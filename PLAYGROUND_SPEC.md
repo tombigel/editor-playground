@@ -81,10 +81,14 @@ Children can be:
 
 Drag behavior includes:
 
-- snap targets for viewport center and element top/center/bottom alignment
+- snap targets for page bounds and page centers (left/right/top/bottom + horizontal/vertical center)
+- snap targets for element top/center/bottom alignment
 - a global snap toggle in the left rail
 - `Alt` to invert current snap mode during drag
 - `Shift` to lock drag movement to a single axis
+- snap guide colors:
+  - component guides: teal
+  - page guides: magenta
 
 Resize behavior includes:
 
@@ -112,6 +116,24 @@ Keyboard shortcuts (active only when a node is selected and no input field is fo
 - `Cmd + ]`: position forward
 - `Cmd + Alt + [`: send to back
 - `Cmd + Alt + ]`: bring to front
+
+## History Model
+
+Undo/redo is implemented as an in-memory history stack.
+
+- history is not persisted to `localStorage`
+- changes are stored incrementally as per-node before/after patches
+- full document snapshots are avoided for performance
+- resize interactions are recorded as a single transaction on release (not per mousemove frame)
+- move and non-text updates create a new transaction per action
+- text field updates are debounced into grouped history entries after short idle
+- `Cmd + Z` / `Cmd + Shift + Z` is handled by the app globally, including when text fields are focused (native browser undo is intercepted)
+
+Controls:
+
+- top bar buttons: undo / redo
+- shortcuts: `Cmd + Z`, `Cmd + Shift + Z`
+- debug panel: clear undo history, configurable max retained undo steps
 
 ## Units
 
@@ -196,6 +218,7 @@ Current UX includes:
 - debug panel
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips
+- in-memory incremental undo/redo
 - local session persistence in `localStorage`
 
 ## Validation Policy
@@ -216,6 +239,8 @@ The playground exposes:
 - show spacers toggle
 - sticky computation output
 - reset stage action
+- clear undo history action
+- undo step retention control
 
 ## Running the Playground
 

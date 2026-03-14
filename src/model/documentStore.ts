@@ -235,7 +235,7 @@ export function insertWrapper(state: EditorState, role: WrapperRole): EditorStat
     : role === 'container'
       ? findFirstSection(document) ?? document.rootId
       : document.rootId;
-  const node = createWrapper(role, parentId);
+  const node = createUniqueWrapper(document, role, parentId);
   document.nodes[node.id] = node;
   document.nodes[parentId].children.push(node.id);
   return { ...state, document, selectedId: node.id };
@@ -246,7 +246,7 @@ export function insertLeaf(state: EditorState, role: LeafRole): EditorState {
   const parentId = state.selectedId
     ? getInsertionParent(document, state.selectedId, 'leaf')
     : findFirstSection(document) ?? document.rootId;
-  const node = createLeaf(role, parentId);
+  const node = createUniqueLeaf(document, role, parentId);
   document.nodes[node.id] = node;
   document.nodes[parentId].children.push(node.id);
   return { ...state, document, selectedId: node.id };
@@ -285,6 +285,22 @@ function getInsertionParent(
     return document.rootId;
   }
   return document.rootId;
+}
+
+function createUniqueWrapper(document: DocumentModel, role: WrapperRole, parentId: NodeId) {
+  let node = createWrapper(role, parentId);
+  while (document.nodes[node.id]) {
+    node = createWrapper(role, parentId);
+  }
+  return node;
+}
+
+function createUniqueLeaf(document: DocumentModel, role: LeafRole, parentId: NodeId) {
+  let node = createLeaf(role, parentId);
+  while (document.nodes[node.id]) {
+    node = createLeaf(role, parentId);
+  }
+  return node;
 }
 
 export function updateTextField(
@@ -519,6 +535,10 @@ function canParentNode(parent: DocumentNode, child: DocumentNode): boolean {
 }
 
 function isDescendant(document: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {
+  if (candidateId === targetAncestorId) {
+    return true;
+  }
+
   let current: DocumentNode | undefined = document.nodes[candidateId];
   while (current && current.parentId) {
     if (current.parentId === targetAncestorId) {
@@ -541,6 +561,10 @@ export function reparentNode(
   const nextParent = document.nodes[parentId];
 
   if (!node || !nextParent || node.type === 'site' || nextParent.type !== 'wrapper') {
+    return state;
+  }
+
+  if (parentId === nodeId) {
     return state;
   }
 

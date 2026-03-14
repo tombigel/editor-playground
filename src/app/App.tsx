@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Eye, Grid3X3, Magnet, SearchCode, StickyNote } from 'lucide-react';
+import { Eye, Grid3X3, Magnet, Redo2, SearchCode, StickyNote, Undo2 } from 'lucide-react';
 import {
   cancelPromoteWrapperRole,
   clearPersistedState,
   confirmPromoteWrapperRole,
-  createInitialState,
   deleteNode,
   demoteWrapperRole,
   getValidationErrors,
@@ -12,6 +11,7 @@ import {
   insertWrapper,
   loadPersistedState,
   moveNode,
+  type EditorState,
   persistState,
   reparentNode,
   reorderNode,
@@ -25,6 +25,7 @@ import {
 } from '../model/documentStore';
 import { parseUnitValue } from '../model/units';
 import { getNode } from '../model/selectors';
+import type { DocumentNode, NodeId } from '../model/types';
 import { InsertPanel } from '../panels/InsertPanel';
 import { InspectorPanel } from '../panels/InspectorPanel';
 import { DebugPanel } from '../panels/DebugPanel';
@@ -34,7 +35,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 
-type Action =
+type EditorAction =
   | { type: 'select'; id: string | null }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertLeaf'; role: 'text' | 'image' | 'link' | 'button' }
@@ -64,7 +65,52 @@ type Action =
   | { type: 'setShowGridLanes'; value: boolean }
   | { type: 'setSnapEnabled'; value: boolean };
 
-function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
+type HistoryAction =
+  | EditorAction
+  | { type: 'undo' }
+  | { type: 'redo' }
+  | { type: 'clearHistory' }
+  | { type: 'setHistoryLimit'; value: number }
+  | { type: 'beginResize'; id: NodeId }
+  | { type: 'endResize'; id: NodeId };
+
+type NodePatch = {
+  id: NodeId;
+  before?: DocumentNode;
+  after?: DocumentNode;
+};
+
+type HistoryEntry = {
+  rootIdBefore: NodeId;
+  rootIdAfter: NodeId;
+  nodePatches: NodePatch[];
+  selectedBefore: NodeId | null;
+  selectedAfter: NodeId | null;
+  pendingBefore: EditorState['pendingRoleSwap'];
+  pendingAfter: EditorState['pendingRoleSwap'];
+  debounceKey: string | null;
+  createdAt: number;
+};
+
+type HistoryState = {
+  present: EditorState;
+  past: HistoryEntry[];
+  future: HistoryEntry[];
+  historyLimit: number;
+  activeResize:
+    | {
+        nodeId: NodeId;
+        before: EditorState;
+      }
+    | null;
+};
+
+const DEFAULT_HISTORY_LIMIT = 100;
+const MIN_HISTORY_LIMIT = 1;
+const MAX_HISTORY_LIMIT = 500;
+const TEXT_HISTORY_DEBOUNCE_MS = 450;
+
+function editorReducer(state: EditorState, action: EditorAction) {
   const selectedId = state.selectedId;
   switch (action.type) {
     case 'select':
@@ -147,8 +193,145 @@ function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
   }
 }
 
+function createHistoryState(): HistoryState {
+  return {
+    present: loadPersistedState(),
+    past: [],
+    future: [],
+    historyLimit: DEFAULT_HISTORY_LIMIT,
+    activeResize: null,
+  };
+}
+
+function historyReducer(state: HistoryState, action: HistoryAction): HistoryState {
+  if (action.type === 'beginResize') {
+    if (state.activeResize) {
+      return state;
+    }
+    return {
+      ...state,
+      activeResize: {
+        nodeId: action.id,
+        before: state.present,
+      },
+    };
+  }
+
+  if (action.type === 'endResize') {
+    if (!state.activeResize || state.activeResize.nodeId !== action.id) {
+      return state;
+    }
+
+    const entry = buildHistoryEntry(
+      state.activeResize.before,
+      state.present,
+      null,
+      Date.now(),
+    );
+
+    if (!entry) {
+      return { ...state, activeResize: null };
+    }
+
+    return {
+      ...state,
+      past: appendHistoryEntry(state.past, entry, state.historyLimit),
+      future: [],
+      activeResize: null,
+    };
+  }
+
+  if (action.type === 'undo') {
+    if (state.activeResize) {
+      return state;
+    }
+    const entry = state.past[state.past.length - 1];
+    if (!entry) {
+      return state;
+    }
+
+    return {
+      ...state,
+      present: applyHistoryEntry(state.present, entry, 'undo'),
+      past: state.past.slice(0, -1),
+      future: [entry, ...state.future],
+    };
+  }
+
+  if (action.type === 'redo') {
+    if (state.activeResize) {
+      return state;
+    }
+    const entry = state.future[0];
+    if (!entry) {
+      return state;
+    }
+
+    return {
+      ...state,
+      present: applyHistoryEntry(state.present, entry, 'redo'),
+      past: [...state.past, entry],
+      future: state.future.slice(1),
+    };
+  }
+
+  if (action.type === 'clearHistory') {
+    return { ...state, past: [], future: [], activeResize: null };
+  }
+
+  if (action.type === 'setHistoryLimit') {
+    const nextLimit = clampHistoryLimit(action.value);
+    const excess = Math.max(0, state.past.length - nextLimit);
+    return {
+      ...state,
+      historyLimit: nextLimit,
+      past: excess > 0 ? state.past.slice(excess) : state.past,
+    };
+  }
+
+  const nextPresent = editorReducer(state.present, action);
+  if (nextPresent === state.present) {
+    return state;
+  }
+
+  if (state.activeResize && isResizeStreamAction(action, state.activeResize.nodeId)) {
+    return {
+      ...state,
+      present: nextPresent,
+    };
+  }
+
+  if (!shouldTrackInHistory(action)) {
+    return {
+      ...state,
+      present: nextPresent,
+    };
+  }
+
+  const entry = buildHistoryEntry(
+    state.present,
+    nextPresent,
+    getTextDebounceKey(action, state.present.selectedId),
+    Date.now(),
+  );
+  if (!entry) {
+    return {
+      ...state,
+      present: nextPresent,
+    };
+  }
+
+  return {
+    ...state,
+    present: nextPresent,
+    past: appendHistoryEntry(state.past, entry, state.historyLimit),
+    future: [],
+  };
+}
+
 export function App() {
-  const [state, dispatch] = useReducer(reducer, undefined, loadPersistedState);
+  const [historyState, dispatch] = useReducer(historyReducer, undefined, createHistoryState);
+  const state = historyState.present;
   const [debugOpen, setDebugOpen] = useState(false);
   const [spacerMenuOpen, setSpacerMenuOpen] = useState(false);
   const spacerMenuRef = useRef<HTMLDivElement | null>(null);
@@ -178,12 +361,19 @@ export function App() {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (!state.selectedId) {
+      const isUndoRedo = event.metaKey && !event.ctrlKey && event.code === 'KeyZ';
+      if (isUndoRedo) {
+        event.preventDefault();
+        dispatch({ type: event.shiftKey ? 'redo' : 'undo' });
         return;
       }
 
       const active = document.activeElement as HTMLElement | null;
       if (isInteractiveFocus(active)) {
+        return;
+      }
+
+      if (!state.selectedId) {
         return;
       }
 
@@ -231,7 +421,32 @@ export function App() {
                 </div>
               </div>
             </div>
-            <div className="ml-auto" />
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                title="Undo · Cmd + Z"
+                aria-label="Undo"
+                disabled={historyState.past.length === 0}
+                onClick={() => dispatch({ type: 'undo' })}
+                className="h-8 w-8 rounded-md border border-white/12 bg-white/4 p-0 text-white hover:bg-white/10 disabled:opacity-35"
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                title="Redo · Cmd + Shift + Z"
+                aria-label="Redo"
+                disabled={historyState.future.length === 0}
+                onClick={() => dispatch({ type: 'redo' })}
+                className="h-8 w-8 rounded-md border border-white/12 bg-white/4 p-0 text-white hover:bg-white/10 disabled:opacity-35"
+              >
+                <Redo2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -369,6 +584,11 @@ export function App() {
                           errors={errors}
                           stickyState={stickyState}
                           selectedNode={selectedNode}
+                          undoDepth={historyState.past.length}
+                          redoDepth={historyState.future.length}
+                          historyLimit={historyState.historyLimit}
+                          onClearHistory={() => dispatch({ type: 'clearHistory' })}
+                          onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
                           onExport={async () => {
                             try {
                               await navigator.clipboard.writeText(
@@ -404,6 +624,8 @@ export function App() {
               onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
               onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
               onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
+              onResizeStart={(id) => dispatch({ type: 'beginResize', id })}
+              onResizeEnd={(id) => dispatch({ type: 'endResize', id })}
             />
 
           </main>
@@ -491,7 +713,184 @@ function SpacerIcon({ className }: { className?: string }) {
   );
 }
 
-function selectedNodeHasTopEdge(state: ReturnType<typeof createInitialState>, selectedId: string) {
+function shouldTrackInHistory(action: EditorAction) {
+  return (
+    action.type !== 'select' &&
+    action.type !== 'setPreviewSticky' &&
+    action.type !== 'setSpacerVisibility' &&
+    action.type !== 'setShowGridLanes' &&
+    action.type !== 'setSnapEnabled'
+  );
+}
+
+function isResizeStreamAction(action: EditorAction, nodeId: NodeId) {
+  return (
+    (action.type === 'resize' && action.id === nodeId) ||
+    (action.type === 'move' && action.id === nodeId)
+  );
+}
+
+function getTextDebounceKey(action: EditorAction, selectedId: string | null) {
+  if (action.type !== 'text' || !selectedId) {
+    return null;
+  }
+  return `text:${selectedId}:${action.field}`;
+}
+
+function appendHistoryEntry(past: HistoryEntry[], entry: HistoryEntry, historyLimit: number) {
+  const last = past[past.length - 1];
+  const shouldDebounceMerge =
+    Boolean(
+      last &&
+      last.debounceKey &&
+      entry.debounceKey &&
+      last.debounceKey === entry.debounceKey &&
+      entry.createdAt - last.createdAt <= TEXT_HISTORY_DEBOUNCE_MS,
+    );
+
+  const nextPast = shouldDebounceMerge
+    ? [...past.slice(0, -1), composeHistoryEntries(last!, entry)]
+    : [...past, entry];
+
+  if (nextPast.length > historyLimit) {
+    return nextPast.slice(nextPast.length - historyLimit);
+  }
+  return nextPast;
+}
+
+function clampHistoryLimit(value: number) {
+  const parsed = Number.isFinite(value) ? Math.round(value) : DEFAULT_HISTORY_LIMIT;
+  return Math.min(MAX_HISTORY_LIMIT, Math.max(MIN_HISTORY_LIMIT, parsed));
+}
+
+function buildHistoryEntry(
+  before: EditorState,
+  after: EditorState,
+  debounceKey: string | null,
+  createdAt: number,
+): HistoryEntry | null {
+  const patches: NodePatch[] = [];
+  const nodeIds = new Set<string>([
+    ...Object.keys(before.document.nodes),
+    ...Object.keys(after.document.nodes),
+  ]);
+
+  for (const id of nodeIds) {
+    const beforeNode = before.document.nodes[id];
+    const afterNode = after.document.nodes[id];
+    if (!beforeNode && afterNode) {
+      patches.push({ id, before: undefined, after: afterNode });
+      continue;
+    }
+    if (beforeNode && !afterNode) {
+      patches.push({ id, before: beforeNode, after: undefined });
+      continue;
+    }
+    if (beforeNode && afterNode && !nodesEqual(beforeNode, afterNode)) {
+      patches.push({ id, before: beforeNode, after: afterNode });
+    }
+  }
+
+  const selectedChanged = before.selectedId !== after.selectedId;
+  const pendingChanged =
+    JSON.stringify(before.pendingRoleSwap) !== JSON.stringify(after.pendingRoleSwap);
+  const rootChanged = before.document.rootId !== after.document.rootId;
+
+  if (!selectedChanged && !pendingChanged && !rootChanged && patches.length === 0) {
+    return null;
+  }
+
+  return {
+    rootIdBefore: before.document.rootId,
+    rootIdAfter: after.document.rootId,
+    nodePatches: patches,
+    selectedBefore: before.selectedId,
+    selectedAfter: after.selectedId,
+    pendingBefore: before.pendingRoleSwap,
+    pendingAfter: after.pendingRoleSwap,
+    debounceKey,
+    createdAt,
+  };
+}
+
+function composeHistoryEntries(previous: HistoryEntry, next: HistoryEntry): HistoryEntry {
+  const byId = new Map<string, NodePatch>();
+
+  for (const patch of previous.nodePatches) {
+    byId.set(patch.id, patch);
+  }
+
+  for (const patch of next.nodePatches) {
+    const existing = byId.get(patch.id);
+    if (!existing) {
+      byId.set(patch.id, patch);
+      continue;
+    }
+
+    const composed: NodePatch = {
+      id: patch.id,
+      before: existing.before,
+      after: patch.after,
+    };
+
+    if (
+      (composed.before === undefined && composed.after === undefined) ||
+      (composed.before && composed.after && nodesEqual(composed.before, composed.after))
+    ) {
+      byId.delete(patch.id);
+    } else {
+      byId.set(patch.id, composed);
+    }
+  }
+
+  return {
+    rootIdBefore: previous.rootIdBefore,
+    rootIdAfter: next.rootIdAfter,
+    nodePatches: Array.from(byId.values()),
+    selectedBefore: previous.selectedBefore,
+    selectedAfter: next.selectedAfter,
+    pendingBefore: previous.pendingBefore,
+    pendingAfter: next.pendingAfter,
+    debounceKey: next.debounceKey,
+    createdAt: next.createdAt,
+  };
+}
+
+function applyHistoryEntry(
+  present: EditorState,
+  entry: HistoryEntry,
+  direction: 'undo' | 'redo',
+): EditorState {
+  const nodes = { ...present.document.nodes };
+  for (const patch of entry.nodePatches) {
+    const snapshot = direction === 'undo' ? patch.before : patch.after;
+    if (!snapshot) {
+      delete nodes[patch.id];
+    } else {
+      nodes[patch.id] = structuredClone(snapshot);
+    }
+  }
+
+  const rootId = direction === 'undo' ? entry.rootIdBefore : entry.rootIdAfter;
+  const selectedCandidate = direction === 'undo' ? entry.selectedBefore : entry.selectedAfter;
+  const selectedId = selectedCandidate && nodes[selectedCandidate] ? selectedCandidate : null;
+
+  return {
+    ...present,
+    document: {
+      rootId,
+      nodes,
+    },
+    selectedId,
+    pendingRoleSwap: direction === 'undo' ? entry.pendingBefore : entry.pendingAfter,
+  };
+}
+
+function nodesEqual(left: DocumentNode, right: DocumentNode) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function selectedNodeHasTopEdge(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
   if (!node || node.type === 'site') {
     return false;
@@ -499,7 +898,7 @@ function selectedNodeHasTopEdge(state: ReturnType<typeof createInitialState>, se
   return node.sticky?.edges.top ?? !node.sticky?.edges.bottom;
 }
 
-function selectedNodeHasBottomEdge(state: ReturnType<typeof createInitialState>, selectedId: string) {
+function selectedNodeHasBottomEdge(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
   if (!node || node.type === 'site') {
     return false;
@@ -508,7 +907,7 @@ function selectedNodeHasBottomEdge(state: ReturnType<typeof createInitialState>,
 }
 
 function getNodeOrderState(
-  state: ReturnType<typeof createInitialState>,
+  state: EditorState,
   node: ReturnType<typeof getNode>,
 ) {
   if (!node || node.type === 'site' || node.parentId === null) {

@@ -3,16 +3,33 @@ import type { ComputedWrapperStickyState, DocumentNode } from '../model/types';
 import { formatValue } from '../model/units';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 type Props = {
   errors: string[];
   stickyState: Record<string, ComputedWrapperStickyState>;
   selectedNode: DocumentNode | null;
+  undoDepth: number;
+  redoDepth: number;
+  historyLimit: number;
+  onClearHistory: () => void;
+  onHistoryLimitChange: (value: number) => void;
   onExport: () => Promise<boolean>;
   onReset: () => void;
 };
 
-export function DebugPanel({ errors, stickyState, selectedNode, onExport, onReset }: Props) {
+export function DebugPanel({
+  errors,
+  stickyState,
+  selectedNode,
+  undoDepth,
+  redoDepth,
+  historyLimit,
+  onClearHistory,
+  onHistoryLimitChange,
+  onExport,
+  onReset,
+}: Props) {
   const [exportState, setExportState] = useState<'idle' | 'copied' | 'error'>('idle');
 
   async function handleExport() {
@@ -27,14 +44,34 @@ export function DebugPanel({ errors, stickyState, selectedNode, onExport, onRese
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Debug</div>
           <div className="text-sm text-slate-600">Validation and computed sticky state</div>
+          <div className="mt-1 text-xs text-slate-500">Undo: {undoDepth} · Redo: {redoDepth}</div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" className="min-w-[110px]" onClick={handleExport}>
             {exportState === 'copied' ? 'Copied' : exportState === 'error' ? 'Copy failed' : 'Export data'}
           </Button>
+          <Button type="button" variant="outline" size="sm" className="min-w-[110px]" onClick={onClearHistory}>
+            Clear undo
+          </Button>
           <Button type="button" variant="destructive" size="sm" className="min-w-[110px]" onClick={onReset}>
             Reset stage
           </Button>
+        </div>
+        <div className="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-2">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Undo steps</div>
+          <Input
+            type="number"
+            min={1}
+            max={500}
+            value={historyLimit}
+            onChange={(event) => {
+              const next = Number.parseInt(event.target.value, 10);
+              if (Number.isFinite(next)) {
+                onHistoryLimitChange(next);
+              }
+            }}
+            className="h-8 text-xs"
+          />
         </div>
       </div>
 

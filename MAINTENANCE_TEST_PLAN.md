@@ -41,6 +41,7 @@ This plan is for keeping the playground stable while feature work is paused.
 3. Attempt cyclic reparent and verify it is rejected.
 4. Delete parent node and verify descendants are removed.
 5. If selected node is deleted via ancestor removal, selected state clears.
+6. After reload, inserting new wrappers/leaves does not overwrite existing nodes (ID uniqueness is preserved).
 
 ## 2) Sticky Logic Tests
 
@@ -90,6 +91,7 @@ This plan is for keeping the playground stable while feature work is paused.
 6. Shift + drag locks to one axis (horizontal or vertical based on dominant delta).
 7. Shift + corner resize preserves current aspect ratio.
 8. Resize start on non-numeric size values (`auto`, `fit-content`, `%`, `aspect-ratio(...)`) does not jump on first pointer move.
+9. Dropping a container over invalid targets never makes it disappear; if reparent is invalid, position updates in current parent.
 
 ### C. Ordering behavior
 
@@ -106,18 +108,41 @@ This plan is for keeping the playground stable while feature work is paused.
 2. Spacer visibility modes (`selected`, `all`) filter visuals correctly.
 3. Grid lane toggle draws mesh guides without layout side effects.
 4. Debug panel shows validation errors and sticky math for active document.
+5. Debug undo controls work:
+   Clear undo empties history, and undo-step limit updates cap retention.
 
 ### E. Snap behavior
 
-1. With snap enabled, drag snaps to screen center and nearby element top/center/bottom anchors.
-2. With snap disabled, no snap guides are shown and drag is free.
-3. Holding `Alt` during drag reverses current snap behavior (temporary invert).
+1. With snap enabled, drag snaps to page bounds and centers:
+   left/right/top/bottom and page horizontal/vertical center.
+2. With snap enabled, drag also snaps to nearby element top/center/bottom anchors.
+3. Guide colors match source:
+   component guides are teal, page guides are magenta.
+4. With snap disabled, no snap guides are shown and drag is free.
+5. Holding `Alt` during drag reverses current snap behavior (temporary invert).
 
 ### F. Persistence and reset
 
 1. Reload restores persisted state.
 2. Default document seeding is stable when no stored defaults exist.
 3. Reset stage clears persisted state and returns to factory baseline.
+
+### G. Undo / Redo History
+
+1. With canvas/non-interactive focus, `Cmd + Z` performs app undo.
+2. With canvas/non-interactive focus, `Cmd + Shift + Z` performs app redo.
+3. Top-bar undo/redo buttons match shortcut behavior and disabled states.
+4. Undo/redo restores:
+   node properties, parent-child order, selection, and pending role-swap state.
+5. Resize interactions create a single undo transaction on release (mouse up/leave), not on every resize frame.
+6. Move and non-text data updates create a new undo transaction per action (no same-type transaction merging).
+7. Text field editing is history-debounced:
+   typing continuous characters should not create one undo step per keypress.
+8. History limit is enforced: past stack length never exceeds configured max.
+9. While focused in input/textarea fields, `Cmd + Z` / `Cmd + Shift + Z` still uses app history:
+   native browser text undo/redo is intercepted and does not run.
+10. History remains in memory only:
+   reloading the app clears undo/redo stacks while persisted document state remains.
 
 ## Regression Exit Criteria
 

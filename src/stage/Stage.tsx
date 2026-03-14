@@ -25,6 +25,8 @@ type Props = {
   onMove: (id: NodeId, x: string, y: string) => void;
   onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
   onResize: (id: NodeId, width: string, height: string) => void;
+  onResizeStart: (id: NodeId) => void;
+  onResizeEnd: (id: NodeId) => void;
 };
 
 const VIEWPORT_WIDTH = 1440;
@@ -35,6 +37,13 @@ const SNAP_THRESHOLD_PX = 8;
 type SnapGuides = {
   x: number | null;
   y: number | null;
+  xSource: 'component' | 'page' | null;
+  ySource: 'component' | 'page' | null;
+};
+
+type SnapTarget = {
+  value: number;
+  source: 'component' | 'page';
 };
 
 function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
@@ -52,10 +61,17 @@ export function Stage({
   onMove,
   onReparent,
   onResize,
+  onResizeStart,
+  onResizeEnd,
 }: Props) {
   const stickyState = useMemo(() => computeStickyState(document), [document]);
   const [dragState, setDragState] = useState<DragState>(null);
-  const [snapGuides, setSnapGuides] = useState<SnapGuides>({ x: null, y: null });
+  const [snapGuides, setSnapGuides] = useState<SnapGuides>({
+    x: null,
+    y: null,
+    xSource: null,
+    ySource: null,
+  });
   const [resizeState, setResizeState] = useState<ResizeState>(null);
   const root = document.nodes[document.rootId];
   const wrappers = getChildren(document, root.id).filter((node) => node.type === 'wrapper') as WrapperNode[];
@@ -76,14 +92,21 @@ export function Stage({
                 clientX: axisLocked.clientX,
                 clientY: axisLocked.clientY,
                 guideX: null,
+                guideXSource: null,
                 guideY: null,
+                guideYSource: null,
               };
           setDragState({
             ...dragState,
             currentClientX: snapped.clientX,
             currentClientY: snapped.clientY,
           });
-          setSnapGuides({ x: snapped.guideX, y: snapped.guideY });
+          setSnapGuides({
+            x: snapped.guideX,
+            y: snapped.guideY,
+            xSource: snapped.guideXSource,
+            ySource: snapped.guideYSource,
+          });
         }
         if (resizeState) {
           const frame = computeResizeFrame(resizeState, event.clientX, event.clientY, event.shiftKey);
@@ -103,9 +126,11 @@ export function Stage({
                 clientX: axisLocked.clientX,
                 clientY: axisLocked.clientY,
                 guideX: null,
+                guideXSource: null,
                 guideY: null,
+                guideYSource: null,
               };
-          const drop = findDropWrapper(snapped.clientX, snapped.clientY);
+          const drop = findDropWrapper(document, dragState.nodeId, snapped.clientX, snapped.clientY);
           const draggedNode = document.nodes[dragState.nodeId];
           if (drop && draggedNode && draggedNode.type !== 'site') {
             const localX = Math.max(0, snapped.clientX - drop.rect.left - dragState.grabOffsetX);
@@ -117,13 +142,19 @@ export function Stage({
             }
           }
         }
+        if (resizeState) {
+          onResizeEnd(resizeState.nodeId);
+        }
         setDragState(null);
-        setSnapGuides({ x: null, y: null });
+        setSnapGuides({ x: null, y: null, xSource: null, ySource: null });
         setResizeState(null);
       }}
       onMouseLeave={() => {
+        if (resizeState) {
+          onResizeEnd(resizeState.nodeId);
+        }
         setDragState(null);
-        setSnapGuides({ x: null, y: null });
+        setSnapGuides({ x: null, y: null, xSource: null, ySource: null });
         setResizeState(null);
       }}
     >
@@ -144,6 +175,7 @@ export function Stage({
               setDragState,
               resizeState,
               setResizeState,
+              onResizeStart,
               isTopLevel: true,
             })
           : <EmptySlot label="Header slot" />}
@@ -163,6 +195,7 @@ export function Stage({
               setDragState,
               resizeState,
               setResizeState,
+              onResizeStart,
               isTopLevel: true,
             }),
           )}
@@ -182,6 +215,7 @@ export function Stage({
               setDragState,
               resizeState,
               setResizeState,
+              onResizeStart,
               isTopLevel: true,
             })
           : <EmptySlot label="Footer slot" />}
@@ -218,13 +252,13 @@ function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState
           style={{
             borderColor: node.style.borderColor,
             borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
+            borderStyle: 'solid',
           }}
         >
-          <div className="drag-preview-wrapper-label">{node.name}</div>
           <div
             className="drag-preview-content-wrapper"
             style={{
-              background: node.style.background,
+              background: node.style.background ?? '#fff',
             }}
           />
         </div>
@@ -248,10 +282,16 @@ function renderSnapGuides(guides: SnapGuides) {
   return (
     <>
       {guides.x !== null ? (
-        <div className="snap-guide snap-guide-vertical" style={{ left: `${guides.x}px` }} />
+        <div
+          className={`snap-guide snap-guide-vertical ${guides.xSource === 'page' ? 'snap-guide-page' : 'snap-guide-component'}`}
+          style={{ left: `${guides.x}px` }}
+        />
       ) : null}
       {guides.y !== null ? (
-        <div className="snap-guide snap-guide-horizontal" style={{ top: `${guides.y}px` }} />
+        <div
+          className={`snap-guide snap-guide-horizontal ${guides.ySource === 'page' ? 'snap-guide-page' : 'snap-guide-component'}`}
+          style={{ top: `${guides.y}px` }}
+        />
       ) : null}
     </>
   );
@@ -271,6 +311,7 @@ type RenderWrapperArgs = {
   setDragState: (state: DragState) => void;
   resizeState: ResizeState;
   setResizeState: (state: ResizeState) => void;
+  onResizeStart: (id: NodeId) => void;
   isTopLevel: boolean;
   meshPlacement?: CSSProperties;
 };
@@ -288,6 +329,7 @@ function renderWrapper({
   dragState,
   setDragState,
   setResizeState,
+  onResizeStart,
   isTopLevel,
   meshPlacement,
 }: RenderWrapperArgs): JSX.Element {
@@ -417,6 +459,7 @@ function renderWrapper({
                 setDragState,
                 resizeState: null,
                 setResizeState,
+                onResizeStart,
                 isTopLevel: false,
                 meshPlacement: meshLayout.childPlacements[child.id],
               })
@@ -429,6 +472,7 @@ function renderWrapper({
                 dragState,
                 setDragState,
                 setResizeState,
+                onResizeStart,
                 registration: registrationMap.get(child.id),
                 meshPlacement: meshLayout.childPlacements[child.id],
                 wrapperBottomLanePx: meshLayout.bottomLanePx,
@@ -438,6 +482,7 @@ function renderWrapper({
           <ResizeHandleView
             onHandleMouseDown={(handle, event) => {
               event.stopPropagation();
+              onResizeStart(node.id);
               const fallbackWidth = numericWidth(node.rect.width.base.raw);
               const fallbackHeight = numericHeight(node.rect.height.base.raw);
               const startSize = getResizeStartSize(event.currentTarget, fallbackWidth, fallbackHeight);
@@ -476,6 +521,7 @@ function renderLeaf({
   dragState,
   setDragState,
   setResizeState,
+  onResizeStart,
   registration,
   meshPlacement,
   wrapperBottomLanePx,
@@ -488,6 +534,7 @@ function renderLeaf({
   dragState: DragState;
   setDragState: (state: DragState) => void;
   setResizeState: (state: ResizeState) => void;
+  onResizeStart: (id: NodeId) => void;
   registration?: ComputedWrapperStickyState['registrations'][number];
   meshPlacement?: CSSProperties;
   wrapperBottomLanePx: number;
@@ -554,6 +601,7 @@ function renderLeaf({
         <ResizeHandleView
           onHandleMouseDown={(handle, event) => {
             event.stopPropagation();
+            onResizeStart(child.id);
             const fallbackWidth = numericWidth(child.rect.width.base.raw);
             const fallbackHeight = numericHeight(child.rect.height.base.raw);
             const startSize = getResizeStartSize(event.currentTarget, fallbackWidth, fallbackHeight);
@@ -977,17 +1025,18 @@ function getSnappedDragPosition(dragState: Exclude<DragState, null>, clientX: nu
   let top = clientY - dragState.grabOffsetY;
   const width = dragState.previewWidth;
   const height = dragState.previewHeight;
+  const pageTargets = collectPageSnapTargets();
 
-  const centerScreenX = window.innerWidth / 2;
-  const currentCenterX = left + width / 2;
-  const centerDeltaX = centerScreenX - currentCenterX;
-  const guideX = Math.abs(centerDeltaX) <= SNAP_THRESHOLD_PX ? centerScreenX : null;
-  if (guideX !== null) {
-    left += centerDeltaX;
+  const horizontalTargets: SnapTarget[] = [...pageTargets.horizontal];
+  const horizontalSnap = findHorizontalSnap(left, width, horizontalTargets);
+  if (horizontalSnap) {
+    left += horizontalSnap.delta;
   }
 
-  const verticalTargets = collectVerticalSnapTargets(dragState.nodeId);
-  verticalTargets.push(window.innerHeight / 2);
+  const verticalTargets = [
+    ...collectVerticalSnapTargets(dragState.nodeId),
+    ...pageTargets.vertical,
+  ];
   const verticalSnap = findVerticalSnap(top, height, verticalTargets);
   if (verticalSnap) {
     top += verticalSnap.delta;
@@ -996,13 +1045,15 @@ function getSnappedDragPosition(dragState: Exclude<DragState, null>, clientX: nu
   return {
     clientX: left + dragState.grabOffsetX,
     clientY: top + dragState.grabOffsetY,
-    guideX,
+    guideX: horizontalSnap?.target ?? null,
+    guideXSource: horizontalSnap?.source ?? null,
     guideY: verticalSnap?.target ?? null,
+    guideYSource: verticalSnap?.source ?? null,
   };
 }
 
 function collectVerticalSnapTargets(draggedId: string) {
-  const targets: number[] = [];
+  const targets: SnapTarget[] = [];
   const nodes = document.querySelectorAll<HTMLElement>('.stage-canvas [data-node-id]');
   for (const element of nodes) {
     if (element.dataset.nodeId === draggedId) {
@@ -1012,24 +1063,60 @@ function collectVerticalSnapTargets(draggedId: string) {
     if (rect.height < 1 || rect.width < 1) {
       continue;
     }
-    targets.push(rect.top, rect.top + rect.height / 2, rect.bottom);
+    targets.push(
+      { value: rect.top, source: 'component' },
+      { value: rect.top + rect.height / 2, source: 'component' },
+      { value: rect.bottom, source: 'component' },
+    );
   }
   return targets;
 }
 
-function findVerticalSnap(top: number, height: number, targets: number[]) {
-  const anchors = [top, top + height / 2, top + height];
-  let best: { delta: number; distance: number; target: number } | null = null;
+function collectPageSnapTargets() {
+  const frame = window.document.querySelector<HTMLElement>('.stage-frame');
+  if (!frame) {
+    return {
+      horizontal: [
+        { value: 0, source: 'page' as const },
+        { value: window.innerWidth / 2, source: 'page' as const },
+        { value: window.innerWidth, source: 'page' as const },
+      ],
+      vertical: [
+        { value: 0, source: 'page' as const },
+        { value: window.innerHeight / 2, source: 'page' as const },
+        { value: window.innerHeight, source: 'page' as const },
+      ],
+    };
+  }
+
+  const rect = frame.getBoundingClientRect();
+  return {
+    horizontal: [
+      { value: rect.left, source: 'page' as const },
+      { value: rect.left + rect.width / 2, source: 'page' as const },
+      { value: rect.right, source: 'page' as const },
+    ],
+    vertical: [
+      { value: rect.top, source: 'page' as const },
+      { value: rect.top + rect.height / 2, source: 'page' as const },
+      { value: rect.bottom, source: 'page' as const },
+    ],
+  };
+}
+
+function findHorizontalSnap(left: number, width: number, targets: SnapTarget[]) {
+  const anchors = [left, left + width / 2, left + width];
+  let best: { delta: number; distance: number; target: number; source: 'component' | 'page' } | null = null;
 
   for (const target of targets) {
     for (const anchor of anchors) {
-      const delta = target - anchor;
+      const delta = target.value - anchor;
       const distance = Math.abs(delta);
       if (distance > SNAP_THRESHOLD_PX) {
         continue;
       }
       if (!best || distance < best.distance) {
-        best = { delta, distance, target };
+        best = { delta, distance, target: target.value, source: target.source };
       }
     }
   }
@@ -1037,22 +1124,117 @@ function findVerticalSnap(top: number, height: number, targets: number[]) {
   return best;
 }
 
-function findDropWrapper(clientX: number, clientY: number) {
-  const target = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
-  const dropElement = target?.closest('[data-drop-wrapper-id]') as HTMLElement | null;
-  if (!dropElement) {
+function findVerticalSnap(top: number, height: number, targets: SnapTarget[]) {
+  const anchors = [top, top + height / 2, top + height];
+  let best: { delta: number; distance: number; target: number; source: 'component' | 'page' } | null = null;
+
+  for (const target of targets) {
+    for (const anchor of anchors) {
+      const delta = target.value - anchor;
+      const distance = Math.abs(delta);
+      if (distance > SNAP_THRESHOLD_PX) {
+        continue;
+      }
+      if (!best || distance < best.distance) {
+        best = { delta, distance, target: target.value, source: target.source };
+      }
+    }
+  }
+
+  return best;
+}
+
+function findDropWrapper(
+  model: DocumentModel,
+  draggedId: NodeId,
+  clientX: number,
+  clientY: number,
+) {
+  const target = window.document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  const draggedNode = model.nodes[draggedId];
+  if (!target || !draggedNode || draggedNode.type === 'site' || !draggedNode.parentId) {
     return null;
   }
 
-  const wrapperId = dropElement.dataset.dropWrapperId;
-  if (!wrapperId) {
+  const visited = new Set<string>();
+  let current: HTMLElement | null = target;
+  while (current) {
+    const wrapperId = current.dataset.dropWrapperId;
+    if (wrapperId && !visited.has(wrapperId)) {
+      visited.add(wrapperId);
+      const candidate = model.nodes[wrapperId];
+      if (
+        candidate &&
+        candidate.type === 'wrapper' &&
+        isValidDropParent(model, draggedNode, candidate)
+      ) {
+        return {
+          wrapperId,
+          rect: current.getBoundingClientRect(),
+        };
+      }
+    }
+    current = current.parentElement;
+  }
+
+  const fallback = findDropWrapperElement(draggedNode.parentId);
+  if (!fallback) {
     return null;
   }
 
   return {
-    wrapperId,
-    rect: dropElement.getBoundingClientRect(),
+    wrapperId: draggedNode.parentId,
+    rect: fallback.getBoundingClientRect(),
   };
+}
+
+function findDropWrapperElement(wrapperId: string) {
+  const wrappers = window.document.querySelectorAll<HTMLElement>('[data-drop-wrapper-id]');
+  for (const wrapper of wrappers) {
+    if (wrapper.dataset.dropWrapperId === wrapperId) {
+      return wrapper;
+    }
+  }
+  return null;
+}
+
+function isValidDropParent(
+  model: DocumentModel,
+  draggedNode: Exclude<DocumentNode, { type: 'site' }>,
+  candidate: WrapperNode,
+) {
+  if (candidate.id === draggedNode.id) {
+    return false;
+  }
+
+  if (isDescendant(model, candidate.id, draggedNode.id)) {
+    return false;
+  }
+
+  if (draggedNode.type === 'leaf') {
+    return true;
+  }
+
+  if (draggedNode.role !== 'container') {
+    return false;
+  }
+
+  if (candidate.role === 'container') {
+    return true;
+  }
+
+  return candidate.role === 'section' || candidate.role === 'header' || candidate.role === 'footer';
+}
+
+function isDescendant(model: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {
+  let current: DocumentNode | undefined = model.nodes[candidateId];
+  while (current && current.parentId) {
+    if (current.parentId === targetAncestorId) {
+      return true;
+    }
+    current = model.nodes[current.parentId];
+  }
+  return false;
 }
 
 function resolveOffsetPx(

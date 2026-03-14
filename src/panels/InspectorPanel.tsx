@@ -72,7 +72,7 @@ export function InspectorPanel({
 }: Props) {
   if (!node) {
     return (
-      <div className="flex h-full flex-col gap-2 p-3 text-sm">
+      <div className="flex h-full flex-col gap-1.5 p-2.5 text-xs">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Inspector</div>
           <div className="mt-1 text-xs text-slate-600">Select a node to inspect its layout and sticky config.</div>
@@ -82,28 +82,28 @@ export function InspectorPanel({
   }
 
   return (
-    <div className="flex h-full flex-col gap-2 overflow-auto p-3 text-sm">
+    <div className="flex h-full flex-col gap-1.5 overflow-auto p-2.5 text-xs">
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Inspector</div>
         <div className="mt-0.5 flex items-center gap-2">
           <h2 className="text-[15px] font-semibold text-slate-950">{node.name}</h2>
           {node.type !== 'site' ? (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
+            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
               {node.role}
             </span>
           ) : null}
         </div>
       </div>
 
-      <Card className="rounded-xl border-slate-200 shadow-none">
-        <CardContent className="space-y-3 px-4 py-4">
-          <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
-            <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Name</Label>
-            <Input value={node.name} onChange={(e) => onTextChange('name', e.target.value)} className="h-9 text-xs" />
+      <Card className="rounded-lg border-slate-200/90 shadow-none">
+        <CardContent className="space-y-2.5 px-3 py-3">
+          <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
+            <Label className="text-[11px] font-medium text-slate-500">Name</Label>
+            <Input value={node.name} onChange={(e) => onTextChange('name', e.target.value)} className="h-8 rounded-sm text-[11px]" />
           </div>
 
           {node.type !== 'site' ? (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               <InlineField
                 label="X"
                 value={node.rect.x.base.raw}
@@ -132,9 +132,9 @@ export function InspectorPanel({
           ) : null}
 
           {showOrderControls ? (
-            <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
-              <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Order</Label>
-              <div className="flex justify-end gap-2">
+            <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
+              <Label className="text-[11px] font-medium text-slate-500">Order</Label>
+              <div className="flex justify-end gap-1.5">
                 <OrderIconButton
                   label="Position Forward"
                   shortcut="Cmd + ]"
@@ -180,13 +180,13 @@ export function InspectorPanel({
       {node.type !== 'site' ? (
         <>
           {node.type === 'wrapper' ? (
-            <Card className="rounded-xl border-slate-200 shadow-none">
-              <CardHeader className="px-4 pt-4 pb-1.5">
-                <CardTitle className="text-sm">Design</CardTitle>
+            <Card className="rounded-lg border-slate-200/90 shadow-none">
+              <CardHeader className="px-3 pt-3 pb-1">
+                <CardTitle className="text-xs">Design</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 pt-2 pb-4">
+              <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
                 <FormField label="Background">
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5">
+                  <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1">
                     <input
                       type="color"
                       className="h-8 w-9 rounded-md border-0 bg-transparent p-0"
@@ -201,16 +201,16 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'text' ? (
-            <Card className="rounded-xl border-slate-200 shadow-none">
-              <CardHeader className="px-4 pt-4 pb-1.5">
-                <CardTitle className="text-sm">Content</CardTitle>
+            <Card className="rounded-lg border-slate-200/90 shadow-none">
+              <CardHeader className="px-3 pt-3 pb-1">
+                <CardTitle className="text-xs">Content</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 pt-2 pb-4">
+              <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
                 <FormField label="Text">
                   <Textarea value={node.content} onChange={(e) => onTextChange('content', e.target.value)} />
                 </FormField>
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  <Label className="text-[11px] font-medium text-slate-500">
                     Text style
                   </Label>
                   <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
@@ -294,11 +294,11 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'button' ? (
-            <Card className="rounded-xl border-slate-200 shadow-none">
-              <CardHeader className="px-4 pt-4 pb-1.5">
-                <CardTitle className="text-sm">Content</CardTitle>
+            <Card className="rounded-lg border-slate-200/90 shadow-none">
+              <CardHeader className="px-3 pt-3 pb-1">
+                <CardTitle className="text-xs">Content</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pt-2 pb-4">
+              <CardContent className="px-3 pt-1.5 pb-3">
                 <FormField label="Label">
                   <Input value={node.label} onChange={(e) => onTextChange('label', e.target.value)} />
                 </FormField>
@@ -307,11 +307,11 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'link' ? (
-            <Card className="rounded-xl border-slate-200 shadow-none">
-              <CardHeader className="px-4 pt-4 pb-1.5">
-                <CardTitle className="text-sm">Content</CardTitle>
+            <Card className="rounded-lg border-slate-200/90 shadow-none">
+              <CardHeader className="px-3 pt-3 pb-1">
+                <CardTitle className="text-xs">Content</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 pt-2 pb-4">
+              <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
                 <FormField label="Label">
                   <Input value={node.label} onChange={(e) => onTextChange('label', e.target.value)} />
                 </FormField>
@@ -323,11 +323,11 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'image' ? (
-            <Card className="rounded-xl border-slate-200 shadow-none">
-              <CardHeader className="px-4 pt-4 pb-1.5">
-                <CardTitle className="text-sm">Image</CardTitle>
+            <Card className="rounded-lg border-slate-200/90 shadow-none">
+              <CardHeader className="px-3 pt-3 pb-1">
+                <CardTitle className="text-xs">Image</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-4 pt-2 pb-4">
+              <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
                 <FormField label="Src">
                   <Input value={node.src ?? ''} onChange={(e) => onTextChange('src', e.target.value)} />
                 </FormField>
@@ -338,12 +338,12 @@ export function InspectorPanel({
             </Card>
           ) : null}
 
-          <Card className="rounded-xl border-slate-200 shadow-none">
-            <CardHeader className="px-4 pt-4 pb-1.5">
-              <CardTitle className="text-sm">Sticky</CardTitle>
+          <Card className="rounded-lg border-slate-200/90 shadow-none">
+            <CardHeader className="px-3 pt-3 pb-1">
+              <CardTitle className="text-xs">Sticky</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 px-4 pt-2 pb-4">
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+            <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
+              <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-2">
                 <div>
                   <div className="text-xs font-medium text-slate-900">Enabled</div>
                   <div className="text-[11px] text-slate-500">Pin this node inside its structural range.</div>
@@ -387,7 +387,7 @@ export function InspectorPanel({
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-3">
-                      <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                      <Label className="text-[11px] font-medium text-slate-500">
                         Duration
                       </Label>
                       <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
@@ -422,7 +422,7 @@ export function InspectorPanel({
                         onValueChange={onStickyDuration}
                       />
                     ) : (
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                      <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
                         Uses the owner section height as the sticky distance.
                       </div>
                     )}
@@ -473,7 +473,7 @@ function Field({
             onChange(next);
           }
         }}
-        className={`h-9 text-xs ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
+        className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
       />
     </FormField>
   );
@@ -499,8 +499,8 @@ function InlineField({
   }, [value]);
 
   return (
-    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1.5">
-      <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</Label>
+    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
+      <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
       <Input
         value={draft}
         onChange={(e) => {
@@ -516,7 +516,7 @@ function InlineField({
             onChange(next);
           }
         }}
-        className={`h-8 text-xs ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
+        className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
       />
     </div>
   );
@@ -544,7 +544,7 @@ function OrderIconButton({
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
-        className="h-8 w-8 p-0"
+        className="h-7 w-7 rounded-sm p-0"
       >
         {children}
       </Button>
@@ -561,8 +561,8 @@ function OrderIconButton({
 
 function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="space-y-1">
-      <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</Label>
+    <div className="space-y-0.5">
+      <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
       {children}
     </div>
   );
@@ -600,7 +600,7 @@ function InlineParsedInput({
           onChange(next);
         }
       }}
-      className={`h-8 text-xs ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
+      className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
     />
   );
 }
@@ -637,7 +637,7 @@ function InlineNumberInput({
           onChange(next);
         }
       }}
-      className={`h-8 text-xs ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
+      className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
     />
   );
 }
@@ -660,18 +660,18 @@ function RangeField({
   onValueChange: (value: number) => void;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       {label ? (
         <div className="flex items-center justify-between gap-2">
-          <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</Label>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+          <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
+          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
             {value}
             {unit}
           </span>
         </div>
       ) : (
         <div className="flex justify-end">
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
             {value}
             {unit}
           </span>
@@ -692,10 +692,10 @@ function WrapperActions({
   onDemote: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
-      <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Role</Label>
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
+    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
+      <Label className="text-[11px] font-medium text-slate-500">Role</Label>
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
+        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
           {node.role}
         </span>
         {node.role === 'section' || node.role === 'container' ? (

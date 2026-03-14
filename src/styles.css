@@ -545,6 +545,9 @@ button {
 
 .stage-wrapper.selected,
 .stage-leaf.selected {
+  position: relative;
+  isolation: isolate;
+  z-index: 96;
   outline: none;
   box-shadow: none;
 }
@@ -553,19 +556,21 @@ button {
 .stage-leaf.selected::before {
   content: attr(data-node-label);
   position: absolute;
-  top: -20px;
+  top: 0;
   left: 0;
+  transform: translateY(-100%);
   display: inline-flex;
   align-items: center;
-  min-height: 18px;
-  padding: 0 8px;
-  border-radius: 8px;
+  min-height: 20px;
+  padding: 0 10px;
+  border-radius: 0;
+  z-index: 98;
   background: #1668ff;
   color: #fff;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 4px 12px rgba(22, 104, 255, 0.16);
+  box-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
   pointer-events: none;
 }
 
@@ -574,8 +579,9 @@ button {
   content: '';
   position: absolute;
   inset: 0;
-  border: 1px solid #1668ff;
+  border: 2px solid #1668ff;
   border-radius: 0;
+  z-index: 97;
   pointer-events: none;
 }
 
@@ -641,12 +647,45 @@ button {
   left: 0;
   right: 0;
   height: 1px;
+}
+
+.snap-guide-component.snap-guide-vertical {
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 184, 166, 0),
+    rgba(20, 184, 166, 0.75) 20%,
+    rgba(20, 184, 166, 0.75) 80%,
+    rgba(20, 184, 166, 0)
+  );
+}
+
+.snap-guide-component.snap-guide-horizontal {
   background: linear-gradient(
     to right,
-    rgba(22, 104, 255, 0),
-    rgba(22, 104, 255, 0.7) 20%,
-    rgba(22, 104, 255, 0.7) 80%,
-    rgba(22, 104, 255, 0)
+    rgba(20, 184, 166, 0),
+    rgba(20, 184, 166, 0.75) 20%,
+    rgba(20, 184, 166, 0.75) 80%,
+    rgba(20, 184, 166, 0)
+  );
+}
+
+.snap-guide-page.snap-guide-vertical {
+  background: linear-gradient(
+    to bottom,
+    rgba(217, 70, 239, 0),
+    rgba(217, 70, 239, 0.78) 20%,
+    rgba(217, 70, 239, 0.78) 80%,
+    rgba(217, 70, 239, 0)
+  );
+}
+
+.snap-guide-page.snap-guide-horizontal {
+  background: linear-gradient(
+    to right,
+    rgba(217, 70, 239, 0),
+    rgba(217, 70, 239, 0.78) 20%,
+    rgba(217, 70, 239, 0.78) 80%,
+    rgba(217, 70, 239, 0)
   );
 }
 
@@ -996,35 +1035,28 @@ button {
 .drag-preview-wrapper {
   display: flex;
   flex-direction: column;
-  border-style: solid;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 250, 255, 0.98) 100%);
+  overflow: visible;
 }
 
-.drag-preview-wrapper-label {
-  display: inline-flex;
-  align-self: flex-start;
-  margin: 12px 12px 0;
-  min-height: 22px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(22, 104, 255, 0.1);
-  color: #1451bf;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+.drag-preview-inner.drag-preview-wrapper {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .drag-preview-content-wrapper {
-  flex: 1;
-  margin: 10px;
-  min-height: 0;
-  border-radius: 14px;
-  border: 1px solid rgba(18, 32, 51, 0.08);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .resize-handle {
   position: absolute;
+  z-index: 120;
   width: 7px;
   height: 7px;
   border-radius: 999px;
