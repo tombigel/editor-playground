@@ -46,6 +46,15 @@ type SnapTarget = {
   source: 'component' | 'page';
 };
 
+type DragGeometry = {
+  rect: DOMRect;
+  offsetX: number;
+  offsetY: number;
+  useVisualOffset: boolean;
+  modelShiftX: number;
+  modelShiftY: number;
+};
+
 function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
   return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
 }
@@ -110,9 +119,15 @@ export function Stage({
         }
         if (resizeState) {
           const frame = computeResizeFrame(resizeState, event.clientX, event.clientY, event.shiftKey);
-          onResize(resizeState.nodeId, px(frame.width), px(frame.height));
-          if (frame.x !== resizeState.originX || frame.y !== resizeState.originY) {
-            onMove(resizeState.nodeId, px(frame.x), px(frame.y));
+          const nextWidth = Math.round(frame.width);
+          const nextHeight = Math.round(frame.height);
+          const nextX = Math.round(frame.x);
+          const nextY = Math.round(frame.y);
+          const originX = Math.round(resizeState.originX);
+          const originY = Math.round(resizeState.originY);
+          onResize(resizeState.nodeId, px(nextWidth), px(nextHeight));
+          if (nextX !== originX || nextY !== originY) {
+            onMove(resizeState.nodeId, px(nextX), px(nextY));
           }
         }
       }}
@@ -133,11 +148,27 @@ export function Stage({
           const drop = findDropWrapper(document, dragState.nodeId, snapped.clientX, snapped.clientY);
           const draggedNode = document.nodes[dragState.nodeId];
           if (drop && draggedNode && draggedNode.type !== 'site') {
-            const localX = Math.max(0, snapped.clientX - drop.rect.left - dragState.grabOffsetX);
-            const localY = Math.max(0, snapped.clientY - drop.rect.top - dragState.grabOffsetY);
+            const pointerLocalX =
+              snapped.clientX -
+              drop.rect.left -
+              dragState.grabOffsetX -
+              (dragState.useVisualOffset ? dragState.modelShiftX : 0);
+            const pointerLocalY =
+              snapped.clientY -
+              drop.rect.top -
+              dragState.grabOffsetY -
+              (dragState.useVisualOffset ? dragState.modelShiftY : 0);
             if (draggedNode.parentId !== drop.wrapperId) {
+              const localX = Math.max(0, pointerLocalX);
+              const localY = Math.max(0, pointerLocalY);
               onReparent(dragState.nodeId, drop.wrapperId, `${localX}px`, `${localY}px`);
             } else {
+              const localX = dragState.useVisualOffset
+                ? Math.max(0, pointerLocalX)
+                : Math.max(0, dragState.originX + (snapped.clientX - dragState.startClientX));
+              const localY = dragState.useVisualOffset
+                ? Math.max(0, pointerLocalY)
+                : Math.max(0, dragState.originY + (snapped.clientY - dragState.startClientY));
               onMove(dragState.nodeId, `${localX}px`, `${localY}px`);
             }
           }
@@ -349,14 +380,21 @@ function renderWrapper({
   const registrationMap = new Map(
     (wrapperStickyState?.registrations ?? []).map((registration) => [registration.ownerId, registration]),
   );
+  const childWrapperExtraExtentMap = new Map<string, number>();
+  for (const child of children) {
+    if (child.type !== 'wrapper') {
+      continue;
+    }
+    childWrapperExtraExtentMap.set(child.id, stickyMap[child.id]?.totalExtraExtentPx ?? 0);
+  }
   const extraExtent = stickyMap[node.id]?.totalExtraExtentPx ?? 0;
-  const meshLayout = computeMeshLayout(children, node, registrationMap);
+  const meshLayout = computeMeshLayout(children, node, registrationMap, childWrapperExtraExtentMap);
   const wrapperStyle = buildWrapperStyle(node, isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, node.id);
   const isStickyContentWrapper = node.sticky?.enabled && node.sticky.target === 'contentWrapper';
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
-      ? getStickyCss(node.sticky, isTopLevel)
+      ? getStickyCss(node.sticky, true)
       : undefined;
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
@@ -398,6 +436,7 @@ function renderWrapper({
           setDragState(
             createDragState({
               nodeId: node.id,
+              parentId: node.parentId ?? undefined,
               element: event.currentTarget,
               clientX: event.clientX,
               clientY: event.clientY,
@@ -546,6 +585,9 @@ function renderLeaf({
     child.sticky.target === 'self' &&
     child.sticky.durationMode !== 'auto' &&
     registration;
+  const stickyEdgeMode = child.sticky ? getStickyEdgeMode(child.sticky) : 'top';
+  const isBottomOnlySticky = Boolean(isSelfStickyTrack && stickyEdgeMode === 'bottom');
+  const isBothSticky = Boolean(isSelfStickyTrack && stickyEdgeMode === 'both');
   const showLeafSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, child.id);
   const isBrandMark = child.role === 'image' && child.name === 'Brand Mark';
   const leafBaseWidth = formatValue(child.rect.width.base.parsed);
@@ -587,6 +629,7 @@ function renderLeaf({
         setDragState(
           createDragState({
             nodeId: child.id,
+            parentId: child.parentId ?? undefined,
             element: event.currentTarget,
             clientX: event.clientX,
             clientY: event.clientY,
@@ -626,7 +669,40 @@ function renderLeaf({
   }
 
   const leafHeightPx = getNodeHeight(child);
-  const trackHeight = isAutoSticky ? leafHeightPx : leafHeightPx + registration.durationPx;
+  const topTrackDistancePx =
+    stickyEdgeMode === 'both'
+      ? registration.topDurationPx ?? registration.durationPx
+      : stickyEdgeMode === 'top'
+        ? registration.durationPx
+        : 0;
+  const bottomTrackDistancePx =
+    stickyEdgeMode === 'both'
+      ? registration.bottomDurationPx ?? registration.durationPx
+      : stickyEdgeMode === 'bottom'
+        ? registration.durationPx
+        : 0;
+  const trackHeight =
+    isAutoSticky
+      ? leafHeightPx
+      : leafHeightPx + topTrackDistancePx + bottomTrackDistancePx;
+  const topStickyTrackSpacer =
+    topTrackDistancePx > 0 ? (
+      <div
+        className="sticky-track-spacer"
+        style={{
+          height: `${topTrackDistancePx}px`,
+        }}
+      />
+    ) : null;
+  const bottomStickyTrackSpacer =
+    bottomTrackDistancePx > 0 ? (
+      <div
+        className="sticky-track-spacer"
+        style={{
+          height: `${bottomTrackDistancePx}px`,
+        }}
+      />
+    ) : null;
   return (
     <div
       key={`${child.id}-track`}
@@ -637,13 +713,9 @@ function renderLeaf({
         minHeight: `${trackHeight}px`,
       }}
     >
+      {isBottomOnlySticky || isBothSticky ? bottomStickyTrackSpacer : null}
       {leafBody}
-      <div
-        className="sticky-track-spacer"
-        style={{
-          height: `${registration.durationPx}px`,
-        }}
-      />
+      {isBottomOnlySticky ? null : topStickyTrackSpacer}
     </div>
   );
 }
@@ -674,8 +746,33 @@ function renderLeafSpacerOverlay({
     return null;
   }
 
+  const edgeMode = getStickyEdgeMode(child.sticky);
+  const isBottomOnlySticky = edgeMode === 'bottom';
+  const isBothSticky = edgeMode === 'both';
   const leafHeightPx = getNodeHeight(child);
   const autoDistancePx = Math.max(0, wrapperBottomLanePx - registration.startPx);
+  const topDistancePx =
+    child.sticky.durationMode === 'auto'
+      ? autoDistancePx
+      : edgeMode === 'both'
+        ? Math.max(0, registration.topDurationPx ?? registration.durationPx)
+        : isBottomOnlySticky
+          ? 0
+          : Math.max(0, registration.durationPx);
+  const bottomDistancePx =
+    child.sticky.durationMode === 'auto'
+      ? autoDistancePx
+      : edgeMode === 'both'
+        ? Math.max(0, registration.bottomDurationPx ?? registration.durationPx)
+        : isBottomOnlySticky
+          ? Math.max(0, registration.durationPx)
+          : 0;
+  const trackOffsetPx =
+    (isBottomOnlySticky || isBothSticky) && child.sticky.durationMode !== 'auto'
+      ? bottomDistancePx
+      : 0;
+  const topSpacerAnchorStyle = { top: '100%', bottom: 'auto' };
+  const bottomSpacerAnchorStyle = { top: 'auto', bottom: '100%' };
 
   return (
     <div
@@ -688,6 +785,7 @@ function renderLeafSpacerOverlay({
         height: `${leafHeightPx}px`,
         minHeight: `${leafHeightPx}px`,
         alignSelf: 'start',
+        marginTop: trackOffsetPx > 0 ? `${trackOffsetPx}px` : undefined,
         aspectRatio:
           !('unit' in child.rect.height.base.parsed) &&
           child.rect.height.base.parsed.keyword === 'aspect-ratio'
@@ -698,23 +796,67 @@ function renderLeafSpacerOverlay({
     >
       {renderOffsetVisual(child.sticky, child)}
       {child.sticky.durationMode === 'auto' ? (
-        <div
-          className="sticky-auto-spacer"
-          style={{
-            height: `${autoDistancePx}px`,
-          }}
-        >
-          <span className="sticky-spacer-label sticky-spacer-label-auto">Distance: auto</span>
-        </div>
+        <>
+          {bottomDistancePx > 0 ? (
+            <div
+              className="sticky-auto-spacer sticky-auto-spacer-bottom"
+              style={{
+                ...bottomSpacerAnchorStyle,
+                height: `${bottomDistancePx}px`,
+              }}
+            >
+              <span className="sticky-spacer-label sticky-spacer-label-auto">
+                {isBothSticky ? 'Bottom Distance: auto' : 'Distance: auto'}
+              </span>
+            </div>
+          ) : null}
+          {topDistancePx > 0 ? (
+            <div
+              className="sticky-auto-spacer sticky-auto-spacer-top"
+              style={{
+                ...topSpacerAnchorStyle,
+                height: `${topDistancePx}px`,
+              }}
+            >
+              <span className="sticky-spacer-label sticky-spacer-label-auto">
+                {isBothSticky ? 'Top Distance: auto' : 'Distance: auto'}
+              </span>
+            </div>
+          ) : null}
+        </>
       ) : (
-        <div
-          className="sticky-distance-spacer-visual"
-          style={{
-            height: `${registration.durationPx}px`,
-          }}
-        >
-          <span className="sticky-spacer-label">{`Distance · ${Math.round(registration.durationPx)}px`}</span>
-        </div>
+        <>
+          {bottomDistancePx > 0 ? (
+            <div
+              className="sticky-distance-spacer-visual sticky-distance-spacer-visual-bottom"
+              style={{
+                ...bottomSpacerAnchorStyle,
+                height: `${bottomDistancePx}px`,
+              }}
+            >
+              <span className="sticky-spacer-label">
+                {isBothSticky
+                  ? `Bottom Distance · ${Math.round(bottomDistancePx)}px`
+                  : `Distance · ${Math.round(bottomDistancePx)}px`}
+              </span>
+            </div>
+          ) : null}
+          {topDistancePx > 0 ? (
+            <div
+              className="sticky-distance-spacer-visual sticky-distance-spacer-visual-top"
+              style={{
+                ...topSpacerAnchorStyle,
+                height: `${topDistancePx}px`,
+              }}
+            >
+              <span className="sticky-spacer-label">
+                {isBothSticky
+                  ? `Top Distance · ${Math.round(topDistancePx)}px`
+                  : `Distance · ${Math.round(topDistancePx)}px`}
+              </span>
+            </div>
+          ) : null}
+        </>
       )}
     </div>
   );
@@ -982,6 +1124,7 @@ function getTrackCssWidth(node: LeafNode) {
 
 function createDragState({
   nodeId,
+  parentId,
   element,
   clientX,
   clientY,
@@ -989,13 +1132,14 @@ function createDragState({
   originY,
 }: {
   nodeId: string;
+  parentId?: string;
   element: HTMLElement;
   clientX: number;
   clientY: number;
   originX: number;
   originY: number;
 }): Exclude<DragState, null> {
-  const dragGeometry = getDragElementRect(element, clientX, clientY);
+  const dragGeometry = getDragElementRect(element, clientX, clientY, parentId, originX, originY);
   return {
     nodeId,
     startClientX: clientX,
@@ -1004,6 +1148,9 @@ function createDragState({
     currentClientY: clientY,
     grabOffsetX: dragGeometry.offsetX,
     grabOffsetY: dragGeometry.offsetY,
+    useVisualOffset: dragGeometry.useVisualOffset,
+    modelShiftX: dragGeometry.modelShiftX,
+    modelShiftY: dragGeometry.modelShiftY,
     previewWidth: dragGeometry.rect.width,
     previewHeight: dragGeometry.rect.height,
     originX,
@@ -1011,12 +1158,49 @@ function createDragState({
   };
 }
 
-function getDragElementRect(element: HTMLElement, clientX: number, clientY: number) {
+function getDragElementRect(
+  element: HTMLElement,
+  clientX: number,
+  clientY: number,
+  parentId?: string,
+  originX?: number,
+  originY?: number,
+): DragGeometry {
   const rect = element.getBoundingClientRect();
+  const visualOffsetX = clientX - rect.left;
+  const visualOffsetY = clientY - rect.top;
+  if (parentId && Number.isFinite(originX) && Number.isFinite(originY)) {
+    const parentElement = findDropWrapperElement(parentId);
+    if (parentElement) {
+      const parentRect = parentElement.getBoundingClientRect();
+      const modelLeft = parentRect.left + (originX ?? 0);
+      const modelTop = parentRect.top + (originY ?? 0);
+      const stickyVisualShiftX = rect.left - modelLeft;
+      const stickyVisualShiftY = rect.top - modelTop;
+      const hasStickyVisualShift =
+        Math.abs(stickyVisualShiftX) > 1 || Math.abs(stickyVisualShiftY) > 1;
+      return {
+        rect,
+        offsetX: hasStickyVisualShift
+          ? visualOffsetX
+          : clientX - modelLeft,
+        offsetY: hasStickyVisualShift
+          ? visualOffsetY
+          : clientY - modelTop,
+        useVisualOffset: hasStickyVisualShift,
+        modelShiftX: hasStickyVisualShift ? stickyVisualShiftX : 0,
+        modelShiftY: hasStickyVisualShift ? stickyVisualShiftY : 0,
+      };
+    }
+  }
+
   return {
     rect,
-    offsetX: clientX - rect.left,
-    offsetY: clientY - rect.top,
+    offsetX: visualOffsetX,
+    offsetY: visualOffsetY,
+    useVisualOffset: false,
+    modelShiftX: 0,
+    modelShiftY: 0,
   };
 }
 
@@ -1257,6 +1441,15 @@ function defaultStickyOffset() {
   return '0px';
 }
 
+function getStickyEdgeMode(sticky: StickyDefinition): 'top' | 'bottom' | 'both' {
+  const bottom = sticky.edges.bottom ?? false;
+  const top = sticky.edges.top ?? !bottom;
+  if (top && bottom) {
+    return 'both';
+  }
+  return bottom ? 'bottom' : 'top';
+}
+
 function getNodeWidth(node: Exclude<DocumentNode, { type: 'site' }>) {
   const width = node.rect.width.base.parsed;
   if ('unit' in width) {
@@ -1300,14 +1493,14 @@ function getStickyCss(
     style.position = 'sticky';
   }
 
-  const topActive = sticky.edges.top ?? !sticky.edges.bottom;
-  const bottomActive = sticky.edges.bottom ?? false;
-
-  if (topActive) {
-    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset();
-  }
-  if (bottomActive) {
+  const edgeMode = getStickyEdgeMode(sticky);
+  if (edgeMode === 'bottom') {
     style.bottom = sticky.offsetBottom?.raw ?? defaultStickyOffset();
+  } else if (edgeMode === 'both') {
+    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset();
+    style.bottom = sticky.offsetBottom?.raw ?? defaultStickyOffset();
+  } else {
+    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset();
   }
 
   return style;
@@ -1329,15 +1522,60 @@ function renderOffsetVisual(
     return null;
   }
 
-  const offset = sticky.offsetTop ?? sticky.offsetBottom;
-  const offsetPx = offset ? resolveOffsetPx(offset, node) : 0;
+  const edgeMode = getStickyEdgeMode(sticky);
+  if (edgeMode === 'both') {
+    const topOffsetPx = resolveStickyOffsetPx(sticky, node, 'top');
+    const bottomOffsetPx = resolveStickyOffsetPx(sticky, node, 'bottom');
+    if (topOffsetPx <= 0 && bottomOffsetPx <= 0) {
+      return null;
+    }
+    return (
+      <>
+        {topOffsetPx > 0 ? renderOffsetVisualForEdge(topOffsetPx, 'top', true) : null}
+        {bottomOffsetPx > 0 ? renderOffsetVisualForEdge(bottomOffsetPx, 'bottom', true) : null}
+      </>
+    );
+  }
+
+  const offsetPx = resolveStickyOffsetPx(sticky, node, edgeMode);
   if (offsetPx <= 0) {
     return null;
   }
 
+  return renderOffsetVisualForEdge(offsetPx, edgeMode, false);
+}
+
+function resolveStickyOffsetPx(
+  sticky: StickyDefinition,
+  node: Exclude<DocumentNode, { type: 'site' }>,
+  edge: 'top' | 'bottom',
+) {
+  const offset =
+    edge === 'top'
+      ? sticky.offsetTop ?? sticky.offsetBottom
+      : sticky.offsetBottom ?? sticky.offsetTop;
+  return offset ? resolveOffsetPx(offset, node) : 0;
+}
+
+function renderOffsetVisualForEdge(
+  offsetPx: number,
+  edge: 'top' | 'bottom',
+  showEdgeLabel: boolean,
+) {
+  const positionStyle =
+    edge === 'bottom'
+      ? { top: 'auto', bottom: `${-offsetPx}px` }
+      : { top: `${-offsetPx}px`, bottom: 'auto' };
+  const labelText = showEdgeLabel
+    ? `${edge === 'top' ? 'Top' : 'Bottom'} Offset · ${Math.round(offsetPx)}px`
+    : `Offset · ${Math.round(offsetPx)}px`;
+
   return (
-    <div className="sticky-offset-visual" style={{ height: `${offsetPx}px`, top: `${-offsetPx}px` }}>
-      <span className="sticky-offset-label">Offset · {Math.round(offsetPx)}px</span>
+    <div
+      className={`sticky-offset-visual ${edge === 'bottom' ? 'sticky-offset-visual-bottom' : 'sticky-offset-visual-top'}`}
+      style={{ height: `${offsetPx}px`, ...positionStyle }}
+    >
+      <span className="sticky-offset-label">{labelText}</span>
     </div>
   );
 }
@@ -1447,6 +1685,7 @@ function computeMeshLayout(
   children: Exclude<DocumentNode, { type: 'site' }>[],
   wrapper: WrapperNode,
   registrations: Map<string, ComputedWrapperStickyState['registrations'][number]>,
+  childWrapperExtraExtents: Map<string, number>,
 ): MeshLayout {
   const width = getNodeWidth(wrapper);
   const baseHeight = getNodeHeight(wrapper);
@@ -1457,7 +1696,11 @@ function computeMeshLayout(
     const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x');
     const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y');
     const childWidth = getNodeWidth(child);
-    const childHeight = getMeshNodeHeight(child, registrations.get(child.id));
+    const childHeight = getMeshNodeHeight(
+      child,
+      registrations.get(child.id),
+      childWrapperExtraExtents.get(child.id) ?? 0,
+    );
     xLines.add(clampLine(childX, width));
     xLines.add(clampLine(childX + childWidth, width));
     yLines.add(Math.max(0, childY));
@@ -1474,7 +1717,11 @@ function computeMeshLayout(
     const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x');
     const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y');
     const childWidth = getNodeWidth(child);
-    const childHeight = getMeshNodeHeight(child, registrations.get(child.id));
+    const childHeight = getMeshNodeHeight(
+      child,
+      registrations.get(child.id),
+      childWrapperExtraExtents.get(child.id) ?? 0,
+    );
     const colStart = lineIndex(columns, clampLine(childX, width));
     const colEnd = lineIndex(columns, clampLine(childX + childWidth, width));
     const rowStart = lineIndex(rows, Math.max(0, childY));
@@ -1531,8 +1778,12 @@ function renderGridLaneOverlay(meshLayout: MeshLayout) {
 function getMeshNodeHeight(
   node: Exclude<DocumentNode, { type: 'site' }>,
   registration?: ComputedWrapperStickyState['registrations'][number],
+  childWrapperExtraExtentPx = 0,
 ) {
-  const baseHeight = getNodeHeight(node);
+  let baseHeight = getNodeHeight(node);
+  if (node.type === 'wrapper' && childWrapperExtraExtentPx > 0) {
+    baseHeight += childWrapperExtraExtentPx;
+  }
   if (
     registration &&
     node.sticky?.enabled &&

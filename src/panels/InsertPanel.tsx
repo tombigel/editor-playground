@@ -3,7 +3,8 @@ import type { LeafRole } from '../model/types';
 import { Button } from '@/components/ui/button';
 
 type Props = {
-  onInsertWrapper: (role: 'section' | 'container') => void;
+  onInsertWrapper: (role: 'container') => void;
+  onOpenSectionTemplates: () => void;
   onInsertLeaf: (role: LeafRole) => void;
 };
 
@@ -52,7 +53,7 @@ const INSERT_ITEMS = [
   },
 ];
 
-export function InsertPanel({ onInsertWrapper, onInsertLeaf }: Props) {
+export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertLeaf }: Props) {
   return (
     <div className="flex flex-col items-center gap-2 overflow-visible">
       <div className="pb-1">
@@ -64,12 +65,21 @@ export function InsertPanel({ onInsertWrapper, onInsertLeaf }: Props) {
           <Button
             key={item.label}
             type="button"
+            data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
             variant="ghost"
             title={`${item.label} · ${item.hint}`}
             className="group relative h-12 w-12 rounded-2xl border border-slate-300 bg-white p-0 text-slate-950 shadow-[0_2px_10px_rgba(18,32,51,0.06)] transition hover:border-slate-400 hover:bg-slate-50 hover:shadow-[0_6px_18px_rgba(18,32,51,0.1)]"
-            onClick={() =>
-              item.kind === 'wrapper' ? onInsertWrapper(item.role) : onInsertLeaf(item.role)
-            }
+            onClick={() => {
+              if (item.kind === 'wrapper') {
+                if (item.role === 'section') {
+                  onOpenSectionTemplates();
+                } else {
+                  onInsertWrapper(item.role);
+                }
+                return;
+              }
+              onInsertLeaf(item.role);
+            }}
           >
             <span className="flex h-full w-full items-center justify-center rounded-[15px] border border-black/8 bg-white text-slate-950">
               <Icon className="h-4 w-4" strokeWidth={1.9} />

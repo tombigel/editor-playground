@@ -42,6 +42,7 @@ This plan is for keeping the playground stable while feature work is paused.
 4. Delete parent node and verify descendants are removed.
 5. If selected node is deleted via ancestor removal, selected state clears.
 6. After reload, inserting new wrappers/leaves does not overwrite existing nodes (ID uniqueness is preserved).
+7. After reload, inserting section templates does not mutate/overwrite existing sections (ID uniqueness is preserved).
 
 ## 2) Sticky Logic Tests
 
@@ -59,6 +60,8 @@ This plan is for keeping the playground stable while feature work is paused.
 3. `startPx` follows spacer-start rules:
    Wrapper content target starts at wrapper height, leaf/self starts at `y + nodeHeight`.
 4. `endPx = startPx + durationPx`.
+5. Container sticky targets (`self` and `contentWrapper`) both produce expected sticky movement and duration range.
+6. In `edges: both` + custom mode, effective registration distance uses `durationTop + durationBottom`.
 
 ### C. Extent and overlap behavior
 
@@ -66,12 +69,17 @@ This plan is for keeping the playground stable while feature work is paused.
 2. Auto content-wrapper sticky does not add extra extent.
 3. Multiple sticky registrations in one wrapper:
    `totalExtraExtentPx` equals the maximum extent, not sum of extents.
+4. Parent layout expands correctly for child containers whose sticky `contentWrapper` adds extra extent.
 
 ### D. Edge cases
 
 1. Missing/invalid numeric raw values fall back without crashes.
 2. Aspect-ratio and auto heights compute stable fallback heights.
 3. Empty document or document with only root wrapper references returns stable result shape.
+4. Bottom-edge self sticky stays viewport-pinned during preview and does not drift off-screen while its duration spacer scrolls.
+5. For `edges: both`, preview applies both sticky constraints (`top` + `bottom`) and drag/resize behavior stays stable without coordinate drift.
+6. For bottom-edge self sticky with custom duration, offset and distance markers stay anchored near the pinned element (not at track origin) and dragging has no hidden upper clamp.
+7. For `edges: both`, top and bottom offset markers are both visible simultaneously, and top/bottom distance markers are both visible with their own values.
 
 ## 3) Editor Interaction Tests
 
@@ -80,6 +88,7 @@ This plan is for keeping the playground stable while feature work is paused.
 1. Selecting wrapper/leaf updates inspector.
 2. Editing text, dimensions, and sticky fields updates model and persists.
 3. Invalid unit input stays local (not written into model).
+4. For `edges: both`, editing top/bottom offsets and top/bottom durations updates the corresponding sticky fields (`offsetTop`, `offsetBottom`, `durationTop`, `durationBottom`).
 
 ### B. Drag, resize, and drop
 
@@ -92,14 +101,18 @@ This plan is for keeping the playground stable while feature work is paused.
 7. Shift + corner resize preserves current aspect ratio.
 8. Resize start on non-numeric size values (`auto`, `fit-content`, `%`, `aspect-ratio(...)`) does not jump on first pointer move.
 9. Dropping a container over invalid targets never makes it disappear; if reparent is invalid, position updates in current parent.
+10. While sticky preview is enabled, dragging/resizing sticky nodes does not introduce unintended `x`/`y` drift from sticky viewport offsets.
+11. Repeated drag-start/drag-end cycles on bottom-edge sticky nodes do not accumulate extra Y offset (no per-drag `+distance` feedback loop).
 
 ### C. Ordering behavior
 
 1. Reorder actions change parent `children` DOM order (not `z-index`).
-2. Reorder controls appear only for components (leaves + `container` wrappers), not `section/header/footer`.
-3. Inspector icon actions perform expected movement:
+2. Component reorder controls appear only for components (leaves + `container` wrappers), not `section/header/footer`.
+3. Section wrappers expose dedicated DOM up/down controls in the role row and only swap with sibling sections (never across header/footer).
+4. Section DOM up/down buttons are disabled at section bounds (no previous/next section sibling).
+5. Inspector icon actions perform expected movement:
    Position forward, bring to front, position backward, send to back.
-4. Keyboard shortcuts (when node selected and no field focused):
+6. Keyboard shortcuts (when node selected and no field focused):
    `Cmd + [`, `Cmd + ]`, `Cmd + Alt + [`, `Cmd + Alt + ]`.
 
 ### D. Sticky preview and debug UX
@@ -110,6 +123,9 @@ This plan is for keeping the playground stable while feature work is paused.
 4. Debug panel shows validation errors and sticky math for active document.
 5. Debug undo controls work:
    Clear undo empties history, and undo-step limit updates cap retention.
+6. Left-side pop panels close on outside click and `Esc`:
+   section templates panel and debug tools panel.
+7. Left-side pop panels render above selected stage overlays.
 
 ### E. Snap behavior
 
@@ -143,6 +159,35 @@ This plan is for keeping the playground stable while feature work is paused.
    native browser text undo/redo is intercepted and does not run.
 10. History remains in memory only:
    reloading the app clears undo/redo stacks while persisted document state remains.
+
+### H. Section templates
+
+1. Clicking `Section` in the add rail opens template picker; it does not insert immediately.
+2. Picker displays template cards in a 2-column layout.
+3. Picker is a compact left-side panel and remains visually above selected stage overlays.
+4. Clicking an active template inserts exactly one section and selects it.
+5. Inserted section is placed before footer in root ordering when footer exists.
+6. Placeholder/coming-soon templates are visible but cannot be inserted.
+7. All shipped templates load without validation errors:
+   `Blank`, `Post`, `Sticky Staggered Images`, `Sticky Pinned Cards`, `Sticky Media Reveal`, `Sticky Bottom Dock`.
+8. `Sticky Media Reveal` template uses a direct sticky image leaf (no container wrapper around the media) and matches the locked baseline:
+   media coordinates/size plus sticky `duration=100vh`, `offsetTop=10vh`.
+9. `Sticky Staggered Images` template matches the locked gallery baseline:
+   heading/copy/image coordinates plus per-image sticky `duration=150vh`, `offsetTop=15vh`.
+10. `Sticky Pinned Cards` template matches the locked pinned-cards baseline:
+   pinned lead coordinates `x=85`, `y=212.28125`, lead sticky `durationMode=auto`, `duration=220vh`, `offsetTop=12vh`,
+   and narrative cards use sticky durations `25vh`, `25vh`, `50vh` with `offsetTop=15vh`.
+11. `Sticky Bottom Dock` template demonstrates bottom-edge sticky behavior:
+   bottom-pinned card uses `edges.bottom=true`, `offsetBottom=8vh`, and custom duration while narrative cards scroll independently.
+
+### I. Factory baseline shell
+
+1. Factory default includes one project-focused header, one main section, and one project-focused footer.
+2. Factory default main section is seeded from `Post` template.
+3. Header/footer seed text relates to Sticky Playground (not generic business placeholder copy).
+4. Legacy untouched default shell (old header/footer seed) auto-migrates to the new baseline on load.
+5. Header is text-only (no brand image) and primary text is inset from header edges.
+6. Footer title/body/repository-link blocks keep vertical separation and never overlap at default stage width.
 
 ## Regression Exit Criteria
 

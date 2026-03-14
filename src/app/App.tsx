@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Eye, Grid3X3, Magnet, Redo2, SearchCode, StickyNote, Undo2 } from 'lucide-react';
+import { Eye, Grid3X3, Magnet, Redo2, SearchCode, StickyNote, Undo2, X } from 'lucide-react';
 import {
   cancelPromoteWrapperRole,
   clearPersistedState,
@@ -8,6 +8,7 @@ import {
   demoteWrapperRole,
   getValidationErrors,
   insertLeaf,
+  insertSectionTemplate,
   insertWrapper,
   loadPersistedState,
   moveNode,
@@ -23,6 +24,7 @@ import {
   updateTextField,
   updateWrapperStyleField,
 } from '../model/documentStore';
+import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
 import { parseUnitValue } from '../model/units';
 import { getNode } from '../model/selectors';
 import type { DocumentNode, NodeId } from '../model/types';
@@ -38,6 +40,7 @@ import { Separator } from '@/components/ui/separator';
 type EditorAction =
   | { type: 'select'; id: string | null }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
+  | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
   | { type: 'insertLeaf'; role: 'text' | 'image' | 'link' | 'button' }
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
@@ -54,8 +57,12 @@ type EditorAction =
   | { type: 'stickyTarget'; value: 'self' | 'contentWrapper' }
   | { type: 'stickyEdges'; value: 'top' | 'bottom' | 'both' }
   | { type: 'stickyOffset'; value: number }
+  | { type: 'stickyOffsetTop'; value: number }
+  | { type: 'stickyOffsetBottom'; value: number }
   | { type: 'stickyDurationMode'; value: 'auto' | 'custom' }
   | { type: 'stickyDuration'; value: number }
+  | { type: 'stickyDurationTop'; value: number }
+  | { type: 'stickyDurationBottom'; value: number }
   | { type: 'orderBack' }
   | { type: 'orderForward' }
   | { type: 'orderSendToBack' }
@@ -109,6 +116,18 @@ const DEFAULT_HISTORY_LIMIT = 100;
 const MIN_HISTORY_LIMIT = 1;
 const MAX_HISTORY_LIMIT = 500;
 const TEXT_HISTORY_DEBOUNCE_MS = 450;
+const UPCOMING_SCROLL_TEMPLATES = [
+  {
+    id: 'scrollStory',
+    name: 'Scroll Story (Soon)',
+    description: 'Reserved for scroll-linked animation templates.',
+  },
+  {
+    id: 'timelineMotion',
+    name: 'Timeline Motion (Soon)',
+    description: 'Reserved for narrative timeline animations.',
+  },
+] as const;
 
 function editorReducer(state: EditorState, action: EditorAction) {
   const selectedId = state.selectedId;
@@ -117,6 +136,8 @@ function editorReducer(state: EditorState, action: EditorAction) {
       return selectNode(state, action.id);
     case 'insertWrapper':
       return insertWrapper(state, action.role);
+    case 'insertSectionTemplate':
+      return insertSectionTemplate(state, action.templateId);
     case 'insertLeaf':
       return insertLeaf(state, action.role);
     case 'move':
@@ -166,12 +187,48 @@ function editorReducer(state: EditorState, action: EditorAction) {
         offsetBottom:
           selectedNodeHasBottomEdge(state, selectedId) ? parseUnitValue(`${action.value}vh`) : undefined,
       });
+    case 'stickyOffsetTop':
+      if (!selectedId) {
+        return state;
+      }
+      return updateStickyField(state, selectedId, {
+        offsetTop: parseUnitValue(`${action.value}vh`),
+      });
+    case 'stickyOffsetBottom':
+      if (!selectedId) {
+        return state;
+      }
+      return updateStickyField(state, selectedId, {
+        offsetBottom: parseUnitValue(`${action.value}vh`),
+      });
     case 'stickyDurationMode':
       return selectedId ? updateStickyField(state, selectedId, { durationMode: action.value }) : state;
     case 'stickyDuration':
+      if (!selectedId) {
+        return state;
+      }
+      const parsedDuration = parseUnitValue(`${action.value}vh`);
       return selectedId
-        ? updateStickyField(state, selectedId, { duration: parseUnitValue(`${action.value}vh`) })
+        ? updateStickyField(state, selectedId, {
+            duration: parsedDuration,
+            durationTop: selectedNodeHasTopEdge(state, selectedId) ? parsedDuration : undefined,
+            durationBottom: selectedNodeHasBottomEdge(state, selectedId) ? parsedDuration : undefined,
+          })
         : state;
+    case 'stickyDurationTop':
+      if (!selectedId) {
+        return state;
+      }
+      return updateStickyField(state, selectedId, {
+        durationTop: parseUnitValue(`${action.value}vh`),
+      });
+    case 'stickyDurationBottom':
+      if (!selectedId) {
+        return state;
+      }
+      return updateStickyField(state, selectedId, {
+        durationBottom: parseUnitValue(`${action.value}vh`),
+      });
     case 'orderBack':
       return selectedId ? reorderNode(state, selectedId, 'back') : state;
     case 'orderForward':
@@ -334,9 +391,13 @@ export function App() {
   const state = historyState.present;
   const [debugOpen, setDebugOpen] = useState(false);
   const [spacerMenuOpen, setSpacerMenuOpen] = useState(false);
+  const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
   const spacerMenuRef = useRef<HTMLDivElement | null>(null);
+  const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
+  const debugPanelRef = useRef<HTMLDivElement | null>(null);
   const selectedNode = getNode(state.document, state.selectedId);
   const orderState = getNodeOrderState(state, selectedNode);
+  const sectionOrderState = getSectionOrderState(state, selectedNode);
   const errors = useMemo(() => getValidationErrors(state), [state]);
   const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
 
@@ -345,22 +406,55 @@ export function App() {
   }, [state]);
 
   useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (!spacerMenuRef.current) {
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as HTMLElement | null;
+      if (!target) {
         return;
       }
 
-      if (!spacerMenuRef.current.contains(event.target as Node)) {
+      if (
+        spacerMenuRef.current &&
+        !spacerMenuRef.current.contains(target) &&
+        !target.closest('[data-panel-trigger="spacer-visibility"]')
+      ) {
         setSpacerMenuOpen(false);
+      }
+
+      if (
+        sectionTemplateOpen &&
+        sectionTemplatePanelRef.current &&
+        !sectionTemplatePanelRef.current.contains(target) &&
+        !target.closest('[data-panel-trigger="section-templates"]')
+      ) {
+        setSectionTemplateOpen(false);
+      }
+
+      if (
+        debugOpen &&
+        debugPanelRef.current &&
+        !debugPanelRef.current.contains(target) &&
+        !target.closest('[data-panel-trigger="debug-tools"]')
+      ) {
+        setDebugOpen(false);
       }
     }
 
-    window.addEventListener('mousedown', handlePointerDown);
-    return () => window.removeEventListener('mousedown', handlePointerDown);
-  }, []);
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, [debugOpen, sectionTemplateOpen]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        if (sectionTemplateOpen || debugOpen || spacerMenuOpen) {
+          event.preventDefault();
+          setSectionTemplateOpen(false);
+          setDebugOpen(false);
+          setSpacerMenuOpen(false);
+        }
+        return;
+      }
+
       const isUndoRedo = event.metaKey && !event.ctrlKey && event.code === 'KeyZ';
       if (isUndoRedo) {
         event.preventDefault();
@@ -403,7 +497,7 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state]);
+  }, [debugOpen, sectionTemplateOpen, spacerMenuOpen, state]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900">
@@ -455,6 +549,7 @@ export function App() {
             <div className="flex h-full flex-col gap-4 overflow-visible p-3">
               <div className="overflow-visible rounded-2xl border border-slate-200 bg-slate-50/80 p-2">
                 <InsertPanel
+                  onOpenSectionTemplates={() => setSectionTemplateOpen(true)}
                   onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
                   onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
                 />
@@ -479,6 +574,7 @@ export function App() {
                   <div ref={spacerMenuRef} className="group relative">
                     <button
                       type="button"
+                      data-panel-trigger="spacer-visibility"
                       aria-haspopup="menu"
                       aria-expanded={spacerMenuOpen}
                       onClick={() => setSpacerMenuOpen((open) => !open)}
@@ -559,6 +655,7 @@ export function App() {
                   </button>
                   <button
                     type="button"
+                    data-panel-trigger="debug-tools"
                     aria-pressed={debugOpen}
                     onClick={() => setDebugOpen((open) => !open)}
                     className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
@@ -572,41 +669,6 @@ export function App() {
                       {debugOpen ? 'Hide debug tools' : 'Show debug tools'}
                     </span>
                   </button>
-                  {debugOpen ? (
-                    <div className="absolute bottom-0 left-[calc(100%+16px)] z-40 w-[368px]">
-                      <div className="rounded-2xl border border-slate-200 bg-white/96 shadow-[0_18px_40px_rgba(18,32,51,0.12)] backdrop-blur">
-                        <div className="px-4 py-3">
-                          <div className="text-sm font-semibold text-slate-900">Debug tools</div>
-                          <div className="text-xs text-slate-500">Validation, sticky math, stage reset</div>
-                        </div>
-                        <Separator />
-                        <DebugPanel
-                          errors={errors}
-                          stickyState={stickyState}
-                          selectedNode={selectedNode}
-                          undoDepth={historyState.past.length}
-                          redoDepth={historyState.future.length}
-                          historyLimit={historyState.historyLimit}
-                          onClearHistory={() => dispatch({ type: 'clearHistory' })}
-                          onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
-                          onExport={async () => {
-                            try {
-                              await navigator.clipboard.writeText(
-                                JSON.stringify(state.document, null, 2),
-                              );
-                              return true;
-                            } catch {
-                              return false;
-                            }
-                          }}
-                          onReset={() => {
-                            clearPersistedState();
-                            window.location.reload();
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               </div>
             </div>
@@ -638,10 +700,14 @@ export function App() {
               canOrderForward={orderState.canForward}
               canSendToBack={orderState.canBack}
               canBringToFront={orderState.canForward}
+              canSectionBack={sectionOrderState.canBack}
+              canSectionForward={sectionOrderState.canForward}
               onOrderBack={() => dispatch({ type: 'orderBack' })}
               onOrderForward={() => dispatch({ type: 'orderForward' })}
               onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
               onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
+              onSectionBack={() => dispatch({ type: 'orderBack' })}
+              onSectionForward={() => dispatch({ type: 'orderForward' })}
               onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
               onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
               onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
@@ -651,12 +717,130 @@ export function App() {
               onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
               onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
               onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
+              onStickyOffsetTop={(value) => dispatch({ type: 'stickyOffsetTop', value })}
+              onStickyOffsetBottom={(value) => dispatch({ type: 'stickyOffsetBottom', value })}
               onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
               onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
+              onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
+              onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
             />
           </aside>
         </div>
       </div>
+
+      {sectionTemplateOpen ? (
+        <div
+          ref={sectionTemplatePanelRef}
+          className="fixed left-[102px] top-[72px] z-[300] w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+        >
+          <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
+            <div>
+              <div className="text-sm font-semibold text-slate-900">Section templates</div>
+              <div className="mt-0.5 text-xs text-slate-500">Choose a layout to insert.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSectionTemplateOpen(false)}
+              className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close section templates panel"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="max-h-[62vh] overflow-y-auto p-3">
+            <div className="grid grid-cols-2 gap-2.5">
+              {SECTION_TEMPLATES.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => {
+                    dispatch({ type: 'insertSectionTemplate', templateId: template.id });
+                    setSectionTemplateOpen(false);
+                  }}
+                  className="group flex min-h-[104px] flex-col rounded-lg border border-slate-200 bg-white p-2.5 text-left transition hover:border-[#3772ff] hover:bg-[#f6f9ff]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-900">{template.name}</span>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        template.category === 'sticky'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {template.category === 'sticky' ? 'Sticky' : 'Basic'}
+                    </span>
+                  </div>
+                  <span className="mt-1.5 text-[11px] leading-4 text-slate-600">{template.description}</span>
+                </button>
+              ))}
+              {UPCOMING_SCROLL_TEMPLATES.map((template) => (
+                <div
+                  key={template.id}
+                  className="flex min-h-[104px] flex-col rounded-lg border border-dashed border-slate-300 bg-slate-50 p-2.5 text-left opacity-85"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700">{template.name}</span>
+                    <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                      Soon
+                    </span>
+                  </div>
+                  <span className="mt-1.5 text-[11px] leading-4 text-slate-500">{template.description}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {debugOpen ? (
+        <div
+          ref={debugPanelRef}
+          className="fixed bottom-4 left-[102px] z-[300] w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+        >
+          <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
+            <div>
+              <div className="text-sm font-semibold text-slate-900">Debug tools</div>
+              <div className="mt-0.5 text-xs text-slate-500">Validation, sticky math, stage reset</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDebugOpen(false)}
+              className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close debug tools panel"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <Separator />
+          <div className="max-h-[58vh] overflow-y-auto">
+            <DebugPanel
+              errors={errors}
+              stickyState={stickyState}
+              selectedNode={selectedNode}
+              undoDepth={historyState.past.length}
+              redoDepth={historyState.future.length}
+              historyLimit={historyState.historyLimit}
+              onClearHistory={() => dispatch({ type: 'clearHistory' })}
+              onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
+              onExport={async () => {
+                try {
+                  await navigator.clipboard.writeText(
+                    JSON.stringify(state.document, null, 2),
+                  );
+                  return true;
+                } catch {
+                  return false;
+                }
+              }}
+              onReset={() => {
+                clearPersistedState();
+                window.location.reload();
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <Dialog
         open={Boolean(state.pendingRoleSwap)}
@@ -934,4 +1118,45 @@ function getNodeOrderState(
     canBack: index > 0,
     canForward: index < parent.children.length - 1,
   };
+}
+
+function getSectionOrderState(
+  state: EditorState,
+  node: ReturnType<typeof getNode>,
+) {
+  if (!node || node.type !== 'wrapper' || node.role !== 'section' || node.parentId !== state.document.rootId) {
+    return { canBack: false, canForward: false };
+  }
+
+  const root = state.document.nodes[state.document.rootId];
+  if (!root || root.type !== 'site') {
+    return { canBack: false, canForward: false };
+  }
+
+  const index = root.children.indexOf(node.id);
+  if (index === -1) {
+    return { canBack: false, canForward: false };
+  }
+
+  return {
+    canBack: findSectionSiblingIndex(state, root.children, index, -1) !== -1,
+    canForward: findSectionSiblingIndex(state, root.children, index, 1) !== -1,
+  };
+}
+
+function findSectionSiblingIndex(
+  state: EditorState,
+  siblingIds: NodeId[],
+  fromIndex: number,
+  direction: -1 | 1,
+) {
+  let index = fromIndex + direction;
+  while (index >= 0 && index < siblingIds.length) {
+    const candidate = state.document.nodes[siblingIds[index]];
+    if (candidate?.type === 'wrapper' && candidate.role === 'section') {
+      return index;
+    }
+    index += direction;
+  }
+  return -1;
 }

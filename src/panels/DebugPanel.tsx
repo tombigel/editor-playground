@@ -124,7 +124,14 @@ export function DebugPanel({
             </div>
             {selectedNode.sticky ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                duration: {selectedNode.sticky.durationMode === 'auto' ? 'auto' : formatValue(selectedNode.sticky.duration.parsed)}
+                duration:{' '}
+                {selectedNode.sticky.durationMode === 'auto'
+                  ? 'auto'
+                  : `${formatValue(selectedNode.sticky.duration.parsed)} · top ${
+                      formatValue((selectedNode.sticky.durationTop ?? selectedNode.sticky.duration).parsed)
+                    } · bottom ${
+                      formatValue((selectedNode.sticky.durationBottom ?? selectedNode.sticky.duration).parsed)
+                    }`}
               </div>
             ) : null}
           </CardContent>

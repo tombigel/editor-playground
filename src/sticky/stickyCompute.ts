@@ -3,6 +3,7 @@ import type {
   ComputedWrapperStickyState,
   DocumentModel,
   DocumentNode,
+  StickyDefinition,
   WrapperNode,
 } from '../model/types';
 import { resolveUnitValuePx } from '../model/units';
@@ -32,18 +33,23 @@ export function computeStickyState(
     if (!ownerWrapper) {
       continue;
     }
-    const durationPx = resolveUnitValuePx(
-      node.sticky.durationMode === 'auto'
-        ? { value: getWrapperHeight(ownerWrapper), unit: 'px' as const }
-        : node.sticky.duration.parsed,
-      {
-        width: getWrapperWidth(ownerWrapper),
-        height: getWrapperHeight(ownerWrapper),
-        viewportWidth: VIEWPORT.width,
-        viewportHeight: VIEWPORT.height,
-      },
-      'height',
+    const edgeMode = getStickyEdgeMode(node.sticky);
+    const topDurationPx = resolveStickyDurationPx(
+      node.sticky.durationTop ?? node.sticky.duration,
+      ownerWrapper,
     );
+    const bottomDurationPx = resolveStickyDurationPx(
+      node.sticky.durationBottom ?? node.sticky.duration,
+      ownerWrapper,
+    );
+    const durationPx =
+      node.sticky.durationMode === 'auto'
+        ? getWrapperHeight(ownerWrapper)
+        : edgeMode === 'both'
+          ? topDurationPx + bottomDurationPx
+          : edgeMode === 'bottom'
+            ? bottomDurationPx
+            : topDurationPx;
     const startPx = getSpacerStartPx(node, ownerWrapper);
     const endPx = startPx + durationPx;
     const extentPx =
@@ -58,6 +64,8 @@ export function computeStickyState(
       startPx,
       endPx,
       durationPx,
+      topDurationPx,
+      bottomDurationPx,
       extentPx,
     };
     result[ownerWrapper.id].registrations.push(registration);
@@ -70,6 +78,28 @@ export function computeStickyState(
   }
 
   return result;
+}
+
+function resolveStickyDurationPx(duration: StickyDefinition['duration'], ownerWrapper: WrapperNode) {
+  return resolveUnitValuePx(
+    duration.parsed,
+    {
+      width: getWrapperWidth(ownerWrapper),
+      height: getWrapperHeight(ownerWrapper),
+      viewportWidth: VIEWPORT.width,
+      viewportHeight: VIEWPORT.height,
+    },
+    'height',
+  );
+}
+
+function getStickyEdgeMode(sticky: StickyDefinition): 'top' | 'bottom' | 'both' {
+  const bottom = sticky.edges.bottom ?? false;
+  const top = sticky.edges.top ?? !bottom;
+  if (top && bottom) {
+    return 'both';
+  }
+  return bottom ? 'bottom' : 'top';
 }
 
 function resolveStickyOwnerWrapper(

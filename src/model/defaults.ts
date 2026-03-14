@@ -1,5 +1,6 @@
 import type {
   DocumentModel,
+  DocumentNode,
   ButtonLeaf,
   ImageLeaf,
   NodeId,
@@ -29,104 +30,169 @@ const IMAGE_SOURCES = [
   },
 ];
 
-const BRAND_MARK_SRC =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="112" height="30" viewBox="0 0 112 30" fill="none">
-      <defs>
-        <linearGradient id="gumFill" x1="10" y1="5" x2="100" y2="25" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#FDE68A"/>
-          <stop offset="0.55" stop-color="#F7C97D"/>
-          <stop offset="1" stop-color="#E7A95D"/>
-        </linearGradient>
-        <linearGradient id="gumHighlight" x1="24" y1="8" x2="82" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stop-color="rgba(255,255,255,0.85)"/>
-          <stop offset="1" stop-color="rgba(255,255,255,0)"/>
-        </linearGradient>
-        <filter id="gumShadow" x="0" y="0" width="112" height="30" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-          <feDropShadow dx="0" dy="1.2" stdDeviation="1.4" flood-color="#B97A35" flood-opacity="0.18"/>
-        </filter>
-      </defs>
-      <g filter="url(#gumShadow)">
-        <path
-          d="M12.4 9.8C15.6 6.9 20.9 6.6 26.8 7.4L40.2 9.3C47.5 10.4 53.7 10.4 61.2 9.1L78.2 6.2C86.5 4.8 95.2 5.9 100.2 9.3C104.2 12.1 104.8 16.6 101.8 19.8C98.7 23.1 92.6 24.7 85.4 24.3L61.3 23C53.7 22.6 46.3 22.8 38.8 23.6L25.9 24.9C18.8 25.6 12.7 24.4 9.4 21.2C6.2 18.2 6.7 13.9 12.4 9.8Z"
-          fill="url(#gumFill)"
-        />
-        <path
-          d="M27 10.3C37.4 12.5 49.9 12.8 61.7 10.8L82.6 7.1C88.1 6.1 93.6 6.5 97.3 8.1C94.4 6.1 89.9 5.3 85.5 5.9L61.4 9.2C53.7 10.2 46.2 10.1 38.6 8.9L24.2 6.7C19.3 6 14.9 6.7 12.2 8.7C16.1 6.9 21.5 7.6 27 10.3Z"
-          fill="url(#gumHighlight)"
-          opacity="0.9"
-        />
-      </g>
-    </svg>
-  `);
+type TemplateBuild = {
+  wrapper: WrapperNode;
+  nodes: Record<NodeId, DocumentNode>;
+};
+
+export type SectionTemplateId =
+  | 'blank'
+  | 'post'
+  | 'stickyStaggeredImages'
+  | 'stickyPinnedCards'
+  | 'stickyMediaReveal'
+  | 'stickySteps';
+
+export type SectionTemplateSummary = {
+  id: SectionTemplateId;
+  name: string;
+  description: string;
+  category: 'basic' | 'sticky';
+};
+
+export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
+  {
+    id: 'blank',
+    name: 'Blank',
+    description: 'Empty section canvas for custom layout.',
+    category: 'basic',
+  },
+  {
+    id: 'post',
+    name: 'Post',
+    description: 'Image + title + text starter layout.',
+    category: 'basic',
+  },
+  {
+    id: 'stickyStaggeredImages',
+    name: 'Sticky Staggered Images',
+    description: 'Four sticky images with staggered offsets and durations.',
+    category: 'sticky',
+  },
+  {
+    id: 'stickyPinnedCards',
+    name: 'Sticky Pinned Cards',
+    description: 'Pinned lead column with progressive narrative cards.',
+    category: 'sticky',
+  },
+  {
+    id: 'stickyMediaReveal',
+    name: 'Sticky Media Reveal',
+    description: 'Pinned media column with right-side reveal content.',
+    category: 'sticky',
+  },
+  {
+    id: 'stickySteps',
+    name: 'Sticky Bottom Dock',
+    description: 'Bottom-pinned summary card with scrolling narrative stream.',
+    category: 'sticky',
+  },
+];
 
 export function createDefaultHeader(parentId: NodeId) {
   const header = createWrapper('header', parentId);
-  header.name = 'Primary Header';
+  header.name = 'Playground Header';
   header.rect = createDefaultRect('0px', '0px', '100%', 'auto');
-  header.style.borderColor = '#e5ebf3';
-  header.style.paddingTop = parseUnitValue('24px');
-  header.style.paddingRight = parseUnitValue('40px');
-  header.style.paddingBottom = parseUnitValue('24px');
-  header.style.paddingLeft = parseUnitValue('40px');
+  header.style.background = '#f8fbff';
+  header.style.borderColor = '#d6e2f2';
+  header.style.paddingTop = parseUnitValue('20px');
+  header.style.paddingRight = parseUnitValue('48px');
+  header.style.paddingBottom = parseUnitValue('20px');
+  header.style.paddingLeft = parseUnitValue('48px');
 
   const headerLogo = createLeaf('text', header.id) as TextLeaf;
-  headerLogo.name = 'Brand Name';
-  headerLogo.content = 'Business Name';
-  headerLogo.rect = createDefaultRect('56px', '4px', 'fit-content', 'auto');
+  headerLogo.name = 'Product Title';
+  headerLogo.content = 'Sticky Playground';
+  headerLogo.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
   headerLogo.style ??= {};
   headerLogo.style.color = '#0f172a';
-  headerLogo.style.fontSize = parseUnitValue('16px');
+  headerLogo.style.fontSize = parseUnitValue('20px');
+  headerLogo.style.fontWeight = 'bold';
 
-  const headerMark = createLeaf('image', header.id) as ImageLeaf;
-  headerMark.name = 'Brand Mark';
-  headerMark.src = BRAND_MARK_SRC;
-  headerMark.alt = 'Sticky gum brand mark';
-  headerMark.rect = createDefaultRect('0px', '2px', '112px', '30px');
+  const headerSubtitle = createLeaf('text', header.id) as TextLeaf;
+  headerSubtitle.name = 'Product Subtitle';
+  headerSubtitle.content = 'Model, preview, and validate sticky behavior before implementation.';
+  headerSubtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
+  headerSubtitle.style ??= {};
+  headerSubtitle.style.color = '#516174';
+  headerSubtitle.style.fontSize = parseUnitValue('14px');
 
-  const headerLink = createLeaf('link', header.id) as LinkLeaf;
-  headerLink.name = 'Nav Link';
-  headerLink.label = 'Home';
-  headerLink.rect = createDefaultRect('1110px', '4px', 'fit-content', 'auto');
+  const navTemplates = createLeaf('link', header.id) as LinkLeaf;
+  navTemplates.name = 'Templates Link';
+  navTemplates.label = 'Templates';
+  navTemplates.rect = createDefaultRect('836px', '48px', 'fit-content', 'auto');
 
-  header.children = [headerMark.id, headerLogo.id, headerLink.id];
+  const navSticky = createLeaf('link', header.id) as LinkLeaf;
+  navSticky.name = 'Sticky Demos Link';
+  navSticky.label = 'Sticky Demos';
+  navSticky.rect = createDefaultRect('947px', '48px', 'fit-content', 'auto');
+
+  const navTests = createLeaf('link', header.id) as LinkLeaf;
+  navTests.name = 'Test Plan Link';
+  navTests.label = 'Test Plan';
+  navTests.rect = createDefaultRect('1082px', '48px', '144px', '24px');
+
+  header.children = [headerLogo.id, headerSubtitle.id, navTemplates.id, navSticky.id, navTests.id];
 
   return {
     wrapper: header,
     nodes: {
       [header.id]: header,
-      [headerMark.id]: headerMark,
       [headerLogo.id]: headerLogo,
-      [headerLink.id]: headerLink,
+      [headerSubtitle.id]: headerSubtitle,
+      [navTemplates.id]: navTemplates,
+      [navSticky.id]: navSticky,
+      [navTests.id]: navTests,
     },
   };
 }
 
 export function createDefaultFooter(parentId: NodeId) {
   const footer = createWrapper('footer', parentId);
-  footer.name = 'Footer';
+  footer.name = 'Playground Footer';
   footer.rect = createDefaultRect('0px', '0px', '100%', 'auto');
-  footer.style.borderColor = '#e5ebf3';
-  footer.style.paddingTop = parseUnitValue('28px');
-  footer.style.paddingRight = parseUnitValue('40px');
-  footer.style.paddingBottom = parseUnitValue('28px');
-  footer.style.paddingLeft = parseUnitValue('40px');
+  footer.style.background = '#f8fbff';
+  footer.style.borderColor = '#d6e2f2';
+  footer.style.paddingTop = parseUnitValue('26px');
+  footer.style.paddingRight = parseUnitValue('48px');
+  footer.style.paddingBottom = parseUnitValue('26px');
+  footer.style.paddingLeft = parseUnitValue('48px');
+
+  const footerTitle = createLeaf('text', footer.id) as TextLeaf;
+  footerTitle.name = 'Footer Title';
+  footerTitle.content = 'Sticky Playground';
+  footerTitle.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
+  footerTitle.style ??= {};
+  footerTitle.style.color = '#0f172a';
+  footerTitle.style.fontSize = parseUnitValue('16px');
+  footerTitle.style.fontWeight = 'bold';
+  footerTitle.style.lineHeight = 1.2;
 
   const footerCopy = createLeaf('text', footer.id) as TextLeaf;
   footerCopy.name = 'Footer Copy';
-  footerCopy.content = '\u00A9 2035 by Business Name. Built for sticky exploration.';
-  footerCopy.rect = createDefaultRect('0px', '0px', 'fit-content', 'auto');
+  footerCopy.content =
+    'A prototyping surface for sticky logic, spacing strategy, and interaction QA.';
+  footerCopy.rect = createDefaultRect('64px', '53px', '271px', '38px');
   footerCopy.style ??= {};
   footerCopy.style.color = '#475569';
-  footerCopy.style.fontSize = parseUnitValue('16px');
-  footer.children = [footerCopy.id];
+  footerCopy.style.fontSize = parseUnitValue('14px');
+  footerCopy.style.lineHeight = 1.3;
+
+  const footerLink = createLeaf('link', footer.id) as LinkLeaf;
+  footerLink.name = 'Repository Link';
+  footerLink.label = 'github.com/tombigel/codex-playground';
+  footerLink.href = 'https://github.com/tombigel/codex-playground';
+  footerLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
+
+  footer.children = [footerTitle.id, footerCopy.id, footerLink.id];
 
   return {
     wrapper: footer,
     nodes: {
       [footer.id]: footer,
+      [footerTitle.id]: footerTitle,
       [footerCopy.id]: footerCopy,
+      [footerLink.id]: footerLink,
     },
   };
 }
@@ -136,12 +202,35 @@ export function nextId(prefix: string): NodeId {
   return `${prefix}_${counter}`;
 }
 
+export function syncIdCountersWithDocument(document: DocumentModel) {
+  let maxIdCounter = counter;
+  let imageCount = 0;
+
+  for (const node of Object.values(document.nodes)) {
+    const match = node.id.match(/_(\d+)$/);
+    if (match) {
+      const value = Number.parseInt(match[1], 10);
+      if (Number.isFinite(value)) {
+        maxIdCounter = Math.max(maxIdCounter, value);
+      }
+    }
+    if (node.type === 'leaf' && node.role === 'image') {
+      imageCount += 1;
+    }
+  }
+
+  counter = Math.max(counter, maxIdCounter);
+  imageCounter = Math.max(imageCounter, imageCount);
+}
+
 export function createDefaultSticky(): StickyDefinition {
   return {
     enabled: true,
     target: 'self',
     edges: { top: true, bottom: false },
     duration: parseUnitValue('50vh'),
+    durationTop: parseUnitValue('50vh'),
+    durationBottom: parseUnitValue('50vh'),
   };
 }
 
@@ -246,46 +335,29 @@ export function createLeaf(
   };
 }
 
+export function createSectionFromTemplate(templateId: SectionTemplateId, parentId: NodeId): TemplateBuild {
+  switch (templateId) {
+    case 'blank':
+      return createBlankSection(parentId);
+    case 'post':
+      return createPostSection(parentId);
+    case 'stickyStaggeredImages':
+      return createStickyStaggeredImagesSection(parentId);
+    case 'stickyPinnedCards':
+      return createStickyPinnedCardsSection(parentId);
+    case 'stickyMediaReveal':
+      return createStickyMediaRevealSection(parentId);
+    case 'stickySteps':
+      return createStickyStepsSection(parentId);
+    default:
+      return createBlankSection(parentId);
+  }
+}
+
 export function createInitialDocument(): DocumentModel {
   const siteId = nextId('site');
   const { wrapper: header, nodes: headerNodes } = createDefaultHeader(siteId);
-
-  const hero = createWrapper('section', siteId);
-  hero.name = 'Hero Section';
-  hero.rect = createDefaultRect('0px', '0px', '100%', '720px');
-  hero.style.paddingTop = parseUnitValue('56px');
-  hero.style.paddingRight = parseUnitValue('72px');
-  hero.style.paddingBottom = parseUnitValue('56px');
-  hero.style.paddingLeft = parseUnitValue('72px');
-
-  const heroImage = createLeaf('image', hero.id) as ImageLeaf;
-  heroImage.name = 'Hero Image';
-  heroImage.rect = createDefaultRect('48px', '96px', '340px', 'aspect-ratio(4/3)');
-
-  const heroButton = createLeaf('button', hero.id) as ButtonLeaf;
-  heroButton.name = 'Primary Button';
-  heroButton.label = 'Send';
-  heroButton.rect = createDefaultRect('540px', '110px', 'fit-content', 'auto');
-
-  const heroHeading = createLeaf('text', hero.id) as TextLeaf;
-  heroHeading.name = 'Headline';
-  heroHeading.content = 'Design sticky behavior with confidence';
-  heroHeading.rect = createDefaultRect('540px', '220px', 'fit-content', 'auto');
-  heroHeading.style ??= {};
-  heroHeading.style.color = '#081121';
-  heroHeading.style.fontSize = parseUnitValue('68px');
-
-  const heroCopy = createLeaf('text', hero.id) as TextLeaf;
-  heroCopy.name = 'Body Copy';
-  heroCopy.content =
-    'Build layout and sticky interactions in one place, preview spacer behavior, and evolve the model before wiring scroll-driven animations.';
-  heroCopy.rect = createDefaultRect('544px', '430px', '520px', 'auto');
-  heroCopy.style ??= {};
-  heroCopy.style.color = '#334155';
-  heroCopy.style.fontSize = parseUnitValue('24px');
-
-  hero.children = [heroImage.id, heroButton.id, heroHeading.id, heroCopy.id];
-
+  const { wrapper: starterSection, nodes: starterSectionNodes } = createSectionFromTemplate('post', siteId);
   const { wrapper: footer, nodes: footerNodes } = createDefaultFooter(siteId);
 
   return {
@@ -295,18 +367,388 @@ export function createInitialDocument(): DocumentModel {
         id: siteId,
         type: 'site',
         parentId: null,
-        children: [header.id, hero.id, footer.id],
+        children: [header.id, starterSection.id, footer.id],
         name: 'Site',
         visible: true,
         locked: false,
       },
       ...headerNodes,
-      [hero.id]: hero,
-      [heroImage.id]: heroImage,
-      [heroButton.id]: heroButton,
-      [heroHeading.id]: heroHeading,
-      [heroCopy.id]: heroCopy,
+      ...starterSectionNodes,
       ...footerNodes,
     },
+  };
+}
+
+function createBlankSection(parentId: NodeId): TemplateBuild {
+  const section = createWrapper('section', parentId);
+  section.name = 'Blank Section';
+  section.rect = createDefaultRect('0px', '0px', '100%', '640px');
+  section.style.paddingTop = parseUnitValue('64px');
+  section.style.paddingRight = parseUnitValue('72px');
+  section.style.paddingBottom = parseUnitValue('64px');
+  section.style.paddingLeft = parseUnitValue('72px');
+
+  return {
+    wrapper: section,
+    nodes: {
+      [section.id]: section,
+    },
+  };
+}
+
+function createPostSection(parentId: NodeId): TemplateBuild {
+  const section = createWrapper('section', parentId);
+  section.name = 'Post Layout';
+  section.rect = createDefaultRect('0px', '0px', '100%', '760px');
+  section.style.paddingTop = parseUnitValue('64px');
+  section.style.paddingRight = parseUnitValue('72px');
+  section.style.paddingBottom = parseUnitValue('72px');
+  section.style.paddingLeft = parseUnitValue('72px');
+
+  const image = createLeaf('image', section.id) as ImageLeaf;
+  image.name = 'Post Image';
+  image.rect = createDefaultRect('52px', '88px', '420px', 'aspect-ratio(4/3)');
+
+  const title = createLeaf('text', section.id) as TextLeaf;
+  title.name = 'Post Title';
+  title.content = 'Plan sticky behavior before building scroll-driven animations';
+  title.rect = createDefaultRect('544px', '118px', '520px', 'auto');
+  styleText(title, {
+    color: '#0f172a',
+    fontSize: '44px',
+    fontWeight: 'bold',
+    lineHeight: 1.1,
+  });
+
+  const body = createLeaf('text', section.id) as TextLeaf;
+  body.name = 'Post Body';
+  body.content =
+    'Use reusable section templates to validate offset, duration, and sticky overlap behavior before wiring production code.';
+  body.rect = createDefaultRect('548px', '282px', '480px', 'auto');
+  styleText(body, {
+    color: '#475569',
+    fontSize: '23px',
+    lineHeight: 1.28,
+  });
+
+  const link = createLeaf('link', section.id) as LinkLeaf;
+  link.name = 'Post Link';
+  link.label = 'Open maintenance test plan';
+  link.rect = createDefaultRect('548px', '418px', 'fit-content', 'auto');
+
+  section.children = [image.id, title.id, body.id, link.id];
+
+  return {
+    wrapper: section,
+    nodes: {
+      [section.id]: section,
+      [image.id]: image,
+      [title.id]: title,
+      [body.id]: body,
+      [link.id]: link,
+    },
+  };
+}
+
+function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
+  const section = createWrapper('section', parentId);
+  section.name = 'Sticky Staggered Images';
+  section.rect = createDefaultRect('0px', '0px', '100%', '1820px');
+  section.style.paddingTop = parseUnitValue('84px');
+  section.style.paddingRight = parseUnitValue('72px');
+  section.style.paddingBottom = parseUnitValue('84px');
+  section.style.paddingLeft = parseUnitValue('72px');
+
+  const heading = createLeaf('text', section.id) as TextLeaf;
+  heading.name = 'Section Heading';
+  heading.content = 'Staggered sticky gallery';
+  heading.rect = createDefaultRect('64px', '22.5px', '678px', '194px');
+  styleText(heading, { color: '#0f172a', fontSize: '52px', fontWeight: 'bold', lineHeight: 1.06 });
+
+  const copy = createLeaf('text', section.id) as TextLeaf;
+  copy.name = 'Section Copy';
+  copy.content = 'Each card pins with a unique offset and duration to test overlap behavior.';
+  copy.rect = createDefaultRect('68px', '92px', '540px', 'auto');
+  styleText(copy, { color: '#475569', fontSize: '22px', lineHeight: 1.26 });
+
+  const imageA = createLeaf('image', section.id) as ImageLeaf;
+  imageA.name = 'Sticky Image A';
+  imageA.rect = createDefaultRect('64px', '256.96875px', '250px', 'aspect-ratio(4/3)');
+  imageA.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
+  imageA.alt = 'Golden desert dunes under soft sunlight';
+  imageA.sticky = createCustomSticky('150vh', '15vh');
+
+  const imageB = createLeaf('image', section.id) as ImageLeaf;
+  imageB.name = 'Sticky Image B';
+  imageB.rect = createDefaultRect('340px', '444.46875px', '260px', 'aspect-ratio(4/3)');
+  imageB.src = 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80';
+  imageB.alt = 'Mist rising over a calm mountain lake';
+  imageB.sticky = createCustomSticky('150vh', '15vh');
+
+  const imageC = createLeaf('image', section.id) as ImageLeaf;
+  imageC.name = 'Sticky Image C';
+  imageC.rect = createDefaultRect('638px', '653.25px', '270px', 'aspect-ratio(4/3)');
+  imageC.src = 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80';
+  imageC.alt = 'Modern interior with natural light and textured seating';
+  imageC.sticky = createCustomSticky('150vh', '15vh');
+
+  const imageD = createLeaf('image', section.id) as ImageLeaf;
+  imageD.name = 'Sticky Image D';
+  imageD.rect = createDefaultRect('949px', '898.84375px', '220px', 'aspect-ratio(4/3)');
+  imageD.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
+  imageD.alt = 'Golden desert dunes under soft sunlight';
+  imageD.sticky = createCustomSticky('150vh', '15vh');
+
+  section.children = [heading.id, copy.id, imageA.id, imageB.id, imageC.id, imageD.id];
+
+  return {
+    wrapper: section,
+    nodes: {
+      [section.id]: section,
+      [heading.id]: heading,
+      [copy.id]: copy,
+      [imageA.id]: imageA,
+      [imageB.id]: imageB,
+      [imageC.id]: imageC,
+      [imageD.id]: imageD,
+    },
+  };
+}
+
+function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
+  const section = createWrapper('section', parentId);
+  section.name = 'Sticky Pinned Cards';
+  section.rect = createDefaultRect('0px', '0px', '100%', '1760px');
+  section.style.paddingTop = parseUnitValue('80px');
+  section.style.paddingRight = parseUnitValue('72px');
+  section.style.paddingBottom = parseUnitValue('96px');
+  section.style.paddingLeft = parseUnitValue('72px');
+
+  const lead = createLeaf('text', section.id) as TextLeaf;
+  lead.name = 'Pinned Lead';
+  lead.content = 'One pinned message, many scrolling details';
+  lead.rect = createDefaultRect('85px', '212.28125px', '360px', '234px');
+  styleText(lead, { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06 });
+  lead.sticky = {
+    enabled: true,
+    target: 'self',
+    edges: { top: true, bottom: false },
+    durationMode: 'auto',
+    duration: parseUnitValue('220vh'),
+    durationTop: parseUnitValue('220vh'),
+    durationBottom: parseUnitValue('220vh'),
+    offsetTop: parseUnitValue('12vh'),
+  };
+
+  const leadBody = createLeaf('text', section.id) as TextLeaf;
+  leadBody.name = 'Pinned Lead Copy';
+  leadBody.content = 'Use this to validate long sticky durations while content cards keep moving.';
+  leadBody.rect = createDefaultRect('83px', '373px', '340px', 'auto');
+  styleText(leadBody, { color: '#475569', fontSize: '18px', lineHeight: 1.3 });
+
+  const card1 = createLeaf('text', section.id) as TextLeaf;
+  card1.name = 'Narrative Card 1';
+  card1.content = 'Card 1\nTune offsets and verify the spacer end-line for the pinned lead.';
+  card1.rect = createDefaultRect('520px', '235.71875px', '520px', 'auto');
+  card1.sticky = createCustomSticky('25vh', '15vh');
+  styleText(card1, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  const card2 = createLeaf('text', section.id) as TextLeaf;
+  card2.name = 'Narrative Card 2';
+  card2.content = 'Card 2\nCheck snapping around sticky tracks while moving this block.';
+  card2.rect = createDefaultRect('520px', '700px', '520px', 'auto');
+  card2.sticky = createCustomSticky('25vh', '15vh');
+  styleText(card2, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  const card3 = createLeaf('text', section.id) as TextLeaf;
+  card3.name = 'Narrative Card 3';
+  card3.content = 'Card 3\nUse this section to regression-test reorder, resize, and undo behavior.';
+  card3.rect = createDefaultRect('520px', '1211.84375px', '520px', '201px');
+  card3.sticky = createCustomSticky('50vh', '15vh');
+  styleText(card3, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  section.children = [lead.id, leadBody.id, card1.id, card2.id, card3.id];
+
+  return {
+    wrapper: section,
+    nodes: {
+      [section.id]: section,
+      [lead.id]: lead,
+      [leadBody.id]: leadBody,
+      [card1.id]: card1,
+      [card2.id]: card2,
+      [card3.id]: card3,
+    },
+  };
+}
+
+function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
+  const section = createWrapper('section', parentId);
+  section.name = 'Sticky Media Reveal';
+  section.rect = createDefaultRect('0px', '0px', '100%', '1840px');
+  section.style.paddingTop = parseUnitValue('78px');
+  section.style.paddingRight = parseUnitValue('72px');
+  section.style.paddingBottom = parseUnitValue('96px');
+  section.style.paddingLeft = parseUnitValue('72px');
+
+  const heading = createLeaf('text', section.id) as TextLeaf;
+  heading.name = 'Section Heading';
+  heading.content = 'Pinned media with scrolling narrative';
+  heading.rect = createDefaultRect('558px', '165px', '520px', 'auto');
+  styleText(heading, { color: '#0f172a', fontSize: '44px', fontWeight: 'bold', lineHeight: 1.1 });
+
+  const mediaImage = createLeaf('image', section.id) as ImageLeaf;
+  mediaImage.name = 'Pinned Media';
+  mediaImage.rect = createDefaultRect('77px', '165px', '401px', '428px');
+  mediaImage.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
+  mediaImage.alt = 'Golden desert dunes under soft sunlight';
+  mediaImage.sticky = createCustomSticky('100vh', '10vh');
+
+  const blockA = createLeaf('text', section.id) as TextLeaf;
+  blockA.name = 'Narrative Block A';
+  blockA.content = 'A. Define the sticky owner and inspect the offset marker alignment.';
+  blockA.rect = createDefaultRect('560px', '310px', '530px', 'auto');
+  styleText(blockA, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
+
+  const blockB = createLeaf('text', section.id) as TextLeaf;
+  blockB.name = 'Narrative Block B';
+  blockB.content = 'B. Validate spacer height and ensure section extent matches furthest sticky end.';
+  blockB.rect = createDefaultRect('560px', '760px', '530px', 'auto');
+  styleText(blockB, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
+
+  const blockC = createLeaf('text', section.id) as TextLeaf;
+  blockC.name = 'Narrative Block C';
+  blockC.content = 'C. Confirm dragging and snapping stay consistent while sticky preview is enabled.';
+  blockC.rect = createDefaultRect('560px', '1210px', '530px', 'auto');
+  styleText(blockC, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
+
+  section.children = [heading.id, mediaImage.id, blockA.id, blockB.id, blockC.id];
+
+  return {
+    wrapper: section,
+    nodes: {
+      [section.id]: section,
+      [heading.id]: heading,
+      [mediaImage.id]: mediaImage,
+      [blockA.id]: blockA,
+      [blockB.id]: blockB,
+      [blockC.id]: blockC,
+    },
+  };
+}
+
+function createStickyStepsSection(parentId: NodeId): TemplateBuild {
+  const section = createWrapper('section', parentId);
+  section.name = 'Sticky Bottom Dock';
+  section.rect = createDefaultRect('0px', '0px', '100%', '2100px');
+  section.style.paddingTop = parseUnitValue('76px');
+  section.style.paddingRight = parseUnitValue('72px');
+  section.style.paddingBottom = parseUnitValue('104px');
+  section.style.paddingLeft = parseUnitValue('72px');
+
+  const heading = createLeaf('text', section.id) as TextLeaf;
+  heading.name = 'Section Heading';
+  heading.content = 'Sticky bottom dock';
+  heading.rect = createDefaultRect('76px', '92px', '560px', 'auto');
+  styleText(heading, { color: '#0f172a', fontSize: '50px', fontWeight: 'bold', lineHeight: 1.04 });
+
+  const introCopy = createLeaf('text', section.id) as TextLeaf;
+  introCopy.name = 'Section Intro';
+  introCopy.content = 'Test bottom-edge sticky behavior while detail cards keep scrolling upward.';
+  introCopy.rect = createDefaultRect('78px', '182px', '560px', 'auto');
+  styleText(introCopy, { color: '#475569', fontSize: '22px', lineHeight: 1.24 });
+
+  const dockCard = createLeaf('text', section.id) as TextLeaf;
+  dockCard.name = 'Bottom Dock Card';
+  dockCard.content =
+    'Pinned summary card\nEdges: bottom\nOffset: 8vh\nDuration: 180vh\n\nUse this card to verify bottom stick behavior and spacer alignment.';
+  dockCard.rect = createDefaultRect('724px', '1320px', '420px', '272px');
+  styleText(dockCard, { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 });
+  dockCard.sticky = {
+    enabled: true,
+    target: 'self',
+    edges: { top: false, bottom: true },
+    durationMode: 'custom',
+    duration: parseUnitValue('180vh'),
+    durationTop: parseUnitValue('180vh'),
+    durationBottom: parseUnitValue('180vh'),
+    offsetBottom: parseUnitValue('8vh'),
+  };
+
+  const detailA = createLeaf('text', section.id) as TextLeaf;
+  detailA.name = 'Detail Card A';
+  detailA.content = 'A\nSwitch between top and bottom edges and validate track labels.';
+  detailA.rect = createDefaultRect('84px', '420px', '520px', 'auto');
+  styleText(detailA, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  const detailB = createLeaf('text', section.id) as TextLeaf;
+  detailB.name = 'Detail Card B';
+  detailB.content = 'B\nDrag this block near guides and inspect bottom snap behavior.';
+  detailB.rect = createDefaultRect('104px', '860px', '520px', 'auto');
+  styleText(detailB, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  const detailC = createLeaf('text', section.id) as TextLeaf;
+  detailC.name = 'Detail Card C';
+  detailC.content = 'C\nResize the dock and confirm sticky preview does not drift model coordinates.';
+  detailC.rect = createDefaultRect('122px', '1320px', '520px', 'auto');
+  styleText(detailC, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  const detailD = createLeaf('text', section.id) as TextLeaf;
+  detailD.name = 'Detail Card D';
+  detailD.content = 'D\nRun undo/redo after bottom-sticky edits to validate transaction boundaries.';
+  detailD.rect = createDefaultRect('144px', '1740px', '520px', 'auto');
+  styleText(detailD, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+
+  section.children = [heading.id, introCopy.id, dockCard.id, detailA.id, detailB.id, detailC.id, detailD.id];
+
+  return {
+    wrapper: section,
+    nodes: {
+      [section.id]: section,
+      [heading.id]: heading,
+      [introCopy.id]: introCopy,
+      [dockCard.id]: dockCard,
+      [detailA.id]: detailA,
+      [detailB.id]: detailB,
+      [detailC.id]: detailC,
+      [detailD.id]: detailD,
+    },
+  };
+}
+
+function styleText(
+  leaf: TextLeaf,
+  options: {
+    color?: string;
+    fontSize?: string;
+    fontWeight?: 'normal' | 'bold';
+    lineHeight?: number;
+  },
+) {
+  leaf.style ??= {};
+  if (options.color) {
+    leaf.style.color = options.color;
+  }
+  if (options.fontSize) {
+    leaf.style.fontSize = parseUnitValue(options.fontSize);
+  }
+  if (options.fontWeight) {
+    leaf.style.fontWeight = options.fontWeight;
+  }
+  if (typeof options.lineHeight === 'number') {
+    leaf.style.lineHeight = options.lineHeight;
+  }
+}
+
+function createCustomSticky(duration: string, offsetTop: string): StickyDefinition {
+  return {
+    enabled: true,
+    target: 'self',
+    edges: { top: true, bottom: false },
+    durationMode: 'custom',
+    duration: parseUnitValue(duration),
+    durationTop: parseUnitValue(duration),
+    durationBottom: parseUnitValue(duration),
+    offsetTop: parseUnitValue(offsetTop),
   };
 }

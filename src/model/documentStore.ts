@@ -1,11 +1,23 @@
-import { createDefaultFooter, createDefaultHeader, createInitialDocument, createLeaf, createWrapper } from './defaults';
+import {
+  createDefaultRect,
+  createDefaultFooter,
+  createDefaultHeader,
+  createInitialDocument,
+  createLeaf,
+  createSectionFromTemplate,
+  createWrapper,
+  syncIdCountersWithDocument,
+  type SectionTemplateId,
+} from './defaults';
 import { validateDocument } from './validation';
 import type {
   DocumentModel,
   DocumentNode,
   LeafRole,
+  LinkLeaf,
   NodeId,
   StickyDefinition,
+  TextLeaf,
   WrapperRole,
   WrapperNode,
 } from './types';
@@ -60,9 +72,11 @@ export function loadPersistedState(): EditorState {
       return createInitialState();
     }
     const parsed = JSON.parse(raw) as EditorState;
+    const normalizedDocument = normalizeDocument(parsed.document);
     const candidate: EditorState = {
       ...parsed,
-      document: normalizeDocument(parsed.document),
+      document: normalizedDocument,
+      selectedId: parsed.selectedId && normalizedDocument.nodes[parsed.selectedId] ? parsed.selectedId : null,
       pendingRoleSwap: null,
       ui: {
         previewSticky: parsed.ui?.previewSticky ?? true,
@@ -165,22 +179,38 @@ function normalizeSticky(sticky: StickyDefinition | undefined): StickyDefinition
     return undefined;
   }
 
+  const bottom = sticky.edges?.bottom ?? false;
+  let top = sticky.edges?.top ?? (bottom ? false : true);
+  let normalizedBottom = bottom;
+
+  // Heuristic migration: keep single-edge intent when legacy data accidentally persisted both edges.
+  if (top && normalizedBottom) {
+    if (!sticky.offsetTop && sticky.offsetBottom) {
+      top = false;
+    } else if (sticky.offsetTop && !sticky.offsetBottom) {
+      normalizedBottom = false;
+    }
+  }
+
+  const duration = sticky.duration ?? parseUnitValue('50vh');
+  const durationTop = sticky.durationTop ?? duration;
+  const durationBottom = sticky.durationBottom ?? duration;
+
   return {
     ...sticky,
     enabled: sticky.enabled ?? false,
     target: sticky.target ?? 'self',
     durationMode: sticky.durationMode ?? 'auto',
-    duration: sticky.duration ?? parseUnitValue('50vh'),
-    edges: {
-      top: true,
-      bottom: false,
-      ...sticky.edges,
-    },
+    duration,
+    durationTop,
+    durationBottom,
+    edges: { top, bottom: normalizedBottom },
   };
 }
 
 function normalizeDocument(document: DocumentModel): DocumentModel {
   const normalized = cloneDocument(document);
+  syncIdCountersWithDocument(normalized);
   for (const node of Object.values(normalized.nodes)) {
     if (node.type === 'site') {
       continue;
@@ -188,7 +218,210 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
     node.sticky = normalizeSticky(node.sticky);
   }
   ensureDefaultSiteSections(normalized);
+  upgradeLegacyStarterShell(normalized);
   return normalized;
+}
+
+function upgradeLegacyStarterShell(document: DocumentModel) {
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return;
+  }
+
+  const wrappers = root.children
+    .map((id) => document.nodes[id])
+    .filter((node): node is WrapperNode => Boolean(node && node.type === 'wrapper'));
+
+  const header = wrappers.find((node) => node.role === 'header');
+  const footer = wrappers.find((node) => node.role === 'footer');
+
+  if (header && isLegacyHeader(document, header)) {
+    applyModernHeader(document, header);
+  }
+
+  if (footer && isLegacyFooter(document, footer)) {
+    applyModernFooter(document, footer);
+  }
+}
+
+function isLegacyHeader(document: DocumentModel, header: WrapperNode) {
+  if (header.name === 'Primary Header') {
+    return true;
+  }
+
+  const children = header.children.map((id) => document.nodes[id]).filter(Boolean);
+  const brandName = children.find(
+    (node): node is TextLeaf => node.type === 'leaf' && node.role === 'text' && node.content === 'Business Name',
+  );
+  const homeLink = children.find(
+    (node) => node.type === 'leaf' && node.role === 'link' && node.label === 'Home',
+  );
+  if (brandName && homeLink) {
+    return true;
+  }
+
+  const hasLegacyModernMark = children.some(
+    (node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Brand Mark',
+  );
+  const hasStarterTitle = children.some(
+    (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title' && node.content === 'Sticky Playground',
+  );
+  if (hasLegacyModernMark && hasStarterTitle) {
+    return true;
+  }
+
+  const textOnlyStarterTitle = children.find(
+    (node): node is TextLeaf =>
+      node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title' && node.content === 'Sticky Playground',
+  );
+  const titleX = textOnlyStarterTitle ? parseFloat(textOnlyStarterTitle.rect.x.base.raw) || 0 : 0;
+  return Boolean(textOnlyStarterTitle && titleX < 40);
+}
+
+function isLegacyFooter(document: DocumentModel, footer: WrapperNode) {
+  if (footer.name === 'Footer') {
+    return true;
+  }
+
+  const children = footer.children.map((id) => document.nodes[id]).filter(Boolean);
+  const hasOldBusinessCopy = children.some(
+    (node) =>
+      node.type === 'leaf' &&
+      node.role === 'text' &&
+      node.content.includes('Built for sticky exploration'),
+  );
+  if (hasOldBusinessCopy) {
+    return true;
+  }
+
+  const modernCopy = children.find(
+    (node): node is TextLeaf =>
+      node.type === 'leaf' &&
+      node.role === 'text' &&
+      node.name === 'Footer Copy' &&
+      node.content === 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.',
+  );
+  const hasModernMeta = children.some(
+    (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Meta',
+  );
+  if (hasModernMeta) {
+    return true;
+  }
+
+  const copyY = modernCopy ? parseFloat(modernCopy.rect.y.base.raw) || 0 : 0;
+  return Boolean(modernCopy && copyY < 45);
+}
+
+function applyModernHeader(document: DocumentModel, header: WrapperNode) {
+  const previousChildren = [...header.children];
+  for (const childId of previousChildren) {
+    removeNodeSubtree(document, childId);
+  }
+
+  header.name = 'Playground Header';
+  header.rect = createDefaultRect('0px', '0px', '100%', 'auto');
+  header.style.background = '#f8fbff';
+  header.style.borderColor = '#d6e2f2';
+  header.style.paddingTop = parseUnitValue('20px');
+  header.style.paddingRight = parseUnitValue('48px');
+  header.style.paddingBottom = parseUnitValue('20px');
+  header.style.paddingLeft = parseUnitValue('48px');
+
+  const title = createUniqueLeaf(document, 'text', header.id) as TextLeaf;
+  title.name = 'Product Title';
+  title.content = 'Sticky Playground';
+  title.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
+  title.style ??= {};
+  title.style.color = '#0f172a';
+  title.style.fontSize = parseUnitValue('20px');
+  title.style.fontWeight = 'bold';
+
+  const subtitle = createUniqueLeaf(document, 'text', header.id) as TextLeaf;
+  subtitle.name = 'Product Subtitle';
+  subtitle.content = 'Model, preview, and validate sticky behavior before implementation.';
+  subtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
+  subtitle.style ??= {};
+  subtitle.style.color = '#516174';
+  subtitle.style.fontSize = parseUnitValue('14px');
+
+  const templatesLink = createUniqueLeaf(document, 'link', header.id) as LinkLeaf;
+  templatesLink.name = 'Templates Link';
+  templatesLink.label = 'Templates';
+  templatesLink.rect = createDefaultRect('836px', '48px', 'fit-content', 'auto');
+
+  const stickyLink = createUniqueLeaf(document, 'link', header.id) as LinkLeaf;
+  stickyLink.name = 'Sticky Demos Link';
+  stickyLink.label = 'Sticky Demos';
+  stickyLink.rect = createDefaultRect('947px', '48px', 'fit-content', 'auto');
+
+  const testPlanLink = createUniqueLeaf(document, 'link', header.id) as LinkLeaf;
+  testPlanLink.name = 'Test Plan Link';
+  testPlanLink.label = 'Test Plan';
+  testPlanLink.rect = createDefaultRect('1082px', '48px', '144px', '24px');
+
+  document.nodes[title.id] = title;
+  document.nodes[subtitle.id] = subtitle;
+  document.nodes[templatesLink.id] = templatesLink;
+  document.nodes[stickyLink.id] = stickyLink;
+  document.nodes[testPlanLink.id] = testPlanLink;
+  header.children = [title.id, subtitle.id, templatesLink.id, stickyLink.id, testPlanLink.id];
+}
+
+function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
+  const previousChildren = [...footer.children];
+  for (const childId of previousChildren) {
+    removeNodeSubtree(document, childId);
+  }
+
+  footer.name = 'Playground Footer';
+  footer.rect = createDefaultRect('0px', '0px', '100%', 'auto');
+  footer.style.background = '#f8fbff';
+  footer.style.borderColor = '#d6e2f2';
+  footer.style.paddingTop = parseUnitValue('26px');
+  footer.style.paddingRight = parseUnitValue('48px');
+  footer.style.paddingBottom = parseUnitValue('26px');
+  footer.style.paddingLeft = parseUnitValue('48px');
+
+  const title = createUniqueLeaf(document, 'text', footer.id) as TextLeaf;
+  title.name = 'Footer Title';
+  title.content = 'Sticky Playground';
+  title.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
+  title.style ??= {};
+  title.style.color = '#0f172a';
+  title.style.fontSize = parseUnitValue('16px');
+  title.style.fontWeight = 'bold';
+  title.style.lineHeight = 1.2;
+
+  const copy = createUniqueLeaf(document, 'text', footer.id) as TextLeaf;
+  copy.name = 'Footer Copy';
+  copy.content = 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.';
+  copy.rect = createDefaultRect('64px', '53px', '271px', '38px');
+  copy.style ??= {};
+  copy.style.color = '#475569';
+  copy.style.fontSize = parseUnitValue('14px');
+  copy.style.lineHeight = 1.3;
+
+  const repoLink = createUniqueLeaf(document, 'link', footer.id) as LinkLeaf;
+  repoLink.name = 'Repository Link';
+  repoLink.label = 'github.com/tombigel/codex-playground';
+  repoLink.href = 'https://github.com/tombigel/codex-playground';
+  repoLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
+
+  document.nodes[title.id] = title;
+  document.nodes[copy.id] = copy;
+  document.nodes[repoLink.id] = repoLink;
+  footer.children = [title.id, copy.id, repoLink.id];
+}
+
+function removeNodeSubtree(document: DocumentModel, nodeId: NodeId) {
+  const node = document.nodes[nodeId];
+  if (!node) {
+    return;
+  }
+  for (const childId of node.children) {
+    removeNodeSubtree(document, childId);
+  }
+  delete document.nodes[nodeId];
 }
 
 function ensureDefaultSiteSections(document: DocumentModel) {
@@ -230,6 +463,7 @@ export function selectNode(state: EditorState, selectedId: NodeId | null): Edito
 
 export function insertWrapper(state: EditorState, role: WrapperRole): EditorState {
   const document = cloneDocument(state.document);
+  syncIdCountersWithDocument(document);
   const parentId = state.selectedId
     ? getInsertionParent(document, state.selectedId, role === 'container' ? 'containerWrapper' : 'siteWrapper')
     : role === 'container'
@@ -241,8 +475,29 @@ export function insertWrapper(state: EditorState, role: WrapperRole): EditorStat
   return { ...state, document, selectedId: node.id };
 }
 
+export function insertSectionTemplate(state: EditorState, templateId: SectionTemplateId): EditorState {
+  const document = cloneDocument(state.document);
+  syncIdCountersWithDocument(document);
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return state;
+  }
+
+  const { wrapper, nodes } = createSectionFromTemplate(templateId, document.rootId);
+  Object.assign(document.nodes, nodes);
+  const footerIndex = root.children.findIndex((childId) => {
+    const child = document.nodes[childId];
+    return child?.type === 'wrapper' && child.role === 'footer';
+  });
+  const insertAt = footerIndex >= 0 ? footerIndex : root.children.length;
+  root.children.splice(insertAt, 0, wrapper.id);
+
+  return { ...state, document, selectedId: wrapper.id };
+}
+
 export function insertLeaf(state: EditorState, role: LeafRole): EditorState {
   const document = cloneDocument(state.document);
+  syncIdCountersWithDocument(document);
   const parentId = state.selectedId
     ? getInsertionParent(document, state.selectedId, 'leaf')
     : findFirstSection(document) ?? document.rootId;
@@ -390,6 +645,8 @@ export function updateStickyField(
     edges: { top: true, bottom: false },
     durationMode: 'auto',
     duration: parseUnitValue('50vh'),
+    durationTop: parseUnitValue('50vh'),
+    durationBottom: parseUnitValue('50vh'),
     ...node.sticky,
     ...patch,
   };
@@ -456,7 +713,7 @@ export function reorderNode(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (!node || node.type === 'site' || !isReorderableComponent(node) || !node.parentId) {
+  if (!node || node.type === 'site' || !node.parentId) {
     return state;
   }
 
@@ -467,6 +724,28 @@ export function reorderNode(
 
   const index = parent.children.indexOf(nodeId);
   if (index === -1) {
+    return state;
+  }
+
+  // Sections are reordered only among sibling sections at root level.
+  if (node.type === 'wrapper' && node.role === 'section') {
+    if (parent.type !== 'site') {
+      return state;
+    }
+    if (action === 'sendToBack' || action === 'bringToFront') {
+      return state;
+    }
+    const targetIndex = findSiblingSectionIndex(document, parent.children, index, action === 'back' ? -1 : 1);
+    if (targetIndex === -1) {
+      return state;
+    }
+    const nextChildren = [...parent.children];
+    [nextChildren[targetIndex], nextChildren[index]] = [nextChildren[index], nextChildren[targetIndex]];
+    parent.children = nextChildren;
+    return { ...state, document };
+  }
+
+  if (!isReorderableComponent(node)) {
     return state;
   }
 
@@ -504,6 +783,23 @@ function isReorderableComponent(node: Exclude<DocumentNode, { type: 'site' }>) {
     return true;
   }
   return node.role === 'container';
+}
+
+function findSiblingSectionIndex(
+  document: DocumentModel,
+  siblingIds: NodeId[],
+  fromIndex: number,
+  direction: -1 | 1,
+) {
+  let index = fromIndex + direction;
+  while (index >= 0 && index < siblingIds.length) {
+    const candidate = document.nodes[siblingIds[index]];
+    if (candidate?.type === 'wrapper' && candidate.role === 'section') {
+      return index;
+    }
+    index += direction;
+  }
+  return -1;
 }
 
 function isSiteSectionRole(role: WrapperRole) {

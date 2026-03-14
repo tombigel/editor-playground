@@ -819,6 +819,19 @@ button {
   min-height: 24px;
 }
 
+.sticky-offset-visual-bottom,
+.sticky-distance-spacer-visual-bottom,
+.sticky-auto-spacer-bottom {
+  align-items: flex-end;
+}
+
+.sticky-offset-visual-bottom .sticky-offset-label,
+.sticky-distance-spacer-visual-bottom .sticky-spacer-label,
+.sticky-auto-spacer-bottom .sticky-spacer-label {
+  margin-top: 0;
+  margin-bottom: var(--sticky-label-offset);
+}
+
 .sticky-offset-label {
   display: inline-flex;
   align-items: center;

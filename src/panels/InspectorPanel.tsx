@@ -8,6 +8,8 @@ import {
   ArrowBigDownDash,
   ArrowBigUp,
   ArrowBigUpDash,
+  ArrowDownToLine,
+  ArrowUpToLine,
   ListEnd,
   ListStart,
   ListX,
@@ -30,10 +32,14 @@ type Props = {
   canOrderForward: boolean;
   canSendToBack: boolean;
   canBringToFront: boolean;
+  canSectionBack: boolean;
+  canSectionForward: boolean;
   onOrderBack: () => void;
   onOrderForward: () => void;
   onSendToBack: () => void;
   onBringToFront: () => void;
+  onSectionBack: () => void;
+  onSectionForward: () => void;
   onTextChange: (field: string, value: string) => void;
   onWrapperStyleChange: (field: 'background', value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
@@ -43,8 +49,12 @@ type Props = {
   onStickyTarget: (target: 'self' | 'contentWrapper') => void;
   onStickyEdges: (edge: 'top' | 'bottom' | 'both') => void;
   onStickyOffset: (value: number) => void;
+  onStickyOffsetTop: (value: number) => void;
+  onStickyOffsetBottom: (value: number) => void;
   onStickyDurationMode: (value: 'auto' | 'custom') => void;
   onStickyDuration: (value: number) => void;
+  onStickyDurationTop: (value: number) => void;
+  onStickyDurationBottom: (value: number) => void;
 };
 
 export function InspectorPanel({
@@ -54,10 +64,14 @@ export function InspectorPanel({
   canOrderForward,
   canSendToBack,
   canBringToFront,
+  canSectionBack,
+  canSectionForward,
   onOrderBack,
   onOrderForward,
   onSendToBack,
   onBringToFront,
+  onSectionBack,
+  onSectionForward,
   onTextChange,
   onWrapperStyleChange,
   onRectChange,
@@ -67,8 +81,12 @@ export function InspectorPanel({
   onStickyTarget,
   onStickyEdges,
   onStickyOffset,
+  onStickyOffsetTop,
+  onStickyOffsetBottom,
   onStickyDurationMode,
   onStickyDuration,
+  onStickyDurationTop,
+  onStickyDurationBottom,
 }: Props) {
   if (!node) {
     return (
@@ -172,7 +190,15 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'wrapper' ? (
-            <WrapperActions node={node} onPromote={onPromote} onDemote={onDemote} />
+            <WrapperActions
+              node={node}
+              canSectionBack={canSectionBack}
+              canSectionForward={canSectionForward}
+              onSectionBack={onSectionBack}
+              onSectionForward={onSectionForward}
+              onPromote={onPromote}
+              onDemote={onDemote}
+            />
           ) : null}
         </CardContent>
       </Card>
@@ -353,6 +379,10 @@ export function InspectorPanel({
 
               {node.sticky?.enabled ? (
                 <>
+                  {(() => {
+                    const stickyEdge = edgeValue(node);
+                    return (
+                      <>
                   {node.type === 'wrapper' ? (
                     <FormField label="Target">
                       <Select
@@ -380,10 +410,33 @@ export function InspectorPanel({
                         <SelectItem value="bottom">Bottom</SelectItem>
                         <SelectItem value="both">Both</SelectItem>
                       </SelectContent>
-                    </Select>
-                  </FormField>
+                      </Select>
+                    </FormField>
 
-                  <RangeField label="Offset" value={stickyOffsetVh(node)} min={0} max={100} step={1} unit="vh" onValueChange={onStickyOffset} />
+                  {stickyEdge === 'both' ? (
+                    <div className="space-y-1.5">
+                      <RangeField
+                        label="Top Offset"
+                        value={stickyOffsetTopVh(node)}
+                        min={0}
+                        max={100}
+                        step={1}
+                        unit="vh"
+                        onValueChange={onStickyOffsetTop}
+                      />
+                      <RangeField
+                        label="Bottom Offset"
+                        value={stickyOffsetBottomVh(node)}
+                        min={0}
+                        max={100}
+                        step={1}
+                        unit="vh"
+                        onValueChange={onStickyOffsetBottom}
+                      />
+                    </div>
+                  ) : (
+                    <RangeField label="Offset" value={stickyOffsetVh(node)} min={0} max={100} step={1} unit="vh" onValueChange={onStickyOffset} />
+                  )}
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-3">
@@ -412,21 +465,47 @@ export function InspectorPanel({
                       </div>
                     </div>
                     {(node.sticky?.durationMode ?? 'auto') === 'custom' ? (
-                      <RangeField
-                        label={null}
-                        value={stickyDurationVh(node)}
-                        min={0}
-                        max={400}
-                        step={25}
-                        unit="vh"
-                        onValueChange={onStickyDuration}
-                      />
+                      stickyEdge === 'both' ? (
+                        <div className="space-y-1.5">
+                          <RangeField
+                            label="Top Distance"
+                            value={stickyDurationTopVh(node)}
+                            min={0}
+                            max={400}
+                            step={25}
+                            unit="vh"
+                            onValueChange={onStickyDurationTop}
+                          />
+                          <RangeField
+                            label="Bottom Distance"
+                            value={stickyDurationBottomVh(node)}
+                            min={0}
+                            max={400}
+                            step={25}
+                            unit="vh"
+                            onValueChange={onStickyDurationBottom}
+                          />
+                        </div>
+                      ) : (
+                        <RangeField
+                          label={null}
+                          value={stickyDurationVh(node)}
+                          min={0}
+                          max={400}
+                          step={25}
+                          unit="vh"
+                          onValueChange={onStickyDuration}
+                        />
+                      )
                     ) : (
                       <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
                         Uses the owner section height as the sticky distance.
                       </div>
                     )}
                   </div>
+                      </>
+                    );
+                  })()}
                 </>
               ) : null}
             </CardContent>
@@ -527,12 +606,14 @@ function OrderIconButton({
   shortcut,
   onClick,
   disabled,
+  compact = false,
   children,
 }: {
   label: string;
   shortcut?: string;
   onClick: () => void;
   disabled: boolean;
+  compact?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -544,7 +625,7 @@ function OrderIconButton({
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
-        className="h-7 w-7 rounded-sm p-0"
+        className={`${compact ? 'h-6 w-6' : 'h-7 w-7'} rounded-sm p-0`}
       >
         {children}
       </Button>
@@ -684,32 +765,57 @@ function RangeField({
 
 function WrapperActions({
   node,
+  canSectionBack,
+  canSectionForward,
+  onSectionBack,
+  onSectionForward,
   onPromote,
   onDemote,
 }: {
   node: WrapperNode;
+  canSectionBack: boolean;
+  canSectionForward: boolean;
+  onSectionBack: () => void;
+  onSectionForward: () => void;
   onPromote: (role: 'header' | 'footer') => void;
   onDemote: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
+    <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-1">
       <Label className="text-[11px] font-medium text-slate-500">Role</Label>
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+      <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
+        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
           {node.role}
         </span>
-        {node.role === 'section' || node.role === 'container' ? (
+        {node.role === 'section' ? (
           <>
-            <OrderIconButton label="Promote to Header" onClick={() => onPromote('header')} disabled={false}>
-              <ListStart className="h-4 w-4" />
+            <OrderIconButton compact label="Move Section Up" onClick={onSectionBack} disabled={!canSectionBack}>
+              <ListStart className="h-3.5 w-3.5" />
             </OrderIconButton>
-            <OrderIconButton label="Promote to Footer" onClick={() => onPromote('footer')} disabled={false}>
-              <ListEnd className="h-4 w-4" />
+            <OrderIconButton compact label="Move Section Down" onClick={onSectionForward} disabled={!canSectionForward}>
+              <ListEnd className="h-3.5 w-3.5" />
+            </OrderIconButton>
+            <>
+              <OrderIconButton compact label="Promote to Header" onClick={() => onPromote('header')} disabled={false}>
+                <ArrowUpToLine className="h-3.5 w-3.5" />
+              </OrderIconButton>
+              <OrderIconButton compact label="Promote to Footer" onClick={() => onPromote('footer')} disabled={false}>
+                <ArrowDownToLine className="h-3.5 w-3.5" />
+              </OrderIconButton>
+            </>
+          </>
+        ) : node.role === 'container' ? (
+          <>
+            <OrderIconButton compact label="Promote to Header" onClick={() => onPromote('header')} disabled={false}>
+              <ArrowUpToLine className="h-3.5 w-3.5" />
+            </OrderIconButton>
+            <OrderIconButton compact label="Promote to Footer" onClick={() => onPromote('footer')} disabled={false}>
+              <ArrowDownToLine className="h-3.5 w-3.5" />
             </OrderIconButton>
           </>
         ) : (
-          <OrderIconButton label="Demote to Section" onClick={onDemote} disabled={false}>
-            <ListX className="h-4 w-4" />
+          <OrderIconButton compact label="Demote to Section" onClick={onDemote} disabled={false}>
+            <ListX className="h-3.5 w-3.5" />
           </OrderIconButton>
         )}
       </div>
@@ -740,7 +846,7 @@ function stickyDurationVh(node: Exclude<DocumentNode, { type: 'site' }>) {
   if ((node.sticky?.durationMode ?? 'auto') === 'auto') {
     return 0;
   }
-  const duration = node.sticky?.duration.parsed;
+  const duration = node.sticky?.durationTop?.parsed ?? node.sticky?.duration.parsed;
   if (!duration) {
     return 50;
   }
@@ -756,6 +862,44 @@ function stickyOffsetVh(node: Exclude<DocumentNode, { type: 'site' }>) {
     return 0;
   }
   return offset.unit === 'vh' ? offset.value : 0;
+}
+
+function stickyOffsetTopVh(node: Exclude<DocumentNode, { type: 'site' }>) {
+  const offset = node.sticky?.offsetTop?.parsed;
+  if (!offset) {
+    return 0;
+  }
+  return offset.unit === 'vh' ? offset.value : 0;
+}
+
+function stickyOffsetBottomVh(node: Exclude<DocumentNode, { type: 'site' }>) {
+  const offset = node.sticky?.offsetBottom?.parsed;
+  if (!offset) {
+    return 0;
+  }
+  return offset.unit === 'vh' ? offset.value : 0;
+}
+
+function stickyDurationTopVh(node: Exclude<DocumentNode, { type: 'site' }>) {
+  if ((node.sticky?.durationMode ?? 'auto') === 'auto') {
+    return 0;
+  }
+  const duration = node.sticky?.durationTop?.parsed ?? node.sticky?.duration.parsed;
+  if (!duration) {
+    return 50;
+  }
+  return duration.unit === 'vh' ? duration.value : 50;
+}
+
+function stickyDurationBottomVh(node: Exclude<DocumentNode, { type: 'site' }>) {
+  if ((node.sticky?.durationMode ?? 'auto') === 'auto') {
+    return 0;
+  }
+  const duration = node.sticky?.durationBottom?.parsed ?? node.sticky?.duration.parsed;
+  if (!duration) {
+    return 50;
+  }
+  return duration.unit === 'vh' ? duration.value : 50;
 }
 
 function validateUnitField(value: string, field: 'x' | 'y' | 'width' | 'height') {

@@ -6,6 +6,9 @@ export type DragState = {
   currentClientY: number;
   grabOffsetX: number;
   grabOffsetY: number;
+  useVisualOffset: boolean;
+  modelShiftX: number;
+  modelShiftY: number;
   previewWidth: number;
   previewHeight: number;
   originX: number;

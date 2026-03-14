@@ -51,6 +51,8 @@ export type StickyDefinition = {
   offsetBottom?: ParsedValue<UnitValue>;
   durationMode?: 'auto' | 'custom';
   duration: ParsedValue<UnitValue>;
+  durationTop?: ParsedValue<UnitValue>;
+  durationBottom?: ParsedValue<UnitValue>;
 };
 
 export type BaseNode = {
@@ -146,6 +148,8 @@ export type ComputedStickyRegistration = {
   startPx: number;
   endPx: number;
   durationPx: number;
+  topDurationPx?: number;
+  bottomDurationPx?: number;
   extentPx: number;
 };
 
