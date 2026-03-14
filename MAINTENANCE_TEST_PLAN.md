@@ -87,15 +87,33 @@ This plan is for keeping the playground stable while feature work is paused.
 3. Drag wrapper (non-top-level) repositions/reparents correctly.
 4. Resize from all handles (`n`, `ne`, `e`, `se`, `s`, `sw`, `w`, `nw`) updates dimensions.
 5. North/west resize also adjusts x/y anchor behavior.
+6. Shift + drag locks to one axis (horizontal or vertical based on dominant delta).
+7. Shift + corner resize preserves current aspect ratio.
+8. Resize start on non-numeric size values (`auto`, `fit-content`, `%`, `aspect-ratio(...)`) does not jump on first pointer move.
 
-### C. Sticky preview and debug UX
+### C. Ordering behavior
+
+1. Reorder actions change parent `children` DOM order (not `z-index`).
+2. Reorder controls appear only for components (leaves + `container` wrappers), not `section/header/footer`.
+3. Inspector icon actions perform expected movement:
+   Position forward, bring to front, position backward, send to back.
+4. Keyboard shortcuts (when node selected and no field focused):
+   `Cmd + [`, `Cmd + ]`, `Cmd + Alt + [`, `Cmd + Alt + ]`.
+
+### D. Sticky preview and debug UX
 
 1. Sticky preview toggle applies/removes CSS sticky behavior.
 2. Spacer visibility modes (`selected`, `all`) filter visuals correctly.
 3. Grid lane toggle draws mesh guides without layout side effects.
 4. Debug panel shows validation errors and sticky math for active document.
 
-### D. Persistence and reset
+### E. Snap behavior
+
+1. With snap enabled, drag snaps to screen center and nearby element top/center/bottom anchors.
+2. With snap disabled, no snap guides are shown and drag is free.
+3. Holding `Alt` during drag reverses current snap behavior (temporary invert).
+
+### F. Persistence and reset
 
 1. Reload restores persisted state.
 2. Default document seeding is stable when no stored defaults exist.

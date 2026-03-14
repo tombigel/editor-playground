@@ -79,6 +79,40 @@ Children can be:
 - resized
 - reparented between sections and containers
 
+Drag behavior includes:
+
+- snap targets for viewport center and element top/center/bottom alignment
+- a global snap toggle in the left rail
+- `Alt` to invert current snap mode during drag
+- `Shift` to lock drag movement to a single axis
+
+Resize behavior includes:
+
+- `Shift` on corner handles to preserve the current aspect ratio
+- resize start normalization to rendered box size when stored values are non-numeric (`auto`, `fit-content`, `%`, `aspect-ratio(...)`) to avoid first-frame jumps
+
+## Ordering Model
+
+Layer/order operations are implemented via DOM order (parent `children` array), not `z-index`.
+
+Reorderable nodes:
+
+- all leaves
+- wrapper nodes with role `container`
+
+Non-reorderable wrappers:
+
+- `section`
+- `header`
+- `footer`
+
+Keyboard shortcuts (active only when a node is selected and no input field is focused):
+
+- `Cmd + [`: position backward
+- `Cmd + ]`: position forward
+- `Cmd + Alt + [`: send to back
+- `Cmd + Alt + ]`: bring to front
+
 ## Units
 
 The model is breakpoint-ready, even though the current editor only exposes a base breakpoint.
@@ -160,7 +194,8 @@ Current UX includes:
 - insert panel
 - inspector panel
 - debug panel
-- drag, resize, and reparenting
+- drag, resize, reparenting, and snap guides
+- inspector ordering controls with icon actions and tooltips
 - local session persistence in `localStorage`
 
 ## Validation Policy
