@@ -477,7 +477,8 @@ button {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  overflow: auto;
+  overflow-x: clip;
+  overflow-y: auto;
   padding: 22px clamp(14px, 2vw, 28px) 48px;
 }
 
