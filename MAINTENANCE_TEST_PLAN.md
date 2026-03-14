@@ -200,6 +200,13 @@ This plan is for keeping the playground stable while feature work is paused.
 5. Header is text-only (no brand image) and primary text is inset from header edges.
 6. Footer title/body/repository-link blocks keep vertical separation and never overlap at default stage width.
 
+### J. Architecture boundaries
+
+1. `src/model/*` compiles without importing from `src/app/*`, `src/panels/*`, `src/stage/*`, or `src/editor/*`.
+2. Editor UI surfaces (`src/app/*`, `src/panels/*`) use API facade imports (`src/api/*`) and do not import model/stage modules directly.
+3. `src/site/SiteRenderer.tsx` has no editor interaction dependencies (`DragController`, `ResizeController`, selection overlays, panel state).
+4. `src/api/documentApi.ts` supports document-level mutation/validation utilities using `DocumentModel` only (no `EditorState` requirement), enabling CLI/non-UI usage.
+
 ## Regression Exit Criteria
 
 Maintenance release is acceptable only if all are true:

@@ -89,3 +89,13 @@ This is intentional. Sticky behavior is easier to reason about when its range is
 
 - [PLAYGROUND_SPEC.md](./PLAYGROUND_SPEC.md) for the editor model, wrapper roles, nesting rules, units, persistence, and implementation notes
 
+## API Boundaries
+
+For non-UI document automation (for example CLI scripts), use `src/api/documentApi.ts`.
+
+It exposes document-level operations using `DocumentModel` only (no editor session state), including:
+
+- document creation/validation
+- parse/serialize helpers
+- rect/sticky/text mutation helpers
+- template insertion into the document tree

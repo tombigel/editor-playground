@@ -1,5 +1,5 @@
 import { ImageIcon, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
-import type { LeafRole } from '../model/types';
+import type { LeafRole } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 
 type Props = {

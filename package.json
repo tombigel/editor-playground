@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:architecture": "sh -c 'rg -n -e \"from ../model\" -e \"from ../stage\" src/app src/panels && exit 1 || true; rg -n \"\\.\\./(editor|app|panels|stage|api)\" src/model src/sticky && exit 1 || true; rg -n \"\\.\\./(editor|api|app|panels|stage)\" src/site && exit 1 || true'"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

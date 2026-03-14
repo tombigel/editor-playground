@@ -241,6 +241,14 @@ Current UX includes:
 - in-memory incremental undo/redo
 - local session persistence in `localStorage`
 
+## Architecture Boundaries
+
+- `src/model/*` is the domain layer (types, units, defaults, selectors, validation) and has no editor UI concerns.
+- `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
+- `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
+- `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
+- `src/site/SiteRenderer.tsx` is a site/runtime renderer detached from editor interactions (no drag/resize/selection logic).
+
 ## Section Templates
 
 Adding a section now opens a section-template picker instead of inserting immediately.

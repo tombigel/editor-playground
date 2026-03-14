@@ -16,8 +16,8 @@ import {
   ListStart,
   ListX,
 } from 'lucide-react';
-import type { DocumentNode, WrapperNode } from '../model/types';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import type { DocumentNode, WrapperNode } from '../api/documentApi';
+import { parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

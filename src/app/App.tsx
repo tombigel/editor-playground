@@ -1,18 +1,25 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Eye, Grid3X3, Magnet, Redo2, SearchCode, StickyNote, Undo2, X } from 'lucide-react';
 import {
+  SECTION_TEMPLATES,
   cancelPromoteWrapperRole,
   clearPersistedState,
+  computeStickyState,
   confirmPromoteWrapperRole,
   deleteNode,
   demoteWrapperRole,
+  getNode,
   getValidationErrors,
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
   loadPersistedState,
   moveNode,
+  parseUnitValue,
+  type DocumentNode,
   type EditorState,
+  type NodeId,
+  type SectionTemplateId,
   persistState,
   reparentNode,
   reorderNode,
@@ -23,16 +30,11 @@ import {
   updateStickyField,
   updateTextField,
   updateWrapperStyleField,
-} from '../model/documentStore';
-import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
-import { parseUnitValue } from '../model/units';
-import { getNode } from '../model/selectors';
-import type { DocumentNode, NodeId } from '../model/types';
+} from '../api/editorApi';
 import { InsertPanel } from '../panels/InsertPanel';
 import { InspectorPanel } from '../panels/InspectorPanel';
 import { DebugPanel } from '../panels/DebugPanel';
-import { Stage } from '../stage/Stage';
-import { computeStickyState } from '../sticky/stickyCompute';
+import { Stage } from '../api/editorViewApi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ComputedWrapperStickyState, DocumentNode } from '../model/types';
-import { formatValue } from '../model/units';
+import type { ComputedWrapperStickyState, DocumentNode } from '../api/documentApi';
+import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

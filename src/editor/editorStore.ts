@@ -8,8 +8,8 @@ import {
   createWrapper,
   syncIdCountersWithDocument,
   type SectionTemplateId,
-} from './defaults';
-import { validateDocument } from './validation';
+} from '../model/defaults';
+import { validateDocument } from '../model/validation';
 import type {
   DocumentModel,
   DocumentNode,
@@ -20,8 +20,8 @@ import type {
   TextLeaf,
   WrapperRole,
   WrapperNode,
-} from './types';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from './units';
+} from '../model/types';
+import { parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
 
 export type ConfirmReplaceRole = {
   requestedId: NodeId;

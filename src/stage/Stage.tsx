@@ -14,7 +14,7 @@ import { formatValue, resolveUnitValuePx } from '../model/units';
 import type { DragState } from '../editor/DragController';
 import type { ResizeHandle, ResizeState } from '../editor/ResizeController';
 
-type Props = {
+export type StageProps = {
   document: DocumentModel;
   selectedId: NodeId | null;
   previewSticky: boolean;
@@ -72,7 +72,7 @@ export function Stage({
   onResize,
   onResizeStart,
   onResizeEnd,
-}: Props) {
+}: StageProps) {
   const stickyState = useMemo(() => computeStickyState(document), [document]);
   const [dragState, setDragState] = useState<DragState>(null);
   const [snapGuides, setSnapGuides] = useState<SnapGuides>({
