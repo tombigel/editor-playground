@@ -1,5 +1,7 @@
 export type DragState = {
   nodeId: string;
+  startClientX: number;
+  startClientY: number;
   currentClientX: number;
   currentClientY: number;
   grabOffsetX: number;

@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  ArrowBigDown,
+  ArrowBigDownDash,
+  ArrowBigUp,
+  ArrowBigUpDash,
+  ListEnd,
+  ListStart,
+  ListX,
+} from 'lucide-react';
 import type { DocumentNode, WrapperNode } from '../model/types';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { Button } from '@/components/ui/button';
@@ -14,6 +25,15 @@ import { Textarea } from '@/components/ui/textarea';
 
 type Props = {
   node: DocumentNode | null;
+  showOrderControls: boolean;
+  canOrderBack: boolean;
+  canOrderForward: boolean;
+  canSendToBack: boolean;
+  canBringToFront: boolean;
+  onOrderBack: () => void;
+  onOrderForward: () => void;
+  onSendToBack: () => void;
+  onBringToFront: () => void;
   onTextChange: (field: string, value: string) => void;
   onWrapperStyleChange: (field: 'background', value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
@@ -29,6 +49,15 @@ type Props = {
 
 export function InspectorPanel({
   node,
+  showOrderControls,
+  canOrderBack,
+  canOrderForward,
+  canSendToBack,
+  canBringToFront,
+  onOrderBack,
+  onOrderForward,
+  onSendToBack,
+  onBringToFront,
   onTextChange,
   onWrapperStyleChange,
   onRectChange,
@@ -60,20 +89,88 @@ export function InspectorPanel({
           <h2 className="text-[15px] font-semibold text-slate-950">{node.name}</h2>
           {node.type !== 'site' ? (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
-              {node.type === 'wrapper' ? node.role : node.role}
+              {node.role}
             </span>
           ) : null}
         </div>
       </div>
 
       <Card className="rounded-xl border-slate-200 shadow-none">
-        <CardHeader className="px-4 pt-4 pb-1.5">
-          <CardTitle className="text-sm">Identity</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 px-4 pt-2 pb-4">
-          <FormField label="Name">
-            <Input value={node.name} onChange={(e) => onTextChange('name', e.target.value)} />
-          </FormField>
+        <CardContent className="space-y-3 px-4 py-4">
+          <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Name</Label>
+            <Input value={node.name} onChange={(e) => onTextChange('name', e.target.value)} className="h-9 text-xs" />
+          </div>
+
+          {node.type !== 'site' ? (
+            <div className="grid grid-cols-2 gap-2">
+              <InlineField
+                label="X"
+                value={node.rect.x.base.raw}
+                onChange={(value) => onRectChange('x', value)}
+                validate={(value) => validateUnitField(value, 'x')}
+              />
+              <InlineField
+                label="Y"
+                value={node.rect.y.base.raw}
+                onChange={(value) => onRectChange('y', value)}
+                validate={(value) => validateUnitField(value, 'y')}
+              />
+              <InlineField
+                label="W"
+                value={node.rect.width.base.raw}
+                onChange={(value) => onRectChange('width', value)}
+                validate={(value) => validateUnitField(value, 'width')}
+              />
+              <InlineField
+                label="H"
+                value={node.rect.height.base.raw}
+                onChange={(value) => onRectChange('height', value)}
+                validate={(value) => validateUnitField(value, 'height')}
+              />
+            </div>
+          ) : null}
+
+          {showOrderControls ? (
+            <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Order</Label>
+              <div className="flex justify-end gap-2">
+                <OrderIconButton
+                  label="Position Forward"
+                  shortcut="Cmd + ]"
+                  onClick={onOrderForward}
+                  disabled={!canOrderForward}
+                >
+                  <ArrowBigUp className="h-4 w-4" />
+                </OrderIconButton>
+                <OrderIconButton
+                  label="Bring to Front"
+                  shortcut="Cmd + Alt + ]"
+                  onClick={onBringToFront}
+                  disabled={!canBringToFront}
+                >
+                  <ArrowBigUpDash className="h-4 w-4" />
+                </OrderIconButton>
+                <OrderIconButton
+                  label="Position Backward"
+                  shortcut="Cmd + ["
+                  onClick={onOrderBack}
+                  disabled={!canOrderBack}
+                >
+                  <ArrowBigDown className="h-4 w-4" />
+                </OrderIconButton>
+                <OrderIconButton
+                  label="Send to Back"
+                  shortcut="Cmd + Alt + ["
+                  onClick={onSendToBack}
+                  disabled={!canSendToBack}
+                >
+                  <ArrowBigDownDash className="h-4 w-4" />
+                </OrderIconButton>
+              </div>
+            </div>
+          ) : null}
+
           {node.type === 'wrapper' ? (
             <WrapperActions node={node} onPromote={onPromote} onDemote={onDemote} />
           ) : null}
@@ -82,40 +179,6 @@ export function InspectorPanel({
 
       {node.type !== 'site' ? (
         <>
-          <Card className="rounded-xl border-slate-200 shadow-none">
-            <CardHeader className="px-4 pt-4 pb-1.5">
-              <CardTitle className="text-sm">Frame</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 px-4 pt-2 pb-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Field
-                  label="X"
-                  value={node.rect.x.base.raw}
-                  onChange={(value) => onRectChange('x', value)}
-                  validate={(value) => validateUnitField(value, 'x')}
-                />
-                <Field
-                  label="Y"
-                  value={node.rect.y.base.raw}
-                  onChange={(value) => onRectChange('y', value)}
-                  validate={(value) => validateUnitField(value, 'y')}
-                />
-                <Field
-                  label="Width"
-                  value={node.rect.width.base.raw}
-                  onChange={(value) => onRectChange('width', value)}
-                  validate={(value) => validateUnitField(value, 'width')}
-                />
-                <Field
-                  label="Height"
-                  value={node.rect.height.base.raw}
-                  onChange={(value) => onRectChange('height', value)}
-                  validate={(value) => validateUnitField(value, 'height')}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {node.type === 'wrapper' ? (
             <Card className="rounded-xl border-slate-200 shadow-none">
               <CardHeader className="px-4 pt-4 pb-1.5">
@@ -416,6 +479,86 @@ function Field({
   );
 }
 
+function InlineField({
+  label,
+  value,
+  onChange,
+  validate,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  validate?: (value: string) => boolean;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [invalid, setInvalid] = useState(false);
+
+  useEffect(() => {
+    setDraft(value);
+    setInvalid(false);
+  }, [value]);
+
+  return (
+    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1.5">
+      <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</Label>
+      <Input
+        value={draft}
+        onChange={(e) => {
+          const next = e.target.value;
+          setDraft(next);
+          if (!validate) {
+            onChange(next);
+            return;
+          }
+          const isValid = validate(next);
+          setInvalid(!isValid);
+          if (isValid) {
+            onChange(next);
+          }
+        }}
+        className={`h-8 text-xs ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
+      />
+    </div>
+  );
+}
+
+function OrderIconButton({
+  label,
+  shortcut,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string;
+  shortcut?: string;
+  onClick: () => void;
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className="group relative inline-flex">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        aria-label={label}
+        onClick={onClick}
+        disabled={disabled}
+        className="h-8 w-8 p-0"
+      >
+        {children}
+      </Button>
+      <div
+        role="tooltip"
+        className={`pointer-events-none absolute left-1/2 z-30 w-max -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-center text-[11px] text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${shortcut ? '-top-10' : '-top-8'}`}
+      >
+        <div className="leading-3.5 font-medium">{label}</div>
+        {shortcut ? <div className="mt-0.5 leading-3 text-[10px] font-normal text-slate-300">{shortcut}</div> : null}
+      </div>
+    </div>
+  );
+}
+
 function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-1">
@@ -549,25 +692,25 @@ function WrapperActions({
   onDemote: () => void;
 }) {
   return (
-    <div className="space-y-1.5">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Role</div>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2">
+      <Label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Role</Label>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">
           {node.role}
         </span>
         {node.role === 'section' || node.role === 'container' ? (
           <>
-            <Button variant="outline" size="sm" onClick={() => onPromote('header')}>
-              Promote to header
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onPromote('footer')}>
-              Promote to footer
-            </Button>
+            <OrderIconButton label="Promote to Header" onClick={() => onPromote('header')} disabled={false}>
+              <ListStart className="h-4 w-4" />
+            </OrderIconButton>
+            <OrderIconButton label="Promote to Footer" onClick={() => onPromote('footer')} disabled={false}>
+              <ListEnd className="h-4 w-4" />
+            </OrderIconButton>
           </>
         ) : (
-          <Button variant="outline" size="sm" onClick={onDemote}>
-            Demote to section
-          </Button>
+          <OrderIconButton label="Demote to Section" onClick={onDemote} disabled={false}>
+            <ListX className="h-4 w-4" />
+          </OrderIconButton>
         )}
       </div>
     </div>

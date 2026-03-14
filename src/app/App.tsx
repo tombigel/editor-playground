@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Eye, Grid3X3, SearchCode, StickyNote } from 'lucide-react';
+import { Eye, Grid3X3, Magnet, SearchCode, StickyNote } from 'lucide-react';
 import {
   cancelPromoteWrapperRole,
   clearPersistedState,
@@ -14,6 +14,7 @@ import {
   moveNode,
   persistState,
   reparentNode,
+  reorderNode,
   requestPromoteWrapperRole,
   resizeNode,
   selectNode,
@@ -54,9 +55,14 @@ type Action =
   | { type: 'stickyOffset'; value: number }
   | { type: 'stickyDurationMode'; value: 'auto' | 'custom' }
   | { type: 'stickyDuration'; value: number }
+  | { type: 'orderBack' }
+  | { type: 'orderForward' }
+  | { type: 'orderSendToBack' }
+  | { type: 'orderBringToFront' }
   | { type: 'setPreviewSticky'; value: boolean }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
-  | { type: 'setShowGridLanes'; value: boolean };
+  | { type: 'setShowGridLanes'; value: boolean }
+  | { type: 'setSnapEnabled'; value: boolean };
 
 function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
   const selectedId = state.selectedId;
@@ -120,12 +126,22 @@ function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
       return selectedId
         ? updateStickyField(state, selectedId, { duration: parseUnitValue(`${action.value}vh`) })
         : state;
+    case 'orderBack':
+      return selectedId ? reorderNode(state, selectedId, 'back') : state;
+    case 'orderForward':
+      return selectedId ? reorderNode(state, selectedId, 'forward') : state;
+    case 'orderSendToBack':
+      return selectedId ? reorderNode(state, selectedId, 'sendToBack') : state;
+    case 'orderBringToFront':
+      return selectedId ? reorderNode(state, selectedId, 'bringToFront') : state;
     case 'setPreviewSticky':
       return { ...state, ui: { ...state.ui, previewSticky: action.value } };
     case 'setSpacerVisibility':
       return { ...state, ui: { ...state.ui, spacerVisibility: action.value } };
     case 'setShowGridLanes':
       return { ...state, ui: { ...state.ui, showGridLanes: action.value } };
+    case 'setSnapEnabled':
+      return { ...state, ui: { ...state.ui, snapEnabled: action.value } };
     default:
       return state;
   }
@@ -137,6 +153,7 @@ export function App() {
   const [spacerMenuOpen, setSpacerMenuOpen] = useState(false);
   const spacerMenuRef = useRef<HTMLDivElement | null>(null);
   const selectedNode = getNode(state.document, state.selectedId);
+  const orderState = getNodeOrderState(state, selectedNode);
   const errors = useMemo(() => getValidationErrors(state), [state]);
   const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
 
@@ -164,22 +181,39 @@ export function App() {
       if (!state.selectedId) {
         return;
       }
-      if (event.key !== 'Backspace' && event.key !== 'Delete') {
-        return;
-      }
 
       const active = document.activeElement as HTMLElement | null;
       if (isInteractiveFocus(active)) {
         return;
       }
 
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+        dispatch({ type: 'delete' });
+        return;
+      }
+
+      if (!event.metaKey || event.ctrlKey || event.shiftKey) {
+        return;
+      }
+
+      const isLeft = event.code === 'BracketLeft';
+      const isRight = event.code === 'BracketRight';
+      if (!isLeft && !isRight) {
+        return;
+      }
+
       event.preventDefault();
-      dispatch({ type: 'delete' });
+      if (event.altKey) {
+        dispatch({ type: isLeft ? 'orderSendToBack' : 'orderBringToFront' });
+      } else {
+        dispatch({ type: isLeft ? 'orderBack' : 'orderForward' });
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.selectedId]);
+  }, [state]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900">
@@ -295,6 +329,21 @@ export function App() {
                   </button>
                   <button
                     type="button"
+                    aria-pressed={state.ui.snapEnabled}
+                    onClick={() => dispatch({ type: 'setSnapEnabled', value: !state.ui.snapEnabled })}
+                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
+                      state.ui.snapEnabled
+                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
+                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Magnet className="h-4 w-4" />
+                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
+                      {state.ui.snapEnabled ? 'Disable snap (Alt reverses)' : 'Enable snap (Alt reverses)'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
                     aria-pressed={debugOpen}
                     onClick={() => setDebugOpen((open) => !open)}
                     className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
@@ -350,6 +399,7 @@ export function App() {
               previewSticky={state.ui.previewSticky}
               spacerVisibility={state.ui.spacerVisibility}
               showGridLanes={state.ui.showGridLanes}
+              snapEnabled={state.ui.snapEnabled}
               onSelect={(id) => dispatch({ type: 'select', id })}
               onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
               onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
@@ -361,6 +411,15 @@ export function App() {
           <aside className="min-h-0 overflow-hidden border-l border-slate-200/80 bg-white/97 shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
             <InspectorPanel
               node={selectedNode}
+              showOrderControls={orderState.show}
+              canOrderBack={orderState.canBack}
+              canOrderForward={orderState.canForward}
+              canSendToBack={orderState.canBack}
+              canBringToFront={orderState.canForward}
+              onOrderBack={() => dispatch({ type: 'orderBack' })}
+              onOrderForward={() => dispatch({ type: 'orderForward' })}
+              onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
+              onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
               onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
               onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
               onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
@@ -446,4 +505,34 @@ function selectedNodeHasBottomEdge(state: ReturnType<typeof createInitialState>,
     return false;
   }
   return node.sticky?.edges.bottom ?? false;
+}
+
+function getNodeOrderState(
+  state: ReturnType<typeof createInitialState>,
+  node: ReturnType<typeof getNode>,
+) {
+  if (!node || node.type === 'site' || node.parentId === null) {
+    return { show: false, canBack: false, canForward: false };
+  }
+
+  const isReorderable = node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
+  if (!isReorderable) {
+    return { show: false, canBack: false, canForward: false };
+  }
+
+  const parent = state.document.nodes[node.parentId];
+  if (!parent) {
+    return { show: false, canBack: false, canForward: false };
+  }
+
+  const index = parent.children.indexOf(node.id);
+  if (index === -1) {
+    return { show: false, canBack: false, canForward: false };
+  }
+
+  return {
+    show: true,
+    canBack: index > 0,
+    canForward: index < parent.children.length - 1,
+  };
 }

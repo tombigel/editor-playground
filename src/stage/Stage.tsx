@@ -20,10 +20,21 @@ type Props = {
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
+  snapEnabled: boolean;
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
   onResize: (id: NodeId, width: string, height: string) => void;
+};
+
+const VIEWPORT_WIDTH = 1440;
+const VIEWPORT_HEIGHT = 900;
+const MIN_NODE_SIZE = 24;
+const SNAP_THRESHOLD_PX = 8;
+
+type SnapGuides = {
+  x: number | null;
+  y: number | null;
 };
 
 function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
@@ -36,6 +47,7 @@ export function Stage({
   previewSticky,
   spacerVisibility,
   showGridLanes,
+  snapEnabled,
   onSelect,
   onMove,
   onReparent,
@@ -43,6 +55,7 @@ export function Stage({
 }: Props) {
   const stickyState = useMemo(() => computeStickyState(document), [document]);
   const [dragState, setDragState] = useState<DragState>(null);
+  const [snapGuides, setSnapGuides] = useState<SnapGuides>({ x: null, y: null });
   const [resizeState, setResizeState] = useState<ResizeState>(null);
   const root = document.nodes[document.rootId];
   const wrappers = getChildren(document, root.id).filter((node) => node.type === 'wrapper') as WrapperNode[];
@@ -55,27 +68,48 @@ export function Stage({
       className="stage-shell"
       onMouseMove={(event) => {
         if (dragState) {
+          const axisLocked = getShiftLockedPointer(dragState, event.clientX, event.clientY, event.shiftKey);
+          const shouldSnap = event.altKey ? !snapEnabled : snapEnabled;
+          const snapped = shouldSnap
+            ? getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY)
+            : {
+                clientX: axisLocked.clientX,
+                clientY: axisLocked.clientY,
+                guideX: null,
+                guideY: null,
+              };
           setDragState({
             ...dragState,
-            currentClientX: event.clientX,
-            currentClientY: event.clientY,
+            currentClientX: snapped.clientX,
+            currentClientY: snapped.clientY,
           });
+          setSnapGuides({ x: snapped.guideX, y: snapped.guideY });
         }
         if (resizeState) {
-          const deltaX = event.clientX - resizeState.startClientX;
-          const deltaY = event.clientY - resizeState.startClientY;
-          const nextWidth = Math.max(24, resizeState.originWidth + deltaX);
-          const nextHeight = Math.max(24, resizeState.originHeight + deltaY);
-          onResize(resizeState.nodeId, `${nextWidth}px`, `${nextHeight}px`);
+          const frame = computeResizeFrame(resizeState, event.clientX, event.clientY, event.shiftKey);
+          onResize(resizeState.nodeId, px(frame.width), px(frame.height));
+          if (frame.x !== resizeState.originX || frame.y !== resizeState.originY) {
+            onMove(resizeState.nodeId, px(frame.x), px(frame.y));
+          }
         }
       }}
       onMouseUp={(event) => {
         if (dragState) {
-          const drop = findDropWrapper(event.clientX, event.clientY);
+          const axisLocked = getShiftLockedPointer(dragState, event.clientX, event.clientY, event.shiftKey);
+          const shouldSnap = event.altKey ? !snapEnabled : snapEnabled;
+          const snapped = shouldSnap
+            ? getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY)
+            : {
+                clientX: axisLocked.clientX,
+                clientY: axisLocked.clientY,
+                guideX: null,
+                guideY: null,
+              };
+          const drop = findDropWrapper(snapped.clientX, snapped.clientY);
           const draggedNode = document.nodes[dragState.nodeId];
           if (drop && draggedNode && draggedNode.type !== 'site') {
-            const localX = Math.max(0, event.clientX - drop.rect.left - dragState.grabOffsetX);
-            const localY = Math.max(0, event.clientY - drop.rect.top - dragState.grabOffsetY);
+            const localX = Math.max(0, snapped.clientX - drop.rect.left - dragState.grabOffsetX);
+            const localY = Math.max(0, snapped.clientY - drop.rect.top - dragState.grabOffsetY);
             if (draggedNode.parentId !== drop.wrapperId) {
               onReparent(dragState.nodeId, drop.wrapperId, `${localX}px`, `${localY}px`);
             } else {
@@ -84,10 +118,12 @@ export function Stage({
           }
         }
         setDragState(null);
+        setSnapGuides({ x: null, y: null });
         setResizeState(null);
       }}
       onMouseLeave={() => {
         setDragState(null);
+        setSnapGuides({ x: null, y: null });
         setResizeState(null);
       }}
     >
@@ -151,6 +187,7 @@ export function Stage({
           : <EmptySlot label="Footer slot" />}
         </div>
       </div>
+      {dragState ? renderSnapGuides(snapGuides) : null}
       {dragState ? renderDragPreview(document, dragState) : null}
     </div>
   );
@@ -204,6 +241,19 @@ function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState
         </div>
       )}
     </div>
+  );
+}
+
+function renderSnapGuides(guides: SnapGuides) {
+  return (
+    <>
+      {guides.x !== null ? (
+        <div className="snap-guide snap-guide-vertical" style={{ left: `${guides.x}px` }} />
+      ) : null}
+      {guides.y !== null ? (
+        <div className="snap-guide snap-guide-horizontal" style={{ top: `${guides.y}px` }} />
+      ) : null}
+    </>
   );
 }
 
@@ -264,7 +314,7 @@ function renderWrapper({
   const isStickyContentWrapper = node.sticky?.enabled && node.sticky.target === 'contentWrapper';
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
-      ? getStickyCss(node.sticky, isTopLevel, node)
+      ? getStickyCss(node.sticky, isTopLevel)
       : undefined;
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
@@ -274,7 +324,7 @@ function renderWrapper({
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
         gridTemplateRows: meshLayout.rowTemplate,
-        ...(previewSticky ? getStickyCss(node.sticky!, true, node) : {}),
+        ...(previewSticky ? getStickyCss(node.sticky!, true) : {}),
       }
     : {
         ...getContentWrapperBaseStyle(node),
@@ -303,18 +353,16 @@ function renderWrapper({
         event.stopPropagation();
         onSelect(node.id);
         if (!isTopLevel) {
-          const dragGeometry = getDragElementRect(event.currentTarget, event.clientX, event.clientY);
-          setDragState({
-            nodeId: node.id,
-            currentClientX: event.clientX,
-            currentClientY: event.clientY,
-            grabOffsetX: dragGeometry.offsetX,
-            grabOffsetY: dragGeometry.offsetY,
-            previewWidth: dragGeometry.rect.width,
-            previewHeight: dragGeometry.rect.height,
-            originX: parseFloat(node.rect.x.base.raw) || 0,
-            originY: parseFloat(node.rect.y.base.raw) || 0,
-          });
+          setDragState(
+            createDragState({
+              nodeId: node.id,
+              element: event.currentTarget,
+              clientX: event.clientX,
+              clientY: event.clientY,
+              originX: parseFloat(node.rect.x.base.raw) || 0,
+              originY: parseFloat(node.rect.y.base.raw) || 0,
+            }),
+          );
         }
       }}
       >
@@ -347,8 +395,12 @@ function renderWrapper({
                 selectedId,
               }),
             )}
-          {showWrapperSpacerVisuals ? renderSpacerRanges(document, node, wrapperStickyState) : null}
         </div>
+        {showWrapperSpacerVisuals ? (
+          <div className="sticky-spacer-range-layer">
+            {renderSpacerRanges(document, node, wrapperStickyState)}
+          </div>
+        ) : null}
         {children.map((child) =>
           child.type === 'wrapper'
             ? renderWrapper({
@@ -374,7 +426,6 @@ function renderWrapper({
                 previewSticky,
                 spacerVisibility,
                 onSelect,
-                onMove,
                 dragState,
                 setDragState,
                 setResizeState,
@@ -387,13 +438,16 @@ function renderWrapper({
           <ResizeHandleView
             onHandleMouseDown={(handle, event) => {
               event.stopPropagation();
+              const fallbackWidth = numericWidth(node.rect.width.base.raw);
+              const fallbackHeight = numericHeight(node.rect.height.base.raw);
+              const startSize = getResizeStartSize(event.currentTarget, fallbackWidth, fallbackHeight);
               setResizeState({
                 nodeId: node.id,
                 handle,
                 startClientX: event.clientX,
                 startClientY: event.clientY,
-                originWidth: numericWidth(node.rect.width.base.raw),
-                originHeight: numericHeight(node.rect.height.base.raw),
+                originWidth: startSize.width,
+                originHeight: startSize.height,
                 originX: parseFloat(node.rect.x.base.raw) || 0,
                 originY: parseFloat(node.rect.y.base.raw) || 0,
               });
@@ -419,7 +473,6 @@ function renderLeaf({
   previewSticky,
   spacerVisibility,
   onSelect,
-  onMove: _onMove,
   dragState,
   setDragState,
   setResizeState,
@@ -432,7 +485,6 @@ function renderLeaf({
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   onSelect: (id: NodeId) => void;
-  onMove: (id: NodeId, x: string, y: string) => void;
   dragState: DragState;
   setDragState: (state: DragState) => void;
   setResizeState: (state: ResizeState) => void;
@@ -478,25 +530,23 @@ function renderLeaf({
         position: previewSticky && (isSelfStickyTrack || isAutoSticky) ? 'sticky' : 'relative',
         ...(
           previewSticky && child.sticky?.enabled
-            ? getStickyCss(child.sticky, false, child)
+            ? getStickyCss(child.sticky, false)
             : {}
         ),
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
         onSelect(child.id);
-        const dragGeometry = getDragElementRect(event.currentTarget, event.clientX, event.clientY);
-        setDragState({
-          nodeId: child.id,
-          currentClientX: event.clientX,
-          currentClientY: event.clientY,
-          grabOffsetX: dragGeometry.offsetX,
-          grabOffsetY: dragGeometry.offsetY,
-          previewWidth: dragGeometry.rect.width,
-          previewHeight: dragGeometry.rect.height,
-          originX: parseFloat(child.rect.x.base.raw) || 0,
-          originY: parseFloat(child.rect.y.base.raw) || 0,
-        });
+        setDragState(
+          createDragState({
+            nodeId: child.id,
+            element: event.currentTarget,
+            clientX: event.clientX,
+            clientY: event.clientY,
+            originX: parseFloat(child.rect.x.base.raw) || 0,
+            originY: parseFloat(child.rect.y.base.raw) || 0,
+          }),
+        );
       }}
     >
       <div className="stage-leaf-body">{renderLeafContent(child)}</div>
@@ -504,13 +554,16 @@ function renderLeaf({
         <ResizeHandleView
           onHandleMouseDown={(handle, event) => {
             event.stopPropagation();
+            const fallbackWidth = numericWidth(child.rect.width.base.raw);
+            const fallbackHeight = numericHeight(child.rect.height.base.raw);
+            const startSize = getResizeStartSize(event.currentTarget, fallbackWidth, fallbackHeight);
             setResizeState({
               nodeId: child.id,
               handle,
               startClientX: event.clientX,
               startClientY: event.clientY,
-              originWidth: numericWidth(child.rect.width.base.raw),
-              originHeight: numericHeight(child.rect.height.base.raw),
+              originWidth: startSize.width,
+              originHeight: startSize.height,
               originX: parseFloat(child.rect.x.base.raw) || 0,
               originY: parseFloat(child.rect.y.base.raw) || 0,
             });
@@ -574,6 +627,7 @@ function renderLeafSpacerOverlay({
   }
 
   const leafHeightPx = getNodeHeight(child);
+  const autoDistancePx = Math.max(0, wrapperBottomLanePx - registration.startPx);
 
   return (
     <div
@@ -591,7 +645,7 @@ function renderLeafSpacerOverlay({
           child.rect.height.base.parsed.keyword === 'aspect-ratio'
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
-        ...(previewSticky ? getStickyCss(child.sticky, false, child) : {}),
+        ...(previewSticky ? getStickyCss(child.sticky, false) : {}),
       }}
     >
       {renderOffsetVisual(child.sticky, child)}
@@ -599,7 +653,7 @@ function renderLeafSpacerOverlay({
         <div
           className="sticky-auto-spacer"
           style={{
-            height: `${Math.max(0, wrapperBottomLanePx - registration.startPx)}px`,
+            height: `${autoDistancePx}px`,
           }}
         >
           <span className="sticky-spacer-label sticky-spacer-label-auto">Distance: auto</span>
@@ -696,6 +750,130 @@ function numericHeight(raw: string) {
   return Number.isFinite(parsed) ? parsed : 80;
 }
 
+function getResizeStartSize(handleElement: HTMLDivElement, fallbackWidth: number, fallbackHeight: number) {
+  const nodeElement = handleElement.closest<HTMLElement>('[data-node-id]');
+  if (!nodeElement) {
+    return { width: fallbackWidth, height: fallbackHeight };
+  }
+
+  const rect = nodeElement.getBoundingClientRect();
+  return {
+    width: rect.width > 0 ? rect.width : fallbackWidth,
+    height: rect.height > 0 ? rect.height : fallbackHeight,
+  };
+}
+
+function px(value: number) {
+  return `${Math.round(value)}px`;
+}
+
+function getShiftLockedPointer(
+  dragState: Exclude<DragState, null>,
+  clientX: number,
+  clientY: number,
+  shiftKey: boolean,
+) {
+  if (!shiftKey) {
+    return { clientX, clientY };
+  }
+
+  const deltaX = clientX - dragState.startClientX;
+  const deltaY = clientY - dragState.startClientY;
+  if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+    return { clientX, clientY: dragState.startClientY };
+  }
+
+  return { clientX: dragState.startClientX, clientY };
+}
+
+function computeResizeFrame(
+  resizeState: Exclude<ResizeState, null>,
+  clientX: number,
+  clientY: number,
+  shiftKey: boolean,
+) {
+  const deltaX = clientX - resizeState.startClientX;
+  const deltaY = clientY - resizeState.startClientY;
+
+  const isEast = resizeState.handle.includes('e');
+  const isWest = resizeState.handle.includes('w');
+  const isSouth = resizeState.handle.includes('s');
+  const isNorth = resizeState.handle.includes('n');
+  const isCornerHandle = (isEast || isWest) && (isSouth || isNorth);
+  const ratio = resizeState.originWidth / Math.max(1, resizeState.originHeight);
+
+  let width = resizeState.originWidth;
+  let height = resizeState.originHeight;
+  let x = resizeState.originX;
+  let y = resizeState.originY;
+
+  if (isEast) {
+    width = resizeState.originWidth + deltaX;
+  } else if (isWest) {
+    width = resizeState.originWidth - deltaX;
+    x = resizeState.originX + deltaX;
+  }
+
+  if (isSouth) {
+    height = resizeState.originHeight + deltaY;
+  } else if (isNorth) {
+    height = resizeState.originHeight - deltaY;
+    y = resizeState.originY + deltaY;
+  }
+
+  if (shiftKey && isCornerHandle) {
+    const widthChange = Math.abs(width - resizeState.originWidth) / Math.max(1, resizeState.originWidth);
+    const heightChange = Math.abs(height - resizeState.originHeight) / Math.max(1, resizeState.originHeight);
+
+    if (widthChange >= heightChange) {
+      height = width / ratio;
+    } else {
+      width = height * ratio;
+    }
+
+    if (isWest) {
+      x = resizeState.originX + (resizeState.originWidth - width);
+    }
+    if (isNorth) {
+      y = resizeState.originY + (resizeState.originHeight - height);
+    }
+  }
+
+  if (width < MIN_NODE_SIZE) {
+    if (isWest) {
+      x -= MIN_NODE_SIZE - width;
+    }
+    width = MIN_NODE_SIZE;
+  }
+
+  if (height < MIN_NODE_SIZE) {
+    if (isNorth) {
+      y -= MIN_NODE_SIZE - height;
+    }
+    height = MIN_NODE_SIZE;
+  }
+
+  if (shiftKey && isCornerHandle) {
+    const scale = Math.max(
+      1,
+      MIN_NODE_SIZE / Math.max(width, 1),
+      MIN_NODE_SIZE / Math.max(height, 1),
+    );
+    if (scale > 1) {
+      width *= scale;
+      height *= scale;
+      if (isWest) {
+        x = resizeState.originX + (resizeState.originWidth - width);
+      }
+      if (isNorth) {
+        y = resizeState.originY + (resizeState.originHeight - height);
+      }
+    }
+  }
+
+  return { width, height, x, y };
+}
+
 function estimateAutoLeafHeight(node: LeafNode) {
   if (node.role === 'text') {
     const fontSize =
@@ -704,9 +882,9 @@ function estimateAutoLeafHeight(node: LeafNode) {
             node.style.fontSize.parsed,
             {
               width: getNodeWidth(node),
-              height: 900,
-              viewportWidth: 1440,
-              viewportHeight: 900,
+              height: VIEWPORT_HEIGHT,
+              viewportWidth: VIEWPORT_WIDTH,
+              viewportHeight: VIEWPORT_HEIGHT,
             },
             'width',
           )
@@ -754,6 +932,37 @@ function getTrackCssWidth(node: LeafNode) {
   return 'min-content';
 }
 
+function createDragState({
+  nodeId,
+  element,
+  clientX,
+  clientY,
+  originX,
+  originY,
+}: {
+  nodeId: string;
+  element: HTMLElement;
+  clientX: number;
+  clientY: number;
+  originX: number;
+  originY: number;
+}): Exclude<DragState, null> {
+  const dragGeometry = getDragElementRect(element, clientX, clientY);
+  return {
+    nodeId,
+    startClientX: clientX,
+    startClientY: clientY,
+    currentClientX: clientX,
+    currentClientY: clientY,
+    grabOffsetX: dragGeometry.offsetX,
+    grabOffsetY: dragGeometry.offsetY,
+    previewWidth: dragGeometry.rect.width,
+    previewHeight: dragGeometry.rect.height,
+    originX,
+    originY,
+  };
+}
+
 function getDragElementRect(element: HTMLElement, clientX: number, clientY: number) {
   const rect = element.getBoundingClientRect();
   return {
@@ -761,6 +970,71 @@ function getDragElementRect(element: HTMLElement, clientX: number, clientY: numb
     offsetX: clientX - rect.left,
     offsetY: clientY - rect.top,
   };
+}
+
+function getSnappedDragPosition(dragState: Exclude<DragState, null>, clientX: number, clientY: number) {
+  let left = clientX - dragState.grabOffsetX;
+  let top = clientY - dragState.grabOffsetY;
+  const width = dragState.previewWidth;
+  const height = dragState.previewHeight;
+
+  const centerScreenX = window.innerWidth / 2;
+  const currentCenterX = left + width / 2;
+  const centerDeltaX = centerScreenX - currentCenterX;
+  const guideX = Math.abs(centerDeltaX) <= SNAP_THRESHOLD_PX ? centerScreenX : null;
+  if (guideX !== null) {
+    left += centerDeltaX;
+  }
+
+  const verticalTargets = collectVerticalSnapTargets(dragState.nodeId);
+  verticalTargets.push(window.innerHeight / 2);
+  const verticalSnap = findVerticalSnap(top, height, verticalTargets);
+  if (verticalSnap) {
+    top += verticalSnap.delta;
+  }
+
+  return {
+    clientX: left + dragState.grabOffsetX,
+    clientY: top + dragState.grabOffsetY,
+    guideX,
+    guideY: verticalSnap?.target ?? null,
+  };
+}
+
+function collectVerticalSnapTargets(draggedId: string) {
+  const targets: number[] = [];
+  const nodes = document.querySelectorAll<HTMLElement>('.stage-canvas [data-node-id]');
+  for (const element of nodes) {
+    if (element.dataset.nodeId === draggedId) {
+      continue;
+    }
+    const rect = element.getBoundingClientRect();
+    if (rect.height < 1 || rect.width < 1) {
+      continue;
+    }
+    targets.push(rect.top, rect.top + rect.height / 2, rect.bottom);
+  }
+  return targets;
+}
+
+function findVerticalSnap(top: number, height: number, targets: number[]) {
+  const anchors = [top, top + height / 2, top + height];
+  let best: { delta: number; distance: number; target: number } | null = null;
+
+  for (const target of targets) {
+    for (const anchor of anchors) {
+      const delta = target - anchor;
+      const distance = Math.abs(delta);
+      if (distance > SNAP_THRESHOLD_PX) {
+        continue;
+      }
+      if (!best || distance < best.distance) {
+        best = { delta, distance, target };
+      }
+    }
+  }
+
+  return best;
 }
 
 function findDropWrapper(clientX: number, clientY: number) {
@@ -790,24 +1064,24 @@ function resolveOffsetPx(
     {
       width: getNodeWidth(node),
       height: getNodeHeight(node),
-      viewportWidth: 1440,
-      viewportHeight: 900,
+      viewportWidth: VIEWPORT_WIDTH,
+      viewportHeight: VIEWPORT_HEIGHT,
     },
     'height',
   );
 }
 
-function defaultStickyOffset(node: Exclude<DocumentNode, { type: 'site' }>) {
-  return node.type === 'wrapper' ? '0px' : '0px';
+function defaultStickyOffset() {
+  return '0px';
 }
 
 function getNodeWidth(node: Exclude<DocumentNode, { type: 'site' }>) {
   const width = node.rect.width.base.parsed;
   if ('unit' in width) {
     return width.unit === 'px' ? width.value : width.unit === 'vw'
-      ? (width.value / 100) * 1440
+      ? (width.value / 100) * VIEWPORT_WIDTH
       : width.unit === 'vh'
-        ? (width.value / 100) * 900
+        ? (width.value / 100) * VIEWPORT_HEIGHT
         : (width.value / 100) * 960;
   }
   return 240;
@@ -817,9 +1091,9 @@ function getNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>) {
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
     return height.unit === 'px' ? height.value : height.unit === 'vh'
-      ? (height.value / 100) * 900
+      ? (height.value / 100) * VIEWPORT_HEIGHT
       : height.unit === 'vw'
-        ? (height.value / 100) * 1440
+        ? (height.value / 100) * VIEWPORT_WIDTH
         : (height.value / 100) * 480;
   }
   if (height.keyword === 'aspect-ratio') {
@@ -831,18 +1105,9 @@ function getNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>) {
   return estimateAutoLeafHeight(node);
 }
 
-function formatHeight(node: WrapperNode) {
-  const parsed = node.rect.height.base.parsed;
-  if ('unit' in parsed) {
-    return formatValue(parsed);
-  }
-  return parsed.keyword;
-}
-
 function getStickyCss(
   sticky: NonNullable<Exclude<DocumentNode, { type: 'site' }>['sticky']>,
   allowStickyPosition: boolean,
-  node: Exclude<DocumentNode, { type: 'site' }>,
 ): CSSProperties {
   if (!sticky.enabled) {
     return {};
@@ -857,10 +1122,10 @@ function getStickyCss(
   const bottomActive = sticky.edges.bottom ?? false;
 
   if (topActive) {
-    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset(node);
+    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset();
   }
   if (bottomActive) {
-    style.bottom = sticky.offsetBottom?.raw ?? defaultStickyOffset(node);
+    style.bottom = sticky.offsetBottom?.raw ?? defaultStickyOffset();
   }
 
   return style;
@@ -919,11 +1184,11 @@ function renderSpacerRanges(
         className={`sticky-spacer-range ${owner.sticky?.durationMode === 'auto' ? 'sticky-spacer-range-auto' : ''}`}
         style={style}
       >
-        <span className="sticky-spacer-label">
-          {owner.sticky?.durationMode === 'auto'
-            ? 'Distance: auto'
-            : `Distance · ${Math.round(registration.durationPx)}px`}
-        </span>
+        {owner.sticky?.durationMode === 'auto' ? (
+          <span className="sticky-spacer-label sticky-spacer-label-auto">Distance: auto</span>
+        ) : (
+          <span className="sticky-spacer-label">{`Distance · ${Math.round(registration.durationPx)}px`}</span>
+        )}
       </div>
     );
     });
@@ -1109,8 +1374,8 @@ function resolveCoordinatePx(
     {
       width,
       height,
-      viewportWidth: 1440,
-      viewportHeight: 900,
+      viewportWidth: VIEWPORT_WIDTH,
+      viewportHeight: VIEWPORT_HEIGHT,
     },
     axis,
   );

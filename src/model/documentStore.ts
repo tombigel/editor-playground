@@ -17,6 +17,8 @@ export type ConfirmReplaceRole = {
   existingId: NodeId;
 };
 
+export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
+
 export type EditorState = {
   document: DocumentModel;
   selectedId: NodeId | null;
@@ -25,6 +27,7 @@ export type EditorState = {
     previewSticky: boolean;
     spacerVisibility: 'selected' | 'all';
     showGridLanes: boolean;
+    snapEnabled: boolean;
   };
 };
 
@@ -40,6 +43,7 @@ export function createInitialState(): EditorState {
       previewSticky: true,
       spacerVisibility: 'selected',
       showGridLanes: false,
+      snapEnabled: true,
     },
   };
 }
@@ -67,6 +71,7 @@ export function loadPersistedState(): EditorState {
             ? parsed.ui.spacerVisibility
             : 'selected',
         showGridLanes: parsed.ui?.showGridLanes ?? false,
+        snapEnabled: parsed.ui?.snapEnabled ?? true,
       },
     };
     const errors = validateDocument(candidate.document);
@@ -428,6 +433,63 @@ export function resizeNode(
   return { ...state, document };
 }
 
+export function reorderNode(
+  state: EditorState,
+  nodeId: NodeId,
+  action: NodeOrderAction,
+): EditorState {
+  const document = cloneDocument(state.document);
+  const node = document.nodes[nodeId];
+  if (!node || node.type === 'site' || !isReorderableComponent(node) || !node.parentId) {
+    return state;
+  }
+
+  const parent = document.nodes[node.parentId];
+  if (!parent) {
+    return state;
+  }
+
+  const index = parent.children.indexOf(nodeId);
+  if (index === -1) {
+    return state;
+  }
+
+  const nextChildren = [...parent.children];
+  if (action === 'back') {
+    if (index === 0) {
+      return state;
+    }
+    [nextChildren[index - 1], nextChildren[index]] = [nextChildren[index], nextChildren[index - 1]];
+  } else if (action === 'forward') {
+    if (index === nextChildren.length - 1) {
+      return state;
+    }
+    [nextChildren[index + 1], nextChildren[index]] = [nextChildren[index], nextChildren[index + 1]];
+  } else if (action === 'sendToBack') {
+    if (index === 0) {
+      return state;
+    }
+    nextChildren.splice(index, 1);
+    nextChildren.unshift(nodeId);
+  } else {
+    if (index === nextChildren.length - 1) {
+      return state;
+    }
+    nextChildren.splice(index, 1);
+    nextChildren.push(nodeId);
+  }
+
+  parent.children = nextChildren;
+  return { ...state, document };
+}
+
+function isReorderableComponent(node: Exclude<DocumentNode, { type: 'site' }>) {
+  if (node.type === 'leaf') {
+    return true;
+  }
+  return node.role === 'container';
+}
+
 function isSiteSectionRole(role: WrapperRole) {
   return role === 'section' || role === 'header' || role === 'footer';
 }
@@ -551,7 +613,6 @@ function applyPromoteWrapperRole(
 ): EditorState {
   const document = cloneDocument(state.document);
   const wrapper = assertWrapper(document.nodes[wrapperId]);
-  const root = document.nodes[document.rootId];
   for (const node of Object.values(document.nodes)) {
     if (
       node.type === 'wrapper' &&
@@ -563,8 +624,35 @@ function applyPromoteWrapperRole(
     }
   }
   wrapper.role = targetRole;
-  wrapper.parentId = root.id;
+  moveWrapperToRoot(document, wrapper.id, targetRole);
   return { ...state, document };
+}
+
+function moveWrapperToRoot(
+  document: DocumentModel,
+  wrapperId: NodeId,
+  targetRole: 'header' | 'footer',
+) {
+  const wrapper = document.nodes[wrapperId];
+  const root = document.nodes[document.rootId];
+  if (!wrapper || wrapper.type !== 'wrapper' || root.type !== 'site') {
+    return;
+  }
+
+  if (wrapper.parentId && wrapper.parentId !== root.id) {
+    const previousParent = document.nodes[wrapper.parentId];
+    if (previousParent) {
+      previousParent.children = previousParent.children.filter((childId) => childId !== wrapper.id);
+    }
+  }
+
+  root.children = root.children.filter((childId) => childId !== wrapper.id);
+  if (targetRole === 'header') {
+    root.children.unshift(wrapper.id);
+  } else {
+    root.children.push(wrapper.id);
+  }
+  wrapper.parentId = root.id;
 }
 
 export function demoteWrapperRole(state: EditorState, wrapperId: NodeId): EditorState {
@@ -586,7 +674,10 @@ export function deleteNode(state: EditorState, nodeId: NodeId): EditorState {
   return {
     ...state,
     document,
-    selectedId: state.selectedId === nodeId ? null : state.selectedId,
+    selectedId:
+      state.selectedId && !document.nodes[state.selectedId]
+        ? null
+        : state.selectedId,
   };
 }
 
