@@ -176,8 +176,11 @@ This plan is for keeping the playground stable while feature work is paused.
 6. Placeholder/coming-soon templates are visible but cannot be inserted.
 7. All shipped templates load without validation errors:
    `Blank`, `Post`, `Sticky Staggered Images`, `Sticky Pinned Cards`, `Sticky Media Reveal`, `Sticky Edge Lab`.
-8. `Sticky Media Reveal` template uses a direct sticky image leaf (no container wrapper around the media) and matches the locked baseline:
-   media coordinates/size plus sticky `duration=100vh`, `offsetTop=10vh`.
+8. `Sticky Media Reveal` template uses direct sticky image leaves (no container wrappers around the media) and matches the locked baseline:
+   pinned media at `x=77`, `y=165`, size `401x428` with sticky `duration=150vh`, `offsetTop=10vh`;
+   reveal backdrop at `x=78`, `y=167`, size `399x426` with sticky `duration=25vh`, `offsetTop=10vh`;
+   narrative blocks match `y=313.640625`, `1035`, and `1687` with updated copy; section child order is
+   heading, pinned media, narrative A/B/C, then reveal backdrop.
 9. `Sticky Staggered Images` template matches the locked gallery baseline:
    heading/copy/image coordinates plus per-image sticky `duration=150vh`, `offsetTop=15vh`.
 10. `Sticky Pinned Cards` template matches the locked pinned-cards baseline:

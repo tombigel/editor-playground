@@ -78,7 +78,7 @@ export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   {
     id: 'stickyMediaReveal',
     name: 'Sticky Media Reveal',
-    description: 'Pinned media column with right-side reveal content.',
+    description: 'Pinned media with layered reveal background and right-side narrative.',
     category: 'sticky',
   },
   {
@@ -602,33 +602,59 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
   mediaImage.rect = createDefaultRect('77px', '165px', '401px', '428px');
   mediaImage.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
   mediaImage.alt = 'Golden desert dunes under soft sunlight';
-  mediaImage.sticky = createCustomSticky('100vh', '10vh');
+  mediaImage.sticky = {
+    enabled: true,
+    target: 'self',
+    edges: { top: true, bottom: false },
+    durationMode: 'custom',
+    duration: parseUnitValue('150vh'),
+    durationTop: parseUnitValue('150vh'),
+    offsetTop: parseUnitValue('10vh'),
+  };
+
+  const revealBackdrop = createLeaf('image', section.id) as ImageLeaf;
+  revealBackdrop.name = 'Reveal Backdrop';
+  revealBackdrop.rect = createDefaultRect('78px', '167px', '399px', '426px');
+  revealBackdrop.src =
+    'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80';
+  revealBackdrop.alt = 'Modern interior with natural light and textured seating';
+  revealBackdrop.sticky = {
+    enabled: true,
+    target: 'self',
+    edges: { top: true, bottom: false },
+    durationMode: 'custom',
+    duration: parseUnitValue('25vh'),
+    durationTop: parseUnitValue('25vh'),
+    offsetTop: parseUnitValue('10vh'),
+  };
 
   const blockA = createLeaf('text', section.id) as TextLeaf;
   blockA.name = 'Narrative Block A';
-  blockA.content = 'A. Define the sticky owner and inspect the offset marker alignment.';
-  blockA.rect = createDefaultRect('560px', '310px', '530px', 'auto');
+  blockA.content = 'A. We start with an image and stay with it \nfor a while';
+  blockA.rect = createDefaultRect('560px', '313.640625px', '530px', 'auto');
   styleText(blockA, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
 
   const blockB = createLeaf('text', section.id) as TextLeaf;
   blockB.name = 'Narrative Block B';
-  blockB.content = 'B. Validate spacer height and ensure section extent matches furthest sticky end.';
-  blockB.rect = createDefaultRect('560px', '760px', '530px', 'auto');
+  blockB.content = 'B. We reveal a second image, starting to tell a story';
+  blockB.rect = createDefaultRect('560px', '1035px', '530px', 'auto');
   styleText(blockB, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
 
   const blockC = createLeaf('text', section.id) as TextLeaf;
   blockC.name = 'Narrative Block C';
-  blockC.content = 'C. Confirm dragging and snapping stay consistent while sticky preview is enabled.';
-  blockC.rect = createDefaultRect('560px', '1210px', '530px', 'auto');
+  blockC.content =
+    'C. We end with some text we wanted to say about this image. Maybe a description, maybe an epilogue.\n';
+  blockC.rect = createDefaultRect('559px', '1687px', '530px', '306px');
   styleText(blockC, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
 
-  section.children = [heading.id, mediaImage.id, blockA.id, blockB.id, blockC.id];
+  section.children = [heading.id, mediaImage.id, blockA.id, blockB.id, blockC.id, revealBackdrop.id];
 
   return {
     wrapper: section,
     nodes: {
       [section.id]: section,
       [heading.id]: heading,
+      [revealBackdrop.id]: revealBackdrop,
       [mediaImage.id]: mediaImage,
       [blockA.id]: blockA,
       [blockB.id]: blockB,
