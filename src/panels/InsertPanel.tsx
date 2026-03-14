@@ -1,4 +1,4 @@
-import { ImageIcon, Link2, RectangleHorizontal, Rows3, SquareStack, Type } from 'lucide-react';
+import { ImageIcon, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
 import type { LeafRole } from '../model/types';
 import { Button } from '@/components/ui/button';
 
@@ -47,7 +47,7 @@ const INSERT_ITEMS = [
   {
     kind: 'leaf' as const,
     role: 'button' as const,
-    icon: RectangleHorizontal,
+    icon: RectangleEllipsis,
     label: 'Button',
     hint: 'Primary CTA',
   },

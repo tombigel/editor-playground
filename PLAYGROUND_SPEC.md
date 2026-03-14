@@ -172,7 +172,8 @@ Sticky properties:
 
 - duration slider: `0vh` to `400vh` in `25vh` steps
 - offset slider: `0vh` to `100vh`
-- when edge is `both`, inspector exposes separate top/bottom offset sliders and separate top/bottom duration sliders
+- when edge is `both`, inspector uses a dual-knob offset range slider (top/bottom band) and separate top/bottom duration sliders
+- for `container` wrappers, sticky `target` is temporarily fixed to `self` in the UI; `contentWrapper` target is hidden (implementation retained for future enablement)
 
 Defaults:
 
@@ -214,6 +215,8 @@ Sticky preview is CSS-native.
 Bottom-edge self sticky uses inverted track spacer ordering (spacer before node) so viewport pinning remains stable during scroll.
 For `edges: both`, preview applies both sticky constraints together (`top` and `bottom`) and uses split offsets (`offsetTop`, `offsetBottom`).
 For `edges: both`, visual guides render top and bottom offsets together, and distance guides render both top and bottom tracks together.
+Wrapper `target=self` sticky uses the same sticky-track/spacer pattern as leaf components for custom durations, including bottom-edge spacer ordering.
+Wrapper `target=self` sticky also renders `Distance: auto` indicators in preview (including top/bottom labeling in `edges: both`).
 
 JavaScript is used for:
 
@@ -258,11 +261,12 @@ Current templates:
 - `Sticky Staggered Images`
 - `Sticky Pinned Cards`
 - `Sticky Media Reveal`
-- `Sticky Bottom Dock`
+- `Sticky Edge Lab`
 
 `Sticky Media Reveal` uses a direct sticky image leaf (not a wrapper container around the image) seeded from a locked baseline (image position/size and sticky `duration=100vh`, `offsetTop=10vh`).
 `Sticky Staggered Images` is seeded from the locked staggered-gallery structure (fixed image coordinates and `150vh` duration / `15vh` offset per image).
 `Sticky Pinned Cards` is seeded from the locked pinned-cards baseline (pinned lead at `85/212.28125`, lead sticky `durationMode=auto` + `220vh` duration + `12vh` offset; narrative cards keep fixed coordinates with sticky `25vh/25vh/50vh` durations at `15vh` offset).
+`Sticky Edge Lab` is seeded as a 3-column top/both/bottom comparison. Only the three sticky card texts are wrapped in colored `container` wrappers, and sticky settings live on those card containers: top (`edges.top=true`, `offsetTop=10vh`, `durationTop=140vh`), both (`edges.top=true`, `edges.bottom=true`, `offsetTop=10vh`, `offsetBottom=10vh`, `durationTop=80vh`, `durationBottom=80vh`), and bottom (`edges.bottom=true`, `offsetBottom=10vh`, `durationBottom=140vh`). Baseline alignment is locked, including section height `2480px`, notes `y` values (`972`, `1293`, `1780`), sticky container anchors (`72/362`, `473/761`, `864/1179.9921875`), and footer note at `x=96`, `y=2604.984375`.
 
 Future-facing placeholders for scroll-driven animation templates are visible but non-insertable.
 

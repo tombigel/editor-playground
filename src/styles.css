@@ -854,6 +854,14 @@ button {
   flex-direction: column;
   align-items: stretch;
   overflow: visible;
+  pointer-events: none;
+  z-index: 8;
+  isolation: isolate;
+}
+
+.sticky-track > .stage-wrapper,
+.sticky-track > .stage-leaf {
+  pointer-events: auto;
 }
 
 .sticky-track-spacer {
@@ -870,7 +878,7 @@ button {
   align-items: center;
   min-height: 20px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: 0;
   background: #3478ff;
   color: #fff;
   font-size: 10px;

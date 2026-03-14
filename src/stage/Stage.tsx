@@ -345,6 +345,8 @@ type RenderWrapperArgs = {
   onResizeStart: (id: NodeId) => void;
   isTopLevel: boolean;
   meshPlacement?: CSSProperties;
+  selfRegistration?: ComputedWrapperStickyState['registrations'][number];
+  ownerBottomLanePx?: number;
 };
 
 function renderWrapper({
@@ -363,6 +365,8 @@ function renderWrapper({
   onResizeStart,
   isTopLevel,
   meshPlacement,
+  selfRegistration,
+  ownerBottomLanePx,
 }: RenderWrapperArgs): JSX.Element {
   const Tag =
     node.role === 'header'
@@ -392,10 +396,37 @@ function renderWrapper({
   const wrapperStyle = buildWrapperStyle(node, isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, node.id);
   const isStickyContentWrapper = node.sticky?.enabled && node.sticky.target === 'contentWrapper';
+  const stickyEdgeMode = node.sticky ? getStickyEdgeMode(node.sticky) : 'top';
+  const isSelfStickyTrack = Boolean(
+    selfRegistration &&
+    node.sticky?.enabled &&
+    node.sticky.target === 'self' &&
+    node.sticky.durationMode !== 'auto',
+  );
+  const isBottomOnlySticky = isSelfStickyTrack && stickyEdgeMode === 'bottom';
+  const isBothSticky = isSelfStickyTrack && stickyEdgeMode === 'both';
+  const topTrackDistancePx =
+    isSelfStickyTrack && selfRegistration
+      ? stickyEdgeMode === 'both'
+        ? selfRegistration.topDurationPx ?? selfRegistration.durationPx
+        : stickyEdgeMode === 'top'
+          ? selfRegistration.durationPx
+          : 0
+      : 0;
+  const bottomTrackDistancePx =
+    isSelfStickyTrack && selfRegistration
+      ? stickyEdgeMode === 'both'
+        ? selfRegistration.bottomDurationPx ?? selfRegistration.durationPx
+        : stickyEdgeMode === 'bottom'
+          ? selfRegistration.durationPx
+          : 0
+      : 0;
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
       ? getStickyCss(node.sticky, true)
       : undefined;
+  const shouldLayerStickySelf =
+    previewSticky && node.sticky?.enabled && node.sticky.target === 'self';
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
@@ -414,7 +445,7 @@ function renderWrapper({
         gridTemplateRows: meshLayout.rowTemplate,
       };
 
-  return (
+  const wrapperBody = (
     <Tag
       key={node.id}
       data-node-id={node.id}
@@ -424,9 +455,10 @@ function renderWrapper({
       }`}
       style={{
         ...wrapperStyle,
-        ...meshPlacement,
+        ...(isSelfStickyTrack ? {} : meshPlacement),
         borderColor: node.style.borderColor,
         borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
+        zIndex: shouldLayerStickySelf ? 14 : undefined,
         ...wrapperStickyCss,
       }}
       onMouseDown={(event) => {
@@ -455,6 +487,9 @@ function renderWrapper({
         >
         {showGridLanes ? renderGridLaneOverlay(meshLayout) : null}
         {showWrapperSpacerVisuals ? renderOffsetVisual(node.sticky, node) : null}
+        {showWrapperSpacerVisuals
+          ? renderWrapperSelfDistanceVisual(node, selfRegistration, ownerBottomLanePx)
+          : null}
         <div
           className="sticky-spacer-layer"
           style={{
@@ -501,6 +536,8 @@ function renderWrapper({
                 onResizeStart,
                 isTopLevel: false,
                 meshPlacement: meshLayout.childPlacements[child.id],
+                selfRegistration: registrationMap.get(child.id),
+                ownerBottomLanePx: meshLayout.bottomLanePx,
               })
             : renderLeaf({
                 child,
@@ -546,6 +583,47 @@ function renderWrapper({
         />
       ) : null}
     </Tag>
+  );
+
+  if (!isSelfStickyTrack || !selfRegistration) {
+    return wrapperBody;
+  }
+
+  const wrapperBaseHeightPx = getNodeHeight(node);
+  const trackHeight = wrapperBaseHeightPx + topTrackDistancePx + bottomTrackDistancePx;
+  const topStickyTrackSpacer =
+    topTrackDistancePx > 0 ? (
+      <div
+        className="sticky-track-spacer"
+        style={{
+          height: `${topTrackDistancePx}px`,
+        }}
+      />
+    ) : null;
+  const bottomStickyTrackSpacer =
+    bottomTrackDistancePx > 0 ? (
+      <div
+        className="sticky-track-spacer"
+        style={{
+          height: `${bottomTrackDistancePx}px`,
+        }}
+      />
+    ) : null;
+
+  return (
+    <div
+      key={`${node.id}-track`}
+      className={`sticky-track ${dragState?.nodeId === node.id ? 'drag-source' : ''}`}
+      style={{
+        ...meshPlacement,
+        width: '100%',
+        minHeight: `${trackHeight}px`,
+      }}
+    >
+      {isBottomOnlySticky || isBothSticky ? bottomStickyTrackSpacer : null}
+      {wrapperBody}
+      {isBottomOnlySticky ? null : topStickyTrackSpacer}
+    </div>
   );
 }
 
@@ -617,6 +695,10 @@ function renderLeaf({
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
         position: previewSticky && (isSelfStickyTrack || isAutoSticky) ? 'sticky' : 'relative',
+        zIndex:
+          previewSticky && child.sticky?.enabled && child.sticky.target === 'self'
+            ? 14
+            : undefined,
         ...(
           previewSticky && child.sticky?.enabled
             ? getStickyCss(child.sticky, false)
@@ -799,7 +881,7 @@ function renderLeafSpacerOverlay({
         <>
           {bottomDistancePx > 0 ? (
             <div
-              className="sticky-auto-spacer sticky-auto-spacer-bottom"
+              className={`sticky-auto-spacer sticky-auto-spacer-bottom ${isBothSticky ? 'sticky-guide-dual' : ''}`}
               style={{
                 ...bottomSpacerAnchorStyle,
                 height: `${bottomDistancePx}px`,
@@ -812,7 +894,7 @@ function renderLeafSpacerOverlay({
           ) : null}
           {topDistancePx > 0 ? (
             <div
-              className="sticky-auto-spacer sticky-auto-spacer-top"
+              className={`sticky-auto-spacer sticky-auto-spacer-top ${isBothSticky ? 'sticky-guide-dual' : ''}`}
               style={{
                 ...topSpacerAnchorStyle,
                 height: `${topDistancePx}px`,
@@ -828,7 +910,7 @@ function renderLeafSpacerOverlay({
         <>
           {bottomDistancePx > 0 ? (
             <div
-              className="sticky-distance-spacer-visual sticky-distance-spacer-visual-bottom"
+              className={`sticky-distance-spacer-visual sticky-distance-spacer-visual-bottom ${isBothSticky ? 'sticky-guide-dual' : ''}`}
               style={{
                 ...bottomSpacerAnchorStyle,
                 height: `${bottomDistancePx}px`,
@@ -843,7 +925,7 @@ function renderLeafSpacerOverlay({
           ) : null}
           {topDistancePx > 0 ? (
             <div
-              className="sticky-distance-spacer-visual sticky-distance-spacer-visual-top"
+              className={`sticky-distance-spacer-visual sticky-distance-spacer-visual-top ${isBothSticky ? 'sticky-guide-dual' : ''}`}
               style={{
                 ...topSpacerAnchorStyle,
                 height: `${topDistancePx}px`,
@@ -859,6 +941,100 @@ function renderLeafSpacerOverlay({
         </>
       )}
     </div>
+  );
+}
+
+function renderWrapperSelfDistanceVisual(
+  node: WrapperNode,
+  registration?: ComputedWrapperStickyState['registrations'][number],
+  ownerBottomLanePx?: number,
+) {
+  if (!registration || !node.sticky?.enabled || node.sticky.target !== 'self') {
+    return null;
+  }
+
+  const edgeMode = getStickyEdgeMode(node.sticky);
+  const isBottomOnlySticky = edgeMode === 'bottom';
+  const isBothSticky = edgeMode === 'both';
+  const isAuto = (node.sticky.durationMode ?? 'auto') === 'auto';
+  const autoDistancePx = Math.max(
+    0,
+    (ownerBottomLanePx ?? getNodeHeight(node)) - registration.startPx,
+  );
+  const topDistancePx = isAuto
+    ? edgeMode === 'both'
+      ? autoDistancePx
+      : isBottomOnlySticky
+        ? 0
+        : autoDistancePx
+    : edgeMode === 'both'
+      ? Math.max(0, registration.topDurationPx ?? registration.durationPx)
+      : isBottomOnlySticky
+        ? 0
+        : Math.max(0, registration.durationPx);
+  const bottomDistancePx = isAuto
+    ? edgeMode === 'both'
+      ? autoDistancePx
+      : isBottomOnlySticky
+        ? autoDistancePx
+        : 0
+    : edgeMode === 'both'
+      ? Math.max(0, registration.bottomDurationPx ?? registration.durationPx)
+      : isBottomOnlySticky
+        ? Math.max(0, registration.durationPx)
+        : 0;
+  const topSpacerAnchorStyle = { top: '100%', bottom: 'auto' } as const;
+  const bottomSpacerAnchorStyle = { top: 'auto', bottom: '100%' } as const;
+
+  return (
+    <>
+      {bottomDistancePx > 0 ? (
+        <div
+          className={
+            isAuto
+              ? 'sticky-auto-spacer sticky-auto-spacer-bottom'
+              : 'sticky-distance-spacer-visual sticky-distance-spacer-visual-bottom'
+          }
+          style={{
+            ...bottomSpacerAnchorStyle,
+            height: `${bottomDistancePx}px`,
+          }}
+        >
+          <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''}`}>
+            {isAuto
+              ? isBothSticky
+                ? 'Bottom Distance: auto'
+                : 'Distance: auto'
+              : isBothSticky
+                ? `Bottom Distance · ${Math.round(bottomDistancePx)}px`
+                : `Distance · ${Math.round(bottomDistancePx)}px`}
+          </span>
+        </div>
+      ) : null}
+      {topDistancePx > 0 ? (
+        <div
+          className={
+            isAuto
+              ? 'sticky-auto-spacer sticky-auto-spacer-top'
+              : 'sticky-distance-spacer-visual sticky-distance-spacer-visual-top'
+          }
+          style={{
+            ...topSpacerAnchorStyle,
+            height: `${topDistancePx}px`,
+          }}
+        >
+          <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''}`}>
+            {isAuto
+              ? isBothSticky
+                ? 'Top Distance: auto'
+                : 'Distance: auto'
+              : isBothSticky
+                ? `Top Distance · ${Math.round(topDistancePx)}px`
+                : `Distance · ${Math.round(topDistancePx)}px`}
+          </span>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -1572,7 +1748,9 @@ function renderOffsetVisualForEdge(
 
   return (
     <div
-      className={`sticky-offset-visual ${edge === 'bottom' ? 'sticky-offset-visual-bottom' : 'sticky-offset-visual-top'}`}
+      className={`sticky-offset-visual ${
+        edge === 'bottom' ? 'sticky-offset-visual-bottom' : 'sticky-offset-visual-top'
+      } ${showEdgeLabel ? 'sticky-guide-dual' : ''}`}
       style={{ height: `${offsetPx}px`, ...positionStyle }}
     >
       <span className="sticky-offset-label">{labelText}</span>

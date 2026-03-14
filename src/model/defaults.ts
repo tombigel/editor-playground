@@ -83,8 +83,8 @@ export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   },
   {
     id: 'stickySteps',
-    name: 'Sticky Bottom Dock',
-    description: 'Bottom-pinned summary card with scrolling narrative stream.',
+    name: 'Sticky Edge Lab',
+    description: 'Compare top, both, and bottom sticky behavior in one section.',
     category: 'sticky',
   },
 ];
@@ -639,80 +639,199 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
 
 function createStickyStepsSection(parentId: NodeId): TemplateBuild {
   const section = createWrapper('section', parentId);
-  section.name = 'Sticky Bottom Dock';
-  section.rect = createDefaultRect('0px', '0px', '100%', '2100px');
-  section.style.paddingTop = parseUnitValue('76px');
+  section.name = 'Sticky Edge Lab';
+  section.rect = createDefaultRect('0px', '0px', '100%', '2480px');
+  section.style.paddingTop = parseUnitValue('80px');
   section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('104px');
+  section.style.paddingBottom = parseUnitValue('120px');
   section.style.paddingLeft = parseUnitValue('72px');
 
-  const heading = createLeaf('text', section.id) as TextLeaf;
-  heading.name = 'Section Heading';
-  heading.content = 'Sticky bottom dock';
-  heading.rect = createDefaultRect('76px', '92px', '560px', 'auto');
-  styleText(heading, { color: '#0f172a', fontSize: '50px', fontWeight: 'bold', lineHeight: 1.04 });
-
-  const introCopy = createLeaf('text', section.id) as TextLeaf;
-  introCopy.name = 'Section Intro';
-  introCopy.content = 'Test bottom-edge sticky behavior while detail cards keep scrolling upward.';
-  introCopy.rect = createDefaultRect('78px', '182px', '560px', 'auto');
-  styleText(introCopy, { color: '#475569', fontSize: '22px', lineHeight: 1.24 });
-
-  const dockCard = createLeaf('text', section.id) as TextLeaf;
-  dockCard.name = 'Bottom Dock Card';
-  dockCard.content =
-    'Pinned summary card\nEdges: bottom\nOffset: 8vh\nDuration: 180vh\n\nUse this card to verify bottom stick behavior and spacer alignment.';
-  dockCard.rect = createDefaultRect('724px', '1320px', '420px', '272px');
-  styleText(dockCard, { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 });
-  dockCard.sticky = {
-    enabled: true,
-    target: 'self',
-    edges: { top: false, bottom: true },
-    durationMode: 'custom',
-    duration: parseUnitValue('180vh'),
-    durationTop: parseUnitValue('180vh'),
-    durationBottom: parseUnitValue('180vh'),
-    offsetBottom: parseUnitValue('8vh'),
+  const nodes: Record<NodeId, DocumentNode> = {
+    [section.id]: section,
   };
 
-  const detailA = createLeaf('text', section.id) as TextLeaf;
-  detailA.name = 'Detail Card A';
-  detailA.content = 'A\nSwitch between top and bottom edges and validate track labels.';
-  detailA.rect = createDefaultRect('84px', '420px', '520px', 'auto');
-  styleText(detailA, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+  const createSectionText = (
+    name: string,
+    rect: { x: string; y: string; width: string; height?: string },
+    content: string,
+    textStyle: { color?: string; fontSize?: string; fontWeight?: 'normal' | 'bold'; lineHeight?: number },
+  ) => {
+    const text = createLeaf('text', section.id) as TextLeaf;
+    text.name = name;
+    text.content = content;
+    text.rect = createDefaultRect(rect.x, rect.y, rect.width, rect.height ?? 'auto');
+    styleText(text, textStyle);
+    nodes[text.id] = text;
+    return text;
+  };
 
-  const detailB = createLeaf('text', section.id) as TextLeaf;
-  detailB.name = 'Detail Card B';
-  detailB.content = 'B\nDrag this block near guides and inspect bottom snap behavior.';
-  detailB.rect = createDefaultRect('104px', '860px', '520px', 'auto');
-  styleText(detailB, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+  const createStickyCardContainer = (
+    options: {
+      containerName: string;
+      textName: string;
+      x: string;
+      y: string;
+      width: string;
+      height: string;
+      content: string;
+      textX: string;
+      textY: string;
+      textWidth: string;
+      textHeight: string;
+      background: string;
+      sticky: StickyDefinition;
+    },
+  ) => {
+    const container = createWrapper('container', section.id);
+    container.name = options.containerName;
+    container.rect = createDefaultRect(options.x, options.y, options.width, options.height);
+    container.style.background = options.background;
+    container.style.borderColor = '#d6e2f2';
+    container.style.borderWidth = parseUnitValue('1px');
+    container.style.paddingTop = parseUnitValue('0px');
+    container.style.paddingRight = parseUnitValue('0px');
+    container.style.paddingBottom = parseUnitValue('0px');
+    container.style.paddingLeft = parseUnitValue('0px');
+    container.sticky = options.sticky;
 
-  const detailC = createLeaf('text', section.id) as TextLeaf;
-  detailC.name = 'Detail Card C';
-  detailC.content = 'C\nResize the dock and confirm sticky preview does not drift model coordinates.';
-  detailC.rect = createDefaultRect('122px', '1320px', '520px', 'auto');
-  styleText(detailC, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+    const text = createLeaf('text', container.id) as TextLeaf;
+    text.name = options.textName;
+    text.content = options.content;
+    text.rect = createDefaultRect(options.textX, options.textY, options.textWidth, options.textHeight);
+    styleText(text, { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 });
 
-  const detailD = createLeaf('text', section.id) as TextLeaf;
-  detailD.name = 'Detail Card D';
-  detailD.content = 'D\nRun undo/redo after bottom-sticky edits to validate transaction boundaries.';
-  detailD.rect = createDefaultRect('144px', '1740px', '520px', 'auto');
-  styleText(detailD, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
+    container.children = [text.id];
+    nodes[container.id] = container;
+    nodes[text.id] = text;
+    return container;
+  };
 
-  section.children = [heading.id, introCopy.id, dockCard.id, detailA.id, detailB.id, detailC.id, detailD.id];
+  const heading = createSectionText(
+    'Section Heading',
+    { x: '72px', y: '86px', width: '980px' },
+    'Sticky edge lab: top, both, bottom',
+    { color: '#0f172a', fontSize: '48px', fontWeight: 'bold', lineHeight: 1.04 },
+  );
+
+  const intro = createSectionText(
+    'Section Intro',
+    { x: '74px', y: '170px', width: '980px' },
+    'Use one section to compare sticky behavior for top, both, and bottom edges with the same viewport and drag context.',
+    { color: '#475569', fontSize: '22px', lineHeight: 1.24 },
+  );
+
+  const topNotes = createSectionText(
+    'Top Column Notes',
+    { x: '78px', y: '972px', width: '330px' },
+    'Top notes\nUse this column to verify top-edge pinning, offset marker placement, and drag snapping around a single top constraint.',
+    { color: '#0f172a', fontSize: '22px', lineHeight: 1.22 },
+  );
+
+  const bothNotes = createSectionText(
+    'Both Column Notes',
+    { x: '473px', y: '1293px', width: '330px' },
+    'Both notes\nAdjust dual offsets and split durations to validate the combined top+bottom constraint and dual guide rendering.',
+    { color: '#0f172a', fontSize: '22px', lineHeight: 1.22 },
+  );
+
+  const bottomNotes = createSectionText(
+    'Bottom Column Notes',
+    { x: '870px', y: '1780px', width: '330px' },
+    'Bottom notes\nCheck bottom-edge pinning, spacer direction, and that repeated drags do not introduce hidden Y feedback loops.',
+    { color: '#0f172a', fontSize: '22px', lineHeight: 1.22 },
+  );
+
+  const footerNote = createSectionText(
+    'Section Footer Note',
+    { x: '96px', y: '2604.984375px', width: '1120px', height: '44px' },
+    'Tip: select each card and switch edge/offset/duration values in the inspector to compare how spacer and offset visuals respond.',
+    { color: '#475569', fontSize: '18px', lineHeight: 1.26 },
+  );
+
+  const topCardContainer = createStickyCardContainer({
+    containerName: 'Top Edge Card Container',
+    textName: 'Top Edge Card',
+    x: '72px',
+    y: '362px',
+    width: '330px',
+    height: '151px',
+    content: 'Top card\nEdges: top\nOffset: 10vh\nDistance: 140vh',
+    textX: '18px',
+    textY: '15.390625px',
+    textWidth: '264px',
+    textHeight: '120px',
+    background: '#eaf3ff',
+    sticky: createCustomSticky('140vh', '10vh'),
+  });
+
+  const bothCardContainer = createStickyCardContainer({
+    containerName: 'Both Edges Card Container',
+    textName: 'Both Edges Card',
+    x: '473px',
+    y: '761px',
+    width: '330px',
+    height: '201px',
+    content:
+      'Both card\nEdges: both\nTop Offset: 10vh\nBottom Offset: 10vh\nTop Distance: 80vh\nBottom Distance: 80vh',
+    textX: '20px',
+    textY: '10.875px',
+    textWidth: '288px',
+    textHeight: '179px',
+    background: '#eefae9',
+    sticky: {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: true },
+      durationMode: 'custom',
+      duration: parseUnitValue('160vh'),
+      durationTop: parseUnitValue('80vh'),
+      durationBottom: parseUnitValue('80vh'),
+      offsetTop: parseUnitValue('10vh'),
+      offsetBottom: parseUnitValue('10vh'),
+    },
+  });
+
+  const bottomCardContainer = createStickyCardContainer({
+    containerName: 'Bottom Edge Card Container',
+    textName: 'Bottom Edge Card',
+    x: '864px',
+    y: '1179.9921875px',
+    width: '330px',
+    height: '146px',
+    content: 'Bottom card\nEdges: bottom\nOffset: 10vh\nDistance: 140vh',
+    textX: '22px',
+    textY: '12.8984375px',
+    textWidth: '273px',
+    textHeight: '120px',
+    background: '#fff4ea',
+    sticky: {
+      enabled: true,
+      target: 'self',
+      edges: { top: false, bottom: true },
+      durationMode: 'custom',
+      duration: parseUnitValue('140vh'),
+      durationTop: parseUnitValue('140vh'),
+      durationBottom: parseUnitValue('140vh'),
+      offsetBottom: parseUnitValue('10vh'),
+    },
+  });
+
+  // Keep sticky containers at the end of DOM order so they render above static notes when overlapping.
+  section.children = [
+    bothNotes.id,
+    heading.id,
+    intro.id,
+    topNotes.id,
+    bottomNotes.id,
+    topCardContainer.id,
+    bothCardContainer.id,
+    bottomCardContainer.id,
+    footerNote.id,
+  ];
 
   return {
     wrapper: section,
-    nodes: {
-      [section.id]: section,
-      [heading.id]: heading,
-      [introCopy.id]: introCopy,
-      [dockCard.id]: dockCard,
-      [detailA.id]: detailA,
-      [detailB.id]: detailB,
-      [detailC.id]: detailC,
-      [detailD.id]: detailD,
-    },
+    nodes,
   };
 }
 

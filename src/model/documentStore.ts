@@ -216,6 +216,9 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
       continue;
     }
     node.sticky = normalizeSticky(node.sticky);
+    if (node.type === 'wrapper' && node.role === 'container' && node.sticky?.target === 'contentWrapper') {
+      node.sticky.target = 'self';
+    }
   }
   ensureDefaultSiteSections(normalized);
   upgradeLegacyStarterShell(normalized);
@@ -650,6 +653,9 @@ export function updateStickyField(
     ...node.sticky,
     ...patch,
   };
+  if (node.type === 'wrapper' && node.role === 'container' && node.sticky.target === 'contentWrapper') {
+    node.sticky.target = 'self';
+  }
   return { ...state, document };
 }
 

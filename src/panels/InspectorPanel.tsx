@@ -4,10 +4,12 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  ArrowDown,
   ArrowBigDown,
   ArrowBigDownDash,
   ArrowBigUp,
   ArrowBigUpDash,
+  ArrowUp,
   ArrowDownToLine,
   ArrowUpToLine,
   ListEnd,
@@ -371,7 +373,9 @@ export function InspectorPanel({
             <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
               <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-2">
                 <div>
-                  <div className="text-xs font-medium text-slate-900">Enabled</div>
+                  <div className="text-xs font-medium text-slate-900">
+                    {node.sticky?.enabled ? 'Enabled' : 'Disabled'}
+                  </div>
                   <div className="text-[11px] text-slate-500">Pin this node inside its structural range.</div>
                 </div>
                 <Switch checked={Boolean(node.sticky?.enabled)} onCheckedChange={onStickyEnabled} />
@@ -384,20 +388,28 @@ export function InspectorPanel({
                     return (
                       <>
                   {node.type === 'wrapper' ? (
-                    <FormField label="Target">
-                      <Select
-                        value={node.sticky?.target ?? 'self'}
-                        onValueChange={(value) => onStickyTarget(value as 'self' | 'contentWrapper')}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="self">Self</SelectItem>
-                          <SelectItem value="contentWrapper">Content wrapper</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormField>
+                    node.role === 'container' ? (
+                      <FormField label="Target">
+                        <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
+                          Self (content wrapper target is temporarily hidden for containers)
+                        </div>
+                      </FormField>
+                    ) : (
+                      <FormField label="Target">
+                        <Select
+                          value={node.sticky?.target ?? 'self'}
+                          onValueChange={(value) => onStickyTarget(value as 'self' | 'contentWrapper')}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="self">Self</SelectItem>
+                            <SelectItem value="contentWrapper">Content wrapper</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormField>
+                    )
                   ) : null}
 
                   <FormField label="Edge">
@@ -414,26 +426,18 @@ export function InspectorPanel({
                     </FormField>
 
                   {stickyEdge === 'both' ? (
-                    <div className="space-y-1.5">
-                      <RangeField
-                        label="Top Offset"
-                        value={stickyOffsetTopVh(node)}
-                        min={0}
-                        max={100}
-                        step={1}
-                        unit="vh"
-                        onValueChange={onStickyOffsetTop}
-                      />
-                      <RangeField
-                        label="Bottom Offset"
-                        value={stickyOffsetBottomVh(node)}
-                        min={0}
-                        max={100}
-                        step={1}
-                        unit="vh"
-                        onValueChange={onStickyOffsetBottom}
-                      />
-                    </div>
+                    <StickyOffsetBandField
+                      topOffset={stickyOffsetTopVh(node)}
+                      bottomOffset={stickyOffsetBottomVh(node)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      unit="vh"
+                      onValueChange={(top, bottom) => {
+                        onStickyOffsetTop(top);
+                        onStickyOffsetBottom(bottom);
+                      }}
+                    />
                   ) : (
                     <RangeField label="Offset" value={stickyOffsetVh(node)} min={0} max={100} step={1} unit="vh" onValueChange={onStickyOffset} />
                   )}
@@ -763,6 +767,73 @@ function RangeField({
   );
 }
 
+function StickyOffsetBandField({
+  topOffset,
+  bottomOffset,
+  min,
+  max,
+  step,
+  unit,
+  onValueChange,
+}: {
+  topOffset: number;
+  bottomOffset: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  onValueChange: (topOffset: number, bottomOffset: number) => void;
+}) {
+  const topValue = clamp(topOffset, min, max);
+  const bottomValue = clamp(bottomOffset, min, max);
+  const sliderEndFromTop = clamp(max - bottomValue, min, max);
+  const sliderStart = Math.min(topValue, sliderEndFromTop);
+  const sliderEnd = Math.max(topValue, sliderEndFromTop);
+  const rangeSpan = Math.max(0, sliderEnd - sliderStart);
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-[11px] font-medium text-slate-500">Offset Range</Label>
+        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+          Span {Math.round(rangeSpan)}
+          {unit}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-600">
+        <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5">
+          <ArrowUp className="h-3 w-3 text-slate-500" />
+          Top {Math.round(topValue)}
+          {unit}
+        </span>
+        <span className="inline-flex items-center justify-end gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-right">
+          Bottom {Math.round(bottomValue)}
+          {unit}
+          <ArrowDown className="h-3 w-3 text-slate-500" />
+        </span>
+      </div>
+      <Slider
+        value={[sliderStart, sliderEnd]}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={(next) => {
+          if (next.length < 2) {
+            return;
+          }
+          const rawStart = next[0] ?? sliderStart;
+          const rawEnd = next[1] ?? sliderEnd;
+          const nextStart = Math.min(rawStart, rawEnd);
+          const nextEnd = Math.max(rawStart, rawEnd);
+          const nextTop = clamp(Math.round(nextStart), min, max);
+          const nextBottom = clamp(Math.round(max - nextEnd), min, max);
+          onValueChange(nextTop, nextBottom);
+        }}
+      />
+    </div>
+  );
+}
+
 function WrapperActions({
   node,
   canSectionBack,
@@ -900,6 +971,10 @@ function stickyDurationBottomVh(node: Exclude<DocumentNode, { type: 'site' }>) {
     return 50;
   }
   return duration.unit === 'vh' ? duration.value : 50;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function validateUnitField(value: string, field: 'x' | 'y' | 'width' | 'height') {

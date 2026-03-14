@@ -60,7 +60,7 @@ This plan is for keeping the playground stable while feature work is paused.
 3. `startPx` follows spacer-start rules:
    Wrapper content target starts at wrapper height, leaf/self starts at `y + nodeHeight`.
 4. `endPx = startPx + durationPx`.
-5. Container sticky targets (`self` and `contentWrapper`) both produce expected sticky movement and duration range.
+5. Container sticky target is currently restricted to `self` (UI-hidden `contentWrapper`); normalized container sticky behavior remains stable.
 6. In `edges: both` + custom mode, effective registration distance uses `durationTop + durationBottom`.
 
 ### C. Extent and overlap behavior
@@ -80,6 +80,9 @@ This plan is for keeping the playground stable while feature work is paused.
 5. For `edges: both`, preview applies both sticky constraints (`top` + `bottom`) and drag/resize behavior stays stable without coordinate drift.
 6. For bottom-edge self sticky with custom duration, offset and distance markers stay anchored near the pinned element (not at track origin) and dragging has no hidden upper clamp.
 7. For `edges: both`, top and bottom offset markers are both visible simultaneously, and top/bottom distance markers are both visible with their own values.
+8. Container `target=self` sticky (custom duration) follows the same track behavior as leaf components, including bottom-edge ordering and distance indicators.
+9. Container `target=self` sticky (auto duration) shows `Distance: auto` indicators (and in `edges: both`, both top/bottom auto indicators are visible).
+10. While sticky preview is enabled, self-sticky nodes render above overlapping non-sticky content (deterministic stacking order).
 
 ## 3) Editor Interaction Tests
 
@@ -89,6 +92,9 @@ This plan is for keeping the playground stable while feature work is paused.
 2. Editing text, dimensions, and sticky fields updates model and persists.
 3. Invalid unit input stays local (not written into model).
 4. For `edges: both`, editing top/bottom offsets and top/bottom durations updates the corresponding sticky fields (`offsetTop`, `offsetBottom`, `durationTop`, `durationBottom`).
+5. For `edges: both`, dual-knob offset range slider keeps handles ordered (non-crossing) and maps correctly to `offsetTop` / `offsetBottom`.
+6. For `container` wrappers, sticky target control exposes only `self` and does not allow selecting `contentWrapper`.
+7. Non-sticky nodes remain selectable when they overlap with sticky track spacer regions (empty spacer area does not capture pointer events).
 
 ### B. Drag, resize, and drop
 
@@ -169,7 +175,7 @@ This plan is for keeping the playground stable while feature work is paused.
 5. Inserted section is placed before footer in root ordering when footer exists.
 6. Placeholder/coming-soon templates are visible but cannot be inserted.
 7. All shipped templates load without validation errors:
-   `Blank`, `Post`, `Sticky Staggered Images`, `Sticky Pinned Cards`, `Sticky Media Reveal`, `Sticky Bottom Dock`.
+   `Blank`, `Post`, `Sticky Staggered Images`, `Sticky Pinned Cards`, `Sticky Media Reveal`, `Sticky Edge Lab`.
 8. `Sticky Media Reveal` template uses a direct sticky image leaf (no container wrapper around the media) and matches the locked baseline:
    media coordinates/size plus sticky `duration=100vh`, `offsetTop=10vh`.
 9. `Sticky Staggered Images` template matches the locked gallery baseline:
@@ -177,8 +183,13 @@ This plan is for keeping the playground stable while feature work is paused.
 10. `Sticky Pinned Cards` template matches the locked pinned-cards baseline:
    pinned lead coordinates `x=85`, `y=212.28125`, lead sticky `durationMode=auto`, `duration=220vh`, `offsetTop=12vh`,
    and narrative cards use sticky durations `25vh`, `25vh`, `50vh` with `offsetTop=15vh`.
-11. `Sticky Bottom Dock` template demonstrates bottom-edge sticky behavior:
-   bottom-pinned card uses `edges.bottom=true`, `offsetBottom=8vh`, and custom duration while narrative cards scroll independently.
+11. `Sticky Edge Lab` template demonstrates side-by-side edge comparison in one section:
+   only the three sticky card texts are wrapped by colored `container` wrappers, and sticky lives on those three card containers:
+   top (`edges.top=true`, `offsetTop=10vh`, `durationTop=140vh`), both
+   (`edges.top=true`, `edges.bottom=true`, `offsetTop=10vh`, `offsetBottom=10vh`, `durationTop=80vh`, `durationBottom=80vh`),
+   bottom (`edges.bottom=true`, `offsetBottom=10vh`, `durationBottom=140vh`).
+   Baseline geometry/order is locked: section height `2480px`; non-sticky text order starts with `Both Column Notes`, then heading/intro/notes; sticky containers follow in order top/both/bottom; footer note is last.
+   Locked coordinates include: top notes `y=972`, both notes `y=1293`, bottom notes `y=1780`, footer note `x=96`, `y=2604.984375`, and sticky containers at `x/y` top `72/362`, both `473/761`, bottom `864/1179.9921875`.
 
 ### I. Factory baseline shell
 

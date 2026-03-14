@@ -165,7 +165,12 @@ function editorReducer(state: EditorState, action: EditorAction) {
     case 'stickyEnabled':
       return selectedId ? updateStickyField(state, selectedId, { enabled: action.value }) : state;
     case 'stickyTarget':
-      return selectedId ? updateStickyField(state, selectedId, { target: action.value }) : state;
+      if (!selectedId) {
+        return state;
+      }
+      return updateStickyField(state, selectedId, {
+        target: selectedNodeDisallowsContentWrapperTarget(state, selectedId) ? 'self' : action.value,
+      });
     case 'stickyEdges':
       if (!selectedId) {
         return state;
@@ -1088,6 +1093,11 @@ function selectedNodeHasBottomEdge(state: EditorState, selectedId: string) {
     return false;
   }
   return node.sticky?.edges.bottom ?? false;
+}
+
+function selectedNodeDisallowsContentWrapperTarget(state: EditorState, selectedId: string) {
+  const node = getNode(state.document, selectedId);
+  return Boolean(node && node.type === 'wrapper' && node.role === 'container');
 }
 
 function getNodeOrderState(
