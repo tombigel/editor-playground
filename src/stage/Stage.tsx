@@ -18,18 +18,24 @@ type Props = {
   document: DocumentModel;
   selectedId: NodeId | null;
   previewSticky: boolean;
-  showSpacers: boolean;
+  spacerVisibility: 'selected' | 'all';
+  showGridLanes: boolean;
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
   onResize: (id: NodeId, width: string, height: string) => void;
 };
 
+function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
+  return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
+}
+
 export function Stage({
   document,
   selectedId,
   previewSticky,
-  showSpacers,
+  spacerVisibility,
+  showGridLanes,
   onSelect,
   onMove,
   onReparent,
@@ -85,14 +91,16 @@ export function Stage({
         setResizeState(null);
       }}
     >
-      <div className="stage-canvas">
+      <div className="stage-frame">
+        <div className="stage-canvas">
         {header
           ? renderWrapper({
               document,
               node: header,
               selectedId,
               previewSticky,
-              showSpacers,
+              spacerVisibility,
+              showGridLanes,
               onSelect,
               onMove,
               stickyMap: stickyState,
@@ -110,7 +118,8 @@ export function Stage({
               node: wrapper,
               selectedId,
               previewSticky,
-              showSpacers,
+              spacerVisibility,
+              showGridLanes,
               onSelect,
               onMove,
               stickyMap: stickyState,
@@ -128,7 +137,8 @@ export function Stage({
               node: footer,
               selectedId,
               previewSticky,
-              showSpacers,
+              spacerVisibility,
+              showGridLanes,
               onSelect,
               onMove,
               stickyMap: stickyState,
@@ -139,6 +149,7 @@ export function Stage({
               isTopLevel: true,
             })
           : <EmptySlot label="Footer slot" />}
+        </div>
       </div>
       {dragState ? renderDragPreview(document, dragState) : null}
     </div>
@@ -165,9 +176,32 @@ function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState
   return (
     <div className="drag-preview" style={style}>
       {node.type === 'wrapper' ? (
-        <div className="drag-preview-inner wrapper-preview">{node.name}</div>
+        <div
+          className={`drag-preview-inner drag-preview-wrapper role-${node.role}`}
+          style={{
+            borderColor: node.style.borderColor,
+            borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
+          }}
+        >
+          <div className="drag-preview-wrapper-label">{node.name}</div>
+          <div
+            className="drag-preview-content-wrapper"
+            style={{
+              background: node.style.background,
+            }}
+          />
+        </div>
       ) : (
-        <div className="drag-preview-inner leaf-preview">{renderLeafContent(node)}</div>
+        <div
+          data-node-id={node.id}
+          className={`drag-preview-inner stage-leaf role-${node.role} ${node.role === 'image' && node.name === 'Brand Mark' ? 'is-brand-mark' : ''}`}
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+        >
+          <div className="stage-leaf-body">{renderLeafContent(node)}</div>
+        </div>
       )}
     </div>
   );
@@ -178,7 +212,8 @@ type RenderWrapperArgs = {
   node: WrapperNode;
   selectedId: NodeId | null;
   previewSticky: boolean;
-  showSpacers: boolean;
+  spacerVisibility: 'selected' | 'all';
+  showGridLanes: boolean;
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   stickyMap: Record<string, ComputedWrapperStickyState>;
@@ -187,6 +222,7 @@ type RenderWrapperArgs = {
   resizeState: ResizeState;
   setResizeState: (state: ResizeState) => void;
   isTopLevel: boolean;
+  meshPlacement?: CSSProperties;
 };
 
 function renderWrapper({
@@ -194,7 +230,8 @@ function renderWrapper({
   node,
   selectedId,
   previewSticky,
-  showSpacers,
+  spacerVisibility,
+  showGridLanes,
   onSelect,
   onMove,
   stickyMap,
@@ -202,6 +239,7 @@ function renderWrapper({
   setDragState,
   setResizeState,
   isTopLevel,
+  meshPlacement,
 }: RenderWrapperArgs): JSX.Element {
   const Tag =
     node.role === 'header'
@@ -216,8 +254,13 @@ function renderWrapper({
     (child): child is Exclude<DocumentNode, { type: 'site' }> => child.type !== 'site',
   );
   const wrapperStickyState = stickyMap[node.id];
+  const registrationMap = new Map(
+    (wrapperStickyState?.registrations ?? []).map((registration) => [registration.ownerId, registration]),
+  );
   const extraExtent = stickyMap[node.id]?.totalExtraExtentPx ?? 0;
+  const meshLayout = computeMeshLayout(children, node, registrationMap);
   const wrapperStyle = buildWrapperStyle(node, isTopLevel);
+  const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, node.id);
   const isStickyContentWrapper = node.sticky?.enabled && node.sticky.target === 'contentWrapper';
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
@@ -228,22 +271,30 @@ function renderWrapper({
         width: '100%',
         ...getContentWrapperBaseStyle(node),
         background: node.style.background,
+        display: 'grid',
+        gridTemplateColumns: meshLayout.columnTemplate,
+        gridTemplateRows: meshLayout.rowTemplate,
         ...(previewSticky ? getStickyCss(node.sticky!, true, node) : {}),
       }
     : {
         ...getContentWrapperBaseStyle(node),
         background: node.style.background,
+        display: 'grid',
+        gridTemplateColumns: meshLayout.columnTemplate,
+        gridTemplateRows: meshLayout.rowTemplate,
       };
 
   return (
     <Tag
       key={node.id}
       data-node-id={node.id}
+      data-node-label={formatNodeLabel(node)}
       className={`stage-wrapper role-${node.role} ${selectedId === node.id ? 'selected' : ''} ${
         dragState?.nodeId === node.id ? 'drag-source' : ''
       }`}
       style={{
         ...wrapperStyle,
+        ...meshPlacement,
         borderColor: node.style.borderColor,
         borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
         ...wrapperStickyCss,
@@ -273,9 +324,30 @@ function renderWrapper({
         data-drop-wrapper-id={node.id}
         style={contentWrapperStyle}
         >
-        {showSpacers ? renderOffsetVisual(node.sticky, node) : null}
-        <div className="sticky-spacer-layer">
-          {showSpacers ? renderSpacerRanges(document, node, wrapperStickyState) : null}
+        {showGridLanes ? renderGridLaneOverlay(meshLayout) : null}
+        {showWrapperSpacerVisuals ? renderOffsetVisual(node.sticky, node) : null}
+        <div
+          className="sticky-spacer-layer"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: meshLayout.columnTemplate,
+            gridTemplateRows: meshLayout.rowTemplate,
+          }}
+        >
+          {children
+            .filter((child): child is LeafNode => child.type === 'leaf')
+            .map((child) =>
+              renderLeafSpacerOverlay({
+                child,
+                registration: registrationMap.get(child.id),
+                meshPlacement: meshLayout.childPlacements[child.id],
+                wrapperBottomLanePx: meshLayout.bottomLanePx,
+                previewSticky,
+                spacerVisibility,
+                selectedId,
+              }),
+            )}
+          {showWrapperSpacerVisuals ? renderSpacerRanges(document, node, wrapperStickyState) : null}
         </div>
         {children.map((child) =>
           child.type === 'wrapper'
@@ -284,7 +356,8 @@ function renderWrapper({
                 node: child,
                 selectedId,
                 previewSticky,
-                showSpacers,
+                spacerVisibility,
+                showGridLanes,
                 onSelect,
                 onMove,
                 stickyMap,
@@ -293,20 +366,21 @@ function renderWrapper({
                 resizeState: null,
                 setResizeState,
                 isTopLevel: false,
+                meshPlacement: meshLayout.childPlacements[child.id],
               })
             : renderLeaf({
                 child,
                 selectedId,
                 previewSticky,
-                showSpacers,
+                spacerVisibility,
                 onSelect,
                 onMove,
                 dragState,
                 setDragState,
                 setResizeState,
-                registration: wrapperStickyState?.registrations.find(
-                  (registration) => registration.ownerId === child.id,
-                ),
+                registration: registrationMap.get(child.id),
+                meshPlacement: meshLayout.childPlacements[child.id],
+                wrapperBottomLanePx: meshLayout.bottomLanePx,
               }),
         )}
         {selectedId === node.id && !isTopLevel ? (
@@ -329,7 +403,7 @@ function renderWrapper({
       </div>
       {extraExtent > 0 ? (
         <div
-          className={`sticky-flow-spacer ${showSpacers ? '' : 'spacer-visual-hidden'}`}
+          className={`sticky-flow-spacer ${showWrapperSpacerVisuals ? '' : 'spacer-visual-hidden'}`}
           style={{ height: `${extraExtent}px` }}
         />
       ) : null}
@@ -343,57 +417,65 @@ function renderLeaf({
   child,
   selectedId,
   previewSticky,
-  showSpacers,
+  spacerVisibility,
   onSelect,
   onMove: _onMove,
   dragState,
   setDragState,
   setResizeState,
   registration,
+  meshPlacement,
+  wrapperBottomLanePx,
 }: {
   child: LeafNode;
   selectedId: NodeId | null;
   previewSticky: boolean;
-  showSpacers: boolean;
+  spacerVisibility: 'selected' | 'all';
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   dragState: DragState;
   setDragState: (state: DragState) => void;
   setResizeState: (state: ResizeState) => void;
   registration?: ComputedWrapperStickyState['registrations'][number];
+  meshPlacement?: CSSProperties;
+  wrapperBottomLanePx: number;
 }) {
+  const isAutoSticky =
+    child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
   const isSelfStickyTrack =
-    child.sticky?.enabled && child.sticky.target === 'self' && registration;
+    child.sticky?.enabled &&
+    child.sticky.target === 'self' &&
+    child.sticky.durationMode !== 'auto' &&
+    registration;
+  const showLeafSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, child.id);
+  const isBrandMark = child.role === 'image' && child.name === 'Brand Mark';
   const leafBaseWidth = formatValue(child.rect.width.base.parsed);
+  const leafBaseHeight = getLeafCssHeight(child);
+  const trackWidth = getTrackCssWidth(child);
   const leafBody = (
     <div
       key={child.id}
       data-node-id={child.id}
-      className={`stage-leaf role-${child.role} ${selectedId === child.id ? 'selected' : ''} ${
-        dragState?.nodeId === child.id ? 'drag-source' : ''
-      }`}
+      data-node-label={formatNodeLabel(child)}
+      className={`stage-leaf role-${child.role} ${isBrandMark ? 'is-brand-mark' : ''} ${
+        selectedId === child.id ? 'selected' : ''
+      } ${dragState?.nodeId === child.id ? 'drag-source' : ''}`}
       style={{
         ...(isSelfStickyTrack
           ? {
-              width: leafBaseWidth,
+              width: '100%',
             }
           : {
-              left: child.rect.x.base.raw,
-              top: child.rect.y.base.raw,
-              width: leafBaseWidth,
+              ...meshPlacement,
+              width: '100%',
             }),
-        height:
-          child.rect.height.base.parsed && 'unit' in child.rect.height.base.parsed
-            ? formatValue(child.rect.height.base.parsed)
-            : child.rect.height.base.raw.startsWith('aspect-ratio')
-              ? 'auto'
-              : formatValue(child.rect.height.base.parsed),
+        height: leafBaseHeight,
         aspectRatio:
           !('unit' in child.rect.height.base.parsed) &&
           child.rect.height.base.parsed.keyword === 'aspect-ratio'
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
-        position: previewSticky && isSelfStickyTrack ? 'sticky' : 'absolute',
+        position: previewSticky && (isSelfStickyTrack || isAutoSticky) ? 'sticky' : 'relative',
         ...(
           previewSticky && child.sticky?.enabled
             ? getStickyCss(child.sticky, false, child)
@@ -403,9 +485,7 @@ function renderLeaf({
       onMouseDown={(event) => {
         event.stopPropagation();
         onSelect(child.id);
-        const dragRoot =
-          (event.currentTarget.closest('.sticky-track') as HTMLElement | null) ?? event.currentTarget;
-        const dragGeometry = getDragElementRect(dragRoot, event.clientX, event.clientY);
+        const dragGeometry = getDragElementRect(event.currentTarget, event.clientX, event.clientY);
         setDragState({
           nodeId: child.id,
           currentClientX: event.clientX,
@@ -419,7 +499,7 @@ function renderLeaf({
         });
       }}
     >
-      {renderLeafContent(child)}
+      <div className="stage-leaf-body">{renderLeafContent(child)}</div>
       {selectedId === child.id ? (
         <ResizeHandleView
           onHandleMouseDown={(handle, event) => {
@@ -444,30 +524,96 @@ function renderLeaf({
     return leafBody;
   }
 
-  const trackHeight = numericHeight(child.rect.height.base.raw) + registration.durationPx;
+  const leafHeightPx = getNodeHeight(child);
+  const trackHeight = isAutoSticky ? leafHeightPx : leafHeightPx + registration.durationPx;
   return (
     <div
       key={`${child.id}-track`}
       className={`sticky-track ${dragState?.nodeId === child.id ? 'drag-source' : ''}`}
       style={{
-        left: child.rect.x.base.raw,
-        top: child.rect.y.base.raw,
-        width: 'min-content',
+        ...meshPlacement,
+        width: trackWidth,
         minHeight: `${trackHeight}px`,
       }}
     >
-      {showSpacers ? renderOffsetVisual(child.sticky, child) : null}
       {leafBody}
       <div
-        className={`sticky-track-spacer ${showSpacers ? '' : 'spacer-visual-hidden'}`}
+        className="sticky-track-spacer"
         style={{
           height: `${registration.durationPx}px`,
         }}
-      >
-        <span className="sticky-spacer-label">
-          {child.name} spacer · {Math.round(registration.durationPx)}px
-        </span>
-      </div>
+      />
+    </div>
+  );
+}
+
+function renderLeafSpacerOverlay({
+  child,
+  registration,
+  meshPlacement,
+  wrapperBottomLanePx,
+  previewSticky,
+  spacerVisibility,
+  selectedId,
+}: {
+  child: LeafNode;
+  registration?: ComputedWrapperStickyState['registrations'][number];
+  meshPlacement?: CSSProperties;
+  wrapperBottomLanePx: number;
+  previewSticky: boolean;
+  spacerVisibility: 'selected' | 'all';
+  selectedId: NodeId | null;
+}) {
+  if (!registration || !child.sticky?.enabled || child.sticky.target !== 'self') {
+    return null;
+  }
+
+  const showLeafSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, child.id);
+  if (!showLeafSpacerVisuals) {
+    return null;
+  }
+
+  const leafHeightPx = getNodeHeight(child);
+
+  return (
+    <div
+      key={`${child.id}-overlay`}
+      className="leaf-spacer-overlay"
+      style={{
+        ...meshPlacement,
+        position: previewSticky ? 'sticky' : 'relative',
+        width: '100%',
+        height: `${leafHeightPx}px`,
+        minHeight: `${leafHeightPx}px`,
+        alignSelf: 'start',
+        aspectRatio:
+          !('unit' in child.rect.height.base.parsed) &&
+          child.rect.height.base.parsed.keyword === 'aspect-ratio'
+            ? String(child.rect.height.base.parsed.ratio)
+            : undefined,
+        ...(previewSticky ? getStickyCss(child.sticky, false, child) : {}),
+      }}
+    >
+      {renderOffsetVisual(child.sticky, child)}
+      {child.sticky.durationMode === 'auto' ? (
+        <div
+          className="sticky-auto-spacer"
+          style={{
+            height: `${Math.max(0, wrapperBottomLanePx - registration.startPx)}px`,
+          }}
+        >
+          <span className="sticky-spacer-label sticky-spacer-label-auto">Distance: auto</span>
+        </div>
+      ) : (
+        <div
+          className="sticky-distance-spacer-visual"
+          style={{
+            height: `${registration.durationPx}px`,
+          }}
+        >
+          <span className="sticky-spacer-label">{`Distance · ${Math.round(registration.durationPx)}px`}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -475,15 +621,51 @@ function renderLeaf({
 function renderLeafContent(node: LeafNode) {
   switch (node.role) {
     case 'text':
-      return <p>{node.content}</p>;
+      return (
+        <p
+          style={{
+            color: node.style?.color ?? '#16202a',
+            fontSize: node.style?.fontSize
+              ? formatValue(node.style.fontSize.parsed)
+              : '18px',
+            fontWeight: node.style?.fontWeight ?? 'normal',
+            fontStyle: node.style?.fontStyle ?? 'normal',
+            lineHeight: node.style?.lineHeight ?? 1.24,
+            textAlign: node.style?.textAlign ?? 'left',
+          }}
+        >
+          {node.content}
+        </p>
+      );
     case 'image':
-      return <div className="image-placeholder">{node.alt || 'Image'}</div>;
+      return node.src ? (
+        <img className="stage-image" src={node.src} alt={node.alt || 'Image'} draggable={false} />
+      ) : (
+        <div className="image-placeholder">{node.alt || 'Image'}</div>
+      );
     case 'link':
-      return <a href={node.href}>{node.label}</a>;
+      return (
+        <a href={node.href} tabIndex={-1}>
+          {node.label}
+        </a>
+      );
     case 'button':
-      return <button type="button">{node.label}</button>;
+      return (
+        <button type="button" tabIndex={-1}>
+          {node.label}
+        </button>
+      );
   }
 }
+
+type MeshLayout = {
+  columnTemplate: string;
+  rowTemplate: string;
+  childPlacements: Record<string, CSSProperties>;
+  columnLines: number[];
+  rowLines: number[];
+  bottomLanePx: number;
+};
 
 function ResizeHandleView({
   onHandleMouseDown,
@@ -512,6 +694,64 @@ function numericWidth(raw: string) {
 function numericHeight(raw: string) {
   const parsed = parseFloat(raw);
   return Number.isFinite(parsed) ? parsed : 80;
+}
+
+function estimateAutoLeafHeight(node: LeafNode) {
+  if (node.role === 'text') {
+    const fontSize =
+      node.style?.fontSize && 'unit' in node.style.fontSize.parsed
+        ? resolveUnitValuePx(
+            node.style.fontSize.parsed,
+            {
+              width: getNodeWidth(node),
+              height: 900,
+              viewportWidth: 1440,
+              viewportHeight: 900,
+            },
+            'width',
+          )
+        : 18;
+    const widthPx = getNodeWidth(node);
+    const content = node.content || '';
+    const charsPerLine = Math.max(10, Math.floor(widthPx / Math.max(fontSize * 0.58, 1)));
+    const lineCount = Math.max(
+      1,
+      content.split('\n').reduce(
+        (count, line) => count + Math.max(1, Math.ceil(line.length / charsPerLine)),
+        0,
+      ),
+    );
+    return Math.ceil(lineCount * fontSize * 1.24);
+  }
+
+  if (node.role === 'link') {
+    return 24;
+  }
+
+  if (node.role === 'button') {
+    return 50;
+  }
+
+  return 56;
+}
+
+function getLeafCssHeight(node: LeafNode) {
+  const height = node.rect.height.base.parsed;
+  if ('unit' in height) {
+    return formatValue(height);
+  }
+  if (height.keyword === 'aspect-ratio') {
+    return 'auto';
+  }
+  return 'auto';
+}
+
+function getTrackCssWidth(node: LeafNode) {
+  const width = node.rect.width.base.parsed;
+  if ('unit' in width) {
+    return formatValue(width);
+  }
+  return 'min-content';
 }
 
 function getDragElementRect(element: HTMLElement, clientX: number, clientY: number) {
@@ -585,7 +825,10 @@ function getNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>) {
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node) / height.ratio;
   }
-  return node.type === 'wrapper' ? 480 : 56;
+  if (node.type === 'wrapper') {
+    return node.role === 'header' || node.role === 'footer' ? 0 : 480;
+  }
+  return estimateAutoLeafHeight(node);
 }
 
 function formatHeight(node: WrapperNode) {
@@ -623,6 +866,14 @@ function getStickyCss(
   return style;
 }
 
+function shouldShowSpacerVisuals(
+  spacerVisibility: 'selected' | 'all',
+  selectedId: NodeId | null,
+  ownerId: NodeId,
+) {
+  return spacerVisibility === 'all' || selectedId === ownerId;
+}
+
 function renderOffsetVisual(
   sticky: StickyDefinition | undefined,
   node: Exclude<DocumentNode, { type: 'site' }>,
@@ -639,7 +890,7 @@ function renderOffsetVisual(
 
   return (
     <div className="sticky-offset-visual" style={{ height: `${offsetPx}px`, top: `${-offsetPx}px` }}>
-      <span className="sticky-offset-label">offset · {Math.round(offsetPx)}px</span>
+      <span className="sticky-offset-label">Offset · {Math.round(offsetPx)}px</span>
     </div>
   );
 }
@@ -663,9 +914,15 @@ function renderSpacerRanges(
 
     const style = getSpacerRangeStyle(owner, registration, wrapper);
     return (
-      <div key={registration.ownerId} className="sticky-spacer-range" style={style}>
+      <div
+        key={registration.ownerId}
+        className={`sticky-spacer-range ${owner.sticky?.durationMode === 'auto' ? 'sticky-spacer-range-auto' : ''}`}
+        style={style}
+      >
         <span className="sticky-spacer-label">
-          {owner.name} spacer · {Math.round(registration.durationPx)}px
+          {owner.sticky?.durationMode === 'auto'
+            ? 'Distance: auto'
+            : `Distance · ${Math.round(registration.durationPx)}px`}
         </span>
       </div>
     );
@@ -714,9 +971,7 @@ function buildWrapperStyle(node: WrapperNode, isTopLevel: boolean): CSSPropertie
     ...(isTopLevel
       ? {}
       : {
-          position: 'absolute',
-          left: node.rect.x.base.raw,
-          top: node.rect.y.base.raw,
+          position: 'relative',
         }),
   };
 }
@@ -739,4 +994,147 @@ function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
 
   base.minHeight = '120px';
   return base;
+}
+
+function computeMeshLayout(
+  children: Exclude<DocumentNode, { type: 'site' }>[],
+  wrapper: WrapperNode,
+  registrations: Map<string, ComputedWrapperStickyState['registrations'][number]>,
+): MeshLayout {
+  const width = getNodeWidth(wrapper);
+  const baseHeight = getNodeHeight(wrapper);
+  const xLines = new Set<number>([0, width]);
+  const yLines = new Set<number>([0, baseHeight]);
+
+  for (const child of children) {
+    const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x');
+    const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y');
+    const childWidth = getNodeWidth(child);
+    const childHeight = getMeshNodeHeight(child, registrations.get(child.id));
+    xLines.add(clampLine(childX, width));
+    xLines.add(clampLine(childX + childWidth, width));
+    yLines.add(Math.max(0, childY));
+    yLines.add(Math.max(0, childY + childHeight));
+  }
+
+  const columns = sortedLines(xLines);
+  const rows = sortedLines(yLines);
+  const columnTemplate = templateFromLines(columns);
+  const rowTemplate = templateFromLines(rows);
+  const childPlacements: Record<string, CSSProperties> = {};
+
+  for (const child of children) {
+    const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x');
+    const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y');
+    const childWidth = getNodeWidth(child);
+    const childHeight = getMeshNodeHeight(child, registrations.get(child.id));
+    const colStart = lineIndex(columns, clampLine(childX, width));
+    const colEnd = lineIndex(columns, clampLine(childX + childWidth, width));
+    const rowStart = lineIndex(rows, Math.max(0, childY));
+    const rowEnd = lineIndex(rows, Math.max(0, childY + childHeight));
+
+    childPlacements[child.id] = {
+      gridColumn: `${colStart} / ${Math.max(colStart + 1, colEnd)}`,
+      gridRow: `${rowStart} / ${Math.max(rowStart + 1, rowEnd)}`,
+      justifySelf: 'stretch',
+      alignSelf: 'stretch',
+      minWidth: 0,
+      minHeight: 0,
+    };
+  }
+
+  return {
+    columnTemplate,
+    rowTemplate,
+    childPlacements,
+    columnLines: columns,
+    rowLines: rows,
+    bottomLanePx: rows[rows.length - 1] ?? baseHeight,
+  };
+}
+
+function renderGridLaneOverlay(meshLayout: MeshLayout) {
+  const verticalLines = meshLayout.columnLines.slice(1, -1);
+  const horizontalLines = meshLayout.rowLines.slice(1, -1);
+
+  if (verticalLines.length === 0 && horizontalLines.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="grid-lane-overlay" aria-hidden="true">
+      {verticalLines.map((line) => (
+        <div
+          key={`v-${line}`}
+          className="grid-lane grid-lane-vertical"
+          style={{ left: `${line}px` }}
+        />
+      ))}
+      {horizontalLines.map((line) => (
+        <div
+          key={`h-${line}`}
+          className="grid-lane grid-lane-horizontal"
+          style={{ top: `${line}px` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function getMeshNodeHeight(
+  node: Exclude<DocumentNode, { type: 'site' }>,
+  registration?: ComputedWrapperStickyState['registrations'][number],
+) {
+  const baseHeight = getNodeHeight(node);
+  if (
+    registration &&
+    node.sticky?.enabled &&
+    node.sticky.target === 'self' &&
+    node.sticky.durationMode !== 'auto' &&
+    registration.target === 'self'
+  ) {
+    return baseHeight + registration.durationPx;
+  }
+  return baseHeight;
+}
+
+function resolveCoordinatePx(
+  value: WrapperNode['rect']['x']['base']['parsed'],
+  width: number,
+  height: number,
+  axis: 'x' | 'y',
+) {
+  return resolveUnitValuePx(
+    value,
+    {
+      width,
+      height,
+      viewportWidth: 1440,
+      viewportHeight: 900,
+    },
+    axis,
+  );
+}
+
+function clampLine(value: number, max: number) {
+  return Math.min(Math.max(0, value), Math.max(max, value));
+}
+
+function sortedLines(values: Set<number>) {
+  return Array.from(values).sort((a, b) => a - b);
+}
+
+function templateFromLines(lines: number[]) {
+  if (lines.length < 2) {
+    return '1fr';
+  }
+  return lines
+    .slice(0, -1)
+    .map((line, index) => `${Math.max(1, lines[index + 1] - line)}px`)
+    .join(' ');
+}
+
+function lineIndex(lines: number[], value: number) {
+  const index = lines.findIndex((line) => Math.abs(line - value) < 0.5);
+  return (index === -1 ? 0 : index) + 1;
 }

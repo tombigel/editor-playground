@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useReducer } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { Eye, Grid3X3, SearchCode, StickyNote } from 'lucide-react';
 import {
   cancelPromoteWrapperRole,
   clearPersistedState,
@@ -10,25 +11,27 @@ import {
   insertLeaf,
   insertWrapper,
   loadPersistedState,
-  persistState,
-  requestPromoteWrapperRole,
-  reparentNode,
-  selectNode,
   moveNode,
+  persistState,
+  reparentNode,
+  requestPromoteWrapperRole,
   resizeNode,
+  selectNode,
   updateRectField,
   updateStickyField,
   updateTextField,
   updateWrapperStyleField,
 } from '../model/documentStore';
+import { parseUnitValue } from '../model/units';
 import { getNode } from '../model/selectors';
 import { InsertPanel } from '../panels/InsertPanel';
 import { InspectorPanel } from '../panels/InspectorPanel';
 import { DebugPanel } from '../panels/DebugPanel';
 import { Stage } from '../stage/Stage';
-import { parseUnitValue } from '../model/units';
 import { computeStickyState } from '../sticky/stickyCompute';
-import { FloatingPanel } from './FloatingPanel';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 
 type Action =
   | { type: 'select'; id: string | null }
@@ -49,9 +52,11 @@ type Action =
   | { type: 'stickyTarget'; value: 'self' | 'contentWrapper' }
   | { type: 'stickyEdges'; value: 'top' | 'bottom' | 'both' }
   | { type: 'stickyOffset'; value: number }
+  | { type: 'stickyDurationMode'; value: 'auto' | 'custom' }
   | { type: 'stickyDuration'; value: number }
   | { type: 'setPreviewSticky'; value: boolean }
-  | { type: 'setShowSpacers'; value: boolean };
+  | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
+  | { type: 'setShowGridLanes'; value: boolean };
 
 function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
   const selectedId = state.selectedId;
@@ -105,19 +110,22 @@ function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
         return state;
       }
       return updateStickyField(state, selectedId, {
-        offsetTop:
-          selectedNodeHasTopEdge(state, selectedId) ? parseUnitValue(`${action.value}vh`) : undefined,
+        offsetTop: selectedNodeHasTopEdge(state, selectedId) ? parseUnitValue(`${action.value}vh`) : undefined,
         offsetBottom:
           selectedNodeHasBottomEdge(state, selectedId) ? parseUnitValue(`${action.value}vh`) : undefined,
       });
+    case 'stickyDurationMode':
+      return selectedId ? updateStickyField(state, selectedId, { durationMode: action.value }) : state;
     case 'stickyDuration':
       return selectedId
         ? updateStickyField(state, selectedId, { duration: parseUnitValue(`${action.value}vh`) })
         : state;
     case 'setPreviewSticky':
       return { ...state, ui: { ...state.ui, previewSticky: action.value } };
-    case 'setShowSpacers':
-      return { ...state, ui: { ...state.ui, showSpacers: action.value } };
+    case 'setSpacerVisibility':
+      return { ...state, ui: { ...state.ui, spacerVisibility: action.value } };
+    case 'setShowGridLanes':
+      return { ...state, ui: { ...state.ui, showGridLanes: action.value } };
     default:
       return state;
   }
@@ -125,6 +133,9 @@ function reducer(state: ReturnType<typeof createInitialState>, action: Action) {
 
 export function App() {
   const [state, dispatch] = useReducer(reducer, undefined, loadPersistedState);
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [spacerMenuOpen, setSpacerMenuOpen] = useState(false);
+  const spacerMenuRef = useRef<HTMLDivElement | null>(null);
   const selectedNode = getNode(state.document, state.selectedId);
   const errors = useMemo(() => getValidationErrors(state), [state]);
   const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
@@ -133,84 +144,291 @@ export function App() {
     persistState(state);
   }, [state]);
 
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!spacerMenuRef.current) {
+        return;
+      }
+
+      if (!spacerMenuRef.current.contains(event.target as Node)) {
+        setSpacerMenuOpen(false);
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown);
+    return () => window.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (!state.selectedId) {
+        return;
+      }
+      if (event.key !== 'Backspace' && event.key !== 'Delete') {
+        return;
+      }
+
+      const active = document.activeElement as HTMLElement | null;
+      if (isInteractiveFocus(active)) {
+        return;
+      }
+
+      event.preventDefault();
+      dispatch({ type: 'delete' });
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.selectedId]);
+
   return (
-    <div className="app-shell">
-      <Stage
-        document={state.document}
-        selectedId={state.selectedId}
-        previewSticky={state.ui.previewSticky}
-        showSpacers={state.ui.showSpacers}
-        onSelect={(id) => dispatch({ type: 'select', id })}
-        onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
-        onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
-        onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
-      />
-      <FloatingPanel title="Insert" initialPosition={{ x: 12, y: 12 }} width={220}>
-        <InsertPanel
-          onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
-          onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
-        />
-      </FloatingPanel>
-      <FloatingPanel
-        title="Inspector"
-        initialPosition={{
-          x: Math.max(260, (typeof window !== 'undefined' ? window.innerWidth : 1440) - 340),
-          y: 12,
-        }}
-        width={320}
-      >
-        <InspectorPanel
-          node={selectedNode}
-          onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
-          onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
-          onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
-          onPromote={(role) => dispatch({ type: 'promote', role })}
-          onDemote={() => dispatch({ type: 'demote' })}
-          onDelete={() => dispatch({ type: 'delete' })}
-          onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
-          onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
-          onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
-          onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
-          onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
-        />
-      </FloatingPanel>
-      <FloatingPanel
-        title="Debug"
-        initialPosition={{
-          x: 244,
-          y: Math.max(12, (typeof window !== 'undefined' ? window.innerHeight : 900) - 180),
-        }}
-        width={520}
-      >
-        <DebugPanel
-          errors={errors}
-          stickyState={stickyState}
-          previewSticky={state.ui.previewSticky}
-          showSpacers={state.ui.showSpacers}
-          onPreviewStickyChange={(value) => dispatch({ type: 'setPreviewSticky', value })}
-          onShowSpacersChange={(value) => dispatch({ type: 'setShowSpacers', value })}
-          onReset={() => {
-            clearPersistedState();
-            window.location.reload();
-          }}
-        />
-      </FloatingPanel>
-      {state.pendingRoleSwap ? (
-        <div className="dialog-backdrop">
-          <div className="dialog">
-            <h3>Replace current {state.pendingRoleSwap.targetRole}?</h3>
-            <p>
-              A {state.pendingRoleSwap.targetRole} already exists. Demote the current one and promote
-              this section?
-            </p>
-            <div className="dialog-actions">
-              <button onClick={() => dispatch({ type: 'cancelPromote' })}>Cancel</button>
-              <button onClick={() => dispatch({ type: 'confirmPromote' })}>Replace</button>
+    <div className="h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900">
+      <div className="grid h-full grid-rows-[56px_minmax(0,1fr)]">
+        <header className="border-b border-white/10 bg-[#131720] px-4 text-white shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="flex h-full items-center gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#3772ff] to-[#1a243a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]">
+                <StickyNote className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold tracking-[0.01em]">Sticky Playground</div>
+                <div className="truncate text-[11px] text-white/55">
+                  Editor bootstrap · mesh layout · spacer-based sticky behavior
+                </div>
+              </div>
             </div>
+            <div className="ml-auto" />
           </div>
+        </header>
+
+        <div className="grid min-h-0 grid-cols-[84px_minmax(0,1fr)_300px]">
+          <aside className="relative z-30 overflow-visible border-r border-slate-200/80 bg-white/95 shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
+            <div className="flex h-full flex-col gap-4 overflow-visible p-3">
+              <div className="overflow-visible rounded-2xl border border-slate-200 bg-slate-50/80 p-2">
+                <InsertPanel
+                  onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
+                  onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
+                />
+              </div>
+              <div className="mt-auto flex justify-center">
+                <div className="relative flex flex-col gap-2 overflow-visible">
+                  <button
+                    type="button"
+                    aria-pressed={state.ui.previewSticky}
+                    onClick={() => dispatch({ type: 'setPreviewSticky', value: !state.ui.previewSticky })}
+                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
+                      state.ui.previewSticky
+                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
+                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
+                      {state.ui.previewSticky ? 'Disable sticky preview' : 'Enable sticky preview'}
+                    </span>
+                  </button>
+                  <div ref={spacerMenuRef} className="group relative">
+                    <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={spacerMenuOpen}
+                      onClick={() => setSpacerMenuOpen((open) => !open)}
+                      aria-pressed={state.ui.spacerVisibility === 'all'}
+                      className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
+                        state.ui.spacerVisibility === 'all'
+                          ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
+                          : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <SpacerIcon className="h-4 w-4" />
+                    </button>
+                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
+                      Spacer visibility
+                    </span>
+                    {spacerMenuOpen ? (
+                      <div className="absolute left-[calc(100%+8px)] top-1/2 z-[95] min-w-[140px] -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-1 shadow-[0_12px_24px_rgba(18,32,51,0.12)]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          dispatch({ type: 'setSpacerVisibility', value: 'selected' });
+                          setSpacerMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
+                          state.ui.spacerVisibility === 'selected'
+                            ? 'bg-[#3772ff] text-white'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        Selected spacers
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          dispatch({ type: 'setSpacerVisibility', value: 'all' });
+                          setSpacerMenuOpen(false);
+                        }}
+                        className={`mt-1 flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
+                          state.ui.spacerVisibility === 'all'
+                            ? 'bg-[#3772ff] text-white'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        All spacers
+                      </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    aria-pressed={state.ui.showGridLanes}
+                    onClick={() => dispatch({ type: 'setShowGridLanes', value: !state.ui.showGridLanes })}
+                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
+                      state.ui.showGridLanes
+                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
+                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
+                      {state.ui.showGridLanes ? 'Hide grid lanes' : 'Show grid lanes'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={debugOpen}
+                    onClick={() => setDebugOpen((open) => !open)}
+                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
+                      debugOpen
+                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
+                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <SearchCode className="h-4 w-4" />
+                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
+                      {debugOpen ? 'Hide debug tools' : 'Show debug tools'}
+                    </span>
+                  </button>
+                  {debugOpen ? (
+                    <div className="absolute bottom-0 left-[calc(100%+16px)] z-40 w-[368px]">
+                      <div className="rounded-2xl border border-slate-200 bg-white/96 shadow-[0_18px_40px_rgba(18,32,51,0.12)] backdrop-blur">
+                        <div className="px-4 py-3">
+                          <div className="text-sm font-semibold text-slate-900">Debug tools</div>
+                          <div className="text-xs text-slate-500">Validation, sticky math, stage reset</div>
+                        </div>
+                        <Separator />
+                        <DebugPanel
+                          errors={errors}
+                          stickyState={stickyState}
+                          selectedNode={selectedNode}
+                          onExport={async () => {
+                            try {
+                              await navigator.clipboard.writeText(
+                                JSON.stringify(state.document, null, 2),
+                              );
+                              return true;
+                            } catch {
+                              return false;
+                            }
+                          }}
+                          onReset={() => {
+                            clearPersistedState();
+                            window.location.reload();
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <main className="relative min-h-0 overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0)),#eef2f7]">
+            <Stage
+              document={state.document}
+              selectedId={state.selectedId}
+              previewSticky={state.ui.previewSticky}
+              spacerVisibility={state.ui.spacerVisibility}
+              showGridLanes={state.ui.showGridLanes}
+              onSelect={(id) => dispatch({ type: 'select', id })}
+              onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
+              onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
+              onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
+            />
+
+          </main>
+
+          <aside className="min-h-0 overflow-hidden border-l border-slate-200/80 bg-white/97 shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
+            <InspectorPanel
+              node={selectedNode}
+              onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
+              onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
+              onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
+              onPromote={(role) => dispatch({ type: 'promote', role })}
+              onDemote={() => dispatch({ type: 'demote' })}
+              onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
+              onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
+              onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
+              onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
+              onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
+              onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
+            />
+          </aside>
         </div>
-      ) : null}
+      </div>
+
+      <Dialog
+        open={Boolean(state.pendingRoleSwap)}
+        onOpenChange={(open) => {
+          if (!open) {
+            dispatch({ type: 'cancelPromote' });
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Replace current {state.pendingRoleSwap?.targetRole}?</DialogTitle>
+            <DialogDescription>
+              A {state.pendingRoleSwap?.targetRole} already exists. Demote the current one and promote
+              this wrapper instead?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => dispatch({ type: 'cancelPromote' })}>
+              Cancel
+            </Button>
+            <Button onClick={() => dispatch({ type: 'confirmPromote' })}>Replace</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function isInteractiveFocus(element: HTMLElement | null) {
+  if (!element) {
+    return false;
+  }
+
+  if (element.isContentEditable) {
+    return true;
+  }
+
+  return Boolean(
+    element.closest(
+      'input, textarea, select, button, [role="textbox"], [contenteditable="true"], [data-radix-slider-thumb], [data-radix-select-trigger]',
+    ),
+  );
+}
+
+function SpacerIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <rect x="4" y="4" width="16" height="4" rx="1" />
+      <path d="M12 8v8" />
+      <path d="M8 12h8" opacity="0.65" />
+      <rect x="4" y="16" width="16" height="4" rx="1" />
+    </svg>
   );
 }
 

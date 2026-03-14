@@ -1,4 +1,4 @@
-import { createInitialDocument, createLeaf, createWrapper } from './defaults';
+import { createDefaultFooter, createDefaultHeader, createInitialDocument, createLeaf, createWrapper } from './defaults';
 import { validateDocument } from './validation';
 import type {
   DocumentModel,
@@ -23,20 +23,23 @@ export type EditorState = {
   pendingRoleSwap: ConfirmReplaceRole | null;
   ui: {
     previewSticky: boolean;
-    showSpacers: boolean;
+    spacerVisibility: 'selected' | 'all';
+    showGridLanes: boolean;
   };
 };
 
 export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
+export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';
 
 export function createInitialState(): EditorState {
   return {
-    document: createInitialDocument(),
+    document: loadDefaultDocument(),
     selectedId: null,
     pendingRoleSwap: null,
     ui: {
       previewSticky: true,
-      showSpacers: true,
+      spacerVisibility: 'selected',
+      showGridLanes: false,
     },
   };
 }
@@ -47,6 +50,7 @@ export function loadPersistedState(): EditorState {
   }
 
   try {
+    ensureDefaultDocumentSeeded();
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       return createInitialState();
@@ -58,7 +62,11 @@ export function loadPersistedState(): EditorState {
       pendingRoleSwap: null,
       ui: {
         previewSticky: parsed.ui?.previewSticky ?? true,
-        showSpacers: parsed.ui?.showSpacers ?? true,
+        spacerVisibility:
+          parsed.ui?.spacerVisibility === 'all' || parsed.ui?.spacerVisibility === 'selected'
+            ? parsed.ui.spacerVisibility
+            : 'selected',
+        showGridLanes: parsed.ui?.showGridLanes ?? false,
       },
     };
     const errors = validateDocument(candidate.document);
@@ -89,6 +97,57 @@ export function clearPersistedState() {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
+function loadDefaultDocument(): DocumentModel {
+  if (typeof window === 'undefined') {
+    return createInitialDocument();
+  }
+
+  try {
+    const raw = window.localStorage.getItem(DEFAULT_DOCUMENT_STORAGE_KEY);
+    if (!raw) {
+      return createInitialDocument();
+    }
+    const document = normalizeDocument(JSON.parse(raw) as DocumentModel);
+    const errors = validateDocument(document);
+    if (errors.length > 0) {
+      return createInitialDocument();
+    }
+    return document;
+  } catch {
+    return createInitialDocument();
+  }
+}
+
+function ensureDefaultDocumentSeeded() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (window.localStorage.getItem(DEFAULT_DOCUMENT_STORAGE_KEY)) {
+    return;
+  }
+
+  const persistedSession = window.localStorage.getItem(STORAGE_KEY);
+  if (persistedSession) {
+    try {
+      const parsed = JSON.parse(persistedSession) as EditorState;
+      const document = normalizeDocument(parsed.document);
+      const errors = validateDocument(document);
+      if (errors.length === 0) {
+        window.localStorage.setItem(DEFAULT_DOCUMENT_STORAGE_KEY, JSON.stringify(document));
+        return;
+      }
+    } catch {
+      // fall through to factory default
+    }
+  }
+
+  window.localStorage.setItem(
+    DEFAULT_DOCUMENT_STORAGE_KEY,
+    JSON.stringify(createInitialDocument()),
+  );
+}
+
 function cloneDocument(document: DocumentModel): DocumentModel {
   return {
     rootId: document.rootId,
@@ -105,6 +164,7 @@ function normalizeSticky(sticky: StickyDefinition | undefined): StickyDefinition
     ...sticky,
     enabled: sticky.enabled ?? false,
     target: sticky.target ?? 'self',
+    durationMode: sticky.durationMode ?? 'auto',
     duration: sticky.duration ?? parseUnitValue('50vh'),
     edges: {
       top: true,
@@ -122,7 +182,34 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
     }
     node.sticky = normalizeSticky(node.sticky);
   }
+  ensureDefaultSiteSections(normalized);
   return normalized;
+}
+
+function ensureDefaultSiteSections(document: DocumentModel) {
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return;
+  }
+
+  const wrappers = root.children
+    .map((id) => document.nodes[id])
+    .filter((node): node is WrapperNode => Boolean(node && node.type === 'wrapper'));
+
+  const hasHeader = wrappers.some((node) => node.role === 'header');
+  const hasFooter = wrappers.some((node) => node.role === 'footer');
+
+  if (!hasHeader) {
+    const { wrapper, nodes } = createDefaultHeader(document.rootId);
+    Object.assign(document.nodes, nodes);
+    root.children.unshift(wrapper.id);
+  }
+
+  if (!hasFooter) {
+    const { wrapper, nodes } = createDefaultFooter(document.rootId);
+    Object.assign(document.nodes, nodes);
+    root.children.push(wrapper.id);
+  }
 }
 
 function assertWrapper(node: DocumentNode): WrapperNode {
@@ -211,6 +298,24 @@ export function updateTextField(
     node.name = value;
   } else if (field === 'content' && node.type === 'leaf' && node.role === 'text') {
     node.content = value;
+  } else if (field === 'fontSize' && node.type === 'leaf' && node.role === 'text') {
+    node.style ??= {};
+    node.style.fontSize = parseUnitValue(value);
+  } else if (field === 'fontWeight' && node.type === 'leaf' && node.role === 'text') {
+    node.style ??= {};
+    node.style.fontWeight = value === 'bold' ? 'bold' : 'normal';
+  } else if (field === 'fontStyle' && node.type === 'leaf' && node.role === 'text') {
+    node.style ??= {};
+    node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
+  } else if (field === 'lineHeight' && node.type === 'leaf' && node.role === 'text') {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      node.style ??= {};
+      node.style.lineHeight = parsed;
+    }
+  } else if (field === 'textAlign' && node.type === 'leaf' && node.role === 'text') {
+    node.style ??= {};
+    node.style.textAlign = value === 'center' || value === 'right' ? value : 'left';
   } else if (field === 'label' && node.type === 'leaf' && 'label' in node) {
     node.label = value;
   } else if (field === 'href' && node.type === 'leaf' && node.role === 'link') {
@@ -262,6 +367,7 @@ export function updateStickyField(
     enabled: false,
     target: 'self',
     edges: { top: true, bottom: false },
+    durationMode: 'auto',
     duration: parseUnitValue('50vh'),
     ...node.sticky,
     ...patch,

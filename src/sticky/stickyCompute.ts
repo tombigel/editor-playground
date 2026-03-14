@@ -33,7 +33,9 @@ export function computeStickyState(
       continue;
     }
     const durationPx = resolveUnitValuePx(
-      node.sticky.duration.parsed,
+      node.sticky.durationMode === 'auto'
+        ? { value: getWrapperHeight(ownerWrapper), unit: 'px' as const }
+        : node.sticky.duration.parsed,
       {
         width: getWrapperWidth(ownerWrapper),
         height: getWrapperHeight(ownerWrapper),
@@ -44,7 +46,10 @@ export function computeStickyState(
     );
     const startPx = getSpacerStartPx(node, ownerWrapper);
     const endPx = startPx + durationPx;
-    const extentPx = Math.max(0, endPx - getWrapperHeight(ownerWrapper));
+    const extentPx =
+      node.sticky.durationMode === 'auto'
+        ? 0
+        : Math.max(0, endPx - getWrapperHeight(ownerWrapper));
     const registration: ComputedStickyRegistration = {
       ownerId: node.id,
       parentWrapperId: ownerWrapper.id,
@@ -56,10 +61,12 @@ export function computeStickyState(
       extentPx,
     };
     result[ownerWrapper.id].registrations.push(registration);
-    result[ownerWrapper.id].totalExtraExtentPx = Math.max(
-      result[ownerWrapper.id].totalExtraExtentPx,
-      extentPx,
-    );
+    if (registration.target === 'contentWrapper') {
+      result[ownerWrapper.id].totalExtraExtentPx = Math.max(
+        result[ownerWrapper.id].totalExtraExtentPx,
+        extentPx,
+      );
+    }
   }
 
   return result;

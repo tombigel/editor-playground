@@ -49,6 +49,7 @@ export type StickyDefinition = {
   edges: StickyEdges;
   offsetTop?: ParsedValue<UnitValue>;
   offsetBottom?: ParsedValue<UnitValue>;
+  durationMode?: 'auto' | 'custom';
   duration: ParsedValue<UnitValue>;
 };
 
@@ -91,6 +92,10 @@ export type TextLeaf = BaseNode & {
   style?: {
     color?: string;
     fontSize?: ParsedValue<UnitValue>;
+    fontWeight?: 'normal' | 'bold';
+    fontStyle?: 'normal' | 'italic';
+    lineHeight?: number;
+    textAlign?: 'left' | 'center' | 'right';
   };
 };
 
