@@ -93,7 +93,7 @@ export function InspectorPanel({
   if (!node) {
     return (
       <div className="flex h-full flex-col gap-1.5 p-2.5 text-xs">
-        <div>
+        <div className="space-y-1.5 pb-1.5">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Inspector</div>
           <div className="mt-1 text-xs text-slate-600">Select a node to inspect its layout and sticky config.</div>
         </div>
@@ -103,9 +103,9 @@ export function InspectorPanel({
 
   return (
     <div className="flex h-full flex-col gap-1.5 overflow-auto p-2.5 text-xs">
-      <div>
+      <div className="space-y-1.5 pb-1.5">
         <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Inspector</div>
-        <div className="mt-0.5 flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-2">
           <h2 className="text-[15px] font-semibold text-slate-950">{node.name}</h2>
           {node.type !== 'site' ? (
             <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
@@ -851,36 +851,45 @@ function WrapperActions({
   onPromote: (role: 'header' | 'footer') => void;
   onDemote: () => void;
 }) {
-  return (
-    <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium text-slate-500">Role</Label>
-      <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
-        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-          {node.role}
-        </span>
-        {node.role === 'section' ? (
-          <>
+  if (node.role === 'section') {
+    return (
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-1">
+          <Label className="text-[11px] font-medium text-slate-500">Order</Label>
+          <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
             <OrderIconButton compact label="Move Section Up" onClick={onSectionBack} disabled={!canSectionBack}>
               <ListStart className="h-3.5 w-3.5" />
             </OrderIconButton>
             <OrderIconButton compact label="Move Section Down" onClick={onSectionForward} disabled={!canSectionForward}>
               <ListEnd className="h-3.5 w-3.5" />
             </OrderIconButton>
-            <>
-              <OrderIconButton compact label="Promote to Header" onClick={() => onPromote('header')} disabled={false}>
-                <ArrowUpToLine className="h-3.5 w-3.5" />
-              </OrderIconButton>
-              <OrderIconButton compact label="Promote to Footer" onClick={() => onPromote('footer')} disabled={false}>
-                <ArrowDownToLine className="h-3.5 w-3.5" />
-              </OrderIconButton>
-            </>
-          </>
-        ) : node.role === 'container' ? (
-          <>
-            <OrderIconButton compact label="Promote to Header" onClick={() => onPromote('header')} disabled={false}>
+          </div>
+        </div>
+        <div className="grid grid-cols-[30px_minmax(0,1fr)] items-center gap-1">
+          <Label className="text-[11px] font-medium text-slate-500">Role</Label>
+          <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
+            <OrderIconButton compact label="To Header" onClick={() => onPromote('header')} disabled={false}>
               <ArrowUpToLine className="h-3.5 w-3.5" />
             </OrderIconButton>
-            <OrderIconButton compact label="Promote to Footer" onClick={() => onPromote('footer')} disabled={false}>
+            <OrderIconButton compact label="To Footer" onClick={() => onPromote('footer')} disabled={false}>
+              <ArrowDownToLine className="h-3.5 w-3.5" />
+            </OrderIconButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-1">
+      <Label className="text-[11px] font-medium text-slate-500">Role</Label>
+      <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
+        {node.role === 'container' ? (
+          <>
+            <OrderIconButton compact label="To Header" onClick={() => onPromote('header')} disabled={false}>
+              <ArrowUpToLine className="h-3.5 w-3.5" />
+            </OrderIconButton>
+            <OrderIconButton compact label="To Footer" onClick={() => onPromote('footer')} disabled={false}>
               <ArrowDownToLine className="h-3.5 w-3.5" />
             </OrderIconButton>
           </>
