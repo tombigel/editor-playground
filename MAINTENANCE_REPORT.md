@@ -13,7 +13,7 @@ Validation run:
 
 - `npm run lint`: passed
 - `npm run typecheck`: passed
-- `npm run test:run`: passed, `124` tests
+- `npm run test:run`: passed, `127` tests
 - `npm run test:coverage`: passed with thresholds
 - `npm run check:architecture`: passed
 - `npm run build`: passed
@@ -81,9 +81,14 @@ Validation run:
 ### `src/app`
 
 - `src/app/App.tsx`
-  - Very large orchestration file at 1,441 lines. It owns reducer logic, history diffing, persistence, keyboard shortcuts, popover dismissal, theme sync, and layout shell rendering.
+  - Very large orchestration file. It owns reducer logic, history diffing, persistence, keyboard shortcuts, popover dismissal, theme sync, and layout shell rendering.
   - Completed on 2026-03-15: history diffing now uses extracted structural comparison helpers in `src/app/history.ts` instead of `JSON.stringify`.
-  - Remaining issue: `App.tsx` is still oversized even though the history comparison logic is now testable in isolation.
+  - Partially completed on 2026-03-15: top-bar actions, rail toggles, and the section template popover were extracted into `src/app/AppChrome.tsx`, which removed a large block of render-only duplication from `App.tsx`.
+  - Partially completed on 2026-03-15: environment hooks and pure app selectors now live in `src/app/useEditorEnvironment.ts` and `src/app/appSelectors.ts`, with direct tests for the selector logic.
+  - Partially completed on 2026-03-15: keyboard shortcut orchestration now lives in `src/app/useEditorKeyboardShortcuts.ts`, with the action mapping isolated in `src/app/shortcutController.ts` and covered by direct tests.
+  - Partially completed on 2026-03-15: reducer and history-state orchestration now live in `src/app/editorState.ts`, with direct tests covering history-only UI toggles, resize stream coalescing, and sticky-target coercion.
+  - Partially completed on 2026-03-15: the main shell render tree now lives in `src/app/AppShell.tsx`, and settings import/reset workflow helpers now live in `src/app/appSettingsActions.ts` with direct tests.
+  - Completed on 2026-03-15: panel/open-state orchestration now lives in `src/app/useAppPanels.ts`, derived app view-model state lives in `src/app/useAppViewModel.ts`, and runtime effects live in `src/app/useAppRuntime.ts`. `App.tsx` is now a thin composition layer over app hooks plus `AppShell.tsx`.
 
 ### `src/editor`
 
@@ -91,15 +96,19 @@ Validation run:
   - Strong migration coverage in tests, but the file mixes persistence, migration, document mutation, and selection/history concerns.
   - Repeated object seeding for sticky defaults appears in both editor and document APIs. That should be centralized.
 - Completed on 2026-03-15: `src/editor/DragController.ts` and `src/editor/ResizeController.ts` were removed.
-  - Their stage-only types are now co-located in `src/stage/Stage.tsx`, which better reflects actual ownership.
+  - Their stage-only types and helpers are now co-located under `src/stage`, which better reflects actual ownership.
 
 ### `src/stage`
 
 - `src/stage/Stage.tsx`
-  - Main complexity hotspot at 2,282 lines.
-  - It mixes rendering, geometry measurement, drag state, resize math, snapping, drop-target resolution, sticky visualization, and unit conversion.
+  - Completed on 2026-03-15: reduced from 2,363 lines to 205 lines and now acts as a thin stage shell only.
+  - It now owns geometry measurement, pointer lifecycle, and editor callback wiring, while rendering moved to `src/stage/StageScene.tsx` and pure interaction/measurement math moved to `src/stage/stageMath.ts`.
   - Partially completed on 2026-03-15: drag/snap/drop helpers now accept injected document/window adapters, which makes the interaction math directly testable without a browser test harness.
-  - This is the file most likely to benefit from extraction into pure helpers with injected geometry/document adapters.
+  - Partially completed on 2026-03-15: pure drag/resize/drop/measurement math now lives in `src/stage/stageMath.ts`, and `Stage.test.tsx` now imports that test surface directly instead of reaching through `Stage.tsx`.
+- `src/stage/StageScene.tsx`
+  - New extracted stage render/layout surface as of 2026-03-15.
+  - It now owns the nested wrapper/leaf render tree, sticky/spacer visuals, and mesh layout composition.
+  - Remaining issue: it is still a large renderer module and is the next logical extraction target if stage rendering needs further decomposition.
 - `src/stage/Stage.test.tsx`
   - Completed on 2026-03-15 for the highest-risk helper paths: stage interaction coverage now includes snap inversion, shift axis lock, drop fallback resolution, and sticky visual offset drag math.
   - Remaining gap: there is still no full browser-level drag/reparent integration coverage.
@@ -107,10 +116,12 @@ Validation run:
 ### `src/panels`
 
 - `src/panels/InspectorPanel.tsx`
-  - Another major hotspot at 1,796 lines.
-  - `Field` and `InlineField` at `src/panels/InspectorPanel.tsx:604-687` are currently unused.
-  - The file exports and tests several conversion helpers, which is useful, but it also confirms this component is carrying too much domain logic.
-  - Strong candidate for split into smaller field modules: geometry fields, text fields, sticky fields, and unit conversion helpers.
+  - Another major hotspot, though materially smaller now after extraction.
+  - Completed on 2026-03-15: the low-level inspector controls and measurement/unit conversion helpers now live in `src/panels/InspectorControls.tsx`, and `InspectorPanel.tsx` re-exports the tested conversion API from there.
+  - Partially completed on 2026-03-15: inspector sections are now split into `src/panels/inspector/CommonSections.tsx`, `src/panels/inspector/ContentSections.tsx`, and `src/panels/inspector/StickySection.tsx`, so `InspectorPanel.tsx` now composes sections instead of holding one long render body.
+  - Partially completed on 2026-03-15: section resolution now goes through `src/panels/inspector/schema.tsx`, which gives the inspector an explicit configuration layer with section ids, grouping, alignment, visibility, and render hooks.
+  - Partially completed on 2026-03-15: each current node type/role now has its own inspector config module (`config.site.tsx`, `config.section.tsx`, `config.container.tsx`, `config.header.tsx`, `config.footer.tsx`, `config.text.tsx`, `config.button.tsx`, `config.link.tsx`, `config.image.tsx`), and the central schema now only selects which node-owned config to use.
+  - Completed on 2026-03-15: the schema layer now resolves first-class inspector blocks with titles, descriptions, layout modes, visibility, alignment, and an explicit custom-block render path. `InspectorPanel.tsx` now renders block metadata instead of a flat section list, and node configs own grouped layout composition rather than only flat section ordering.
 - `src/panels/SettingsPanel.tsx`
   - Completed on 2026-03-15: export now uses an in-panel file name field instead of `window.prompt`, while still supporting the native save picker when available.
   - Completed on 2026-03-15 for testability: transfer logic now lives in a dedicated helper module with direct tests for save-picker, named download fallback, and clipboard failure paths.
@@ -121,6 +132,7 @@ Validation run:
   - Many seeded templates rely on hard-coded pixel coordinates and heights.
   - This is acceptable for a playground, but it makes template maintenance tedious and brittle.
   - Partially completed on 2026-03-15: shared padding/section-shell helpers now reduce some of the repeated template setup.
+  - Partially completed on 2026-03-15: template node-map and child-assignment helpers now reduce repeated wrapper child wiring and node-record boilerplate across the header/footer and seeded sections, and more sticky sections now share the same section-shell builder.
   - If templates continue to grow, a larger builder/helper DSL would still pay off.
 - `src/model/validation.ts`
   - Completed on 2026-03-15: graph integrity checks were expanded to cover root validity, symmetric parent/child links, duplicate child ids, cycles, and unreachable nodes.
