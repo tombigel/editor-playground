@@ -9,7 +9,9 @@ import {
   confirmPromoteWrapperRole,
   deleteNode,
   demoteWrapperRole,
+  getAdjacentStageSelection,
   getNode,
+  getStageSelectableNodeIds,
   importDocument as importEditorDocument,
   getValidationErrors,
   insertLeaf,
@@ -17,6 +19,7 @@ import {
   insertWrapper,
   loadPersistedState,
   moveNode,
+  nudgeNode,
   parseImportedDocumentJson,
   parseUnitValue,
   type DocumentNode,
@@ -76,6 +79,7 @@ type EditorAction =
   | { type: 'orderForward' }
   | { type: 'orderSendToBack' }
   | { type: 'orderBringToFront' }
+  | { type: 'nudgeSelection'; deltaX: number; deltaY: number }
   | { type: 'importDocument'; document: DocumentModel }
   | { type: 'setPreviewSticky'; value: boolean }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
@@ -140,7 +144,7 @@ const UPCOMING_SCROLL_TEMPLATES = [
 ] as const;
 
 const TOPBAR_ICON_BUTTON_CLASS =
-  'h-8 w-8 rounded-md border border-white/10 bg-white/[0.035] p-0 text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/14 hover:bg-white/[0.065] hover:text-white/92 focus-visible:border-white/18 focus-visible:bg-white/[0.08] focus-visible:text-white';
+  'h-8 w-8 rounded-md border border-white/10 bg-white/[0.035] p-0 text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/14 hover:bg-white/[0.065] hover:text-white/92 focus-visible:border-white/20 focus-visible:bg-white/[0.08] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]';
 
 const TOPBAR_TOOLTIP_CLASS =
   'rounded-lg border border-slate-700 bg-[#0f172a] px-3 py-2 text-xs font-medium text-slate-100 shadow-[0_16px_36px_rgba(2,6,23,0.38)]';
@@ -258,6 +262,8 @@ function editorReducer(state: EditorState, action: EditorAction) {
       return selectedId ? reorderNode(state, selectedId, 'sendToBack') : state;
     case 'orderBringToFront':
       return selectedId ? reorderNode(state, selectedId, 'bringToFront') : state;
+    case 'nudgeSelection':
+      return selectedId ? nudgeNode(state, selectedId, { x: action.deltaX, y: action.deltaY }) : state;
     case 'importDocument':
       return importEditorDocument(state, action.document);
     case 'setPreviewSticky':
@@ -426,6 +432,7 @@ export function App() {
   const errors = useMemo(() => getValidationErrors(state), [state]);
   const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
   const documentJson = useMemo(() => serializeDocumentJson(state.document), [state.document]);
+  const stageSelectableIds = useMemo(() => getStageSelectableNodeIds(state.document), [state.document]);
 
   useEffect(() => {
     persistState(state);
@@ -490,12 +497,28 @@ export function App() {
     function handleKeyDown(event: KeyboardEvent) {
       const active = document.activeElement as HTMLElement | null;
       const interactiveFocus = isInteractiveFocus(active);
+      const stageFocus = hasStageKeyboardFocus(active);
+
+      if (stageFocus && event.key === 'Tab') {
+        const nextSelection = getAdjacentStageSelection(
+          state.document,
+          state.selectedId,
+          event.shiftKey ? 'backward' : 'forward',
+        );
+        if (nextSelection) {
+          event.preventDefault();
+          dispatch({ type: 'select', id: nextSelection });
+        }
+        return;
+      }
+
       const shortcut = findMatchingShortcut(
         event,
         {
           interactiveFocus,
           hasSelection: Boolean(state.selectedId),
           hasDismissiblePanels: sectionTemplateOpen || settingsOpen || shortcutHelpOpen,
+          hasStageFocus: stageFocus,
         },
         shortcutPlatform,
       );
@@ -535,6 +558,18 @@ export function App() {
           return;
         case 'toggleSnapEnabled':
           dispatch({ type: 'setSnapEnabled', value: !state.ui.snapEnabled });
+          return;
+        case 'nudgeSelectionLeft':
+          dispatch({ type: 'nudgeSelection', deltaX: event.shiftKey ? -10 : -1, deltaY: 0 });
+          return;
+        case 'nudgeSelectionRight':
+          dispatch({ type: 'nudgeSelection', deltaX: event.shiftKey ? 10 : 1, deltaY: 0 });
+          return;
+        case 'nudgeSelectionUp':
+          dispatch({ type: 'nudgeSelection', deltaX: 0, deltaY: event.shiftKey ? -10 : -1 });
+          return;
+        case 'nudgeSelectionDown':
+          dispatch({ type: 'nudgeSelection', deltaX: 0, deltaY: event.shiftKey ? 10 : 1 });
           return;
         case 'deleteSelection':
           dispatch({ type: 'delete' });
@@ -647,7 +682,7 @@ export function App() {
                   onClick={() => setSettingsOpen((open) => !open)}
                   className={
                     settingsOpen
-                      ? 'h-8 w-8 rounded-md border border-[#4d86ff] bg-[#3772ff] p-0 text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)] focus-visible:border-[#76a2ff] focus-visible:bg-[#4f86ff]'
+                      ? 'h-8 w-8 rounded-md border border-[#4d86ff] bg-[#3772ff] p-0 text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)] focus-visible:border-[#8ab0ff] focus-visible:bg-[#4f86ff] focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]'
                       : TOPBAR_ICON_BUTTON_CLASS
                   }
                 >
@@ -713,6 +748,11 @@ export function App() {
               spacerVisibility={state.ui.spacerVisibility}
               showGridLanes={state.ui.showGridLanes}
               snapEnabled={state.ui.snapEnabled}
+              onStageFocus={() => {
+                if (!state.selectedId && stageSelectableIds.length > 0) {
+                  dispatch({ type: 'select', id: stageSelectableIds[0] });
+                }
+              }}
               onSelect={(id) => dispatch({ type: 'select', id })}
               onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
               onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
@@ -790,7 +830,7 @@ export function App() {
                 setSectionTemplateOpen(false);
                 setSectionTemplateAnchor(null);
               }}
-              className="rounded-md p-1 text-slate-500 transition-[background-color,color] duration-150 hover:bg-slate-100/80 hover:text-slate-700"
+              className="rounded-md p-1 text-slate-500 transition-[background-color,color,box-shadow] duration-150 hover:bg-slate-100/80 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               aria-label="Close section templates panel"
             >
               <X className="h-4 w-4" />
@@ -807,7 +847,7 @@ export function App() {
                     setSectionTemplateOpen(false);
                     setSectionTemplateAnchor(null);
                   }}
-                  className="group flex min-h-[104px] flex-col rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/70"
+                  className="group flex min-h-[104px] flex-col rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-900">{template.name}</span>
@@ -933,6 +973,10 @@ function isInteractiveFocus(element: HTMLElement | null) {
   );
 }
 
+function hasStageKeyboardFocus(element: HTMLElement | null) {
+  return Boolean(element?.closest('[data-stage-focus-scope="true"]'));
+}
+
 function RailToggleButton({
   icon: Icon,
   pressed,
@@ -958,7 +1002,7 @@ function RailToggleButton({
         type="button"
         aria-pressed={pressed}
         onClick={onClick}
-        className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow] duration-150 ${
+        className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
           pressed
             ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)]'
             : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50/80'

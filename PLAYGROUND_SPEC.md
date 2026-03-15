@@ -126,6 +126,8 @@ Keyboard shortcuts:
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
+- `Left` / `Right` / `Up` / `Down`: move the focused stage selection by `1px`
+- `Shift + Left` / `Shift + Right` / `Shift + Up` / `Shift + Down`: move the focused stage selection by `10px`
 - `Mod + ,`: open settings
 - `?`: open shortcut help when no input field is focused
 - `Esc`: close open panels / dialogs
@@ -264,6 +266,8 @@ Current UX includes:
 - shortcut guide also appears as the last section inside settings
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
+- the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, selection stays virtual, and arrow keys nudge positioned components
+- button focus states use a stronger visible ring across editor controls
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips
 - in-memory incremental undo/redo

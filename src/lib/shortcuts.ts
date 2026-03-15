@@ -9,6 +9,10 @@ export type ShortcutId =
   | 'togglePreviewSticky'
   | 'toggleSpacerVisibility'
   | 'toggleSnapEnabled'
+  | 'nudgeSelectionLeft'
+  | 'nudgeSelectionRight'
+  | 'nudgeSelectionUp'
+  | 'nudgeSelectionDown'
   | 'deleteSelection'
   | 'orderBack'
   | 'orderForward'
@@ -34,12 +38,14 @@ export type ShortcutDefinition = {
   combos: ShortcutCombo[];
   allowInInteractive?: boolean;
   requiresSelection?: boolean;
+  requiresStageFocus?: boolean;
 };
 
 export type ShortcutContext = {
   interactiveFocus: boolean;
   hasSelection: boolean;
   hasDismissiblePanels: boolean;
+  hasStageFocus: boolean;
 };
 
 export type ShortcutGesture = {
@@ -102,6 +108,50 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     category: 'View',
     description: 'Toggle snap to guides',
     combos: [{ code: 'KeyG', keyLabel: 'G', shift: true }],
+  },
+  {
+    id: 'nudgeSelectionLeft',
+    category: 'Edit',
+    description: 'Move selection left',
+    combos: [
+      { code: 'ArrowLeft', keyLabel: 'Left' },
+      { code: 'ArrowLeft', keyLabel: 'Left', shift: true },
+    ],
+    requiresSelection: true,
+    requiresStageFocus: true,
+  },
+  {
+    id: 'nudgeSelectionRight',
+    category: 'Edit',
+    description: 'Move selection right',
+    combos: [
+      { code: 'ArrowRight', keyLabel: 'Right' },
+      { code: 'ArrowRight', keyLabel: 'Right', shift: true },
+    ],
+    requiresSelection: true,
+    requiresStageFocus: true,
+  },
+  {
+    id: 'nudgeSelectionUp',
+    category: 'Edit',
+    description: 'Move selection up',
+    combos: [
+      { code: 'ArrowUp', keyLabel: 'Up' },
+      { code: 'ArrowUp', keyLabel: 'Up', shift: true },
+    ],
+    requiresSelection: true,
+    requiresStageFocus: true,
+  },
+  {
+    id: 'nudgeSelectionDown',
+    category: 'Edit',
+    description: 'Move selection down',
+    combos: [
+      { code: 'ArrowDown', keyLabel: 'Down' },
+      { code: 'ArrowDown', keyLabel: 'Down', shift: true },
+    ],
+    requiresSelection: true,
+    requiresStageFocus: true,
   },
   {
     id: 'deleteSelection',
@@ -181,6 +231,9 @@ export function findMatchingShortcut(
       continue;
     }
     if (definition.requiresSelection && !context.hasSelection) {
+      continue;
+    }
+    if (definition.requiresStageFocus && !context.hasStageFocus) {
       continue;
     }
     if (definition.id === 'dismissPanels' && !context.hasDismissiblePanels) {

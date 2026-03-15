@@ -10,6 +10,7 @@ import {
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
+  nudgeNode,
   parseImportedDocumentJson,
   reparentNode,
   reorderNode,
@@ -218,5 +219,43 @@ describe('editor/editorStore integration', () => {
     expect(next.selectedId).toBeNull();
     expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'header')).toBe(true);
     expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'footer')).toBe(true);
+  });
+
+  it('nudges selected components by pixel deltas and clamps to zero', () => {
+    const state0 = createInitialState();
+    const state1 = insertLeaf(state0, 'text');
+    const leafId = state1.selectedId;
+    if (!leafId) {
+      throw new Error('Expected selected leaf');
+    }
+
+    const before = state1.document.nodes[leafId];
+    if (before.type === 'site') {
+      throw new Error('Expected non-site node');
+    }
+
+    const moved = nudgeNode(state1, leafId, { x: 10, y: -999 });
+    const after = moved.document.nodes[leafId];
+    if (after.type === 'site') {
+      throw new Error('Expected non-site node');
+    }
+
+    expect(after.rect.x.base.raw).toBe(`${Math.max(0, Number.parseFloat(before.rect.x.base.raw) + 10)}px`);
+    expect(after.rect.y.base.raw).toBe('0px');
+  });
+
+  it('does not nudge top-level wrappers', () => {
+    const state = createInitialState();
+    const root = getRoot(state.document);
+    const sectionId = root.children.find((id) => {
+      const node = state.document.nodes[id];
+      return node?.type === 'wrapper' && node.role === 'section';
+    });
+
+    if (!sectionId) {
+      throw new Error('Expected top-level section');
+    }
+
+    expect(nudgeNode(state, sectionId, { x: 10, y: 10 })).toBe(state);
   });
 });

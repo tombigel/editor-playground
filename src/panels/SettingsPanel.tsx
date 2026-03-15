@@ -324,7 +324,7 @@ export function SettingsPanel({
                     key={section.id}
                     type="button"
                     onClick={() => scrollToSection(section.id)}
-                    className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 ${
+                    className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-inset ${
                       active ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:bg-white/80 hover:text-slate-950'
                     }`}
                   >
@@ -730,7 +730,7 @@ function InfoTooltip({ children }: { children: ReactNode }) {
     >
       <button
         type="button"
-        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-[background-color,border-color,color] duration-150 hover:border-slate-300 hover:bg-slate-50/80 hover:text-slate-600 focus-visible:border-slate-300 focus-visible:bg-slate-50/80 focus-visible:text-slate-600"
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/80 hover:text-slate-600 focus-visible:border-slate-300 focus-visible:bg-slate-50/80 focus-visible:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         aria-label="More information"
       >
         <Info className="h-3.5 w-3.5" />

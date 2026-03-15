@@ -21,6 +21,7 @@ export type StageProps = {
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
   snapEnabled: boolean;
+  onStageFocus: () => void;
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
@@ -59,6 +60,11 @@ function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' 
   return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
 }
 
+function getStageNodeAriaLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
+  const roleLabel = formatNodeLabel(node);
+  return node.name && node.name !== roleLabel ? `${roleLabel}: ${node.name}` : roleLabel;
+}
+
 export function Stage({
   document,
   selectedId,
@@ -66,6 +72,7 @@ export function Stage({
   spacerVisibility,
   showGridLanes,
   snapEnabled,
+  onStageFocus,
   onSelect,
   onMove,
   onReparent,
@@ -91,6 +98,12 @@ export function Stage({
   return (
     <div
       className="stage-shell"
+      tabIndex={0}
+      role="region"
+      aria-label="Editor stage"
+      aria-activedescendant={selectedId ? `stage-node-${selectedId}` : undefined}
+      data-stage-focus-scope="true"
+      onFocus={onStageFocus}
       onMouseMove={(event) => {
         if (dragState) {
           const axisLocked = getShiftLockedPointer(dragState, event.clientX, event.clientY, event.shiftKey);
@@ -189,6 +202,10 @@ export function Stage({
         setResizeState(null);
       }}
     >
+      <p className="sr-only">
+        Tab selects components in stage order. Arrow keys move the selected component by 1 pixel.
+        Shift plus arrow keys move by 10 pixels.
+      </p>
       <div className="stage-frame">
         <div className="stage-canvas">
         {header
@@ -448,11 +465,13 @@ function renderWrapper({
   const wrapperBody = (
     <Tag
       key={node.id}
+      id={`stage-node-${node.id}`}
       data-node-id={node.id}
       data-node-label={formatNodeLabel(node)}
       className={`stage-wrapper role-${node.role} ${selectedId === node.id ? 'selected' : ''} ${
         dragState?.nodeId === node.id ? 'drag-source' : ''
       }`}
+      aria-label={getStageNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,
         ...(isSelfStickyTrack ? {} : meshPlacement),
@@ -478,7 +497,7 @@ function renderWrapper({
           );
         }
       }}
-      >
+    >
         <div
           className="content-wrapper"
         data-content-wrapper-for={node.id}
@@ -674,11 +693,13 @@ function renderLeaf({
   const leafBody = (
     <div
       key={child.id}
+      id={`stage-node-${child.id}`}
       data-node-id={child.id}
       data-node-label={formatNodeLabel(child)}
       className={`stage-leaf role-${child.role} ${isBrandMark ? 'is-brand-mark' : ''} ${
         selectedId === child.id ? 'selected' : ''
       } ${dragState?.nodeId === child.id ? 'drag-source' : ''}`}
+      aria-label={getStageNodeAriaLabel(child)}
       style={{
         ...(isSelfStickyTrack
           ? {

@@ -81,7 +81,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           {children}
           <button
             type="button"
-            className="absolute right-4 top-4 rounded-md border border-transparent p-1 text-slate-500 transition-[background-color,border-color,color] duration-150 hover:border-slate-200 hover:bg-slate-50/80 hover:text-slate-700 focus:outline-none"
+            className="absolute right-4 top-4 rounded-md border border-transparent p-1 text-slate-500 transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-slate-200 hover:bg-slate-50/80 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             onClick={() => onOpenChange(false)}
           >
             <X className="size-4" />

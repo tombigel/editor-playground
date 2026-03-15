@@ -731,6 +731,22 @@ export function moveNode(
   return { ...state, document };
 }
 
+export function nudgeNode(
+  state: EditorState,
+  nodeId: NodeId,
+  delta: { x: number; y: number },
+): EditorState {
+  const node = state.document.nodes[nodeId];
+  if (!node || node.type === 'site' || !node.parentId || node.parentId === state.document.rootId) {
+    return state;
+  }
+
+  return moveNode(state, nodeId, {
+    x: `${Math.max(0, readCoordinatePx(node.rect.x.base.raw) + delta.x)}px`,
+    y: `${Math.max(0, readCoordinatePx(node.rect.y.base.raw) + delta.y)}px`,
+  });
+}
+
 export function resizeNode(
   state: EditorState,
   nodeId: NodeId,
@@ -1055,4 +1071,9 @@ function removeRecursively(document: DocumentModel, nodeId: NodeId) {
 
 export function getValidationErrors(state: EditorState): string[] {
   return validateDocument(state.document);
+}
+
+function readCoordinatePx(raw: string) {
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

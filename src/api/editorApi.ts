@@ -12,6 +12,7 @@ import {
   insertWrapper,
   loadPersistedState,
   moveNode,
+  nudgeNode,
   persistState,
   parseImportedDocumentJson,
   reparentNode,
@@ -25,6 +26,7 @@ import {
   updateWrapperStyleField,
   type EditorState,
 } from '../editor/editorStore';
+import { getAdjacentStageSelection, getStageSelectableNodeIds } from '../editor/stageNavigation';
 import { computeStickyState } from '../sticky/stickyCompute';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
 import { getNode } from '../model/selectors';
@@ -45,12 +47,15 @@ export {
   demoteWrapperRole,
   importDocument,
   getNode,
+  getAdjacentStageSelection,
+  getStageSelectableNodeIds,
   getValidationErrors,
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
   loadPersistedState,
   moveNode,
+  nudgeNode,
   parseUnitValue,
   persistState,
   parseImportedDocumentJson,

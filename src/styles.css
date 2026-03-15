@@ -936,6 +936,16 @@ button {
   overflow: visible;
 }
 
+.stage-shell:focus-visible {
+  outline: none;
+}
+
+.stage-shell:focus-visible .stage-frame {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.96),
+    0 0 0 5px rgba(15, 79, 214, 0.18);
+}
+
 .stage-leaf-body,
 .stage-leaf-body * {
   user-select: none;

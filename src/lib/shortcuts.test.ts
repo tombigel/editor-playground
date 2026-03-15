@@ -15,6 +15,7 @@ describe('shortcut registry', () => {
         interactiveFocus: false,
         hasSelection: true,
         hasDismissiblePanels: false,
+        hasStageFocus: false,
       },
       'mac',
     );
@@ -31,6 +32,7 @@ describe('shortcut registry', () => {
         interactiveFocus: false,
         hasSelection: true,
         hasDismissiblePanels: false,
+        hasStageFocus: false,
       },
       'mac',
     );
@@ -57,6 +59,7 @@ describe('shortcut registry', () => {
         interactiveFocus: false,
         hasSelection: false,
         hasDismissiblePanels: false,
+        hasStageFocus: false,
       },
       'other',
     );
@@ -78,11 +81,52 @@ describe('shortcut registry', () => {
         interactiveFocus: false,
         hasSelection: false,
         hasDismissiblePanels: false,
+        hasStageFocus: false,
       },
       'other',
     );
 
     expect(snap?.id).toBe('toggleSnapEnabled');
     expect(getShortcutLabel('toggleSnapEnabled', 'other')).toBe('Shift + G');
+  });
+
+  it('matches stage-only nudge shortcuts and blocks them outside the stage', () => {
+    const blocked = findMatchingShortcut(
+      {
+        code: 'ArrowRight',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    const nudged = findMatchingShortcut(
+      {
+        code: 'ArrowRight',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: true,
+      },
+      'other',
+    );
+
+    expect(blocked).toBeNull();
+    expect(nudged?.id).toBe('nudgeSelectionRight');
+    expect(getShortcutLabel('nudgeSelectionRight', 'other')).toBe('Right / Shift + Right');
   });
 });
