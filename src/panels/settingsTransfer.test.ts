@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_EXPORT_FILE_NAME,
+  DEFAULT_SITE_EXPORT_ZIP_FILE_NAME,
   copyExportDocument,
   normalizeFileName,
   pasteClipboardImport,
   saveExportDocument,
+  saveExportSiteZip,
 } from './settingsTransfer';
 
 describe('panels/settingsTransfer', () => {
@@ -12,6 +14,7 @@ describe('panels/settingsTransfer', () => {
     expect(normalizeFileName('landing-page', 'sticky-playground-document.json')).toBe('landing-page.json');
     expect(normalizeFileName(' report.json ', 'sticky-playground-document.json')).toBe('report.json');
     expect(normalizeFileName('   ', 'sticky-playground-document.json')).toBe('sticky-playground-document.json');
+    expect(normalizeFileName('landing-page', 'sticky-playground-site.zip')).toBe('landing-page.zip');
   });
 
   it('uses the save picker when it is available', async () => {
@@ -111,6 +114,32 @@ describe('panels/settingsTransfer', () => {
       ok: false,
       message: 'Clipboard copy failed.',
     });
+  });
+
+  it('saves site zip with zip defaults', async () => {
+    const download = vi.fn();
+    const createZip = vi.fn().mockResolvedValue(new Blob(['zip-data'], { type: 'application/zip' }));
+
+    const result = await saveExportSiteZip(
+      {
+        'index.html': '<!doctype html>',
+        'index.css': '.sp-site {}',
+      },
+      {
+        windowLike: {},
+        download,
+        createZip,
+      },
+    );
+
+    expect(result).toEqual({ ok: true, message: `Downloaded ${DEFAULT_SITE_EXPORT_ZIP_FILE_NAME}.` });
+    expect(createZip).toHaveBeenCalledWith({
+      'index.html': '<!doctype html>',
+      'index.css': '.sp-site {}',
+    });
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(download.mock.calls[0]?.[1]).toBe(DEFAULT_SITE_EXPORT_ZIP_FILE_NAME);
+    expect(await download.mock.calls[0]?.[0]?.text()).toBe('zip-data');
   });
 
   it('returns imported clipboard text and status on success', async () => {

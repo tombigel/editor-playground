@@ -100,6 +100,7 @@ It exposes document-level operations using `DocumentModel` only (no editor sessi
 - rect/sticky/text mutation helpers
 - template insertion into the document tree
 - shared sticky resolution helpers (`resolveStickyLayout`, `resolveWrapperStickyState`) that accept document data plus renderer-provided geometry
+- site export helpers that render SSR-safe site HTML and generated CSS bundles from the document model, including ZIP export packaging
 
 ## Testing
 

@@ -262,6 +262,7 @@ export function AppShell({
       {settingsOpen ? (
         <PopoverSurface ref={settingsPanelRef} open={settingsOpen} onOpenChange={onSettingsOpenChange}>
           <SettingsPanel
+            document={state.document}
             documentJson={documentJson}
             errors={errors}
             stickyLayout={stickyLayout}

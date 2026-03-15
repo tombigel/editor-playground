@@ -17,7 +17,7 @@ import {
   Settings,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { DocumentNode, StickyLayoutState } from '../api/documentApi';
+import type { DocumentModel, DocumentNode, StickyLayoutState } from '../api/editorApi';
 import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,15 +28,17 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/lib/theme';
 import {
   copyExportDocument,
-  DEFAULT_EXPORT_FILE_NAME,
   pasteClipboardImport,
   saveExportDocument,
+  saveExportSiteZip,
   type ActionResult,
 } from './settingsTransfer';
 
 type SectionId = 'display' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
+const DEFAULT_EXPORT_BASENAME = 'sticky-playground';
 
 type Props = {
+  document: DocumentModel;
   documentJson: string;
   errors: string[];
   stickyLayout: StickyLayoutState;
@@ -101,6 +103,7 @@ const SECTION_META: Array<{
 ];
 
 export function SettingsPanel({
+  document,
   documentJson,
   errors,
   stickyLayout,
@@ -127,7 +130,7 @@ export function SettingsPanel({
 }: Props) {
   const [activeSection, setActiveSection] = useState<SectionId>('display');
   const [importBuffer, setImportBuffer] = useState('');
-  const [exportFileName, setExportFileName] = useState(DEFAULT_EXPORT_FILE_NAME);
+  const [exportFileName, setExportFileName] = useState(DEFAULT_EXPORT_BASENAME);
   const [exportStatus, setExportStatus] = useState<ActionResult | null>(null);
   const [importStatus, setImportStatus] = useState<ActionResult | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -208,6 +211,23 @@ export function SettingsPanel({
     }
   }
 
+  async function handleSaveSiteZip() {
+    const bundle = await loadSiteExportBundle();
+    const zipFileName = bundle.htmlFileName.replace(/\.[a-z0-9]+$/i, '.zip');
+    const result = await saveExportSiteZip(
+      {
+        [bundle.htmlFileName]: bundle.htmlDocument,
+        [bundle.cssFileName]: bundle.css,
+      },
+      {
+        fileName: zipFileName,
+      },
+    );
+    if (result) {
+      setExportStatus(result);
+    }
+  }
+
   async function handlePasteFromClipboard() {
     const result = await pasteClipboardImport();
     if (result.text != null) {
@@ -223,6 +243,14 @@ export function SettingsPanel({
 
   async function handleImportBuffer() {
     await runImport(importBuffer);
+  }
+
+  async function loadSiteExportBundle() {
+    const { renderSiteExportBundle } = await import('../api/siteApi');
+    return renderSiteExportBundle(document, {
+      title: getSiteTitle(exportFileName),
+      htmlFileName: exportFileName,
+    });
   }
 
   async function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
@@ -335,100 +363,126 @@ export function SettingsPanel({
               <SectionHeading
                 eyebrow="Import / Export"
                 title="Document transfer"
-                description="Import or export document JSON."
+                description="Import JSON or export the current document as JSON or a rendered site ZIP."
               />
               <PlainGroup title="Export">
-                <div className="editor-border-subtle border-b px-4 py-4">
+                <div className="space-y-4">
+                  <TransferSubsection
+                    title="Base file name"
+                    description="Used for fallback downloads and as the suggested native save name. JSON exports use `.json`; rendered site exports use `.zip`."
+                  >
                   <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_280px] sm:items-center">
-                    <div className="min-w-0">
-                      <div className="editor-text-strong text-sm font-medium">File name</div>
-                      <div className="editor-text-muted mt-1 text-sm">
-                        Used for fallback downloads and as the suggested native save name.
-                      </div>
-                    </div>
                     <Input
                       value={exportFileName}
                       onChange={(event) => setExportFileName(event.target.value)}
-                      placeholder={DEFAULT_EXPORT_FILE_NAME}
+                      placeholder={DEFAULT_EXPORT_BASENAME}
                       className="h-9 text-sm"
                     />
                   </div>
+                  </TransferSubsection>
+
+                  <TransferSubsection
+                    title="Document JSON"
+                    description="Model export for re-importing into the editor."
+                  >
+                    <ActionRow
+                      icon={FileDown}
+                      title="Save JSON"
+                      description="Uses the browser save picker when available, otherwise downloads a `.json` file."
+                      actions={
+                        <Button type="button" variant="outline" size="sm" onClick={handleSaveExport}>
+                          Save JSON
+                        </Button>
+                      }
+                    />
+                    <ActionRow
+                      icon={Clipboard}
+                      title="Copy JSON"
+                      description="Copies the current document model to the clipboard."
+                      actions={
+                        <Button type="button" variant="outline" size="sm" onClick={handleCopyExport}>
+                          Copy JSON
+                        </Button>
+                      }
+                    />
+                  </TransferSubsection>
+
+                  <TransferSubsection
+                    title="Rendered Site"
+                    description="Generated site structure export for hosting or SSR."
+                  >
+                    <ActionRow
+                      icon={FileDown}
+                      title="Save site ZIP"
+                      description="Exports the rendered site as one ZIP archive containing the generated HTML and CSS bundle."
+                      actions={
+                        <Button type="button" variant="outline" size="sm" onClick={handleSaveSiteZip}>
+                          Save Site ZIP
+                        </Button>
+                      }
+                    />
+                  </TransferSubsection>
                 </div>
-                <ActionRow
-                  icon={FileDown}
-                  title="Save to file"
-                  description="Uses the browser save picker when available, otherwise downloads with the file name above."
-                  actions={
-                    <Button type="button" variant="outline" size="sm" onClick={handleSaveExport}>
-                      Save
-                    </Button>
-                  }
-                />
-                <ActionRow
-                  icon={Clipboard}
-                  title="Copy to clipboard"
-                  description="Copies the current document JSON."
-                  actions={
-                    <Button type="button" variant="outline" size="sm" onClick={handleCopyExport}>
-                      Copy JSON
-                    </Button>
-                  }
-                />
-                <StatusMessage result={exportStatus} fallback="Exports include the document model only." />
+                <StatusMessage result={exportStatus} fallback="Exports include document JSON or a rendered site ZIP containing separate HTML and CSS files." />
               </PlainGroup>
 
               <PlainGroup title="Import" className="mt-6">
-                <ActionRow
-                  icon={FileUp}
-                  title="Import from file"
-                  description="Replaces the current document from a JSON file."
-                  actions={
-                    <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                      Choose file
-                    </Button>
-                  }
-                />
-                <ActionRow
-                  icon={Clipboard}
-                  title="Paste from clipboard"
-                  description="Pastes JSON into the import editor."
-                  actions={
-                    <Button type="button" variant="outline" size="sm" onClick={handlePasteFromClipboard}>
-                      Paste
-                    </Button>
-                  }
-                />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  className="hidden"
-                  onChange={handleFileSelection}
-                />
-                <div className="editor-border-subtle border-t px-4 py-4">
-                  <div className="editor-text-muted mb-2 text-xs font-medium">Imported JSON</div>
-                  <Textarea
-                    value={importBuffer}
-                    onChange={(event) => setImportBuffer(event.target.value)}
-                    placeholder="Paste exported document JSON here."
-                    className="min-h-[220px] rounded-lg font-mono text-xs leading-5"
+                <TransferSubsection
+                  title="Document JSON"
+                  description="Bring a saved document model back into the editor."
+                >
+                  <ActionRow
+                    icon={FileUp}
+                    title="Import from file"
+                    description="Replaces the current document from a JSON file."
+                    actions={
+                      <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                        Choose file
+                      </Button>
+                    }
                   />
-                  <div className="mt-3 flex items-start justify-between gap-3">
-                    <div className="editor-text-muted max-w-[420px] text-xs leading-5">
-                      Import validates, normalizes, replaces the active document, and supports undo.
+                  <ActionRow
+                    icon={Clipboard}
+                    title="Paste from clipboard"
+                    description="Pastes JSON into the import editor."
+                    actions={
+                      <Button type="button" variant="outline" size="sm" onClick={handlePasteFromClipboard}>
+                        Paste
+                      </Button>
+                    }
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    className="hidden"
+                    onChange={handleFileSelection}
+                  />
+                  <div className="editor-border-subtle mt-4 border-t pt-4">
+                    <div className="editor-text-muted mb-2 text-xs font-medium">Imported JSON</div>
+                    <Textarea
+                      value={importBuffer}
+                      onChange={(event) => setImportBuffer(event.target.value)}
+                      placeholder="Paste exported document JSON here."
+                      className="min-h-[220px] rounded-lg font-mono text-xs leading-5"
+                    />
+                    <div className="mt-3 flex items-start justify-between gap-3">
+                      <div className="editor-text-muted max-w-[420px] text-xs leading-5">
+                        Import validates, normalizes, replaces the active document, and supports undo.
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={handleImportBuffer}
+                        disabled={importBuffer.trim().length === 0}
+                      >
+                        <ArrowUpFromLine className="h-4 w-4" />
+                        Import JSON
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="shrink-0"
-                      onClick={handleImportBuffer}
-                      disabled={importBuffer.trim().length === 0}
-                    >
-                      <ArrowUpFromLine className="h-4 w-4" />
-                      Import JSON
-                    </Button>
                   </div>
-                </div>
+                </TransferSubsection>
                 <StatusMessage result={importStatus} fallback="Invalid JSON leaves the current stage unchanged." />
               </PlainGroup>
             </section>
@@ -614,7 +668,29 @@ function PlainGroup({
   return (
     <div className={className}>
       <div className="editor-text-strong mb-3 text-sm font-medium">{title}</div>
-      <div className="editor-bg-surface editor-border-subtle rounded-lg border">{children}</div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+}
+
+function TransferSubsection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="editor-border-subtle editor-bg-surface rounded-xl border px-4 py-4">
+      <div>
+        <div className="editor-text-strong text-sm font-medium">{title}</div>
+        <div className="editor-text-muted mt-1 text-sm">{description}</div>
+      </div>
+      <div className="mt-4">
+        {children}
+      </div>
     </div>
   );
 }
@@ -753,6 +829,14 @@ function InfoTooltip({ children }: { children: ReactNode }) {
       </button>
     </PopoverTooltip>
   );
+}
+
+function getSiteTitle(fileName: string) {
+  const trimmed = fileName.trim();
+  if (!trimmed) {
+    return 'Sticky Playground Site';
+  }
+  return trimmed.replace(/\.[a-z0-9]+$/i, '') || 'Sticky Playground Site';
 }
 
 function StatusMessage({

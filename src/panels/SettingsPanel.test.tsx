@@ -8,6 +8,7 @@ describe('panels/SettingsPanel', () => {
     const document = createInitialDocument();
     const markup = renderToStaticMarkup(
       <SettingsPanel
+        document={document}
         documentJson='{"rootId":"site_1"}'
         errors={[]}
         stickyLayout={{}}
@@ -34,8 +35,19 @@ describe('panels/SettingsPanel', () => {
       />,
     );
 
-    expect(markup).toContain('File name');
-    expect(markup).toContain('sticky-playground-document.json');
-    expect(markup).toContain('suggested native save name');
+    expect(markup).toContain('Base file name');
+    expect(markup).toContain('sticky-playground');
+    expect(markup).toContain('JSON exports use `.json`; rendered site exports use `.zip`.');
+    expect(markup).toContain('Document JSON');
+    expect(markup).toContain('Rendered Site');
+    expect(markup).toContain('Model export for re-importing into the editor.');
+    expect(markup).toContain('Generated site structure export for hosting or SSR.');
+    expect(markup).toContain('Bring a saved document model back into the editor.');
+    expect(markup).toContain('Save JSON');
+    expect(markup).toContain('Save Site ZIP');
+    expect(markup).not.toContain('Save Site HTML');
+    expect(markup).not.toContain('Save Site CSS');
+    expect(markup).not.toContain('Copy Site HTML');
+    expect(markup).not.toContain('Copy Site CSS');
   });
 });
