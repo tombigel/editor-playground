@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { computeStickyState } from '../sticky/stickyCompute';
+import { createInitialDocument } from '../model/defaults';
 import { parseUnitValue } from '../model/units';
 import {
   confirmPromoteWrapperRole,
   createInitialState,
   deleteNode,
+  importDocument,
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
+  parseImportedDocumentJson,
   reparentNode,
   reorderNode,
   requestPromoteWrapperRole,
@@ -188,5 +191,32 @@ describe('editor/editorStore integration', () => {
     const registration = stickyState[parent.id]?.registrations.find((item) => item.ownerId === leafId);
     expect(registration).toBeTruthy();
     expect(registration?.durationPx).toBe(120);
+  });
+
+  it('normalizes imported documents and clears selection on replace', () => {
+    const state0 = createInitialState();
+    const state1 = insertLeaf(state0, 'text');
+    expect(state1.selectedId).toBeTruthy();
+
+    const baseDocument = createInitialDocument();
+    const baseRoot = getRoot(baseDocument);
+    const imported = {
+      rootId: baseDocument.rootId,
+      nodes: {
+        [baseRoot.id]: {
+          ...baseRoot,
+          children: [],
+        },
+      },
+    };
+
+    const parsed = parseImportedDocumentJson(JSON.stringify(imported));
+    const next = importDocument(state1, parsed);
+    const nextRoot = getRoot(next.document);
+    const topLevelWrappers = nextRoot.children.map((id) => next.document.nodes[id]);
+
+    expect(next.selectedId).toBeNull();
+    expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'header')).toBe(true);
+    expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'footer')).toBe(true);
   });
 });

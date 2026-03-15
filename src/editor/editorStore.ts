@@ -116,6 +116,29 @@ export function clearPersistedState() {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
+export function parseImportedDocumentJson(raw: string): DocumentModel {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('Import failed: invalid JSON.');
+  }
+
+  try {
+    const document = normalizeDocument(parsed as DocumentModel);
+    const errors = validateDocument(document);
+    if (errors.length > 0) {
+      throw new Error(`Import failed: ${errors.join('; ')}`);
+    }
+    return document;
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Import failed:')) {
+      throw error;
+    }
+    throw new Error('Import failed: invalid document structure.');
+  }
+}
+
 function loadDefaultDocument(): DocumentModel {
   if (typeof window === 'undefined') {
     return createInitialDocument();
@@ -462,6 +485,21 @@ function assertWrapper(node: DocumentNode): WrapperNode {
 
 export function selectNode(state: EditorState, selectedId: NodeId | null): EditorState {
   return { ...state, selectedId };
+}
+
+export function importDocument(state: EditorState, document: DocumentModel): EditorState {
+  const normalized = normalizeDocument(document);
+  const errors = validateDocument(normalized);
+  if (errors.length > 0) {
+    throw new Error(`Import failed: ${errors.join('; ')}`);
+  }
+
+  return {
+    ...state,
+    document: normalized,
+    selectedId: null,
+    pendingRoleSwap: null,
+  };
 }
 
 export function insertWrapper(state: EditorState, role: WrapperRole): EditorState {
