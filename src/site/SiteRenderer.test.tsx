@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument } from '../model/defaults';
-import { parseFontSizeValue } from '../model/units';
+import { parseUnitValue } from '../model/units';
 import { SiteRenderer } from './SiteRenderer';
 
 describe('site/SiteRenderer', () => {
@@ -23,64 +23,86 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain('Plan sticky behavior before building scroll-driven animations');
   });
 
-  it('renders text decoration styles for text leaves', () => {
+  it('renders self sticky nodes inside a sticky track with a spacer', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
       (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
-      throw new Error('Expected post title text node');
+    if (!target || target.type !== 'leaf') {
+      throw new Error('Expected text leaf');
     }
 
-    target.style ??= {};
-    target.style.textDecorationLine = 'underline';
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true },
+      durationMode: 'custom',
+      duration: parseUnitValue('40vh'),
+      durationTop: parseUnitValue('40vh'),
+      durationBottom: parseUnitValue('40vh'),
+      offsetTop: parseUnitValue('10vh'),
+    };
 
     const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
 
-    expect(markup).toContain('text-decoration-line:underline');
+    expect(markup).toContain(`data-node-track-for="${target.id}"`);
+    expect(markup).toContain(`class="sp-sticky-spacer sp-sticky-spacer-top sp-node-${target.id}-top-spacer"`);
   });
 
-  it('renders text direction styles for text leaves', () => {
+  it('renders content-wrapper sticky wrappers with a flow spacer', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.type === 'wrapper' && node.role === 'section',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
-      throw new Error('Expected post title text node');
+    if (!target || target.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
     }
 
-    target.style ??= {};
-    target.style.direction = 'rtl';
+    target.sticky = {
+      enabled: true,
+      target: 'contentWrapper',
+      edges: { top: true },
+      durationMode: 'custom',
+      duration: parseUnitValue('60vh'),
+      durationTop: parseUnitValue('60vh'),
+      durationBottom: parseUnitValue('60vh'),
+      offsetTop: parseUnitValue('12vh'),
+    };
 
     const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
 
-    expect(markup).toContain('direction:rtl');
+    expect(markup).toContain(`class="sp-wrapper-content sp-node-${target.id}-content"`);
+    expect(markup).toContain(`class="sp-content-spacer sp-node-${target.id}-content-spacer"`);
   });
 
-  it('keeps text styling stable when the html tag changes', () => {
+  it('renders bottom-edge sticky nodes with the spacer before the node content', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
-      throw new Error('Expected post title text node');
+    if (!target || target.type !== 'leaf') {
+      throw new Error('Expected link leaf');
     }
 
-    target.htmlTag = 'h2';
-    target.style ??= {};
-    target.style.fontSize = parseFontSizeValue('31px');
-    target.style.fontWeight = 'bold';
-    target.style.lineHeight = 1.4;
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { bottom: true },
+      durationMode: 'custom',
+      duration: parseUnitValue('40vh'),
+      durationTop: parseUnitValue('40vh'),
+      durationBottom: parseUnitValue('40vh'),
+      offsetBottom: parseUnitValue('24px'),
+    };
 
     const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+    const spacerIndex = markup.indexOf(`sp-node-${target.id}-bottom-spacer`);
+    const nodeIndex = markup.indexOf(`data-node-id="${target.id}"`);
 
-    expect(markup).toContain('<h2');
-    expect(markup).toContain('margin:0');
-    expect(markup).toContain('font-size:31px');
-    expect(markup).toContain('font-weight:bold');
-    expect(markup).toContain('line-height:1.4');
+    expect(spacerIndex).toBeGreaterThan(-1);
+    expect(nodeIndex).toBeGreaterThan(spacerIndex);
   });
 });

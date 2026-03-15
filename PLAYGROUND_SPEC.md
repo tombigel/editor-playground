@@ -153,14 +153,16 @@ Controls:
 
 ## Import / Export
 
-The playground imports and exports document JSON only, not full editor session state.
+The playground imports and exports document JSON, and it can also export a rendered site bundle made of separate HTML and CSS files. It does not export full editor session state.
 
 - export lives in the settings panel under `Import / Export`
 - export supports:
-  - an editable file name field in settings
+  - an editable base file name field in settings
   - save to file with that file name suggested when browser APIs allow it
   - fallback named download using that same file name when native save picker is unavailable
   - copy JSON to clipboard
+  - save rendered site ZIP (HTML + CSS bundle)
+  - separate export groupings for `Document JSON` and `Rendered Site`
 - import supports:
   - choosing a `.json` file
   - pasting JSON from clipboard into the settings panel import box
@@ -175,6 +177,15 @@ Validation during import/persistence restore now checks document graph integrity
 - child `parentId` must point back to the owning parent
 - duplicate child ids inside one parent are rejected
 - unreachable/orphaned subtrees are rejected
+
+Rendered site export is SSR-safe:
+
+- `src/site/SiteRenderer.tsx` renders structural site markup without editor concerns
+- `src/site/siteExport.tsx` renders:
+  - body HTML
+  - generated CSS
+  - a complete HTML document that links to the generated CSS file
+- rendered site export does not depend on browser measurement APIs
 
 ## Units
 
@@ -258,6 +269,28 @@ For sticky containers:
 - `target=contentWrapper` applies sticky positioning to the internal content wrapper
 - when nested container `contentWrapper` sticky adds extra extent, parent mesh sizing includes that extent so scroll range and sticky duration stay consistent
 
+## Site Rendering
+
+`src/site/SiteRenderer.tsx` is now the canonical site/runtime renderer boundary for non-editor output.
+
+- it is detached from editor interactions (`drag`, `resize`, `selection`, diagnostics)
+- it renders semantic wrapper tags (`header`, `section`, `footer`, `div`) plus leaf tags/content
+- it preserves authored width keywords and text HTML tags
+- it uses the same mesh-grid child placement baseline as the editor stage for non-editor layout, instead of falling back to absolute-position child export
+- it carries the renderer's default presentation layer for text, links, buttons, and images into the exported CSS, then layers authored model values on top
+- it renders sticky structure with real exported spacer elements:
+  - `target=self`: sticky track + edge-aware spacer ordering + sticky node
+  - `target=contentWrapper`: wrapper + sticky content wrapper + flow spacer
+- custom sticky durations export as authored CSS lengths
+- `durationMode=auto` exports no synthetic measured spacer extent because site export is model-driven and does not depend on runtime DOM measurement
+
+`src/site/siteExport.tsx` exposes the programmatic export surface:
+
+- `renderSiteBodyHtml(document)`
+- `renderSiteCss(document)`
+- `renderSiteHtmlDocument(document)`
+- `renderSiteExportBundle(document)`
+
 ## Preview Model
 
 Sticky preview is CSS-native.
@@ -310,8 +343,11 @@ Current UX includes:
 - `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
 - `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
+- `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
+- `src/render/layout.ts` is the shared non-editor layout baseline for mesh-grid placement, wrapper sizing, and sticky structure inputs used by both the editor stage renderer and the site export renderer.
+- `src/render/leafPresentation.ts` is a shared presentation layer for leaf content defaults used by both the editor stage renderer and the site export renderer.
 - `src/stage/Stage.tsx` is an editor renderer. It measures live node geometry, renders the preview, and publishes that geometry upward so other editor surfaces can reuse the same sticky resolution inputs.
-- `src/site/SiteRenderer.tsx` is a site/runtime renderer detached from editor interactions (no drag/resize/selection logic).
+- `src/site/SiteRenderer.tsx` and `src/site/siteExport.tsx` are the site/runtime renderer boundary detached from editor interactions and browser measurement requirements, but they consume the same shared layout/presentation baseline as the stage where possible.
 
 ## Section Templates
 

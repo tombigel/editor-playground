@@ -1,7 +1,16 @@
-import type { CSSProperties } from 'react';
-import { getChildren } from '../model/selectors';
-import type { DocumentModel, DocumentNode, StickyDefinition, WrapperNode } from '../model/types';
-import { formatValue } from '../model/units';
+import {
+  getNodeTextContent,
+  SITE_MAIN_CLASS,
+  SITE_ROOT_CLASS,
+} from './siteShared';
+import type { DocumentModel } from '../model/types';
+import {
+  buildSiteRootPlan,
+  getTrackSpacerDescriptor,
+  type SiteLeafPlan,
+  type SiteRenderPlanNode,
+  type SiteWrapperPlan,
+} from './sitePlan';
 
 export type SiteRendererProps = {
   document: DocumentModel;
@@ -9,153 +18,110 @@ export type SiteRendererProps = {
 };
 
 export function SiteRenderer({ document, previewSticky = true }: SiteRendererProps) {
-  const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
-    return null;
-  }
-
-  const wrappers = getChildren(document, root.id).filter((node): node is WrapperNode => node.type === 'wrapper');
+  const plan = buildSiteRootPlan(document, previewSticky);
 
   return (
-    <div className="site-renderer" style={{ width: '100%' }}>
-      {wrappers.map((wrapper) => renderWrapper(document, wrapper, true, previewSticky))}
+    <div className={SITE_ROOT_CLASS}>
+      {plan.header ? renderWrapperPlan(plan.header) : null}
+      <main className={SITE_MAIN_CLASS}>
+        {plan.main.map((wrapper) => renderWrapperPlan(wrapper))}
+      </main>
+      {plan.footer ? renderWrapperPlan(plan.footer) : null}
     </div>
   );
 }
 
-function renderWrapper(
-  document: DocumentModel,
-  node: WrapperNode,
-  isTopLevel: boolean,
-  previewSticky: boolean,
-): JSX.Element {
-  const Tag: 'section' | 'header' | 'footer' | 'div' =
-    node.role === 'header' ? 'header' : node.role === 'footer' ? 'footer' : node.role === 'section' ? 'section' : 'div';
-  const children = getChildren(document, node.id).filter((child): child is Exclude<DocumentNode, { type: 'site' }> => child.type !== 'site');
+function renderPlanNode(plan: SiteRenderPlanNode): JSX.Element {
+  return plan.kind === 'wrapper' ? renderWrapperPlan(plan) : renderLeafPlan(plan);
+}
 
-  const wrapperStyle: CSSProperties = {
-    position: isTopLevel ? 'relative' : 'absolute',
-    left: isTopLevel ? undefined : node.rect.x.base.raw,
-    top: isTopLevel ? undefined : node.rect.y.base.raw,
-    width: formatValue(node.rect.width.base.parsed),
-    minHeight: formatNodeHeight(node),
-    background: node.style.background,
-    borderStyle: 'solid',
-    borderColor: node.style.borderColor,
-    borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
-    paddingTop: node.style.paddingTop ? formatValue(node.style.paddingTop.parsed) : undefined,
-    paddingRight: node.style.paddingRight ? formatValue(node.style.paddingRight.parsed) : undefined,
-    paddingBottom: node.style.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : undefined,
-    paddingLeft: node.style.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : undefined,
-    ...(previewSticky ? stickyCss(node.sticky) : {}),
-  };
-
-  return (
-    <Tag key={node.id} style={wrapperStyle}>
-      <div style={{ position: 'relative', minHeight: 1 }}>
-        {children.map((child) =>
-          child.type === 'wrapper'
-            ? renderWrapper(document, child, false, previewSticky)
-            : renderLeaf(child, previewSticky),
-        )}
-      </div>
+function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
+  const Tag = plan.tag;
+  const wrapperChildren = plan.children.map((child) => renderPlanNode(child));
+  const wrapper = (
+    <Tag key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} data-top-level={plan.isTopLevel ? 'true' : 'false'}>
+      {plan.contentSticky ? (
+        <>
+          <div className={plan.contentClassName}>
+            {wrapperChildren}
+          </div>
+          <div className={plan.contentSpacerClassName} aria-hidden="true" />
+        </>
+      ) : (
+        <div className={plan.contentClassName}>
+          {wrapperChildren}
+        </div>
+      )}
     </Tag>
   );
+
+  if (plan.selfSticky) {
+    return (
+      <div key={`${plan.node.id}-track`} className={plan.trackClassName} data-node-track-for={plan.node.id}>
+        {plan.spacerEdgesBefore.map((edge) => (
+          <div key={`${plan.node.id}-${edge}-before`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        ))}
+        {wrapper}
+        {plan.spacerEdgesAfter.map((edge) => (
+          <div key={`${plan.node.id}-${edge}-after`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        ))}
+      </div>
+    );
+  }
+
+  return wrapper;
 }
 
-function renderLeaf(node: Extract<DocumentNode, { type: 'leaf' }>, previewSticky: boolean) {
-  const style: CSSProperties = {
-    position: 'absolute',
-    left: node.rect.x.base.raw,
-    top: node.rect.y.base.raw,
-    width: formatValue(node.rect.width.base.parsed),
-    minHeight: formatNodeHeight(node),
-    ...(previewSticky ? stickyCss(node.sticky) : {}),
-  };
-
-  if (node.role === 'text') {
-    const Tag = node.htmlTag;
-    return (
-      <Tag
-        key={node.id}
-        style={{
-          ...style,
-          margin: 0,
-          color: node.style?.color ?? 'inherit',
-          fontWeight: node.style?.fontWeight ?? 'inherit',
-          fontStyle: node.style?.fontStyle ?? 'inherit',
-          textDecorationLine: node.style?.textDecorationLine ?? 'inherit',
-          lineHeight: node.style?.lineHeight ?? 'inherit',
-          direction: node.style?.direction ?? 'inherit',
-          fontSize: node.style?.fontSize ? formatValue(node.style.fontSize.parsed) : 'inherit',
-        }}
-      >
-        {node.content}
+function renderLeafPlan(plan: SiteLeafPlan) {
+  let leaf: JSX.Element;
+  if (plan.node.role === 'text') {
+    const Tag = plan.node.htmlTag;
+    leaf = (
+      <Tag key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id}>
+        {getNodeTextContent(plan.node)}
       </Tag>
     );
-  }
-
-  if (node.role === 'image') {
-    return node.src ? (
-      <img key={node.id} src={node.src} alt={node.alt ?? ''} style={{ ...style, display: 'block', height: 'auto' }} />
+  } else if (plan.node.role === 'image') {
+    leaf = plan.node.src ? (
+      <img
+        key={plan.node.id}
+        className={plan.imageClassName}
+        data-node-id={plan.node.id}
+        src={plan.node.src}
+        alt={plan.node.alt ?? ''}
+      />
     ) : (
-      <div key={node.id} style={style}>Image</div>
+      <div key={plan.node.id} className={plan.imagePlaceholderClassName} data-node-id={plan.node.id}>
+        {getNodeTextContent(plan.node)}
+      </div>
     );
-  }
-
-  if (node.role === 'link') {
-    return (
-      <a key={node.id} href={node.href} style={style}>
-        {node.label}
+  } else if (plan.node.role === 'link') {
+    leaf = (
+      <a key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} href={plan.node.href}>
+        {getNodeTextContent(plan.node)}
       </a>
     );
+  } else {
+    leaf = (
+      <button key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} type="button">
+        {getNodeTextContent(plan.node)}
+      </button>
+    );
   }
 
-  return (
-    <button key={node.id} type="button" style={style}>
-      {node.label}
-    </button>
-  );
-}
-
-function stickyCss(sticky: StickyDefinition | undefined): CSSProperties {
-  if (!sticky?.enabled || sticky.target !== 'self') {
-    return {};
+  if (plan.selfSticky) {
+    return (
+      <div key={`${plan.node.id}-track`} className={plan.trackClassName} data-node-track-for={plan.node.id}>
+        {plan.spacerEdgesBefore.map((edge) => (
+          <div key={`${plan.node.id}-${edge}-before`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        ))}
+        {leaf}
+        {plan.spacerEdgesAfter.map((edge) => (
+          <div key={`${plan.node.id}-${edge}-after`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        ))}
+      </div>
+    );
   }
 
-  const bottom = sticky.edges.bottom ?? false;
-  const top = sticky.edges.top ?? !bottom;
-  if (top && bottom) {
-    return {
-      position: 'sticky',
-      top: sticky.offsetTop?.raw ?? '0px',
-      bottom: sticky.offsetBottom?.raw ?? '0px',
-      zIndex: 1,
-    };
-  }
-
-  if (bottom) {
-    return {
-      position: 'sticky',
-      bottom: sticky.offsetBottom?.raw ?? '0px',
-      zIndex: 1,
-    };
-  }
-
-  return {
-    position: 'sticky',
-    top: sticky.offsetTop?.raw ?? '0px',
-    zIndex: 1,
-  };
-}
-
-function formatNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>) {
-  const height = node.rect.height.base.parsed;
-  if ('unit' in height) {
-    return formatValue(height);
-  }
-  if (height.keyword === 'aspect-ratio') {
-    return undefined;
-  }
-  return undefined;
+  return leaf;
 }

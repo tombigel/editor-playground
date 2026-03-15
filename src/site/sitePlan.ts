@@ -1,0 +1,159 @@
+import type { CSSProperties } from 'react';
+import type { DocumentModel, DocumentNode, WrapperNode } from '../model/types';
+import { resolveWrapperRenderPlan, type RenderMeasuredNodeSizes } from '../render/layout';
+import {
+  getContentClassName,
+  getContentSpacerClassName,
+  getNodeClassName,
+  getRootWrappers,
+  getTrackClassName,
+  getTrackSpacerClassName,
+  getWrapperTag,
+  getStickyTrackSpacerSequence,
+  isBrandMark,
+  isContentWrapperSticky,
+  isSelfSticky,
+  SITE_BRAND_MARK_CLASS,
+  SITE_IMAGE_CLASS,
+  SITE_IMAGE_PLACEHOLDER_CLASS,
+  splitRootWrappers,
+} from './siteShared';
+
+type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
+
+export type SiteTrackSpacerEdge = 'top' | 'bottom';
+
+export type SiteLeafPlan = {
+  kind: 'leaf';
+  node: LeafNode;
+  nodeClassName: string;
+  meshPlacement?: CSSProperties;
+  selfSticky: boolean;
+  trackClassName: string;
+  spacerEdgesBefore: SiteTrackSpacerEdge[];
+  spacerEdgesAfter: SiteTrackSpacerEdge[];
+  imageClassName: string;
+  imagePlaceholderClassName: string;
+  isBrandMark: boolean;
+};
+
+export type SiteWrapperPlan = {
+  kind: 'wrapper';
+  node: WrapperNode;
+  isTopLevel: boolean;
+  tag: ReturnType<typeof getWrapperTag>;
+  nodeClassName: string;
+  meshPlacement?: CSSProperties;
+  selfSticky: boolean;
+  contentSticky: boolean;
+  trackClassName: string;
+  spacerEdgesBefore: SiteTrackSpacerEdge[];
+  spacerEdgesAfter: SiteTrackSpacerEdge[];
+  contentClassName: string;
+  contentSpacerClassName: string;
+  stickyState: ReturnType<typeof resolveWrapperRenderPlan>['stickyState'];
+  registrationMap: ReturnType<typeof resolveWrapperRenderPlan>['registrationMap'];
+  extraExtent: number;
+  meshLayout: ReturnType<typeof resolveWrapperRenderPlan>['meshLayout'];
+  children: SiteRenderPlanNode[];
+};
+
+export type SiteRenderPlanNode = SiteWrapperPlan | SiteLeafPlan;
+
+export type SiteRootPlan = {
+  header: SiteWrapperPlan | null;
+  footer: SiteWrapperPlan | null;
+  main: SiteWrapperPlan[];
+};
+
+export function buildSiteRootPlan(
+  document: DocumentModel,
+  previewSticky: boolean,
+  measuredNodeSizes: RenderMeasuredNodeSizes = {},
+): SiteRootPlan {
+  const wrappers = getRootWrappers(document);
+  const { header, footer, main } = splitRootWrappers(wrappers);
+
+  return {
+    header: header ? buildWrapperPlan(document, header, true, previewSticky, measuredNodeSizes) : null,
+    footer: footer ? buildWrapperPlan(document, footer, true, previewSticky, measuredNodeSizes) : null,
+    main: main.map((wrapper) => buildWrapperPlan(document, wrapper, true, previewSticky, measuredNodeSizes)),
+  };
+}
+
+function buildWrapperPlan(
+  document: DocumentModel,
+  node: WrapperNode,
+  isTopLevel: boolean,
+  previewSticky: boolean,
+  measuredNodeSizes: RenderMeasuredNodeSizes,
+  meshPlacement?: CSSProperties,
+): SiteWrapperPlan {
+  const renderPlan = resolveWrapperRenderPlan(document, node, measuredNodeSizes);
+  const spacerSequence = getStickyTrackSpacerSequence(node.sticky);
+  const children = renderPlan.children.map((child) =>
+    child.type === 'wrapper'
+      ? buildWrapperPlan(
+          document,
+          child,
+          false,
+          previewSticky,
+          measuredNodeSizes,
+          renderPlan.meshLayout.childPlacements[child.id],
+        )
+      : buildLeafPlan(child, previewSticky, renderPlan.meshLayout.childPlacements[child.id]),
+  );
+
+  return {
+    kind: 'wrapper',
+    node,
+    isTopLevel,
+    tag: getWrapperTag(node.role),
+    nodeClassName: getNodeClassName(node),
+    meshPlacement,
+    selfSticky: isSelfSticky(node.sticky, previewSticky),
+    contentSticky: isContentWrapperSticky(node.sticky, previewSticky),
+    trackClassName: getTrackClassName(node.id),
+    spacerEdgesBefore: spacerSequence.before,
+    spacerEdgesAfter: spacerSequence.after,
+    contentClassName: getContentClassName(node.id),
+    contentSpacerClassName: getContentSpacerClassName(node.id),
+    stickyState: renderPlan.stickyState,
+    registrationMap: renderPlan.registrationMap,
+    extraExtent: renderPlan.extraExtent,
+    meshLayout: renderPlan.meshLayout,
+    children,
+  };
+}
+
+function buildLeafPlan(
+  node: LeafNode,
+  previewSticky: boolean,
+  meshPlacement?: CSSProperties,
+): SiteLeafPlan {
+  const spacerSequence = getStickyTrackSpacerSequence(node.sticky);
+  const nodeClassName = getNodeClassName(node);
+  const brandMark = isBrandMark(node);
+
+  return {
+    kind: 'leaf',
+    node,
+    nodeClassName: brandMark ? `${nodeClassName} ${SITE_BRAND_MARK_CLASS}` : nodeClassName,
+    meshPlacement,
+    selfSticky: isSelfSticky(node.sticky, previewSticky),
+    trackClassName: getTrackClassName(node.id),
+    spacerEdgesBefore: spacerSequence.before,
+    spacerEdgesAfter: spacerSequence.after,
+    imageClassName: `${brandMark ? `${nodeClassName} ${SITE_BRAND_MARK_CLASS}` : nodeClassName} ${SITE_IMAGE_CLASS}`,
+    imagePlaceholderClassName: `${nodeClassName} ${SITE_IMAGE_PLACEHOLDER_CLASS}`,
+    isBrandMark: brandMark,
+  };
+}
+
+export function getTrackSpacerDescriptor(nodeId: string, edge: SiteTrackSpacerEdge) {
+  return {
+    edge,
+    key: `${nodeId}-${edge}`,
+    className: getTrackSpacerClassName(nodeId, edge),
+  };
+}

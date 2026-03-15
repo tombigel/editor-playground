@@ -39,8 +39,8 @@ Validation run:
    - `src/components/ui/separator.tsx` removed
    - Unused exports:
    - `DialogTrigger` and `DialogClose` in `src/components/ui/dialog.tsx:35-42,113-121` removed
-   - `SiteRenderer` is only referenced by its own tests, not by the app.
-   - Remaining decision: either remove `SiteRenderer`, or keep it and clearly document it as a separate lightweight renderer.
+   - `SiteRenderer` was initially only referenced by its own tests, not by the app.
+   - Completed on 2026-03-16: it was promoted into the canonical SSR-safe site/runtime renderer boundary with a real site export path, so it is no longer a dead-code candidate.
 
 4. Completed on 2026-03-15: the document validation layer was too shallow for the model complexity.
    - `src/model/validation.ts:7-39`
@@ -142,9 +142,10 @@ Validation run:
 ### `src/site`
 
 - `src/site/SiteRenderer.tsx`
-  - It is not used by the app, only by its own tests.
-  - It renders sticky with plain `position: sticky` only and does not represent spacer duration/content-wrapper semantics from the current spec and stage implementation.
-  - If this is supposed to be a faithful site output, it is under-modeled. If not, it should be labeled as a lightweight renderer or removed.
+  - Completed on 2026-03-16: it is now the canonical SSR-safe site/runtime renderer boundary instead of a test-only stub.
+  - It now renders structural sticky DOM for both `target=self` (track + spacer) and `target=contentWrapper` (sticky content wrapper + flow spacer), and programmatic site export lives in `src/site/siteExport.tsx`.
+  - The settings panel now exposes a rendered-site bundle export using that same boundary (`.html` + `.css`).
+  - Follow-up completed on 2026-03-16: site export now uses the same shared mesh-grid/sticky layout baseline as the editor stage for non-editor rendering, instead of a separate absolute-position child renderer.
 
 ### `src/components/ui`
 
@@ -216,10 +217,10 @@ These are not all “wrong”, but they are worth revisiting:
    - clipboard paste failures
 
 6. Dead-code regression tests only where product intent exists.
-   - Example: if `SiteRenderer` is supposed to stay, add tests for spacer/duration semantics; otherwise remove it instead of testing it more.
+   - Example: `SiteRenderer` now has explicit product intent as the SSR-safe site export renderer, so tests should keep growing around its supported sticky/export semantics instead of revisiting removal.
 
 ## Suggested cleanup order
 
-1. Decide the fate of `src/site/SiteRenderer.tsx`: remove it, or keep and document it as a separate lightweight renderer.
-2. Split `Stage.tsx` and `InspectorPanel.tsx` into pure helper modules plus smaller render components.
-3. Add stage interaction coverage for drag, snap, reparent, and drop behavior.
+1. Add full browser-level stage interaction coverage for drag, snap, reparent, and drop behavior.
+2. Continue improving seeded template maintainability in `src/model/defaults.ts`.
+3. If site export fidelity keeps growing, extract a broader shared render/style plan so stage preview and site export share more than leaf presentation defaults.
