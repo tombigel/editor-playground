@@ -15,7 +15,7 @@ import type {
   WrapperNode,
   WrapperRole,
 } from '../model/types';
-import { formatValue, parseHeightValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
+import { formatValue, parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument } from '../model/validation';
 
 export type {
@@ -37,6 +37,7 @@ export {
   getChildren,
   getNode,
   parseHeightValue,
+  parseFontSizeValue,
   parseUnitValue,
   parseWidthValue,
   resolveUnitValuePx,

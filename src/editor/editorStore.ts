@@ -22,7 +22,7 @@ import type {
   WrapperRole,
   WrapperNode,
 } from '../model/types';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { normalizeThemeMode, type ThemeMode } from '../lib/theme';
 
 export type ConfirmReplaceRole = {
@@ -526,7 +526,7 @@ function applyModernHeader(document: DocumentModel, header: WrapperNode) {
   title.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
   title.style ??= {};
   title.style.color = '#0f172a';
-  title.style.fontSize = parseUnitValue('20px');
+  title.style.fontSize = parseFontSizeValue('20px');
   title.style.fontWeight = 'bold';
   title.htmlTag = 'h1';
 
@@ -536,7 +536,7 @@ function applyModernHeader(document: DocumentModel, header: WrapperNode) {
   subtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
   subtitle.style ??= {};
   subtitle.style.color = '#516174';
-  subtitle.style.fontSize = parseUnitValue('14px');
+  subtitle.style.fontSize = parseFontSizeValue('14px');
 
   const templatesLink = createUniqueLeaf(document, 'link', header.id) as LinkLeaf;
   templatesLink.name = 'Templates Link';
@@ -582,7 +582,7 @@ function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
   title.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
   title.style ??= {};
   title.style.color = '#0f172a';
-  title.style.fontSize = parseUnitValue('16px');
+  title.style.fontSize = parseFontSizeValue('16px');
   title.style.fontWeight = 'bold';
   title.style.lineHeight = 1.2;
   title.htmlTag = 'h2';
@@ -593,7 +593,7 @@ function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
   copy.rect = createDefaultRect('64px', '53px', '271px', '38px');
   copy.style ??= {};
   copy.style.color = '#475569';
-  copy.style.fontSize = parseUnitValue('14px');
+  copy.style.fontSize = parseFontSizeValue('14px');
   copy.style.lineHeight = 1.3;
 
   const repoLink = createUniqueLeaf(document, 'link', footer.id) as LinkLeaf;
@@ -788,7 +788,7 @@ export function updateTextField(
     node.htmlTag = normalizeTextHtmlTag(value as TextLeaf['htmlTag']);
   } else if (field === 'fontSize' && node.type === 'leaf' && node.role === 'text') {
     node.style ??= {};
-    node.style.fontSize = parseUnitValue(value);
+    node.style.fontSize = parseFontSizeValue(value);
   } else if (field === 'fontWeight' && node.type === 'leaf' && node.role === 'text') {
     node.style ??= {};
     node.style.fontWeight = value === 'bold' ? 'bold' : 'normal';

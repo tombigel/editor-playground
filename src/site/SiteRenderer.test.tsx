@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument } from '../model/defaults';
-import { parseUnitValue } from '../model/units';
+import { parseFontSizeValue } from '../model/units';
 import { SiteRenderer } from './SiteRenderer';
 
 describe('site/SiteRenderer', () => {
@@ -71,7 +71,7 @@ describe('site/SiteRenderer', () => {
 
     target.htmlTag = 'h2';
     target.style ??= {};
-    target.style.fontSize = parseUnitValue('31px');
+    target.style.fontSize = parseFontSizeValue('31px');
     target.style.fontWeight = 'bold';
     target.style.lineHeight = 1.4;
 

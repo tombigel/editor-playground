@@ -4,11 +4,17 @@ export type NodeType = 'site' | 'wrapper' | 'leaf';
 export type WrapperRole = 'section' | 'header' | 'footer' | 'container';
 export type LeafRole = 'text' | 'image' | 'link' | 'button';
 export type BreakpointId = 'base' | 'tablet' | 'mobile';
-export type Unit = 'px' | '%' | 'vw' | 'vh';
+export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
+export type FontSizeUnit = 'px' | 'em' | 'rem';
 
 export type UnitValue = {
   value: number;
   unit: Unit;
+};
+
+export type FontSizeValue = {
+  value: number;
+  unit: FontSizeUnit;
 };
 
 export type WidthValue = UnitValue | { keyword: 'fit-content' | 'min-content' | 'max-content' };
@@ -94,7 +100,7 @@ export type TextLeaf = BaseNode & {
   sticky?: StickyDefinition;
   style?: {
     color?: string;
-    fontSize?: ParsedValue<UnitValue>;
+    fontSize?: ParsedValue<FontSizeValue>;
     fontWeight?: 'normal' | 'bold';
     fontStyle?: 'normal' | 'italic';
     textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through';

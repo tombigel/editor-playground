@@ -11,24 +11,42 @@ import {
   ArrowBigUpDash,
   ArrowUp,
   BetweenHorizontalStart,
+  ChevronDown,
   ListEnd,
   ListStart,
   PanelBottom,
   PanelTop,
   PilcrowLeft,
   PilcrowRight,
+  Proportions,
 } from 'lucide-react';
 import type { DocumentNode, WrapperNode } from '../api/documentApi';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
+import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+
+type SizeFieldAxis = 'x' | 'y' | 'width' | 'height';
+type SizeFieldMode = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax' | 'fit-content' | 'min-content' | 'max-content' | 'auto' | 'aspect-ratio';
+type FontSizeMode = 'px' | 'em' | 'rem';
+type SizeFieldDescriptor =
+  | { kind: 'numeric'; mode: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>; input: string }
+  | { kind: 'keyword'; mode: Extract<SizeFieldMode, 'fit-content' | 'min-content' | 'max-content' | 'auto'>; input: '' }
+  | { kind: 'aspect-ratio'; mode: 'aspect-ratio'; input: string };
+
+const WIDTH_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'fit-content' | 'min-content' | 'max-content'>[] = [
+  'fit-content',
+  'min-content',
+  'max-content',
+];
+const HEIGHT_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'auto' | 'aspect-ratio'>[] = ['auto', 'aspect-ratio'];
+const FONT_SIZE_UNIT_OPTIONS: FontSizeMode[] = ['px', 'em', 'rem'];
 
 type Props = {
   node: DocumentNode | null;
@@ -135,29 +153,33 @@ export function InspectorPanel({
 
           {node.type !== 'site' ? (
             <div className="grid grid-cols-2 gap-1.5">
-              <InlineField
+              <SizeInlineField
                 label="X"
+                nodeId={node.id}
                 value={node.rect.x.base.raw}
                 onChange={(value) => onRectChange('x', value)}
-                validate={(value) => validateUnitField(value, 'x')}
+                axis="x"
               />
-              <InlineField
+              <SizeInlineField
                 label="Y"
+                nodeId={node.id}
                 value={node.rect.y.base.raw}
                 onChange={(value) => onRectChange('y', value)}
-                validate={(value) => validateUnitField(value, 'y')}
+                axis="y"
               />
-              <InlineField
+              <SizeInlineField
                 label="W"
+                nodeId={node.id}
                 value={node.rect.width.base.raw}
                 onChange={(value) => onRectChange('width', value)}
-                validate={(value) => validateUnitField(value, 'width')}
+                axis="width"
               />
-              <InlineField
+              <SizeInlineField
                 label="H"
+                nodeId={node.id}
                 value={node.rect.height.base.raw}
                 onChange={(value) => onRectChange('height', value)}
-                validate={(value) => validateUnitField(value, 'height')}
+                axis="height"
               />
             </div>
           ) : null}
@@ -257,10 +279,11 @@ export function InspectorPanel({
                 <div className="space-y-1.5">
                   <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                     <Label className="text-[11px] font-medium text-slate-500">Size</Label>
-                    <div className="ml-auto grid w-[140px] grid-cols-[78px_58px] items-center gap-1">
-                      <FontSizePxInput
-                        value={fontSizePxValue(node)}
-                        onChange={(value) => onTextChange('fontSize', `${value}px`)}
+                    <div className="ml-auto grid w-[140px] grid-cols-[96px_40px] items-center gap-1">
+                      <FontSizeField
+                        nodeId={node.id}
+                        value={fontSizeFieldValue(node)}
+                        onChange={(value) => onTextChange('fontSize', value)}
                       />
                       <NumberInput
                         value={lineHeightValue(node)}
@@ -663,6 +686,200 @@ function InlineField({
   );
 }
 
+function SizeInlineField({
+  label,
+  nodeId,
+  axis,
+  value,
+  onChange,
+}: {
+  label: string;
+  nodeId: string;
+  axis: SizeFieldAxis;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [mode, setMode] = useState<SizeFieldMode>(() => describeSizeFieldValue(value, axis).mode);
+  const [numericDraft, setNumericDraft] = useState(() => getInitialNumericDraft(value, axis));
+  const [aspectDraft, setAspectDraft] = useState(() => getInitialAspectDraft(value));
+  const [invalid, setInvalid] = useState(false);
+
+  useEffect(() => {
+    const descriptor = describeSizeFieldValue(value, axis);
+    setMode(descriptor.mode);
+    if (descriptor.kind === 'numeric') {
+      setNumericDraft(descriptor.input);
+    }
+    if (descriptor.kind === 'aspect-ratio') {
+      setAspectDraft(descriptor.input);
+    }
+    setInvalid(false);
+  }, [axis, value]);
+
+  const descriptor = describeSizeFieldValue(value, axis);
+  const showNumericInput = mode === 'px' || mode === '%' || mode === 'vw' || mode === 'vh' || mode === 'vmin' || mode === 'vmax';
+  const showAspectInput = mode === 'aspect-ratio';
+  const showKeywordTriggerOnly = !showNumericInput && !showAspectInput;
+  const suffixWidthClass = showAspectInput ? 'w-[52px] min-w-[52px]' : 'w-[44px] min-w-[44px]';
+  const usesIconSuffix = mode === 'aspect-ratio';
+  const shellClass = invalid
+    ? 'border-red-400 bg-red-50 focus-within:border-red-400'
+    : 'border-slate-200 bg-white focus-within:border-blue-500';
+
+  function commitDraft(nextMode: SizeFieldMode, nextInput?: string) {
+    const candidateInput = nextInput ?? (nextMode === 'aspect-ratio' ? aspectDraft : numericDraft);
+    const nextRaw = buildSizeFieldValue(axis, nextMode, candidateInput);
+    if (!nextRaw) {
+      setInvalid(true);
+      return false;
+    }
+    setInvalid(false);
+    onChange(nextRaw);
+    return true;
+  }
+
+  function handleModeChange(nextMode: string) {
+    const resolvedMode = nextMode as SizeFieldMode;
+    setMode(resolvedMode);
+
+    if (resolvedMode === 'aspect-ratio') {
+      const nextAspect = descriptor.kind === 'aspect-ratio' ? descriptor.input : aspectDraft || '16/9';
+      setAspectDraft(nextAspect);
+      commitDraft(resolvedMode, nextAspect);
+      return;
+    }
+
+    if (resolvedMode === 'auto' || resolvedMode === 'fit-content' || resolvedMode === 'min-content' || resolvedMode === 'max-content') {
+      commitDraft(resolvedMode);
+      return;
+    }
+
+    const convertedNumeric = convertStageMeasurementToInput(nodeId, axis, resolvedMode);
+    const nextNumeric =
+      convertedNumeric ?? (descriptor.kind === 'numeric' ? descriptor.input : numericDraft || getDefaultNumericDraft(axis));
+    setNumericDraft(nextNumeric);
+    commitDraft(resolvedMode, nextNumeric);
+  }
+
+  return (
+    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
+      <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
+      {showKeywordTriggerOnly ? (
+        <div
+          className={`group/sizefield relative flex h-8 overflow-visible rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
+        >
+          <Select value={mode} onValueChange={handleModeChange}>
+            <SelectTrigger
+              className="peer/keywordtrigger h-full w-full justify-start rounded-none border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
+          </Select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex w-9 items-center justify-center rounded-r-sm bg-white opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100">
+            <ChevronDown className="h-3.5 w-3.5 text-slate-700" />
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-9 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" />
+        </div>
+      ) : (
+        <div
+          className={`group/sizefield relative flex h-8 overflow-visible rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
+        >
+          {showNumericInput ? (
+            <Input
+              type="number"
+              step="any"
+              value={numericDraft}
+              onChange={(e) => {
+                const next = e.target.value;
+                setNumericDraft(next);
+                const nextRaw = buildSizeFieldValue(axis, mode, next);
+                setInvalid(!nextRaw);
+                if (nextRaw) {
+                  onChange(nextRaw);
+                }
+              }}
+              className="peer/valueinput h-full flex-1 overflow-visible rounded-none border-0 bg-transparent px-3 text-[11px] text-slate-600 shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          ) : (
+            <Input
+              value={aspectDraft}
+              onChange={(e) => {
+                const next = e.target.value;
+                setAspectDraft(next);
+                const nextRaw = buildSizeFieldValue(axis, 'aspect-ratio', next);
+                setInvalid(!nextRaw);
+                if (nextRaw) {
+                  onChange(nextRaw);
+                }
+              }}
+              className="peer/valueinput h-full flex-1 overflow-visible rounded-none border-0 bg-transparent px-3 text-[11px] text-slate-600 shadow-none focus-visible:border-0 focus-visible:ring-0"
+            />
+          )}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+            style={{ right: usesIconSuffix ? '52px' : '44px' }}
+          />
+          <div className={`group/unitsuffix relative ${suffixWidthClass}`}>
+            <Select value={mode} onValueChange={handleModeChange}>
+              <SelectTrigger
+                className={`peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-none border-0 border-l border-slate-200 bg-transparent px-0 text-center text-[10px] font-medium text-slate-800 shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0`}
+              >
+                {usesIconSuffix ? (
+                  <span className="flex w-full items-center justify-center">
+                    <Proportions className="h-3.5 w-3.5" />
+                  </span>
+                ) : (
+                  <SelectValue />
+                )}
+              </SelectTrigger>
+              <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
+            </Select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm bg-white opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100" style={{ width: usesIconSuffix ? '52px' : '44px' }}>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-700" />
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" style={{ width: usesIconSuffix ? '52px' : '44px' }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function renderSizeModeOptions(axis: SizeFieldAxis) {
+  const isLengthOnlyAxis = axis === 'x' || axis === 'y';
+  const scalarUnits = isLengthOnlyAxis ? ['px'] : ['px', '%'];
+  const viewportUnits = ['vw', 'vh', 'vmin', 'vmax'];
+  const keywords =
+    axis === 'width'
+      ? WIDTH_KEYWORD_OPTIONS
+      : axis === 'height'
+        ? HEIGHT_KEYWORD_OPTIONS
+        : null;
+
+  return (
+    <>
+      {scalarUnits.map((option) => (
+        <SelectItem key={`${axis}-${option}`} value={option}>
+          {option}
+        </SelectItem>
+      ))}
+      {keywords ? <SelectSeparator /> : null}
+      {keywords?.map((option) => (
+        <SelectItem key={`${axis}-${option}`} value={option}>
+          {option}
+        </SelectItem>
+      ))}
+      <SelectSeparator />
+      {viewportUnits.map((option) => (
+        <SelectItem key={`${axis}-${option}`} value={option}>
+          {option}
+        </SelectItem>
+      ))}
+    </>
+  );
+}
+
 function OrderIconButton({
   label,
   shortcut,
@@ -686,7 +903,7 @@ function OrderIconButton({
       content={
         <>
           <div className="leading-3.5 font-medium">{label}</div>
-          {shortcut ? <div className="mt-0.5 leading-3 text-[10px] font-normal text-slate-300">{shortcut}</div> : null}
+          {shortcut ? <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">{shortcut}</div> : null}
         </>
       }
     >
@@ -854,31 +1071,55 @@ function InlineNumberInput({
   );
 }
 
-function FontSizePxInput({
+function FontSizeField({
+  nodeId,
   value,
   onChange,
 }: {
-  value: number;
-  onChange: (value: number) => void;
+  nodeId: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
+  const parsed = parseFontSizeValue(value);
+  const fontSizeSuffixWidth = '44px';
   return (
-    <div className="relative">
+    <div className="group/sizefield relative flex h-8 overflow-visible rounded-sm border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
       <Input
         type="number"
         min={1}
-        step={1}
-        value={String(value)}
+        step="any"
+        value={String(parsed.parsed.value)}
         onChange={(e) => {
           const next = Number.parseFloat(e.target.value);
           if (Number.isFinite(next) && next > 0) {
-            onChange(next);
+            onChange(`${next}${parsed.parsed.unit}`);
           }
         }}
-        className="h-8 rounded-sm text-[11px] [appearance:textfield] pr-7 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="peer/valueinput h-full overflow-visible rounded-none border-0 bg-transparent text-[11px] text-slate-600 [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
-      <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] font-medium text-slate-500">
-        px
-      </span>
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" style={{ right: fontSizeSuffixWidth }} />
+      <Select
+        value={parsed.parsed.unit}
+        onValueChange={(nextUnit) => {
+          const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
+          onChange(`${converted ?? parsed.parsed.value}${nextUnit as FontSizeMode}`);
+        }}
+      >
+        <SelectTrigger className="peer/unittrigger relative z-10 h-full justify-center rounded-none border-0 border-l border-slate-200 bg-transparent px-0 text-center text-[10px] font-medium text-slate-800 shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0" style={{ width: fontSizeSuffixWidth }}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {FONT_SIZE_UNIT_OPTIONS.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm bg-white opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100" style={{ width: fontSizeSuffixWidth }}>
+        <ChevronDown className="h-3.5 w-3.5 text-slate-700" />
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" style={{ width: fontSizeSuffixWidth }} />
     </div>
   );
 }
@@ -902,14 +1143,14 @@ function NumberInput({
       min={min}
       max={max}
       step={step}
-      value={value.toFixed(1)}
+      value={formatFieldNumber(clampFieldNumber(value))}
       onChange={(e) => {
         const next = Number.parseFloat(e.target.value);
         if (Number.isFinite(next) && next >= min && next <= max) {
           onChange(next);
         }
       }}
-      className="h-8 rounded-sm text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      className="h-8 rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
     />
   );
 }
@@ -1175,12 +1416,8 @@ function stickyDurationTopVh(node: Exclude<DocumentNode, { type: 'site' }>) {
   return duration.unit === 'vh' ? duration.value : 50;
 }
 
-function fontSizePxValue(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
-  const fontSize = node.style?.fontSize?.parsed;
-  if (fontSize && 'unit' in fontSize && fontSize.unit === 'px') {
-    return fontSize.value;
-  }
-  return 18;
+function fontSizeFieldValue(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
+  return node.style?.fontSize?.raw ?? '18px';
 }
 
 function lineHeightValue(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
@@ -1244,4 +1481,316 @@ function validateUnitField(value: string, field: 'x' | 'y' | 'width' | 'height')
   } catch {
     return false;
   }
+}
+
+export function describeSizeFieldValue(value: string, axis: SizeFieldAxis): SizeFieldDescriptor {
+  const parsed =
+    axis === 'width'
+      ? parseWidthValue(value)
+      : axis === 'height'
+        ? parseHeightValue(value)
+        : parseUnitValue(value);
+  if ('unit' in parsed.parsed) {
+    return {
+      kind: 'numeric',
+      mode: parsed.parsed.unit,
+      input: formatNumericFieldInput(parsed.parsed.value, parsed.parsed.unit),
+    };
+  }
+  if (parsed.parsed.keyword === 'aspect-ratio') {
+    return {
+      kind: 'aspect-ratio',
+      mode: 'aspect-ratio',
+      input: extractAspectRatioExpression(parsed.raw),
+    };
+  }
+  return {
+    kind: 'keyword',
+    mode: parsed.parsed.keyword,
+    input: '',
+  };
+}
+
+export function buildSizeFieldValue(axis: SizeFieldAxis, mode: SizeFieldMode, input: string) {
+  if (axis === 'x' || axis === 'y') {
+    if (mode !== 'px' && mode !== 'vw' && mode !== 'vh' && mode !== 'vmin' && mode !== 'vmax') {
+      return null;
+    }
+    const numeric = input.trim();
+    if (!/^-?\d+(?:\.\d+)?$/.test(numeric)) {
+      return null;
+    }
+    const nextRaw = `${numeric}${mode}`;
+    try {
+      parseUnitValue(nextRaw);
+      return nextRaw;
+    } catch {
+      return null;
+    }
+  }
+
+  if (mode === 'fit-content' || mode === 'min-content' || mode === 'max-content') {
+    return axis === 'width' ? mode : null;
+  }
+  if (mode === 'auto') {
+    return axis === 'height' ? mode : null;
+  }
+  if (mode === 'aspect-ratio') {
+    if (axis !== 'height') {
+      return null;
+    }
+    const normalized = normalizeAspectRatioExpression(input);
+    return normalized ? `aspect-ratio(${normalized})` : null;
+  }
+
+  const numeric = input.trim();
+  if (!/^-?\d+(?:\.\d+)?$/.test(numeric)) {
+    return null;
+  }
+  const nextRaw = `${numeric}${mode}`;
+  try {
+    if (axis === 'width') {
+      parseWidthValue(nextRaw);
+    } else {
+      parseHeightValue(nextRaw);
+    }
+    return nextRaw;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizeAspectRatioExpression(input: string) {
+  const trimmed = input.trim();
+  if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    return Number(trimmed) > 0 ? trimmed : null;
+  }
+
+  const fractionMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if (!fractionMatch) {
+    return null;
+  }
+
+  const left = Number(fractionMatch[1]);
+  const right = Number(fractionMatch[2]);
+  if (left <= 0 || right <= 0) {
+    return null;
+  }
+
+  return `${fractionMatch[1]}/${fractionMatch[2]}`;
+}
+
+export function convertRenderedPxToUnitValue(
+  px: number,
+  axis: SizeFieldAxis,
+  mode: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>,
+  parentSizePx?: number,
+  viewportSizePx?: number,
+) {
+  if (!Number.isFinite(px)) {
+    return null;
+  }
+
+  if (mode === 'px') {
+    return roundGeometryValue(px);
+  }
+
+  if (mode === '%') {
+    if ((axis === 'x' || axis === 'y') || !parentSizePx || parentSizePx <= 0) {
+      return null;
+    }
+    return roundGeometryValue((px / parentSizePx) * 100);
+  }
+
+  if (mode === 'vw') {
+    if (!viewportSizePx || viewportSizePx <= 0) {
+      return null;
+    }
+    return roundGeometryValue((px / viewportSizePx) * 100);
+  }
+
+  if (mode === 'vh') {
+    if (!viewportSizePx || viewportSizePx <= 0) {
+      return null;
+    }
+    return roundGeometryValue((px / viewportSizePx) * 100);
+  }
+
+  if (!viewportSizePx || viewportSizePx <= 0) {
+    return null;
+  }
+  return roundGeometryValue((px / viewportSizePx) * 100);
+}
+
+export function convertStageMeasurementToInput(
+  nodeId: string,
+  axis: SizeFieldAxis,
+  mode: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>,
+  ownerDocument: Document = document,
+) {
+  const measurement = measureStageGeometry(nodeId, ownerDocument);
+  if (!measurement) {
+    return null;
+  }
+
+  const px =
+    axis === 'x'
+      ? measurement.offsetX
+      : axis === 'y'
+        ? measurement.offsetY
+        : axis === 'width'
+          ? measurement.width
+          : measurement.height;
+  const parentSize =
+    axis === 'width'
+      ? measurement.parentWidth
+      : axis === 'height'
+        ? measurement.parentHeight
+        : undefined;
+  const viewportSize =
+    mode === 'vw'
+      ? measurement.viewportWidth
+      : mode === 'vh'
+        ? measurement.viewportHeight
+        : mode === 'vmin'
+          ? Math.min(measurement.viewportWidth ?? 0, measurement.viewportHeight ?? 0)
+          : mode === 'vmax'
+            ? Math.max(measurement.viewportWidth ?? 0, measurement.viewportHeight ?? 0)
+            : undefined;
+
+  const converted = convertRenderedPxToUnitValue(px, axis, mode, parentSize, viewportSize);
+  return converted == null ? null : formatNumericFieldInput(converted, mode);
+}
+
+export function convertRenderedPxToFontSizeValue(
+  px: number,
+  mode: FontSizeMode,
+  reference: { rootFontSizePx: number; inheritedFontSizePx: number },
+) {
+  if (!Number.isFinite(px) || px <= 0) {
+    return null;
+  }
+
+  if (mode === 'px') {
+    return clampFieldNumber(px);
+  }
+
+  const base = mode === 'rem' ? reference.rootFontSizePx : reference.inheritedFontSizePx;
+  if (!Number.isFinite(base) || base <= 0) {
+    return null;
+  }
+  return clampFieldNumber(px / base);
+}
+
+export function convertStageFontSizeToInput(
+  nodeId: string,
+  mode: FontSizeMode,
+  ownerDocument: Document = document,
+) {
+  const measurement = measureStageFontSize(nodeId, ownerDocument);
+  if (!measurement) {
+    return null;
+  }
+
+  const converted = convertRenderedPxToFontSizeValue(measurement.fontSizePx, mode, {
+    rootFontSizePx: measurement.rootFontSizePx,
+    inheritedFontSizePx: measurement.inheritedFontSizePx,
+  });
+  return converted == null ? null : formatFieldNumber(converted);
+}
+
+function measureStageGeometry(nodeId: string, ownerDocument: Document) {
+  const element = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  if (!element) {
+    return null;
+  }
+
+  const rect = element.getBoundingClientRect();
+  const parentContent =
+    element.parentElement?.closest<HTMLElement>('[data-content-wrapper-for]') ??
+    element.parentElement;
+  const parentRect = parentContent?.getBoundingClientRect();
+
+  return {
+    width: rect.width,
+    height: rect.height,
+    offsetX: parentRect ? rect.left - parentRect.left : rect.left,
+    offsetY: parentRect ? rect.top - parentRect.top : rect.top,
+    parentWidth: parentRect?.width,
+    parentHeight: parentRect?.height,
+    viewportWidth: ownerDocument.defaultView?.innerWidth,
+    viewportHeight: ownerDocument.defaultView?.innerHeight,
+  };
+}
+
+function measureStageFontSize(nodeId: string, ownerDocument: Document) {
+  const element = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  const defaultView = ownerDocument.defaultView;
+  if (!element || !defaultView) {
+    return null;
+  }
+
+  const computed = defaultView.getComputedStyle(element);
+  const parentComputed = defaultView.getComputedStyle(element.parentElement ?? element);
+  const rootComputed = defaultView.getComputedStyle(ownerDocument.documentElement);
+  const fontSizePx = Number.parseFloat(computed.fontSize);
+  const inheritedFontSizePx = Number.parseFloat(parentComputed.fontSize);
+  const rootFontSizePx = Number.parseFloat(rootComputed.fontSize);
+  if (!Number.isFinite(fontSizePx) || !Number.isFinite(inheritedFontSizePx) || !Number.isFinite(rootFontSizePx)) {
+    return null;
+  }
+
+  return {
+    fontSizePx,
+    inheritedFontSizePx,
+    rootFontSizePx,
+  };
+}
+
+function roundGeometryValue(value: number) {
+  return Math.round(value * 1000) / 1000;
+}
+
+function formatNumericFieldInput(
+  value: number,
+  unit: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>,
+) {
+  return formatFieldNumber(unit === 'px' ? clampFieldNumber(value) : clampFieldNumber(value));
+}
+
+function clampFieldNumber(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function formatFieldNumber(value: number) {
+  return value.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function extractAspectRatioExpression(raw: string) {
+  const match = raw.trim().match(/^aspect-ratio\(\s*(.+?)\s*\)$/);
+  return match?.[1] ?? '16/9';
+}
+
+function getInitialNumericDraft(value: string, axis: SizeFieldAxis) {
+  const descriptor = describeSizeFieldValue(value, axis);
+  return descriptor.kind === 'numeric' ? descriptor.input : getDefaultNumericDraft(axis);
+}
+
+function getInitialAspectDraft(value: string) {
+  try {
+    const descriptor = describeSizeFieldValue(value, 'height');
+    return descriptor.kind === 'aspect-ratio' ? descriptor.input : '16/9';
+  } catch {
+    return '16/9';
+  }
+}
+
+function getDefaultNumericDraft(axis: SizeFieldAxis) {
+  if (axis === 'width') {
+    return '240';
+  }
+  if (axis === 'height') {
+    return '120';
+  }
+  return '0';
 }

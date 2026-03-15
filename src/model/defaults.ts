@@ -10,7 +10,7 @@ import type {
   WrapperNode,
   WrapperRole,
 } from './types';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from './units';
+import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from './units';
 
 let counter = 0;
 let imageCounter = 0;
@@ -106,7 +106,7 @@ export function createDefaultHeader(parentId: NodeId) {
   headerLogo.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
   headerLogo.style ??= {};
   headerLogo.style.color = '#0f172a';
-  headerLogo.style.fontSize = parseUnitValue('20px');
+  headerLogo.style.fontSize = parseFontSizeValue('20px');
   headerLogo.style.fontWeight = 'bold';
   headerLogo.htmlTag = 'h1';
 
@@ -116,7 +116,7 @@ export function createDefaultHeader(parentId: NodeId) {
   headerSubtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
   headerSubtitle.style ??= {};
   headerSubtitle.style.color = '#516174';
-  headerSubtitle.style.fontSize = parseUnitValue('14px');
+  headerSubtitle.style.fontSize = parseFontSizeValue('14px');
 
   const navTemplates = createLeaf('link', header.id) as LinkLeaf;
   navTemplates.name = 'Templates Link';
@@ -165,7 +165,7 @@ export function createDefaultFooter(parentId: NodeId) {
   footerTitle.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
   footerTitle.style ??= {};
   footerTitle.style.color = '#0f172a';
-  footerTitle.style.fontSize = parseUnitValue('16px');
+  footerTitle.style.fontSize = parseFontSizeValue('16px');
   footerTitle.style.fontWeight = 'bold';
   footerTitle.style.lineHeight = 1.2;
   footerTitle.htmlTag = 'h2';
@@ -177,7 +177,7 @@ export function createDefaultFooter(parentId: NodeId) {
   footerCopy.rect = createDefaultRect('64px', '53px', '271px', '38px');
   footerCopy.style ??= {};
   footerCopy.style.color = '#475569';
-  footerCopy.style.fontSize = parseUnitValue('14px');
+  footerCopy.style.fontSize = parseFontSizeValue('14px');
   footerCopy.style.lineHeight = 1.3;
 
   const footerLink = createLeaf('link', footer.id) as LinkLeaf;
@@ -297,7 +297,7 @@ export function createLeaf(
       sticky: undefined,
       style: {
         color: '#16202a',
-        fontSize: parseUnitValue('18px'),
+        fontSize: parseFontSizeValue('18px'),
       },
     };
   }
@@ -886,7 +886,7 @@ function styleText(
     leaf.style.color = options.color;
   }
   if (options.fontSize) {
-    leaf.style.fontSize = parseUnitValue(options.fontSize);
+    leaf.style.fontSize = parseFontSizeValue(options.fontSize);
   }
   if (options.fontWeight) {
     leaf.style.fontWeight = options.fontWeight;

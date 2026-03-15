@@ -1,4 +1,5 @@
 import type {
+  FontSizeValue,
   HeightValue,
   ParsedValue,
   Unit,
@@ -6,7 +7,8 @@ import type {
   WidthValue,
 } from './types';
 
-const unitPattern = /^(-?\d+(?:\.\d+)?)(px|%|vw|vh)$/;
+const unitPattern = /^(-?\d+(?:\.\d+)?)(px|%|vw|vh|vmin|vmax)$/;
+const fontSizePattern = /^(-?\d+(?:\.\d+)?)(px|em|rem)$/;
 const aspectRatioPattern = /^aspect-ratio\(\s*(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?\s*\)$/;
 
 export function parseUnitValue(raw: string): ParsedValue<UnitValue> {
@@ -32,6 +34,21 @@ export function parseWidthValue(raw: string): ParsedValue<WidthValue> {
   return parseUnitValue(raw);
 }
 
+export function parseFontSizeValue(raw: string): ParsedValue<FontSizeValue> {
+  const value = raw.trim();
+  const match = value.match(fontSizePattern);
+  if (!match) {
+    throw new Error(`Invalid font size value: ${raw}`);
+  }
+  return {
+    raw,
+    parsed: {
+      value: Number(match[1]),
+      unit: match[2] as FontSizeValue['unit'],
+    },
+  };
+}
+
 export function parseHeightValue(raw: string): ParsedValue<HeightValue> {
   const value = raw.trim();
   if (value === 'auto') {
@@ -53,7 +70,7 @@ export function parseHeightValue(raw: string): ParsedValue<HeightValue> {
 }
 
 export function formatValue(
-  value: UnitValue | WidthValue | HeightValue,
+  value: UnitValue | WidthValue | HeightValue | FontSizeValue,
 ): string {
   if ('unit' in value) {
     return `${value.value}${value.unit}`;
@@ -62,6 +79,20 @@ export function formatValue(
     return `aspect-ratio(${value.ratio})`;
   }
   return value.keyword;
+}
+
+export function resolveFontSizePx(
+  value: FontSizeValue,
+  reference: { rootFontSizePx: number; inheritedFontSizePx: number },
+) {
+  switch (value.unit) {
+    case 'px':
+      return value.value;
+    case 'em':
+      return value.value * reference.inheritedFontSizePx;
+    case 'rem':
+      return value.value * reference.rootFontSizePx;
+  }
 }
 
 export function resolveUnitValuePx(
@@ -80,5 +111,9 @@ export function resolveUnitValuePx(
       return (value.value / 100) * reference.viewportWidth;
     case 'vh':
       return (value.value / 100) * reference.viewportHeight;
+    case 'vmin':
+      return (value.value / 100) * Math.min(reference.viewportWidth, reference.viewportHeight);
+    case 'vmax':
+      return (value.value / 100) * Math.max(reference.viewportWidth, reference.viewportHeight);
   }
 }
