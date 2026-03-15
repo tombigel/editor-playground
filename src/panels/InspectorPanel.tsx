@@ -738,7 +738,7 @@ function SizeInlineField({
           <div className={`group/unitsuffix relative ${suffixWidthClass}`}>
             <Select value={mode} onValueChange={handleModeChange}>
               <SelectTrigger
-                className={`editor-inline-field-trigger peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-r-sm border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0`}
+                className={`editor-inline-field-trigger peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0`}
               >
                 {usesIconSuffix ? (
                   <span className="flex w-full items-center justify-center">
@@ -946,7 +946,7 @@ function FontSizeField({
           onChange(`${converted ?? parsed.parsed.value}${nextUnit as FontSizeMode}`);
         }}
       >
-        <SelectTrigger className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0" style={{ width: fontSizeSuffixWidth }}>
+        <SelectTrigger className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0" style={{ width: fontSizeSuffixWidth }}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
