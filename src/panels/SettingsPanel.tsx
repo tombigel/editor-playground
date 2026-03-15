@@ -26,13 +26,9 @@ import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/lib/theme';
+import { copyExportDocument, pasteClipboardImport, saveExportDocument, type ActionResult } from './settingsTransfer';
 
 type SectionId = 'display' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
-
-type ActionResult = {
-  ok: boolean;
-  message: string;
-};
 
 type Props = {
   documentJson: string;
@@ -97,23 +93,6 @@ const SECTION_META: Array<{
     description: 'Keyboard and pointer reference.',
   },
 ];
-
-type SaveFilePickerHandle = {
-  createWritable: () => Promise<{
-    write: (data: Blob) => Promise<void>;
-    close: () => Promise<void>;
-  }>;
-};
-
-type SavePickerWindow = Window & {
-  showSaveFilePicker?: (options?: {
-    suggestedName?: string;
-    types?: Array<{
-      description: string;
-      accept: Record<string, string[]>;
-    }>;
-  }) => Promise<SaveFilePickerHandle>;
-};
 
 export function SettingsPanel({
   documentJson,
@@ -210,62 +189,22 @@ export function SettingsPanel({
   }
 
   async function handleCopyExport() {
-    try {
-      await navigator.clipboard.writeText(documentJson);
-      setExportStatus({ ok: true, message: 'Document JSON copied.' });
-    } catch {
-      setExportStatus({ ok: false, message: 'Clipboard copy failed.' });
-    }
+    setExportStatus(await copyExportDocument(documentJson));
   }
 
   async function handleSaveExport() {
-    const blob = new Blob([documentJson], { type: 'application/json' });
-    const suggestedName = 'sticky-playground-document.json';
-
-    try {
-      const saveWindow = window as SavePickerWindow;
-      if (saveWindow.showSaveFilePicker) {
-        const handle = await saveWindow.showSaveFilePicker({
-          suggestedName,
-          types: [
-            {
-              description: 'JSON document',
-              accept: {
-                'application/json': ['.json'],
-              },
-            },
-          ],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        setExportStatus({ ok: true, message: 'Document saved to file.' });
-        return;
-      }
-
-      const enteredName = window.prompt('File name', suggestedName);
-      if (enteredName === null) {
-        return;
-      }
-      const fileName = normalizeFileName(enteredName, suggestedName);
-      downloadBlob(blob, fileName);
-      setExportStatus({ ok: true, message: `Downloaded ${fileName}.` });
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return;
-      }
-      setExportStatus({ ok: false, message: 'File export failed.' });
+    const result = await saveExportDocument(documentJson);
+    if (result) {
+      setExportStatus(result);
     }
   }
 
   async function handlePasteFromClipboard() {
-    try {
-      const text = await navigator.clipboard.readText();
-      setImportBuffer(text);
-      setImportStatus({ ok: true, message: 'Clipboard JSON pasted into the import box.' });
-    } catch {
-      setImportStatus({ ok: false, message: 'Clipboard read failed.' });
+    const result = await pasteClipboardImport();
+    if (result.text != null) {
+      setImportBuffer(result.text);
     }
+    setImportStatus(result.status);
   }
 
   async function runImport(raw: string) {
@@ -814,21 +753,4 @@ function StatusMessage({
       {result.message}
     </div>
   );
-}
-
-function normalizeFileName(input: string, fallback: string) {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return fallback;
-  }
-  return trimmed.endsWith('.json') ? trimmed : `${trimmed}.json`;
-}
-
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
 }

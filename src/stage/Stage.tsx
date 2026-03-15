@@ -59,6 +59,14 @@ type DragGeometry = {
   modelShiftY: number;
 };
 
+type DragResolutionOptions = {
+  shiftKey: boolean;
+  altKey: boolean;
+  snapEnabled: boolean;
+  documentRef?: Pick<Document, 'querySelector' | 'querySelectorAll'>;
+  windowRef?: Pick<Window, 'innerWidth' | 'innerHeight'>;
+};
+
 type MeasuredNodeSizes = StickyMeasuredNodeSizes;
 type StageStickyRegistration = ComputedWrapperStickyState['registrations'][number];
 
@@ -130,18 +138,11 @@ export function Stage({
       onFocus={onStageFocus}
       onMouseMove={(event) => {
         if (dragState) {
-          const axisLocked = getShiftLockedPointer(dragState, event.clientX, event.clientY, event.shiftKey);
-          const shouldSnap = event.altKey ? !snapEnabled : snapEnabled;
-          const snapped = shouldSnap
-            ? getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY)
-            : {
-                clientX: axisLocked.clientX,
-                clientY: axisLocked.clientY,
-                guideX: null,
-                guideXSource: null,
-                guideY: null,
-                guideYSource: null,
-              };
+          const snapped = resolveDragPointerPosition(dragState, event.clientX, event.clientY, {
+            shiftKey: event.shiftKey,
+            altKey: event.altKey,
+            snapEnabled,
+          });
           setDragState({
             ...dragState,
             currentClientX: snapped.clientX,
@@ -175,18 +176,11 @@ export function Stage({
       onMouseUp={(event) => {
         if (dragState) {
           if (didDragPointerMove(dragState, event.clientX, event.clientY)) {
-            const axisLocked = getShiftLockedPointer(dragState, event.clientX, event.clientY, event.shiftKey);
-            const shouldSnap = event.altKey ? !snapEnabled : snapEnabled;
-            const snapped = shouldSnap
-              ? getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY)
-              : {
-                  clientX: axisLocked.clientX,
-                  clientY: axisLocked.clientY,
-                  guideX: null,
-                  guideXSource: null,
-                  guideY: null,
-                  guideYSource: null,
-                };
+            const snapped = resolveDragPointerPosition(dragState, event.clientX, event.clientY, {
+              shiftKey: event.shiftKey,
+              altKey: event.altKey,
+              snapEnabled,
+            });
             const drop = findDropWrapper(document, dragState.nodeId, snapped.clientX, snapped.clientY);
             const draggedNode = document.nodes[dragState.nodeId];
             if (drop && draggedNode && draggedNode.type !== 'site') {
@@ -1297,8 +1291,8 @@ function formatResizeNumber(value: number) {
   return (Math.round(value * 100) / 100).toFixed(2).replace(/\.?0+$/, '');
 }
 
-function getShiftLockedPointer(
-  dragState: Exclude<DragState, null>,
+export function getShiftLockedPointer(
+  dragState: Pick<Exclude<DragState, null>, 'startClientX' | 'startClientY'>,
   clientX: number,
   clientY: number,
   shiftKey: boolean,
@@ -1314,6 +1308,34 @@ function getShiftLockedPointer(
   }
 
   return { clientX: dragState.startClientX, clientY };
+}
+
+export function resolveDragPointerPosition(
+  dragState: Exclude<DragState, null>,
+  clientX: number,
+  clientY: number,
+  {
+    shiftKey,
+    altKey,
+    snapEnabled,
+    documentRef = window.document,
+    windowRef = window,
+  }: DragResolutionOptions,
+) {
+  const axisLocked = getShiftLockedPointer(dragState, clientX, clientY, shiftKey);
+  const shouldSnap = altKey ? !snapEnabled : snapEnabled;
+  if (!shouldSnap) {
+    return {
+      clientX: axisLocked.clientX,
+      clientY: axisLocked.clientY,
+      guideX: null,
+      guideXSource: null,
+      guideY: null,
+      guideYSource: null,
+    };
+  }
+
+  return getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY, documentRef, windowRef);
 }
 
 function computeResizeFrame(
@@ -1496,19 +1518,20 @@ function createDragState({
   };
 }
 
-function getDragElementRect(
+export function getDragElementRect(
   element: HTMLElement,
   clientX: number,
   clientY: number,
   parentId?: string,
   originX?: number,
   originY?: number,
+  documentRef: Pick<Document, 'querySelectorAll'> = window.document,
 ): DragGeometry {
   const rect = element.getBoundingClientRect();
   const visualOffsetX = clientX - rect.left;
   const visualOffsetY = clientY - rect.top;
   if (parentId && Number.isFinite(originX) && Number.isFinite(originY)) {
-    const parentElement = findDropWrapperElement(parentId);
+    const parentElement = findDropWrapperElement(parentId, documentRef);
     if (parentElement) {
       const parentRect = parentElement.getBoundingClientRect();
       const modelLeft = parentRect.left + (originX ?? 0);
@@ -1542,12 +1565,18 @@ function getDragElementRect(
   };
 }
 
-function getSnappedDragPosition(dragState: Exclude<DragState, null>, clientX: number, clientY: number) {
+export function getSnappedDragPosition(
+  dragState: Exclude<DragState, null>,
+  clientX: number,
+  clientY: number,
+  documentRef: Pick<Document, 'querySelector' | 'querySelectorAll'> = window.document,
+  windowRef: Pick<Window, 'innerWidth' | 'innerHeight'> = window,
+) {
   let left = clientX - dragState.grabOffsetX;
   let top = clientY - dragState.grabOffsetY;
   const width = dragState.previewWidth;
   const height = dragState.previewHeight;
-  const pageTargets = collectPageSnapTargets();
+  const pageTargets = collectPageSnapTargets(documentRef, windowRef);
 
   const horizontalTargets: SnapTarget[] = [...pageTargets.horizontal];
   const horizontalSnap = findHorizontalSnap(left, width, horizontalTargets);
@@ -1556,7 +1585,7 @@ function getSnappedDragPosition(dragState: Exclude<DragState, null>, clientX: nu
   }
 
   const verticalTargets = [
-    ...collectVerticalSnapTargets(dragState.nodeId),
+    ...collectVerticalSnapTargets(dragState.nodeId, documentRef),
     ...pageTargets.vertical,
   ];
   const verticalSnap = findVerticalSnap(top, height, verticalTargets);
@@ -1585,9 +1614,12 @@ export function didDragPointerMove(
   );
 }
 
-function collectVerticalSnapTargets(draggedId: string) {
+export function collectVerticalSnapTargets(
+  draggedId: string,
+  documentRef: Pick<Document, 'querySelectorAll'> = document,
+) {
   const targets: SnapTarget[] = [];
-  const nodes = document.querySelectorAll<HTMLElement>('.stage-canvas [data-node-id]');
+  const nodes = documentRef.querySelectorAll<HTMLElement>('.stage-canvas [data-node-id]');
   for (const element of nodes) {
     if (element.dataset.nodeId === draggedId) {
       continue;
@@ -1605,19 +1637,22 @@ function collectVerticalSnapTargets(draggedId: string) {
   return targets;
 }
 
-function collectPageSnapTargets() {
-  const frame = window.document.querySelector<HTMLElement>('.stage-frame');
+export function collectPageSnapTargets(
+  documentRef: Pick<Document, 'querySelector'> = window.document,
+  windowRef: Pick<Window, 'innerWidth' | 'innerHeight'> = window,
+) {
+  const frame = documentRef.querySelector<HTMLElement>('.stage-frame');
   if (!frame) {
     return {
       horizontal: [
         { value: 0, source: 'page' as const },
-        { value: window.innerWidth / 2, source: 'page' as const },
-        { value: window.innerWidth, source: 'page' as const },
+        { value: windowRef.innerWidth / 2, source: 'page' as const },
+        { value: windowRef.innerWidth, source: 'page' as const },
       ],
       vertical: [
         { value: 0, source: 'page' as const },
-        { value: window.innerHeight / 2, source: 'page' as const },
-        { value: window.innerHeight, source: 'page' as const },
+        { value: windowRef.innerHeight / 2, source: 'page' as const },
+        { value: windowRef.innerHeight, source: 'page' as const },
       ],
     };
   }
@@ -1677,13 +1712,14 @@ function findVerticalSnap(top: number, height: number, targets: SnapTarget[]) {
   return best;
 }
 
-function findDropWrapper(
+export function findDropWrapper(
   model: DocumentModel,
   draggedId: NodeId,
   clientX: number,
   clientY: number,
+  documentRef: Pick<Document, 'elementFromPoint' | 'querySelectorAll'> = window.document,
 ) {
-  const target = window.document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  const target = documentRef.elementFromPoint(clientX, clientY) as HTMLElement | null;
   const draggedNode = model.nodes[draggedId];
   if (!target || !draggedNode || draggedNode.type === 'site' || !draggedNode.parentId) {
     return null;
@@ -1710,7 +1746,7 @@ function findDropWrapper(
     current = current.parentElement;
   }
 
-  const fallback = findDropWrapperElement(draggedNode.parentId);
+  const fallback = findDropWrapperElement(draggedNode.parentId, documentRef);
   if (!fallback) {
     return null;
   }
@@ -1721,8 +1757,11 @@ function findDropWrapper(
   };
 }
 
-function findDropWrapperElement(wrapperId: string) {
-  const wrappers = window.document.querySelectorAll<HTMLElement>('[data-drop-wrapper-id]');
+export function findDropWrapperElement(
+  wrapperId: string,
+  documentRef: Pick<Document, 'querySelectorAll'> = window.document,
+) {
+  const wrappers = documentRef.querySelectorAll<HTMLElement>('[data-drop-wrapper-id]');
   for (const wrapper of wrappers) {
     if (wrapper.dataset.dropWrapperId === wrapperId) {
       return wrapper;

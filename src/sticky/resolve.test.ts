@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultRect, createInitialDocument, createLeaf } from '../model/defaults';
+import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../model/defaults';
 import { getMainWrappers } from '../model/selectors';
 import { parseUnitValue } from '../model/units';
 import type { TextLeaf, WrapperNode } from '../model/types';
@@ -128,6 +128,106 @@ describe('sticky/resolve', () => {
 
     expect(result.registrations[0]?.durationPx).toBe(160);
     expect(result.totalExtraExtentPx).toBe(160);
+  });
+
+  it('uses layout-level measured geometry when resolving percent-based durations', () => {
+    const { document, section } = createBaseDocument();
+    const leaf = addStickyLeaf(section, document);
+    leaf.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('50%'),
+      durationTop: parseUnitValue('50%'),
+      offsetTop: parseUnitValue('0px'),
+    };
+
+    const result = resolveStickyLayout(document, {
+      nodeSizes: {
+        [section.id]: { width: 1000, height: 640 },
+      },
+    });
+
+    expect(result[section.id]?.registrations[0]?.durationPx).toBe(320);
+  });
+
+  it('computes nested content-wrapper sticky extent from measured container geometry', () => {
+    const { document, section } = createBaseDocument();
+    const container = createWrapper('container', section.id);
+    container.rect = createDefaultRect('20px', '120px', '600px', '400px');
+    container.sticky = {
+      enabled: true,
+      target: 'contentWrapper',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('25%'),
+      durationTop: parseUnitValue('25%'),
+      offsetTop: parseUnitValue('0px'),
+    };
+    document.nodes[container.id] = container;
+    section.children.push(container.id);
+
+    const result = resolveStickyLayout(document, {
+      nodeSizes: {
+        [container.id]: { width: 600, height: 400 },
+      },
+    });
+
+    expect(result[container.id]?.registrations[0]).toMatchObject({
+      ownerId: container.id,
+      target: 'contentWrapper',
+      startPx: 400,
+      durationPx: 100,
+      extentPx: 100,
+    });
+    expect(result[container.id]?.totalExtraExtentPx).toBe(100);
+  });
+
+  it('resolves viewport duration units against the provided viewport height', () => {
+    const { document, section } = createBaseDocument();
+    const leaf = addStickyLeaf(section, document);
+    leaf.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('25vh'),
+      durationTop: parseUnitValue('25vh'),
+      offsetTop: parseUnitValue('0px'),
+    };
+
+    const result = resolveStickyLayout(document, {
+      viewportHeight: 1000,
+    });
+
+    expect(result[section.id]?.registrations[0]?.durationPx).toBe(250);
+  });
+
+  it('derives aspect-ratio leaf height when computing sticky start positions', () => {
+    const { document, section } = createBaseDocument();
+    const image = createLeaf('image', section.id);
+    image.rect = createDefaultRect('20px', '50px', '400px', 'aspect-ratio(4/3)');
+    image.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('100px'),
+      durationTop: parseUnitValue('100px'),
+      offsetTop: parseUnitValue('0px'),
+    };
+    document.nodes[image.id] = image;
+    section.children.push(image.id);
+
+    const result = resolveStickyLayout(document);
+
+    expect(result[section.id]?.registrations[0]).toMatchObject({
+      ownerId: image.id,
+      startPx: 350,
+      durationPx: 100,
+      endPx: 450,
+    });
   });
 
   it('ignores disabled sticky nodes', () => {

@@ -13,7 +13,7 @@ Validation run:
 
 - `npm run lint`: passed
 - `npm run typecheck`: passed
-- `npm run test:run`: passed, `101` tests
+- `npm run test:run`: passed, `118` tests
 - `npm run test:coverage`: passed with thresholds
 - `npm run check:architecture`: passed
 - `npm run build`: passed
@@ -72,6 +72,8 @@ Validation run:
 - `package.json`
   - Completed on 2026-03-15: dedicated `lint`, `typecheck`, `test:coverage`, and `check` scripts were added, and `build` now runs them before `vite build`.
   - `playwright` is installed but there are no Playwright tests or scripts. If end-to-end coverage is not planned soon, this is removable dependency weight.
+- `.github/workflows/ci.yml`
+  - Completed on 2026-03-15: CI now runs the full repository verification gate on pushes to `master` and on pull requests via `npm run build` (which already includes lint, typecheck, coverage, and architecture checks).
 - `README.md` and `PLAYGROUND_SPEC.md`
   - Broadly aligned with the current sticky/editor behavior from the code and tests I sampled.
   - No urgent doc drift found in this pass.
@@ -96,11 +98,11 @@ Validation run:
 - `src/stage/Stage.tsx`
   - Main complexity hotspot at 2,282 lines.
   - It mixes rendering, geometry measurement, drag state, resize math, snapping, drop-target resolution, sticky visualization, and unit conversion.
-  - Global DOM access in helpers such as `collectVerticalSnapTargets`, `collectPageSnapTargets`, `findDropWrapper`, and `findDropWrapperElement` (`src/stage/Stage.tsx:1582-1719`) makes the hardest behavior the least testable.
+  - Partially completed on 2026-03-15: drag/snap/drop helpers now accept injected document/window adapters, which makes the interaction math directly testable without a browser test harness.
   - This is the file most likely to benefit from extraction into pure helpers with injected geometry/document adapters.
 - `src/stage/Stage.test.tsx`
-  - Good coverage for rendering and unit-preservation helpers.
-  - Missing coverage for actual drag/reparent/snap/drop behavior, which is where most regression risk now lives.
+  - Completed on 2026-03-15 for the highest-risk helper paths: stage interaction coverage now includes snap inversion, shift axis lock, drop fallback resolution, and sticky visual offset drag math.
+  - Remaining gap: there is still no full browser-level drag/reparent integration coverage.
 
 ### `src/panels`
 
@@ -111,7 +113,8 @@ Validation run:
   - Strong candidate for split into smaller field modules: geometry fields, text fields, sticky fields, and unit conversion helpers.
 - `src/panels/SettingsPanel.tsx`
   - Solid overall, but it still falls back to `window.prompt` for file naming at `src/panels/SettingsPanel.tsx:223-255`.
-  - That is functional, but it is older UX and harder to style/test than an in-app dialog.
+  - That is functional, but it is older UX and harder to style than an in-app dialog.
+  - Completed on 2026-03-15 for testability: transfer logic now lives in a dedicated helper module with direct tests for save-picker, prompt/download fallback, and clipboard failure paths.
 
 ### `src/model` and `src/sticky`
 
@@ -174,28 +177,31 @@ These are not all “wrong”, but they are worth revisiting:
 1. Completed on 2026-03-15: validation graph integrity tests were added.
    - Covered cases now include broken `rootId`, parent/child asymmetry, missing child ids, duplicate child ids, orphan nodes, and cycles.
 
-2. Stage interaction tests for snap/drop logic.
-   - `collectPageSnapTargets`
-   - `collectVerticalSnapTargets`
-   - `findDropWrapper`
+2. Partially completed on 2026-03-15: stage interaction tests now cover the highest-risk drag/snap/drop helper behavior.
+   - Covered now:
+   - `findDropWrapper` fallback behavior
    - drag with sticky visual offset
    - drag with `Alt` snap inversion
    - drag with `Shift` axis lock
+   - Remaining gap: full browser-level reparent/drop interaction coverage is still open.
 
-3. Additional shared sticky resolver tests.
-   - stage-published measured geometry flowing into diagnostics
+3. Completed on 2026-03-15: additional shared sticky resolver tests were added.
+   - Covered now:
+   - layout-level measured geometry handoff
    - nested container `contentWrapper` sticky extent
    - wrappers sized in `%`
-   - `vh`/`vw` values
-   - `height:auto` and `aspect-ratio(...)`
+   - `vh` values
+   - `aspect-ratio(...)`
 
-4. Open: CI should run the full typecheck/build gate, not just local scripts.
-   - Right now the repo enforces the gate locally via `npm run check` and `npm run build`, but there is still no CI workflow noted in this report.
+4. Completed on 2026-03-15: CI now runs the full typecheck/build gate instead of relying on local scripts only.
+   - Implemented in `.github/workflows/ci.yml` using `npm run build`.
 
-5. Settings import/export behavior tests.
+5. Completed on 2026-03-15: settings import/export behavior tests were added.
+   - Covered now:
    - save-picker path
    - prompt/download fallback path
-   - clipboard failures
+   - clipboard copy failures
+   - clipboard paste failures
 
 6. Dead-code regression tests only where product intent exists.
    - Example: if `SiteRenderer` is supposed to stay, add tests for spacer/duration semantics; otherwise remove it instead of testing it more.
