@@ -112,7 +112,7 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {
     id: 'nudgeSelectionLeft',
     category: 'Edit',
-    description: 'Move selection left',
+    description: 'Move left',
     combos: [
       { code: 'ArrowLeft', keyLabel: 'Left' },
       { code: 'ArrowLeft', keyLabel: 'Left', shift: true },
@@ -123,7 +123,7 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {
     id: 'nudgeSelectionRight',
     category: 'Edit',
-    description: 'Move selection right',
+    description: 'Move right',
     combos: [
       { code: 'ArrowRight', keyLabel: 'Right' },
       { code: 'ArrowRight', keyLabel: 'Right', shift: true },
@@ -134,7 +134,7 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {
     id: 'nudgeSelectionUp',
     category: 'Edit',
-    description: 'Move selection up',
+    description: 'Move up',
     combos: [
       { code: 'ArrowUp', keyLabel: 'Up' },
       { code: 'ArrowUp', keyLabel: 'Up', shift: true },
@@ -145,7 +145,7 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {
     id: 'nudgeSelectionDown',
     category: 'Edit',
-    description: 'Move selection down',
+    description: 'Move down',
     combos: [
       { code: 'ArrowDown', keyLabel: 'Down' },
       { code: 'ArrowDown', keyLabel: 'Down', shift: true },

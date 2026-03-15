@@ -80,7 +80,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
               data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
               variant="ghost"
               title={`${item.label} · ${item.hint}`}
-              className="h-12 w-12 rounded-2xl border border-slate-300 bg-white p-0 text-slate-950 shadow-[0_2px_10px_rgba(18,32,51,0.06)] transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-400 hover:bg-slate-50/75 hover:shadow-[0_4px_14px_rgba(18,32,51,0.08)]"
+              className="group h-12 w-12 rounded-2xl border border-slate-300 bg-white p-0 text-slate-950 shadow-[0_2px_10px_rgba(18,32,51,0.06)] transition-[background-color,border-color,box-shadow,transform] duration-150 hover:border-slate-500 hover:bg-slate-100 hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-slate-500"
               onClick={(event) => {
                 if (item.kind === 'wrapper') {
                   if (item.role === 'section') {
@@ -93,7 +93,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
                 onInsertLeaf(item.role);
               }}
             >
-              <span className="flex h-full w-full items-center justify-center rounded-[15px] border border-black/8 bg-white text-slate-950">
+              <span className="flex h-full w-full items-center justify-center rounded-[15px] border border-black/8 bg-white text-slate-950 transition-[background-color,border-color,color] duration-150 group-hover:border-slate-300 group-hover:bg-slate-100 group-hover:text-slate-900">
                 <Icon className="h-4 w-4" strokeWidth={1.9} />
               </span>
             </Button>
