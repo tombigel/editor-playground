@@ -10,11 +10,11 @@ import {
   ArrowBigUp,
   ArrowBigUpDash,
   ArrowUp,
-  ArrowDownToLine,
-  ArrowUpToLine,
+  BetweenHorizontalStart,
   ListEnd,
   ListStart,
-  ListX,
+  PanelBottom,
+  PanelTop,
 } from 'lucide-react';
 import type { DocumentNode, WrapperNode } from '../api/documentApi';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
@@ -656,6 +656,39 @@ function OrderIconButton({
   );
 }
 
+function TypeIconButton({
+  label,
+  active,
+  onClick,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <PopoverTooltip
+      side="top"
+      align="center"
+      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      content={<div className="leading-3.5 font-medium">{label}</div>}
+    >
+      <Button
+        type="button"
+        variant={active ? 'default' : 'outline'}
+        size="sm"
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+        className="h-6 w-6 rounded-sm p-0"
+      >
+        {children}
+      </Button>
+    </PopoverTooltip>
+  );
+}
+
 function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-0.5">
@@ -863,9 +896,12 @@ function WrapperActions({
   onPromote: (role: 'header' | 'footer') => void;
   onDemote: () => void;
 }) {
+  const currentType =
+    node.role === 'section' || node.role === 'header' || node.role === 'footer' ? node.role : null;
+
   if (node.role === 'section') {
     return (
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="space-y-1.5">
         <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-1">
           <Label className="text-[11px] font-medium text-slate-500">Order</Label>
           <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
@@ -877,40 +913,54 @@ function WrapperActions({
             </OrderIconButton>
           </div>
         </div>
-        <div className="grid grid-cols-[30px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium text-slate-500">Role</Label>
-          <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
-            <OrderIconButton compact label="To Header" onClick={() => onPromote('header')} disabled={false}>
-              <ArrowUpToLine className="h-3.5 w-3.5" />
-            </OrderIconButton>
-            <OrderIconButton compact label="To Footer" onClick={() => onPromote('footer')} disabled={false}>
-              <ArrowDownToLine className="h-3.5 w-3.5" />
-            </OrderIconButton>
-          </div>
+        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+          <Label className="text-[11px] font-medium text-slate-500">Section type</Label>
+          <SectionTypeSelector currentType={currentType} onPromote={onPromote} onDemote={onDemote} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium text-slate-500">Role</Label>
-      <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
-        {node.role === 'container' ? (
-          <>
-            <OrderIconButton compact label="To Header" onClick={() => onPromote('header')} disabled={false}>
-              <ArrowUpToLine className="h-3.5 w-3.5" />
-            </OrderIconButton>
-            <OrderIconButton compact label="To Footer" onClick={() => onPromote('footer')} disabled={false}>
-              <ArrowDownToLine className="h-3.5 w-3.5" />
-            </OrderIconButton>
-          </>
-        ) : (
-          <OrderIconButton compact label="Demote to Section" onClick={onDemote} disabled={false}>
-            <ListX className="h-3.5 w-3.5" />
-          </OrderIconButton>
-        )}
-      </div>
+    <div className="grid grid-cols-[74px_minmax(0,1fr)] items-center gap-1">
+      <Label className="text-[11px] font-medium text-slate-500">Section type</Label>
+      <SectionTypeSelector currentType={currentType} onPromote={onPromote} onDemote={onDemote} />
+    </div>
+  );
+}
+
+function SectionTypeSelector({
+  currentType,
+  onPromote,
+  onDemote,
+}: {
+  currentType: 'section' | 'header' | 'footer' | null;
+  onPromote: (role: 'header' | 'footer') => void;
+  onDemote: () => void;
+}) {
+  return (
+    <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
+      <TypeIconButton
+        label="Set type to Section"
+        active={currentType === 'section'}
+        onClick={currentType === 'section' ? () => {} : onDemote}
+      >
+        <BetweenHorizontalStart className="h-3.5 w-3.5" />
+      </TypeIconButton>
+      <TypeIconButton
+        label="Set type to Header"
+        active={currentType === 'header'}
+        onClick={currentType === 'header' ? () => {} : () => onPromote('header')}
+      >
+        <PanelTop className="h-3.5 w-3.5" />
+      </TypeIconButton>
+      <TypeIconButton
+        label="Set type to Footer"
+        active={currentType === 'footer'}
+        onClick={currentType === 'footer' ? () => {} : () => onPromote('footer')}
+      >
+        <PanelBottom className="h-3.5 w-3.5" />
+      </TypeIconButton>
     </div>
   );
 }

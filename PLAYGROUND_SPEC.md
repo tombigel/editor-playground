@@ -44,7 +44,7 @@ All wrappers share the same structural behavior:
 - child positioning relative to that content wrapper
 - sticky can apply to the wrapper or the content wrapper
 
-### Role promotion
+### Section type
 
 A wrapper can be promoted or demoted between:
 
@@ -52,7 +52,7 @@ A wrapper can be promoted or demoted between:
 - `header`
 - `footer`
 
-The wrapper keeps the same id.
+The inspector labels this control as `Section type`, and the wrapper keeps the same id.
 
 If a header or footer already exists, promotion asks whether to demote the current one and replace it.
 

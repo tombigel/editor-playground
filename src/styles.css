@@ -232,7 +232,7 @@ body[data-editor-theme='dark'] {
   .editor-shortcut-help,
   .ui-dialog-popover > div
 ) [data-ui='switch'][data-state='checked'] {
-  background: #6b8fd6;
+  background: #748cbf;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) :is(
@@ -248,7 +248,7 @@ body[data-editor-theme='dark'] {
   .editor-settings-panel,
   .ui-dialog-popover > div
 ) [data-ui='slider-range'] {
-  background: #6b8fd6;
+  background: #748cbf;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) :is(
@@ -257,7 +257,7 @@ body[data-editor-theme='dark'] {
   .ui-dialog-popover > div
 ) [data-ui='slider-thumb'] {
   background: #0f1722;
-  border-color: #88a4d8;
+  border-color: #8d9fc7;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) .ui-popover-tooltip {
@@ -325,25 +325,25 @@ body[data-editor-theme='dark'] {
 
 .editor-shell[data-editor-theme='dark'] .stage-wrapper.selected::before,
 .editor-shell[data-editor-theme='dark'] .stage-leaf.selected::before {
-  background: #6b8fd6;
-  box-shadow: 0 2px 8px rgba(107, 143, 214, 0.22);
+  background: #748cbf;
+  box-shadow: 0 2px 8px rgba(116, 140, 191, 0.2);
 }
 
 .editor-shell[data-editor-theme='dark'] .stage-wrapper.selected::after,
 .editor-shell[data-editor-theme='dark'] .stage-leaf.selected::after {
-  border-color: #6b8fd6;
+  border-color: #748cbf;
 }
 
 .editor-shell[data-editor-theme='dark'] .drag-preview-inner {
-  border-color: #6b8fd6;
+  border-color: #748cbf;
   box-shadow:
-    0 0 0 4px rgba(107, 143, 214, 0.1),
+    0 0 0 4px rgba(116, 140, 191, 0.09),
     0 18px 40px rgba(18, 32, 51, 0.18);
 }
 
 .editor-shell[data-editor-theme='dark'] .resize-handle {
-  background: #6b8fd6;
-  border-color: #6b8fd6;
+  background: #748cbf;
+  border-color: #748cbf;
 }
 
 button,
