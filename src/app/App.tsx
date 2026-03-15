@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
-import { CircleQuestionMark, Eye, Magnet, Redo2, Settings, StickyNote, Undo2, X } from 'lucide-react';
+import { CircleQuestionMark, Eye, Magnet, Redo2, Settings, Undo2, X } from 'lucide-react';
 import {
   SECTION_TEMPLATES,
   cancelPromoteWrapperRole,
@@ -699,9 +699,7 @@ export function App() {
         <header className={topbarClass}>
           <div className="flex h-full items-center gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#3772ff] to-[#1a243a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]">
-                <StickyNote className="h-4 w-4" />
-              </div>
+              <img src="/sticky_512.png" alt="" className="h-8 w-8 shrink-0 object-contain" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold tracking-[0.01em]">Sticky Playground</div>
                 <div className="truncate text-[11px] text-white/55">
