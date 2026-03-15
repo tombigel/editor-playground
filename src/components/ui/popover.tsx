@@ -3,6 +3,9 @@ import type { CSSProperties, ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
+const TOOLTIP_HOVER_DELAY_MS = 200;
+let visibleTooltipCount = 0;
+
 type NativePopoverElement = HTMLDivElement & {
   showPopover: () => void;
   hidePopover: () => void;
@@ -84,6 +87,14 @@ type PopoverTooltipProps = {
   offset?: number;
 };
 
+export function shouldBypassTooltipDelay(hasVisibleTooltip: boolean) {
+  return hasVisibleTooltip;
+}
+
+export function getTooltipHoverDelay(hasVisibleTooltip: boolean) {
+  return shouldBypassTooltipDelay(hasVisibleTooltip) ? 0 : TOOLTIP_HOVER_DELAY_MS;
+}
+
 export function PopoverTooltip({
   content,
   children,
@@ -94,8 +105,54 @@ export function PopoverTooltip({
 }: PopoverTooltipProps) {
   const triggerRef = React.useRef<HTMLSpanElement | null>(null);
   const popoverRef = React.useRef<NativePopoverElement | null>(null);
+  const openTimerRef = React.useRef<number | null>(null);
+  const registeredVisibleRef = React.useRef(false);
   const [open, setOpen] = React.useState(false);
   const [style, setStyle] = React.useState<CSSProperties>({ top: 0, left: 0, visibility: 'hidden' });
+
+  const clearOpenTimer = React.useCallback(() => {
+    if (openTimerRef.current != null) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+  }, []);
+
+  const openFromHover = React.useCallback(() => {
+    clearOpenTimer();
+    const delay = getTooltipHoverDelay(visibleTooltipCount > 0);
+    if (delay === 0) {
+      setOpen(true);
+      return;
+    }
+    openTimerRef.current = window.setTimeout(() => {
+      openTimerRef.current = null;
+      setOpen(true);
+    }, delay);
+  }, [clearOpenTimer]);
+
+  const closeFromHover = React.useCallback(() => {
+    clearOpenTimer();
+    setOpen(false);
+  }, [clearOpenTimer]);
+
+  React.useEffect(() => clearOpenTimer, [clearOpenTimer]);
+
+  React.useEffect(() => {
+    if (open && !registeredVisibleRef.current) {
+      visibleTooltipCount += 1;
+      registeredVisibleRef.current = true;
+    } else if (!open && registeredVisibleRef.current) {
+      visibleTooltipCount = Math.max(0, visibleTooltipCount - 1);
+      registeredVisibleRef.current = false;
+    }
+
+    return () => {
+      if (registeredVisibleRef.current) {
+        visibleTooltipCount = Math.max(0, visibleTooltipCount - 1);
+        registeredVisibleRef.current = false;
+      }
+    };
+  }, [open]);
 
   React.useEffect(() => {
     const element = popoverRef.current;
@@ -172,8 +229,8 @@ export function PopoverTooltip({
       <span
         ref={triggerRef}
         className="inline-flex"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseEnter={openFromHover}
+        onMouseLeave={closeFromHover}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
       >

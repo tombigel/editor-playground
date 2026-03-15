@@ -712,7 +712,14 @@ export function App() {
                 side="bottom"
                 align="end"
                 className={TOPBAR_TOOLTIP_CLASS}
-                content={`Undo · ${getShortcutLabel('undo', shortcutPlatform)}`}
+                content={
+                  <>
+                    <div className="leading-3.5 font-medium">Undo</div>
+                    <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">
+                      {getShortcutLabel('undo', shortcutPlatform)}
+                    </div>
+                  </>
+                }
               >
                 <Button
                   type="button"
@@ -730,7 +737,14 @@ export function App() {
                 side="bottom"
                 align="end"
                 className={TOPBAR_TOOLTIP_CLASS}
-                content={`Redo · ${getShortcutLabel('redo', shortcutPlatform)}`}
+                content={
+                  <>
+                    <div className="leading-3.5 font-medium">Redo</div>
+                    <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">
+                      {getShortcutLabel('redo', shortcutPlatform)}
+                    </div>
+                  </>
+                }
               >
                 <Button
                   type="button"
@@ -748,7 +762,14 @@ export function App() {
                 side="bottom"
                 align="end"
                 className={TOPBAR_TOOLTIP_CLASS}
-                content={`Keyboard shortcuts · ${getShortcutLabel('showShortcutHelp', shortcutPlatform)}`}
+                content={
+                  <>
+                    <div className="leading-3.5 font-medium">Keyboard shortcuts</div>
+                    <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">
+                      {getShortcutLabel('showShortcutHelp', shortcutPlatform)}
+                    </div>
+                  </>
+                }
               >
                 <Button
                   type="button"
@@ -766,7 +787,14 @@ export function App() {
                 side="bottom"
                 align="end"
                 className={TOPBAR_TOOLTIP_CLASS}
-                content={`Settings · ${getShortcutLabel('openSettings', shortcutPlatform)}`}
+                content={
+                  <>
+                    <div className="leading-3.5 font-medium">Settings</div>
+                    <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">
+                      {getShortcutLabel('openSettings', shortcutPlatform)}
+                    </div>
+                  </>
+                }
               >
                 <Button
                   type="button"
@@ -1100,7 +1128,16 @@ function RailToggleButton({
     <PopoverTooltip
       side="right"
       align="center"
-      content={`${label}${shortcut ? ` · ${shortcut}` : detail ? ` · ${detail}` : ''}`}
+      content={
+        shortcut ? (
+          <>
+            <div className="leading-3.5 font-medium">{label}</div>
+            <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">{shortcut}</div>
+          </>
+        ) : (
+          <div className="leading-3.5 font-medium">{detail ? `${label} · ${detail}` : label}</div>
+        )
+      }
     >
       <button
         type="button"
