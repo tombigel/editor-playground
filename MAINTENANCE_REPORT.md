@@ -11,83 +11,66 @@ Scope reviewed:
 
 Validation run:
 
-- `npm run test:run`: passed, `91` tests
+- `npm run lint`: passed
+- `npm run typecheck`: passed
+- `npm run test:run`: passed, `101` tests
+- `npm run test:coverage`: passed with thresholds
 - `npm run check:architecture`: passed
-- `npm run build`: failed
-
-## Status Update
-
-Completed in the hardening pass started on 2026-03-15:
-
-- Done: fixed the build-breaking test type cast in `src/stage/Stage.test.tsx`
-- Done: added explicit `lint`, `typecheck`, `test:coverage`, and `check` scripts, and wired `build` to run them before `vite build`
-- Done: added ESLint with repo-local config in `eslint.config.js`
-- Done: added Vitest coverage reporting and threshold checks in `vite.config.ts`
-- Done: strengthened document graph validation in `src/model/validation.ts`
-- Done: added graph-integrity coverage in `src/model/validation.test.ts`
-- Done: documented the stricter import/persistence validation rules in `PLAYGROUND_SPEC.md`
-
-Current post-hardening validation status:
-
-- `npm run lint`: passes
-- `npm run typecheck`: passes
-- `npm run test:run`: passes, `98` tests
-- `npm run test:coverage`: passes with thresholds
-- `npm run check:architecture`: passes
-- `npm run build`: passes
+- `npm run build`: passed
 
 ## Highest-priority findings
 
-1. Build is currently broken by a test-only type cast.
+1. Completed on 2026-03-15: the build break caused by a test-only type cast was fixed.
    - `src/stage/Stage.test.tsx:401-403`
-   - `npm run build` fails because the mock `classList` object is cast directly to `DOMTokenList`, which is not structurally compatible under strict TypeScript.
-   - This is a real maintenance issue because the repo is not in a clean buildable state even though Vitest is green.
+   - `npm run build` had been failing because the mock `classList` object was cast directly to `DOMTokenList`, which is not structurally compatible under strict TypeScript.
+   - This is now resolved, and the repo is back to a clean buildable state.
 
-2. `src/styles.css` still contains a large block of dead legacy CSS.
+2. Completed on 2026-03-15: `src/styles.css` contained a large block of dead legacy CSS.
    - Dead selector families start around `src/styles.css:380` (`.studio-*`, `.panel`, `.dialog*`, `.debug-card`).
-   - None of these selectors are used by the current app tree anymore.
-   - There are also duplicated resize-handle rules at `src/styles.css:1459-1480` where `.handle-w` and `.handle-nw` are defined twice.
-   - This is low-signal weight in the hottest stylesheet and makes future CSS work harder than it needs to be.
+   - None of these selectors were used by the current app tree anymore.
+   - There were also duplicated resize-handle rules at `src/styles.css:1459-1480` where `.handle-w` and `.handle-nw` were defined twice.
+   - The unused selector families and duplicate handle rules were removed.
 
-3. There is confirmed dead runtime code, not just dead CSS.
+3. Partially completed on 2026-03-15: there was confirmed dead runtime code, not just dead CSS.
    - Unused files/components:
-   - `src/app/FloatingPanel.tsx`
-   - `src/panels/DebugPanel.tsx`
-   - `src/site/index.ts`
-   - `src/components/ui/separator.tsx`
+   - `src/app/FloatingPanel.tsx` removed
+   - `src/panels/DebugPanel.tsx` removed
+   - `src/site/index.ts` removed
+   - `src/components/ui/separator.tsx` removed
    - Unused exports:
-   - `DialogTrigger` and `DialogClose` in `src/components/ui/dialog.tsx:35-42,113-121`
+   - `DialogTrigger` and `DialogClose` in `src/components/ui/dialog.tsx:35-42,113-121` removed
    - `SiteRenderer` is only referenced by its own tests, not by the app.
-   - These are good cleanup candidates, but `SiteRenderer` first needs a product decision: remove it, or keep it and clearly document it as a separate renderer.
+   - Remaining decision: either remove `SiteRenderer`, or keep it and clearly document it as a separate lightweight renderer.
 
-4. The document validation layer is too shallow for the model complexity.
+4. Completed on 2026-03-15: the document validation layer was too shallow for the model complexity.
    - `src/model/validation.ts:7-39`
-   - It checks some parent/child role rules, but it does not verify:
+   - The original validator checked some parent/child role rules, but it did not verify:
    - `rootId` exists and points to a `site`
    - every `parent.children[]` id exists
    - parent/child links are symmetric
    - duplicate child ids
    - orphaned nodes
    - cycles outside the immediate containment checks
-   - This leaves room for corrupted persisted/imported data that is “valid enough” to pass `validateDocument` and fail later in renderer/editor code.
+   - These checks are now implemented in `src/model/validation.ts`, with coverage added in `src/model/validation.test.ts`.
 
-5. Sticky diagnostics use fallback geometry that can drift from the actual stage.
-   - `src/sticky/stickyCompute.ts:11,83-93,143-167`
-   - `computeStickyState` uses hardcoded viewport and fallback sizes (`1440x900`, `960`, `480`, `48`, `160`) instead of the richer runtime geometry the stage already has.
-   - That means sticky math in diagnostics can diverge from rendered behavior for `%`, `vh`, `auto`, `aspect-ratio(...)`, and measured intrinsic content.
-   - The logic is also duplicated with similar helpers in `src/stage/Stage.tsx`.
+5. Completed on 2026-03-15: sticky diagnostics had fallback geometry that could drift from the actual stage.
+   - The old `src/sticky/stickyCompute.ts` path used hardcoded viewport and fallback sizes (`1440x900`, `960`, `480`, `48`, `160`) instead of the richer runtime geometry the stage already had.
+   - That meant sticky math in diagnostics could diverge from rendered behavior for `%`, `vh`, `auto`, `aspect-ratio(...)`, and measured intrinsic content.
+   - Sticky resolution now lives in `src/sticky/resolve.ts` as a shared pure API, and both the stage preview and settings diagnostics consume that resolver.
+   - `src/stage/Stage.tsx` now publishes measured node geometry upward so diagnostics can resolve sticky ranges against the same stage measurements.
 
-6. The public document API has type drift.
+6. Completed on 2026-03-15: the public document API had type drift.
    - `src/api/documentApi.ts:47-50,125-128`
-   - `DocumentCommand['setText']` does not allow `htmlTag`, but `setNodeTextField` does.
-   - Separately, the editor layer still uses broad `field: string` plumbing in places like `src/editor/editorStore.ts:771` and `src/app/App.tsx` action definitions, which weakens compile-time guarantees and makes typos easier to ship.
+   - `DocumentCommand['setText']` did not allow `htmlTag`, even though `setNodeTextField` did.
+   - Separately, the editor layer used broad `field: string` plumbing in places like `src/editor/editorStore.ts:771` and `src/app/App.tsx` action definitions, which weakened compile-time guarantees and made typos easier to ship.
+   - This is now aligned through shared field unions used by the document API, editor store, app actions, and inspector panel, with regression coverage for command-based `htmlTag` updates.
 
 ## File and area notes
 
 ### Top-level
 
 - `package.json`
-  - No dedicated `typecheck` or `lint` script. Right now `build` is acting as typecheck, and it failed only because tests are included in `src`.
+  - Completed on 2026-03-15: dedicated `lint`, `typecheck`, `test:coverage`, and `check` scripts were added, and `build` now runs them before `vite build`.
   - `playwright` is installed but there are no Playwright tests or scripts. If end-to-end coverage is not planned soon, this is removable dependency weight.
 - `README.md` and `PLAYGROUND_SPEC.md`
   - Broadly aligned with the current sticky/editor behavior from the code and tests I sampled.
@@ -98,9 +81,6 @@ Current post-hardening validation status:
 - `src/app/App.tsx`
   - Very large orchestration file at 1,441 lines. It owns reducer logic, history diffing, persistence, keyboard shortcuts, popover dismissal, theme sync, and layout shell rendering.
   - `buildHistoryEntry` / `nodesEqual` use `JSON.stringify` for change detection at `src/app/App.tsx:1252-1255,1347-1348`. That is simple but expensive and brittle as the document grows.
-- `src/app/FloatingPanel.tsx`
-  - Appears unused.
-  - If kept, it should at least be moved out of the runtime bundle or into an explicit experimental area.
 
 ### `src/editor`
 
@@ -132,8 +112,6 @@ Current post-hardening validation status:
 - `src/panels/SettingsPanel.tsx`
   - Solid overall, but it still falls back to `window.prompt` for file naming at `src/panels/SettingsPanel.tsx:223-255`.
   - That is functional, but it is older UX and harder to style/test than an in-app dialog.
-- `src/panels/DebugPanel.tsx`
-  - Unused.
 
 ### `src/model` and `src/sticky`
 
@@ -142,9 +120,9 @@ Current post-hardening validation status:
   - This is acceptable for a playground, but it makes template maintenance tedious and brittle.
   - If templates continue to grow, a builder/helper DSL would pay off.
 - `src/model/validation.ts`
-  - Needs stronger graph integrity checks.
-- `src/sticky/stickyCompute.ts`
-  - Logic is readable, but it is simplified enough to disagree with stage rendering under non-trivial unit cases.
+  - Completed on 2026-03-15: graph integrity checks were expanded to cover root validity, symmetric parent/child links, duplicate child ids, cycles, and unreachable nodes.
+- `src/sticky/resolve.ts`
+  - Completed on 2026-03-15: sticky range/extent resolution now lives in one shared pure module used by both stage preview and settings diagnostics.
 
 ### `src/site`
 
@@ -157,24 +135,20 @@ Current post-hardening validation status:
 
 - The shared UI primitives are generally fine and small.
 - `src/components/ui/dialog.tsx`
-  - `DialogTrigger` and `DialogClose` are unused.
-- `src/components/ui/separator.tsx`
-  - Unused.
+  - Completed on 2026-03-15: unused `DialogTrigger` and `DialogClose` exports were removed.
 
 ### `src/styles.css`
 
 - Biggest cleanup target after `Stage.tsx` and `InspectorPanel.tsx`.
-- The dark-theme section at `src/styles.css:48-280` is heavily selector-driven and relies on repeated `!important`.
-- This wants CSS custom properties on `[data-editor-theme]` instead:
-  - shared surface/background/border/text variables
-  - far fewer repeated selectors
-  - less specificity fighting
-- The legacy `.studio-*`, `.panel`, `.dialog*`, and `.debug-card` block should be removed unless it is intentionally retained for a hidden mode.
+- Partially completed on 2026-03-15: the editor theme now uses shared CSS custom properties for body/editor backgrounds, shared surfaces, controls, stage frame/canvas, selection accent, drag preview, and resize handles.
+- Remaining issue: the dark-theme section still has some selector-driven utility overrides and `!important` usage, especially around Tailwind utility color remapping.
+- Completed on 2026-03-15: the legacy `.studio-*`, `.panel`, `.dialog*`, and `.debug-card` block was removed, along with duplicate resize-handle rules.
 
 ## Modern CSS opportunities
 
-1. Replace most dark-theme overrides in `src/styles.css` with custom properties on `[data-editor-theme="light" | "dark"]`.
-   - This is the highest-value CSS modernization in the repo.
+1. Partially completed on 2026-03-15: replace most dark-theme overrides in `src/styles.css` with custom properties on `[data-editor-theme="light" | "dark"]`.
+   - Shared theme variables now cover core surfaces, controls, stage chrome, and interaction accents.
+   - Remaining work is to finish removing selector-driven utility overrides and reduce the last `!important` patches.
 
 2. Replace repeated layout-specific background/border/color overrides with semantic tokens.
    - Example token groups: `--surface-1`, `--surface-2`, `--border-subtle`, `--text-muted`, `--accent`.
@@ -198,12 +172,8 @@ These are not all “wrong”, but they are worth revisiting:
 
 ## Tests that would pay for themselves
 
-1. Validation graph integrity tests.
-   - Broken `rootId`
-   - parent references child but child points elsewhere
-   - missing child ids in `children`
-   - duplicate child ids
-   - orphan nodes
+1. Completed on 2026-03-15: validation graph integrity tests were added.
+   - Covered cases now include broken `rootId`, parent/child asymmetry, missing child ids, duplicate child ids, orphan nodes, and cycles.
 
 2. Stage interaction tests for snap/drop logic.
    - `collectPageSnapTargets`
@@ -213,15 +183,15 @@ These are not all “wrong”, but they are worth revisiting:
    - drag with `Alt` snap inversion
    - drag with `Shift` axis lock
 
-3. Sticky computation parity tests between diagnostics and stage behavior.
+3. Additional shared sticky resolver tests.
+   - stage-published measured geometry flowing into diagnostics
+   - nested container `contentWrapper` sticky extent
    - wrappers sized in `%`
    - `vh`/`vw` values
-   - `height:auto`
-   - `aspect-ratio(...)`
-   - content-wrapper sticky on nested wrappers
+   - `height:auto` and `aspect-ratio(...)`
 
-4. Typecheck/build gate in CI.
-   - Right now a green Vitest run can still hide a broken build.
+4. Open: CI should run the full typecheck/build gate, not just local scripts.
+   - Right now the repo enforces the gate locally via `npm run check` and `npm run build`, but there is still no CI workflow noted in this report.
 
 5. Settings import/export behavior tests.
    - save-picker path
@@ -233,9 +203,7 @@ These are not all “wrong”, but they are worth revisiting:
 
 ## Suggested cleanup order
 
-1. Fix the build break in `src/stage/Stage.test.tsx`.
-2. Delete dead runtime files and dead CSS blocks.
-3. Strengthen `validateDocument` and add graph-integrity tests.
-4. Split `Stage.tsx` and `InspectorPanel.tsx` into pure helper modules plus smaller render components.
-5. Unify sticky geometry helpers between stage and diagnostics.
-6. Convert theme styling to CSS variables and remove the dark-mode `!important` sprawl.
+1. Decide the fate of `src/site/SiteRenderer.tsx`: remove it, or keep and document it as a separate lightweight renderer.
+2. Split `Stage.tsx` and `InspectorPanel.tsx` into pure helper modules plus smaller render components.
+3. Convert theme styling to CSS variables and remove the dark-mode `!important` sprawl.
+4. Add stage interaction coverage for drag, snap, reparent, and drop behavior.

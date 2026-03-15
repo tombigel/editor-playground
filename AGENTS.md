@@ -1,5 +1,9 @@
 # Project Agent Rules
 
+## Architecture Boundary
+
+Maintain strict separation between the model, API, editor state, stage renderer, and site renderer so each layer can be replaced independently without requiring changes to the others.
+
 ## Documentation And Test Gate
 
 For every important functional change or addition, update documentation in the same change set.
