@@ -12,8 +12,6 @@ import { getChildren } from '../model/selectors';
 import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../sticky/resolve';
 import { resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
-import type { DragState } from '../editor/DragController';
-import type { ResizeHandle, ResizeState } from '../editor/ResizeController';
 
 export type StageProps = {
   document: DocumentModel;
@@ -31,6 +29,44 @@ export type StageProps = {
   onResizeEnd: (id: NodeId) => void;
   onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
 };
+
+type DragState = {
+  nodeId: string;
+  startClientX: number;
+  startClientY: number;
+  currentClientX: number;
+  currentClientY: number;
+  grabOffsetX: number;
+  grabOffsetY: number;
+  useVisualOffset: boolean;
+  modelShiftX: number;
+  modelShiftY: number;
+  previewWidth: number;
+  previewHeight: number;
+  originX: number;
+  originY: number;
+} | null;
+
+type ResizeHandle =
+  | 'n'
+  | 'ne'
+  | 'e'
+  | 'se'
+  | 's'
+  | 'sw'
+  | 'w'
+  | 'nw';
+
+type ResizeState = {
+  nodeId: string;
+  handle: ResizeHandle;
+  startClientX: number;
+  startClientY: number;
+  originWidth: number;
+  originHeight: number;
+  originX: number;
+  originY: number;
+} | null;
 
 const VIEWPORT_WIDTH = 1440;
 const VIEWPORT_HEIGHT = 900;

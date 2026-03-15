@@ -13,7 +13,7 @@ Validation run:
 
 - `npm run lint`: passed
 - `npm run typecheck`: passed
-- `npm run test:run`: passed, `118` tests
+- `npm run test:run`: passed, `124` tests
 - `npm run test:coverage`: passed with thresholds
 - `npm run check:architecture`: passed
 - `npm run build`: passed
@@ -82,16 +82,16 @@ Validation run:
 
 - `src/app/App.tsx`
   - Very large orchestration file at 1,441 lines. It owns reducer logic, history diffing, persistence, keyboard shortcuts, popover dismissal, theme sync, and layout shell rendering.
-  - `buildHistoryEntry` / `nodesEqual` use `JSON.stringify` for change detection at `src/app/App.tsx:1252-1255,1347-1348`. That is simple but expensive and brittle as the document grows.
+  - Completed on 2026-03-15: history diffing now uses extracted structural comparison helpers in `src/app/history.ts` instead of `JSON.stringify`.
+  - Remaining issue: `App.tsx` is still oversized even though the history comparison logic is now testable in isolation.
 
 ### `src/editor`
 
 - `src/editor/editorStore.ts`
   - Strong migration coverage in tests, but the file mixes persistence, migration, document mutation, and selection/history concerns.
   - Repeated object seeding for sticky defaults appears in both editor and document APIs. That should be centralized.
-- `src/editor/DragController.ts` and `src/editor/ResizeController.ts`
-  - Only type holders plus `px()` in drag controller.
-  - These files no longer justify being separate “controllers” and look like leftovers from an earlier design.
+- Completed on 2026-03-15: `src/editor/DragController.ts` and `src/editor/ResizeController.ts` were removed.
+  - Their stage-only types are now co-located in `src/stage/Stage.tsx`, which better reflects actual ownership.
 
 ### `src/stage`
 
@@ -112,16 +112,16 @@ Validation run:
   - The file exports and tests several conversion helpers, which is useful, but it also confirms this component is carrying too much domain logic.
   - Strong candidate for split into smaller field modules: geometry fields, text fields, sticky fields, and unit conversion helpers.
 - `src/panels/SettingsPanel.tsx`
-  - Solid overall, but it still falls back to `window.prompt` for file naming at `src/panels/SettingsPanel.tsx:223-255`.
-  - That is functional, but it is older UX and harder to style than an in-app dialog.
-  - Completed on 2026-03-15 for testability: transfer logic now lives in a dedicated helper module with direct tests for save-picker, prompt/download fallback, and clipboard failure paths.
+  - Completed on 2026-03-15: export now uses an in-panel file name field instead of `window.prompt`, while still supporting the native save picker when available.
+  - Completed on 2026-03-15 for testability: transfer logic now lives in a dedicated helper module with direct tests for save-picker, named download fallback, and clipboard failure paths.
 
 ### `src/model` and `src/sticky`
 
 - `src/model/defaults.ts`
   - Many seeded templates rely on hard-coded pixel coordinates and heights.
   - This is acceptable for a playground, but it makes template maintenance tedious and brittle.
-  - If templates continue to grow, a builder/helper DSL would pay off.
+  - Partially completed on 2026-03-15: shared padding/section-shell helpers now reduce some of the repeated template setup.
+  - If templates continue to grow, a larger builder/helper DSL would still pay off.
 - `src/model/validation.ts`
   - Completed on 2026-03-15: graph integrity checks were expanded to cover root validity, symmetric parent/child links, duplicate child ids, cycles, and unreachable nodes.
 - `src/sticky/resolve.ts`
@@ -170,7 +170,7 @@ These are not all “wrong”, but they are worth revisiting:
 - `src/components/ui/popover.tsx`
   - Tooltip positioning is entirely manual. This is reasonable for now, but it is custom infrastructure that will need careful testing as the app grows.
 - `src/panels/SettingsPanel.tsx`
-  - `window.prompt` fallback is doing UI work the app can handle itself.
+  - Completed on 2026-03-15: the export fallback now uses in-app UI instead of `window.prompt`.
 
 ## Tests that would pay for themselves
 
@@ -199,7 +199,7 @@ These are not all “wrong”, but they are worth revisiting:
 5. Completed on 2026-03-15: settings import/export behavior tests were added.
    - Covered now:
    - save-picker path
-   - prompt/download fallback path
+   - named download fallback path
    - clipboard copy failures
    - clipboard paste failures
 

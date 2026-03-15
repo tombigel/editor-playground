@@ -3,6 +3,8 @@ export type ActionResult = {
   message: string;
 };
 
+export const DEFAULT_EXPORT_FILE_NAME = 'sticky-playground-document.json';
+
 export type SaveFilePickerHandle = {
   createWritable: () => Promise<{
     write: (data: Blob) => Promise<void>;
@@ -18,7 +20,6 @@ export type SavePickerWindow = {
       accept: Record<string, string[]>;
     }>;
   }) => Promise<SaveFilePickerHandle>;
-  prompt: (message?: string, defaultValue?: string) => string | null;
 };
 
 export function normalizeFileName(input: string, fallback: string) {
@@ -69,20 +70,22 @@ export async function pasteClipboardImport(
 export async function saveExportDocument(
   documentJson: string,
   {
+    fileName = DEFAULT_EXPORT_FILE_NAME,
     windowLike = window as unknown as SavePickerWindow,
     download = downloadBlob,
   }: {
+    fileName?: string;
     windowLike?: SavePickerWindow;
     download?: (blob: Blob, fileName: string) => void;
   } = {},
 ): Promise<ActionResult | null> {
   const blob = new Blob([documentJson], { type: 'application/json' });
-  const suggestedName = 'sticky-playground-document.json';
+  const normalizedFileName = normalizeFileName(fileName, DEFAULT_EXPORT_FILE_NAME);
 
   try {
     if (windowLike.showSaveFilePicker) {
       const handle = await windowLike.showSaveFilePicker({
-        suggestedName,
+        suggestedName: normalizedFileName,
         types: [
           {
             description: 'JSON document',
@@ -98,13 +101,8 @@ export async function saveExportDocument(
       return { ok: true, message: 'Document saved to file.' };
     }
 
-    const enteredName = windowLike.prompt('File name', suggestedName);
-    if (enteredName === null) {
-      return null;
-    }
-    const fileName = normalizeFileName(enteredName, suggestedName);
-    download(blob, fileName);
-    return { ok: true, message: `Downloaded ${fileName}.` };
+    download(blob, normalizedFileName);
+    return { ok: true, message: `Downloaded ${normalizedFileName}.` };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       return null;

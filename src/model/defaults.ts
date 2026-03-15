@@ -35,6 +35,13 @@ type TemplateBuild = {
   nodes: Record<NodeId, DocumentNode>;
 };
 
+type BoxPadding = {
+  top: string;
+  right: string;
+  bottom: string;
+  left?: string;
+};
+
 export type SectionTemplateId =
   | 'blank'
   | 'post'
@@ -89,16 +96,36 @@ export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   },
 ];
 
+function applyPadding(
+  node: Pick<WrapperNode, 'style'>,
+  { top, right, bottom, left = right }: BoxPadding,
+) {
+  node.style.paddingTop = parseUnitValue(top);
+  node.style.paddingRight = parseUnitValue(right);
+  node.style.paddingBottom = parseUnitValue(bottom);
+  node.style.paddingLeft = parseUnitValue(left);
+}
+
+function createTemplateSection(
+  parentId: NodeId,
+  name: string,
+  height: string,
+  padding: BoxPadding,
+) {
+  const section = createWrapper('section', parentId);
+  section.name = name;
+  section.rect = createDefaultRect('0px', '0px', '100%', height);
+  applyPadding(section, padding);
+  return section;
+}
+
 export function createDefaultHeader(parentId: NodeId) {
   const header = createWrapper('header', parentId);
   header.name = 'Playground Header';
   header.rect = createDefaultRect('0px', '0px', '100%', 'auto');
   header.style.background = '#f8fbff';
   header.style.borderColor = '#d6e2f2';
-  header.style.paddingTop = parseUnitValue('20px');
-  header.style.paddingRight = parseUnitValue('48px');
-  header.style.paddingBottom = parseUnitValue('20px');
-  header.style.paddingLeft = parseUnitValue('48px');
+  applyPadding(header, { top: '20px', right: '48px', bottom: '20px' });
 
   const headerLogo = createLeaf('text', header.id) as TextLeaf;
   headerLogo.name = 'Product Title';
@@ -154,10 +181,7 @@ export function createDefaultFooter(parentId: NodeId) {
   footer.rect = createDefaultRect('0px', '0px', '100%', 'auto');
   footer.style.background = '#f8fbff';
   footer.style.borderColor = '#d6e2f2';
-  footer.style.paddingTop = parseUnitValue('26px');
-  footer.style.paddingRight = parseUnitValue('48px');
-  footer.style.paddingBottom = parseUnitValue('26px');
-  footer.style.paddingLeft = parseUnitValue('48px');
+  applyPadding(footer, { top: '26px', right: '48px', bottom: '26px' });
 
   const footerTitle = createLeaf('text', footer.id) as TextLeaf;
   footerTitle.name = 'Footer Title';
@@ -383,13 +407,11 @@ export function createInitialDocument(): DocumentModel {
 }
 
 function createBlankSection(parentId: NodeId): TemplateBuild {
-  const section = createWrapper('section', parentId);
-  section.name = 'Blank Section';
-  section.rect = createDefaultRect('0px', '0px', '100%', '50vh');
-  section.style.paddingTop = parseUnitValue('64px');
-  section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('64px');
-  section.style.paddingLeft = parseUnitValue('72px');
+  const section = createTemplateSection(parentId, 'Blank Section', '50vh', {
+    top: '64px',
+    right: '72px',
+    bottom: '64px',
+  });
 
   return {
     wrapper: section,
@@ -400,13 +422,11 @@ function createBlankSection(parentId: NodeId): TemplateBuild {
 }
 
 function createPostSection(parentId: NodeId): TemplateBuild {
-  const section = createWrapper('section', parentId);
-  section.name = 'Post Layout';
-  section.rect = createDefaultRect('0px', '0px', '100%', '50vh');
-  section.style.paddingTop = parseUnitValue('64px');
-  section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('72px');
-  section.style.paddingLeft = parseUnitValue('72px');
+  const section = createTemplateSection(parentId, 'Post Layout', '50vh', {
+    top: '64px',
+    right: '72px',
+    bottom: '72px',
+  });
 
   const image = createLeaf('image', section.id) as ImageLeaf;
   image.name = 'Post Image';
@@ -455,13 +475,11 @@ function createPostSection(parentId: NodeId): TemplateBuild {
 }
 
 function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
-  const section = createWrapper('section', parentId);
-  section.name = 'Sticky Staggered Images';
-  section.rect = createDefaultRect('0px', '0px', '100%', '1820px');
-  section.style.paddingTop = parseUnitValue('84px');
-  section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('84px');
-  section.style.paddingLeft = parseUnitValue('72px');
+  const section = createTemplateSection(parentId, 'Sticky Staggered Images', '1820px', {
+    top: '84px',
+    right: '72px',
+    bottom: '84px',
+  });
 
   const heading = createLeaf('text', section.id) as TextLeaf;
   heading.name = 'Section Heading';

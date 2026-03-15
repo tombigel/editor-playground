@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_EXPORT_FILE_NAME,
   copyExportDocument,
   normalizeFileName,
   pasteClipboardImport,
@@ -23,14 +24,13 @@ describe('panels/settingsTransfer', () => {
     const result = await saveExportDocument('{"hello":"world"}', {
       windowLike: {
         showSaveFilePicker,
-        prompt: () => null,
       },
     });
 
     expect(result).toEqual({ ok: true, message: 'Document saved to file.' });
     expect(showSaveFilePicker).toHaveBeenCalledWith(
       expect.objectContaining({
-        suggestedName: 'sticky-playground-document.json',
+        suggestedName: DEFAULT_EXPORT_FILE_NAME,
       }),
     );
     expect(write).toHaveBeenCalledTimes(1);
@@ -42,8 +42,8 @@ describe('panels/settingsTransfer', () => {
     const download = vi.fn();
 
     const result = await saveExportDocument('{"hello":"world"}', {
+      fileName: 'landing-page',
       windowLike: {
-        prompt: () => 'landing-page',
       },
       download,
     });
@@ -62,7 +62,6 @@ describe('panels/settingsTransfer', () => {
           error.name = 'AbortError';
           throw error;
         },
-        prompt: () => null,
       },
     });
 
@@ -71,14 +70,28 @@ describe('panels/settingsTransfer', () => {
 
   it('returns an error status when export fails', async () => {
     const result = await saveExportDocument('{"hello":"world"}', {
+      fileName: 'landing-page',
       windowLike: {
-        prompt: () => {
+        showSaveFilePicker: async () => {
           throw new Error('prompt failed');
         },
       },
     });
 
     expect(result).toEqual({ ok: false, message: 'File export failed.' });
+  });
+
+  it('normalizes fallback download names without prompting', async () => {
+    const download = vi.fn();
+
+    const result = await saveExportDocument('{"hello":"world"}', {
+      fileName: '  custom-name  ',
+      windowLike: {},
+      download,
+    });
+
+    expect(result).toEqual({ ok: true, message: 'Downloaded custom-name.json.' });
+    expect(download.mock.calls[0]?.[1]).toBe('custom-name.json');
   });
 
   it('copies document JSON to the clipboard', async () => {

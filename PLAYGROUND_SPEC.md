@@ -157,8 +157,9 @@ The playground imports and exports document JSON only, not full editor session s
 
 - export lives in the settings panel under `Import / Export`
 - export supports:
-  - save to file with a user-selected file name when browser APIs allow it
-  - fallback named download when native save picker is unavailable
+  - an editable file name field in settings
+  - save to file with that file name suggested when browser APIs allow it
+  - fallback named download using that same file name when native save picker is unavailable
   - copy JSON to clipboard
 - import supports:
   - choosing a `.json` file

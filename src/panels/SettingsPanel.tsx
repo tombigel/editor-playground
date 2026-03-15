@@ -26,7 +26,13 @@ import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/lib/theme';
-import { copyExportDocument, pasteClipboardImport, saveExportDocument, type ActionResult } from './settingsTransfer';
+import {
+  copyExportDocument,
+  DEFAULT_EXPORT_FILE_NAME,
+  pasteClipboardImport,
+  saveExportDocument,
+  type ActionResult,
+} from './settingsTransfer';
 
 type SectionId = 'display' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
 
@@ -121,6 +127,7 @@ export function SettingsPanel({
 }: Props) {
   const [activeSection, setActiveSection] = useState<SectionId>('display');
   const [importBuffer, setImportBuffer] = useState('');
+  const [exportFileName, setExportFileName] = useState(DEFAULT_EXPORT_FILE_NAME);
   const [exportStatus, setExportStatus] = useState<ActionResult | null>(null);
   const [importStatus, setImportStatus] = useState<ActionResult | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -193,7 +200,9 @@ export function SettingsPanel({
   }
 
   async function handleSaveExport() {
-    const result = await saveExportDocument(documentJson);
+    const result = await saveExportDocument(documentJson, {
+      fileName: exportFileName,
+    });
     if (result) {
       setExportStatus(result);
     }
@@ -329,10 +338,26 @@ export function SettingsPanel({
                 description="Import or export document JSON."
               />
               <PlainGroup title="Export">
+                <div className="editor-border-subtle border-b px-4 py-4">
+                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_280px] sm:items-center">
+                    <div className="min-w-0">
+                      <div className="editor-text-strong text-sm font-medium">File name</div>
+                      <div className="editor-text-muted mt-1 text-sm">
+                        Used for fallback downloads and as the suggested native save name.
+                      </div>
+                    </div>
+                    <Input
+                      value={exportFileName}
+                      onChange={(event) => setExportFileName(event.target.value)}
+                      placeholder={DEFAULT_EXPORT_FILE_NAME}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                </div>
                 <ActionRow
                   icon={FileDown}
                   title="Save to file"
-                  description="Uses the browser save picker when available."
+                  description="Uses the browser save picker when available, otherwise downloads with the file name above."
                   actions={
                     <Button type="button" variant="outline" size="sm" onClick={handleSaveExport}>
                       Save
