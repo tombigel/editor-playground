@@ -52,6 +52,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
 import { findMatchingShortcut, getShortcutLabel, getShortcutPlatform } from '@/lib/shortcuts';
 import { resolveThemeMode, type ResolvedTheme, type ThemeMode } from '@/lib/theme';
+import { scrollSelectedStageNodeIntoView } from './selectionScroll';
 
 type EditorAction =
   | { type: 'select'; id: string | null }
@@ -518,6 +519,18 @@ export function App() {
       document.documentElement.style.colorScheme = '';
     };
   }, [resolvedTheme]);
+
+  useEffect(() => {
+    if (!state.selectedId || typeof window === 'undefined') {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      scrollSelectedStageNodeIntoView(state.selectedId);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [state.selectedId]);
 
   useEffect(() => {
     if (!sectionTemplateOpen || !sectionTemplateAnchor) {

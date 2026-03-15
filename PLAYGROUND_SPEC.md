@@ -178,6 +178,10 @@ Supported unit types:
 
 Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
 
+Text leaves also store an HTML tag, editable in the inspector. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the text node.
+
+Text style controls support bold, italic, underline, and strikethrough toggles, numeric font size and line-height fields, HTML tag selection, text direction (`LTR` / `RTL`), and alignment.
+
 Internally, values are stored as parsed data shaped like `CSSUnitValue`, but as plain app data rather than browser Typed OM objects.
 
 ## Sticky Model
@@ -269,7 +273,7 @@ Current UX includes:
 - shortcut guide also appears as the last section inside settings
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
-- the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, selection stays virtual, and arrow keys nudge positioned components
+- the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current selection scrolls into view when needed, and arrow keys nudge positioned components
 - button focus states use a stronger visible ring across editor controls
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips

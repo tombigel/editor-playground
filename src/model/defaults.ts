@@ -291,6 +291,7 @@ export function createLeaf(
       name: 'Text',
       rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
       content: 'Edit text',
+      htmlTag: 'p',
       sticky: undefined,
       style: {
         color: '#16202a',

@@ -43,4 +43,105 @@ describe('stage/Stage', () => {
       expect(nodeMarkupMatch?.[1]).not.toContain('width:100%');
     },
   );
+
+  it('renders text leaves using their configured html tag in the stage', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.htmlTag = 'blockquote';
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('<blockquote');
+  });
+
+  it('renders text decoration styles for text leaves in the stage', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.style ??= {};
+    target.style.textDecorationLine = 'underline line-through';
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('text-decoration-line:underline line-through');
+  });
+
+  it('renders text direction styles for text leaves in the stage', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.style ??= {};
+    target.style.direction = 'rtl';
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('direction:rtl');
+  });
 });

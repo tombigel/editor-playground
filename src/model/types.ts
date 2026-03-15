@@ -90,13 +90,16 @@ export type TextLeaf = BaseNode & {
   role: 'text';
   rect: RectModel;
   content: string;
+  htmlTag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'blockquote' | 'div';
   sticky?: StickyDefinition;
   style?: {
     color?: string;
     fontSize?: ParsedValue<UnitValue>;
     fontWeight?: 'normal' | 'bold';
     fontStyle?: 'normal' | 'italic';
+    textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through';
     lineHeight?: number;
+    direction?: 'ltr' | 'rtl';
     textAlign?: 'left' | 'center' | 'right';
   };
 };

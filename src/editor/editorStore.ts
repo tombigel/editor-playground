@@ -276,6 +276,9 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
     if (node.type === 'site') {
       continue;
     }
+    if (node.type === 'leaf' && node.role === 'text') {
+      node.htmlTag = normalizeTextHtmlTag(node.htmlTag);
+    }
     node.sticky = normalizeSticky(node.sticky);
     if (node.type === 'wrapper' && node.role === 'container' && node.sticky?.target === 'contentWrapper') {
       node.sticky.target = 'self';
@@ -286,6 +289,25 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
   upgradeLegacyStarterShell(normalized);
   renameRepositoryLinks(normalized);
   return normalized;
+}
+
+function normalizeTextHtmlTag(
+  htmlTag: TextLeaf['htmlTag'] | undefined,
+): TextLeaf['htmlTag'] {
+  switch (htmlTag) {
+    case 'h1':
+    case 'h2':
+    case 'h3':
+    case 'h4':
+    case 'h5':
+    case 'h6':
+    case 'p':
+    case 'blockquote':
+    case 'div':
+      return htmlTag;
+    default:
+      return 'p';
+  }
 }
 
 function renameRepositoryLinks(document: DocumentModel) {
@@ -743,6 +765,8 @@ export function updateTextField(
     node.name = value;
   } else if (field === 'content' && node.type === 'leaf' && node.role === 'text') {
     node.content = value;
+  } else if (field === 'htmlTag' && node.type === 'leaf' && node.role === 'text') {
+    node.htmlTag = normalizeTextHtmlTag(value as TextLeaf['htmlTag']);
   } else if (field === 'fontSize' && node.type === 'leaf' && node.role === 'text') {
     node.style ??= {};
     node.style.fontSize = parseUnitValue(value);
@@ -752,12 +776,18 @@ export function updateTextField(
   } else if (field === 'fontStyle' && node.type === 'leaf' && node.role === 'text') {
     node.style ??= {};
     node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
+  } else if (field === 'textDecorationLine' && node.type === 'leaf' && node.role === 'text') {
+    node.style ??= {};
+    node.style.textDecorationLine = normalizeTextDecorationLine(value);
   } else if (field === 'lineHeight' && node.type === 'leaf' && node.role === 'text') {
     const parsed = Number.parseFloat(value);
     if (Number.isFinite(parsed) && parsed > 0) {
       node.style ??= {};
       node.style.lineHeight = parsed;
     }
+  } else if (field === 'direction' && node.type === 'leaf' && node.role === 'text') {
+    node.style ??= {};
+    node.style.direction = value === 'rtl' ? 'rtl' : 'ltr';
   } else if (field === 'textAlign' && node.type === 'leaf' && node.role === 'text') {
     node.style ??= {};
     node.style.textAlign = value === 'center' || value === 'right' ? value : 'left';
@@ -796,6 +826,19 @@ export function updateRectField(
     rect.y.base = parseUnitValue(raw);
   }
   return { ...state, document };
+}
+
+function normalizeTextDecorationLine(
+  value: string,
+): NonNullable<TextLeaf['style']>['textDecorationLine'] {
+  switch (value) {
+    case 'underline':
+    case 'line-through':
+    case 'underline line-through':
+      return value;
+    default:
+      return 'none';
+  }
 }
 
 export function updateStickyField(

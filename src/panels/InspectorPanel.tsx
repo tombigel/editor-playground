@@ -15,6 +15,8 @@ import {
   ListStart,
   PanelBottom,
   PanelTop,
+  PilcrowLeft,
+  PilcrowRight,
 } from 'lucide-react';
 import type { DocumentNode, WrapperNode } from '../api/documentApi';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
@@ -246,84 +248,125 @@ export function InspectorPanel({
                 <FormField label="Text">
                   <Textarea value={node.content} onChange={(e) => onTextChange('content', e.target.value)} />
                 </FormField>
-                <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-500">
-                    Text style
-                  </Label>
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
-                    <InlineParsedInput
-                      value={node.style?.fontSize?.raw ?? '18px'}
-                      onChange={(value) => onTextChange('fontSize', value)}
-                      validate={(value) => {
-                        try {
-                          parseUnitValue(value);
-                          return true;
-                        } catch {
-                          return false;
-                        }
-                      }}
-                      placeholder="18px"
-                    />
-                    <Button
-                      type="button"
-                      variant={node.style?.fontWeight === 'bold' ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 min-w-8 px-2 text-xs font-bold"
-                      onClick={() =>
-                        onTextChange('fontWeight', node.style?.fontWeight === 'bold' ? 'normal' : 'bold')
-                      }
-                    >
-                      B
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={node.style?.fontStyle === 'italic' ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 min-w-8 px-2 text-xs italic"
-                      onClick={() =>
-                        onTextChange('fontStyle', node.style?.fontStyle === 'italic' ? 'normal' : 'italic')
-                      }
-                    >
-                      I
-                    </Button>
+                <div className="space-y-1.5">
+                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+                    <Label className="text-[11px] font-medium text-slate-500">Size</Label>
+                    <div className="ml-auto grid w-[140px] grid-cols-[78px_58px] items-center gap-1">
+                      <FontSizePxInput
+                        value={fontSizePxValue(node)}
+                        onChange={(value) => onTextChange('fontSize', `${value}px`)}
+                      />
+                      <NumberInput
+                        value={lineHeightValue(node)}
+                        min={0.1}
+                        max={4}
+                        step={0.1}
+                        onChange={(value) => onTextChange('lineHeight', String(value))}
+                      />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-[88px_auto_auto_auto] items-center gap-2">
-                    <InlineNumberInput
-                      value={node.style?.lineHeight?.toFixed(1) ?? '1.2'}
-                      onChange={(value) => onTextChange('lineHeight', value)}
-                      validate={(value) => {
-                        const parsed = Number.parseFloat(value);
-                        return Number.isFinite(parsed) && parsed > 0 && parsed <= 4;
-                      }}
-                      placeholder="1.2"
-                    />
-                    <Button
-                      type="button"
-                      variant={(node.style?.textAlign ?? 'left') === 'left' ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 min-w-8 px-2"
-                      onClick={() => onTextChange('textAlign', 'left')}
-                    >
-                      <AlignLeft className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={node.style?.textAlign === 'center' ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 min-w-8 px-2"
-                      onClick={() => onTextChange('textAlign', 'center')}
-                    >
-                      <AlignCenter className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={node.style?.textAlign === 'right' ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 min-w-8 px-2"
-                      onClick={() => onTextChange('textAlign', 'right')}
-                    >
-                      <AlignRight className="h-3.5 w-3.5" />
-                    </Button>
+                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+                    <Label className="text-[11px] font-medium text-slate-500">Style</Label>
+                    <div className="ml-auto flex items-center gap-1">
+                      <TextStyleIconButton
+                        label="Bold"
+                        active={node.style?.fontWeight === 'bold'}
+                        onClick={() => onTextChange('fontWeight', node.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
+                      >
+                        <span className="font-black tracking-[-0.02em]">B</span>
+                      </TextStyleIconButton>
+                      <TextStyleIconButton
+                        label="Italic"
+                        active={node.style?.fontStyle === 'italic'}
+                        onClick={() =>
+                          onTextChange('fontStyle', node.style?.fontStyle === 'italic' ? 'normal' : 'italic')
+                        }
+                      >
+                        <span className="font-medium italic">I</span>
+                      </TextStyleIconButton>
+                      <TextStyleIconButton
+                        label="Underline"
+                        active={textDecorationHasUnderline(node)}
+                        onClick={() =>
+                          onTextChange(
+                            'textDecorationLine',
+                            toggleTextDecorationLine(node.style?.textDecorationLine, 'underline'),
+                          )
+                        }
+                      >
+                        <span className="underline">U</span>
+                      </TextStyleIconButton>
+                      <TextStyleIconButton
+                        label="Strikethrough"
+                        active={textDecorationHasLineThrough(node)}
+                        onClick={() =>
+                          onTextChange(
+                            'textDecorationLine',
+                            toggleTextDecorationLine(node.style?.textDecorationLine, 'line-through'),
+                          )
+                        }
+                      >
+                        <span className="line-through">S</span>
+                      </TextStyleIconButton>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+                    <Label className="text-[11px] font-medium text-slate-500">Alignment</Label>
+                    <div className="ml-auto flex items-center gap-1">
+                      <TextStyleIconButton
+                        label="Align left"
+                        active={(node.style?.textAlign ?? 'left') === 'left'}
+                        onClick={() => onTextChange('textAlign', 'left')}
+                      >
+                        <AlignLeft className="h-4 w-4" />
+                      </TextStyleIconButton>
+                      <TextStyleIconButton
+                        label="Align center"
+                        active={node.style?.textAlign === 'center'}
+                        onClick={() => onTextChange('textAlign', 'center')}
+                      >
+                        <AlignCenter className="h-4 w-4" />
+                      </TextStyleIconButton>
+                      <TextStyleIconButton
+                        label="Align right"
+                        active={node.style?.textAlign === 'right'}
+                        onClick={() => onTextChange('textAlign', 'right')}
+                      >
+                        <AlignRight className="h-4 w-4" />
+                      </TextStyleIconButton>
+                      <TextStyleIconButton
+                        label="Text direction"
+                        active={false}
+                        onClick={() =>
+                          onTextChange('direction', (node.style?.direction ?? 'ltr') === 'rtl' ? 'ltr' : 'rtl')
+                        }
+                      >
+                        {(node.style?.direction ?? 'ltr') === 'rtl' ? (
+                          <PilcrowLeft className="h-4 w-4" />
+                        ) : (
+                          <PilcrowRight className="h-4 w-4" />
+                        )}
+                      </TextStyleIconButton>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+                    <Label className="text-[11px] font-medium text-slate-500">HTML tag</Label>
+                    <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
+                      <SelectTrigger className="ml-auto w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="h1">h1</SelectItem>
+                        <SelectItem value="h2">h2</SelectItem>
+                        <SelectItem value="h3">h3</SelectItem>
+                        <SelectItem value="h4">h4</SelectItem>
+                        <SelectItem value="h5">h5</SelectItem>
+                        <SelectItem value="h6">h6</SelectItem>
+                        <SelectItem value="p">p</SelectItem>
+                        <SelectItem value="blockquote">blockquote</SelectItem>
+                        <SelectItem value="div">div</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </CardContent>
@@ -648,7 +691,7 @@ function OrderIconButton({
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
-        className={`${compact ? 'h-6 w-6' : 'h-7 w-7'} rounded-sm p-0`}
+        className={`${compact ? 'h-8 w-8' : 'h-8 w-8'} p-0 text-xs`}
       >
         {children}
       </Button>
@@ -681,7 +724,40 @@ function TypeIconButton({
         aria-label={label}
         aria-pressed={active}
         onClick={onClick}
-        className="h-6 w-6 rounded-sm p-0"
+        className="h-8 w-8 p-0 text-xs"
+      >
+        {children}
+      </Button>
+    </PopoverTooltip>
+  );
+}
+
+function TextStyleIconButton({
+  label,
+  active,
+  onClick,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <PopoverTooltip
+      side="top"
+      align="center"
+      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      content={<div className="leading-3.5 font-medium">{label}</div>}
+    >
+      <Button
+        type="button"
+        variant={active ? 'default' : 'outline'}
+        size="sm"
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+        className="h-8 w-8 p-0 text-xs"
       >
         {children}
       </Button>
@@ -768,6 +844,66 @@ function InlineNumberInput({
         }
       }}
       className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
+    />
+  );
+}
+
+function FontSizePxInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="relative">
+      <Input
+        type="number"
+        min={1}
+        step={1}
+        value={String(value)}
+        onChange={(e) => {
+          const next = Number.parseFloat(e.target.value);
+          if (Number.isFinite(next) && next > 0) {
+            onChange(next);
+          }
+        }}
+        className="[appearance:textfield] pr-7 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+      <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] font-medium text-slate-500">
+        px
+      </span>
+    </div>
+  );
+}
+
+function NumberInput({
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <Input
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      value={value.toFixed(1)}
+      onChange={(e) => {
+        const next = Number.parseFloat(e.target.value);
+        if (Number.isFinite(next) && next >= min && next <= max) {
+          onChange(next);
+        }
+      }}
+      className="[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
     />
   );
 }
@@ -1031,6 +1167,47 @@ function stickyDurationTopVh(node: Exclude<DocumentNode, { type: 'site' }>) {
     return 50;
   }
   return duration.unit === 'vh' ? duration.value : 50;
+}
+
+function fontSizePxValue(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
+  const fontSize = node.style?.fontSize?.parsed;
+  if (fontSize && 'unit' in fontSize && fontSize.unit === 'px') {
+    return fontSize.value;
+  }
+  return 18;
+}
+
+function lineHeightValue(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
+  return node.style?.lineHeight ?? 1.2;
+}
+
+function textDecorationHasUnderline(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
+  return node.style?.textDecorationLine?.includes('underline') ?? false;
+}
+
+function textDecorationHasLineThrough(node: Extract<DocumentNode, { type: 'leaf'; role: 'text' }>) {
+  return node.style?.textDecorationLine?.includes('line-through') ?? false;
+}
+
+function toggleTextDecorationLine(
+  current: 'none' | 'underline' | 'line-through' | 'underline line-through' | undefined,
+  target: 'underline' | 'line-through',
+) {
+  const hasUnderline = current?.includes('underline') ?? false;
+  const hasLineThrough = current?.includes('line-through') ?? false;
+  const nextUnderline = target === 'underline' ? !hasUnderline : hasUnderline;
+  const nextLineThrough = target === 'line-through' ? !hasLineThrough : hasLineThrough;
+
+  if (nextUnderline && nextLineThrough) {
+    return 'underline line-through';
+  }
+  if (nextUnderline) {
+    return 'underline';
+  }
+  if (nextLineThrough) {
+    return 'line-through';
+  }
+  return 'none';
 }
 
 function stickyDurationBottomVh(node: Exclude<DocumentNode, { type: 'site' }>) {

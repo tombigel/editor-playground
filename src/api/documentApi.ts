@@ -124,7 +124,7 @@ export function setNodeSticky(
 export function setNodeTextField(
   document: DocumentModel,
   nodeId: NodeId,
-  field: 'name' | 'content' | 'label' | 'href' | 'src' | 'alt',
+  field: 'name' | 'content' | 'htmlTag' | 'label' | 'href' | 'src' | 'alt',
   value: string,
 ): DocumentModel {
   const next = cloneDocument(document);
@@ -140,6 +140,21 @@ export function setNodeTextField(
 
   if (field === 'content' && node.type === 'leaf' && node.role === 'text') {
     node.content = value;
+    return next;
+  }
+
+  if (field === 'htmlTag' && node.type === 'leaf' && node.role === 'text') {
+    node.htmlTag =
+      value === 'h1' ||
+      value === 'h2' ||
+      value === 'h3' ||
+      value === 'h4' ||
+      value === 'h5' ||
+      value === 'h6' ||
+      value === 'blockquote' ||
+      value === 'div'
+        ? value
+        : 'p';
     return next;
   }
 

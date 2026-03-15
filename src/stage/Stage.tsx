@@ -1061,23 +1061,28 @@ function renderWrapperSelfDistanceVisual(
 
 function renderLeafContent(node: LeafNode) {
   switch (node.role) {
-    case 'text':
+    case 'text': {
+      const Tag = node.htmlTag;
       return (
-        <p
+        <Tag
           style={{
+            margin: 0,
             color: node.style?.color ?? '#16202a',
             fontSize: node.style?.fontSize
               ? formatValue(node.style.fontSize.parsed)
               : '18px',
             fontWeight: node.style?.fontWeight ?? 'normal',
             fontStyle: node.style?.fontStyle ?? 'normal',
+            textDecorationLine: node.style?.textDecorationLine ?? 'none',
             lineHeight: node.style?.lineHeight ?? 1.24,
+            direction: node.style?.direction ?? 'ltr',
             textAlign: node.style?.textAlign ?? 'left',
           }}
         >
           {node.content}
-        </p>
+        </Tag>
       );
+    }
     case 'image':
       return node.src ? (
         <img className="stage-image" src={node.src} alt={node.alt || 'Image'} draggable={false} />

@@ -74,10 +74,11 @@ function renderLeaf(node: Extract<DocumentNode, { type: 'leaf' }>, previewSticky
   };
 
   if (node.role === 'text') {
+    const Tag = node.htmlTag;
     return (
-      <p key={node.id} style={{ ...style, margin: 0, color: node.style?.color, fontWeight: node.style?.fontWeight, lineHeight: node.style?.lineHeight, fontSize: node.style?.fontSize ? formatValue(node.style.fontSize.parsed) : undefined }}>
+      <Tag key={node.id} style={{ ...style, margin: 0, color: node.style?.color, fontWeight: node.style?.fontWeight, fontStyle: node.style?.fontStyle, textDecorationLine: node.style?.textDecorationLine, lineHeight: node.style?.lineHeight, direction: node.style?.direction, fontSize: node.style?.fontSize ? formatValue(node.style.fontSize.parsed) : undefined }}>
         {node.content}
-      </p>
+      </Tag>
     );
   }
 

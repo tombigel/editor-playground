@@ -48,6 +48,24 @@ describe('api/documentApi', () => {
     expect(node.sticky?.durationMode).toBe('custom');
   });
 
+  it('updates text html tag through API helpers', () => {
+    const document = createInitialDocument();
+    const textId = Object.keys(document.nodes).find(
+      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+    );
+    if (!textId) {
+      throw new Error('Expected text node');
+    }
+
+    const next = setNodeTextField(document, textId, 'htmlTag', 'blockquote');
+    const node = next.nodes[textId];
+    if (node.type !== 'leaf' || node.role !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    expect(node.htmlTag).toBe('blockquote');
+  });
+
   it('returns original document when text field does not apply to node type', () => {
     const document = createInitialDocument();
     const wrapperId = Object.keys(document.nodes).find(
