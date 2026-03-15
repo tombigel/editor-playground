@@ -14,6 +14,14 @@ This plan is for keeping the playground stable while feature work is paused.
 2. Run full regression once per week while in maintenance mode.
 3. Run full regression after any dependency update or refactor touching model/sticky/editor logic.
 
+## Automated Run
+
+1. Use `npm run test:run` for the current automated suite.
+2. Use `npm run test` during feature/test iteration loops.
+3. Current automated coverage files:
+   `src/model/units.test.ts`, `src/model/validation.test.ts`, `src/sticky/stickyCompute.test.ts`,
+   `src/api/documentApi.test.ts`, `src/editor/editorStore.integration.test.ts`.
+
 ## 1) Site Model Tests
 
 ### A. Document shape and validation

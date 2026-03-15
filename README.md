@@ -99,3 +99,18 @@ It exposes document-level operations using `DocumentModel` only (no editor sessi
 - parse/serialize helpers
 - rect/sticky/text mutation helpers
 - template insertion into the document tree
+
+## Testing
+
+Run tests with:
+
+- `npm run test` for watch mode
+- `npm run test:run` for a single full run
+
+Current automated suites:
+
+- `src/model/units.test.ts`
+- `src/model/validation.test.ts`
+- `src/sticky/stickyCompute.test.ts`
+- `src/api/documentApi.test.ts`
+- `src/editor/editorStore.integration.test.ts`
