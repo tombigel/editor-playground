@@ -180,8 +180,8 @@ export function createDefaultFooter(parentId: NodeId) {
 
   const footerLink = createLeaf('link', footer.id) as LinkLeaf;
   footerLink.name = 'Repository Link';
-  footerLink.label = 'github.com/tombigel/codex-playground';
-  footerLink.href = 'https://github.com/tombigel/codex-playground';
+  footerLink.label = 'github.com/tombigel/sticky-playground';
+  footerLink.href = 'https://github.com/tombigel/sticky-playground';
   footerLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
 
   footer.children = [footerTitle.id, footerCopy.id, footerLink.id];

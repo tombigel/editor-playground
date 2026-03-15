@@ -164,4 +164,19 @@ describe('api/documentApi', () => {
     expect(postLink.label).toBe('Open playground spec');
     expect(postLink.label.toLowerCase()).not.toContain('maintenance');
   });
+
+  it('seeds the default footer repository link with the sticky-playground repo url', () => {
+    const document = createInitialDocument();
+    const repoLink = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
+    );
+
+    expect(repoLink).toBeTruthy();
+    if (!repoLink || repoLink.type !== 'leaf' || repoLink.role !== 'link') {
+      return;
+    }
+
+    expect(repoLink.label).toBe('github.com/tombigel/sticky-playground');
+    expect(repoLink.href).toBe('https://github.com/tombigel/sticky-playground');
+  });
 });

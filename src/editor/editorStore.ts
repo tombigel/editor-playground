@@ -249,7 +249,24 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
   }
   ensureDefaultSiteSections(normalized);
   upgradeLegacyStarterShell(normalized);
+  renameRepositoryLinks(normalized);
   return normalized;
+}
+
+function renameRepositoryLinks(document: DocumentModel) {
+  for (const node of Object.values(document.nodes)) {
+    if (node.type !== 'leaf' || node.role !== 'link') {
+      continue;
+    }
+
+    if (node.label === 'github.com/tombigel/codex-playground') {
+      node.label = 'github.com/tombigel/sticky-playground';
+    }
+
+    if (node.href === 'https://github.com/tombigel/codex-playground') {
+      node.href = 'https://github.com/tombigel/sticky-playground';
+    }
+  }
 }
 
 function upgradeLegacyStarterShell(document: DocumentModel) {
@@ -433,8 +450,8 @@ function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
 
   const repoLink = createUniqueLeaf(document, 'link', footer.id) as LinkLeaf;
   repoLink.name = 'Repository Link';
-  repoLink.label = 'github.com/tombigel/codex-playground';
-  repoLink.href = 'https://github.com/tombigel/codex-playground';
+  repoLink.label = 'github.com/tombigel/sticky-playground';
+  repoLink.href = 'https://github.com/tombigel/sticky-playground';
   repoLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
 
   document.nodes[title.id] = title;

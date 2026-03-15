@@ -150,6 +150,45 @@ describe('editor/editorStore integration', () => {
     }
   });
 
+  it('migrates persisted repository links to the sticky-playground repo', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+
+    const state = createInitialState();
+    const nextDocument = structuredClone(state.document);
+    const repoLink = Object.values(nextDocument.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
+    );
+    if (!repoLink || repoLink.type !== 'leaf' || repoLink.role !== 'link') {
+      throw new Error('Expected repository link');
+    }
+
+    repoLink.label = 'github.com/tombigel/codex-playground';
+    repoLink.href = 'https://github.com/tombigel/codex-playground';
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        document: nextDocument,
+      }),
+    );
+
+    const loaded = loadPersistedState();
+    const migratedRepoLink = Object.values(loaded.document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
+    );
+
+    expect(migratedRepoLink).toBeTruthy();
+    if (!migratedRepoLink || migratedRepoLink.type !== 'leaf' || migratedRepoLink.role !== 'link') {
+      return;
+    }
+
+    expect(migratedRepoLink.label).toBe('github.com/tombigel/sticky-playground');
+    expect(migratedRepoLink.href).toBe('https://github.com/tombigel/sticky-playground');
+  });
+
   it('inserts sections before footer and selects the inserted section', () => {
     const initial = createInitialState();
     const rootBefore = getRoot(initial.document);
