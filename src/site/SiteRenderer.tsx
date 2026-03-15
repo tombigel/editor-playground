@@ -76,7 +76,20 @@ function renderLeaf(node: Extract<DocumentNode, { type: 'leaf' }>, previewSticky
   if (node.role === 'text') {
     const Tag = node.htmlTag;
     return (
-      <Tag key={node.id} style={{ ...style, margin: 0, color: node.style?.color, fontWeight: node.style?.fontWeight, fontStyle: node.style?.fontStyle, textDecorationLine: node.style?.textDecorationLine, lineHeight: node.style?.lineHeight, direction: node.style?.direction, fontSize: node.style?.fontSize ? formatValue(node.style.fontSize.parsed) : undefined }}>
+      <Tag
+        key={node.id}
+        style={{
+          ...style,
+          margin: 0,
+          color: node.style?.color ?? 'inherit',
+          fontWeight: node.style?.fontWeight ?? 'inherit',
+          fontStyle: node.style?.fontStyle ?? 'inherit',
+          textDecorationLine: node.style?.textDecorationLine ?? 'inherit',
+          lineHeight: node.style?.lineHeight ?? 'inherit',
+          direction: node.style?.direction ?? 'inherit',
+          fontSize: node.style?.fontSize ? formatValue(node.style.fontSize.parsed) : 'inherit',
+        }}
+      >
         {node.content}
       </Tag>
     );

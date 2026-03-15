@@ -194,6 +194,50 @@ describe('editor/editorStore integration', () => {
     expect(migratedRepoLink.href).toBe('https://github.com/tombigel/sticky-playground');
   });
 
+  it('migrates legacy header and footer text tags to semantic defaults', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+
+    const state = createInitialState();
+    const nextDocument = structuredClone(state.document);
+    const headerTitle = Object.values(nextDocument.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title',
+    );
+    const footerTitle = Object.values(nextDocument.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Title',
+    );
+
+    if (!headerTitle || headerTitle.type !== 'leaf' || headerTitle.role !== 'text') {
+      throw new Error('Expected header title');
+    }
+    if (!footerTitle || footerTitle.type !== 'leaf' || footerTitle.role !== 'text') {
+      throw new Error('Expected footer title');
+    }
+
+    headerTitle.htmlTag = 'p';
+    footerTitle.htmlTag = 'p';
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        document: nextDocument,
+      }),
+    );
+
+    const loaded = loadPersistedState();
+    const migratedHeaderTitle = Object.values(loaded.document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title',
+    );
+    const migratedFooterTitle = Object.values(loaded.document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Title',
+    );
+
+    expect(migratedHeaderTitle && migratedHeaderTitle.type === 'leaf' && migratedHeaderTitle.role === 'text' ? migratedHeaderTitle.htmlTag : null).toBe('h1');
+    expect(migratedFooterTitle && migratedFooterTitle.type === 'leaf' && migratedFooterTitle.role === 'text' ? migratedFooterTitle.htmlTag : null).toBe('h2');
+  });
+
   it('migrates untouched legacy default starter sections to the post template', () => {
     const windowStub = createWindowStorageStub();
     vi.stubGlobal('window', windowStub);

@@ -223,18 +223,24 @@ export function InspectorPanel({
               <CardHeader className="px-3 pt-3 pb-1">
                 <CardTitle className="text-xs">Design</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
-                <FormField label="Background">
-                  <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1">
+              <CardContent className="px-3 pt-1.5 pb-3">
+                <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+                  <Label className="text-[11px] font-medium text-slate-500">Background</Label>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Input
+                      value={normalizeColorInputValue(node.style.background)}
+                      onChange={(e) => onWrapperStyleChange('background', e.target.value)}
+                      className="h-8 w-22 rounded-sm font-mono text-[11px] uppercase"
+                    />
                     <input
                       type="color"
-                      className="h-8 w-9 rounded-md border-0 bg-transparent p-0"
+                      aria-label="Background color"
+                      className="h-8 w-8 cursor-pointer rounded-sm border border-slate-200 bg-white p-0 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/80 focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
                       value={normalizeColorInputValue(node.style.background)}
                       onChange={(e) => onWrapperStyleChange('background', e.target.value)}
                     />
-                    <div className="text-xs text-slate-500">{normalizeColorInputValue(node.style.background)}</div>
                   </div>
-                </FormField>
+                </div>
               </CardContent>
             </Card>
           ) : null}
@@ -352,7 +358,7 @@ export function InspectorPanel({
                   <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                     <Label className="text-[11px] font-medium text-slate-500">HTML tag</Label>
                     <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
-                      <SelectTrigger className="ml-auto w-24">
+                      <SelectTrigger className="ml-auto h-8 w-24 rounded-sm text-[11px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -868,7 +874,7 @@ function FontSizePxInput({
             onChange(next);
           }
         }}
-        className="[appearance:textfield] pr-7 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="h-8 rounded-sm text-[11px] [appearance:textfield] pr-7 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] font-medium text-slate-500">
         px
@@ -903,7 +909,7 @@ function NumberInput({
           onChange(next);
         }
       }}
-      className="[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      className="h-8 rounded-sm text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
     />
   );
 }

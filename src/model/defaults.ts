@@ -108,6 +108,7 @@ export function createDefaultHeader(parentId: NodeId) {
   headerLogo.style.color = '#0f172a';
   headerLogo.style.fontSize = parseUnitValue('20px');
   headerLogo.style.fontWeight = 'bold';
+  headerLogo.htmlTag = 'h1';
 
   const headerSubtitle = createLeaf('text', header.id) as TextLeaf;
   headerSubtitle.name = 'Product Subtitle';
@@ -167,6 +168,7 @@ export function createDefaultFooter(parentId: NodeId) {
   footerTitle.style.fontSize = parseUnitValue('16px');
   footerTitle.style.fontWeight = 'bold';
   footerTitle.style.lineHeight = 1.2;
+  footerTitle.htmlTag = 'h2';
 
   const footerCopy = createLeaf('text', footer.id) as TextLeaf;
   footerCopy.name = 'Footer Copy';
@@ -419,6 +421,7 @@ function createPostSection(parentId: NodeId): TemplateBuild {
     fontSize: '44px',
     fontWeight: 'bold',
     lineHeight: 1.1,
+    htmlTag: 'h1',
   });
 
   const body = createLeaf('text', section.id) as TextLeaf;
@@ -464,7 +467,7 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
   heading.name = 'Section Heading';
   heading.content = 'Staggered sticky gallery';
   heading.rect = createDefaultRect('64px', '22.5px', '678px', '194px');
-  styleText(heading, { color: '#0f172a', fontSize: '52px', fontWeight: 'bold', lineHeight: 1.06 });
+  styleText(heading, { color: '#0f172a', fontSize: '52px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' });
 
   const copy = createLeaf('text', section.id) as TextLeaf;
   copy.name = 'Section Copy';
@@ -529,7 +532,7 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
   lead.name = 'Pinned Lead';
   lead.content = 'One pinned message, many scrolling details';
   lead.rect = createDefaultRect('85px', '212.28125px', '360px', '234px');
-  styleText(lead, { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06 });
+  styleText(lead, { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' });
   lead.sticky = {
     enabled: true,
     target: 'self',
@@ -596,7 +599,7 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
   heading.name = 'Section Heading';
   heading.content = 'Pinned media with scrolling narrative';
   heading.rect = createDefaultRect('558px', '165px', '520px', 'auto');
-  styleText(heading, { color: '#0f172a', fontSize: '44px', fontWeight: 'bold', lineHeight: 1.1 });
+  styleText(heading, { color: '#0f172a', fontSize: '44px', fontWeight: 'bold', lineHeight: 1.1, htmlTag: 'h2' });
 
   const mediaImage = createLeaf('image', section.id) as ImageLeaf;
   mediaImage.name = 'Pinned Media';
@@ -681,7 +684,13 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     name: string,
     rect: { x: string; y: string; width: string; height?: string },
     content: string,
-    textStyle: { color?: string; fontSize?: string; fontWeight?: 'normal' | 'bold'; lineHeight?: number },
+    textStyle: {
+      color?: string;
+      fontSize?: string;
+      fontWeight?: 'normal' | 'bold';
+      lineHeight?: number;
+      htmlTag?: TextLeaf['htmlTag'];
+    },
   ) => {
     const text = createLeaf('text', section.id) as TextLeaf;
     text.name = name;
@@ -737,7 +746,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     'Section Heading',
     { x: '72px', y: '86px', width: '980px' },
     'Sticky edge lab: top, both, bottom',
-    { color: '#0f172a', fontSize: '48px', fontWeight: 'bold', lineHeight: 1.04 },
+    { color: '#0f172a', fontSize: '48px', fontWeight: 'bold', lineHeight: 1.04, htmlTag: 'h2' },
   );
 
   const intro = createSectionText(
@@ -869,6 +878,7 @@ function styleText(
     fontSize?: string;
     fontWeight?: 'normal' | 'bold';
     lineHeight?: number;
+    htmlTag?: TextLeaf['htmlTag'];
   },
 ) {
   leaf.style ??= {};
@@ -883,6 +893,9 @@ function styleText(
   }
   if (typeof options.lineHeight === 'number') {
     leaf.style.lineHeight = options.lineHeight;
+  }
+  if (options.htmlTag) {
+    leaf.htmlTag = options.htmlTag;
   }
 }
 

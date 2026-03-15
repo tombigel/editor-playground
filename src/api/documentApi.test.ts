@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createSectionFromTemplate } from '../model/defaults';
 import {
   applyDocumentCommands,
   createInitialDocument,
@@ -195,6 +196,72 @@ describe('api/documentApi', () => {
     }
 
     expect(postSection.rect.height.base.raw).toBe('50vh');
+  });
+
+  it('seeds semantic heading tags for template titles', () => {
+    const initialDocument = createInitialDocument();
+    const headerTitle = Object.values(initialDocument.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title',
+    );
+    const footerTitle = Object.values(initialDocument.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Title',
+    );
+    const postTitle = Object.values(initialDocument.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    expect(headerTitle).toBeTruthy();
+    if (!headerTitle || headerTitle.type !== 'leaf' || headerTitle.role !== 'text') {
+      return;
+    }
+
+    expect(headerTitle.htmlTag).toBe('h1');
+
+    expect(footerTitle).toBeTruthy();
+    if (!footerTitle || footerTitle.type !== 'leaf' || footerTitle.role !== 'text') {
+      return;
+    }
+
+    expect(footerTitle.htmlTag).toBe('h2');
+
+    expect(postTitle).toBeTruthy();
+    if (!postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
+      return;
+    }
+
+    expect(postTitle.htmlTag).toBe('h1');
+
+    const staggered = createSectionFromTemplate('stickyStaggeredImages', 'site_test');
+    const staggeredHeading = Object.values(staggered.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading',
+    );
+    expect(staggeredHeading && staggeredHeading.type === 'leaf' && staggeredHeading.role === 'text' ? staggeredHeading.htmlTag : null).toBe('h2');
+
+    const pinnedCards = createSectionFromTemplate('stickyPinnedCards', 'site_test');
+    const pinnedLead = Object.values(pinnedCards.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+    );
+    expect(pinnedLead && pinnedLead.type === 'leaf' && pinnedLead.role === 'text' ? pinnedLead.htmlTag : null).toBe('h2');
+
+    const mediaReveal = createSectionFromTemplate('stickyMediaReveal', 'site_test');
+    const mediaRevealHeading = Object.values(mediaReveal.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading',
+    );
+    expect(
+      mediaRevealHeading && mediaRevealHeading.type === 'leaf' && mediaRevealHeading.role === 'text'
+        ? mediaRevealHeading.htmlTag
+        : null,
+    ).toBe('h2');
+
+    const stickySteps = createSectionFromTemplate('stickySteps', 'site_test');
+    const stickyStepsHeading = Object.values(stickySteps.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading',
+    );
+    expect(
+      stickyStepsHeading && stickyStepsHeading.type === 'leaf' && stickyStepsHeading.role === 'text'
+        ? stickyStepsHeading.htmlTag
+        : null,
+    ).toBe('h2');
   });
 
   it('seeds the default footer repository link with the sticky-playground repo url', () => {

@@ -287,6 +287,7 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
   ensureDefaultSiteSections(normalized);
   upgradeLegacyStarterSection(normalized);
   upgradeLegacyStarterShell(normalized);
+  normalizeStarterShellTextTags(normalized);
   renameRepositoryLinks(normalized);
   return normalized;
 }
@@ -345,6 +346,22 @@ function upgradeLegacyStarterShell(document: DocumentModel) {
 
   if (footer && isLegacyFooter(document, footer)) {
     applyModernFooter(document, footer);
+  }
+}
+
+function normalizeStarterShellTextTags(document: DocumentModel) {
+  for (const node of Object.values(document.nodes)) {
+    if (node.type !== 'leaf' || node.role !== 'text') {
+      continue;
+    }
+
+    if (node.name === 'Product Title' && node.content === 'Sticky Playground') {
+      node.htmlTag = 'h1';
+    }
+
+    if (node.name === 'Footer Title' && node.content === 'Sticky Playground') {
+      node.htmlTag = 'h2';
+    }
   }
 }
 
@@ -511,6 +528,7 @@ function applyModernHeader(document: DocumentModel, header: WrapperNode) {
   title.style.color = '#0f172a';
   title.style.fontSize = parseUnitValue('20px');
   title.style.fontWeight = 'bold';
+  title.htmlTag = 'h1';
 
   const subtitle = createUniqueLeaf(document, 'text', header.id) as TextLeaf;
   subtitle.name = 'Product Subtitle';
@@ -567,6 +585,7 @@ function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
   title.style.fontSize = parseUnitValue('16px');
   title.style.fontWeight = 'bold';
   title.style.lineHeight = 1.2;
+  title.htmlTag = 'h2';
 
   const copy = createUniqueLeaf(document, 'text', footer.id) as TextLeaf;
   copy.name = 'Footer Copy';
