@@ -87,6 +87,15 @@ describe('api/documentApi', () => {
     expect(reparsed.nodes[textId]).toEqual(next.nodes[textId]);
   });
 
+  it('serializes the document model shape only', () => {
+    const document = createInitialDocument();
+    const serialized = JSON.parse(serializeDocumentJson(document)) as Record<string, unknown>;
+
+    expect(Object.keys(serialized).sort()).toEqual(['nodes', 'rootId']);
+    expect(serialized.rootId).toBe(document.rootId);
+    expect(serialized.nodes).toEqual(document.nodes);
+  });
+
   it('rejects invalid documents via parseDocumentJson', () => {
     const bad = {
       rootId: 'site_1',

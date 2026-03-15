@@ -28,19 +28,10 @@ function getRoot(state: ReturnType<typeof createInitialState>['document']) {
   return root;
 }
 
-describe('editor/editorStore integration', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('defaults editor theme mode to auto', () => {
-    const state = createInitialState();
-    expect(state.ui.themeMode).toBe('auto');
-  });
-
-  it('normalizes persisted theme mode values', () => {
-    const storage = new Map<string, string>();
-    const localStorage = {
+function createWindowStorageStub() {
+  const storage = new Map<string, string>();
+  return {
+    localStorage: {
       getItem(key: string) {
         return storage.get(key) ?? null;
       },
@@ -53,9 +44,24 @@ describe('editor/editorStore integration', () => {
       clear() {
         storage.clear();
       },
-    };
+    },
+  };
+}
 
-    vi.stubGlobal('window', { localStorage });
+describe('editor/editorStore integration', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('defaults editor theme mode to auto', () => {
+    const state = createInitialState();
+    expect(state.ui.themeMode).toBe('auto');
+  });
+
+  it('normalizes persisted theme mode values', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
 
     const state = createInitialState();
 
@@ -84,6 +90,64 @@ describe('editor/editorStore integration', () => {
     );
 
     expect(loadPersistedState().ui.themeMode).toBe('dark');
+  });
+
+  it('restores persisted document and UI state while dropping transient editor state', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+
+    const state0 = createInitialState();
+    const state1 = insertLeaf(state0, 'text');
+    const textId = state1.selectedId;
+    if (!textId) {
+      throw new Error('Expected inserted text node');
+    }
+
+    const nextDocument = structuredClone(state1.document);
+    const nextText = nextDocument.nodes[textId];
+    if (!nextText || nextText.type !== 'leaf' || nextText.role !== 'text') {
+      throw new Error('Expected inserted text leaf');
+    }
+    nextText.content = 'Persisted text value';
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state1,
+        document: nextDocument,
+        selectedId: 'missing_node',
+        pendingRoleSwap: {
+          requestedId: textId,
+          targetRole: 'header',
+          existingId: textId,
+        },
+        ui: {
+          previewSticky: false,
+          spacerVisibility: 'all',
+          showGridLanes: true,
+          snapEnabled: false,
+          themeMode: 'dark',
+        },
+      }),
+    );
+
+    const loaded = loadPersistedState();
+    const loadedText = loaded.document.nodes[textId];
+
+    expect(loaded.selectedId).toBeNull();
+    expect(loaded.pendingRoleSwap).toBeNull();
+    expect(loaded.ui).toEqual({
+      previewSticky: false,
+      spacerVisibility: 'all',
+      showGridLanes: true,
+      snapEnabled: false,
+      themeMode: 'dark',
+    });
+    expect(loadedText.type).toBe('leaf');
+    if (loadedText.type === 'leaf' && loadedText.role === 'text') {
+      expect(loadedText.content).toBe('Persisted text value');
+    }
   });
 
   it('inserts sections before footer and selects the inserted section', () => {
@@ -278,6 +342,12 @@ describe('editor/editorStore integration', () => {
     expect(next.selectedId).toBeNull();
     expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'header')).toBe(true);
     expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'footer')).toBe(true);
+  });
+
+  it('rejects editor session payloads as imported documents', () => {
+    const state = createInitialState();
+
+    expect(() => parseImportedDocumentJson(JSON.stringify(state))).toThrow('Import failed: invalid document structure.');
   });
 
   it('nudges selected components by pixel deltas and clamps to zero', () => {
