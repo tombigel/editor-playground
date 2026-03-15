@@ -9,12 +9,16 @@ import type {
   ComputedWrapperStickyState,
   DocumentModel,
   DocumentNode,
+  EditorTextField,
   LeafRole,
+  NodeTextField,
   NodeId,
   StickyDefinition,
   WrapperNode,
   WrapperRole,
 } from '../model/types';
+import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolve';
+import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument } from '../model/validation';
 
@@ -22,8 +26,12 @@ export type {
   ComputedWrapperStickyState,
   DocumentModel,
   DocumentNode,
+  EditorTextField,
   LeafRole,
+  NodeTextField,
   NodeId,
+  StickyGeometrySnapshot,
+  StickyLayoutState,
   StickyDefinition,
   WrapperNode,
   WrapperRole,
@@ -40,6 +48,8 @@ export {
   parseFontSizeValue,
   parseUnitValue,
   parseWidthValue,
+  resolveStickyLayout,
+  resolveWrapperStickyState,
   resolveUnitValuePx,
   validateDocument,
 };
@@ -47,7 +57,7 @@ export {
 export type DocumentCommand =
   | { type: 'setRect'; nodeId: NodeId; field: 'x' | 'y' | 'width' | 'height'; value: string }
   | { type: 'setSticky'; nodeId: NodeId; patch: Partial<StickyDefinition> }
-  | { type: 'setText'; nodeId: NodeId; field: 'name' | 'content' | 'label' | 'href' | 'src' | 'alt'; value: string };
+  | { type: 'setText'; nodeId: NodeId; field: NodeTextField; value: string };
 
 export function cloneDocument(document: DocumentModel): DocumentModel {
   return {
@@ -125,7 +135,7 @@ export function setNodeSticky(
 export function setNodeTextField(
   document: DocumentModel,
   nodeId: NodeId,
-  field: 'name' | 'content' | 'htmlTag' | 'label' | 'href' | 'src' | 'alt',
+  field: NodeTextField,
   value: string,
 ): DocumentModel {
   const next = cloneDocument(document);

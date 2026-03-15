@@ -27,24 +27,29 @@ import {
   updateStickyField,
   updateTextField,
   updateWrapperStyleField,
-  type EditorState,
 } from '../editor/editorStore';
 import { getAdjacentStageSelection, getStageSelectableNodeIds } from '../editor/stageNavigation';
-import { computeStickyState } from '../sticky/stickyCompute';
-import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
+import { SECTION_TEMPLATES } from '../model/defaults';
 import { getNode } from '../model/selectors';
-import type { DocumentModel, DocumentNode, NodeId } from '../model/types';
 import { parseUnitValue } from '../model/units';
-import { serializeDocumentJson } from './documentApi';
+import { resolveStickyLayout, resolveWrapperStickyState, serializeDocumentJson } from './documentApi';
 
-export type { DocumentModel, DocumentNode, EditorState, NodeId, SectionTemplateId };
+export type {
+  DocumentModel,
+  DocumentNode,
+  EditorTextField,
+  NodeId,
+  StickyGeometrySnapshot,
+  StickyLayoutState,
+} from './documentApi';
+export type { EditorState } from '../editor/editorStore';
+export type { SectionTemplateId } from '../model/defaults';
 
 export {
   SECTION_TEMPLATES,
   cancelPromoteWrapperRole,
   clearSessionState,
   clearPersistedState,
-  computeStickyState,
   confirmPromoteWrapperRole,
   createFactoryResetState,
   createInitialState,
@@ -65,6 +70,8 @@ export {
   persistDefaultDocument,
   persistState,
   parseImportedDocumentJson,
+  resolveStickyLayout,
+  resolveWrapperStickyState,
   reparentNode,
   reorderNode,
   requestPromoteWrapperRole,

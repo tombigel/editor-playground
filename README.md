@@ -99,6 +99,7 @@ It exposes document-level operations using `DocumentModel` only (no editor sessi
 - parse/serialize helpers
 - rect/sticky/text mutation helpers
 - template insertion into the document tree
+- shared sticky resolution helpers (`resolveStickyLayout`, `resolveWrapperStickyState`) that accept document data plus renderer-provided geometry
 
 ## Testing
 
@@ -115,6 +116,6 @@ Current automated suites:
 
 - `src/model/units.test.ts`
 - `src/model/validation.test.ts`
-- `src/sticky/stickyCompute.test.ts`
+- `src/sticky/resolve.test.ts`
 - `src/api/documentApi.test.ts`
 - `src/editor/editorStore.integration.test.ts`

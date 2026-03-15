@@ -32,15 +32,6 @@ function Dialog({
   return <DialogContext.Provider value={value}>{children}</DialogContext.Provider>;
 }
 
-function DialogTrigger({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-
-function DialogClose({ children }: { children: React.ReactNode }) {
-  const { onOpenChange } = useDialogContext();
-  return <button type="button" onClick={() => onOpenChange(false)}>{children}</button>;
-}
-
 type DialogContentProps = Omit<React.ComponentPropsWithoutRef<'div'>, 'children'> & {
   children: React.ReactNode;
   surfaceClassName?: string;
@@ -112,11 +103,9 @@ function DialogDescription({ className, ...props }: React.ComponentProps<'div'>)
 
 export {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 };

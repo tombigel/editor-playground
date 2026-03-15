@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { computeStickyState } from '../sticky/stickyCompute';
+import { resolveStickyLayout } from '../sticky/resolve';
 import { createInitialDocument } from '../model/defaults';
 import { parseUnitValue } from '../model/units';
 import {
@@ -564,7 +564,7 @@ describe('editor/editorStore integration', () => {
     expect(confirmed.pendingRoleSwap).toBeNull();
   });
 
-  it('integrates editor sticky mutation with sticky compute registrations', () => {
+  it('integrates editor sticky mutation with sticky layout resolution', () => {
     const state0 = createInitialState();
     const state1 = insertLeaf(state0, 'text');
     const leafId = state1.selectedId;
@@ -586,7 +586,7 @@ describe('editor/editorStore integration', () => {
       throw new Error('Expected leaf with parent wrapper');
     }
 
-    const stickyState = computeStickyState(state2.document);
+    const stickyState = resolveStickyLayout(state2.document);
     const parent = state2.document.nodes[leaf.parentId];
     if (!parent || parent.type !== 'wrapper') {
       throw new Error('Expected parent wrapper');

@@ -17,7 +17,7 @@ import {
   Settings,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { ComputedWrapperStickyState, DocumentNode } from '../api/documentApi';
+import type { DocumentNode, StickyLayoutState } from '../api/documentApi';
 import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ type ActionResult = {
 type Props = {
   documentJson: string;
   errors: string[];
-  stickyState: Record<string, ComputedWrapperStickyState>;
+  stickyLayout: StickyLayoutState;
   selectedNode: DocumentNode | null;
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
@@ -118,7 +118,7 @@ type SavePickerWindow = Window & {
 export function SettingsPanel({
   documentJson,
   errors,
-  stickyState,
+  stickyLayout,
   selectedNode,
   previewSticky,
   spacerVisibility,
@@ -294,7 +294,7 @@ export function SettingsPanel({
   }
 
   const spacerToggleOn = spacerVisibility === 'all';
-  const hasStickyRegistrations = Object.values(stickyState).length > 0;
+  const hasStickyRegistrations = Object.values(stickyLayout).length > 0;
 
   return (
     <div className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
@@ -526,7 +526,7 @@ export function SettingsPanel({
                 <div className="mb-3 text-sm font-medium text-slate-900">Sticky math</div>
                 {hasStickyRegistrations ? (
                   <div className="space-y-3 text-xs text-slate-600">
-                    {Object.values(stickyState).map((entry) => (
+                    {Object.values(stickyLayout).map((entry) => (
                       <div key={entry.wrapperId} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
                         <div className="font-medium text-slate-900">{entry.wrapperId}</div>
                         <div className="mt-1">extra extent: {Math.round(entry.totalExtraExtentPx)}px</div>

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument } from '../model/defaults';
-import { parseFontSizeValue, parseHeightValue, parseWidthValue } from '../model/units';
+import { createDefaultRect, createInitialDocument, createLeaf } from '../model/defaults';
+import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { resolveWrapperStickyState } from '../sticky/resolve';
 import { didDragPointerMove, getNodeHeight, getNodeWidth, getResizeCommitSize, measureStageNodeElement, Stage } from './Stage';
 
 describe('stage/Stage', () => {
@@ -421,6 +422,88 @@ describe('stage/Stage', () => {
     expect(size).toEqual({
       width: 994,
       height: 554,
+    });
+  });
+
+  it('derives content-wrapper sticky extent locally from measured wrapper geometry', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.sticky = {
+      enabled: true,
+      target: 'contentWrapper',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('180px'),
+      durationTop: parseUnitValue('180px'),
+      durationBottom: parseUnitValue('180px'),
+      offsetTop: parseUnitValue('0px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    const stickyState = resolveWrapperStickyState(section, [], {
+      nodeSizes: {
+        [section.id]: { width: 1000, height: 320 },
+      },
+    });
+
+    expect(stickyState.totalExtraExtentPx).toBe(180);
+    expect(stickyState.registrations[0]).toMatchObject({
+      ownerId: section.id,
+      parentWrapperId: section.id,
+      startPx: 320,
+      durationPx: 180,
+      extentPx: 180,
+    });
+  });
+
+  it('derives child sticky start positions from child coordinates and measured height', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.children = [];
+    const stickyLeaf = createLeaf('text', section.id);
+    stickyLeaf.rect = createDefaultRect('24px', '100px', '200px', 'auto');
+    stickyLeaf.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('120px'),
+      durationTop: parseUnitValue('120px'),
+      durationBottom: parseUnitValue('120px'),
+      offsetTop: parseUnitValue('0px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    document.nodes[stickyLeaf.id] = stickyLeaf;
+    section.children.push(stickyLeaf.id);
+
+    const stickyState = resolveWrapperStickyState(section, [stickyLeaf], {
+      nodeSizes: {
+        [section.id]: { width: 1000, height: 600 },
+        [stickyLeaf.id]: { width: 200, height: 84 },
+      },
+    });
+
+    expect(stickyState.registrations[0]).toMatchObject({
+      ownerId: stickyLeaf.id,
+      parentWrapperId: section.id,
+      startPx: 184,
+      durationPx: 120,
+      endPx: 304,
     });
   });
 });

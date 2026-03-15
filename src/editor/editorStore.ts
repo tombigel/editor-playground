@@ -14,6 +14,7 @@ import type {
   ButtonLeaf,
   DocumentModel,
   DocumentNode,
+  EditorTextField,
   LeafRole,
   LinkLeaf,
   NodeId,
@@ -771,7 +772,7 @@ function createUniqueLeaf(document: DocumentModel, role: LeafRole, parentId: Nod
 export function updateTextField(
   state: EditorState,
   nodeId: NodeId,
-  field: string,
+  field: EditorTextField,
   value: string,
 ): EditorState {
   const document = cloneDocument(state.document);

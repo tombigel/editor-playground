@@ -20,7 +20,7 @@ import {
   PilcrowRight,
   Proportions,
 } from 'lucide-react';
-import type { DocumentNode, WrapperNode } from '../api/documentApi';
+import type { DocumentNode, EditorTextField, WrapperNode } from '../api/documentApi';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +67,7 @@ type Props = {
   onBringToFront: () => void;
   onSectionBack: () => void;
   onSectionForward: () => void;
-  onTextChange: (field: string, value: string) => void;
+  onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: 'background', value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onPromote: (role: 'header' | 'footer') => void;

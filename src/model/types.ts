@@ -6,6 +6,16 @@ export type LeafRole = 'text' | 'image' | 'link' | 'button';
 export type BreakpointId = 'base' | 'tablet' | 'mobile';
 export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
 export type FontSizeUnit = 'px' | 'em' | 'rem';
+export type NodeTextField = 'name' | 'content' | 'htmlTag' | 'label' | 'href' | 'src' | 'alt';
+export type TextStyleField =
+  | 'fontSize'
+  | 'fontWeight'
+  | 'fontStyle'
+  | 'textDecorationLine'
+  | 'lineHeight'
+  | 'direction'
+  | 'textAlign';
+export type EditorTextField = NodeTextField | TextStyleField;
 
 export type UnitValue = {
   value: number;

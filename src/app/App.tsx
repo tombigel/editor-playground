@@ -6,7 +6,6 @@ import {
   cancelPromoteWrapperRole,
   clearSessionState,
   clearPersistedState,
-  computeStickyState,
   confirmPromoteWrapperRole,
   createFactoryResetState,
   deleteNode,
@@ -28,6 +27,7 @@ import {
   type DocumentNode,
   type DocumentModel,
   type EditorState,
+  type EditorTextField,
   type NodeId,
   type SectionTemplateId,
   persistState,
@@ -37,6 +37,9 @@ import {
   resizeNode,
   selectNode,
   serializeDocumentJson,
+  resolveStickyLayout,
+  type StickyGeometrySnapshot,
+  type StickyLayoutState,
   updateRectField,
   updateStickyField,
   updateTextField,
@@ -62,7 +65,7 @@ type EditorAction =
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
   | { type: 'resize'; id: string; width: string; height: string }
-  | { type: 'text'; field: string; value: string }
+  | { type: 'text'; field: EditorTextField; value: string }
   | { type: 'wrapperStyle'; field: 'background'; value: string }
   | { type: 'rect'; field: 'x' | 'y' | 'width' | 'height'; value: string }
   | { type: 'promote'; role: 'header' | 'footer' }
@@ -465,6 +468,7 @@ export function App() {
   const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
   const [sectionTemplateAnchor, setSectionTemplateAnchor] = useState<HTMLElement | null>(null);
   const [sectionTemplatePosition, setSectionTemplatePosition] = useState({ top: 72, left: 102 });
+  const [stickyGeometry, setStickyGeometry] = useState<StickyGeometrySnapshot>({});
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
   const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
   const shortcutPlatform = getShortcutPlatform();
@@ -472,7 +476,10 @@ export function App() {
   const orderState = getNodeOrderState(state, selectedNode);
   const sectionOrderState = getSectionOrderState(state, selectedNode);
   const errors = useMemo(() => getValidationErrors(state), [state]);
-  const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
+  const stickyLayout = useMemo<StickyLayoutState>(
+    () => resolveStickyLayout(state.document, stickyGeometry),
+    [state.document, stickyGeometry],
+  );
   const documentJson = useMemo(() => serializeDocumentJson(state.document), [state.document]);
   const stageSelectableIds = useMemo(() => getStageSelectableNodeIds(state.document), [state.document]);
   const [systemPrefersDark, setSystemPrefersDark] = useState(false);
@@ -882,6 +889,7 @@ export function App() {
               onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
               onResizeStart={(id) => dispatch({ type: 'beginResize', id })}
               onResizeEnd={(id) => dispatch({ type: 'endResize', id })}
+              onStickyGeometryChange={setStickyGeometry}
             />
 
           </main>
@@ -1013,7 +1021,7 @@ export function App() {
           <SettingsPanel
             documentJson={documentJson}
             errors={errors}
-            stickyState={stickyState}
+            stickyLayout={stickyLayout}
             selectedNode={selectedNode}
             previewSticky={state.ui.previewSticky}
             spacerVisibility={state.ui.spacerVisibility}

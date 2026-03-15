@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
 import type {
   ComputedWrapperStickyState,
@@ -9,7 +9,8 @@ import type {
   WrapperNode,
 } from '../model/types';
 import { getChildren } from '../model/selectors';
-import { computeStickyState } from '../sticky/stickyCompute';
+import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../sticky/resolve';
+import { resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import type { DragState } from '../editor/DragController';
 import type { ResizeHandle, ResizeState } from '../editor/ResizeController';
@@ -28,6 +29,7 @@ export type StageProps = {
   onResize: (id: NodeId, width: string, height: string) => void;
   onResizeStart: (id: NodeId) => void;
   onResizeEnd: (id: NodeId) => void;
+  onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
 };
 
 const VIEWPORT_WIDTH = 1440;
@@ -57,7 +59,8 @@ type DragGeometry = {
   modelShiftY: number;
 };
 
-type MeasuredNodeSizes = Record<string, { width: number; height: number }>;
+type MeasuredNodeSizes = StickyMeasuredNodeSizes;
+type StageStickyRegistration = ComputedWrapperStickyState['registrations'][number];
 
 function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
   return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
@@ -82,9 +85,9 @@ export function Stage({
   onResize,
   onResizeStart,
   onResizeEnd,
+  onStickyGeometryChange,
 }: StageProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const stickyState = useMemo(() => computeStickyState(document), [document]);
   const [measuredNodeSizes, setMeasuredNodeSizes] = useState<MeasuredNodeSizes>({});
   const [dragState, setDragState] = useState<DragState>(null);
   const [snapGuides, setSnapGuides] = useState<SnapGuides>({
@@ -108,7 +111,12 @@ export function Stage({
 
     const next = measureStageNodeSizes(root);
     setMeasuredNodeSizes((current) => (areMeasuredNodeSizesEqual(current, next) ? current : next));
-  }, [document]);
+    onStickyGeometryChange?.({
+      nodeSizes: next,
+      viewportWidth: VIEWPORT_WIDTH,
+      viewportHeight: VIEWPORT_HEIGHT,
+    });
+  }, [document, onStickyGeometryChange]);
 
   return (
     <div
@@ -240,7 +248,6 @@ export function Stage({
               showGridLanes,
               onSelect,
               onMove,
-              stickyMap: stickyState,
               measuredNodeSizes,
               dragState,
               setDragState,
@@ -261,7 +268,6 @@ export function Stage({
               showGridLanes,
               onSelect,
               onMove,
-              stickyMap: stickyState,
               measuredNodeSizes,
               dragState,
               setDragState,
@@ -282,7 +288,6 @@ export function Stage({
               showGridLanes,
               onSelect,
               onMove,
-              stickyMap: stickyState,
               measuredNodeSizes,
               dragState,
               setDragState,
@@ -379,7 +384,6 @@ type RenderWrapperArgs = {
   showGridLanes: boolean;
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
-  stickyMap: Record<string, ComputedWrapperStickyState>;
   measuredNodeSizes: MeasuredNodeSizes;
   dragState: DragState;
   setDragState: (state: DragState) => void;
@@ -388,7 +392,7 @@ type RenderWrapperArgs = {
   onResizeStart: (id: NodeId) => void;
   isTopLevel: boolean;
   meshPlacement?: CSSProperties;
-  selfRegistration?: ComputedWrapperStickyState['registrations'][number];
+  selfRegistration?: StageStickyRegistration;
   ownerBottomLanePx?: number;
 };
 
@@ -401,7 +405,6 @@ function renderWrapper({
   showGridLanes,
   onSelect,
   onMove,
-  stickyMap,
   measuredNodeSizes,
   dragState,
   setDragState,
@@ -424,7 +427,12 @@ function renderWrapper({
   const children = getChildren(document, node.id).filter(
     (child): child is Exclude<DocumentNode, { type: 'site' }> => child.type !== 'site',
   );
-  const wrapperStickyState = stickyMap[node.id];
+  const stickyGeometry = {
+    nodeSizes: measuredNodeSizes,
+    viewportWidth: VIEWPORT_WIDTH,
+    viewportHeight: VIEWPORT_HEIGHT,
+  };
+  const wrapperStickyState = resolveWrapperStickyState(node, children, stickyGeometry);
   const registrationMap = new Map(
     (wrapperStickyState?.registrations ?? []).map((registration) => [registration.ownerId, registration]),
   );
@@ -433,9 +441,15 @@ function renderWrapper({
     if (child.type !== 'wrapper') {
       continue;
     }
-    childWrapperExtraExtentMap.set(child.id, stickyMap[child.id]?.totalExtraExtentPx ?? 0);
+    const childChildren = getChildren(document, child.id).filter(
+      (candidate): candidate is Exclude<DocumentNode, { type: 'site' }> => candidate.type !== 'site',
+    );
+    childWrapperExtraExtentMap.set(
+      child.id,
+      resolveWrapperStickyState(child, childChildren, stickyGeometry).totalExtraExtentPx,
+    );
   }
-  const extraExtent = stickyMap[node.id]?.totalExtraExtentPx ?? 0;
+  const extraExtent = wrapperStickyState.totalExtraExtentPx;
   const meshLayout = computeMeshLayout(children, node, registrationMap, childWrapperExtraExtentMap, measuredNodeSizes);
   const wrapperStyle = buildWrapperStyle(node, isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, node.id);
@@ -561,7 +575,7 @@ function renderWrapper({
         </div>
         {showWrapperSpacerVisuals ? (
           <div className="sticky-spacer-range-layer">
-            {renderSpacerRanges(document, node, wrapperStickyState, measuredNodeSizes)}
+            {renderSpacerRanges(document, node, wrapperStickyState.registrations, measuredNodeSizes)}
           </div>
         ) : null}
         {children.map((child) =>
@@ -575,7 +589,6 @@ function renderWrapper({
                 showGridLanes,
                 onSelect,
                 onMove,
-                stickyMap,
                 measuredNodeSizes,
                 dragState,
                 setDragState,
@@ -697,7 +710,7 @@ function renderLeaf({
   setDragState: (state: DragState) => void;
   setResizeState: (state: ResizeState) => void;
   onResizeStart: (id: NodeId) => void;
-  registration?: ComputedWrapperStickyState['registrations'][number];
+  registration?: StageStickyRegistration;
   meshPlacement?: CSSProperties;
   measuredNodeSizes: MeasuredNodeSizes;
 }) {
@@ -861,7 +874,7 @@ function renderLeafSpacerOverlay({
   measuredNodeSizes,
 }: {
   child: LeafNode;
-  registration?: ComputedWrapperStickyState['registrations'][number];
+  registration?: StageStickyRegistration;
   meshPlacement?: CSSProperties;
   wrapperBottomLanePx: number;
   previewSticky: boolean;
@@ -996,7 +1009,7 @@ function renderLeafSpacerOverlay({
 
 function renderWrapperSelfDistanceVisual(
   node: WrapperNode,
-  registration?: ComputedWrapperStickyState['registrations'][number],
+  registration?: StageStickyRegistration,
   ownerBottomLanePx?: number,
   measuredNodeSizes: MeasuredNodeSizes = {},
 ) {
@@ -2012,14 +2025,14 @@ function renderOffsetVisualForEdge(
 function renderSpacerRanges(
   document: DocumentModel,
   wrapper: WrapperNode,
-  stickyState?: ComputedWrapperStickyState,
+  registrations: StageStickyRegistration[],
   measuredNodeSizes: MeasuredNodeSizes = {},
 ) {
-  if (!stickyState || stickyState.registrations.length === 0) {
+  if (registrations.length === 0) {
     return null;
   }
 
-  return stickyState.registrations
+  return registrations
     .filter((registration) => registration.target === 'contentWrapper')
     .map((registration) => {
     const owner = document.nodes[registration.ownerId];
@@ -2046,7 +2059,7 @@ function renderSpacerRanges(
 
 function getSpacerRangeStyle(
   owner: Exclude<DocumentNode, { type: 'site' }>,
-  registration: ComputedWrapperStickyState['registrations'][number],
+  registration: StageStickyRegistration,
   wrapper: WrapperNode,
   measuredNodeSizes: MeasuredNodeSizes = {},
 ): CSSProperties {
@@ -2117,7 +2130,7 @@ function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
 function computeMeshLayout(
   children: Exclude<DocumentNode, { type: 'site' }>[],
   wrapper: WrapperNode,
-  registrations: Map<string, ComputedWrapperStickyState['registrations'][number]>,
+  registrations: Map<string, StageStickyRegistration>,
   childWrapperExtraExtents: Map<string, number>,
   measuredNodeSizes: MeasuredNodeSizes = {},
 ): MeshLayout {
@@ -2213,7 +2226,7 @@ function renderGridLaneOverlay(meshLayout: MeshLayout) {
 
 function getMeshNodeHeight(
   node: Exclude<DocumentNode, { type: 'site' }>,
-  registration?: ComputedWrapperStickyState['registrations'][number],
+  registration?: StageStickyRegistration,
   childWrapperExtraExtentPx = 0,
   measuredNodeSizes: MeasuredNodeSizes = {},
 ) {

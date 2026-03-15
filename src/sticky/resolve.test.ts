@@ -3,7 +3,7 @@ import { createDefaultRect, createInitialDocument, createLeaf } from '../model/d
 import { getMainWrappers } from '../model/selectors';
 import { parseUnitValue } from '../model/units';
 import type { TextLeaf, WrapperNode } from '../model/types';
-import { computeStickyState } from './stickyCompute';
+import { resolveStickyLayout, resolveWrapperStickyState } from './resolve';
 
 function createBaseDocument() {
   const document = createInitialDocument();
@@ -21,7 +21,7 @@ function addStickyLeaf(section: WrapperNode, document: ReturnType<typeof createB
   return leaf;
 }
 
-describe('sticky/computeStickyState', () => {
+describe('sticky/resolve', () => {
   it('registers self-sticky leaves with expected custom duration math', () => {
     const { document, section } = createBaseDocument();
     const leaf = addStickyLeaf(section, document);
@@ -35,7 +35,7 @@ describe('sticky/computeStickyState', () => {
       offsetTop: parseUnitValue('10px'),
     };
 
-    const result = computeStickyState(document);
+    const result = resolveStickyLayout(document);
     const registration = result[section.id]?.registrations[0];
     expect(registration).toBeTruthy();
     expect(registration?.parentWrapperId).toBe(section.id);
@@ -58,7 +58,7 @@ describe('sticky/computeStickyState', () => {
       offsetTop: parseUnitValue('0px'),
     };
 
-    const result = computeStickyState(document);
+    const result = resolveStickyLayout(document);
     const registration = result[section.id]?.registrations[0];
     expect(registration?.durationPx).toBe(1000);
     expect(registration?.extentPx).toBe(0);
@@ -79,7 +79,7 @@ describe('sticky/computeStickyState', () => {
       offsetBottom: parseUnitValue('0px'),
     };
 
-    const result = computeStickyState(document);
+    const result = resolveStickyLayout(document);
     const registration = result[section.id]?.registrations[0];
     expect(registration?.topDurationPx).toBe(100);
     expect(registration?.bottomDurationPx).toBe(50);
@@ -99,13 +99,35 @@ describe('sticky/computeStickyState', () => {
       offsetTop: parseUnitValue('0px'),
     };
 
-    const result = computeStickyState(document);
+    const result = resolveStickyLayout(document);
     const registration = result[section.id]?.registrations[0];
     expect(registration?.target).toBe('contentWrapper');
     expect(registration?.startPx).toBe(300);
     expect(registration?.durationPx).toBe(600);
     expect(registration?.extentPx).toBe(600);
     expect(result[section.id]?.totalExtraExtentPx).toBe(600);
+  });
+
+  it('uses measured geometry when resolving wrapper-local sticky layout', () => {
+    const { section } = createBaseDocument();
+    section.sticky = {
+      enabled: true,
+      target: 'contentWrapper',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('50%'),
+      durationTop: parseUnitValue('50%'),
+      offsetTop: parseUnitValue('0px'),
+    };
+
+    const result = resolveWrapperStickyState(section, [], {
+      nodeSizes: {
+        [section.id]: { width: 1000, height: 320 },
+      },
+    });
+
+    expect(result.registrations[0]?.durationPx).toBe(160);
+    expect(result.totalExtraExtentPx).toBe(160);
   });
 
   it('ignores disabled sticky nodes', () => {
@@ -121,7 +143,7 @@ describe('sticky/computeStickyState', () => {
       offsetTop: parseUnitValue('0px'),
     };
 
-    const result = computeStickyState(document);
+    const result = resolveStickyLayout(document);
     expect(result[section.id]?.registrations).toEqual([]);
   });
 });

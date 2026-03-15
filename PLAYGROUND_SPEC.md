@@ -305,9 +305,11 @@ Current UX includes:
 ## Architecture Boundaries
 
 - `src/model/*` is the domain layer (types, units, defaults, selectors, validation) and has no editor UI concerns.
+- `src/sticky/resolve.ts` is the shared sticky domain resolver. It accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations / extra extent without depending on React or DOM APIs.
 - `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
 - `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
+- `src/stage/Stage.tsx` is an editor renderer. It measures live node geometry, renders the preview, and publishes that geometry upward so other editor surfaces can reuse the same sticky resolution inputs.
 - `src/site/SiteRenderer.tsx` is a site/runtime renderer detached from editor interactions (no drag/resize/selection logic).
 
 ## Section Templates
@@ -369,7 +371,7 @@ The playground exposes:
 - show spacers toggle (`selected` or `all`)
 - preview + spacer quick toggles remain in the left rail with shortcuts/tooltips
 - snap toggle remains in the left rail with tooltip guidance for `Alt` drag inversion and a `Shift + G` shortcut
-- sticky computation output
+- sticky diagnostics output resolved by the shared sticky resolver using the same measured stage geometry the editor preview publishes
 - reset stage action
 - clear undo history action
 - undo step retention control

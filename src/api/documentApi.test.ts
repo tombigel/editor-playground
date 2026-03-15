@@ -92,6 +92,7 @@ describe('api/documentApi', () => {
     const next = applyDocumentCommands(document, [
       { type: 'setRect', nodeId: textId, field: 'y', value: '777px' },
       { type: 'setText', nodeId: textId, field: 'content', value: 'Updated by command chain' },
+      { type: 'setText', nodeId: textId, field: 'htmlTag', value: 'blockquote' },
     ]);
 
     const updatedText = next.nodes[textId];
@@ -100,6 +101,7 @@ describe('api/documentApi', () => {
     }
     expect(updatedText.rect.y.base.raw).toBe('777px');
     expect(updatedText.content).toBe('Updated by command chain');
+    expect(updatedText.htmlTag).toBe('blockquote');
 
     const json = serializeDocumentJson(next);
     const reparsed = parseDocumentJson(json);
