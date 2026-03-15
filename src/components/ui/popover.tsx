@@ -11,6 +11,10 @@ type NativePopoverElement = HTMLDivElement & {
   hidePopover: () => void;
 };
 
+type PopoverAttributeProps = React.HTMLAttributes<HTMLDivElement> & {
+  popover?: 'auto' | 'manual';
+};
+
 type PopoverSurfaceProps = React.ComponentProps<'div'> & {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -20,6 +24,10 @@ type PopoverSurfaceProps = React.ComponentProps<'div'> & {
 export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfaceProps>(
   ({ open, onOpenChange, popoverMode = 'manual', className, children, ...props }, forwardedRef) => {
     const localRef = React.useRef<NativePopoverElement | null>(null);
+    const surfaceProps: PopoverAttributeProps = {
+      ...props,
+      popover: popoverMode,
+    };
     const setRef = React.useCallback(
       (node: NativePopoverElement | null) => {
         localRef.current = node;
@@ -67,9 +75,8 @@ export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfacePro
     return (
       <div
         ref={setRef}
-        popover={popoverMode}
         className={cn('ui-popover-surface m-0 outline-none', className)}
-        {...props}
+        {...surfaceProps}
       >
         {children}
       </div>
@@ -238,7 +245,7 @@ export function PopoverTooltip({
       </span>
       <div
         ref={popoverRef}
-        popover="manual"
+        {...({ popover: 'manual' } as PopoverAttributeProps)}
         role="tooltip"
         className={cn(
           'ui-popover-tooltip fixed m-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] outline-none',

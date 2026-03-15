@@ -164,7 +164,16 @@ The playground imports and exports document JSON only, not full editor session s
   - choosing a `.json` file
   - pasting JSON from clipboard into the settings panel import box
   - importing pasted JSON from the textarea
-- import normalizes the incoming document, validates it, replaces the current document, clears selection, and can be undone with `Cmd + Z`
+- import normalizes the incoming document, validates graph integrity, replaces the current document, clears selection, and can be undone with `Cmd + Z`
+
+Validation during import/persistence restore now checks document graph integrity in addition to role nesting:
+
+- `rootId` must resolve to a `site` node
+- non-root nodes must have a parent
+- parent `children` references must resolve to existing nodes
+- child `parentId` must point back to the owning parent
+- duplicate child ids inside one parent are rejected
+- unreachable/orphaned subtrees are rejected
 
 ## Units
 

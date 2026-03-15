@@ -106,6 +106,10 @@ Run tests with:
 
 - `npm run test` for watch mode
 - `npm run test:run` for a single full run
+- `npm run test:coverage` for a single run with coverage thresholds
+- `npm run lint` for static lint checks
+- `npm run typecheck` for TypeScript checks
+- `npm run build` to run lint, typecheck, coverage, architecture checks, and the Vite production build
 
 Current automated suites:
 

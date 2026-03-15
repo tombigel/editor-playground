@@ -14,10 +14,8 @@ import {
   Keyboard,
   Info,
   Magnet,
-  RefreshCcw,
   Settings,
   SlidersHorizontal,
-  Trash2,
 } from 'lucide-react';
 import type { ComputedWrapperStickyState, DocumentNode } from '../api/documentApi';
 import { formatValue } from '../api/documentApi';

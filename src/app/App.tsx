@@ -249,14 +249,16 @@ function editorReducer(state: EditorState, action: EditorAction) {
       if (!selectedId) {
         return state;
       }
-      const parsedDuration = parseUnitValue(`${action.value}vh`);
-      return selectedId
-        ? updateStickyField(state, selectedId, {
-            duration: parsedDuration,
-            durationTop: selectedNodeHasTopEdge(state, selectedId) ? parsedDuration : undefined,
-            durationBottom: selectedNodeHasBottomEdge(state, selectedId) ? parsedDuration : undefined,
-          })
-        : state;
+      {
+        const parsedDuration = parseUnitValue(`${action.value}vh`);
+        return selectedId
+          ? updateStickyField(state, selectedId, {
+              duration: parsedDuration,
+              durationTop: selectedNodeHasTopEdge(state, selectedId) ? parsedDuration : undefined,
+              durationBottom: selectedNodeHasBottomEdge(state, selectedId) ? parsedDuration : undefined,
+            })
+          : state;
+      }
     case 'stickyDurationTop':
       if (!selectedId) {
         return state;

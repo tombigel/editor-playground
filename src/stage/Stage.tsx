@@ -591,7 +591,6 @@ function renderWrapper({
                 child,
                 selectedId,
                 previewSticky,
-                spacerVisibility,
                 onSelect,
                 dragState,
                 setDragState,
@@ -599,7 +598,6 @@ function renderWrapper({
                 onResizeStart,
                 registration: registrationMap.get(child.id),
                 meshPlacement: meshLayout.childPlacements[child.id],
-                wrapperBottomLanePx: meshLayout.bottomLanePx,
                 measuredNodeSizes,
               }),
         )}
@@ -682,7 +680,6 @@ function renderLeaf({
   child,
   selectedId,
   previewSticky,
-  spacerVisibility,
   onSelect,
   dragState,
   setDragState,
@@ -690,13 +687,11 @@ function renderLeaf({
   onResizeStart,
   registration,
   meshPlacement,
-  wrapperBottomLanePx,
   measuredNodeSizes,
 }: {
   child: LeafNode;
   selectedId: NodeId | null;
   previewSticky: boolean;
-  spacerVisibility: 'selected' | 'all';
   onSelect: (id: NodeId) => void;
   dragState: DragState;
   setDragState: (state: DragState) => void;
@@ -704,7 +699,6 @@ function renderLeaf({
   onResizeStart: (id: NodeId) => void;
   registration?: ComputedWrapperStickyState['registrations'][number];
   meshPlacement?: CSSProperties;
-  wrapperBottomLanePx: number;
   measuredNodeSizes: MeasuredNodeSizes;
 }) {
   const isAutoSticky =
@@ -717,7 +711,6 @@ function renderLeaf({
   const stickyEdgeMode = child.sticky ? getStickyEdgeMode(child.sticky) : 'top';
   const isBottomOnlySticky = Boolean(isSelfStickyTrack && stickyEdgeMode === 'bottom');
   const isBothSticky = Boolean(isSelfStickyTrack && stickyEdgeMode === 'both');
-  const showLeafSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, child.id);
   const isBrandMark = child.role === 'image' && child.name === 'Brand Mark';
   const leafBaseWidth = formatValue(child.rect.width.base.parsed);
   const leafBaseHeight = getLeafCssHeight(child);

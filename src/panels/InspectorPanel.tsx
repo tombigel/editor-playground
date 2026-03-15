@@ -601,91 +601,6 @@ export function InspectorPanel({
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  validate,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  validate?: (value: string) => boolean;
-}) {
-  const [draft, setDraft] = useState(value);
-  const [invalid, setInvalid] = useState(false);
-
-  useEffect(() => {
-    setDraft(value);
-    setInvalid(false);
-  }, [value]);
-
-  return (
-    <FormField label={label}>
-      <Input
-        value={draft}
-        onChange={(e) => {
-          const next = e.target.value;
-          setDraft(next);
-          if (!validate) {
-            onChange(next);
-            return;
-          }
-          const isValid = validate(next);
-          setInvalid(!isValid);
-          if (isValid) {
-            onChange(next);
-          }
-        }}
-        className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
-      />
-    </FormField>
-  );
-}
-
-function InlineField({
-  label,
-  value,
-  onChange,
-  validate,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  validate?: (value: string) => boolean;
-}) {
-  const [draft, setDraft] = useState(value);
-  const [invalid, setInvalid] = useState(false);
-
-  useEffect(() => {
-    setDraft(value);
-    setInvalid(false);
-  }, [value]);
-
-  return (
-    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
-      <Input
-        value={draft}
-        onChange={(e) => {
-          const next = e.target.value;
-          setDraft(next);
-          if (!validate) {
-            onChange(next);
-            return;
-          }
-          const isValid = validate(next);
-          setInvalid(!isValid);
-          if (isValid) {
-            onChange(next);
-          }
-        }}
-        className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
-      />
-    </div>
-  );
-}
-
 function SizeInlineField({
   label,
   nodeId,
@@ -994,80 +909,6 @@ function FormField({ label, children }: { label: string; children: ReactNode }) 
       <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
       {children}
     </div>
-  );
-}
-
-function InlineParsedInput({
-  value,
-  onChange,
-  validate,
-  placeholder,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  validate: (value: string) => boolean;
-  placeholder?: string;
-}) {
-  const [draft, setDraft] = useState(value);
-  const [invalid, setInvalid] = useState(false);
-
-  useEffect(() => {
-    setDraft(value);
-    setInvalid(false);
-  }, [value]);
-
-  return (
-    <Input
-      value={draft}
-      placeholder={placeholder}
-      onChange={(e) => {
-        const next = e.target.value;
-        setDraft(next);
-        const isValid = validate(next);
-        setInvalid(!isValid);
-        if (isValid) {
-          onChange(next);
-        }
-      }}
-      className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
-    />
-  );
-}
-
-function InlineNumberInput({
-  value,
-  onChange,
-  validate,
-  placeholder,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  validate: (value: string) => boolean;
-  placeholder?: string;
-}) {
-  const [draft, setDraft] = useState(value);
-  const [invalid, setInvalid] = useState(false);
-
-  useEffect(() => {
-    setDraft(value);
-    setInvalid(false);
-  }, [value]);
-
-  return (
-    <Input
-      value={draft}
-      placeholder={placeholder}
-      onChange={(e) => {
-        const next = e.target.value;
-        setDraft(next);
-        const isValid = validate(next);
-        setInvalid(!isValid);
-        if (isValid) {
-          onChange(next);
-        }
-      }}
-      className={`h-8 rounded-sm text-[11px] ${invalid ? 'border-red-400 bg-red-50 focus-visible:ring-red-300' : ''}`}
-    />
   );
 }
 
@@ -1466,21 +1307,6 @@ function stickyDurationBottomVh(node: Exclude<DocumentNode, { type: 'site' }>) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-function validateUnitField(value: string, field: 'x' | 'y' | 'width' | 'height') {
-  try {
-    if (field === 'width') {
-      parseWidthValue(value);
-    } else if (field === 'height') {
-      parseHeightValue(value);
-    } else {
-      parseUnitValue(value);
-    }
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function describeSizeFieldValue(value: string, axis: SizeFieldAxis): SizeFieldDescriptor {

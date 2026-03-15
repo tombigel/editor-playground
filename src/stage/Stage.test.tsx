@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument } from '../model/defaults';
-import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { parseFontSizeValue, parseHeightValue, parseWidthValue } from '../model/units';
 import { didDragPointerMove, getNodeHeight, getNodeWidth, getResizeCommitSize, measureStageNodeElement, Stage } from './Stage';
 
 describe('stage/Stage', () => {
@@ -390,7 +390,7 @@ describe('stage/Stage', () => {
       />,
     );
 
-    const nodeMarkupMatch = markup.match(new RegExp(`id=\"stage-node-${target.id}\"[^>]*style=\"([^\"]+)\"`));
+    const nodeMarkupMatch = markup.match(new RegExp(`id="stage-node-${target.id}"[^>]*style="([^"]+)"`));
     expect(nodeMarkupMatch?.[1]).toContain('align-self:start');
     expect(nodeMarkupMatch?.[1]).toContain('height:auto');
   });
@@ -400,7 +400,7 @@ describe('stage/Stage', () => {
       dataset: { nodeId: 'section_8' } as DOMStringMap,
       classList: {
         contains: (value: string) => value === 'stage-wrapper',
-      } as DOMTokenList,
+      } as unknown as DOMTokenList,
       getBoundingClientRect: () =>
         ({
           width: 996,
