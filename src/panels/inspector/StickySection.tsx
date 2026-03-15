@@ -1,0 +1,244 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { FormField, RangeField, StickyOffsetBandField } from '../InspectorControls';
+import type { InspectorActionHandlers, NonSiteInspectorNode } from './types';
+
+export function StickySection({
+  node,
+  actions,
+}: {
+  node: NonSiteInspectorNode;
+  actions: Pick<
+    InspectorActionHandlers,
+    | 'onStickyEnabled'
+    | 'onStickyTarget'
+    | 'onStickyEdges'
+    | 'onStickyOffset'
+    | 'onStickyOffsetTop'
+    | 'onStickyOffsetBottom'
+    | 'onStickyDurationMode'
+    | 'onStickyDuration'
+    | 'onStickyDurationTop'
+    | 'onStickyDurationBottom'
+  >;
+}) {
+  return (
+    <Card className="editor-border-subtle rounded-lg shadow-none">
+      <CardHeader className="px-3 pt-3 pb-1">
+        <CardTitle className="text-xs">Sticky</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
+        <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
+          <div>
+            <div className="editor-text-strong text-xs font-medium">{node.sticky?.enabled ? 'Enabled' : 'Disabled'}</div>
+            <div className="editor-text-muted text-[11px]">Pin this node inside its structural range.</div>
+          </div>
+          <Switch checked={Boolean(node.sticky?.enabled)} onCheckedChange={actions.onStickyEnabled} />
+        </div>
+
+        {node.sticky?.enabled ? (
+          <>
+            {node.type === 'wrapper' ? (
+              node.role === 'container' ? (
+                <FormField label="Target">
+                  <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
+                    Self (content wrapper target is temporarily hidden for containers)
+                  </div>
+                </FormField>
+              ) : (
+                <FormField label="Target">
+                  <Select
+                    value={node.sticky?.target ?? 'self'}
+                    onValueChange={(value) => actions.onStickyTarget(value as 'self' | 'contentWrapper')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="self">Self</SelectItem>
+                      <SelectItem value="contentWrapper">Content wrapper</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+              )
+            ) : null}
+
+            <FormField label="Edge">
+              <Select value={edgeValue(node)} onValueChange={(value) => actions.onStickyEdges(value as 'top' | 'bottom' | 'both')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="top">Top</SelectItem>
+                  <SelectItem value="bottom">Bottom</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+
+            {edgeValue(node) === 'both' ? (
+              <StickyOffsetBandField
+                topOffset={stickyOffsetTopVh(node)}
+                bottomOffset={stickyOffsetBottomVh(node)}
+                min={0}
+                max={100}
+                step={1}
+                unit="vh"
+                onValueChange={(top, bottom) => {
+                  actions.onStickyOffsetTop(top);
+                  actions.onStickyOffsetBottom(bottom);
+                }}
+              />
+            ) : (
+              <RangeField
+                label="Offset"
+                value={stickyOffsetVh(node)}
+                min={0}
+                max={100}
+                step={1}
+                unit="vh"
+                onValueChange={actions.onStickyOffset}
+              />
+            )}
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-3">
+                <Label className="text-[11px] font-medium">Duration</Label>
+                <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+                  <Button
+                    type="button"
+                    variant={(node.sticky?.durationMode ?? 'auto') === 'auto' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px]"
+                    onClick={() => actions.onStickyDurationMode('auto')}
+                  >
+                    Auto
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={(node.sticky?.durationMode ?? 'auto') === 'custom' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px]"
+                    onClick={() => actions.onStickyDurationMode('custom')}
+                  >
+                    Custom
+                  </Button>
+                </div>
+              </div>
+              {(node.sticky?.durationMode ?? 'auto') === 'custom' ? (
+                edgeValue(node) === 'both' ? (
+                  <div className="space-y-1.5">
+                    <RangeField
+                      label="Top Distance"
+                      value={stickyDurationTopVh(node)}
+                      min={0}
+                      max={400}
+                      step={25}
+                      unit="vh"
+                      onValueChange={actions.onStickyDurationTop}
+                    />
+                    <RangeField
+                      label="Bottom Distance"
+                      value={stickyDurationBottomVh(node)}
+                      min={0}
+                      max={400}
+                      step={25}
+                      unit="vh"
+                      onValueChange={actions.onStickyDurationBottom}
+                    />
+                  </div>
+                ) : (
+                  <RangeField
+                    label={null}
+                    value={stickyDurationVh(node)}
+                    min={0}
+                    max={400}
+                    step={25}
+                    unit="vh"
+                    onValueChange={actions.onStickyDuration}
+                  />
+                )
+              ) : (
+                <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
+                  Uses the owner section height as the sticky distance.
+                </div>
+              )}
+            </div>
+          </>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function edgeValue(node: NonSiteInspectorNode) {
+  const top = node.sticky?.edges.top;
+  const bottom = node.sticky?.edges.bottom;
+  if (top && bottom) {
+    return 'both';
+  }
+  if (bottom) {
+    return 'bottom';
+  }
+  return 'top';
+}
+
+function stickyDurationVh(node: NonSiteInspectorNode) {
+  if ((node.sticky?.durationMode ?? 'auto') === 'auto') {
+    return 0;
+  }
+  const duration = node.sticky?.durationTop?.parsed ?? node.sticky?.duration.parsed;
+  if (!duration) {
+    return 50;
+  }
+  return duration.unit === 'vh' ? duration.value : 50;
+}
+
+function stickyOffsetVh(node: NonSiteInspectorNode) {
+  const offset = node.sticky?.offsetTop?.parsed ?? node.sticky?.offsetBottom?.parsed;
+  if (!offset) {
+    return 0;
+  }
+  return offset.unit === 'vh' ? offset.value : 0;
+}
+
+function stickyOffsetTopVh(node: NonSiteInspectorNode) {
+  const offset = node.sticky?.offsetTop?.parsed;
+  if (!offset) {
+    return 0;
+  }
+  return offset.unit === 'vh' ? offset.value : 0;
+}
+
+function stickyOffsetBottomVh(node: NonSiteInspectorNode) {
+  const offset = node.sticky?.offsetBottom?.parsed;
+  if (!offset) {
+    return 0;
+  }
+  return offset.unit === 'vh' ? offset.value : 0;
+}
+
+function stickyDurationTopVh(node: NonSiteInspectorNode) {
+  if ((node.sticky?.durationMode ?? 'auto') === 'auto') {
+    return 0;
+  }
+  const duration = node.sticky?.durationTop?.parsed ?? node.sticky?.duration.parsed;
+  if (!duration) {
+    return 50;
+  }
+  return duration.unit === 'vh' ? duration.value : 50;
+}
+
+function stickyDurationBottomVh(node: NonSiteInspectorNode) {
+  if ((node.sticky?.durationMode ?? 'auto') === 'auto') {
+    return 0;
+  }
+  const duration = node.sticky?.durationBottom?.parsed ?? node.sticky?.duration.parsed;
+  if (!duration) {
+    return 50;
+  }
+  return duration.unit === 'vh' ? duration.value : 50;
+}

@@ -13,6 +13,8 @@ import {
   getShiftLockedPointer,
   measureStageNodeElement,
   resolveDragPointerPosition,
+} from './stageMath';
+import {
   Stage,
 } from './Stage';
 

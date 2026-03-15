@@ -42,6 +42,8 @@ type BoxPadding = {
   left?: string;
 };
 
+type TemplateNode = DocumentNode | WrapperNode;
+
 export type SectionTemplateId =
   | 'blank'
   | 'post'
@@ -119,6 +121,29 @@ function createTemplateSection(
   return section;
 }
 
+function setChildren(parent: Pick<WrapperNode, 'children'>, children: TemplateNode[]) {
+  parent.children = children.map((child) => child.id);
+}
+
+function createNodeMap(...nodes: TemplateNode[]) {
+  return Object.fromEntries(nodes.map((node) => [node.id, node])) as Record<NodeId, DocumentNode>;
+}
+
+function buildTemplate(
+  wrapper: WrapperNode,
+  children: TemplateNode[] = [],
+  extraNodes: TemplateNode[] = [],
+): TemplateBuild {
+  if (children.length > 0) {
+    setChildren(wrapper, children);
+  }
+
+  return {
+    wrapper,
+    nodes: createNodeMap(wrapper, ...children, ...extraNodes),
+  };
+}
+
 export function createDefaultHeader(parentId: NodeId) {
   const header = createWrapper('header', parentId);
   header.name = 'Playground Header';
@@ -160,19 +185,7 @@ export function createDefaultHeader(parentId: NodeId) {
   navTests.label = 'Test Plan';
   navTests.rect = createDefaultRect('1082px', '48px', '144px', '24px');
 
-  header.children = [headerLogo.id, headerSubtitle.id, navTemplates.id, navSticky.id, navTests.id];
-
-  return {
-    wrapper: header,
-    nodes: {
-      [header.id]: header,
-      [headerLogo.id]: headerLogo,
-      [headerSubtitle.id]: headerSubtitle,
-      [navTemplates.id]: navTemplates,
-      [navSticky.id]: navSticky,
-      [navTests.id]: navTests,
-    },
-  };
+  return buildTemplate(header, [headerLogo, headerSubtitle, navTemplates, navSticky, navTests]);
 }
 
 export function createDefaultFooter(parentId: NodeId) {
@@ -210,17 +223,7 @@ export function createDefaultFooter(parentId: NodeId) {
   footerLink.href = 'https://github.com/tombigel/sticky-playground';
   footerLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
 
-  footer.children = [footerTitle.id, footerCopy.id, footerLink.id];
-
-  return {
-    wrapper: footer,
-    nodes: {
-      [footer.id]: footer,
-      [footerTitle.id]: footerTitle,
-      [footerCopy.id]: footerCopy,
-      [footerLink.id]: footerLink,
-    },
-  };
+  return buildTemplate(footer, [footerTitle, footerCopy, footerLink]);
 }
 
 export function nextId(prefix: string): NodeId {
@@ -413,12 +416,7 @@ function createBlankSection(parentId: NodeId): TemplateBuild {
     bottom: '64px',
   });
 
-  return {
-    wrapper: section,
-    nodes: {
-      [section.id]: section,
-    },
-  };
+  return buildTemplate(section);
 }
 
 function createPostSection(parentId: NodeId): TemplateBuild {
@@ -460,18 +458,7 @@ function createPostSection(parentId: NodeId): TemplateBuild {
   link.label = 'Open playground spec';
   link.rect = createDefaultRect('548px', '418px', 'fit-content', 'auto');
 
-  section.children = [image.id, title.id, body.id, link.id];
-
-  return {
-    wrapper: section,
-    nodes: {
-      [section.id]: section,
-      [image.id]: image,
-      [title.id]: title,
-      [body.id]: body,
-      [link.id]: link,
-    },
-  };
+  return buildTemplate(section, [image, title, body, link]);
 }
 
 function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
@@ -521,30 +508,15 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
   imageD.alt = 'Golden desert dunes under soft sunlight';
   imageD.sticky = createCustomSticky('150vh', '15vh');
 
-  section.children = [heading.id, copy.id, imageA.id, imageB.id, imageC.id, imageD.id];
-
-  return {
-    wrapper: section,
-    nodes: {
-      [section.id]: section,
-      [heading.id]: heading,
-      [copy.id]: copy,
-      [imageA.id]: imageA,
-      [imageB.id]: imageB,
-      [imageC.id]: imageC,
-      [imageD.id]: imageD,
-    },
-  };
+  return buildTemplate(section, [heading, copy, imageA, imageB, imageC, imageD]);
 }
 
 function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
-  const section = createWrapper('section', parentId);
-  section.name = 'Sticky Pinned Cards';
-  section.rect = createDefaultRect('0px', '0px', '100%', '1760px');
-  section.style.paddingTop = parseUnitValue('80px');
-  section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('96px');
-  section.style.paddingLeft = parseUnitValue('72px');
+  const section = createTemplateSection(parentId, 'Sticky Pinned Cards', '1760px', {
+    top: '80px',
+    right: '72px',
+    bottom: '96px',
+  });
 
   const lead = createLeaf('text', section.id) as TextLeaf;
   lead.name = 'Pinned Lead';
@@ -589,29 +561,15 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
   card3.sticky = createCustomSticky('50vh', '15vh');
   styleText(card3, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
 
-  section.children = [lead.id, leadBody.id, card1.id, card2.id, card3.id];
-
-  return {
-    wrapper: section,
-    nodes: {
-      [section.id]: section,
-      [lead.id]: lead,
-      [leadBody.id]: leadBody,
-      [card1.id]: card1,
-      [card2.id]: card2,
-      [card3.id]: card3,
-    },
-  };
+  return buildTemplate(section, [lead, leadBody, card1, card2, card3]);
 }
 
 function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
-  const section = createWrapper('section', parentId);
-  section.name = 'Sticky Media Reveal';
-  section.rect = createDefaultRect('0px', '0px', '100%', '1840px');
-  section.style.paddingTop = parseUnitValue('78px');
-  section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('96px');
-  section.style.paddingLeft = parseUnitValue('72px');
+  const section = createTemplateSection(parentId, 'Sticky Media Reveal', '1840px', {
+    top: '78px',
+    right: '72px',
+    bottom: '96px',
+  });
 
   const heading = createLeaf('text', section.id) as TextLeaf;
   heading.name = 'Section Heading';
@@ -669,30 +627,15 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
   blockC.rect = createDefaultRect('559px', '1687px', '530px', '306px');
   styleText(blockC, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
 
-  section.children = [heading.id, mediaImage.id, blockA.id, blockB.id, blockC.id, revealBackdrop.id];
-
-  return {
-    wrapper: section,
-    nodes: {
-      [section.id]: section,
-      [heading.id]: heading,
-      [revealBackdrop.id]: revealBackdrop,
-      [mediaImage.id]: mediaImage,
-      [blockA.id]: blockA,
-      [blockB.id]: blockB,
-      [blockC.id]: blockC,
-    },
-  };
+  return buildTemplate(section, [heading, mediaImage, blockA, blockB, blockC, revealBackdrop]);
 }
 
 function createStickyStepsSection(parentId: NodeId): TemplateBuild {
-  const section = createWrapper('section', parentId);
-  section.name = 'Sticky Edge Lab';
-  section.rect = createDefaultRect('0px', '0px', '100%', '2480px');
-  section.style.paddingTop = parseUnitValue('80px');
-  section.style.paddingRight = parseUnitValue('72px');
-  section.style.paddingBottom = parseUnitValue('120px');
-  section.style.paddingLeft = parseUnitValue('72px');
+  const section = createTemplateSection(parentId, 'Sticky Edge Lab', '2480px', {
+    top: '80px',
+    right: '72px',
+    bottom: '120px',
+  });
 
   const nodes: Record<NodeId, DocumentNode> = {
     [section.id]: section,
@@ -754,7 +697,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     text.rect = createDefaultRect(options.textX, options.textY, options.textWidth, options.textHeight);
     styleText(text, { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 });
 
-    container.children = [text.id];
+    setChildren(container, [text]);
     nodes[container.id] = container;
     nodes[text.id] = text;
     return container;
@@ -871,17 +814,17 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
   });
 
   // Keep sticky containers at the end of DOM order so they render above static notes when overlapping.
-  section.children = [
-    bothNotes.id,
-    heading.id,
-    intro.id,
-    topNotes.id,
-    bottomNotes.id,
-    topCardContainer.id,
-    bothCardContainer.id,
-    bottomCardContainer.id,
-    footerNote.id,
-  ];
+  setChildren(section, [
+    bothNotes,
+    heading,
+    intro,
+    topNotes,
+    bottomNotes,
+    topCardContainer,
+    bothCardContainer,
+    bottomCardContainer,
+    footerNote,
+  ]);
 
   return {
     wrapper: section,
