@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument } from '../model/defaults';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
-import { didDragPointerMove, getNodeHeight, getNodeWidth, measureStageNodeElement, Stage } from './Stage';
+import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { didDragPointerMove, getNodeHeight, getNodeWidth, getResizeCommitSize, measureStageNodeElement, Stage } from './Stage';
 
 describe('stage/Stage', () => {
   it.each(['fit-content', 'max-content', 'min-content'])(
@@ -157,7 +157,7 @@ describe('stage/Stage', () => {
 
     target.htmlTag = 'blockquote';
     target.style ??= {};
-    target.style.fontSize = parseUnitValue('31px');
+    target.style.fontSize = parseFontSizeValue('31px');
     target.style.fontWeight = 'bold';
     target.style.lineHeight = 1.4;
 
@@ -232,6 +232,99 @@ describe('stage/Stage', () => {
 
     expect(getNodeWidth(target, measuredNodeSizes)).toBe(400);
     expect(getNodeHeight(target, measuredNodeSizes)).toBe(300);
+  });
+
+  it('keeps auto height when resizing width from a horizontal handle', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.rect.height.base = parseHeightValue('auto');
+
+    expect(
+      getResizeCommitSize(
+        target,
+        {
+          nodeId: target.id,
+          handle: 'e',
+          startClientX: 0,
+          startClientY: 0,
+          originX: 0,
+          originY: 0,
+          originWidth: 520,
+          originHeight: 145,
+        },
+        600,
+        145,
+      ),
+    ).toEqual({ width: '600px', height: 'auto' });
+  });
+
+  it('keeps aspect-ratio height authored when resizing width from a horizontal handle', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Post Image',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'image') {
+      throw new Error('Expected post image node');
+    }
+
+    target.rect.height.base = parseHeightValue('aspect-ratio(4/3)');
+
+    expect(
+      getResizeCommitSize(
+        target,
+        {
+          nodeId: target.id,
+          handle: 'e',
+          startClientX: 0,
+          startClientY: 0,
+          originX: 0,
+          originY: 0,
+          originWidth: 420,
+          originHeight: 315,
+        },
+        500,
+        315,
+      ),
+    ).toEqual({ width: '500px', height: 'aspect-ratio(4/3)' });
+  });
+
+  it('keeps keyword width authored when resizing height from a vertical handle', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.rect.width.base = parseWidthValue('fit-content');
+
+    expect(
+      getResizeCommitSize(
+        target,
+        {
+          nodeId: target.id,
+          handle: 's',
+          startClientX: 0,
+          startClientY: 0,
+          originX: 0,
+          originY: 0,
+          originWidth: 520,
+          originHeight: 145,
+        },
+        520,
+        220,
+      ),
+    ).toEqual({ width: 'fit-content', height: '220px' });
   });
 
   it('treats click jitter as selection instead of a committed drag', () => {

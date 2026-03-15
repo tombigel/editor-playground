@@ -10,7 +10,7 @@ import type {
 } from '../model/types';
 import { getChildren } from '../model/selectors';
 import { computeStickyState } from '../sticky/stickyCompute';
-import { formatValue, resolveUnitValuePx } from '../model/units';
+import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import type { DragState } from '../editor/DragController';
 import type { ResizeHandle, ResizeState } from '../editor/ResizeController';
 
@@ -154,7 +154,11 @@ export function Stage({
           const nextY = Math.round(frame.y);
           const originX = Math.round(resizeState.originX);
           const originY = Math.round(resizeState.originY);
-          onResize(resizeState.nodeId, px(nextWidth), px(nextHeight));
+          const resizedNode = document.nodes[resizeState.nodeId];
+          if (resizedNode && resizedNode.type !== 'site') {
+            const commit = getResizeCommitSize(resizedNode, resizeState, nextWidth, nextHeight, document);
+            onResize(resizeState.nodeId, commit.width, commit.height);
+          }
           if (nextX !== originX || nextY !== originY) {
             onMove(resizeState.nodeId, px(nextX), px(nextY));
           }
@@ -1195,6 +1199,98 @@ function px(value: number) {
   return `${Math.round(value)}px`;
 }
 
+export function getResizeCommitSize(
+  node: Exclude<DocumentNode, { type: 'site' }>,
+  resizeState: Exclude<ResizeState, null>,
+  nextWidth: number,
+  nextHeight: number,
+  documentModel?: DocumentModel,
+) {
+  const changesWidth = resizeState.handle.includes('e') || resizeState.handle.includes('w');
+  const changesHeight = resizeState.handle.includes('n') || resizeState.handle.includes('s');
+  const parentReference = documentModel ? getResizeParentReference(node, documentModel) : null;
+
+  return {
+    width: changesWidth
+      ? serializeResizedDimension('width', node.rect.width.base.parsed, node.rect.width.base.raw, nextWidth, parentReference)
+      : node.rect.width.base.raw,
+    height: changesHeight
+      ? serializeResizedDimension('height', node.rect.height.base.parsed, node.rect.height.base.raw, nextHeight, parentReference)
+      : node.rect.height.base.raw,
+  };
+}
+
+function serializeResizedDimension(
+  axis: 'width' | 'height',
+  parsed: Exclude<DocumentNode, { type: 'site' }>['rect']['width' | 'height']['base']['parsed'],
+  raw: string,
+  pxValue: number,
+  reference: { width: number; height: number; viewportWidth: number; viewportHeight: number } | null,
+) {
+  if ('unit' in parsed) {
+    const converted = convertPxToAuthorUnit(pxValue, parsed.unit, axis, reference);
+    return converted == null ? px(pxValue) : `${formatResizeNumber(converted)}${parsed.unit}`;
+  }
+
+  return px(pxValue);
+}
+
+function convertPxToAuthorUnit(
+  pxValue: number,
+  unit: 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax',
+  axis: 'width' | 'height',
+  reference: { width: number; height: number; viewportWidth: number; viewportHeight: number } | null,
+) {
+  if (unit === 'px') {
+    return Math.round(pxValue);
+  }
+  if (!reference) {
+    return null;
+  }
+  if (unit === '%') {
+    const base = axis === 'width' ? reference.width : reference.height;
+    return base > 0 ? (pxValue / base) * 100 : null;
+  }
+  if (unit === 'vw') {
+    return reference.viewportWidth > 0 ? (pxValue / reference.viewportWidth) * 100 : null;
+  }
+  if (unit === 'vh') {
+    return reference.viewportHeight > 0 ? (pxValue / reference.viewportHeight) * 100 : null;
+  }
+  if (unit === 'vmin') {
+    const base = Math.min(reference.viewportWidth, reference.viewportHeight);
+    return base > 0 ? (pxValue / base) * 100 : null;
+  }
+  const base = Math.max(reference.viewportWidth, reference.viewportHeight);
+  return base > 0 ? (pxValue / base) * 100 : null;
+}
+
+function getResizeParentReference(
+  node: Exclude<DocumentNode, { type: 'site' }>,
+  documentModel: DocumentModel,
+) {
+  const parent = node.parentId ? documentModel.nodes[node.parentId] : null;
+  if (!parent || parent.type === 'site') {
+    return {
+      width: VIEWPORT_WIDTH,
+      height: VIEWPORT_HEIGHT,
+      viewportWidth: VIEWPORT_WIDTH,
+      viewportHeight: VIEWPORT_HEIGHT,
+    };
+  }
+
+  return {
+    width: getNodeWidth(parent, {}),
+    height: getNodeHeight(parent, {}),
+    viewportWidth: VIEWPORT_WIDTH,
+    viewportHeight: VIEWPORT_HEIGHT,
+  };
+}
+
+function formatResizeNumber(value: number) {
+  return (Math.round(value * 100) / 100).toFixed(2).replace(/\.?0+$/, '');
+}
+
 function getShiftLockedPointer(
   dragState: Exclude<DragState, null>,
   clientX: number,
@@ -1306,15 +1402,12 @@ function estimateAutoLeafHeight(node: LeafNode, measuredNodeSizes: MeasuredNodeS
   if (node.role === 'text') {
     const fontSize =
       node.style?.fontSize && 'unit' in node.style.fontSize.parsed
-        ? resolveUnitValuePx(
+        ? resolveFontSizePx(
             node.style.fontSize.parsed,
             {
-              width: getNodeWidth(node, measuredNodeSizes),
-              height: VIEWPORT_HEIGHT,
-              viewportWidth: VIEWPORT_WIDTH,
-              viewportHeight: VIEWPORT_HEIGHT,
+              rootFontSizePx: 16,
+              inheritedFontSizePx: 16,
             },
-            'width',
           )
         : 18;
     const widthPx = getNodeWidth(node, measuredNodeSizes);
@@ -1783,6 +1876,10 @@ export function getNodeWidth(node: Exclude<DocumentNode, { type: 'site' }>, meas
       ? (width.value / 100) * VIEWPORT_WIDTH
       : width.unit === 'vh'
         ? (width.value / 100) * VIEWPORT_HEIGHT
+        : width.unit === 'vmin'
+          ? (width.value / 100) * Math.min(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+          : width.unit === 'vmax'
+            ? (width.value / 100) * Math.max(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
         : (width.value / 100) * 960;
   }
   return 240;
@@ -1800,6 +1897,10 @@ export function getNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>, mea
       ? (height.value / 100) * VIEWPORT_HEIGHT
       : height.unit === 'vw'
         ? (height.value / 100) * VIEWPORT_WIDTH
+        : height.unit === 'vmin'
+          ? (height.value / 100) * Math.min(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+          : height.unit === 'vmax'
+            ? (height.value / 100) * Math.max(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
         : (height.value / 100) * 480;
   }
   if (height.keyword === 'aspect-ratio') {
