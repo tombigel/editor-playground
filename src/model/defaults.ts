@@ -433,7 +433,7 @@ function createPostSection(parentId: NodeId): TemplateBuild {
 
   const link = createLeaf('link', section.id) as LinkLeaf;
   link.name = 'Post Link';
-  link.label = 'Open maintenance test plan';
+  link.label = 'Open playground spec';
   link.rect = createDefaultRect('548px', '418px', 'fit-content', 'auto');
 
   section.children = [image.id, title.id, body.id, link.id];

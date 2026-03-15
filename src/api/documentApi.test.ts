@@ -140,4 +140,19 @@ describe('api/documentApi', () => {
     expect(nextRoot.children[nextRoot.children.length - 1]).toBe(footerId);
     expect(nextRoot.children.length).toBe(root.children.length + 1);
   });
+
+  it('seeds the default post link with product documentation copy', () => {
+    const document = createInitialDocument();
+    const postLink = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    expect(postLink).toBeTruthy();
+    if (!postLink || postLink.type !== 'leaf' || postLink.role !== 'link') {
+      return;
+    }
+
+    expect(postLink.label).toBe('Open playground spec');
+    expect(postLink.label.toLowerCase()).not.toContain('maintenance');
+  });
 });

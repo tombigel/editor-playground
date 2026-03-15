@@ -1,13 +1,13 @@
 # Project Agent Rules
 
-## Documentation And Test Plan Gate
+## Documentation And Test Gate
 
 For every important functional change or addition, update documentation in the same change set.
 
 Required files:
 
 - `PLAYGROUND_SPEC.md`: update behavior/model/UX descriptions.
-- `MAINTENANCE_TEST_PLAN.md`: update or add regression tests for the new/changed behavior.
+- automated tests: every testable behavior change must update existing tests or add new ones in the same change set.
 
 Important functional change includes (non-exhaustive):
 
@@ -17,3 +17,4 @@ Important functional change includes (non-exhaustive):
 - inspector/debug controls that affect workflow or state
 
 When no doc change is needed, explicitly confirm why in the final summary.
+When a change is not reasonably testable, explicitly confirm why in the final summary.
