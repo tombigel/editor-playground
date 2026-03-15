@@ -368,58 +368,170 @@ body[data-editor-theme='dark'] {
   box-shadow: var(--editor-tooltip-shadow);
 }
 
+.editor-text-strong {
+  color: var(--editor-utility-text-strong);
+}
+
+.editor-text-muted {
+  color: var(--editor-utility-text-muted);
+}
+
+.editor-bg-surface {
+  background-color: var(--editor-surface-background);
+}
+
+.editor-bg-subtle {
+  background-color: var(--editor-utility-bg-subtle);
+}
+
+.editor-border-subtle {
+  border-color: var(--editor-utility-border);
+}
+
+.editor-icon-surface {
+  background-color: var(--editor-utility-bg-subtle);
+  border-color: var(--editor-utility-border);
+  color: var(--editor-utility-text-muted);
+}
+
+.editor-pill-subtle {
+  background-color: var(--editor-utility-bg-subtle);
+  color: var(--editor-utility-text-muted);
+}
+
+.editor-template-tag {
+  background: var(--editor-template-tag-background);
+  color: var(--editor-template-tag-text);
+  box-shadow: var(--editor-template-tag-shadow);
+}
+
+.editor-kbd {
+  background-color: var(--editor-surface-background);
+  border-color: var(--editor-utility-border);
+  color: var(--editor-utility-text-strong);
+}
+
+.editor-tooltip-panel {
+  background: var(--editor-tooltip-background);
+  border-color: var(--editor-tooltip-border);
+  color: var(--editor-tooltip-text);
+  box-shadow: var(--editor-tooltip-shadow);
+}
+
+.editor-icon-button-subtle {
+  background: var(--editor-button-surface);
+  border-color: var(--editor-button-border);
+  color: var(--editor-utility-text-muted);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.editor-icon-button-subtle:hover,
+.editor-icon-button-subtle:focus-visible {
+  background: var(--editor-button-surface-hover);
+  border-color: var(--editor-button-border-hover);
+  color: var(--editor-button-ghost-hover-text);
+}
+
+.editor-inline-field {
+  background: var(--editor-input-background);
+  border-color: var(--editor-utility-border);
+}
+
+.editor-inline-field-invalid {
+  background: color-mix(in srgb, #ef4444 12%, var(--editor-input-background));
+  border-color: #f87171;
+}
+
+.editor-inline-field-value {
+  color: var(--editor-utility-text-muted);
+}
+
+.editor-inline-field-trigger {
+  border-color: var(--editor-utility-border);
+  color: var(--editor-utility-text-strong);
+}
+
+.editor-inline-field-caret {
+  background: var(--editor-input-background);
+}
+
+.editor-template-card {
+  background: var(--editor-surface-background);
+  border-color: var(--editor-utility-border);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.editor-template-card:hover,
+.editor-template-card:focus-visible {
+  background: var(--editor-utility-bg-subtle);
+  border-color: var(--editor-button-border-hover);
+}
+
+.editor-template-card-muted {
+  background: var(--editor-utility-bg-subtle);
+  border-color: var(--editor-button-border);
+}
+
+.editor-insert-button {
+  background: var(--editor-surface-background);
+  border-color: var(--editor-button-border);
+  color: var(--editor-utility-text-strong);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.editor-insert-button:hover,
+.editor-insert-button:focus-visible {
+  background: var(--editor-utility-bg-subtle);
+  border-color: var(--editor-button-border-hover);
+}
+
+.editor-insert-button-inner {
+  background: var(--editor-surface-background);
+  color: var(--editor-utility-text-strong);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.editor-insert-button:hover .editor-insert-button-inner,
+.editor-insert-button:focus-visible .editor-insert-button-inner {
+  background: var(--editor-utility-bg-subtle);
+  border-color: var(--editor-button-border-hover);
+}
+
 :is(.editor-shell, body) .settings-nav-link {
   color: var(--editor-settings-nav-text);
 }
 
 :is(.editor-shell, body) .settings-nav-link:hover {
-  background: var(--editor-settings-nav-hover-background) !important;
-  color: var(--editor-settings-nav-hover-text) !important;
+  background: var(--editor-settings-nav-hover-background);
+  color: var(--editor-settings-nav-hover-text);
 }
 
 :is(.editor-shell, body) .settings-nav-link[data-active='true'] {
-  background: var(--editor-settings-nav-active-background) !important;
-  color: var(--editor-settings-nav-active-text) !important;
+  background: var(--editor-settings-nav-active-background);
+  color: var(--editor-settings-nav-active-text);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-utility-border) 20%, transparent), 0 8px 20px rgba(0, 0, 0, 0.14);
 }
 
-:is(.editor-shell, body) .settings-nav-link[data-active='true'] .text-slate-500,
-:is(.editor-shell, body) .settings-nav-link:hover .text-slate-500 {
-  color: var(--editor-settings-nav-active-muted) !important;
+:is(.editor-shell, body) .settings-nav-link-copy {
+  color: var(--editor-utility-text-muted);
 }
 
-:is(.editor-shell, body) .template-tag-sticky {
-  background: var(--editor-template-tag-background) !important;
-  color: var(--editor-template-tag-text) !important;
-  box-shadow: var(--editor-template-tag-shadow);
-}
-
-.editor-shell[data-editor-theme='dark'] .text-slate-950,
-.editor-shell[data-editor-theme='dark'] .text-slate-900,
-.editor-shell[data-editor-theme='dark'] .text-slate-700 {
-  color: var(--editor-utility-text-strong) !important;
-}
-
-.editor-shell[data-editor-theme='dark'] .text-slate-600,
-.editor-shell[data-editor-theme='dark'] .text-slate-500,
-.editor-shell[data-editor-theme='dark'] .text-slate-400 {
-  color: var(--editor-utility-text-muted) !important;
-}
-
-.editor-shell[data-editor-theme='dark'] .bg-slate-50,
-.editor-shell[data-editor-theme='dark'] .bg-slate-50\/70,
-.editor-shell[data-editor-theme='dark'] .bg-slate-50\/80,
-.editor-shell[data-editor-theme='dark'] .bg-slate-100,
-.editor-shell[data-editor-theme='dark'] .bg-slate-200,
-.editor-shell[data-editor-theme='dark'] .bg-white {
-  background-color: var(--editor-utility-bg-subtle) !important;
-}
-
-.editor-shell[data-editor-theme='dark'] .border-slate-200,
-.editor-shell[data-editor-theme='dark'] .border-slate-200\/80,
-.editor-shell[data-editor-theme='dark'] .border-slate-200\/90,
-.editor-shell[data-editor-theme='dark'] .border-slate-300 {
-  border-color: var(--editor-utility-border) !important;
+:is(.editor-shell, body) .settings-nav-link:is(:hover, [data-active='true']) .settings-nav-link-copy {
+  color: var(--editor-settings-nav-active-muted);
 }
 
 .editor-shell[data-editor-theme='dark'] {
@@ -882,8 +994,8 @@ button {
 }
 
 .spacer-visual-hidden {
-  border-color: transparent !important;
-  background: transparent !important;
+  border-color: transparent;
+  background: transparent;
 }
 
 .spacer-visual-hidden .sticky-spacer-label {

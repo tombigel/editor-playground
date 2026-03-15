@@ -123,8 +123,8 @@ export function InspectorPanel({
     return (
       <div className="flex h-full flex-col gap-1.5 p-2.5 text-xs">
         <div className="space-y-1.5 pb-1.5">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Inspector</div>
-          <div className="mt-1 text-xs text-slate-600">Select a node to inspect its layout and sticky config.</div>
+          <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.12em]">Inspector</div>
+          <div className="editor-text-muted mt-1 text-xs">Select a node to inspect its layout and sticky config.</div>
         </div>
       </div>
     );
@@ -133,21 +133,21 @@ export function InspectorPanel({
   return (
     <div className="flex h-full flex-col gap-1.5 overflow-auto p-2.5 text-xs">
       <div className="space-y-1.5 pb-1.5">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Inspector</div>
+        <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.12em]">Inspector</div>
         <div className="mt-1 flex items-center gap-2">
-          <h2 className="text-[15px] font-semibold text-slate-950">{node.name}</h2>
+          <h2 className="editor-text-strong text-[15px] font-semibold">{node.name}</h2>
           {node.type !== 'site' ? (
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+            <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
               {node.role}
             </span>
           ) : null}
         </div>
       </div>
 
-      <Card className="rounded-lg border-slate-200/90 shadow-none">
+      <Card className="editor-border-subtle rounded-lg shadow-none">
         <CardContent className="space-y-2.5 px-3 py-3">
           <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
-            <Label className="text-[11px] font-medium text-slate-500">Name</Label>
+            <Label className="text-[11px] font-medium">Name</Label>
             <Input value={node.name} onChange={(e) => onTextChange('name', e.target.value)} className="h-8 rounded-sm text-[11px]" />
           </div>
 
@@ -186,7 +186,7 @@ export function InspectorPanel({
 
           {showOrderControls ? (
             <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
-              <Label className="text-[11px] font-medium text-slate-500">Order</Label>
+              <Label className="text-[11px] font-medium">Order</Label>
               <div className="flex justify-end gap-1.5">
                 <OrderIconButton
                   label="Position Forward"
@@ -241,13 +241,13 @@ export function InspectorPanel({
       {node.type !== 'site' ? (
         <>
           {node.type === 'wrapper' ? (
-            <Card className="rounded-lg border-slate-200/90 shadow-none">
+            <Card className="editor-border-subtle rounded-lg shadow-none">
               <CardHeader className="px-3 pt-3 pb-1">
                 <CardTitle className="text-xs">Design</CardTitle>
               </CardHeader>
               <CardContent className="px-3 pt-1.5 pb-3">
                 <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                  <Label className="text-[11px] font-medium text-slate-500">Background</Label>
+                  <Label className="text-[11px] font-medium">Background</Label>
                   <div className="ml-auto flex items-center gap-2">
                     <Input
                       value={normalizeColorInputValue(node.style.background)}
@@ -257,7 +257,7 @@ export function InspectorPanel({
                     <input
                       type="color"
                       aria-label="Background color"
-                      className="h-8 w-8 cursor-pointer rounded-sm border border-slate-200 bg-white p-0 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/80 focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
+                      className="editor-icon-button-subtle h-8 w-8 cursor-pointer rounded-sm border p-0 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
                       value={normalizeColorInputValue(node.style.background)}
                       onChange={(e) => onWrapperStyleChange('background', e.target.value)}
                     />
@@ -268,7 +268,7 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'text' ? (
-            <Card className="rounded-lg border-slate-200/90 shadow-none">
+            <Card className="editor-border-subtle rounded-lg shadow-none">
               <CardHeader className="px-3 pt-3 pb-1">
                 <CardTitle className="text-xs">Content</CardTitle>
               </CardHeader>
@@ -278,7 +278,7 @@ export function InspectorPanel({
                 </FormField>
                 <div className="space-y-1.5">
                   <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium text-slate-500">Size</Label>
+                    <Label className="text-[11px] font-medium">Size</Label>
                     <div className="ml-auto grid w-[140px] grid-cols-[96px_40px] items-center gap-1">
                       <FontSizeField
                         nodeId={node.id}
@@ -295,7 +295,7 @@ export function InspectorPanel({
                     </div>
                   </div>
                   <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium text-slate-500">Style</Label>
+                    <Label className="text-[11px] font-medium">Style</Label>
                     <div className="ml-auto flex items-center gap-1">
                       <TextStyleIconButton
                         label="Bold"
@@ -340,7 +340,7 @@ export function InspectorPanel({
                     </div>
                   </div>
                   <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium text-slate-500">Alignment</Label>
+                    <Label className="text-[11px] font-medium">Alignment</Label>
                     <div className="ml-auto flex items-center gap-1">
                       <TextStyleIconButton
                         label="Align left"
@@ -379,7 +379,7 @@ export function InspectorPanel({
                     </div>
                   </div>
                   <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium text-slate-500">HTML tag</Label>
+                    <Label className="text-[11px] font-medium">HTML tag</Label>
                     <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
                       <SelectTrigger className="ml-auto h-8 w-24 rounded-sm text-[11px]">
                         <SelectValue />
@@ -403,7 +403,7 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'button' ? (
-            <Card className="rounded-lg border-slate-200/90 shadow-none">
+            <Card className="editor-border-subtle rounded-lg shadow-none">
               <CardHeader className="px-3 pt-3 pb-1">
                 <CardTitle className="text-xs">Content</CardTitle>
               </CardHeader>
@@ -416,7 +416,7 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'link' ? (
-            <Card className="rounded-lg border-slate-200/90 shadow-none">
+            <Card className="editor-border-subtle rounded-lg shadow-none">
               <CardHeader className="px-3 pt-3 pb-1">
                 <CardTitle className="text-xs">Content</CardTitle>
               </CardHeader>
@@ -432,7 +432,7 @@ export function InspectorPanel({
           ) : null}
 
           {node.type === 'leaf' && node.role === 'image' ? (
-            <Card className="rounded-lg border-slate-200/90 shadow-none">
+            <Card className="editor-border-subtle rounded-lg shadow-none">
               <CardHeader className="px-3 pt-3 pb-1">
                 <CardTitle className="text-xs">Image</CardTitle>
               </CardHeader>
@@ -447,17 +447,17 @@ export function InspectorPanel({
             </Card>
           ) : null}
 
-          <Card className="rounded-lg border-slate-200/90 shadow-none">
+          <Card className="editor-border-subtle rounded-lg shadow-none">
             <CardHeader className="px-3 pt-3 pb-1">
               <CardTitle className="text-xs">Sticky</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
-              <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-2">
+              <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
                 <div>
-                  <div className="text-xs font-medium text-slate-900">
+                  <div className="editor-text-strong text-xs font-medium">
                     {node.sticky?.enabled ? 'Enabled' : 'Disabled'}
                   </div>
-                  <div className="text-[11px] text-slate-500">Pin this node inside its structural range.</div>
+                  <div className="editor-text-muted text-[11px]">Pin this node inside its structural range.</div>
                 </div>
                 <Switch checked={Boolean(node.sticky?.enabled)} onCheckedChange={onStickyEnabled} />
               </div>
@@ -471,7 +471,7 @@ export function InspectorPanel({
                   {node.type === 'wrapper' ? (
                     node.role === 'container' ? (
                       <FormField label="Target">
-                        <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
+                        <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
                           Self (content wrapper target is temporarily hidden for containers)
                         </div>
                       </FormField>
@@ -525,10 +525,10 @@ export function InspectorPanel({
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-3">
-                      <Label className="text-[11px] font-medium text-slate-500">
+                      <Label className="text-[11px] font-medium">
                         Duration
                       </Label>
-                      <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+                      <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
                         <Button
                           type="button"
                           variant={(node.sticky?.durationMode ?? 'auto') === 'auto' ? 'default' : 'ghost'}
@@ -583,7 +583,7 @@ export function InspectorPanel({
                         />
                       )
                     ) : (
-                      <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600">
+                      <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
                         Uses the owner section height as the sticky distance.
                       </div>
                     )}
@@ -638,8 +638,8 @@ function SizeInlineField({
   const suffixWidthClass = showAspectInput ? 'w-[52px] min-w-[52px]' : 'w-[44px] min-w-[44px]';
   const usesIconSuffix = mode === 'aspect-ratio';
   const shellClass = invalid
-    ? 'border-red-400 bg-red-50 focus-within:border-red-400'
-    : 'border-slate-200 bg-white focus-within:border-blue-500';
+    ? 'editor-inline-field editor-inline-field-invalid focus-within:border-red-400'
+    : 'editor-inline-field focus-within:border-blue-500';
 
   function commitDraft(nextMode: SizeFieldMode, nextInput?: string) {
     const candidateInput = nextInput ?? (nextMode === 'aspect-ratio' ? aspectDraft : numericDraft);
@@ -678,27 +678,27 @@ function SizeInlineField({
 
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
+      <Label className="text-[11px] font-medium">{label}</Label>
       {showKeywordTriggerOnly ? (
         <div
-          className={`group/sizefield relative flex h-8 overflow-visible rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
+          className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
           <Select value={mode} onValueChange={handleModeChange}>
             <SelectTrigger
-              className="peer/keywordtrigger h-full w-full justify-start rounded-none border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0"
+              className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
           </Select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex w-9 items-center justify-center rounded-r-sm bg-white opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100">
-            <ChevronDown className="h-3.5 w-3.5 text-slate-700" />
+          <div className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex w-9 items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100">
+            <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
           </div>
           <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-9 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" />
         </div>
       ) : (
         <div
-          className={`group/sizefield relative flex h-8 overflow-visible rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
+          className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
           {showNumericInput ? (
             <Input
@@ -714,7 +714,7 @@ function SizeInlineField({
                   onChange(nextRaw);
                 }
               }}
-              className="peer/valueinput h-full flex-1 overflow-visible rounded-none border-0 bg-transparent px-3 text-[11px] text-slate-600 shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           ) : (
             <Input
@@ -728,7 +728,7 @@ function SizeInlineField({
                   onChange(nextRaw);
                 }
               }}
-              className="peer/valueinput h-full flex-1 overflow-visible rounded-none border-0 bg-transparent px-3 text-[11px] text-slate-600 shadow-none focus-visible:border-0 focus-visible:ring-0"
+              className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none focus-visible:border-0 focus-visible:ring-0"
             />
           )}
           <div
@@ -738,7 +738,7 @@ function SizeInlineField({
           <div className={`group/unitsuffix relative ${suffixWidthClass}`}>
             <Select value={mode} onValueChange={handleModeChange}>
               <SelectTrigger
-                className={`peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-none border-0 border-l border-slate-200 bg-transparent px-0 text-center text-[10px] font-medium text-slate-800 shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0`}
+                className={`editor-inline-field-trigger peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-r-sm border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0`}
               >
                 {usesIconSuffix ? (
                   <span className="flex w-full items-center justify-center">
@@ -750,8 +750,8 @@ function SizeInlineField({
               </SelectTrigger>
               <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
             </Select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm bg-white opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100" style={{ width: usesIconSuffix ? '52px' : '44px' }}>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-700" />
+            <div className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100" style={{ width: usesIconSuffix ? '52px' : '44px' }}>
+              <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
             </div>
             <div className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" style={{ width: usesIconSuffix ? '52px' : '44px' }} />
           </div>
@@ -906,7 +906,7 @@ function TextStyleIconButton({
 function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
+      <Label className="text-[11px] font-medium">{label}</Label>
       {children}
     </div>
   );
@@ -924,7 +924,7 @@ function FontSizeField({
   const parsed = parseFontSizeValue(value);
   const fontSizeSuffixWidth = '44px';
   return (
-    <div className="group/sizefield relative flex h-8 overflow-visible rounded-sm border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
+    <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
       <Input
         type="number"
         min={1}
@@ -936,7 +936,7 @@ function FontSizeField({
             onChange(`${next}${parsed.parsed.unit}`);
           }
         }}
-        className="peer/valueinput h-full overflow-visible rounded-none border-0 bg-transparent text-[11px] text-slate-600 [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" style={{ right: fontSizeSuffixWidth }} />
       <Select
@@ -946,7 +946,7 @@ function FontSizeField({
           onChange(`${converted ?? parsed.parsed.value}${nextUnit as FontSizeMode}`);
         }}
       >
-        <SelectTrigger className="peer/unittrigger relative z-10 h-full justify-center rounded-none border-0 border-l border-slate-200 bg-transparent px-0 text-center text-[10px] font-medium text-slate-800 shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0" style={{ width: fontSizeSuffixWidth }}>
+        <SelectTrigger className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0" style={{ width: fontSizeSuffixWidth }}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -957,8 +957,8 @@ function FontSizeField({
           ))}
         </SelectContent>
       </Select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm bg-white opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100" style={{ width: fontSizeSuffixWidth }}>
-        <ChevronDown className="h-3.5 w-3.5 text-slate-700" />
+      <div className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100" style={{ width: fontSizeSuffixWidth }}>
+        <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
       </div>
       <div className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" style={{ width: fontSizeSuffixWidth }} />
     </div>
@@ -1017,15 +1017,15 @@ function RangeField({
     <div className="space-y-1">
       {label ? (
         <div className="flex items-center justify-between gap-2">
-          <Label className="text-[11px] font-medium text-slate-500">{label}</Label>
-          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+          <Label className="text-[11px] font-medium">{label}</Label>
+          <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
             {value}
             {unit}
           </span>
         </div>
       ) : (
         <div className="flex justify-end">
-          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+          <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
             {value}
             {unit}
           </span>
@@ -1063,22 +1063,22 @@ function StickyOffsetBandField({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
-        <Label className="text-[11px] font-medium text-slate-500">Offset Range</Label>
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+        <Label className="text-[11px] font-medium">Offset Range</Label>
+        <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
           Span {Math.round(rangeSpan)}
           {unit}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-600">
-        <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5">
-          <ArrowUp className="h-3 w-3 text-slate-500" />
+      <div className="editor-text-muted grid grid-cols-2 gap-1 text-[10px]">
+        <span className="editor-bg-subtle inline-flex items-center gap-1 rounded-md px-2 py-0.5">
+          <ArrowUp className="editor-text-muted h-3 w-3" />
           Top {Math.round(topValue)}
           {unit}
         </span>
-        <span className="inline-flex items-center justify-end gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-right">
+        <span className="editor-bg-subtle inline-flex items-center justify-end gap-1 rounded-md px-2 py-0.5 text-right">
           Bottom {Math.round(bottomValue)}
           {unit}
-          <ArrowDown className="h-3 w-3 text-slate-500" />
+          <ArrowDown className="editor-text-muted h-3 w-3" />
         </span>
       </div>
       <Slider
@@ -1127,7 +1127,7 @@ function WrapperActions({
     return (
       <div className="space-y-1.5">
         <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium text-slate-500">Order</Label>
+          <Label className="text-[11px] font-medium">Order</Label>
           <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
             <OrderIconButton compact label="Move Section Up" onClick={onSectionBack} disabled={!canSectionBack}>
               <ListStart className="h-3.5 w-3.5" />
@@ -1138,7 +1138,7 @@ function WrapperActions({
           </div>
         </div>
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium text-slate-500">Section type</Label>
+          <Label className="text-[11px] font-medium">Section type</Label>
           <SectionTypeSelector currentType={currentType} onPromote={onPromote} onDemote={onDemote} />
         </div>
       </div>
@@ -1147,7 +1147,7 @@ function WrapperActions({
 
   return (
     <div className="grid grid-cols-[74px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium text-slate-500">Section type</Label>
+      <Label className="text-[11px] font-medium">Section type</Label>
       <SectionTypeSelector currentType={currentType} onPromote={onPromote} onDemote={onDemote} />
     </div>
   );

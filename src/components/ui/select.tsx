@@ -15,14 +15,14 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     data-ui="select-trigger"
     className={cn(
-      'flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50',
+      'editor-bg-surface editor-border-subtle editor-text-strong flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="size-4 text-slate-500" />
+      <ChevronDown className="editor-text-muted size-4" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -37,7 +37,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       data-ui="select-content"
       className={cn(
-        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-slate-200 bg-white text-slate-950 shadow-md',
+        'editor-bg-surface editor-border-subtle editor-text-strong relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md',
         position === 'popper' &&
           'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
         className,
@@ -73,7 +73,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     data-ui="select-item"
     className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'editor-text-strong relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}
@@ -95,7 +95,7 @@ const SelectSeparator = React.forwardRef<
   <SelectPrimitive.Separator
     ref={ref}
     data-ui="select-separator"
-    className={cn('-mx-1 my-1 h-px bg-slate-200', className)}
+    className={cn('editor-border-subtle -mx-1 my-1 h-px border-t', className)}
     {...props}
   />
 ));

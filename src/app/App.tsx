@@ -700,7 +700,7 @@ export function App() {
 
   return (
     <div
-      className="editor-shell h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900"
+      className="editor-shell h-screen w-screen overflow-hidden"
       data-editor-theme={resolvedTheme}
       data-theme-mode={state.ui.themeMode}
     >
@@ -824,9 +824,9 @@ export function App() {
         </header>
 
         <div className="grid min-h-0 grid-cols-[84px_minmax(0,1fr)_300px]">
-          <aside className="editor-rail-shell relative z-[360] overflow-visible border-r border-slate-200/80 bg-white/95 shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
+          <aside className="editor-rail-shell editor-border-subtle relative z-[360] overflow-visible border-r shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
             <div className="flex h-full flex-col gap-4 overflow-visible p-3">
-              <div className="overflow-visible rounded-2xl border border-slate-200 bg-slate-50/80 p-2">
+              <div className="editor-bg-subtle editor-border-subtle overflow-visible rounded-2xl border p-2">
                 <InsertPanel
                   onOpenSectionTemplates={(trigger) => {
                     setSectionTemplateAnchor(trigger);
@@ -870,7 +870,7 @@ export function App() {
             </div>
           </aside>
 
-          <main className="editor-workspace-shell relative min-h-0 overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0)),#eef2f7]">
+          <main className="editor-workspace-shell relative min-h-0 overflow-hidden">
             <Stage
               document={state.document}
               selectedId={state.selectedId}
@@ -894,7 +894,7 @@ export function App() {
 
           </main>
 
-          <aside className="editor-inspector-shell min-h-0 overflow-hidden border-l border-slate-200/80 bg-white/97 shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
+          <aside className="editor-inspector-shell editor-border-subtle min-h-0 overflow-hidden border-l shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
             <InspectorPanel
               node={selectedNode}
               showOrderControls={orderState.show}
@@ -944,22 +944,22 @@ export function App() {
               setSectionTemplateAnchor(null);
             }
           }}
-          className="editor-floating-panel editor-section-templates fixed w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+          className="editor-floating-panel editor-section-templates editor-bg-surface editor-border-subtle fixed w-[440px] rounded-xl border shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
           style={{
             top: `${sectionTemplatePosition.top}px`,
             left: `${sectionTemplatePosition.left}px`,
           }}
         >
-          <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
+          <div className="editor-border-subtle flex items-start justify-between border-b px-4 py-3">
             <div>
-              <div className="text-sm font-semibold text-slate-900">Section templates</div>
-              <div className="mt-0.5 text-xs text-slate-500">Choose a layout to insert.</div>
+              <div className="editor-text-strong text-sm font-semibold">Section templates</div>
+              <div className="editor-text-muted mt-0.5 text-xs">Choose a layout to insert.</div>
             </div>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="rounded-lg text-slate-500 hover:bg-slate-100/80 hover:text-slate-700 focus-visible:ring-blue-500/45"
+              className="editor-icon-button-subtle rounded-lg border focus-visible:ring-blue-500/45"
               onClick={() => {
                 setSectionTemplateOpen(false);
                 setSectionTemplateAnchor(null);
@@ -980,35 +980,35 @@ export function App() {
                     setSectionTemplateOpen(false);
                     setSectionTemplateAnchor(null);
                   }}
-                  className="group flex min-h-[104px] flex-col rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  className="editor-template-card group flex min-h-[104px] flex-col rounded-lg border p-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-900">{template.name}</span>
+                    <span className="editor-text-strong text-xs font-semibold">{template.name}</span>
                     <span
                       className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
                         template.category === 'sticky'
-                          ? 'template-tag-sticky bg-emerald-50 text-emerald-700'
-                          : 'bg-slate-100 text-slate-600'
+                          ? 'editor-template-tag'
+                          : 'editor-pill-subtle'
                       }`}
                     >
                       {template.category === 'sticky' ? 'Sticky' : 'Basic'}
                     </span>
                   </div>
-                  <span className="mt-1.5 text-[11px] leading-4 text-slate-600">{template.description}</span>
+                  <span className="editor-text-muted mt-1.5 text-[11px] leading-4">{template.description}</span>
                 </button>
               ))}
               {UPCOMING_SCROLL_TEMPLATES.map((template) => (
                 <div
                   key={template.id}
-                  className="flex min-h-[104px] flex-col rounded-lg border border-dashed border-slate-300 bg-slate-50 p-2.5 text-left opacity-85"
+                  className="editor-template-card-muted editor-border-subtle flex min-h-[104px] flex-col rounded-lg border border-dashed p-2.5 text-left opacity-85"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-700">{template.name}</span>
-                    <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                    <span className="editor-text-strong text-xs font-semibold">{template.name}</span>
+                    <span className="editor-pill-subtle rounded px-1.5 py-0.5 text-[10px] font-medium">
                       Soon
                     </span>
                   </div>
-                  <span className="mt-1.5 text-[11px] leading-4 text-slate-500">{template.description}</span>
+                  <span className="editor-text-muted mt-1.5 text-[11px] leading-4">{template.description}</span>
                 </div>
               ))}
             </div>
@@ -1156,7 +1156,7 @@ function RailToggleButton({
         className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
           pressed
             ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] hover:border-[#6f9dff] hover:bg-[#4a7ffc] hover:shadow-[0_16px_30px_rgba(55,114,255,0.3),inset_0_0_0_1px_rgba(34,87,214,0.6)]'
-            : 'border-slate-200 bg-white text-slate-900 shadow-[0_2px_10px_rgba(18,32,51,0.05)] hover:border-slate-400 hover:bg-slate-100 hover:shadow-[0_10px_22px_rgba(18,32,51,0.1)]'
+            : 'editor-icon-button-subtle editor-text-strong shadow-[0_2px_10px_rgba(18,32,51,0.05)] hover:shadow-[0_10px_22px_rgba(18,32,51,0.1)]'
         }`}
       >
         <Icon className="h-4 w-4" />

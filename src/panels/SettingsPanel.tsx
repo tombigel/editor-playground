@@ -298,15 +298,15 @@ export function SettingsPanel({
 
   return (
     <div className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+      <div className="editor-bg-surface editor-border-subtle overflow-hidden rounded-2xl border">
+      <div className="editor-border-subtle flex items-center justify-between border-b px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600">
+          <div className="editor-icon-surface flex h-9 w-9 items-center justify-center rounded-xl border">
             <Settings className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-sm font-medium text-slate-950">Settings</div>
-            <div className="text-xs text-slate-500">Controls, transfer, diagnostics.</div>
+            <div className="editor-text-strong text-sm font-medium">Settings</div>
+            <div className="editor-text-muted text-xs">Controls, transfer, diagnostics.</div>
           </div>
         </div>
         <Button type="button" variant="ghost" size="icon" className="rounded-lg" onClick={onClose} aria-label="Close settings">
@@ -315,9 +315,9 @@ export function SettingsPanel({
       </div>
 
       <div className="grid h-[min(78vh,720px)] min-h-0 grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="border-r border-slate-200 bg-slate-50/70">
+        <aside className="editor-bg-subtle editor-border-subtle border-r">
           <div className="sticky top-0 px-3 py-4">
-            <div className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <div className="editor-text-muted mb-3 px-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
               On This Page
             </div>
             <nav className="space-y-1">
@@ -330,14 +330,14 @@ export function SettingsPanel({
                     type="button"
                     onClick={() => scrollToSection(section.id)}
                     data-active={active ? 'true' : 'false'}
-                    className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-inset ${
-                      active ? 'settings-nav-link bg-white text-slate-950 shadow-sm' : 'settings-nav-link text-slate-600 hover:bg-white/80 hover:text-slate-950'
+                    className={`settings-nav-link flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-inset ${
+                      active ? 'shadow-sm' : ''
                     }`}
                   >
                     <Icon className="mt-0.5 h-4 w-4 shrink-0" />
                     <div className="min-w-0">
                       <div className="text-sm font-medium">{section.label}</div>
-                      <div className="mt-0.5 text-xs leading-5 text-slate-500">{section.description}</div>
+                      <div className="settings-nav-link-copy mt-0.5 text-xs leading-5">{section.description}</div>
                     </div>
                   </button>
                 );
@@ -348,7 +348,7 @@ export function SettingsPanel({
 
         <div ref={scrollRef} className="min-h-0 overflow-y-auto" onScroll={updateActiveSection}>
           <div className="px-6 py-5">
-            <section ref={displayRef} className="border-b border-slate-200 pb-6">
+            <section ref={displayRef} className="editor-border-subtle border-b pb-6">
               <SectionHeading eyebrow="UI" title="Appearance and guides" description="Theme, stage toggles, and guides." />
               <ThemeModeRow value={themeMode} onChange={onThemeModeChange} />
               <SettingRow
@@ -383,7 +383,7 @@ export function SettingsPanel({
               />
             </section>
 
-            <section ref={transferRef} className="border-b border-slate-200 py-6">
+            <section ref={transferRef} className="editor-border-subtle border-b py-6">
               <SectionHeading
                 eyebrow="Import / Export"
                 title="Document transfer"
@@ -441,16 +441,16 @@ export function SettingsPanel({
                   className="hidden"
                   onChange={handleFileSelection}
                 />
-                <div className="border-t border-slate-200 px-4 py-4">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Imported JSON</div>
+                <div className="editor-border-subtle border-t px-4 py-4">
+                  <div className="editor-text-muted mb-2 text-xs font-medium">Imported JSON</div>
                   <Textarea
                     value={importBuffer}
                     onChange={(event) => setImportBuffer(event.target.value)}
                     placeholder="Paste exported document JSON here."
-                    className="min-h-[220px] rounded-lg border-slate-200 font-mono text-xs leading-5"
+                    className="min-h-[220px] rounded-lg font-mono text-xs leading-5"
                   />
                   <div className="mt-3 flex items-start justify-between gap-3">
-                    <div className="max-w-[420px] text-xs leading-5 text-slate-500">
+                    <div className="editor-text-muted max-w-[420px] text-xs leading-5">
                       Import validates, normalizes, replaces the active document, and supports undo.
                     </div>
                     <Button
@@ -469,7 +469,7 @@ export function SettingsPanel({
               </PlainGroup>
             </section>
 
-            <section ref={advancedRef} className="border-b border-slate-200 py-6">
+            <section ref={advancedRef} className="editor-border-subtle border-b py-6">
               <SectionHeading
                 eyebrow="Advanced"
                 title="Editing behavior"
@@ -517,18 +517,18 @@ export function SettingsPanel({
                 description="Validation and computed sticky ranges."
               />
               <PlainGroup title="Validation">
-                <div className="space-y-2 text-sm text-slate-600">
+                <div className="editor-text-muted space-y-2 text-sm">
                   {errors.length === 0 ? <p>No errors.</p> : errors.map((error) => <p key={error}>{error}</p>)}
                 </div>
               </PlainGroup>
 
               <div className="mt-6">
-                <div className="mb-3 text-sm font-medium text-slate-900">Sticky math</div>
+                <div className="editor-text-strong mb-3 text-sm font-medium">Sticky math</div>
                 {hasStickyRegistrations ? (
-                  <div className="space-y-3 text-xs text-slate-600">
+                  <div className="editor-text-muted space-y-3 text-xs">
                     {Object.values(stickyLayout).map((entry) => (
-                      <div key={entry.wrapperId} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-                        <div className="font-medium text-slate-900">{entry.wrapperId}</div>
+                      <div key={entry.wrapperId} className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-3">
+                        <div className="editor-text-strong font-medium">{entry.wrapperId}</div>
                         <div className="mt-1">extra extent: {Math.round(entry.totalExtraExtentPx)}px</div>
                         <div className="mt-2 space-y-1">
                           {entry.registrations.map((registration) => (
@@ -542,13 +542,13 @@ export function SettingsPanel({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-slate-600">No sticky registrations.</div>
+                  <div className="editor-text-muted text-sm">No sticky registrations.</div>
                 )}
               </div>
 
               {selectedNode && selectedNode.type !== 'site' ? (
                 <div className="mt-6">
-                  <div className="mb-3 text-sm font-medium text-slate-900">Selected node</div>
+                  <div className="editor-text-strong mb-3 text-sm font-medium">Selected node</div>
                   <div className="grid gap-3 md:grid-cols-3">
                     <MetricCell label="Width" value={formatValue(selectedNode.rect.width.base.parsed)} />
                     <MetricCell label="Height" value={formatValue(selectedNode.rect.height.base.parsed)} />
@@ -571,7 +571,7 @@ export function SettingsPanel({
               ) : null}
             </section>
 
-            <section ref={shortcutsRef} className="border-t border-slate-200 py-6">
+            <section ref={shortcutsRef} className="editor-border-subtle border-t py-6">
               <SectionHeading
                 eyebrow="Shortcuts"
                 title="Keyboard and pointer reference"
@@ -599,10 +599,10 @@ function ThemeModeRow({
   return (
     <div className="flex items-start justify-between gap-4 py-4">
       <div className="min-w-0 pr-4">
-        <div className="text-sm font-medium text-slate-950">Theme</div>
-        <div className="mt-1 text-sm text-slate-600">Switch the editor between light, dark, or system mode.</div>
+        <div className="editor-text-strong text-sm font-medium">Theme</div>
+        <div className="editor-text-muted mt-1 text-sm">Switch the editor between light, dark, or system mode.</div>
       </div>
-      <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-1">
+      <div className="editor-bg-subtle editor-border-subtle inline-flex shrink-0 rounded-lg border p-1">
         {options.map((option) => (
           <Button
             key={option}
@@ -631,9 +631,9 @@ function SectionHeading({
 }) {
   return (
     <div className="mb-4">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{eyebrow}</div>
-      <div className="mt-1 text-lg font-medium text-slate-950">{title}</div>
-      <div className="mt-1 text-sm text-slate-500">{description}</div>
+      <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.14em]">{eyebrow}</div>
+      <div className="editor-text-strong mt-1 text-lg font-medium">{title}</div>
+      <div className="editor-text-muted mt-1 text-sm">{description}</div>
     </div>
   );
 }
@@ -649,8 +649,8 @@ function PlainGroup({
 }) {
   return (
     <div className={className}>
-      <div className="mb-3 text-sm font-medium text-slate-900">{title}</div>
-      <div className="rounded-lg border border-slate-200 bg-white">{children}</div>
+      <div className="editor-text-strong mb-3 text-sm font-medium">{title}</div>
+      <div className="editor-bg-surface editor-border-subtle rounded-lg border">{children}</div>
     </div>
   );
 }
@@ -675,18 +675,18 @@ function SettingRow({
   const Icon = icon;
 
   return (
-    <div className="flex items-start justify-between gap-4 border-t border-slate-200 py-4 first:border-t-0">
+    <div className="editor-border-subtle flex items-start justify-between gap-4 border-t py-4 first:border-t-0">
       <div className="flex min-w-0 gap-3">
-        <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
+        <div className="editor-icon-surface mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border">
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <div className="text-sm font-medium text-slate-950">{title}</div>
+            <div className="editor-text-strong text-sm font-medium">{title}</div>
             {tooltip ? <InfoTooltip>{tooltip}</InfoTooltip> : null}
           </div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
-          {note ? <div className="mt-1 text-xs text-slate-500">{note}</div> : null}
+          <div className="editor-text-muted mt-1 text-sm">{description}</div>
+          {note ? <div className="editor-text-muted mt-1 text-xs">{note}</div> : null}
         </div>
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
@@ -710,16 +710,16 @@ function ActionRow({
   const Icon = icon;
 
   return (
-    <div className="flex flex-col gap-3 border-t border-slate-200 py-3 first:border-t-0 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-6">
+    <div className="editor-border-subtle flex flex-col gap-3 border-t py-3 first:border-t-0 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-6">
       <div className={`min-w-0 ${icon ? 'flex gap-3' : ''}`}>
         {Icon ? (
-          <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
+          <div className="editor-icon-surface mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border">
             <Icon className="h-4 w-4" />
           </div>
         ) : null}
         <div className="min-w-0">
-          <div className="text-sm font-medium text-slate-950">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
+          <div className="editor-text-strong text-sm font-medium">{title}</div>
+          <div className="editor-text-muted mt-1 text-sm">{description}</div>
         </div>
       </div>
       <div className={`shrink-0 sm:justify-self-end ${actionsClassName ?? ''}`}>{actions}</div>
@@ -739,10 +739,10 @@ function NumericRow({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-slate-200 py-4">
+    <div className="editor-border-subtle flex items-center justify-between gap-4 border-t py-4">
       <div className="min-w-0">
-        <div className="text-sm font-medium text-slate-950">{title}</div>
-        <div className="mt-1 text-sm text-slate-600">{description}</div>
+        <div className="editor-text-strong text-sm font-medium">{title}</div>
+        <div className="editor-text-muted mt-1 text-sm">{description}</div>
       </div>
       <div className="w-[96px] shrink-0">
         <Input
@@ -765,9 +765,9 @@ function NumericRow({
 
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</div>
-      <div className="mt-1 text-sm text-slate-900">{value}</div>
+    <div className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-2">
+      <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.12em]">{label}</div>
+      <div className="editor-text-strong mt-1 text-sm">{value}</div>
     </div>
   );
 }
@@ -777,12 +777,12 @@ function InfoTooltip({ children }: { children: ReactNode }) {
     <PopoverTooltip
       side="bottom"
       align="end"
-      className="w-64 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal leading-5 text-slate-600 shadow-[0_16px_30px_rgba(15,23,42,0.14)]"
+      className="editor-tooltip-panel w-64 rounded-lg border px-3 py-2 text-xs font-normal leading-5"
       content={children}
     >
       <button
         type="button"
-        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/80 hover:text-slate-600 focus-visible:border-slate-300 focus-visible:bg-slate-50/80 focus-visible:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+        className="editor-icon-button-subtle inline-flex h-5 w-5 items-center justify-center rounded-full border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         aria-label="More information"
       >
         <Info className="h-3.5 w-3.5" />
@@ -799,7 +799,7 @@ function StatusMessage({
   fallback: string;
 }) {
   if (!result) {
-    return <div className="px-4 py-3 text-xs text-slate-500">{fallback}</div>;
+    return <div className="editor-text-muted px-4 py-3 text-xs">{fallback}</div>;
   }
 
   return (

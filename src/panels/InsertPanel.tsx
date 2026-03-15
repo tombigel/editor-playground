@@ -58,7 +58,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
   return (
     <div className="flex flex-col items-center gap-2 overflow-visible">
       <div className="pb-1">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Add</div>
+        <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.12em]">Add</div>
       </div>
       {INSERT_ITEMS.map((item) => {
         const Icon = item.icon;
@@ -70,8 +70,8 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
             className="min-w-[148px] text-left font-normal"
             content={
               <>
-                <span className="block text-sm font-medium text-slate-900">{item.label}</span>
-                <span className="mt-0.5 block text-xs text-slate-500">{item.hint}</span>
+                <span className="editor-text-strong block text-sm font-medium">{item.label}</span>
+                <span className="editor-text-muted mt-0.5 block text-xs">{item.hint}</span>
               </>
             }
           >
@@ -80,7 +80,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
               data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
               variant="ghost"
               title={`${item.label} · ${item.hint}`}
-              className="group h-12 w-12 rounded-2xl border border-slate-300 bg-white p-0 text-slate-950 shadow-[0_2px_10px_rgba(18,32,51,0.06)] transition-[background-color,border-color,box-shadow,transform] duration-150 hover:border-slate-500 hover:bg-slate-100 hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-slate-500"
+              className="editor-insert-button group h-12 w-12 rounded-2xl border p-0 shadow-[0_2px_10px_rgba(18,32,51,0.06)] hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-blue-500"
               onClick={(event) => {
                 if (item.kind === 'wrapper') {
                   if (item.role === 'section') {
@@ -93,7 +93,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
                 onInsertLeaf(item.role);
               }}
             >
-              <span className="flex h-full w-full items-center justify-center rounded-[15px] border border-black/8 bg-white text-slate-950 transition-[background-color,border-color,color] duration-150 group-hover:border-slate-300 group-hover:bg-slate-100 group-hover:text-slate-900">
+              <span className="editor-insert-button-inner flex h-full w-full items-center justify-center rounded-[15px] border border-black/8">
                 <Icon className="h-4 w-4" strokeWidth={1.9} />
               </span>
             </Button>

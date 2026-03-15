@@ -8,7 +8,7 @@ function Label({
 }: React.ComponentProps<'label'>) {
   return (
     <label
-      className={cn('text-[13px] font-medium text-slate-700', className)}
+      className={cn('editor-text-muted text-[13px] font-medium', className)}
       {...props}
     />
   );

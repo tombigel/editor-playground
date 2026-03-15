@@ -64,7 +64,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       >
         <div
           className={cn(
-            'relative grid w-full max-w-md gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-lg',
+            'editor-bg-surface editor-border-subtle relative grid w-full max-w-md gap-4 rounded-xl border p-6 shadow-lg',
             className,
           )}
           onMouseDown={(event) => event.stopPropagation()}
@@ -72,7 +72,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           {children}
           <button
             type="button"
-            className="absolute right-4 top-4 rounded-md border border-transparent p-1 text-slate-500 transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-slate-200 hover:bg-slate-50/80 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+            className="editor-icon-button-subtle absolute right-4 top-4 rounded-md border border-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             onClick={() => onOpenChange(false)}
           >
             <X className="size-4" />
@@ -94,11 +94,11 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function DialogTitle({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('text-lg font-semibold text-slate-900', className)} {...props} />;
+  return <div className={cn('editor-text-strong text-lg font-semibold', className)} {...props} />;
 }
 
 function DialogDescription({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('text-sm text-slate-500', className)} {...props} />;
+  return <div className={cn('editor-text-muted text-sm', className)} {...props} />;
 }
 
 export {

@@ -140,15 +140,14 @@ Validation run:
 ### `src/styles.css`
 
 - Biggest cleanup target after `Stage.tsx` and `InspectorPanel.tsx`.
-- Partially completed on 2026-03-15: the editor theme now uses shared CSS custom properties for body/editor backgrounds, shared surfaces, controls, stage frame/canvas, selection accent, drag preview, and resize handles.
-- Remaining issue: the dark-theme section still has some selector-driven utility overrides and `!important` usage, especially around Tailwind utility color remapping.
+- Completed on 2026-03-15: the editor theme now uses shared CSS custom properties plus editor-owned semantic classes for body/editor backgrounds, shared surfaces, controls, stage frame/canvas, selection accent, drag preview, resize handles, settings navigation, template cards, and inspector inline fields.
+- Completed on 2026-03-15: the remaining dark-theme utility remap block and the last CSS `!important` overrides used for theme patching were removed.
 - Completed on 2026-03-15: the legacy `.studio-*`, `.panel`, `.dialog*`, and `.debug-card` block was removed, along with duplicate resize-handle rules.
 
 ## Modern CSS opportunities
 
-1. Partially completed on 2026-03-15: replace most dark-theme overrides in `src/styles.css` with custom properties on `[data-editor-theme="light" | "dark"]`.
-   - Shared theme variables now cover core surfaces, controls, stage chrome, and interaction accents.
-   - Remaining work is to finish removing selector-driven utility overrides and reduce the last `!important` patches.
+1. Completed on 2026-03-15: replace dark-theme overrides in `src/styles.css` with custom properties on `[data-editor-theme="light" | "dark"]` plus editor-owned semantic classes.
+   - Shared theme variables now cover core surfaces, controls, stage chrome, interaction accents, and the remaining panel-specific visual treatments that had still depended on utility remaps.
 
 2. Replace repeated layout-specific background/border/color overrides with semantic tokens.
    - Example token groups: `--surface-1`, `--surface-2`, `--border-subtle`, `--text-muted`, `--accent`.
@@ -205,5 +204,4 @@ These are not all “wrong”, but they are worth revisiting:
 
 1. Decide the fate of `src/site/SiteRenderer.tsx`: remove it, or keep and document it as a separate lightweight renderer.
 2. Split `Stage.tsx` and `InspectorPanel.tsx` into pure helper modules plus smaller render components.
-3. Convert theme styling to CSS variables and remove the dark-mode `!important` sprawl.
-4. Add stage interaction coverage for drag, snap, reparent, and drop behavior.
+3. Add stage interaction coverage for drag, snap, reparent, and drop behavior.

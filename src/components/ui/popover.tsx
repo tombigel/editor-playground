@@ -248,7 +248,7 @@ export function PopoverTooltip({
         {...({ popover: 'manual' } as PopoverAttributeProps)}
         role="tooltip"
         className={cn(
-          'ui-popover-tooltip fixed m-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] outline-none',
+          'editor-tooltip-panel ui-popover-tooltip fixed m-0 rounded-xl border px-3 py-2 text-xs font-medium outline-none',
           className,
         )}
         style={style}

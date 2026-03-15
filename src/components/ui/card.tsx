@@ -7,7 +7,7 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-ui="card"
       className={cn(
-        'rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm',
+        'editor-bg-surface editor-border-subtle editor-text-strong rounded-xl border shadow-sm',
         className,
       )}
       {...props}
@@ -27,7 +27,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
 function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      className={cn('text-sm font-semibold tracking-tight text-slate-900', className)}
+      className={cn('editor-text-strong text-sm font-semibold tracking-tight', className)}
       {...props}
     />
   );
@@ -36,7 +36,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
 function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      className={cn('text-xs text-slate-500', className)}
+      className={cn('editor-text-muted text-xs', className)}
       {...props}
     />
   );
