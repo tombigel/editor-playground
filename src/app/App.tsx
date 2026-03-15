@@ -146,6 +146,9 @@ const UPCOMING_SCROLL_TEMPLATES = [
 const TOPBAR_ICON_BUTTON_CLASS =
   'h-8 w-8 rounded-md border border-white/10 bg-white/[0.035] p-0 text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/14 hover:bg-white/[0.065] hover:text-white/92 focus-visible:border-white/20 focus-visible:bg-white/[0.08] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]';
 
+const TOPBAR_ACTIVE_BUTTON_CLASS =
+  'h-8 w-8 rounded-md border border-white/16 bg-white/[0.12] p-0 text-white shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/22 hover:bg-white/[0.16] hover:text-white focus-visible:border-white/24 focus-visible:bg-white/[0.16] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]';
+
 const TOPBAR_TOOLTIP_CLASS =
   'rounded-lg border border-slate-700 bg-[#0f172a] px-3 py-2 text-xs font-medium text-slate-100 shadow-[0_16px_36px_rgba(2,6,23,0.38)]';
 
@@ -659,8 +662,9 @@ export function App() {
                   variant="ghost"
                   size="sm"
                   aria-label="Keyboard shortcuts"
-                  onClick={() => setShortcutHelpOpen(true)}
-                  className={TOPBAR_ICON_BUTTON_CLASS}
+                  aria-expanded={shortcutHelpOpen}
+                  onClick={() => setShortcutHelpOpen((open) => !open)}
+                  className={shortcutHelpOpen ? TOPBAR_ACTIVE_BUTTON_CLASS : TOPBAR_ICON_BUTTON_CLASS}
                 >
                   <CircleQuestionMark className="h-4 w-4" />
                 </Button>
@@ -680,11 +684,7 @@ export function App() {
                   aria-expanded={settingsOpen}
                   data-panel-trigger="settings"
                   onClick={() => setSettingsOpen((open) => !open)}
-                  className={
-                    settingsOpen
-                      ? 'h-8 w-8 rounded-md border border-[#4d86ff] bg-[#3772ff] p-0 text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)] focus-visible:border-[#8ab0ff] focus-visible:bg-[#4f86ff] focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]'
-                      : TOPBAR_ICON_BUTTON_CLASS
-                  }
+                  className={settingsOpen ? TOPBAR_ACTIVE_BUTTON_CLASS : TOPBAR_ICON_BUTTON_CLASS}
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
