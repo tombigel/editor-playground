@@ -165,6 +165,20 @@ describe('api/documentApi', () => {
     expect(postLink.label.toLowerCase()).not.toContain('maintenance');
   });
 
+  it('seeds the initial post section with a 50vh height', () => {
+    const document = createInitialDocument();
+    const postSection = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    expect(postSection).toBeTruthy();
+    if (!postSection || postSection.type !== 'wrapper') {
+      return;
+    }
+
+    expect(postSection.rect.height.base.raw).toBe('50vh');
+  });
+
   it('seeds the default footer repository link with the sticky-playground repo url', () => {
     const document = createInitialDocument();
     const repoLink = Object.values(document.nodes).find(

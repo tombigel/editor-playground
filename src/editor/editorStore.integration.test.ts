@@ -3,8 +3,12 @@ import { computeStickyState } from '../sticky/stickyCompute';
 import { createInitialDocument } from '../model/defaults';
 import { parseUnitValue } from '../model/units';
 import {
+  clearSessionState,
   confirmPromoteWrapperRole,
+  clearPersistedState,
+  createFactoryResetState,
   createInitialState,
+  DEFAULT_DOCUMENT_STORAGE_KEY,
   deleteNode,
   importDocument,
   insertLeaf,
@@ -13,6 +17,7 @@ import {
   loadPersistedState,
   nudgeNode,
   parseImportedDocumentJson,
+  persistDefaultDocument,
   reparentNode,
   reorderNode,
   requestPromoteWrapperRole,
@@ -189,6 +194,197 @@ describe('editor/editorStore integration', () => {
     expect(migratedRepoLink.href).toBe('https://github.com/tombigel/sticky-playground');
   });
 
+  it('migrates untouched legacy default starter sections to the post template', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+
+    localStorage.setItem(
+      DEFAULT_DOCUMENT_STORAGE_KEY,
+      JSON.stringify({
+        rootId: 'site_1',
+        nodes: {
+          site_1: {
+            id: 'site_1',
+            type: 'site',
+            parentId: null,
+            children: ['section_2'],
+            name: 'Site',
+            visible: true,
+            locked: false,
+          },
+          section_2: {
+            id: 'section_2',
+            type: 'wrapper',
+            role: 'section',
+            parentId: 'site_1',
+            children: ['text_3', 'button_4'],
+            name: 'Section',
+            visible: true,
+            locked: false,
+            rect: {
+              x: { base: { raw: '0px', parsed: { value: 0, unit: 'px' } } },
+              y: { base: { raw: '0px', parsed: { value: 0, unit: 'px' } } },
+              width: { base: { raw: '100%', parsed: { value: 100, unit: '%' } } },
+              height: { base: { raw: '480px', parsed: { value: 480, unit: 'px' } } },
+            },
+            style: {
+              background: '#ffffff',
+              borderColor: '#b6c2d1',
+              borderWidth: { raw: '1px', parsed: { value: 1, unit: 'px' } },
+              paddingTop: { raw: '16px', parsed: { value: 16, unit: 'px' } },
+              paddingRight: { raw: '16px', parsed: { value: 16, unit: 'px' } },
+              paddingBottom: { raw: '16px', parsed: { value: 16, unit: 'px' } },
+              paddingLeft: { raw: '16px', parsed: { value: 16, unit: 'px' } },
+            },
+          },
+          text_3: {
+            id: 'text_3',
+            type: 'leaf',
+            role: 'text',
+            parentId: 'section_2',
+            children: [],
+            name: 'Text',
+            visible: true,
+            locked: false,
+            rect: {
+              x: { base: { raw: '32px', parsed: { value: 32, unit: 'px' } } },
+              y: { base: { raw: '32px', parsed: { value: 32, unit: 'px' } } },
+              width: { base: { raw: 'fit-content', parsed: { keyword: 'fit-content' } } },
+              height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
+            },
+            content: 'Edit text',
+            style: {
+              color: '#16202a',
+              fontSize: { raw: '18px', parsed: { value: 18, unit: 'px' } },
+            },
+          },
+          button_4: {
+            id: 'button_4',
+            type: 'leaf',
+            role: 'button',
+            parentId: 'section_2',
+            children: [],
+            name: 'Button',
+            visible: true,
+            locked: false,
+            rect: {
+              x: { base: { raw: '32px', parsed: { value: 32, unit: 'px' } } },
+              y: { base: { raw: '32px', parsed: { value: 32, unit: 'px' } } },
+              width: { base: { raw: 'fit-content', parsed: { keyword: 'fit-content' } } },
+              height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
+            },
+            label: 'Button',
+          },
+        },
+      }),
+    );
+
+    const loaded = loadPersistedState();
+    const root = getRoot(loaded.document);
+    const postSection = Object.values(loaded.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    expect(root.children).toHaveLength(3);
+    expect(postSection).toBeTruthy();
+    if (!postSection || postSection.type !== 'wrapper') {
+      return;
+    }
+
+    expect(postSection.rect.height.base.raw).toBe('50vh');
+    expect(Object.values(loaded.document.nodes).some((node) => node.id === 'section_2')).toBe(false);
+  });
+
+  it('clears the seeded default document on reset so a fresh post template is recreated', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+
+    localStorage.setItem(
+      DEFAULT_DOCUMENT_STORAGE_KEY,
+      JSON.stringify({
+        rootId: 'site_1',
+        nodes: {
+          site_1: {
+            id: 'site_1',
+            type: 'site',
+            parentId: null,
+            children: [],
+            name: 'Site',
+            visible: true,
+            locked: false,
+          },
+        },
+      }),
+    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(createInitialState()));
+
+    clearPersistedState();
+
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem(DEFAULT_DOCUMENT_STORAGE_KEY)).toBeNull();
+
+    const reloaded = createInitialState();
+    const postSection = Object.values(reloaded.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    expect(postSection).toBeTruthy();
+  });
+
+  it('clears only the live session when requested', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(createInitialState()));
+    localStorage.setItem(DEFAULT_DOCUMENT_STORAGE_KEY, JSON.stringify(createInitialDocument()));
+
+    clearSessionState();
+
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem(DEFAULT_DOCUMENT_STORAGE_KEY)).not.toBeNull();
+  });
+
+  it('builds a factory reset state while preserving the provided ui settings', () => {
+    const state = createInitialState();
+    const reset = createFactoryResetState({
+      previewSticky: false,
+      spacerVisibility: 'all',
+      showGridLanes: true,
+      snapEnabled: false,
+      themeMode: 'dark',
+    });
+
+    const postSection = Object.values(reset.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    expect(reset.selectedId).toBeNull();
+    expect(reset.pendingRoleSwap).toBeNull();
+    expect(reset.ui).toEqual({
+      previewSticky: false,
+      spacerVisibility: 'all',
+      showGridLanes: true,
+      snapEnabled: false,
+      themeMode: 'dark',
+    });
+    expect(postSection).toBeTruthy();
+    expect(reset.document).not.toBe(state.document);
+  });
+
+  it('persists the provided default document snapshot', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const document = createInitialDocument();
+
+    persistDefaultDocument(document);
+
+    expect(localStorage.getItem(DEFAULT_DOCUMENT_STORAGE_KEY)).toBe(JSON.stringify(document));
+  });
+
   it('inserts sections before footer and selects the inserted section', () => {
     const initial = createInitialState();
     const rootBefore = getRoot(initial.document);
@@ -207,6 +403,7 @@ describe('editor/editorStore integration', () => {
     expect(selected.type).toBe('wrapper');
     if (selected.type === 'wrapper') {
       expect(selected.role).toBe('section');
+      expect(selected.rect.height.base.raw).toBe('50vh');
     }
   });
 

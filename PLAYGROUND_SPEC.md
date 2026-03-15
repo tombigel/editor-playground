@@ -176,6 +176,8 @@ Supported unit types:
 - `width`: unit value, `fit-content`, `min-content`, or `max-content`
 - `height`: unit value, `auto`, or `aspect-ratio(...)`
 
+Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
+
 Internally, values are stored as parsed data shaped like `CSSUnitValue`, but as plain app data rather than browser Typed OM objects.
 
 ## Sticky Model
@@ -273,6 +275,8 @@ Current UX includes:
 - inspector ordering controls with icon actions and tooltips
 - in-memory incremental undo/redo
 - local session persistence in `localStorage`
+- `Reset data` restores the factory document baseline and clears undo/redo while preserving editor UI preferences
+- `Reset all` also clears persisted editor UI/session state and restores the full editor baseline
 
 ## Architecture Boundaries
 
@@ -297,8 +301,8 @@ Template picker behavior:
 
 Current templates:
 
-- `Blank`
-- `Post` (image + title + text)
+- `Blank` with default section height `50vh`
+- `Post` (image + title + text) with default section height `50vh`
 - `Sticky Staggered Images`
 - `Sticky Pinned Cards`
 - `Sticky Media Reveal`
@@ -321,6 +325,7 @@ Factory seed now uses:
 - redesigned project-focused footer
 
 When loading persisted legacy starter documents, untouched old default header/footer shells are auto-upgraded in place to the current baseline.
+When loading the untouched original starter document, the legacy single section with placeholder text/button content is replaced with the current `Post` template baseline.
 
 ## Validation Policy
 

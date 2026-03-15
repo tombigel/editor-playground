@@ -58,7 +58,8 @@ type Props = {
   onClearHistory: () => void;
   onHistoryLimitChange: (value: number) => void;
   onImport: (raw: string) => Promise<ActionResult> | ActionResult;
-  onReset: () => void;
+  onResetData: () => void;
+  onResetAll: () => void;
 };
 
 const SECTION_META: Array<{
@@ -138,7 +139,8 @@ export function SettingsPanel({
   onClearHistory,
   onHistoryLimitChange,
   onImport,
-  onReset,
+  onResetData,
+  onResetAll,
 }: Props) {
   const [activeSection, setActiveSection] = useState<SectionId>('display');
   const [importBuffer, setImportBuffer] = useState('');
@@ -482,24 +484,31 @@ export function SettingsPanel({
                 onChange={onHistoryLimitChange}
               />
               <ActionRow
-                icon={Trash2}
                 title="Clear undo history"
                 description="Clears undo and redo without changing the document."
                 actions={
-                  <Button type="button" variant="outline" size="sm" onClick={onClearHistory}>
-                    Clear
-                  </Button>
+                  <div className="flex w-full justify-end">
+                    <Button type="button" variant="outline" size="sm" className="w-[120px]" onClick={onClearHistory}>
+                      Clear
+                    </Button>
+                  </div>
                 }
+                actionsClassName="sm:min-w-[248px]"
               />
               <ActionRow
-                icon={RefreshCcw}
                 title="Reset stage"
-                description="Reloads the factory baseline."
+                description="Reset document data, or reset document data plus editor preferences."
                 actions={
-                  <Button type="button" variant="destructive" size="sm" onClick={onReset}>
-                    Reset
-                  </Button>
+                  <div className="flex w-full flex-col gap-2 sm:flex-row">
+                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={onResetData}>
+                      Reset data
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" className="flex-1" onClick={onResetAll}>
+                      Reset all
+                    </Button>
+                  </div>
                 }
+                actionsClassName="sm:min-w-[248px]"
               />
             </section>
 
@@ -692,26 +701,30 @@ function ActionRow({
   title,
   description,
   actions,
+  actionsClassName,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: string;
   description: string;
   actions: ReactNode;
+  actionsClassName?: string;
 }) {
   const Icon = icon;
 
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-slate-200 px-4 py-3 first:border-t-0">
-      <div className="flex min-w-0 gap-3">
-        <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
-          <Icon className="h-4 w-4" />
-        </div>
+    <div className="flex flex-col gap-3 border-t border-slate-200 py-3 first:border-t-0 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-6">
+      <div className={`min-w-0 ${icon ? 'flex gap-3' : ''}`}>
+        {Icon ? (
+          <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
+            <Icon className="h-4 w-4" />
+          </div>
+        ) : null}
         <div className="min-w-0">
           <div className="text-sm font-medium text-slate-950">{title}</div>
           <div className="mt-1 text-sm text-slate-600">{description}</div>
         </div>
       </div>
-      <div className="shrink-0">{actions}</div>
+      <div className={`shrink-0 sm:justify-self-end ${actionsClassName ?? ''}`}>{actions}</div>
     </div>
   );
 }

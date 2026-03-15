@@ -382,7 +382,7 @@ export function createInitialDocument(): DocumentModel {
 function createBlankSection(parentId: NodeId): TemplateBuild {
   const section = createWrapper('section', parentId);
   section.name = 'Blank Section';
-  section.rect = createDefaultRect('0px', '0px', '100%', '640px');
+  section.rect = createDefaultRect('0px', '0px', '100%', '50vh');
   section.style.paddingTop = parseUnitValue('64px');
   section.style.paddingRight = parseUnitValue('72px');
   section.style.paddingBottom = parseUnitValue('64px');
@@ -399,7 +399,7 @@ function createBlankSection(parentId: NodeId): TemplateBuild {
 function createPostSection(parentId: NodeId): TemplateBuild {
   const section = createWrapper('section', parentId);
   section.name = 'Post Layout';
-  section.rect = createDefaultRect('0px', '0px', '100%', '760px');
+  section.rect = createDefaultRect('0px', '0px', '100%', '50vh');
   section.style.paddingTop = parseUnitValue('64px');
   section.style.paddingRight = parseUnitValue('72px');
   section.style.paddingBottom = parseUnitValue('72px');

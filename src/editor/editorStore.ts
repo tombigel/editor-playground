@@ -11,6 +11,7 @@ import {
 } from '../model/defaults';
 import { validateDocument } from '../model/validation';
 import type {
+  ButtonLeaf,
   DocumentModel,
   DocumentNode,
   LeafRole,
@@ -113,11 +114,44 @@ export function persistState(state: EditorState) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
 }
 
-export function clearPersistedState() {
+export function persistDefaultDocument(document: DocumentModel) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.localStorage.setItem(DEFAULT_DOCUMENT_STORAGE_KEY, JSON.stringify(document));
+}
+
+export function clearSessionState() {
   if (typeof window === 'undefined') {
     return;
   }
   window.localStorage.removeItem(STORAGE_KEY);
+}
+
+export function clearPersistedState() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  clearSessionState();
+  window.localStorage.removeItem(DEFAULT_DOCUMENT_STORAGE_KEY);
+}
+
+export function createFactoryResetState(ui?: EditorState['ui']): EditorState {
+  const document = createInitialDocument();
+  return {
+    document,
+    selectedId: null,
+    pendingRoleSwap: null,
+    ui: ui
+      ? { ...ui }
+      : {
+          previewSticky: true,
+          spacerVisibility: 'selected',
+          showGridLanes: false,
+          snapEnabled: true,
+          themeMode: 'auto',
+        },
+  };
 }
 
 export function parseImportedDocumentJson(raw: string): DocumentModel {
@@ -248,6 +282,7 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
     }
   }
   ensureDefaultSiteSections(normalized);
+  upgradeLegacyStarterSection(normalized);
   upgradeLegacyStarterShell(normalized);
   renameRepositoryLinks(normalized);
   return normalized;
@@ -289,6 +324,78 @@ function upgradeLegacyStarterShell(document: DocumentModel) {
   if (footer && isLegacyFooter(document, footer)) {
     applyModernFooter(document, footer);
   }
+}
+
+function upgradeLegacyStarterSection(document: DocumentModel) {
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return;
+  }
+
+  const sections = root.children
+    .map((id) => document.nodes[id])
+    .filter((node): node is WrapperNode => Boolean(node && node.type === 'wrapper' && node.role === 'section'));
+
+  if (sections.length !== 1) {
+    return;
+  }
+
+  const [legacySection] = sections;
+  if (!legacySection || !isLegacyStarterSection(document, legacySection)) {
+    return;
+  }
+
+  const sectionIndex = root.children.indexOf(legacySection.id);
+  removeNodeSubtree(document, legacySection.id);
+
+  const { wrapper, nodes } = createSectionFromTemplate('post', document.rootId);
+  Object.assign(document.nodes, nodes);
+  root.children.splice(sectionIndex, 1, wrapper.id);
+}
+
+function isLegacyStarterSection(document: DocumentModel, section: WrapperNode) {
+  if (
+    section.name !== 'Section' ||
+    section.rect.width.base.raw !== '100%' ||
+    section.rect.height.base.raw !== '480px' ||
+    section.children.length !== 2
+  ) {
+    return false;
+  }
+
+  const [firstChildId, secondChildId] = section.children;
+  const firstChild = document.nodes[firstChildId];
+  const secondChild = document.nodes[secondChildId];
+
+  return isLegacyStarterText(firstChild) && isLegacyStarterButton(secondChild);
+}
+
+function isLegacyStarterText(node: DocumentNode | undefined): node is TextLeaf {
+  return Boolean(
+    node &&
+      node.type === 'leaf' &&
+      node.role === 'text' &&
+      node.name === 'Text' &&
+      node.content === 'Edit text' &&
+      node.rect.x.base.raw === '32px' &&
+      node.rect.y.base.raw === '32px' &&
+      node.rect.width.base.raw === 'fit-content' &&
+      node.rect.height.base.raw === 'auto',
+  );
+}
+
+function isLegacyStarterButton(node: DocumentNode | undefined): node is ButtonLeaf {
+  return Boolean(
+    node &&
+      node.type === 'leaf' &&
+      node.role === 'button' &&
+      node.name === 'Button' &&
+      node.label === 'Button' &&
+      node.rect.x.base.raw === '32px' &&
+      node.rect.y.base.raw === '32px' &&
+      node.rect.width.base.raw === 'fit-content' &&
+      node.rect.height.base.raw === 'auto',
+  );
 }
 
 function isLegacyHeader(document: DocumentModel, header: WrapperNode) {

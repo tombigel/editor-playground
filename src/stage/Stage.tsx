@@ -703,11 +703,11 @@ function renderLeaf({
       style={{
         ...(isSelfStickyTrack
           ? {
-              width: '100%',
+              width: leafBaseWidth,
             }
           : {
               ...meshPlacement,
-              width: '100%',
+              width: leafBaseWidth,
             }),
         height: leafBaseHeight,
         aspectRatio:

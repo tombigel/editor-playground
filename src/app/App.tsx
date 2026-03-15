@@ -4,9 +4,11 @@ import { CircleQuestionMark, Eye, Magnet, Redo2, Settings, StickyNote, Undo2, X 
 import {
   SECTION_TEMPLATES,
   cancelPromoteWrapperRole,
+  clearSessionState,
   clearPersistedState,
   computeStickyState,
   confirmPromoteWrapperRole,
+  createFactoryResetState,
   deleteNode,
   demoteWrapperRole,
   getAdjacentStageSelection,
@@ -22,6 +24,7 @@ import {
   nudgeNode,
   parseImportedDocumentJson,
   parseUnitValue,
+  persistDefaultDocument,
   type DocumentNode,
   type DocumentModel,
   type EditorState,
@@ -93,6 +96,8 @@ type HistoryAction =
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'clearHistory' }
+  | { type: 'resetData' }
+  | { type: 'resetAll' }
   | { type: 'setHistoryLimit'; value: number }
   | { type: 'beginResize'; id: NodeId }
   | { type: 'endResize'; id: NodeId };
@@ -376,6 +381,27 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
 
   if (action.type === 'clearHistory') {
     return { ...state, past: [], future: [], activeResize: null };
+  }
+
+  if (action.type === 'resetData') {
+    return {
+      ...state,
+      present: createFactoryResetState(state.present.ui),
+      past: [],
+      future: [],
+      activeResize: null,
+    };
+  }
+
+  if (action.type === 'resetAll') {
+    return {
+      ...state,
+      present: createFactoryResetState(),
+      past: [],
+      future: [],
+      historyLimit: DEFAULT_HISTORY_LIMIT,
+      activeResize: null,
+    };
   }
 
   if (action.type === 'setHistoryLimit') {
@@ -977,9 +1003,16 @@ export function App() {
                 };
               }
             }}
-            onReset={() => {
+            onResetData={() => {
+              const next = createFactoryResetState(state.ui);
+              clearSessionState();
+              persistDefaultDocument(next.document);
+              dispatch({ type: 'resetData' });
+            }}
+            onResetAll={() => {
               clearPersistedState();
-              window.location.reload();
+              persistDefaultDocument(createFactoryResetState().document);
+              dispatch({ type: 'resetAll' });
             }}
           />
         </PopoverSurface>

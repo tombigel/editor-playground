@@ -15,7 +15,8 @@ type Props = {
   onClearHistory: () => void;
   onHistoryLimitChange: (value: number) => void;
   onExport: () => Promise<boolean>;
-  onReset: () => void;
+  onResetData: () => void;
+  onResetAll: () => void;
 };
 
 export function DebugPanel({
@@ -28,7 +29,8 @@ export function DebugPanel({
   onClearHistory,
   onHistoryLimitChange,
   onExport,
-  onReset,
+  onResetData,
+  onResetAll,
 }: Props) {
   const [exportState, setExportState] = useState<'idle' | 'copied' | 'error'>('idle');
 
@@ -53,8 +55,11 @@ export function DebugPanel({
           <Button type="button" variant="outline" size="sm" className="min-w-[110px]" onClick={onClearHistory}>
             Clear undo
           </Button>
-          <Button type="button" variant="destructive" size="sm" className="min-w-[110px]" onClick={onReset}>
-            Reset stage
+          <Button type="button" variant="outline" size="sm" className="min-w-[110px]" onClick={onResetData}>
+            Reset data
+          </Button>
+          <Button type="button" variant="destructive" size="sm" className="min-w-[110px]" onClick={onResetAll}>
+            Reset all
           </Button>
         </div>
         <div className="grid grid-cols-[84px_minmax(0,1fr)] items-center gap-2">
