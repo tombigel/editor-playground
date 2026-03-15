@@ -33,15 +33,15 @@ body {
 
 body[data-editor-theme='dark'] {
   background:
-    radial-gradient(circle at top left, rgba(68, 94, 138, 0.22), transparent 26%),
-    linear-gradient(180deg, #0d131d 0%, #0a1018 100%);
+    radial-gradient(circle at top left, rgba(90, 118, 168, 0.24), transparent 28%),
+    linear-gradient(180deg, #111927 0%, #0d141f 100%);
 }
 
 .editor-shell[data-editor-theme='dark'] {
   color: #e6edf5;
   background:
-    radial-gradient(circle at top left, rgba(68, 94, 138, 0.22), transparent 26%),
-    linear-gradient(180deg, #0d131d 0%, #0a1018 100%);
+    radial-gradient(circle at top left, rgba(90, 118, 168, 0.24), transparent 28%),
+    linear-gradient(180deg, #111927 0%, #0d141f 100%);
   color-scheme: dark;
 }
 
@@ -54,44 +54,44 @@ body[data-editor-theme='dark'] {
   .ui-dialog-popover > div,
   [data-ui='card']
 ) {
-  background: #121a26 !important;
-  border-color: #36495f !important;
+  background: #1a2534 !important;
+  border-color: #47607a !important;
   color: #e6edf5 !important;
   box-shadow:
-    0 18px 40px rgba(1, 6, 15, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    0 20px 44px rgba(1, 6, 15, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .editor-shell[data-editor-theme='dark'] .editor-workspace-shell {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-    #0f1620 !important;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0)),
+    #131d2a !important;
 }
 
 .editor-shell[data-editor-theme='dark'] .stage-frame {
-  background: #111925;
-  border-color: #36495f;
+  background: #1d2a3a;
+  border-color: #4c6680;
   box-shadow:
-    0 28px 54px rgba(0, 0, 0, 0.36),
-    0 2px 16px rgba(0, 0, 0, 0.22);
+    0 28px 54px rgba(0, 0, 0, 0.3),
+    0 2px 16px rgba(0, 0, 0, 0.18);
 }
 
 .editor-shell[data-editor-theme='dark'] .stage-canvas {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-    #131d2a;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0)),
+    #243244;
 }
 
 .editor-shell[data-editor-theme='dark'] .empty-slot {
   color: #93a3b8;
-  background: rgba(18, 26, 38, 0.9);
-  border-bottom-color: #36495f;
+  background: rgba(26, 37, 52, 0.88);
+  border-bottom-color: #47607a;
 }
 
 .editor-shell[data-editor-theme='dark'] .content-wrapper,
 .editor-shell[data-editor-theme='dark'] .stage-wrapper.role-header .content-wrapper,
 .editor-shell[data-editor-theme='dark'] .stage-wrapper.role-footer .content-wrapper {
-  background: #121a26;
+  background: #1d2a39;
 }
 
 .editor-shell[data-editor-theme='dark'] .image-placeholder {
@@ -117,8 +117,8 @@ body[data-editor-theme='dark'] {
   .editor-shortcut-help,
   .ui-dialog-popover > div
 ) [data-ui='button'][data-variant='secondary'] {
-  background: #182332;
-  border-color: #36495f;
+  background: #202d3e;
+  border-color: #47607a;
   color: #e6edf5;
 }
 
@@ -138,9 +138,9 @@ body[data-editor-theme='dark'] {
   .editor-shortcut-help,
   .ui-dialog-popover > div
 ) [data-ui='button'][data-variant='secondary']:hover {
-  background: #223145;
-  border-color: #4d6481;
-  box-shadow: inset 0 0 0 1px rgba(129, 160, 201, 0.12);
+  background: #29394d;
+  border-color: #5d7895;
+  box-shadow: inset 0 0 0 1px rgba(150, 180, 214, 0.14);
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) :is(
@@ -174,8 +174,8 @@ body[data-editor-theme='dark'] {
   .editor-shortcut-help,
   .ui-dialog-popover > div
 ) :is([data-ui='input'], [data-ui='textarea'], [data-ui='select-trigger']) {
-  background: #0f1722;
-  border-color: #36495f;
+  background: #162130;
+  border-color: #47607a;
   color: #e6edf5;
 }
 
@@ -204,13 +204,13 @@ body[data-editor-theme='dark'] {
   .ui-dialog-popover > div,
   [data-ui='select-content']
 ) {
-  background: #121a26;
-  border-color: #36495f;
+  background: #1a2534;
+  border-color: #47607a;
   color: #e6edf5;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) [data-ui='select-item']:is(:focus, [data-highlighted]) {
-  background: #243548;
+  background: #2a3850;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) :is(
@@ -232,7 +232,7 @@ body[data-editor-theme='dark'] {
   .editor-shortcut-help,
   .ui-dialog-popover > div
 ) [data-ui='switch'][data-state='checked'] {
-  background: #4f83fd;
+  background: #6b8fd6;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) :is(
@@ -248,7 +248,7 @@ body[data-editor-theme='dark'] {
   .editor-settings-panel,
   .ui-dialog-popover > div
 ) [data-ui='slider-range'] {
-  background: #4f83fd;
+  background: #6b8fd6;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) :is(
@@ -257,7 +257,7 @@ body[data-editor-theme='dark'] {
   .ui-dialog-popover > div
 ) [data-ui='slider-thumb'] {
   background: #0f1722;
-  border-color: #6d9aff;
+  border-color: #88a4d8;
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) .ui-popover-tooltip {
@@ -277,11 +277,11 @@ body[data-editor-theme='dark'] {
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) .settings-nav-link[data-active='true'] {
-  background: #1c2838 !important;
+  background: #223147 !important;
   color: #f3f7fc !important;
   box-shadow:
-    inset 0 0 0 1px rgba(118, 148, 186, 0.18),
-    0 8px 20px rgba(0, 0, 0, 0.16);
+    inset 0 0 0 1px rgba(136, 159, 194, 0.16),
+    0 8px 20px rgba(0, 0, 0, 0.14);
 }
 
 :is(.editor-shell[data-editor-theme='dark'], body[data-editor-theme='dark']) .settings-nav-link[data-active='true'] .text-slate-500,
@@ -313,14 +313,37 @@ body[data-editor-theme='dark'] {
 .editor-shell[data-editor-theme='dark'] .bg-slate-100,
 .editor-shell[data-editor-theme='dark'] .bg-slate-200,
 .editor-shell[data-editor-theme='dark'] .bg-white {
-  background-color: #182231 !important;
+  background-color: #223041 !important;
 }
 
 .editor-shell[data-editor-theme='dark'] .border-slate-200,
 .editor-shell[data-editor-theme='dark'] .border-slate-200\/80,
 .editor-shell[data-editor-theme='dark'] .border-slate-200\/90,
 .editor-shell[data-editor-theme='dark'] .border-slate-300 {
-  border-color: #36495f !important;
+  border-color: #47607a !important;
+}
+
+.editor-shell[data-editor-theme='dark'] .stage-wrapper.selected::before,
+.editor-shell[data-editor-theme='dark'] .stage-leaf.selected::before {
+  background: #6b8fd6;
+  box-shadow: 0 2px 8px rgba(107, 143, 214, 0.22);
+}
+
+.editor-shell[data-editor-theme='dark'] .stage-wrapper.selected::after,
+.editor-shell[data-editor-theme='dark'] .stage-leaf.selected::after {
+  border-color: #6b8fd6;
+}
+
+.editor-shell[data-editor-theme='dark'] .drag-preview-inner {
+  border-color: #6b8fd6;
+  box-shadow:
+    0 0 0 4px rgba(107, 143, 214, 0.1),
+    0 18px 40px rgba(18, 32, 51, 0.18);
+}
+
+.editor-shell[data-editor-theme='dark'] .resize-handle {
+  background: #6b8fd6;
+  border-color: #6b8fd6;
 }
 
 button,

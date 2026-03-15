@@ -906,17 +906,19 @@ export function App() {
               <div className="text-sm font-semibold text-slate-900">Section templates</div>
               <div className="mt-0.5 text-xs text-slate-500">Choose a layout to insert.</div>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-lg text-slate-500 hover:bg-slate-100/80 hover:text-slate-700 focus-visible:ring-blue-500/45"
               onClick={() => {
                 setSectionTemplateOpen(false);
                 setSectionTemplateAnchor(null);
               }}
-              className="rounded-md p-1 text-slate-500 transition-[background-color,color,box-shadow] duration-150 hover:bg-slate-100/80 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               aria-label="Close section templates panel"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
           <div className="max-h-[62vh] overflow-y-auto p-3">
             <div className="grid grid-cols-2 gap-2.5">
