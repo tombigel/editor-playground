@@ -95,7 +95,7 @@ Drag behavior includes:
 Resize behavior includes:
 
 - `Shift` on corner handles to preserve the current aspect ratio
-- resize start normalization to rendered box size when stored values are non-numeric (`auto`, `fit-content`, `%`, `aspect-ratio(...)`) to avoid first-frame jumps
+- resize start normalization to rendered box size when stored values are non-numeric (`auto`, `fit-content`, `min-content`, `max-content`, `%`, `aspect-ratio(...)`) to avoid first-frame jumps
 - drag/resize coordinate commits are anchored to model-space origin so sticky-preview viewport pinning does not leak into persisted `x`/`y`
 
 ## Ordering Model
@@ -173,7 +173,7 @@ The model is breakpoint-ready, even though the current editor only exposes a bas
 Supported unit types:
 
 - `x`, `y`: `px`, `%`, `vw`, `vh`
-- `width`: unit value or `fit-content`
+- `width`: unit value, `fit-content`, `min-content`, or `max-content`
 - `height`: unit value, `auto`, or `aspect-ratio(...)`
 
 Internally, values are stored as parsed data shaped like `CSSUnitValue`, but as plain app data rather than browser Typed OM objects.

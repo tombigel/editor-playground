@@ -10,6 +10,8 @@ describe('model/units', () => {
 
   it('parses width keywords and numeric widths', () => {
     expect(parseWidthValue('fit-content').parsed).toEqual({ keyword: 'fit-content' });
+    expect(parseWidthValue('min-content').parsed).toEqual({ keyword: 'min-content' });
+    expect(parseWidthValue('max-content').parsed).toEqual({ keyword: 'max-content' });
     expect(parseWidthValue('75%').parsed).toEqual({ value: 75, unit: '%' });
   });
 
@@ -25,6 +27,8 @@ describe('model/units', () => {
   it('formats parsed values back to css-like strings', () => {
     expect(formatValue(parseUnitValue('10px').parsed)).toBe('10px');
     expect(formatValue(parseWidthValue('fit-content').parsed)).toBe('fit-content');
+    expect(formatValue(parseWidthValue('min-content').parsed)).toBe('min-content');
+    expect(formatValue(parseWidthValue('max-content').parsed)).toBe('max-content');
     expect(formatValue(parseHeightValue('aspect-ratio(1.5)').parsed)).toBe('aspect-ratio(1.5)');
   });
 

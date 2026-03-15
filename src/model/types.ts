@@ -11,7 +11,7 @@ export type UnitValue = {
   unit: Unit;
 };
 
-export type WidthValue = UnitValue | { keyword: 'fit-content' };
+export type WidthValue = UnitValue | { keyword: 'fit-content' | 'min-content' | 'max-content' };
 
 export type HeightValue =
   | UnitValue

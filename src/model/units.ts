@@ -25,8 +25,9 @@ export function parseUnitValue(raw: string): ParsedValue<UnitValue> {
 }
 
 export function parseWidthValue(raw: string): ParsedValue<WidthValue> {
-  if (raw.trim() === 'fit-content') {
-    return { raw, parsed: { keyword: 'fit-content' } };
+  const value = raw.trim();
+  if (value === 'fit-content' || value === 'min-content' || value === 'max-content') {
+    return { raw, parsed: { keyword: value } };
   }
   return parseUnitValue(raw);
 }
