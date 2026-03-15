@@ -1,49 +1,98 @@
 import * as React from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { PopoverSurface } from './popover';
 
-const Dialog = DialogPrimitive.Root;
-const DialogTrigger = DialogPrimitive.Trigger;
-const DialogPortal = DialogPrimitive.Portal;
-const DialogClose = DialogPrimitive.Close;
+type DialogContextValue = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn('fixed inset-0 z-50 bg-slate-950/30 backdrop-blur-[1px]', className)}
-    {...props}
-  />
-));
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+const DialogContext = React.createContext<DialogContextValue | null>(null);
 
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-lg',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none">
-        <X className="size-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
-DialogContent.displayName = DialogPrimitive.Content.displayName;
+function useDialogContext() {
+  const context = React.useContext(DialogContext);
+  if (!context) {
+    throw new Error('Dialog components must be used inside <Dialog>.');
+  }
+  return context;
+}
+
+function Dialog({
+  open,
+  onOpenChange,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+}) {
+  const value = React.useMemo(() => ({ open, onOpenChange }), [open, onOpenChange]);
+  return <DialogContext.Provider value={value}>{children}</DialogContext.Provider>;
+}
+
+function DialogTrigger({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
+function DialogClose({ children }: { children: React.ReactNode }) {
+  const { onOpenChange } = useDialogContext();
+  return <button type="button" onClick={() => onOpenChange(false)}>{children}</button>;
+}
+
+type DialogContentProps = Omit<React.ComponentPropsWithoutRef<'div'>, 'children'> & {
+  children: React.ReactNode;
+  surfaceClassName?: string;
+  backdropVariant?: 'default' | 'transparent';
+};
+
+const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
+  ({ className, children, surfaceClassName, backdropVariant = 'default', ...props }, ref) => {
+    const { open, onOpenChange } = useDialogContext();
+
+    return (
+      <PopoverSurface
+        ref={ref}
+        open={open}
+        onOpenChange={onOpenChange}
+        popoverMode="auto"
+        role="dialog"
+        aria-modal="true"
+        data-backdrop-variant={backdropVariant}
+        className={cn(
+          'ui-dialog-popover fixed inset-0 grid h-screen w-screen max-h-none max-w-none place-items-center bg-slate-950/30 p-6 backdrop-blur-[1px]',
+          surfaceClassName,
+        )}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            onOpenChange(false);
+          }
+        }}
+        {...props}
+      >
+        <div
+          className={cn(
+            'relative grid w-full max-w-md gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-lg',
+            className,
+          )}
+          onMouseDown={(event) => event.stopPropagation()}
+        >
+          {children}
+          <button
+            type="button"
+            className="absolute right-4 top-4 rounded-md border border-transparent p-1 text-slate-500 transition-[background-color,border-color,color] duration-150 hover:border-slate-200 hover:bg-slate-50/80 hover:text-slate-700 focus:outline-none"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="size-4" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
+      </PopoverSurface>
+    );
+  },
+);
+DialogContent.displayName = 'DialogContent';
 
 function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return <div className={cn('flex flex-col gap-2 text-left', className)} {...props} />;
@@ -53,20 +102,12 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return <div className={cn('flex justify-end gap-2', className)} {...props} />;
 }
 
-function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn('text-lg font-semibold text-slate-900', className)} {...props} />;
+function DialogTitle({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div className={cn('text-lg font-semibold text-slate-900', className)} {...props} />;
 }
 
-function DialogDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) {
-  return (
-    <DialogPrimitive.Description
-      className={cn('text-sm text-slate-500', className)}
-      {...props}
-    />
-  );
+function DialogDescription({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div className={cn('text-sm text-slate-500', className)} {...props} />;
 }
 
 export {

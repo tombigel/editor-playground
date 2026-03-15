@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Eye, Grid3X3, Magnet, Redo2, SearchCode, StickyNote, Undo2, X } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { CircleQuestionMark, Eye, Magnet, Redo2, Settings, StickyNote, Undo2, X } from 'lucide-react';
 import {
   SECTION_TEMPLATES,
   cancelPromoteWrapperRole,
@@ -9,14 +10,17 @@ import {
   deleteNode,
   demoteWrapperRole,
   getNode,
+  importDocument as importEditorDocument,
   getValidationErrors,
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
   loadPersistedState,
   moveNode,
+  parseImportedDocumentJson,
   parseUnitValue,
   type DocumentNode,
+  type DocumentModel,
   type EditorState,
   type NodeId,
   type SectionTemplateId,
@@ -26,6 +30,7 @@ import {
   requestPromoteWrapperRole,
   resizeNode,
   selectNode,
+  serializeDocumentJson,
   updateRectField,
   updateStickyField,
   updateTextField,
@@ -33,11 +38,13 @@ import {
 } from '../api/editorApi';
 import { InsertPanel } from '../panels/InsertPanel';
 import { InspectorPanel } from '../panels/InspectorPanel';
-import { DebugPanel } from '../panels/DebugPanel';
+import { ShortcutHelpDialog } from '../panels/ShortcutHelpDialog';
+import { SettingsPanel } from '../panels/SettingsPanel';
 import { Stage } from '../api/editorViewApi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
+import { findMatchingShortcut, getShortcutLabel, getShortcutPlatform } from '@/lib/shortcuts';
 
 type EditorAction =
   | { type: 'select'; id: string | null }
@@ -69,6 +76,7 @@ type EditorAction =
   | { type: 'orderForward' }
   | { type: 'orderSendToBack' }
   | { type: 'orderBringToFront' }
+  | { type: 'importDocument'; document: DocumentModel }
   | { type: 'setPreviewSticky'; value: boolean }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
   | { type: 'setShowGridLanes'; value: boolean }
@@ -130,6 +138,12 @@ const UPCOMING_SCROLL_TEMPLATES = [
     description: 'Reserved for narrative timeline animations.',
   },
 ] as const;
+
+const TOPBAR_ICON_BUTTON_CLASS =
+  'h-8 w-8 rounded-md border border-white/10 bg-white/[0.035] p-0 text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/14 hover:bg-white/[0.065] hover:text-white/92 focus-visible:border-white/18 focus-visible:bg-white/[0.08] focus-visible:text-white';
+
+const TOPBAR_TOOLTIP_CLASS =
+  'rounded-lg border border-slate-700 bg-[#0f172a] px-3 py-2 text-xs font-medium text-slate-100 shadow-[0_16px_36px_rgba(2,6,23,0.38)]';
 
 function editorReducer(state: EditorState, action: EditorAction) {
   const selectedId = state.selectedId;
@@ -244,6 +258,8 @@ function editorReducer(state: EditorState, action: EditorAction) {
       return selectedId ? reorderNode(state, selectedId, 'sendToBack') : state;
     case 'orderBringToFront':
       return selectedId ? reorderNode(state, selectedId, 'bringToFront') : state;
+    case 'importDocument':
+      return importEditorDocument(state, action.document);
     case 'setPreviewSticky':
       return { ...state, ui: { ...state.ui, previewSticky: action.value } };
     case 'setSpacerVisibility':
@@ -396,21 +412,47 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
 export function App() {
   const [historyState, dispatch] = useReducer(historyReducer, undefined, createHistoryState);
   const state = historyState.present;
-  const [debugOpen, setDebugOpen] = useState(false);
-  const [spacerMenuOpen, setSpacerMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
-  const spacerMenuRef = useRef<HTMLDivElement | null>(null);
+  const [sectionTemplateAnchor, setSectionTemplateAnchor] = useState<HTMLElement | null>(null);
+  const [sectionTemplatePosition, setSectionTemplatePosition] = useState({ top: 72, left: 102 });
+  const settingsPanelRef = useRef<HTMLDivElement | null>(null);
   const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
-  const debugPanelRef = useRef<HTMLDivElement | null>(null);
+  const shortcutPlatform = getShortcutPlatform();
   const selectedNode = getNode(state.document, state.selectedId);
   const orderState = getNodeOrderState(state, selectedNode);
   const sectionOrderState = getSectionOrderState(state, selectedNode);
   const errors = useMemo(() => getValidationErrors(state), [state]);
   const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
+  const documentJson = useMemo(() => serializeDocumentJson(state.document), [state.document]);
 
   useEffect(() => {
     persistState(state);
   }, [state]);
+
+  useEffect(() => {
+    if (!sectionTemplateOpen || !sectionTemplateAnchor) {
+      return;
+    }
+    const anchor = sectionTemplateAnchor;
+
+    function updateSectionTemplatePosition() {
+      const rect = anchor.getBoundingClientRect();
+      setSectionTemplatePosition({
+        top: Math.max(72, Math.min(window.innerHeight - 480, rect.top - 10)),
+        left: rect.right + 16,
+      });
+    }
+
+    updateSectionTemplatePosition();
+    window.addEventListener('resize', updateSectionTemplatePosition);
+    window.addEventListener('scroll', updateSectionTemplatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updateSectionTemplatePosition);
+      window.removeEventListener('scroll', updateSectionTemplatePosition, true);
+    };
+  }, [sectionTemplateAnchor, sectionTemplateOpen]);
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -420,11 +462,12 @@ export function App() {
       }
 
       if (
-        spacerMenuRef.current &&
-        !spacerMenuRef.current.contains(target) &&
-        !target.closest('[data-panel-trigger="spacer-visibility"]')
+        settingsOpen &&
+        settingsPanelRef.current &&
+        !settingsPanelRef.current.contains(target) &&
+        !target.closest('[data-panel-trigger="settings"]')
       ) {
-        setSpacerMenuOpen(false);
+        setSettingsOpen(false);
       }
 
       if (
@@ -434,77 +477,88 @@ export function App() {
         !target.closest('[data-panel-trigger="section-templates"]')
       ) {
         setSectionTemplateOpen(false);
+        setSectionTemplateAnchor(null);
       }
 
-      if (
-        debugOpen &&
-        debugPanelRef.current &&
-        !debugPanelRef.current.contains(target) &&
-        !target.closest('[data-panel-trigger="debug-tools"]')
-      ) {
-        setDebugOpen(false);
-      }
     }
 
     window.addEventListener('pointerdown', handlePointerDown);
     return () => window.removeEventListener('pointerdown', handlePointerDown);
-  }, [debugOpen, sectionTemplateOpen]);
+  }, [sectionTemplateOpen, settingsOpen]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        if (sectionTemplateOpen || debugOpen || spacerMenuOpen) {
-          event.preventDefault();
-          setSectionTemplateOpen(false);
-          setDebugOpen(false);
-          setSpacerMenuOpen(false);
-        }
-        return;
-      }
-
-      const isUndoRedo = event.metaKey && !event.ctrlKey && event.code === 'KeyZ';
-      if (isUndoRedo) {
-        event.preventDefault();
-        dispatch({ type: event.shiftKey ? 'redo' : 'undo' });
-        return;
-      }
-
       const active = document.activeElement as HTMLElement | null;
-      if (isInteractiveFocus(active)) {
-        return;
-      }
+      const interactiveFocus = isInteractiveFocus(active);
+      const shortcut = findMatchingShortcut(
+        event,
+        {
+          interactiveFocus,
+          hasSelection: Boolean(state.selectedId),
+          hasDismissiblePanels: sectionTemplateOpen || settingsOpen || shortcutHelpOpen,
+        },
+        shortcutPlatform,
+      );
 
-      if (!state.selectedId) {
-        return;
-      }
-
-      if (event.key === 'Backspace' || event.key === 'Delete') {
-        event.preventDefault();
-        dispatch({ type: 'delete' });
-        return;
-      }
-
-      if (!event.metaKey || event.ctrlKey || event.shiftKey) {
-        return;
-      }
-
-      const isLeft = event.code === 'BracketLeft';
-      const isRight = event.code === 'BracketRight';
-      if (!isLeft && !isRight) {
+      if (!shortcut) {
         return;
       }
 
       event.preventDefault();
-      if (event.altKey) {
-        dispatch({ type: isLeft ? 'orderSendToBack' : 'orderBringToFront' });
-      } else {
-        dispatch({ type: isLeft ? 'orderBack' : 'orderForward' });
+      switch (shortcut.id) {
+        case 'dismissPanels':
+          setSectionTemplateOpen(false);
+          setSectionTemplateAnchor(null);
+          setSettingsOpen(false);
+          setShortcutHelpOpen(false);
+          return;
+        case 'undo':
+          dispatch({ type: 'undo' });
+          return;
+        case 'redo':
+          dispatch({ type: 'redo' });
+          return;
+        case 'openSettings':
+          setSettingsOpen((open) => !open);
+          return;
+        case 'showShortcutHelp':
+          setShortcutHelpOpen(true);
+          return;
+        case 'togglePreviewSticky':
+          dispatch({ type: 'setPreviewSticky', value: !state.ui.previewSticky });
+          return;
+        case 'toggleSpacerVisibility':
+          dispatch({
+            type: 'setSpacerVisibility',
+            value: state.ui.spacerVisibility === 'all' ? 'selected' : 'all',
+          });
+          return;
+        case 'toggleSnapEnabled':
+          dispatch({ type: 'setSnapEnabled', value: !state.ui.snapEnabled });
+          return;
+        case 'deleteSelection':
+          dispatch({ type: 'delete' });
+          return;
+        case 'orderBack':
+          dispatch({ type: 'orderBack' });
+          return;
+        case 'orderForward':
+          dispatch({ type: 'orderForward' });
+          return;
+        case 'orderSendToBack':
+          dispatch({ type: 'orderSendToBack' });
+          return;
+        case 'orderBringToFront':
+          dispatch({ type: 'orderBringToFront' });
+          return;
+        default:
+          assertNever(shortcut.id);
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [debugOpen, sectionTemplateOpen, spacerMenuOpen, state]);
+  }, [sectionTemplateOpen, settingsOpen, shortcutHelpOpen, shortcutPlatform, state]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900">
@@ -523,159 +577,129 @@ export function App() {
               </div>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                title="Undo · Cmd + Z"
-                aria-label="Undo"
-                disabled={historyState.past.length === 0}
-                onClick={() => dispatch({ type: 'undo' })}
-                className="h-8 w-8 rounded-md border border-white/12 bg-white/4 p-0 text-white hover:bg-white/10 disabled:opacity-35"
+              <PopoverTooltip
+                side="bottom"
+                align="end"
+                className={TOPBAR_TOOLTIP_CLASS}
+                content={`Undo · ${getShortcutLabel('undo', shortcutPlatform)}`}
               >
-                <Undo2 className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                title="Redo · Cmd + Shift + Z"
-                aria-label="Redo"
-                disabled={historyState.future.length === 0}
-                onClick={() => dispatch({ type: 'redo' })}
-                className="h-8 w-8 rounded-md border border-white/12 bg-white/4 p-0 text-white hover:bg-white/10 disabled:opacity-35"
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Undo"
+                  disabled={historyState.past.length === 0}
+                  onClick={() => dispatch({ type: 'undo' })}
+                  className={TOPBAR_ICON_BUTTON_CLASS}
+                >
+                  <Undo2 className="h-4 w-4" />
+                </Button>
+              </PopoverTooltip>
+              <PopoverTooltip
+                side="bottom"
+                align="end"
+                className={TOPBAR_TOOLTIP_CLASS}
+                content={`Redo · ${getShortcutLabel('redo', shortcutPlatform)}`}
               >
-                <Redo2 className="h-4 w-4" />
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Redo"
+                  disabled={historyState.future.length === 0}
+                  onClick={() => dispatch({ type: 'redo' })}
+                  className={TOPBAR_ICON_BUTTON_CLASS}
+                >
+                  <Redo2 className="h-4 w-4" />
+                </Button>
+              </PopoverTooltip>
+              <PopoverTooltip
+                side="bottom"
+                align="end"
+                className={TOPBAR_TOOLTIP_CLASS}
+                content={`Keyboard shortcuts · ${getShortcutLabel('showShortcutHelp', shortcutPlatform)}`}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Keyboard shortcuts"
+                  onClick={() => setShortcutHelpOpen(true)}
+                  className={TOPBAR_ICON_BUTTON_CLASS}
+                >
+                  <CircleQuestionMark className="h-4 w-4" />
+                </Button>
+              </PopoverTooltip>
+              <PopoverTooltip
+                side="bottom"
+                align="end"
+                className={TOPBAR_TOOLTIP_CLASS}
+                content={`Settings · ${getShortcutLabel('openSettings', shortcutPlatform)}`}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Settings"
+                  aria-haspopup="dialog"
+                  aria-expanded={settingsOpen}
+                  data-panel-trigger="settings"
+                  onClick={() => setSettingsOpen((open) => !open)}
+                  className={
+                    settingsOpen
+                      ? 'h-8 w-8 rounded-md border border-[#4d86ff] bg-[#3772ff] p-0 text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)] focus-visible:border-[#76a2ff] focus-visible:bg-[#4f86ff]'
+                      : TOPBAR_ICON_BUTTON_CLASS
+                  }
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </PopoverTooltip>
             </div>
           </div>
         </header>
 
         <div className="grid min-h-0 grid-cols-[84px_minmax(0,1fr)_300px]">
-          <aside className="relative z-30 overflow-visible border-r border-slate-200/80 bg-white/95 shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
+          <aside className="relative z-[360] overflow-visible border-r border-slate-200/80 bg-white/95 shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
             <div className="flex h-full flex-col gap-4 overflow-visible p-3">
               <div className="overflow-visible rounded-2xl border border-slate-200 bg-slate-50/80 p-2">
                 <InsertPanel
-                  onOpenSectionTemplates={() => setSectionTemplateOpen(true)}
+                  onOpenSectionTemplates={(trigger) => {
+                    setSectionTemplateAnchor(trigger);
+                    setSectionTemplateOpen(true);
+                  }}
                   onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
                   onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
                 />
               </div>
               <div className="mt-auto flex justify-center">
-                <div className="relative flex flex-col gap-2 overflow-visible">
-                  <button
-                    type="button"
-                    aria-pressed={state.ui.previewSticky}
+                <div className="flex flex-col gap-2">
+                  <RailToggleButton
+                    icon={Eye}
+                    pressed={state.ui.previewSticky}
+                    label={state.ui.previewSticky ? 'Sticky preview on' : 'Sticky preview off'}
+                    shortcut={getShortcutLabel('togglePreviewSticky', shortcutPlatform)}
                     onClick={() => dispatch({ type: 'setPreviewSticky', value: !state.ui.previewSticky })}
-                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
-                      state.ui.previewSticky
-                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
-                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Eye className="h-4 w-4" />
-                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
-                      {state.ui.previewSticky ? 'Disable sticky preview' : 'Enable sticky preview'}
-                    </span>
-                  </button>
-                  <div ref={spacerMenuRef} className="group relative">
-                    <button
-                      type="button"
-                      data-panel-trigger="spacer-visibility"
-                      aria-haspopup="menu"
-                      aria-expanded={spacerMenuOpen}
-                      onClick={() => setSpacerMenuOpen((open) => !open)}
-                      aria-pressed={state.ui.spacerVisibility === 'all'}
-                      className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
-                        state.ui.spacerVisibility === 'all'
-                          ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
-                          : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <SpacerIcon className="h-4 w-4" />
-                    </button>
-                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
-                      Spacer visibility
-                    </span>
-                    {spacerMenuOpen ? (
-                      <div className="absolute left-[calc(100%+8px)] top-1/2 z-[95] min-w-[140px] -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-1 shadow-[0_12px_24px_rgba(18,32,51,0.12)]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          dispatch({ type: 'setSpacerVisibility', value: 'selected' });
-                          setSpacerMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
-                          state.ui.spacerVisibility === 'selected'
-                            ? 'bg-[#3772ff] text-white'
-                            : 'text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        Selected spacers
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          dispatch({ type: 'setSpacerVisibility', value: 'all' });
-                          setSpacerMenuOpen(false);
-                        }}
-                        className={`mt-1 flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
-                          state.ui.spacerVisibility === 'all'
-                            ? 'bg-[#3772ff] text-white'
-                            : 'text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        All spacers
-                      </button>
-                      </div>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    aria-pressed={state.ui.showGridLanes}
-                    onClick={() => dispatch({ type: 'setShowGridLanes', value: !state.ui.showGridLanes })}
-                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
-                      state.ui.showGridLanes
-                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
-                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
-                      {state.ui.showGridLanes ? 'Hide grid lanes' : 'Show grid lanes'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={state.ui.snapEnabled}
+                  />
+                  <RailToggleButton
+                    icon={SpacerIcon}
+                    pressed={state.ui.spacerVisibility === 'all'}
+                    label={state.ui.spacerVisibility === 'all' ? 'Show all spacers' : 'Show selected spacers'}
+                    shortcut={getShortcutLabel('toggleSpacerVisibility', shortcutPlatform)}
+                    onClick={() =>
+                      dispatch({
+                        type: 'setSpacerVisibility',
+                        value: state.ui.spacerVisibility === 'all' ? 'selected' : 'all',
+                      })
+                    }
+                  />
+                  <RailToggleButton
+                    icon={Magnet}
+                    pressed={state.ui.snapEnabled}
+                    label={state.ui.snapEnabled ? 'Snap to guides on' : 'Snap to guides off'}
+                    shortcut={getShortcutLabel('toggleSnapEnabled', shortcutPlatform)}
+                    detail="Alt reverses while dragging"
                     onClick={() => dispatch({ type: 'setSnapEnabled', value: !state.ui.snapEnabled })}
-                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
-                      state.ui.snapEnabled
-                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
-                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Magnet className="h-4 w-4" />
-                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
-                      {state.ui.snapEnabled ? 'Disable snap (Alt reverses)' : 'Enable snap (Alt reverses)'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    data-panel-trigger="debug-tools"
-                    aria-pressed={debugOpen}
-                    onClick={() => setDebugOpen((open) => !open)}
-                    className={`group relative flex h-11 w-11 items-center justify-center rounded-2xl border transition ${
-                      debugOpen
-                        ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22)]'
-                        : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <SearchCode className="h-4 w-4" />
-                    <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
-                      {debugOpen ? 'Hide debug tools' : 'Show debug tools'}
-                    </span>
-                  </button>
+                  />
                 </div>
               </div>
             </div>
@@ -707,6 +731,10 @@ export function App() {
               canOrderForward={orderState.canForward}
               canSendToBack={orderState.canBack}
               canBringToFront={orderState.canForward}
+              orderBackShortcut={getShortcutLabel('orderBack', shortcutPlatform)}
+              orderForwardShortcut={getShortcutLabel('orderForward', shortcutPlatform)}
+              sendToBackShortcut={getShortcutLabel('orderSendToBack', shortcutPlatform)}
+              bringToFrontShortcut={getShortcutLabel('orderBringToFront', shortcutPlatform)}
               canSectionBack={sectionOrderState.canBack}
               canSectionForward={sectionOrderState.canForward}
               onOrderBack={() => dispatch({ type: 'orderBack' })}
@@ -736,9 +764,20 @@ export function App() {
       </div>
 
       {sectionTemplateOpen ? (
-        <div
+        <PopoverSurface
           ref={sectionTemplatePanelRef}
-          className="fixed left-[102px] top-[72px] z-[300] w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+          open={sectionTemplateOpen}
+          onOpenChange={(open) => {
+            setSectionTemplateOpen(open);
+            if (!open) {
+              setSectionTemplateAnchor(null);
+            }
+          }}
+          className="fixed w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+          style={{
+            top: `${sectionTemplatePosition.top}px`,
+            left: `${sectionTemplatePosition.left}px`,
+          }}
         >
           <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
             <div>
@@ -747,8 +786,11 @@ export function App() {
             </div>
             <button
               type="button"
-              onClick={() => setSectionTemplateOpen(false)}
-              className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              onClick={() => {
+                setSectionTemplateOpen(false);
+                setSectionTemplateAnchor(null);
+              }}
+              className="rounded-md p-1 text-slate-500 transition-[background-color,color] duration-150 hover:bg-slate-100/80 hover:text-slate-700"
               aria-label="Close section templates panel"
             >
               <X className="h-4 w-4" />
@@ -763,8 +805,9 @@ export function App() {
                   onClick={() => {
                     dispatch({ type: 'insertSectionTemplate', templateId: template.id });
                     setSectionTemplateOpen(false);
+                    setSectionTemplateAnchor(null);
                   }}
-                  className="group flex min-h-[104px] flex-col rounded-lg border border-slate-200 bg-white p-2.5 text-left transition hover:border-[#3772ff] hover:bg-[#f6f9ff]"
+                  className="group flex min-h-[104px] flex-col rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50/70"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-900">{template.name}</span>
@@ -797,56 +840,51 @@ export function App() {
               ))}
             </div>
           </div>
-        </div>
+        </PopoverSurface>
       ) : null}
 
-      {debugOpen ? (
-        <div
-          ref={debugPanelRef}
-          className="fixed bottom-4 left-[102px] z-[300] w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
-        >
-          <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
-            <div>
-              <div className="text-sm font-semibold text-slate-900">Debug tools</div>
-              <div className="mt-0.5 text-xs text-slate-500">Validation, sticky math, stage reset</div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setDebugOpen(false)}
-              className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Close debug tools panel"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <Separator />
-          <div className="max-h-[58vh] overflow-y-auto">
-            <DebugPanel
-              errors={errors}
-              stickyState={stickyState}
-              selectedNode={selectedNode}
-              undoDepth={historyState.past.length}
-              redoDepth={historyState.future.length}
-              historyLimit={historyState.historyLimit}
-              onClearHistory={() => dispatch({ type: 'clearHistory' })}
-              onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
-              onExport={async () => {
-                try {
-                  await navigator.clipboard.writeText(
-                    JSON.stringify(state.document, null, 2),
-                  );
-                  return true;
-                } catch {
-                  return false;
-                }
-              }}
-              onReset={() => {
-                clearPersistedState();
-                window.location.reload();
-              }}
-            />
-          </div>
-        </div>
+      {settingsOpen ? (
+        <PopoverSurface ref={settingsPanelRef} open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <SettingsPanel
+            documentJson={documentJson}
+            errors={errors}
+            stickyState={stickyState}
+            selectedNode={selectedNode}
+            previewSticky={state.ui.previewSticky}
+            spacerVisibility={state.ui.spacerVisibility}
+            showGridLanes={state.ui.showGridLanes}
+            snapEnabled={state.ui.snapEnabled}
+            undoDepth={historyState.past.length}
+            redoDepth={historyState.future.length}
+            historyLimit={historyState.historyLimit}
+            onClose={() => setSettingsOpen(false)}
+            onPreviewStickyChange={(value) => dispatch({ type: 'setPreviewSticky', value })}
+            onSpacerVisibilityChange={(value) => dispatch({ type: 'setSpacerVisibility', value })}
+            onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
+            onSnapEnabledChange={(value) => dispatch({ type: 'setSnapEnabled', value })}
+            onClearHistory={() => dispatch({ type: 'clearHistory' })}
+            onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
+            onImport={async (raw) => {
+              try {
+                const document = parseImportedDocumentJson(raw);
+                dispatch({ type: 'importDocument', document });
+                return {
+                  ok: true,
+                  message: 'Document imported. Undo with Cmd + Z.',
+                };
+              } catch (error) {
+                return {
+                  ok: false,
+                  message: error instanceof Error ? error.message : 'Import failed.',
+                };
+              }
+            }}
+            onReset={() => {
+              clearPersistedState();
+              window.location.reload();
+            }}
+          />
+        </PopoverSurface>
       ) : null}
 
       <Dialog
@@ -873,6 +911,8 @@ export function App() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={setShortcutHelpOpen} />
     </div>
   );
 }
@@ -893,6 +933,43 @@ function isInteractiveFocus(element: HTMLElement | null) {
   );
 }
 
+function RailToggleButton({
+  icon: Icon,
+  pressed,
+  label,
+  shortcut,
+  detail,
+  onClick,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  pressed: boolean;
+  label: string;
+  shortcut?: string;
+  detail?: string;
+  onClick: () => void;
+}) {
+  return (
+    <PopoverTooltip
+      side="right"
+      align="center"
+      content={`${label}${shortcut ? ` · ${shortcut}` : detail ? ` · ${detail}` : ''}`}
+    >
+      <button
+        type="button"
+        aria-pressed={pressed}
+        onClick={onClick}
+        className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow] duration-150 ${
+          pressed
+            ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)]'
+            : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50/80'
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+      </button>
+    </PopoverTooltip>
+  );
+}
+
 function SpacerIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
@@ -902,6 +979,10 @@ function SpacerIcon({ className }: { className?: string }) {
       <rect x="4" y="16" width="16" height="4" rx="1" />
     </svg>
   );
+}
+
+function assertNever(value: never) {
+  throw new Error(`Unhandled shortcut: ${String(value)}`);
 }
 
 function shouldTrackInHistory(action: EditorAction) {

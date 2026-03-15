@@ -42,6 +42,26 @@ button {
   cursor: pointer;
 }
 
+.ui-popover-surface,
+.ui-popover-tooltip {
+  inset: auto;
+  margin: 0;
+}
+
+.ui-dialog-popover {
+  margin: 0;
+}
+
+.ui-dialog-popover::backdrop {
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(1px);
+}
+
+.ui-dialog-popover[data-backdrop-variant='transparent']::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+
 .studio-shell {
   display: grid;
   grid-template-rows: 46px minmax(0, 1fr);

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -34,6 +35,10 @@ type Props = {
   canOrderForward: boolean;
   canSendToBack: boolean;
   canBringToFront: boolean;
+  orderBackShortcut: string;
+  orderForwardShortcut: string;
+  sendToBackShortcut: string;
+  bringToFrontShortcut: string;
   canSectionBack: boolean;
   canSectionForward: boolean;
   onOrderBack: () => void;
@@ -66,6 +71,10 @@ export function InspectorPanel({
   canOrderForward,
   canSendToBack,
   canBringToFront,
+  orderBackShortcut,
+  orderForwardShortcut,
+  sendToBackShortcut,
+  bringToFrontShortcut,
   canSectionBack,
   canSectionForward,
   onOrderBack,
@@ -157,7 +166,7 @@ export function InspectorPanel({
               <div className="flex justify-end gap-1.5">
                 <OrderIconButton
                   label="Position Forward"
-                  shortcut="Cmd + ]"
+                  shortcut={orderForwardShortcut}
                   onClick={onOrderForward}
                   disabled={!canOrderForward}
                 >
@@ -165,7 +174,7 @@ export function InspectorPanel({
                 </OrderIconButton>
                 <OrderIconButton
                   label="Bring to Front"
-                  shortcut="Cmd + Alt + ]"
+                  shortcut={bringToFrontShortcut}
                   onClick={onBringToFront}
                   disabled={!canBringToFront}
                 >
@@ -173,7 +182,7 @@ export function InspectorPanel({
                 </OrderIconButton>
                 <OrderIconButton
                   label="Position Backward"
-                  shortcut="Cmd + ["
+                  shortcut={orderBackShortcut}
                   onClick={onOrderBack}
                   disabled={!canOrderBack}
                 >
@@ -181,7 +190,7 @@ export function InspectorPanel({
                 </OrderIconButton>
                 <OrderIconButton
                   label="Send to Back"
-                  shortcut="Cmd + Alt + ["
+                  shortcut={sendToBackShortcut}
                   onClick={onSendToBack}
                   disabled={!canSendToBack}
                 >
@@ -621,7 +630,17 @@ function OrderIconButton({
   children: ReactNode;
 }) {
   return (
-    <div className="group relative inline-flex">
+    <PopoverTooltip
+      side="top"
+      align="center"
+      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      content={
+        <>
+          <div className="leading-3.5 font-medium">{label}</div>
+          {shortcut ? <div className="mt-0.5 leading-3 text-[10px] font-normal text-slate-300">{shortcut}</div> : null}
+        </>
+      }
+    >
       <Button
         type="button"
         variant="outline"
@@ -633,14 +652,7 @@ function OrderIconButton({
       >
         {children}
       </Button>
-      <div
-        role="tooltip"
-        className={`pointer-events-none absolute left-1/2 z-30 w-max -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-center text-[11px] text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${shortcut ? '-top-10' : '-top-8'}`}
-      >
-        <div className="leading-3.5 font-medium">{label}</div>
-        {shortcut ? <div className="mt-0.5 leading-3 text-[10px] font-normal text-slate-300">{shortcut}</div> : null}
-      </div>
-    </div>
+    </PopoverTooltip>
   );
 }
 

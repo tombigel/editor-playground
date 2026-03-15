@@ -83,7 +83,7 @@ export function FloatingPanel({
         <strong>{title}</strong>
         <button
           type="button"
-          className="panel-collapse-button"
+          className="panel-collapse-button rounded-md px-2 py-1 transition-[background-color,color] duration-150 hover:bg-slate-100/80"
           onMouseDown={(event) => event.stopPropagation()}
           onClick={() => setCollapsed((value) => !value)}
         >

@@ -115,12 +115,20 @@ Non-reorderable wrappers:
 
 Section ordering uses dedicated up/down controls in the inspector role row (DOM move between section siblings only).
 
-Keyboard shortcuts (active only when a node is selected and no input field is focused):
+Keyboard shortcuts:
 
-- `Cmd + [`: position backward
-- `Cmd + ]`: position forward
-- `Cmd + Alt + [`: send to back
-- `Cmd + Alt + ]`: bring to front
+`Mod` maps to `Cmd` on macOS and `Ctrl` on Windows/Linux.
+
+- `Mod + [`: position backward (when a node is selected and no input field is focused)
+- `Mod + ]`: position forward (when a node is selected and no input field is focused)
+- `Mod + Shift + [`: send to back (when a node is selected and no input field is focused)
+- `Mod + Shift + ]`: bring to front (when a node is selected and no input field is focused)
+- `Shift + P`: toggle sticky preview from the left rail when no input field is focused
+- `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
+- `Shift + G`: toggle snap to guides when no input field is focused
+- `Mod + ,`: open settings
+- `?`: open shortcut help when no input field is focused
+- `Esc`: close open panels / dialogs
 
 ## History Model
 
@@ -136,9 +144,25 @@ Undo/redo is implemented as an in-memory history stack.
 
 Controls:
 
-- top bar buttons: undo / redo
-- shortcuts: `Cmd + Z`, `Cmd + Shift + Z`
-- debug panel: clear undo history, configurable max retained undo steps
+- top bar buttons: undo / redo / shortcut help / settings
+- shortcuts: `Mod + Z`, `Mod + Shift + Z` (and `Ctrl + Y` on non-mac platforms)
+- settings panel: clear undo history, configurable max retained undo steps
+- document import replaces the current document as a single undoable transaction
+
+## Import / Export
+
+The playground imports and exports document JSON only, not full editor session state.
+
+- export lives in the settings panel under `Import / Export`
+- export supports:
+  - save to file with a user-selected file name when browser APIs allow it
+  - fallback named download when native save picker is unavailable
+  - copy JSON to clipboard
+- import supports:
+  - choosing a `.json` file
+  - pasting JSON from clipboard into the settings panel import box
+  - importing pasted JSON from the textarea
+- import normalizes the incoming document, validates it, replaces the current document, clears selection, and can be undone with `Cmd + Z`
 
 ## Units
 
@@ -231,11 +255,15 @@ JavaScript is not used for live sticky movement during scroll.
 Current UX includes:
 
 - full-stage canvas
-- floating draggable/collapsible panels
 - insert panel
 - inspector panel
-- debug panel
-- left pop panels (section templates + debug tools) that close on outside click / `Esc` and stay above stage selection overlays
+- centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Import / Export`, `Advanced`, `Debug Info`, and `Shortcuts`
+- left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
+- top bar utility actions for shortcut help and settings
+- shortcut help dialog opened by `?`, generated from the shared shortcut registry
+- shortcut guide also appears as the last section inside settings
+- editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
+- left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips
 - in-memory incremental undo/redo
@@ -304,11 +332,14 @@ The playground exposes:
 - spacer visuals
 - offset visuals
 - preview sticky toggle
-- show spacers toggle
+- show spacers toggle (`selected` or `all`)
+- preview + spacer quick toggles remain in the left rail with shortcuts/tooltips
+- snap toggle remains in the left rail with tooltip guidance for `Alt` drag inversion and a `Shift + G` shortcut
 - sticky computation output
 - reset stage action
 - clear undo history action
 - undo step retention control
+- import / export controls in settings
 
 ## Running the Playground
 

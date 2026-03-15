@@ -1,10 +1,11 @@
 import { ImageIcon, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
 import type { LeafRole } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
+import { PopoverTooltip } from '@/components/ui/popover';
 
 type Props = {
   onInsertWrapper: (role: 'container') => void;
-  onOpenSectionTemplates: () => void;
+  onOpenSectionTemplates: (trigger: HTMLElement) => void;
   onInsertLeaf: (role: LeafRole) => void;
 };
 
@@ -62,33 +63,41 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
       {INSERT_ITEMS.map((item) => {
         const Icon = item.icon;
         return (
-          <Button
+          <PopoverTooltip
             key={item.label}
-            type="button"
-            data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
-            variant="ghost"
-            title={`${item.label} · ${item.hint}`}
-            className="group relative h-12 w-12 rounded-2xl border border-slate-300 bg-white p-0 text-slate-950 shadow-[0_2px_10px_rgba(18,32,51,0.06)] transition hover:border-slate-400 hover:bg-slate-50 hover:shadow-[0_6px_18px_rgba(18,32,51,0.1)]"
-            onClick={() => {
-              if (item.kind === 'wrapper') {
-                if (item.role === 'section') {
-                  onOpenSectionTemplates();
-                } else {
-                  onInsertWrapper(item.role);
-                }
-                return;
-              }
-              onInsertLeaf(item.role);
-            }}
+            side="right"
+            align="center"
+            className="min-w-[148px] text-left font-normal"
+            content={
+              <>
+                <span className="block text-sm font-medium text-slate-900">{item.label}</span>
+                <span className="mt-0.5 block text-xs text-slate-500">{item.hint}</span>
+              </>
+            }
           >
-            <span className="flex h-full w-full items-center justify-center rounded-[15px] border border-black/8 bg-white text-slate-950">
-              <Icon className="h-4 w-4" strokeWidth={1.9} />
-            </span>
-            <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[90] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-left shadow-[0_12px_24px_rgba(18,32,51,0.12)] group-hover:block">
-              <span className="block text-sm font-medium text-slate-900">{item.label}</span>
-              <span className="mt-0.5 block text-xs text-slate-500">{item.hint}</span>
-            </span>
-          </Button>
+            <Button
+              type="button"
+              data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
+              variant="ghost"
+              title={`${item.label} · ${item.hint}`}
+              className="h-12 w-12 rounded-2xl border border-slate-300 bg-white p-0 text-slate-950 shadow-[0_2px_10px_rgba(18,32,51,0.06)] transition-[background-color,border-color,box-shadow] duration-150 hover:border-slate-400 hover:bg-slate-50/75 hover:shadow-[0_4px_14px_rgba(18,32,51,0.08)]"
+              onClick={(event) => {
+                if (item.kind === 'wrapper') {
+                  if (item.role === 'section') {
+                    onOpenSectionTemplates(event.currentTarget);
+                  } else {
+                    onInsertWrapper(item.role);
+                  }
+                  return;
+                }
+                onInsertLeaf(item.role);
+              }}
+            >
+              <span className="flex h-full w-full items-center justify-center rounded-[15px] border border-black/8 bg-white text-slate-950">
+                <Icon className="h-4 w-4" strokeWidth={1.9} />
+              </span>
+            </Button>
+          </PopoverTooltip>
         );
       })}
     </div>
