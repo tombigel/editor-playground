@@ -27,6 +27,7 @@ import { PopoverTooltip } from '@/components/ui/popover';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import type { ThemeMode } from '@/lib/theme';
 
 type SectionId = 'display' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
 
@@ -44,6 +45,7 @@ type Props = {
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
   snapEnabled: boolean;
+  themeMode: ThemeMode;
   undoDepth: number;
   redoDepth: number;
   historyLimit: number;
@@ -52,6 +54,7 @@ type Props = {
   onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
   onShowGridLanesChange: (value: boolean) => void;
   onSnapEnabledChange: (value: boolean) => void;
+  onThemeModeChange: (value: ThemeMode) => void;
   onClearHistory: () => void;
   onHistoryLimitChange: (value: number) => void;
   onImport: (raw: string) => Promise<ActionResult> | ActionResult;
@@ -68,7 +71,7 @@ const SECTION_META: Array<{
     id: 'display',
     label: 'UI',
     icon: Eye,
-    description: 'Preview, spacers, snap, guides.',
+    description: 'Theme, preview, and guides.',
   },
   {
     id: 'transfer',
@@ -122,6 +125,7 @@ export function SettingsPanel({
   spacerVisibility,
   showGridLanes,
   snapEnabled,
+  themeMode,
   undoDepth,
   redoDepth,
   historyLimit,
@@ -130,6 +134,7 @@ export function SettingsPanel({
   onSpacerVisibilityChange,
   onShowGridLanesChange,
   onSnapEnabledChange,
+  onThemeModeChange,
   onClearHistory,
   onHistoryLimitChange,
   onImport,
@@ -292,7 +297,7 @@ export function SettingsPanel({
   const hasStickyRegistrations = Object.values(stickyState).length > 0;
 
   return (
-    <div className="fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
+    <div className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
         <div className="flex items-center gap-3">
@@ -324,8 +329,9 @@ export function SettingsPanel({
                     key={section.id}
                     type="button"
                     onClick={() => scrollToSection(section.id)}
+                    data-active={active ? 'true' : 'false'}
                     className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-inset ${
-                      active ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:bg-white/80 hover:text-slate-950'
+                      active ? 'settings-nav-link bg-white text-slate-950 shadow-sm' : 'settings-nav-link text-slate-600 hover:bg-white/80 hover:text-slate-950'
                     }`}
                   >
                     <Icon className="mt-0.5 h-4 w-4 shrink-0" />
@@ -343,7 +349,8 @@ export function SettingsPanel({
         <div ref={scrollRef} className="min-h-0 overflow-y-auto" onScroll={updateActiveSection}>
           <div className="px-6 py-5">
             <section ref={displayRef} className="border-b border-slate-200 pb-6">
-              <SectionHeading eyebrow="UI" title="Preview and visibility" description="Stage toggles and guides." />
+              <SectionHeading eyebrow="UI" title="Appearance and guides" description="Theme, stage toggles, and guides." />
+              <ThemeModeRow value={themeMode} onChange={onThemeModeChange} />
               <SettingRow
                 icon={Eye}
                 title="Sticky preview"
@@ -533,7 +540,8 @@ export function SettingsPanel({
               </div>
 
               {selectedNode && selectedNode.type !== 'site' ? (
-                <PlainGroup title="Selected node" className="mt-6">
+                <div className="mt-6">
+                  <div className="mb-3 text-sm font-medium text-slate-900">Selected node</div>
                   <div className="grid gap-3 md:grid-cols-3">
                     <MetricCell label="Width" value={formatValue(selectedNode.rect.width.base.parsed)} />
                     <MetricCell label="Height" value={formatValue(selectedNode.rect.height.base.parsed)} />
@@ -552,7 +560,7 @@ export function SettingsPanel({
                       }
                     />
                   </div>
-                </PlainGroup>
+                </div>
               ) : null}
             </section>
 
@@ -567,6 +575,39 @@ export function SettingsPanel({
           </div>
         </div>
       </div>
+      </div>
+    </div>
+  );
+}
+
+function ThemeModeRow({
+  value,
+  onChange,
+}: {
+  value: ThemeMode;
+  onChange: (value: ThemeMode) => void;
+}) {
+  const options: ThemeMode[] = ['light', 'dark', 'auto'];
+
+  return (
+    <div className="flex items-start justify-between gap-4 py-4">
+      <div className="min-w-0 pr-4">
+        <div className="text-sm font-medium text-slate-950">Theme</div>
+        <div className="mt-1 text-sm text-slate-600">Switch the editor between light, dark, or system mode.</div>
+      </div>
+      <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-1">
+        {options.map((option) => (
+          <Button
+            key={option}
+            type="button"
+            variant={value === option ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onChange(option)}
+            className="min-w-[64px] rounded-md capitalize"
+          >
+            {option}
+          </Button>
+        ))}
       </div>
     </div>
   );

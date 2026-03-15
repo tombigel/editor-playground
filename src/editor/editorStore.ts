@@ -22,6 +22,7 @@ import type {
   WrapperNode,
 } from '../model/types';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { normalizeThemeMode, type ThemeMode } from '../lib/theme';
 
 export type ConfirmReplaceRole = {
   requestedId: NodeId;
@@ -40,6 +41,7 @@ export type EditorState = {
     spacerVisibility: 'selected' | 'all';
     showGridLanes: boolean;
     snapEnabled: boolean;
+    themeMode: ThemeMode;
   };
 };
 
@@ -56,6 +58,7 @@ export function createInitialState(): EditorState {
       spacerVisibility: 'selected',
       showGridLanes: false,
       snapEnabled: true,
+      themeMode: 'auto',
     },
   };
 }
@@ -86,6 +89,7 @@ export function loadPersistedState(): EditorState {
             : 'selected',
         showGridLanes: parsed.ui?.showGridLanes ?? false,
         snapEnabled: parsed.ui?.snapEnabled ?? true,
+        themeMode: normalizeThemeMode(parsed.ui?.themeMode),
       },
     };
     const errors = validateDocument(candidate.document);

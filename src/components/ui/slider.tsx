@@ -19,15 +19,17 @@ const Slider = React.forwardRef<
       ref={ref}
       value={value}
       defaultValue={defaultValue}
+      data-ui="slider"
       className={cn('relative flex w-full touch-none select-none items-center', className)}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-slate-200">
-        <SliderPrimitive.Range className="absolute h-full bg-blue-600" />
+      <SliderPrimitive.Track data-ui="slider-track" className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-slate-200">
+        <SliderPrimitive.Range data-ui="slider-range" className="absolute h-full bg-blue-600" />
       </SliderPrimitive.Track>
       {Array.from({ length: thumbCount }).map((_, index) => (
         <SliderPrimitive.Thumb
           key={index}
+          data-ui="slider-thumb"
           className="block size-4 rounded-full border border-blue-600 bg-white shadow-sm transition-colors focus-visible:ring-4 focus-visible:ring-blue-500/20 disabled:pointer-events-none disabled:opacity-50"
         />
       ))}

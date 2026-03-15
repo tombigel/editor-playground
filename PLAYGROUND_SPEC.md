@@ -260,6 +260,7 @@ Current UX includes:
 - insert panel
 - inspector panel
 - centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Import / Export`, `Advanced`, `Debug Info`, and `Shortcuts`
+- the settings `UI` section includes editor theme mode: `Light`, `Dark`, and `Auto` (`Auto` follows the system color scheme)
 - left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
 - top bar utility actions for shortcut help and settings
 - shortcut help dialog opened by `?`, generated from the shared shortcut registry

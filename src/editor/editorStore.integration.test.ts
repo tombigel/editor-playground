@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computeStickyState } from '../sticky/stickyCompute';
 import { createInitialDocument } from '../model/defaults';
 import { parseUnitValue } from '../model/units';
@@ -10,11 +10,13 @@ import {
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
+  loadPersistedState,
   nudgeNode,
   parseImportedDocumentJson,
   reparentNode,
   reorderNode,
   requestPromoteWrapperRole,
+  STORAGE_KEY,
   updateStickyField,
 } from './editorStore';
 
@@ -27,6 +29,63 @@ function getRoot(state: ReturnType<typeof createInitialState>['document']) {
 }
 
 describe('editor/editorStore integration', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('defaults editor theme mode to auto', () => {
+    const state = createInitialState();
+    expect(state.ui.themeMode).toBe('auto');
+  });
+
+  it('normalizes persisted theme mode values', () => {
+    const storage = new Map<string, string>();
+    const localStorage = {
+      getItem(key: string) {
+        return storage.get(key) ?? null;
+      },
+      setItem(key: string, value: string) {
+        storage.set(key, value);
+      },
+      removeItem(key: string) {
+        storage.delete(key);
+      },
+      clear() {
+        storage.clear();
+      },
+    };
+
+    vi.stubGlobal('window', { localStorage });
+
+    const state = createInitialState();
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          themeMode: 'night-mode',
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.themeMode).toBe('auto');
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          themeMode: 'dark',
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.themeMode).toBe('dark');
+  });
+
   it('inserts sections before footer and selects the inserted section', () => {
     const initial = createInitialState();
     const rootBefore = getRoot(initial.document);

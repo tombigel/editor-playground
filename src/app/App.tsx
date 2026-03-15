@@ -48,6 +48,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
 import { findMatchingShortcut, getShortcutLabel, getShortcutPlatform } from '@/lib/shortcuts';
+import { resolveThemeMode, type ResolvedTheme, type ThemeMode } from '@/lib/theme';
 
 type EditorAction =
   | { type: 'select'; id: string | null }
@@ -84,7 +85,8 @@ type EditorAction =
   | { type: 'setPreviewSticky'; value: boolean }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
   | { type: 'setShowGridLanes'; value: boolean }
-  | { type: 'setSnapEnabled'; value: boolean };
+  | { type: 'setSnapEnabled'; value: boolean }
+  | { type: 'setThemeMode'; value: ThemeMode };
 
 type HistoryAction =
   | EditorAction
@@ -143,11 +145,17 @@ const UPCOMING_SCROLL_TEMPLATES = [
   },
 ] as const;
 
-const TOPBAR_ICON_BUTTON_CLASS =
-  'h-8 w-8 rounded-md border border-white/10 bg-white/[0.035] p-0 text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/14 hover:bg-white/[0.065] hover:text-white/92 focus-visible:border-white/20 focus-visible:bg-white/[0.08] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]';
+function getTopbarIconButtonClass(theme: ResolvedTheme) {
+  return theme === 'dark'
+    ? 'h-8 w-8 rounded-md border border-white/10 bg-white/[0.035] p-0 text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/14 hover:bg-white/[0.065] hover:text-white/92 focus-visible:border-white/20 focus-visible:bg-white/[0.08] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]'
+    : 'h-8 w-8 rounded-md border border-[#5d90ff] bg-[#1f5de6] p-0 text-white shadow-[0_8px_18px_rgba(18,48,128,0.18),inset_0_1px_0_rgba(255,255,255,0.07)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-[#81a9ff] hover:bg-[#1854d9] hover:text-white hover:shadow-[0_10px_22px_rgba(18,48,128,0.22),inset_0_1px_0_rgba(255,255,255,0.08)] focus-visible:border-[#8db1ff] focus-visible:bg-[#1854d9] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#2f6df6]';
+}
 
-const TOPBAR_ACTIVE_BUTTON_CLASS =
-  'h-8 w-8 rounded-md border border-white/16 bg-white/[0.12] p-0 text-white shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/22 hover:bg-white/[0.16] hover:text-white focus-visible:border-white/24 focus-visible:bg-white/[0.16] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]';
+function getTopbarActiveButtonClass(theme: ResolvedTheme) {
+  return theme === 'dark'
+    ? 'h-8 w-8 rounded-md border border-white/16 bg-white/[0.12] p-0 text-white shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-white/22 hover:bg-white/[0.16] hover:text-white focus-visible:border-white/24 focus-visible:bg-white/[0.16] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131720]'
+    : 'h-8 w-8 rounded-md border border-[#8ab0ff] bg-[#4f83fd] p-0 text-white shadow-[0_12px_26px_rgba(18,48,128,0.24),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-[#a3c0ff] hover:bg-[#6694ff] hover:text-white hover:shadow-[0_14px_30px_rgba(18,48,128,0.28),inset_0_0_0_1px_rgba(255,255,255,0.1)] focus-visible:border-[#a9c4ff] focus-visible:bg-[#6694ff] focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#2f6df6]';
+}
 
 const TOPBAR_TOOLTIP_CLASS =
   'rounded-lg border border-slate-700 bg-[#0f172a] px-3 py-2 text-xs font-medium text-slate-100 shadow-[0_16px_36px_rgba(2,6,23,0.38)]';
@@ -277,6 +285,8 @@ function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, ui: { ...state.ui, showGridLanes: action.value } };
     case 'setSnapEnabled':
       return { ...state, ui: { ...state.ui, snapEnabled: action.value } };
+    case 'setThemeMode':
+      return { ...state, ui: { ...state.ui, themeMode: action.value } };
     default:
       return state;
   }
@@ -436,10 +446,52 @@ export function App() {
   const stickyState = useMemo(() => computeStickyState(state.document), [state.document]);
   const documentJson = useMemo(() => serializeDocumentJson(state.document), [state.document]);
   const stageSelectableIds = useMemo(() => getStageSelectableNodeIds(state.document), [state.document]);
+  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
+  const resolvedTheme = useMemo<ResolvedTheme>(
+    () => resolveThemeMode(state.ui.themeMode, systemPrefersDark),
+    [state.ui.themeMode, systemPrefersDark],
+  );
+  const topbarClass =
+    resolvedTheme === 'dark'
+      ? 'editor-topbar border-b border-white/10 bg-[#131720] px-4 text-white shadow-[0_1px_0_rgba(255,255,255,0.04)]'
+      : 'editor-topbar border-b border-[#245fe2] bg-[#2f6df6] px-4 text-white shadow-[0_1px_0_rgba(255,255,255,0.12)]';
+  const topbarIconButtonClass = getTopbarIconButtonClass(resolvedTheme);
+  const topbarActiveButtonClass = getTopbarActiveButtonClass(resolvedTheme);
 
   useEffect(() => {
     persistState(state);
   }, [state]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const updatePreference = () => setSystemPrefersDark(mediaQuery.matches);
+
+    updatePreference();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
+
+  useEffect(() => {
+    document.body.dataset.editorTheme = resolvedTheme;
+    document.documentElement.dataset.editorTheme = resolvedTheme;
+    document.documentElement.style.colorScheme = resolvedTheme;
+
+    return () => {
+      delete document.body.dataset.editorTheme;
+      delete document.documentElement.dataset.editorTheme;
+      document.documentElement.style.colorScheme = '';
+    };
+  }, [resolvedTheme]);
 
   useEffect(() => {
     if (!sectionTemplateOpen || !sectionTemplateAnchor) {
@@ -599,9 +651,13 @@ export function App() {
   }, [sectionTemplateOpen, settingsOpen, shortcutHelpOpen, shortcutPlatform, state]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900">
+    <div
+      className="editor-shell h-screen w-screen overflow-hidden bg-[#eef2f7] text-slate-900"
+      data-editor-theme={resolvedTheme}
+      data-theme-mode={state.ui.themeMode}
+    >
       <div className="grid h-full grid-rows-[56px_minmax(0,1fr)]">
-        <header className="border-b border-white/10 bg-[#131720] px-4 text-white shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+        <header className={topbarClass}>
           <div className="flex h-full items-center gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#3772ff] to-[#1a243a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]">
@@ -628,7 +684,7 @@ export function App() {
                   aria-label="Undo"
                   disabled={historyState.past.length === 0}
                   onClick={() => dispatch({ type: 'undo' })}
-                  className={TOPBAR_ICON_BUTTON_CLASS}
+                  className={topbarIconButtonClass}
                 >
                   <Undo2 className="h-4 w-4" />
                 </Button>
@@ -646,7 +702,7 @@ export function App() {
                   aria-label="Redo"
                   disabled={historyState.future.length === 0}
                   onClick={() => dispatch({ type: 'redo' })}
-                  className={TOPBAR_ICON_BUTTON_CLASS}
+                  className={topbarIconButtonClass}
                 >
                   <Redo2 className="h-4 w-4" />
                 </Button>
@@ -664,7 +720,7 @@ export function App() {
                   aria-label="Keyboard shortcuts"
                   aria-expanded={shortcutHelpOpen}
                   onClick={() => setShortcutHelpOpen((open) => !open)}
-                  className={shortcutHelpOpen ? TOPBAR_ACTIVE_BUTTON_CLASS : TOPBAR_ICON_BUTTON_CLASS}
+                  className={shortcutHelpOpen ? topbarActiveButtonClass : topbarIconButtonClass}
                 >
                   <CircleQuestionMark className="h-4 w-4" />
                 </Button>
@@ -684,7 +740,7 @@ export function App() {
                   aria-expanded={settingsOpen}
                   data-panel-trigger="settings"
                   onClick={() => setSettingsOpen((open) => !open)}
-                  className={settingsOpen ? TOPBAR_ACTIVE_BUTTON_CLASS : TOPBAR_ICON_BUTTON_CLASS}
+                  className={settingsOpen ? topbarActiveButtonClass : topbarIconButtonClass}
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -694,7 +750,7 @@ export function App() {
         </header>
 
         <div className="grid min-h-0 grid-cols-[84px_minmax(0,1fr)_300px]">
-          <aside className="relative z-[360] overflow-visible border-r border-slate-200/80 bg-white/95 shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
+          <aside className="editor-rail-shell relative z-[360] overflow-visible border-r border-slate-200/80 bg-white/95 shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
             <div className="flex h-full flex-col gap-4 overflow-visible p-3">
               <div className="overflow-visible rounded-2xl border border-slate-200 bg-slate-50/80 p-2">
                 <InsertPanel
@@ -740,7 +796,7 @@ export function App() {
             </div>
           </aside>
 
-          <main className="relative min-h-0 overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0)),#eef2f7]">
+          <main className="editor-workspace-shell relative min-h-0 overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0)),#eef2f7]">
             <Stage
               document={state.document}
               selectedId={state.selectedId}
@@ -763,7 +819,7 @@ export function App() {
 
           </main>
 
-          <aside className="min-h-0 overflow-hidden border-l border-slate-200/80 bg-white/97 shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
+          <aside className="editor-inspector-shell min-h-0 overflow-hidden border-l border-slate-200/80 bg-white/97 shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
             <InspectorPanel
               node={selectedNode}
               showOrderControls={orderState.show}
@@ -813,7 +869,7 @@ export function App() {
               setSectionTemplateAnchor(null);
             }
           }}
-          className="fixed w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+          className="editor-floating-panel editor-section-templates fixed w-[440px] rounded-xl border border-slate-200 bg-white shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
           style={{
             top: `${sectionTemplatePosition.top}px`,
             left: `${sectionTemplatePosition.left}px`,
@@ -854,7 +910,7 @@ export function App() {
                     <span
                       className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
                         template.category === 'sticky'
-                          ? 'bg-emerald-50 text-emerald-700'
+                          ? 'template-tag-sticky bg-emerald-50 text-emerald-700'
                           : 'bg-slate-100 text-slate-600'
                       }`}
                     >
@@ -894,6 +950,7 @@ export function App() {
             spacerVisibility={state.ui.spacerVisibility}
             showGridLanes={state.ui.showGridLanes}
             snapEnabled={state.ui.snapEnabled}
+            themeMode={state.ui.themeMode}
             undoDepth={historyState.past.length}
             redoDepth={historyState.future.length}
             historyLimit={historyState.historyLimit}
@@ -902,6 +959,7 @@ export function App() {
             onSpacerVisibilityChange={(value) => dispatch({ type: 'setSpacerVisibility', value })}
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
             onSnapEnabledChange={(value) => dispatch({ type: 'setSnapEnabled', value })}
+            onThemeModeChange={(value) => dispatch({ type: 'setThemeMode', value })}
             onClearHistory={() => dispatch({ type: 'clearHistory' })}
             onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
             onImport={async (raw) => {
@@ -1002,10 +1060,10 @@ function RailToggleButton({
         type="button"
         aria-pressed={pressed}
         onClick={onClick}
-        className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+        className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
           pressed
-            ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] hover:border-[#7da7ff] hover:bg-[#4f83fd] hover:shadow-[0_14px_28px_rgba(55,114,255,0.26),inset_0_0_0_1px_rgba(34,87,214,0.6)]'
-            : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50/80'
+            ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] hover:border-[#6f9dff] hover:bg-[#4a7ffc] hover:shadow-[0_16px_30px_rgba(55,114,255,0.3),inset_0_0_0_1px_rgba(34,87,214,0.6)]'
+            : 'border-slate-200 bg-white text-slate-900 shadow-[0_2px_10px_rgba(18,32,51,0.05)] hover:border-slate-400 hover:bg-slate-100 hover:shadow-[0_10px_22px_rgba(18,32,51,0.1)]'
         }`}
       >
         <Icon className="h-4 w-4" />
@@ -1035,7 +1093,8 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setPreviewSticky' &&
     action.type !== 'setSpacerVisibility' &&
     action.type !== 'setShowGridLanes' &&
-    action.type !== 'setSnapEnabled'
+    action.type !== 'setSnapEnabled' &&
+    action.type !== 'setThemeMode'
   );
 }
 
