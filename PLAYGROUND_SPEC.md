@@ -178,7 +178,9 @@ Supported unit types:
 
 Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
 
-Text leaves also store an HTML tag, editable in the inspector. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the text node.
+In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry. Absolute and relative sizes resolve from authored values; intrinsic sizes such as text `height: auto` and keyword widths use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
+
+Text leaves also store an HTML tag, editable in the inspector. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the text node. Changing the tag updates semantics only; the renderer and stage styling normalize native tag defaults so browser heading/blockquote styles and stage-only paragraph selectors do not override the text node's authored styling. Seeded templates use semantic heading tags for primary titles: the default post title is `h1`, and the primary titles in the sticky demo sections are seeded as `h2`.
 
 Text style controls support bold, italic, underline, and strikethrough toggles, numeric font size and line-height fields, HTML tag selection, text direction (`LTR` / `RTL`), and alignment.
 
@@ -274,6 +276,9 @@ Current UX includes:
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
 - the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current selection scrolls into view when needed, and arrow keys nudge positioned components
+- pointer selection does not commit drag/reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not remeasure layout as a drag
+- intrinsic-height leaf nodes in the editor stage align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy
+- auto-height wrapper sizing in the editor stage is measured from the inner content box, so dragging or repositioning selected nodes does not inflate surrounding header/section height by wrapper borders
 - button focus states use a stronger visible ring across editor controls
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips
