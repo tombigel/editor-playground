@@ -1,7 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createSectionFromTemplate } from '../defaults';
+import {
+  createDefaultFooter,
+  createDefaultHeader,
+  createInitialDocument,
+  createSectionFromTemplate,
+  SECTION_TEMPLATES,
+} from '../defaults';
 
 describe('model/defaults', () => {
+  it('builds all published section templates and default chrome surfaces', () => {
+    const document = createInitialDocument();
+
+    for (const template of SECTION_TEMPLATES) {
+      const build = createSectionFromTemplate(template.id, document.rootId);
+      expect(build.wrapper.role).toBe('section');
+      expect(build.nodes[build.wrapper.id]).toBeDefined();
+    }
+
+    const header = createDefaultHeader(document.rootId);
+    const footer = createDefaultFooter(document.rootId);
+
+    expect(header.wrapper.role).toBe('header');
+    expect(footer.wrapper.role).toBe('footer');
+  });
+
   it('seeds pinned cards with auto lead sticky and top-edge narrative cards', () => {
     const document = createInitialDocument();
     const { nodes } = createSectionFromTemplate('stickyPinnedCards', document.rootId);
