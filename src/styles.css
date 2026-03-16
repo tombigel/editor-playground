@@ -66,9 +66,10 @@
   --editor-settings-nav-text: #475569;
   --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.8);
   --editor-settings-nav-hover-text: #0f172a;
-  --editor-settings-nav-active-background: #ffffff;
-  --editor-settings-nav-active-text: #0f172a;
-  --editor-settings-nav-active-muted: #64748b;
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
+  --editor-settings-nav-active-text: #16315f;
+  --editor-settings-nav-active-muted: #5d7293;
+  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 14%, transparent);
   --editor-template-tag-background: rgba(16, 185, 129, 0.12);
   --editor-template-tag-text: #047857;
   --editor-template-tag-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.14);
@@ -150,7 +151,7 @@ body[data-editor-theme='dark'] {
   --editor-select-content-background: #1a2534;
   --editor-select-highlight-background: #2a3850;
   --editor-switch-background: #334155;
-  --editor-switch-background-checked: #748cbf;
+  --editor-switch-background-checked: #1668ff;
   --editor-slider-track-background: #263244;
   --editor-slider-range-background: #748cbf;
   --editor-slider-thumb-background: #0f1722;
@@ -166,6 +167,7 @@ body[data-editor-theme='dark'] {
   --editor-settings-nav-active-background: #223147;
   --editor-settings-nav-active-text: #f3f7fc;
   --editor-settings-nav-active-muted: #95a8bf;
+  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 18%, transparent);
   --editor-template-tag-background: rgba(16, 185, 129, 0.14);
   --editor-template-tag-text: #86efc5;
   --editor-template-tag-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.14);
@@ -173,14 +175,14 @@ body[data-editor-theme='dark'] {
   --editor-utility-text-muted: #94a5b8;
   --editor-utility-bg-subtle: #223041;
   --editor-utility-border: #47607a;
-  --editor-accent: #748cbf;
-  --editor-accent-shadow: 0 2px 8px rgba(116, 140, 191, 0.2);
+  --editor-accent: #1668ff;
+  --editor-accent-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
   --editor-drag-preview-background: rgba(26, 37, 52, 0.96);
   --editor-drag-preview-shadow:
     0 0 0 3px rgba(116, 140, 191, 0.08),
     0 12px 28px rgba(18, 32, 51, 0.12);
-  --editor-resize-handle-background: #748cbf;
-  --editor-resize-handle-border: #748cbf;
+  --editor-resize-handle-background: #1668ff;
+  --editor-resize-handle-border: #1668ff;
 }
 
 .editor-shell {
@@ -532,7 +534,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) .settings-nav-link[data-active='true'] {
   background: var(--editor-settings-nav-active-background);
   color: var(--editor-settings-nav-active-text);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-utility-border) 20%, transparent), 0 8px 20px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--editor-settings-nav-active-shadow);
 }
 
 :is(.editor-shell, body) .settings-nav-link-copy {
