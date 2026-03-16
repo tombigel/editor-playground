@@ -34,6 +34,7 @@ export type SiteLeafPlan = {
   nodeClassName: string;
   meshPlacement?: CSSProperties;
   selfSticky: boolean;
+  selfStickyTrack: boolean;
   trackClassName: string;
   spacerEdgesBefore: SiteTrackSpacerEdge[];
   spacerEdgesAfter: SiteTrackSpacerEdge[];
@@ -50,6 +51,7 @@ export type SiteWrapperPlan = {
   nodeClassName: string;
   meshPlacement?: CSSProperties;
   selfSticky: boolean;
+  selfStickyTrack: boolean;
   contentSticky: boolean;
   trackClassName: string;
   spacerEdgesBefore: SiteTrackSpacerEdge[];

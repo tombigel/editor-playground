@@ -49,7 +49,7 @@ function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
     </Tag>
   );
 
-  if (plan.selfSticky) {
+  if (plan.selfStickyTrack) {
     return (
       <div key={`${plan.node.id}-track`} className={plan.trackClassName} data-node-track-for={plan.node.id}>
         {plan.spacerEdgesBefore.map((edge) => (
@@ -103,7 +103,7 @@ function renderLeafPlan(plan: SiteLeafPlan) {
     );
   }
 
-  if (plan.selfSticky) {
+  if (plan.selfStickyTrack) {
     return (
       <div key={`${plan.node.id}-track`} className={plan.trackClassName} data-node-track-for={plan.node.id}>
         {plan.spacerEdgesBefore.map((edge) => (

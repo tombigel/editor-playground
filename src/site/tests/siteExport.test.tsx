@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument } from '../../model/defaults';
+import { createInitialDocument, createSectionFromTemplate } from '../../model/defaults';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
@@ -122,6 +122,35 @@ describe('site/siteExport', () => {
     expect(css).toContain('min-height: 720px;');
   });
 
+  it('does not add an export-only wrapper min-height floor above authored short sticky containers', () => {
+    const document = structuredClone(createInitialDocument());
+    const stickySteps = createSectionFromTemplate('stickySteps', document.rootId);
+    document.nodes = {
+      ...document.nodes,
+      ...stickySteps.nodes,
+    };
+    document.nodes[document.rootId].children.push(stickySteps.wrapper.id);
+    const topCard = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'container' && node.name === 'Top Edge Card Container',
+    );
+    const bottomCard = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'container' && node.name === 'Bottom Edge Card Container',
+    );
+
+    if (!topCard || topCard.type !== 'wrapper' || !bottomCard || bottomCard.type !== 'wrapper') {
+      throw new Error('Expected sticky edge lab card containers');
+    }
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain(`.sp-node-${topCard.id}-content {`);
+    expect(css).toContain('min-height: 151px;');
+    expect(css).toContain(`.sp-node-${bottomCard.id}-content {`);
+    expect(css).toContain('min-height: 146px;');
+    expect(css).not.toContain('.sp-wrapper.sp-role-section, .sp-wrapper.sp-role-container');
+    expect(css).not.toContain('min-height: 180px;');
+  });
+
   it('emits framed image styling and brand mark overrides', () => {
     const document = createInitialDocument();
     const css = renderSiteCss(document);
@@ -162,6 +191,31 @@ describe('site/siteExport', () => {
     expect(css).toContain(`.sp-node-${target.id}-top-spacer`);
     expect(css).toContain('height: 45vh;');
     expect(css).toContain('top: 8vh;');
+  });
+
+  it('keeps auto self-sticky leaves sticky on the node instead of a synthetic track wrapper', () => {
+    const document = structuredClone(createInitialDocument());
+    const stickyPinnedCards = createSectionFromTemplate('stickyPinnedCards', document.rootId);
+    document.nodes = {
+      ...document.nodes,
+      ...stickyPinnedCards.nodes,
+    };
+    document.nodes[document.rootId].children.push(stickyPinnedCards.wrapper.id);
+
+    const pinnedLead = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+    );
+
+    if (!pinnedLead || pinnedLead.type !== 'leaf' || pinnedLead.role !== 'text') {
+      throw new Error('Expected pinned lead text node');
+    }
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain(`.sp-node-${pinnedLead.id}.sp-role-text.sp-leaf`);
+    expect(css).toContain('position: sticky;');
+    expect(css).toContain('top: 12vh;');
+    expect(css).not.toContain(`.sp-node-${pinnedLead.id}-track`);
   });
 
   it('returns html, css, document output, and bundle file names together', () => {

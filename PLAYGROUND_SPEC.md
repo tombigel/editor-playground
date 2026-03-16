@@ -278,11 +278,13 @@ For sticky containers:
 - it preserves authored width keywords and text HTML tags
 - it uses the same mesh-grid child placement baseline as the editor stage for non-editor layout, instead of falling back to absolute-position child export
 - it carries the renderer's default presentation layer for text, links, buttons, and images into the exported CSS, then layers authored model values on top
+- it preserves authored wrapper/content minimum heights in export and does not add an extra generic min-height floor to short wrappers
 - it renders sticky structure with real exported spacer elements:
   - `target=self`: sticky track + edge-aware spacer ordering + sticky node
   - `target=contentWrapper`: wrapper + sticky content wrapper + flow spacer
 - custom sticky durations export as authored CSS lengths
 - `durationMode=auto` exports no synthetic measured spacer extent because site export is model-driven and does not depend on runtime DOM measurement
+- `target=self` with `durationMode=auto` exports sticky directly on the node/wrapper without a synthetic track wrapper, matching the editor stage baseline
 
 `src/site/siteExport.tsx` exposes the programmatic export surface:
 
@@ -301,6 +303,7 @@ For `edges: both`, visual guides render top and bottom offsets together, and dis
 Wrapper `target=self` sticky uses the same sticky-track/spacer pattern as leaf components for custom durations, including bottom-edge spacer ordering.
 Wrapper `target=self` sticky also renders `Distance: auto` indicators in preview (including top/bottom labeling in `edges: both`).
 For single-edge `target=self` auto duration, preview renders exactly one distance guide on the active travel side rather than dual top/bottom guides.
+Sticky layering uses one shared z-index baseline across the editor stage and exported site, instead of renderer-specific sticky stacking values.
 
 JavaScript is used for:
 

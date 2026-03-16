@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseUnitValue } from '../../model/units';
-import { getStickyCssProperties, getStickyEdgeMode } from '../sticky';
+import { getStickyCssProperties, getStickyEdgeMode, STICKY_LAYER_Z_INDEX } from '../sticky';
 
 const bothSticky = {
   enabled: true,
@@ -25,7 +25,7 @@ describe('render/sticky', () => {
     expect(getStickyCssProperties(undefined)).toEqual({});
     expect(getStickyCssProperties(bothSticky, { includePosition: true, includeZIndex: true })).toEqual({
       position: 'sticky',
-      zIndex: 1,
+      zIndex: STICKY_LAYER_Z_INDEX,
       top: '8px',
       bottom: '12px',
     });

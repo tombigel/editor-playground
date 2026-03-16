@@ -243,10 +243,8 @@ function renderWrapper({
   const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(selfRegistration, node.sticky);
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
-      ? getStickyCssProperties(node.sticky, { includePosition: true })
+      ? getStickyCssProperties(node.sticky, { includePosition: true, includeZIndex: true })
       : undefined;
-  const shouldLayerStickySelf =
-    previewSticky && node.sticky?.enabled && node.sticky.target === 'self';
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
@@ -255,7 +253,7 @@ function renderWrapper({
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
         gridTemplateRows: meshLayout.rowTemplate,
-        ...(previewSticky ? getStickyCssProperties(node.sticky!, { includePosition: true }) : {}),
+        ...(previewSticky ? getStickyCssProperties(node.sticky!, { includePosition: true, includeZIndex: true }) : {}),
       }
     : {
         ...getContentWrapperBaseStyle(node),
@@ -280,7 +278,6 @@ function renderWrapper({
         ...(isSelfStickyTrack ? {} : plan.meshPlacement),
         borderColor: node.style.borderColor,
         borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
-        zIndex: shouldLayerStickySelf ? 14 : undefined,
         ...wrapperStickyCss,
       }}
       onMouseDown={(event) => {
@@ -490,11 +487,9 @@ function renderLeaf({
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
         position: previewSticky && (isSelfStickyTrack || isAutoSticky) ? 'sticky' : 'relative',
-        zIndex:
-          previewSticky && child.sticky?.enabled && child.sticky.target === 'self'
-            ? 14
-            : undefined,
-        ...(previewSticky && child.sticky?.enabled ? getStickyCssProperties(child.sticky) : {}),
+        ...(previewSticky && child.sticky?.enabled
+          ? getStickyCssProperties(child.sticky, { includeZIndex: true })
+          : {}),
       }}
       onMouseDown={(event) => {
         event.stopPropagation();

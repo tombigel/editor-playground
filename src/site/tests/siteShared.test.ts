@@ -94,7 +94,7 @@ describe('site/siteShared', () => {
     expect(getStickyDurationCss(topSticky)).toBe('10vh');
     expect(getStickyDurationCss(bothSticky)).toBe('calc(15vh + 25vh)');
 
-    expect(getStickyCssDeclarations(bothSticky)).toEqual(['position: sticky', 'z-index: 1', 'top: 4px', 'bottom: 8px']);
+    expect(getStickyCssDeclarations(bothSticky)).toEqual(['position: sticky', 'z-index: 14', 'top: 4px', 'bottom: 8px']);
     expect(getStickyTrackSpacerSequence(topSticky)).toEqual({ before: [], after: ['top'] });
     expect(getStickyTrackSpacerSequence(bottomSticky)).toEqual({ before: ['bottom'], after: [] });
     expect(getStickyTrackSpacerSequence(bothSticky)).toEqual({ before: ['bottom'], after: ['top'] });

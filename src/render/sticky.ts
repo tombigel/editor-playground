@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
 import type { StickyDefinition } from '../model/types';
 
+export const STICKY_LAYER_Z_INDEX = 14;
+
 export function getStickyEdgeMode(sticky: StickyDefinition | undefined): 'top' | 'bottom' | 'both' {
   if (!sticky) {
     return 'top';
@@ -26,7 +28,7 @@ export function getStickyCssProperties(
     style.position = 'sticky';
   }
   if (includeZIndex) {
-    style.zIndex = 1;
+    style.zIndex = STICKY_LAYER_Z_INDEX;
   }
 
   const edgeMode = getStickyEdgeMode(sticky);

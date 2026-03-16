@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument } from '../../model/defaults';
+import { createInitialDocument, createSectionFromTemplate } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
 import { SiteRenderer } from '../SiteRenderer';
 
@@ -104,5 +104,28 @@ describe('site/SiteRenderer', () => {
 
     expect(spacerIndex).toBeGreaterThan(-1);
     expect(nodeIndex).toBeGreaterThan(spacerIndex);
+  });
+
+  it('renders auto self-sticky leaves without a synthetic track wrapper', () => {
+    const document = structuredClone(createInitialDocument());
+    const stickyPinnedCards = createSectionFromTemplate('stickyPinnedCards', document.rootId);
+    document.nodes = {
+      ...document.nodes,
+      ...stickyPinnedCards.nodes,
+    };
+    document.nodes[document.rootId].children.push(stickyPinnedCards.wrapper.id);
+
+    const pinnedLead = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+    );
+
+    if (!pinnedLead || pinnedLead.type !== 'leaf' || pinnedLead.role !== 'text') {
+      throw new Error('Expected pinned lead text node');
+    }
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).toContain(`data-node-id="${pinnedLead.id}"`);
+    expect(markup).not.toContain(`data-node-track-for="${pinnedLead.id}"`);
   });
 });
