@@ -1,78 +1,27 @@
 import type { DocumentModel, DocumentNode, NodeId, StickyDefinition } from '../model/types';
 import { resolveFontSizePx, resolveUnitValuePx } from '../model/units';
-import type { StickyMeasuredNodeSizes } from '../sticky/resolve';
-
-type LeafNode = Extract<DocumentModel['nodes'][string], { type: 'leaf' }>;
-type WrapperNode = Extract<DocumentModel['nodes'][string], { type: 'wrapper' }>;
-
-export type DragState = {
-  nodeId: string;
-  startClientX: number;
-  startClientY: number;
-  currentClientX: number;
-  currentClientY: number;
-  grabOffsetX: number;
-  grabOffsetY: number;
-  useVisualOffset: boolean;
-  modelShiftX: number;
-  modelShiftY: number;
-  previewWidth: number;
-  previewHeight: number;
-  originX: number;
-  originY: number;
-} | null;
-
-export type ResizeHandle =
-  | 'n'
-  | 'ne'
-  | 'e'
-  | 'se'
-  | 's'
-  | 'sw'
-  | 'w'
-  | 'nw';
-
-export type ResizeState = {
-  nodeId: string;
-  handle: ResizeHandle;
-  startClientX: number;
-  startClientY: number;
-  originWidth: number;
-  originHeight: number;
-  originX: number;
-  originY: number;
-} | null;
-
-export type SnapGuides = {
-  x: number | null;
-  y: number | null;
-  xSource: 'component' | 'page' | null;
-  ySource: 'component' | 'page' | null;
-};
-
-type SnapTarget = {
-  value: number;
-  source: 'component' | 'page';
-};
-
-type DragGeometry = {
-  rect: DOMRect;
-  offsetX: number;
-  offsetY: number;
-  useVisualOffset: boolean;
-  modelShiftX: number;
-  modelShiftY: number;
-};
-
-type DragResolutionOptions = {
-  shiftKey: boolean;
-  altKey: boolean;
-  snapEnabled: boolean;
-  documentRef?: Pick<Document, 'querySelector' | 'querySelectorAll'>;
-  windowRef?: Pick<Window, 'innerWidth' | 'innerHeight'>;
-};
-
-export type MeasuredNodeSizes = StickyMeasuredNodeSizes;
+import type {
+  DragGeometry,
+  DragResolutionOptions,
+  DragState,
+  MeasuredNodeSizes,
+  ResizeState,
+  SnapTarget,
+  StageMathLeafNode as LeafNode,
+  StageMathWrapperNode as WrapperNode,
+} from './types/stageMath';
+export type {
+  DragGeometry,
+  DragResolutionOptions,
+  DragState,
+  MeasuredNodeSizes,
+  ResizeHandle,
+  ResizeState,
+  SnapGuides,
+  SnapTarget,
+  StageMathLeafNode,
+  StageMathWrapperNode,
+} from './types/stageMath';
 
 export const VIEWPORT_WIDTH = 1440;
 export const VIEWPORT_HEIGHT = 900;

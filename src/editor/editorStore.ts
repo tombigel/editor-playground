@@ -24,28 +24,9 @@ import type {
   WrapperNode,
 } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
-import { normalizeThemeMode, type ThemeMode } from '../lib/theme';
-
-export type ConfirmReplaceRole = {
-  requestedId: NodeId;
-  targetRole: 'header' | 'footer';
-  existingId: NodeId;
-};
-
-export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
-
-export type EditorState = {
-  document: DocumentModel;
-  selectedId: NodeId | null;
-  pendingRoleSwap: ConfirmReplaceRole | null;
-  ui: {
-    previewSticky: boolean;
-    spacerVisibility: 'selected' | 'all';
-    showGridLanes: boolean;
-    snapEnabled: boolean;
-    themeMode: ThemeMode;
-  };
-};
+import { normalizeThemeMode } from '../lib/theme';
+import type { EditorState, NodeOrderAction } from './types/store';
+export type { ConfirmReplaceRole, EditorState, NodeOrderAction } from './types/store';
 
 export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
 export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';

@@ -3,35 +3,25 @@ import { getChildren } from '../model/selectors';
 import type {
   ComputedWrapperStickyState,
   DocumentModel,
-  DocumentNode,
   StickyDefinition,
   WrapperNode,
 } from '../model/types';
 import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
-import type { StickyMeasuredNodeSizes } from '../sticky/resolve';
 import { resolveWrapperStickyState } from '../sticky/resolve';
-
-type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-type ExportableNode = Exclude<DocumentNode, { type: 'site' }>;
-
-export type RenderMeasuredNodeSizes = StickyMeasuredNodeSizes;
-
-export type MeshLayout = {
-  columnTemplate: string;
-  rowTemplate: string;
-  childPlacements: Record<string, CSSProperties>;
-  columnLines: number[];
-  rowLines: number[];
-  bottomLanePx: number;
-};
-
-export type WrapperRenderPlan = {
-  children: ExportableNode[];
-  stickyState: ComputedWrapperStickyState;
-  registrationMap: Map<string, ComputedWrapperStickyState['registrations'][number]>;
-  extraExtent: number;
-  meshLayout: MeshLayout;
-};
+import type {
+  MeshLayout,
+  RenderExportableNode as ExportableNode,
+  RenderLeafNode as LeafNode,
+  RenderMeasuredNodeSizes,
+  WrapperRenderPlan,
+} from './types/layout';
+export type {
+  MeshLayout,
+  RenderExportableNode,
+  RenderLeafNode,
+  RenderMeasuredNodeSizes,
+  WrapperRenderPlan,
+} from './types/layout';
 
 export const RENDER_VIEWPORT_WIDTH = 1440;
 export const RENDER_VIEWPORT_HEIGHT = 900;

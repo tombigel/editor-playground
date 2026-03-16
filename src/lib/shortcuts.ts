@@ -1,57 +1,18 @@
-export type ShortcutPlatform = 'mac' | 'other';
-
-export type ShortcutId =
-  | 'dismissPanels'
-  | 'undo'
-  | 'redo'
-  | 'openSettings'
-  | 'showShortcutHelp'
-  | 'togglePreviewSticky'
-  | 'toggleSpacerVisibility'
-  | 'toggleSnapEnabled'
-  | 'nudgeSelectionLeft'
-  | 'nudgeSelectionRight'
-  | 'nudgeSelectionUp'
-  | 'nudgeSelectionDown'
-  | 'deleteSelection'
-  | 'orderBack'
-  | 'orderForward'
-  | 'orderSendToBack'
-  | 'orderBringToFront';
-
-type ShortcutCombo = {
-  code: string;
-  keyLabel: string;
-  mod?: boolean;
-  ctrl?: boolean;
-  meta?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-  platforms?: ShortcutPlatform[];
-  omitShiftInDisplay?: boolean;
-};
-
-export type ShortcutDefinition = {
-  id: ShortcutId;
-  category: 'General' | 'View' | 'Edit' | 'Arrange';
-  description: string;
-  combos: ShortcutCombo[];
-  allowInInteractive?: boolean;
-  requiresSelection?: boolean;
-  requiresStageFocus?: boolean;
-};
-
-export type ShortcutContext = {
-  interactiveFocus: boolean;
-  hasSelection: boolean;
-  hasDismissiblePanels: boolean;
-  hasStageFocus: boolean;
-};
-
-export type ShortcutGesture = {
-  label: string;
-  description: string;
-};
+import type {
+  ShortcutCombo,
+  ShortcutContext,
+  ShortcutDefinition,
+  ShortcutGesture,
+  ShortcutId,
+  ShortcutPlatform,
+} from './types/shortcuts';
+export type {
+  ShortcutContext,
+  ShortcutDefinition,
+  ShortcutGesture,
+  ShortcutId,
+  ShortcutPlatform,
+} from './types/shortcuts';
 
 export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {

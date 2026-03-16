@@ -8,29 +8,24 @@ import type {
   WrapperNode,
 } from '../model/types';
 import { resolveFontSizePx, resolveUnitValuePx } from '../model/units';
+import type {
+  ResolvedStickyGeometry,
+  StickyGeometrySnapshot,
+  StickyLayoutState,
+  StickyRegistration,
+} from './types';
+export type {
+  ResolvedStickyGeometry,
+  StickyGeometrySnapshot,
+  StickyLayoutState,
+  StickyRegistration,
+} from './types';
+export type { StickyMeasuredNodeSizes } from './types';
 
 const DEFAULT_VIEWPORT_WIDTH = 1440;
 const DEFAULT_VIEWPORT_HEIGHT = 900;
 const DEFAULT_PERCENT_WIDTH_REFERENCE = 960;
 const DEFAULT_PERCENT_HEIGHT_REFERENCE = 480;
-
-export type StickyMeasuredNodeSizes = Record<string, { width: number; height: number }>;
-
-export type StickyGeometrySnapshot = {
-  nodeSizes?: StickyMeasuredNodeSizes;
-  viewportWidth?: number;
-  viewportHeight?: number;
-};
-
-export type StickyLayoutState = Record<string, ComputedWrapperStickyState>;
-
-type StickyRegistration = ComputedWrapperStickyState['registrations'][number];
-
-type ResolvedStickyGeometry = {
-  nodeSizes: StickyMeasuredNodeSizes;
-  viewportWidth: number;
-  viewportHeight: number;
-};
 
 export function resolveStickyLayout(
   document: DocumentModel,

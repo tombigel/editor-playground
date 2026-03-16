@@ -10,6 +10,18 @@ import type {
   WrapperNode,
   WrapperRole,
 } from './types';
+import type {
+  BoxPadding,
+  ImageNodeConfig,
+  LinkNodeConfig,
+  RectConfig,
+  SectionTemplateId,
+  SectionTemplateSummary,
+  TemplateBuild,
+  TemplateNode,
+  TextNodeConfig,
+  TextStyleOptions,
+} from './types/defaults';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from './units';
 
 let counter = 0;
@@ -30,63 +42,7 @@ const IMAGE_SOURCES = [
   },
 ];
 
-type TemplateBuild = {
-  wrapper: WrapperNode;
-  nodes: Record<NodeId, DocumentNode>;
-};
-
-type BoxPadding = {
-  top: string;
-  right: string;
-  bottom: string;
-  left?: string;
-};
-
-type TemplateNode = DocumentNode | WrapperNode;
-type TextStyleOptions = {
-  color?: string;
-  fontSize?: string;
-  fontWeight?: 'normal' | 'bold';
-  lineHeight?: number;
-  htmlTag?: TextLeaf['htmlTag'];
-};
-type RectConfig = {
-  x: string;
-  y: string;
-  width: string;
-  height?: string;
-};
-type TextNodeConfig = RectConfig & {
-  name: string;
-  content: string;
-  style?: TextStyleOptions;
-};
-type LinkNodeConfig = RectConfig & {
-  name: string;
-  label: string;
-  href?: string;
-};
-type ImageNodeConfig = RectConfig & {
-  name: string;
-  src?: string;
-  alt?: string;
-  sticky?: StickyDefinition;
-};
-
-export type SectionTemplateId =
-  | 'blank'
-  | 'post'
-  | 'stickyStaggeredImages'
-  | 'stickyPinnedCards'
-  | 'stickyMediaReveal'
-  | 'stickySteps';
-
-export type SectionTemplateSummary = {
-  id: SectionTemplateId;
-  name: string;
-  description: string;
-  category: 'basic' | 'sticky';
-};
+export type { SectionTemplateId, SectionTemplateSummary } from './types/defaults';
 
 export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   {

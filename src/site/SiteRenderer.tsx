@@ -1,6 +1,5 @@
 import { getNodeTextContent } from '../render/nodePresentation';
 import { SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
-import type { DocumentModel } from '../model/types';
 import {
   buildSiteRootPlan,
   getTrackSpacerDescriptor,
@@ -8,11 +7,9 @@ import {
   type SiteRenderPlanNode,
   type SiteWrapperPlan,
 } from './sitePlan';
+import type { SiteRendererProps } from './types/renderer';
 
-export type SiteRendererProps = {
-  document: DocumentModel;
-  previewSticky?: boolean;
-};
+export type { SiteRendererProps } from './types/renderer';
 
 export function SiteRenderer({ document, previewSticky = true }: SiteRendererProps) {
   const plan = buildSiteRootPlan(document, previewSticky);

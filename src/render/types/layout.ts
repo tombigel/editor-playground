@@ -1,0 +1,25 @@
+import type { CSSProperties } from 'react';
+import type { ComputedWrapperStickyState, DocumentNode } from '../../model/types';
+import type { StickyMeasuredNodeSizes } from '../../sticky/resolve';
+
+export type RenderLeafNode = Extract<DocumentNode, { type: 'leaf' }>;
+export type RenderExportableNode = Exclude<DocumentNode, { type: 'site' }>;
+
+export type RenderMeasuredNodeSizes = StickyMeasuredNodeSizes;
+
+export type MeshLayout = {
+  columnTemplate: string;
+  rowTemplate: string;
+  childPlacements: Record<string, CSSProperties>;
+  columnLines: number[];
+  rowLines: number[];
+  bottomLanePx: number;
+};
+
+export type WrapperRenderPlan = {
+  children: RenderExportableNode[];
+  stickyState: ComputedWrapperStickyState;
+  registrationMap: Map<string, ComputedWrapperStickyState['registrations'][number]>;
+  extraExtent: number;
+  meshLayout: MeshLayout;
+};

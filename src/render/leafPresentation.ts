@@ -1,15 +1,10 @@
 import type { CSSProperties } from 'react';
 import type { DocumentNode, TextLeaf } from '../model/types';
 import { formatValue } from '../model/units';
+import type { SharedCssRule, StyleRecord } from './types/presentation';
+export type { SharedCssRule, StyleRecord, StyleValue } from './types/presentation';
 
 type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-
-export type StyleValue = string | number;
-export type StyleRecord = Record<string, StyleValue>;
-export type SharedCssRule = {
-  selector: string;
-  style: StyleRecord;
-};
 
 export function getLeafInlineStyle(node: LeafNode): StyleRecord {
   if (node.role === 'text') {

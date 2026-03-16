@@ -36,21 +36,9 @@ import {
   type SiteRenderPlanNode,
   type SiteWrapperPlan,
 } from './sitePlan';
+import type { SiteExportBundle, SiteExportOptions } from './types/export';
 
-export type SiteExportOptions = {
-  previewSticky?: boolean;
-  title?: string;
-  htmlFileName?: string;
-  cssFileName?: string;
-};
-
-export type SiteExportBundle = {
-  htmlFileName: string;
-  cssFileName: string;
-  bodyHtml: string;
-  css: string;
-  htmlDocument: string;
-};
+export type { SiteExportBundle, SiteExportOptions } from './types/export';
 
 const DEFAULT_SITE_TITLE = 'Sticky Playground Site';
 export const DEFAULT_SITE_HTML_FILE_NAME = 'sticky-playground-site.html';

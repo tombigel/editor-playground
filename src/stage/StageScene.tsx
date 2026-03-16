@@ -28,7 +28,7 @@ import {
   usesIntrinsicHeight,
 } from '../render/layout';
 import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
-import { buildSiteRootPlan, type SiteLeafPlan, type SiteWrapperPlan } from '../site/sitePlan';
+import { buildSiteRootPlan, type SiteLeafPlan } from '../site/sitePlan';
 import {
   createDragState,
   getResizeStartSize,
@@ -39,26 +39,13 @@ import {
   type ResizeState,
   type SnapGuides,
 } from './stageMath';
-
-type StageStickyRegistration = SiteWrapperPlan['stickyState']['registrations'][number];
-type LeafNode = SiteLeafPlan['node'];
-
-type StageSceneProps = {
-  document: DocumentModel;
-  selectedId: NodeId | null;
-  previewSticky: boolean;
-  spacerVisibility: 'selected' | 'all';
-  showGridLanes: boolean;
-  onSelect: (id: NodeId) => void;
-  onMove: (id: NodeId, x: string, y: string) => void;
-  onResizeStart: (id: NodeId) => void;
-  dragState: DragState;
-  setDragState: (state: DragState) => void;
-  snapGuides: SnapGuides;
-  resizeState: ResizeState;
-  setResizeState: (state: ResizeState) => void;
-  measuredNodeSizes: RenderMeasuredNodeSizes;
-};
+import type {
+  RenderWrapperArgs,
+  StageSceneLeafNode as LeafNode,
+  StageSceneProps,
+  StageStickyRegistration,
+} from './types/scene';
+export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types/scene';
 
 export function StageScene({
   document,
@@ -223,25 +210,6 @@ function renderSnapGuides(guides: SnapGuides) {
     </>
   );
 }
-
-type RenderWrapperArgs = {
-  document: DocumentModel;
-  plan: SiteWrapperPlan;
-  selectedId: NodeId | null;
-  previewSticky: boolean;
-  spacerVisibility: 'selected' | 'all';
-  showGridLanes: boolean;
-  onSelect: (id: NodeId) => void;
-  onMove: (id: NodeId, x: string, y: string) => void;
-  measuredNodeSizes: RenderMeasuredNodeSizes;
-  dragState: DragState;
-  setDragState: (state: DragState) => void;
-  resizeState: ResizeState;
-  setResizeState: (state: ResizeState) => void;
-  onResizeStart: (id: NodeId) => void;
-  selfRegistration?: StageStickyRegistration;
-  ownerBottomLanePx?: number;
-};
 
 function renderWrapper({
   document,

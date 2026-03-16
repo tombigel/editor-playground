@@ -1,22 +1,6 @@
-import type { DocumentNode, EditorState, NodeId } from '../api/editorApi';
-
-export type NodePatch = {
-  id: NodeId;
-  before?: DocumentNode;
-  after?: DocumentNode;
-};
-
-export type HistoryEntry = {
-  rootIdBefore: NodeId;
-  rootIdAfter: NodeId;
-  nodePatches: NodePatch[];
-  selectedBefore: NodeId | null;
-  selectedAfter: NodeId | null;
-  pendingBefore: EditorState['pendingRoleSwap'];
-  pendingAfter: EditorState['pendingRoleSwap'];
-  debounceKey: string | null;
-  createdAt: number;
-};
+import type { DocumentNode, EditorState } from '../api/editorApi';
+export type { HistoryEntry, NodePatch } from './types/history';
+import type { HistoryEntry, NodePatch } from './types/history';
 
 export function appendHistoryEntry(past: HistoryEntry[], entry: HistoryEntry, historyLimit: number) {
   const last = past[past.length - 1];

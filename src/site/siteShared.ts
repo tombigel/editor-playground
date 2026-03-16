@@ -1,7 +1,8 @@
 import { getChildren } from '../model/selectors';
-import type { DocumentModel, DocumentNode, StickyDefinition, WrapperNode } from '../model/types';
+import type { DocumentModel, StickyDefinition, WrapperNode } from '../model/types';
 import { formatValue } from '../model/units';
 import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
+import type { SiteExportableNode as ExportableNode } from './types/shared';
 
 export { getNodeTextContent, isBrandMark } from '../render/nodePresentation';
 export { getStickyEdgeMode } from '../render/sticky';
@@ -20,8 +21,6 @@ export const SITE_CONTENT_SPACER_CLASS = 'sp-content-spacer';
 export const SITE_IMAGE_CLASS = 'sp-image';
 export const SITE_IMAGE_PLACEHOLDER_CLASS = 'sp-image-placeholder';
 export const SITE_BRAND_MARK_CLASS = 'is-brand-mark';
-
-type ExportableNode = Exclude<DocumentNode, { type: 'site' }>;
 
 export function getRootWrappers(document: DocumentModel) {
   const root = document.nodes[document.rootId];

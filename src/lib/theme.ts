@@ -1,5 +1,6 @@
-export type ThemeMode = 'light' | 'dark' | 'auto';
-export type ResolvedTheme = 'light' | 'dark';
+import type { ResolvedTheme, ThemeMode } from './types/theme';
+
+export type { ResolvedTheme, ThemeMode } from './types/theme';
 
 export function normalizeThemeMode(value: unknown): ThemeMode {
   return value === 'light' || value === 'dark' || value === 'auto' ? value : 'auto';

@@ -1,6 +1,4 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { DocumentModel, NodeId } from '../model/types';
-import type { StickyGeometrySnapshot } from '../sticky/resolve';
 import { StageScene } from './StageScene';
 import {
   areMeasuredNodeSizesEqual,
@@ -11,30 +9,12 @@ import {
   measureStageNodeSizes,
   px,
   resolveDragPointerPosition,
-  type DragState,
-  type MeasuredNodeSizes,
-  type ResizeState,
-  type SnapGuides,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
 } from './stageMath';
-
-export type StageProps = {
-  document: DocumentModel;
-  selectedId: NodeId | null;
-  previewSticky: boolean;
-  spacerVisibility: 'selected' | 'all';
-  showGridLanes: boolean;
-  snapEnabled: boolean;
-  onStageFocus: () => void;
-  onSelect: (id: NodeId) => void;
-  onMove: (id: NodeId, x: string, y: string) => void;
-  onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
-  onResize: (id: NodeId, width: string, height: string) => void;
-  onResizeStart: (id: NodeId) => void;
-  onResizeEnd: (id: NodeId) => void;
-  onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
-};
+import type { StageProps } from './types';
+import type { DragState, MeasuredNodeSizes, ResizeState, SnapGuides } from './types/stageMath';
+export type { StageProps } from './types';
 
 export function Stage({
   document,

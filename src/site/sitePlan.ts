@@ -18,53 +18,15 @@ import {
   SITE_IMAGE_PLACEHOLDER_CLASS,
   splitRootWrappers,
 } from './siteShared';
+import type {
+  SiteLeafPlan,
+  SiteRootPlan,
+  SiteTrackSpacerEdge,
+  SiteWrapperPlan,
+} from './types/plan';
 
 type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-
-export type SiteTrackSpacerEdge = 'top' | 'bottom';
-
-export type SiteLeafPlan = {
-  kind: 'leaf';
-  node: LeafNode;
-  nodeClassName: string;
-  meshPlacement?: CSSProperties;
-  selfSticky: boolean;
-  trackClassName: string;
-  spacerEdgesBefore: SiteTrackSpacerEdge[];
-  spacerEdgesAfter: SiteTrackSpacerEdge[];
-  imageClassName: string;
-  imagePlaceholderClassName: string;
-  isBrandMark: boolean;
-};
-
-export type SiteWrapperPlan = {
-  kind: 'wrapper';
-  node: WrapperNode;
-  isTopLevel: boolean;
-  tag: ReturnType<typeof getWrapperTag>;
-  nodeClassName: string;
-  meshPlacement?: CSSProperties;
-  selfSticky: boolean;
-  contentSticky: boolean;
-  trackClassName: string;
-  spacerEdgesBefore: SiteTrackSpacerEdge[];
-  spacerEdgesAfter: SiteTrackSpacerEdge[];
-  contentClassName: string;
-  contentSpacerClassName: string;
-  stickyState: ReturnType<typeof resolveWrapperRenderPlan>['stickyState'];
-  registrationMap: ReturnType<typeof resolveWrapperRenderPlan>['registrationMap'];
-  extraExtent: number;
-  meshLayout: ReturnType<typeof resolveWrapperRenderPlan>['meshLayout'];
-  children: SiteRenderPlanNode[];
-};
-
-export type SiteRenderPlanNode = SiteWrapperPlan | SiteLeafPlan;
-
-export type SiteRootPlan = {
-  header: SiteWrapperPlan | null;
-  footer: SiteWrapperPlan | null;
-  main: SiteWrapperPlan[];
-};
+export type { SiteLeafPlan, SiteRenderPlanNode, SiteRootPlan, SiteTrackSpacerEdge, SiteWrapperPlan } from './types/plan';
 
 export function buildSiteRootPlan(
   document: DocumentModel,

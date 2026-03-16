@@ -1,16 +1,10 @@
-import type { CSSProperties, ReactNode } from 'react';
-import type { DocumentNode } from '../model/types';
-
-type StageOrSiteNode = Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>;
-type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-
-type RenderLeafContentOptions = {
-  textStyle?: CSSProperties;
-  imageClassName?: string;
-  imagePlaceholderClassName?: string;
-  imageDraggable?: boolean;
-  disableTabNavigation?: boolean;
-};
+import type { ReactNode } from 'react';
+import type {
+  PresentationLeafNode as LeafNode,
+  RenderLeafContentOptions,
+  StageOrSiteNode,
+} from './types/nodePresentation';
+export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types/nodePresentation';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
   return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
