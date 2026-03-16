@@ -341,6 +341,8 @@ For `edges: both`, visual guides render top and bottom offsets together, and dis
 Wrapper `target=self` sticky uses the same sticky-track/spacer pattern as leaf components for custom durations, including bottom-edge spacer ordering.
 Wrapper `target=self` sticky also renders `Distance: auto` indicators in preview (including top/bottom labeling in `edges: both`).
 For single-edge `target=self` auto duration, preview renders exactly one distance guide on the active travel side rather than dual top/bottom guides.
+Top-level wrappers (`section`, `header`, `footer`) treat `target=self` as an auto-only preview mode. They keep offset indicators, show `Distance: auto`, and do not render synthetic custom-distance track shells.
+In the inspector, top-level wrappers with `target=self` also treat duration as fixed auto mode: the panel shows a selected non-changeable `Auto` state, hides `Custom`, and the helper copy reads `Uses the page height as the sticky distance.`
 Sticky layering uses one shared low z-index baseline across the editor stage and exported site, instead of renderer-specific sticky stacking values. Editor-only layering prefers DOM order and local stacking contexts first; the remaining explicit layers are limited to a small named stack for selected nodes, sticky labels, and resize handles rather than large arbitrary z-index jumps.
 
 JavaScript is used for:

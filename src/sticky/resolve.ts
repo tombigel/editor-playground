@@ -55,6 +55,10 @@ export function resolveWrapperStickyState(
 ): ComputedWrapperStickyState {
   const resolvedGeometry = withDefaultGeometry(geometry);
   const registrations: StickyRegistration[] = [];
+  const ownSelfRegistration = getOwnSelfStickyRegistration(wrapper, resolvedGeometry);
+  if (ownSelfRegistration) {
+    registrations.push(ownSelfRegistration);
+  }
   const ownContentWrapperRegistration = getOwnContentWrapperStickyRegistration(wrapper, resolvedGeometry);
   if (ownContentWrapperRegistration) {
     registrations.push(ownContentWrapperRegistration);
@@ -95,6 +99,16 @@ function getOwnContentWrapperStickyRegistration(
   geometry: ResolvedStickyGeometry,
 ) {
   if (!wrapper.sticky?.enabled || wrapper.sticky.target !== 'contentWrapper') {
+    return null;
+  }
+  return buildStickyRegistration(wrapper, wrapper, geometry);
+}
+
+function getOwnSelfStickyRegistration(
+  wrapper: WrapperNode,
+  geometry: ResolvedStickyGeometry,
+) {
+  if (!wrapper.sticky?.enabled || wrapper.sticky.target !== 'self') {
     return null;
   }
   return buildStickyRegistration(wrapper, wrapper, geometry);

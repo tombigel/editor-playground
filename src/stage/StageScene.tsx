@@ -29,7 +29,7 @@ import {
   usesIntrinsicHeight,
 } from '../render/layout';
 import { buildRenderRootPlan } from '../render/renderPlan';
-import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
+import { getStickyCssProperties, getStickyEdgeMode, usesSyntheticStickyTrack } from '../render/sticky';
 import type { RenderLeafPlanNode } from '../render/types';
 import {
   createDragState,
@@ -87,6 +87,8 @@ export function StageScene({
                 resizeState,
                 setResizeState,
                 onResizeStart,
+                selfRegistration: plan.header.registrationMap.get(plan.header.node.id),
+                ownerBottomLanePx: plan.header.meshLayout.bottomLanePx,
               })
             : <EmptySlot label="Header slot" />}
           <main className="site-main">
@@ -106,6 +108,8 @@ export function StageScene({
                 resizeState,
                 setResizeState,
                 onResizeStart,
+                selfRegistration: wrapper.registrationMap.get(wrapper.node.id),
+                ownerBottomLanePx: wrapper.meshLayout.bottomLanePx,
               }),
             )}
           </main>
@@ -125,6 +129,8 @@ export function StageScene({
                 resizeState,
                 setResizeState,
                 onResizeStart,
+                selfRegistration: plan.footer.registrationMap.get(plan.footer.node.id),
+                ownerBottomLanePx: plan.footer.meshLayout.bottomLanePx,
               })
             : <EmptySlot label="Footer slot" />}
         </div>
@@ -236,9 +242,7 @@ function renderWrapper({
   const isStickyContentWrapper = plan.contentSticky;
   const isSelfStickyTrack = Boolean(
     selfRegistration &&
-    node.sticky?.enabled &&
-    node.sticky.target === 'self' &&
-    node.sticky.durationMode !== 'auto',
+    usesSyntheticStickyTrack(node, { isTopLevel: plan.isTopLevel }),
   );
   const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(selfRegistration, node.sticky);
   const wrapperStickyCss =
@@ -450,11 +454,7 @@ function renderLeaf({
   const meshPlacement = plan.meshPlacement;
   const isAutoSticky =
     child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
-  const isSelfStickyTrack =
-    child.sticky?.enabled &&
-    child.sticky.target === 'self' &&
-    child.sticky.durationMode !== 'auto' &&
-    registration;
+  const isSelfStickyTrack = usesSyntheticStickyTrack(child) && registration;
   const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(registration, child.sticky);
   const brandMark = isBrandMark(child);
   const leafBaseWidth = formatValue(child.rect.width.base.parsed);
@@ -736,8 +736,30 @@ function renderWrapperSelfDistanceVisual(
   const edgeMode = getStickyEdgeMode(node.sticky);
   const isBottomOnlySticky = edgeMode === 'bottom';
   const isBothSticky = edgeMode === 'both';
-  const isAuto = (node.sticky.durationMode ?? 'auto') === 'auto';
+  const isTopLevelAutoOnly = node.role !== 'container' && node.sticky.target === 'self';
+  const isAuto = isTopLevelAutoOnly || (node.sticky.durationMode ?? 'auto') === 'auto';
   const nodeHeightPx = getNodeHeight(node, measuredNodeSizes);
+  if (isTopLevelAutoOnly) {
+    return (
+      <>
+        {isBottomOnlySticky || isBothSticky ? (
+          <div className="sticky-auto-indicator sticky-auto-indicator-bottom">
+            <span className="sticky-spacer-label sticky-spacer-label-auto">
+              {isBothSticky ? 'Bottom Distance: auto' : 'Distance: auto'}
+            </span>
+          </div>
+        ) : null}
+        {!isBottomOnlySticky ? (
+          <div className="sticky-auto-indicator sticky-auto-indicator-top">
+            <span className="sticky-spacer-label sticky-spacer-label-auto">
+              {isBothSticky ? 'Top Distance: auto' : 'Distance: auto'}
+            </span>
+          </div>
+        ) : null}
+      </>
+    );
+  }
+
   const autoDistances = getAutoStickySpacerDistances({
     edgeMode,
     ownerBottomLanePx: ownerBottomLanePx ?? nodeHeightPx,

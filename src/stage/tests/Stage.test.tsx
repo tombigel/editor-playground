@@ -554,6 +554,52 @@ describe('stage/Stage', () => {
     });
   });
 
+  it('renders self-sticky indicators for top-level sections', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('140px'),
+      durationTop: parseUnitValue('140px'),
+      durationBottom: parseUnitValue('140px'),
+      offsetTop: parseUnitValue('24px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={section.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Offset · 24px');
+    expect(markup).toContain('Distance: auto');
+    expect(markup).not.toContain('Distance · 140px');
+    expect(markup).not.toContain('sticky-track');
+  });
+
   it('renders a single auto distance guide for top-edge self sticky leaves', () => {
     const siteId = 'site_top_auto';
     const section = createWrapper('section', siteId);

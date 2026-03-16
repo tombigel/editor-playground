@@ -25,6 +25,11 @@ export function StickySection({
     | 'onStickyDurationBottom'
   >;
 }) {
+  const forceAutoDuration =
+    node.type === 'wrapper' &&
+    node.role !== 'container' &&
+    (node.sticky?.target ?? 'self') === 'self';
+
   return (
     <Card className="editor-border-subtle rounded-lg shadow-none">
       <CardHeader className="px-3 pt-3 pb-1">
@@ -107,28 +112,42 @@ export function StickySection({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-[11px] font-medium">Duration</Label>
-                <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-                  <Button
-                    type="button"
-                    variant={(node.sticky?.durationMode ?? 'auto') === 'auto' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="h-7 px-2.5 text-[11px]"
-                    onClick={() => actions.onStickyDurationMode('auto')}
-                  >
-                    Auto
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={(node.sticky?.durationMode ?? 'auto') === 'custom' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="h-7 px-2.5 text-[11px]"
-                    onClick={() => actions.onStickyDurationMode('custom')}
-                  >
-                    Custom
-                  </Button>
-                </div>
+                {forceAutoDuration ? (
+                  <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="sm"
+                      className="h-7 px-2.5 text-[11px]"
+                      disabled
+                    >
+                      Auto
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+                    <Button
+                      type="button"
+                      variant={(node.sticky?.durationMode ?? 'auto') === 'auto' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-7 px-2.5 text-[11px]"
+                      onClick={() => actions.onStickyDurationMode('auto')}
+                    >
+                      Auto
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={(node.sticky?.durationMode ?? 'auto') === 'custom' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-7 px-2.5 text-[11px]"
+                      onClick={() => actions.onStickyDurationMode('custom')}
+                    >
+                      Custom
+                    </Button>
+                  </div>
+                )}
               </div>
-              {(node.sticky?.durationMode ?? 'auto') === 'custom' ? (
+              {!forceAutoDuration && (node.sticky?.durationMode ?? 'auto') === 'custom' ? (
                 edgeValue(node) === 'both' ? (
                   <div className="space-y-1.5">
                     <RangeField
@@ -163,7 +182,9 @@ export function StickySection({
                 )
               ) : (
                 <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
-                  Uses the owner section height as the sticky distance.
+                  {forceAutoDuration
+                    ? 'Uses the page height as the sticky distance.'
+                    : 'Uses the owner section height as the sticky distance.'}
                 </div>
               )}
             </div>

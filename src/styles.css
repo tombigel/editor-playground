@@ -873,6 +873,23 @@ button {
   isolation: isolate;
 }
 
+.sticky-auto-indicator {
+  position: absolute;
+  left: 0;
+  width: max-content;
+  max-width: calc(100% - 12px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sticky-auto-indicator-top {
+  top: calc(100% + 8px);
+}
+
+.sticky-auto-indicator-bottom {
+  bottom: calc(100% + 8px);
+}
+
 .sticky-spacer-range::before,
 .sticky-spacer-range::after,
 .sticky-offset-visual::before,

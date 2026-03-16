@@ -179,6 +179,70 @@ describe('panels/InspectorPanel', () => {
     }
   });
 
+  it('shows fixed auto duration state for top-level self sticky wrappers', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    sectionNode.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      durationTop: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      durationBottom: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      offsetTop: { raw: '0vh', parsed: { value: 0, unit: 'vh' } },
+    };
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        node={sectionNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Uses the page height as the sticky distance.');
+    expect(markup).toContain('>Auto<');
+    expect(markup).not.toContain('>Custom<');
+  });
+
   it('renders single-unit numeric inline fields without select dropdown chrome', () => {
     const markup = renderToStaticMarkup(
       <NumericUnitInlineField value="2px" units={['px']} onChange={() => {}} />,

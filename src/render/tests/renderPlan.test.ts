@@ -98,4 +98,28 @@ describe('render/renderPlan', () => {
     expect(imagePlan?.nodeClassName).toContain('is-brand-mark');
     expect(imagePlan?.imageClassName).toContain('sp-image');
   });
+
+  it('does not build synthetic self-sticky tracks for top-level sections', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('120px'),
+      durationTop: parseUnitValue('120px'),
+      durationBottom: parseUnitValue('120px'),
+      offsetTop: parseUnitValue('12px'),
+    };
+
+    const plan = buildRenderRootPlan(document, true);
+
+    expect(plan.main[0]?.selfSticky).toBe(true);
+    expect(plan.main[0]?.selfStickyTrack).toBe(false);
+  });
 });

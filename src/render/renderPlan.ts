@@ -24,6 +24,7 @@ import {
   SITE_IMAGE_PLACEHOLDER_CLASS,
   splitRootWrappers,
 } from '../site/siteShared';
+import { usesSyntheticStickyTrack } from './sticky';
 
 type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
 
@@ -73,7 +74,7 @@ function buildWrapperPlan(
     nodeClassName: getNodeClassName(node),
     meshPlacement,
     selfSticky: isSelfSticky(node.sticky, previewSticky),
-    selfStickyTrack: isSelfSticky(node.sticky, previewSticky) && node.sticky?.durationMode !== 'auto',
+    selfStickyTrack: previewSticky && usesSyntheticStickyTrack(node, { isTopLevel }),
     contentSticky: isContentWrapperSticky(node.sticky, previewSticky),
     trackClassName: getTrackClassName(node.id),
     spacerEdgesBefore: spacerSequence.before,
@@ -103,7 +104,7 @@ function buildLeafPlan(
     nodeClassName: brandMark ? `${nodeClassName} ${SITE_BRAND_MARK_CLASS}` : nodeClassName,
     meshPlacement,
     selfSticky: isSelfSticky(node.sticky, previewSticky),
-    selfStickyTrack: isSelfSticky(node.sticky, previewSticky) && node.sticky?.durationMode !== 'auto',
+    selfStickyTrack: previewSticky && usesSyntheticStickyTrack(node),
     trackClassName: getTrackClassName(node.id),
     spacerEdgesBefore: spacerSequence.before,
     spacerEdgesAfter: spacerSequence.after,
