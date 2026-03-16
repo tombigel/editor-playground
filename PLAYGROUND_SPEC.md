@@ -199,7 +199,7 @@ Supported unit types:
 
 Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
 
-In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry. Absolute and relative sizes resolve from authored values; intrinsic sizes such as text `height: auto` and keyword widths use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
+In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry selectively. Absolute and relative sizes resolve from authored values; wrapper width is authored directly, and wrapper height acts as the authored minimum content height so sections and containers can still expand to fit children and sticky extents. Intrinsic sizes such as text `height: auto` and keyword widths use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
 
 Text leaves also store an HTML tag, editable in the inspector. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the text node. Changing the tag updates semantics only; the renderer and stage styling normalize native tag defaults so browser heading/blockquote styles and stage-only paragraph selectors do not override the text node's authored styling. Seeded templates use semantic heading tags for primary titles: the default post title is `h1`, and the primary titles in the sticky demo sections are seeded as `h2`.
 
@@ -300,6 +300,7 @@ For `edges: both`, preview applies both sticky constraints together (`top` and `
 For `edges: both`, visual guides render top and bottom offsets together, and distance guides render both top and bottom tracks together.
 Wrapper `target=self` sticky uses the same sticky-track/spacer pattern as leaf components for custom durations, including bottom-edge spacer ordering.
 Wrapper `target=self` sticky also renders `Distance: auto` indicators in preview (including top/bottom labeling in `edges: both`).
+For single-edge `target=self` auto duration, preview renders exactly one distance guide on the active travel side rather than dual top/bottom guides.
 
 JavaScript is used for:
 

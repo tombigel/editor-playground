@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
-import { parseUnitValue } from '../../model/units';
+import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import {
   buildWrapperStyle,
   cssPropertiesToDeclarations,
@@ -16,15 +16,22 @@ import {
 } from '../layout';
 
 describe('render/layout', () => {
-  it('uses measured sizes before fallback geometry', () => {
+  it('uses measured sizes for intrinsic geometry and preserves authored explicit wrapper height', () => {
     const document = createInitialDocument();
-    const image = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
-    if (!image || image.type !== 'leaf' || image.role !== 'image') {
-      throw new Error('Expected image leaf');
+    const title = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!title || title.type !== 'leaf' || title.role !== 'text' || !section || section.type !== 'wrapper') {
+      throw new Error('Expected text leaf and section wrapper');
     }
 
-    expect(getNodeWidth(image, { [image.id]: { width: 333, height: 222 } })).toBe(333);
-    expect(getNodeHeight(image, { [image.id]: { width: 333, height: 222 } })).toBe(222);
+    title.rect.width.base = parseWidthValue('fit-content');
+    title.rect.height.base = parseHeightValue('auto');
+
+    expect(getNodeWidth(title, { [title.id]: { width: 333, height: 222 } })).toBe(333);
+    expect(getNodeHeight(title, { [title.id]: { width: 333, height: 222 } })).toBe(222);
+    expect(getNodeHeight(section, { [section.id]: { width: 1000, height: 222 } })).toBe(450);
   });
 
   it('derives fallback width and height from authored units and aspect ratio', () => {
@@ -57,7 +64,7 @@ describe('render/layout', () => {
       [section.id]: { width: 1000, height: 500 },
     });
 
-    expect(offset).toBe(50);
+    expect(offset).toBe(45);
     expect(buildWrapperStyle(section, true)).toEqual({ width: '100%' });
     expect(getContentWrapperBaseStyle(section)).toEqual({ width: '100%', minHeight: '50vh' });
     expect(cssPropertiesToDeclarations({ gridTemplateColumns: '1fr 2fr', minHeight: '50vh' })).toEqual([

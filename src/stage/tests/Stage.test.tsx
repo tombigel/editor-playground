@@ -91,6 +91,40 @@ describe('stage/Stage', () => {
     expect(markup).toContain('<blockquote');
   });
 
+  it('renders authored section height on the content wrapper', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.rect.height.base = parseHeightValue('720px');
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={section.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain(`data-content-wrapper-for="${section.id}"`);
+    expect(markup).toContain('min-height:720px');
+  });
+
   it('renders text decoration styles for text leaves in the stage', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
@@ -518,6 +552,50 @@ describe('stage/Stage', () => {
       durationPx: 120,
       endPx: 304,
     });
+  });
+
+  it('renders a single auto distance guide for top-edge self sticky leaves', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'auto',
+      duration: parseUnitValue('0px'),
+      durationTop: parseUnitValue('0px'),
+      durationBottom: parseUnitValue('0px'),
+      offsetTop: parseUnitValue('0px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="all"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup.match(/Distance: auto/g)).toHaveLength(1);
+    expect(markup).not.toContain('sticky-auto-spacer-bottom');
   });
 
   it('locks drag movement to the dominant axis when shift is held', () => {

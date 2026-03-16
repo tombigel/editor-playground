@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
-import { parseFontSizeValue, parseUnitValue } from '../../model/units';
+import { parseFontSizeValue, parseHeightValue, parseUnitValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
 describe('site/siteExport', () => {
@@ -102,6 +102,24 @@ describe('site/siteExport', () => {
     expect(css).toContain(`.sp-node-${postTitle.id}.sp-role-text`);
     expect(css).toContain('grid-column:');
     expect(css).toContain('grid-row:');
+  });
+
+  it('serializes authored section height into exported wrapper content css', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.rect.height.base = parseHeightValue('720px');
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain(`.sp-node-${section.id}-content {`);
+    expect(css).toContain('min-height: 720px;');
   });
 
   it('emits framed image styling and brand mark overrides', () => {

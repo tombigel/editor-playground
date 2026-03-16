@@ -114,11 +114,6 @@ export function usesIntrinsicHeight(node: LeafNode) {
 }
 
 export function getNodeWidth(node: ExportableNode, measuredNodeSizes: RenderMeasuredNodeSizes = {}) {
-  const measured = measuredNodeSizes[node.id];
-  if (measured?.width && measured.width > 0) {
-    return measured.width;
-  }
-
   const width = node.rect.width.base.parsed;
   if ('unit' in width) {
     return width.unit === 'px' ? width.value : width.unit === 'vw'
@@ -129,17 +124,16 @@ export function getNodeWidth(node: ExportableNode, measuredNodeSizes: RenderMeas
           ? (width.value / 100) * Math.min(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
           : width.unit === 'vmax'
             ? (width.value / 100) * Math.max(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
-            : (width.value / 100) * 960;
+          : (width.value / 100) * 960;
+  }
+  const measured = measuredNodeSizes[node.id];
+  if (measured?.width && measured.width > 0) {
+    return measured.width;
   }
   return 240;
 }
 
 export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMeasuredNodeSizes = {}) {
-  const measured = measuredNodeSizes[node.id];
-  if (measured?.height && measured.height > 0) {
-    return measured.height;
-  }
-
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
     return height.unit === 'px' ? height.value : height.unit === 'vh'
@@ -151,6 +145,10 @@ export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMea
           : height.unit === 'vmax'
             ? (height.value / 100) * Math.max(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
             : (height.value / 100) * 480;
+  }
+  const measured = measuredNodeSizes[node.id];
+  if (height.keyword === 'auto' && measured?.height && measured.height > 0) {
+    return measured.height;
   }
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node, measuredNodeSizes) / height.ratio;

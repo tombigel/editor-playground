@@ -604,7 +604,11 @@ function renderLeafSpacerOverlay({
   const autoDistancePx = Math.max(0, wrapperBottomLanePx - registration.startPx);
   const topDistancePx =
     child.sticky.durationMode === 'auto'
-      ? autoDistancePx
+      ? edgeMode === 'both'
+        ? autoDistancePx
+        : isBottomOnlySticky
+          ? 0
+          : autoDistancePx
       : edgeMode === 'both'
         ? Math.max(0, registration.topDurationPx ?? registration.durationPx)
         : isBottomOnlySticky
@@ -612,7 +616,11 @@ function renderLeafSpacerOverlay({
           : Math.max(0, registration.durationPx);
   const bottomDistancePx =
     child.sticky.durationMode === 'auto'
-      ? autoDistancePx
+      ? edgeMode === 'both'
+        ? autoDistancePx
+        : isBottomOnlySticky
+          ? autoDistancePx
+          : 0
       : edgeMode === 'both'
         ? Math.max(0, registration.bottomDurationPx ?? registration.durationPx)
         : isBottomOnlySticky
