@@ -1,8 +1,8 @@
-export {
-  SiteRenderer,
+import {
+  SiteRenderer as SiteRendererComponent,
   type SiteRendererProps,
 } from '../site/SiteRenderer';
-export {
+import {
   DEFAULT_SITE_CSS_FILE_NAME,
   DEFAULT_SITE_HTML_FILE_NAME,
   renderSiteBodyHtml,
@@ -12,3 +12,25 @@ export {
   type SiteExportBundle,
   type SiteExportOptions,
 } from '../site/siteExport';
+
+export const SiteRenderer = SiteRendererComponent;
+
+export const siteApi = {
+  SiteRenderer,
+  DEFAULT_SITE_CSS_FILE_NAME,
+  DEFAULT_SITE_HTML_FILE_NAME,
+  renderSiteBodyHtml,
+  renderSiteCss,
+  renderSiteExportBundle,
+  renderSiteHtmlDocument,
+};
+
+export type { SiteRendererProps, SiteExportBundle, SiteExportOptions };
+export {
+  DEFAULT_SITE_CSS_FILE_NAME,
+  DEFAULT_SITE_HTML_FILE_NAME,
+  renderSiteBodyHtml,
+  renderSiteCss,
+  renderSiteExportBundle,
+  renderSiteHtmlDocument,
+};
