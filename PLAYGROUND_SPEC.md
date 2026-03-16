@@ -5,6 +5,7 @@ This document captures the current editor and implementation model used by the s
 Related documentation:
 
 - [Editor Style Guide](/Users/tombigel/Dev/Wix/sticky-playground/EDITOR_STYLE_GUIDE.md): visual rules and token guidance for editor chrome
+- [Sticky Render Model](/Users/tombigel/Dev/Wix/sticky-playground/STICKY_RENDER_MODEL.md): rendered-site sticky data and DOM structure
 
 ## Goal
 
