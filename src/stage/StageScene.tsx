@@ -245,6 +245,7 @@ function renderWrapper({
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
       ? getStickyCssProperties(node.sticky, { includePosition: true, includeZIndex: true })
       : undefined;
+  const wrapperLayerStyle = selectedId === node.id ? { zIndex: 'var(--editor-layer-selection)' } : undefined;
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
@@ -279,6 +280,7 @@ function renderWrapper({
         borderColor: node.style.borderColor,
         borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
         ...wrapperStickyCss,
+        ...wrapperLayerStyle,
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
@@ -490,6 +492,7 @@ function renderLeaf({
         ...(previewSticky && child.sticky?.enabled
           ? getStickyCssProperties(child.sticky, { includeZIndex: true })
           : {}),
+        ...(selectedId === child.id ? { zIndex: 'var(--editor-layer-selection)' } : {}),
       }}
       onMouseDown={(event) => {
         event.stopPropagation();

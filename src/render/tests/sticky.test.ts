@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseUnitValue } from '../../model/units';
-import { getStickyCssProperties, getStickyEdgeMode, STICKY_LAYER_Z_INDEX } from '../sticky';
+import { STICKY_LAYER_Z_INDEX } from '../layers';
+import { getStickyCssProperties, getStickyEdgeMode } from '../sticky';
 
 const bothSticky = {
   enabled: true,

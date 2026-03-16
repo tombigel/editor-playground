@@ -155,7 +155,6 @@ function getBaseSiteCssRules(): SharedCssRule[] {
         minHeight: '1px',
         height: 'auto',
         width: '100%',
-        zIndex: 2,
       },
     },
     {

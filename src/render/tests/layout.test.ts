@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument } from '../../model/defaults';
+import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import {
+  AUTO_WRAPPER_MIN_HEIGHT_PX,
   buildWrapperStyle,
   cssPropertiesToDeclarations,
   getContentWrapperBaseStyle,
@@ -105,5 +106,30 @@ describe('render/layout', () => {
       gridRow: expect.any(String),
     });
     expect(plan.meshLayout.bottomLanePx).toBeGreaterThan(0);
+  });
+
+  it('does not keep stale measured auto wrapper height as a mesh row boundary', () => {
+    const section = createWrapper('section', 'root');
+    section.rect = createDefaultRect('0px', '0px', '100%', 'auto');
+    const text = createLeaf('text', section.id);
+    text.name = 'Auto Height Child';
+    text.rect = createDefaultRect('0px', '24px', '240px', '40px');
+    section.children = [text.id];
+
+    const document = {
+      rootId: section.id,
+      nodes: {
+        [section.id]: section,
+        [text.id]: text,
+      },
+    };
+
+    const plan = resolveWrapperRenderPlan(document, section, {
+      [section.id]: { width: 960, height: 640 },
+    });
+
+    expect(plan.meshLayout.bottomLanePx).toBe(AUTO_WRAPPER_MIN_HEIGHT_PX);
+    expect(plan.meshLayout.rowTemplate).toContain('24px');
+    expect(plan.meshLayout.rowTemplate).not.toContain('640px');
   });
 });

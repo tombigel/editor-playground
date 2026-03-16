@@ -25,6 +25,7 @@ export type {
 
 export const RENDER_VIEWPORT_WIDTH = 1440;
 export const RENDER_VIEWPORT_HEIGHT = 900;
+export const AUTO_WRAPPER_MIN_HEIGHT_PX = 120;
 
 export function resolveWrapperRenderPlan(
   document: DocumentModel,
@@ -90,7 +91,7 @@ export function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
     return base;
   }
 
-  base.minHeight = '120px';
+  base.minHeight = `${AUTO_WRAPPER_MIN_HEIGHT_PX}px`;
   return base;
 }
 
@@ -233,7 +234,7 @@ function computeMeshLayout(
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
 ): MeshLayout {
   const width = getNodeWidth(wrapper, measuredNodeSizes);
-  const baseHeight = getNodeHeight(wrapper, measuredNodeSizes);
+  const baseHeight = getWrapperMeshBaseHeight(wrapper, measuredNodeSizes);
   const xLines = new Set<number>([0, width]);
   const yLines = new Set<number>([0, baseHeight]);
 
@@ -312,6 +313,20 @@ function getMeshNodeHeight(
     return baseHeight + registration.durationPx;
   }
   return baseHeight;
+}
+
+function getWrapperMeshBaseHeight(
+  wrapper: WrapperNode,
+  measuredNodeSizes: RenderMeasuredNodeSizes = {},
+) {
+  const height = wrapper.rect.height.base.parsed;
+  if ('unit' in height || height.keyword === 'aspect-ratio') {
+    return getNodeHeight(wrapper, measuredNodeSizes);
+  }
+  if (wrapper.role === 'header' || wrapper.role === 'footer') {
+    return 0;
+  }
+  return AUTO_WRAPPER_MIN_HEIGHT_PX;
 }
 
 function resolveCoordinatePx(
