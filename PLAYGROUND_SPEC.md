@@ -270,7 +270,7 @@ Sticky properties:
 - duration slider: `0vh` to `400vh` in `25vh` steps
 - offset slider: `0vh` to `100vh`
 - when edge is `both`, inspector uses a dual-knob offset range slider (top/bottom band) and separate top/bottom duration sliders
-- for `container` wrappers, sticky `target` is temporarily fixed to `self` in the UI; `contentWrapper` target is hidden (implementation retained for future enablement)
+- for wrappers, sticky `target` is hidden from the editor UI for now; the product currently presents wrapper sticky as self-targeted only, while internal `contentWrapper` support remains retained for future enablement
 
 Defaults:
 

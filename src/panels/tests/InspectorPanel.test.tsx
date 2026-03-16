@@ -243,6 +243,70 @@ describe('panels/InspectorPanel', () => {
     expect(markup).not.toContain('>Custom<');
   });
 
+  it('hides the sticky target field for wrapper nodes', () => {
+    const document = createInitialDocument();
+    const containerNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!containerNode || containerNode.type !== 'wrapper') {
+      throw new Error('Expected wrapper node');
+    }
+
+    containerNode.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'auto',
+      duration: { raw: '50vh', parsed: { value: 50, unit: 'vh' } },
+      durationTop: { raw: '50vh', parsed: { value: 50, unit: 'vh' } },
+      durationBottom: { raw: '50vh', parsed: { value: 50, unit: 'vh' } },
+      offsetTop: { raw: '0vh', parsed: { value: 0, unit: 'vh' } },
+    };
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        node={containerNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+      />,
+    );
+
+    expect(markup).not.toContain('>Target<');
+    expect(markup).not.toContain('>Self<');
+    expect(markup).not.toContain('Content wrapper');
+  });
+
   it('renders single-unit numeric inline fields without select dropdown chrome', () => {
     const markup = renderToStaticMarkup(
       <NumericUnitInlineField value="2px" units={['px']} onChange={() => {}} />,

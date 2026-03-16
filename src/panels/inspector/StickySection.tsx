@@ -46,31 +46,6 @@ export function StickySection({
 
         {node.sticky?.enabled ? (
           <>
-            {node.type === 'wrapper' ? (
-              node.role === 'container' ? (
-                <FormField label="Target">
-                  <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
-                    Self (content wrapper target is temporarily hidden for containers)
-                  </div>
-                </FormField>
-              ) : (
-                <FormField label="Target">
-                  <Select
-                    value={node.sticky?.target ?? 'self'}
-                    onValueChange={(value) => actions.onStickyTarget(value as 'self' | 'contentWrapper')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="self">Self</SelectItem>
-                      <SelectItem value="contentWrapper">Content wrapper</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-              )
-            ) : null}
-
             <FormField label="Edge">
               <Select value={edgeValue(node)} onValueChange={(value) => actions.onStickyEdges(value as 'top' | 'bottom' | 'both')}>
                 <SelectTrigger>
