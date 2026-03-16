@@ -1,6 +1,10 @@
 import { getChildren } from '../model/selectors';
 import type { DocumentModel, DocumentNode, StickyDefinition, WrapperNode } from '../model/types';
 import { formatValue } from '../model/units';
+import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
+
+export { getNodeTextContent, isBrandMark } from '../render/nodePresentation';
+export { getStickyEdgeMode } from '../render/sticky';
 
 export const SITE_ROOT_CLASS = 'sp-site';
 export const SITE_MAIN_CLASS = 'sp-site-main';
@@ -86,18 +90,6 @@ export function isContentWrapperSticky(sticky: StickyDefinition | undefined, pre
   return Boolean(previewSticky && sticky?.enabled && sticky.target === 'contentWrapper');
 }
 
-export function getStickyEdgeMode(sticky: StickyDefinition | undefined): 'top' | 'bottom' | 'both' {
-  if (!sticky) {
-    return 'top';
-  }
-  const bottom = sticky.edges.bottom ?? false;
-  const top = sticky.edges.top ?? !bottom;
-  if (top && bottom) {
-    return 'both';
-  }
-  return bottom ? 'bottom' : 'top';
-}
-
 export function getStickyDurationCss(sticky: StickyDefinition | undefined) {
   if (!sticky?.enabled || sticky.durationMode === 'auto') {
     return '0px';
@@ -146,19 +138,9 @@ export function getStickyTrackSpacerCss(sticky: StickyDefinition | undefined, ed
 }
 
 export function getStickyCssDeclarations(sticky: StickyDefinition | undefined) {
-  if (!sticky?.enabled) {
-    return [];
-  }
-
-  const edgeMode = getStickyEdgeMode(sticky);
-  const declarations = ['position: sticky', 'z-index: 1'];
-  if (edgeMode === 'both' || edgeMode === 'top') {
-    declarations.push(`top: ${sticky.offsetTop?.raw ?? '0px'}`);
-  }
-  if (edgeMode === 'both' || edgeMode === 'bottom') {
-    declarations.push(`bottom: ${sticky.offsetBottom?.raw ?? '0px'}`);
-  }
-  return declarations;
+  return Object.entries(getStickyCssProperties(sticky, { includePosition: true, includeZIndex: true })).map(
+    ([key, value]) => `${toCssPropertyName(key)}: ${String(value)}`,
+  );
 }
 
 export function formatNodeHeight(node: ExportableNode) {
@@ -169,16 +151,6 @@ export function formatNodeHeight(node: ExportableNode) {
   return undefined;
 }
 
-export function getNodeTextContent(node: Extract<DocumentNode, { type: 'leaf' }>) {
-  if (node.role === 'text') {
-    return node.content;
-  }
-  if (node.role === 'image') {
-    return node.alt ?? 'Image';
-  }
-  return node.label;
-}
-
-export function isBrandMark(node: Extract<DocumentNode, { type: 'leaf' }>) {
-  return node.role === 'image' && node.name === 'Brand Mark';
+function toCssPropertyName(property: string) {
+  return property.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
 }

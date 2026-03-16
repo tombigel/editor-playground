@@ -1,8 +1,5 @@
-import {
-  getNodeTextContent,
-  SITE_MAIN_CLASS,
-  SITE_ROOT_CLASS,
-} from './siteShared';
+import { getNodeTextContent } from '../render/nodePresentation';
+import { SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
 import type { DocumentModel } from '../model/types';
 import {
   buildSiteRootPlan,

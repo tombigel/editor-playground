@@ -9,6 +9,12 @@ import type {
 import { formatValue } from '../model/units';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../render/leafPresentation';
 import {
+  formatNodeLabel,
+  getNodeAriaLabel,
+  isBrandMark,
+  renderLeafContent,
+} from '../render/nodePresentation';
+import {
   buildWrapperStyle,
   getContentWrapperBaseStyle,
   getLeafCssHeight,
@@ -21,6 +27,7 @@ import {
   type RenderMeasuredNodeSizes,
   usesIntrinsicHeight,
 } from '../render/layout';
+import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
 import { buildSiteRootPlan, type SiteLeafPlan, type SiteWrapperPlan } from '../site/sitePlan';
 import {
   createDragState,
@@ -139,15 +146,6 @@ export function StageScene({
   );
 }
 
-function formatNodeLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
-  return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
-}
-
-function getStageNodeAriaLabel(node: Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>) {
-  const roleLabel = formatNodeLabel(node);
-  return node.name && node.name !== roleLabel ? `${roleLabel}: ${node.name}` : roleLabel;
-}
-
 function EmptySlot({ label }: { label: string }) {
   return <div className="empty-slot">{label}</div>;
 }
@@ -186,13 +184,21 @@ function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState
       ) : (
         <div
           data-node-id={node.id}
-          className={`drag-preview-inner stage-leaf role-${node.role} ${node.role === 'image' && node.name === 'Brand Mark' ? 'is-brand-mark' : ''}`}
+          className={`drag-preview-inner stage-leaf role-${node.role} ${isBrandMark(node) ? 'is-brand-mark' : ''}`}
           style={{
             width: '100%',
             height: '100%',
           }}
         >
-          <div className="stage-leaf-body">{renderLeafContent(node)}</div>
+          <div className="stage-leaf-body">
+            {renderLeafContent(node, {
+              textStyle: styleRecordToReactStyle(getLeafInlineStyle(node)),
+              imageClassName: 'stage-image',
+              imagePlaceholderClassName: 'image-placeholder',
+              imageDraggable: false,
+              disableTabNavigation: true,
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -260,34 +266,16 @@ function renderWrapper({
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, node.id);
   const isStickyContentWrapper = plan.contentSticky;
-  const stickyEdgeMode = node.sticky ? getStickyEdgeMode(node.sticky) : 'top';
   const isSelfStickyTrack = Boolean(
     selfRegistration &&
     node.sticky?.enabled &&
     node.sticky.target === 'self' &&
     node.sticky.durationMode !== 'auto',
   );
-  const isBottomOnlySticky = isSelfStickyTrack && stickyEdgeMode === 'bottom';
-  const isBothSticky = isSelfStickyTrack && stickyEdgeMode === 'both';
-  const topTrackDistancePx =
-    isSelfStickyTrack && selfRegistration
-      ? stickyEdgeMode === 'both'
-        ? selfRegistration.topDurationPx ?? selfRegistration.durationPx
-        : stickyEdgeMode === 'top'
-          ? selfRegistration.durationPx
-          : 0
-      : 0;
-  const bottomTrackDistancePx =
-    isSelfStickyTrack && selfRegistration
-      ? stickyEdgeMode === 'both'
-        ? selfRegistration.bottomDurationPx ?? selfRegistration.durationPx
-        : stickyEdgeMode === 'bottom'
-          ? selfRegistration.durationPx
-          : 0
-      : 0;
+  const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(selfRegistration, node.sticky);
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
-      ? getStickyCss(node.sticky, true)
+      ? getStickyCssProperties(node.sticky, { includePosition: true })
       : undefined;
   const shouldLayerStickySelf =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self';
@@ -299,7 +287,7 @@ function renderWrapper({
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
         gridTemplateRows: meshLayout.rowTemplate,
-        ...(previewSticky ? getStickyCss(node.sticky!, true) : {}),
+        ...(previewSticky ? getStickyCssProperties(node.sticky!, { includePosition: true }) : {}),
       }
     : {
         ...getContentWrapperBaseStyle(node),
@@ -318,7 +306,7 @@ function renderWrapper({
       className={`stage-wrapper role-${node.role} ${selectedId === node.id ? 'selected' : ''} ${
         dragState?.nodeId === node.id ? 'drag-source' : ''
       }`}
-      aria-label={getStageNodeAriaLabel(node)}
+      aria-label={getNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,
         ...(isSelfStickyTrack ? {} : plan.meshPlacement),
@@ -453,41 +441,20 @@ function renderWrapper({
   }
 
   const wrapperBaseHeightPx = getNodeHeight(node, measuredNodeSizes);
-  const trackHeight = wrapperBaseHeightPx + topTrackDistancePx + bottomTrackDistancePx;
-  const topStickyTrackSpacer =
-    topTrackDistancePx > 0 ? (
-      <div
-        className="sticky-track-spacer"
-        style={{
-          height: `${topTrackDistancePx}px`,
-        }}
-      />
-    ) : null;
-  const bottomStickyTrackSpacer =
-    bottomTrackDistancePx > 0 ? (
-      <div
-        className="sticky-track-spacer"
-        style={{
-          height: `${bottomTrackDistancePx}px`,
-        }}
-      />
-    ) : null;
-
-  return (
-    <div
-      key={`${node.id}-track`}
-      className={`sticky-track ${dragState?.nodeId === node.id ? 'drag-source' : ''}`}
-      style={{
-        ...plan.meshPlacement,
-        width: '100%',
-        minHeight: `${trackHeight}px`,
-      }}
-    >
-      {isBottomOnlySticky || isBothSticky ? bottomStickyTrackSpacer : null}
-      {wrapperBody}
-      {isBottomOnlySticky ? null : topStickyTrackSpacer}
-    </div>
-  );
+  const trackHeight = wrapperBaseHeightPx + topDistancePx + bottomDistancePx;
+  return renderStickyTrackShell({
+    nodeId: node.id,
+    dragSourceId: dragState?.nodeId,
+    style: {
+      ...plan.meshPlacement,
+      width: '100%',
+      minHeight: `${trackHeight}px`,
+    },
+    bottomFirst,
+    topDistancePx,
+    bottomDistancePx,
+    body: wrapperBody,
+  });
 }
 
 function renderLeaf({
@@ -522,10 +489,8 @@ function renderLeaf({
     child.sticky.target === 'self' &&
     child.sticky.durationMode !== 'auto' &&
     registration;
-  const stickyEdgeMode = child.sticky ? getStickyEdgeMode(child.sticky) : 'top';
-  const isBottomOnlySticky = Boolean(isSelfStickyTrack && stickyEdgeMode === 'bottom');
-  const isBothSticky = Boolean(isSelfStickyTrack && stickyEdgeMode === 'both');
-  const isBrandMark = child.role === 'image' && child.name === 'Brand Mark';
+  const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(registration, child.sticky);
+  const brandMark = isBrandMark(child);
   const leafBaseWidth = formatValue(child.rect.width.base.parsed);
   const leafBaseHeight = getLeafCssHeight(child);
   const intrinsicHeightLeaf = usesIntrinsicHeight(child);
@@ -536,10 +501,10 @@ function renderLeaf({
       id={`stage-node-${child.id}`}
       data-node-id={child.id}
       data-node-label={formatNodeLabel(child)}
-      className={`stage-leaf role-${child.role} ${isBrandMark ? 'is-brand-mark' : ''} ${
+      className={`stage-leaf role-${child.role} ${brandMark ? 'is-brand-mark' : ''} ${
         selectedId === child.id ? 'selected' : ''
       } ${dragState?.nodeId === child.id ? 'drag-source' : ''}`}
-      aria-label={getStageNodeAriaLabel(child)}
+      aria-label={getNodeAriaLabel(child)}
       style={{
         ...(isSelfStickyTrack
           ? {
@@ -561,7 +526,7 @@ function renderLeaf({
           previewSticky && child.sticky?.enabled && child.sticky.target === 'self'
             ? 14
             : undefined,
-        ...(previewSticky && child.sticky?.enabled ? getStickyCss(child.sticky, false) : {}),
+        ...(previewSticky && child.sticky?.enabled ? getStickyCssProperties(child.sticky) : {}),
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
@@ -579,7 +544,15 @@ function renderLeaf({
         );
       }}
     >
-      <div className="stage-leaf-body">{renderLeafContent(child)}</div>
+      <div className="stage-leaf-body">
+        {renderLeafContent(child, {
+          textStyle: styleRecordToReactStyle(getLeafInlineStyle(child)),
+          imageClassName: 'stage-image',
+          imagePlaceholderClassName: 'image-placeholder',
+          imageDraggable: false,
+          disableTabNavigation: true,
+        })}
+      </div>
       {selectedId === child.id ? (
         <ResizeHandleView
           onHandleMouseDown={(handle, event) => {
@@ -609,55 +582,23 @@ function renderLeaf({
   }
 
   const leafHeightPx = getNodeHeight(child, measuredNodeSizes);
-  const topTrackDistancePx =
-    stickyEdgeMode === 'both'
-      ? registration.topDurationPx ?? registration.durationPx
-      : stickyEdgeMode === 'top'
-        ? registration.durationPx
-        : 0;
-  const bottomTrackDistancePx =
-    stickyEdgeMode === 'both'
-      ? registration.bottomDurationPx ?? registration.durationPx
-      : stickyEdgeMode === 'bottom'
-        ? registration.durationPx
-        : 0;
   const trackHeight =
     isAutoSticky
       ? leafHeightPx
-      : leafHeightPx + topTrackDistancePx + bottomTrackDistancePx;
-  const topStickyTrackSpacer =
-    topTrackDistancePx > 0 ? (
-      <div
-        className="sticky-track-spacer"
-        style={{
-          height: `${topTrackDistancePx}px`,
-        }}
-      />
-    ) : null;
-  const bottomStickyTrackSpacer =
-    bottomTrackDistancePx > 0 ? (
-      <div
-        className="sticky-track-spacer"
-        style={{
-          height: `${bottomTrackDistancePx}px`,
-        }}
-      />
-    ) : null;
-  return (
-    <div
-      key={`${child.id}-track`}
-      className={`sticky-track ${dragState?.nodeId === child.id ? 'drag-source' : ''}`}
-      style={{
-        ...meshPlacement,
-        width: trackWidth,
-        minHeight: `${trackHeight}px`,
-      }}
-    >
-      {isBottomOnlySticky || isBothSticky ? bottomStickyTrackSpacer : null}
-      {leafBody}
-      {isBottomOnlySticky ? null : topStickyTrackSpacer}
-    </div>
-  );
+      : leafHeightPx + topDistancePx + bottomDistancePx;
+  return renderStickyTrackShell({
+    nodeId: child.id,
+    dragSourceId: dragState?.nodeId,
+    style: {
+      ...meshPlacement,
+      width: trackWidth,
+      minHeight: `${trackHeight}px`,
+    },
+    bottomFirst,
+    topDistancePx,
+    bottomDistancePx,
+    body: leafBody,
+  });
 }
 
 function renderLeafSpacerOverlay({
@@ -733,7 +674,7 @@ function renderLeafSpacerOverlay({
           child.rect.height.base.parsed.keyword === 'aspect-ratio'
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
-        ...(previewSticky ? getStickyCss(child.sticky, false) : {}),
+        ...(previewSticky ? getStickyCssProperties(child.sticky) : {}),
       }}
     >
       {renderOffsetVisual(child.sticky, child, measuredNodeSizes)}
@@ -899,37 +840,84 @@ function renderWrapperSelfDistanceVisual(
   );
 }
 
-function renderLeafContent(node: LeafNode) {
-  switch (node.role) {
-    case 'text': {
-      const Tag = node.htmlTag;
-      return (
-        <Tag
-          style={styleRecordToReactStyle(getLeafInlineStyle(node))}
-        >
-          {node.content}
-        </Tag>
-      );
-    }
-    case 'image':
-      return node.src ? (
-        <img className="stage-image" src={node.src} alt={node.alt || 'Image'} draggable={false} />
-      ) : (
-        <div className="image-placeholder">{node.alt || 'Image'}</div>
-      );
-    case 'link':
-      return (
-        <a href={node.href} tabIndex={-1}>
-          {node.label}
-        </a>
-      );
-    case 'button':
-      return (
-        <button type="button" tabIndex={-1}>
-          {node.label}
-        </button>
-      );
+function getStickyTrackDistances(
+  registration: StageStickyRegistration | undefined,
+  sticky: WrapperNode['sticky'] | LeafNode['sticky'] | undefined,
+) {
+  const edgeMode = sticky ? getStickyEdgeMode(sticky) : 'top';
+  if (!registration || !sticky?.enabled || sticky.target !== 'self' || sticky.durationMode === 'auto') {
+    return {
+      edgeMode,
+      topDistancePx: 0,
+      bottomDistancePx: 0,
+      bottomFirst: false,
+    };
   }
+
+  const topDistancePx =
+    edgeMode === 'both'
+      ? registration.topDurationPx ?? registration.durationPx
+      : edgeMode === 'top'
+        ? registration.durationPx
+        : 0;
+  const bottomDistancePx =
+    edgeMode === 'both'
+      ? registration.bottomDurationPx ?? registration.durationPx
+      : edgeMode === 'bottom'
+        ? registration.durationPx
+        : 0;
+
+  return {
+    edgeMode,
+    topDistancePx,
+    bottomDistancePx,
+    bottomFirst: edgeMode === 'bottom' || edgeMode === 'both',
+  };
+}
+
+function renderTrackSpacer(heightPx: number) {
+  if (heightPx <= 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className="sticky-track-spacer"
+      style={{
+        height: `${heightPx}px`,
+      }}
+    />
+  );
+}
+
+function renderStickyTrackShell({
+  nodeId,
+  dragSourceId,
+  style,
+  bottomFirst,
+  topDistancePx,
+  bottomDistancePx,
+  body,
+}: {
+  nodeId: string;
+  dragSourceId: string | undefined;
+  style: CSSProperties;
+  bottomFirst: boolean;
+  topDistancePx: number;
+  bottomDistancePx: number;
+  body: JSX.Element;
+}) {
+  return (
+    <div
+      key={`${nodeId}-track`}
+      className={`sticky-track ${dragSourceId === nodeId ? 'drag-source' : ''}`}
+      style={style}
+    >
+      {bottomFirst ? renderTrackSpacer(bottomDistancePx) : null}
+      {body}
+      {bottomFirst ? null : renderTrackSpacer(topDistancePx)}
+    </div>
+  );
 }
 
 function ResizeHandleView({
@@ -949,45 +937,6 @@ function ResizeHandleView({
       ))}
     </>
   );
-}
-
-function defaultStickyOffset() {
-  return '0px';
-}
-
-function getStickyEdgeMode(sticky: StickyDefinition): 'top' | 'bottom' | 'both' {
-  const bottom = sticky.edges.bottom ?? false;
-  const top = sticky.edges.top ?? !bottom;
-  if (top && bottom) {
-    return 'both';
-  }
-  return bottom ? 'bottom' : 'top';
-}
-
-function getStickyCss(
-  sticky: NonNullable<Exclude<DocumentNode, { type: 'site' }>['sticky']>,
-  allowStickyPosition: boolean,
-): CSSProperties {
-  if (!sticky.enabled) {
-    return {};
-  }
-
-  const style: CSSProperties = {};
-  if (allowStickyPosition) {
-    style.position = 'sticky';
-  }
-
-  const edgeMode = getStickyEdgeMode(sticky);
-  if (edgeMode === 'bottom') {
-    style.bottom = sticky.offsetBottom?.raw ?? defaultStickyOffset();
-  } else if (edgeMode === 'both') {
-    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset();
-    style.bottom = sticky.offsetBottom?.raw ?? defaultStickyOffset();
-  } else {
-    style.top = sticky.offsetTop?.raw ?? defaultStickyOffset();
-  }
-
-  return style;
 }
 
 function shouldShowSpacerVisuals(

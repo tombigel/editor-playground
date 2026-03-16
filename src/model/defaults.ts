@@ -43,6 +43,35 @@ type BoxPadding = {
 };
 
 type TemplateNode = DocumentNode | WrapperNode;
+type TextStyleOptions = {
+  color?: string;
+  fontSize?: string;
+  fontWeight?: 'normal' | 'bold';
+  lineHeight?: number;
+  htmlTag?: TextLeaf['htmlTag'];
+};
+type RectConfig = {
+  x: string;
+  y: string;
+  width: string;
+  height?: string;
+};
+type TextNodeConfig = RectConfig & {
+  name: string;
+  content: string;
+  style?: TextStyleOptions;
+};
+type LinkNodeConfig = RectConfig & {
+  name: string;
+  label: string;
+  href?: string;
+};
+type ImageNodeConfig = RectConfig & {
+  name: string;
+  src?: string;
+  alt?: string;
+  sticky?: StickyDefinition;
+};
 
 export type SectionTemplateId =
   | 'blank'
@@ -144,6 +173,42 @@ function buildTemplate(
   };
 }
 
+function createTextNode(parentId: NodeId, config: TextNodeConfig) {
+  const text = createLeaf('text', parentId) as TextLeaf;
+  text.name = config.name;
+  text.content = config.content;
+  text.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
+  if (config.style) {
+    styleText(text, config.style);
+  }
+  return text;
+}
+
+function createLinkNode(parentId: NodeId, config: LinkNodeConfig) {
+  const link = createLeaf('link', parentId) as LinkLeaf;
+  link.name = config.name;
+  link.label = config.label;
+  link.href = config.href ?? link.href;
+  link.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
+  return link;
+}
+
+function createImageNode(parentId: NodeId, config: ImageNodeConfig) {
+  const image = createLeaf('image', parentId) as ImageLeaf;
+  image.name = config.name;
+  image.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
+  if (config.src) {
+    image.src = config.src;
+  }
+  if (config.alt) {
+    image.alt = config.alt;
+  }
+  if (config.sticky) {
+    image.sticky = config.sticky;
+  }
+  return image;
+}
+
 export function createDefaultHeader(parentId: NodeId) {
   const header = createWrapper('header', parentId);
   header.name = 'Playground Header';
@@ -152,38 +217,48 @@ export function createDefaultHeader(parentId: NodeId) {
   header.style.borderColor = '#d6e2f2';
   applyPadding(header, { top: '20px', right: '48px', bottom: '20px' });
 
-  const headerLogo = createLeaf('text', header.id) as TextLeaf;
-  headerLogo.name = 'Product Title';
-  headerLogo.content = 'Sticky Playground';
-  headerLogo.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
-  headerLogo.style ??= {};
-  headerLogo.style.color = '#0f172a';
-  headerLogo.style.fontSize = parseFontSizeValue('20px');
-  headerLogo.style.fontWeight = 'bold';
-  headerLogo.htmlTag = 'h1';
+  const headerLogo = createTextNode(header.id, {
+    name: 'Product Title',
+    content: 'Sticky Playground',
+    x: '62px',
+    y: '25.5px',
+    width: 'fit-content',
+    style: { color: '#0f172a', fontSize: '20px', fontWeight: 'bold', htmlTag: 'h1' },
+  });
 
-  const headerSubtitle = createLeaf('text', header.id) as TextLeaf;
-  headerSubtitle.name = 'Product Subtitle';
-  headerSubtitle.content = 'Model, preview, and validate sticky behavior before implementation.';
-  headerSubtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
-  headerSubtitle.style ??= {};
-  headerSubtitle.style.color = '#516174';
-  headerSubtitle.style.fontSize = parseFontSizeValue('14px');
+  const headerSubtitle = createTextNode(header.id, {
+    name: 'Product Subtitle',
+    content: 'Model, preview, and validate sticky behavior before implementation.',
+    x: '61px',
+    y: '60px',
+    width: 'fit-content',
+    style: { color: '#516174', fontSize: '14px' },
+  });
 
-  const navTemplates = createLeaf('link', header.id) as LinkLeaf;
-  navTemplates.name = 'Templates Link';
-  navTemplates.label = 'Templates';
-  navTemplates.rect = createDefaultRect('836px', '48px', 'fit-content', 'auto');
+  const navTemplates = createLinkNode(header.id, {
+    name: 'Templates Link',
+    label: 'Templates',
+    x: '836px',
+    y: '48px',
+    width: 'fit-content',
+  });
 
-  const navSticky = createLeaf('link', header.id) as LinkLeaf;
-  navSticky.name = 'Sticky Demos Link';
-  navSticky.label = 'Sticky Demos';
-  navSticky.rect = createDefaultRect('947px', '48px', 'fit-content', 'auto');
+  const navSticky = createLinkNode(header.id, {
+    name: 'Sticky Demos Link',
+    label: 'Sticky Demos',
+    x: '947px',
+    y: '48px',
+    width: 'fit-content',
+  });
 
-  const navTests = createLeaf('link', header.id) as LinkLeaf;
-  navTests.name = 'Test Plan Link';
-  navTests.label = 'Test Plan';
-  navTests.rect = createDefaultRect('1082px', '48px', '144px', '24px');
+  const navTests = createLinkNode(header.id, {
+    name: 'Test Plan Link',
+    label: 'Test Plan',
+    x: '1082px',
+    y: '48px',
+    width: '144px',
+    height: '24px',
+  });
 
   return buildTemplate(header, [headerLogo, headerSubtitle, navTemplates, navSticky, navTests]);
 }
@@ -196,32 +271,34 @@ export function createDefaultFooter(parentId: NodeId) {
   footer.style.borderColor = '#d6e2f2';
   applyPadding(footer, { top: '26px', right: '48px', bottom: '26px' });
 
-  const footerTitle = createLeaf('text', footer.id) as TextLeaf;
-  footerTitle.name = 'Footer Title';
-  footerTitle.content = 'Sticky Playground';
-  footerTitle.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
-  footerTitle.style ??= {};
-  footerTitle.style.color = '#0f172a';
-  footerTitle.style.fontSize = parseFontSizeValue('16px');
-  footerTitle.style.fontWeight = 'bold';
-  footerTitle.style.lineHeight = 1.2;
-  footerTitle.htmlTag = 'h2';
+  const footerTitle = createTextNode(footer.id, {
+    name: 'Footer Title',
+    content: 'Sticky Playground',
+    x: '67px',
+    y: '28px',
+    width: 'fit-content',
+    style: { color: '#0f172a', fontSize: '16px', fontWeight: 'bold', lineHeight: 1.2, htmlTag: 'h2' },
+  });
 
-  const footerCopy = createLeaf('text', footer.id) as TextLeaf;
-  footerCopy.name = 'Footer Copy';
-  footerCopy.content =
-    'A prototyping surface for sticky logic, spacing strategy, and interaction QA.';
-  footerCopy.rect = createDefaultRect('64px', '53px', '271px', '38px');
-  footerCopy.style ??= {};
-  footerCopy.style.color = '#475569';
-  footerCopy.style.fontSize = parseFontSizeValue('14px');
-  footerCopy.style.lineHeight = 1.3;
+  const footerCopy = createTextNode(footer.id, {
+    name: 'Footer Copy',
+    content: 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.',
+    x: '64px',
+    y: '53px',
+    width: '271px',
+    height: '38px',
+    style: { color: '#475569', fontSize: '14px', lineHeight: 1.3 },
+  });
 
-  const footerLink = createLeaf('link', footer.id) as LinkLeaf;
-  footerLink.name = 'Repository Link';
-  footerLink.label = 'github.com/tombigel/sticky-playground';
-  footerLink.href = 'https://github.com/tombigel/sticky-playground';
-  footerLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
+  const footerLink = createLinkNode(footer.id, {
+    name: 'Repository Link',
+    label: 'github.com/tombigel/sticky-playground',
+    href: 'https://github.com/tombigel/sticky-playground',
+    x: '866px',
+    y: '48px',
+    width: '322px',
+    height: '24px',
+  });
 
   return buildTemplate(footer, [footerTitle, footerCopy, footerLink]);
 }
@@ -426,37 +503,50 @@ function createPostSection(parentId: NodeId): TemplateBuild {
     bottom: '72px',
   });
 
-  const image = createLeaf('image', section.id) as ImageLeaf;
-  image.name = 'Post Image';
-  image.rect = createDefaultRect('52px', '88px', '420px', 'aspect-ratio(4/3)');
-
-  const title = createLeaf('text', section.id) as TextLeaf;
-  title.name = 'Post Title';
-  title.content = 'Plan sticky behavior before building scroll-driven animations';
-  title.rect = createDefaultRect('544px', '118px', '520px', 'auto');
-  styleText(title, {
-    color: '#0f172a',
-    fontSize: '44px',
-    fontWeight: 'bold',
-    lineHeight: 1.1,
-    htmlTag: 'h1',
+  const image = createImageNode(section.id, {
+    name: 'Post Image',
+    x: '52px',
+    y: '88px',
+    width: '420px',
+    height: 'aspect-ratio(4/3)',
   });
 
-  const body = createLeaf('text', section.id) as TextLeaf;
-  body.name = 'Post Body';
-  body.content =
-    'Use reusable section templates to validate offset, duration, and sticky overlap behavior before wiring production code.';
-  body.rect = createDefaultRect('548px', '282px', '480px', 'auto');
-  styleText(body, {
-    color: '#475569',
-    fontSize: '23px',
-    lineHeight: 1.28,
+  const title = createTextNode(section.id, {
+    name: 'Post Title',
+    content: 'Plan sticky behavior before building scroll-driven animations',
+    x: '544px',
+    y: '118px',
+    width: '520px',
+    style: {
+      color: '#0f172a',
+      fontSize: '44px',
+      fontWeight: 'bold',
+      lineHeight: 1.1,
+      htmlTag: 'h1',
+    },
   });
 
-  const link = createLeaf('link', section.id) as LinkLeaf;
-  link.name = 'Post Link';
-  link.label = 'Open playground spec';
-  link.rect = createDefaultRect('548px', '418px', 'fit-content', 'auto');
+  const body = createTextNode(section.id, {
+    name: 'Post Body',
+    content:
+      'Use reusable section templates to validate offset, duration, and sticky overlap behavior before wiring production code.',
+    x: '548px',
+    y: '282px',
+    width: '480px',
+    style: {
+      color: '#475569',
+      fontSize: '23px',
+      lineHeight: 1.28,
+    },
+  });
+
+  const link = createLinkNode(section.id, {
+    name: 'Post Link',
+    label: 'Open playground spec',
+    x: '548px',
+    y: '418px',
+    width: 'fit-content',
+  });
 
   return buildTemplate(section, [image, title, body, link]);
 }
@@ -468,45 +558,68 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     bottom: '84px',
   });
 
-  const heading = createLeaf('text', section.id) as TextLeaf;
-  heading.name = 'Section Heading';
-  heading.content = 'Staggered sticky gallery';
-  heading.rect = createDefaultRect('64px', '22.5px', '678px', '194px');
-  styleText(heading, { color: '#0f172a', fontSize: '52px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' });
+  const heading = createTextNode(section.id, {
+    name: 'Section Heading',
+    content: 'Staggered sticky gallery',
+    x: '64px',
+    y: '22.5px',
+    width: '678px',
+    height: '194px',
+    style: { color: '#0f172a', fontSize: '52px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' },
+  });
 
-  const copy = createLeaf('text', section.id) as TextLeaf;
-  copy.name = 'Section Copy';
-  copy.content = 'Each card pins with a unique offset and duration to test overlap behavior.';
-  copy.rect = createDefaultRect('68px', '92px', '540px', 'auto');
-  styleText(copy, { color: '#475569', fontSize: '22px', lineHeight: 1.26 });
+  const copy = createTextNode(section.id, {
+    name: 'Section Copy',
+    content: 'Each card pins with a unique offset and duration to test overlap behavior.',
+    x: '68px',
+    y: '92px',
+    width: '540px',
+    style: { color: '#475569', fontSize: '22px', lineHeight: 1.26 },
+  });
 
-  const imageA = createLeaf('image', section.id) as ImageLeaf;
-  imageA.name = 'Sticky Image A';
-  imageA.rect = createDefaultRect('64px', '256.96875px', '250px', 'aspect-ratio(4/3)');
-  imageA.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
-  imageA.alt = 'Golden desert dunes under soft sunlight';
-  imageA.sticky = createCustomSticky('150vh', '15vh');
+  const imageA = createImageNode(section.id, {
+    name: 'Sticky Image A',
+    x: '64px',
+    y: '256.96875px',
+    width: '250px',
+    height: 'aspect-ratio(4/3)',
+    src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Golden desert dunes under soft sunlight',
+    sticky: createCustomSticky('150vh', '15vh'),
+  });
 
-  const imageB = createLeaf('image', section.id) as ImageLeaf;
-  imageB.name = 'Sticky Image B';
-  imageB.rect = createDefaultRect('340px', '444.46875px', '260px', 'aspect-ratio(4/3)');
-  imageB.src = 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80';
-  imageB.alt = 'Mist rising over a calm mountain lake';
-  imageB.sticky = createCustomSticky('150vh', '15vh');
+  const imageB = createImageNode(section.id, {
+    name: 'Sticky Image B',
+    x: '340px',
+    y: '444.46875px',
+    width: '260px',
+    height: 'aspect-ratio(4/3)',
+    src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Mist rising over a calm mountain lake',
+    sticky: createCustomSticky('150vh', '15vh'),
+  });
 
-  const imageC = createLeaf('image', section.id) as ImageLeaf;
-  imageC.name = 'Sticky Image C';
-  imageC.rect = createDefaultRect('638px', '653.25px', '270px', 'aspect-ratio(4/3)');
-  imageC.src = 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80';
-  imageC.alt = 'Modern interior with natural light and textured seating';
-  imageC.sticky = createCustomSticky('150vh', '15vh');
+  const imageC = createImageNode(section.id, {
+    name: 'Sticky Image C',
+    x: '638px',
+    y: '653.25px',
+    width: '270px',
+    height: 'aspect-ratio(4/3)',
+    src: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Modern interior with natural light and textured seating',
+    sticky: createCustomSticky('150vh', '15vh'),
+  });
 
-  const imageD = createLeaf('image', section.id) as ImageLeaf;
-  imageD.name = 'Sticky Image D';
-  imageD.rect = createDefaultRect('949px', '898.84375px', '220px', 'aspect-ratio(4/3)');
-  imageD.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
-  imageD.alt = 'Golden desert dunes under soft sunlight';
-  imageD.sticky = createCustomSticky('150vh', '15vh');
+  const imageD = createImageNode(section.id, {
+    name: 'Sticky Image D',
+    x: '949px',
+    y: '898.84375px',
+    width: '220px',
+    height: 'aspect-ratio(4/3)',
+    src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Golden desert dunes under soft sunlight',
+    sticky: createCustomSticky('150vh', '15vh'),
+  });
 
   return buildTemplate(section, [heading, copy, imageA, imageB, imageC, imageD]);
 }
@@ -518,11 +631,15 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     bottom: '96px',
   });
 
-  const lead = createLeaf('text', section.id) as TextLeaf;
-  lead.name = 'Pinned Lead';
-  lead.content = 'One pinned message, many scrolling details';
-  lead.rect = createDefaultRect('85px', '212.28125px', '360px', '234px');
-  styleText(lead, { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' });
+  const lead = createTextNode(section.id, {
+    name: 'Pinned Lead',
+    content: 'One pinned message, many scrolling details',
+    x: '85px',
+    y: '212.28125px',
+    width: '360px',
+    height: '234px',
+    style: { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' },
+  });
   lead.sticky = {
     enabled: true,
     target: 'self',
@@ -534,32 +651,45 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     offsetTop: parseUnitValue('12vh'),
   };
 
-  const leadBody = createLeaf('text', section.id) as TextLeaf;
-  leadBody.name = 'Pinned Lead Copy';
-  leadBody.content = 'Use this to validate long sticky durations while content cards keep moving.';
-  leadBody.rect = createDefaultRect('83px', '373px', '340px', 'auto');
-  styleText(leadBody, { color: '#475569', fontSize: '18px', lineHeight: 1.3 });
+  const leadBody = createTextNode(section.id, {
+    name: 'Pinned Lead Copy',
+    content: 'Use this to validate long sticky durations while content cards keep moving.',
+    x: '83px',
+    y: '373px',
+    width: '340px',
+    style: { color: '#475569', fontSize: '18px', lineHeight: 1.3 },
+  });
 
-  const card1 = createLeaf('text', section.id) as TextLeaf;
-  card1.name = 'Narrative Card 1';
-  card1.content = 'Card 1\nTune offsets and verify the spacer end-line for the pinned lead.';
-  card1.rect = createDefaultRect('520px', '235.71875px', '520px', 'auto');
+  const card1 = createTextNode(section.id, {
+    name: 'Narrative Card 1',
+    content: 'Card 1\nTune offsets and verify the spacer end-line for the pinned lead.',
+    x: '520px',
+    y: '235.71875px',
+    width: '520px',
+    style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
+  });
   card1.sticky = createCustomSticky('25vh', '15vh');
-  styleText(card1, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
 
-  const card2 = createLeaf('text', section.id) as TextLeaf;
-  card2.name = 'Narrative Card 2';
-  card2.content = 'Card 2\nCheck snapping around sticky tracks while moving this block.';
-  card2.rect = createDefaultRect('520px', '700px', '520px', 'auto');
+  const card2 = createTextNode(section.id, {
+    name: 'Narrative Card 2',
+    content: 'Card 2\nCheck snapping around sticky tracks while moving this block.',
+    x: '520px',
+    y: '700px',
+    width: '520px',
+    style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
+  });
   card2.sticky = createCustomSticky('25vh', '15vh');
-  styleText(card2, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
 
-  const card3 = createLeaf('text', section.id) as TextLeaf;
-  card3.name = 'Narrative Card 3';
-  card3.content = 'Card 3\nUse this section to regression-test reorder, resize, and undo behavior.';
-  card3.rect = createDefaultRect('520px', '1211.84375px', '520px', '201px');
+  const card3 = createTextNode(section.id, {
+    name: 'Narrative Card 3',
+    content: 'Card 3\nUse this section to regression-test reorder, resize, and undo behavior.',
+    x: '520px',
+    y: '1211.84375px',
+    width: '520px',
+    height: '201px',
+    style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
+  });
   card3.sticky = createCustomSticky('50vh', '15vh');
-  styleText(card3, { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 });
 
   return buildTemplate(section, [lead, leadBody, card1, card2, card3]);
 }
@@ -571,17 +701,24 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     bottom: '96px',
   });
 
-  const heading = createLeaf('text', section.id) as TextLeaf;
-  heading.name = 'Section Heading';
-  heading.content = 'Pinned media with scrolling narrative';
-  heading.rect = createDefaultRect('558px', '165px', '520px', 'auto');
-  styleText(heading, { color: '#0f172a', fontSize: '44px', fontWeight: 'bold', lineHeight: 1.1, htmlTag: 'h2' });
+  const heading = createTextNode(section.id, {
+    name: 'Section Heading',
+    content: 'Pinned media with scrolling narrative',
+    x: '558px',
+    y: '165px',
+    width: '520px',
+    style: { color: '#0f172a', fontSize: '44px', fontWeight: 'bold', lineHeight: 1.1, htmlTag: 'h2' },
+  });
 
-  const mediaImage = createLeaf('image', section.id) as ImageLeaf;
-  mediaImage.name = 'Pinned Media';
-  mediaImage.rect = createDefaultRect('77px', '165px', '401px', '428px');
-  mediaImage.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';
-  mediaImage.alt = 'Golden desert dunes under soft sunlight';
+  const mediaImage = createImageNode(section.id, {
+    name: 'Pinned Media',
+    x: '77px',
+    y: '165px',
+    width: '401px',
+    height: '428px',
+    src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Golden desert dunes under soft sunlight',
+  });
   mediaImage.sticky = {
     enabled: true,
     target: 'self',
@@ -592,12 +729,15 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     offsetTop: parseUnitValue('10vh'),
   };
 
-  const revealBackdrop = createLeaf('image', section.id) as ImageLeaf;
-  revealBackdrop.name = 'Reveal Backdrop';
-  revealBackdrop.rect = createDefaultRect('78px', '167px', '399px', '426px');
-  revealBackdrop.src =
-    'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80';
-  revealBackdrop.alt = 'Modern interior with natural light and textured seating';
+  const revealBackdrop = createImageNode(section.id, {
+    name: 'Reveal Backdrop',
+    x: '78px',
+    y: '167px',
+    width: '399px',
+    height: '426px',
+    src: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Modern interior with natural light and textured seating',
+  });
   revealBackdrop.sticky = {
     enabled: true,
     target: 'self',
@@ -608,24 +748,34 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     offsetTop: parseUnitValue('10vh'),
   };
 
-  const blockA = createLeaf('text', section.id) as TextLeaf;
-  blockA.name = 'Narrative Block A';
-  blockA.content = 'A. We start with an image and stay with it \nfor a while';
-  blockA.rect = createDefaultRect('560px', '313.640625px', '530px', 'auto');
-  styleText(blockA, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
+  const blockA = createTextNode(section.id, {
+    name: 'Narrative Block A',
+    content: 'A. We start with an image and stay with it \nfor a while',
+    x: '560px',
+    y: '313.640625px',
+    width: '530px',
+    style: { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 },
+  });
 
-  const blockB = createLeaf('text', section.id) as TextLeaf;
-  blockB.name = 'Narrative Block B';
-  blockB.content = 'B. We reveal a second image, starting to tell a story';
-  blockB.rect = createDefaultRect('560px', '1035px', '530px', 'auto');
-  styleText(blockB, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
+  const blockB = createTextNode(section.id, {
+    name: 'Narrative Block B',
+    content: 'B. We reveal a second image, starting to tell a story',
+    x: '560px',
+    y: '1035px',
+    width: '530px',
+    style: { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 },
+  });
 
-  const blockC = createLeaf('text', section.id) as TextLeaf;
-  blockC.name = 'Narrative Block C';
-  blockC.content =
-    'C. We end with some text we wanted to say about this image. Maybe a description, maybe an epilogue.\n';
-  blockC.rect = createDefaultRect('559px', '1687px', '530px', '306px');
-  styleText(blockC, { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 });
+  const blockC = createTextNode(section.id, {
+    name: 'Narrative Block C',
+    content:
+      'C. We end with some text we wanted to say about this image. Maybe a description, maybe an epilogue.\n',
+    x: '559px',
+    y: '1687px',
+    width: '530px',
+    height: '306px',
+    style: { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 },
+  });
 
   return buildTemplate(section, [heading, mediaImage, blockA, blockB, blockC, revealBackdrop]);
 }
@@ -641,23 +791,16 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     [section.id]: section,
   };
 
-  const createSectionText = (
-    name: string,
-    rect: { x: string; y: string; width: string; height?: string },
-    content: string,
-    textStyle: {
-      color?: string;
-      fontSize?: string;
-      fontWeight?: 'normal' | 'bold';
-      lineHeight?: number;
-      htmlTag?: TextLeaf['htmlTag'];
-    },
-  ) => {
-    const text = createLeaf('text', section.id) as TextLeaf;
-    text.name = name;
-    text.content = content;
-    text.rect = createDefaultRect(rect.x, rect.y, rect.width, rect.height ?? 'auto');
-    styleText(text, textStyle);
+  const createSectionText = (name: string, rect: RectConfig, content: string, textStyle: TextStyleOptions) => {
+    const text = createTextNode(section.id, {
+      name,
+      content,
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+      style: textStyle,
+    });
     nodes[text.id] = text;
     return text;
   };
@@ -691,11 +834,15 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     container.style.paddingLeft = parseUnitValue('0px');
     container.sticky = options.sticky;
 
-    const text = createLeaf('text', container.id) as TextLeaf;
-    text.name = options.textName;
-    text.content = options.content;
-    text.rect = createDefaultRect(options.textX, options.textY, options.textWidth, options.textHeight);
-    styleText(text, { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 });
+    const text = createTextNode(container.id, {
+      name: options.textName,
+      content: options.content,
+      x: options.textX,
+      y: options.textY,
+      width: options.textWidth,
+      height: options.textHeight,
+      style: { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 },
+    });
 
     setChildren(container, [text]);
     nodes[container.id] = container;
