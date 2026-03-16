@@ -629,7 +629,6 @@ button {
 .stage-wrapper {
   position: relative;
   min-height: 0;
-  border-style: solid;
   border-radius: 0;
   overflow: visible;
   background: transparent;

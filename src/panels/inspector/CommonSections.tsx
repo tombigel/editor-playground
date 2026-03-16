@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
-import { OrderIconButton, SizeInlineField, WrapperActions } from '../InspectorControls';
+import { HoverColorField, NumericUnitInlineField, OrderIconButton, SizeInlineField, WrapperActions } from '../InspectorControls';
 
 export function InspectorSummary({ node }: { node: InspectorNode | null }) {
   if (!node) {
@@ -39,6 +39,11 @@ export function NodeBasicsSection({
   orderState: InspectorOrderState;
   actions: Pick<InspectorActionHandlers, 'onTextChange' | 'onRectChange' | 'onPromote' | 'onDemote'>;
 }) {
+  const showWidthField = !(
+    node.type === 'wrapper' &&
+    (node.role === 'section' || node.role === 'header' || node.role === 'footer')
+  );
+
   return (
     <Card className="editor-border-subtle rounded-lg shadow-none">
       <CardContent className="space-y-2.5 px-3 py-3">
@@ -67,13 +72,17 @@ export function NodeBasicsSection({
               onChange={(value) => actions.onRectChange('y', value)}
               axis="y"
             />
-            <SizeInlineField
-              label="W"
-              nodeId={node.id}
-              value={node.rect.width.base.raw}
-              onChange={(value) => actions.onRectChange('width', value)}
-              axis="width"
-            />
+            {showWidthField ? (
+              <SizeInlineField
+                label="W"
+                nodeId={node.id}
+                value={node.rect.width.base.raw}
+                onChange={(value) => actions.onRectChange('width', value)}
+                axis="width"
+              />
+            ) : (
+              <div aria-hidden="true" data-ui="geometry-width-placeholder" className="h-8" />
+            )}
             <SizeInlineField
               label="H"
               nodeId={node.id}
@@ -145,7 +154,7 @@ export function WrapperDesignSection({
   onWrapperStyleChange,
 }: {
   node: WrapperInspectorNode;
-  onWrapperStyleChange: (field: 'background', value: string) => void;
+  onWrapperStyleChange: (field: 'background' | 'sectionBorderBottomColor' | 'sectionBorderBottomWidth', value: string) => void;
 }) {
   return (
     <Card className="editor-border-subtle rounded-lg shadow-none">
@@ -156,28 +165,35 @@ export function WrapperDesignSection({
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
           <Label className="text-[11px] font-medium">Background</Label>
           <div className="ml-auto flex items-center gap-2">
-            <Input
-              value={normalizeColorInputValue(node.style.background)}
-              onChange={(e) => onWrapperStyleChange('background', e.target.value)}
-              className="h-8 w-22 rounded-sm font-mono text-[11px] uppercase"
-            />
-            <input
-              type="color"
-              aria-label="Background color"
-              className="editor-icon-button-subtle h-8 w-8 cursor-pointer rounded-sm border p-0 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
-              value={normalizeColorInputValue(node.style.background)}
-              onChange={(e) => onWrapperStyleChange('background', e.target.value)}
+            <HoverColorField
+              value={node.style.background}
+              onChange={(value) => onWrapperStyleChange('background', value)}
+              ariaLabel="Background color"
             />
           </div>
         </div>
+
+        {node.role === 'section' ? (
+          <div className="mt-2 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+            <Label className="text-[11px] font-medium">Divider</Label>
+            <div className="ml-auto flex items-center gap-2">
+              <NumericUnitInlineField
+                value={node.style.sectionBorderBottomWidth?.raw ?? ''}
+                units={['px']}
+                onChange={(value) => onWrapperStyleChange('sectionBorderBottomWidth', value)}
+                placeholder="1"
+                className="w-[5.5rem]"
+              />
+              <HoverColorField
+                value={node.style.sectionBorderBottomColor}
+                onChange={(value) => onWrapperStyleChange('sectionBorderBottomColor', value)}
+                ariaLabel="Bottom border color"
+                fallback="#dbe3ee"
+              />
+            </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
-}
-
-function normalizeColorInputValue(value: string | undefined) {
-  if (value && /^#[0-9a-fA-F]{6}$/.test(value)) {
-    return value;
-  }
-  return '#ffffff';
 }

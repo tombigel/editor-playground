@@ -4,6 +4,7 @@ import type {
   EditorTextField,
   NodeId,
   SectionTemplateId,
+  WrapperStyleField,
 } from '../../model/types';
 import type { EditorState } from '../../editor/types';
 
@@ -34,7 +35,7 @@ export type EditorAction =
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
   | { type: 'resize'; id: string; width: string; height: string }
   | { type: 'text'; field: EditorTextField; value: string }
-  | { type: 'wrapperStyle'; field: 'background'; value: string }
+  | { type: 'wrapperStyle'; field: WrapperStyleField; value: string }
   | { type: 'rect'; field: 'x' | 'y' | 'width' | 'height'; value: string }
   | { type: 'promote'; role: 'header' | 'footer' }
   | { type: 'confirmPromote' }

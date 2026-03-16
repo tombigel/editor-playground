@@ -555,15 +555,22 @@ describe('stage/Stage', () => {
   });
 
   it('renders a single auto distance guide for top-edge self sticky leaves', () => {
-    const document = structuredClone(createInitialDocument());
-    const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
-    );
+    const siteId = 'site_top_auto';
+    const section = createWrapper('section', siteId);
+    section.name = 'Top Auto Section';
+    section.rect = createDefaultRect('0px', '0px', '100%', '600px');
+    section.style.paddingTop = parseUnitValue('0px');
+    section.style.paddingRight = parseUnitValue('0px');
+    section.style.paddingBottom = parseUnitValue('0px');
+    section.style.paddingLeft = parseUnitValue('0px');
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
-      throw new Error('Expected post title text node');
+    const target = createLeaf('text', section.id);
+    if (target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected text leaf');
     }
 
+    target.name = 'Top Auto Leaf';
+    target.rect = createDefaultRect('24px', '300px', '200px', '100px');
     target.sticky = {
       enabled: true,
       target: 'self',
@@ -574,6 +581,25 @@ describe('stage/Stage', () => {
       durationBottom: parseUnitValue('0px'),
       offsetTop: parseUnitValue('0px'),
       offsetBottom: parseUnitValue('0px'),
+    };
+
+    section.children = [target.id];
+
+    const document = {
+      rootId: siteId,
+      nodes: {
+        [siteId]: {
+          id: siteId,
+          type: 'site' as const,
+          parentId: null,
+          children: [section.id],
+          name: 'Site',
+          visible: true,
+          locked: false,
+        },
+        [section.id]: section,
+        [target.id]: target,
+      },
     };
 
     const markup = renderToStaticMarkup(
@@ -596,6 +622,79 @@ describe('stage/Stage', () => {
 
     expect(markup.match(/Distance: auto/g)).toHaveLength(1);
     expect(markup).not.toContain('sticky-auto-spacer-bottom');
+    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top[^"]*" style="top:100%;bottom:auto;height:200px"/);
+  });
+
+  it('splits both-edge auto self sticky guides by free space above and below the leaf', () => {
+    const siteId = 'site_test';
+    const section = createWrapper('section', siteId);
+    section.name = 'Auto Sticky Section';
+    section.rect = createDefaultRect('0px', '0px', '100%', '600px');
+    section.style.paddingTop = parseUnitValue('0px');
+    section.style.paddingRight = parseUnitValue('0px');
+    section.style.paddingBottom = parseUnitValue('0px');
+    section.style.paddingLeft = parseUnitValue('0px');
+
+    const stickyLeaf = createLeaf('text', section.id);
+    if (stickyLeaf.type !== 'leaf' || stickyLeaf.role !== 'text') {
+      throw new Error('Expected text leaf');
+    }
+
+    stickyLeaf.name = 'Both Auto Leaf';
+    stickyLeaf.rect = createDefaultRect('24px', '300px', '200px', '100px');
+    stickyLeaf.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: true },
+      durationMode: 'auto',
+      duration: parseUnitValue('0px'),
+      durationTop: parseUnitValue('0px'),
+      durationBottom: parseUnitValue('0px'),
+      offsetTop: parseUnitValue('0px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    section.children = [stickyLeaf.id];
+
+    const document = {
+      rootId: siteId,
+      nodes: {
+        [siteId]: {
+          id: siteId,
+          type: 'site' as const,
+          parentId: null,
+          children: [section.id],
+          name: 'Site',
+          visible: true,
+          locked: false,
+        },
+        [section.id]: section,
+        [stickyLeaf.id]: stickyLeaf,
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={stickyLeaf.id}
+        previewSticky={true}
+        spacerVisibility="all"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Top Distance: auto');
+    expect(markup).toContain('Bottom Distance: auto');
+    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-bottom sticky-guide-dual[^"]*" style="top:auto;bottom:100%;height:300px"/);
+    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top sticky-guide-dual[^"]*" style="top:100%;bottom:auto;height:200px"/);
   });
 
   it('locks drag movement to the dominant axis when shift is held', () => {

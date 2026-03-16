@@ -217,6 +217,155 @@ export function SizeInlineField({
   );
 }
 
+export function NumericUnitInlineField({
+  value,
+  units,
+  onChange,
+  placeholder,
+  className = '',
+}: {
+  value: string;
+  units: ('px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax')[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const parsed = value ? parseUnitValue(value) : null;
+  const initialUnit = parsed && units.includes(parsed.parsed.unit) ? parsed.parsed.unit : units[0];
+  const [draft, setDraft] = useState(parsed ? String(parsed.parsed.value) : '');
+  const [unit, setUnit] = useState(initialUnit);
+  const hasUnitSelector = units.length > 1;
+  const suffixWidth = '44px';
+
+  useEffect(() => {
+    const nextParsed = value ? parseUnitValue(value) : null;
+    const nextUnit = nextParsed && units.includes(nextParsed.parsed.unit) ? nextParsed.parsed.unit : units[0];
+    setDraft(nextParsed ? String(nextParsed.parsed.value) : '');
+    setUnit(nextUnit);
+  }, [units, value]);
+
+  function commit(nextDraft: string, nextUnit: typeof unit) {
+    if (!nextDraft) {
+      onChange('');
+      return;
+    }
+
+    const nextValue = Number.parseFloat(nextDraft);
+    if (!Number.isFinite(nextValue)) {
+      return;
+    }
+
+    onChange(`${nextDraft}${nextUnit}`);
+  }
+
+  return (
+    <div className={`editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500 ${className}`.trim()}>
+      <Input
+        type="number"
+        step="any"
+        value={draft}
+        placeholder={placeholder}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+          commit(nextDraft, unit);
+        }}
+        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+        style={{ right: suffixWidth }}
+      />
+      {hasUnitSelector ? (
+        <>
+          <Select
+            value={unit}
+            onValueChange={(nextUnit) => {
+              const resolvedUnit = nextUnit as typeof unit;
+              setUnit(resolvedUnit);
+              commit(draft, resolvedUnit);
+            }}
+          >
+            <SelectTrigger
+              className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0"
+              style={{ width: suffixWidth }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {units.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div
+            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
+            style={{ width: suffixWidth }}
+          >
+            <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+          </div>
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+            style={{ width: suffixWidth }}
+          />
+        </>
+      ) : (
+        <div
+          className="editor-inline-field-trigger pointer-events-none relative z-10 flex h-full items-center justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[11px] font-medium shadow-none"
+          style={{ width: suffixWidth }}
+        >
+          {unit}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function HoverColorField({
+  value,
+  onChange,
+  ariaLabel,
+  fallback = '#ffffff',
+  inputWidthClass = 'w-[4.75rem]',
+  gapPx = 8,
+}: {
+  value: string | undefined;
+  onChange: (value: string) => void;
+  ariaLabel: string;
+  fallback?: string;
+  inputWidthClass?: string;
+  gapPx?: number;
+}) {
+  const normalizedValue = normalizeHexColor(value, fallback);
+  const gapStyle = { width: `${gapPx}px`, right: '100%' };
+  const inputOffsetStyle = { right: `calc(100% + ${gapPx}px)` };
+
+  return (
+    <div className="group/colorfield relative flex h-8 w-8 shrink-0 items-center justify-end overflow-visible">
+      <div aria-hidden="true" className="absolute top-1/2 z-20 h-8 -translate-y-1/2" style={gapStyle} />
+      <div
+        className={`pointer-events-none absolute top-1/2 z-30 origin-right -translate-y-1/2 rounded-sm opacity-0 shadow-[0_3px_10px_rgba(18,32,51,0.06)] translate-x-1.5 scale-[0.985] transition-[opacity,transform] duration-120 ease-out group-hover/colorfield:pointer-events-auto group-hover/colorfield:opacity-100 group-hover/colorfield:translate-x-0 group-hover/colorfield:scale-100 group-hover/colorfield:duration-220 group-hover/colorfield:ease-[cubic-bezier(0.22,1,0.36,1)] group-focus-within/colorfield:pointer-events-auto group-focus-within/colorfield:opacity-100 group-focus-within/colorfield:translate-x-0 group-focus-within/colorfield:scale-100 group-focus-within/colorfield:duration-220 group-focus-within/colorfield:ease-[cubic-bezier(0.22,1,0.36,1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.16)] ${inputWidthClass}`}
+        style={inputOffsetStyle}
+      >
+        <Input
+          value={normalizedValue}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-8 w-full rounded-sm font-mono text-[11px] uppercase"
+        />
+      </div>
+      <input
+        type="color"
+        aria-label={ariaLabel}
+        className="editor-icon-button-subtle relative z-10 h-8 w-8 cursor-pointer rounded-sm border p-0 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
+        value={normalizedValue}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  );
+}
+
 function renderSizeModeOptions(axis: SizeFieldAxis) {
   const isLengthOnlyAxis = axis === 'x' || axis === 'y';
   const scalarUnits = isLengthOnlyAxis ? ['px'] : ['px', '%'];
@@ -966,4 +1115,11 @@ function getDefaultNumericDraft(axis: SizeFieldAxis) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeHexColor(value: string | undefined, fallback: string) {
+  if (value && /^#[0-9a-fA-F]{6}$/.test(value)) {
+    return value;
+  }
+  return fallback;
 }

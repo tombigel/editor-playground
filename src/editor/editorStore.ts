@@ -22,6 +22,7 @@ import type {
   TextLeaf,
   WrapperRole,
   WrapperNode,
+  WrapperStyleField,
 } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { normalizeThemeMode } from '../lib/theme';
@@ -872,7 +873,7 @@ export function updateStickyField(
 export function updateWrapperStyleField(
   state: EditorState,
   nodeId: NodeId,
-  field: 'background',
+  field: WrapperStyleField,
   value: string,
 ): EditorState {
   const document = cloneDocument(state.document);
@@ -880,6 +881,12 @@ export function updateWrapperStyleField(
   if (node.type !== 'wrapper') {
     return state;
   }
+
+  if (field === 'sectionBorderBottomWidth') {
+    node.style.sectionBorderBottomWidth = value ? parseUnitValue(value) : undefined;
+    return { ...state, document };
+  }
+
   node.style[field] = value || undefined;
   return { ...state, document };
 }

@@ -1,4 +1,4 @@
-import type { DocumentModel, DocumentNode, WrapperNode } from '../model/types';
+import type { DocumentModel, DocumentNode } from '../model/types';
 import { formatValue } from '../model/units';
 import {
   buildWrapperStyle,
@@ -6,6 +6,7 @@ import {
   getContentWrapperBaseStyle,
   getLeafCssHeight,
   getTrackCssWidth,
+  getWrapperBorderDeclarations,
   usesIntrinsicHeight,
 } from '../render/layout';
 import {
@@ -124,7 +125,6 @@ function getBaseSiteCssRules(): SharedCssRule[] {
         minHeight: 0,
         overflow: 'visible',
         background: 'transparent',
-        borderStyle: 'solid',
         borderRadius: 0,
       },
     },
@@ -201,7 +201,7 @@ function appendWrapperPlanCss(plan: SiteWrapperPlan, rules: SharedCssRule[]) {
     style: declarationsToStyleRecord([
       ...cssPropertiesToDeclarations(buildWrapperStyle(plan.node, plan.isTopLevel)),
       ...(plan.selfStickyTrack ? [] : cssPropertiesToDeclarations(plan.meshPlacement)),
-      ...wrapperBorderDeclarations(plan.node.style),
+      ...getWrapperBorderDeclarations(plan.node),
       ...(plan.selfSticky ? getStickyCssDeclarations(plan.node.sticky) : []),
     ]),
   });
@@ -282,15 +282,6 @@ function appendLeafPlanCss(plan: Extract<SiteRenderPlanNode, { kind: 'leaf' }>, 
       style: { height: getStickyTrackSpacerCss(node.sticky, 'bottom') },
     });
   }
-}
-
-function wrapperBorderDeclarations(style: WrapperNode['style']): string[] {
-  const declarations: string[] = ['border-style: solid'];
-  if (style.borderColor) {
-    declarations.push(`border-color: ${style.borderColor}`);
-  }
-  declarations.push(`border-width: ${style.borderWidth ? formatValue(style.borderWidth.parsed) : '1px'}`);
-  return declarations;
 }
 
 function leafSizeDeclarations(node: Extract<DocumentNode, { type: 'leaf' }>) {

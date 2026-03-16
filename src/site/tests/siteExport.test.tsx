@@ -122,6 +122,30 @@ describe('site/siteExport', () => {
     expect(css).toContain('min-height: 720px;');
   });
 
+  it('serializes section bottom divider styles without adding implicit wrapper borders', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.style.borderColor = undefined;
+    section.style.borderWidth = undefined;
+    section.style.sectionBorderBottomColor = '#cbd5e1';
+    section.style.sectionBorderBottomWidth = parseUnitValue('2px');
+
+    const css = renderSiteCss(document);
+    const sectionRule = css.match(new RegExp(`\\.sp-node-${section.id}[^}]+\\}`, 'm'))?.[0] ?? '';
+
+    expect(sectionRule).toContain(`.sp-node-${section.id}`);
+    expect(sectionRule).toContain('border-bottom-color: #cbd5e1;');
+    expect(sectionRule).toContain('border-bottom-width: 2px;');
+    expect(sectionRule).not.toContain('border-width: 1px;');
+  });
+
   it('does not add an export-only wrapper min-height floor above authored short sticky containers', () => {
     const document = structuredClone(createInitialDocument());
     const stickySteps = createSectionFromTemplate('stickySteps', document.rootId);

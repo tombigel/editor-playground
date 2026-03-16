@@ -9,6 +9,7 @@ import {
   convertRenderedPxToUnitValue,
   describeSizeFieldValue,
   InspectorPanel,
+  NumericUnitInlineField,
   normalizeAspectRatioExpression,
 } from '../InspectorPanel';
 
@@ -66,6 +67,125 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Set type to Header');
     expect(markup).toContain('Set type to Footer');
     expect(markup.match(/aria-pressed="true"/g)?.length).toBe(1);
+  });
+
+  it('renders section-only bottom divider controls in wrapper design', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        node={sectionNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Divider');
+    expect(markup).toContain('Bottom border color');
+    expect(markup).toContain('placeholder="1"');
+    expect(markup).toContain('>px<');
+  });
+
+  it('hides the width field for section-level wrappers while preserving the geometry slot', () => {
+    const document = createInitialDocument();
+    const wrapperRoles: Array<'section' | 'header' | 'footer'> = ['section', 'header', 'footer'];
+
+    for (const role of wrapperRoles) {
+      const wrapperNode = Object.values(document.nodes).find(
+        (node) => node.type === 'wrapper' && node.role === role,
+      );
+
+      if (!wrapperNode || wrapperNode.type !== 'wrapper') {
+        throw new Error(`Expected ${role} wrapper`);
+      }
+
+      const markup = renderToStaticMarkup(
+        <InspectorPanel
+          node={wrapperNode}
+          showOrderControls={false}
+          canOrderBack={false}
+          canOrderForward={false}
+          canSendToBack={false}
+          canBringToFront={false}
+          orderBackShortcut=""
+          orderForwardShortcut=""
+          sendToBackShortcut=""
+          bringToFrontShortcut=""
+          canSectionBack={false}
+          canSectionForward={false}
+          onOrderBack={() => {}}
+          onOrderForward={() => {}}
+          onSendToBack={() => {}}
+          onBringToFront={() => {}}
+          onSectionBack={() => {}}
+          onSectionForward={() => {}}
+          onTextChange={() => {}}
+          onWrapperStyleChange={() => {}}
+          onRectChange={() => {}}
+          onPromote={() => {}}
+          onDemote={() => {}}
+          onStickyEnabled={() => {}}
+          onStickyTarget={() => {}}
+          onStickyEdges={() => {}}
+          onStickyOffset={() => {}}
+          onStickyOffsetTop={() => {}}
+          onStickyOffsetBottom={() => {}}
+          onStickyDurationMode={() => {}}
+          onStickyDuration={() => {}}
+          onStickyDurationTop={() => {}}
+          onStickyDurationBottom={() => {}}
+        />,
+      );
+
+      expect(markup).not.toContain('>W<');
+      expect(markup).toContain('data-ui="geometry-width-placeholder"');
+    }
+  });
+
+  it('renders single-unit numeric inline fields without select dropdown chrome', () => {
+    const markup = renderToStaticMarkup(
+      <NumericUnitInlineField value="2px" units={['px']} onChange={() => {}} />,
+    );
+
+    expect(markup).toContain('>px<');
+    expect(markup).not.toContain('data-ui="select-trigger"');
   });
 
   it('describes numeric, keyword, and aspect-ratio size values for the composite field', () => {

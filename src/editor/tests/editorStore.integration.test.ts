@@ -23,6 +23,7 @@ import {
   requestPromoteWrapperRole,
   STORAGE_KEY,
   updateStickyField,
+  updateWrapperStyleField,
 } from '../editorStore';
 
 function getRoot(state: ReturnType<typeof createInitialState>['document']) {
@@ -61,6 +62,28 @@ describe('editor/editorStore integration', () => {
   it('defaults editor theme mode to auto', () => {
     const state = createInitialState();
     expect(state.ui.themeMode).toBe('auto');
+  });
+
+  it('stores section bottom divider styles as wrapper style fields', () => {
+    const state = createInitialState();
+    const section = Object.values(state.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const withColor = updateWrapperStyleField(state, section.id, 'sectionBorderBottomColor', '#cbd5e1');
+    const withWidth = updateWrapperStyleField(withColor, section.id, 'sectionBorderBottomWidth', '2px');
+    const updated = withWidth.document.nodes[section.id];
+
+    if (!updated || updated.type !== 'wrapper') {
+      throw new Error('Expected updated section wrapper');
+    }
+
+    expect(updated.style.sectionBorderBottomColor).toBe('#cbd5e1');
+    expect(updated.style.sectionBorderBottomWidth?.raw).toBe('2px');
   });
 
   it('normalizes persisted theme mode values', () => {

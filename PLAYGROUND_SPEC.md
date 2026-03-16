@@ -48,6 +48,14 @@ All wrappers share the same structural behavior:
 - child positioning relative to that content wrapper
 - sticky can apply to the wrapper or the content wrapper
 
+Wrapper style behavior:
+
+- wrappers do not get an implicit visible border by default
+- generic wrapper borders only render when wrapper border style data is authored
+- `section` wrappers support a dedicated bottom divider style with:
+  - color
+  - width
+
 ### Section type
 
 A wrapper can be promoted or demoted between:
@@ -59,6 +67,19 @@ A wrapper can be promoted or demoted between:
 The inspector labels this control as `Section type`, and the wrapper keeps the same id.
 
 If a header or footer already exists, promotion asks whether to demote the current one and replace it.
+
+The section design controls also expose a section-only bottom divider editor:
+
+- `Divider`: one row containing:
+  - bottom border width
+  - bottom border color
+- divider width uses the inline number-with-unit control in `px` only
+- single-unit inline controls do not show dropdown hover chrome or selection interactions
+- inspector color fields use a hover/focus reveal pattern:
+  - idle: only the `input[type=color]` swatch is visible
+  - hover: the hex text input slides out to the left and overlays nearby space
+  - focus-within: the hex text input stays open while the text field or swatch is focused
+  - blur + no hover: the hex text input hides again
 
 ## Nesting Rules
 
@@ -209,7 +230,7 @@ Text leaves also store an HTML tag, editable in the inspector. Supported tags ar
 
 Text style controls support bold, italic, underline, and strikethrough toggles, a font-size value field with a unit selector (`px`, `em`, `rem`), a numeric line-height field, HTML tag selection, text direction (`LTR` / `RTL`), and alignment. Switching the font-size unit rewrites the numeric value against the live rendered font size in the stage so the text keeps the same visual size when changing between `px`, `em`, and `rem`.
 
-Inspector geometry controls use single composite fields instead of raw freeform text. `X` and `Y` support length units only (`px`, `vw`, `vh`, `vmin`, `vmax`). `Width` and `Height` use one shared shell with an editable numeric/value segment and a unit-or-mode segment. Numeric values edit as `number + unit`; width keywords and height `auto` render as a single full-field mode trigger; height `aspect-ratio` stays in the same shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`. Width/height numeric modes support `px`, `%`, `vw`, `vh`, `vmin`, and `vmax`. The numeric segment uses the browser number-input keyboard behavior while hiding native steppers. The unit/mode segment uses brighter text than the numeric value, and its dropdown chevron appears only on hover/focus as a white overlay over the suffix area. Numeric field displays are capped to 2 decimal places and trim trailing zeroes. When switching from one numeric unit to another, or from keyword sizing into a numeric unit, the inspector measures the live stage geometry and rewrites the numeric value against the live parent box and live browser viewport so the node keeps the same rendered size/position in the editor instead of changing scale. For `vmin` and `vmax`, conversion uses the live smaller or larger browser viewport dimension respectively. Committed values still serialize back to the existing model strings (`320px`, `fit-content`, `auto`, `aspect-ratio(16/9)`).
+Inspector geometry controls use single composite fields instead of raw freeform text. `X` and `Y` support length units only (`px`, `vw`, `vh`, `vmin`, `vmax`). `Width` and `Height` use one shared shell with an editable numeric/value segment and a unit-or-mode segment. Numeric values edit as `number + unit`; width keywords and height `auto` render as a single full-field mode trigger; height `aspect-ratio` stays in the same shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`. Width/height numeric modes support `px`, `%`, `vw`, `vh`, `vmin`, and `vmax`. The numeric segment uses the browser number-input keyboard behavior while hiding native steppers. The unit/mode segment uses brighter text than the numeric value, and its dropdown chevron appears only on hover/focus as a white overlay over the suffix area. Numeric field displays are capped to 2 decimal places and trim trailing zeroes. When switching from one numeric unit to another, or from keyword sizing into a numeric unit, the inspector measures the live stage geometry and rewrites the numeric value against the live parent box and live browser viewport so the node keeps the same rendered size/position in the editor instead of changing scale. For `vmin` and `vmax`, conversion uses the live smaller or larger browser viewport dimension respectively. Committed values still serialize back to the existing model strings (`320px`, `fit-content`, `auto`, `aspect-ratio(16/9)`). For wrapper nodes with role `section`, `header`, or `footer`, the width control is hidden in the geometry grid while its slot stays reserved so the 2x2 geometry layout remains visually stable.
 
 Editor resize and width/height field edits are isolated per axis. Changing one axis preserves the untouched axis as-authored, including keywords and non-pixel units. That means `height:auto` stays `auto` when width changes, `height:aspect-ratio(...)` stays authored when width changes, and keyword widths such as `fit-content` stay authored when only height changes. When a resized axis already uses a numeric unit (`px`, `%`, `vw`, `vh`, `vmin`, `vmax`), the editor rewrites the new value back into that same unit instead of collapsing it to pixels. Keywords remain preserved only on the untouched axis; if the keyword axis itself is explicitly resized, that axis is authored as a concrete size.
 
@@ -276,6 +297,8 @@ Multiple sticky spacers can overlap in vertical range.
 They do not add together.
 
 The final section height is determined by the spacer whose end is furthest down.
+
+For self-target sticky guides in the editor preview, `durationMode=auto` uses the actual free space around the sticky node. Top-edge auto uses the free space below the node, bottom-edge auto uses the free space above it, and both-edge auto renders those two guide heights independently instead of mirroring one distance to both sides.
 
 For sticky containers:
 

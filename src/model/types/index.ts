@@ -16,6 +16,7 @@ export type TextStyleField =
   | 'direction'
   | 'textAlign';
 export type EditorTextField = NodeTextField | TextStyleField;
+export type WrapperStyleField = 'background' | 'sectionBorderBottomColor' | 'sectionBorderBottomWidth';
 
 export type UnitValue = {
   value: number;
@@ -94,6 +95,8 @@ export type WrapperNode = BaseNode & {
     background?: string;
     borderColor?: string;
     borderWidth?: ParsedValue<UnitValue>;
+    sectionBorderBottomColor?: string;
+    sectionBorderBottomWidth?: ParsedValue<UnitValue>;
     paddingTop?: ParsedValue<UnitValue>;
     paddingRight?: ParsedValue<UnitValue>;
     paddingBottom?: ParsedValue<UnitValue>;

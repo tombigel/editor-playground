@@ -21,6 +21,7 @@ import {
   getNodeHeight,
   getNodeWidth,
   getTrackCssWidth,
+  getWrapperBorderStyle,
   hasIntrinsicWidth,
   resolveOffsetPx,
   type MeshLayout,
@@ -156,9 +157,7 @@ function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState
         <div
           className={`drag-preview-inner drag-preview-wrapper role-${node.role}`}
           style={{
-            borderColor: node.style.borderColor,
-            borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
-            borderStyle: 'solid',
+            ...getWrapperBorderStyle(node),
           }}
         >
           <div
@@ -277,8 +276,7 @@ function renderWrapper({
       style={{
         ...wrapperStyle,
         ...(isSelfStickyTrack ? {} : plan.meshPlacement),
-        borderColor: node.style.borderColor,
-        borderWidth: node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px',
+        ...getWrapperBorderStyle(node),
         ...wrapperStickyCss,
         ...wrapperLayerStyle,
       }}
@@ -599,14 +597,19 @@ function renderLeafSpacerOverlay({
   const isBottomOnlySticky = edgeMode === 'bottom';
   const isBothSticky = edgeMode === 'both';
   const leafHeightPx = getNodeHeight(child, measuredNodeSizes);
-  const autoDistancePx = Math.max(0, wrapperBottomLanePx - registration.startPx);
+  const autoDistances = getAutoStickySpacerDistances({
+    edgeMode,
+    ownerBottomLanePx: wrapperBottomLanePx,
+    startPx: registration.startPx,
+    nodeHeightPx: leafHeightPx,
+  });
   const topDistancePx =
     child.sticky.durationMode === 'auto'
       ? edgeMode === 'both'
-        ? autoDistancePx
+        ? autoDistances.topDistancePx
         : isBottomOnlySticky
           ? 0
-          : autoDistancePx
+          : autoDistances.topDistancePx
       : edgeMode === 'both'
         ? Math.max(0, registration.topDurationPx ?? registration.durationPx)
         : isBottomOnlySticky
@@ -615,9 +618,9 @@ function renderLeafSpacerOverlay({
   const bottomDistancePx =
     child.sticky.durationMode === 'auto'
       ? edgeMode === 'both'
-        ? autoDistancePx
+        ? autoDistances.bottomDistancePx
         : isBottomOnlySticky
-          ? autoDistancePx
+          ? autoDistances.bottomDistancePx
           : 0
       : edgeMode === 'both'
         ? Math.max(0, registration.bottomDurationPx ?? registration.durationPx)
@@ -733,16 +736,19 @@ function renderWrapperSelfDistanceVisual(
   const isBottomOnlySticky = edgeMode === 'bottom';
   const isBothSticky = edgeMode === 'both';
   const isAuto = (node.sticky.durationMode ?? 'auto') === 'auto';
-  const autoDistancePx = Math.max(
-    0,
-    (ownerBottomLanePx ?? getNodeHeight(node, measuredNodeSizes)) - registration.startPx,
-  );
+  const nodeHeightPx = getNodeHeight(node, measuredNodeSizes);
+  const autoDistances = getAutoStickySpacerDistances({
+    edgeMode,
+    ownerBottomLanePx: ownerBottomLanePx ?? nodeHeightPx,
+    startPx: registration.startPx,
+    nodeHeightPx,
+  });
   const topDistancePx = isAuto
     ? edgeMode === 'both'
-      ? autoDistancePx
+      ? autoDistances.topDistancePx
       : isBottomOnlySticky
         ? 0
-        : autoDistancePx
+        : autoDistances.topDistancePx
     : edgeMode === 'both'
       ? Math.max(0, registration.topDurationPx ?? registration.durationPx)
       : isBottomOnlySticky
@@ -750,9 +756,9 @@ function renderWrapperSelfDistanceVisual(
         : Math.max(0, registration.durationPx);
   const bottomDistancePx = isAuto
     ? edgeMode === 'both'
-      ? autoDistancePx
+      ? autoDistances.bottomDistancePx
       : isBottomOnlySticky
-        ? autoDistancePx
+        ? autoDistances.bottomDistancePx
         : 0
     : edgeMode === 'both'
       ? Math.max(0, registration.bottomDurationPx ?? registration.durationPx)
@@ -846,6 +852,40 @@ function getStickyTrackDistances(
     topDistancePx,
     bottomDistancePx,
     bottomFirst: edgeMode === 'bottom' || edgeMode === 'both',
+  };
+}
+
+function getAutoStickySpacerDistances({
+  edgeMode,
+  ownerBottomLanePx,
+  startPx,
+  nodeHeightPx,
+}: {
+  edgeMode: 'top' | 'bottom' | 'both';
+  ownerBottomLanePx: number;
+  startPx: number;
+  nodeHeightPx: number;
+}) {
+  const bottomDistancePx = Math.max(0, startPx - nodeHeightPx);
+  const topDistancePx = Math.max(0, ownerBottomLanePx - startPx);
+
+  if (edgeMode === 'bottom') {
+    return {
+      topDistancePx: 0,
+      bottomDistancePx,
+    };
+  }
+
+  if (edgeMode === 'both') {
+    return {
+      topDistancePx,
+      bottomDistancePx,
+    };
+  }
+
+  return {
+    topDistancePx,
+    bottomDistancePx: 0,
   };
 }
 

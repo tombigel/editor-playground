@@ -15,6 +15,7 @@ import type {
   NodeId,
   StickyDefinition,
   WrapperNode,
+  WrapperStyleField,
   WrapperRole,
 } from '../model/types';
 import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolve';
@@ -35,6 +36,7 @@ export type {
   StickyLayoutState,
   StickyDefinition,
   WrapperNode,
+  WrapperStyleField,
   WrapperRole,
 };
 export type { DocumentCommand } from './types';

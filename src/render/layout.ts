@@ -75,6 +75,30 @@ export function buildWrapperStyle(node: WrapperNode, isTopLevel: boolean): CSSPr
   };
 }
 
+export function getWrapperBorderStyle(node: WrapperNode): CSSProperties {
+  const style: CSSProperties = {};
+
+  if (node.style.borderColor || node.style.borderWidth) {
+    style.borderStyle = 'solid';
+    style.borderColor = node.style.borderColor;
+    style.borderWidth = node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px';
+  }
+
+  if (node.role === 'section' && (node.style.sectionBorderBottomColor || node.style.sectionBorderBottomWidth)) {
+    style.borderBottomStyle = 'solid';
+    style.borderBottomColor = node.style.sectionBorderBottomColor;
+    style.borderBottomWidth = node.style.sectionBorderBottomWidth
+      ? formatValue(node.style.sectionBorderBottomWidth.parsed)
+      : '1px';
+  }
+
+  return style;
+}
+
+export function getWrapperBorderDeclarations(node: WrapperNode): string[] {
+  return cssPropertiesToDeclarations(getWrapperBorderStyle(node));
+}
+
 export function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
   const height = node.rect.height.base.parsed;
   const base: CSSProperties = {

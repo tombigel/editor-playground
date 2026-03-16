@@ -10,6 +10,8 @@ import {
   getNodeHeight,
   getNodeWidth,
   getTrackCssWidth,
+  getWrapperBorderDeclarations,
+  getWrapperBorderStyle,
   hasIntrinsicWidth,
   resolveOffsetPx,
   resolveWrapperRenderPlan,
@@ -72,6 +74,31 @@ describe('render/layout', () => {
       'grid-template-columns: 1fr 2fr',
       'min-height: 50vh',
     ]);
+  });
+
+  it('only emits explicit wrapper borders and supports section bottom dividers', () => {
+    const section = createWrapper('section', 'root');
+    section.style.borderColor = undefined;
+    section.style.borderWidth = undefined;
+    section.style.sectionBorderBottomColor = '#cbd5e1';
+    section.style.sectionBorderBottomWidth = parseUnitValue('2px');
+
+    expect(getWrapperBorderStyle(section)).toEqual({
+      borderBottomStyle: 'solid',
+      borderBottomColor: '#cbd5e1',
+      borderBottomWidth: '2px',
+    });
+    expect(getWrapperBorderDeclarations(section)).toEqual([
+      'border-bottom-style: solid',
+      'border-bottom-color: #cbd5e1',
+      'border-bottom-width: 2px',
+    ]);
+
+    const container = createWrapper('container', 'root');
+    container.style.borderColor = undefined;
+    container.style.borderWidth = undefined;
+    expect(getWrapperBorderStyle(container)).toEqual({});
+    expect(getWrapperBorderDeclarations(container)).toEqual([]);
   });
 
   it('builds mesh layout and sticky extra extent for content-wrapper sticky sections', () => {

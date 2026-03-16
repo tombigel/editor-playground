@@ -1,4 +1,4 @@
-import type { DocumentNode, EditorTextField } from '../../../api/documentApi';
+import type { DocumentNode, EditorTextField, WrapperStyleField } from '../../../api/documentApi';
 import type { ReactNode } from 'react';
 
 export type InspectorNode = DocumentNode;
@@ -11,7 +11,7 @@ export type WrapperInspectorNode = Extract<DocumentNode, { type: 'wrapper' }>;
 
 export type InspectorActionHandlers = {
   onTextChange: (field: EditorTextField, value: string) => void;
-  onWrapperStyleChange: (field: 'background', value: string) => void;
+  onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onPromote: (role: 'header' | 'footer') => void;
   onDemote: () => void;

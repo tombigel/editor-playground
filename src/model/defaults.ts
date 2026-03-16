@@ -322,8 +322,6 @@ export function createWrapper(role: WrapperRole, parentId: NodeId): WrapperNode 
         : createDefaultRect('0px', '0px', '100%', '480px'),
     style: {
       background: '#ffffff',
-      borderColor: '#b6c2d1',
-      borderWidth: parseUnitValue('1px'),
       paddingTop: parseUnitValue('16px'),
       paddingRight: parseUnitValue('16px'),
       paddingBottom: parseUnitValue('16px'),
