@@ -275,7 +275,7 @@ export function OrderIconButton({
         <>
           <div className="leading-3.5 font-medium">{label}</div>
           {shortcut ? (
-            <div className="mt-0.5 font-mono text-[10px] font-light leading-3 text-slate-300">{shortcut}</div>
+            <div className="editor-tooltip-shortcut mt-0.5 font-mono text-[10px] font-light leading-3">{shortcut}</div>
           ) : null}
         </>
       }

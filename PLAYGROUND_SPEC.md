@@ -209,7 +209,17 @@ Inspector geometry controls use single composite fields instead of raw freeform 
 
 Editor resize and width/height field edits are isolated per axis. Changing one axis preserves the untouched axis as-authored, including keywords and non-pixel units. That means `height:auto` stays `auto` when width changes, `height:aspect-ratio(...)` stays authored when width changes, and keyword widths such as `fit-content` stay authored when only height changes. When a resized axis already uses a numeric unit (`px`, `%`, `vw`, `vh`, `vmin`, `vmax`), the editor rewrites the new value back into that same unit instead of collapsing it to pixels. Keywords remain preserved only on the untouched axis; if the keyword axis itself is explicitly resized, that axis is authored as a concrete size.
 
-Shared hover tooltips in the editor use a 200ms initial mouse delay whenever no tooltip is currently visible. If a tooltip is already visible, entering another tooltip trigger opens it immediately with no additional delay. Keyboard focus opens tooltips immediately, and shortcut hints inside button tooltips render in a light monospace style distinct from the main label.
+Shared hover tooltips in the editor follow a delayed-open plus grace-period model:
+
+- when no tooltip is currently open, hovering a tooltip trigger waits 200ms before opening
+- if the pointer leaves before that tooltip opens, the pending open is canceled
+- entering another tooltip trigger while no tooltip is open starts a fresh 200ms wait
+- once a tooltip is visible, leaving its trigger closes it immediately
+- after a visible tooltip closes, the next 200ms act as a grace period: entering the same or another tooltip trigger during that window opens immediately with no delay
+- after the grace period ends, hover-open returns to the normal 200ms delay
+- keyboard focus opens tooltips immediately
+
+Shortcut hints inside tooltips render as a secondary monospace line with lower contrast than the main label.
 
 Internally, values are stored as parsed data shaped like `CSSUnitValue`, but as plain app data rather than browser Typed OM objects.
 

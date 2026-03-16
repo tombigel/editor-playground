@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 
 const TOOLTIP_HOVER_DELAY_MS = 200;
 let visibleTooltipCount = 0;
+let tooltipDelayBypassUntil = 0;
 
 type NativePopoverElement = HTMLDivElement & {
   showPopover: () => void;
@@ -94,12 +95,24 @@ type PopoverTooltipProps = {
   offset?: number;
 };
 
-export function shouldBypassTooltipDelay(hasVisibleTooltip: boolean) {
-  return hasVisibleTooltip;
+export function getTooltipDelayBypassUntil(now = Date.now()) {
+  return now + TOOLTIP_HOVER_DELAY_MS;
 }
 
-export function getTooltipHoverDelay(hasVisibleTooltip: boolean) {
-  return shouldBypassTooltipDelay(hasVisibleTooltip) ? 0 : TOOLTIP_HOVER_DELAY_MS;
+export function shouldBypassTooltipDelay(
+  hasVisibleTooltip: boolean,
+  now = Date.now(),
+  delayBypassUntil = tooltipDelayBypassUntil,
+) {
+  return hasVisibleTooltip || now < delayBypassUntil;
+}
+
+export function getTooltipHoverDelay(
+  hasVisibleTooltip: boolean,
+  now = Date.now(),
+  delayBypassUntil = tooltipDelayBypassUntil,
+) {
+  return shouldBypassTooltipDelay(hasVisibleTooltip, now, delayBypassUntil) ? 0 : TOOLTIP_HOVER_DELAY_MS;
 }
 
 export function PopoverTooltip({
@@ -139,6 +152,9 @@ export function PopoverTooltip({
 
   const closeFromHover = React.useCallback(() => {
     clearOpenTimer();
+    if (registeredVisibleRef.current) {
+      tooltipDelayBypassUntil = getTooltipDelayBypassUntil();
+    }
     setOpen(false);
   }, [clearOpenTimer]);
 
