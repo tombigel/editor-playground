@@ -35,8 +35,8 @@ import {
   selectedNodeHasBottomEdge,
   selectedNodeHasTopEdge,
 } from './appSelectors';
-import type { EditorAction, HistoryAction, HistoryState } from './types/editorState';
-export type { EditorAction, HistoryAction, HistoryState } from './types/editorState';
+import type { EditorAction, HistoryAction, HistoryState } from './types';
+export type { EditorAction, HistoryAction, HistoryState } from './types';
 
 export const DEFAULT_HISTORY_LIMIT = 100;
 export const MIN_HISTORY_LIMIT = 1;

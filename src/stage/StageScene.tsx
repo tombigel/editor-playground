@@ -44,8 +44,8 @@ import type {
   StageSceneLeafNode as LeafNode,
   StageSceneProps,
   StageStickyRegistration,
-} from './types/scene';
-export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types/scene';
+} from './types';
+export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
 
 export function StageScene({
   document,

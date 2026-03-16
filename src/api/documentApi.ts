@@ -21,7 +21,7 @@ import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolv
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument } from '../model/validation';
-import type { DocumentCommand } from './types/document';
+import type { DocumentCommand } from './types';
 
 export type {
   ComputedWrapperStickyState,
@@ -37,7 +37,7 @@ export type {
   WrapperNode,
   WrapperRole,
 };
-export type { DocumentCommand } from './types/document';
+export type { DocumentCommand } from './types';
 
 export {
   SECTION_TEMPLATES,

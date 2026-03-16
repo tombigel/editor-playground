@@ -3,8 +3,8 @@ import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
   StageOrSiteNode,
-} from './types/nodePresentation';
-export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types/nodePresentation';
+} from './types';
+export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
   return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;

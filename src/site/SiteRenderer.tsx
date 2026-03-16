@@ -7,9 +7,9 @@ import {
   type SiteRenderPlanNode,
   type SiteWrapperPlan,
 } from './sitePlan';
-import type { SiteRendererProps } from './types/renderer';
+import type { SiteRendererProps } from './types';
 
-export type { SiteRendererProps } from './types/renderer';
+export type { SiteRendererProps } from './types';
 
 export function SiteRenderer({ document, previewSticky = true }: SiteRendererProps) {
   const plan = buildSiteRootPlan(document, previewSticky);

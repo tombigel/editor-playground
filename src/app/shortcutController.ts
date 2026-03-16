@@ -1,6 +1,6 @@
 import type { ShortcutId } from '@/lib/shortcuts';
-import type { ShortcutExecutionHandlers, ShortcutUiState } from './types/shortcutController';
-export type { ShortcutExecutionHandlers, ShortcutUiState } from './types/shortcutController';
+import type { ShortcutExecutionHandlers, ShortcutUiState } from './types';
+export type { ShortcutExecutionHandlers, ShortcutUiState } from './types';
 
 export function executeEditorShortcut(
   shortcutId: ShortcutId,

@@ -1,8 +1,5 @@
-import type {
-  DocumentModel,
-  NodeId,
-} from '../../model/types';
-import type { ThemeMode } from '../../lib/theme';
+import type { DocumentModel, NodeId } from '../../model/types';
+import type { ThemeMode } from '../../lib/types';
 
 export type ConfirmReplaceRole = {
   requestedId: NodeId;

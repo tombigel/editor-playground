@@ -9,7 +9,7 @@ import type {
   SnapTarget,
   StageMathLeafNode as LeafNode,
   StageMathWrapperNode as WrapperNode,
-} from './types/stageMath';
+} from './types';
 export type {
   DragGeometry,
   DragResolutionOptions,
@@ -21,7 +21,7 @@ export type {
   SnapTarget,
   StageMathLeafNode,
   StageMathWrapperNode,
-} from './types/stageMath';
+} from './types';
 
 export const VIEWPORT_WIDTH = 1440;
 export const VIEWPORT_HEIGHT = 900;

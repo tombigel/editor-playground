@@ -2,7 +2,7 @@ import { getChildren } from '../model/selectors';
 import type { DocumentModel, StickyDefinition, WrapperNode } from '../model/types';
 import { formatValue } from '../model/units';
 import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
-import type { SiteExportableNode as ExportableNode } from './types/shared';
+import type { SiteExportableNode as ExportableNode } from './types';
 
 export { getNodeTextContent, isBrandMark } from '../render/nodePresentation';
 export { getStickyEdgeMode } from '../render/sticky';

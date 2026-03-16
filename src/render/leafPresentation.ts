@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react';
 import type { DocumentNode, TextLeaf } from '../model/types';
 import { formatValue } from '../model/units';
-import type { SharedCssRule, StyleRecord } from './types/presentation';
-export type { SharedCssRule, StyleRecord, StyleValue } from './types/presentation';
+import type { SharedCssRule, StyleRecord } from './types';
+export type { SharedCssRule, StyleRecord, StyleValue } from './types';
 
 type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
 

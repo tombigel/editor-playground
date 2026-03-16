@@ -36,9 +36,9 @@ import {
   type SiteRenderPlanNode,
   type SiteWrapperPlan,
 } from './sitePlan';
-import type { SiteExportBundle, SiteExportOptions } from './types/export';
+import type { SiteExportBundle, SiteExportOptions } from './types';
 
-export type { SiteExportBundle, SiteExportOptions } from './types/export';
+export type { SiteExportBundle, SiteExportOptions } from './types';
 
 const DEFAULT_SITE_TITLE = 'Sticky Playground Site';
 export const DEFAULT_SITE_HTML_FILE_NAME = 'sticky-playground-site.html';

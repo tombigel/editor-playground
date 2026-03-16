@@ -1,16 +1,36 @@
 import type { CSSProperties } from 'react';
-import type { DocumentNode, WrapperNode } from '../../model/types';
-import type { resolveWrapperRenderPlan } from '../../render/layout';
-import type { getWrapperTag } from '../siteShared';
+import type { DocumentModel, DocumentNode, WrapperNode } from '../../model/types';
+import type { WrapperRenderPlan } from '../../render/types';
 
-type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-type WrapperRenderPlan = ReturnType<typeof resolveWrapperRenderPlan>;
+type SiteLeafNode = Extract<DocumentNode, { type: 'leaf' }>;
+export type SiteWrapperTag = 'div' | 'section' | 'header' | 'footer';
 
+export type SiteRendererProps = {
+  document: DocumentModel;
+  previewSticky?: boolean;
+};
+
+export type SiteExportOptions = {
+  previewSticky?: boolean;
+  title?: string;
+  htmlFileName?: string;
+  cssFileName?: string;
+};
+
+export type SiteExportBundle = {
+  htmlFileName: string;
+  cssFileName: string;
+  bodyHtml: string;
+  css: string;
+  htmlDocument: string;
+};
+
+export type SiteExportableNode = Exclude<DocumentNode, { type: 'site' }>;
 export type SiteTrackSpacerEdge = 'top' | 'bottom';
 
 export type SiteLeafPlan = {
   kind: 'leaf';
-  node: LeafNode;
+  node: SiteLeafNode;
   nodeClassName: string;
   meshPlacement?: CSSProperties;
   selfSticky: boolean;
@@ -26,7 +46,7 @@ export type SiteWrapperPlan = {
   kind: 'wrapper';
   node: WrapperNode;
   isTopLevel: boolean;
-  tag: ReturnType<typeof getWrapperTag>;
+  tag: SiteWrapperTag;
   nodeClassName: string;
   meshPlacement?: CSSProperties;
   selfSticky: boolean;

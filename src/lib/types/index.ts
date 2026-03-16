@@ -1,3 +1,6 @@
+export type ThemeMode = 'light' | 'dark' | 'auto';
+export type ResolvedTheme = 'light' | 'dark';
+
 export type ShortcutPlatform = 'mac' | 'other';
 
 export type ShortcutId =

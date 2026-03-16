@@ -23,10 +23,10 @@ import type {
   SiteRootPlan,
   SiteTrackSpacerEdge,
   SiteWrapperPlan,
-} from './types/plan';
+} from './types';
 
 type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-export type { SiteLeafPlan, SiteRenderPlanNode, SiteRootPlan, SiteTrackSpacerEdge, SiteWrapperPlan } from './types/plan';
+export type { SiteLeafPlan, SiteRenderPlanNode, SiteRootPlan, SiteTrackSpacerEdge, SiteWrapperPlan } from './types';
 
 export function buildSiteRootPlan(
   document: DocumentModel,

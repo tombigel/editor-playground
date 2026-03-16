@@ -1,5 +1,7 @@
 import type { DocumentModel, NodeId } from '../../model/types';
-import type { StickyGeometrySnapshot } from '../../sticky/resolve';
+import type { RenderMeasuredNodeSizes } from '../../render/types';
+import type { SiteLeafPlan, SiteWrapperPlan } from '../../site/types';
+import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../../sticky/types';
 
 export type StageProps = {
   document: DocumentModel;
@@ -16,4 +18,115 @@ export type StageProps = {
   onResizeStart: (id: NodeId) => void;
   onResizeEnd: (id: NodeId) => void;
   onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
+};
+
+export type DragState = {
+  nodeId: string;
+  startClientX: number;
+  startClientY: number;
+  currentClientX: number;
+  currentClientY: number;
+  grabOffsetX: number;
+  grabOffsetY: number;
+  useVisualOffset: boolean;
+  modelShiftX: number;
+  modelShiftY: number;
+  previewWidth: number;
+  previewHeight: number;
+  originX: number;
+  originY: number;
+} | null;
+
+export type ResizeHandle =
+  | 'n'
+  | 'ne'
+  | 'e'
+  | 'se'
+  | 's'
+  | 'sw'
+  | 'w'
+  | 'nw';
+
+export type ResizeState = {
+  nodeId: string;
+  handle: ResizeHandle;
+  startClientX: number;
+  startClientY: number;
+  originWidth: number;
+  originHeight: number;
+  originX: number;
+  originY: number;
+} | null;
+
+export type SnapGuides = {
+  x: number | null;
+  y: number | null;
+  xSource: 'component' | 'page' | null;
+  ySource: 'component' | 'page' | null;
+};
+
+export type StageMathLeafNode = Extract<DocumentModel['nodes'][string], { type: 'leaf' }>;
+export type StageMathWrapperNode = Extract<DocumentModel['nodes'][string], { type: 'wrapper' }>;
+
+export type SnapTarget = {
+  value: number;
+  source: 'component' | 'page';
+};
+
+export type DragGeometry = {
+  rect: DOMRect;
+  offsetX: number;
+  offsetY: number;
+  useVisualOffset: boolean;
+  modelShiftX: number;
+  modelShiftY: number;
+};
+
+export type DragResolutionOptions = {
+  shiftKey: boolean;
+  altKey: boolean;
+  snapEnabled: boolean;
+  documentRef?: Pick<Document, 'querySelector' | 'querySelectorAll'>;
+  windowRef?: Pick<Window, 'innerWidth' | 'innerHeight'>;
+};
+
+export type MeasuredNodeSizes = StickyMeasuredNodeSizes;
+
+export type StageStickyRegistration = SiteWrapperPlan['stickyState']['registrations'][number];
+export type StageSceneLeafNode = SiteLeafPlan['node'];
+
+export type StageSceneProps = {
+  document: DocumentModel;
+  selectedId: NodeId | null;
+  previewSticky: boolean;
+  spacerVisibility: 'selected' | 'all';
+  showGridLanes: boolean;
+  onSelect: (id: NodeId) => void;
+  onMove: (id: NodeId, x: string, y: string) => void;
+  onResizeStart: (id: NodeId) => void;
+  dragState: DragState;
+  setDragState: (state: DragState) => void;
+  snapGuides: SnapGuides;
+  resizeState: ResizeState;
+  setResizeState: (state: ResizeState) => void;
+  measuredNodeSizes: RenderMeasuredNodeSizes;
+};
+
+export type RenderWrapperArgs = {
+  document: DocumentModel;
+  plan: SiteWrapperPlan;
+  selectedId: NodeId | null;
+  previewSticky: boolean;
+  spacerVisibility: 'selected' | 'all';
+  showGridLanes: boolean;
+  onSelect: (id: NodeId) => void;
+  onMove: (id: NodeId, x: string, y: string) => void;
+  measuredNodeSizes: RenderMeasuredNodeSizes;
+  dragState: DragState;
+  setDragState: (state: DragState) => void;
+  resizeState: ResizeState;
+  setResizeState: (state: ResizeState) => void;
+  onResizeStart: (id: NodeId) => void;
+  selfRegistration?: StageStickyRegistration;
+  ownerBottomLanePx?: number;
 };

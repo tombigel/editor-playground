@@ -14,14 +14,14 @@ import type {
   RenderLeafNode as LeafNode,
   RenderMeasuredNodeSizes,
   WrapperRenderPlan,
-} from './types/layout';
+} from './types';
 export type {
   MeshLayout,
   RenderExportableNode,
   RenderLeafNode,
   RenderMeasuredNodeSizes,
   WrapperRenderPlan,
-} from './types/layout';
+} from './types';
 
 export const RENDER_VIEWPORT_WIDTH = 1440;
 export const RENDER_VIEWPORT_HEIGHT = 900;

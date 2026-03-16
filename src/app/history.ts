@@ -1,6 +1,6 @@
 import type { DocumentNode, EditorState } from '../api/editorApi';
-export type { HistoryEntry, NodePatch } from './types/history';
-import type { HistoryEntry, NodePatch } from './types/history';
+export type { HistoryEntry, NodePatch } from './types';
+import type { HistoryEntry, NodePatch } from './types';
 
 export function appendHistoryEntry(past: HistoryEntry[], entry: HistoryEntry, historyLimit: number) {
   const last = past[past.length - 1];

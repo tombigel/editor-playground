@@ -5,14 +5,14 @@ import type {
   ShortcutGesture,
   ShortcutId,
   ShortcutPlatform,
-} from './types/shortcuts';
+} from './types';
 export type {
   ShortcutContext,
   ShortcutDefinition,
   ShortcutGesture,
   ShortcutId,
   ShortcutPlatform,
-} from './types/shortcuts';
+} from './types';
 
 export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   {

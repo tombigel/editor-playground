@@ -13,7 +13,7 @@ import {
   VIEWPORT_WIDTH,
 } from './stageMath';
 import type { StageProps } from './types';
-import type { DragState, MeasuredNodeSizes, ResizeState, SnapGuides } from './types/stageMath';
+import type { DragState, MeasuredNodeSizes, ResizeState, SnapGuides } from './types';
 export type { StageProps } from './types';
 
 export function Stage({

@@ -21,7 +21,7 @@ import type {
   TemplateNode,
   TextNodeConfig,
   TextStyleOptions,
-} from './types/defaults';
+} from './types';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from './units';
 
 let counter = 0;
@@ -42,7 +42,7 @@ const IMAGE_SOURCES = [
   },
 ];
 
-export type { SectionTemplateId, SectionTemplateSummary } from './types/defaults';
+export type { SectionTemplateId, SectionTemplateSummary } from './types';
 
 export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   {

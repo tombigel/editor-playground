@@ -25,8 +25,8 @@ import type {
 } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { normalizeThemeMode } from '../lib/theme';
-import type { EditorState, NodeOrderAction } from './types/store';
-export type { ConfirmReplaceRole, EditorState, NodeOrderAction } from './types/store';
+import type { EditorState, NodeOrderAction } from './types';
+export type { ConfirmReplaceRole, EditorState, NodeOrderAction } from './types';
 
 export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
 export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';

@@ -1,6 +1,6 @@
-import type { ActionResult, SavePickerWindow } from './types/settingsTransfer';
+import type { ActionResult, SavePickerWindow } from './types';
 
-export type { ActionResult, SaveFilePickerHandle, SavePickerWindow } from './types/settingsTransfer';
+export type { ActionResult, SaveFilePickerHandle, SavePickerWindow } from './types';
 
 export const DEFAULT_EXPORT_FILE_NAME = 'sticky-playground-document.json';
 export const DEFAULT_SITE_EXPORT_ZIP_FILE_NAME = 'sticky-playground-site.zip';

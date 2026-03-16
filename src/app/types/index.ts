@@ -1,5 +1,29 @@
-import type { DocumentModel, EditorState, EditorTextField, NodeId, SectionTemplateId } from '../../api/editorApi';
-import type { HistoryEntry } from '../history';
+import type {
+  DocumentModel,
+  DocumentNode,
+  EditorTextField,
+  NodeId,
+  SectionTemplateId,
+} from '../../model/types';
+import type { EditorState } from '../../editor/types';
+
+export type NodePatch = {
+  id: NodeId;
+  before?: DocumentNode;
+  after?: DocumentNode;
+};
+
+export type HistoryEntry = {
+  rootIdBefore: NodeId;
+  rootIdAfter: NodeId;
+  nodePatches: NodePatch[];
+  selectedBefore: NodeId | null;
+  selectedAfter: NodeId | null;
+  pendingBefore: EditorState['pendingRoleSwap'];
+  pendingAfter: EditorState['pendingRoleSwap'];
+  debounceKey: string | null;
+  createdAt: number;
+};
 
 export type EditorAction =
   | { type: 'select'; id: string | null }
@@ -61,4 +85,27 @@ export type HistoryState = {
         before: EditorState;
       }
     | null;
+};
+
+export type ShortcutUiState = {
+  previewSticky: boolean;
+  spacerVisibility: 'selected' | 'all';
+  snapEnabled: boolean;
+};
+
+export type ShortcutExecutionHandlers = {
+  closePanels: () => void;
+  undo: () => void;
+  redo: () => void;
+  toggleSettings: () => void;
+  openShortcutHelp: () => void;
+  setPreviewSticky: (value: boolean) => void;
+  setSpacerVisibility: (value: 'selected' | 'all') => void;
+  setSnapEnabled: (value: boolean) => void;
+  nudgeSelection: (deltaX: number, deltaY: number) => void;
+  deleteSelection: () => void;
+  orderBack: () => void;
+  orderForward: () => void;
+  orderSendToBack: () => void;
+  orderBringToFront: () => void;
 };
