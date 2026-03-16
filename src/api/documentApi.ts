@@ -21,6 +21,7 @@ import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolv
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument } from '../model/validation';
+import type { DocumentCommand } from './types/document';
 
 export type {
   ComputedWrapperStickyState,
@@ -36,6 +37,7 @@ export type {
   WrapperNode,
   WrapperRole,
 };
+export type { DocumentCommand } from './types/document';
 
 export {
   SECTION_TEMPLATES,
@@ -53,11 +55,6 @@ export {
   resolveUnitValuePx,
   validateDocument,
 };
-
-export type DocumentCommand =
-  | { type: 'setRect'; nodeId: NodeId; field: 'x' | 'y' | 'width' | 'height'; value: string }
-  | { type: 'setSticky'; nodeId: NodeId; patch: Partial<StickyDefinition> }
-  | { type: 'setText'; nodeId: NodeId; field: NodeTextField; value: string };
 
 export function cloneDocument(document: DocumentModel): DocumentModel {
   return {

@@ -15,16 +15,6 @@ import {
 
 export const SiteRenderer = SiteRendererComponent;
 
-export const siteApi = {
-  SiteRenderer,
-  DEFAULT_SITE_CSS_FILE_NAME,
-  DEFAULT_SITE_HTML_FILE_NAME,
-  renderSiteBodyHtml,
-  renderSiteCss,
-  renderSiteExportBundle,
-  renderSiteHtmlDocument,
-};
-
 export type { SiteRendererProps, SiteExportBundle, SiteExportOptions };
 export {
   DEFAULT_SITE_CSS_FILE_NAME,

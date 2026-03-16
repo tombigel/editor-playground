@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createSectionFromTemplate } from '../model/defaults';
+import { createSectionFromTemplate } from '../../model/defaults';
 import {
   applyDocumentCommands,
   createInitialDocument,
@@ -9,7 +9,7 @@ import {
   setNodeRect,
   setNodeSticky,
   setNodeTextField,
-} from './documentApi';
+} from '../documentApi';
 
 function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>) {
   const id = Object.keys(document.nodes).find((nodeId) => document.nodes[nodeId]?.type !== 'site');
