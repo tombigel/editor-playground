@@ -1,5 +1,7 @@
 import type { DocumentModel, DocumentNode } from '../model/types';
 import { formatValue } from '../model/units';
+import { buildRenderRootPlan } from '../render/renderPlan';
+import { walkRootPlan } from '../render/renderPlanHelpers';
 import {
   buildWrapperStyle,
   cssPropertiesToDeclarations,
@@ -14,7 +16,7 @@ import {
   getSiteLeafBaseRules,
   styleRecordToCssDeclarations,
 } from '../render/leafPresentation';
-import type { SharedCssRule } from '../render/types';
+import type { RenderPlanNode, RenderWrapperPlanNode, SharedCssRule } from '../render/types';
 import {
   SITE_BRAND_MARK_CLASS,
   SITE_CONTENT_CLASS,
@@ -34,12 +36,6 @@ import {
   getStickyTrackSpacerCss,
   getTrackSpacerClassName,
 } from './siteShared';
-import {
-  buildSiteRootPlan,
-  type SiteRenderPlanNode,
-  type SiteWrapperPlan,
-} from './sitePlan';
-import { walkSiteRootPlan } from './sitePlanHelpers';
 
 export function buildSiteCssRules(document: DocumentModel, previewSticky = true): SharedCssRule[] {
   const rules = [
@@ -55,8 +51,8 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
       button: `button.${SITE_LEAF_CLASS}.sp-role-button`,
     }),
   ];
-  const plan = buildSiteRootPlan(document, previewSticky);
-  walkSiteRootPlan(plan, (node) => appendPlanCss(node, rules));
+  const plan = buildRenderRootPlan(document, previewSticky);
+  walkRootPlan(plan, (node) => appendPlanCss(node, rules));
 
   return rules;
 }
@@ -186,7 +182,7 @@ function getBaseSiteCssRules(): SharedCssRule[] {
   ];
 }
 
-function appendPlanCss(plan: SiteRenderPlanNode, rules: SharedCssRule[]) {
+function appendPlanCss(plan: RenderPlanNode, rules: SharedCssRule[]) {
   if (plan.kind === 'wrapper') {
     appendWrapperPlanCss(plan, rules);
     return;
@@ -195,7 +191,7 @@ function appendPlanCss(plan: SiteRenderPlanNode, rules: SharedCssRule[]) {
   appendLeafPlanCss(plan, rules);
 }
 
-function appendWrapperPlanCss(plan: SiteWrapperPlan, rules: SharedCssRule[]) {
+function appendWrapperPlanCss(plan: RenderWrapperPlanNode, rules: SharedCssRule[]) {
   rules.push({
     selector: selectorFromClassName(plan.nodeClassName),
     style: declarationsToStyleRecord([
@@ -249,7 +245,7 @@ function appendWrapperPlanCss(plan: SiteWrapperPlan, rules: SharedCssRule[]) {
   }
 }
 
-function appendLeafPlanCss(plan: Extract<SiteRenderPlanNode, { kind: 'leaf' }>, rules: SharedCssRule[]) {
+function appendLeafPlanCss(plan: Extract<RenderPlanNode, { kind: 'leaf' }>, rules: SharedCssRule[]) {
   const node = plan.node;
 
   rules.push({

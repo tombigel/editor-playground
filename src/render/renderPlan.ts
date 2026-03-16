@@ -1,6 +1,12 @@
 import type { CSSProperties } from 'react';
 import type { DocumentModel, DocumentNode, WrapperNode } from '../model/types';
-import { resolveWrapperRenderPlan, type RenderMeasuredNodeSizes } from '../render/layout';
+import { resolveWrapperRenderPlan, type RenderMeasuredNodeSizes } from './layout';
+import type {
+  RenderLeafPlanNode,
+  RenderRootPlan,
+  RenderTrackSpacerEdge,
+  RenderWrapperPlanNode,
+} from './types';
 import {
   getContentClassName,
   getContentSpacerClassName,
@@ -17,22 +23,15 @@ import {
   SITE_IMAGE_CLASS,
   SITE_IMAGE_PLACEHOLDER_CLASS,
   splitRootWrappers,
-} from './siteShared';
-import type {
-  SiteLeafPlan,
-  SiteRootPlan,
-  SiteTrackSpacerEdge,
-  SiteWrapperPlan,
-} from './types';
+} from '../site/siteShared';
 
 type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-export type { SiteLeafPlan, SiteRenderPlanNode, SiteRootPlan, SiteTrackSpacerEdge, SiteWrapperPlan } from './types';
 
-export function buildSiteRootPlan(
+export function buildRenderRootPlan(
   document: DocumentModel,
   previewSticky: boolean,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
-): SiteRootPlan {
+): RenderRootPlan {
   const wrappers = getRootWrappers(document);
   const { header, footer, main } = splitRootWrappers(wrappers);
 
@@ -50,7 +49,7 @@ function buildWrapperPlan(
   previewSticky: boolean,
   measuredNodeSizes: RenderMeasuredNodeSizes,
   meshPlacement?: CSSProperties,
-): SiteWrapperPlan {
+): RenderWrapperPlanNode {
   const renderPlan = resolveWrapperRenderPlan(document, node, measuredNodeSizes);
   const spacerSequence = getStickyTrackSpacerSequence(node.sticky);
   const children = renderPlan.children.map((child) =>
@@ -93,7 +92,7 @@ function buildLeafPlan(
   node: LeafNode,
   previewSticky: boolean,
   meshPlacement?: CSSProperties,
-): SiteLeafPlan {
+): RenderLeafPlanNode {
   const spacerSequence = getStickyTrackSpacerSequence(node.sticky);
   const nodeClassName = getNodeClassName(node);
   const brandMark = isBrandMark(node);
@@ -114,7 +113,7 @@ function buildLeafPlan(
   };
 }
 
-export function getTrackSpacerDescriptor(nodeId: string, edge: SiteTrackSpacerEdge) {
+export function getTrackSpacerDescriptor(nodeId: string, edge: RenderTrackSpacerEdge) {
   return {
     edge,
     key: `${nodeId}-${edge}`,

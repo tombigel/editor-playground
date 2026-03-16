@@ -1,6 +1,6 @@
 import type { DocumentModel, NodeId } from '../../model/types';
 import type { RenderMeasuredNodeSizes } from '../../render/types';
-import type { SiteLeafPlan, SiteWrapperPlan } from '../../site/types';
+import type { RenderLeafPlanNode, RenderWrapperPlanNode } from '../../render/types';
 import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../../sticky/types';
 
 export type StageProps = {
@@ -92,8 +92,8 @@ export type DragResolutionOptions = {
 
 export type MeasuredNodeSizes = StickyMeasuredNodeSizes;
 
-export type StageStickyRegistration = SiteWrapperPlan['stickyState']['registrations'][number];
-export type StageSceneLeafNode = SiteLeafPlan['node'];
+export type StageStickyRegistration = RenderWrapperPlanNode['stickyState']['registrations'][number];
+export type StageSceneLeafNode = RenderLeafPlanNode['node'];
 
 export type StageSceneProps = {
   document: DocumentModel;
@@ -114,7 +114,7 @@ export type StageSceneProps = {
 
 export type RenderWrapperArgs = {
   document: DocumentModel;
-  plan: SiteWrapperPlan;
+  plan: RenderWrapperPlanNode;
   selectedId: NodeId | null;
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';

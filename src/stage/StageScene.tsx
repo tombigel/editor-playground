@@ -28,8 +28,9 @@ import {
   type RenderMeasuredNodeSizes,
   usesIntrinsicHeight,
 } from '../render/layout';
+import { buildRenderRootPlan } from '../render/renderPlan';
 import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
-import { buildSiteRootPlan, type SiteLeafPlan } from '../site/sitePlan';
+import type { RenderLeafPlanNode } from '../render/types';
 import {
   createDragState,
   getResizeStartSize,
@@ -64,7 +65,7 @@ export function StageScene({
   setResizeState,
   measuredNodeSizes,
 }: StageSceneProps) {
-  const plan = buildSiteRootPlan(document, previewSticky, measuredNodeSizes);
+  const plan = buildRenderRootPlan(document, previewSticky, measuredNodeSizes);
 
   return (
     <>
@@ -318,7 +319,7 @@ function renderWrapper({
           }}
         >
           {plan.children
-            .filter((child): child is SiteLeafPlan => child.kind === 'leaf')
+            .filter((child): child is RenderLeafPlanNode => child.kind === 'leaf')
             .map((child) =>
               renderLeafSpacerOverlay({
                 child: child.node,
@@ -434,7 +435,7 @@ function renderLeaf({
   registration,
   measuredNodeSizes,
 }: {
-  plan: SiteLeafPlan;
+  plan: RenderLeafPlanNode;
   selectedId: NodeId | null;
   previewSticky: boolean;
   onSelect: (id: NodeId) => void;

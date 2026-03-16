@@ -387,9 +387,10 @@ Current UX includes:
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
 - `src/render/layout.ts` is the shared non-editor layout baseline for mesh-grid placement, wrapper sizing, and sticky structure inputs used by both the editor stage renderer and the site export renderer.
+- `src/render/renderPlan.ts` and `src/render/renderPlanHelpers.ts` own the shared non-editor render tree and traversal helpers consumed by both the editor stage renderer and the site/runtime renderer.
 - `src/render/leafPresentation.ts` is a shared presentation layer for leaf content defaults used by both the editor stage renderer and the site export renderer.
-- `src/stage/Stage.tsx` is an editor renderer. It measures live node geometry, renders the preview, and publishes that geometry upward so other editor surfaces can reuse the same sticky resolution inputs.
-- `src/site/SiteRenderer.tsx` and `src/site/siteExport.tsx` are the site/runtime renderer boundary detached from editor interactions and browser measurement requirements, but they consume the same shared layout/presentation baseline as the stage where possible.
+- `src/stage/Stage.tsx` is an editor renderer. It measures live node geometry, renders the preview, publishes that geometry upward so other editor surfaces can reuse the same sticky resolution inputs, and owns editor-only visuals such as selection chrome, drag preview, snap guides, and sticky guides.
+- `src/site/SiteRenderer.tsx` and `src/site/siteExport.tsx` are the site/runtime renderer boundary detached from editor interactions and browser measurement requirements. They consume the shared render plan and shared render style semantics, but not editor-only preview visuals.
 
 ## Section Templates
 

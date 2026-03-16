@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
-import { buildSiteRootPlan, getTrackSpacerDescriptor } from '../sitePlan';
+import { buildRenderRootPlan, getTrackSpacerDescriptor } from '../renderPlan';
 
-describe('site/sitePlan', () => {
+describe('render/renderPlan', () => {
   it('builds a root plan with header, main sections, and footer', () => {
-    const plan = buildSiteRootPlan(createInitialDocument(), true);
+    const plan = buildRenderRootPlan(createInitialDocument(), true);
 
     expect(plan.header?.kind).toBe('wrapper');
     expect(plan.header?.isTopLevel).toBe(true);
@@ -21,7 +21,7 @@ describe('site/sitePlan', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const plan = buildSiteRootPlan(document, true, {
+    const plan = buildRenderRootPlan(document, true, {
       [section.id]: { width: 1200, height: 700 },
     });
     const mainSection = plan.main[0];
@@ -64,7 +64,7 @@ describe('site/sitePlan', () => {
       offsetBottom: parseUnitValue('10px'),
     };
 
-    const plan = buildSiteRootPlan(document, true);
+    const plan = buildRenderRootPlan(document, true);
     const mainSection = plan.main[0];
     const linkPlan = mainSection.children.find((child) => child.kind === 'leaf' && child.node.id === link.id);
 
@@ -88,7 +88,7 @@ describe('site/sitePlan', () => {
 
     image.name = 'Brand Mark';
 
-    const plan = buildSiteRootPlan(document, true);
+    const plan = buildRenderRootPlan(document, true);
     const imagePlan = plan.main[0]?.children.find(
       (child): child is Extract<typeof child, { kind: 'leaf' }> => child.kind === 'leaf' && child.node.id === image.id,
     );

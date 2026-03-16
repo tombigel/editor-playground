@@ -1,18 +1,14 @@
 import { getNodeTextContent } from '../render/nodePresentation';
+import { buildRenderRootPlan } from '../render/renderPlan';
+import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
+import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
 import { SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
-import {
-  buildSiteRootPlan,
-  type SiteLeafPlan,
-  type SiteRenderPlanNode,
-  type SiteWrapperPlan,
-} from './sitePlan';
-import { getSiteTrackSpacerDescriptors } from './sitePlanHelpers';
 import type { SiteRendererProps } from './types';
 
 export type { SiteRendererProps } from './types';
 
 export function SiteRenderer({ document, previewSticky = true }: SiteRendererProps) {
-  const plan = buildSiteRootPlan(document, previewSticky);
+  const plan = buildRenderRootPlan(document, previewSticky);
 
   return (
     <div className={SITE_ROOT_CLASS}>
@@ -25,14 +21,14 @@ export function SiteRenderer({ document, previewSticky = true }: SiteRendererPro
   );
 }
 
-function renderPlanNode(plan: SiteRenderPlanNode): JSX.Element {
+function renderPlanNode(plan: RenderPlanNode): JSX.Element {
   return plan.kind === 'wrapper' ? renderWrapperPlan(plan) : renderLeafPlan(plan);
 }
 
-function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
+function renderWrapperPlan(plan: RenderWrapperPlanNode): JSX.Element {
   const Tag = plan.tag;
   const wrapperChildren = plan.children.map((child) => renderPlanNode(child));
-  const trackSpacers = getSiteTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
+  const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
   const wrapper = (
     <Tag key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} data-top-level={plan.isTopLevel ? 'true' : 'false'}>
       {plan.contentSticky ? (
@@ -67,8 +63,8 @@ function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
   return wrapper;
 }
 
-function renderLeafPlan(plan: SiteLeafPlan) {
-  const trackSpacers = getSiteTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
+function renderLeafPlan(plan: RenderLeafPlanNode) {
+  const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
   let leaf: JSX.Element;
   if (plan.node.role === 'text') {
     const Tag = plan.node.htmlTag;
