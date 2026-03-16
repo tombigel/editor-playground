@@ -14,12 +14,23 @@ export default defineConfig({
     environment: 'node',
     clearMocks: true,
     restoreMocks: true,
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+      'src/**/*.e2e.test.ts',
+      'src/**/*.e2e.test.tsx',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.{ts,tsx}',
+        'src/**/*.e2e.test.{ts,tsx}',
+        'src/**/tests/e2eServer.ts',
         'src/main.tsx',
         'src/vite-env.d.ts',
         'src/types/**',

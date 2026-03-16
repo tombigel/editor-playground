@@ -541,7 +541,7 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
     alt: 'Golden desert dunes under soft sunlight',
-    sticky: createCustomSticky('150vh', '15vh'),
+    sticky: createTopSticky({ duration: '150vh', offsetTop: '15vh' }),
   });
 
   const imageB = createImageNode(section.id, {
@@ -552,7 +552,7 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80',
     alt: 'Mist rising over a calm mountain lake',
-    sticky: createCustomSticky('150vh', '15vh'),
+    sticky: createTopSticky({ duration: '150vh', offsetTop: '15vh' }),
   });
 
   const imageC = createImageNode(section.id, {
@@ -563,7 +563,7 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
     alt: 'Modern interior with natural light and textured seating',
-    sticky: createCustomSticky('150vh', '15vh'),
+    sticky: createTopSticky({ duration: '150vh', offsetTop: '15vh' }),
   });
 
   const imageD = createImageNode(section.id, {
@@ -574,7 +574,7 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
     alt: 'Golden desert dunes under soft sunlight',
-    sticky: createCustomSticky('150vh', '15vh'),
+    sticky: createTopSticky({ duration: '150vh', offsetTop: '15vh' }),
   });
 
   return buildTemplate(section, [heading, copy, imageA, imageB, imageC, imageD]);
@@ -596,16 +596,11 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     height: '234px',
     style: { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' },
   });
-  lead.sticky = {
-    enabled: true,
-    target: 'self',
-    edges: { top: true, bottom: false },
+  lead.sticky = createTopSticky({
+    duration: '220vh',
+    offsetTop: '12vh',
     durationMode: 'auto',
-    duration: parseUnitValue('220vh'),
-    durationTop: parseUnitValue('220vh'),
-    durationBottom: parseUnitValue('220vh'),
-    offsetTop: parseUnitValue('12vh'),
-  };
+  });
 
   const leadBody = createTextNode(section.id, {
     name: 'Pinned Lead Copy',
@@ -624,7 +619,7 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     width: '520px',
     style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
   });
-  card1.sticky = createCustomSticky('25vh', '15vh');
+  card1.sticky = createTopSticky({ duration: '25vh', offsetTop: '15vh' });
 
   const card2 = createTextNode(section.id, {
     name: 'Narrative Card 2',
@@ -634,7 +629,7 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     width: '520px',
     style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
   });
-  card2.sticky = createCustomSticky('25vh', '15vh');
+  card2.sticky = createTopSticky({ duration: '25vh', offsetTop: '15vh' });
 
   const card3 = createTextNode(section.id, {
     name: 'Narrative Card 3',
@@ -645,7 +640,7 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     height: '201px',
     style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
   });
-  card3.sticky = createCustomSticky('50vh', '15vh');
+  card3.sticky = createTopSticky({ duration: '50vh', offsetTop: '15vh' });
 
   return buildTemplate(section, [lead, leadBody, card1, card2, card3]);
 }
@@ -675,15 +670,7 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
     alt: 'Golden desert dunes under soft sunlight',
   });
-  mediaImage.sticky = {
-    enabled: true,
-    target: 'self',
-    edges: { top: true, bottom: false },
-    durationMode: 'custom',
-    duration: parseUnitValue('150vh'),
-    durationTop: parseUnitValue('150vh'),
-    offsetTop: parseUnitValue('10vh'),
-  };
+  mediaImage.sticky = createTopSticky({ duration: '150vh', offsetTop: '10vh' });
 
   const revealBackdrop = createImageNode(section.id, {
     name: 'Reveal Backdrop',
@@ -694,15 +681,7 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     src: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
     alt: 'Modern interior with natural light and textured seating',
   });
-  revealBackdrop.sticky = {
-    enabled: true,
-    target: 'self',
-    edges: { top: true, bottom: false },
-    durationMode: 'custom',
-    duration: parseUnitValue('25vh'),
-    durationTop: parseUnitValue('25vh'),
-    offsetTop: parseUnitValue('10vh'),
-  };
+  revealBackdrop.sticky = createTopSticky({ duration: '25vh', offsetTop: '10vh' });
 
   const blockA = createTextNode(section.id, {
     name: 'Narrative Block A',
@@ -861,7 +840,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     textWidth: '264px',
     textHeight: '120px',
     background: '#eaf3ff',
-    sticky: createCustomSticky('140vh', '10vh'),
+    sticky: createTopSticky({ duration: '140vh', offsetTop: '10vh' }),
   });
 
   const bothCardContainer = createStickyCardContainer({
@@ -878,17 +857,13 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     textWidth: '288px',
     textHeight: '179px',
     background: '#eefae9',
-    sticky: {
-      enabled: true,
-      target: 'self',
-      edges: { top: true, bottom: true },
-      durationMode: 'custom',
-      duration: parseUnitValue('160vh'),
-      durationTop: parseUnitValue('80vh'),
-      durationBottom: parseUnitValue('80vh'),
-      offsetTop: parseUnitValue('10vh'),
-      offsetBottom: parseUnitValue('10vh'),
-    },
+    sticky: createBothSticky({
+      duration: '160vh',
+      durationTop: '80vh',
+      durationBottom: '80vh',
+      offsetTop: '10vh',
+      offsetBottom: '10vh',
+    }),
   });
 
   const bottomCardContainer = createStickyCardContainer({
@@ -904,16 +879,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     textWidth: '273px',
     textHeight: '120px',
     background: '#fff4ea',
-    sticky: {
-      enabled: true,
-      target: 'self',
-      edges: { top: false, bottom: true },
-      durationMode: 'custom',
-      duration: parseUnitValue('140vh'),
-      durationTop: parseUnitValue('140vh'),
-      durationBottom: parseUnitValue('140vh'),
-      offsetBottom: parseUnitValue('10vh'),
-    },
+    sticky: createBottomSticky({ durationBottom: '140vh', offsetBottom: '10vh' }),
   });
 
   // Keep sticky containers at the end of DOM order so they render above static notes when overlapping.
@@ -963,15 +929,68 @@ function styleText(
   }
 }
 
-function createCustomSticky(duration: string, offsetTop: string): StickyDefinition {
+function createTopSticky({
+  duration,
+  offsetTop,
+  durationMode = 'custom',
+}: {
+  duration: string;
+  offsetTop: string;
+  durationMode?: 'auto' | 'custom';
+}): StickyDefinition {
   return {
     enabled: true,
     target: 'self',
     edges: { top: true, bottom: false },
-    durationMode: 'custom',
+    durationMode,
     duration: parseUnitValue(duration),
     durationTop: parseUnitValue(duration),
     durationBottom: parseUnitValue(duration),
     offsetTop: parseUnitValue(offsetTop),
+  };
+}
+
+function createBottomSticky({
+  durationBottom,
+  offsetBottom,
+}: {
+  durationBottom: string;
+  offsetBottom: string;
+}): StickyDefinition {
+  return {
+    enabled: true,
+    target: 'self',
+    edges: { top: false, bottom: true },
+    durationMode: 'custom',
+    duration: parseUnitValue(durationBottom),
+    durationTop: parseUnitValue(durationBottom),
+    durationBottom: parseUnitValue(durationBottom),
+    offsetBottom: parseUnitValue(offsetBottom),
+  };
+}
+
+function createBothSticky({
+  duration,
+  durationTop,
+  durationBottom,
+  offsetTop,
+  offsetBottom,
+}: {
+  duration: string;
+  durationTop: string;
+  durationBottom: string;
+  offsetTop: string;
+  offsetBottom: string;
+}): StickyDefinition {
+  return {
+    enabled: true,
+    target: 'self',
+    edges: { top: true, bottom: true },
+    durationMode: 'custom',
+    duration: parseUnitValue(duration),
+    durationTop: parseUnitValue(durationTop),
+    durationBottom: parseUnitValue(durationBottom),
+    offsetTop: parseUnitValue(offsetTop),
+    offsetBottom: parseUnitValue(offsetBottom),
   };
 }

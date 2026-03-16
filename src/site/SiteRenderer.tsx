@@ -2,11 +2,11 @@ import { getNodeTextContent } from '../render/nodePresentation';
 import { SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
 import {
   buildSiteRootPlan,
-  getTrackSpacerDescriptor,
   type SiteLeafPlan,
   type SiteRenderPlanNode,
   type SiteWrapperPlan,
 } from './sitePlan';
+import { getSiteTrackSpacerDescriptors } from './sitePlanHelpers';
 import type { SiteRendererProps } from './types';
 
 export type { SiteRendererProps } from './types';
@@ -32,6 +32,7 @@ function renderPlanNode(plan: SiteRenderPlanNode): JSX.Element {
 function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
   const Tag = plan.tag;
   const wrapperChildren = plan.children.map((child) => renderPlanNode(child));
+  const trackSpacers = getSiteTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
   const wrapper = (
     <Tag key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} data-top-level={plan.isTopLevel ? 'true' : 'false'}>
       {plan.contentSticky ? (
@@ -52,12 +53,12 @@ function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
   if (plan.selfStickyTrack) {
     return (
       <div key={`${plan.node.id}-track`} className={plan.trackClassName} data-node-track-for={plan.node.id}>
-        {plan.spacerEdgesBefore.map((edge) => (
-          <div key={`${plan.node.id}-${edge}-before`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        {trackSpacers.before.map((descriptor) => (
+          <div key={`${plan.node.id}-${descriptor.edge}-before`} className={descriptor.className} aria-hidden="true" />
         ))}
         {wrapper}
-        {plan.spacerEdgesAfter.map((edge) => (
-          <div key={`${plan.node.id}-${edge}-after`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        {trackSpacers.after.map((descriptor) => (
+          <div key={`${plan.node.id}-${descriptor.edge}-after`} className={descriptor.className} aria-hidden="true" />
         ))}
       </div>
     );
@@ -67,6 +68,7 @@ function renderWrapperPlan(plan: SiteWrapperPlan): JSX.Element {
 }
 
 function renderLeafPlan(plan: SiteLeafPlan) {
+  const trackSpacers = getSiteTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
   let leaf: JSX.Element;
   if (plan.node.role === 'text') {
     const Tag = plan.node.htmlTag;
@@ -106,12 +108,12 @@ function renderLeafPlan(plan: SiteLeafPlan) {
   if (plan.selfStickyTrack) {
     return (
       <div key={`${plan.node.id}-track`} className={plan.trackClassName} data-node-track-for={plan.node.id}>
-        {plan.spacerEdgesBefore.map((edge) => (
-          <div key={`${plan.node.id}-${edge}-before`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        {trackSpacers.before.map((descriptor) => (
+          <div key={`${plan.node.id}-${descriptor.edge}-before`} className={descriptor.className} aria-hidden="true" />
         ))}
         {leaf}
-        {plan.spacerEdgesAfter.map((edge) => (
-          <div key={`${plan.node.id}-${edge}-after`} className={getTrackSpacerDescriptor(plan.node.id, edge).className} aria-hidden="true" />
+        {trackSpacers.after.map((descriptor) => (
+          <div key={`${plan.node.id}-${descriptor.edge}-after`} className={descriptor.className} aria-hidden="true" />
         ))}
       </div>
     );

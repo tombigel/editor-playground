@@ -35,10 +35,10 @@ import {
 } from './siteShared';
 import {
   buildSiteRootPlan,
-  type SiteLeafPlan,
   type SiteRenderPlanNode,
   type SiteWrapperPlan,
 } from './sitePlan';
+import { walkSiteRootPlan } from './sitePlanHelpers';
 
 export function buildSiteCssRules(document: DocumentModel, previewSticky = true): SharedCssRule[] {
   const rules = [
@@ -55,16 +55,7 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
     }),
   ];
   const plan = buildSiteRootPlan(document, previewSticky);
-
-  if (plan.header) {
-    appendPlanCss(plan.header, rules);
-  }
-  for (const wrapper of plan.main) {
-    appendPlanCss(wrapper, rules);
-  }
-  if (plan.footer) {
-    appendPlanCss(plan.footer, rules);
-  }
+  walkSiteRootPlan(plan, (node) => appendPlanCss(node, rules));
 
   return rules;
 }
@@ -256,13 +247,9 @@ function appendWrapperPlanCss(plan: SiteWrapperPlan, rules: SharedCssRule[]) {
       },
     });
   }
-
-  for (const child of plan.children) {
-    appendPlanCss(child, rules);
-  }
 }
 
-function appendLeafPlanCss(plan: SiteLeafPlan, rules: SharedCssRule[]) {
+function appendLeafPlanCss(plan: Extract<SiteRenderPlanNode, { kind: 'leaf' }>, rules: SharedCssRule[]) {
   const node = plan.node;
 
   rules.push({
