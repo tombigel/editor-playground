@@ -561,7 +561,8 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup).toContain('>HTML tag<');
     expect(textMarkup).toContain('>Color<');
     expect(textMarkup).toContain('>Shadow<');
-    expect(textMarkup).toContain('aria-label="Text color opacity"');
+    expect(textMarkup).toContain('aria-label="Text color"');
+    expect(textMarkup).toContain('data-ui="color-picker"');
     expect(linkMarkup).toContain('>Text style<');
     expect(linkMarkup).toContain('>Design<');
     expect(linkMarkup).toContain('>Href<');

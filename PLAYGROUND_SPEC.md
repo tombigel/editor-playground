@@ -84,10 +84,10 @@ The section design controls also expose a section-only bottom divider editor:
 - divider width uses the inline number-with-unit control in `px` only
 - single-unit inline controls do not show dropdown hover chrome or selection interactions
 - inspector color fields render inline in the row:
-  - alpha-aware colors show an always-visible opacity slider (`0-100`)
-  - all color fields show a native color swatch/input beside it
-  - committed values are serialized as `rgb(r g b / a)` strings when alpha is supported
-  - plain solid colors such as the section divider color omit the opacity slider
+  - alpha-aware colors use the shared advanced color picker with alpha controls enabled
+  - plain solid colors such as the section divider color use the same picker with alpha controls hidden
+  - the picker preserves authored CSS color strings, including extended spaces such as `oklch(...)`, `lab(...)`, and `color(display-p3 ...)`
+  - reopening the picker re-initializes its active colorspace from the currently authored color string instead of carrying over the previous open session
 
 ## Nesting Rules
 
@@ -268,7 +268,7 @@ Shadow controls in the inspector edit `distance` and `angle`, but the persisted 
 
 Unified border editors follow the same simplified treatment:
 
-- border color uses the shared inline opacity slider + swatch control
+- border color uses the shared advanced color picker
 - border width renders as a fixed `px` field without a unit dropdown
 - border radius uses an explicit inline unit selector and supports `px` and `%`
 - border width preserves its implicit stored unit, and border radius preserves/edits its explicit `px` or `%` unit

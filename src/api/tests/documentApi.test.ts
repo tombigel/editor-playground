@@ -100,10 +100,15 @@ describe('api/documentApi', () => {
       throw new Error('Expected text, image, and button nodes');
     }
 
-    const withTextColor = setNodeTextField(document, textId, 'color', '#334155');
+    const withTextColor = setNodeTextField(document, textId, 'color', 'oklch(70% 0.2 250 / 0.7)');
     const withTextShadow = setNodeTextField(withTextColor, textId, 'shadowBlur', '14');
     const withImageBorder = setNodeTextField(withTextShadow, imageId, 'borderRadius', '24px');
-    const withButtonBackground = setNodeTextField(withImageBorder, buttonId, 'background', '#1d4ed8');
+    const withButtonBackground = setNodeTextField(
+      withImageBorder,
+      buttonId,
+      'background',
+      'color(display-p3 0.24 0.52 0.88 / 0.9)',
+    );
     const withButtonShadow = setNodeTextField(withButtonBackground, buttonId, 'shadowOffsetY', '12');
     const withButtonTypography = setNodeTextField(withButtonShadow, buttonId, 'fontWeight', 'bold');
     const withButtonWrap = setNodeTextField(withButtonTypography, buttonId, 'textWrap', 'wrap');
@@ -122,10 +127,10 @@ describe('api/documentApi', () => {
       throw new Error('Expected button node');
     }
 
-    expect(textNode.style?.color).toBe('#334155');
+    expect(textNode.style?.color).toBe('oklch(70% 0.2 250 / 0.7)');
     expect(textNode.style?.shadowBlur).toBe(14);
     expect(imageNode.style?.borderRadius?.raw).toBe('24px');
-    expect(buttonNode.style?.background).toBe('#1d4ed8');
+    expect(buttonNode.style?.background).toBe('color(display-p3 0.24 0.52 0.88 / 0.9)');
     expect(buttonNode.style?.shadowOffsetY).toBe(12);
     expect(buttonNode.style?.fontWeight).toBe('bold');
     expect(buttonNode.style?.textWrap).toBe('wrap');

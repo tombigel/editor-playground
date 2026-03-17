@@ -106,6 +106,37 @@ describe('site/siteExport', () => {
     expect(css).toContain('filter: drop-shadow(2px 6px 10px rgba(29, 78, 216, 0.28));');
   });
 
+  it('preserves authored extended color space strings in exported css', () => {
+    const document = structuredClone(createInitialDocument());
+    const text = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!text || text.type !== 'leaf' || text.role !== 'text' || !section || section.type !== 'wrapper') {
+      throw new Error('Expected text leaf and section wrapper');
+    }
+
+    const button = createLeaf('button', section.id);
+    if (button.role !== 'button') {
+      throw new Error('Expected button leaf');
+    }
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(button.id);
+
+    text.style ??= {};
+    text.style.color = 'oklch(70% 0.2 250 / 0.7)';
+    button.style ??= {};
+    button.style.background = 'color(display-p3 0.24 0.52 0.88 / 0.9)';
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain('color: oklch(70% 0.2 250 / 0.7);');
+    expect(css).toContain('background: color(display-p3 0.24 0.52 0.88 / 0.9);');
+  });
+
   it('exports button typography and wrap settings', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

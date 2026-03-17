@@ -14,6 +14,7 @@ import {
 import type { BorderStyle, ShadowStyle, WrapperNode } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
@@ -47,6 +48,8 @@ const WIDTH_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'fit-content' | 'min-content
 ];
 const HEIGHT_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'auto' | 'aspect-ratio'>[] = ['auto', 'aspect-ratio'];
 const FONT_SIZE_UNIT_OPTIONS: FontSizeMode[] = ['px', 'em', 'rem'];
+const COMPACT_UNIT_SUFFIX_WIDTH = 36;
+const COMPACT_UNIT_ICON_SUFFIX_WIDTH = 40;
 
 export function SizeInlineField({
   label,
@@ -85,7 +88,7 @@ export function SizeInlineField({
     mode === 'px' || mode === '%' || mode === 'vw' || mode === 'vh' || mode === 'vmin' || mode === 'vmax';
   const showAspectInput = mode === 'aspect-ratio';
   const showKeywordTriggerOnly = !showNumericInput && !showAspectInput;
-  const suffixWidthClass = showAspectInput ? 'w-[52px] min-w-[52px]' : 'w-[44px] min-w-[44px]';
+  const suffixWidth = showAspectInput ? COMPACT_UNIT_ICON_SUFFIX_WIDTH : COMPACT_UNIT_SUFFIX_WIDTH;
   const usesIconSuffix = mode === 'aspect-ratio';
   const shellClass = invalid
     ? 'editor-inline-field editor-inline-field-invalid focus-within:border-red-400'
@@ -141,15 +144,21 @@ export function SizeInlineField({
           className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
           <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
-            <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60">
+          <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
           </Select>
-          <div className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex w-9 items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100">
-            <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+          <div
+            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100"
+            style={{ width: `${COMPACT_UNIT_SUFFIX_WIDTH}px` }}
+          >
+            <ChevronDown className="editor-text-strong h-3 w-3" />
           </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-9 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]" />
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+            style={{ width: `${COMPACT_UNIT_SUFFIX_WIDTH}px` }}
+          />
         </div>
       ) : (
         <div
@@ -190,12 +199,12 @@ export function SizeInlineField({
           )}
           <div
             className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-            style={{ right: usesIconSuffix ? '52px' : '44px' }}
+            style={{ right: `${suffixWidth}px` }}
           />
-          <div className={`group/unitsuffix relative ${suffixWidthClass}`}>
+          <div className="group/unitsuffix relative shrink-0" style={{ width: `${suffixWidth}px`, minWidth: `${suffixWidth}px` }}>
             <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
               <SelectTrigger
-                className={`editor-inline-field-trigger peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60`}
+                className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full w-full justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {usesIconSuffix ? (
                   <span className="flex w-full items-center justify-center">
@@ -209,13 +218,13 @@ export function SizeInlineField({
             </Select>
             <div
               className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
-              style={{ width: usesIconSuffix ? '52px' : '44px' }}
+              style={{ width: `${suffixWidth}px` }}
             >
-              <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+              <ChevronDown className="editor-text-strong h-3 w-3" />
             </div>
             <div
               className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-              style={{ width: usesIconSuffix ? '52px' : '44px' }}
+              style={{ width: `${suffixWidth}px` }}
             />
           </div>
         </div>
@@ -242,7 +251,7 @@ export function NumericUnitInlineField({
   const [draft, setDraft] = useState(parsed ? String(parsed.parsed.value) : '');
   const [unit, setUnit] = useState(initialUnit);
   const hasUnitSelector = units.length > 1;
-  const suffixWidth = '44px';
+  const suffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
 
   useEffect(() => {
     const nextParsed = value ? parseUnitValue(value) : null;
@@ -294,7 +303,7 @@ export function NumericUnitInlineField({
             }}
           >
             <SelectTrigger
-              className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0"
+              className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
               style={{ width: suffixWidth }}
             >
               <SelectValue />
@@ -311,7 +320,7 @@ export function NumericUnitInlineField({
             className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
             style={{ width: suffixWidth }}
           >
-            <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+            <ChevronDown className="editor-text-strong h-3 w-3" />
           </div>
           <div
             className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
@@ -320,7 +329,7 @@ export function NumericUnitInlineField({
         </>
       ) : (
         <div
-          className="editor-inline-field-trigger pointer-events-none relative z-10 flex h-full items-center justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[11px] font-medium shadow-none"
+          className="editor-inline-field-trigger editor-inline-field-trigger-static pointer-events-none relative z-10 flex h-full items-center justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center text-[10px] font-medium tracking-[-0.01em] shadow-none"
           style={{ width: suffixWidth }}
         >
           {unit}
@@ -343,41 +352,19 @@ export function HoverColorField({
   fallback?: string;
   showOpacity?: boolean;
 }) {
-  const resolvedColor = normalizeColorFieldValue(value, fallback);
+  const resolvedValue = showOpacity ? value : forceOpaqueColorValue(value);
+  const resolvedFallback = showOpacity ? fallback : forceOpaqueColorValue(fallback) || '#ffffff';
 
   return (
-    <div className="flex h-8 min-w-[8.75rem] items-center justify-end gap-2">
-      {showOpacity ? (
-        <div className="flex-1">
-          <Slider
-            aria-label={`${ariaLabel} opacity`}
-            value={[resolvedColor.opacityPercent]}
-            min={0}
-            max={100}
-            step={1}
-            onValueChange={(nextValue) => {
-              const nextOpacity = nextValue[0] ?? resolvedColor.opacityPercent;
-              onChange(formatRgbColorValue(resolvedColor.red, resolvedColor.green, resolvedColor.blue, nextOpacity / 100));
-            }}
-          />
-        </div>
-      ) : (
-        <div className="flex-1" />
-      )}
-      <div className="editor-icon-button-subtle relative h-8 w-8 shrink-0 overflow-hidden rounded-sm border shadow-sm">
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(148,163,184,0.12)_25%,transparent_25%,transparent_75%,rgba(148,163,184,0.12)_75%,rgba(148,163,184,0.12)),linear-gradient(45deg,rgba(148,163,184,0.12)_25%,transparent_25%,transparent_75%,rgba(148,163,184,0.12)_75%,rgba(148,163,184,0.12))] bg-[length:8px_8px] bg-[position:0_0,4px_4px]" />
-        <div className="absolute inset-[3px] rounded-[3px]" style={{ backgroundColor: resolvedColor.css }} />
-        <input
-          type="color"
-          aria-label={ariaLabel}
-          className="absolute inset-0 cursor-pointer opacity-0 focus-visible:outline-none"
-          value={resolvedColor.hex}
-          onChange={(event) => {
-            const nextColor = normalizeColorFieldValue(event.target.value, resolvedColor.hex);
-            onChange(formatRgbColorValue(nextColor.red, nextColor.green, nextColor.blue, resolvedColor.alpha));
-          }}
-        />
-      </div>
+    <div className="flex justify-end">
+      <ColorPicker
+        value={resolvedValue}
+        fallback={resolvedFallback}
+        allowAlpha={showOpacity}
+        ariaLabel={ariaLabel}
+        className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-sm border shadow-sm"
+        onChange={(nextValue) => onChange(showOpacity ? nextValue : forceOpaqueColorValue(nextValue) || resolvedFallback)}
+      />
     </div>
   );
 }
@@ -594,7 +581,7 @@ export function LabeledFixedUnitField({
           }}
           className="editor-inline-field-value h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] text-center shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
-        <div className="editor-inline-field-trigger editor-text-strong flex h-full w-[44px] min-w-[44px] items-center justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium">
+        <div className="editor-inline-field-trigger editor-inline-field-trigger-static flex h-full w-[36px] min-w-[36px] items-center justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center text-[10px] font-medium tracking-[-0.01em]">
           {unit}
         </div>
       </div>
@@ -852,7 +839,7 @@ export function FontSizeField({
   onChange: (value: string) => void;
 }) {
   const parsed = parseFontSizeValue(value);
-  const fontSizeSuffixWidth = '44px';
+  const fontSizeSuffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
   return (
     <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
       <Input
@@ -880,7 +867,7 @@ export function FontSizeField({
         }}
       >
         <SelectTrigger
-          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0"
+          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
           style={{ width: fontSizeSuffixWidth }}
         >
           <SelectValue />
@@ -897,7 +884,7 @@ export function FontSizeField({
         className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
         style={{ width: fontSizeSuffixWidth }}
       >
-        <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+        <ChevronDown className="editor-text-strong h-3 w-3" />
       </div>
       <div
         className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
@@ -915,7 +902,7 @@ export function SpacingField({
   onChange: (value: string) => void;
 }) {
   const parsed = parseSpacingValue(value);
-  const suffixWidth = '44px';
+  const suffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
 
   return (
     <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
@@ -943,7 +930,7 @@ export function SpacingField({
         }}
       >
         <SelectTrigger
-          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0"
+          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
           style={{ width: suffixWidth }}
         >
           <SelectValue />
@@ -960,7 +947,7 @@ export function SpacingField({
         className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
         style={{ width: suffixWidth }}
       >
-        <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+        <ChevronDown className="editor-text-strong h-3 w-3" />
       </div>
       <div
         className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
@@ -1508,171 +1495,40 @@ function readUnifiedParsedValue(values: Array<string | undefined>) {
   return defined.length === values.length && defined.every((value) => value === defined[0]) ? defined[0] : '';
 }
 
-type ParsedColorChannels = {
-  red: number;
-  green: number;
-  blue: number;
-  alpha: number;
-};
-
-export function formatRgbColorValue(red: number, green: number, blue: number, alpha: number) {
-  return `rgb(${clampColorChannel(red)} ${clampColorChannel(green)} ${clampColorChannel(blue)} / ${formatAlphaValue(alpha)})`;
-}
-
-export function parseColorFieldValue(value: string | undefined) {
+export function forceOpaqueColorValue(value: string | undefined) {
   if (!value) {
-    return null;
+    return value;
   }
 
   const trimmed = value.trim();
   if (!trimmed) {
-    return null;
+    return value;
   }
 
-  const hexMatch = trimmed.match(/^#([\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i);
+  const hexMatch = trimmed.match(/^#([\da-f]{4}|[\da-f]{8})$/i);
   if (hexMatch) {
-    return parseHexColorValue(hexMatch[1]);
+    const digits = hexMatch[1];
+    return `#${digits.length === 4 ? digits.slice(0, 3) : digits.slice(0, 6)}`;
   }
 
-  const functionMatch = trimmed.match(/^rgba?\((.+)\)$/i);
-  if (!functionMatch) {
-    return null;
+  const rgbCommaMatch = trimmed.match(/^rgba\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)$/i);
+  if (rgbCommaMatch) {
+    return `rgb(${rgbCommaMatch[1]}, ${rgbCommaMatch[2]}, ${rgbCommaMatch[3]})`;
   }
 
-  return parseFunctionalColorValue(functionMatch[1]);
-}
+  const rgbSlashMatch = trimmed.match(/^rgba?\((.+)\/(.+)\)$/i);
+  if (rgbSlashMatch) {
+    return `rgb(${rgbSlashMatch[1].trim()})`;
+  }
 
-export function normalizeColorFieldValue(value: string | undefined, fallback: string) {
-  const parsed = parseColorFieldValue(value) ?? parseColorFieldValue(fallback) ?? { red: 255, green: 255, blue: 255, alpha: 1 };
+  const genericSlashMatch = trimmed.match(/^([a-z][\w-]*\(.+)\/([^)]+)\)$/i);
+  if (genericSlashMatch) {
+    return `${genericSlashMatch[1].trim()})`;
+  }
 
-  return {
-    ...parsed,
-    hex: formatHexColorValue(parsed.red, parsed.green, parsed.blue),
-    css: formatRgbColorValue(parsed.red, parsed.green, parsed.blue, parsed.alpha),
-    opacityPercent: Math.round(parsed.alpha * 100),
-  };
+  return trimmed;
 }
 
 function roundShadowNumber(value: number) {
   return Math.round(value * 100) / 100;
-}
-
-function parseHexColorValue(value: string): ParsedColorChannels | null {
-  if (value.length === 3 || value.length === 4) {
-    const expanded = value
-      .split('')
-      .map((part) => `${part}${part}`)
-      .join('');
-
-    return parseHexColorValue(expanded);
-  }
-
-  if (value.length !== 6 && value.length !== 8) {
-    return null;
-  }
-
-  const red = Number.parseInt(value.slice(0, 2), 16);
-  const green = Number.parseInt(value.slice(2, 4), 16);
-  const blue = Number.parseInt(value.slice(4, 6), 16);
-  const alpha = value.length === 8 ? Number.parseInt(value.slice(6, 8), 16) / 255 : 1;
-
-  if (![red, green, blue, alpha].every((part) => Number.isFinite(part))) {
-    return null;
-  }
-
-  return {
-    red: clampColorChannel(red),
-    green: clampColorChannel(green),
-    blue: clampColorChannel(blue),
-    alpha: clamp(alpha, 0, 1),
-  };
-}
-
-function parseFunctionalColorValue(value: string): ParsedColorChannels | null {
-  const normalized = value.trim();
-  const slashParts = normalized.split('/');
-  const channelTokens = splitColorTokens(slashParts[0] ?? '');
-  const alphaToken =
-    slashParts.length > 1
-      ? slashParts[1]?.trim()
-      : channelTokens.length === 4
-        ? channelTokens[3]
-        : undefined;
-  const rgbTokens = alphaToken && channelTokens.length === 4 ? channelTokens.slice(0, 3) : channelTokens;
-
-  if (rgbTokens.length !== 3) {
-    return null;
-  }
-
-  const red = parseColorChannel(rgbTokens[0]);
-  const green = parseColorChannel(rgbTokens[1]);
-  const blue = parseColorChannel(rgbTokens[2]);
-  const alpha = parseAlphaChannel(alphaToken);
-
-  if (red === null || green === null || blue === null || alpha === null) {
-    return null;
-  }
-
-  return { red, green, blue, alpha };
-}
-
-function splitColorTokens(value: string) {
-  return value
-    .trim()
-    .split(value.includes(',') ? /\s*,\s*/ : /\s+/)
-    .filter(Boolean);
-}
-
-function parseColorChannel(value: string | undefined) {
-  if (!value) {
-    return null;
-  }
-  if (value.endsWith('%')) {
-    const parsed = Number.parseFloat(value.slice(0, -1));
-    if (!Number.isFinite(parsed)) {
-      return null;
-    }
-    return clampColorChannel((parsed / 100) * 255);
-  }
-
-  const parsed = Number.parseFloat(value);
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
-
-  return clampColorChannel(parsed);
-}
-
-function parseAlphaChannel(value: string | undefined) {
-  if (!value) {
-    return 1;
-  }
-  if (value.endsWith('%')) {
-    const parsed = Number.parseFloat(value.slice(0, -1));
-    if (!Number.isFinite(parsed)) {
-      return null;
-    }
-    return clamp(parsed / 100, 0, 1);
-  }
-
-  const parsed = Number.parseFloat(value);
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
-
-  return clamp(parsed, 0, 1);
-}
-
-function formatHexColorValue(red: number, green: number, blue: number) {
-  return `#${[red, green, blue]
-    .map((channel) => clampColorChannel(channel).toString(16).padStart(2, '0'))
-    .join('')}`;
-}
-
-function clampColorChannel(value: number) {
-  return Math.round(clamp(value, 0, 255));
-}
-
-function formatAlphaValue(value: number) {
-  return clamp(value, 0, 1).toFixed(3).replace(/\.?0+$/, '');
 }
