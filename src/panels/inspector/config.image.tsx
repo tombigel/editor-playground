@@ -1,6 +1,6 @@
-import { ImageContentSection } from './ContentSections';
+import { ImageContentSection, ImageDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
-import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { basicsSection, createSectionBlock, propertiesSection, summaryBlock } from './config.common';
 import type { ImageInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const imageContentSection: InspectorSectionDefinition = {
@@ -11,8 +11,14 @@ const imageContentSection: InspectorSectionDefinition = {
 
 const imageStickySection: InspectorSectionDefinition = {
   id: 'sticky',
+  render: ({ node, actions, focusedMode }) =>
+    isImageNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+};
+
+const imageDesignSection: InspectorSectionDefinition = {
+  id: 'image-design',
   render: ({ node, actions }) =>
-    isImageNode(node) ? <StickySection node={node} actions={actions} /> : null,
+    isImageNode(node) ? <ImageDesignSection node={node} onTextChange={actions.onTextChange} /> : null,
 };
 
 export const IMAGE_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
@@ -32,11 +38,25 @@ export const IMAGE_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     sections: [imageContentSection],
   }),
   createSectionBlock({
+    id: 'design',
+    bucket: 'primary',
+    title: 'Design',
+    description: 'Border, radius, and shadow styling.',
+    sections: [imageDesignSection],
+  }),
+  createSectionBlock({
     id: 'sticky-behavior',
     bucket: 'behavior',
     title: 'Sticky behavior',
     description: 'Target, offsets, and duration behavior.',
     sections: [imageStickySection],
+  }),
+  createSectionBlock({
+    id: 'properties',
+    bucket: 'primary',
+    title: 'Properties',
+    description: 'Component metadata.',
+    sections: [propertiesSection],
   }),
 ];
 

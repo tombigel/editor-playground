@@ -17,11 +17,12 @@ import {
   Settings,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { DocumentModel, DocumentNode, StickyLayoutState } from '../api/editorApi';
+import type { DocumentModel, DocumentNode, FocusedMode, StickyLayoutState } from '../api/editorApi';
 import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,6 +49,7 @@ type Props = {
   showGridLanes: boolean;
   snapEnabled: boolean;
   themeMode: ThemeMode;
+  startupFocusedMode: FocusedMode;
   undoDepth: number;
   redoDepth: number;
   historyLimit: number;
@@ -57,6 +59,7 @@ type Props = {
   onShowGridLanesChange: (value: boolean) => void;
   onSnapEnabledChange: (value: boolean) => void;
   onThemeModeChange: (value: ThemeMode) => void;
+  onStartupFocusedModeChange: (value: FocusedMode) => void;
   onClearHistory: () => void;
   onHistoryLimitChange: (value: number) => void;
   onImport: (raw: string) => Promise<ActionResult> | ActionResult;
@@ -113,6 +116,7 @@ export function SettingsPanel({
   showGridLanes,
   snapEnabled,
   themeMode,
+  startupFocusedMode,
   undoDepth,
   redoDepth,
   historyLimit,
@@ -122,6 +126,7 @@ export function SettingsPanel({
   onShowGridLanesChange,
   onSnapEnabledChange,
   onThemeModeChange,
+  onStartupFocusedModeChange,
   onClearHistory,
   onHistoryLimitChange,
   onImport,
@@ -293,7 +298,7 @@ export function SettingsPanel({
       <div className="grid h-[min(78vh,720px)] min-h-0 grid-cols-[220px_minmax(0,1fr)]">
         <aside className="editor-bg-subtle editor-border-subtle border-r">
           <div className="sticky top-0 px-3 py-4">
-            <div className="editor-text-muted mb-3 px-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
+            <div className="editor-text-muted mb-3 px-2 text-[11px] font-medium">
               On This Page
             </div>
             <nav className="space-y-1">
@@ -327,6 +332,10 @@ export function SettingsPanel({
             <section ref={displayRef} className="editor-border-subtle border-b pb-6">
               <SectionHeading eyebrow="UI" title="Appearance and guides" description="Theme, stage toggles, and guides." />
               <ThemeModeRow value={themeMode} onChange={onThemeModeChange} />
+              <FocusedModeStartupRow
+                value={startupFocusedMode}
+                onChange={onStartupFocusedModeChange}
+              />
               <SettingRow
                 icon={Eye}
                 title="Sticky preview"
@@ -638,6 +647,36 @@ function ThemeModeRow({
   );
 }
 
+function FocusedModeStartupRow({
+  value,
+  onChange,
+}: {
+  value: FocusedMode;
+  onChange: (value: FocusedMode) => void;
+}) {
+  return (
+    <div className="editor-border-subtle flex items-center justify-between gap-4 border-t py-4">
+      <div className="min-w-0 pr-4">
+        <div className="editor-text-strong text-sm font-medium">Startup mode</div>
+        <div className="editor-text-muted mt-1 text-sm">
+          Chooses which focused mode the editor opens with. This only changes editor chrome, not document or export output.
+        </div>
+      </div>
+      <div className="w-[180px] shrink-0">
+        <Select value={value ?? 'normal'} onValueChange={(next) => onChange(next === 'sticky' ? 'sticky' : null)}>
+          <SelectTrigger aria-label="Startup mode">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="normal">Normal</SelectItem>
+            <SelectItem value="sticky">Sticky</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
 function SectionHeading({
   eyebrow,
   title,
@@ -649,7 +688,7 @@ function SectionHeading({
 }) {
   return (
     <div className="mb-4">
-      <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.14em]">{eyebrow}</div>
+      <div className="editor-text-muted text-[11px] font-medium">{eyebrow}</div>
       <div className="editor-text-strong mt-1 text-lg font-medium">{title}</div>
       <div className="editor-text-muted mt-1 text-sm">{description}</div>
     </div>
@@ -806,7 +845,7 @@ function NumericRow({
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-2">
-      <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.12em]">{label}</div>
+      <div className="editor-text-muted text-[11px] font-medium">{label}</div>
       <div className="editor-text-strong mt-1 text-sm">{value}</div>
     </div>
   );

@@ -76,6 +76,12 @@ Approved text roles:
 - muted text: `--editor-utility-text-muted`
 - tooltip muted text: `--editor-tooltip-muted-text`
 
+Label styling rules:
+
+- Avoid all-caps muted eyebrow labels in editor chrome.
+- Prefer sentence case or title case small labels with normal tracking.
+- Use heavier weight only when the label needs hierarchy, not decorative emphasis.
+
 ## 4. Icon System
 
 Library:

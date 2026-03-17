@@ -23,6 +23,44 @@ describe('app/editorState', () => {
     expect(next.future).toHaveLength(0);
   });
 
+  it('keeps focused mode actions out of undo history', () => {
+    const initial = createTestHistoryState();
+
+    const next = historyReducer(initial, { type: 'setFocusedMode', value: 'sticky' });
+
+    expect(next.present.ui.focusedMode).toBe('sticky');
+    expect(next.past).toHaveLength(0);
+    expect(next.future).toHaveLength(0);
+  });
+
+  it('clears temporary inspector state when entering and leaving focused mode', () => {
+    const initial = createInitialState();
+    const entered = editorReducer(initial, { type: 'setFocusedMode', value: 'sticky' });
+    const opened = editorReducer(entered, { type: 'setTemporaryInspectorOpen', value: true });
+    const exited = editorReducer(opened, { type: 'setFocusedMode', value: null });
+
+    expect(entered.ui.temporaryInspectorOpen).toBe(false);
+    expect(entered.ui.inspectorCollapsed).toBe(true);
+    expect(opened.ui.temporaryInspectorOpen).toBe(true);
+    expect(exited.ui.temporaryInspectorOpen).toBe(false);
+    expect(exited.ui.inspectorCollapsed).toBe(false);
+  });
+
+  it('prevents temporary inspector open when no focused mode is active', () => {
+    const initial = createInitialState();
+    const next = editorReducer(initial, { type: 'setTemporaryInspectorOpen', value: true });
+
+    expect(next.ui.temporaryInspectorOpen).toBe(false);
+  });
+
+  it('updates startup mode without changing the current focused mode', () => {
+    const initial = createInitialState();
+    const next = editorReducer(initial, { type: 'setStartupFocusedMode', value: 'sticky' });
+
+    expect(next.ui.startupFocusedMode).toBe('sticky');
+    expect(next.ui.focusedMode).toBeNull();
+  });
+
   it('coalesces resize streams into a single history entry when the resize ends', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'text');

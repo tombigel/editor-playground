@@ -10,6 +10,7 @@ import {
   getNodeHeight,
   getNodeWidth,
   getResizeCommitSize,
+  getResizeStartSize,
   getShiftLockedPointer,
   measureStageNodeElement,
   resolveDragPointerPosition,
@@ -91,7 +92,7 @@ describe('stage/Stage', () => {
     expect(markup).toContain('<blockquote');
   });
 
-  it('renders authored section height on the content wrapper', () => {
+  it('renders authored section height as a content-wrapper minimum height', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
       (node) => node.type === 'wrapper' && node.role === 'section',
@@ -123,6 +124,56 @@ describe('stage/Stage', () => {
 
     expect(markup).toContain(`data-content-wrapper-for="${section.id}"`);
     expect(markup).toContain('min-height:720px');
+  });
+
+  it('compensates editor sticky offsets against the stage shell padding', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: true },
+      offsetTop: parseUnitValue('10vh'),
+      offsetBottom: parseUnitValue('5vh'),
+      durationMode: 'auto',
+      duration: parseUnitValue('50vh'),
+      durationTop: parseUnitValue('50vh'),
+      durationBottom: parseUnitValue('50vh'),
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    const nodeMarkupMatch = markup.match(new RegExp(`id="stage-node-${target.id}"[^>]*style="([^"]+)"`));
+    expect(nodeMarkupMatch?.[1]).toContain('top:calc(10vh + 22px)');
+    expect(nodeMarkupMatch?.[1]).toContain('bottom:calc(5vh + 48px)');
+    expect(markup).toContain('Top Offset · 90px');
+    expect(markup).toContain('height:90px;top:-90px');
+    expect(markup).toContain('Bottom Offset · 45px');
+    expect(markup).toContain('height:45px;top:auto;bottom:-45px');
+    expect(markup).toContain('class="sticky-spacer-layer" style="box-sizing:border-box;padding-top:64px;padding-right:72px;padding-bottom:72px;padding-left:72px;');
   });
 
   it('renders text decoration styles for text leaves in the stage', () => {
@@ -472,6 +523,75 @@ describe('stage/Stage', () => {
     });
   });
 
+  it('measures wrapper resize starts from the inner content wrapper surface', () => {
+    const size = getResizeStartSize(
+      {
+        closest: () =>
+          ({
+            dataset: { nodeId: 'container_1' } as DOMStringMap,
+            classList: {
+              contains: (value: string) => value === 'stage-wrapper',
+            } as unknown as DOMTokenList,
+            querySelector: (selector: string) =>
+              selector === '[data-content-wrapper-for="container_1"]'
+                ? ({
+                    getBoundingClientRect: () =>
+                      ({
+                        width: 316,
+                        height: 176,
+                      }) as DOMRect,
+                  } as HTMLElement)
+                : null,
+            getBoundingClientRect: () =>
+              ({
+                width: 320,
+                height: 180,
+              }) as DOMRect,
+          } as HTMLElement),
+      } as unknown as HTMLDivElement,
+      240,
+      120,
+    );
+
+    expect(size).toEqual({
+      width: 316,
+      height: 176,
+    });
+  });
+
+  it('renders wrapper resize handles outside the content wrapper so they align to the outer border edge', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+    const container = createWrapper('container', section.id);
+    document.nodes[container.id] = container;
+    section.children.push(container.id);
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={container.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toMatch(
+      new RegExp(`data-content-wrapper-for="${container.id}"[\\s\\S]*?</div><div class="resize-handle handle-n"`),
+    );
+  });
+
   it('derives content-wrapper sticky extent locally from measured wrapper geometry', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -595,6 +715,7 @@ describe('stage/Stage', () => {
     );
 
     expect(markup).toContain('Offset · 24px');
+    expect(markup).toContain('height:24px;top:-24px');
     expect(markup).toContain('Distance: auto');
     expect(markup).not.toContain('Distance · 140px');
     expect(markup).not.toContain('sticky-track');
@@ -669,6 +790,75 @@ describe('stage/Stage', () => {
     expect(markup.match(/Distance: auto/g)).toHaveLength(1);
     expect(markup).not.toContain('sticky-auto-spacer-bottom');
     expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top[^"]*" style="top:100%;bottom:auto;height:200px"/);
+  });
+
+  it('extends top-edge auto guides through wrapper bottom padding', () => {
+    const siteId = 'site_top_auto_padding';
+    const section = createWrapper('section', siteId);
+    section.name = 'Top Auto Padded Section';
+    section.rect = createDefaultRect('0px', '0px', '100%', '400px');
+    section.style.paddingTop = parseUnitValue('20px');
+    section.style.paddingRight = parseUnitValue('0px');
+    section.style.paddingBottom = parseUnitValue('30px');
+    section.style.paddingLeft = parseUnitValue('0px');
+
+    const target = createLeaf('text', section.id);
+    if (target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected text leaf');
+    }
+
+    target.name = 'Top Auto Padded Leaf';
+    target.rect = createDefaultRect('24px', '100px', '200px', '50px');
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'auto',
+      duration: parseUnitValue('0px'),
+      durationTop: parseUnitValue('0px'),
+      durationBottom: parseUnitValue('0px'),
+      offsetTop: parseUnitValue('0px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    section.children = [target.id];
+
+    const document = {
+      rootId: siteId,
+      nodes: {
+        [siteId]: {
+          id: siteId,
+          type: 'site' as const,
+          parentId: null,
+          children: [section.id],
+          name: 'Site',
+          visible: true,
+          locked: false,
+        },
+        [section.id]: section,
+        [target.id]: target,
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="all"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top[^"]*" style="top:100%;bottom:auto;height:280px"/);
   });
 
   it('splits both-edge auto self sticky guides by free space above and below the leaf', () => {

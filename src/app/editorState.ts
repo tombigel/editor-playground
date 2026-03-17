@@ -169,6 +169,28 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, ui: { ...state.ui, snapEnabled: action.value } };
     case 'setThemeMode':
       return { ...state, ui: { ...state.ui, themeMode: action.value } };
+    case 'setFocusedMode':
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          focusedMode: action.value,
+          inspectorCollapsed: action.value ? true : false,
+          temporaryInspectorOpen: false,
+        },
+      };
+    case 'setStartupFocusedMode':
+      return { ...state, ui: { ...state.ui, startupFocusedMode: action.value } };
+    case 'setInspectorCollapsed':
+      return { ...state, ui: { ...state.ui, inspectorCollapsed: action.value } };
+    case 'setTemporaryInspectorOpen':
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          temporaryInspectorOpen: state.ui.focusedMode ? action.value : false,
+        },
+      };
     default:
       return state;
   }
@@ -338,7 +360,11 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setSpacerVisibility' &&
     action.type !== 'setShowGridLanes' &&
     action.type !== 'setSnapEnabled' &&
-    action.type !== 'setThemeMode'
+    action.type !== 'setThemeMode' &&
+    action.type !== 'setFocusedMode' &&
+    action.type !== 'setStartupFocusedMode' &&
+    action.type !== 'setInspectorCollapsed' &&
+    action.type !== 'setTemporaryInspectorOpen'
   );
 }
 

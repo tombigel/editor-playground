@@ -1,4 +1,5 @@
-import type { DocumentNode, EditorTextField, WrapperStyleField } from '../../../api/documentApi';
+import type { DocumentNode, EditorTextField, FocusedMode } from '../../../api/editorApi';
+import type { WrapperStyleField } from '../../../api/documentApi';
 import type { ReactNode } from 'react';
 
 export type InspectorNode = DocumentNode;
@@ -25,6 +26,7 @@ export type InspectorActionHandlers = {
   onStickyDuration: (value: number) => void;
   onStickyDurationTop: (value: number) => void;
   onStickyDurationBottom: (value: number) => void;
+  onEnterFocusedMode: (mode: FocusedMode) => void;
 };
 
 export type InspectorOrderState = {
@@ -51,6 +53,7 @@ export type InspectorSectionContext = {
   node: InspectorNode | null;
   actions: InspectorActionHandlers;
   orderState: InspectorOrderState;
+  focusedMode: FocusedMode;
 };
 
 export type InspectorBlockBucket = 'summary' | 'primary' | 'behavior';

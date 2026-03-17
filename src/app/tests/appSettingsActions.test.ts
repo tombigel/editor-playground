@@ -30,6 +30,10 @@ describe('app/appSettingsActions', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      focusedMode: 'sticky',
+      startupFocusedMode: 'sticky',
+      inspectorCollapsed: true,
+      temporaryInspectorOpen: true,
     });
 
     expect(next.selectedId).toBeNull();
@@ -39,6 +43,10 @@ describe('app/appSettingsActions', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      focusedMode: 'sticky',
+      startupFocusedMode: 'sticky',
+      inspectorCollapsed: true,
+      temporaryInspectorOpen: false,
     });
   });
 
@@ -51,6 +59,10 @@ describe('app/appSettingsActions', () => {
       showGridLanes: false,
       snapEnabled: true,
       themeMode: 'auto',
+      focusedMode: null,
+      startupFocusedMode: null,
+      inspectorCollapsed: false,
+      temporaryInspectorOpen: false,
     });
   });
 

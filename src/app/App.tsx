@@ -27,10 +27,13 @@ export function App() {
       spacerVisibility: state.ui.spacerVisibility,
       snapEnabled: state.ui.snapEnabled,
     },
-    hasDismissiblePanels: panels.hasDismissiblePanels,
+    hasDismissiblePanels: panels.hasDismissiblePanels || state.ui.temporaryInspectorOpen,
     shortcutPlatform,
     onSelect: (id) => dispatch({ type: 'select', id }),
-    onClosePanels: panels.closeTransientPanels,
+    onClosePanels: () => {
+      panels.closeTransientPanels();
+      dispatch({ type: 'setTemporaryInspectorOpen', value: false });
+    },
     onUndo: () => dispatch({ type: 'undo' }),
     onRedo: () => dispatch({ type: 'redo' }),
     onToggleSettings: () => panels.setSettingsOpen((open) => !open),

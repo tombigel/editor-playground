@@ -7,6 +7,7 @@ import type {
   WrapperNode,
 } from '../model/types';
 import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
+import { buildBorderStyle, buildBoxShadow } from './styleHelpers';
 import { resolveWrapperStickyState } from '../sticky/resolve';
 import type {
   MeshLayout,
@@ -78,12 +79,6 @@ export function buildWrapperStyle(node: WrapperNode, isTopLevel: boolean): CSSPr
 export function getWrapperBorderStyle(node: WrapperNode): CSSProperties {
   const style: CSSProperties = {};
 
-  if (node.style.borderColor || node.style.borderWidth) {
-    style.borderStyle = 'solid';
-    style.borderColor = node.style.borderColor;
-    style.borderWidth = node.style.borderWidth ? formatValue(node.style.borderWidth.parsed) : '1px';
-  }
-
   if (node.role === 'section' && (node.style.sectionBorderBottomColor || node.style.sectionBorderBottomWidth)) {
     style.borderBottomStyle = 'solid';
     style.borderBottomColor = node.style.sectionBorderBottomColor;
@@ -99,6 +94,31 @@ export function getWrapperBorderDeclarations(node: WrapperNode): string[] {
   return cssPropertiesToDeclarations(getWrapperBorderStyle(node));
 }
 
+export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties {
+  const style: CSSProperties = {
+    boxSizing: 'border-box',
+    background: node.style.background,
+    ...getContentWrapperPaddingStyle(node),
+  };
+
+  Object.assign(style, buildBorderStyle(node.style));
+  const boxShadow = buildBoxShadow(node.style);
+  if (boxShadow) {
+    style.boxShadow = boxShadow;
+  }
+
+  return style;
+}
+
+export function getContentWrapperPaddingStyle(node: WrapperNode): CSSProperties {
+  return {
+    paddingTop: node.style.paddingTop ? formatValue(node.style.paddingTop.parsed) : undefined,
+    paddingRight: node.style.paddingRight ? formatValue(node.style.paddingRight.parsed) : undefined,
+    paddingBottom: node.style.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : undefined,
+    paddingLeft: node.style.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : undefined,
+  };
+}
+
 export function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
   const height = node.rect.height.base.parsed;
   const base: CSSProperties = {
@@ -106,7 +126,11 @@ export function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
   };
 
   if ('unit' in height) {
-    base.minHeight = formatValue(height);
+    if (node.role === 'container') {
+      base.height = formatValue(height);
+    } else {
+      base.minHeight = formatValue(height);
+    }
     return base;
   }
 
@@ -161,7 +185,8 @@ export function getNodeWidth(node: ExportableNode, measuredNodeSizes: RenderMeas
 export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMeasuredNodeSizes = {}) {
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
-    return height.unit === 'px' ? height.value : height.unit === 'vh'
+    const authoredHeight =
+      height.unit === 'px' ? height.value : height.unit === 'vh'
       ? (height.value / 100) * RENDER_VIEWPORT_HEIGHT
       : height.unit === 'vw'
         ? (height.value / 100) * RENDER_VIEWPORT_WIDTH
@@ -170,6 +195,13 @@ export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMea
           : height.unit === 'vmax'
             ? (height.value / 100) * Math.max(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
             : (height.value / 100) * 480;
+
+    if (node.type === 'wrapper' && node.role !== 'container') {
+      const measuredContentHeight = getMeasuredWrapperContentHeight(node, measuredNodeSizes);
+      return measuredContentHeight != null ? Math.max(authoredHeight, measuredContentHeight) : authoredHeight;
+    }
+
+    return authoredHeight;
   }
   const measured = measuredNodeSizes[node.id];
   if (height.keyword === 'auto' && measured?.height && measured.height > 0) {
@@ -182,6 +214,43 @@ export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMea
     return node.role === 'header' || node.role === 'footer' ? 0 : 480;
   }
   return estimateAutoLeafHeight(node, measuredNodeSizes);
+}
+
+function getMeasuredWrapperContentHeight(
+  node: WrapperNode,
+  measuredNodeSizes: RenderMeasuredNodeSizes,
+) {
+  const measured = measuredNodeSizes[node.id];
+  if (!measured?.height || measured.height <= 0) {
+    return null;
+  }
+
+  const paddingTop = resolveWrapperPaddingPx(node, 'top', measuredNodeSizes);
+  const paddingBottom = resolveWrapperPaddingPx(node, 'bottom', measuredNodeSizes);
+  return Math.max(0, measured.height - paddingTop - paddingBottom);
+}
+
+function resolveWrapperPaddingPx(
+  node: WrapperNode,
+  edge: 'top' | 'bottom',
+  measuredNodeSizes: RenderMeasuredNodeSizes,
+) {
+  const padding = edge === 'top' ? node.style.paddingTop : node.style.paddingBottom;
+  if (!padding) {
+    return 0;
+  }
+
+  const measured = measuredNodeSizes[node.id];
+  return resolveUnitValuePx(
+    padding.parsed,
+    {
+      width: measured?.width ?? getNodeWidth(node, measuredNodeSizes),
+      height: measured?.height ?? 0,
+      viewportWidth: RENDER_VIEWPORT_WIDTH,
+      viewportHeight: RENDER_VIEWPORT_HEIGHT,
+    },
+    'x',
+  );
 }
 
 export function resolveOffsetPx(

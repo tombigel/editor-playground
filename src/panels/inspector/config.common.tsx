@@ -1,4 +1,4 @@
-import { InspectorSummary, NodeBasicsSection } from './CommonSections';
+import { InspectorSummary, NodeBasicsSection, NodePropertiesSection } from './CommonSections';
 import type { InspectorBlockDefinition, InspectorSectionDefinition } from './types';
 
 export const summaryBlock: InspectorBlockDefinition = {
@@ -13,6 +13,11 @@ export const basicsSection: InspectorSectionDefinition = {
   id: 'basics',
   render: ({ node, orderState, actions }) =>
     node ? <NodeBasicsSection node={node} orderState={orderState} actions={actions} /> : null,
+};
+
+export const propertiesSection: InspectorSectionDefinition = {
+  id: 'properties',
+  render: ({ node, actions }) => (node ? <NodePropertiesSection node={node} actions={actions} /> : null),
 };
 
 export function createSectionBlock(

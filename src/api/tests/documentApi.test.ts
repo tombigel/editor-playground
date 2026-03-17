@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createSectionFromTemplate } from '../../model/defaults';
+import { createLeaf, createSectionFromTemplate } from '../../model/defaults';
 import {
   applyDocumentCommands,
   createInitialDocument,
@@ -21,7 +21,18 @@ function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>)
 
 describe('api/documentApi', () => {
   it('updates rect fields immutably', () => {
-    const document = createInitialDocument();
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+    const image = createLeaf('image', section.id);
+    const button = createLeaf('button', section.id);
+    document.nodes[image.id] = image;
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(image.id, button.id);
     const nodeId = firstEditableNodeId(document);
     const before = document.nodes[nodeId];
     if (before.type === 'site') {
@@ -65,6 +76,59 @@ describe('api/documentApi', () => {
     }
 
     expect(node.htmlTag).toBe('blockquote');
+  });
+
+  it('updates design fields for leaves through API helpers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+    const image = createLeaf('image', section.id);
+    const button = createLeaf('button', section.id);
+    document.nodes[image.id] = image;
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(image.id, button.id);
+    const textId = Object.keys(document.nodes).find(
+      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+    );
+    const imageId = image.id;
+    const buttonId = button.id;
+    if (!textId || !imageId || !buttonId) {
+      throw new Error('Expected text, image, and button nodes');
+    }
+
+    const withTextColor = setNodeTextField(document, textId, 'color', '#334155');
+    const withTextShadow = setNodeTextField(withTextColor, textId, 'shadowBlur', '14');
+    const withImageBorder = setNodeTextField(withTextShadow, imageId, 'borderRadius', '24px');
+    const withButtonBackground = setNodeTextField(withImageBorder, buttonId, 'background', '#1d4ed8');
+    const withButtonShadow = setNodeTextField(withButtonBackground, buttonId, 'shadowOffsetY', '12');
+    const withButtonTypography = setNodeTextField(withButtonShadow, buttonId, 'fontWeight', 'bold');
+    const withButtonWrap = setNodeTextField(withButtonTypography, buttonId, 'textWrap', 'wrap');
+
+    const textNode = withButtonWrap.nodes[textId];
+    const imageNode = withButtonWrap.nodes[imageId];
+    const buttonNode = withButtonWrap.nodes[buttonId];
+
+    if (textNode.type !== 'leaf' || textNode.role !== 'text') {
+      throw new Error('Expected text node');
+    }
+    if (imageNode.type !== 'leaf' || imageNode.role !== 'image') {
+      throw new Error('Expected image node');
+    }
+    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+      throw new Error('Expected button node');
+    }
+
+    expect(textNode.style?.color).toBe('#334155');
+    expect(textNode.style?.shadowBlur).toBe(14);
+    expect(imageNode.style?.borderRadius?.raw).toBe('24px');
+    expect(buttonNode.style?.background).toBe('#1d4ed8');
+    expect(buttonNode.style?.shadowOffsetY).toBe(12);
+    expect(buttonNode.style?.fontWeight).toBe('bold');
+    expect(buttonNode.style?.textWrap).toBe('wrap');
   });
 
   it('returns original document when text field does not apply to node type', () => {

@@ -24,7 +24,7 @@ export type {
   StickyLayoutState,
   SectionTemplateId,
 };
-export type { EditorState } from '../editor/editorStore';
+export type { EditorState, FocusedMode } from '../editor/editorStore';
 
 export const cancelPromoteWrapperRole = editorStore.cancelPromoteWrapperRole;
 export const clearSessionState = editorStore.clearSessionState;

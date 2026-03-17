@@ -1,0 +1,25 @@
+export const DEFAULT_TEXT_COLOR = '#16202a';
+export const DEFAULT_LINK_COLOR = '#172033';
+export const DEFAULT_SHADOW_COLOR = 'rgba(18, 32, 51, 0.14)';
+export const DEFAULT_SHADOW_BLUR_PX = 18;
+export const DEFAULT_SHADOW_OFFSET_X_PX = 0;
+export const DEFAULT_SHADOW_OFFSET_Y_PX = 10;
+
+export const DEFAULT_IMAGE_BACKGROUND = '#f4f6fa';
+export const DEFAULT_IMAGE_BORDER_COLOR = '#d8e0ea';
+export const DEFAULT_IMAGE_BORDER_WIDTH = '1px';
+export const DEFAULT_IMAGE_BORDER_RADIUS = '16px';
+export const DEFAULT_IMAGE_SHADOW_COLOR = 'rgba(18, 32, 51, 0.12)';
+export const DEFAULT_IMAGE_SHADOW_BLUR_PX = 28;
+export const DEFAULT_IMAGE_SHADOW_OFFSET_X_PX = 0;
+export const DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX = 12;
+
+export const DEFAULT_BUTTON_TEXT_COLOR = '#fff';
+export const DEFAULT_BUTTON_BACKGROUND = '#05070a';
+export const DEFAULT_BUTTON_BORDER_RADIUS = '999px';
+export const DEFAULT_BUTTON_PADDING_BLOCK = '13px';
+export const DEFAULT_BUTTON_PADDING_INLINE = '24px';
+export const DEFAULT_BUTTON_SHADOW_COLOR = 'rgba(5, 7, 10, 0.16)';
+export const DEFAULT_BUTTON_SHADOW_BLUR_PX = 18;
+export const DEFAULT_BUTTON_SHADOW_OFFSET_X_PX = 0;
+export const DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX = 10;

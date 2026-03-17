@@ -7,9 +7,15 @@ import type {
   StickyLayoutState,
 } from '../api/editorApi';
 import { InsertPanel } from '../panels/InsertPanel';
-import { InspectorPanel } from '../panels/InspectorPanel';
 import { ShortcutHelpDialog } from '../panels/ShortcutHelpDialog';
 import { SettingsPanel } from '../panels/SettingsPanel';
+import {
+  EditorSidebar,
+  INSPECTOR_COLLAPSED_WIDTH_PX,
+  INSPECTOR_EXPANDED_WIDTH_PX,
+  INSPECTOR_TRANSITION_MS,
+} from '../panels/EditorSidebar';
+import { FocusedModePanel } from '../panels/FocusedModePanel';
 import type { ActionResult } from '../panels/settingsTransfer';
 import { Stage } from '../api/editorViewApi';
 import { Button } from '@/components/ui/button';
@@ -81,6 +87,12 @@ export function AppShell({
   onResetData,
   onResetAll,
 }: Props) {
+  const isSidebarCollapsed = state.ui.inspectorCollapsed && !state.ui.temporaryInspectorOpen;
+  const sidebarWidth = isSidebarCollapsed
+    ? `${INSPECTOR_COLLAPSED_WIDTH_PX}px`
+    : `${INSPECTOR_EXPANDED_WIDTH_PX}px`;
+  const sidebarTransitionTiming = isSidebarCollapsed ? 'ease-in' : 'ease-out';
+
   return (
     <div
       className="editor-shell h-screen w-screen overflow-hidden"
@@ -140,7 +152,14 @@ export function AppShell({
           </div>
         </header>
 
-        <div className="grid min-h-0 grid-cols-[84px_minmax(0,1fr)_300px]">
+        <div
+          className="grid min-h-0 transition-[grid-template-columns] ease-out"
+          style={{
+            gridTemplateColumns: `84px minmax(0,1fr) ${sidebarWidth}`,
+            transitionDuration: `${INSPECTOR_TRANSITION_MS}ms`,
+            transitionTimingFunction: sidebarTransitionTiming,
+          }}
+        >
           <aside className="editor-rail-shell editor-border-subtle relative z-[360] overflow-visible border-r shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
             <div className="flex h-full flex-col gap-4 overflow-visible p-3">
               <div className="editor-bg-subtle editor-border-subtle overflow-visible rounded-2xl border p-2">
@@ -205,45 +224,92 @@ export function AppShell({
               onResizeEnd={(id) => dispatch({ type: 'endResize', id })}
               onStickyGeometryChange={onStickyGeometryChange}
             />
+            {state.ui.focusedMode ? (
+              <div className="pointer-events-none absolute right-5 top-5 z-[340] w-[270px] max-w-[calc(100%-40px)]">
+                <FocusedModePanel
+                  node={selectedNode}
+                  focusedMode={state.ui.focusedMode}
+                  mode={state.ui.focusedMode}
+                  showOrderControls={orderState.show}
+                  canOrderBack={orderState.canBack}
+                  canOrderForward={orderState.canForward}
+                  canSendToBack={orderState.canBack}
+                  canBringToFront={orderState.canForward}
+                  orderBackShortcut={getShortcutLabel('orderBack', shortcutPlatform)}
+                  orderForwardShortcut={getShortcutLabel('orderForward', shortcutPlatform)}
+                  sendToBackShortcut={getShortcutLabel('orderSendToBack', shortcutPlatform)}
+                  bringToFrontShortcut={getShortcutLabel('orderBringToFront', shortcutPlatform)}
+                  canSectionBack={sectionOrderState.canBack}
+                  canSectionForward={sectionOrderState.canForward}
+                  onOrderBack={() => dispatch({ type: 'orderBack' })}
+                  onOrderForward={() => dispatch({ type: 'orderForward' })}
+                  onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
+                  onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
+                  onSectionBack={() => dispatch({ type: 'orderBack' })}
+                  onSectionForward={() => dispatch({ type: 'orderForward' })}
+                  onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
+                  onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
+                  onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
+                  onPromote={(role) => dispatch({ type: 'promote', role })}
+                  onDemote={() => dispatch({ type: 'demote' })}
+                  onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
+                  onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
+                  onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
+                  onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
+                  onStickyOffsetTop={(value) => dispatch({ type: 'stickyOffsetTop', value })}
+                  onStickyOffsetBottom={(value) => dispatch({ type: 'stickyOffsetBottom', value })}
+                  onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
+                  onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
+                  onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
+                  onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
+                  onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
+                  onExitFocusedMode={() => dispatch({ type: 'setFocusedMode', value: null })}
+                />
+              </div>
+            ) : null}
           </main>
 
-          <aside className="editor-inspector-shell editor-border-subtle min-h-0 overflow-hidden border-l shadow-[-8px_0_24px_rgba(18,32,51,0.03)]">
-            <InspectorPanel
-              node={selectedNode}
-              showOrderControls={orderState.show}
-              canOrderBack={orderState.canBack}
-              canOrderForward={orderState.canForward}
-              canSendToBack={orderState.canBack}
-              canBringToFront={orderState.canForward}
-              orderBackShortcut={getShortcutLabel('orderBack', shortcutPlatform)}
-              orderForwardShortcut={getShortcutLabel('orderForward', shortcutPlatform)}
-              sendToBackShortcut={getShortcutLabel('orderSendToBack', shortcutPlatform)}
-              bringToFrontShortcut={getShortcutLabel('orderBringToFront', shortcutPlatform)}
-              canSectionBack={sectionOrderState.canBack}
-              canSectionForward={sectionOrderState.canForward}
-              onOrderBack={() => dispatch({ type: 'orderBack' })}
-              onOrderForward={() => dispatch({ type: 'orderForward' })}
-              onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
-              onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
-              onSectionBack={() => dispatch({ type: 'orderBack' })}
-              onSectionForward={() => dispatch({ type: 'orderForward' })}
-              onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
-              onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
-              onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
-              onPromote={(role) => dispatch({ type: 'promote', role })}
-              onDemote={() => dispatch({ type: 'demote' })}
-              onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
-              onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
-              onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
-              onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
-              onStickyOffsetTop={(value) => dispatch({ type: 'stickyOffsetTop', value })}
-              onStickyOffsetBottom={(value) => dispatch({ type: 'stickyOffsetBottom', value })}
-              onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
-              onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
-              onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
-              onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
-            />
-          </aside>
+          <EditorSidebar
+            node={selectedNode}
+            focusedMode={state.ui.focusedMode}
+            inspectorCollapsed={state.ui.inspectorCollapsed}
+            temporaryInspectorOpen={state.ui.temporaryInspectorOpen}
+            showOrderControls={orderState.show}
+            canOrderBack={orderState.canBack}
+            canOrderForward={orderState.canForward}
+            canSendToBack={orderState.canBack}
+            canBringToFront={orderState.canForward}
+            orderBackShortcut={getShortcutLabel('orderBack', shortcutPlatform)}
+            orderForwardShortcut={getShortcutLabel('orderForward', shortcutPlatform)}
+            sendToBackShortcut={getShortcutLabel('orderSendToBack', shortcutPlatform)}
+            bringToFrontShortcut={getShortcutLabel('orderBringToFront', shortcutPlatform)}
+            canSectionBack={sectionOrderState.canBack}
+            canSectionForward={sectionOrderState.canForward}
+            onOrderBack={() => dispatch({ type: 'orderBack' })}
+            onOrderForward={() => dispatch({ type: 'orderForward' })}
+            onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
+            onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
+            onSectionBack={() => dispatch({ type: 'orderBack' })}
+            onSectionForward={() => dispatch({ type: 'orderForward' })}
+            onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
+            onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
+            onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
+            onPromote={(role) => dispatch({ type: 'promote', role })}
+            onDemote={() => dispatch({ type: 'demote' })}
+            onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
+            onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
+            onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
+            onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
+            onStickyOffsetTop={(value) => dispatch({ type: 'stickyOffsetTop', value })}
+            onStickyOffsetBottom={(value) => dispatch({ type: 'stickyOffsetBottom', value })}
+            onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
+            onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
+            onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
+            onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
+            onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
+            onInspectorCollapsedChange={(value) => dispatch({ type: 'setInspectorCollapsed', value })}
+            onTemporaryInspectorOpenChange={(value) => dispatch({ type: 'setTemporaryInspectorOpen', value })}
+          />
         </div>
       </div>
 
@@ -272,6 +338,7 @@ export function AppShell({
             showGridLanes={state.ui.showGridLanes}
             snapEnabled={state.ui.snapEnabled}
             themeMode={state.ui.themeMode}
+            startupFocusedMode={state.ui.startupFocusedMode}
             undoDepth={historyState.past.length}
             redoDepth={historyState.future.length}
             historyLimit={historyState.historyLimit}
@@ -281,6 +348,7 @@ export function AppShell({
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
             onSnapEnabledChange={(value) => dispatch({ type: 'setSnapEnabled', value })}
             onThemeModeChange={(value) => dispatch({ type: 'setThemeMode', value })}
+            onStartupFocusedModeChange={(value) => dispatch({ type: 'setStartupFocusedMode', value })}
             onClearHistory={() => dispatch({ type: 'clearHistory' })}
             onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
             onImport={onImportDocument}

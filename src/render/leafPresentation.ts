@@ -1,6 +1,27 @@
 import type { CSSProperties } from 'react';
-import type { DocumentNode, TextLeaf } from '../model/types';
+import type { DocumentNode, ImageLeaf, LinkLeaf, TextLeaf, ButtonLeaf, TypographyStyle } from '../model/types';
+import {
+  DEFAULT_BUTTON_BACKGROUND,
+  DEFAULT_BUTTON_BORDER_RADIUS,
+  DEFAULT_BUTTON_PADDING_BLOCK,
+  DEFAULT_BUTTON_PADDING_INLINE,
+  DEFAULT_BUTTON_TEXT_COLOR,
+  DEFAULT_BUTTON_SHADOW_BLUR_PX,
+  DEFAULT_BUTTON_SHADOW_COLOR,
+  DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
+  DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
+  DEFAULT_IMAGE_BORDER_COLOR,
+  DEFAULT_IMAGE_BORDER_RADIUS,
+  DEFAULT_IMAGE_BORDER_WIDTH,
+  DEFAULT_IMAGE_SHADOW_BLUR_PX,
+  DEFAULT_IMAGE_SHADOW_COLOR,
+  DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
+  DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
+  DEFAULT_LINK_COLOR,
+  DEFAULT_TEXT_COLOR,
+} from '../model/styleDefaults';
 import { formatValue } from '../model/units';
+import { buildBorderStyle, buildBoxShadow, buildFilterShadow, hasBorderStyle, hasShadowStyle } from './styleHelpers';
 import type { SharedCssRule, StyleRecord } from './types';
 export type { SharedCssRule, StyleRecord, StyleValue } from './types';
 
@@ -11,31 +32,132 @@ export function getLeafInlineStyle(node: LeafNode): StyleRecord {
     return getTextLeafStyle(node);
   }
 
-  if (node.role === 'image' && node.name === 'Brand Mark') {
-    return {
-      minWidth: 0,
-      minHeight: 0,
-    };
+  if (node.role === 'link') {
+    return getLinkLeafStyle(node);
+  }
+
+  if (node.role === 'image') {
+    return getImageLeafStyle(node);
+  }
+
+  if (node.role === 'button') {
+    return getButtonLeafStyle(node);
   }
 
   return {};
 }
 
 export function getTextLeafStyle(node: TextLeaf): StyleRecord {
-  return {
-    margin: 0,
-    maxWidth: '100%',
-    whiteSpace: 'pre-wrap',
-    color: node.style?.color ?? '#16202a',
-    fontSize: node.style?.fontSize ? formatValue(node.style.fontSize.parsed) : '18px',
-    fontWeight: node.style?.fontWeight ?? '500',
-    fontStyle: node.style?.fontStyle ?? 'normal',
+  return getTypographyStyle(node.style, {
+    color: DEFAULT_TEXT_COLOR,
+    fontSize: '18px',
+    fontWeight: '500',
     letterSpacing: '-0.02em',
-    textDecorationLine: node.style?.textDecorationLine ?? 'none',
-    lineHeight: node.style?.lineHeight ?? 1.24,
-    direction: node.style?.direction ?? 'ltr',
-    textAlign: node.style?.textAlign ?? 'left',
+    textDecorationLine: 'none',
+    lineHeight: 1.24,
+    direction: 'ltr',
+    textAlign: 'left',
+    whiteSpace: 'pre-wrap',
+    maxWidth: '100%',
+    margin: 0,
+  });
+}
+
+export function getLinkLeafStyle(node: LinkLeaf): StyleRecord {
+  return {
+    display: 'block',
+    width: '100%',
+    maxWidth: '100%',
+    ...getTypographyStyle(node.style, {
+      color: DEFAULT_LINK_COLOR,
+      fontWeight: '500',
+      textDecorationLine: 'underline',
+      lineHeight: 1.24,
+      direction: 'ltr',
+      textAlign: 'left',
+      whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : 'nowrap',
+    }),
   };
+}
+
+export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
+  const useImageDefaults = node.name !== 'Brand Mark';
+  const style: StyleRecord =
+    node.name === 'Brand Mark'
+      ? {
+          minWidth: 0,
+          minHeight: 0,
+        }
+      : {};
+
+  if (!hasBorderStyle(node.style) && !hasShadowStyle(node.style)) {
+    return style;
+  }
+
+  Object.assign(
+    style,
+    buildBorderStyle(node.style, useImageDefaults
+      ? {
+          color: DEFAULT_IMAGE_BORDER_COLOR,
+          width: DEFAULT_IMAGE_BORDER_WIDTH,
+          radius: DEFAULT_IMAGE_BORDER_RADIUS,
+        }
+      : {}),
+  );
+  const boxShadow = buildBoxShadow(
+    node.style,
+    useImageDefaults
+      ? {
+          color: DEFAULT_IMAGE_SHADOW_COLOR,
+          blur: DEFAULT_IMAGE_SHADOW_BLUR_PX,
+          offsetX: DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
+          offsetY: DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
+        }
+      : {},
+  );
+  if (boxShadow) {
+    style.boxShadow = boxShadow;
+  }
+  return style;
+}
+
+export function getButtonLeafStyle(node: ButtonLeaf): StyleRecord {
+  const style: StyleRecord = {
+    ...getTypographyStyle(node.style, {
+      color: DEFAULT_BUTTON_TEXT_COLOR,
+      fontSize: '18px',
+      fontWeight: '500',
+      letterSpacing: '-0.01em',
+      textDecorationLine: 'none',
+      lineHeight: 1.24,
+      direction: 'ltr',
+      textAlign: 'left',
+      whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : 'nowrap',
+    }),
+    ...(node.style?.background ? { background: node.style.background } : { background: DEFAULT_BUTTON_BACKGROUND }),
+    ...(node.style?.paddingBlock ? { paddingBlock: formatValue(node.style.paddingBlock.parsed) } : {}),
+    ...(node.style?.paddingInline ? { paddingInline: formatValue(node.style.paddingInline.parsed) } : {}),
+  };
+  if (hasBorderStyle(node.style)) {
+    Object.assign(
+      style,
+      buildBorderStyle(node.style, {
+        radius: DEFAULT_BUTTON_BORDER_RADIUS,
+      }),
+    );
+  }
+  if (hasShadowStyle(node.style)) {
+    const boxShadow = buildBoxShadow(node.style, {
+      color: DEFAULT_BUTTON_SHADOW_COLOR,
+      blur: DEFAULT_BUTTON_SHADOW_BLUR_PX,
+      offsetX: DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
+      offsetY: DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
+    });
+    if (boxShadow) {
+      style.boxShadow = boxShadow;
+    }
+  }
+  return style;
 }
 
 export function styleRecordToReactStyle(style: StyleRecord): CSSProperties {
@@ -144,7 +266,8 @@ export function getSiteLeafBaseRules(selectors: {
         font: 'inherit',
         color: '#fff',
         borderRadius: '999px',
-        padding: '13px 24px',
+        paddingBlock: DEFAULT_BUTTON_PADDING_BLOCK,
+        paddingInline: DEFAULT_BUTTON_PADDING_INLINE,
         fontSize: '18px',
         fontWeight: 500,
         letterSpacing: '-0.01em',
@@ -158,4 +281,42 @@ export function getSiteLeafBaseRules(selectors: {
 
 function toKebabCase(value: string) {
   return value.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+}
+
+function getTypographyStyle(
+  style: (TypographyStyle & { textWrap?: 'single-line' | 'wrap' } & { shadowColor?: string; shadowBlur?: number; shadowOffsetX?: number; shadowOffsetY?: number }) | undefined,
+  defaults: {
+    color?: string;
+    fontSize?: string;
+    fontWeight?: string;
+    letterSpacing?: string;
+    textDecorationLine?: string;
+    lineHeight?: number;
+    direction?: 'ltr' | 'rtl';
+    textAlign?: 'left' | 'center' | 'right';
+    whiteSpace?: 'normal' | 'nowrap' | 'pre-wrap';
+    maxWidth?: string;
+    margin?: number;
+  },
+): StyleRecord {
+  const filter = buildFilterShadow(style);
+  return {
+    ...(defaults.margin !== undefined ? { margin: defaults.margin } : {}),
+    ...(defaults.maxWidth ? { maxWidth: defaults.maxWidth } : {}),
+    ...(defaults.whiteSpace ? { whiteSpace: defaults.whiteSpace } : {}),
+    ...(style?.color || defaults.color ? { color: style?.color ?? defaults.color } : {}),
+    ...(style?.fontSize || defaults.fontSize
+      ? { fontSize: style?.fontSize ? formatValue(style.fontSize.parsed) : defaults.fontSize }
+      : {}),
+    ...(style?.fontWeight || defaults.fontWeight ? { fontWeight: style?.fontWeight ?? defaults.fontWeight } : {}),
+    ...(style?.fontStyle ? { fontStyle: style.fontStyle } : {}),
+    ...(defaults.letterSpacing ? { letterSpacing: defaults.letterSpacing } : {}),
+    ...(style?.textDecorationLine || defaults.textDecorationLine
+      ? { textDecorationLine: style?.textDecorationLine ?? defaults.textDecorationLine }
+      : {}),
+    ...(style?.lineHeight || defaults.lineHeight ? { lineHeight: style?.lineHeight ?? defaults.lineHeight } : {}),
+    ...(style?.direction || defaults.direction ? { direction: style?.direction ?? defaults.direction } : {}),
+    ...(style?.textAlign || defaults.textAlign ? { textAlign: style?.textAlign ?? defaults.textAlign } : {}),
+    ...(filter ? { filter } : {}),
+  };
 }

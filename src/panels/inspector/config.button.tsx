@@ -1,6 +1,6 @@
-import { ButtonContentSection } from './ContentSections';
+import { ButtonContentSection, ButtonDesignSection, ButtonTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
-import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { basicsSection, createSectionBlock, propertiesSection, summaryBlock } from './config.common';
 import type { ButtonInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const buttonContentSection: InspectorSectionDefinition = {
@@ -11,8 +11,20 @@ const buttonContentSection: InspectorSectionDefinition = {
 
 const buttonStickySection: InspectorSectionDefinition = {
   id: 'sticky',
+  render: ({ node, actions, focusedMode }) =>
+    isButtonNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+};
+
+const buttonDesignSection: InspectorSectionDefinition = {
+  id: 'button-design',
   render: ({ node, actions }) =>
-    isButtonNode(node) ? <StickySection node={node} actions={actions} /> : null,
+    isButtonNode(node) ? <ButtonDesignSection node={node} onTextChange={actions.onTextChange} /> : null,
+};
+
+const buttonTextStyleSection: InspectorSectionDefinition = {
+  id: 'button-text-style',
+  render: ({ node, actions }) =>
+    isButtonNode(node) ? <ButtonTextStyleSection node={node} onTextChange={actions.onTextChange} /> : null,
 };
 
 export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
@@ -32,11 +44,32 @@ export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     sections: [buttonContentSection],
   }),
   createSectionBlock({
+    id: 'text-style',
+    bucket: 'primary',
+    title: 'Text style',
+    description: 'Typography and wrapping controls.',
+    sections: [buttonTextStyleSection],
+  }),
+  createSectionBlock({
+    id: 'design',
+    bucket: 'primary',
+    title: 'Design',
+    description: 'Colors, fill, padding, border, and shadow.',
+    sections: [buttonDesignSection],
+  }),
+  createSectionBlock({
     id: 'sticky-behavior',
     bucket: 'behavior',
     title: 'Sticky behavior',
     description: 'Target, offsets, and duration behavior.',
     sections: [buttonStickySection],
+  }),
+  createSectionBlock({
+    id: 'properties',
+    bucket: 'primary',
+    title: 'Properties',
+    description: 'Component metadata.',
+    sections: [propertiesSection],
   }),
 ];
 

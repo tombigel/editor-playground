@@ -6,8 +6,33 @@ export type LeafRole = 'text' | 'image' | 'link' | 'button';
 export type BreakpointId = 'base' | 'tablet' | 'mobile';
 export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
 export type FontSizeUnit = 'px' | 'em' | 'rem';
+export type SpacingUnit = 'px' | 'em' | 'rem';
 export type NodeTextField = 'name' | 'content' | 'htmlTag' | 'label' | 'href' | 'src' | 'alt';
-export type TextStyleField =
+export type BorderColorField =
+  | 'borderColor'
+  | 'borderTopColor'
+  | 'borderRightColor'
+  | 'borderBottomColor'
+  | 'borderLeftColor';
+export type BorderWidthField =
+  | 'borderWidth'
+  | 'borderTopWidth'
+  | 'borderRightWidth'
+  | 'borderBottomWidth'
+  | 'borderLeftWidth';
+export type BorderRadiusField =
+  | 'borderRadius'
+  | 'borderTopLeftRadius'
+  | 'borderTopRightRadius'
+  | 'borderBottomRightRadius'
+  | 'borderBottomLeftRadius';
+export type ShadowStyleField =
+  | 'shadowColor'
+  | 'shadowBlur'
+  | 'shadowOffsetX'
+  | 'shadowOffsetY';
+export type LeafTypographyField =
+  | 'color'
   | 'fontSize'
   | 'fontWeight'
   | 'fontStyle'
@@ -15,8 +40,31 @@ export type TextStyleField =
   | 'lineHeight'
   | 'direction'
   | 'textAlign';
-export type EditorTextField = NodeTextField | TextStyleField;
-export type WrapperStyleField = 'background' | 'sectionBorderBottomColor' | 'sectionBorderBottomWidth';
+export type TextWrapField = 'textWrap';
+export type TextStyleField =
+  | LeafTypographyField
+  | ShadowStyleField;
+export type LinkStyleField = LeafTypographyField | TextWrapField | ShadowStyleField;
+export type ImageStyleField = BorderColorField | BorderWidthField | BorderRadiusField | ShadowStyleField;
+export type ButtonStyleField =
+  | LeafTypographyField
+  | 'background'
+  | 'paddingBlock'
+  | 'paddingInline'
+  | TextWrapField
+  | BorderColorField
+  | BorderWidthField
+  | BorderRadiusField
+  | ShadowStyleField;
+export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField;
+export type WrapperStyleField =
+  | 'background'
+  | BorderColorField
+  | BorderWidthField
+  | BorderRadiusField
+  | ShadowStyleField
+  | 'sectionBorderBottomColor'
+  | 'sectionBorderBottomWidth';
 
 export type UnitValue = {
   value: number;
@@ -26,6 +74,11 @@ export type UnitValue = {
 export type FontSizeValue = {
   value: number;
   unit: FontSizeUnit;
+};
+
+export type SpacingValue = {
+  value: number;
+  unit: SpacingUnit;
 };
 
 export type WidthValue = UnitValue | { keyword: 'fit-content' | 'min-content' | 'max-content' };
@@ -39,6 +92,44 @@ export type ParsedValue<T> = {
   raw: string;
   parsed: T;
 };
+
+export type BorderStyle = {
+  borderColor?: string;
+  borderTopColor?: string;
+  borderRightColor?: string;
+  borderBottomColor?: string;
+  borderLeftColor?: string;
+  borderWidth?: ParsedValue<UnitValue>;
+  borderTopWidth?: ParsedValue<UnitValue>;
+  borderRightWidth?: ParsedValue<UnitValue>;
+  borderBottomWidth?: ParsedValue<UnitValue>;
+  borderLeftWidth?: ParsedValue<UnitValue>;
+  borderRadius?: ParsedValue<UnitValue>;
+  borderTopLeftRadius?: ParsedValue<UnitValue>;
+  borderTopRightRadius?: ParsedValue<UnitValue>;
+  borderBottomRightRadius?: ParsedValue<UnitValue>;
+  borderBottomLeftRadius?: ParsedValue<UnitValue>;
+};
+
+export type ShadowStyle = {
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+};
+
+export type TypographyStyle = {
+  color?: string;
+  fontSize?: ParsedValue<FontSizeValue>;
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through';
+  lineHeight?: number;
+  direction?: 'ltr' | 'rtl';
+  textAlign?: 'left' | 'center' | 'right';
+};
+
+export type TextWrapMode = 'single-line' | 'wrap';
 
 export type ResponsiveValue<T> = {
   base: T;
@@ -91,10 +182,9 @@ export type WrapperNode = BaseNode & {
   role: WrapperRole;
   rect: RectModel;
   sticky?: StickyDefinition;
-  style: {
+  style: BorderStyle &
+    ShadowStyle & {
     background?: string;
-    borderColor?: string;
-    borderWidth?: ParsedValue<UnitValue>;
     sectionBorderBottomColor?: string;
     sectionBorderBottomWidth?: ParsedValue<UnitValue>;
     paddingTop?: ParsedValue<UnitValue>;
@@ -111,16 +201,7 @@ export type TextLeaf = BaseNode & {
   content: string;
   htmlTag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'blockquote' | 'div';
   sticky?: StickyDefinition;
-  style?: {
-    color?: string;
-    fontSize?: ParsedValue<FontSizeValue>;
-    fontWeight?: 'normal' | 'bold';
-    fontStyle?: 'normal' | 'italic';
-    textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through';
-    lineHeight?: number;
-    direction?: 'ltr' | 'rtl';
-    textAlign?: 'left' | 'center' | 'right';
-  };
+  style?: ShadowStyle & TypographyStyle;
 };
 
 export type ImageLeaf = BaseNode & {
@@ -130,6 +211,7 @@ export type ImageLeaf = BaseNode & {
   src?: string;
   alt?: string;
   sticky?: StickyDefinition;
+  style?: BorderStyle & ShadowStyle;
 };
 
 export type LinkLeaf = BaseNode & {
@@ -139,6 +221,10 @@ export type LinkLeaf = BaseNode & {
   label: string;
   href?: string;
   sticky?: StickyDefinition;
+  style?: TypographyStyle &
+    ShadowStyle & {
+      textWrap?: TextWrapMode;
+    };
 };
 
 export type ButtonLeaf = BaseNode & {
@@ -147,6 +233,14 @@ export type ButtonLeaf = BaseNode & {
   rect: RectModel;
   label: string;
   sticky?: StickyDefinition;
+  style?: TypographyStyle &
+    BorderStyle &
+    ShadowStyle & {
+      background?: string;
+      textWrap?: TextWrapMode;
+      paddingBlock?: ParsedValue<SpacingValue>;
+      paddingInline?: ParsedValue<SpacingValue>;
+    };
 };
 
 export type DocumentNode =

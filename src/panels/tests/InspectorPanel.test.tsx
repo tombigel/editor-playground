@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument } from '../../model/defaults';
+import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
 import {
   buildSizeFieldValue,
   convertRenderedPxToFontSizeValue,
@@ -59,6 +59,8 @@ describe('panels/InspectorPanel', () => {
         onStickyDuration={() => {}}
         onStickyDurationTop={() => {}}
         onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
       />,
     );
 
@@ -66,6 +68,8 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Set type to Section');
     expect(markup).toContain('Set type to Header');
     expect(markup).toContain('Set type to Footer');
+    expect(markup).toContain('>Properties<');
+    expect(markup).toContain('Name');
     expect(markup.match(/aria-pressed="true"/g)?.length).toBe(1);
   });
 
@@ -114,16 +118,69 @@ describe('panels/InspectorPanel', () => {
         onStickyDuration={() => {}}
         onStickyDurationTop={() => {}}
         onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
       />,
     );
 
     expect(markup).toContain('Divider');
     expect(markup).toContain('Bottom border color');
+    expect(markup).not.toContain('Bottom border color opacity');
+    expect(markup).not.toContain('>Border<');
+    expect(markup).not.toContain('>Shadow<');
     expect(markup).toContain('placeholder="1"');
     expect(markup).toContain('>px<');
   });
 
-  it('hides the width field for section-level wrappers while preserving the geometry slot', () => {
+  it('renders border and shadow controls for container wrapper design', () => {
+    const containerNode = createWrapper('container', 'root');
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        node={containerNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('>Border<');
+    expect(markup).toContain('>Shadow<');
+    expect(markup).not.toContain('Divider');
+  });
+
+  it('shows a disabled width field for top-level wrappers locked to 100%', () => {
     const document = createInitialDocument();
     const wrapperRoles: Array<'section' | 'header' | 'footer'> = ['section', 'header', 'footer'];
 
@@ -171,11 +228,14 @@ describe('panels/InspectorPanel', () => {
           onStickyDuration={() => {}}
           onStickyDurationTop={() => {}}
           onStickyDurationBottom={() => {}}
+          focusedMode={null}
+          onEnterFocusedMode={() => {}}
         />,
       );
 
-      expect(markup).not.toContain('>W<');
-      expect(markup).toContain('data-ui="geometry-width-placeholder"');
+      expect(markup).toContain('>W<');
+      expect(markup).toContain('value="100"');
+      expect(markup).toContain('disabled=""');
     }
   });
 
@@ -235,6 +295,8 @@ describe('panels/InspectorPanel', () => {
         onStickyDuration={() => {}}
         onStickyDurationTop={() => {}}
         onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
       />,
     );
 
@@ -299,12 +361,240 @@ describe('panels/InspectorPanel', () => {
         onStickyDuration={() => {}}
         onStickyDurationTop={() => {}}
         onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
       />,
     );
 
     expect(markup).not.toContain('>Target<');
     expect(markup).not.toContain('>Self<');
     expect(markup).not.toContain('Content wrapper');
+  });
+
+  it('renders content and design sections for leaf inspectors', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section node');
+    }
+    const buttonNode = createLeaf('button', sectionNode.id);
+    const textNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'text');
+    const linkNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link');
+    const imageNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
+
+    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+      throw new Error('Expected text node');
+    }
+    if (!linkNode || linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+      throw new Error('Expected link node');
+    }
+    if (!imageNode || imageNode.type !== 'leaf' || imageNode.role !== 'image') {
+      throw new Error('Expected image node');
+    }
+    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+      throw new Error('Expected button node');
+    }
+
+    const textMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        node={textNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    const imageMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        node={imageNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+    const linkMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        node={linkNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+    const buttonMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        node={buttonNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(textMarkup).toContain('>Content<');
+    expect(textMarkup).toContain('>Text style<');
+    expect(textMarkup).toContain('>Design<');
+    expect(textMarkup).toContain('>Text<');
+    expect(textMarkup.indexOf('>Text style<')).toBeLessThan(textMarkup.indexOf('>Design<'));
+    expect(textMarkup).toContain('>HTML tag<');
+    expect(textMarkup).toContain('>Color<');
+    expect(textMarkup).toContain('>Shadow<');
+    expect(textMarkup).toContain('aria-label="Text color opacity"');
+    expect(linkMarkup).toContain('>Text style<');
+    expect(linkMarkup).toContain('>Design<');
+    expect(linkMarkup).toContain('>Href<');
+    expect(linkMarkup.indexOf('>Text style<')).toBeLessThan(linkMarkup.indexOf('>Design<'));
+    expect(linkMarkup).toContain('>Wrap<');
+    expect(linkMarkup.match(/>Wrap</g)?.length).toBe(1);
+    expect(linkMarkup).toContain('aria-label="Single line"');
+    expect(linkMarkup).toContain('>Color<');
+    expect(linkMarkup).toContain('>Shadow<');
+    expect(imageMarkup).toContain('>Content<');
+    expect(imageMarkup).toContain('>Design<');
+    expect(imageMarkup).not.toContain('>Image<');
+    expect(imageMarkup).toContain('>Src<');
+    expect(imageMarkup).toContain('>Alt<');
+    expect(imageMarkup).toContain('>Border<');
+    expect(buttonMarkup).toContain('>Text style<');
+    expect(buttonMarkup).toContain('>Design<');
+    expect(buttonMarkup.indexOf('>Text style<')).toBeLessThan(buttonMarkup.indexOf('>Design<'));
+    expect(buttonMarkup).toContain('>Color<');
+    expect(buttonMarkup).toContain('>Background<');
+    expect(buttonMarkup).toContain('>Border<');
+    expect(buttonMarkup).toContain('>Shadow<');
+    expect(buttonMarkup).toContain('>Padding<');
+    expect(buttonMarkup).toContain('>Y<');
+    expect(buttonMarkup).toContain('>X<');
+    expect(buttonMarkup).toContain('>Radius<');
+    expect(buttonMarkup).toContain('>Wrap<');
+    expect(buttonMarkup.match(/>Wrap</g)?.length).toBe(1);
+    expect(buttonMarkup).toContain('aria-label="Single line"');
+    expect(buttonMarkup.indexOf('>Color<')).toBeLessThan(buttonMarkup.indexOf('>Background<'));
+    expect(buttonMarkup.indexOf('>Background<')).toBeLessThan(buttonMarkup.indexOf('>Border<'));
+    expect(buttonMarkup.indexOf('>Border<')).toBeLessThan(buttonMarkup.indexOf('>Shadow<'));
+    expect(buttonMarkup.indexOf('>Shadow<')).toBeLessThan(buttonMarkup.indexOf('>Padding<'));
   });
 
   it('renders single-unit numeric inline fields without select dropdown chrome', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createSectionFromTemplate } from '../../model/defaults';
-import { parseFontSizeValue, parseHeightValue, parseUnitValue } from '../../model/units';
+import { createInitialDocument, createLeaf, createSectionFromTemplate, createWrapper } from '../../model/defaults';
+import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
 describe('site/siteExport', () => {
@@ -64,6 +64,77 @@ describe('site/siteExport', () => {
     expect(css).toContain('text-align: left;');
   });
 
+  it('exports custom text and link design styles including filter shadows', () => {
+    const document = structuredClone(createInitialDocument());
+    const text = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+    const link = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+    if (!text || text.type !== 'leaf' || text.role !== 'text' || !link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected text and link leaves');
+    }
+
+    text.style ??= {};
+    text.style.color = '#0f172a';
+    text.style.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    text.style.shadowBlur = 16;
+    text.style.shadowOffsetX = 4;
+    text.style.shadowOffsetY = 8;
+    link.style ??= {};
+    link.style.color = '#1d4ed8';
+    link.style.fontWeight = 'bold';
+    link.style.textAlign = 'center';
+    link.style.textWrap = 'wrap';
+    link.style.shadowColor = 'rgba(29, 78, 216, 0.28)';
+    link.style.shadowBlur = 10;
+    link.style.shadowOffsetX = 2;
+    link.style.shadowOffsetY = 6;
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain(`.sp-node-${text.id}.sp-role-text`);
+    expect(css).toContain('filter: drop-shadow(4px 8px 16px rgba(15, 23, 42, 0.18));');
+    expect(css).toContain(`.sp-node-${link.id}.sp-role-link`);
+    expect(css).toContain('display: block;');
+    expect(css).toContain('width: 100%;');
+    expect(css).toContain('color: #1d4ed8;');
+    expect(css).toContain('font-weight: bold;');
+    expect(css).toContain('text-align: center;');
+    expect(css).toContain('white-space: normal;');
+    expect(css).toContain('filter: drop-shadow(2px 6px 10px rgba(29, 78, 216, 0.28));');
+  });
+
+  it('exports button typography and wrap settings', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+    const button = createLeaf('button', section.id);
+    if (button.role !== 'button') {
+      throw new Error('Expected button leaf');
+    }
+    button.style ??= {};
+    button.style.fontSize = parseFontSizeValue('22px');
+    button.style.fontStyle = 'italic';
+    button.style.textAlign = 'center';
+    button.style.textWrap = 'wrap';
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(button.id);
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain(`.sp-node-${button.id}.sp-role-button.sp-leaf`);
+    expect(css).toContain('font-size: 22px;');
+    expect(css).toContain('font-style: italic;');
+    expect(css).toContain('text-align: center;');
+    expect(css).toContain('white-space: normal;');
+  });
+
   it('normalizes native text and button element defaults in exported css', () => {
     const css = renderSiteCss(createInitialDocument());
 
@@ -77,7 +148,8 @@ describe('site/siteExport', () => {
     expect(css).toContain('appearance: none;');
     expect(css).toContain('background: #05070a;');
     expect(css).toContain('border-radius: 999px;');
-    expect(css).toContain('padding: 13px 24px;');
+    expect(css).toContain('padding-block: 13px;');
+    expect(css).toContain('padding-inline: 24px;');
     expect(css).toContain('box-shadow: 0 10px 18px rgba(5, 7, 10, 0.16);');
   });
 
@@ -146,7 +218,77 @@ describe('site/siteExport', () => {
     expect(sectionRule).not.toContain('border-width: 1px;');
   });
 
-  it('does not add an export-only wrapper min-height floor above authored short sticky containers', () => {
+  it('exports container, image, and button design surfaces', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const image = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'image',
+    );
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+    const container = createWrapper('container', section.id);
+    const button = createLeaf('button', section.id);
+    document.nodes[container.id] = container;
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(container.id, button.id);
+    if (!container || container.type !== 'wrapper' || !image || image.type !== 'leaf' || image.role !== 'image' || !button || button.type !== 'leaf' || button.role !== 'button') {
+      throw new Error('Expected container, image, and button nodes');
+    }
+
+    container.style.background = '#ffffff';
+    container.style.borderWidth = parseUnitValue('2px');
+    container.style.borderColor = '#cbd5e1';
+    container.style.borderRadius = parseUnitValue('18px');
+    container.style.shadowColor = 'rgba(18, 32, 51, 0.16)';
+    container.style.shadowBlur = 22;
+    container.style.shadowOffsetX = 0;
+    container.style.shadowOffsetY = 14;
+
+    image.style ??= {};
+    image.style.borderWidth = parseUnitValue('3px');
+    image.style.borderColor = '#2563eb';
+    image.style.borderRadius = parseUnitValue('28px');
+    image.style.shadowColor = 'rgba(37, 99, 235, 0.2)';
+    image.style.shadowBlur = 18;
+    image.style.shadowOffsetX = 0;
+    image.style.shadowOffsetY = 12;
+
+    button.style ??= {};
+    button.style.color = '#0f172a';
+    button.style.background = '#f8fafc';
+    button.style.paddingBlock = parseSpacingValue('0.75em');
+    button.style.paddingInline = parseSpacingValue('1.5rem');
+    button.style.borderWidth = parseUnitValue('1px');
+    button.style.borderColor = '#0f172a';
+    button.style.shadowColor = 'rgba(15, 23, 42, 0.15)';
+    button.style.shadowBlur = 14;
+    button.style.shadowOffsetX = 0;
+    button.style.shadowOffsetY = 8;
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain(`.sp-node-${container.id}-content {`);
+    expect(css).toContain('box-sizing: border-box;');
+    expect(css).toContain('background-clip: padding-box;');
+    expect(css).toContain('border-radius: 18px;');
+    expect(css).toContain('box-shadow: 0px 14px 22px rgba(18, 32, 51, 0.16);');
+    expect(css).toContain(`.sp-node-${image.id}.sp-role-image.sp-leaf`);
+    expect(css).toContain('border-width: 3px;');
+    expect(css).toContain('border-radius: 28px;');
+    expect(css).toContain('box-shadow: 0px 12px 18px rgba(37, 99, 235, 0.2);');
+    expect(css).toContain(`.sp-node-${button.id}.sp-role-button.sp-leaf`);
+    expect(css).toContain('background: #f8fafc;');
+    expect(css).toContain('padding-block: 0.75em;');
+    expect(css).toContain('padding-inline: 1.5rem;');
+    expect(css).toContain('background-clip: padding-box;');
+    expect(css).toContain('border-color: #0f172a;');
+    expect(css).toContain('box-shadow: 0px 8px 14px rgba(15, 23, 42, 0.15);');
+  });
+
+  it('does not add an export-only wrapper height floor above authored short sticky containers', () => {
     const document = structuredClone(createInitialDocument());
     const stickySteps = createSectionFromTemplate('stickySteps', document.rootId);
     document.nodes = {
@@ -168,9 +310,9 @@ describe('site/siteExport', () => {
     const css = renderSiteCss(document);
 
     expect(css).toContain(`.sp-node-${topCard.id}-content {`);
-    expect(css).toContain('min-height: 151px;');
+    expect(css).toContain('height: 151px;');
     expect(css).toContain(`.sp-node-${bottomCard.id}-content {`);
-    expect(css).toContain('min-height: 146px;');
+    expect(css).toContain('height: 146px;');
     expect(css).not.toContain('.sp-wrapper.sp-role-section, .sp-wrapper.sp-role-container');
     expect(css).not.toContain('min-height: 180px;');
   });

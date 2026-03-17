@@ -1,0 +1,119 @@
+import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
+import { createInitialDocument } from '../../../model/defaults';
+import { NodeBasicsSection, InspectorSectionCard } from '../CommonSections';
+
+describe('panels/inspector/CommonSections', () => {
+  it('invokes the focused-mode entry action from the section header button', () => {
+    const onEnter = vi.fn();
+    const tree = InspectorSectionCard({
+      title: 'Sticky',
+      focusedModeEntry: {
+        mode: 'sticky',
+        label: 'sticky mode',
+        onEnter,
+      },
+      children: null,
+    });
+
+    const button = findElementByAriaLabel(tree, 'Go to sticky mode');
+    if (!button?.props.onClick) {
+      throw new Error('Expected focused-mode entry button');
+    }
+
+    button.props.onClick();
+    expect(onEnter).toHaveBeenCalledWith('sticky');
+  });
+
+  it('shows the top-level width field as disabled when the wrapper is locked to 100%', () => {
+    const document = createInitialDocument();
+    const headerNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'header',
+    );
+
+    if (!headerNode || headerNode.type !== 'wrapper') {
+      throw new Error('Expected header wrapper');
+    }
+
+    const markup = renderToStaticMarkup(
+      <NodeBasicsSection
+        node={headerNode}
+        orderState={{
+          showOrderControls: false,
+          canOrderBack: false,
+          canOrderForward: false,
+          canSendToBack: false,
+          canBringToFront: false,
+          orderBackShortcut: '',
+          orderForwardShortcut: '',
+          sendToBackShortcut: '',
+          bringToFrontShortcut: '',
+          canSectionBack: false,
+          canSectionForward: false,
+          onOrderBack: () => {},
+          onOrderForward: () => {},
+          onSendToBack: () => {},
+          onBringToFront: () => {},
+          onSectionBack: () => {},
+          onSectionForward: () => {},
+        }}
+        actions={{
+          onRectChange: () => {},
+          onPromote: () => {},
+          onDemote: () => {},
+        }}
+      />,
+    );
+
+    expect(markup).toContain('>W<');
+    expect(markup).toContain('value="100"');
+    expect(markup).toContain('disabled=""');
+  });
+
+  it('renders custom header content and action without affecting the shared card structure', () => {
+    const onClick = vi.fn();
+    const markup = renderToStaticMarkup(
+      <InspectorSectionCard
+        title="Sticky"
+        headerContent={<div>Post Title</div>}
+        headerAction={{
+          ariaLabel: 'Close sticky mode',
+          icon: <span>close</span>,
+          onClick,
+        }}
+      >
+        <div>Body</div>
+      </InspectorSectionCard>,
+    );
+
+    expect(markup).toContain('Post Title');
+    expect(markup).toContain('aria-label="Close sticky mode"');
+    expect(markup).toContain('Body');
+  });
+});
+
+function findElementByAriaLabel(node: ReactNode, ariaLabel: string): ReactElement | null {
+  if (!isValidElement(node)) {
+    return null;
+  }
+
+  if (node.props['aria-label'] === ariaLabel) {
+    return node;
+  }
+
+  return findInChildren(node.props.children, ariaLabel);
+}
+
+function findInChildren(children: ReactNode, ariaLabel: string): ReactElement | null {
+  const childList = Array.isArray(children) ? children : [children];
+
+  for (const child of childList) {
+    const match = findElementByAriaLabel(child, ariaLabel);
+    if (match) {
+      return match;
+    }
+  }
+
+  return null;
+}

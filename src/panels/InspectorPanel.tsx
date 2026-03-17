@@ -1,4 +1,6 @@
-import type { DocumentNode, EditorTextField, WrapperStyleField } from '../api/documentApi';
+import type { DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
+import type { WrapperStyleField } from '../api/documentApi';
+import { InspectorBlockList } from './InspectorBlockList';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 import { resolveInspectorBlocks } from './inspector/schema';
 
@@ -13,8 +15,9 @@ export {
   normalizeAspectRatioExpression,
 } from './InspectorControls';
 
-type Props = {
+export type InspectorPanelProps = {
   node: DocumentNode | null;
+  focusedMode: FocusedMode;
   showOrderControls: boolean;
   canOrderBack: boolean;
   canOrderForward: boolean;
@@ -47,10 +50,12 @@ type Props = {
   onStickyDuration: (value: number) => void;
   onStickyDurationTop: (value: number) => void;
   onStickyDurationBottom: (value: number) => void;
+  onEnterFocusedMode: (mode: FocusedMode) => void;
 };
 
 export function InspectorPanel({
   node,
+  focusedMode,
   showOrderControls,
   canOrderBack,
   canOrderForward,
@@ -83,7 +88,8 @@ export function InspectorPanel({
   onStickyDuration,
   onStickyDurationTop,
   onStickyDurationBottom,
-}: Props) {
+  onEnterFocusedMode,
+}: InspectorPanelProps) {
   const actions: InspectorActionHandlers = {
     onTextChange,
     onWrapperStyleChange,
@@ -100,6 +106,7 @@ export function InspectorPanel({
     onStickyDuration,
     onStickyDurationTop,
     onStickyDurationBottom,
+    onEnterFocusedMode,
   };
   const orderState: InspectorOrderState = {
     showOrderControls,
@@ -120,46 +127,7 @@ export function InspectorPanel({
     onSectionBack,
     onSectionForward,
   };
-  const blocks = resolveInspectorBlocks({ node, actions, orderState });
+  const blocks = resolveInspectorBlocks({ node, actions, orderState, focusedMode });
 
-  return (
-    <div className="flex h-full flex-col gap-1.5 overflow-auto p-2.5 text-xs">
-      {blocks.map((block) => (
-        <div
-          key={block.id}
-          data-inspector-block={block.id}
-          data-inspector-bucket={block.bucket}
-          data-inspector-align={block.align}
-          data-inspector-layout={block.layout}
-          className={block.align === 'start' ? 'self-start' : undefined}
-        >
-          {block.render ? (
-            block.render()
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              {block.title || block.description ? (
-                <div className="px-1 pb-0.5">
-                  {block.title ? (
-                    <div className="editor-text-strong text-[11px] font-semibold uppercase tracking-[0.08em]">
-                      {block.title}
-                    </div>
-                  ) : null}
-                  {block.description ? (
-                    <div className="editor-text-muted mt-0.5 text-[11px]">{block.description}</div>
-                  ) : null}
-                </div>
-              ) : null}
-              <div className={block.layout === 'grid-2' ? 'grid grid-cols-2 gap-1.5' : 'flex flex-col gap-1.5'}>
-                {block.sections.map((section) => (
-                  <div key={section.id} data-inspector-section={section.id}>
-                    {section.render()}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
+  return <InspectorBlockList blocks={blocks} />;
 }

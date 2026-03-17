@@ -18,6 +18,7 @@ describe('panels/SettingsPanel', () => {
         showGridLanes={false}
         snapEnabled={true}
         themeMode="auto"
+        startupFocusedMode={null}
         undoDepth={0}
         redoDepth={0}
         historyLimit={100}
@@ -27,6 +28,7 @@ describe('panels/SettingsPanel', () => {
         onShowGridLanesChange={() => {}}
         onSnapEnabledChange={() => {}}
         onThemeModeChange={() => {}}
+        onStartupFocusedModeChange={() => {}}
         onClearHistory={() => {}}
         onHistoryLimitChange={() => {}}
         onImport={() => ({ ok: true, message: 'ok' })}
@@ -36,6 +38,8 @@ describe('panels/SettingsPanel', () => {
     );
 
     expect(markup).toContain('Base file name');
+    expect(markup).toContain('Startup mode');
+    expect(markup).toContain('Chooses which focused mode the editor opens with.');
     expect(markup).toContain('sticky-playground');
     expect(markup).toContain('JSON exports use `.json`; rendered site exports use `.zip`.');
     expect(markup).toContain('Document JSON');

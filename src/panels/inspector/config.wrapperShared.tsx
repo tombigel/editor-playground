@@ -1,6 +1,6 @@
 import { WrapperDesignSection } from './CommonSections';
 import { StickySection } from './StickySection';
-import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { basicsSection, createSectionBlock, propertiesSection, summaryBlock } from './config.common';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, WrapperInspectorNode } from './types';
 
 const wrapperDesignSection: InspectorSectionDefinition = {
@@ -13,8 +13,8 @@ const wrapperDesignSection: InspectorSectionDefinition = {
 
 const wrapperStickySection: InspectorSectionDefinition = {
   id: 'sticky',
-  render: ({ node, actions }) =>
-    isWrapperNode(node) ? <StickySection node={node} actions={actions} /> : null,
+  render: ({ node, actions, focusedMode }) =>
+    isWrapperNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
 };
 
 export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonly InspectorBlockDefinition[] {
@@ -40,6 +40,13 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
       title,
       description: 'Target, offsets, and duration behavior.',
       sections: [wrapperStickySection],
+    }),
+    createSectionBlock({
+      id: 'properties',
+      bucket: 'primary',
+      title: 'Properties',
+      description: 'Component metadata.',
+      sections: [propertiesSection],
     }),
   ];
 }

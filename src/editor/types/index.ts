@@ -1,6 +1,8 @@
 import type { DocumentModel, NodeId } from '../../model/types';
 import type { ThemeMode } from '../../lib/types';
 
+export type FocusedMode = null | 'sticky';
+
 export type ConfirmReplaceRole = {
   requestedId: NodeId;
   targetRole: 'header' | 'footer';
@@ -19,5 +21,9 @@ export type EditorState = {
     showGridLanes: boolean;
     snapEnabled: boolean;
     themeMode: ThemeMode;
+    focusedMode: FocusedMode;
+    startupFocusedMode: FocusedMode;
+    inspectorCollapsed: boolean;
+    temporaryInspectorOpen: boolean;
   };
 };

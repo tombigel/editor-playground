@@ -6,7 +6,7 @@ import type {
   SectionTemplateId,
   WrapperStyleField,
 } from '../../model/types';
-import type { EditorState } from '../../editor/types';
+import type { EditorState, FocusedMode } from '../../editor/types';
 
 export type NodePatch = {
   id: NodeId;
@@ -62,7 +62,11 @@ export type EditorAction =
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
   | { type: 'setShowGridLanes'; value: boolean }
   | { type: 'setSnapEnabled'; value: boolean }
-  | { type: 'setThemeMode'; value: EditorState['ui']['themeMode'] };
+  | { type: 'setThemeMode'; value: EditorState['ui']['themeMode'] }
+  | { type: 'setFocusedMode'; value: FocusedMode }
+  | { type: 'setStartupFocusedMode'; value: FocusedMode }
+  | { type: 'setInspectorCollapsed'; value: boolean }
+  | { type: 'setTemporaryInspectorOpen'; value: boolean };
 
 export type HistoryAction =
   | EditorAction

@@ -31,7 +31,7 @@ export function isBrandMark(node: LeafNode) {
 
 export function renderLeafContent(node: LeafNode, options: RenderLeafContentOptions = {}): ReactNode {
   const {
-    textStyle,
+    contentStyle,
     imageClassName,
     imagePlaceholderClassName,
     imageDraggable = true,
@@ -42,28 +42,29 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
   switch (node.role) {
     case 'text': {
       const Tag = node.htmlTag;
-      return <Tag style={textStyle}>{node.content}</Tag>;
+      return <Tag style={contentStyle}>{node.content}</Tag>;
     }
     case 'image':
       return node.src ? (
         <img
           className={imageClassName}
+          style={contentStyle}
           src={node.src}
           alt={node.alt || 'Image'}
           draggable={imageDraggable}
         />
       ) : (
-        <div className={imagePlaceholderClassName}>{getNodeTextContent(node)}</div>
+        <div className={imagePlaceholderClassName} style={contentStyle}>{getNodeTextContent(node)}</div>
       );
     case 'link':
       return (
-        <a href={node.href} tabIndex={tabIndex}>
+        <a href={node.href} tabIndex={tabIndex} style={contentStyle}>
           {getNodeTextContent(node)}
         </a>
       );
     case 'button':
       return (
-        <button type="button" tabIndex={tabIndex}>
+        <button type="button" tabIndex={tabIndex} style={contentStyle}>
           {getNodeTextContent(node)}
         </button>
       );

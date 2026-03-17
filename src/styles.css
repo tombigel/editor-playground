@@ -693,6 +693,14 @@ button {
   opacity: 0.2;
 }
 
+.drag-source,
+.drag-source *,
+.drag-source::before,
+.drag-source::after {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
 .content-wrapper {
   position: relative;
   align-items: start;

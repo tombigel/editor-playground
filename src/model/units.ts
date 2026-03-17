@@ -2,6 +2,7 @@ import type {
   FontSizeValue,
   HeightValue,
   ParsedValue,
+  SpacingValue,
   Unit,
   UnitValue,
   WidthValue,
@@ -9,6 +10,7 @@ import type {
 
 const unitPattern = /^(-?\d+(?:\.\d+)?)(px|%|vw|vh|vmin|vmax)$/;
 const fontSizePattern = /^(-?\d+(?:\.\d+)?)(px|em|rem)$/;
+const spacingPattern = /^(-?\d+(?:\.\d+)?)(px|em|rem)$/;
 const aspectRatioPattern = /^aspect-ratio\(\s*(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?\s*\)$/;
 
 export function parseUnitValue(raw: string): ParsedValue<UnitValue> {
@@ -49,6 +51,21 @@ export function parseFontSizeValue(raw: string): ParsedValue<FontSizeValue> {
   };
 }
 
+export function parseSpacingValue(raw: string): ParsedValue<SpacingValue> {
+  const value = raw.trim();
+  const match = value.match(spacingPattern);
+  if (!match) {
+    throw new Error(`Invalid spacing value: ${raw}`);
+  }
+  return {
+    raw,
+    parsed: {
+      value: Number(match[1]),
+      unit: match[2] as SpacingValue['unit'],
+    },
+  };
+}
+
 export function parseHeightValue(raw: string): ParsedValue<HeightValue> {
   const value = raw.trim();
   if (value === 'auto') {
@@ -70,7 +87,7 @@ export function parseHeightValue(raw: string): ParsedValue<HeightValue> {
 }
 
 export function formatValue(
-  value: UnitValue | WidthValue | HeightValue | FontSizeValue,
+  value: UnitValue | WidthValue | HeightValue | FontSizeValue | SpacingValue,
 ): string {
   if ('unit' in value) {
     return `${value.value}${value.unit}`;

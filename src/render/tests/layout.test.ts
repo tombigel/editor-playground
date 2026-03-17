@@ -6,6 +6,8 @@ import {
   buildWrapperStyle,
   cssPropertiesToDeclarations,
   getContentWrapperBaseStyle,
+  getContentWrapperPaddingStyle,
+  getContentWrapperSurfaceStyle,
   getLeafCssHeight,
   getNodeHeight,
   getNodeWidth,
@@ -35,6 +37,20 @@ describe('render/layout', () => {
     expect(getNodeWidth(title, { [title.id]: { width: 333, height: 222 } })).toBe(333);
     expect(getNodeHeight(title, { [title.id]: { width: 333, height: 222 } })).toBe(222);
     expect(getNodeHeight(section, { [section.id]: { width: 1000, height: 222 } })).toBe(450);
+  });
+
+  it('treats explicit section height as a minimum for structural geometry while containers stay fixed', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const container = createWrapper('container', 'root');
+    container.rect.height.base = parseHeightValue('180px');
+
+    expect(getNodeHeight(section, { [section.id]: { width: 998, height: 700 } })).toBe(564);
+    expect(getNodeHeight(container, { [container.id]: { width: 320, height: 260 } })).toBe(180);
   });
 
   it('derives fallback width and height from authored units and aspect ratio', () => {
@@ -76,6 +92,16 @@ describe('render/layout', () => {
     ]);
   });
 
+  it('uses fixed height for containers and minimum height for sections', () => {
+    const section = createWrapper('section', 'root');
+    const container = createWrapper('container', 'root');
+    section.rect.height.base = parseHeightValue('240px');
+    container.rect.height.base = parseHeightValue('180px');
+
+    expect(getContentWrapperBaseStyle(section)).toEqual({ width: '100%', minHeight: '240px' });
+    expect(getContentWrapperBaseStyle(container)).toEqual({ width: '100%', height: '180px' });
+  });
+
   it('only emits explicit wrapper borders and supports section bottom dividers', () => {
     const section = createWrapper('section', 'root');
     section.style.borderColor = undefined;
@@ -99,6 +125,45 @@ describe('render/layout', () => {
     container.style.borderWidth = undefined;
     expect(getWrapperBorderStyle(container)).toEqual({});
     expect(getWrapperBorderDeclarations(container)).toEqual([]);
+  });
+
+  it('applies wrapper surface background, border, radius, and shadow on the content wrapper', () => {
+    const container = createWrapper('container', 'root');
+    container.style.background = '#ffffff';
+    container.style.borderWidth = parseUnitValue('2px');
+    container.style.borderColor = '#dbe3ee';
+    container.style.borderRadius = parseUnitValue('20px');
+    container.style.shadowColor = 'rgba(18, 32, 51, 0.18)';
+    container.style.shadowBlur = 24;
+    container.style.shadowOffsetX = 0;
+    container.style.shadowOffsetY = 12;
+
+    expect(getContentWrapperSurfaceStyle(container)).toEqual({
+      boxSizing: 'border-box',
+      backgroundClip: 'padding-box',
+      background: '#ffffff',
+      borderStyle: 'solid',
+      borderWidth: '2px',
+      borderColor: '#dbe3ee',
+      borderRadius: '20px',
+      boxShadow: '0px 12px 24px rgba(18, 32, 51, 0.18)',
+      paddingTop: '16px',
+      paddingRight: '16px',
+      paddingBottom: '16px',
+      paddingLeft: '16px',
+    });
+    expect(getWrapperBorderStyle(container)).toEqual({});
+  });
+
+  it('exposes content wrapper padding separately for overlay alignment', () => {
+    const section = createWrapper('section', 'root');
+
+    expect(getContentWrapperPaddingStyle(section)).toEqual({
+      paddingTop: '16px',
+      paddingRight: '16px',
+      paddingBottom: '16px',
+      paddingLeft: '16px',
+    });
   });
 
   it('builds mesh layout and sticky extra extent for content-wrapper sticky sections', () => {

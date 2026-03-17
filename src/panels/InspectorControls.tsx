@@ -11,8 +11,8 @@ import {
   PanelTop,
   Proportions,
 } from 'lucide-react';
-import type { WrapperNode } from '../api/documentApi';
-import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
+import type { BorderStyle, ShadowStyle, WrapperNode } from '../model/types';
+import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,7 @@ type SizeFieldMode =
   | 'auto'
   | 'aspect-ratio';
 type FontSizeMode = 'px' | 'em' | 'rem';
+type SpacingMode = 'px' | 'em' | 'rem';
 export type SizeFieldDescriptor =
   | { kind: 'numeric'; mode: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>; input: string }
   | { kind: 'keyword'; mode: Extract<SizeFieldMode, 'fit-content' | 'min-content' | 'max-content' | 'auto'>; input: '' }
@@ -53,12 +54,14 @@ export function SizeInlineField({
   axis,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   nodeId: string;
   axis: SizeFieldAxis;
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   const [mode, setMode] = useState<SizeFieldMode>(() => describeSizeFieldValue(value, axis).mode);
   const [numericDraft, setNumericDraft] = useState(() => getInitialNumericDraft(value, axis));
@@ -96,7 +99,9 @@ export function SizeInlineField({
       return false;
     }
     setInvalid(false);
-    onChange(nextRaw);
+    if (!disabled) {
+      onChange(nextRaw);
+    }
     return true;
   }
 
@@ -135,8 +140,8 @@ export function SizeInlineField({
         <div
           className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
-          <Select value={mode} onValueChange={handleModeChange}>
-            <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0">
+          <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
+            <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
@@ -160,10 +165,11 @@ export function SizeInlineField({
                 setNumericDraft(next);
                 const nextRaw = buildSizeFieldValue(axis, mode, next);
                 setInvalid(!nextRaw);
-                if (nextRaw) {
+                if (nextRaw && !disabled) {
                   onChange(nextRaw);
                 }
               }}
+              disabled={disabled}
               className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           ) : (
@@ -174,10 +180,11 @@ export function SizeInlineField({
                 setAspectDraft(next);
                 const nextRaw = buildSizeFieldValue(axis, 'aspect-ratio', next);
                 setInvalid(!nextRaw);
-                if (nextRaw) {
+                if (nextRaw && !disabled) {
                   onChange(nextRaw);
                 }
               }}
+              disabled={disabled}
               className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none focus-visible:border-0 focus-visible:ring-0"
             />
           )}
@@ -186,9 +193,9 @@ export function SizeInlineField({
             style={{ right: usesIconSuffix ? '52px' : '44px' }}
           />
           <div className={`group/unitsuffix relative ${suffixWidthClass}`}>
-            <Select value={mode} onValueChange={handleModeChange}>
+            <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
               <SelectTrigger
-                className={`editor-inline-field-trigger peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0`}
+                className={`editor-inline-field-trigger peer/unittrigger relative z-10 h-full ${suffixWidthClass} justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 {usesIconSuffix ? (
                   <span className="flex w-full items-center justify-center">
@@ -328,42 +335,358 @@ export function HoverColorField({
   onChange,
   ariaLabel,
   fallback = '#ffffff',
-  inputWidthClass = 'w-[4.75rem]',
-  gapPx = 8,
+  showOpacity = true,
 }: {
   value: string | undefined;
   onChange: (value: string) => void;
   ariaLabel: string;
   fallback?: string;
-  inputWidthClass?: string;
-  gapPx?: number;
+  showOpacity?: boolean;
 }) {
-  const normalizedValue = normalizeHexColor(value, fallback);
-  const gapStyle = { width: `${gapPx}px`, right: '100%' };
-  const inputOffsetStyle = { right: `calc(100% + ${gapPx}px)` };
+  const resolvedColor = normalizeColorFieldValue(value, fallback);
 
   return (
-    <div className="group/colorfield relative flex h-8 w-8 shrink-0 items-center justify-end overflow-visible">
-      <div aria-hidden="true" className="absolute top-1/2 z-20 h-8 -translate-y-1/2" style={gapStyle} />
-      <div
-        className={`pointer-events-none absolute top-1/2 z-30 origin-right -translate-y-1/2 rounded-sm opacity-0 shadow-[0_3px_10px_rgba(18,32,51,0.06)] translate-x-1.5 scale-[0.985] transition-[opacity,transform] duration-120 ease-out group-hover/colorfield:pointer-events-auto group-hover/colorfield:opacity-100 group-hover/colorfield:translate-x-0 group-hover/colorfield:scale-100 group-hover/colorfield:duration-220 group-hover/colorfield:ease-[cubic-bezier(0.22,1,0.36,1)] group-focus-within/colorfield:pointer-events-auto group-focus-within/colorfield:opacity-100 group-focus-within/colorfield:translate-x-0 group-focus-within/colorfield:scale-100 group-focus-within/colorfield:duration-220 group-focus-within/colorfield:ease-[cubic-bezier(0.22,1,0.36,1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.16)] ${inputWidthClass}`}
-        style={inputOffsetStyle}
-      >
-        <Input
-          value={normalizedValue}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-8 w-full rounded-sm font-mono text-[11px] uppercase"
+    <div className="flex h-8 min-w-[8.75rem] items-center justify-end gap-2">
+      {showOpacity ? (
+        <div className="flex-1">
+          <Slider
+            aria-label={`${ariaLabel} opacity`}
+            value={[resolvedColor.opacityPercent]}
+            min={0}
+            max={100}
+            step={1}
+            onValueChange={(nextValue) => {
+              const nextOpacity = nextValue[0] ?? resolvedColor.opacityPercent;
+              onChange(formatRgbColorValue(resolvedColor.red, resolvedColor.green, resolvedColor.blue, nextOpacity / 100));
+            }}
+          />
+        </div>
+      ) : (
+        <div className="flex-1" />
+      )}
+      <div className="editor-icon-button-subtle relative h-8 w-8 shrink-0 overflow-hidden rounded-sm border shadow-sm">
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(148,163,184,0.12)_25%,transparent_25%,transparent_75%,rgba(148,163,184,0.12)_75%,rgba(148,163,184,0.12)),linear-gradient(45deg,rgba(148,163,184,0.12)_25%,transparent_25%,transparent_75%,rgba(148,163,184,0.12)_75%,rgba(148,163,184,0.12))] bg-[length:8px_8px] bg-[position:0_0,4px_4px]" />
+        <div className="absolute inset-[3px] rounded-[3px]" style={{ backgroundColor: resolvedColor.css }} />
+        <input
+          type="color"
+          aria-label={ariaLabel}
+          className="absolute inset-0 cursor-pointer opacity-0 focus-visible:outline-none"
+          value={resolvedColor.hex}
+          onChange={(event) => {
+            const nextColor = normalizeColorFieldValue(event.target.value, resolvedColor.hex);
+            onChange(formatRgbColorValue(nextColor.red, nextColor.green, nextColor.blue, resolvedColor.alpha));
+          }}
         />
       </div>
-      <input
-        type="color"
-        aria-label={ariaLabel}
-        className="editor-icon-button-subtle relative z-10 h-8 w-8 cursor-pointer rounded-sm border p-0 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
-        value={normalizedValue}
-        onChange={(event) => onChange(event.target.value)}
+    </div>
+  );
+}
+
+export function BorderControlGroup({
+  colorValue,
+  widthValue,
+  radiusValue,
+  onColorChange,
+  onWidthChange,
+  onRadiusChange,
+  showRadius = true,
+  colorFallback = '#d8e0ea',
+  widthPlaceholder = '1',
+  radiusPlaceholder = '16',
+}: {
+  colorValue: string;
+  widthValue: string;
+  radiusValue: string;
+  onColorChange: (value: string) => void;
+  onWidthChange: (value: string) => void;
+  onRadiusChange: (value: string) => void;
+  showRadius?: boolean;
+  colorFallback?: string;
+  widthPlaceholder?: string;
+  radiusPlaceholder?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-end">
+        <HoverColorField value={colorValue || undefined} onChange={onColorChange} ariaLabel="Border color" fallback={colorFallback} />
+      </div>
+      <div className={`grid gap-1.5 ${showRadius ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <LabeledFixedUnitField
+          label="Width"
+          value={widthValue}
+          unit="px"
+          onChange={onWidthChange}
+          placeholder={widthPlaceholder}
+          min={0}
+          step="any"
+        />
+        {showRadius ? (
+          <LabeledUnitField
+            label="Radius"
+            value={radiusValue}
+            units={['px', '%']}
+            onChange={onRadiusChange}
+            placeholder={radiusPlaceholder}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function ShadowControlGroup({
+  color,
+  blur,
+  distance,
+  angle,
+  onColorChange,
+  onBlurChange,
+  onDistanceChange,
+  onAngleChange,
+  colorFallback,
+}: {
+  color: string;
+  blur: number;
+  distance: number;
+  angle: number;
+  onColorChange: (value: string) => void;
+  onBlurChange: (value: number) => void;
+  onDistanceChange: (value: number) => void;
+  onAngleChange: (value: number) => void;
+  colorFallback: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-end">
+        <HoverColorField value={color || undefined} onChange={onColorChange} ariaLabel="Shadow color" fallback={colorFallback} />
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        <LabeledNumberField label="Blur" value={blur} onChange={onBlurChange} min={0} max={200} step={1} />
+        <LabeledNumberField label="Distance" value={distance} onChange={onDistanceChange} min={0} max={400} step={1} />
+        <LabeledNumberField label="Angle" value={angle} onChange={onAngleChange} min={-180} max={180} step={1} />
+      </div>
+    </div>
+  );
+}
+
+export function LabeledNumberField({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step: number;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <Label className="text-[11px] font-medium">{label}</Label>
+      <NumberInput value={value} min={min} max={max} step={step} onChange={onChange} />
+    </div>
+  );
+}
+
+export function LabeledImplicitUnitField({
+  label,
+  value,
+  units,
+  onChange,
+  placeholder,
+  min,
+  step,
+}: {
+  label: string;
+  value: string;
+  units: ('px' | '%')[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  min?: number;
+  step?: number | 'any';
+}) {
+  const parsed = value ? parseUnitValue(value) : null;
+  const resolvedUnit = parsed && units.includes(parsed.parsed.unit as 'px' | '%') ? parsed.parsed.unit : units[0];
+  const [draft, setDraft] = useState(parsed ? formatFieldNumber(clampFieldNumber(parsed.parsed.value)) : '');
+
+  useEffect(() => {
+    const nextParsed = value ? parseUnitValue(value) : null;
+    setDraft(nextParsed ? formatFieldNumber(clampFieldNumber(nextParsed.parsed.value)) : '');
+  }, [value]);
+
+  return (
+    <div className="space-y-0.5">
+      <Label className="text-[11px] font-medium">{label}</Label>
+      <Input
+        type="number"
+        min={min}
+        step={step}
+        value={draft}
+        placeholder={placeholder}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+          if (nextDraft.trim() === '') {
+            onChange('');
+            return;
+          }
+          const nextValue = Number.parseFloat(nextDraft);
+          if (Number.isFinite(nextValue)) {
+            onChange(`${nextValue}${resolvedUnit}`);
+          }
+        }}
+        className="h-8 rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
     </div>
   );
+}
+
+export function LabeledFixedUnitField({
+  label,
+  value,
+  unit,
+  onChange,
+  placeholder,
+  min,
+  step,
+}: {
+  label: string;
+  value: string;
+  unit: 'px' | '%';
+  onChange: (value: string) => void;
+  placeholder?: string;
+  min?: number;
+  step?: number | 'any';
+}) {
+  const parsed = value ? parseUnitValue(value) : null;
+  const [draft, setDraft] = useState(parsed ? formatFieldNumber(clampFieldNumber(parsed.parsed.value)) : '');
+
+  useEffect(() => {
+    const nextParsed = value ? parseUnitValue(value) : null;
+    setDraft(nextParsed ? formatFieldNumber(clampFieldNumber(nextParsed.parsed.value)) : '');
+  }, [value]);
+
+  return (
+    <div className="space-y-0.5">
+      <Label className="text-[11px] font-medium">{label}</Label>
+      <div className="group/inlinefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] editor-inline-field focus-within:border-blue-500">
+        <Input
+          type="number"
+          min={min}
+          step={step}
+          value={draft}
+          placeholder={placeholder}
+          onChange={(event) => {
+            const nextDraft = event.target.value;
+            setDraft(nextDraft);
+            if (nextDraft.trim() === '') {
+              onChange('');
+              return;
+            }
+            const nextValue = Number.parseFloat(nextDraft);
+            if (Number.isFinite(nextValue)) {
+              onChange(`${nextValue}${unit}`);
+            }
+          }}
+          className="editor-inline-field-value h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] text-center shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <div className="editor-inline-field-trigger editor-text-strong flex h-full w-[44px] min-w-[44px] items-center justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium">
+          {unit}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LabeledUnitField({
+  label,
+  value,
+  units,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  units: ('px' | '%')[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <Label className="text-[11px] font-medium">{label}</Label>
+      <NumericUnitInlineField value={value} units={units} onChange={onChange} placeholder={placeholder} />
+    </div>
+  );
+}
+
+export function readUnifiedBorderColor(style: BorderStyle | undefined) {
+  if (!style) {
+    return '';
+  }
+  if (style.borderColor) {
+    return style.borderColor;
+  }
+  const values = [style.borderTopColor, style.borderRightColor, style.borderBottomColor, style.borderLeftColor].filter(
+    (value): value is string => Boolean(value),
+  );
+  return values.length === 4 && values.every((value) => value === values[0]) ? values[0] : '';
+}
+
+export function readUnifiedBorderWidth(style: BorderStyle | undefined) {
+  if (!style) {
+    return '';
+  }
+  if (style.borderWidth) {
+    return style.borderWidth.raw;
+  }
+  return readUnifiedParsedValue([
+    style.borderTopWidth?.raw,
+    style.borderRightWidth?.raw,
+    style.borderBottomWidth?.raw,
+    style.borderLeftWidth?.raw,
+  ]);
+}
+
+export function readUnifiedBorderRadius(style: BorderStyle | undefined) {
+  if (!style) {
+    return '';
+  }
+  if (style.borderRadius) {
+    return style.borderRadius.raw;
+  }
+  return readUnifiedParsedValue([
+    style.borderTopLeftRadius?.raw,
+    style.borderTopRightRadius?.raw,
+    style.borderBottomRightRadius?.raw,
+    style.borderBottomLeftRadius?.raw,
+  ]);
+}
+
+export function readShadowFieldValues(
+  style: ShadowStyle | undefined,
+  fallback: { color: string; blur: number; distance: number; angle: number },
+) {
+  const fallbackVector = offsetsFromDistanceAndAngle(fallback.distance, fallback.angle);
+  const offsetX = style?.shadowOffsetX ?? fallbackVector.offsetX;
+  const offsetY = style?.shadowOffsetY ?? fallbackVector.offsetY;
+  return {
+    color: style?.shadowColor ?? fallback.color,
+    blur: style?.shadowBlur ?? fallback.blur,
+    distance: roundShadowNumber(Math.sqrt(offsetX ** 2 + offsetY ** 2)),
+    angle: roundShadowNumber((Math.atan2(offsetY, offsetX) * 180) / Math.PI),
+  };
+}
+
+export function offsetsFromDistanceAndAngle(distance: number, angle: number) {
+  const radians = (angle * Math.PI) / 180;
+  return {
+    offsetX: Math.cos(radians) * distance,
+    offsetY: Math.sin(radians) * distance,
+  };
 }
 
 function renderSizeModeOptions(axis: SizeFieldAxis) {
@@ -579,6 +902,69 @@ export function FontSizeField({
       <div
         className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
         style={{ width: fontSizeSuffixWidth }}
+      />
+    </div>
+  );
+}
+
+export function SpacingField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const parsed = parseSpacingValue(value);
+  const suffixWidth = '44px';
+
+  return (
+    <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
+      <Input
+        type="number"
+        min={0}
+        step="any"
+        value={String(parsed.parsed.value)}
+        onChange={(e) => {
+          const next = Number.parseFloat(e.target.value);
+          if (Number.isFinite(next) && next >= 0) {
+            onChange(`${next}${parsed.parsed.unit}`);
+          }
+        }}
+        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+        style={{ right: suffixWidth }}
+      />
+      <Select
+        value={parsed.parsed.unit}
+        onValueChange={(nextUnit) => {
+          onChange(`${parsed.parsed.value}${nextUnit as SpacingMode}`);
+        }}
+      >
+        <SelectTrigger
+          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full justify-center rounded-r-sm rounded-l-none border-0 border-l bg-transparent px-0 text-center text-[10px] font-medium shadow-none [&>span]:w-full [&>span]:justify-center [&>svg]:hidden focus:border-0 focus:ring-0"
+          style={{ width: suffixWidth }}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {FONT_SIZE_UNIT_OPTIONS.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div
+        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
+        style={{ width: suffixWidth }}
+      >
+        <ChevronDown className="editor-text-strong h-3.5 w-3.5" />
+      </div>
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+        style={{ width: suffixWidth }}
       />
     </div>
   );
@@ -1117,9 +1503,176 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function normalizeHexColor(value: string | undefined, fallback: string) {
-  if (value && /^#[0-9a-fA-F]{6}$/.test(value)) {
-    return value;
+function readUnifiedParsedValue(values: Array<string | undefined>) {
+  const defined = values.filter((value): value is string => Boolean(value));
+  return defined.length === values.length && defined.every((value) => value === defined[0]) ? defined[0] : '';
+}
+
+type ParsedColorChannels = {
+  red: number;
+  green: number;
+  blue: number;
+  alpha: number;
+};
+
+export function formatRgbColorValue(red: number, green: number, blue: number, alpha: number) {
+  return `rgb(${clampColorChannel(red)} ${clampColorChannel(green)} ${clampColorChannel(blue)} / ${formatAlphaValue(alpha)})`;
+}
+
+export function parseColorFieldValue(value: string | undefined) {
+  if (!value) {
+    return null;
   }
-  return fallback;
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const hexMatch = trimmed.match(/^#([\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i);
+  if (hexMatch) {
+    return parseHexColorValue(hexMatch[1]);
+  }
+
+  const functionMatch = trimmed.match(/^rgba?\((.+)\)$/i);
+  if (!functionMatch) {
+    return null;
+  }
+
+  return parseFunctionalColorValue(functionMatch[1]);
+}
+
+export function normalizeColorFieldValue(value: string | undefined, fallback: string) {
+  const parsed = parseColorFieldValue(value) ?? parseColorFieldValue(fallback) ?? { red: 255, green: 255, blue: 255, alpha: 1 };
+
+  return {
+    ...parsed,
+    hex: formatHexColorValue(parsed.red, parsed.green, parsed.blue),
+    css: formatRgbColorValue(parsed.red, parsed.green, parsed.blue, parsed.alpha),
+    opacityPercent: Math.round(parsed.alpha * 100),
+  };
+}
+
+function roundShadowNumber(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function parseHexColorValue(value: string): ParsedColorChannels | null {
+  if (value.length === 3 || value.length === 4) {
+    const expanded = value
+      .split('')
+      .map((part) => `${part}${part}`)
+      .join('');
+
+    return parseHexColorValue(expanded);
+  }
+
+  if (value.length !== 6 && value.length !== 8) {
+    return null;
+  }
+
+  const red = Number.parseInt(value.slice(0, 2), 16);
+  const green = Number.parseInt(value.slice(2, 4), 16);
+  const blue = Number.parseInt(value.slice(4, 6), 16);
+  const alpha = value.length === 8 ? Number.parseInt(value.slice(6, 8), 16) / 255 : 1;
+
+  if (![red, green, blue, alpha].every((part) => Number.isFinite(part))) {
+    return null;
+  }
+
+  return {
+    red: clampColorChannel(red),
+    green: clampColorChannel(green),
+    blue: clampColorChannel(blue),
+    alpha: clamp(alpha, 0, 1),
+  };
+}
+
+function parseFunctionalColorValue(value: string): ParsedColorChannels | null {
+  const normalized = value.trim();
+  const slashParts = normalized.split('/');
+  const channelTokens = splitColorTokens(slashParts[0] ?? '');
+  const alphaToken =
+    slashParts.length > 1
+      ? slashParts[1]?.trim()
+      : channelTokens.length === 4
+        ? channelTokens[3]
+        : undefined;
+  const rgbTokens = alphaToken && channelTokens.length === 4 ? channelTokens.slice(0, 3) : channelTokens;
+
+  if (rgbTokens.length !== 3) {
+    return null;
+  }
+
+  const red = parseColorChannel(rgbTokens[0]);
+  const green = parseColorChannel(rgbTokens[1]);
+  const blue = parseColorChannel(rgbTokens[2]);
+  const alpha = parseAlphaChannel(alphaToken);
+
+  if (red === null || green === null || blue === null || alpha === null) {
+    return null;
+  }
+
+  return { red, green, blue, alpha };
+}
+
+function splitColorTokens(value: string) {
+  return value
+    .trim()
+    .split(value.includes(',') ? /\s*,\s*/ : /\s+/)
+    .filter(Boolean);
+}
+
+function parseColorChannel(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+  if (value.endsWith('%')) {
+    const parsed = Number.parseFloat(value.slice(0, -1));
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    return clampColorChannel((parsed / 100) * 255);
+  }
+
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return clampColorChannel(parsed);
+}
+
+function parseAlphaChannel(value: string | undefined) {
+  if (!value) {
+    return 1;
+  }
+  if (value.endsWith('%')) {
+    const parsed = Number.parseFloat(value.slice(0, -1));
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    return clamp(parsed / 100, 0, 1);
+  }
+
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return clamp(parsed, 0, 1);
+}
+
+function formatHexColorValue(red: number, green: number, blue: number) {
+  return `#${[red, green, blue]
+    .map((channel) => clampColorChannel(channel).toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+function clampColorChannel(value: number) {
+  return Math.round(clamp(value, 0, 255));
+}
+
+function formatAlphaValue(value: number) {
+  return clamp(value, 0, 1).toFixed(3).replace(/\.?0+$/, '');
 }

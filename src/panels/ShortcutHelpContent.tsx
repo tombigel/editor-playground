@@ -27,7 +27,7 @@ export function ShortcutHelpContent({ compact = false }: Props) {
       <div className={`grid gap-4 ${compact ? 'xl:grid-cols-2' : 'md:grid-cols-2'}`}>
         {categories.map((category) => (
           <section key={category.category} className="editor-bg-subtle editor-border-subtle rounded-xl border p-4">
-            <div className="editor-text-muted text-xs font-semibold uppercase tracking-[0.12em]">{category.category}</div>
+            <div className="editor-text-muted text-xs font-medium">{category.category}</div>
             <div className="mt-3 space-y-3">
               {category.items.map((item) => (
                 <div key={item.id} className="flex items-start justify-between gap-4">
@@ -45,7 +45,7 @@ export function ShortcutHelpContent({ compact = false }: Props) {
       </div>
 
       <section className="editor-bg-subtle editor-border-subtle rounded-xl border p-4">
-        <div className="editor-text-muted text-xs font-semibold uppercase tracking-[0.12em]">Pointer Modifiers</div>
+        <div className="editor-text-muted text-xs font-medium">Pointer Modifiers</div>
         <div className="mt-3 space-y-3">
           {SHORTCUT_GESTURES.map((gesture) => (
             <div key={gesture.label} className="flex items-start justify-between gap-4">

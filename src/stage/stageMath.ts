@@ -45,7 +45,12 @@ export function getResizeStartSize(handleElement: HTMLDivElement, fallbackWidth:
     return { width: fallbackWidth, height: fallbackHeight };
   }
 
-  const rect = nodeElement.getBoundingClientRect();
+  const nodeId = nodeElement.dataset.nodeId;
+  const contentWrapper =
+    nodeId && nodeElement.classList.contains('stage-wrapper')
+      ? nodeElement.querySelector<HTMLElement>(`[data-content-wrapper-for="${nodeId}"]`)
+      : null;
+  const rect = (contentWrapper ?? nodeElement).getBoundingClientRect();
   return {
     width: rect.width > 0 ? rect.width : fallbackWidth,
     height: rect.height > 0 ? rect.height : fallbackHeight,

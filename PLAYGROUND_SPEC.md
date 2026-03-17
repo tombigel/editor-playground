@@ -52,7 +52,8 @@ All wrappers share the same structural behavior:
 Wrapper style behavior:
 
 - wrappers do not get an implicit visible border by default
-- generic wrapper borders only render when wrapper border style data is authored
+- wrapper visual styling is applied on the inner `contentWrapper` surface, not on the outer layout shell
+- only `container` wrappers expose generic surface styling controls for border, radius, and shadow
 - `section` wrappers support a dedicated bottom divider style with:
   - color
   - width
@@ -69,6 +70,12 @@ The inspector labels this control as `Section type`, and the wrapper keeps the s
 
 If a header or footer already exists, promotion asks whether to demote the current one and replace it.
 
+Section/header/footer design controls stay minimal:
+
+- `section`, `header`, and `footer` expose background color
+- `section` also exposes a section-only bottom divider editor
+- header/footer do not expose generic border, radius, or shadow controls
+
 The section design controls also expose a section-only bottom divider editor:
 
 - `Divider`: one row containing:
@@ -76,11 +83,11 @@ The section design controls also expose a section-only bottom divider editor:
   - bottom border color
 - divider width uses the inline number-with-unit control in `px` only
 - single-unit inline controls do not show dropdown hover chrome or selection interactions
-- inspector color fields use a hover/focus reveal pattern:
-  - idle: only the `input[type=color]` swatch is visible
-  - hover: the hex text input slides out to the left and overlays nearby space
-  - focus-within: the hex text input stays open while the text field or swatch is focused
-  - blur + no hover: the hex text input hides again
+- inspector color fields render inline in the row:
+  - alpha-aware colors show an always-visible opacity slider (`0-100`)
+  - all color fields show a native color swatch/input beside it
+  - committed values are serialized as `rgb(r g b / a)` strings when alpha is supported
+  - plain solid colors such as the section divider color omit the opacity slider
 
 ## Nesting Rules
 
@@ -114,6 +121,7 @@ Drag behavior includes:
 - a global snap toggle in the left rail
 - `Alt` to invert current snap mode during drag
 - `Shift` to lock drag movement to a single axis
+- the dragged source node fades and suppresses local box/filter shadows while dragging so the drag silhouette stays clean
 - snap guide colors:
   - component guides: teal
   - page guides: magenta
@@ -225,11 +233,45 @@ Supported unit types:
 
 Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
 
-In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry selectively. Absolute and relative sizes resolve from authored values; wrapper width is authored directly, and wrapper height acts as the authored minimum content height so sections and containers can still expand to fit children and sticky extents. Auto-height wrapper mesh layout is recalculated from that authored minimum plus current children/sticky extents rather than preserving stale previously measured wrapper height after edits. Intrinsic sizes such as text `height: auto` and keyword widths use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
+In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry selectively. Absolute and relative sizes resolve from authored values; wrapper width is authored directly. For `section`/`header`/`footer`, an authored explicit wrapper height renders as the content-wrapper minimum height so the wrapper can still grow with content and sticky extents, and stage structural-range math uses the larger of that authored minimum or the current measured inner content height. For `container`, an authored explicit height renders as the actual content-wrapper height so border/padding surfaces and edit geometry stay aligned to the authored box. Auto-height wrapper mesh layout is recalculated from the current children/sticky extents rather than preserving stale previously measured wrapper height after edits. Intrinsic sizes such as text `height: auto` and keyword widths use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. Stage overlay layers that render guides and spacer ranges mirror the content-wrapper padding so their coordinate space stays aligned with padded wrapper content. The editor stage adds its shell inset to sticky preview positioning, while offset guides stay in authored units inside that compensated sticky preview so the indicators remain aligned to the sticky element. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
+
+For wrapper resizing in the stage, start-size measurement uses the inner `contentWrapper` surface so border/padding styling does not feed back into authored geometry, while the visible resize handles stay anchored to the outer wrapper shell so they align to the outer edge of bordered container surfaces.
 
 Text leaves also store an HTML tag, editable in the inspector. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the text node. Changing the tag updates semantics only; the renderer and stage styling normalize native tag defaults so browser heading/blockquote styles and stage-only paragraph selectors do not override the text node's authored styling. Seeded templates use semantic heading tags for primary titles: the default post title is `h1`, and the primary titles in the sticky demo sections are seeded as `h2`.
 
-Text style controls support bold, italic, underline, and strikethrough toggles, a font-size value field with a unit selector (`px`, `em`, `rem`), a numeric line-height field, HTML tag selection, text direction (`LTR` / `RTL`), and alignment. Switching the font-size unit rewrites the numeric value against the live rendered font size in the stage so the text keeps the same visual size when changing between `px`, `em`, and `rem`.
+Text-bearing leaves split typography from presentation in the inspector:
+
+- `text`
+  - `Content`: body copy
+  - `Text style`: font size, line height, bold, italic, underline, strikethrough, alignment, direction, and HTML tag
+  - `Design`: text color and filter-based shadow
+- `link`
+  - `Content`: label and `href`
+  - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
+  - `Design`: text color and filter-based shadow
+  - links render as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame
+  - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
+  - link wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
+- `image`
+  - `Content`: `src` and `alt`
+  - `Design`: unified border width/color/radius plus box shadow
+- `button`
+  - `Content`: label
+  - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
+  - `Design`: text color, background color, unified border color/width/radius, box shadow, and block/inline padding in that order
+  - button padding is edited as `Y` and `X` fields that serialize to `paddingBlock` / `paddingInline`
+  - button padding units support `px`, `em`, and `rem`
+  - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
+  - button wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
+
+Shadow controls in the inspector edit `distance` and `angle`, but the persisted document model continues to store shadow offsets as `shadowOffsetX` / `shadowOffsetY`. The blur, distance, and angle inputs currently render as plain number fields without inline unit suffix chrome so larger values fit cleanly while the control layout is in flux. Text and link shadows render via CSS `filter: drop-shadow(...)`; wrapper, image, and button shadows render via CSS `box-shadow`. Wrapper, image, and button border surfaces use `box-sizing: border-box`, and bordered fills are clipped to `padding-box` so the border reads as an outer stroke instead of painting over the background.
+
+Unified border editors follow the same simplified treatment:
+
+- border color uses the shared inline opacity slider + swatch control
+- border width renders as a fixed `px` field without a unit dropdown
+- border radius uses an explicit inline unit selector and supports `px` and `%`
+- border width preserves its implicit stored unit, and border radius preserves/edits its explicit `px` or `%` unit
 
 Inspector geometry controls use single composite fields instead of raw freeform text. `X` and `Y` support length units only (`px`, `vw`, `vh`, `vmin`, `vmax`). `Width` and `Height` use one shared shell with an editable numeric/value segment and a unit-or-mode segment. Numeric values edit as `number + unit`; width keywords and height `auto` render as a single full-field mode trigger; height `aspect-ratio` stays in the same shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`. Width/height numeric modes support `px`, `%`, `vw`, `vh`, `vmin`, and `vmax`. The numeric segment uses the browser number-input keyboard behavior while hiding native steppers. The unit/mode segment uses brighter text than the numeric value, and its dropdown chevron appears only on hover/focus as a white overlay over the suffix area. Numeric field displays are capped to 2 decimal places and trim trailing zeroes. When switching from one numeric unit to another, or from keyword sizing into a numeric unit, the inspector measures the live stage geometry and rewrites the numeric value against the live parent box and live browser viewport so the node keeps the same rendered size/position in the editor instead of changing scale. For `vmin` and `vmax`, conversion uses the live smaller or larger browser viewport dimension respectively. Committed values still serialize back to the existing model strings (`320px`, `fit-content`, `auto`, `aspect-ratio(16/9)`). For wrapper nodes with role `section`, `header`, or `footer`, the width control is hidden in the geometry grid while its slot stays reserved so the 2x2 geometry layout remains visually stable.
 
@@ -316,7 +358,10 @@ For sticky containers:
 - it preserves authored width keywords and text HTML tags
 - it uses the same mesh-grid child placement baseline as the editor stage for non-editor layout, instead of falling back to absolute-position child export
 - it carries the renderer's default presentation layer for text, links, buttons, and images into the exported CSS, then layers authored model values on top
-- it preserves authored wrapper/content minimum heights in export and does not add an extra generic min-height floor to short wrappers
+- it preserves authored explicit wrapper/content sizing in export:
+  - `section`/`header`/`footer` keep authored `min-height`
+  - `container` keeps authored fixed `height`
+  - it does not add an extra generic height floor to short wrappers
 - it renders sticky structure with real exported spacer elements:
   - `target=self`: sticky track + edge-aware spacer ordering + sticky node
   - `target=contentWrapper`: wrapper + sticky content wrapper + flow spacer
@@ -344,6 +389,7 @@ For single-edge `target=self` auto duration, preview renders exactly one distanc
 Top-level wrappers (`section`, `header`, `footer`) treat `target=self` as an auto-only preview mode. They keep offset indicators, show `Distance: auto`, and do not render synthetic custom-distance track shells.
 In the inspector, top-level wrappers with `target=self` also treat duration as fixed auto mode: the panel shows a selected non-changeable `Auto` state, hides `Custom`, and the helper copy reads `Uses the page height as the sticky distance.`
 Sticky layering uses one shared low z-index baseline across the editor stage and exported site, instead of renderer-specific sticky stacking values. Editor-only layering prefers DOM order and local stacking contexts first; the remaining explicit layers are limited to a small named stack for selected nodes, sticky labels, and resize handles rather than large arbitrary z-index jumps.
+In the editor stage only, sticky offsets are compensated against the stage shell top/bottom breathing space so authored `top`/`bottom` offsets pin to the visible stage frame rather than to the outer scroll-shell padding.
 
 JavaScript is used for:
 
@@ -359,9 +405,16 @@ Current UX includes:
 
 - full-stage canvas
 - insert panel
-- inspector panel
+- inspector panel with a collapsible right rail in normal mode
+- focused mode as editor chrome only; the first focused mode is `sticky`
+- focused mode renders as a floating workspace surface and stays detached from the inspector collapsed/open state
+- entering focused mode collapses the inspector automatically
+- closing focused mode restores the inspector from its hidden state
+- when the inspector is collapsed, the right-rail opener can temporarily reopen it without changing the collapsed preference; while focused mode is active that temporary inspector closes on mouseout after a short delay
 - centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Import / Export`, `Advanced`, `Debug Info`, and `Shortcuts`
 - the settings `UI` section includes editor theme mode: `Light`, `Dark`, and `Auto` (`Auto` follows the system color scheme)
+- the settings `UI` section also includes a startup focused-mode selector: `Normal` or `Sticky`
+- startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it
 - left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
 - top bar utility actions for shortcut help and settings
 - shortcut help dialog opened by `?`, generated from the shared shortcut registry
@@ -373,6 +426,11 @@ Current UX includes:
 - intrinsic-height leaf nodes in the editor stage align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy
 - auto-height wrapper sizing in the editor stage is measured from the inner content box, so dragging or repositioning selected nodes does not inflate surrounding header/section height by wrapper borders
 - button focus states use a stronger visible ring across editor controls
+- inspector sections that correspond to a focused mode can expose a small top-right `Go to mode` entry button; the sticky section is the first such entry point
+- the floating sticky focused mode reuses the same sticky section card chrome as the inspector; it fills the shared section header leading slot with component name + type and replaces the header action with the close button
+- top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when the authored width is locked to `100%`
+- the shared `Name` field lives in its own trailing `Properties` section instead of the layout section across non-site inspectors
+- `Content` is the standard content-editing section title across leaf inspectors; text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips
 - in-memory incremental undo/redo
@@ -385,6 +443,7 @@ Current UX includes:
 - `src/model/*` is the domain layer (types, units, defaults, selectors, validation) and has no editor UI concerns.
 - `src/sticky/resolve.ts` is the shared sticky domain resolver. It accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations / extra extent without depending on React or DOM APIs.
 - `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
+- focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
 - `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
@@ -449,9 +508,10 @@ The playground exposes:
 
 - spacer visuals
 - offset visuals
+- sticky focused mode
 - preview sticky toggle
 - show spacers toggle (`selected` or `all`)
-- preview + spacer quick toggles remain in the left rail with shortcuts/tooltips
+- preview and spacer quick toggles remain in the left rail
 - snap toggle remains in the left rail with tooltip guidance for `Alt` drag inversion and a `Shift + G` shortcut
 - sticky diagnostics output resolved by the shared sticky resolver using the same measured stage geometry the editor preview publishes
 - reset stage action

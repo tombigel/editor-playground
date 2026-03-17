@@ -11,6 +11,9 @@ import {
 } from '../model/defaults';
 import { validateDocument } from '../model/validation';
 import type {
+  BorderColorField,
+  BorderRadiusField,
+  BorderWidthField,
   ButtonLeaf,
   DocumentModel,
   DocumentNode,
@@ -18,31 +21,31 @@ import type {
   LeafRole,
   LinkLeaf,
   NodeId,
+  ShadowStyleField,
   StickyDefinition,
   TextLeaf,
   WrapperRole,
   WrapperNode,
   WrapperStyleField,
 } from '../model/types';
-import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { normalizeThemeMode } from '../lib/theme';
-import type { EditorState, NodeOrderAction } from './types';
-export type { ConfirmReplaceRole, EditorState, NodeOrderAction } from './types';
+import type { EditorState, FocusedMode, NodeOrderAction } from './types';
+export type { ConfirmReplaceRole, EditorState, FocusedMode, NodeOrderAction } from './types';
 
 export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
 export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';
 
 export function createInitialState(): EditorState {
+  const ui = createDefaultUiState();
   return {
     document: loadDefaultDocument(),
     selectedId: null,
     pendingRoleSwap: null,
     ui: {
-      previewSticky: true,
-      spacerVisibility: 'selected',
-      showGridLanes: false,
-      snapEnabled: true,
-      themeMode: 'auto',
+      ...ui,
+      focusedMode: ui.startupFocusedMode,
+      inspectorCollapsed: ui.startupFocusedMode ? true : ui.inspectorCollapsed,
     },
   };
 }
@@ -60,6 +63,7 @@ export function loadPersistedState(): EditorState {
     }
     const parsed = JSON.parse(raw) as EditorState;
     const normalizedDocument = normalizeDocument(parsed.document);
+    const startupFocusedMode = normalizeFocusedMode(parsed.ui?.startupFocusedMode);
     const candidate: EditorState = {
       ...parsed,
       document: normalizedDocument,
@@ -74,6 +78,10 @@ export function loadPersistedState(): EditorState {
         showGridLanes: parsed.ui?.showGridLanes ?? false,
         snapEnabled: parsed.ui?.snapEnabled ?? true,
         themeMode: normalizeThemeMode(parsed.ui?.themeMode),
+        focusedMode: startupFocusedMode,
+        startupFocusedMode,
+        inspectorCollapsed: startupFocusedMode ? true : parsed.ui?.inspectorCollapsed ?? false,
+        temporaryInspectorOpen: false,
       },
     };
     const errors = validateDocument(candidate.document);
@@ -125,16 +133,26 @@ export function createFactoryResetState(ui?: EditorState['ui']): EditorState {
     document,
     selectedId: null,
     pendingRoleSwap: null,
-    ui: ui
-      ? { ...ui }
-      : {
-          previewSticky: true,
-          spacerVisibility: 'selected',
-          showGridLanes: false,
-          snapEnabled: true,
-          themeMode: 'auto',
-        },
+    ui: ui ? { ...ui, temporaryInspectorOpen: false } : createDefaultUiState(),
   };
+}
+
+function createDefaultUiState(): EditorState['ui'] {
+  return {
+    previewSticky: true,
+    spacerVisibility: 'selected',
+    showGridLanes: false,
+    snapEnabled: true,
+    themeMode: 'auto',
+    focusedMode: null,
+    startupFocusedMode: null,
+    inspectorCollapsed: false,
+    temporaryInspectorOpen: false,
+  };
+}
+
+function normalizeFocusedMode(value: unknown): FocusedMode {
+  return value === 'sticky' ? 'sticky' : null;
 }
 
 export function parseImportedDocumentJson(raw: string): DocumentModel {
@@ -769,30 +787,50 @@ export function updateTextField(
     node.content = value;
   } else if (field === 'htmlTag' && node.type === 'leaf' && node.role === 'text') {
     node.htmlTag = normalizeTextHtmlTag(value as TextLeaf['htmlTag']);
-  } else if (field === 'fontSize' && node.type === 'leaf' && node.role === 'text') {
+  } else if (field === 'color' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
-    node.style.fontSize = parseFontSizeValue(value);
-  } else if (field === 'fontWeight' && node.type === 'leaf' && node.role === 'text') {
+    node.style.color = value || undefined;
+  } else if (field === 'background' && node.type === 'leaf' && node.role === 'button') {
+    node.style ??= {};
+    node.style.background = value || undefined;
+  } else if ((field === 'paddingBlock' || field === 'paddingInline') && node.type === 'leaf' && node.role === 'button') {
+    node.style ??= {};
+    node.style[field] = value ? parseSpacingValue(value) : undefined;
+  } else if (field === 'fontSize' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+    node.style ??= {};
+    node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
+  } else if (field === 'fontWeight' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
     node.style.fontWeight = value === 'bold' ? 'bold' : 'normal';
-  } else if (field === 'fontStyle' && node.type === 'leaf' && node.role === 'text') {
+  } else if (field === 'fontStyle' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
     node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
-  } else if (field === 'textDecorationLine' && node.type === 'leaf' && node.role === 'text') {
+  } else if (
+    field === 'textDecorationLine' &&
+    node.type === 'leaf' &&
+    (node.role === 'text' || node.role === 'link' || node.role === 'button')
+  ) {
     node.style ??= {};
     node.style.textDecorationLine = normalizeTextDecorationLine(value);
-  } else if (field === 'lineHeight' && node.type === 'leaf' && node.role === 'text') {
+  } else if (
+    field === 'lineHeight' &&
+    node.type === 'leaf' &&
+    (node.role === 'text' || node.role === 'link' || node.role === 'button')
+  ) {
     const parsed = Number.parseFloat(value);
     if (Number.isFinite(parsed) && parsed > 0) {
       node.style ??= {};
       node.style.lineHeight = parsed;
     }
-  } else if (field === 'direction' && node.type === 'leaf' && node.role === 'text') {
+  } else if (field === 'direction' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
     node.style.direction = value === 'rtl' ? 'rtl' : 'ltr';
-  } else if (field === 'textAlign' && node.type === 'leaf' && node.role === 'text') {
+  } else if (field === 'textAlign' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
     node.style.textAlign = value === 'center' || value === 'right' ? value : 'left';
+  } else if (field === 'textWrap' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.style ??= {};
+    node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
   } else if (field === 'label' && node.type === 'leaf' && 'label' in node) {
     node.label = value;
   } else if (field === 'href' && node.type === 'leaf' && node.role === 'link') {
@@ -801,6 +839,25 @@ export function updateTextField(
     node.src = value;
   } else if (field === 'alt' && node.type === 'leaf' && node.role === 'image') {
     node.alt = value;
+  } else if (isBorderColorField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+    node.style ??= {};
+    node.style[field] = value || undefined;
+  } else if (isBorderWidthField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+    node.style ??= {};
+    node.style[field] = value ? parseUnitValue(value) : undefined;
+  } else if (isBorderRadiusField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+    node.style ??= {};
+    node.style[field] = value ? parseUnitValue(value) : undefined;
+  } else if (isShadowStyleField(field) && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'image' || node.role === 'button')) {
+    node.style ??= {};
+    if (field === 'shadowColor') {
+      node.style.shadowColor = value || undefined;
+    } else {
+      const parsed = parseShadowLength(value);
+      if (parsed != null) {
+        node.style[field] = parsed;
+      }
+    }
   }
 
   return { ...state, document };
@@ -887,8 +944,69 @@ export function updateWrapperStyleField(
     return { ...state, document };
   }
 
+  if (isBorderWidthField(field) || isBorderRadiusField(field)) {
+    node.style[field] = value ? parseUnitValue(value) : undefined;
+    return { ...state, document };
+  }
+
+  if (isShadowStyleField(field)) {
+    if (field === 'shadowColor') {
+      node.style.shadowColor = value || undefined;
+    } else {
+      const parsed = parseShadowLength(value);
+      if (parsed != null) {
+        node.style[field] = parsed;
+      }
+    }
+    return { ...state, document };
+  }
+
   node.style[field] = value || undefined;
   return { ...state, document };
+}
+
+function parseShadowLength(value: string) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isBorderColorField(field: EditorTextField | WrapperStyleField): field is BorderColorField {
+  return (
+    field === 'borderColor' ||
+    field === 'borderTopColor' ||
+    field === 'borderRightColor' ||
+    field === 'borderBottomColor' ||
+    field === 'borderLeftColor'
+  );
+}
+
+function isBorderWidthField(field: EditorTextField | WrapperStyleField): field is BorderWidthField {
+  return (
+    field === 'borderWidth' ||
+    field === 'borderTopWidth' ||
+    field === 'borderRightWidth' ||
+    field === 'borderBottomWidth' ||
+    field === 'borderLeftWidth'
+  );
+}
+
+function isBorderRadiusField(field: EditorTextField | WrapperStyleField): field is BorderRadiusField {
+  return (
+    field === 'borderRadius' ||
+    field === 'borderTopLeftRadius' ||
+    field === 'borderTopRightRadius' ||
+    field === 'borderBottomRightRadius' ||
+    field === 'borderBottomLeftRadius'
+  );
+}
+
+function isShadowStyleField(field: EditorTextField | WrapperStyleField): field is ShadowStyleField {
+  return (
+    field === 'shadowColor' ||
+    field === 'shadowBlur' ||
+    field === 'shadowOffsetX' ||
+    field === 'shadowOffsetY'
+  );
 }
 
 export function moveNode(

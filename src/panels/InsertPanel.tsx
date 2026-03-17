@@ -58,7 +58,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
   return (
     <div className="flex flex-col items-center gap-2 overflow-visible">
       <div className="pb-1">
-        <div className="editor-text-muted text-[11px] font-semibold uppercase tracking-[0.12em]">Add</div>
+        <div className="editor-text-muted text-[11px] font-medium">Add</div>
       </div>
       {INSERT_ITEMS.map((item) => {
         const Icon = item.icon;

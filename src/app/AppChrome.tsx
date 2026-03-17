@@ -235,3 +235,22 @@ export function SpacerIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function StickyModeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="5" y="4" width="14" height="16" rx="2" />
+      <path d="M8 8h8" />
+      <path d="M8 12h5" opacity="0.7" />
+      <path d="M15 12v5" />
+      <path d="M12.5 14.5 15 12l2.5 2.5" />
+    </svg>
+  );
+}

@@ -2,10 +2,45 @@ import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
+import { PopoverSurface } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
+type SelectContextValue = {
+  open: boolean;
+};
+
+const SelectContext = React.createContext<SelectContextValue>({ open: false });
 const SelectValue = SelectPrimitive.Value;
+
+function Select({
+  children,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen ?? false);
+  const open = openProp ?? uncontrolledOpen;
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (openProp === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  }
+
+  return (
+    <SelectContext.Provider value={{ open }}>
+      <SelectPrimitive.Root
+        {...props}
+        {...(openProp !== undefined ? { open: openProp } : { defaultOpen })}
+        onOpenChange={handleOpenChange}
+      >
+        {children}
+      </SelectPrimitive.Root>
+    </SelectContext.Provider>
+  );
+}
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
@@ -31,38 +66,46 @@ SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = 'popper', ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
-      data-ui="select-content"
-      className={cn(
-        'editor-bg-surface editor-border-subtle editor-text-strong relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md',
-        position === 'popper' &&
-          'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
-        className,
-      )}
-      position={position}
-      {...props}
+>(({ className, children, position = 'popper', ...props }, ref) => {
+  const { open } = React.useContext(SelectContext);
+
+  return (
+    <PopoverSurface
+      open={open}
+      popoverMode="manual"
+      className="fixed inset-0 m-0 overflow-visible border-0 bg-transparent p-0 shadow-none outline-none pointer-events-none"
     >
-      <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1">
-        <ChevronUp className="size-4" />
-      </SelectPrimitive.ScrollUpButton>
-      <SelectPrimitive.Viewport
+      <SelectPrimitive.Content
+        ref={ref}
+        data-ui="select-content"
         className={cn(
-          'p-1',
+          'editor-bg-surface editor-border-subtle editor-text-strong pointer-events-auto relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md',
           position === 'popper' &&
-            'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
+            'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+          className,
         )}
+        position={position}
+        {...props}
       >
-        {children}
-      </SelectPrimitive.Viewport>
-      <SelectPrimitive.ScrollDownButton className="flex cursor-default items-center justify-center py-1">
-        <ChevronDown className="size-4" />
-      </SelectPrimitive.ScrollDownButton>
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
+        <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1">
+          <ChevronUp className="size-4" />
+        </SelectPrimitive.ScrollUpButton>
+        <SelectPrimitive.Viewport
+          className={cn(
+            'p-1',
+            position === 'popper' &&
+              'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
+          )}
+        >
+          {children}
+        </SelectPrimitive.Viewport>
+        <SelectPrimitive.ScrollDownButton className="flex cursor-default items-center justify-center py-1">
+          <ChevronDown className="size-4" />
+        </SelectPrimitive.ScrollDownButton>
+      </SelectPrimitive.Content>
+    </PopoverSurface>
+  );
+});
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 
 const SelectItem = React.forwardRef<

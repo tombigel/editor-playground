@@ -23,6 +23,7 @@ import {
   requestPromoteWrapperRole,
   STORAGE_KEY,
   updateStickyField,
+  updateTextField,
   updateWrapperStyleField,
 } from '../editorStore';
 
@@ -64,6 +65,15 @@ describe('editor/editorStore integration', () => {
     expect(state.ui.themeMode).toBe('auto');
   });
 
+  it('defaults focused-mode ui state to the normal editor', () => {
+    const state = createInitialState();
+
+    expect(state.ui.focusedMode).toBeNull();
+    expect(state.ui.startupFocusedMode).toBeNull();
+    expect(state.ui.inspectorCollapsed).toBe(false);
+    expect(state.ui.temporaryInspectorOpen).toBe(false);
+  });
+
   it('stores section bottom divider styles as wrapper style fields', () => {
     const state = createInitialState();
     const section = Object.values(state.document.nodes).find(
@@ -84,6 +94,40 @@ describe('editor/editorStore integration', () => {
 
     expect(updated.style.sectionBorderBottomColor).toBe('#cbd5e1');
     expect(updated.style.sectionBorderBottomWidth?.raw).toBe('2px');
+  });
+
+  it('stores unified border and shadow edits for wrappers and leaves', () => {
+    const state = createInitialState();
+    const section = Object.values(state.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const link = Object.values(state.document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link',
+    );
+
+    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected section wrapper and link leaf');
+    }
+
+    const withWrapperBorder = updateWrapperStyleField(state, section.id, 'borderRadius', '24px');
+    const withWrapperShadow = updateWrapperStyleField(withWrapperBorder, section.id, 'shadowOffsetY', '18');
+    const withLinkColor = updateTextField(withWrapperShadow, link.id, 'color', '#1d4ed8');
+    const withLinkShadow = updateTextField(withLinkColor, link.id, 'shadowOffsetX', '6');
+
+    const updatedSection = withLinkShadow.document.nodes[section.id];
+    const updatedLink = withLinkShadow.document.nodes[link.id];
+
+    if (!updatedSection || updatedSection.type !== 'wrapper') {
+      throw new Error('Expected updated wrapper');
+    }
+    if (!updatedLink || updatedLink.type !== 'leaf' || updatedLink.role !== 'link') {
+      throw new Error('Expected updated link');
+    }
+
+    expect(updatedSection.style.borderRadius?.raw).toBe('24px');
+    expect(updatedSection.style.shadowOffsetY).toBe(18);
+    expect(updatedLink.style?.color).toBe('#1d4ed8');
+    expect(updatedLink.style?.shadowOffsetX).toBe(6);
   });
 
   it('normalizes persisted theme mode values', () => {
@@ -118,6 +162,79 @@ describe('editor/editorStore integration', () => {
     );
 
     expect(loadPersistedState().ui.themeMode).toBe('dark');
+  });
+
+  it('restores startup focused mode while dropping transient inspector-open state', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const state = createInitialState();
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          startupFocusedMode: 'sticky',
+          focusedMode: 'sticky',
+          inspectorCollapsed: true,
+          temporaryInspectorOpen: true,
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui).toMatchObject({
+      startupFocusedMode: 'sticky',
+      focusedMode: 'sticky',
+      inspectorCollapsed: true,
+      temporaryInspectorOpen: false,
+    });
+  });
+
+  it('initializes focused mode from the startup preference when no focused mode is stored', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const state = createInitialState();
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          startupFocusedMode: 'sticky',
+          focusedMode: null,
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.focusedMode).toBe('sticky');
+    expect(loadPersistedState().ui.inspectorCollapsed).toBe(true);
+  });
+
+  it('prefers the startup focused mode over the previously persisted focused session mode', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const state = createInitialState();
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          startupFocusedMode: null,
+          focusedMode: 'sticky',
+          inspectorCollapsed: true,
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.focusedMode).toBeNull();
+    expect(loadPersistedState().ui.inspectorCollapsed).toBe(true);
   });
 
   it('restores persisted document and UI state while dropping transient editor state', () => {
@@ -156,6 +273,10 @@ describe('editor/editorStore integration', () => {
           showGridLanes: true,
           snapEnabled: false,
           themeMode: 'dark',
+          focusedMode: 'sticky',
+          startupFocusedMode: 'sticky',
+          inspectorCollapsed: true,
+          temporaryInspectorOpen: true,
         },
       }),
     );
@@ -171,6 +292,10 @@ describe('editor/editorStore integration', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      focusedMode: 'sticky',
+      startupFocusedMode: 'sticky',
+      inspectorCollapsed: true,
+      temporaryInspectorOpen: false,
     });
     expect(loadedText.type).toBe('leaf');
     if (loadedText.type === 'leaf' && loadedText.role === 'text') {
@@ -422,6 +547,10 @@ describe('editor/editorStore integration', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      focusedMode: 'sticky',
+      startupFocusedMode: 'sticky',
+      inspectorCollapsed: true,
+      temporaryInspectorOpen: true,
     });
 
     const postSection = Object.values(reset.document.nodes).find(
@@ -436,6 +565,10 @@ describe('editor/editorStore integration', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      focusedMode: 'sticky',
+      startupFocusedMode: 'sticky',
+      inspectorCollapsed: true,
+      temporaryInspectorOpen: false,
     });
     expect(postSection).toBeTruthy();
     expect(reset.document).not.toBe(state.document);

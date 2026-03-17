@@ -1,14 +1,20 @@
+import type { ReactNode } from 'react';
+import type { FocusedMode } from '../../api/editorApi';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FormField, RangeField, StickyOffsetBandField } from '../InspectorControls';
+import { InspectorSectionCard, type InspectorSectionHeaderAction } from './CommonSections';
 import type { InspectorActionHandlers, NonSiteInspectorNode } from './types';
 
 export function StickySection({
   node,
   actions,
+  focusedMode,
+  headerContent,
+  headerAction,
+  contentClassName,
 }: {
   node: NonSiteInspectorNode;
   actions: Pick<
@@ -23,26 +29,42 @@ export function StickySection({
     | 'onStickyDuration'
     | 'onStickyDurationTop'
     | 'onStickyDurationBottom'
+    | 'onEnterFocusedMode'
   >;
+  focusedMode: FocusedMode;
+  headerContent?: ReactNode;
+  headerAction?: InspectorSectionHeaderAction;
+  contentClassName?: string;
 }) {
   const forceAutoDuration =
     node.type === 'wrapper' &&
     node.role !== 'container' &&
     (node.sticky?.target ?? 'self') === 'self';
+  const isStickyFocusedMode = focusedMode === 'sticky';
 
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Sticky</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
-        <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
+    <InspectorSectionCard
+      title="Sticky"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={
+        isStickyFocusedMode
+          ? undefined
+          : {
+              mode: 'sticky',
+              label: 'sticky mode',
+              onEnter: actions.onEnterFocusedMode,
+            }
+      }
+    >
+      <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
           <div>
             <div className="editor-text-strong text-xs font-medium">{node.sticky?.enabled ? 'Enabled' : 'Disabled'}</div>
             <div className="editor-text-muted text-[11px]">Pin this node inside its structural range.</div>
           </div>
           <Switch checked={Boolean(node.sticky?.enabled)} onCheckedChange={actions.onStickyEnabled} />
-        </div>
+      </div>
 
         {node.sticky?.enabled ? (
           <>
@@ -165,8 +187,7 @@ export function StickySection({
             </div>
           </>
         ) : null}
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 

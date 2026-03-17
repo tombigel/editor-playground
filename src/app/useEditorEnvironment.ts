@@ -105,11 +105,14 @@ export function useDismissFloatingPanels({
       if (!target) {
         return;
       }
+      const hasOpenSelect = Boolean(document.querySelector('[data-ui="select-content"][data-state="open"]'));
 
       if (
         settingsOpen &&
         settingsPanelRef.current &&
+        !hasOpenSelect &&
         !settingsPanelRef.current.contains(target) &&
+        !target.closest('[data-ui="select-content"]') &&
         !target.closest('[data-panel-trigger="settings"]')
       ) {
         onCloseSettings();
@@ -125,8 +128,8 @@ export function useDismissFloatingPanels({
       }
     }
 
-    window.addEventListener('pointerdown', handlePointerDown);
-    return () => window.removeEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerdown', handlePointerDown, true);
+    return () => window.removeEventListener('pointerdown', handlePointerDown, true);
   }, [
     onCloseSectionTemplates,
     onCloseSettings,

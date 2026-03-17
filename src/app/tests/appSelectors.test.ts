@@ -20,6 +20,10 @@ function createState(): EditorState {
       showGridLanes: false,
       snapEnabled: true,
       themeMode: 'auto',
+      focusedMode: null,
+      startupFocusedMode: null,
+      inspectorCollapsed: false,
+      temporaryInspectorOpen: false,
     },
   };
 }
