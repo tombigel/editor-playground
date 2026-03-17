@@ -8,6 +8,7 @@ import {
   convertStageMeasurementToInput,
   convertRenderedPxToUnitValue,
   describeSizeFieldValue,
+  getSizeModeOptions,
   InspectorPanel,
   NumericUnitInlineField,
   normalizeAspectRatioExpression,
@@ -605,6 +606,22 @@ describe('panels/InspectorPanel', () => {
 
     expect(markup).toContain('>px<');
     expect(markup).not.toContain('data-ui="select-trigger"');
+  });
+
+  it('limits x and y layout unit menus to px, vw, and vh', () => {
+    expect(getSizeModeOptions('x')).toEqual({
+      scalarUnits: ['px'],
+      viewportUnits: ['vw', 'vh'],
+      keywords: null,
+    });
+
+    expect(getSizeModeOptions('y')).toEqual({
+      scalarUnits: ['px'],
+      viewportUnits: ['vw', 'vh'],
+      keywords: null,
+    });
+
+    expect(getSizeModeOptions('width').viewportUnits).toEqual(['vw', 'vh', 'vmin', 'vmax']);
   });
 
   it('describes numeric, keyword, and aspect-ratio size values for the composite field', () => {

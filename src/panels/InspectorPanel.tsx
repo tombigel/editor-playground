@@ -11,8 +11,10 @@ export {
   convertStageFontSizeToInput,
   convertStageMeasurementToInput,
   describeSizeFieldValue,
+  getSizeModeOptions,
   NumericUnitInlineField,
   normalizeAspectRatioExpression,
+  SizeInlineField,
 } from './InspectorControls';
 
 export type InspectorPanelProps = {

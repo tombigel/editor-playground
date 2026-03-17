@@ -676,16 +676,26 @@ export function offsetsFromDistanceAndAngle(distance: number, angle: number) {
   };
 }
 
-function renderSizeModeOptions(axis: SizeFieldAxis) {
+export function getSizeModeOptions(axis: SizeFieldAxis) {
   const isLengthOnlyAxis = axis === 'x' || axis === 'y';
   const scalarUnits = isLengthOnlyAxis ? ['px'] : ['px', '%'];
-  const viewportUnits = ['vw', 'vh', 'vmin', 'vmax'];
+  const viewportUnits = isLengthOnlyAxis ? ['vw', 'vh'] : ['vw', 'vh', 'vmin', 'vmax'];
   const keywords =
     axis === 'width'
       ? WIDTH_KEYWORD_OPTIONS
       : axis === 'height'
         ? HEIGHT_KEYWORD_OPTIONS
         : null;
+
+  return {
+    scalarUnits,
+    viewportUnits,
+    keywords,
+  };
+}
+
+function renderSizeModeOptions(axis: SizeFieldAxis) {
+  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis);
 
   return (
     <>
