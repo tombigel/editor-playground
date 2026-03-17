@@ -1,5 +1,9 @@
 # Maintenance Report
 
+Status: Archived on 2026-03-17 after the 2026-03 maintenance pass.
+
+This file remains as a historical record of the pass. Remaining work mentioned here is future product or follow-up work, not active broad maintenance debt.
+
 Date: 2026-03-15
 
 Scope reviewed:
