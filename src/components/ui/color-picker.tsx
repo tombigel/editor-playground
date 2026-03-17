@@ -181,7 +181,7 @@ function ColorPickerImpl({
     }
 
     void loadHdrColorInput().then(() => setIsReady(true));
-  }, []);
+  }, [isReady]);
 
   React.useEffect(() => {
     if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {
@@ -268,17 +268,55 @@ function ColorPickerImpl({
       isOpenRef.current = false;
     };
 
+    const handleTriggerClick = (event: Event) => {
+      if (!isOpenRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      element.close();
+    };
+
+    const handleHostClick = (event: Event) => {
+      if (!isOpenRef.current) {
+        return;
+      }
+
+      const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+      const clickedTrigger = path.some((node) => {
+        if (!(node instanceof HTMLElement)) {
+          return false;
+        }
+
+        const part = node.getAttribute('part');
+        return node.classList.contains('trigger') || part?.split(/\s+/).includes('trigger') === true;
+      });
+
+      if (!clickedTrigger) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      element.close();
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.key === 'ArrowDown') {
         syncValueBeforeOpen();
       }
     };
 
+    const trigger = element.shadowRoot?.querySelector<HTMLElement>('[part~="trigger"]');
+
     element.addEventListener('change', handleChange as EventListener);
     element.addEventListener('open', handleOpen as EventListener);
     element.addEventListener('close', handleClose as EventListener);
     element.addEventListener('pointerdown', syncValueBeforeOpen);
     element.addEventListener('keydown', handleKeyDown);
+    element.addEventListener('click', handleHostClick, { capture: true });
+    trigger?.addEventListener('click', handleTriggerClick, { capture: true });
 
     return () => {
       element.removeEventListener('change', handleChange as EventListener);
@@ -286,6 +324,8 @@ function ColorPickerImpl({
       element.removeEventListener('close', handleClose as EventListener);
       element.removeEventListener('pointerdown', syncValueBeforeOpen);
       element.removeEventListener('keydown', handleKeyDown);
+      element.removeEventListener('click', handleHostClick, { capture: true });
+      trigger?.removeEventListener('click', handleTriggerClick, { capture: true });
       if (frameRef.current !== null && typeof window !== 'undefined') {
         window.cancelAnimationFrame(frameRef.current);
         frameRef.current = null;

@@ -150,6 +150,56 @@ describe('panels/InspectorControls e2e', () => {
     });
   }, 30_000);
 
+  it('closes the picker when the trigger is clicked again', async () => {
+    const seeded = createColorSpaceDocument();
+
+    page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+    await page.addInitScript(
+      ({ storageKey, defaultKey, seededState, seededDocument }) => {
+        window.localStorage.clear();
+        window.localStorage.setItem(storageKey, JSON.stringify(seededState));
+        window.localStorage.setItem(defaultKey, JSON.stringify(seededDocument));
+      },
+      {
+        storageKey: STORAGE_KEY,
+        defaultKey: DEFAULT_DOCUMENT_STORAGE_KEY,
+        seededState: {
+          document: seeded.document,
+          selectedId: seeded.titleId,
+          pendingRoleSwap: null,
+          ui: {
+            previewSticky: true,
+            spacerVisibility: 'selected',
+            showGridLanes: false,
+            snapEnabled: true,
+            themeMode: 'auto',
+            focusedMode: null,
+            startupFocusedMode: null,
+            inspectorCollapsed: false,
+            temporaryInspectorOpen: false,
+          },
+        },
+        seededDocument: seeded.document,
+      },
+    );
+
+    await page.goto(server.url);
+    await page.locator('.editor-inspector-shell').waitFor({ state: 'visible' });
+
+    const picker = page.locator('color-input[aria-label="Text color"]').first();
+    const readOpenState = () => page.evaluate(() => {
+      const element = document.querySelector('color-input[aria-label="Text color"]');
+      const panel = element?.shadowRoot?.querySelector<HTMLElement>('.panel');
+      return panel?.matches(':popover-open') ?? false;
+    });
+
+    await picker.click();
+    await expect.poll(readOpenState).toBe(true);
+
+    await picker.click();
+    await expect.poll(readOpenState).toBe(false);
+  }, 30_000);
+
   it('re-initializes shadow pickers from the current authored alpha color when selection changes', async () => {
     const seeded = createShadowColorSpaceDocument();
 
