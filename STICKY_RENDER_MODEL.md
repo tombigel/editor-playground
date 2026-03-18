@@ -61,8 +61,6 @@ type StickyDefinition = {
 };
 ```
 
-### 
-
 ### **Meaning**
 
 - `edges`  
@@ -75,7 +73,6 @@ type StickyDefinition = {
   - the shared sticky distance for single-edge sticky  
 - `durationTop` / `durationBottom`  
   - split distances for `edges: both`  
-    
 
 ## **Sticky Lane Model**
 
