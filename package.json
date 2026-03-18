@@ -10,6 +10,7 @@
     "test:coverage": "vitest run --coverage",
     "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run check:architecture",
     "build": "npm run check && vite build",
+    "deploy": "npm run build && node scripts/deploy-webdav.mjs",
     "refresh:google-fonts": "node scripts/refresh-google-fonts-catalog.mjs",
     "preview": "vite preview",
     "test": "vitest",
