@@ -31,6 +31,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PopoverSurface } from '@/components/ui/popover';
 import { getShortcutLabel, type ShortcutPlatform } from '@/lib/shortcuts';
 import type { ResolvedTheme } from '@/lib/theme';
+import stickyIconUrl from '../../sticky_512.png';
 import { RailToggleButton, SectionTemplatePopover, SpacerIcon, TopbarIconAction } from './AppChrome';
 import type { HistoryAction, HistoryState } from './editorState';
 
@@ -150,7 +151,7 @@ export function AppShell({
         <header className={topbarClass}>
           <div className="flex h-full items-center gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <img src="/sticky_512.png" alt="" className="h-8 w-8 shrink-0 object-contain" />
+              <img src={stickyIconUrl} alt="" className="h-8 w-8 shrink-0 object-contain" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold tracking-[0.01em]">Sticky Playground</div>
                 <div className="truncate text-[11px] text-white/55">
