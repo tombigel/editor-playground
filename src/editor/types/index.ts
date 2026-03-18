@@ -2,6 +2,7 @@ import type { DocumentModel, NodeId } from '../../model/types';
 import type { ThemeMode } from '../../lib/types';
 
 export type FocusedMode = null | 'layout' | 'sticky' | 'content' | 'design';
+export type FocusedPanelOffset = { x: number; y: number };
 
 export type ConfirmReplaceRole = {
   requestedId: NodeId;
@@ -26,5 +27,6 @@ export type EditorState = {
     startupFocusedMode: FocusedMode;
     inspectorCollapsed: boolean;
     temporaryInspectorOpen: boolean;
+    focusedPanelOffset: FocusedPanelOffset;
   };
 };

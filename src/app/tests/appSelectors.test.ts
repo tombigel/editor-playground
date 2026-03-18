@@ -25,6 +25,7 @@ function createState(): EditorState {
       startupFocusedMode: null,
       inspectorCollapsed: false,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 0, y: 0 },
     },
   };
 }

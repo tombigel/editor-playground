@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialState, resolveStickyLayout } from '../../api/editorApi';
+import { createInitialState, insertLeaf, resolveStickyLayout } from '../../api/editorApi';
 import { AppShell } from '../AppShell';
 
 function createProps(): ComponentProps<typeof AppShell> {
@@ -63,5 +63,35 @@ describe('app/AppShell', () => {
     expect(markup).toContain('Manage Fonts');
     expect(markup).toContain('max-h-[min(84vh,820px)]');
     expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto pr-1');
+  });
+
+  it('renders the focused panel at its stored viewport offset from the workspace-aligned default', () => {
+    const props = createProps();
+    const state = insertLeaf(props.state, 'text');
+    if (!state.selectedId) {
+      throw new Error('Expected selected text node');
+    }
+    const selectedNode = state.document.nodes[state.selectedId];
+    if (!selectedNode) {
+      throw new Error('Expected selected node');
+    }
+
+    state.ui.focusedMode = 'sticky';
+    state.ui.focusedPanelOffset = { x: -48, y: 64 };
+
+    const markup = renderToStaticMarkup(
+      <AppShell
+        {...props}
+        state={state}
+        selectedNode={selectedNode}
+        selectedNodes={[selectedNode]}
+        stickyLayout={resolveStickyLayout(state.document)}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Drag focused panel"');
+    expect(markup).toContain('top:76px');
+    expect(markup).toContain('right:80px');
+    expect(markup).toContain('transform:translate(-48px, 64px)');
   });
 });

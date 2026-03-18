@@ -8,7 +8,7 @@ import type {
   StickyDefinition,
   WrapperStyleField,
 } from '../../model/types';
-import type { EditorState, FocusedMode } from '../../editor/types';
+import type { EditorState, FocusedMode, FocusedPanelOffset } from '../../editor/types';
 
 export type NodePatch = {
   id: NodeId;
@@ -107,7 +107,8 @@ export type EditorAction =
   | { type: 'setFocusedMode'; value: FocusedMode }
   | { type: 'setStartupFocusedMode'; value: FocusedMode }
   | { type: 'setInspectorCollapsed'; value: boolean }
-  | { type: 'setTemporaryInspectorOpen'; value: boolean };
+  | { type: 'setTemporaryInspectorOpen'; value: boolean }
+  | { type: 'setFocusedPanelOffset'; value: FocusedPanelOffset };
 
 export type HistoryAction =
   | EditorAction

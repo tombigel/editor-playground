@@ -1,4 +1,4 @@
-import type { Dispatch, Ref } from 'react';
+import { useEffect, useRef, useState, type Dispatch, type PointerEvent as ReactPointerEvent, type Ref } from 'react';
 import { CircleQuestionMark, Eye, Magnet, Redo2, Settings, Undo2 } from 'lucide-react';
 import type {
   DocumentNode,
@@ -32,6 +32,11 @@ import { PopoverSurface } from '@/components/ui/popover';
 import { getShortcutLabel, type ShortcutPlatform } from '@/lib/shortcuts';
 import type { ResolvedTheme } from '@/lib/theme';
 import stickyIconUrl from '../../sticky_512.png';
+import {
+  clampFocusedPanelOffset,
+  FOCUSED_PANEL_RIGHT_OFFSET_PX,
+  FOCUSED_PANEL_TOP_OFFSET_PX,
+} from '../editor/focusedPanelPosition';
 import { RailToggleButton, SectionTemplatePopover, SpacerIcon, TopbarIconAction } from './AppChrome';
 import type { HistoryAction, HistoryState } from './editorState';
 
@@ -102,11 +107,115 @@ export function AppShell({
   onResetData,
   onResetAll,
 }: Props) {
+  const focusedPanelRef = useRef<HTMLDivElement | null>(null);
+  const focusedPanelDragRef = useRef<{
+    pointerId: number;
+    originX: number;
+    originY: number;
+    originOffset: EditorState['ui']['focusedPanelOffset'];
+  } | null>(null);
+  const focusedPanelOffsetDraftRef = useRef(state.ui.focusedPanelOffset);
+  const [focusedPanelOffsetDraft, setFocusedPanelOffsetDraft] = useState(state.ui.focusedPanelOffset);
+  const [focusedPanelDragging, setFocusedPanelDragging] = useState(false);
   const isSidebarCollapsed = state.ui.inspectorCollapsed && !state.ui.temporaryInspectorOpen;
   const sidebarWidth = isSidebarCollapsed
     ? `${INSPECTOR_COLLAPSED_WIDTH_PX}px`
     : `${INSPECTOR_EXPANDED_WIDTH_PX}px`;
+  const focusedPanelRightOffsetPx = INSPECTOR_COLLAPSED_WIDTH_PX + FOCUSED_PANEL_RIGHT_OFFSET_PX;
   const sidebarTransitionTiming = isSidebarCollapsed ? 'ease-in' : 'ease-out';
+
+  useEffect(() => {
+    focusedPanelOffsetDraftRef.current = focusedPanelOffsetDraft;
+  }, [focusedPanelOffsetDraft]);
+
+  useEffect(() => {
+    if (!focusedPanelDragging) {
+      setFocusedPanelOffsetDraft(state.ui.focusedPanelOffset);
+    }
+  }, [focusedPanelDragging, state.ui.focusedPanelOffset]);
+
+  useEffect(() => {
+    if (!focusedPanelDragging || typeof document === 'undefined') {
+      return;
+    }
+
+    const { cursor, userSelect } = document.body.style;
+    document.body.style.cursor = 'grabbing';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.body.style.cursor = cursor;
+      document.body.style.userSelect = userSelect;
+    };
+  }, [focusedPanelDragging]);
+
+  useEffect(() => {
+    if (!focusedPanelDragging) {
+      return;
+    }
+
+    function finishFocusedPanelDrag(nextOffset: EditorState['ui']['focusedPanelOffset']) {
+      focusedPanelDragRef.current = null;
+      setFocusedPanelDragging(false);
+      if (nextOffset.x !== state.ui.focusedPanelOffset.x || nextOffset.y !== state.ui.focusedPanelOffset.y) {
+        dispatch({ type: 'setFocusedPanelOffset', value: nextOffset });
+      }
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      if (
+        !focusedPanelDragRef.current ||
+        event.pointerId !== focusedPanelDragRef.current.pointerId ||
+        !focusedPanelRef.current
+      ) {
+        return;
+      }
+
+      const panelRect = focusedPanelRef.current.getBoundingClientRect();
+      const nextOffset = clampFocusedPanelOffset({
+        offset: focusedPanelDragRef.current.originOffset,
+        deltaX: event.clientX - focusedPanelDragRef.current.originX,
+        deltaY: event.clientY - focusedPanelDragRef.current.originY,
+        containerWidth: window.innerWidth,
+        containerHeight: Math.max(0, window.innerHeight - 56),
+        panelWidth: panelRect.width,
+        panelHeight: panelRect.height,
+        rightOffset: focusedPanelRightOffsetPx,
+      });
+      setFocusedPanelOffsetDraft(nextOffset);
+    }
+
+    function handlePointerEnd(event: PointerEvent) {
+      if (!focusedPanelDragRef.current || event.pointerId !== focusedPanelDragRef.current.pointerId) {
+        return;
+      }
+      finishFocusedPanelDrag(focusedPanelOffsetDraftRef.current);
+    }
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerEnd);
+    window.addEventListener('pointercancel', handlePointerEnd);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerEnd);
+      window.removeEventListener('pointercancel', handlePointerEnd);
+    };
+  }, [dispatch, focusedPanelDragging, focusedPanelRightOffsetPx, state.ui.focusedPanelOffset]);
+
+  function handleFocusedPanelDragStart(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    focusedPanelDragRef.current = {
+      pointerId: event.pointerId,
+      originX: event.clientX,
+      originY: event.clientY,
+      originOffset: focusedPanelOffsetDraft,
+    };
+    setFocusedPanelDragging(true);
+  }
 
   function collectSelectionRects() {
     if (typeof window === 'undefined') {
@@ -276,52 +385,6 @@ export function AppShell({
               onResizeEnd={(id) => dispatch({ type: 'endResize', id })}
               onStickyGeometryChange={onStickyGeometryChange}
             />
-            {state.ui.focusedMode && selectedNodes.length > 0 ? (
-              <div className="pointer-events-none absolute right-5 top-5 z-[340] w-[270px] max-w-[calc(100%-40px)]">
-                <FocusedModePanel
-                  document={state.document}
-                  selectedNodes={selectedNodes}
-                  node={selectedNode}
-                  focusedMode={state.ui.focusedMode}
-                  mode={state.ui.focusedMode}
-                  showOrderControls={orderState.show}
-                  canOrderBack={orderState.canBack}
-                  canOrderForward={orderState.canForward}
-                  canSendToBack={orderState.canBack}
-                  canBringToFront={orderState.canForward}
-                  orderBackShortcut={getShortcutLabel('orderBack', shortcutPlatform)}
-                  orderForwardShortcut={getShortcutLabel('orderForward', shortcutPlatform)}
-                  sendToBackShortcut={getShortcutLabel('orderSendToBack', shortcutPlatform)}
-                  bringToFrontShortcut={getShortcutLabel('orderBringToFront', shortcutPlatform)}
-                  canSectionBack={sectionOrderState.canBack}
-                  canSectionForward={sectionOrderState.canForward}
-                  onOrderBack={() => dispatch({ type: 'orderBack' })}
-                  onOrderForward={() => dispatch({ type: 'orderForward' })}
-                  onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
-                  onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
-                  onSectionBack={() => dispatch({ type: 'orderBack' })}
-                  onSectionForward={() => dispatch({ type: 'orderForward' })}
-                  onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
-                  onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
-                  onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
-                  onPromote={(role) => dispatch({ type: 'promote', role })}
-                  onDemote={() => dispatch({ type: 'demote' })}
-                  onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
-                  onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
-                  onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
-                  onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
-                  onStickyOffsetTop={(value) => dispatch({ type: 'stickyOffsetTop', value })}
-                  onStickyOffsetBottom={(value) => dispatch({ type: 'stickyOffsetBottom', value })}
-                  onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
-                  onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
-                  onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
-                  onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
-                  onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
-                  onOpenManageFonts={() => onManageFontsOpenChange(true)}
-                  onExitFocusedMode={() => dispatch({ type: 'setFocusedMode', value: null })}
-                />
-              </div>
-            ) : null}
           </main>
 
           <EditorSidebar
@@ -375,6 +438,64 @@ export function AppShell({
           />
         </div>
       </div>
+
+      {state.ui.focusedMode && selectedNodes.length > 0 ? (
+        <div
+          ref={focusedPanelRef}
+          className="pointer-events-none absolute z-[340] w-[270px] max-w-[calc(100vw-40px)]"
+          data-focused-panel-dragging={focusedPanelDragging ? 'true' : 'false'}
+          style={{
+            top: `${56 + FOCUSED_PANEL_TOP_OFFSET_PX}px`,
+            right: `${focusedPanelRightOffsetPx}px`,
+            transform: `translate(${focusedPanelOffsetDraft.x}px, ${focusedPanelOffsetDraft.y}px)`,
+          }}
+        >
+          <FocusedModePanel
+            document={state.document}
+            selectedNodes={selectedNodes}
+            node={selectedNode}
+            focusedMode={state.ui.focusedMode}
+            mode={state.ui.focusedMode}
+            showOrderControls={orderState.show}
+            canOrderBack={orderState.canBack}
+            canOrderForward={orderState.canForward}
+            canSendToBack={orderState.canBack}
+            canBringToFront={orderState.canForward}
+            orderBackShortcut={getShortcutLabel('orderBack', shortcutPlatform)}
+            orderForwardShortcut={getShortcutLabel('orderForward', shortcutPlatform)}
+            sendToBackShortcut={getShortcutLabel('orderSendToBack', shortcutPlatform)}
+            bringToFrontShortcut={getShortcutLabel('orderBringToFront', shortcutPlatform)}
+            canSectionBack={sectionOrderState.canBack}
+            canSectionForward={sectionOrderState.canForward}
+            onOrderBack={() => dispatch({ type: 'orderBack' })}
+            onOrderForward={() => dispatch({ type: 'orderForward' })}
+            onSendToBack={() => dispatch({ type: 'orderSendToBack' })}
+            onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
+            onSectionBack={() => dispatch({ type: 'orderBack' })}
+            onSectionForward={() => dispatch({ type: 'orderForward' })}
+            onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
+            onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
+            onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}
+            onPromote={(role) => dispatch({ type: 'promote', role })}
+            onDemote={() => dispatch({ type: 'demote' })}
+            onStickyEnabled={(value) => dispatch({ type: 'stickyEnabled', value })}
+            onStickyTarget={(value) => dispatch({ type: 'stickyTarget', value })}
+            onStickyEdges={(value) => dispatch({ type: 'stickyEdges', value })}
+            onStickyOffset={(value) => dispatch({ type: 'stickyOffset', value })}
+            onStickyOffsetTop={(value) => dispatch({ type: 'stickyOffsetTop', value })}
+            onStickyOffsetBottom={(value) => dispatch({ type: 'stickyOffsetBottom', value })}
+            onStickyDurationMode={(value) => dispatch({ type: 'stickyDurationMode', value })}
+            onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
+            onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
+            onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
+            onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
+            onOpenManageFonts={() => onManageFontsOpenChange(true)}
+            onExitFocusedMode={() => dispatch({ type: 'setFocusedMode', value: null })}
+            onHeaderDragPointerDown={handleFocusedPanelDragStart}
+            dragging={focusedPanelDragging}
+          />
+        </div>
+      ) : null}
 
       <SectionTemplatePopover
         panelRef={sectionTemplatePanelRef}

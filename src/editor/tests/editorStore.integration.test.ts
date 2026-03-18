@@ -75,6 +75,7 @@ describe('editor/editorStore integration', () => {
     expect(state.ui.startupFocusedMode).toBeNull();
     expect(state.ui.inspectorCollapsed).toBe(false);
     expect(state.ui.temporaryInspectorOpen).toBe(false);
+    expect(state.ui.focusedPanelOffset).toEqual({ x: 0, y: 0 });
   });
 
   it('initializes from a focus-mode query override before any persisted state is loaded', () => {
@@ -332,6 +333,7 @@ describe('editor/editorStore integration', () => {
       focusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 0, y: 0 },
     });
   });
 
@@ -444,6 +446,7 @@ describe('editor/editorStore integration', () => {
           startupFocusedMode: 'sticky',
           inspectorCollapsed: true,
           temporaryInspectorOpen: true,
+          focusedPanelOffset: { x: -48, y: 96 },
         },
       }),
     );
@@ -463,6 +466,7 @@ describe('editor/editorStore integration', () => {
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: -48, y: 96 },
     });
     expect(loadedText.type).toBe('leaf');
     if (loadedText.type === 'leaf' && loadedText.role === 'text') {
@@ -718,6 +722,7 @@ describe('editor/editorStore integration', () => {
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: true,
+      focusedPanelOffset: { x: 24, y: 60 },
     });
 
     const postSection = Object.values(reset.document.nodes).find(
@@ -736,6 +741,7 @@ describe('editor/editorStore integration', () => {
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 24, y: 60 },
     });
     expect(postSection).toBeTruthy();
     expect(reset.document).not.toBe(state.document);

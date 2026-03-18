@@ -41,6 +41,7 @@ import {
   selectedNodeHasBottomEdge,
   selectedNodeHasTopEdge,
 } from './appSelectors';
+import { normalizeFocusedPanelOffset } from '../editor/focusedPanelPosition';
 import type { EditorAction, HistoryAction, HistoryState } from './types';
 export type { EditorAction, HistoryAction, HistoryState } from './types';
 
@@ -252,6 +253,14 @@ export function editorReducer(state: EditorState, action: EditorAction) {
           temporaryInspectorOpen: state.ui.focusedMode ? action.value : false,
         },
       };
+    case 'setFocusedPanelOffset':
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          focusedPanelOffset: normalizeFocusedPanelOffset(action.value),
+        },
+      };
     default:
       return state;
   }
@@ -425,7 +434,8 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setFocusedMode' &&
     action.type !== 'setStartupFocusedMode' &&
     action.type !== 'setInspectorCollapsed' &&
-    action.type !== 'setTemporaryInspectorOpen'
+    action.type !== 'setTemporaryInspectorOpen' &&
+    action.type !== 'setFocusedPanelOffset'
   );
 }
 

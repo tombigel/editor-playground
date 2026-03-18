@@ -84,6 +84,7 @@ describe('panels/FocusedModePanel', () => {
         focusedMode="sticky"
         mode="sticky"
         onExitFocusedMode={() => {}}
+        onHeaderDragPointerDown={() => {}}
       />,
     );
 
@@ -92,6 +93,7 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain(textNode.role);
     expect(markup).toContain('Pin this node inside its structural range.');
     expect(markup).toContain('editor-scrollbar');
+    expect(markup).toContain('aria-label="Drag focused panel"');
   });
 
   it('renders layout-focused controls for the selected node', () => {

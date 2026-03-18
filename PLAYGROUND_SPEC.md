@@ -544,6 +544,7 @@ Current UX includes:
 - inspector panel with a collapsible right rail in normal mode
 - focused mode as editor chrome only; the first focused mode is `sticky`
 - focused mode renders as a floating workspace surface and stays detached from the inspector collapsed/open state
+- the focused floating panel can be dragged from its title area and is clamped against the window viewport below the top bar rather than against the stage; its default resting position still aligns with the pre-viewport workspace edge near the collapsed inspector, and its offset persists as editor UI state and does not enter undo history
 - entering focused mode collapses the inspector automatically
 - closing focused mode restores the inspector from its hidden state
 - when the inspector is collapsed, the right-rail opener can temporarily reopen it without changing the collapsed preference; while focused mode is active that temporary inspector closes on mouseout after a short delay
@@ -608,7 +609,7 @@ Current UX includes:
 - `src/model/*` is the domain layer (types, units, defaults, selectors, validation) and has no editor UI concerns.
 - `src/sticky/resolve.ts` is the shared sticky domain resolver. It accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations / extra extent without depending on React or DOM APIs.
 - `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
-- focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
+- focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal`/`none` for no focused mode.
 - `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.

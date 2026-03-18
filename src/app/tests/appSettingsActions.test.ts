@@ -34,6 +34,7 @@ describe('app/appSettingsActions', () => {
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: true,
+      focusedPanelOffset: { x: -36, y: 72 },
     });
 
     expect(next.selectedId).toBeNull();
@@ -47,6 +48,7 @@ describe('app/appSettingsActions', () => {
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: -36, y: 72 },
     });
   });
 
@@ -63,6 +65,7 @@ describe('app/appSettingsActions', () => {
       startupFocusedMode: null,
       inspectorCollapsed: false,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 0, y: 0 },
     });
   });
 

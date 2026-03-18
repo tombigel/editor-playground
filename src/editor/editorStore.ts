@@ -34,6 +34,7 @@ import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue
 import { forceOpaqueColorValue } from '../model/colors';
 import { normalizeThemeMode } from '../lib/theme';
 import { normalizeFocusedMode, resolveFocusedModeUrlOverride } from './focusedModes';
+import { DEFAULT_FOCUSED_PANEL_OFFSET, normalizeFocusedPanelOffset } from './focusedPanelPosition';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds, toggleSelectedId, toggleSelectedIds } from './selection';
 export type { ConfirmReplaceRole, EditorState, FocusedMode, NodeOrderAction } from './types';
@@ -111,6 +112,7 @@ export function loadPersistedState(): EditorState {
         startupFocusedMode,
         inspectorCollapsed: startupFocusedMode ? true : parsed.ui?.inspectorCollapsed ?? false,
         temporaryInspectorOpen: false,
+        focusedPanelOffset: normalizeFocusedPanelOffset(parsed.ui?.focusedPanelOffset),
       },
     };
     const errors = validateDocument(candidate.document);
@@ -178,6 +180,7 @@ function createDefaultUiState(): EditorState['ui'] {
     startupFocusedMode: null,
     inspectorCollapsed: false,
     temporaryInspectorOpen: false,
+    focusedPanelOffset: DEFAULT_FOCUSED_PANEL_OFFSET,
   };
 }
 
