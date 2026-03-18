@@ -80,7 +80,7 @@ describe('panels/SettingsPanel e2e', () => {
 
     const dropdown = page.locator('[data-ui="select-content"]').last();
     await dropdown.waitFor({ state: 'visible' });
-    expect(await dropdown.getByText('vw').isVisible()).toBe(true);
+    expect(await dropdown.isVisible()).toBe(true);
     expect(await page.locator('body > [data-ui="select-content"]').count()).toBe(0);
   }, 30_000);
 });

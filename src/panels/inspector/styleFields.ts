@@ -68,8 +68,8 @@ export function applyUnifiedWrapperBorderRadius(onChange: PatchSetter<WrapperSty
 export function applyLeafShadowPatch(
   onChange: PatchSetter<EditorTextField>,
   currentStyle: ShadowStyle | undefined,
-  fallback: { color: string; blur: number; distance: number; angle: number },
-  patch: Partial<{ color: string; blur: number; distance: number; angle: number }>,
+  fallback: { color: string; blur: number; spread: number; distance: number; angle: number },
+  patch: Partial<{ color: string; blur: number; spread: number; distance: number; angle: number }>,
 ) {
   applyShadowPatch(onChange, currentStyle, fallback, patch);
 }
@@ -77,17 +77,17 @@ export function applyLeafShadowPatch(
 export function applyWrapperShadowPatch(
   onChange: PatchSetter<WrapperStyleField>,
   currentStyle: ShadowStyle | undefined,
-  fallback: { color: string; blur: number; distance: number; angle: number },
-  patch: Partial<{ color: string; blur: number; distance: number; angle: number }>,
+  fallback: { color: string; blur: number; spread: number; distance: number; angle: number },
+  patch: Partial<{ color: string; blur: number; spread: number; distance: number; angle: number }>,
 ) {
   applyShadowPatch(onChange, currentStyle, fallback, patch);
 }
 
-function applyShadowPatch<Field extends 'shadowColor' | 'shadowBlur' | 'shadowOffsetX' | 'shadowOffsetY'>(
+function applyShadowPatch<Field extends 'shadowColor' | 'shadowBlur' | 'shadowSpread' | 'shadowOffsetX' | 'shadowOffsetY'>(
   onChange: PatchSetter<Field>,
   currentStyle: ShadowStyle | undefined,
-  fallback: { color: string; blur: number; distance: number; angle: number },
-  patch: Partial<{ color: string; blur: number; distance: number; angle: number }>,
+  fallback: { color: string; blur: number; spread: number; distance: number; angle: number },
+  patch: Partial<{ color: string; blur: number; spread: number; distance: number; angle: number }>,
 ) {
   const currentDistance = currentStyle?.shadowOffsetX !== undefined || currentStyle?.shadowOffsetY !== undefined
     ? Math.sqrt((currentStyle?.shadowOffsetX ?? 0) ** 2 + (currentStyle?.shadowOffsetY ?? 0) ** 2)
@@ -98,12 +98,14 @@ function applyShadowPatch<Field extends 'shadowColor' | 'shadowBlur' | 'shadowOf
   const next = {
     color: patch.color ?? currentStyle?.shadowColor ?? fallback.color,
     blur: patch.blur ?? currentStyle?.shadowBlur ?? fallback.blur,
+    spread: patch.spread ?? currentStyle?.shadowSpread ?? fallback.spread,
     distance: patch.distance ?? currentDistance,
     angle: patch.angle ?? currentAngle,
   };
   const offsets = offsetsFromDistanceAndAngle(next.distance, next.angle);
   onChange('shadowColor' as Field, next.color);
   onChange('shadowBlur' as Field, String(next.blur));
+  onChange('shadowSpread' as Field, String(next.spread));
   onChange('shadowOffsetX' as Field, String(offsets.offsetX));
   onChange('shadowOffsetY' as Field, String(offsets.offsetY));
 }

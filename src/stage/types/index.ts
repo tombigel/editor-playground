@@ -1,4 +1,4 @@
-import type { DocumentModel, NodeId } from '../../model/types';
+import type { DocumentModel, NodeId, ViewportMeasurement } from '../../model/types';
 import type { RenderMeasuredNodeSizes } from '../../render/types';
 import type { RenderLeafPlanNode, RenderWrapperPlanNode } from '../../render/types';
 import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../../sticky/types';
@@ -110,6 +110,7 @@ export type StageSceneProps = {
   resizeState: ResizeState;
   setResizeState: (state: ResizeState) => void;
   measuredNodeSizes: RenderMeasuredNodeSizes;
+  viewport: ViewportMeasurement;
 };
 
 export type RenderWrapperArgs = {
@@ -122,11 +123,13 @@ export type RenderWrapperArgs = {
   onSelect: (id: NodeId) => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   measuredNodeSizes: RenderMeasuredNodeSizes;
+  viewport: ViewportMeasurement;
   dragState: DragState;
   setDragState: (state: DragState) => void;
   resizeState: ResizeState;
   setResizeState: (state: ResizeState) => void;
   onResizeStart: (id: NodeId) => void;
   selfRegistration?: StageStickyRegistration;
+  ownerWrapper?: StageMathWrapperNode;
   ownerBottomLanePx?: number;
 };

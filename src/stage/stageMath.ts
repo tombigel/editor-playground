@@ -1,4 +1,5 @@
-import type { DocumentModel, DocumentNode, NodeId, StickyDefinition } from '../model/types';
+import type { DocumentModel, DocumentNode, NodeId, StickyDefinition, ViewportMeasurement } from '../model/types';
+import { convertRenderedPxToGeometryUnit } from '../model/conversion';
 import { resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import type {
   DragGeometry,
@@ -23,8 +24,10 @@ export type {
   StageMathWrapperNode,
 } from './types';
 
-export const VIEWPORT_WIDTH = 1440;
-export const VIEWPORT_HEIGHT = 900;
+export const DEFAULT_STAGE_VIEWPORT: ViewportMeasurement = {
+  width: 1440,
+  height: 900,
+};
 const MIN_NODE_SIZE = 24;
 const SNAP_THRESHOLD_PX = 8;
 const DRAG_COMMIT_THRESHOLD_PX = 1;
@@ -67,10 +70,12 @@ export function getResizeCommitSize(
   nextWidth: number,
   nextHeight: number,
   documentModel?: DocumentModel,
+  measuredNodeSizes: MeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
 ) {
   const changesWidth = resizeState.handle.includes('e') || resizeState.handle.includes('w');
   const changesHeight = resizeState.handle.includes('n') || resizeState.handle.includes('s');
-  const parentReference = documentModel ? getResizeParentReference(node, documentModel) : null;
+  const parentReference = documentModel ? getResizeParentReference(node, documentModel, measuredNodeSizes, viewport) : null;
 
   return {
     width: changesWidth
@@ -103,49 +108,39 @@ function convertPxToAuthorUnit(
   axis: 'width' | 'height',
   reference: { width: number; height: number; viewportWidth: number; viewportHeight: number } | null,
 ) {
-  if (unit === 'px') {
-    return Math.round(pxValue);
-  }
   if (!reference) {
     return null;
   }
-  if (unit === '%') {
-    const base = axis === 'width' ? reference.width : reference.height;
-    return base > 0 ? (pxValue / base) * 100 : null;
-  }
-  if (unit === 'vw') {
-    return reference.viewportWidth > 0 ? (pxValue / reference.viewportWidth) * 100 : null;
-  }
-  if (unit === 'vh') {
-    return reference.viewportHeight > 0 ? (pxValue / reference.viewportHeight) * 100 : null;
-  }
-  if (unit === 'vmin') {
-    const base = Math.min(reference.viewportWidth, reference.viewportHeight);
-    return base > 0 ? (pxValue / base) * 100 : null;
-  }
-  const base = Math.max(reference.viewportWidth, reference.viewportHeight);
-  return base > 0 ? (pxValue / base) * 100 : null;
+  return convertRenderedPxToGeometryUnit(pxValue, axis, unit, {
+    referenceSizePx: axis === 'width' ? reference.width : reference.height,
+    viewport: {
+      width: reference.viewportWidth,
+      height: reference.viewportHeight,
+    },
+  });
 }
 
 function getResizeParentReference(
   node: Exclude<DocumentNode, { type: 'site' }>,
   documentModel: DocumentModel,
+  measuredNodeSizes: MeasuredNodeSizes,
+  viewport: ViewportMeasurement,
 ) {
   const parent = node.parentId ? documentModel.nodes[node.parentId] : null;
   if (!parent || parent.type === 'site') {
     return {
-      width: VIEWPORT_WIDTH,
-      height: VIEWPORT_HEIGHT,
-      viewportWidth: VIEWPORT_WIDTH,
-      viewportHeight: VIEWPORT_HEIGHT,
+      width: viewport.width,
+      height: viewport.height,
+      viewportWidth: viewport.width,
+      viewportHeight: viewport.height,
     };
   }
 
   return {
-    width: getNodeWidth(parent, {}),
-    height: getNodeHeight(parent, {}),
-    viewportWidth: VIEWPORT_WIDTH,
-    viewportHeight: VIEWPORT_HEIGHT,
+    width: getNodeWidth(parent, measuredNodeSizes, viewport),
+    height: getNodeHeight(parent, measuredNodeSizes, viewport),
+    viewportWidth: viewport.width,
+    viewportHeight: viewport.height,
   };
 }
 
@@ -653,6 +648,31 @@ export function measureStageNodeElement(
   };
 }
 
+export function measureStageViewport(
+  root: Pick<HTMLElement, 'getBoundingClientRect' | 'ownerDocument'>,
+): ViewportMeasurement | null {
+  const rect = root.getBoundingClientRect();
+  const defaultView = root.ownerDocument.defaultView;
+  if (!defaultView || rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+
+  const computed = defaultView.getComputedStyle(root as Element);
+  const paddingLeft = Number.parseFloat(computed.paddingLeft) || 0;
+  const paddingRight = Number.parseFloat(computed.paddingRight) || 0;
+  const paddingTop = Number.parseFloat(computed.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(computed.paddingBottom) || 0;
+  const width = rect.width - paddingLeft - paddingRight;
+  const height = rect.height - paddingTop - paddingBottom;
+
+  return width > 0 && height > 0
+    ? {
+        width,
+        height,
+      }
+    : null;
+}
+
 export function areMeasuredNodeSizesEqual(current: MeasuredNodeSizes, next: MeasuredNodeSizes) {
   const currentKeys = Object.keys(current);
   const nextKeys = Object.keys(next);
@@ -675,7 +695,11 @@ export function areMeasuredNodeSizesEqual(current: MeasuredNodeSizes, next: Meas
   return true;
 }
 
-export function getNodeWidth(node: Exclude<DocumentNode, { type: 'site' }>, measuredNodeSizes: MeasuredNodeSizes = {}) {
+export function getNodeWidth(
+  node: Exclude<DocumentNode, { type: 'site' }>,
+  measuredNodeSizes: MeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
+) {
   const measured = measuredNodeSizes[node.id];
   if (measured?.width && measured.width > 0) {
     return measured.width;
@@ -684,19 +708,23 @@ export function getNodeWidth(node: Exclude<DocumentNode, { type: 'site' }>, meas
   const width = node.rect.width.base.parsed;
   if ('unit' in width) {
     return width.unit === 'px' ? width.value : width.unit === 'vw'
-      ? (width.value / 100) * VIEWPORT_WIDTH
+      ? (width.value / 100) * viewport.width
       : width.unit === 'vh'
-        ? (width.value / 100) * VIEWPORT_HEIGHT
+        ? (width.value / 100) * viewport.height
         : width.unit === 'vmin'
-          ? (width.value / 100) * Math.min(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+          ? (width.value / 100) * Math.min(viewport.width, viewport.height)
           : width.unit === 'vmax'
-            ? (width.value / 100) * Math.max(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
-            : (width.value / 100) * 960;
+            ? (width.value / 100) * Math.max(viewport.width, viewport.height)
+            : 0;
   }
   return 240;
 }
 
-export function getNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>, measuredNodeSizes: MeasuredNodeSizes = {}) {
+export function getNodeHeight(
+  node: Exclude<DocumentNode, { type: 'site' }>,
+  measuredNodeSizes: MeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
+) {
   const measured = measuredNodeSizes[node.id];
   if (measured?.height && measured.height > 0) {
     return measured.height;
@@ -705,25 +733,29 @@ export function getNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>, mea
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
     return height.unit === 'px' ? height.value : height.unit === 'vh'
-      ? (height.value / 100) * VIEWPORT_HEIGHT
+      ? (height.value / 100) * viewport.height
       : height.unit === 'vw'
-        ? (height.value / 100) * VIEWPORT_WIDTH
+        ? (height.value / 100) * viewport.width
         : height.unit === 'vmin'
-          ? (height.value / 100) * Math.min(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+          ? (height.value / 100) * Math.min(viewport.width, viewport.height)
           : height.unit === 'vmax'
-            ? (height.value / 100) * Math.max(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
-            : (height.value / 100) * 480;
+            ? (height.value / 100) * Math.max(viewport.width, viewport.height)
+            : 0;
   }
   if (height.keyword === 'aspect-ratio') {
-    return getNodeWidth(node, measuredNodeSizes) / height.ratio;
+    return getNodeWidth(node, measuredNodeSizes, viewport) / height.ratio;
   }
   if (node.type === 'wrapper') {
-    return node.role === 'header' || node.role === 'footer' ? 0 : 480;
+    return node.role === 'header' || node.role === 'footer' ? 0 : 0;
   }
-  return estimateAutoLeafHeight(node, measuredNodeSizes);
+  return estimateAutoLeafHeight(node, measuredNodeSizes, viewport);
 }
 
-function estimateAutoLeafHeight(node: LeafNode, measuredNodeSizes: MeasuredNodeSizes = {}) {
+function estimateAutoLeafHeight(
+  node: LeafNode,
+  measuredNodeSizes: MeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
+) {
   if (node.role === 'text') {
     const fontSize =
       node.style?.fontSize && 'unit' in node.style.fontSize.parsed
@@ -735,7 +767,7 @@ function estimateAutoLeafHeight(node: LeafNode, measuredNodeSizes: MeasuredNodeS
             },
           )
         : 18;
-    const widthPx = getNodeWidth(node, measuredNodeSizes);
+    const widthPx = getNodeWidth(node, measuredNodeSizes, viewport);
     const content = node.content || '';
     const charsPerLine = Math.max(10, Math.floor(widthPx / Math.max(fontSize * 0.58, 1)));
     const lineCount = Math.max(
@@ -763,14 +795,15 @@ export function resolveOffsetPx(
   offset: NonNullable<StickyDefinition['offsetTop']>,
   node: Exclude<DocumentNode, { type: 'site' }>,
   measuredNodeSizes: MeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
 ) {
   return resolveUnitValuePx(
     offset.parsed,
     {
-      width: getNodeWidth(node, measuredNodeSizes),
-      height: getNodeHeight(node, measuredNodeSizes),
-      viewportWidth: VIEWPORT_WIDTH,
-      viewportHeight: VIEWPORT_HEIGHT,
+      width: getNodeWidth(node, measuredNodeSizes, viewport),
+      height: getNodeHeight(node, measuredNodeSizes, viewport),
+      viewportWidth: viewport.width,
+      viewportHeight: viewport.height,
     },
     'height',
   );

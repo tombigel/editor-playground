@@ -21,7 +21,7 @@ import {
   createTopSticky,
   setChildren,
 } from './templateHelpers';
-import { parseUnitValue } from './units';
+import { parseSpacingValue, parseUnitValue } from './units';
 
 export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   {
@@ -547,10 +547,10 @@ function createStickyCardContainer(
   container.style.background = options.background;
   container.style.borderColor = '#d6e2f2';
   container.style.borderWidth = parseUnitValue('1px');
-  container.style.paddingTop = parseUnitValue('0px');
-  container.style.paddingRight = parseUnitValue('0px');
-  container.style.paddingBottom = parseUnitValue('0px');
-  container.style.paddingLeft = parseUnitValue('0px');
+  container.style.paddingTop = parseSpacingValue('0px');
+  container.style.paddingRight = parseSpacingValue('0px');
+  container.style.paddingBottom = parseSpacingValue('0px');
+  container.style.paddingLeft = parseSpacingValue('0px');
   container.sticky = options.sticky;
 
   const text = createTextNode(container.id, {

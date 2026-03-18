@@ -2,10 +2,13 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  ArrowLeftRight,
+  ArrowUpDown,
   PilcrowLeft,
   PilcrowRight,
   TextWrap,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +34,7 @@ import {
   DEFAULT_BUTTON_PADDING_INLINE,
   DEFAULT_BUTTON_SHADOW_BLUR_PX,
   DEFAULT_BUTTON_SHADOW_COLOR,
+  DEFAULT_BUTTON_SHADOW_SPREAD_PX,
   DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
   DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
   DEFAULT_BUTTON_TEXT_COLOR,
@@ -39,11 +43,13 @@ import {
   DEFAULT_IMAGE_BORDER_WIDTH,
   DEFAULT_IMAGE_SHADOW_BLUR_PX,
   DEFAULT_IMAGE_SHADOW_COLOR,
+  DEFAULT_IMAGE_SHADOW_SPREAD_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
   DEFAULT_LINK_COLOR,
   DEFAULT_SHADOW_BLUR_PX,
   DEFAULT_SHADOW_COLOR,
+  DEFAULT_SHADOW_SPREAD_PX,
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_TEXT_COLOR,
@@ -133,7 +139,13 @@ export function TextDesignSection({
 }) {
   const shadow = readShadowFieldValues(
     node.style,
-    createShadowFallback(DEFAULT_SHADOW_COLOR, DEFAULT_SHADOW_BLUR_PX, DEFAULT_SHADOW_OFFSET_X_PX, DEFAULT_SHADOW_OFFSET_Y_PX),
+    createShadowFallback(
+      DEFAULT_SHADOW_COLOR,
+      DEFAULT_SHADOW_BLUR_PX,
+      DEFAULT_SHADOW_SPREAD_PX,
+      DEFAULT_SHADOW_OFFSET_X_PX,
+      DEFAULT_SHADOW_OFFSET_Y_PX,
+    ),
   );
 
   return (
@@ -147,7 +159,13 @@ export function TextDesignSection({
           onTextChange={onTextChange}
           colorFallback={DEFAULT_TEXT_COLOR}
           shadow={shadow}
-          shadowFallback={createShadowFallback(DEFAULT_SHADOW_COLOR, DEFAULT_SHADOW_BLUR_PX, DEFAULT_SHADOW_OFFSET_X_PX, DEFAULT_SHADOW_OFFSET_Y_PX)}
+          shadowFallback={createShadowFallback(
+            DEFAULT_SHADOW_COLOR,
+            DEFAULT_SHADOW_BLUR_PX,
+            DEFAULT_SHADOW_SPREAD_PX,
+            DEFAULT_SHADOW_OFFSET_X_PX,
+            DEFAULT_SHADOW_OFFSET_Y_PX,
+          )}
         />
       </CardContent>
     </Card>
@@ -204,6 +222,7 @@ export function ButtonDesignSection({
   const shadowFallback = createShadowFallback(
     DEFAULT_BUTTON_SHADOW_COLOR,
     DEFAULT_BUTTON_SHADOW_BLUR_PX,
+    DEFAULT_BUTTON_SHADOW_SPREAD_PX,
     DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
     DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
   );
@@ -240,6 +259,7 @@ export function ButtonDesignSection({
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>
           <BorderControlGroup
+            nodeId={node.id}
             colorValue={readUnifiedBorderColor(node.style)}
             widthValue={readUnifiedBorderWidth(node.style)}
             radiusValue={readUnifiedBorderRadius(node.style)}
@@ -248,41 +268,70 @@ export function ButtonDesignSection({
             onRadiusChange={(value) => applyUnifiedLeafBorderRadius(onTextChange, value)}
           />
         </div>
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
-          <Label className="pt-1 text-[11px] font-medium">Shadow</Label>
+        <div className="space-y-1.5">
           <ShadowControlGroup
             color={shadow.color}
             blur={shadow.blur}
+            spread={shadow.spread}
             distance={shadow.distance}
             angle={shadow.angle}
             colorFallback={DEFAULT_BUTTON_SHADOW_COLOR}
+            supportsSpread
             onColorChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { color: value })}
             onBlurChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { blur: value })}
+            onSpreadChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { spread: value })}
             onDistanceChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { distance: value })}
             onAngleChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { angle: value })}
           />
         </div>
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
-          <Label className="pt-1 text-[11px] font-medium">Padding</Label>
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium">Padding</Label>
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-medium">Y</Label>
-              <SpacingField
-                value={node.style?.paddingBlock?.raw ?? DEFAULT_BUTTON_PADDING_BLOCK}
-                onChange={(value) => onTextChange('paddingBlock', value)}
-              />
-            </div>
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-medium">X</Label>
-              <SpacingField
-                value={node.style?.paddingInline?.raw ?? DEFAULT_BUTTON_PADDING_INLINE}
-                onChange={(value) => onTextChange('paddingInline', value)}
-              />
-            </div>
+            <ButtonPaddingField
+              nodeId={node.id}
+              axis="block"
+              icon={<ArrowUpDown className="h-3.5 w-3.5" />}
+              ariaLabel="Vertical padding"
+              value={node.style?.paddingBlock?.raw ?? DEFAULT_BUTTON_PADDING_BLOCK}
+              onChange={(value) => onTextChange('paddingBlock', value)}
+            />
+            <ButtonPaddingField
+              nodeId={node.id}
+              axis="inline"
+              icon={<ArrowLeftRight className="h-3.5 w-3.5" />}
+              ariaLabel="Horizontal padding"
+              value={node.style?.paddingInline?.raw ?? DEFAULT_BUTTON_PADDING_INLINE}
+              onChange={(value) => onTextChange('paddingInline', value)}
+            />
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function ButtonPaddingField({
+  nodeId,
+  axis,
+  icon,
+  ariaLabel,
+  value,
+  onChange,
+}: {
+  nodeId: string;
+  axis: 'block' | 'inline';
+  icon: ReactNode;
+  ariaLabel: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
+      <div className="editor-text-muted flex h-8 items-center justify-center" aria-label={ariaLabel}>
+        {icon}
+      </div>
+      <SpacingField nodeId={nodeId} axis={axis} value={value} onChange={onChange} />
+    </div>
   );
 }
 
@@ -336,7 +385,13 @@ export function LinkDesignSection({
   node: LinkInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
 }) {
-  const shadowFallback = createShadowFallback(DEFAULT_SHADOW_COLOR, DEFAULT_SHADOW_BLUR_PX, DEFAULT_SHADOW_OFFSET_X_PX, DEFAULT_SHADOW_OFFSET_Y_PX);
+  const shadowFallback = createShadowFallback(
+    DEFAULT_SHADOW_COLOR,
+    DEFAULT_SHADOW_BLUR_PX,
+    DEFAULT_SHADOW_SPREAD_PX,
+    DEFAULT_SHADOW_OFFSET_X_PX,
+    DEFAULT_SHADOW_OFFSET_Y_PX,
+  );
   const shadow = readShadowFieldValues(node.style, shadowFallback);
 
   return (
@@ -391,6 +446,7 @@ export function ImageDesignSection({
   const shadowFallback = createShadowFallback(
     DEFAULT_IMAGE_SHADOW_COLOR,
     DEFAULT_IMAGE_SHADOW_BLUR_PX,
+    DEFAULT_IMAGE_SHADOW_SPREAD_PX,
     DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
     DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
   );
@@ -405,6 +461,7 @@ export function ImageDesignSection({
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>
           <BorderControlGroup
+            nodeId={node.id}
             colorValue={readUnifiedBorderColor(node.style) || DEFAULT_IMAGE_BORDER_COLOR}
             widthValue={readUnifiedBorderWidth(node.style) || DEFAULT_IMAGE_BORDER_WIDTH}
             radiusValue={readUnifiedBorderRadius(node.style) || DEFAULT_IMAGE_BORDER_RADIUS}
@@ -416,16 +473,18 @@ export function ImageDesignSection({
             radiusPlaceholder="16"
           />
         </div>
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
-          <Label className="pt-1 text-[11px] font-medium">Shadow</Label>
+        <div className="space-y-1.5">
           <ShadowControlGroup
             color={shadow.color}
             blur={shadow.blur}
+            spread={shadow.spread}
             distance={shadow.distance}
             angle={shadow.angle}
             colorFallback={DEFAULT_IMAGE_SHADOW_COLOR}
+            supportsSpread
             onColorChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { color: value })}
             onBlurChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { blur: value })}
+            onSpreadChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { spread: value })}
             onDistanceChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { distance: value })}
             onAngleChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { angle: value })}
           />
@@ -468,10 +527,11 @@ function toggleTextDecorationLine(
   return 'none';
 }
 
-function createShadowFallback(color: string, blur: number, offsetX: number, offsetY: number) {
+function createShadowFallback(color: string, blur: number, spread: number, offsetX: number, offsetY: number) {
   return {
     color,
     blur,
+    spread,
     distance: Math.round(Math.sqrt(offsetX ** 2 + offsetY ** 2) * 100) / 100,
     angle: Math.round(((Math.atan2(offsetY, offsetX) * 180) / Math.PI) * 100) / 100,
   };
@@ -623,8 +683,7 @@ function TypographyDesignFields({
           />
         </div>
       </div>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
-        <Label className="pt-1 text-[11px] font-medium">Shadow</Label>
+      <div className="space-y-1.5">
         <ShadowControlGroup
           color={shadow.color}
           blur={shadow.blur}

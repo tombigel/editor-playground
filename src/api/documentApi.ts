@@ -367,6 +367,7 @@ function isShadowStyleField(field: EditorTextField): field is ShadowStyleField {
   return (
     field === 'shadowColor' ||
     field === 'shadowBlur' ||
+    field === 'shadowSpread' ||
     field === 'shadowOffsetX' ||
     field === 'shadowOffsetY'
   );

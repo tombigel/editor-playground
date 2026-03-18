@@ -22,11 +22,6 @@ export type {
 } from './types';
 export type { StickyMeasuredNodeSizes } from './types';
 
-const DEFAULT_VIEWPORT_WIDTH = 1440;
-const DEFAULT_VIEWPORT_HEIGHT = 900;
-const DEFAULT_PERCENT_WIDTH_REFERENCE = 960;
-const DEFAULT_PERCENT_HEIGHT_REFERENCE = 480;
-
 export function resolveStickyLayout(
   document: DocumentModel,
   geometry: StickyGeometrySnapshot = {},
@@ -89,8 +84,8 @@ export function resolveWrapperStickyState(
 function withDefaultGeometry(geometry: StickyGeometrySnapshot): ResolvedStickyGeometry {
   return {
     nodeSizes: geometry.nodeSizes ?? {},
-    viewportWidth: geometry.viewportWidth ?? DEFAULT_VIEWPORT_WIDTH,
-    viewportHeight: geometry.viewportHeight ?? DEFAULT_VIEWPORT_HEIGHT,
+    viewportWidth: geometry.viewportWidth ?? 0,
+    viewportHeight: geometry.viewportHeight ?? 0,
   };
 }
 
@@ -245,8 +240,8 @@ function getNodeWidth(
           : width.unit === 'vmin'
             ? (width.value / 100) * Math.min(geometry.viewportWidth, geometry.viewportHeight)
             : width.unit === 'vmax'
-              ? (width.value / 100) * Math.max(geometry.viewportWidth, geometry.viewportHeight)
-              : (width.value / 100) * DEFAULT_PERCENT_WIDTH_REFERENCE;
+          ? (width.value / 100) * Math.max(geometry.viewportWidth, geometry.viewportHeight)
+              : 0;
   }
 
   return 240;
@@ -272,14 +267,14 @@ function getNodeHeight(
           : height.unit === 'vmin'
             ? (height.value / 100) * Math.min(geometry.viewportWidth, geometry.viewportHeight)
             : height.unit === 'vmax'
-              ? (height.value / 100) * Math.max(geometry.viewportWidth, geometry.viewportHeight)
-              : (height.value / 100) * DEFAULT_PERCENT_HEIGHT_REFERENCE;
+          ? (height.value / 100) * Math.max(geometry.viewportWidth, geometry.viewportHeight)
+              : 0;
   }
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node, geometry) / height.ratio;
   }
   if (node.type === 'wrapper') {
-    return node.role === 'header' || node.role === 'footer' ? 0 : DEFAULT_PERCENT_HEIGHT_REFERENCE;
+    return 0;
   }
   return estimateAutoLeafHeight(node, geometry);
 }

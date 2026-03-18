@@ -29,6 +29,7 @@ export type BorderRadiusField =
 export type ShadowStyleField =
   | 'shadowColor'
   | 'shadowBlur'
+  | 'shadowSpread'
   | 'shadowOffsetX'
   | 'shadowOffsetY';
 export type LeafTypographyField =
@@ -63,6 +64,10 @@ export type WrapperStyleField =
   | BorderWidthField
   | BorderRadiusField
   | ShadowStyleField
+  | 'paddingTop'
+  | 'paddingRight'
+  | 'paddingBottom'
+  | 'paddingLeft'
   | 'sectionBorderBottomColor'
   | 'sectionBorderBottomWidth';
 
@@ -79,6 +84,11 @@ export type FontSizeValue = {
 export type SpacingValue = {
   value: number;
   unit: SpacingUnit;
+};
+
+export type ViewportMeasurement = {
+  width: number;
+  height: number;
 };
 
 export type WidthValue = UnitValue | { keyword: 'fit-content' | 'min-content' | 'max-content' };
@@ -114,6 +124,7 @@ export type BorderStyle = {
 export type ShadowStyle = {
   shadowColor?: string;
   shadowBlur?: number;
+  shadowSpread?: number;
   shadowOffsetX?: number;
   shadowOffsetY?: number;
 };
@@ -187,10 +198,10 @@ export type WrapperNode = BaseNode & {
     background?: string;
     sectionBorderBottomColor?: string;
     sectionBorderBottomWidth?: ParsedValue<UnitValue>;
-    paddingTop?: ParsedValue<UnitValue>;
-    paddingRight?: ParsedValue<UnitValue>;
-    paddingBottom?: ParsedValue<UnitValue>;
-    paddingLeft?: ParsedValue<UnitValue>;
+    paddingTop?: ParsedValue<SpacingValue>;
+    paddingRight?: ParsedValue<SpacingValue>;
+    paddingBottom?: ParsedValue<SpacingValue>;
+    paddingLeft?: ParsedValue<SpacingValue>;
   };
 };
 

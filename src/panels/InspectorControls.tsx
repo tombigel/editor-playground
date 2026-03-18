@@ -11,7 +11,15 @@ import {
   PanelTop,
   Proportions,
 } from 'lucide-react';
-import type { BorderStyle, ShadowStyle, WrapperNode } from '../model/types';
+import {
+  convertRenderedPxToBorderRadiusUnit,
+  convertRenderedPxToFontRelativeUnit,
+  convertRenderedPxToGeometryUnit,
+  convertRenderedPxToSpacingUnit,
+  formatDisplayValue,
+} from '../model/conversion';
+import { forceOpaqueColorValue } from '../model/colors';
+import type { BorderStyle, ShadowStyle, ViewportMeasurement, WrapperNode } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
@@ -34,10 +42,12 @@ type SizeFieldMode =
   | 'max-content'
   | 'auto'
   | 'aspect-ratio';
+type NumericSizeFieldMode = Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>;
 type FontSizeMode = 'px' | 'em' | 'rem';
 type SpacingMode = 'px' | 'em' | 'rem';
+export type SpacingAxis = 'block' | 'inline' | 'top' | 'right' | 'bottom' | 'left';
 export type SizeFieldDescriptor =
-  | { kind: 'numeric'; mode: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>; input: string }
+  | { kind: 'numeric'; mode: NumericSizeFieldMode; input: string }
   | { kind: 'keyword'; mode: Extract<SizeFieldMode, 'fit-content' | 'min-content' | 'max-content' | 'auto'>; input: '' }
   | { kind: 'aspect-ratio'; mode: 'aspect-ratio'; input: string };
 
@@ -57,6 +67,7 @@ export function SizeInlineField({
   axis,
   value,
   onChange,
+  isSectionHeight = false,
   disabled = false,
 }: {
   label: string;
@@ -64,39 +75,42 @@ export function SizeInlineField({
   axis: SizeFieldAxis;
   value: string;
   onChange: (value: string) => void;
+  isSectionHeight?: boolean;
   disabled?: boolean;
 }) {
-  const [mode, setMode] = useState<SizeFieldMode>(() => describeSizeFieldValue(value, axis).mode);
-  const [numericDraft, setNumericDraft] = useState(() => getInitialNumericDraft(value, axis));
+  const modeOptions = getSizeModeOptions(axis, { isSectionHeight });
+  const [mode, setMode] = useState<SizeFieldMode>(() => getInitialSizeFieldMode(value, axis, isSectionHeight));
+  const [numericDraft, setNumericDraft] = useState(() => getInitialNumericDraft(value, axis, nodeId, isSectionHeight));
   const [aspectDraft, setAspectDraft] = useState(() => getInitialAspectDraft(value));
   const [invalid, setInvalid] = useState(false);
 
   useEffect(() => {
     const descriptor = describeSizeFieldValue(value, axis);
-    setMode(descriptor.mode);
+    setMode(resolveSizeFieldMode(descriptor, axis, isSectionHeight));
     if (descriptor.kind === 'numeric') {
-      setNumericDraft(descriptor.input);
+      setNumericDraft(getInitialNumericDraft(value, axis, nodeId, isSectionHeight));
     }
     if (descriptor.kind === 'aspect-ratio') {
       setAspectDraft(descriptor.input);
     }
     setInvalid(false);
-  }, [axis, value]);
+  }, [axis, isSectionHeight, nodeId, value]);
 
   const descriptor = describeSizeFieldValue(value, axis);
-  const showNumericInput =
-    mode === 'px' || mode === '%' || mode === 'vw' || mode === 'vh' || mode === 'vmin' || mode === 'vmax';
+  const showNumericInput = isNumericSizeFieldMode(mode);
   const showAspectInput = mode === 'aspect-ratio';
   const showKeywordTriggerOnly = !showNumericInput && !showAspectInput;
+  const hasStaticNumericUnitSuffix = showNumericInput && modeOptions.selectableModes.length === 1;
   const suffixWidth = showAspectInput ? COMPACT_UNIT_ICON_SUFFIX_WIDTH : COMPACT_UNIT_SUFFIX_WIDTH;
   const usesIconSuffix = mode === 'aspect-ratio';
+  const numericMin = axis === 'width' || axis === 'height' ? 0 : undefined;
   const shellClass = invalid
     ? 'editor-inline-field editor-inline-field-invalid focus-within:border-red-400'
     : 'editor-inline-field focus-within:border-blue-500';
 
   function commitDraft(nextMode: SizeFieldMode, nextInput?: string) {
     const candidateInput = nextInput ?? (nextMode === 'aspect-ratio' ? aspectDraft : numericDraft);
-    const nextRaw = buildSizeFieldValue(axis, nextMode, candidateInput);
+    const nextRaw = buildSizeFieldValue(axis, nextMode, candidateInput, { isSectionHeight });
     if (!nextRaw) {
       setInvalid(true);
       return false;
@@ -110,12 +124,13 @@ export function SizeInlineField({
 
   function handleModeChange(nextMode: string) {
     const resolvedMode = nextMode as SizeFieldMode;
-    setMode(resolvedMode);
 
     if (resolvedMode === 'aspect-ratio') {
       const nextAspect = descriptor.kind === 'aspect-ratio' ? descriptor.input : aspectDraft || '16/9';
       setAspectDraft(nextAspect);
-      commitDraft(resolvedMode, nextAspect);
+      if (commitDraft(resolvedMode, nextAspect)) {
+        setMode(resolvedMode);
+      }
       return;
     }
 
@@ -125,15 +140,20 @@ export function SizeInlineField({
       resolvedMode === 'min-content' ||
       resolvedMode === 'max-content'
     ) {
-      commitDraft(resolvedMode);
+      if (commitDraft(resolvedMode)) {
+        setMode(resolvedMode);
+      }
       return;
     }
 
     const convertedNumeric = convertStageMeasurementToInput(nodeId, axis, resolvedMode);
-    const nextNumeric =
-      convertedNumeric ?? (descriptor.kind === 'numeric' ? descriptor.input : numericDraft || getDefaultNumericDraft(axis));
-    setNumericDraft(nextNumeric);
-    commitDraft(resolvedMode, nextNumeric);
+    if (convertedNumeric == null) {
+      return;
+    }
+    setNumericDraft(convertedNumeric);
+    if (commitDraft(resolvedMode, convertedNumeric)) {
+      setMode(resolvedMode);
+    }
   }
 
   return (
@@ -144,13 +164,13 @@ export function SizeInlineField({
           className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
           <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
-          <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60">
+          <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
+            <SelectContent>{renderSizeModeOptions(axis, { isSectionHeight })}</SelectContent>
           </Select>
           <div
-            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100"
+            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100 peer-disabled/keywordtrigger:opacity-0"
             style={{ width: `${COMPACT_UNIT_SUFFIX_WIDTH}px` }}
           >
             <ChevronDown className="editor-text-strong h-3 w-3" />
@@ -168,18 +188,19 @@ export function SizeInlineField({
             <Input
               type="number"
               step="any"
+              min={numericMin}
               value={numericDraft}
               onChange={(e) => {
                 const next = e.target.value;
                 setNumericDraft(next);
-                const nextRaw = buildSizeFieldValue(axis, mode, next);
+                const nextRaw = buildSizeFieldValue(axis, mode, next, { isSectionHeight });
                 setInvalid(!nextRaw);
                 if (nextRaw && !disabled) {
                   onChange(nextRaw);
                 }
               }}
               disabled={disabled}
-              className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none [appearance:textfield] [padding-inline-end:0] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           ) : (
             <Input
@@ -202,30 +223,40 @@ export function SizeInlineField({
             style={{ right: `${suffixWidth}px` }}
           />
           <div className="group/unitsuffix relative shrink-0" style={{ width: `${suffixWidth}px`, minWidth: `${suffixWidth}px` }}>
-            <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
-              <SelectTrigger
-                className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full w-full justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60"
+            {hasStaticNumericUnitSuffix ? (
+              <div
+                className="editor-inline-field-trigger editor-inline-field-trigger-static pointer-events-none relative z-10 flex h-full w-full items-center justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center text-[10px] font-medium tracking-[-0.01em] shadow-none"
               >
-                {usesIconSuffix ? (
-                  <span className="flex w-full items-center justify-center">
-                    <Proportions className="h-3.5 w-3.5" />
-                  </span>
-                ) : (
-                  <SelectValue />
-                )}
-              </SelectTrigger>
-              <SelectContent>{renderSizeModeOptions(axis)}</SelectContent>
-            </Select>
-            <div
-              className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
-              style={{ width: `${suffixWidth}px` }}
-            >
-              <ChevronDown className="editor-text-strong h-3 w-3" />
-            </div>
-            <div
-              className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-              style={{ width: `${suffixWidth}px` }}
-            />
+                {mode}
+              </div>
+            ) : (
+              <>
+                <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
+                  <SelectTrigger
+                    className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full w-full justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60"
+                  >
+                    {usesIconSuffix ? (
+                      <span className="flex w-full items-center justify-center">
+                        <Proportions className="h-3.5 w-3.5" />
+                      </span>
+                    ) : (
+                      <SelectValue />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>{renderSizeModeOptions(axis, { isSectionHeight })}</SelectContent>
+                </Select>
+                <div
+                  className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
+                  style={{ width: `${suffixWidth}px` }}
+                >
+                  <ChevronDown className="editor-text-strong h-3 w-3" />
+                </div>
+                <div
+                  className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+                  style={{ width: `${suffixWidth}px` }}
+                />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -239,12 +270,18 @@ export function NumericUnitInlineField({
   onChange,
   placeholder,
   className = '',
+  onUnitChangeValue,
+  min,
+  max,
 }: {
   value: string;
   units: ('px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax')[];
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  onUnitChangeValue?: (nextUnit: string, currentValue: string) => string | null;
+  min?: number;
+  max?: number;
 }) {
   const parsed = value ? parseUnitValue(value) : null;
   const initialUnit = parsed && units.includes(parsed.parsed.unit) ? parsed.parsed.unit : units[0];
@@ -270,6 +307,12 @@ export function NumericUnitInlineField({
     if (!Number.isFinite(nextValue)) {
       return;
     }
+    if (min != null && nextValue < min) {
+      return;
+    }
+    if (max != null && nextValue > max) {
+      return;
+    }
 
     onChange(`${nextDraft}${nextUnit}`);
   }
@@ -279,6 +322,8 @@ export function NumericUnitInlineField({
       <Input
         type="number"
         step="any"
+        min={min}
+        max={max}
         value={draft}
         placeholder={placeholder}
         onChange={(event) => {
@@ -286,7 +331,7 @@ export function NumericUnitInlineField({
           setDraft(nextDraft);
           commit(nextDraft, unit);
         }}
-        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
@@ -298,6 +343,17 @@ export function NumericUnitInlineField({
             value={unit}
             onValueChange={(nextUnit) => {
               const resolvedUnit = nextUnit as typeof unit;
+              if (onUnitChangeValue) {
+                const nextValue = onUnitChangeValue(resolvedUnit, value);
+                if (!nextValue) {
+                  return;
+                }
+                const nextParsed = parseUnitValue(nextValue);
+                setDraft(formatDisplayValue(nextParsed.parsed.value));
+                setUnit(nextParsed.parsed.unit);
+                onChange(nextValue);
+                return;
+              }
               setUnit(resolvedUnit);
               commit(draft, resolvedUnit);
             }}
@@ -317,7 +373,7 @@ export function NumericUnitInlineField({
             </SelectContent>
           </Select>
           <div
-            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
+            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
             style={{ width: suffixWidth }}
           >
             <ChevronDown className="editor-text-strong h-3 w-3" />
@@ -370,6 +426,7 @@ export function HoverColorField({
 }
 
 export function BorderControlGroup({
+  nodeId,
   colorValue,
   widthValue,
   radiusValue,
@@ -381,6 +438,7 @@ export function BorderControlGroup({
   widthPlaceholder = '1',
   radiusPlaceholder = '16',
 }: {
+  nodeId: string;
   colorValue: string;
   widthValue: string;
   radiusValue: string;
@@ -398,22 +456,23 @@ export function BorderControlGroup({
         <HoverColorField value={colorValue || undefined} onChange={onColorChange} ariaLabel="Border color" fallback={colorFallback} />
       </div>
       <div className={`grid gap-1.5 ${showRadius ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        <LabeledFixedUnitField
+        <LabeledUnitField
           label="Width"
           value={widthValue}
-          unit="px"
+          units={['px']}
           onChange={onWidthChange}
           placeholder={widthPlaceholder}
           min={0}
-          step="any"
         />
         {showRadius ? (
           <LabeledUnitField
+            nodeId={nodeId}
             label="Radius"
             value={radiusValue}
             units={['px', '%']}
             onChange={onRadiusChange}
             placeholder={radiusPlaceholder}
+            min={0}
           />
         ) : null}
       </div>
@@ -422,33 +481,47 @@ export function BorderControlGroup({
 }
 
 export function ShadowControlGroup({
+  label = 'Shadow',
   color,
   blur,
+  spread,
   distance,
   angle,
   onColorChange,
   onBlurChange,
+  onSpreadChange,
   onDistanceChange,
   onAngleChange,
   colorFallback,
+  supportsSpread = false,
 }: {
+  label?: string;
   color: string;
   blur: number;
+  spread?: number;
   distance: number;
   angle: number;
   onColorChange: (value: string) => void;
   onBlurChange: (value: number) => void;
+  onSpreadChange?: (value: number) => void;
   onDistanceChange: (value: number) => void;
   onAngleChange: (value: number) => void;
   colorFallback: string;
+  supportsSpread?: boolean;
 }) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-end">
-        <HoverColorField value={color || undefined} onChange={onColorChange} ariaLabel="Shadow color" fallback={colorFallback} />
+    <div className="w-full space-y-1.5">
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+        <Label className="text-[11px] font-medium">{label}</Label>
+        <div className="ml-auto flex items-center gap-2">
+          <HoverColorField value={color || undefined} onChange={onColorChange} ariaLabel="Shadow color" fallback={colorFallback} />
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className={`grid w-full gap-1.5 ${supportsSpread ? 'grid-cols-4' : 'grid-cols-3'}`}>
         <LabeledNumberField label="Blur" value={blur} onChange={onBlurChange} min={0} max={200} step={1} />
+        {supportsSpread ? (
+          <LabeledNumberField label="Spread" value={spread ?? 0} onChange={(value) => onSpreadChange?.(value)} min={-200} max={200} step={1} />
+        ) : null}
         <LabeledNumberField label="Distance" value={distance} onChange={onDistanceChange} min={0} max={400} step={1} />
         <LabeledNumberField label="Angle" value={angle} onChange={onAngleChange} min={-180} max={180} step={1} />
       </div>
@@ -472,7 +545,7 @@ export function LabeledNumberField({
   step: number;
 }) {
   return (
-    <div className="space-y-0.5">
+    <div className="min-w-0 w-full space-y-0.5">
       <Label className="text-[11px] font-medium">{label}</Label>
       <NumberInput value={value} min={min} max={max} step={step} onChange={onChange} />
     </div>
@@ -532,80 +605,38 @@ export function LabeledImplicitUnitField({
   );
 }
 
-export function LabeledFixedUnitField({
-  label,
-  value,
-  unit,
-  onChange,
-  placeholder,
-  min,
-  step,
-}: {
-  label: string;
-  value: string;
-  unit: 'px' | '%';
-  onChange: (value: string) => void;
-  placeholder?: string;
-  min?: number;
-  step?: number | 'any';
-}) {
-  const parsed = value ? parseUnitValue(value) : null;
-  const [draft, setDraft] = useState(parsed ? formatFieldNumber(clampFieldNumber(parsed.parsed.value)) : '');
-
-  useEffect(() => {
-    const nextParsed = value ? parseUnitValue(value) : null;
-    setDraft(nextParsed ? formatFieldNumber(clampFieldNumber(nextParsed.parsed.value)) : '');
-  }, [value]);
-
-  return (
-    <div className="space-y-0.5">
-      <Label className="text-[11px] font-medium">{label}</Label>
-      <div className="group/inlinefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] editor-inline-field focus-within:border-blue-500">
-        <Input
-          type="number"
-          min={min}
-          step={step}
-          value={draft}
-          placeholder={placeholder}
-          onChange={(event) => {
-            const nextDraft = event.target.value;
-            setDraft(nextDraft);
-            if (nextDraft.trim() === '') {
-              onChange('');
-              return;
-            }
-            const nextValue = Number.parseFloat(nextDraft);
-            if (Number.isFinite(nextValue)) {
-              onChange(`${nextValue}${unit}`);
-            }
-          }}
-          className="editor-inline-field-value h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] text-center shadow-none [appearance:textfield] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
-        <div className="editor-inline-field-trigger editor-inline-field-trigger-static flex h-full w-[36px] min-w-[36px] items-center justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center text-[10px] font-medium tracking-[-0.01em]">
-          {unit}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function LabeledUnitField({
+  nodeId,
   label,
   value,
   units,
   onChange,
   placeholder,
+  min,
 }: {
+  nodeId?: string;
   label: string;
   value: string;
   units: ('px' | '%')[];
   onChange: (value: string) => void;
   placeholder?: string;
+  min?: number;
 }) {
   return (
     <div className="space-y-0.5">
       <Label className="text-[11px] font-medium">{label}</Label>
-      <NumericUnitInlineField value={value} units={units} onChange={onChange} placeholder={placeholder} />
+      <NumericUnitInlineField
+        value={value}
+        units={units}
+        onChange={onChange}
+        placeholder={placeholder}
+        min={min}
+        onUnitChangeValue={
+          nodeId
+            ? (nextUnit) => convertStageBorderRadiusToValue(nodeId, nextUnit as 'px' | '%')
+            : undefined
+        }
+      />
     </div>
   );
 }
@@ -655,7 +686,7 @@ export function readUnifiedBorderRadius(style: BorderStyle | undefined) {
 
 export function readShadowFieldValues(
   style: ShadowStyle | undefined,
-  fallback: { color: string; blur: number; distance: number; angle: number },
+  fallback: { color: string; blur: number; spread: number; distance: number; angle: number },
 ) {
   const fallbackVector = offsetsFromDistanceAndAngle(fallback.distance, fallback.angle);
   const offsetX = style?.shadowOffsetX ?? fallbackVector.offsetX;
@@ -663,6 +694,7 @@ export function readShadowFieldValues(
   return {
     color: style?.shadowColor ?? fallback.color,
     blur: style?.shadowBlur ?? fallback.blur,
+    spread: style?.shadowSpread ?? fallback.spread,
     distance: roundShadowNumber(Math.sqrt(offsetX ** 2 + offsetY ** 2)),
     angle: roundShadowNumber((Math.atan2(offsetY, offsetX) * 180) / Math.PI),
   };
@@ -676,26 +708,35 @@ export function offsetsFromDistanceAndAngle(distance: number, angle: number) {
   };
 }
 
-export function getSizeModeOptions(axis: SizeFieldAxis) {
-  const isLengthOnlyAxis = axis === 'x' || axis === 'y';
-  const scalarUnits = isLengthOnlyAxis ? ['px'] : ['px', '%'];
-  const viewportUnits = isLengthOnlyAxis ? ['vw', 'vh'] : ['vw', 'vh', 'vmin', 'vmax'];
+export function getSizeModeOptions(
+  axis: SizeFieldAxis,
+  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+) {
+  const scalarUnits: NumericSizeFieldMode[] = axis === 'x' || axis === 'y' ? ['px'] : ['px', '%'];
+  const viewportUnits: NumericSizeFieldMode[] = axis === 'height' && isSectionHeight ? ['vh', 'vmin', 'vmax'] : [];
   const keywords =
     axis === 'width'
       ? WIDTH_KEYWORD_OPTIONS
       : axis === 'height'
         ? HEIGHT_KEYWORD_OPTIONS
         : null;
+  const selectableModes: SizeFieldMode[] = [...scalarUnits, ...(keywords ?? []), ...viewportUnits];
 
   return {
     scalarUnits,
     viewportUnits,
     keywords,
+    selectableModes,
   };
 }
 
-function renderSizeModeOptions(axis: SizeFieldAxis) {
-  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis);
+function renderSizeModeOptions(
+  axis: SizeFieldAxis,
+  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+) {
+  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis, { isSectionHeight });
+  const hasKeywords = Boolean(keywords?.length);
+  const hasViewportUnits = viewportUnits.length > 0;
 
   return (
     <>
@@ -704,13 +745,13 @@ function renderSizeModeOptions(axis: SizeFieldAxis) {
           {option}
         </SelectItem>
       ))}
-      {keywords ? <SelectSeparator /> : null}
+      {hasKeywords ? <SelectSeparator /> : null}
       {keywords?.map((option) => (
         <SelectItem key={`${axis}-${option}`} value={option}>
           {option}
         </SelectItem>
       ))}
-      <SelectSeparator />
+      {hasViewportUnits ? <SelectSeparator /> : null}
       {viewportUnits.map((option) => (
         <SelectItem key={`${axis}-${option}`} value={option}>
           {option}
@@ -863,7 +904,7 @@ export function FontSizeField({
             onChange(`${next}${parsed.parsed.unit}`);
           }
         }}
-        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
@@ -873,7 +914,10 @@ export function FontSizeField({
         value={parsed.parsed.unit}
         onValueChange={(nextUnit) => {
           const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
-          onChange(`${converted ?? parsed.parsed.value}${nextUnit as FontSizeMode}`);
+          if (converted == null) {
+            return;
+          }
+          onChange(`${converted}${nextUnit as FontSizeMode}`);
         }}
       >
         <SelectTrigger
@@ -891,7 +935,7 @@ export function FontSizeField({
         </SelectContent>
       </Select>
       <div
-        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
+        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
         style={{ width: fontSizeSuffixWidth }}
       >
         <ChevronDown className="editor-text-strong h-3 w-3" />
@@ -905,9 +949,13 @@ export function FontSizeField({
 }
 
 export function SpacingField({
+  nodeId,
+  axis,
   value,
   onChange,
 }: {
+  nodeId: string;
+  axis: SpacingAxis;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -927,7 +975,7 @@ export function SpacingField({
             onChange(`${next}${parsed.parsed.unit}`);
           }
         }}
-        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
@@ -936,7 +984,11 @@ export function SpacingField({
       <Select
         value={parsed.parsed.unit}
         onValueChange={(nextUnit) => {
-          onChange(`${parsed.parsed.value}${nextUnit as SpacingMode}`);
+          const converted = convertStageSpacingToInput(nodeId, axis, nextUnit as SpacingMode);
+          if (converted == null) {
+            return;
+          }
+          onChange(`${converted}${nextUnit as SpacingMode}`);
         }}
       >
         <SelectTrigger
@@ -954,7 +1006,7 @@ export function SpacingField({
         </SelectContent>
       </Select>
       <div
-        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100"
+        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
         style={{ width: suffixWidth }}
       >
         <ChevronDown className="editor-text-strong h-3 w-3" />
@@ -993,7 +1045,7 @@ export function NumberInput({
           onChange(next);
         }
       }}
-      className="h-8 rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      className="h-8 w-full rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
     />
   );
 }
@@ -1219,9 +1271,16 @@ export function describeSizeFieldValue(value: string, axis: SizeFieldAxis): Size
   };
 }
 
-export function buildSizeFieldValue(axis: SizeFieldAxis, mode: SizeFieldMode, input: string) {
+export function buildSizeFieldValue(
+  axis: SizeFieldAxis,
+  mode: SizeFieldMode,
+  input: string,
+  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+) {
+  const allowedNumericModes = getAllowedNumericSizeModes(axis, isSectionHeight);
+
   if (axis === 'x' || axis === 'y') {
-    if (mode !== 'px' && mode !== 'vw' && mode !== 'vh' && mode !== 'vmin' && mode !== 'vmax') {
+    if (mode !== 'px') {
       return null;
     }
     const numeric = input.trim();
@@ -1235,6 +1294,10 @@ export function buildSizeFieldValue(axis: SizeFieldAxis, mode: SizeFieldMode, in
     } catch {
       return null;
     }
+  }
+
+  if (isNumericSizeFieldMode(mode) && !allowedNumericModes.includes(mode)) {
+    return null;
   }
 
   if (mode === 'fit-content' || mode === 'min-content' || mode === 'max-content') {
@@ -1253,6 +1316,10 @@ export function buildSizeFieldValue(axis: SizeFieldAxis, mode: SizeFieldMode, in
 
   const numeric = input.trim();
   if (!/^-?\d+(?:\.\d+)?$/.test(numeric)) {
+    return null;
+  }
+  const numericValue = Number.parseFloat(numeric);
+  if ((axis === 'width' || axis === 'height') && numericValue < 0) {
     return null;
   }
   const nextRaw = `${numeric}${mode}`;
@@ -1295,32 +1362,18 @@ export function convertRenderedPxToUnitValue(
   parentSizePx?: number,
   viewportSizePx?: number,
 ) {
-  if (!Number.isFinite(px)) {
-    return null;
-  }
-
-  if (mode === 'px') {
-    return roundGeometryValue(px);
-  }
-
-  if (mode === '%') {
-    if ((axis === 'x' || axis === 'y') || !parentSizePx || parentSizePx <= 0) {
-      return null;
-    }
-    return roundGeometryValue((px / parentSizePx) * 100);
-  }
-
-  if (mode === 'vw' || mode === 'vh') {
-    if (!viewportSizePx || viewportSizePx <= 0) {
-      return null;
-    }
-    return roundGeometryValue((px / viewportSizePx) * 100);
-  }
-
-  if (!viewportSizePx || viewportSizePx <= 0) {
-    return null;
-  }
-  return roundGeometryValue((px / viewportSizePx) * 100);
+  const viewport =
+    mode === 'vw'
+      ? { width: viewportSizePx ?? 0, height: 1 }
+      : mode === 'vh'
+        ? { width: 1, height: viewportSizePx ?? 0 }
+        : mode === 'vmin' || mode === 'vmax'
+          ? { width: viewportSizePx ?? 0, height: viewportSizePx ?? 0 }
+          : null;
+  return convertRenderedPxToGeometryUnit(px, axis, mode, {
+    referenceSizePx: parentSizePx,
+    viewport,
+  });
 }
 
 export function convertStageMeasurementToInput(
@@ -1346,17 +1399,23 @@ export function convertStageMeasurementToInput(
     axis === 'width'
       ? measurement.parentWidth
       : axis === 'height'
-        ? measurement.parentHeight
+        ? measurement.parentHeightReliable
+          ? measurement.parentHeight
+          : undefined
         : undefined;
   const viewportSize =
     mode === 'vw'
-      ? measurement.viewportWidth
+      ? measurement.viewport?.width
       : mode === 'vh'
-        ? measurement.viewportHeight
+        ? measurement.viewport?.height
         : mode === 'vmin'
-          ? Math.min(measurement.viewportWidth ?? 0, measurement.viewportHeight ?? 0)
+          ? measurement.viewport
+            ? Math.min(measurement.viewport.width, measurement.viewport.height)
+            : undefined
           : mode === 'vmax'
-            ? Math.max(measurement.viewportWidth ?? 0, measurement.viewportHeight ?? 0)
+            ? measurement.viewport
+              ? Math.max(measurement.viewport.width, measurement.viewport.height)
+              : undefined
             : undefined;
 
   const converted = convertRenderedPxToUnitValue(px, axis, mode, parentSize, viewportSize);
@@ -1368,19 +1427,7 @@ export function convertRenderedPxToFontSizeValue(
   mode: FontSizeMode,
   reference: { rootFontSizePx: number; inheritedFontSizePx: number },
 ) {
-  if (!Number.isFinite(px) || px <= 0) {
-    return null;
-  }
-
-  if (mode === 'px') {
-    return clampFieldNumber(px);
-  }
-
-  const base = mode === 'rem' ? reference.rootFontSizePx : reference.inheritedFontSizePx;
-  if (!Number.isFinite(base) || base <= 0) {
-    return null;
-  }
-  return clampFieldNumber(px / base);
+  return convertRenderedPxToFontRelativeUnit(px, mode, reference);
 }
 
 export function convertStageFontSizeToInput(
@@ -1400,16 +1447,67 @@ export function convertStageFontSizeToInput(
   return converted == null ? null : formatFieldNumber(converted);
 }
 
-function measureStageGeometry(nodeId: string, ownerDocument: Document) {
-  const element = ownerDocument.getElementById(`stage-node-${nodeId}`);
-  if (!element) {
+export function convertRenderedPxToSpacingValue(
+  px: number,
+  mode: SpacingMode,
+  reference: { rootFontSizePx: number; inheritedFontSizePx: number },
+) {
+  return convertRenderedPxToSpacingUnit(px, mode, reference);
+}
+
+export function convertStageSpacingToInput(
+  nodeId: string,
+  axis: SpacingAxis,
+  mode: SpacingMode,
+  ownerDocument: Document = document,
+) {
+  const measurement = measureStageSpacing(nodeId, axis, ownerDocument);
+  if (!measurement) {
     return null;
   }
 
+  const converted = convertRenderedPxToSpacingValue(measurement.spacingPx, mode, {
+    rootFontSizePx: measurement.rootFontSizePx,
+    inheritedFontSizePx: measurement.fontSizePx,
+  });
+  return converted == null ? null : formatFieldNumber(converted);
+}
+
+export function convertRenderedPxToBorderRadiusValue(
+  px: number,
+  mode: 'px' | '%',
+  box: { width: number; height: number },
+) {
+  return convertRenderedPxToBorderRadiusUnit(px, mode, box);
+}
+
+export function convertStageBorderRadiusToValue(
+  nodeId: string,
+  mode: 'px' | '%',
+  ownerDocument: Document = document,
+) {
+  const measurement = measureStageBorderRadius(nodeId, ownerDocument);
+  if (!measurement) {
+    return null;
+  }
+
+  const converted = convertRenderedPxToBorderRadiusValue(measurement.radiusPx, mode, measurement.box);
+  return converted == null ? null : `${formatFieldNumber(converted)}${mode}`;
+}
+
+function measureStageGeometry(nodeId: string, ownerDocument: Document) {
+  const root = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  if (!root) {
+    return null;
+  }
+
+  const element = getStageGeometryMeasurementTarget(nodeId, ownerDocument) ?? root;
   const rect = element.getBoundingClientRect();
   const parentContent =
     element.parentElement?.closest<HTMLElement>('[data-content-wrapper-for]') ??
-    element.parentElement;
+    root.parentElement?.closest<HTMLElement>('[data-content-wrapper-for]') ??
+    element.parentElement ??
+    root.parentElement;
   const parentRect = parentContent?.getBoundingClientRect();
 
   return {
@@ -1419,13 +1517,13 @@ function measureStageGeometry(nodeId: string, ownerDocument: Document) {
     offsetY: parentRect ? rect.top - parentRect.top : rect.top,
     parentWidth: parentRect?.width,
     parentHeight: parentRect?.height,
-    viewportWidth: ownerDocument.defaultView?.innerWidth,
-    viewportHeight: ownerDocument.defaultView?.innerHeight,
+    parentHeightReliable: isReliablePercentHeightReference(parentContent),
+    viewport: measureEditorViewport(ownerDocument),
   };
 }
 
 function measureStageFontSize(nodeId: string, ownerDocument: Document) {
-  const element = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  const element = getStageStyleMeasurementTarget(nodeId, ownerDocument);
   const defaultView = ownerDocument.defaultView;
   if (!element || !defaultView) {
     return null;
@@ -1448,15 +1546,207 @@ function measureStageFontSize(nodeId: string, ownerDocument: Document) {
   };
 }
 
-function roundGeometryValue(value: number) {
-  return Math.round(value * 1000) / 1000;
+function measureStageSpacing(nodeId: string, axis: SpacingAxis, ownerDocument: Document) {
+  const element = getStageStyleMeasurementTarget(nodeId, ownerDocument);
+  const defaultView = ownerDocument.defaultView;
+  if (!element || !defaultView) {
+    return null;
+  }
+
+  const computed = defaultView.getComputedStyle(element);
+  const rootComputed = defaultView.getComputedStyle(ownerDocument.documentElement);
+  const top = Number.parseFloat(computed.paddingTop);
+  const bottom = Number.parseFloat(computed.paddingBottom);
+  const left = Number.parseFloat(computed.paddingLeft);
+  const right = Number.parseFloat(computed.paddingRight);
+  const fontSizePx = Number.parseFloat(computed.fontSize);
+  const rootFontSizePx = Number.parseFloat(rootComputed.fontSize);
+  const spacingPx =
+    axis === 'block'
+      ? Number.isFinite(top) && Number.isFinite(bottom) && top > 0 && bottom > 0
+        ? (top + bottom) / 2
+        : Number.isFinite(top) && top > 0
+          ? top
+          : Number.isFinite(bottom) && bottom > 0
+            ? bottom
+            : null
+      : axis === 'inline'
+        ? Number.isFinite(left) && Number.isFinite(right) && left > 0 && right > 0
+          ? (left + right) / 2
+          : Number.isFinite(left) && left > 0
+            ? left
+            : Number.isFinite(right) && right > 0
+              ? right
+              : null
+        : axis === 'top'
+          ? Number.isFinite(top)
+            ? top
+            : null
+          : axis === 'right'
+            ? Number.isFinite(right)
+              ? right
+              : null
+            : axis === 'bottom'
+              ? Number.isFinite(bottom)
+                ? bottom
+                : null
+              : Number.isFinite(left)
+                ? left
+                : null;
+
+  if (spacingPx == null || !Number.isFinite(fontSizePx) || !Number.isFinite(rootFontSizePx)) {
+    return null;
+  }
+
+  return {
+    spacingPx,
+    fontSizePx,
+    rootFontSizePx,
+  };
+}
+
+function measureStageBorderRadius(nodeId: string, ownerDocument: Document) {
+  const element = getStageStyleMeasurementTarget(nodeId, ownerDocument);
+  const defaultView = ownerDocument.defaultView;
+  if (!element || !defaultView) {
+    return null;
+  }
+
+  const computed = defaultView.getComputedStyle(element);
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+
+  const radiusPx = parseComputedBorderRadiusPx(computed.borderTopLeftRadius, {
+    width: rect.width,
+    height: rect.height,
+  });
+  if (radiusPx == null) {
+    return null;
+  }
+
+  return {
+    radiusPx,
+    box: {
+      width: rect.width,
+      height: rect.height,
+    },
+  };
+}
+
+function measureEditorViewport(ownerDocument: Document): ViewportMeasurement | null {
+  const stageShell = ownerDocument.querySelector
+    ? ownerDocument.querySelector<HTMLElement>('.stage-shell')
+    : null;
+  const defaultView = ownerDocument.defaultView;
+  if (!stageShell || !defaultView) {
+    return null;
+  }
+
+  const rawWidth = stageShell.clientWidth || stageShell.getBoundingClientRect().width;
+  const rawHeight = stageShell.clientHeight || stageShell.getBoundingClientRect().height;
+  if (rawWidth <= 0 || rawHeight <= 0) {
+    return null;
+  }
+
+  const computed = defaultView.getComputedStyle(stageShell);
+  const paddingLeft = Number.parseFloat(computed.paddingLeft) || 0;
+  const paddingRight = Number.parseFloat(computed.paddingRight) || 0;
+  const paddingTop = Number.parseFloat(computed.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(computed.paddingBottom) || 0;
+  const width = rawWidth - paddingLeft - paddingRight;
+  const height = rawHeight - paddingTop - paddingBottom;
+
+  return width > 0 && height > 0 ? { width, height } : null;
+}
+
+function isReliablePercentHeightReference(parentContent: Element | null | undefined) {
+  const wrapper = parentContent?.parentElement;
+  if (!wrapper?.classList) {
+    return true;
+  }
+  return !(
+    wrapper.classList.contains('role-section') ||
+    wrapper.classList.contains('role-header') ||
+    wrapper.classList.contains('role-footer')
+  );
+}
+
+function getStageStyleMeasurementTarget(nodeId: string, ownerDocument: Document) {
+  const root = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  if (!root) {
+    return null;
+  }
+
+  const contentWrapper = 'querySelector' in root
+    ? root.querySelector<HTMLElement>(`[data-content-wrapper-for="${nodeId}"]`)
+    : null;
+  if (contentWrapper) {
+    return contentWrapper;
+  }
+
+  const leafContent = 'querySelector' in root
+    ? root.querySelector<HTMLElement>('.stage-leaf-body > *')
+    : null;
+  return leafContent ?? root;
+}
+
+function getStageGeometryMeasurementTarget(nodeId: string, ownerDocument: Document) {
+  const root = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  if (!root) {
+    return null;
+  }
+
+  const contentWrapper = 'querySelector' in root
+    ? root.querySelector<HTMLElement>(`[data-content-wrapper-for="${nodeId}"]`)
+    : null;
+  return contentWrapper ?? root;
+}
+
+function parseComputedBorderRadiusPx(
+  raw: string,
+  box: { width: number; height: number },
+) {
+  const normalized = raw.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const [horizontalRaw, verticalRaw = horizontalRaw] = normalized.split(/\s+/);
+  const horizontal = resolveComputedRadiusSegmentPx(horizontalRaw, box.width, box);
+  const vertical = resolveComputedRadiusSegmentPx(verticalRaw, box.height, box);
+  if (horizontal == null || vertical == null) {
+    return null;
+  }
+  return (horizontal + vertical) / 2;
+}
+
+function resolveComputedRadiusSegmentPx(
+  raw: string,
+  axisSize: number,
+  box: { width: number; height: number },
+) {
+  if (raw.endsWith('px')) {
+    const px = Number.parseFloat(raw);
+    return Number.isFinite(px) ? px : null;
+  }
+  if (raw.endsWith('%')) {
+    const percent = Number.parseFloat(raw);
+    if (!Number.isFinite(percent)) {
+      return null;
+    }
+    const basis = raw === `${percent}%` && box.width !== box.height ? axisSize : (box.width + box.height) / 2;
+    return (percent / 100) * basis;
+  }
+  return null;
 }
 
 function formatNumericFieldInput(
   value: number,
-  unit: Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>,
+  unit: NumericSizeFieldMode,
 ) {
-  return formatFieldNumber(unit === 'px' ? clampFieldNumber(value) : clampFieldNumber(value));
+  return formatFieldNumber(value);
 }
 
 function clampFieldNumber(value: number) {
@@ -1464,7 +1754,7 @@ function clampFieldNumber(value: number) {
 }
 
 function formatFieldNumber(value: number) {
-  return value.toFixed(2).replace(/\.?0+$/, '');
+  return formatDisplayValue(value);
 }
 
 function extractAspectRatioExpression(raw: string) {
@@ -1472,9 +1762,28 @@ function extractAspectRatioExpression(raw: string) {
   return match?.[1] ?? '16/9';
 }
 
-function getInitialNumericDraft(value: string, axis: SizeFieldAxis) {
+function getInitialSizeFieldMode(value: string, axis: SizeFieldAxis, isSectionHeight: boolean) {
+  return resolveSizeFieldMode(describeSizeFieldValue(value, axis), axis, isSectionHeight);
+}
+
+function getInitialNumericDraft(
+  value: string,
+  axis: SizeFieldAxis,
+  nodeId: string,
+  isSectionHeight: boolean,
+) {
   const descriptor = describeSizeFieldValue(value, axis);
-  return descriptor.kind === 'numeric' ? descriptor.input : getDefaultNumericDraft(axis);
+  if (descriptor.kind !== 'numeric') {
+    return getDefaultNumericDraft(axis);
+  }
+  if (getAllowedNumericSizeModes(axis, isSectionHeight).includes(descriptor.mode)) {
+    return descriptor.input;
+  }
+  if (typeof document === 'undefined') {
+    return descriptor.input;
+  }
+  const fallbackMode = getDefaultNumericMode(axis, isSectionHeight);
+  return convertStageMeasurementToInput(nodeId, axis, fallbackMode, document) ?? descriptor.input;
 }
 
 function getInitialAspectDraft(value: string) {
@@ -1496,6 +1805,28 @@ function getDefaultNumericDraft(axis: SizeFieldAxis) {
   return '0';
 }
 
+function resolveSizeFieldMode(descriptor: SizeFieldDescriptor, axis: SizeFieldAxis, isSectionHeight: boolean): SizeFieldMode {
+  if (descriptor.kind !== 'numeric') {
+    return descriptor.mode;
+  }
+  return getAllowedNumericSizeModes(axis, isSectionHeight).includes(descriptor.mode)
+    ? descriptor.mode
+    : getDefaultNumericMode(axis, isSectionHeight);
+}
+
+function getAllowedNumericSizeModes(axis: SizeFieldAxis, isSectionHeight: boolean): NumericSizeFieldMode[] {
+  const { scalarUnits, viewportUnits } = getSizeModeOptions(axis, { isSectionHeight });
+  return [...scalarUnits, ...viewportUnits];
+}
+
+function getDefaultNumericMode(axis: SizeFieldAxis, isSectionHeight: boolean): NumericSizeFieldMode {
+  return getAllowedNumericSizeModes(axis, isSectionHeight)[0] ?? 'px';
+}
+
+function isNumericSizeFieldMode(mode: SizeFieldMode): mode is NumericSizeFieldMode {
+  return mode === 'px' || mode === '%' || mode === 'vw' || mode === 'vh' || mode === 'vmin' || mode === 'vmax';
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -1503,40 +1834,6 @@ function clamp(value: number, min: number, max: number) {
 function readUnifiedParsedValue(values: Array<string | undefined>) {
   const defined = values.filter((value): value is string => Boolean(value));
   return defined.length === values.length && defined.every((value) => value === defined[0]) ? defined[0] : '';
-}
-
-export function forceOpaqueColorValue(value: string | undefined) {
-  if (!value) {
-    return value;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return value;
-  }
-
-  const hexMatch = trimmed.match(/^#([\da-f]{4}|[\da-f]{8})$/i);
-  if (hexMatch) {
-    const digits = hexMatch[1];
-    return `#${digits.length === 4 ? digits.slice(0, 3) : digits.slice(0, 6)}`;
-  }
-
-  const rgbCommaMatch = trimmed.match(/^rgba\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)$/i);
-  if (rgbCommaMatch) {
-    return `rgb(${rgbCommaMatch[1]}, ${rgbCommaMatch[2]}, ${rgbCommaMatch[3]})`;
-  }
-
-  const rgbSlashMatch = trimmed.match(/^rgba?\((.+)\/(.+)\)$/i);
-  if (rgbSlashMatch) {
-    return `rgb(${rgbSlashMatch[1].trim()})`;
-  }
-
-  const genericSlashMatch = trimmed.match(/^([a-z][\w-]*\(.+)\/([^)]+)\)$/i);
-  if (genericSlashMatch) {
-    return `${genericSlashMatch[1].trim()})`;
-  }
-
-  return trimmed;
 }
 
 function roundShadowNumber(value: number) {

@@ -112,6 +112,20 @@ export function resolveFontSizePx(
   }
 }
 
+export function resolveSpacingPx(
+  value: SpacingValue,
+  reference: { rootFontSizePx: number; inheritedFontSizePx: number },
+) {
+  switch (value.unit) {
+    case 'px':
+      return value.value;
+    case 'em':
+      return value.value * reference.inheritedFontSizePx;
+    case 'rem':
+      return value.value * reference.rootFontSizePx;
+  }
+}
+
 export function resolveUnitValuePx(
   value: UnitValue,
   reference: { width: number; height: number; viewportWidth: number; viewportHeight: number },

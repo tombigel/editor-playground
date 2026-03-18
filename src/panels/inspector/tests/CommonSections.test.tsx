@@ -1,7 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { createInitialDocument } from '../../../model/defaults';
+import { createInitialDocument, createWrapper } from '../../../model/defaults';
 import { NodeBasicsSection, InspectorSectionCard } from '../CommonSections';
 
 describe('panels/inspector/CommonSections', () => {
@@ -62,6 +62,7 @@ describe('panels/inspector/CommonSections', () => {
           onRectChange: () => {},
           onPromote: () => {},
           onDemote: () => {},
+          onWrapperStyleChange: () => {},
         }}
       />,
     );
@@ -69,6 +70,59 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('>W<');
     expect(markup).toContain('value="100"');
     expect(markup).toContain('disabled=""');
+    expect(markup).not.toContain('>X<');
+    expect(markup).not.toContain('>Y<');
+    expect(markup).toContain('>Padding<');
+    expect(markup).toContain('aria-label="Top padding"');
+    expect(markup).toContain('aria-label="Right padding"');
+    expect(markup).toContain('aria-label="Bottom padding"');
+    expect(markup).toContain('aria-label="Left padding"');
+    expect(markup).toContain('value="20"');
+    expect(markup).toContain('value="48"');
+  });
+
+  it('shows the same padding control surface for container wrappers', () => {
+    const containerNode = createWrapper('container', 'root');
+
+    const markup = renderToStaticMarkup(
+      <NodeBasicsSection
+        node={containerNode}
+        orderState={{
+          showOrderControls: false,
+          canOrderBack: false,
+          canOrderForward: false,
+          canSendToBack: false,
+          canBringToFront: false,
+          orderBackShortcut: '',
+          orderForwardShortcut: '',
+          sendToBackShortcut: '',
+          bringToFrontShortcut: '',
+          canSectionBack: false,
+          canSectionForward: false,
+          onOrderBack: () => {},
+          onOrderForward: () => {},
+          onSendToBack: () => {},
+          onBringToFront: () => {},
+          onSectionBack: () => {},
+          onSectionForward: () => {},
+        }}
+        actions={{
+          onRectChange: () => {},
+          onPromote: () => {},
+          onDemote: () => {},
+          onWrapperStyleChange: () => {},
+        }}
+      />,
+    );
+
+    expect(markup).toContain('>X<');
+    expect(markup).toContain('>Y<');
+    expect(markup).toContain('>Padding<');
+    expect(markup).toContain('aria-label="Top padding"');
+    expect(markup).toContain('aria-label="Right padding"');
+    expect(markup).toContain('aria-label="Bottom padding"');
+    expect(markup).toContain('aria-label="Left padding"');
+    expect(markup).toContain('value="16"');
   });
 
   it('renders custom header content and action without affecting the shared card structure', () => {

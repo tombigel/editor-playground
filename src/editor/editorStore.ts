@@ -29,6 +29,7 @@ import type {
   WrapperStyleField,
 } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { forceOpaqueColorValue } from '../model/colors';
 import { normalizeThemeMode } from '../lib/theme';
 import type { EditorState, FocusedMode, NodeOrderAction } from './types';
 export type { ConfirmReplaceRole, EditorState, FocusedMode, NodeOrderAction } from './types';
@@ -284,6 +285,9 @@ function normalizeDocument(document: DocumentModel): DocumentModel {
     if (node.type === 'wrapper' && node.role === 'container' && node.sticky?.target === 'contentWrapper') {
       node.sticky.target = 'self';
     }
+    if (node.type === 'wrapper' && isStructuralWrapper(node.role) && node.style.background) {
+      node.style.background = forceOpaqueColorValue(node.style.background);
+    }
   }
   ensureDefaultSiteSections(normalized);
   upgradeLegacyStarterSection(normalized);
@@ -516,10 +520,10 @@ function applyModernHeader(document: DocumentModel, header: WrapperNode) {
   header.rect = createDefaultRect('0px', '0px', '100%', 'auto');
   header.style.background = '#f8fbff';
   header.style.borderColor = '#d6e2f2';
-  header.style.paddingTop = parseUnitValue('20px');
-  header.style.paddingRight = parseUnitValue('48px');
-  header.style.paddingBottom = parseUnitValue('20px');
-  header.style.paddingLeft = parseUnitValue('48px');
+  header.style.paddingTop = parseSpacingValue('20px');
+  header.style.paddingRight = parseSpacingValue('48px');
+  header.style.paddingBottom = parseSpacingValue('20px');
+  header.style.paddingLeft = parseSpacingValue('48px');
 
   const title = createUniqueLeaf(document, 'text', header.id) as TextLeaf;
   title.name = 'Product Title';
@@ -572,10 +576,10 @@ function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
   footer.rect = createDefaultRect('0px', '0px', '100%', 'auto');
   footer.style.background = '#f8fbff';
   footer.style.borderColor = '#d6e2f2';
-  footer.style.paddingTop = parseUnitValue('26px');
-  footer.style.paddingRight = parseUnitValue('48px');
-  footer.style.paddingBottom = parseUnitValue('26px');
-  footer.style.paddingLeft = parseUnitValue('48px');
+  footer.style.paddingTop = parseSpacingValue('26px');
+  footer.style.paddingRight = parseSpacingValue('48px');
+  footer.style.paddingBottom = parseSpacingValue('26px');
+  footer.style.paddingLeft = parseSpacingValue('48px');
 
   const title = createUniqueLeaf(document, 'text', footer.id) as TextLeaf;
   title.name = 'Footer Title';
@@ -944,6 +948,16 @@ export function updateWrapperStyleField(
     return { ...state, document };
   }
 
+  if (field === 'background' && isStructuralWrapper(node.role)) {
+    node.style.background = value ? forceOpaqueColorValue(value) : undefined;
+    return { ...state, document };
+  }
+
+  if (isWrapperPaddingField(field)) {
+    node.style[field] = value ? parseSpacingValue(value) : undefined;
+    return { ...state, document };
+  }
+
   if (isBorderWidthField(field) || isBorderRadiusField(field)) {
     node.style[field] = value ? parseUnitValue(value) : undefined;
     return { ...state, document };
@@ -1004,9 +1018,20 @@ function isShadowStyleField(field: EditorTextField | WrapperStyleField): field i
   return (
     field === 'shadowColor' ||
     field === 'shadowBlur' ||
+    field === 'shadowSpread' ||
     field === 'shadowOffsetX' ||
     field === 'shadowOffsetY'
   );
+}
+
+function isWrapperPaddingField(
+  field: EditorTextField | WrapperStyleField,
+): field is Extract<WrapperStyleField, 'paddingTop' | 'paddingRight' | 'paddingBottom' | 'paddingLeft'> {
+  return field === 'paddingTop' || field === 'paddingRight' || field === 'paddingBottom' || field === 'paddingLeft';
+}
+
+function isStructuralWrapper(role: WrapperRole) {
+  return role === 'section' || role === 'header' || role === 'footer';
 }
 
 export function moveNode(

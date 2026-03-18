@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveStickyLayout } from '../../sticky/resolve';
-import { createInitialDocument } from '../../model/defaults';
+import { createInitialDocument, createWrapper } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
 import {
   clearSessionState,
@@ -110,9 +110,9 @@ describe('editor/editorStore integration', () => {
     }
 
     const withWrapperBorder = updateWrapperStyleField(state, section.id, 'borderRadius', '24px');
-    const withWrapperShadow = updateWrapperStyleField(withWrapperBorder, section.id, 'shadowOffsetY', '18');
+    const withWrapperShadow = updateWrapperStyleField(withWrapperBorder, section.id, 'shadowSpread', '18');
     const withLinkColor = updateTextField(withWrapperShadow, link.id, 'color', '#1d4ed8');
-    const withLinkShadow = updateTextField(withLinkColor, link.id, 'shadowOffsetX', '6');
+    const withLinkShadow = updateTextField(withLinkColor, link.id, 'shadowSpread', '6');
 
     const updatedSection = withLinkShadow.document.nodes[section.id];
     const updatedLink = withLinkShadow.document.nodes[link.id];
@@ -125,9 +125,99 @@ describe('editor/editorStore integration', () => {
     }
 
     expect(updatedSection.style.borderRadius?.raw).toBe('24px');
-    expect(updatedSection.style.shadowOffsetY).toBe(18);
+    expect(updatedSection.style.shadowSpread).toBe(18);
     expect(updatedLink.style?.color).toBe('#1d4ed8');
-    expect(updatedLink.style?.shadowOffsetX).toBe(6);
+    expect(updatedLink.style?.shadowSpread).toBe(6);
+  });
+
+  it('stores wrapper padding edits as parsed spacing values', () => {
+    const state = createInitialState();
+    const header = Object.values(state.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'header',
+    );
+
+    if (!header || header.type !== 'wrapper') {
+      throw new Error('Expected header wrapper');
+    }
+
+    const next = updateWrapperStyleField(state, header.id, 'paddingTop', '2em');
+    const updated = next.document.nodes[header.id];
+
+    if (!updated || updated.type !== 'wrapper') {
+      throw new Error('Expected updated header wrapper');
+    }
+
+    expect(updated.style.paddingTop?.raw).toBe('2em');
+    expect(updated.style.paddingTop?.parsed).toEqual({ value: 2, unit: 'em' });
+  });
+
+  it('strips alpha from structural wrapper background edits while keeping container alpha', () => {
+    const state = createInitialState();
+    const section = Object.values(state.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const withContainer = structuredClone(state);
+    const container = createWrapper('container', section.id);
+    withContainer.document.nodes[container.id] = container;
+    const mutableSection = withContainer.document.nodes[section.id];
+    if (!mutableSection || mutableSection.type !== 'wrapper') {
+      throw new Error('Expected mutable section wrapper');
+    }
+    mutableSection.children = [...mutableSection.children, container.id];
+
+    const withSectionBackground = updateWrapperStyleField(withContainer, section.id, 'background', 'rgb(20 40 60 / 35%)');
+    const withContainerBackground = updateWrapperStyleField(
+      withSectionBackground,
+      container.id,
+      'background',
+      'rgb(20 40 60 / 35%)',
+    );
+
+    const updatedSection = withContainerBackground.document.nodes[section.id];
+    const updatedContainer = withContainerBackground.document.nodes[container.id];
+
+    if (!updatedSection || updatedSection.type !== 'wrapper' || !updatedContainer || updatedContainer.type !== 'wrapper') {
+      throw new Error('Expected updated wrappers');
+    }
+
+    expect(updatedSection.style.background).toBe('rgb(20 40 60)');
+    expect(updatedContainer.style.background).toBe('rgb(20 40 60 / 35%)');
+  });
+
+  it('normalizes persisted structural wrapper background alpha to opaque', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const state = createInitialState();
+    const section = Object.values(state.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const persisted = structuredClone(state);
+    const persistedSection = persisted.document.nodes[section.id];
+    if (!persistedSection || persistedSection.type !== 'wrapper') {
+      throw new Error('Expected persisted section wrapper');
+    }
+    persistedSection.style.background = '#336699cc';
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+
+    const restored = loadPersistedState();
+    const restoredSection = restored.document.nodes[section.id];
+    if (!restoredSection || restoredSection.type !== 'wrapper') {
+      throw new Error('Expected restored section wrapper');
+    }
+
+    expect(restoredSection.style.background).toBe('#336699');
   });
 
   it('normalizes persisted theme mode values', () => {

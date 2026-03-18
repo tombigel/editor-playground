@@ -1,10 +1,21 @@
-import { ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash, SquareArrowOutUpRight } from 'lucide-react';
+import {
+  ArrowBigDown,
+  ArrowBigDownDash,
+  ArrowBigUp,
+  ArrowBigUpDash,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  SquareArrowOutUpRight,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { FocusedMode } from '../../api/editorApi';
 import type { WrapperStyleField } from '../../api/documentApi';
 import {
   DEFAULT_SHADOW_BLUR_PX,
   DEFAULT_SHADOW_COLOR,
+  DEFAULT_SHADOW_SPREAD_PX,
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
 } from '../../model/styleDefaults';
@@ -20,6 +31,7 @@ import {
   OrderIconButton,
   ShadowControlGroup,
   SizeInlineField,
+  SpacingField,
   WrapperActions,
   readShadowFieldValues,
   readUnifiedBorderColor,
@@ -66,31 +78,44 @@ export function NodeBasicsSection({
 }: {
   node: InspectorNode;
   orderState: InspectorOrderState;
-  actions: Pick<InspectorActionHandlers, 'onRectChange' | 'onPromote' | 'onDemote'>;
+  actions: Pick<InspectorActionHandlers, 'onRectChange' | 'onPromote' | 'onDemote' | 'onWrapperStyleChange'>;
 }) {
   const topLevelWidthLocked =
     node.type === 'wrapper' &&
     (node.role === 'section' || node.role === 'header' || node.role === 'footer') &&
     node.rect.width.base.raw === '100%';
+  const hidesPositionFields =
+    node.type === 'wrapper' &&
+    (node.role === 'section' || node.role === 'header' || node.role === 'footer');
+  const isSectionHeight = node.type === 'wrapper' && node.role === 'section';
+  const wrapperPaddingNode: WrapperInspectorNode | null =
+    node.type === 'wrapper' &&
+    (node.role === 'section' || node.role === 'header' || node.role === 'footer' || node.role === 'container')
+      ? node
+      : null;
 
   return (
     <InspectorSectionCard title="Layout" contentClassName="space-y-2.5 px-3 py-3">
       {node.type !== 'site' ? (
         <div className="grid grid-cols-2 gap-1.5">
-          <SizeInlineField
-            label="X"
-            nodeId={node.id}
-            value={node.rect.x.base.raw}
-            onChange={(value) => actions.onRectChange('x', value)}
-            axis="x"
-          />
-          <SizeInlineField
-            label="Y"
-            nodeId={node.id}
-            value={node.rect.y.base.raw}
-            onChange={(value) => actions.onRectChange('y', value)}
-            axis="y"
-          />
+          {!hidesPositionFields ? (
+            <>
+              <SizeInlineField
+                label="X"
+                nodeId={node.id}
+                value={node.rect.x.base.raw}
+                onChange={(value) => actions.onRectChange('x', value)}
+                axis="x"
+              />
+              <SizeInlineField
+                label="Y"
+                nodeId={node.id}
+                value={node.rect.y.base.raw}
+                onChange={(value) => actions.onRectChange('y', value)}
+                axis="y"
+              />
+            </>
+          ) : null}
           <SizeInlineField
             label="W"
             nodeId={node.id}
@@ -105,7 +130,47 @@ export function NodeBasicsSection({
             value={node.rect.height.base.raw}
             onChange={(value) => actions.onRectChange('height', value)}
             axis="height"
+            isSectionHeight={isSectionHeight}
           />
+        </div>
+      ) : null}
+      {wrapperPaddingNode ? (
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium">Padding</Label>
+          <div className="grid grid-cols-2 gap-1.5">
+            <LabeledPaddingField
+              nodeId={wrapperPaddingNode.id}
+              axis="top"
+              icon={<ArrowUp className="h-3.5 w-3.5" />}
+              ariaLabel="Top padding"
+              value={wrapperPaddingNode.style.paddingTop?.raw ?? ''}
+              onChange={(value) => actions.onWrapperStyleChange('paddingTop', value)}
+            />
+            <LabeledPaddingField
+              nodeId={wrapperPaddingNode.id}
+              axis="right"
+              icon={<ArrowRight className="h-3.5 w-3.5" />}
+              ariaLabel="Right padding"
+              value={wrapperPaddingNode.style.paddingRight?.raw ?? ''}
+              onChange={(value) => actions.onWrapperStyleChange('paddingRight', value)}
+            />
+            <LabeledPaddingField
+              nodeId={wrapperPaddingNode.id}
+              axis="bottom"
+              icon={<ArrowDown className="h-3.5 w-3.5" />}
+              ariaLabel="Bottom padding"
+              value={wrapperPaddingNode.style.paddingBottom?.raw ?? ''}
+              onChange={(value) => actions.onWrapperStyleChange('paddingBottom', value)}
+            />
+            <LabeledPaddingField
+              nodeId={wrapperPaddingNode.id}
+              axis="left"
+              icon={<ArrowLeft className="h-3.5 w-3.5" />}
+              ariaLabel="Left padding"
+              value={wrapperPaddingNode.style.paddingLeft?.raw ?? ''}
+              onChange={(value) => actions.onWrapperStyleChange('paddingLeft', value)}
+            />
+          </div>
         </div>
       ) : null}
 
@@ -164,6 +229,31 @@ export function NodeBasicsSection({
   );
 }
 
+function LabeledPaddingField({
+  nodeId,
+  axis,
+  icon,
+  ariaLabel,
+  value,
+  onChange,
+}: {
+  nodeId: string;
+  axis: 'top' | 'right' | 'bottom' | 'left';
+  icon: ReactNode;
+  ariaLabel: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
+      <div className="editor-text-muted flex h-8 items-center justify-center" aria-label={ariaLabel}>
+        {icon}
+      </div>
+      <SpacingField nodeId={nodeId} axis={axis} value={value || '0px'} onChange={onChange} />
+    </div>
+  );
+}
+
 export function NodePropertiesSection({
   node,
   actions,
@@ -193,9 +283,11 @@ export function WrapperDesignSection({
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
 }) {
   const supportsContainerSurfaceStyling = node.role === 'container';
+  const allowsBackgroundOpacity = node.role === 'container';
   const shadowFallback = createShadowFallback(
     DEFAULT_SHADOW_COLOR,
     DEFAULT_SHADOW_BLUR_PX,
+    DEFAULT_SHADOW_SPREAD_PX,
     DEFAULT_SHADOW_OFFSET_X_PX,
     DEFAULT_SHADOW_OFFSET_Y_PX,
   );
@@ -214,6 +306,7 @@ export function WrapperDesignSection({
               value={node.style.background}
               onChange={(value) => onWrapperStyleChange('background', value)}
               ariaLabel="Background color"
+              showOpacity={allowsBackgroundOpacity}
             />
           </div>
         </div>
@@ -221,6 +314,7 @@ export function WrapperDesignSection({
           <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
             <Label className="pt-1 text-[11px] font-medium">Border</Label>
             <BorderControlGroup
+              nodeId={node.id}
               colorValue={readUnifiedBorderColor(node.style)}
               widthValue={readUnifiedBorderWidth(node.style)}
               radiusValue={readUnifiedBorderRadius(node.style)}
@@ -231,16 +325,18 @@ export function WrapperDesignSection({
           </div>
         ) : null}
         {supportsContainerSurfaceStyling ? (
-          <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
-            <Label className="pt-1 text-[11px] font-medium">Shadow</Label>
+          <div className="space-y-1.5">
             <ShadowControlGroup
               color={shadow.color}
               blur={shadow.blur}
+              spread={shadow.spread}
               distance={shadow.distance}
               angle={shadow.angle}
               colorFallback={DEFAULT_SHADOW_COLOR}
+              supportsSpread
               onColorChange={(value) => applyWrapperShadowPatch(onWrapperStyleChange, node.style, shadowFallback, { color: value })}
               onBlurChange={(value) => applyWrapperShadowPatch(onWrapperStyleChange, node.style, shadowFallback, { blur: value })}
+              onSpreadChange={(value) => applyWrapperShadowPatch(onWrapperStyleChange, node.style, shadowFallback, { spread: value })}
               onDistanceChange={(value) => applyWrapperShadowPatch(onWrapperStyleChange, node.style, shadowFallback, { distance: value })}
               onAngleChange={(value) => applyWrapperShadowPatch(onWrapperStyleChange, node.style, shadowFallback, { angle: value })}
             />
@@ -256,6 +352,7 @@ export function WrapperDesignSection({
                 units={['px']}
                 onChange={(value) => onWrapperStyleChange('sectionBorderBottomWidth', value)}
                 placeholder="1"
+                min={0}
                 className="w-[5.5rem]"
               />
               <HoverColorField
@@ -331,10 +428,11 @@ export function InspectorSectionCard({
   );
 }
 
-function createShadowFallback(color: string, blur: number, offsetX: number, offsetY: number) {
+function createShadowFallback(color: string, blur: number, spread: number, offsetX: number, offsetY: number) {
   return {
     color,
     blur,
+    spread,
     distance: Math.round(Math.sqrt(offsetX ** 2 + offsetY ** 2) * 100) / 100,
     angle: Math.round(((Math.atan2(offsetY, offsetX) * 180) / Math.PI) * 100) / 100,
   };

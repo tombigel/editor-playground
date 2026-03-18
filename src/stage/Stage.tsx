@@ -3,14 +3,14 @@ import { StageScene } from './StageScene';
 import {
   areMeasuredNodeSizesEqual,
   computeResizeFrame,
+  DEFAULT_STAGE_VIEWPORT,
   didDragPointerMove,
   findDropWrapper,
   getResizeCommitSize,
+  measureStageViewport,
   measureStageNodeSizes,
   px,
   resolveDragPointerPosition,
-  VIEWPORT_HEIGHT,
-  VIEWPORT_WIDTH,
 } from './stageMath';
 import type { StageProps } from './types';
 import type { DragState, MeasuredNodeSizes, ResizeState, SnapGuides } from './types';
@@ -34,6 +34,7 @@ export function Stage({
 }: StageProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [measuredNodeSizes, setMeasuredNodeSizes] = useState<MeasuredNodeSizes>({});
+  const [viewport, setViewport] = useState(DEFAULT_STAGE_VIEWPORT);
   const [dragState, setDragState] = useState<DragState>(null);
   const [snapGuides, setSnapGuides] = useState<SnapGuides>({
     x: null,
@@ -50,18 +51,25 @@ export function Stage({
     }
 
     const next = measureStageNodeSizes(root);
+    const nextViewport = measureStageViewport(root) ?? DEFAULT_STAGE_VIEWPORT;
     setMeasuredNodeSizes((current) => (areMeasuredNodeSizesEqual(current, next) ? current : next));
+    setViewport((current) => (
+      Math.abs(current.width - nextViewport.width) < 0.5 &&
+      Math.abs(current.height - nextViewport.height) < 0.5
+        ? current
+        : nextViewport
+    ));
     onStickyGeometryChange?.({
       nodeSizes: next,
-      viewportWidth: VIEWPORT_WIDTH,
-      viewportHeight: VIEWPORT_HEIGHT,
+      viewportWidth: nextViewport.width,
+      viewportHeight: nextViewport.height,
     });
   }, [document, onStickyGeometryChange]);
 
   return (
     <div
       ref={stageRef}
-      className="stage-shell"
+      className="stage-shell editor-scrollbar"
       tabIndex={0}
       role="region"
       aria-label="Editor stage"
@@ -98,7 +106,15 @@ export function Stage({
           const originY = Math.round(resizeState.originY);
           const resizedNode = document.nodes[resizeState.nodeId];
           if (resizedNode && resizedNode.type !== 'site') {
-            const commit = getResizeCommitSize(resizedNode, resizeState, nextWidth, nextHeight, document);
+            const commit = getResizeCommitSize(
+              resizedNode,
+              resizeState,
+              nextWidth,
+              nextHeight,
+              document,
+              measuredNodeSizes,
+              viewport,
+            );
             onResize(resizeState.nodeId, commit.width, commit.height);
           }
           if (nextX !== originX || nextY !== originY) {
@@ -179,6 +195,7 @@ export function Stage({
         resizeState={resizeState}
         setResizeState={setResizeState}
         measuredNodeSizes={measuredNodeSizes}
+        viewport={viewport}
       />
     </div>
   );

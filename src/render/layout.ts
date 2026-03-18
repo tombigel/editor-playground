@@ -4,9 +4,10 @@ import type {
   ComputedWrapperStickyState,
   DocumentModel,
   StickyDefinition,
+  ViewportMeasurement,
   WrapperNode,
 } from '../model/types';
-import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
+import { formatValue, resolveFontSizePx, resolveSpacingPx, resolveUnitValuePx } from '../model/units';
 import { buildBorderStyle, buildBoxShadow } from './styleHelpers';
 import { resolveWrapperStickyState } from '../sticky/resolve';
 import type {
@@ -24,22 +25,26 @@ export type {
   WrapperRenderPlan,
 } from './types';
 
-export const RENDER_VIEWPORT_WIDTH = 1440;
-export const RENDER_VIEWPORT_HEIGHT = 900;
+export const DEFAULT_RENDER_VIEWPORT: ViewportMeasurement = {
+  width: 1440,
+  height: 900,
+};
 export const AUTO_WRAPPER_MIN_HEIGHT_PX = 120;
+const DEFAULT_LAYOUT_FONT_REFERENCE_PX = 16;
 
 export function resolveWrapperRenderPlan(
   document: DocumentModel,
   node: WrapperNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): WrapperRenderPlan {
   const children = getChildren(document, node.id).filter(
     (child): child is ExportableNode => child.type !== 'site',
   );
   const stickyGeometry = {
     nodeSizes: measuredNodeSizes,
-    viewportWidth: RENDER_VIEWPORT_WIDTH,
-    viewportHeight: RENDER_VIEWPORT_HEIGHT,
+    viewportWidth: viewport.width,
+    viewportHeight: viewport.height,
   };
   const stickyState = resolveWrapperStickyState(node, children, stickyGeometry);
   const registrationMap = new Map(
@@ -65,7 +70,7 @@ export function resolveWrapperRenderPlan(
     stickyState,
     registrationMap,
     extraExtent: stickyState.totalExtraExtentPx,
-    meshLayout: computeMeshLayout(children, node, registrationMap, childWrapperExtraExtentMap, measuredNodeSizes),
+    meshLayout: computeMeshLayout(children, node, registrationMap, childWrapperExtraExtentMap, measuredNodeSizes, viewport),
   };
 }
 
@@ -98,7 +103,6 @@ export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties 
   const style: CSSProperties = {
     boxSizing: 'border-box',
     background: node.style.background,
-    ...getContentWrapperPaddingStyle(node),
   };
 
   Object.assign(style, buildBorderStyle(node.style));
@@ -162,17 +166,21 @@ export function usesIntrinsicHeight(node: LeafNode) {
   return !('unit' in node.rect.height.base.parsed);
 }
 
-export function getNodeWidth(node: ExportableNode, measuredNodeSizes: RenderMeasuredNodeSizes = {}) {
+export function getNodeWidth(
+  node: ExportableNode,
+  measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+) {
   const width = node.rect.width.base.parsed;
   if ('unit' in width) {
     return width.unit === 'px' ? width.value : width.unit === 'vw'
-      ? (width.value / 100) * RENDER_VIEWPORT_WIDTH
+      ? (width.value / 100) * viewport.width
       : width.unit === 'vh'
-        ? (width.value / 100) * RENDER_VIEWPORT_HEIGHT
+        ? (width.value / 100) * viewport.height
         : width.unit === 'vmin'
-          ? (width.value / 100) * Math.min(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
+          ? (width.value / 100) * Math.min(viewport.width, viewport.height)
           : width.unit === 'vmax'
-            ? (width.value / 100) * Math.max(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
+            ? (width.value / 100) * Math.max(viewport.width, viewport.height)
           : (width.value / 100) * 960;
   }
   const measured = measuredNodeSizes[node.id];
@@ -182,22 +190,26 @@ export function getNodeWidth(node: ExportableNode, measuredNodeSizes: RenderMeas
   return 240;
 }
 
-export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMeasuredNodeSizes = {}) {
+export function getNodeHeight(
+  node: ExportableNode,
+  measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+) {
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
     const authoredHeight =
       height.unit === 'px' ? height.value : height.unit === 'vh'
-      ? (height.value / 100) * RENDER_VIEWPORT_HEIGHT
+      ? (height.value / 100) * viewport.height
       : height.unit === 'vw'
-        ? (height.value / 100) * RENDER_VIEWPORT_WIDTH
+        ? (height.value / 100) * viewport.width
         : height.unit === 'vmin'
-          ? (height.value / 100) * Math.min(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
+          ? (height.value / 100) * Math.min(viewport.width, viewport.height)
           : height.unit === 'vmax'
-            ? (height.value / 100) * Math.max(RENDER_VIEWPORT_WIDTH, RENDER_VIEWPORT_HEIGHT)
+            ? (height.value / 100) * Math.max(viewport.width, viewport.height)
             : (height.value / 100) * 480;
 
     if (node.type === 'wrapper' && node.role !== 'container') {
-      const measuredContentHeight = getMeasuredWrapperContentHeight(node, measuredNodeSizes);
+      const measuredContentHeight = getMeasuredWrapperContentHeight(node, measuredNodeSizes, viewport);
       return measuredContentHeight != null ? Math.max(authoredHeight, measuredContentHeight) : authoredHeight;
     }
 
@@ -208,25 +220,26 @@ export function getNodeHeight(node: ExportableNode, measuredNodeSizes: RenderMea
     return measured.height;
   }
   if (height.keyword === 'aspect-ratio') {
-    return getNodeWidth(node, measuredNodeSizes) / height.ratio;
+    return getNodeWidth(node, measuredNodeSizes, viewport) / height.ratio;
   }
   if (node.type === 'wrapper') {
     return node.role === 'header' || node.role === 'footer' ? 0 : 480;
   }
-  return estimateAutoLeafHeight(node, measuredNodeSizes);
+  return estimateAutoLeafHeight(node, measuredNodeSizes, viewport);
 }
 
 function getMeasuredWrapperContentHeight(
   node: WrapperNode,
   measuredNodeSizes: RenderMeasuredNodeSizes,
+  viewport: ViewportMeasurement,
 ) {
   const measured = measuredNodeSizes[node.id];
   if (!measured?.height || measured.height <= 0) {
     return null;
   }
 
-  const paddingTop = resolveWrapperPaddingPx(node, 'top', measuredNodeSizes);
-  const paddingBottom = resolveWrapperPaddingPx(node, 'bottom', measuredNodeSizes);
+  const paddingTop = resolveWrapperPaddingPx(node, 'top', measuredNodeSizes, viewport);
+  const paddingBottom = resolveWrapperPaddingPx(node, 'bottom', measuredNodeSizes, viewport);
   return Math.max(0, measured.height - paddingTop - paddingBottom);
 }
 
@@ -234,37 +247,32 @@ function resolveWrapperPaddingPx(
   node: WrapperNode,
   edge: 'top' | 'bottom',
   measuredNodeSizes: RenderMeasuredNodeSizes,
+  viewport: ViewportMeasurement,
 ) {
   const padding = edge === 'top' ? node.style.paddingTop : node.style.paddingBottom;
   if (!padding) {
     return 0;
   }
 
-  const measured = measuredNodeSizes[node.id];
-  return resolveUnitValuePx(
-    padding.parsed,
-    {
-      width: measured?.width ?? getNodeWidth(node, measuredNodeSizes),
-      height: measured?.height ?? 0,
-      viewportWidth: RENDER_VIEWPORT_WIDTH,
-      viewportHeight: RENDER_VIEWPORT_HEIGHT,
-    },
-    'x',
-  );
+  return resolveSpacingPx(padding.parsed, {
+    rootFontSizePx: DEFAULT_LAYOUT_FONT_REFERENCE_PX,
+    inheritedFontSizePx: DEFAULT_LAYOUT_FONT_REFERENCE_PX,
+  });
 }
 
 export function resolveOffsetPx(
   offset: NonNullable<StickyDefinition['offsetTop']>,
   node: ExportableNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   return resolveUnitValuePx(
     offset.parsed,
     {
-      width: getNodeWidth(node, measuredNodeSizes),
-      height: getNodeHeight(node, measuredNodeSizes),
-      viewportWidth: RENDER_VIEWPORT_WIDTH,
-      viewportHeight: RENDER_VIEWPORT_HEIGHT,
+      width: getNodeWidth(node, measuredNodeSizes, viewport),
+      height: getNodeHeight(node, measuredNodeSizes, viewport),
+      viewportWidth: viewport.width,
+      viewportHeight: viewport.height,
     },
     'height',
   );
@@ -283,7 +291,11 @@ export function cssPropertiesToDeclarations(style: CSSProperties | undefined): s
     .map(([property, value]) => `${toKebabCase(property)}: ${String(value)}`);
 }
 
-function estimateAutoLeafHeight(node: LeafNode, measuredNodeSizes: RenderMeasuredNodeSizes = {}) {
+function estimateAutoLeafHeight(
+  node: LeafNode,
+  measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+) {
   if (node.role === 'text') {
     const fontSize =
       node.style?.fontSize && 'unit' in node.style.fontSize.parsed
@@ -295,7 +307,7 @@ function estimateAutoLeafHeight(node: LeafNode, measuredNodeSizes: RenderMeasure
             },
           )
         : 18;
-    const widthPx = getNodeWidth(node, measuredNodeSizes);
+    const widthPx = getNodeWidth(node, measuredNodeSizes, viewport);
     const content = node.content || '';
     const charsPerLine = Math.max(10, Math.floor(widthPx / Math.max(fontSize * 0.58, 1)));
     const lineCount = Math.max(
@@ -325,21 +337,23 @@ function computeMeshLayout(
   registrations: Map<string, ComputedWrapperStickyState['registrations'][number]>,
   childWrapperExtraExtents: Map<string, number>,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): MeshLayout {
-  const width = getNodeWidth(wrapper, measuredNodeSizes);
-  const baseHeight = getWrapperMeshBaseHeight(wrapper, measuredNodeSizes);
+  const width = getNodeWidth(wrapper, measuredNodeSizes, viewport);
+  const baseHeight = getWrapperMeshBaseHeight(wrapper, measuredNodeSizes, viewport);
   const xLines = new Set<number>([0, width]);
   const yLines = new Set<number>([0, baseHeight]);
 
   for (const child of children) {
-    const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x');
-    const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y');
-    const childWidth = getNodeWidth(child, measuredNodeSizes);
+    const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x', viewport);
+    const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y', viewport);
+    const childWidth = getNodeWidth(child, measuredNodeSizes, viewport);
     const childHeight = getMeshNodeHeight(
       child,
       registrations.get(child.id),
       childWrapperExtraExtents.get(child.id) ?? 0,
       measuredNodeSizes,
+      viewport,
     );
     xLines.add(clampLine(childX, width));
     xLines.add(clampLine(childX + childWidth, width));
@@ -352,14 +366,15 @@ function computeMeshLayout(
   const childPlacements: Record<string, CSSProperties> = {};
 
   for (const child of children) {
-    const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x');
-    const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y');
-    const childWidth = getNodeWidth(child, measuredNodeSizes);
+    const childX = resolveCoordinatePx(child.rect.x.base.parsed, width, baseHeight, 'x', viewport);
+    const childY = resolveCoordinatePx(child.rect.y.base.parsed, width, baseHeight, 'y', viewport);
+    const childWidth = getNodeWidth(child, measuredNodeSizes, viewport);
     const childHeight = getMeshNodeHeight(
       child,
       registrations.get(child.id),
       childWrapperExtraExtents.get(child.id) ?? 0,
       measuredNodeSizes,
+      viewport,
     );
     const colStart = lineIndex(columns, clampLine(childX, width));
     const colEnd = lineIndex(columns, clampLine(childX + childWidth, width));
@@ -391,8 +406,9 @@ function getMeshNodeHeight(
   registration?: ComputedWrapperStickyState['registrations'][number],
   childWrapperExtraExtentPx = 0,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
-  let baseHeight = getNodeHeight(node, measuredNodeSizes);
+  let baseHeight = getNodeHeight(node, measuredNodeSizes, viewport);
   if (node.type === 'wrapper' && childWrapperExtraExtentPx > 0) {
     baseHeight += childWrapperExtraExtentPx;
   }
@@ -411,10 +427,11 @@ function getMeshNodeHeight(
 function getWrapperMeshBaseHeight(
   wrapper: WrapperNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   const height = wrapper.rect.height.base.parsed;
   if ('unit' in height || height.keyword === 'aspect-ratio') {
-    return getNodeHeight(wrapper, measuredNodeSizes);
+    return getNodeHeight(wrapper, measuredNodeSizes, viewport);
   }
   if (wrapper.role === 'header' || wrapper.role === 'footer') {
     return 0;
@@ -427,14 +444,15 @@ function resolveCoordinatePx(
   width: number,
   height: number,
   axis: 'x' | 'y',
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   return resolveUnitValuePx(
     value,
     {
       width,
       height,
-      viewportWidth: RENDER_VIEWPORT_WIDTH,
-      viewportHeight: RENDER_VIEWPORT_HEIGHT,
+      viewportWidth: viewport.width,
+      viewportHeight: viewport.height,
     },
     axis,
   );

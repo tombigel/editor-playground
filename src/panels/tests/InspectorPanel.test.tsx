@@ -12,6 +12,7 @@ import {
   InspectorPanel,
   NumericUnitInlineField,
   normalizeAspectRatioExpression,
+  SizeInlineField,
 } from '../InspectorPanel';
 
 describe('panels/InspectorPanel', () => {
@@ -125,11 +126,15 @@ describe('panels/InspectorPanel', () => {
     );
 
     expect(markup).toContain('Divider');
+    expect(markup).toContain('Background color');
     expect(markup).toContain('Bottom border color');
     expect(markup).not.toContain('Bottom border color opacity');
+    expect(markup.match(/data-allow-alpha="false"/g)?.length).toBe(2);
+    expect(markup).not.toContain('data-allow-alpha="true"');
     expect(markup).not.toContain('>Border<');
     expect(markup).not.toContain('>Shadow<');
     expect(markup).toContain('placeholder="1"');
+    expect(markup).toContain('min="0"');
     expect(markup).toContain('>px<');
   });
 
@@ -178,7 +183,9 @@ describe('panels/InspectorPanel', () => {
 
     expect(markup).toContain('>Border<');
     expect(markup).toContain('>Shadow<');
+    expect(markup).toContain('>Spread<');
     expect(markup).not.toContain('Divider');
+    expect(markup).toContain('data-allow-alpha="true"');
   });
 
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {
@@ -587,8 +594,8 @@ describe('panels/InspectorPanel', () => {
     expect(buttonMarkup).toContain('>Border<');
     expect(buttonMarkup).toContain('>Shadow<');
     expect(buttonMarkup).toContain('>Padding<');
-    expect(buttonMarkup).toContain('>Y<');
-    expect(buttonMarkup).toContain('>X<');
+    expect(buttonMarkup).toContain('aria-label="Vertical padding"');
+    expect(buttonMarkup).toContain('aria-label="Horizontal padding"');
     expect(buttonMarkup).toContain('>Radius<');
     expect(buttonMarkup).toContain('>Wrap<');
     expect(buttonMarkup.match(/>Wrap</g)?.length).toBe(1);
@@ -608,20 +615,41 @@ describe('panels/InspectorPanel', () => {
     expect(markup).not.toContain('data-ui="select-trigger"');
   });
 
-  it('limits x and y layout unit menus to px, vw, and vh', () => {
+  it('limits layout unit menus to the supported per-axis surface', () => {
     expect(getSizeModeOptions('x')).toEqual({
       scalarUnits: ['px'],
-      viewportUnits: ['vw', 'vh'],
+      viewportUnits: [],
       keywords: null,
+      selectableModes: ['px'],
     });
 
     expect(getSizeModeOptions('y')).toEqual({
       scalarUnits: ['px'],
-      viewportUnits: ['vw', 'vh'],
+      viewportUnits: [],
       keywords: null,
+      selectableModes: ['px'],
     });
 
-    expect(getSizeModeOptions('width').viewportUnits).toEqual(['vw', 'vh', 'vmin', 'vmax']);
+    expect(getSizeModeOptions('width')).toEqual({
+      scalarUnits: ['px', '%'],
+      viewportUnits: [],
+      keywords: ['fit-content', 'min-content', 'max-content'],
+      selectableModes: ['px', '%', 'fit-content', 'min-content', 'max-content'],
+    });
+
+    expect(getSizeModeOptions('height')).toEqual({
+      scalarUnits: ['px', '%'],
+      viewportUnits: [],
+      keywords: ['auto', 'aspect-ratio'],
+      selectableModes: ['px', '%', 'auto', 'aspect-ratio'],
+    });
+
+    expect(getSizeModeOptions('height', { isSectionHeight: true })).toEqual({
+      scalarUnits: ['px', '%'],
+      viewportUnits: ['vh', 'vmin', 'vmax'],
+      keywords: ['auto', 'aspect-ratio'],
+      selectableModes: ['px', '%', 'auto', 'aspect-ratio', 'vh', 'vmin', 'vmax'],
+    });
   });
 
   it('describes numeric, keyword, and aspect-ratio size values for the composite field', () => {
@@ -651,16 +679,46 @@ describe('panels/InspectorPanel', () => {
   });
 
   it('normalizes composite field output back to stored rect values', () => {
-    expect(buildSizeFieldValue('width', 'vw', '33.5')).toBe('33.5vw');
-    expect(buildSizeFieldValue('width', 'vmin', '12')).toBe('12vmin');
-    expect(buildSizeFieldValue('x', 'vmax', '48')).toBe('48vmax');
+    expect(buildSizeFieldValue('width', 'vw', '33.5')).toBeNull();
+    expect(buildSizeFieldValue('width', 'vmin', '12')).toBeNull();
+    expect(buildSizeFieldValue('x', 'vmax', '48')).toBeNull();
     expect(buildSizeFieldValue('width', 'fit-content', '')).toBe('fit-content');
     expect(buildSizeFieldValue('height', 'auto', '')).toBe('auto');
     expect(buildSizeFieldValue('height', 'aspect-ratio', '16 / 9')).toBe('aspect-ratio(16/9)');
     expect(buildSizeFieldValue('height', 'aspect-ratio', '1.7778')).toBe('aspect-ratio(1.7778)');
     expect(buildSizeFieldValue('height', 'aspect-ratio', '16/9/2')).toBeNull();
     expect(buildSizeFieldValue('x', 'px', '48')).toBe('48px');
+    expect(buildSizeFieldValue('x', 'px', '-48')).toBe('-48px');
     expect(buildSizeFieldValue('x', '%', '48')).toBeNull();
+    expect(buildSizeFieldValue('width', 'px', '-1')).toBeNull();
+    expect(buildSizeFieldValue('height', 'vh', '50')).toBeNull();
+    expect(buildSizeFieldValue('height', 'vh', '50', { isSectionHeight: true })).toBe('50vh');
+    expect(buildSizeFieldValue('height', 'vh', '-1', { isSectionHeight: true })).toBeNull();
+  });
+
+  it('renders a min=0 bound on width and height numeric size inputs only', () => {
+    const widthMarkup = renderToStaticMarkup(
+      <SizeInlineField label="W" nodeId="node_1" axis="width" value="120px" onChange={() => {}} />,
+    );
+    const heightMarkup = renderToStaticMarkup(
+      <SizeInlineField label="H" nodeId="node_1" axis="height" value="80px" onChange={() => {}} />,
+    );
+    const xMarkup = renderToStaticMarkup(
+      <SizeInlineField label="X" nodeId="node_1" axis="x" value="-24px" onChange={() => {}} />,
+    );
+
+    expect(widthMarkup).toContain('min="0"');
+    expect(heightMarkup).toContain('min="0"');
+    expect(xMarkup).not.toContain('min="0"');
+  });
+
+  it('renders x and y with a fixed px suffix instead of a unit dropdown', () => {
+    const markup = renderToStaticMarkup(
+      <SizeInlineField label="X" nodeId="node_1" axis="x" value="24px" onChange={() => {}} />,
+    );
+
+    expect(markup).toContain('>px<');
+    expect(markup).not.toContain('data-ui="select-trigger"');
   });
 
   it('normalizes aspect-ratio expressions from a single inline text field', () => {
@@ -686,6 +744,12 @@ describe('panels/InspectorPanel', () => {
   });
 
   it('uses live rendered geometry when switching from keyword sizing into numeric units', () => {
+    const stageShell = {
+      getBoundingClientRect: () => ({
+        width: 1600,
+        height: 1200,
+      }),
+    };
     const parentRect = {
       width: 900,
       height: 600,
@@ -722,9 +786,14 @@ describe('panels/InspectorPanel', () => {
     };
     const ownerDocument = {
       getElementById: (id: string) => (id === 'stage-node-text_10' ? child : null),
+      querySelector: (selector: string) => (selector === '.stage-shell' ? stageShell : null),
       defaultView: {
-        innerWidth: 1600,
-        innerHeight: 1200,
+        getComputedStyle: () => ({
+          paddingLeft: '0px',
+          paddingRight: '0px',
+          paddingTop: '0px',
+          paddingBottom: '0px',
+        }),
       },
     } as unknown as Document;
 
@@ -738,6 +807,7 @@ describe('panels/InspectorPanel', () => {
   it('uses live rendered font size when switching font size units', () => {
     const element = {
       parentElement: {},
+      querySelector: () => null,
     };
     const ownerDocument = {
       getElementById: (id: string) => (id === 'stage-node-text_10' ? element : null),
@@ -758,6 +828,68 @@ describe('panels/InspectorPanel', () => {
     expect(convertStageFontSizeToInput('text_10', 'px', ownerDocument)).toBe('32');
     expect(convertStageFontSizeToInput('text_10', 'em', ownerDocument)).toBe('1.6');
     expect(convertStageFontSizeToInput('text_10', 'rem', ownerDocument)).toBe('2');
+  });
+
+  it('defers height percent conversion when the parent wrapper uses section min-height semantics', () => {
+    const stageShell = {
+      getBoundingClientRect: () => ({
+        width: 1600,
+        height: 1200,
+      }),
+    };
+    const parentRect = {
+      width: 900,
+      height: 600,
+      left: 100,
+      top: 50,
+      right: 1000,
+      bottom: 650,
+      x: 100,
+      y: 50,
+      toJSON() {
+        return this;
+      },
+    } as DOMRect;
+    const parentWrapper = {
+      classList: {
+        contains: (value: string) => value === 'role-section',
+      },
+    };
+    const parent = {
+      getBoundingClientRect: () => parentRect,
+      closest: () => null,
+      parentElement: parentWrapper,
+    };
+    const child = {
+      getBoundingClientRect: () => ({
+        width: 200,
+        height: 120,
+        left: 120,
+        top: 80,
+        right: 320,
+        bottom: 200,
+        x: 120,
+        y: 80,
+        toJSON() {
+          return this;
+        },
+      }),
+      parentElement: parent,
+    };
+    const ownerDocument = {
+      getElementById: (id: string) => (id === 'stage-node-text_10' ? child : null),
+      querySelector: (selector: string) => (selector === '.stage-shell' ? stageShell : null),
+      defaultView: {
+        getComputedStyle: () => ({
+          paddingLeft: '0px',
+          paddingRight: '0px',
+          paddingTop: '0px',
+          paddingBottom: '0px',
+        }),
+      },
+    } as unknown as Document;
+
+    expect(convertStageMeasurementToInput('text_10', 'height', '%', ownerDocument)).toBeNull();
   });
 
 });

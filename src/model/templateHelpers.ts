@@ -14,16 +14,16 @@ import type {
   WrapperNode,
 } from './types';
 import { createDefaultRect, createLeaf, createWrapper } from './defaultFactories';
-import { parseFontSizeValue, parseUnitValue } from './units';
+import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from './units';
 
 export function applyPadding(
   node: Pick<WrapperNode, 'style'>,
   { top, right, bottom, left = right }: BoxPadding,
 ) {
-  node.style.paddingTop = parseUnitValue(top);
-  node.style.paddingRight = parseUnitValue(right);
-  node.style.paddingBottom = parseUnitValue(bottom);
-  node.style.paddingLeft = parseUnitValue(left);
+  node.style.paddingTop = parseSpacingValue(top);
+  node.style.paddingRight = parseSpacingValue(right);
+  node.style.paddingBottom = parseSpacingValue(bottom);
+  node.style.paddingLeft = parseSpacingValue(left);
 }
 
 export function createTemplateSection(

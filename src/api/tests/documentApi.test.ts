@@ -109,7 +109,7 @@ describe('api/documentApi', () => {
       'background',
       'color(display-p3 0.24 0.52 0.88 / 0.9)',
     );
-    const withButtonShadow = setNodeTextField(withButtonBackground, buttonId, 'shadowOffsetY', '12');
+    const withButtonShadow = setNodeTextField(withButtonBackground, buttonId, 'shadowSpread', '12');
     const withButtonTypography = setNodeTextField(withButtonShadow, buttonId, 'fontWeight', 'bold');
     const withButtonWrap = setNodeTextField(withButtonTypography, buttonId, 'textWrap', 'wrap');
 
@@ -131,7 +131,7 @@ describe('api/documentApi', () => {
     expect(textNode.style?.shadowBlur).toBe(14);
     expect(imageNode.style?.borderRadius?.raw).toBe('24px');
     expect(buttonNode.style?.background).toBe('color(display-p3 0.24 0.52 0.88 / 0.9)');
-    expect(buttonNode.style?.shadowOffsetY).toBe(12);
+    expect(buttonNode.style?.shadowSpread).toBe(12);
     expect(buttonNode.style?.fontWeight).toBe('bold');
     expect(buttonNode.style?.textWrap).toBe('wrap');
   });

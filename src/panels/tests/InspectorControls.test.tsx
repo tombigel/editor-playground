@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { forceOpaqueColorValue } from '../../model/colors';
 import {
   BorderControlGroup,
-  forceOpaqueColorValue,
+  convertStageBorderRadiusToValue,
+  convertStageSpacingToInput,
   HoverColorField,
   ShadowControlGroup,
   offsetsFromDistanceAndAngle,
@@ -36,17 +38,21 @@ describe('panels/InspectorControls', () => {
       <ShadowControlGroup
         color="rgb(0 0 0 / 0.4)"
         blur={12}
+        spread={6}
         distance={24}
         angle={45}
         colorFallback="#000000"
+        supportsSpread
         onColorChange={() => {}}
         onBlurChange={() => {}}
+        onSpreadChange={() => {}}
         onDistanceChange={() => {}}
         onAngleChange={() => {}}
       />,
     );
 
     expect(markup).toContain('>Blur<');
+    expect(markup).toContain('>Spread<');
     expect(markup).toContain('>Distance<');
     expect(markup).toContain('>Angle<');
     expect(markup).not.toContain('>px<');
@@ -56,6 +62,7 @@ describe('panels/InspectorControls', () => {
   it('renders border controls with a unit selector for radius', () => {
     const markup = renderToStaticMarkup(
       <BorderControlGroup
+        nodeId="button_1"
         colorValue="rgb(216 224 234 / 1)"
         widthValue="1px"
         radiusValue="16%"
@@ -69,6 +76,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('data-allow-alpha="true"');
     expect(markup).toContain('>Width<');
     expect(markup).toContain('>Radius<');
+    expect(markup.match(/min="0"/g)?.length).toBeGreaterThanOrEqual(2);
     expect(markup).toContain('>px<');
     expect(markup.match(/data-ui="select-trigger"/g)?.length).toBe(1);
   });
@@ -98,7 +106,7 @@ describe('panels/InspectorControls', () => {
           shadowOffsetX: fourDegreeOffsets.offsetX,
           shadowOffsetY: fourDegreeOffsets.offsetY,
         },
-        { color: '#000000', blur: 0, distance: 0, angle: 0 },
+        { color: '#000000', blur: 0, spread: 0, distance: 0, angle: 0 },
       ).angle,
     ).toBe(4);
 
@@ -108,8 +116,84 @@ describe('panels/InspectorControls', () => {
           shadowOffsetX: fortyFiveDegreeOffsets.offsetX,
           shadowOffsetY: fortyFiveDegreeOffsets.offsetY,
         },
-        { color: '#000000', blur: 0, distance: 0, angle: 0 },
-      ).angle,
+        { color: '#000000', blur: 0, spread: 0, distance: 0, angle: 0 },
+    ).angle,
     ).toBe(45);
+  });
+
+  it('reads shadow spread directly from authored style', () => {
+    expect(
+      readShadowFieldValues(
+        {
+          shadowSpread: 14,
+        },
+        { color: '#000000', blur: 0, spread: 0, distance: 0, angle: 0 },
+      ).spread,
+    ).toBe(14);
+  });
+
+  it('converts rendered spacing into target units instead of swapping suffixes', () => {
+    const button = {
+      querySelector: () => null,
+      getBoundingClientRect: () => ({ width: 200, height: 48 }),
+      parentElement: {},
+    };
+    const stageShell = {
+      getBoundingClientRect: () => ({ width: 1200, height: 900 }),
+    };
+    const ownerDocument = {
+      getElementById: (id: string) => (id === 'stage-node-button_1' ? button : null),
+      querySelector: (selector: string) => (selector === '.stage-shell' ? stageShell : null),
+      documentElement: {},
+      defaultView: {
+        getComputedStyle: (target: unknown) => {
+          if (target === button) {
+            return {
+              paddingTop: '23.6px',
+              paddingBottom: '24px',
+              paddingLeft: '32px',
+              paddingRight: '31.6px',
+              fontSize: '20px',
+            };
+          }
+          return {
+            fontSize: '16px',
+            paddingLeft: '0px',
+            paddingRight: '0px',
+            paddingTop: '0px',
+            paddingBottom: '0px',
+          };
+        },
+      },
+    } as unknown as Document;
+
+    expect(convertStageSpacingToInput('button_1', 'block', 'em', ownerDocument)).toBe('1.19');
+    expect(convertStageSpacingToInput('button_1', 'inline', 'rem', ownerDocument)).toBe('1.99');
+    expect(convertStageSpacingToInput('button_1', 'top', 'em', ownerDocument)).toBe('1.18');
+    expect(convertStageSpacingToInput('button_1', 'right', 'rem', ownerDocument)).toBe('1.98');
+    expect(convertStageSpacingToInput('button_1', 'top', 'px', ownerDocument)).toBe('24');
+    expect(convertStageSpacingToInput('button_1', 'right', 'px', ownerDocument)).toBe('32');
+  });
+
+  it('converts rendered border radius into target units instead of swapping suffixes', () => {
+    const wrapper = {
+      querySelector: (selector: string) => (
+        selector === '[data-content-wrapper-for="container_1"]'
+          ? {
+              getBoundingClientRect: () => ({ width: 240, height: 120 }),
+            }
+          : null
+      ),
+    };
+    const ownerDocument = {
+      getElementById: (id: string) => (id === 'stage-node-container_1' ? wrapper : null),
+      defaultView: {
+        getComputedStyle: () => ({
+          borderTopLeftRadius: '18px',
+        }),
+      },
+    } as unknown as Document;
+
+    expect(convertStageBorderRadiusToValue('container_1', '%', ownerDocument)).toBe('10%');
   });
 });

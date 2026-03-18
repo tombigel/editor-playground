@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { DocumentModel, DocumentNode, WrapperNode } from '../model/types';
+import type { DocumentModel, DocumentNode, ViewportMeasurement, WrapperNode } from '../model/types';
 import { resolveWrapperRenderPlan, type RenderMeasuredNodeSizes } from './layout';
 import type {
   RenderLeafPlanNode,
@@ -32,14 +32,15 @@ export function buildRenderRootPlan(
   document: DocumentModel,
   previewSticky: boolean,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport?: ViewportMeasurement,
 ): RenderRootPlan {
   const wrappers = getRootWrappers(document);
   const { header, footer, main } = splitRootWrappers(wrappers);
 
   return {
-    header: header ? buildWrapperPlan(document, header, true, previewSticky, measuredNodeSizes) : null,
-    footer: footer ? buildWrapperPlan(document, footer, true, previewSticky, measuredNodeSizes) : null,
-    main: main.map((wrapper) => buildWrapperPlan(document, wrapper, true, previewSticky, measuredNodeSizes)),
+    header: header ? buildWrapperPlan(document, header, true, previewSticky, measuredNodeSizes, viewport) : null,
+    footer: footer ? buildWrapperPlan(document, footer, true, previewSticky, measuredNodeSizes, viewport) : null,
+    main: main.map((wrapper) => buildWrapperPlan(document, wrapper, true, previewSticky, measuredNodeSizes, viewport)),
   };
 }
 
@@ -49,9 +50,10 @@ function buildWrapperPlan(
   isTopLevel: boolean,
   previewSticky: boolean,
   measuredNodeSizes: RenderMeasuredNodeSizes,
+  viewport?: ViewportMeasurement,
   meshPlacement?: CSSProperties,
 ): RenderWrapperPlanNode {
-  const renderPlan = resolveWrapperRenderPlan(document, node, measuredNodeSizes);
+  const renderPlan = resolveWrapperRenderPlan(document, node, measuredNodeSizes, viewport);
   const spacerSequence = getStickyTrackSpacerSequence(node.sticky);
   const children = renderPlan.children.map((child) =>
     child.type === 'wrapper'
@@ -61,6 +63,7 @@ function buildWrapperPlan(
           false,
           previewSticky,
           measuredNodeSizes,
+          viewport,
           renderPlan.meshLayout.childPlacements[child.id],
         )
       : buildLeafPlan(child, previewSticky, renderPlan.meshLayout.childPlacements[child.id]),

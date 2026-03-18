@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
-import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
+import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import {
   AUTO_WRAPPER_MIN_HEIGHT_PX,
   buildWrapperStyle,
@@ -135,6 +135,7 @@ describe('render/layout', () => {
     container.style.borderRadius = parseUnitValue('20px');
     container.style.shadowColor = 'rgba(18, 32, 51, 0.18)';
     container.style.shadowBlur = 24;
+    container.style.shadowSpread = 8;
     container.style.shadowOffsetX = 0;
     container.style.shadowOffsetY = 12;
 
@@ -146,23 +147,23 @@ describe('render/layout', () => {
       borderWidth: '2px',
       borderColor: '#dbe3ee',
       borderRadius: '20px',
-      boxShadow: '0px 12px 24px rgba(18, 32, 51, 0.18)',
-      paddingTop: '16px',
-      paddingRight: '16px',
-      paddingBottom: '16px',
-      paddingLeft: '16px',
+      boxShadow: '0px 12px 24px 8px rgba(18, 32, 51, 0.18)',
     });
     expect(getWrapperBorderStyle(container)).toEqual({});
   });
 
   it('exposes content wrapper padding separately for overlay alignment', () => {
     const section = createWrapper('section', 'root');
+    section.style.paddingTop = parseSpacingValue('1.5em');
+    section.style.paddingRight = parseSpacingValue('2rem');
+    section.style.paddingBottom = parseSpacingValue('12px');
+    section.style.paddingLeft = parseSpacingValue('0.5em');
 
     expect(getContentWrapperPaddingStyle(section)).toEqual({
-      paddingTop: '16px',
-      paddingRight: '16px',
-      paddingBottom: '16px',
-      paddingLeft: '16px',
+      paddingTop: '1.5em',
+      paddingRight: '2rem',
+      paddingBottom: '12px',
+      paddingLeft: '0.5em',
     });
   });
 
