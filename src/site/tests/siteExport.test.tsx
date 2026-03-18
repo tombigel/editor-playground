@@ -55,6 +55,7 @@ describe('site/siteExport', () => {
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
+    link.linkType = 'external';
     link.href = 'https://example.com/spec';
     link.openInNewTab = true;
 

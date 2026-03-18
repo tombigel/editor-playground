@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getBundledGoogleFontsCatalog } from '../../fonts';
 import { createLeaf, createSectionFromTemplate } from '../../model/defaults';
 import {
   applyDocumentCommands,
@@ -183,11 +184,12 @@ describe('api/documentApi', () => {
 
   it('preserves catalog metadata when applying an existing document font family', () => {
     const document = createInitialDocument();
+    const assistantFamily = getBundledGoogleFontsCatalog().families.find((family) => family.family === 'Assistant');
     const textId = Object.keys(document.nodes).find(
       (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
     );
-    if (!textId) {
-      throw new Error('Expected text node');
+    if (!assistantFamily || !textId) {
+      throw new Error('Expected bundled Assistant metadata and a text node');
     }
 
     const next = setNodeTextField(document, textId, 'fontFamily', 'Assistant');
@@ -198,10 +200,10 @@ describe('api/documentApi', () => {
 
     expect(node.style?.fontFamily).toBe('Assistant');
     expect(next.fontLibrary.usedFamilies.find((family) => family.family === 'Assistant')).toMatchObject({
-      family: 'Assistant',
-      isVariable: true,
-      variants: ['200', '300', 'regular', '500', '600', '700', '800'],
-      axes: [{ tag: 'wght', min: 200, max: 800 }],
+      family: assistantFamily.family,
+      isVariable: assistantFamily.isVariable,
+      variants: assistantFamily.variants,
+      axes: assistantFamily.axes,
     });
   });
 
