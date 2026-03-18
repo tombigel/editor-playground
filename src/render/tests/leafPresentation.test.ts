@@ -66,4 +66,32 @@ describe('render/leafPresentation', () => {
     expect(style.borderRadius).toBe('28px');
     expect(style.boxShadow).toBe('0px 12px 18px rgba(37, 99, 235, 0.2)');
   });
+
+  it('lets zero-valued border fields and fully transparent shadows suppress rendered defaults', () => {
+    const image = createLeaf('image', 'root');
+    const button = createLeaf('button', 'root');
+    if (image.role !== 'image' || button.role !== 'button') {
+      throw new Error('Expected image and button leaves');
+    }
+
+    image.style ??= {};
+    image.style.borderWidth = parseUnitValue('0px');
+    image.style.borderRadius = parseUnitValue('0px');
+    image.style.shadowColor = 'rgba(18, 32, 51, 0)';
+
+    button.style ??= {};
+    button.style.borderRadius = parseUnitValue('0px');
+    button.style.shadowColor = 'rgba(5, 7, 10, 0)';
+
+    const imageStyle = getImageLeafStyle(image);
+    const buttonStyle = getButtonLeafStyle(button);
+
+    expect(imageStyle.borderStyle).toBeUndefined();
+    expect(imageStyle.borderWidth).toBeUndefined();
+    expect(imageStyle.borderColor).toBeUndefined();
+    expect(imageStyle.borderRadius).toBeUndefined();
+    expect(imageStyle.boxShadow).toBeUndefined();
+    expect(buttonStyle.borderRadius).toBeUndefined();
+    expect(buttonStyle.boxShadow).toBeUndefined();
+  });
 });

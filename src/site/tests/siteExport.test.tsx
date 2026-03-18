@@ -313,6 +313,56 @@ describe('site/siteExport', () => {
     expect(css).toContain('box-shadow: 0px 8px 14px 3px rgba(15, 23, 42, 0.15);');
   });
 
+  it('does not serialize zero-width borders, zero radius, or fully transparent shadows into export css', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const image = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'image',
+    );
+
+    if (!section || section.type !== 'wrapper' || !image || image.type !== 'leaf' || image.role !== 'image') {
+      throw new Error('Expected section wrapper and image leaf');
+    }
+
+    const container = createWrapper('container', section.id);
+    document.nodes[container.id] = container;
+    document.nodes[section.id].children.push(container.id);
+
+    container.style.background = '#ffffff';
+    container.style.borderWidth = parseUnitValue('0px');
+    container.style.borderColor = '#cbd5e1';
+    container.style.borderRadius = parseUnitValue('0px');
+    container.style.shadowColor = 'rgba(18, 32, 51, 0)';
+    container.style.shadowBlur = 22;
+    container.style.shadowSpread = 6;
+    container.style.shadowOffsetY = 14;
+
+    image.style ??= {};
+    image.style.borderWidth = parseUnitValue('0px');
+    image.style.borderRadius = parseUnitValue('0px');
+    image.style.shadowColor = 'rgba(18, 32, 51, 0)';
+
+    const css = renderSiteCss(document);
+    const containerRule = css.match(new RegExp(`\\.sp-node-${container.id}-content \\{[^}]+\\}`, 'm'))?.[0] ?? '';
+    const imageRule = css.match(new RegExp(`\\.sp-node-${image.id}\\.sp-role-image\\.sp-leaf \\{[^}]+\\}`, 'm'))?.[0] ?? '';
+
+    expect(containerRule).toContain(`.sp-node-${container.id}-content`);
+    expect(containerRule).toContain('background: #ffffff;');
+    expect(containerRule).toContain('box-sizing: border-box;');
+    expect(containerRule).not.toContain('background-clip: padding-box;');
+    expect(containerRule).not.toContain('border-width: 0px;');
+    expect(containerRule).not.toContain('border-color: #cbd5e1;');
+    expect(containerRule).not.toContain('border-radius: 0px;');
+    expect(containerRule).not.toContain('box-shadow:');
+
+    expect(imageRule).toContain(`.sp-node-${image.id}.sp-role-image.sp-leaf`);
+    expect(imageRule).not.toContain('border-width: 0px;');
+    expect(imageRule).not.toContain('border-radius: 0px;');
+    expect(imageRule).not.toContain('box-shadow:');
+  });
+
   it('does not add an export-only wrapper height floor above authored short sticky containers', () => {
     const document = structuredClone(createInitialDocument());
     const stickySteps = createSectionFromTemplate('stickySteps', document.rootId);

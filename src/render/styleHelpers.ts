@@ -1,3 +1,4 @@
+import { isFullyTransparentColorValue } from '../model/colors';
 import { formatValue } from '../model/units';
 import type { BorderStyle, ParsedValue, ShadowStyle, UnitValue } from '../model/types';
 import type { StyleRecord } from './types';
@@ -35,35 +36,32 @@ export function buildBorderStyle(style: BorderStyle | undefined, defaults: Borde
   const shorthandColor = style?.borderColor ?? defaults.color;
   const hasPerSideColor = hasAnyPerSideBorderColor(style);
   const hasPerSideWidth = hasAnyPerSideBorderWidth(style);
+  const hasPerCornerRadius = hasAnyCornerRadius(style);
   const explicitColor = style?.borderColor !== undefined || hasPerSideColor;
-  const shorthandWidth = formatParsedUnitValue(style?.borderWidth) ?? defaults.width ?? (explicitColor ? '1px' : undefined);
-  const shorthandRadius = formatParsedUnitValue(style?.borderRadius) ?? defaults.radius;
+  const shorthandWidth = resolveOptionalUnitValue(style?.borderWidth, defaults.width ?? (explicitColor ? '1px' : undefined));
+  const shorthandRadius = resolveOptionalUnitValue(style?.borderRadius, defaults.radius);
 
   let hasBorder = false;
 
   for (const [label, widthField, colorField] of BORDER_SIDES) {
     const sideWidth =
-      formatParsedUnitValue(style?.[widthField]) ??
+      resolveOptionalUnitValue(style?.[widthField], undefined) ??
       (hasPerSideWidth || hasPerSideColor ? shorthandWidth : undefined);
     const sideColor = style?.[colorField] ?? (hasPerSideWidth || hasPerSideColor ? shorthandColor : undefined);
-    if (!sideWidth && !sideColor) {
+    if (!sideWidth) {
       continue;
     }
     result[`border${label}Style`] = 'solid';
-    if (sideWidth) {
-      result[`border${label}Width`] = sideWidth;
-    }
+    result[`border${label}Width`] = sideWidth;
     if (sideColor) {
       result[`border${label}Color`] = sideColor;
     }
     hasBorder = true;
   }
 
-  if (!hasPerSideWidth && !hasPerSideColor && (shorthandWidth || shorthandColor)) {
+  if (!hasPerSideWidth && !hasPerSideColor && shorthandWidth) {
     result.borderStyle = 'solid';
-    if (shorthandWidth) {
-      result.borderWidth = shorthandWidth;
-    }
+    result.borderWidth = shorthandWidth;
     if (shorthandColor) {
       result.borderColor = shorthandColor;
     }
@@ -77,7 +75,9 @@ export function buildBorderStyle(style: BorderStyle | undefined, defaults: Borde
 
   let hasCornerRadius = false;
   for (const [label, field] of BORDER_CORNERS) {
-    const value = formatParsedUnitValue(style?.[field]) ?? (hasAnyCornerRadius(style) ? shorthandRadius : undefined);
+    const value =
+      resolveOptionalUnitValue(style?.[field], undefined) ??
+      (hasPerCornerRadius ? shorthandRadius : undefined);
     if (!value) {
       continue;
     }
@@ -85,7 +85,7 @@ export function buildBorderStyle(style: BorderStyle | undefined, defaults: Borde
     hasCornerRadius = true;
   }
 
-  if (!hasCornerRadius && shorthandRadius) {
+  if (!hasPerCornerRadius && shorthandRadius) {
     result.borderRadius = shorthandRadius;
   }
 
@@ -137,7 +137,7 @@ function resolveShadowStyle(style: ShadowStyle | undefined, defaults: ShadowDefa
     return null;
   }
   const color = style?.shadowColor ?? defaults.color;
-  if (!color) {
+  if (!color || isFullyTransparentColorValue(color)) {
     return null;
   }
   return {
@@ -161,6 +161,13 @@ function hasShadowDefaults(defaults: ShadowDefaults) {
 
 function formatParsedUnitValue(value: ParsedValue<UnitValue> | undefined) {
   return value ? formatValue(value.parsed) : undefined;
+}
+
+function resolveOptionalUnitValue(value: ParsedValue<UnitValue> | undefined, fallback: string | undefined) {
+  if (!value) {
+    return fallback;
+  }
+  return value.parsed.value === 0 ? undefined : formatParsedUnitValue(value);
 }
 
 function hasAnyPerSideBorderWidth(style: BorderStyle | undefined) {

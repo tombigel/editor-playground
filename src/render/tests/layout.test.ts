@@ -152,6 +152,24 @@ describe('render/layout', () => {
     expect(getWrapperBorderStyle(container)).toEqual({});
   });
 
+  it('omits zero-width borders, zero radius, and fully transparent shadows from wrapper surfaces', () => {
+    const container = createWrapper('container', 'root');
+    container.style.background = '#ffffff';
+    container.style.borderWidth = parseUnitValue('0px');
+    container.style.borderColor = '#dbe3ee';
+    container.style.borderRadius = parseUnitValue('0px');
+    container.style.shadowColor = 'rgba(18, 32, 51, 0)';
+    container.style.shadowBlur = 24;
+    container.style.shadowSpread = 8;
+    container.style.shadowOffsetX = 0;
+    container.style.shadowOffsetY = 12;
+
+    expect(getContentWrapperSurfaceStyle(container)).toEqual({
+      boxSizing: 'border-box',
+      background: '#ffffff',
+    });
+  });
+
   it('exposes content wrapper padding separately for overlay alignment', () => {
     const section = createWrapper('section', 'root');
     section.style.paddingTop = parseSpacingValue('1.5em');
