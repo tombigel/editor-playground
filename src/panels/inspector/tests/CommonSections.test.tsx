@@ -160,7 +160,6 @@ describe('panels/inspector/CommonSections', () => {
 
     const markup = renderToStaticMarkup(
       <InspectorSummary
-        document={document}
         node={headerNode}
         actions={{ onTextChange: () => {} }}
       />,
@@ -177,7 +176,6 @@ describe('panels/inspector/CommonSections', () => {
 
     const markup = renderToStaticMarkup(
       <InspectorSummary
-        document={document}
         node={siteNode}
         actions={{ onTextChange: () => {} }}
       />,

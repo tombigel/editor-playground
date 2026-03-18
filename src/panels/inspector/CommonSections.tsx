@@ -8,10 +8,8 @@ import {
   ArrowRight,
   ArrowUp,
   SquareArrowOutUpRight,
-  TriangleAlert,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { DocumentModel } from '../../api/editorApi';
 import type { FocusedMode } from '../../api/editorApi';
 import type { WrapperStyleField } from '../../api/documentApi';
 import {
@@ -19,7 +17,6 @@ import {
   getFocusedModeTooltip,
   type ActiveFocusedMode,
 } from '../../editor/focusedModes';
-import { isBrokenAnchorLink } from '../../model/links';
 import {
   DEFAULT_SHADOW_BLUR_PX,
   DEFAULT_SHADOW_COLOR,
@@ -68,28 +65,10 @@ export type InspectorSectionHeaderAction = {
   onClick: () => void;
 };
 
-export function BrokenAnchorWarning({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className={`editor-warning-surface rounded-lg border ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}>
-      <div className="flex items-start gap-2">
-        <TriangleAlert className="editor-warning-text mt-0.5 h-3.5 w-3.5 shrink-0" />
-        <div className="min-w-0">
-          <div className="editor-warning-text text-xs font-medium">Broken anchor</div>
-          <div className="editor-warning-text mt-0.5 text-xs leading-5">
-            This link points to a section that no longer exists.
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function InspectorSummary({
-  document,
   node,
   actions,
 }: {
-  document: DocumentModel;
   node: InspectorNode | null;
   actions: Pick<InspectorActionHandlers, 'onTextChange'>;
 }) {
@@ -128,9 +107,6 @@ export function InspectorSummary({
           ) : null}
         </div>
       </div>
-      {isBrokenAnchorLink(document, node) ? (
-        <BrokenAnchorWarning />
-      ) : null}
     </div>
   );
 }

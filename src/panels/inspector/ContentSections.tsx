@@ -8,6 +8,7 @@ import {
   PilcrowRight,
   Settings2,
   TextWrap,
+  TriangleAlert,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
@@ -483,6 +484,7 @@ function NavigationFields({
   const sectionOptions = getSectionAnchorOptions(document);
   const anchorValue = isValidSectionAnchorTarget(document, node.anchorTargetId) ? node.anchorTargetId : undefined;
   const selectedAnchorOption = sectionOptions.find((option) => option.id === anchorValue);
+  const hasBrokenAnchorTarget = Boolean(node.anchorTargetId && !anchorValue);
 
   function handleLinkTypeChange(value: 'anchor' | 'external') {
     onTextChange('linkType', value);
@@ -524,7 +526,16 @@ function NavigationFields({
         </div>
       </div>
       {linkType === 'anchor' ? (
-        <FormField label="Section">
+        <div className="space-y-0.5">
+          <div className="flex items-center justify-between gap-2">
+            <Label className="text-[11px] font-medium">Section</Label>
+            {hasBrokenAnchorTarget ? (
+              <div className="editor-warning-text inline-flex shrink-0 items-center gap-1 text-[10px] font-medium leading-4">
+                <TriangleAlert className="h-3 w-3 shrink-0" />
+                <span>Broken anchor</span>
+              </div>
+            ) : null}
+          </div>
           <Select
             value={anchorValue}
             onValueChange={(value) => {
@@ -556,7 +567,7 @@ function NavigationFields({
               ))}
             </SelectContent>
           </Select>
-        </FormField>
+        </div>
       ) : (
         <>
           <FormField label="Href">

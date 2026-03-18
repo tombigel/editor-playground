@@ -2,12 +2,10 @@ import { SquareArrowRightEnter } from 'lucide-react';
 import type { FocusedMode } from '../api/editorApi';
 import { getFocusedModeLabel } from '../editor/focusedModes';
 import { createInitialDocument } from '../model/defaults';
-import { isBrokenAnchorLink } from '../model/links';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiStickySection } from './MultiStickySection';
 import { resolveFocusedModeBlocks } from './focusedModes/schema';
 import type { InspectorPanelProps } from './InspectorPanel';
-import { BrokenAnchorWarning } from './inspector/CommonSections';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 
 type Props = Pick<
@@ -140,7 +138,6 @@ export function FocusedModePanel({
   const roleLabel = node ? (node.type === 'site' ? 'site' : node.role) : null;
   const isMultiSticky = mode === 'sticky' && selectedNodes.length > 1;
   const modeLabel = getFocusedModeLabel(mode);
-  const hasBrokenAnchorWarning = node ? isBrokenAnchorLink(resolvedDocument, node) : false;
   const headerContent =
     isMultiSticky ? (
       <div className="min-w-0">
@@ -160,11 +157,6 @@ export function FocusedModePanel({
             </span>
           ) : null}
         </div>
-        {hasBrokenAnchorWarning ? (
-          <div className="mt-2">
-            <BrokenAnchorWarning compact />
-          </div>
-        ) : null}
       </div>
     ) : undefined;
 

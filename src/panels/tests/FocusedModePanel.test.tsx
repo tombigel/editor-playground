@@ -274,6 +274,6 @@ describe('panels/FocusedModePanel', () => {
     );
 
     expect(markup).toContain('Broken anchor');
-    expect(markup).toContain('This link points to a section that no longer exists.');
+    expect(markup).toContain('>Section<');
   });
 });

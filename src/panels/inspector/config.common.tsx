@@ -6,7 +6,7 @@ export const summaryBlock: InspectorBlockDefinition = {
   bucket: 'summary',
   layout: 'custom',
   align: 'start',
-  render: ({ document, node, actions }) => <InspectorSummary document={document} node={node} actions={actions} />,
+  render: ({ node, actions }) => <InspectorSummary node={node} actions={actions} />,
 };
 
 export const basicsSection: InspectorSectionDefinition = {

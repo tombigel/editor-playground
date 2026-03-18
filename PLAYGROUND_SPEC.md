@@ -306,7 +306,7 @@ Text-bearing leaves split typography from presentation in the inspector:
   - links render as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame
   - external links with `Open in a new tab` enabled render/export with `target="_blank"` plus `rel="noopener noreferrer"`
   - anchor links ignore the new-tab toggle and resolve against section wrapper DOM ids in site/export output
-  - if an authored anchor target no longer exists, the selected link shows a dark-yellow `Broken anchor` warning with a triangle-alert icon; broken links are not auto-repaired
+  - if an authored anchor target no longer exists, the selected link shows a compact dark-yellow `Broken anchor` annotation with a triangle-alert icon inline beside the `Section` picker label; broken links are not auto-repaired
   - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
   - link wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
 - `image`
@@ -318,7 +318,7 @@ Text-bearing leaves split typography from presentation in the inspector:
   - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
   - `Design`: text color, background color, unified border color/width/radius, box shadow, and block/inline padding in that order
   - external buttons with `Open in a new tab` enabled render/export with `target="_blank"` plus `rel="noopener noreferrer"`
-  - anchor buttons ignore the new-tab toggle, resolve against section wrapper DOM ids in site/export output, and show the same selected `Broken anchor` warning when their target no longer exists
+  - anchor buttons ignore the new-tab toggle, resolve against section wrapper DOM ids in site/export output, and show the same compact selected `Broken anchor` annotation inline beside the `Section` picker label when their target no longer exists
   - buttons without an `href` render/export as native `button` elements; buttons with an external or anchor destination render/export as styled anchors so navigation behavior matches links
   - button padding is edited as `Y` and `X` fields that serialize to `paddingBlock` / `paddingInline`
   - button padding units support `px`, `em`, and `rem`, and use the same inline unit-switch field treatment as wrapper padding controls
