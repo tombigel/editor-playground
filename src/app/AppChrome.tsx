@@ -206,7 +206,7 @@ export function RailToggleButton({
         type="button"
         aria-pressed={pressed}
         onClick={onClick}
-        className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+        className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
           pressed
             ? 'border-[#3772ff] bg-[#3772ff] text-white shadow-[0_12px_24px_rgba(55,114,255,0.22),inset_0_0_0_1px_rgba(34,87,214,0.42)] hover:border-[#6f9dff] hover:bg-[#4a7ffc] hover:shadow-[0_16px_30px_rgba(55,114,255,0.3),inset_0_0_0_1px_rgba(34,87,214,0.6)]'
             : 'editor-icon-button-subtle editor-text-strong shadow-[0_2px_10px_rgba(18,32,51,0.05)] hover:shadow-[0_10px_22px_rgba(18,32,51,0.1)]'

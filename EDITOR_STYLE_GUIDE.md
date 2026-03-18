@@ -418,6 +418,21 @@ Spec:
 - panel uses editor surface background, subtle border, `rounded-xl`, padded content
 - close button uses icon-button subtle style
 
+### 10.8 Rail Controls
+
+Implementation references:
+
+- [src/panels/InsertPanel.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/panels/InsertPanel.tsx)
+- [src/app/AppChrome.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/app/AppChrome.tsx)
+
+Spec:
+
+- left-rail section labels use strong text, `14px`, semibold
+- insert buttons are `40px` square with `rounded-lg`
+- lower rail toggle buttons are `40px` square with `rounded-lg`
+- icon size stays `16px`
+- use border separation and shared surface tokens instead of wrapping the add-button cluster in an extra framed card
+
 ## 11. Settings Navigation
 
 Implementation reference:

@@ -155,21 +155,19 @@ export function AppShell({
         <div
           className="grid min-h-0 transition-[grid-template-columns] ease-out"
           style={{
-            gridTemplateColumns: `84px minmax(0,1fr) ${sidebarWidth}`,
+            gridTemplateColumns: `76px minmax(0,1fr) ${sidebarWidth}`,
             transitionDuration: `${INSPECTOR_TRANSITION_MS}ms`,
             transitionTimingFunction: sidebarTransitionTiming,
           }}
         >
           <aside className="editor-rail-shell editor-border-subtle relative z-[360] overflow-visible border-r shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
-            <div className="flex h-full flex-col gap-4 overflow-visible p-3">
-              <div className="editor-bg-subtle editor-border-subtle overflow-visible rounded-2xl border p-2">
-                <InsertPanel
-                  onOpenSectionTemplates={onOpenSectionTemplates}
-                  onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
-                  onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
-                />
-              </div>
-              <div className="mt-auto flex justify-center">
+            <div className="flex h-full flex-col overflow-visible p-3">
+              <InsertPanel
+                onOpenSectionTemplates={onOpenSectionTemplates}
+                onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
+                onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
+              />
+              <div className="mt-auto flex justify-center pt-3">
                 <div className="flex flex-col gap-2">
                   <RailToggleButton
                     icon={Eye}

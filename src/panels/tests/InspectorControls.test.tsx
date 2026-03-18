@@ -9,6 +9,7 @@ import {
   ShadowControlGroup,
   offsetsFromDistanceAndAngle,
   readShadowFieldValues,
+  validateNumberInputDraft,
 } from '../InspectorControls';
 
 describe('panels/InspectorControls', () => {
@@ -33,7 +34,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('h-8 w-8');
   });
 
-  it('renders shadow numeric controls without unit suffix shells', () => {
+  it('renders shadow numeric controls with compact fixed unit suffixes', () => {
     const markup = renderToStaticMarkup(
       <ShadowControlGroup
         color="rgb(0 0 0 / 0.4)"
@@ -55,8 +56,8 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('>Spread<');
     expect(markup).toContain('>Distance<');
     expect(markup).toContain('>Angle<');
-    expect(markup).not.toContain('>px<');
-    expect(markup).not.toContain('>deg<');
+    expect(markup.match(/>px</g)?.length).toBe(3);
+    expect(markup).toContain('>°<');
   });
 
   it('renders border controls with a unit selector for radius', () => {
@@ -99,6 +100,7 @@ describe('panels/InspectorControls', () => {
   it('preserves authored shadow angle through distance/offset round-trips', () => {
     const fourDegreeOffsets = offsetsFromDistanceAndAngle(10, 4);
     const fortyFiveDegreeOffsets = offsetsFromDistanceAndAngle(18, 45);
+    const threeFifteenDegreeOffsets = offsetsFromDistanceAndAngle(20, 315);
 
     expect(
       readShadowFieldValues(
@@ -119,6 +121,16 @@ describe('panels/InspectorControls', () => {
         { color: '#000000', blur: 0, spread: 0, distance: 0, angle: 0 },
     ).angle,
     ).toBe(45);
+
+    expect(
+      readShadowFieldValues(
+        {
+          shadowOffsetX: threeFifteenDegreeOffsets.offsetX,
+          shadowOffsetY: threeFifteenDegreeOffsets.offsetY,
+        },
+        { color: '#000000', blur: 0, spread: 0, distance: 0, angle: 0 },
+      ).angle,
+    ).toBe(315);
   });
 
   it('reads shadow spread directly from authored style', () => {
@@ -130,6 +142,21 @@ describe('panels/InspectorControls', () => {
         { color: '#000000', blur: 0, spread: 0, distance: 0, angle: 0 },
       ).spread,
     ).toBe(14);
+  });
+
+  it('treats empty shadow number drafts as invalid until the field blurs', () => {
+    expect(validateNumberInputDraft('', 0, 200)).toEqual({
+      isValid: false,
+      nextValue: null,
+    });
+    expect(validateNumberInputDraft('  ', 0, 200)).toEqual({
+      isValid: false,
+      nextValue: null,
+    });
+    expect(validateNumberInputDraft('24', 0, 200)).toEqual({
+      isValid: true,
+      nextValue: 24,
+    });
   });
 
   it('converts rendered spacing into target units instead of swapping suffixes', () => {

@@ -60,6 +60,7 @@ const HEIGHT_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'auto' | 'aspect-ratio'>[] 
 const FONT_SIZE_UNIT_OPTIONS: FontSizeMode[] = ['px', 'em', 'rem'];
 const COMPACT_UNIT_SUFFIX_WIDTH = 36;
 const COMPACT_UNIT_ICON_SUFFIX_WIDTH = 40;
+const MINIMAL_UNIT_SUFFIX_WIDTH = 24;
 
 export function SizeInlineField({
   label,
@@ -287,6 +288,7 @@ export function NumericUnitInlineField({
   const initialUnit = parsed && units.includes(parsed.parsed.unit) ? parsed.parsed.unit : units[0];
   const [draft, setDraft] = useState(parsed ? String(parsed.parsed.value) : '');
   const [unit, setUnit] = useState(initialUnit);
+  const [invalid, setInvalid] = useState(false);
   const hasUnitSelector = units.length > 1;
   const suffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
 
@@ -295,30 +297,26 @@ export function NumericUnitInlineField({
     const nextUnit = nextParsed && units.includes(nextParsed.parsed.unit) ? nextParsed.parsed.unit : units[0];
     setDraft(nextParsed ? String(nextParsed.parsed.value) : '');
     setUnit(nextUnit);
+    setInvalid(false);
   }, [units, value]);
 
   function commit(nextDraft: string, nextUnit: typeof unit) {
-    if (!nextDraft) {
-      onChange('');
-      return;
-    }
-
-    const nextValue = Number.parseFloat(nextDraft);
-    if (!Number.isFinite(nextValue)) {
-      return;
-    }
-    if (min != null && nextValue < min) {
-      return;
-    }
-    if (max != null && nextValue > max) {
-      return;
+    const validation = validateNumberInputDraft(nextDraft, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
+    setInvalid(!validation.isValid);
+    if (validation.nextValue == null) {
+      return false;
     }
 
     onChange(`${nextDraft}${nextUnit}`);
+    return true;
   }
 
   return (
-    <div className={`editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500 ${className}`.trim()}>
+    <div
+      className={`editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
+        invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+      } ${className}`.trim()}
+    >
       <Input
         type="number"
         step="any"
@@ -326,6 +324,11 @@ export function NumericUnitInlineField({
         max={max}
         value={draft}
         placeholder={placeholder}
+        onBlur={() => {
+          const nextParsed = value ? parseUnitValue(value) : null;
+          setDraft(nextParsed ? String(nextParsed.parsed.value) : '');
+          setInvalid(false);
+        }}
         onChange={(event) => {
           const nextDraft = event.target.value;
           setDraft(nextDraft);
@@ -351,6 +354,7 @@ export function NumericUnitInlineField({
                 const nextParsed = parseUnitValue(nextValue);
                 setDraft(formatDisplayValue(nextParsed.parsed.value));
                 setUnit(nextParsed.parsed.unit);
+                setInvalid(false);
                 onChange(nextValue);
                 return;
               }
@@ -518,12 +522,20 @@ export function ShadowControlGroup({
         </div>
       </div>
       <div className={`grid w-full gap-1.5 ${supportsSpread ? 'grid-cols-4' : 'grid-cols-3'}`}>
-        <LabeledNumberField label="Blur" value={blur} onChange={onBlurChange} min={0} max={200} step={1} />
+        <LabeledNumberField label="Blur" value={blur} onChange={onBlurChange} min={0} max={200} step={1} unitLabel="px" />
         {supportsSpread ? (
-          <LabeledNumberField label="Spread" value={spread ?? 0} onChange={(value) => onSpreadChange?.(value)} min={-200} max={200} step={1} />
+          <LabeledNumberField
+            label="Spread"
+            value={spread ?? 0}
+            onChange={(value) => onSpreadChange?.(value)}
+            min={-200}
+            max={200}
+            step={1}
+            unitLabel="px"
+          />
         ) : null}
-        <LabeledNumberField label="Distance" value={distance} onChange={onDistanceChange} min={0} max={400} step={1} />
-        <LabeledNumberField label="Angle" value={angle} onChange={onAngleChange} min={-180} max={180} step={1} />
+        <LabeledNumberField label="Distance" value={distance} onChange={onDistanceChange} min={0} max={400} step={1} unitLabel="px" />
+        <LabeledNumberField label="Angle" value={angle} onChange={onAngleChange} min={0} max={360} step={1} unitLabel="°" />
       </div>
     </div>
   );
@@ -536,6 +548,7 @@ export function LabeledNumberField({
   min,
   max,
   step,
+  unitLabel,
 }: {
   label: string;
   value: number;
@@ -543,11 +556,12 @@ export function LabeledNumberField({
   min: number;
   max: number;
   step: number;
+  unitLabel?: string;
 }) {
   return (
     <div className="min-w-0 w-full space-y-0.5">
       <Label className="text-[11px] font-medium">{label}</Label>
-      <NumberInput value={value} min={min} max={max} step={step} onChange={onChange} />
+      <NumberInput value={value} min={min} max={max} step={step} onChange={onChange} unitLabel={unitLabel} />
     </div>
   );
 }
@@ -696,7 +710,7 @@ export function readShadowFieldValues(
     blur: style?.shadowBlur ?? fallback.blur,
     spread: style?.shadowSpread ?? fallback.spread,
     distance: roundShadowNumber(Math.sqrt(offsetX ** 2 + offsetY ** 2)),
-    angle: roundShadowNumber((Math.atan2(offsetY, offsetX) * 180) / Math.PI),
+    angle: roundShadowNumber(normalizeShadowAngle((Math.atan2(offsetY, offsetX) * 180) / Math.PI)),
   };
 }
 
@@ -891,17 +905,36 @@ export function FontSizeField({
 }) {
   const parsed = parseFontSizeValue(value);
   const fontSizeSuffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
+  const [draft, setDraft] = useState(String(parsed.parsed.value));
+  const [invalid, setInvalid] = useState(false);
+
+  useEffect(() => {
+    setDraft(String(parsed.parsed.value));
+    setInvalid(false);
+  }, [parsed.parsed.unit, parsed.parsed.value]);
+
   return (
-    <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
+    <div
+      className={`editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
+        invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+      }`}
+    >
       <Input
         type="number"
         min={1}
         step="any"
-        value={String(parsed.parsed.value)}
+        value={draft}
+        onBlur={() => {
+          setDraft(String(parsed.parsed.value));
+          setInvalid(false);
+        }}
         onChange={(e) => {
-          const next = Number.parseFloat(e.target.value);
-          if (Number.isFinite(next) && next > 0) {
-            onChange(`${next}${parsed.parsed.unit}`);
+          const nextDraft = e.target.value;
+          setDraft(nextDraft);
+          const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);
+          setInvalid(!validation.isValid);
+          if (validation.nextValue != null) {
+            onChange(`${validation.nextValue}${parsed.parsed.unit}`);
           }
         }}
         className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -1025,27 +1058,89 @@ export function NumberInput({
   max,
   step,
   onChange,
+  unitLabel,
 }: {
   value: number;
   min: number;
   max: number;
   step: number;
   onChange: (value: number) => void;
+  unitLabel?: string;
 }) {
+  const formattedValue = formatFieldNumber(clampFieldNumber(value));
+  const [draft, setDraft] = useState(formattedValue);
+  const [invalid, setInvalid] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (isEditing) {
+      return;
+    }
+    setDraft(formattedValue);
+    setInvalid(false);
+  }, [formattedValue, isEditing]);
+
+  function handleDraftChange(nextDraft: string) {
+    setDraft(nextDraft);
+    const validation = validateNumberInputDraft(nextDraft, min, max);
+    setInvalid(!validation.isValid);
+    if (validation.nextValue != null) {
+      onChange(validation.nextValue);
+    }
+  }
+
+  function handleBlur() {
+    setIsEditing(false);
+    setDraft(formattedValue);
+    setInvalid(false);
+  }
+
+  if (unitLabel) {
+    const suffixWidth = `${unitLabel === '°' ? MINIMAL_UNIT_SUFFIX_WIDTH - 2 : MINIMAL_UNIT_SUFFIX_WIDTH}px`;
+    return (
+      <div
+        className={`editor-inline-field relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
+          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+        }`}
+      >
+        <Input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={draft}
+          onFocus={() => setIsEditing(true)}
+          onBlur={handleBlur}
+          onChange={(e) => handleDraftChange(e.target.value)}
+          className="editor-inline-field-value peer/valueinput h-full w-full overflow-visible rounded-l-sm border-0 bg-transparent px-2.5 text-center text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+          style={{ right: suffixWidth }}
+        />
+        <div
+          className="editor-inline-field-trigger editor-inline-field-trigger-static pointer-events-none relative z-10 flex h-full shrink-0 items-center justify-center rounded-r-sm rounded-l-none border-0 bg-transparent pl-0 pr-0 text-center text-[10px] font-medium tracking-[-0.01em] shadow-none"
+          style={{ width: suffixWidth }}
+        >
+          {unitLabel}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Input
       type="number"
       min={min}
       max={max}
       step={step}
-      value={formatFieldNumber(clampFieldNumber(value))}
-      onChange={(e) => {
-        const next = Number.parseFloat(e.target.value);
-        if (Number.isFinite(next) && next >= min && next <= max) {
-          onChange(next);
-        }
-      }}
-      className="h-8 w-full rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      value={draft}
+      onFocus={() => setIsEditing(true)}
+      onBlur={handleBlur}
+      onChange={(e) => handleDraftChange(e.target.value)}
+      className={`h-8 w-full rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+        invalid ? 'border-red-400 focus-visible:ring-red-200' : ''
+      }`}
     />
   );
 }
@@ -1838,4 +1933,22 @@ function readUnifiedParsedValue(values: Array<string | undefined>) {
 
 function roundShadowNumber(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+function normalizeShadowAngle(angle: number) {
+  const normalized = ((angle % 360) + 360) % 360;
+  return normalized === 0 ? 0 : normalized;
+}
+
+export function validateNumberInputDraft(draft: string, min: number, max: number) {
+  if (draft.trim() === '') {
+    return { isValid: false, nextValue: null };
+  }
+
+  const nextValue = Number.parseFloat(draft);
+  if (!Number.isFinite(nextValue) || nextValue < min || nextValue > max) {
+    return { isValid: false, nextValue: null };
+  }
+
+  return { isValid: true, nextValue };
 }

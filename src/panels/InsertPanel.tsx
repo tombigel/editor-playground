@@ -58,7 +58,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
   return (
     <div className="flex flex-col items-center gap-2 overflow-visible">
       <div className="pb-1">
-        <div className="editor-text-muted text-[11px] font-medium">Add</div>
+        <div className="editor-text-strong text-sm font-semibold">Add</div>
       </div>
       {INSERT_ITEMS.map((item) => {
         const Icon = item.icon;
@@ -80,7 +80,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
               data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
               variant="ghost"
               title={`${item.label} · ${item.hint}`}
-              className="editor-insert-button group h-12 w-12 rounded-2xl border p-0 shadow-[0_2px_10px_rgba(18,32,51,0.06)] hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-blue-500"
+              className="editor-insert-button group h-10 w-10 rounded-lg border p-0 shadow-[0_2px_10px_rgba(18,32,51,0.06)] hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-blue-500"
               onClick={(event) => {
                 if (item.kind === 'wrapper') {
                   if (item.role === 'section') {
@@ -93,13 +93,14 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
                 onInsertLeaf(item.role);
               }}
             >
-              <span className="editor-insert-button-inner flex h-full w-full items-center justify-center rounded-[15px] border border-black/8">
+              <span className="editor-insert-button-inner flex h-full w-full items-center justify-center rounded-lg border border-black/8">
                 <Icon className="h-4 w-4" strokeWidth={1.9} />
               </span>
             </Button>
           </PopoverTooltip>
         );
       })}
+      <div aria-hidden="true" className="editor-border-subtle mt-2 w-full border-b" />
     </div>
   );
 }
