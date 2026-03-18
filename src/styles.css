@@ -86,6 +86,9 @@
   --editor-template-tag-background: rgba(16, 185, 129, 0.12);
   --editor-template-tag-text: #047857;
   --editor-template-tag-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.14);
+  --editor-warning-background: #fff7e6;
+  --editor-warning-border: #d7b24c;
+  --editor-warning-text: #8a6200;
   --editor-utility-text-strong: #0f172a;
   --editor-utility-text-muted: #64748b;
   --editor-utility-bg-subtle: #f8fafc;
@@ -189,6 +192,9 @@ body[data-editor-theme='dark'] {
   --editor-template-tag-background: rgba(16, 185, 129, 0.14);
   --editor-template-tag-text: #86efc5;
   --editor-template-tag-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.14);
+  --editor-warning-background: rgba(143, 99, 10, 0.18);
+  --editor-warning-border: #9c7420;
+  --editor-warning-text: #f0bf76;
   --editor-utility-text-strong: #e6edf5;
   --editor-utility-text-muted: #94a5b8;
   --editor-utility-bg-subtle: #223041;
@@ -477,6 +483,15 @@ body[data-editor-theme='dark'] {
   background: var(--editor-template-tag-background);
   color: var(--editor-template-tag-text);
   box-shadow: var(--editor-template-tag-shadow);
+}
+
+.editor-warning-surface {
+  background: var(--editor-warning-background);
+  border-color: var(--editor-warning-border);
+}
+
+.editor-warning-text {
+  color: var(--editor-warning-text);
 }
 
 .editor-kbd {
@@ -1450,11 +1465,16 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 }
 
 .handle-s {
+  bottom: -3.5px;
+  left: calc(50% - 3.5px);
+  cursor: ns-resize;
+}
+
+.resize-handle-structural-s.handle-s {
   bottom: -4px;
   left: calc(50% - 11px);
   width: 22px;
   height: 8px;
-  cursor: ns-resize;
 }
 
 .handle-sw {

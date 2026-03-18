@@ -451,6 +451,7 @@ function renderWrapper({
       {selectedIds.length === 1 && selectedId === node.id && wrapperResizeHandles.length > 0 ? (
         <ResizeHandleView
           handles={wrapperResizeHandles}
+          wideSouthHandle={isStructuralTopLevelWrapper(node, plan.isTopLevel)}
           onHandleMouseDown={(handle, event) => {
             event.stopPropagation();
             onResizeStart(node.id);
@@ -1091,9 +1092,11 @@ function renderStickyTrackShell({
 
 function ResizeHandleView({
   handles = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'],
+  wideSouthHandle = false,
   onHandleMouseDown,
 }: {
   handles?: ResizeHandle[];
+  wideSouthHandle?: boolean;
   onHandleMouseDown: (handle: ResizeHandle, event: MouseEvent<HTMLDivElement>) => void;
 }) {
   return (
@@ -1101,7 +1104,7 @@ function ResizeHandleView({
       {handles.map((handle) => (
         <div
           key={handle}
-          className={`resize-handle handle-${handle}`}
+          className={`resize-handle handle-${handle}${handle === 's' && wideSouthHandle ? ' resize-handle-structural-s' : ''}`}
           data-stage-resize-handle="true"
           onMouseDown={(event) => onHandleMouseDown(handle, event)}
         />

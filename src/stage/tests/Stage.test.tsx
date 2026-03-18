@@ -1100,12 +1100,45 @@ describe('stage/Stage', () => {
         />,
       );
 
-      expect(markup).toContain('class="resize-handle handle-s"');
+      expect(markup).toContain('class="resize-handle handle-s resize-handle-structural-s"');
       expect(markup).not.toContain('class="resize-handle handle-n"');
       expect(markup).not.toContain('class="resize-handle handle-e"');
       expect(markup).not.toContain('class="resize-handle handle-se"');
     },
   );
+
+  it('keeps the bottom resize handle round for selected non-structural wrappers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const container = createWrapper('container', section.id);
+    document.nodes[container.id] = container;
+    section.children.push(container.id);
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={container.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('class="resize-handle handle-s"');
+    expect(markup).not.toContain('resize-handle-structural-s');
+  });
 
   it('suppresses the top-level structural resize knob for aspect-ratio heights', () => {
     const document = structuredClone(createInitialDocument());
