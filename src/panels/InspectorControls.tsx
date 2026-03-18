@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import {
   ArrowDown,
@@ -19,7 +19,7 @@ import {
   convertRenderedPxToSpacingUnit,
   formatDisplayValue,
 } from '../model/conversion';
-import { buildFontFamilyStack, listFontWeightOptions, resolveNearestSupportedFontWeight } from '../api/fontApi';
+import { buildFontFamilyStack, buildFontPickerPreviewStylesheetHref, listFontWeightOptions, resolveNearestSupportedFontWeight } from '../api/fontApi';
 import { forceOpaqueColorValue } from '../model/colors';
 import type { BorderStyle, DocumentFontFamily, ShadowStyle, ViewportMeasurement, WrapperNode } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
@@ -44,6 +44,12 @@ type OrderedFontFamilyGroups = {
 
 const RECENT_FONT_FAMILIES_STORAGE_KEY = 'sticky-playground.recent-font-families';
 const RECENT_FONT_FAMILIES_LIMIT = 8;
+const FONT_PICKER_ROW_BASE_CLASS =
+  'editor-text-strong flex w-full items-center rounded-sm px-2 py-1.5 text-left text-[13px] leading-4 outline-none transition-colors';
+const FONT_PICKER_ROW_HOVER_CLASS =
+  'hover:text-[color:var(--editor-accent)] hover:[background:var(--editor-select-highlight-background)]';
+const FONT_PICKER_ROW_ACTIVE_CLASS =
+  'text-[color:var(--editor-accent)] [background:var(--editor-select-highlight-background)]';
 
 export function applyPersistentSelectValueChange(options: {
   nextValue: string;
@@ -289,6 +295,7 @@ export function FontPickerPopover({
   const [activePane, setActivePane] = useState<'family' | 'weight'>('family');
   const [focusedWeightValue, setFocusedWeightValue] = useState(weightValue);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({ top: 0, left: 0, visibility: 'hidden' });
+  const previewLinkId = useId().replace(/:/g, '');
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const familyRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -359,6 +366,24 @@ export function FontPickerPopover({
   const activeFamily = activeFamilyValue === systemOptionValue ? undefined : families.find((family) => family.family === activeFamilyValue);
   const activeWeightOptions = listFontWeightOptions(activeFamily, weightValue);
   const activeWeightOption = activeWeightOptions.find((option) => option.value === weightValue) ?? activeWeightOptions[0];
+  const previewFamilies = useMemo(
+    () => [
+      ...visibleFamilies.recent,
+      ...visibleFamilies.byLanguage,
+      ...(activeFamily ? [activeFamily] : []),
+    ],
+    [activeFamily, visibleFamilies.byLanguage, visibleFamilies.recent],
+  );
+  const previewHref = useMemo(
+    () => open
+      ? buildFontPickerPreviewStylesheetHref({
+          families: previewFamilies,
+          activeFamilyName: activeFamily?.family,
+          activeWeights: activeWeightOptions.map((option) => option.value),
+        })
+      : null,
+    [activeFamily?.family, activeWeightOptions, open, previewFamilies],
+  );
   const triggerLabel = mixedFamily ? 'Mixed' : familyValue === systemOptionValue ? systemLabel : familyValue;
   const triggerStyle =
     mixedFamily
@@ -420,6 +445,33 @@ export function FontPickerPopover({
     }
     setPopoverStyle((current) => ({ ...current, visibility: 'hidden' }));
   }, [open]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const existing = window.document.getElementById(previewLinkId) as HTMLLinkElement | null;
+    if (!previewHref) {
+      existing?.remove();
+      return;
+    }
+
+    if (existing) {
+      existing.href = previewHref;
+      return;
+    }
+
+    const link = window.document.createElement('link');
+    link.id = previewLinkId;
+    link.rel = 'stylesheet';
+    link.href = previewHref;
+    window.document.head.appendChild(link);
+
+    return () => {
+      link.remove();
+    };
+  }, [previewHref, previewLinkId]);
 
   function rememberRecentFontFamily(nextValue: string) {
     if (nextValue === systemOptionValue) {
@@ -615,15 +667,18 @@ export function FontPickerPopover({
                 key={option.value}
                 type="button"
                 className={cn(
-                  'editor-text-strong flex w-full items-center rounded-sm px-2 py-1.5 text-[13px] leading-4 outline-none',
-                  !mixedWeight && option.value === weightValue
-                    ? '[background:var(--editor-select-highlight-background)]'
-                    : 'hover:[background:var(--editor-select-highlight-background)]',
-                  activePane === 'weight' && option.value === focusedWeightValue ? 'ring-1 ring-[color:var(--editor-accent)]' : '',
+                  FONT_PICKER_ROW_BASE_CLASS,
+                  activePane === 'weight' && option.value === focusedWeightValue
+                    ? FONT_PICKER_ROW_ACTIVE_CLASS
+                    : FONT_PICKER_ROW_HOVER_CLASS,
                 )}
                 style={activeFamily ? { fontFamily: buildFontFamilyStack(activeFamily.family), fontWeight: option.value } : { fontWeight: option.value }}
                 ref={(node) => {
                   weightRefs.current[index] = node;
+                }}
+                onMouseEnter={() => {
+                  setActivePane('weight');
+                  setFocusedWeightValue(option.value);
                 }}
                 onFocus={() => {
                   setActivePane('weight');
@@ -666,9 +721,8 @@ const FontPickerRow = forwardRef<
       ref={ref}
       type="button"
       className={cn(
-        'editor-text-strong flex w-full items-center rounded-sm px-2 py-1.5 text-left text-[13px] leading-4 outline-none',
-        active ? '[background:var(--editor-select-highlight-background)]' : 'hover:[background:var(--editor-select-highlight-background)]',
-        focused ? 'ring-1 ring-[color:var(--editor-accent)]' : '',
+        FONT_PICKER_ROW_BASE_CLASS,
+        active || focused ? FONT_PICKER_ROW_ACTIVE_CLASS : FONT_PICKER_ROW_HOVER_CLASS,
       )}
       style={style}
       onMouseEnter={onMouseEnter}

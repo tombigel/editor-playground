@@ -6,7 +6,10 @@ import type {
   TypographyStyle,
 } from '../model/types';
 import { createDefaultFontLibrary, getDefaultDocumentFontFamily } from './defaults';
+import { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
 import { clampFontWeight } from './weights';
+
+const BUNDLED_GOOGLE_FONTS_CATALOG = getBundledGoogleFontsCatalog();
 
 export function getDocumentFontLibrary(document: DocumentModel): FontLibrary {
   return document.fontLibrary;
@@ -113,7 +116,7 @@ export function ensureDocumentFontFamilyByName(document: DocumentModel, familyNa
   if (!familyName.trim() || getDocumentFontFamily(document, familyName)) {
     return document;
   }
-  const fallback = getDefaultDocumentFontFamily(familyName);
+  const fallback = resolveKnownDocumentFontFamily(familyName);
   return addDocumentFontFamily(
     document,
     fallback
@@ -181,7 +184,8 @@ function normalizeFontLibrary(fontLibrary: FontLibrary | undefined): FontLibrary
         favorite: Boolean(family.favorite || favorites.includes(familyName)),
       };
     })
-    .filter((family) => family.family.length > 0);
+    .filter((family) => family.family.length > 0)
+    .map((family) => resolveDocumentFontFamilyMetadata(family));
 
   return { defaults, favorites, usedFamilies };
 }
@@ -242,6 +246,30 @@ function uniqueFamilies(families: DocumentFontFamily[]) {
     seen.add(familyName);
     return true;
   });
+}
+
+function resolveDocumentFontFamilyMetadata(family: DocumentFontFamily): DocumentFontFamily {
+  const resolved = resolveKnownDocumentFontFamily(family.family);
+  if (!resolved) {
+    return family;
+  }
+
+  return {
+    ...family,
+    ...structuredClone(resolved),
+    favorite: family.favorite,
+    origin: family.origin === 'default' || resolved.origin === 'default' ? 'default' : family.origin,
+  };
+}
+
+function resolveKnownDocumentFontFamily(familyName: string) {
+  const defaultFamily = getDefaultDocumentFontFamily(familyName);
+  if (defaultFamily) {
+    return structuredClone(defaultFamily);
+  }
+
+  const bundledFamily = BUNDLED_GOOGLE_FONTS_CATALOG.families.find((family) => family.family === familyName);
+  return bundledFamily ? structuredClone(bundledFamily) : undefined;
 }
 
 function sanitizeString(value: unknown) {

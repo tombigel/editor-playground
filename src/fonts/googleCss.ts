@@ -101,6 +101,47 @@ export function buildFontPreviewStylesheetHref(families: DocumentFontFamily[]) {
   );
 }
 
+export function buildFontPickerPreviewStylesheetHref(options: {
+  families: DocumentFontFamily[];
+  activeFamilyName?: string;
+  activeWeights?: number[];
+}) {
+  const activeWeightSet = [...new Set((options.activeWeights ?? []).filter((weight) => Number.isFinite(weight) && weight > 0))]
+    .sort((left, right) => left - right);
+
+  return buildGoogleFontsStylesheetHref(
+    [...new Map(options.families.map((family) => [family.family, family])).values()].map((family) => {
+      const weightAxis = family.axes?.find((axis) => axis.tag === 'wght');
+      const isActiveFamily = family.family === options.activeFamilyName;
+
+      if (isActiveFamily && family.isVariable && weightAxis) {
+        return {
+          family: family.family,
+          weights: [],
+          isVariable: true,
+          variableRange: { min: weightAxis.min, max: weightAxis.max },
+        };
+      }
+
+      if (isActiveFamily) {
+        return {
+          family: family.family,
+          weights: activeWeightSet.length > 0 ? activeWeightSet : [resolveNearestSupportedFontWeight(DEFAULT_FONT_WEIGHT, family)],
+          isVariable: false,
+          variableRange: undefined,
+        };
+      }
+
+      return {
+        family: family.family,
+        weights: [resolveNearestSupportedFontWeight(DEFAULT_FONT_WEIGHT, family)],
+        isVariable: false,
+        variableRange: undefined,
+      };
+    }),
+  );
+}
+
 function createFontRequest(familyName: string, family: DocumentFontFamily | undefined): FontRequest {
   const weightAxis = family?.axes?.find((axis) => axis.tag === 'wght');
   return {

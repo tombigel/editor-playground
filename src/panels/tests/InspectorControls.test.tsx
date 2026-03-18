@@ -183,6 +183,10 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('popover="manual"');
     expect(markup).toContain('text-[13px] leading-4');
     expect(markup).toContain('px-[3px]');
+    expect(markup).toContain('hover:text-[color:var(--editor-accent)]');
+    expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
+    expect(markup).toContain('text-[color:var(--editor-accent)] [background:var(--editor-select-highlight-background)]');
+    expect(markup).not.toContain('ring-1 ring-[color:var(--editor-accent)]');
     expect(markup).not.toContain('editor-text-muted ml-2 shrink-0 text-[10px]');
     expect(markup.match(/lucide-check/g)?.length).toBeGreaterThanOrEqual(2);
   });

@@ -4,6 +4,7 @@ export {
   DEFAULT_FONT_WEIGHT,
   addDocumentFontFamily,
   buildFontFamilyStack,
+  buildFontPickerPreviewStylesheetHref,
   buildFontPreviewStylesheetHref,
   buildEditorGoogleFontsStylesheetHref,
   buildDocumentGoogleFontsStylesheetHref,

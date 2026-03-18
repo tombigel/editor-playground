@@ -34,6 +34,7 @@ export {
 } from './googleFonts';
 export { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
 export {
+  buildFontPickerPreviewStylesheetHref,
   buildFontPreviewStylesheetHref,
   buildEditorGoogleFontsStylesheetHref,
   buildDocumentGoogleFontsStylesheetHref,
