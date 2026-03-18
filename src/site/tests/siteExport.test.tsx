@@ -40,7 +40,7 @@ describe('site/siteExport', () => {
     expect(css).toContain('text-decoration-line: underline;');
   });
 
-  it('emits renderer text defaults when the model does not override them', () => {
+  it('omits un-authored text design styles when the model does not override them', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
       (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
@@ -55,13 +55,9 @@ describe('site/siteExport', () => {
     const css = renderSiteCss(document);
 
     expect(css).toContain(`.sp-node-${target.id}.sp-role-text`);
-    expect(css).toContain('color: #16202a;');
-    expect(css).toContain('font-size: 18px;');
-    expect(css).toContain('font-weight: 500;');
-    expect(css).toContain('letter-spacing: -0.02em;');
-    expect(css).toContain('line-height: 1.24;');
-    expect(css).toContain('direction: ltr;');
-    expect(css).toContain('text-align: left;');
+    expect(css).not.toContain('color: #16202a;');
+    expect(css).not.toContain('font-size: 18px;');
+    expect(css).not.toContain('letter-spacing: -0.02em;');
   });
 
   it('exports custom text and link design styles including filter shadows', () => {
@@ -166,22 +162,17 @@ describe('site/siteExport', () => {
     expect(css).toContain('white-space: normal;');
   });
 
-  it('normalizes native text and button element defaults in exported css', () => {
+  it('normalizes native text and button elements without adding hidden visual defaults in exported css', () => {
     const css = renderSiteCss(createInitialDocument());
 
     expect(css).toContain('.sp-leaf.sp-role-text {');
     expect(css).toContain('font: inherit;');
     expect(css).toContain('quotes: none;');
     expect(css).toContain('.sp-leaf.sp-role-link {');
-    expect(css).toContain('text-decoration: underline;');
-    expect(css).toContain('text-underline-offset: 3px;');
     expect(css).toContain('button.sp-leaf.sp-role-button {');
     expect(css).toContain('appearance: none;');
-    expect(css).toContain('background: #05070a;');
-    expect(css).toContain('border-radius: 999px;');
-    expect(css).toContain('padding-block: 13px;');
-    expect(css).toContain('padding-inline: 24px;');
-    expect(css).toContain('box-shadow: 0 10px 18px rgba(5, 7, 10, 0.16);');
+    expect(css).toContain('font: inherit;');
+    expect(css).toContain('cursor: pointer;');
   });
 
   it('uses the shared stage mesh grid for wrapper content and child placement', () => {
@@ -275,6 +266,7 @@ describe('site/siteExport', () => {
     container.style.borderRadius = parseUnitValue('18px');
     container.style.shadowColor = 'rgba(18, 32, 51, 0.16)';
     container.style.shadowBlur = 22;
+    container.style.shadowSpread = 6;
     container.style.shadowOffsetX = 0;
     container.style.shadowOffsetY = 14;
 
@@ -284,6 +276,7 @@ describe('site/siteExport', () => {
     image.style.borderRadius = parseUnitValue('28px');
     image.style.shadowColor = 'rgba(37, 99, 235, 0.2)';
     image.style.shadowBlur = 18;
+    image.style.shadowSpread = 4;
     image.style.shadowOffsetX = 0;
     image.style.shadowOffsetY = 12;
 
@@ -296,6 +289,7 @@ describe('site/siteExport', () => {
     button.style.borderColor = '#0f172a';
     button.style.shadowColor = 'rgba(15, 23, 42, 0.15)';
     button.style.shadowBlur = 14;
+    button.style.shadowSpread = 3;
     button.style.shadowOffsetX = 0;
     button.style.shadowOffsetY = 8;
 
@@ -305,18 +299,18 @@ describe('site/siteExport', () => {
     expect(css).toContain('box-sizing: border-box;');
     expect(css).toContain('background-clip: padding-box;');
     expect(css).toContain('border-radius: 18px;');
-    expect(css).toContain('box-shadow: 0px 14px 22px rgba(18, 32, 51, 0.16);');
+    expect(css).toContain('box-shadow: 0px 14px 22px 6px rgba(18, 32, 51, 0.16);');
     expect(css).toContain(`.sp-node-${image.id}.sp-role-image.sp-leaf`);
     expect(css).toContain('border-width: 3px;');
     expect(css).toContain('border-radius: 28px;');
-    expect(css).toContain('box-shadow: 0px 12px 18px rgba(37, 99, 235, 0.2);');
+    expect(css).toContain('box-shadow: 0px 12px 18px 4px rgba(37, 99, 235, 0.2);');
     expect(css).toContain(`.sp-node-${button.id}.sp-role-button.sp-leaf`);
     expect(css).toContain('background: #f8fafc;');
     expect(css).toContain('padding-block: 0.75em;');
     expect(css).toContain('padding-inline: 1.5rem;');
     expect(css).toContain('background-clip: padding-box;');
     expect(css).toContain('border-color: #0f172a;');
-    expect(css).toContain('box-shadow: 0px 8px 14px rgba(15, 23, 42, 0.15);');
+    expect(css).toContain('box-shadow: 0px 8px 14px 3px rgba(15, 23, 42, 0.15);');
   });
 
   it('does not add an export-only wrapper height floor above authored short sticky containers', () => {
@@ -355,7 +349,6 @@ describe('site/siteExport', () => {
     expect(css).toContain('img.sp-leaf.sp-role-image.sp-image {');
     expect(css).toContain('object-fit: cover;');
     expect(css).toContain('border-radius: 16px;');
-    expect(css).toContain('background: #f4f6fa;');
     expect(css).toContain('.sp-leaf.sp-role-image.is-brand-mark.sp-image {');
     expect(css).toContain('object-fit: contain;');
     expect(css).toContain('box-shadow: none;');

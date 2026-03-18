@@ -1,0 +1,69 @@
+import { describe, expect, it } from 'vitest';
+import { createLeaf } from '../../model/defaults';
+import { parseUnitValue } from '../../model/units';
+import { getButtonLeafStyle, getImageLeafStyle } from '../leafPresentation';
+
+describe('render/leafPresentation', () => {
+  it('uses shared default button presentation even without authored border or shadow overrides', () => {
+    const button = createLeaf('button', 'root');
+    if (button.role !== 'button') {
+      throw new Error('Expected button leaf');
+    }
+    const style = getButtonLeafStyle(button);
+
+    expect(style.background).toBe('#05070a');
+    expect(style.borderRadius).toBe('999px');
+    expect(style.boxShadow).toBe('0px 10px 18px rgba(5, 7, 10, 0.16)');
+    expect(style.filter).toBeUndefined();
+    expect(style.paddingBlock).toBe('13px');
+    expect(style.paddingInline).toBe('24px');
+  });
+
+  it('does not add filter shadows to buttons when box shadow is present', () => {
+    const button = createLeaf('button', 'root');
+    if (button.role !== 'button') {
+      throw new Error('Expected button leaf');
+    }
+    button.style ??= {};
+    button.style.shadowColor = 'rgba(15, 23, 42, 0.15)';
+    button.style.shadowBlur = 14;
+    button.style.shadowOffsetY = 8;
+
+    const style = getButtonLeafStyle(button);
+
+    expect(style.boxShadow).toBe('0px 8px 14px rgba(15, 23, 42, 0.15)');
+    expect(style.filter).toBeUndefined();
+  });
+
+  it('uses shared default image presentation even without authored border or shadow overrides', () => {
+    const image = createLeaf('image', 'root');
+    if (image.role !== 'image') {
+      throw new Error('Expected image leaf');
+    }
+    const style = getImageLeafStyle(image);
+
+    expect(style.overflow).toBe('hidden');
+    expect(style.borderStyle).toBe('solid');
+    expect(style.borderWidth).toBe('1px');
+    expect(style.borderColor).toBe('#d8e0ea');
+    expect(style.borderRadius).toBe('16px');
+    expect(style.boxShadow).toBe('0px 12px 28px rgba(18, 32, 51, 0.12)');
+  });
+
+  it('keeps authored image overrides on the shared presentation path', () => {
+    const image = createLeaf('image', 'root');
+    if (image.role !== 'image') {
+      throw new Error('Expected image leaf');
+    }
+    image.style ??= {};
+    image.style.borderRadius = parseUnitValue('28px');
+    image.style.shadowBlur = 18;
+    image.style.shadowOffsetY = 12;
+    image.style.shadowColor = 'rgba(37, 99, 235, 0.2)';
+
+    const style = getImageLeafStyle(image);
+
+    expect(style.borderRadius).toBe('28px');
+    expect(style.boxShadow).toBe('0px 12px 18px rgba(37, 99, 235, 0.2)');
+  });
+});

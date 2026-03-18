@@ -4,9 +4,10 @@ import type {
   DocumentNode,
   NodeId,
   StickyDefinition,
+  ViewportMeasurement,
   WrapperNode,
 } from '../model/types';
-import { formatValue, resolveUnitValuePx } from '../model/units';
+import { formatValue, resolveSpacingPx, resolveUnitValuePx } from '../model/units';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../render/leafPresentation';
 import {
   formatNodeLabel,
@@ -22,8 +23,7 @@ import {
   getLeafCssHeight,
   getNodeHeight,
   getNodeWidth,
-  RENDER_VIEWPORT_HEIGHT,
-  RENDER_VIEWPORT_WIDTH,
+  DEFAULT_RENDER_VIEWPORT,
   getTrackCssWidth,
   getWrapperBorderStyle,
   hasIntrinsicWidth,
@@ -55,6 +55,7 @@ export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStick
 
 const STAGE_STICKY_VIEWPORT_INSET_TOP_PX = 22;
 const STAGE_STICKY_VIEWPORT_INSET_BOTTOM_PX = 48;
+const DEFAULT_LAYOUT_FONT_REFERENCE_PX = 16;
 
 export function StageScene({
   document,
@@ -71,8 +72,9 @@ export function StageScene({
   resizeState,
   setResizeState,
   measuredNodeSizes,
+  viewport,
 }: StageSceneProps) {
-  const plan = buildRenderRootPlan(document, previewSticky, measuredNodeSizes);
+  const plan = buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport);
 
   return (
     <>
@@ -89,12 +91,14 @@ export function StageScene({
                 onSelect,
                 onMove,
                 measuredNodeSizes,
+                viewport,
                 dragState,
                 setDragState,
                 resizeState,
                 setResizeState,
                 onResizeStart,
                 selfRegistration: plan.header.registrationMap.get(plan.header.node.id),
+                ownerWrapper: undefined,
                 ownerBottomLanePx: plan.header.meshLayout.bottomLanePx,
               })
             : <EmptySlot label="Header slot" />}
@@ -110,12 +114,14 @@ export function StageScene({
                 onSelect,
                 onMove,
                 measuredNodeSizes,
+                viewport,
                 dragState,
                 setDragState,
                 resizeState,
                 setResizeState,
                 onResizeStart,
                 selfRegistration: wrapper.registrationMap.get(wrapper.node.id),
+                ownerWrapper: undefined,
                 ownerBottomLanePx: wrapper.meshLayout.bottomLanePx,
               }),
             )}
@@ -131,12 +137,14 @@ export function StageScene({
                 onSelect,
                 onMove,
                 measuredNodeSizes,
+                viewport,
                 dragState,
                 setDragState,
                 resizeState,
                 setResizeState,
                 onResizeStart,
                 selfRegistration: plan.footer.registrationMap.get(plan.footer.node.id),
+                ownerWrapper: undefined,
                 ownerBottomLanePx: plan.footer.meshLayout.bottomLanePx,
               })
             : <EmptySlot label="Footer slot" />}
@@ -175,11 +183,15 @@ function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState
           }}
         >
           <div
-            className="drag-preview-content-wrapper"
+            className="drag-preview-content-wrapper content-wrapper"
             style={{
-              background: node.style.background ?? '#fff',
+              width: '100%',
+              height: '100%',
+              ...getContentWrapperPaddingStyle(node),
             }}
-          />
+          >
+            <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node)} />
+          </div>
         </div>
       ) : (
         <div
@@ -237,11 +249,13 @@ function renderWrapper({
   onSelect,
   onMove,
   measuredNodeSizes,
+  viewport,
   dragState,
   setDragState,
   setResizeState,
   onResizeStart,
   selfRegistration,
+  ownerWrapper,
   ownerBottomLanePx,
 }: RenderWrapperArgs): JSX.Element {
   const node = plan.node;
@@ -260,11 +274,12 @@ function renderWrapper({
       ? getStageStickyCssProperties(node.sticky, { includePosition: true, includeZIndex: true })
       : undefined;
   const wrapperLayerStyle = selectedId === node.id ? { zIndex: 'var(--editor-layer-selection)' } : undefined;
+  const showPaddingVisual = shouldShowWrapperPaddingVisual(document, node, selectedId);
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
         ...getContentWrapperBaseStyle(node),
-        ...getContentWrapperSurfaceStyle(node),
+        ...getContentWrapperPaddingStyle(node),
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
         gridTemplateRows: meshLayout.rowTemplate,
@@ -274,7 +289,7 @@ function renderWrapper({
       }
     : {
         ...getContentWrapperBaseStyle(node),
-        ...getContentWrapperSurfaceStyle(node),
+        ...getContentWrapperPaddingStyle(node),
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
         gridTemplateRows: meshLayout.rowTemplate,
@@ -321,10 +336,18 @@ function renderWrapper({
         data-drop-wrapper-id={node.id}
         style={contentWrapperStyle}
       >
-        {showGridLanes ? renderGridLaneOverlay(meshLayout, node) : null}
-        {showWrapperSpacerVisuals ? renderOffsetVisual(node.sticky, node, measuredNodeSizes) : null}
+        <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node)} />
+        {showGridLanes ? renderGridLaneOverlay(meshLayout, node, measuredNodeSizes, viewport) : null}
+        {showPaddingVisual ? renderWrapperPaddingOverlay(node) : null}
+        {showWrapperSpacerVisuals ? renderOffsetVisual(node.sticky, node, measuredNodeSizes, viewport, ownerWrapper) : null}
         {showWrapperSpacerVisuals
-          ? renderWrapperSelfDistanceVisual(node, selfRegistration, ownerBottomLanePx, measuredNodeSizes)
+          ? renderWrapperSelfDistanceVisual(
+              node,
+              selfRegistration,
+              ownerBottomLanePx,
+              measuredNodeSizes,
+              viewport,
+            )
           : null}
         <div
           className="sticky-spacer-layer"
@@ -349,6 +372,7 @@ function renderWrapper({
                 spacerVisibility,
                 selectedId,
                 measuredNodeSizes,
+                viewport,
               }),
             )}
         </div>
@@ -360,7 +384,7 @@ function renderWrapper({
               ...getContentWrapperPaddingStyle(node),
             }}
           >
-            {renderSpacerRanges(document, node, plan.stickyState.registrations, measuredNodeSizes)}
+            {renderSpacerRanges(document, node, plan.stickyState.registrations, measuredNodeSizes, viewport)}
           </div>
         ) : null}
         {plan.children.map((child) =>
@@ -375,13 +399,15 @@ function renderWrapper({
                 onSelect,
                 onMove,
                 measuredNodeSizes,
+                viewport,
                 dragState,
                 setDragState,
                 resizeState: null,
                 setResizeState,
                 onResizeStart,
                 selfRegistration: plan.registrationMap.get(child.node.id),
-                ownerBottomLanePx: getPreviewWrapperBottomLanePx(node, meshLayout.bottomLanePx, measuredNodeSizes),
+                ownerWrapper: node,
+                ownerBottomLanePx: getPreviewWrapperBottomLanePx(node, meshLayout.bottomLanePx, measuredNodeSizes, viewport),
               })
             : renderLeaf({
                 plan: child,
@@ -394,6 +420,7 @@ function renderWrapper({
                 onResizeStart,
                 registration: plan.registrationMap.get(child.node.id),
                 measuredNodeSizes,
+                viewport,
               }),
         )}
       </div>
@@ -431,7 +458,7 @@ function renderWrapper({
     return wrapperBody;
   }
 
-  const wrapperBaseHeightPx = getNodeHeight(node, measuredNodeSizes);
+  const wrapperBaseHeightPx = getNodeHeight(node, measuredNodeSizes, viewport);
   const trackHeight = wrapperBaseHeightPx + topDistancePx + bottomDistancePx;
   return renderStickyTrackShell({
     nodeId: node.id,
@@ -459,6 +486,7 @@ function renderLeaf({
   onResizeStart,
   registration,
   measuredNodeSizes,
+  viewport,
 }: {
   plan: RenderLeafPlanNode;
   selectedId: NodeId | null;
@@ -470,6 +498,7 @@ function renderLeaf({
   onResizeStart: (id: NodeId) => void;
   registration?: StageStickyRegistration;
   measuredNodeSizes: RenderMeasuredNodeSizes;
+  viewport: ViewportMeasurement;
 }) {
   const child = plan.node;
   const meshPlacement = plan.meshPlacement;
@@ -570,7 +599,7 @@ function renderLeaf({
     return leafBody;
   }
 
-  const leafHeightPx = getNodeHeight(child, measuredNodeSizes);
+  const leafHeightPx = getNodeHeight(child, measuredNodeSizes, viewport);
   const trackHeight =
     isAutoSticky
       ? leafHeightPx
@@ -600,6 +629,7 @@ function renderLeafSpacerOverlay({
   spacerVisibility,
   selectedId,
   measuredNodeSizes,
+  viewport,
 }: {
   child: LeafNode;
   owner: WrapperNode;
@@ -610,6 +640,7 @@ function renderLeafSpacerOverlay({
   spacerVisibility: 'selected' | 'all';
   selectedId: NodeId | null;
   measuredNodeSizes: RenderMeasuredNodeSizes;
+  viewport: ViewportMeasurement;
 }) {
   if (!registration || !child.sticky?.enabled || child.sticky.target !== 'self') {
     return null;
@@ -623,10 +654,10 @@ function renderLeafSpacerOverlay({
   const edgeMode = getStickyEdgeMode(child.sticky);
   const isBottomOnlySticky = edgeMode === 'bottom';
   const isBothSticky = edgeMode === 'both';
-  const leafHeightPx = getNodeHeight(child, measuredNodeSizes);
+  const leafHeightPx = getNodeHeight(child, measuredNodeSizes, viewport);
   const autoDistances = getAutoStickySpacerDistances({
     edgeMode,
-    ownerBottomLanePx: getPreviewWrapperBottomLanePx(owner, wrapperBottomLanePx, measuredNodeSizes),
+    ownerBottomLanePx: getPreviewWrapperBottomLanePx(owner, wrapperBottomLanePx, measuredNodeSizes, viewport),
     startPx: registration.startPx,
     nodeHeightPx: leafHeightPx,
   });
@@ -681,7 +712,7 @@ function renderLeafSpacerOverlay({
         ...(previewSticky ? getStageStickyCssProperties(child.sticky) : {}),
       }}
     >
-      {renderOffsetVisual(child.sticky, child, measuredNodeSizes)}
+      {renderOffsetVisual(child.sticky, child, measuredNodeSizes, viewport, owner)}
       {child.sticky.durationMode === 'auto' ? (
         <>
           {bottomDistancePx > 0 ? (
@@ -779,6 +810,7 @@ function renderWrapperSelfDistanceVisual(
   registration?: StageStickyRegistration,
   ownerBottomLanePx?: number,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   if (!registration || !node.sticky?.enabled || node.sticky.target !== 'self') {
     return null;
@@ -789,7 +821,7 @@ function renderWrapperSelfDistanceVisual(
   const isBothSticky = edgeMode === 'both';
   const isTopLevelAutoOnly = node.role !== 'container' && node.sticky.target === 'self';
   const isAuto = isTopLevelAutoOnly || (node.sticky.durationMode ?? 'auto') === 'auto';
-  const nodeHeightPx = getNodeHeight(node, measuredNodeSizes);
+  const nodeHeightPx = getNodeHeight(node, measuredNodeSizes, viewport);
   if (isTopLevelAutoOnly) {
     return (
       <>
@@ -933,31 +965,33 @@ function getPreviewWrapperBottomLanePx(
   wrapper: WrapperNode,
   bottomLanePx: number,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
-  return bottomLanePx + resolveWrapperVerticalPaddingPx(wrapper, 'bottom', measuredNodeSizes);
+  return bottomLanePx;
 }
 
-function resolveWrapperVerticalPaddingPx(
+function resolveWrapperPaddingPx(
   wrapper: WrapperNode,
-  edge: 'top' | 'bottom',
+  edge: 'top' | 'right' | 'bottom' | 'left',
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
-  const padding = edge === 'top' ? wrapper.style.paddingTop : wrapper.style.paddingBottom;
+  const padding =
+    edge === 'top'
+      ? wrapper.style.paddingTop
+      : edge === 'right'
+        ? wrapper.style.paddingRight
+        : edge === 'bottom'
+          ? wrapper.style.paddingBottom
+          : wrapper.style.paddingLeft;
   if (!padding) {
     return 0;
   }
 
-  const measured = measuredNodeSizes[wrapper.id];
-  return resolveUnitValuePx(
-    padding.parsed,
-    {
-      width: measured?.width ?? getNodeWidth(wrapper, measuredNodeSizes),
-      height: measured?.height ?? 0,
-      viewportWidth: RENDER_VIEWPORT_WIDTH,
-      viewportHeight: RENDER_VIEWPORT_HEIGHT,
-    },
-    'x',
-  );
+  return resolveSpacingPx(padding.parsed, {
+    rootFontSizePx: DEFAULT_LAYOUT_FONT_REFERENCE_PX,
+    inheritedFontSizePx: DEFAULT_LAYOUT_FONT_REFERENCE_PX,
+  });
 }
 
 function getAutoStickySpacerDistances({
@@ -1070,32 +1104,44 @@ function renderOffsetVisual(
   sticky: StickyDefinition | undefined,
   node: Exclude<DocumentNode, { type: 'site' }>,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+  ownerWrapper?: WrapperNode,
 ) {
   if (!sticky?.enabled) {
     return null;
   }
 
+  const topPaddingPx = ownerWrapper ? resolveWrapperPaddingPx(ownerWrapper, 'top', measuredNodeSizes, viewport) : 0;
+  const bottomPaddingPx = ownerWrapper
+    ? resolveWrapperPaddingPx(ownerWrapper, 'bottom', measuredNodeSizes, viewport)
+    : 0;
+
   const edgeMode = getStickyEdgeMode(sticky);
   if (edgeMode === 'both') {
-    const topOffsetPx = resolveStickyOffsetPx(sticky, node, 'top', measuredNodeSizes);
-    const bottomOffsetPx = resolveStickyOffsetPx(sticky, node, 'bottom', measuredNodeSizes);
+    const topOffsetPx = resolveStickyOffsetPx(sticky, node, 'top', measuredNodeSizes, viewport);
+    const bottomOffsetPx = resolveStickyOffsetPx(sticky, node, 'bottom', measuredNodeSizes, viewport);
     if (topOffsetPx <= 0 && bottomOffsetPx <= 0) {
       return null;
     }
     return (
       <>
-        {topOffsetPx > 0 ? renderOffsetVisualForEdge(topOffsetPx, 'top', true) : null}
-        {bottomOffsetPx > 0 ? renderOffsetVisualForEdge(bottomOffsetPx, 'bottom', true) : null}
+        {topOffsetPx > 0 ? renderOffsetVisualForEdge(topOffsetPx, 'top', true, topPaddingPx) : null}
+        {bottomOffsetPx > 0 ? renderOffsetVisualForEdge(bottomOffsetPx, 'bottom', true, bottomPaddingPx) : null}
       </>
     );
   }
 
-  const offsetPx = resolveStickyOffsetPx(sticky, node, edgeMode, measuredNodeSizes);
+  const offsetPx = resolveStickyOffsetPx(sticky, node, edgeMode, measuredNodeSizes, viewport);
   if (offsetPx <= 0) {
     return null;
   }
 
-  return renderOffsetVisualForEdge(offsetPx, edgeMode, false);
+  return renderOffsetVisualForEdge(
+    offsetPx,
+    edgeMode,
+    false,
+    edgeMode === 'top' ? topPaddingPx : bottomPaddingPx,
+  );
 }
 
 function resolveStickyOffsetPx(
@@ -1103,19 +1149,29 @@ function resolveStickyOffsetPx(
   node: Exclude<DocumentNode, { type: 'site' }>,
   edge: 'top' | 'bottom',
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   const offset =
     edge === 'top'
       ? sticky.offsetTop ?? sticky.offsetBottom
       : sticky.offsetBottom ?? sticky.offsetTop;
-  return offset ? resolveOffsetPx(offset, node, measuredNodeSizes) : 0;
+  return offset ? resolveOffsetPx(offset, node, measuredNodeSizes, viewport) : 0;
 }
 
-function renderOffsetVisualForEdge(offsetPx: number, edge: 'top' | 'bottom', showEdgeLabel: boolean) {
+function renderOffsetVisualForEdge(
+  offsetPx: number,
+  edge: 'top' | 'bottom',
+  showEdgeLabel: boolean,
+  paddingPx = 0,
+) {
+  const paddingSegmentPx = Math.max(0, paddingPx);
+  const mainSegmentPx = Math.max(0, offsetPx);
+  const totalGuidePx = mainSegmentPx + paddingSegmentPx;
+  const paddingBoundaryPx = edge === 'top' ? paddingSegmentPx : mainSegmentPx;
   const positionStyle =
     edge === 'bottom'
-      ? { top: 'auto', bottom: `${-offsetPx}px` }
-      : { top: `${-offsetPx}px`, bottom: 'auto' };
+      ? { top: 'auto', bottom: `${-totalGuidePx}px` }
+      : { top: `${-totalGuidePx}px`, bottom: 'auto' };
   const labelText = showEdgeLabel
     ? `${edge === 'top' ? 'Top' : 'Bottom'} Offset · ${Math.round(offsetPx)}px`
     : `Offset · ${Math.round(offsetPx)}px`;
@@ -1125,9 +1181,34 @@ function renderOffsetVisualForEdge(offsetPx: number, edge: 'top' | 'bottom', sho
       className={`sticky-offset-visual ${
         edge === 'bottom' ? 'sticky-offset-visual-bottom' : 'sticky-offset-visual-top'
       } ${showEdgeLabel ? 'sticky-guide-dual' : ''}`}
-      style={{ height: `${offsetPx}px`, ...positionStyle }}
+      style={{ height: `${totalGuidePx}px`, ...positionStyle }}
     >
-      <span className="sticky-offset-label">{labelText}</span>
+      <div className="sticky-offset-track" aria-hidden="true">
+        {mainSegmentPx > 0 ? (
+          <div
+            className={`sticky-offset-main-segment sticky-offset-main-segment-${edge}`}
+            style={{ height: `${mainSegmentPx}px` }}
+          >
+            <span className="sticky-offset-label">
+              {labelText}
+            </span>
+          </div>
+        ) : null}
+        {paddingSegmentPx > 0 ? (
+          <div
+            className={`sticky-offset-padding-segment sticky-offset-padding-segment-${edge}`}
+            style={{ height: `${paddingSegmentPx}px` }}
+          />
+        ) : null}
+        {paddingSegmentPx > 0 ? (
+          <span
+            className="sticky-offset-label sticky-offset-label-padding"
+            style={{ top: `${paddingBoundaryPx}px` }}
+          >
+            {`Padding · ${Math.round(paddingPx)}px`}
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -1137,6 +1218,7 @@ function renderSpacerRanges(
   wrapper: WrapperNode,
   registrations: StageStickyRegistration[],
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   if (registrations.length === 0) {
     return null;
@@ -1150,7 +1232,7 @@ function renderSpacerRanges(
         return null;
       }
 
-      const style = getSpacerRangeStyle(owner, registration, wrapper, measuredNodeSizes);
+      const style = getSpacerRangeStyle(owner, registration, wrapper, measuredNodeSizes, viewport);
       return (
         <div
           key={registration.ownerId}
@@ -1172,6 +1254,7 @@ function getSpacerRangeStyle(
   registration: StageStickyRegistration,
   wrapper: WrapperNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): CSSProperties {
   if (owner.type === 'wrapper' && owner.id === wrapper.id) {
     return {
@@ -1183,7 +1266,7 @@ function getSpacerRangeStyle(
   }
 
   const width = hasIntrinsicWidth(owner)
-    ? `${getNodeWidth(owner, measuredNodeSizes)}px`
+    ? `${getNodeWidth(owner, measuredNodeSizes, viewport)}px`
     : formatValue(owner.rect.width.base.parsed);
 
   return {
@@ -1194,7 +1277,12 @@ function getSpacerRangeStyle(
   };
 }
 
-function renderGridLaneOverlay(meshLayout: MeshLayout, node: WrapperNode) {
+function renderGridLaneOverlay(
+  meshLayout: MeshLayout,
+  node: WrapperNode,
+  measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+) {
   const verticalLines = meshLayout.columnLines.slice(1, -1);
   const horizontalLines = meshLayout.rowLines.slice(1, -1);
 
@@ -1227,4 +1315,61 @@ function renderGridLaneOverlay(meshLayout: MeshLayout, node: WrapperNode) {
       ))}
     </div>
   );
+}
+
+function renderWrapperPaddingOverlay(node: WrapperNode) {
+  return (
+    <div className="wrapper-padding-overlay" aria-hidden="true">
+      <div
+        className="wrapper-padding-overlay-boundary"
+        style={getWrapperPaddingInsetStyle(node)}
+      />
+    </div>
+  );
+}
+
+function getWrapperPaddingInsetStyle(node: WrapperNode): CSSProperties {
+  return {
+    top: node.style.paddingTop ? formatValue(node.style.paddingTop.parsed) : '0px',
+    right: node.style.paddingRight ? formatValue(node.style.paddingRight.parsed) : '0px',
+    bottom: node.style.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : '0px',
+    left: node.style.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : '0px',
+  };
+}
+
+function shouldShowWrapperPaddingVisual(
+  document: DocumentModel,
+  node: WrapperNode,
+  selectedId: NodeId | null,
+) {
+  if (!selectedId) {
+    return false;
+  }
+  if (node.role !== 'section' && node.role !== 'header' && node.role !== 'footer' && node.role !== 'container') {
+    return false;
+  }
+  if (!hasNonZeroWrapperPadding(node)) {
+    return false;
+  }
+  return selectedId === node.id || isNodeDescendantOf(document, selectedId, node.id);
+}
+
+function hasNonZeroWrapperPadding(node: WrapperNode) {
+  return [node.style.paddingTop, node.style.paddingRight, node.style.paddingBottom, node.style.paddingLeft].some((value) => {
+    if (!value) {
+      return false;
+    }
+    return value.parsed.value !== 0;
+  });
+}
+
+function isNodeDescendantOf(document: DocumentModel, nodeId: NodeId, ancestorId: NodeId) {
+  let current = document.nodes[nodeId];
+  while (current?.parentId) {
+    if (current.parentId === ancestorId) {
+      return true;
+    }
+    current = document.nodes[current.parentId];
+  }
+  return false;
 }

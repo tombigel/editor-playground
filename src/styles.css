@@ -77,6 +77,9 @@
   --editor-utility-text-muted: #64748b;
   --editor-utility-bg-subtle: #f8fafc;
   --editor-utility-border: #dbe3ee;
+  --editor-scrollbar-track: color-mix(in srgb, var(--editor-utility-border) 44%, transparent);
+  --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-utility-text-muted) 56%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-text) 52%, transparent);
   --editor-accent: #1668ff;
   --editor-accent-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
   --editor-drag-preview-background: rgba(255, 255, 255, 0.96);
@@ -175,6 +178,9 @@ body[data-editor-theme='dark'] {
   --editor-utility-text-muted: #94a5b8;
   --editor-utility-bg-subtle: #223041;
   --editor-utility-border: #47607a;
+  --editor-scrollbar-track: color-mix(in srgb, var(--editor-utility-border) 46%, transparent);
+  --editor-scrollbar-thumb: color-mix(in srgb, #d6e0ea 34%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, #f3f7fc 48%, transparent);
   --editor-accent: #1668ff;
   --editor-accent-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
   --editor-drag-preview-background: rgba(26, 37, 52, 0.96);
@@ -183,6 +189,50 @@ body[data-editor-theme='dark'] {
     0 12px 28px rgba(18, 32, 51, 0.12);
   --editor-resize-handle-background: #1668ff;
   --editor-resize-handle-border: #1668ff;
+}
+
+.editor-scrollbar {
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.editor-scrollbar:is(:hover, :focus-within, :active) {
+  scrollbar-color: var(--editor-scrollbar-thumb) var(--editor-scrollbar-track);
+}
+
+.editor-scrollbar::-webkit-scrollbar {
+  width: 13px;
+  height: 13px;
+}
+
+.editor-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.editor-scrollbar::-webkit-scrollbar-thumb {
+  min-height: 36px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  background-clip: padding-box;
+}
+
+.editor-scrollbar:is(:hover, :focus-within, :active)::-webkit-scrollbar-track {
+  background: var(--editor-scrollbar-track);
+}
+
+.editor-scrollbar:is(:hover, :focus-within, :active)::-webkit-scrollbar-thumb {
+  background-color: var(--editor-scrollbar-thumb);
+}
+
+.editor-scrollbar:is(:hover, :focus-within, :active)::-webkit-scrollbar-thumb:hover {
+  background-color: var(--editor-scrollbar-thumb-hover);
+}
+
+.editor-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .editor-shell {
@@ -802,13 +852,31 @@ button {
   min-height: 0;
   height: auto;
   width: 100%;
-  background: var(--editor-content-background);
+  background: transparent;
+}
+
+.content-wrapper-surface {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .grid-lane-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.wrapper-padding-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wrapper-padding-overlay-boundary {
+  position: absolute;
+  border: 1px dashed var(--editor-accent);
+  opacity: 0.9;
 }
 
 .grid-lane {
@@ -934,6 +1002,7 @@ button {
   top: 0;
   min-height: 16px;
   --sticky-guide-color: #d3a019;
+  --sticky-padding-guide-color: #c9a74b;
   --sticky-guide-thickness: 2.5px;
   --sticky-cap-width: 20px;
   --sticky-label-offset: 8px;
@@ -1008,12 +1077,15 @@ button {
 }
 
 .sticky-spacer-range::before,
-.sticky-offset-visual::before,
 .sticky-distance-spacer-visual::before,
 .sticky-auto-spacer::before {
   top: 0;
   bottom: 0;
   border-left: var(--sticky-guide-thickness) dashed var(--sticky-guide-color);
+}
+
+.sticky-offset-visual::before {
+  content: none;
 }
 
 .sticky-spacer-range::after,
@@ -1044,9 +1116,67 @@ button {
   margin-bottom: var(--sticky-label-offset);
 }
 
+.sticky-offset-track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sticky-offset-main-segment,
+.sticky-offset-padding-segment {
+  position: absolute;
+  left: 50%;
+  width: var(--sticky-guide-thickness);
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+.sticky-offset-main-segment {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      var(--sticky-guide-color) 0 6px,
+      transparent 6px 11px
+    );
+}
+
+.sticky-offset-padding-segment {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      var(--sticky-padding-guide-color) 0 3px,
+      transparent 3px 7px
+    );
+}
+
+.sticky-offset-padding-segment::before {
+  content: none;
+}
+
+.sticky-offset-padding-segment-top {
+  top: 0;
+}
+
+.sticky-offset-padding-segment-bottom {
+  bottom: 0;
+}
+
+.sticky-offset-main-segment-top {
+  bottom: 0;
+  align-items: center;
+}
+
+.sticky-offset-main-segment-bottom {
+  top: 0;
+  align-items: center;
+}
+
 .sticky-offset-label {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: 20px;
   padding: 0 8px;
   border-radius: 0;
@@ -1058,6 +1188,18 @@ button {
   margin-top: var(--sticky-label-offset);
   position: relative;
   z-index: var(--editor-layer-sticky-label);
+  white-space: nowrap;
+}
+
+.sticky-offset-label-padding {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  background: var(--sticky-padding-guide-color);
+  color: rgba(77, 53, 0, 0.92);
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(211, 160, 25, 0.12);
 }
 
 .sticky-track {
@@ -1163,14 +1305,6 @@ button {
   box-shadow: none;
 }
 
-.stage-leaf.role-image .stage-leaf-body {
-  overflow: hidden;
-  border: 1px solid #d8e0ea;
-  border-radius: 16px;
-  background: #f4f6fa;
-  box-shadow: 0 12px 28px rgba(18, 32, 51, 0.12);
-}
-
 .stage-leaf.role-image.is-brand-mark {
   overflow: visible;
   border: 0;
@@ -1186,30 +1320,6 @@ button {
 
 .stage-wrapper .stage-wrapper {
   min-height: 140px;
-}
-
-.stage-leaf.role-link a {
-  color: #172033;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  font-weight: 500;
-}
-
-.stage-leaf.role-button button {
-  display: block;
-  width: 100%;
-  min-width: min-content;
-  max-width: 100%;
-  box-sizing: border-box;
-  border: 0;
-  background: #05070a;
-  color: #fff;
-  border-radius: 999px;
-  padding: 13px 24px;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  box-shadow: 0 10px 18px rgba(5, 7, 10, 0.16);
 }
 
 .stage-image,

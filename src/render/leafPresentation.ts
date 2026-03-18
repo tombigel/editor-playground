@@ -1,27 +1,9 @@
 import type { CSSProperties } from 'react';
 import type { DocumentNode, ImageLeaf, LinkLeaf, TextLeaf, ButtonLeaf, TypographyStyle } from '../model/types';
 import {
-  DEFAULT_BUTTON_BACKGROUND,
-  DEFAULT_BUTTON_BORDER_RADIUS,
-  DEFAULT_BUTTON_PADDING_BLOCK,
-  DEFAULT_BUTTON_PADDING_INLINE,
-  DEFAULT_BUTTON_TEXT_COLOR,
-  DEFAULT_BUTTON_SHADOW_BLUR_PX,
-  DEFAULT_BUTTON_SHADOW_COLOR,
-  DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
-  DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
-  DEFAULT_IMAGE_BORDER_COLOR,
-  DEFAULT_IMAGE_BORDER_RADIUS,
-  DEFAULT_IMAGE_BORDER_WIDTH,
-  DEFAULT_IMAGE_SHADOW_BLUR_PX,
-  DEFAULT_IMAGE_SHADOW_COLOR,
-  DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
-  DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
-  DEFAULT_LINK_COLOR,
-  DEFAULT_TEXT_COLOR,
 } from '../model/styleDefaults';
 import { formatValue } from '../model/units';
-import { buildBorderStyle, buildBoxShadow, buildFilterShadow, hasBorderStyle, hasShadowStyle } from './styleHelpers';
+import { buildBorderStyle, buildBoxShadow, buildFilterShadow } from './styleHelpers';
 import type { SharedCssRule, StyleRecord } from './types';
 export type { SharedCssRule, StyleRecord, StyleValue } from './types';
 
@@ -49,14 +31,6 @@ export function getLeafInlineStyle(node: LeafNode): StyleRecord {
 
 export function getTextLeafStyle(node: TextLeaf): StyleRecord {
   return getTypographyStyle(node.style, {
-    color: DEFAULT_TEXT_COLOR,
-    fontSize: '18px',
-    fontWeight: '500',
-    letterSpacing: '-0.02em',
-    textDecorationLine: 'none',
-    lineHeight: 1.24,
-    direction: 'ltr',
-    textAlign: 'left',
     whiteSpace: 'pre-wrap',
     maxWidth: '100%',
     margin: 0,
@@ -69,52 +43,24 @@ export function getLinkLeafStyle(node: LinkLeaf): StyleRecord {
     width: '100%',
     maxWidth: '100%',
     ...getTypographyStyle(node.style, {
-      color: DEFAULT_LINK_COLOR,
-      fontWeight: '500',
-      textDecorationLine: 'underline',
-      lineHeight: 1.24,
-      direction: 'ltr',
-      textAlign: 'left',
-      whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : 'nowrap',
+      whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,
     }),
   };
 }
 
 export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
-  const useImageDefaults = node.name !== 'Brand Mark';
   const style: StyleRecord =
     node.name === 'Brand Mark'
       ? {
           minWidth: 0,
           minHeight: 0,
         }
-      : {};
+      : {
+          overflow: 'hidden',
+        };
 
-  if (!hasBorderStyle(node.style) && !hasShadowStyle(node.style)) {
-    return style;
-  }
-
-  Object.assign(
-    style,
-    buildBorderStyle(node.style, useImageDefaults
-      ? {
-          color: DEFAULT_IMAGE_BORDER_COLOR,
-          width: DEFAULT_IMAGE_BORDER_WIDTH,
-          radius: DEFAULT_IMAGE_BORDER_RADIUS,
-        }
-      : {}),
-  );
-  const boxShadow = buildBoxShadow(
-    node.style,
-    useImageDefaults
-      ? {
-          color: DEFAULT_IMAGE_SHADOW_COLOR,
-          blur: DEFAULT_IMAGE_SHADOW_BLUR_PX,
-          offsetX: DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
-          offsetY: DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
-        }
-      : {},
-  );
+  Object.assign(style, buildBorderStyle(node.style));
+  const boxShadow = buildBoxShadow(node.style);
   if (boxShadow) {
     style.boxShadow = boxShadow;
   }
@@ -124,38 +70,16 @@ export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
 export function getButtonLeafStyle(node: ButtonLeaf): StyleRecord {
   const style: StyleRecord = {
     ...getTypographyStyle(node.style, {
-      color: DEFAULT_BUTTON_TEXT_COLOR,
-      fontSize: '18px',
-      fontWeight: '500',
-      letterSpacing: '-0.01em',
-      textDecorationLine: 'none',
-      lineHeight: 1.24,
-      direction: 'ltr',
-      textAlign: 'left',
-      whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : 'nowrap',
-    }),
-    ...(node.style?.background ? { background: node.style.background } : { background: DEFAULT_BUTTON_BACKGROUND }),
+      whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,
+    }, { includeFilter: false }),
+    ...(node.style?.background ? { background: node.style.background } : {}),
     ...(node.style?.paddingBlock ? { paddingBlock: formatValue(node.style.paddingBlock.parsed) } : {}),
     ...(node.style?.paddingInline ? { paddingInline: formatValue(node.style.paddingInline.parsed) } : {}),
   };
-  if (hasBorderStyle(node.style)) {
-    Object.assign(
-      style,
-      buildBorderStyle(node.style, {
-        radius: DEFAULT_BUTTON_BORDER_RADIUS,
-      }),
-    );
-  }
-  if (hasShadowStyle(node.style)) {
-    const boxShadow = buildBoxShadow(node.style, {
-      color: DEFAULT_BUTTON_SHADOW_COLOR,
-      blur: DEFAULT_BUTTON_SHADOW_BLUR_PX,
-      offsetX: DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
-      offsetY: DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
-    });
-    if (boxShadow) {
-      style.boxShadow = boxShadow;
-    }
+  Object.assign(style, buildBorderStyle(node.style));
+  const boxShadow = buildBoxShadow(node.style);
+  if (boxShadow) {
+    style.boxShadow = boxShadow;
   }
   return style;
 }
@@ -201,10 +125,9 @@ export function getSiteLeafBaseRules(selectors: {
     {
       selector: selectors.link,
       style: {
-        color: '#172033',
-        textDecoration: 'underline',
-        textUnderlineOffset: '3px',
-        fontWeight: 500,
+        textDecoration: 'inherit',
+        textUnderlineOffset: 'inherit',
+        fontWeight: 'inherit',
       },
     },
     {
@@ -223,11 +146,6 @@ export function getSiteLeafBaseRules(selectors: {
         width: '100%',
         height: '100%',
         objectFit: 'cover',
-        overflow: 'hidden',
-        border: '1px solid #d8e0ea',
-        borderRadius: '16px',
-        background: '#f4f6fa',
-        boxShadow: '0 12px 28px rgba(18, 32, 51, 0.12)',
       },
     },
     {
@@ -246,10 +164,6 @@ export function getSiteLeafBaseRules(selectors: {
         minHeight: '100px',
         display: 'grid',
         placeItems: 'center',
-        borderRadius: '16px',
-        border: '1px solid #d8e0ea',
-        background: '#f4f6fa',
-        boxShadow: '0 12px 28px rgba(18, 32, 51, 0.12)',
       },
     },
     {
@@ -261,17 +175,8 @@ export function getSiteLeafBaseRules(selectors: {
         minWidth: 'min-content',
         maxWidth: '100%',
         boxSizing: 'border-box',
-        background: '#05070a',
         border: 0,
         font: 'inherit',
-        color: '#fff',
-        borderRadius: '999px',
-        paddingBlock: DEFAULT_BUTTON_PADDING_BLOCK,
-        paddingInline: DEFAULT_BUTTON_PADDING_INLINE,
-        fontSize: '18px',
-        fontWeight: 500,
-        letterSpacing: '-0.01em',
-        boxShadow: '0 10px 18px rgba(5, 7, 10, 0.16)',
         textAlign: 'inherit',
         cursor: 'pointer',
       },
@@ -284,7 +189,7 @@ function toKebabCase(value: string) {
 }
 
 function getTypographyStyle(
-  style: (TypographyStyle & { textWrap?: 'single-line' | 'wrap' } & { shadowColor?: string; shadowBlur?: number; shadowOffsetX?: number; shadowOffsetY?: number }) | undefined,
+  style: (TypographyStyle & { textWrap?: 'single-line' | 'wrap' } & { shadowColor?: string; shadowBlur?: number; shadowSpread?: number; shadowOffsetX?: number; shadowOffsetY?: number }) | undefined,
   defaults: {
     color?: string;
     fontSize?: string;
@@ -298,8 +203,11 @@ function getTypographyStyle(
     maxWidth?: string;
     margin?: number;
   },
+  options: {
+    includeFilter?: boolean;
+  } = {},
 ): StyleRecord {
-  const filter = buildFilterShadow(style);
+  const filter = options.includeFilter === false ? undefined : buildFilterShadow(style);
   return {
     ...(defaults.margin !== undefined ? { margin: defaults.margin } : {}),
     ...(defaults.maxWidth ? { maxWidth: defaults.maxWidth } : {}),

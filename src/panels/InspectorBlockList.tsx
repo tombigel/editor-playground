@@ -11,7 +11,7 @@ export function InspectorBlockList({
 }) {
   return (
     <div
-      className={`flex h-full min-h-0 flex-col text-xs ${scrollable ? 'overflow-auto' : ''} ${
+      className={`flex h-full min-h-0 flex-col text-xs ${scrollable ? 'editor-scrollbar overflow-auto' : ''} ${
         compact ? 'gap-2' : 'gap-1.5 p-2.5 pb-4'
       }`}
     >

@@ -239,7 +239,19 @@ These should drive low-level editor utility classes:
 - `.editor-bg-subtle`
 - `.editor-border-subtle`
 
-## 9. Interaction Tokens
+## 9. Scrollbars
+
+Use the shared `editor-scrollbar` class for intentional editor scroll surfaces only.
+
+Rules:
+
+- keep scrollbar styling scoped to editor chrome; do not restyle browser scrollbars globally
+- reserve space with `scrollbar-gutter: stable both-edges` so the stage and panels do not reflow when the scrollbar appears
+- default to auto-hide behavior: track and thumb stay transparent until the scroll surface is hovered, focused, or actively scrolled
+- derive scrollbar colors from editor tokens in [src/styles.css](/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css), not ad hoc values
+- apply the shared scrollbar to editor scroll containers such as the stage shell, inspector scrollers, focused-mode surfaces, settings body, and editor popover lists
+
+## 10. Interaction Tokens
 
 Approved interaction colors:
 

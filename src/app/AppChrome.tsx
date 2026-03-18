@@ -132,7 +132,7 @@ export function SectionTemplatePopover({
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="max-h-[62vh] overflow-y-auto p-3">
+      <div className="editor-scrollbar max-h-[62vh] overflow-y-auto p-3">
         <div className="grid grid-cols-2 gap-2.5">
           {SECTION_TEMPLATES.map((template) => (
             <button

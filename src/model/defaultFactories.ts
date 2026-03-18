@@ -9,7 +9,27 @@ import type {
   WrapperNode,
   WrapperRole,
 } from './types';
-import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from './units';
+import {
+  DEFAULT_BUTTON_BACKGROUND,
+  DEFAULT_BUTTON_BORDER_RADIUS,
+  DEFAULT_BUTTON_PADDING_BLOCK,
+  DEFAULT_BUTTON_PADDING_INLINE,
+  DEFAULT_BUTTON_SHADOW_BLUR_PX,
+  DEFAULT_BUTTON_SHADOW_COLOR,
+  DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
+  DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
+  DEFAULT_BUTTON_TEXT_COLOR,
+  DEFAULT_IMAGE_BORDER_COLOR,
+  DEFAULT_IMAGE_BORDER_RADIUS,
+  DEFAULT_IMAGE_BORDER_WIDTH,
+  DEFAULT_IMAGE_SHADOW_BLUR_PX,
+  DEFAULT_IMAGE_SHADOW_COLOR,
+  DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
+  DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
+  DEFAULT_LINK_COLOR,
+  DEFAULT_TEXT_COLOR,
+} from './styleDefaults';
+import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from './units';
 
 let counter = 0;
 let imageCounter = 0;
@@ -92,10 +112,10 @@ export function createWrapper(role: WrapperRole, parentId: NodeId): WrapperNode 
         : createDefaultRect('0px', '0px', '100%', '480px'),
     style: {
       background: '#ffffff',
-      paddingTop: parseUnitValue('16px'),
-      paddingRight: parseUnitValue('16px'),
-      paddingBottom: parseUnitValue('16px'),
-      paddingLeft: parseUnitValue('16px'),
+      paddingTop: parseSpacingValue('16px'),
+      paddingRight: parseSpacingValue('16px'),
+      paddingBottom: parseSpacingValue('16px'),
+      paddingLeft: parseSpacingValue('16px'),
     },
   };
 }
@@ -124,8 +144,12 @@ export function createLeaf(
       htmlTag: 'p',
       sticky: undefined,
       style: {
-        color: '#16202a',
+        color: DEFAULT_TEXT_COLOR,
         fontSize: parseFontSizeValue('18px'),
+        textDecorationLine: 'none',
+        lineHeight: 1.24,
+        direction: 'ltr',
+        textAlign: 'left',
       },
     };
   }
@@ -141,6 +165,15 @@ export function createLeaf(
       src: image.src,
       alt: image.alt,
       sticky: undefined,
+      style: {
+        borderWidth: parseUnitValue(DEFAULT_IMAGE_BORDER_WIDTH),
+        borderColor: DEFAULT_IMAGE_BORDER_COLOR,
+        borderRadius: parseUnitValue(DEFAULT_IMAGE_BORDER_RADIUS),
+        shadowColor: DEFAULT_IMAGE_SHADOW_COLOR,
+        shadowBlur: DEFAULT_IMAGE_SHADOW_BLUR_PX,
+        shadowOffsetX: DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
+        shadowOffsetY: DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
+      },
     };
   }
 
@@ -153,6 +186,14 @@ export function createLeaf(
       label: 'Read more',
       href: '#',
       sticky: undefined,
+      style: {
+        color: DEFAULT_LINK_COLOR,
+        textDecorationLine: 'underline',
+        lineHeight: 1.24,
+        direction: 'ltr',
+        textAlign: 'left',
+        textWrap: 'single-line',
+      },
     };
   }
 
@@ -163,5 +204,22 @@ export function createLeaf(
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
     label: 'Button',
     sticky: undefined,
+    style: {
+      color: DEFAULT_BUTTON_TEXT_COLOR,
+      background: DEFAULT_BUTTON_BACKGROUND,
+      fontSize: parseFontSizeValue('18px'),
+      textDecorationLine: 'none',
+      lineHeight: 1.24,
+      direction: 'ltr',
+      textAlign: 'left',
+      textWrap: 'single-line',
+      paddingBlock: parseSpacingValue(DEFAULT_BUTTON_PADDING_BLOCK),
+      paddingInline: parseSpacingValue(DEFAULT_BUTTON_PADDING_INLINE),
+      borderRadius: parseUnitValue(DEFAULT_BUTTON_BORDER_RADIUS),
+      shadowColor: DEFAULT_BUTTON_SHADOW_COLOR,
+      shadowBlur: DEFAULT_BUTTON_SHADOW_BLUR_PX,
+      shadowOffsetX: DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
+      shadowOffsetY: DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
+    },
   };
 }

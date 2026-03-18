@@ -154,7 +154,7 @@ export function FocusedModePanel({
 
   return (
     <div className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-      <div className="max-h-[min(72vh,680px)] overflow-auto">
+      <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
         <InspectorBlockList blocks={blocks} compact scrollable={false} />
       </div>
     </div>

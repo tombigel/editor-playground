@@ -49,6 +49,7 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Bring a saved document model back into the editor.');
     expect(markup).toContain('Save JSON');
     expect(markup).toContain('Save Site ZIP');
+    expect(markup).toContain('editor-scrollbar');
     expect(markup).not.toContain('Save Site HTML');
     expect(markup).not.toContain('Save Site CSS');
     expect(markup).not.toContain('Copy Site HTML');

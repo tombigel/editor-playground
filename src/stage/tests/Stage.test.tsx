@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
-import { parseFontSizeValue, parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
+import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { resolveWrapperStickyState } from '../../sticky/resolve';
 import {
   didDragPointerMove,
@@ -18,8 +18,31 @@ import {
 import {
   Stage,
 } from '../Stage';
+import { StageScene } from '../StageScene';
 
 describe('stage/Stage', () => {
+  it('applies the shared editor scrollbar class to the stage shell', () => {
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={createInitialDocument()}
+        selectedId={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('class="stage-shell editor-scrollbar"');
+  });
+
   it.each(['fit-content', 'max-content', 'min-content'])(
     'preserves %s width for text leaves in the stage DOM',
     (widthKeyword) => {
@@ -126,6 +149,189 @@ describe('stage/Stage', () => {
     expect(markup).toContain('min-height:720px');
   });
 
+  it('shows the section padding boundary when the section or one of its children is selected', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const title = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!section || section.type !== 'wrapper' || !title || title.type !== 'leaf') {
+      throw new Error('Expected section wrapper and child leaf');
+    }
+
+    const sectionSelectedMarkup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={section.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    const childSelectedMarkup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={title.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(sectionSelectedMarkup).toContain('class="wrapper-padding-overlay"');
+    expect(sectionSelectedMarkup).toContain('class="wrapper-padding-overlay-boundary"');
+    expect(sectionSelectedMarkup).toContain('top:64px;right:72px;bottom:72px;left:72px');
+    expect(childSelectedMarkup).toContain('class="wrapper-padding-overlay"');
+    expect(childSelectedMarkup).toContain('top:64px;right:72px;bottom:72px;left:72px');
+  });
+
+  it('shows the container padding boundary when the container or one of its children is selected', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const container = createWrapper('container', section.id);
+    const text = createLeaf('text', container.id);
+    container.children = [text.id];
+    document.nodes[container.id] = container;
+    document.nodes[text.id] = text;
+    section.children = [...section.children, container.id];
+
+    const containerSelectedMarkup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={container.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    const childSelectedMarkup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={text.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(containerSelectedMarkup).toContain('class="wrapper-padding-overlay"');
+    expect(containerSelectedMarkup).toContain('top:16px;right:16px;bottom:16px;left:16px');
+    expect(childSelectedMarkup).toContain('class="wrapper-padding-overlay"');
+    expect(childSelectedMarkup).toContain('top:16px;right:16px;bottom:16px;left:16px');
+  });
+
+  it('retains container surface styling in the drag preview', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const container = createWrapper('container', section.id);
+    container.style.background = '#f6d7c8';
+    container.style.borderWidth = parseUnitValue('3px');
+    container.style.borderColor = '#4c2a1b';
+    container.style.borderRadius = parseUnitValue('24px');
+    container.style.shadowColor = 'rgba(40, 20, 10, 0.2)';
+    container.style.shadowBlur = 18;
+    container.style.shadowSpread = 6;
+    container.style.shadowOffsetX = 0;
+    container.style.shadowOffsetY = 12;
+    section.children = [...section.children, container.id];
+    document.nodes[container.id] = container;
+
+    const markup = renderToStaticMarkup(
+      <StageScene
+        document={document}
+        selectedId={container.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onResizeStart={() => {}}
+        dragState={{
+          nodeId: container.id,
+          startClientX: 200,
+          startClientY: 200,
+          currentClientX: 240,
+          currentClientY: 250,
+          grabOffsetX: 20,
+          grabOffsetY: 30,
+          useVisualOffset: false,
+          modelShiftX: 0,
+          modelShiftY: 0,
+          previewWidth: 360,
+          previewHeight: 240,
+          originX: 0,
+          originY: 0,
+        }}
+        setDragState={() => {}}
+        snapGuides={{ x: null, y: null, xSource: null, ySource: null }}
+        resizeState={null}
+        setResizeState={() => {}}
+        measuredNodeSizes={{}}
+        viewport={{ width: 1440, height: 900 }}
+      />,
+    );
+
+    expect(markup).toContain('class="drag-preview-content-wrapper content-wrapper"');
+    expect(markup).toContain('class="content-wrapper-surface"');
+    expect(markup).toContain('background:#f6d7c8');
+    expect(markup).toContain('border-style:solid');
+    expect(markup).toContain('border-width:3px');
+    expect(markup).toContain('border-color:#4c2a1b');
+    expect(markup).toContain('border-radius:24px');
+    expect(markup).toContain('box-shadow:0px 12px 18px 6px rgba(40, 20, 10, 0.2)');
+  });
+
   it('compensates editor sticky offsets against the stage shell padding', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
@@ -170,9 +376,15 @@ describe('stage/Stage', () => {
     expect(nodeMarkupMatch?.[1]).toContain('top:calc(10vh + 22px)');
     expect(nodeMarkupMatch?.[1]).toContain('bottom:calc(5vh + 48px)');
     expect(markup).toContain('Top Offset · 90px');
-    expect(markup).toContain('height:90px;top:-90px');
+    expect(markup).toContain('Padding · 64px');
+    expect(markup).toContain('class="sticky-offset-padding-segment sticky-offset-padding-segment-top" style="height:64px"');
+    expect(markup).toContain('class="sticky-offset-label sticky-offset-label-padding" style="top:64px"');
+    expect(markup).toContain('height:154px;top:-154px');
     expect(markup).toContain('Bottom Offset · 45px');
-    expect(markup).toContain('height:45px;top:auto;bottom:-45px');
+    expect(markup).toContain('Padding · 72px');
+    expect(markup).toContain('class="sticky-offset-padding-segment sticky-offset-padding-segment-bottom" style="height:72px"');
+    expect(markup).toContain('class="sticky-offset-label sticky-offset-label-padding" style="top:45px"');
+    expect(markup).toContain('height:117px;top:auto;bottom:-117px');
     expect(markup).toContain('class="sticky-spacer-layer" style="box-sizing:border-box;padding-top:64px;padding-right:72px;padding-bottom:72px;padding-left:72px;');
   });
 
@@ -208,6 +420,56 @@ describe('stage/Stage', () => {
     );
 
     expect(markup).toContain('text-decoration-line:underline line-through');
+  });
+
+  it('renders bottom sticky offset padding guides with the same additive segment treatment', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!section || section.type !== 'wrapper' || !target || target.type !== 'leaf') {
+      throw new Error('Expected section wrapper and target leaf');
+    }
+
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: {
+        top: false,
+        bottom: true,
+      },
+      offsetBottom: parseUnitValue('5vh'),
+      durationMode: 'auto',
+      duration: parseUnitValue('50vh'),
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Offset · 45px');
+    expect(markup).toContain('Padding · 72px');
+    expect(markup).toContain('class="sticky-offset-padding-segment sticky-offset-padding-segment-bottom" style="height:72px"');
+    expect(markup).toContain('class="sticky-offset-label sticky-offset-label-padding" style="top:45px"');
+    expect(markup).toContain('height:117px;top:auto;bottom:-117px');
   });
 
   it('renders text direction styles for text leaves in the stage', () => {
@@ -284,7 +546,6 @@ describe('stage/Stage', () => {
     expect(tagMarkupMatch?.[1]).toContain('white-space:pre-wrap');
     expect(tagMarkupMatch?.[1]).toContain('font-size:31px');
     expect(tagMarkupMatch?.[1]).toContain('font-weight:bold');
-    expect(tagMarkupMatch?.[1]).toContain('letter-spacing:-0.02em');
     expect(tagMarkupMatch?.[1]).toContain('line-height:1.4');
   });
 
@@ -726,10 +987,10 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Top Auto Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '600px');
-    section.style.paddingTop = parseUnitValue('0px');
-    section.style.paddingRight = parseUnitValue('0px');
-    section.style.paddingBottom = parseUnitValue('0px');
-    section.style.paddingLeft = parseUnitValue('0px');
+    section.style.paddingTop = parseSpacingValue('0px');
+    section.style.paddingRight = parseSpacingValue('0px');
+    section.style.paddingBottom = parseSpacingValue('0px');
+    section.style.paddingLeft = parseSpacingValue('0px');
 
     const target = createLeaf('text', section.id);
     if (target.type !== 'leaf' || target.role !== 'text') {
@@ -797,10 +1058,10 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Top Auto Padded Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
-    section.style.paddingTop = parseUnitValue('20px');
-    section.style.paddingRight = parseUnitValue('0px');
-    section.style.paddingBottom = parseUnitValue('30px');
-    section.style.paddingLeft = parseUnitValue('0px');
+    section.style.paddingTop = parseSpacingValue('20px');
+    section.style.paddingRight = parseSpacingValue('0px');
+    section.style.paddingBottom = parseSpacingValue('30px');
+    section.style.paddingLeft = parseSpacingValue('0px');
 
     const target = createLeaf('text', section.id);
     if (target.type !== 'leaf' || target.role !== 'text') {
@@ -858,7 +1119,76 @@ describe('stage/Stage', () => {
       />,
     );
 
-    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top[^"]*" style="top:100%;bottom:auto;height:280px"/);
+    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top[^"]*" style="top:100%;bottom:auto;height:250px"/);
+  });
+
+  it('extends bottom-edge auto guides through wrapper top padding', () => {
+    const siteId = 'site_bottom_auto_padding';
+    const section = createWrapper('section', siteId);
+    section.name = 'Bottom Auto Padded Section';
+    section.rect = createDefaultRect('0px', '0px', '100%', '400px');
+    section.style.paddingTop = parseSpacingValue('20px');
+    section.style.paddingRight = parseSpacingValue('0px');
+    section.style.paddingBottom = parseSpacingValue('30px');
+    section.style.paddingLeft = parseSpacingValue('0px');
+
+    const target = createLeaf('text', section.id);
+    if (target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected text leaf');
+    }
+
+    target.name = 'Bottom Auto Padded Leaf';
+    target.rect = createDefaultRect('24px', '100px', '200px', '50px');
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: false, bottom: true },
+      durationMode: 'auto',
+      duration: parseUnitValue('0px'),
+      durationTop: parseUnitValue('0px'),
+      durationBottom: parseUnitValue('0px'),
+      offsetTop: parseUnitValue('0px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    section.children = [target.id];
+
+    const document = {
+      rootId: siteId,
+      nodes: {
+        [siteId]: {
+          id: siteId,
+          type: 'site' as const,
+          parentId: null,
+          children: [section.id],
+          name: 'Site',
+          visible: true,
+          locked: false,
+        },
+        [section.id]: section,
+        [target.id]: target,
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="all"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-bottom[^"]*" style="top:auto;bottom:100%;height:100px"/);
   });
 
   it('splits both-edge auto self sticky guides by free space above and below the leaf', () => {
@@ -866,10 +1196,10 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Auto Sticky Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '600px');
-    section.style.paddingTop = parseUnitValue('0px');
-    section.style.paddingRight = parseUnitValue('0px');
-    section.style.paddingBottom = parseUnitValue('0px');
-    section.style.paddingLeft = parseUnitValue('0px');
+    section.style.paddingTop = parseSpacingValue('0px');
+    section.style.paddingRight = parseSpacingValue('0px');
+    section.style.paddingBottom = parseSpacingValue('0px');
+    section.style.paddingLeft = parseSpacingValue('0px');
 
     const stickyLeaf = createLeaf('text', section.id);
     if (stickyLeaf.type !== 'leaf' || stickyLeaf.role !== 'text') {
@@ -931,6 +1261,96 @@ describe('stage/Stage', () => {
     expect(markup).toContain('Bottom Distance: auto');
     expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-bottom sticky-guide-dual[^"]*" style="top:auto;bottom:100%;height:300px"/);
     expect(markup).toMatch(/sticky-auto-spacer sticky-auto-spacer-top sticky-guide-dual[^"]*" style="top:100%;bottom:auto;height:200px"/);
+  });
+
+  it('includes container border width in sticky overlay insets', () => {
+    const siteId = 'site_container_border';
+    const section = createWrapper('section', siteId);
+    section.name = 'Container Border Section';
+    section.rect = createDefaultRect('0px', '0px', '100%', '400px');
+    section.style.paddingTop = parseSpacingValue('0px');
+    section.style.paddingRight = parseSpacingValue('0px');
+    section.style.paddingBottom = parseSpacingValue('0px');
+    section.style.paddingLeft = parseSpacingValue('0px');
+
+    const container = createWrapper('container', section.id);
+    container.name = 'Bordered Container';
+    container.rect = createDefaultRect('40px', '40px', '320px', '220px');
+    container.style.paddingTop = parseSpacingValue('16px');
+    container.style.paddingRight = parseSpacingValue('16px');
+    container.style.paddingBottom = parseSpacingValue('16px');
+    container.style.paddingLeft = parseSpacingValue('16px');
+    container.style.borderWidth = parseUnitValue('2px');
+    container.style.borderColor = '#dbe3ee';
+
+    const target = createLeaf('text', container.id);
+    if (target.type !== 'leaf' || target.role !== 'text') {
+      throw new Error('Expected text leaf');
+    }
+
+    target.name = 'Bordered Container Leaf';
+    target.rect = createDefaultRect('24px', '24px', '160px', '40px');
+    target.sticky = {
+      enabled: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'custom',
+      duration: parseUnitValue('80px'),
+      durationTop: parseUnitValue('80px'),
+      durationBottom: parseUnitValue('80px'),
+      offsetTop: parseUnitValue('12px'),
+      offsetBottom: parseUnitValue('0px'),
+    };
+
+    container.children = [target.id];
+    section.children = [container.id];
+
+    const document = {
+      rootId: siteId,
+      nodes: {
+        [siteId]: {
+          id: siteId,
+          type: 'site' as const,
+          parentId: null,
+          children: [section.id],
+          name: 'Site',
+          visible: true,
+          locked: false,
+        },
+        [section.id]: section,
+        [container.id]: container,
+        [target.id]: target,
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="all"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(
+      markup,
+    ).toMatch(new RegExp(`data-content-wrapper-for="${container.id}"[\\s\\S]*?class="content-wrapper-surface"[^>]*border-width:2px`));
+    expect(
+      markup,
+    ).toMatch(new RegExp(`data-content-wrapper-for="${container.id}"[\\s\\S]*?class="sticky-spacer-layer" style="box-sizing:border-box;padding-top:16px;padding-right:16px;padding-bottom:16px;padding-left:16px;`));
+    expect(markup).toContain('Padding · 16px');
+    expect(markup).toContain('class="sticky-offset-padding-segment sticky-offset-padding-segment-top" style="height:16px"');
+    expect(markup).toContain('class="sticky-offset-label sticky-offset-label-padding" style="top:16px"');
+    expect(markup).toContain('height:28px;top:-28px');
   });
 
   it('locks drag movement to the dominant axis when shift is held', () => {

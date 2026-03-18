@@ -11,6 +11,7 @@ type BorderDefaults = {
 type ShadowDefaults = {
   color?: string;
   blur?: number;
+  spread?: number;
   offsetX?: number;
   offsetY?: number;
 };
@@ -96,7 +97,8 @@ export function buildBoxShadow(style: ShadowStyle | undefined, defaults: ShadowD
   if (!resolved) {
     return undefined;
   }
-  return `${resolved.offsetX}px ${resolved.offsetY}px ${resolved.blur}px ${resolved.color}`;
+  const spread = resolved.spread !== 0 ? ` ${resolved.spread}px` : '';
+  return `${resolved.offsetX}px ${resolved.offsetY}px ${resolved.blur}px${spread} ${resolved.color}`;
 }
 
 export function buildFilterShadow(style: ShadowStyle | undefined, defaults: ShadowDefaults = {}) {
@@ -112,6 +114,7 @@ export function hasShadowStyle(style: ShadowStyle | undefined) {
     style &&
       (style.shadowColor !== undefined ||
         style.shadowBlur !== undefined ||
+        style.shadowSpread !== undefined ||
         style.shadowOffsetX !== undefined ||
         style.shadowOffsetY !== undefined),
   );
@@ -140,6 +143,7 @@ function resolveShadowStyle(style: ShadowStyle | undefined, defaults: ShadowDefa
   return {
     color,
     blur: style?.shadowBlur ?? defaults.blur ?? 0,
+    spread: style?.shadowSpread ?? defaults.spread ?? 0,
     offsetX: style?.shadowOffsetX ?? defaults.offsetX ?? 0,
     offsetY: style?.shadowOffsetY ?? defaults.offsetY ?? 0,
   };
@@ -149,6 +153,7 @@ function hasShadowDefaults(defaults: ShadowDefaults) {
   return (
     defaults.color !== undefined ||
     defaults.blur !== undefined ||
+    defaults.spread !== undefined ||
     defaults.offsetX !== undefined ||
     defaults.offsetY !== undefined
   );

@@ -72,6 +72,7 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain(textNode.name);
     expect(markup).toContain(textNode.role);
     expect(markup).toContain('Pin this node inside its structural range.');
+    expect(markup).toContain('editor-scrollbar');
   });
 
   it('renders an empty state when sticky focused mode has no compatible selection', () => {

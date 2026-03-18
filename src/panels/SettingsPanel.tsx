@@ -327,7 +327,11 @@ export function SettingsPanel({
           </div>
         </aside>
 
-        <div ref={scrollRef} className="min-h-0 overflow-y-auto" onScroll={updateActiveSection}>
+        <div
+          ref={scrollRef}
+          className="editor-scrollbar min-h-0 overflow-y-auto"
+          onScroll={updateActiveSection}
+        >
           <div className="px-6 py-5">
             <section ref={displayRef} className="editor-border-subtle border-b pb-6">
               <SectionHeading eyebrow="UI" title="Appearance and guides" description="Theme, stage toggles, and guides." />

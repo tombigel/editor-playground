@@ -6,6 +6,7 @@ import {
   buildWrapperStyle,
   cssPropertiesToDeclarations,
   getContentWrapperBaseStyle,
+  getContentWrapperPaddingStyle,
   getContentWrapperSurfaceStyle,
   getLeafCssHeight,
   getTrackCssWidth,
@@ -205,12 +206,13 @@ function appendWrapperPlanCss(plan: RenderWrapperPlanNode, rules: SharedCssRule[
 
   rules.push({
     selector: selectorFromClassName(plan.contentClassName),
-    style: declarationsToStyleRecord([
-      ...cssPropertiesToDeclarations({
-        ...getContentWrapperBaseStyle(plan.node),
-        ...getContentWrapperSurfaceStyle(plan.node),
-        display: 'grid',
-        gridTemplateColumns: plan.meshLayout.columnTemplate,
+      style: declarationsToStyleRecord([
+        ...cssPropertiesToDeclarations({
+          ...getContentWrapperBaseStyle(plan.node),
+          ...getContentWrapperPaddingStyle(plan.node),
+          ...getContentWrapperSurfaceStyle(plan.node),
+          display: 'grid',
+          gridTemplateColumns: plan.meshLayout.columnTemplate,
         gridTemplateRows: plan.meshLayout.rowTemplate,
       }),
       ...(plan.contentSticky ? getStickyCssDeclarations(plan.node.sticky) : []),
