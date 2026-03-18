@@ -136,6 +136,51 @@ describe('api/documentApi', () => {
     expect(buttonNode.style?.textWrap).toBe('wrap');
   });
 
+  it('updates navigation fields for links and buttons through API helpers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const linkId = Object.keys(document.nodes).find(
+      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'link',
+    );
+    if (!section || section.type !== 'wrapper' || !linkId) {
+      throw new Error('Expected section wrapper and link node');
+    }
+
+    const button = createLeaf('button', section.id);
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(button.id);
+
+    const withLinkType = setNodeTextField(document, linkId, 'linkType', 'anchor');
+    const withLinkAnchor = setNodeTextField(withLinkType, linkId, 'anchorTargetId', section.id);
+    const withLinkHref = setNodeTextField(withLinkAnchor, linkId, 'href', 'https://example.com/docs');
+    const withLinkTarget = setNodeTextField(withLinkHref, linkId, 'openInNewTab', 'true');
+    const withButtonType = setNodeTextField(withLinkTarget, button.id, 'linkType', 'anchor');
+    const withButtonAnchor = setNodeTextField(withButtonType, button.id, 'anchorTargetId', section.id);
+    const withButtonHref = setNodeTextField(withButtonAnchor, button.id, 'href', 'https://example.com/start');
+    const withButtonTarget = setNodeTextField(withButtonHref, button.id, 'openInNewTab', 'true');
+
+    const linkNode = withButtonTarget.nodes[linkId];
+    const buttonNode = withButtonTarget.nodes[button.id];
+
+    if (linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+      throw new Error('Expected link node');
+    }
+    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+      throw new Error('Expected button node');
+    }
+
+    expect(linkNode.linkType).toBe('anchor');
+    expect(linkNode.anchorTargetId).toBe(section.id);
+    expect(linkNode.href).toBe('https://example.com/docs');
+    expect(linkNode.openInNewTab).toBe(true);
+    expect(buttonNode.linkType).toBe('anchor');
+    expect(buttonNode.anchorTargetId).toBe(section.id);
+    expect(buttonNode.href).toBe('https://example.com/start');
+    expect(buttonNode.openInNewTab).toBe(true);
+  });
+
   it('preserves catalog metadata when applying an existing document font family', () => {
     const document = createInitialDocument();
     const textId = Object.keys(document.nodes).find(

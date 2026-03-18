@@ -297,19 +297,29 @@ Text-bearing leaves split typography from presentation in the inspector:
   - `Text style`: a combined font family/weight picker, bold, line height, italic, underline, strikethrough, alignment, direction, and HTML tag
   - `Design`: text color and filter-based shadow
 - `link`
-  - `Content`: label and `href`
+  - `Content`: label plus a destination type switch
+  - newly inserted links default to the internal/anchor destination type
+  - `Anchor` destination: a right-aligned pill-style internal/external selector followed by an internal target picker populated from top-level `Top`, section, and `Bottom` targets, with section ids shown on a muted second line and exporting a same-page `#sectionId` href
+  - `External link` destination: `href` and an `Open in a new tab` toggle
   - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
   - `Design`: text color and filter-based shadow
   - links render as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame
+  - external links with `Open in a new tab` enabled render/export with `target="_blank"` plus `rel="noopener noreferrer"`
+  - anchor links ignore the new-tab toggle and resolve against section wrapper DOM ids in site/export output
+  - if an authored anchor target no longer exists, the selected link shows a dark-yellow `Broken anchor` warning with a triangle-alert icon; broken links are not auto-repaired
   - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
   - link wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
 - `image`
   - `Content`: `src` and `alt`
   - `Design`: unified border width/color/radius plus box shadow
 - `button`
-  - `Content`: label
+  - `Content`: the same destination model as `link` with label, a right-aligned internal/external type switch, an internal section picker, or external `href` plus `Open in a new tab`
+  - newly inserted buttons default to the external destination type
   - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
   - `Design`: text color, background color, unified border color/width/radius, box shadow, and block/inline padding in that order
+  - external buttons with `Open in a new tab` enabled render/export with `target="_blank"` plus `rel="noopener noreferrer"`
+  - anchor buttons ignore the new-tab toggle, resolve against section wrapper DOM ids in site/export output, and show the same selected `Broken anchor` warning when their target no longer exists
+  - buttons without an `href` render/export as native `button` elements; buttons with an external or anchor destination render/export as styled anchors so navigation behavior matches links
   - button padding is edited as `Y` and `X` fields that serialize to `paddingBlock` / `paddingInline`
   - button padding units support `px`, `em`, and `rem`, and use the same inline unit-switch field treatment as wrapper padding controls
   - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
@@ -564,11 +574,16 @@ Current UX includes:
   - single-step bulk edits still undo as one action even when they update multiple nodes
 - auto-height wrapper sizing in the editor stage is measured from the inner content box, so dragging or repositioning selected nodes does not inflate surrounding header/section height by wrapper borders
 - button focus states use a stronger visible ring across editor controls
-- inspector sections that correspond to a focused mode can expose a small top-right `Go to mode` entry button; the sticky section is the first such entry point
-- the floating sticky focused mode reuses the same sticky section card chrome as the inspector; it fills the shared section header leading slot with component name + type and replaces the header action with the close button
+- inspector sections that correspond to a focused mode can expose a small top-right `Go to mode` entry button with a tooltip; supported entry points are `Layout`, `Sticky`, `Content`, and `Design`
+- `Sticky` uses the `Sticky focus mode` tooltip, and the other focused-mode entry buttons follow the same `X focus mode` pattern
+- the floating focused-mode panel reuses the same inspector card chrome as the source section; it fills the shared section header leading slot with component name + type and replaces the header action with the close button
+- focused modes are mutually exclusive editor UI states; entering one closes any other active focused mode
 - top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when the authored width is locked to `100%`
-- the shared `Name` field lives in its own trailing `Properties` section instead of the layout section across non-site inspectors
+- non-site single-node inspectors do not use a trailing `Properties` section for naming; the inspector summary title itself is the editable node name surface
+- the summary title is keyboard-focusable, enters edit mode on click or keyboard activation, commits on `Enter` or focus leaving the input, and cancels on `Escape`
+- sticky-capable single-node inspectors place `Sticky behavior` immediately after `Layout`; the multi-select inspector places `Sticky` immediately after `Layout`
 - `Content` is the standard content-editing section title across leaf inspectors; text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`
+- focused `Design` mode combines `Text style` + `Design` into one floating card for text/link/button nodes; wrappers and images render their existing `Design` card only
 - when multiple nodes are selected, the sidebar switches to a dedicated multi-select inspector instead of reusing single-node inspector schemas
 - multi-select controls use indeterminate visual states instead of rendering a literal `Mixed` label
 - multi-select v1 groups are:
@@ -594,6 +609,7 @@ Current UX includes:
 - `src/sticky/resolve.ts` is the shared sticky domain resolver. It accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations / extra extent without depending on React or DOM APIs.
 - `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
 - focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
+- `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal`/`none` for no focused mode.
 - `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
@@ -678,6 +694,7 @@ The playground exposes:
 - clear undo history action
 - undo step retention control
 - import / export controls in settings
+- startup focused mode settings for `Normal`, `Layout`, `Sticky`, `Content`, and `Design`
 
 ## Running the Playground
 

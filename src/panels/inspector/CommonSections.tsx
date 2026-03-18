@@ -8,10 +8,18 @@ import {
   ArrowRight,
   ArrowUp,
   SquareArrowOutUpRight,
+  TriangleAlert,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { DocumentModel } from '../../api/editorApi';
 import type { FocusedMode } from '../../api/editorApi';
 import type { WrapperStyleField } from '../../api/documentApi';
+import {
+  getFocusedModeButtonAriaLabel,
+  getFocusedModeTooltip,
+  type ActiveFocusedMode,
+} from '../../editor/focusedModes';
+import { isBrokenAnchorLink } from '../../model/links';
 import {
   DEFAULT_SHADOW_BLUR_PX,
   DEFAULT_SHADOW_COLOR,
@@ -23,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PopoverTooltip } from '@/components/ui/popover';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
 import {
   BorderControlGroup,
@@ -46,8 +55,10 @@ import {
 } from './styleFields';
 
 export type FocusedModeEntry = {
-  mode: FocusedMode;
+  mode: ActiveFocusedMode;
   label: string;
+  ariaLabel?: string;
+  tooltip?: string;
   onEnter: (mode: FocusedMode) => void;
 };
 
@@ -57,7 +68,31 @@ export type InspectorSectionHeaderAction = {
   onClick: () => void;
 };
 
-export function InspectorSummary({ node }: { node: InspectorNode | null }) {
+export function BrokenAnchorWarning({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`editor-warning-surface rounded-lg border ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}>
+      <div className="flex items-start gap-2">
+        <TriangleAlert className="editor-warning-text mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <div className="min-w-0">
+          <div className="editor-warning-text text-xs font-medium">Broken anchor</div>
+          <div className="editor-warning-text mt-0.5 text-xs leading-5">
+            This link points to a section that no longer exists.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function InspectorSummary({
+  document,
+  node,
+  actions,
+}: {
+  document: DocumentModel;
+  node: InspectorNode | null;
+  actions: Pick<InspectorActionHandlers, 'onTextChange'>;
+}) {
   if (!node) {
     return (
       <div className="flex h-full flex-col gap-1.5 p-2.5 text-xs">
@@ -68,17 +103,136 @@ export function InspectorSummary({ node }: { node: InspectorNode | null }) {
     );
   }
 
-  return null;
+  return (
+    <div className="space-y-2 p-2.5">
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          {node.type === 'site' ? (
+            <div className="editor-text-strong text-[15px] font-medium leading-5">{node.name}</div>
+          ) : (
+            <EditableNodeTitle
+              name={node.name}
+              onCommit={(value) => {
+                if (value !== node.name) {
+                  actions.onTextChange('name', value);
+                }
+              }}
+            />
+          )}
+          {node.type !== 'site' ? (
+            <div className="mt-1">
+              <span className="editor-pill-subtle inline-flex shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
+                {node.role}
+              </span>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      {isBrokenAnchorLink(document, node) ? (
+        <BrokenAnchorWarning />
+      ) : null}
+    </div>
+  );
+}
+
+export function EditableNodeTitle({
+  name,
+  onCommit,
+}: {
+  name: string;
+  onCommit: (value: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const skipBlurCommitRef = useRef(false);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(name);
+    }
+  }, [isEditing, name]);
+
+  useEffect(() => {
+    if (!isEditing || !inputRef.current) {
+      return;
+    }
+    inputRef.current.focus();
+    inputRef.current.select();
+  }, [isEditing]);
+
+  function commit() {
+    setIsEditing(false);
+    if (draft !== name) {
+      onCommit(draft);
+    }
+  }
+
+  function cancel() {
+    setDraft(name);
+    setIsEditing(false);
+  }
+
+  if (isEditing) {
+    return (
+      <Input
+        ref={inputRef}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => {
+          if (skipBlurCommitRef.current) {
+            skipBlurCommitRef.current = false;
+            return;
+          }
+          commit();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            skipBlurCommitRef.current = true;
+            commit();
+            return;
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            skipBlurCommitRef.current = true;
+            cancel();
+          }
+        }}
+        aria-label="Edit title"
+        className="h-9 text-[15px] font-medium"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="editor-text-strong hover:editor-bg-subtle focus-visible:ring-2 focus-visible:ring-blue-500/20 w-full rounded-md px-2.5 py-2 text-left text-[15px] font-medium leading-5 outline-none"
+      aria-label="Edit title"
+      onClick={() => setIsEditing(true)}
+    >
+      {name}
+    </button>
+  );
 }
 
 export function NodeBasicsSection({
   node,
   orderState,
   actions,
+  focusedMode,
+  headerContent,
+  headerAction,
 }: {
   node: InspectorNode;
   orderState: InspectorOrderState;
-  actions: Pick<InspectorActionHandlers, 'onRectChange' | 'onPromote' | 'onDemote' | 'onWrapperStyleChange'>;
+  actions: Pick<InspectorActionHandlers, 'onRectChange' | 'onPromote' | 'onDemote' | 'onWrapperStyleChange'> & {
+    onEnterFocusedMode?: InspectorActionHandlers['onEnterFocusedMode'];
+  };
+  focusedMode?: FocusedMode;
+  headerContent?: ReactNode;
+  headerAction?: InspectorSectionHeaderAction;
 }) {
   const topLevelWidthLocked =
     node.type === 'wrapper' &&
@@ -95,7 +249,13 @@ export function NodeBasicsSection({
       : null;
 
   return (
-    <InspectorSectionCard title="Layout" contentClassName="space-y-2.5 px-3 py-3">
+    <InspectorSectionCard
+      title="Layout"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName="space-y-2.5 px-3 py-3"
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'layout', actions.onEnterFocusedMode)}
+    >
       {node.type !== 'site' ? (
         <div className="grid grid-cols-2 gap-1.5">
           {!hidesPositionFields ? (
@@ -254,33 +414,22 @@ function LabeledPaddingField({
   );
 }
 
-export function NodePropertiesSection({
-  node,
-  actions,
-}: {
-  node: InspectorNode;
-  actions: Pick<InspectorActionHandlers, 'onTextChange'>;
-}) {
-  return (
-    <InspectorSectionCard title="Properties" contentClassName="space-y-2.5 px-3 py-3">
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
-        <Label className="text-[11px] font-medium">Name</Label>
-        <Input
-          value={node.name}
-          onChange={(e) => actions.onTextChange('name', e.target.value)}
-          className="h-8 rounded-sm text-[11px]"
-        />
-      </div>
-    </InspectorSectionCard>
-  );
-}
-
 export function WrapperDesignSection({
   node,
   onWrapperStyleChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   node: WrapperInspectorNode;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
+  focusedMode?: FocusedMode;
+  onEnterFocusedMode?: (mode: FocusedMode) => void;
+  headerContent?: ReactNode;
+  headerAction?: InspectorSectionHeaderAction;
+  contentClassName?: string;
 }) {
   const supportsContainerSurfaceStyling = node.role === 'container';
   const allowsBackgroundOpacity = node.role === 'container';
@@ -294,11 +443,13 @@ export function WrapperDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
 
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Design</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
           <Label className="text-[11px] font-medium">Background</Label>
           <div className="ml-auto flex items-center gap-2">
@@ -365,8 +516,7 @@ export function WrapperDesignSection({
             </div>
           </div>
         ) : null}
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
@@ -410,16 +560,27 @@ export function InspectorSectionCard({
               {headerAction.icon}
             </Button>
           ) : focusedModeEntry ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="editor-icon-button-subtle h-7 w-7 rounded-md border"
-              aria-label={`Go to ${focusedModeEntry.label}`}
-              onClick={() => focusedModeEntry.onEnter(focusedModeEntry.mode)}
+            <PopoverTooltip
+              side="top"
+              align="center"
+              className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+              content={
+                <div className="leading-3.5 font-medium">
+                  {focusedModeEntry.tooltip ?? focusedModeEntry.label}
+                </div>
+              }
             >
-              <SquareArrowOutUpRight className="h-3.5 w-3.5" />
-            </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="editor-icon-button-subtle h-7 w-7 rounded-md border"
+                aria-label={focusedModeEntry.ariaLabel ?? `Go to ${focusedModeEntry.label}`}
+                onClick={() => focusedModeEntry.onEnter(focusedModeEntry.mode)}
+              >
+                <SquareArrowOutUpRight className="h-3.5 w-3.5" />
+              </Button>
+            </PopoverTooltip>
           ) : null}
         </CardHeader>
       ) : null}
@@ -435,5 +596,23 @@ function createShadowFallback(color: string, blur: number, spread: number, offse
     spread,
     distance: Math.round(Math.sqrt(offsetX ** 2 + offsetY ** 2) * 100) / 100,
     angle: Math.round(((Math.atan2(offsetY, offsetX) * 180) / Math.PI) * 100) / 100,
+  };
+}
+
+export function createFocusedModeEntry(
+  focusedMode: FocusedMode,
+  targetMode: ActiveFocusedMode,
+  onEnterFocusedMode?: (mode: FocusedMode) => void,
+): FocusedModeEntry | undefined {
+  if (!onEnterFocusedMode || focusedMode === targetMode) {
+    return undefined;
+  }
+
+  return {
+    mode: targetMode,
+    label: getFocusedModeTooltip(targetMode),
+    tooltip: getFocusedModeTooltip(targetMode),
+    ariaLabel: getFocusedModeButtonAriaLabel(targetMode),
+    onEnter: onEnterFocusedMode,
   };
 }

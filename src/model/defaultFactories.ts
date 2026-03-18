@@ -185,6 +185,7 @@ export function createLeaf(
       name: 'Link',
       rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
       label: 'Read more',
+      linkType: 'anchor',
       href: '#',
       sticky: undefined,
       style: {
@@ -207,6 +208,8 @@ export function createLeaf(
     name: 'Button',
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
     label: 'Button',
+    linkType: 'external',
+    href: '#',
     sticky: undefined,
     style: {
       color: DEFAULT_BUTTON_TEXT_COLOR,

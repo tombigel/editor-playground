@@ -68,23 +68,21 @@ describe('panels/inspector/schema', () => {
     expect(blocks.map((block) => block.id)).toEqual([
       'summary',
       'layout',
-      'design',
       'sticky-behavior',
-      'properties',
+      'design',
     ]);
     expect(blocks.map((block) => block.bucket)).toEqual([
       'summary',
-      'primary',
       'primary',
       'behavior',
       'primary',
     ]);
     expect(blocks[1]?.title).toBe('Layout');
-    expect(blocks[3]?.title).toBe('Section sticky behavior');
-    expect(blocks[3]?.sections.map((section) => section.id)).toEqual(['sticky']);
+    expect(blocks[2]?.title).toBe('Section sticky behavior');
+    expect(blocks[2]?.sections.map((section) => section.id)).toEqual(['sticky']);
   });
 
-  it('resolves text leaf content, text style, and design before sticky behavior', () => {
+  it('resolves text leaf sticky behavior immediately after layout', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(
       (node) => node.type === 'leaf' && node.role === 'text',
@@ -99,18 +97,18 @@ describe('panels/inspector/schema', () => {
     expect(blocks.map((block) => block.id)).toEqual([
       'summary',
       'layout',
+      'sticky-behavior',
       'content',
       'text-style',
       'design',
-      'sticky-behavior',
-      'properties',
     ]);
-    expect(blocks[2]?.title).toBe('Content');
-    expect(blocks[2]?.description).toContain('Copy');
-    expect(blocks[3]?.title).toBe('Text style');
-    expect(blocks[3]?.description).toContain('Typography');
-    expect(blocks[4]?.title).toBe('Design');
-    expect(blocks[4]?.description).toContain('Color');
+    expect(blocks[2]?.title).toBe('Sticky behavior');
+    expect(blocks[3]?.title).toBe('Content');
+    expect(blocks[3]?.description).toContain('Copy');
+    expect(blocks[4]?.title).toBe('Text style');
+    expect(blocks[4]?.description).toContain('Typography');
+    expect(blocks[5]?.title).toBe('Design');
+    expect(blocks[5]?.description).toContain('Color');
   });
 
   it('keeps custom summary blocks separate from section-based layout blocks', () => {
@@ -163,28 +161,25 @@ describe('panels/inspector/schema', () => {
     expect(resolveInspectorBlocks({ document, node: linkNode, actions, orderState, focusedMode: null }).map((block) => block.id)).toEqual([
       'summary',
       'layout',
+      'sticky-behavior',
       'content',
       'text-style',
       'design',
-      'sticky-behavior',
-      'properties',
     ]);
     expect(resolveInspectorBlocks({ document, node: imageNode, actions, orderState, focusedMode: null }).map((block) => block.id)).toEqual([
       'summary',
       'layout',
+      'sticky-behavior',
       'content',
       'design',
-      'sticky-behavior',
-      'properties',
     ]);
     expect(resolveInspectorBlocks({ document, node: buttonNode, actions, orderState, focusedMode: null }).map((block) => block.id)).toEqual([
       'summary',
       'layout',
+      'sticky-behavior',
       'content',
       'text-style',
       'design',
-      'sticky-behavior',
-      'properties',
     ]);
   });
 
@@ -225,6 +220,6 @@ describe('panels/inspector/schema', () => {
 
     expect(stickySection).toBeTruthy();
     const markup = renderToStaticMarkup(<>{stickySection?.render()}</>);
-    expect(markup).toContain('aria-label="Go to sticky mode"');
+    expect(markup).toContain('aria-label="Go to Sticky focus mode"');
   });
 });

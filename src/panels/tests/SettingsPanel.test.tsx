@@ -40,6 +40,7 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Base file name');
     expect(markup).toContain('Startup mode');
     expect(markup).toContain('Chooses which focused mode the editor opens with.');
+    expect(markup).toContain('aria-label="Startup mode"');
     expect(markup).toContain('sticky-playground');
     expect(markup).toContain('JSON exports use `.json`; rendered site exports use `.zip`.');
     expect(markup).toContain('Document JSON');

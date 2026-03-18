@@ -224,6 +224,8 @@ export function MultiSelectInspector({
           </CardContent>
         </Card>
 
+        {stickyNodes.length >= 2 ? <MultiStickySection selectedNodes={stickyNodes} actions={actions} focusedMode={null} /> : null}
+
         {textNodes.length >= 2 ? (
           <Card className="editor-border-subtle rounded-lg shadow-none">
             <CardHeader className="px-3 pt-3 pb-1">
@@ -460,7 +462,6 @@ export function MultiSelectInspector({
           </Card>
         ) : null}
 
-        {stickyNodes.length >= 2 ? <MultiStickySection selectedNodes={stickyNodes} actions={actions} focusedMode={null} /> : null}
       </div>
     </div>
   );

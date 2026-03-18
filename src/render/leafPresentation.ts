@@ -72,6 +72,11 @@ export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
 
 export function getButtonLeafStyle(node: ButtonLeaf): StyleRecord {
   const style: StyleRecord = {
+    display: 'block',
+    width: '100%',
+    minWidth: 'min-content',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
     ...getTypographyStyle(node.style, {
       fontFamily: DEFAULT_FONT_FALLBACK_STACK,
       whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,

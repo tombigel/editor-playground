@@ -11,6 +11,11 @@ describe('render/leafPresentation', () => {
     }
     const style = getButtonLeafStyle(button);
 
+    expect(style.display).toBe('block');
+    expect(style.width).toBe('100%');
+    expect(style.minWidth).toBe('min-content');
+    expect(style.maxWidth).toBe('100%');
+    expect(style.boxSizing).toBe('border-box');
     expect(style.background).toBe('#05070a');
     expect(style.borderRadius).toBe('999px');
     expect(style.boxShadow).toBe('0px 10px 18px rgba(5, 7, 10, 0.16)');

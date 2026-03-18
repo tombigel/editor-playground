@@ -83,6 +83,8 @@ export function createLinkNode(parentId: NodeId, config: LinkNodeConfig) {
   const link = createLeaf('link', parentId) as LinkLeaf;
   link.name = config.name;
   link.label = config.label;
+  link.linkType = config.linkType ?? link.linkType;
+  link.anchorTargetId = config.anchorTargetId ?? link.anchorTargetId;
   link.href = config.href ?? link.href;
   link.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
   return link;

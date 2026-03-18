@@ -3,11 +3,22 @@ export type NodeId = string;
 export type NodeType = 'site' | 'wrapper' | 'leaf';
 export type WrapperRole = 'section' | 'header' | 'footer' | 'container';
 export type LeafRole = 'text' | 'image' | 'link' | 'button';
+export type LinkKind = 'anchor' | 'external';
 export type BreakpointId = 'base' | 'tablet' | 'mobile';
 export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
 export type FontSizeUnit = 'px' | 'em' | 'rem';
 export type SpacingUnit = 'px' | 'em' | 'rem';
-export type NodeTextField = 'name' | 'content' | 'htmlTag' | 'label' | 'href' | 'src' | 'alt';
+export type NodeTextField =
+  | 'name'
+  | 'content'
+  | 'htmlTag'
+  | 'label'
+  | 'linkType'
+  | 'anchorTargetId'
+  | 'href'
+  | 'openInNewTab'
+  | 'src'
+  | 'alt';
 export type BorderColorField =
   | 'borderColor'
   | 'borderTopColor'
@@ -261,7 +272,10 @@ export type LinkLeaf = BaseNode & {
   role: 'link';
   rect: RectModel;
   label: string;
+  linkType?: LinkKind;
+  anchorTargetId?: NodeId;
   href?: string;
+  openInNewTab?: boolean;
   sticky?: StickyDefinition;
   style?: TypographyStyle &
     ShadowStyle & {
@@ -274,6 +288,10 @@ export type ButtonLeaf = BaseNode & {
   role: 'button';
   rect: RectModel;
   label: string;
+  linkType?: LinkKind;
+  anchorTargetId?: NodeId;
+  href?: string;
+  openInNewTab?: boolean;
   sticky?: StickyDefinition;
   style?: TypographyStyle &
     BorderStyle &
@@ -357,6 +375,8 @@ export type TextNodeConfig = RectConfig & {
 export type LinkNodeConfig = RectConfig & {
   name: string;
   label: string;
+  linkType?: LinkKind;
+  anchorTargetId?: NodeId;
   href?: string;
 };
 

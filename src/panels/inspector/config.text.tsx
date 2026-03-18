@@ -1,29 +1,60 @@
-import { TextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
+import { TextAppearanceSection, TextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
-import { basicsSection, createSectionBlock, propertiesSection, summaryBlock } from './config.common';
+import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
 
 const textContentSection: InspectorSectionDefinition = {
   id: 'text-content',
-  render: ({ node, actions }) =>
-    isTextNode(node) ? <TextContentSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ node, actions, focusedMode }) =>
+    isTextNode(node) ? (
+      <TextContentSection
+        node={node}
+        onTextChange={actions.onTextChange}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
+    ) : null,
 };
 
 const textDesignSection: InspectorSectionDefinition = {
   id: 'text-design',
-  render: ({ node, actions }) =>
-    isTextNode(node) ? <TextDesignSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ node, actions, focusedMode }) =>
+    isTextNode(node) ? (
+      <TextDesignSection
+        node={node}
+        onTextChange={actions.onTextChange}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
+    ) : null,
 };
 
 const textTextStyleSection: InspectorSectionDefinition = {
   id: 'text-text-style',
-  render: ({ document, node, actions }) =>
+  render: ({ document, node, actions, focusedMode }) =>
     isTextNode(node) ? (
       <TextTextStyleSection
         document={document}
         node={node}
         onTextChange={actions.onTextChange}
         onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
+    ) : null,
+};
+
+export const textAppearanceSection: InspectorSectionDefinition = {
+  id: 'text-appearance',
+  render: ({ document, node, actions, focusedMode }) =>
+    isTextNode(node) ? (
+      <TextAppearanceSection
+        document={document}
+        node={node}
+        onTextChange={actions.onTextChange}
+        onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
       />
     ) : null,
 };
@@ -42,6 +73,13 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Layout',
     description: 'Position, sizing, and ordering.',
     sections: [basicsSection],
+  }),
+  createSectionBlock({
+    id: 'sticky-behavior',
+    bucket: 'behavior',
+    title: 'Sticky behavior',
+    description: 'Target, offsets, and duration behavior.',
+    sections: [textStickySection],
   }),
   createSectionBlock({
     id: 'content',
@@ -63,20 +101,6 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Design',
     description: 'Color and shadow treatment.',
     sections: [textDesignSection],
-  }),
-  createSectionBlock({
-    id: 'sticky-behavior',
-    bucket: 'behavior',
-    title: 'Sticky behavior',
-    description: 'Target, offsets, and duration behavior.',
-    sections: [textStickySection],
-  }),
-  createSectionBlock({
-    id: 'properties',
-    bucket: 'primary',
-    title: 'Properties',
-    description: 'Component metadata.',
-    sections: [propertiesSection],
   }),
 ];
 

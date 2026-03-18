@@ -10,6 +10,7 @@ import {
   type SectionTemplateId,
 } from '../model/defaults';
 import { ensureDocumentFontFamilyByName, normalizeDocumentFontState } from '../fonts';
+import { getLinkHref } from '../model/links';
 import { validateDocument } from '../model/validation';
 import type {
   BorderColorField,
@@ -32,7 +33,8 @@ import type {
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
 import { normalizeThemeMode } from '../lib/theme';
-import type { EditorState, FocusedMode, NodeOrderAction } from './types';
+import { normalizeFocusedMode, resolveFocusedModeUrlOverride } from './focusedModes';
+import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds, toggleSelectedId, toggleSelectedIds } from './selection';
 export type { ConfirmReplaceRole, EditorState, FocusedMode, NodeOrderAction } from './types';
 
@@ -48,6 +50,10 @@ type SelectionRect = {
 
 export function createInitialState(): EditorState {
   const ui = createDefaultUiState();
+  const focusedModeOverride = resolveFocusedModeUrlOverride(
+    typeof window !== 'undefined' ? (window as Window & { location?: { search?: string } }).location?.search : undefined,
+  );
+  const startupFocusedMode = focusedModeOverride === undefined ? ui.startupFocusedMode : focusedModeOverride;
   return {
     document: loadDefaultDocument(),
     selectedId: null,
@@ -55,8 +61,9 @@ export function createInitialState(): EditorState {
     pendingRoleSwap: null,
     ui: {
       ...ui,
-      focusedMode: ui.startupFocusedMode,
-      inspectorCollapsed: ui.startupFocusedMode ? true : ui.inspectorCollapsed,
+      focusedMode: startupFocusedMode,
+      startupFocusedMode,
+      inspectorCollapsed: startupFocusedMode ? true : ui.inspectorCollapsed,
     },
   };
 }
@@ -74,7 +81,12 @@ export function loadPersistedState(): EditorState {
     }
     const parsed = JSON.parse(raw) as EditorState;
     const normalizedDocument = normalizeDocument(parsed.document);
-    const startupFocusedMode = normalizeFocusedMode(parsed.ui?.startupFocusedMode);
+    const persistedStartupFocusedMode = normalizeFocusedMode(parsed.ui?.startupFocusedMode);
+    const focusedModeOverride = resolveFocusedModeUrlOverride(
+      (window as Window & { location?: { search?: string } }).location?.search,
+    );
+    const startupFocusedMode =
+      focusedModeOverride === undefined ? persistedStartupFocusedMode : focusedModeOverride;
     const selectedIds = normalizeSelectedIds(
       normalizedDocument,
       Array.isArray((parsed as Partial<EditorState>).selectedIds) ? (parsed as Partial<EditorState>).selectedIds : undefined,
@@ -167,10 +179,6 @@ function createDefaultUiState(): EditorState['ui'] {
     inspectorCollapsed: false,
     temporaryInspectorOpen: false,
   };
-}
-
-function normalizeFocusedMode(value: unknown): FocusedMode {
-  return value === 'sticky' ? 'sticky' : null;
 }
 
 export function parseImportedDocumentJson(raw: string): DocumentModel {
@@ -344,7 +352,7 @@ function renameRepositoryLinks(document: DocumentModel) {
       node.label = 'github.com/tombigel/sticky-playground';
     }
 
-    if (node.href === 'https://github.com/tombigel/codex-playground') {
+    if (getLinkHref(node) === 'https://github.com/tombigel/codex-playground') {
       node.href = 'https://github.com/tombigel/sticky-playground';
     }
   }
@@ -905,8 +913,14 @@ export function updateTextField(
     node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
   } else if (field === 'label' && node.type === 'leaf' && 'label' in node) {
     node.label = value;
-  } else if (field === 'href' && node.type === 'leaf' && node.role === 'link') {
+  } else if (field === 'linkType' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.linkType = value === 'anchor' ? 'anchor' : 'external';
+  } else if (field === 'anchorTargetId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.anchorTargetId = value || undefined;
+  } else if (field === 'href' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
     node.href = value;
+  } else if (field === 'openInNewTab' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.openInNewTab = value === 'true' ? true : undefined;
   } else if (field === 'src' && node.type === 'leaf' && node.role === 'image') {
     node.src = value;
   } else if (field === 'alt' && node.type === 'leaf' && node.role === 'image') {

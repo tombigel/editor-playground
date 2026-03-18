@@ -32,6 +32,100 @@ describe('site/siteExport', () => {
     expect(html).toContain('family=Inter');
   });
 
+  it('exports link and button navigation targets including new-tab behavior', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const link = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected section wrapper and post link node');
+    }
+
+    const button = createLeaf('button', section.id);
+    if (button.role !== 'button') {
+      throw new Error('Expected button leaf');
+    }
+    button.label = 'Start testing';
+    button.href = 'https://example.com/start';
+    button.openInNewTab = true;
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(button.id);
+
+    link.href = 'https://example.com/spec';
+    link.openInNewTab = true;
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toMatch(
+      new RegExp(
+        `<a[^>]+data-node-id="${link.id}"[^>]+href="https://example\\.com/spec"[^>]+target="_blank"[^>]+rel="noopener noreferrer"`,
+      ),
+    );
+    expect(html).toMatch(
+      new RegExp(
+        `<a[^>]+data-node-id="${button.id}"[^>]+href="https://example\\.com/start"[^>]+target="_blank"[^>]+rel="noopener noreferrer"`,
+      ),
+    );
+    expect(html).not.toMatch(new RegExp(`<button[^>]+data-node-id="${button.id}"`));
+  });
+
+  it('exports same-page anchor links against section ids', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+    const link = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected post section and link node');
+    }
+
+    link.linkType = 'anchor';
+    link.anchorTargetId = section.id;
+    link.href = `#${section.id}`;
+    link.openInNewTab = true;
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toContain(`data-node-id="${section.id}" data-top-level="true" id="${section.id}"`);
+    expect(html).toMatch(new RegExp(`<a[^>]+data-node-id="${link.id}"[^>]+href="#${section.id}"`));
+    expect(html).not.toMatch(new RegExp(`<a[^>]+data-node-id="${link.id}"[^>]+target="_blank"`));
+  });
+
+  it('exports same-page anchor buttons against section ids', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected post section');
+    }
+
+    const button = createLeaf('button', section.id);
+    if (button.type !== 'leaf' || button.role !== 'button') {
+      throw new Error('Expected button node');
+    }
+    document.nodes[button.id] = button;
+    section.children.push(button.id);
+
+    button.linkType = 'anchor';
+    button.anchorTargetId = section.id;
+    button.href = `#${section.id}`;
+    button.openInNewTab = true;
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toMatch(new RegExp(`<a[^>]+data-node-id="${button.id}"[^>]+href="#${section.id}"`));
+    expect(html).not.toMatch(new RegExp(`<a[^>]+data-node-id="${button.id}"[^>]+target="_blank"`));
+  });
+
   it('generates text styling in css instead of inline styles', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createDefaultFooter,
   createDefaultHeader,
+  createLeaf,
   createInitialDocument,
   createSectionFromTemplate,
   SECTION_TEMPLATES,
@@ -22,6 +23,23 @@ describe('model/defaults', () => {
 
     expect(header.wrapper.role).toBe('header');
     expect(footer.wrapper.role).toBe('footer');
+  });
+
+  it('defaults links to internal navigation and buttons to external navigation', () => {
+    const link = createLeaf('link', 'section_1');
+    const button = createLeaf('button', 'section_1');
+
+    if (link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected link leaf');
+    }
+    if (button.type !== 'leaf' || button.role !== 'button') {
+      throw new Error('Expected button leaf');
+    }
+
+    expect(link.linkType).toBe('anchor');
+    expect(link.href).toBe('#');
+    expect(button.linkType).toBe('external');
+    expect(button.href).toBe('#');
   });
 
   it('seeds pinned cards with auto lead sticky and top-edge narrative cards', () => {

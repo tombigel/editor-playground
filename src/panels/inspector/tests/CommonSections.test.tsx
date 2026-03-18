@@ -2,7 +2,7 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createWrapper } from '../../../model/defaults';
-import { NodeBasicsSection, InspectorSectionCard } from '../CommonSections';
+import { InspectorSectionCard, InspectorSummary, NodeBasicsSection } from '../CommonSections';
 
 describe('panels/inspector/CommonSections', () => {
   it('invokes the focused-mode entry action from the section header button', () => {
@@ -11,13 +11,15 @@ describe('panels/inspector/CommonSections', () => {
       title: 'Sticky',
       focusedModeEntry: {
         mode: 'sticky',
-        label: 'sticky mode',
+        label: 'Sticky focus mode',
+        tooltip: 'Sticky focus mode',
+        ariaLabel: 'Go to Sticky focus mode',
         onEnter,
       },
       children: null,
     });
 
-    const button = findElementByAriaLabel(tree, 'Go to sticky mode');
+    const button = findElementByAriaLabel(tree, 'Go to Sticky focus mode');
     if (!button?.props.onClick) {
       throw new Error('Expected focused-mode entry button');
     }
@@ -144,6 +146,45 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('Post Title');
     expect(markup).toContain('aria-label="Close sticky mode"');
     expect(markup).toContain('Body');
+  });
+
+  it('renders an editable title button in the summary for non-site nodes', () => {
+    const document = createInitialDocument();
+    const headerNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'header',
+    );
+
+    if (!headerNode || headerNode.type !== 'wrapper') {
+      throw new Error('Expected header wrapper');
+    }
+
+    const markup = renderToStaticMarkup(
+      <InspectorSummary
+        document={document}
+        node={headerNode}
+        actions={{ onTextChange: () => {} }}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Edit title"');
+    expect(markup).toContain('Playground Header');
+    expect(markup).toContain('>header<');
+  });
+
+  it('renders the site summary title without the editable button affordance', () => {
+    const document = createInitialDocument();
+    const siteNode = document.nodes[document.rootId];
+
+    const markup = renderToStaticMarkup(
+      <InspectorSummary
+        document={document}
+        node={siteNode}
+        actions={{ onTextChange: () => {} }}
+      />,
+    );
+
+    expect(markup).toContain('Site');
+    expect(markup).not.toContain('aria-label="Edit title"');
   });
 });
 

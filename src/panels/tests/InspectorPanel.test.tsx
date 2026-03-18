@@ -70,8 +70,9 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Set type to Section');
     expect(markup).toContain('Set type to Header');
     expect(markup).toContain('Set type to Footer');
-    expect(markup).toContain('>Properties<');
-    expect(markup).toContain('Name');
+    expect(markup).toContain('Playground Header');
+    expect(markup).toContain('aria-label="Edit title"');
+    expect(markup).not.toContain('>Properties<');
     expect(markup.match(/aria-pressed="true"/g)?.length).toBe(1);
   });
 
@@ -136,6 +137,11 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('placeholder="1"');
     expect(markup).toContain('min="0"');
     expect(markup).toContain('>px<');
+    expect(markup).toContain('aria-label="Go to Layout focus mode"');
+    expect(markup).toContain('aria-label="Go to Sticky focus mode"');
+    expect(markup).toContain('aria-label="Go to Design focus mode"');
+    expect(markup.indexOf('>Layout<')).toBeLessThan(markup.indexOf('>Sticky<'));
+    expect(markup.indexOf('>Sticky<')).toBeLessThan(markup.indexOf('>Design<'));
   });
 
   it('renders border and shadow controls for container wrapper design', () => {
@@ -186,6 +192,8 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('>Spread<');
     expect(markup).not.toContain('Divider');
     expect(markup).toContain('data-allow-alpha="true"');
+    expect(markup.indexOf('>Layout<')).toBeLessThan(markup.indexOf('>Sticky<'));
+    expect(markup.indexOf('>Sticky<')).toBeLessThan(markup.indexOf('>Design<'));
   });
 
   it('renders the dedicated multi-select inspector for multiple selected nodes', () => {
@@ -239,7 +247,10 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('First selected node is the alignment anchor.');
     expect(markup).not.toContain('>Multi-select<');
     expect(markup).toContain('>Layout<');
+    expect(markup).toContain('>Sticky<');
     expect(markup).toContain('>Typography<');
+    expect(markup.indexOf('>Layout<')).toBeLessThan(markup.indexOf('>Sticky<'));
+    expect(markup.indexOf('>Sticky<')).toBeLessThan(markup.indexOf('>Typography<'));
     expect(markup).toContain('class="relative w-[104px]"');
     expect(markup).toContain('aria-label="Manage fonts"');
     expect(markup).not.toContain('class="h-8 rounded-sm text-[11px] w-[72px]"');
@@ -580,6 +591,7 @@ describe('panels/InspectorPanel', () => {
     );
     const buttonMarkup = renderToStaticMarkup(
       <InspectorPanel
+        document={document}
         node={buttonNode}
         showOrderControls={false}
         canOrderBack={false}
@@ -621,7 +633,14 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup).toContain('>Content<');
     expect(textMarkup).toContain('>Text style<');
     expect(textMarkup).toContain('>Design<');
+    expect(textMarkup).toContain('>Sticky<');
+    expect(textMarkup).toContain('aria-label="Go to Layout focus mode"');
+    expect(textMarkup).toContain('aria-label="Go to Sticky focus mode"');
+    expect(textMarkup.match(/aria-label="Go to Content focus mode"/g)?.length).toBe(1);
+    expect(textMarkup.match(/aria-label="Go to Design focus mode"/g)?.length).toBe(2);
     expect(textMarkup).toContain('>Text<');
+    expect(textMarkup.indexOf('>Layout<')).toBeLessThan(textMarkup.indexOf('>Sticky<'));
+    expect(textMarkup.indexOf('>Sticky<')).toBeLessThan(textMarkup.indexOf('>Content<'));
     expect(textMarkup.indexOf('>Text style<')).toBeLessThan(textMarkup.indexOf('>Design<'));
     expect(textMarkup).toContain('aria-label="Manage fonts"');
     expect(textMarkup).toContain('>Manage fonts<');
@@ -636,7 +655,14 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup).toContain('data-ui="color-picker"');
     expect(linkMarkup).toContain('>Text style<');
     expect(linkMarkup).toContain('>Design<');
-    expect(linkMarkup).toContain('>Href<');
+    expect(linkMarkup).toContain('>Sticky<');
+    expect(linkMarkup).toContain('>Type<');
+    expect(linkMarkup).toContain('>Internal<');
+    expect(linkMarkup).toContain('>Section<');
+    expect(linkMarkup).not.toContain('>Href<');
+    expect(linkMarkup).not.toContain('Open in a new tab');
+    expect(linkMarkup.indexOf('>Layout<')).toBeLessThan(linkMarkup.indexOf('>Sticky<'));
+    expect(linkMarkup.indexOf('>Sticky<')).toBeLessThan(linkMarkup.indexOf('>Content<'));
     expect(linkMarkup.indexOf('>Text style<')).toBeLessThan(linkMarkup.indexOf('>Design<'));
     expect(linkMarkup).toContain('>Wrap<');
     expect(linkMarkup.match(/>Wrap</g)?.length).toBe(1);
@@ -645,12 +671,20 @@ describe('panels/InspectorPanel', () => {
     expect(linkMarkup).toContain('>Shadow<');
     expect(imageMarkup).toContain('>Content<');
     expect(imageMarkup).toContain('>Design<');
+    expect(imageMarkup).toContain('>Sticky<');
     expect(imageMarkup).not.toContain('>Image<');
+    expect(imageMarkup.indexOf('>Layout<')).toBeLessThan(imageMarkup.indexOf('>Sticky<'));
+    expect(imageMarkup.indexOf('>Sticky<')).toBeLessThan(imageMarkup.indexOf('>Content<'));
     expect(imageMarkup).toContain('>Src<');
     expect(imageMarkup).toContain('>Alt<');
     expect(imageMarkup).toContain('>Border<');
     expect(buttonMarkup).toContain('>Text style<');
     expect(buttonMarkup).toContain('>Design<');
+    expect(buttonMarkup).toContain('>Sticky<');
+    expect(buttonMarkup).toContain('>Href<');
+    expect(buttonMarkup).toContain('Open in a new tab');
+    expect(buttonMarkup.indexOf('>Layout<')).toBeLessThan(buttonMarkup.indexOf('>Sticky<'));
+    expect(buttonMarkup.indexOf('>Sticky<')).toBeLessThan(buttonMarkup.indexOf('>Content<'));
     expect(buttonMarkup.indexOf('>Text style<')).toBeLessThan(buttonMarkup.indexOf('>Design<'));
     expect(buttonMarkup).toContain('>Color<');
     expect(buttonMarkup).toContain('>Background<');
@@ -667,6 +701,228 @@ describe('panels/InspectorPanel', () => {
     expect(buttonMarkup.indexOf('>Background<')).toBeLessThan(buttonMarkup.indexOf('>Border<'));
     expect(buttonMarkup.indexOf('>Border<')).toBeLessThan(buttonMarkup.indexOf('>Shadow<'));
     expect(buttonMarkup.indexOf('>Shadow<')).toBeLessThan(buttonMarkup.indexOf('>Padding<'));
+  });
+
+  it('renders anchor link controls with section choices and a broken-link warning', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+    const linkNode = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!section || section.type !== 'wrapper' || !linkNode || linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+      throw new Error('Expected section and link node');
+    }
+
+    linkNode.linkType = 'anchor';
+    linkNode.anchorTargetId = section.id;
+
+    const anchorMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        document={document}
+        node={linkNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(anchorMarkup).toContain('>Type<');
+    expect(anchorMarkup).toContain('>Section<');
+    expect(anchorMarkup).toContain('>Internal<');
+    expect(anchorMarkup).toContain('>External<');
+    expect(anchorMarkup).not.toContain('Open in a new tab');
+
+    linkNode.anchorTargetId = 'missing-section';
+
+    const brokenMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        document={document}
+        node={linkNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(brokenMarkup).toContain('Broken anchor');
+  });
+
+  it('renders anchor button controls with section choices and a broken-link warning', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section node');
+    }
+
+    const buttonNode = createLeaf('button', section.id);
+    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+      throw new Error('Expected button node');
+    }
+    document.nodes[buttonNode.id] = buttonNode;
+    section.children.push(buttonNode.id);
+
+    buttonNode.linkType = 'anchor';
+    buttonNode.anchorTargetId = section.id;
+
+    const anchorMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        document={document}
+        node={buttonNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(anchorMarkup).toContain('>Type<');
+    expect(anchorMarkup).toContain('>Section<');
+    expect(anchorMarkup).toContain('>Internal<');
+    expect(anchorMarkup).toContain('>External<');
+    expect(anchorMarkup).not.toContain('Open in a new tab');
+
+    buttonNode.anchorTargetId = 'missing-section';
+
+    const brokenMarkup = renderToStaticMarkup(
+      <InspectorPanel
+        document={document}
+        node={buttonNode}
+        showOrderControls={false}
+        canOrderBack={false}
+        canOrderForward={false}
+        canSendToBack={false}
+        canBringToFront={false}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(brokenMarkup).toContain('Broken anchor');
   });
 
   it('renders single-unit numeric inline fields without select dropdown chrome', () => {

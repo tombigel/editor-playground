@@ -1,12 +1,20 @@
-import { ButtonContentSection, ButtonDesignSection, ButtonTextStyleSection } from './ContentSections';
+import { ButtonAppearanceSection, ButtonContentSection, ButtonDesignSection, ButtonTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
-import { basicsSection, createSectionBlock, propertiesSection, summaryBlock } from './config.common';
+import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import type { ButtonInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const buttonContentSection: InspectorSectionDefinition = {
   id: 'button-content',
-  render: ({ node, actions }) =>
-    isButtonNode(node) ? <ButtonContentSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ document, node, actions, focusedMode }) =>
+    isButtonNode(node) ? (
+      <ButtonContentSection
+        document={document}
+        node={node}
+        onTextChange={actions.onTextChange}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
+    ) : null,
 };
 
 const buttonStickySection: InspectorSectionDefinition = {
@@ -17,19 +25,43 @@ const buttonStickySection: InspectorSectionDefinition = {
 
 const buttonDesignSection: InspectorSectionDefinition = {
   id: 'button-design',
-  render: ({ node, actions }) =>
-    isButtonNode(node) ? <ButtonDesignSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ node, actions, focusedMode }) =>
+    isButtonNode(node) ? (
+      <ButtonDesignSection
+        node={node}
+        onTextChange={actions.onTextChange}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
+    ) : null,
 };
 
 const buttonTextStyleSection: InspectorSectionDefinition = {
   id: 'button-text-style',
-  render: ({ document, node, actions }) =>
+  render: ({ document, node, actions, focusedMode }) =>
     isButtonNode(node) ? (
       <ButtonTextStyleSection
         document={document}
         node={node}
         onTextChange={actions.onTextChange}
         onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
+    ) : null,
+};
+
+export const buttonAppearanceSection: InspectorSectionDefinition = {
+  id: 'button-appearance',
+  render: ({ document, node, actions, focusedMode }) =>
+    isButtonNode(node) ? (
+      <ButtonAppearanceSection
+        document={document}
+        node={node}
+        onTextChange={actions.onTextChange}
+        onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
       />
     ) : null,
 };
@@ -42,6 +74,13 @@ export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Layout',
     description: 'Position, sizing, and ordering.',
     sections: [basicsSection],
+  }),
+  createSectionBlock({
+    id: 'sticky-behavior',
+    bucket: 'behavior',
+    title: 'Sticky behavior',
+    description: 'Target, offsets, and duration behavior.',
+    sections: [buttonStickySection],
   }),
   createSectionBlock({
     id: 'content',
@@ -63,20 +102,6 @@ export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Design',
     description: 'Colors, fill, padding, border, and shadow.',
     sections: [buttonDesignSection],
-  }),
-  createSectionBlock({
-    id: 'sticky-behavior',
-    bucket: 'behavior',
-    title: 'Sticky behavior',
-    description: 'Target, offsets, and duration behavior.',
-    sections: [buttonStickySection],
-  }),
-  createSectionBlock({
-    id: 'properties',
-    bucket: 'primary',
-    title: 'Properties',
-    description: 'Component metadata.',
-    sections: [propertiesSection],
   }),
 ];
 

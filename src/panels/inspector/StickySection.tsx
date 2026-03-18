@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FormField, RangeField, StickyOffsetBandField } from '../InspectorControls';
-import { InspectorSectionCard, type InspectorSectionHeaderAction } from './CommonSections';
+import { createFocusedModeEntry, InspectorSectionCard, type InspectorSectionHeaderAction } from './CommonSections';
 import type { InspectorActionHandlers, NonSiteInspectorNode } from './types';
 
 export function StickySection({
@@ -40,23 +40,13 @@ export function StickySection({
     node.type === 'wrapper' &&
     node.role !== 'container' &&
     (node.sticky?.target ?? 'self') === 'self';
-  const isStickyFocusedMode = focusedMode === 'sticky';
-
   return (
     <InspectorSectionCard
       title="Sticky"
       headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
-      focusedModeEntry={
-        isStickyFocusedMode
-          ? undefined
-          : {
-              mode: 'sticky',
-              label: 'sticky mode',
-              onEnter: actions.onEnterFocusedMode,
-            }
-      }
+      focusedModeEntry={createFocusedModeEntry(focusedMode, 'sticky', actions.onEnterFocusedMode)}
     >
       <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
           <div>

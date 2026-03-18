@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
@@ -26,6 +25,7 @@ import {
   resolveNearestSupportedFontWeight,
 } from '../../api/fontApi';
 import type { DocumentModel } from '../../api/editorApi';
+import { getSectionAnchorOptions, isValidSectionAnchorTarget } from '../../model/links';
 import {
   BorderControlGroup,
   FontPickerPopover,
@@ -74,31 +74,53 @@ import type {
   TextInspectorNode,
 } from './types';
 import type { EditorTextField } from '../../api/documentApi';
+import type { FocusedMode } from '../../api/editorApi';
 import {
   applyLeafShadowPatch,
   applyUnifiedLeafBorderColor,
   applyUnifiedLeafBorderRadius,
   applyUnifiedLeafBorderWidth,
 } from './styleFields';
+import {
+  createFocusedModeEntry,
+  InspectorSectionCard,
+  type InspectorSectionHeaderAction,
+} from './CommonSections';
+
+type FocusModeCardProps = {
+  focusedMode?: FocusedMode;
+  onEnterFocusedMode?: (mode: FocusedMode) => void;
+  headerContent?: ReactNode;
+  headerAction?: InspectorSectionHeaderAction;
+  contentClassName?: string;
+};
+
+type NavigationInspectorNode = ButtonInspectorNode | LinkInspectorNode;
 
 export function TextContentSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'px-3 pt-1.5 pb-3',
 }: {
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Content</CardTitle>
-      </CardHeader>
-      <CardContent className="px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
+    >
         <FormField label="Text">
           <Textarea value={node.content} onChange={(e) => onTextChange('content', e.target.value)} />
         </FormField>
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
@@ -107,18 +129,25 @@ export function TextTextStyleSection({
   node,
   onTextChange,
   onOpenManageFonts,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   document: DocumentModel;
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
   onOpenManageFonts: () => void;
-}) {
+} & FocusModeCardProps) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Text style</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Text style"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <TypographyTextStyleFields
           document={document}
           node={node}
@@ -144,18 +173,22 @@ export function TextTextStyleSection({
             </SelectContent>
           </Select>
         </div>
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
 export function TextDesignSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   const shadow = readShadowFieldValues(
     node.style,
     createShadowFallback(
@@ -168,11 +201,13 @@ export function TextDesignSection({
   );
 
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Design</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <TypographyDesignFields
           node={node}
           onTextChange={onTextChange}
@@ -186,29 +221,37 @@ export function TextDesignSection({
             DEFAULT_SHADOW_OFFSET_Y_PX,
           )}
         />
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
 export function ButtonContentSection({
+  document,
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
+  document: DocumentModel;
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Content</CardTitle>
-      </CardHeader>
-      <CardContent className="px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
+    >
         <FormField label="Label">
           <Input value={node.label} onChange={(e) => onTextChange('label', e.target.value)} />
         </FormField>
-      </CardContent>
-    </Card>
+        <NavigationFields document={document} node={node} onTextChange={onTextChange} />
+    </InspectorSectionCard>
   );
 }
 
@@ -217,18 +260,25 @@ export function ButtonTextStyleSection({
   node,
   onTextChange,
   onOpenManageFonts,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   document: DocumentModel;
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
   onOpenManageFonts: () => void;
-}) {
+} & FocusModeCardProps) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Text style</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Text style"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <TypographyTextStyleFields
           document={document}
           node={node}
@@ -237,18 +287,22 @@ export function ButtonTextStyleSection({
           wrapFieldLabel="Wrap"
           onOpenManageFonts={onOpenManageFonts}
         />
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
 export function ButtonDesignSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
     DEFAULT_BUTTON_SHADOW_COLOR,
     DEFAULT_BUTTON_SHADOW_BLUR_PX,
@@ -259,11 +313,13 @@ export function ButtonDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
 
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Design</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
           <Label className="text-[11px] font-medium">Color</Label>
           <div className="ml-auto flex items-center gap-2">
@@ -335,8 +391,7 @@ export function ButtonDesignSection({
             />
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
@@ -365,27 +420,155 @@ function ButtonPaddingField({
   );
 }
 
-export function LinkContentSection({
-  node,
-  onTextChange,
+function OpenInNewTabField({
+  checked,
+  onChange,
 }: {
-  node: LinkInspectorNode;
-  onTextChange: (field: EditorTextField, value: string) => void;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
 }) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Content</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <label className="editor-text-strong inline-flex items-center gap-2 text-[11px] font-medium">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="editor-border-subtle h-4 w-4 rounded-sm border"
+      />
+      <span>Open in a new tab</span>
+    </label>
+  );
+}
+
+export function LinkContentSection({
+  document,
+  node,
+  onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
+}: {
+  document: DocumentModel;
+  node: LinkInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+} & FocusModeCardProps) {
+  return (
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
+    >
         <FormField label="Label">
           <Input value={node.label} onChange={(e) => onTextChange('label', e.target.value)} />
         </FormField>
-        <FormField label="Href">
-          <Input value={node.href ?? ''} onChange={(e) => onTextChange('href', e.target.value)} />
+        <NavigationFields document={document} node={node} onTextChange={onTextChange} />
+    </InspectorSectionCard>
+  );
+}
+
+function NavigationFields({
+  document,
+  node,
+  onTextChange,
+}: {
+  document: DocumentModel;
+  node: NavigationInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+}) {
+  const linkType = node.linkType ?? 'external';
+  const sectionOptions = getSectionAnchorOptions(document);
+  const anchorValue = isValidSectionAnchorTarget(document, node.anchorTargetId) ? node.anchorTargetId : undefined;
+  const selectedAnchorOption = sectionOptions.find((option) => option.id === anchorValue);
+
+  function handleLinkTypeChange(value: 'anchor' | 'external') {
+    onTextChange('linkType', value);
+    if (value === 'anchor' && !node.anchorTargetId && sectionOptions[0]) {
+      onTextChange('anchorTargetId', sectionOptions[0].id);
+      onTextChange('href', sectionOptions[0].href);
+      return;
+    }
+    if (value === 'external') {
+      onTextChange('openInNewTab', node.openInNewTab ? 'true' : '');
+    }
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+        <Label className="text-[11px] font-medium">Type</Label>
+        <div className="flex justify-end">
+          <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+            <Button
+              type="button"
+              variant={linkType === 'anchor' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2.5 text-[11px]"
+              onClick={() => handleLinkTypeChange('anchor')}
+            >
+              Internal
+            </Button>
+            <Button
+              type="button"
+              variant={linkType === 'external' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2.5 text-[11px]"
+              onClick={() => handleLinkTypeChange('external')}
+            >
+              External
+            </Button>
+          </div>
+        </div>
+      </div>
+      {linkType === 'anchor' ? (
+        <FormField label="Section">
+          <Select
+            value={anchorValue}
+            onValueChange={(value) => {
+              const option = sectionOptions.find((entry) => entry.id === value);
+              onTextChange('anchorTargetId', value);
+              if (option) {
+                onTextChange('href', option.href);
+              }
+            }}
+            disabled={sectionOptions.length === 0}
+          >
+            <SelectTrigger>
+              <span className="truncate text-left">
+                {selectedAnchorOption?.name ?? (sectionOptions.length > 0 ? 'Select a section' : 'No sections available')}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              {sectionOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  <span className="flex min-w-0 flex-col">
+                    <span>{option.name}</span>
+                    {option.detail ? (
+                      <span className="editor-text-muted text-[10px] leading-3">
+                        {option.detail}
+                      </span>
+                    ) : null}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </FormField>
-      </CardContent>
-    </Card>
+      ) : (
+        <>
+          <FormField label="Href">
+            <Input value={node.href ?? ''} onChange={(e) => onTextChange('href', e.target.value)} />
+          </FormField>
+          <OpenInNewTabField
+            checked={Boolean(node.openInNewTab)}
+            onChange={(checked) => onTextChange('openInNewTab', checked ? 'true' : '')}
+          />
+        </>
+      )}
+    </>
   );
 }
 
@@ -394,18 +577,25 @@ export function LinkTextStyleSection({
   node,
   onTextChange,
   onOpenManageFonts,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   document: DocumentModel;
   node: LinkInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
   onOpenManageFonts: () => void;
-}) {
+} & FocusModeCardProps) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Text style</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Text style"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <TypographyTextStyleFields
           document={document}
           node={node}
@@ -414,18 +604,22 @@ export function LinkTextStyleSection({
           wrapFieldLabel="Wrap"
           onOpenManageFonts={onOpenManageFonts}
         />
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
 export function LinkDesignSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   node: LinkInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
     DEFAULT_SHADOW_COLOR,
     DEFAULT_SHADOW_BLUR_PX,
@@ -436,11 +630,13 @@ export function LinkDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
 
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Design</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <TypographyDesignFields
           node={node}
           onTextChange={onTextChange}
@@ -448,42 +644,52 @@ export function LinkDesignSection({
           shadow={shadow}
           shadowFallback={shadowFallback}
         />
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
 export function ImageContentSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   node: ImageInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Content</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
+    >
         <FormField label="Src">
           <Input value={node.src ?? ''} onChange={(e) => onTextChange('src', e.target.value)} />
         </FormField>
         <FormField label="Alt">
           <Input value={node.alt ?? ''} onChange={(e) => onTextChange('alt', e.target.value)} />
         </FormField>
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
   );
 }
 
 export function ImageDesignSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
   node: ImageInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
-}) {
+} & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
     DEFAULT_IMAGE_SHADOW_COLOR,
     DEFAULT_IMAGE_SHADOW_BLUR_PX,
@@ -494,11 +700,13 @@ export function ImageDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
 
   return (
-    <Card className="editor-border-subtle rounded-lg shadow-none">
-      <CardHeader className="px-3 pt-3 pb-1">
-        <CardTitle className="text-xs">Design</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>
           <BorderControlGroup
@@ -530,8 +738,250 @@ export function ImageDesignSection({
             onAngleChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { angle: value })}
           />
         </div>
-      </CardContent>
-    </Card>
+    </InspectorSectionCard>
+  );
+}
+
+export function TextAppearanceSection({
+  document,
+  node,
+  onTextChange,
+  onOpenManageFonts,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
+}: {
+  document: DocumentModel;
+  node: TextInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+  onOpenManageFonts: () => void;
+} & FocusModeCardProps) {
+  const shadowFallback = createShadowFallback(
+    DEFAULT_SHADOW_COLOR,
+    DEFAULT_SHADOW_BLUR_PX,
+    DEFAULT_SHADOW_SPREAD_PX,
+    DEFAULT_SHADOW_OFFSET_X_PX,
+    DEFAULT_SHADOW_OFFSET_Y_PX,
+  );
+  const shadow = readShadowFieldValues(node.style, shadowFallback);
+
+  return (
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
+      <TypographyTextStyleFields
+        document={document}
+        node={node}
+        onTextChange={onTextChange}
+        onOpenManageFonts={onOpenManageFonts}
+      />
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+        <Label className="text-[11px] font-medium">HTML tag</Label>
+        <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
+          <SelectTrigger className="ml-auto h-8 w-24 rounded-sm text-[11px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="h1">h1</SelectItem>
+            <SelectItem value="h2">h2</SelectItem>
+            <SelectItem value="h3">h3</SelectItem>
+            <SelectItem value="h4">h4</SelectItem>
+            <SelectItem value="h5">h5</SelectItem>
+            <SelectItem value="h6">h6</SelectItem>
+            <SelectItem value="p">p</SelectItem>
+            <SelectItem value="blockquote">blockquote</SelectItem>
+            <SelectItem value="div">div</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
+        <TypographyDesignFields
+          node={node}
+          onTextChange={onTextChange}
+          colorFallback={DEFAULT_TEXT_COLOR}
+          shadow={shadow}
+          shadowFallback={shadowFallback}
+        />
+      </div>
+    </InspectorSectionCard>
+  );
+}
+
+export function ButtonAppearanceSection({
+  document,
+  node,
+  onTextChange,
+  onOpenManageFonts,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
+}: {
+  document: DocumentModel;
+  node: ButtonInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+  onOpenManageFonts: () => void;
+} & FocusModeCardProps) {
+  const shadowFallback = createShadowFallback(
+    DEFAULT_BUTTON_SHADOW_COLOR,
+    DEFAULT_BUTTON_SHADOW_BLUR_PX,
+    DEFAULT_BUTTON_SHADOW_SPREAD_PX,
+    DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
+    DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
+  );
+  const shadow = readShadowFieldValues(node.style, shadowFallback);
+
+  return (
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
+      <TypographyTextStyleFields
+        document={document}
+        node={node}
+        onTextChange={onTextChange}
+        supportsWrap
+        wrapFieldLabel="Wrap"
+        onOpenManageFonts={onOpenManageFonts}
+      />
+      <div className="editor-border-subtle border-t pt-2.5">
+        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+          <Label className="text-[11px] font-medium">Color</Label>
+          <div className="ml-auto flex items-center gap-2">
+            <HoverColorField
+              value={node.style?.color}
+              onChange={(value) => onTextChange('color', value)}
+              ariaLabel="Text color"
+              fallback={DEFAULT_BUTTON_TEXT_COLOR}
+            />
+          </div>
+        </div>
+        <div className="mt-2.5 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+          <Label className="text-[11px] font-medium">Background</Label>
+          <div className="ml-auto flex items-center gap-2">
+            <HoverColorField
+              value={node.style?.background}
+              onChange={(value) => onTextChange('background', value)}
+              ariaLabel="Button background color"
+              fallback={DEFAULT_BUTTON_BACKGROUND}
+            />
+          </div>
+        </div>
+        <div className="mt-2.5 grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
+          <Label className="pt-1 text-[11px] font-medium">Border</Label>
+          <BorderControlGroup
+            nodeId={node.id}
+            colorValue={readUnifiedBorderColor(node.style)}
+            widthValue={readUnifiedBorderWidth(node.style)}
+            radiusValue={readUnifiedBorderRadius(node.style)}
+            onColorChange={(value) => applyUnifiedLeafBorderColor(onTextChange, value)}
+            onWidthChange={(value) => applyUnifiedLeafBorderWidth(onTextChange, value)}
+            onRadiusChange={(value) => applyUnifiedLeafBorderRadius(onTextChange, value)}
+          />
+        </div>
+        <div className="mt-2.5 space-y-1.5">
+          <ShadowControlGroup
+            color={shadow.color}
+            blur={shadow.blur}
+            spread={shadow.spread}
+            distance={shadow.distance}
+            angle={shadow.angle}
+            colorFallback={DEFAULT_BUTTON_SHADOW_COLOR}
+            supportsSpread
+            onColorChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { color: value })}
+            onBlurChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { blur: value })}
+            onSpreadChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { spread: value })}
+            onDistanceChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { distance: value })}
+            onAngleChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { angle: value })}
+          />
+        </div>
+        <div className="mt-2.5 space-y-1.5">
+          <Label className="text-[11px] font-medium">Padding</Label>
+          <div className="grid grid-cols-2 gap-1.5">
+            <ButtonPaddingField
+              nodeId={node.id}
+              axis="block"
+              icon={<ArrowUpDown className="h-3.5 w-3.5" />}
+              ariaLabel="Vertical padding"
+              value={node.style?.paddingBlock?.raw ?? DEFAULT_BUTTON_PADDING_BLOCK}
+              onChange={(value) => onTextChange('paddingBlock', value)}
+            />
+            <ButtonPaddingField
+              nodeId={node.id}
+              axis="inline"
+              icon={<ArrowLeftRight className="h-3.5 w-3.5" />}
+              ariaLabel="Horizontal padding"
+              value={node.style?.paddingInline?.raw ?? DEFAULT_BUTTON_PADDING_INLINE}
+              onChange={(value) => onTextChange('paddingInline', value)}
+            />
+          </div>
+        </div>
+      </div>
+    </InspectorSectionCard>
+  );
+}
+
+export function LinkAppearanceSection({
+  document,
+  node,
+  onTextChange,
+  onOpenManageFonts,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
+}: {
+  document: DocumentModel;
+  node: LinkInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+  onOpenManageFonts: () => void;
+} & FocusModeCardProps) {
+  const shadowFallback = createShadowFallback(
+    DEFAULT_SHADOW_COLOR,
+    DEFAULT_SHADOW_BLUR_PX,
+    DEFAULT_SHADOW_SPREAD_PX,
+    DEFAULT_SHADOW_OFFSET_X_PX,
+    DEFAULT_SHADOW_OFFSET_Y_PX,
+  );
+  const shadow = readShadowFieldValues(node.style, shadowFallback);
+
+  return (
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
+      <TypographyTextStyleFields
+        document={document}
+        node={node}
+        onTextChange={onTextChange}
+        supportsWrap
+        wrapFieldLabel="Wrap"
+        onOpenManageFonts={onOpenManageFonts}
+      />
+      <div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
+        <TypographyDesignFields
+          node={node}
+          onTextChange={onTextChange}
+          colorFallback={DEFAULT_LINK_COLOR}
+          shadow={shadow}
+          shadowFallback={shadowFallback}
+        />
+      </div>
+    </InspectorSectionCard>
   );
 }
 

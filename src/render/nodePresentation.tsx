@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -27,6 +28,15 @@ export function getNodeTextContent(node: LeafNode) {
 
 export function isBrandMark(node: LeafNode) {
   return node.role === 'image' && node.name === 'Brand Mark';
+}
+
+function getExternalNavigationProps(node: Extract<LeafNode, { role: 'link' | 'button' }>) {
+  return shouldOpenNavigationInNewTab(node)
+    ? {
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      }
+    : {};
 }
 
 export function renderLeafContent(node: LeafNode, options: RenderLeafContentOptions = {}): ReactNode {
@@ -58,12 +68,16 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
       );
     case 'link':
       return (
-        <a href={node.href} tabIndex={tabIndex} style={contentStyle}>
+        <a href={getLinkHref(node)} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
           {getNodeTextContent(node)}
         </a>
       );
     case 'button':
-      return (
+      return getLinkHref(node) ? (
+        <a href={getLinkHref(node)} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
+          {getNodeTextContent(node)}
+        </a>
+      ) : (
         <button type="button" tabIndex={tabIndex} style={contentStyle}>
           {getNodeTextContent(node)}
         </button>

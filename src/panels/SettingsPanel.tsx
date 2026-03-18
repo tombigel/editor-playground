@@ -21,6 +21,7 @@ import {
 import type { DocumentModel, DocumentNode, FocusedMode, StickyLayoutState } from '../api/editorApi';
 import type { DocumentFontFamily } from '../model/types';
 import { formatValue } from '../api/documentApi';
+import { FOCUSED_MODE_VALUES, getFocusedModeLabel } from '../editor/focusedModes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PopoverTooltip } from '@/components/ui/popover';
@@ -701,13 +702,20 @@ function FocusedModeStartupRow({
         </div>
       </div>
       <div className="w-[180px] shrink-0">
-        <Select value={value ?? 'normal'} onValueChange={(next) => onChange(next === 'sticky' ? 'sticky' : null)}>
+        <Select
+          value={value ?? 'normal'}
+          onValueChange={(next) => onChange(next === 'normal' ? null : (next as Exclude<FocusedMode, null>))}
+        >
           <SelectTrigger aria-label="Startup mode">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="sticky">Sticky</SelectItem>
+            {FOCUSED_MODE_VALUES.map((mode) => (
+              <SelectItem key={mode} value={mode}>
+                {getFocusedModeLabel(mode)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

@@ -16,6 +16,7 @@ import {
   removeDocumentFontFamily,
   toggleDocumentFontFavorite,
 } from '../fonts';
+import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } from '../model/links';
 import { getChildren, getNode } from '../model/selectors';
 import type {
   BorderColorField,
@@ -66,6 +67,7 @@ export {
   getDocumentFontLibrary,
   getFontUsage,
   getChildren,
+  getLinkHref,
   getNode,
   isFontFamilyUsed,
   listDocumentFonts,
@@ -79,6 +81,7 @@ export {
   resolveStickyLayout,
   resolveWrapperStickyState,
   resolveUnitValuePx,
+  shouldOpenNavigationInNewTab,
   toggleDocumentFontFavorite,
   validateDocument,
 };
@@ -199,8 +202,23 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'href' && node.type === 'leaf' && node.role === 'link') {
+  if (field === 'linkType' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.linkType = normalizeNavigationKind(value);
+    return next;
+  }
+
+  if (field === 'anchorTargetId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.anchorTargetId = value || undefined;
+    return next;
+  }
+
+  if (field === 'href' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
     node.href = value;
+    return next;
+  }
+
+  if (field === 'openInNewTab' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.openInNewTab = value === 'true' ? true : undefined;
     return next;
   }
 

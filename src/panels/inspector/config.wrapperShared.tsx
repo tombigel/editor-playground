@@ -1,13 +1,18 @@
 import { WrapperDesignSection } from './CommonSections';
 import { StickySection } from './StickySection';
-import { basicsSection, createSectionBlock, propertiesSection, summaryBlock } from './config.common';
+import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, WrapperInspectorNode } from './types';
 
 const wrapperDesignSection: InspectorSectionDefinition = {
   id: 'wrapper-design',
-  render: ({ node, actions }) =>
+  render: ({ node, actions, focusedMode }) =>
     isWrapperNode(node) ? (
-      <WrapperDesignSection node={node} onWrapperStyleChange={actions.onWrapperStyleChange} />
+      <WrapperDesignSection
+        node={node}
+        onWrapperStyleChange={actions.onWrapperStyleChange}
+        focusedMode={focusedMode}
+        onEnterFocusedMode={actions.onEnterFocusedMode}
+      />
     ) : null,
 };
 
@@ -28,13 +33,6 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
       sections: [basicsSection],
     }),
     createSectionBlock({
-      id: 'design',
-      bucket: 'primary',
-      title: 'Design',
-      description: 'Wrapper visual styling.',
-      sections: [wrapperDesignSection],
-    }),
-    createSectionBlock({
       id: 'sticky-behavior',
       bucket: 'behavior',
       title,
@@ -42,11 +40,11 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
       sections: [wrapperStickySection],
     }),
     createSectionBlock({
-      id: 'properties',
+      id: 'design',
       bucket: 'primary',
-      title: 'Properties',
-      description: 'Component metadata.',
-      sections: [propertiesSection],
+      title: 'Design',
+      description: 'Wrapper visual styling.',
+      sections: [wrapperDesignSection],
     }),
   ];
 }

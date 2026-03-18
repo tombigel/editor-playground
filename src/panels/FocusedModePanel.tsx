@@ -1,10 +1,13 @@
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { FocusedMode } from '../api/editorApi';
+import { getFocusedModeLabel } from '../editor/focusedModes';
 import { createInitialDocument } from '../model/defaults';
+import { isBrokenAnchorLink } from '../model/links';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiStickySection } from './MultiStickySection';
 import { resolveFocusedModeBlocks } from './focusedModes/schema';
 import type { InspectorPanelProps } from './InspectorPanel';
+import { BrokenAnchorWarning } from './inspector/CommonSections';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 
 type Props = Pick<
@@ -133,20 +136,22 @@ export function FocusedModePanel({
     onSectionBack,
     onSectionForward,
   };
-  const title = node?.type === 'site' ? 'No component selected' : node?.name ?? 'No component selected';
-  const roleLabel = node && node.type !== 'site' ? node.role : null;
+  const title = node?.name ?? 'No component selected';
+  const roleLabel = node ? (node.type === 'site' ? 'site' : node.role) : null;
   const isMultiSticky = mode === 'sticky' && selectedNodes.length > 1;
+  const modeLabel = getFocusedModeLabel(mode);
+  const hasBrokenAnchorWarning = node ? isBrokenAnchorLink(resolvedDocument, node) : false;
   const headerContent =
     isMultiSticky ? (
       <div className="min-w-0">
-        <div className="editor-text-strong text-sm font-medium">Sticky</div>
+        <div className="editor-text-strong text-sm font-medium">{modeLabel}</div>
         <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
           <div className="truncate">{selectedNodes.length} selected</div>
         </div>
       </div>
-    ) : node && node.type !== 'site' ? (
+    ) : node ? (
       <div className="min-w-0">
-        <div className="editor-text-strong text-sm font-medium">Sticky</div>
+        <div className="editor-text-strong text-sm font-medium">{modeLabel}</div>
         <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
           <div className="truncate">{title}</div>
           {roleLabel ? (
@@ -155,6 +160,11 @@ export function FocusedModePanel({
             </span>
           ) : null}
         </div>
+        {hasBrokenAnchorWarning ? (
+          <div className="mt-2">
+            <BrokenAnchorWarning compact />
+          </div>
+        ) : null}
       </div>
     ) : undefined;
 
@@ -171,7 +181,7 @@ export function FocusedModePanel({
               contentClassName="space-y-3 px-3 pt-1.5 pb-5"
               headerAction={
                 {
-                  ariaLabel: 'Close sticky mode',
+                  ariaLabel: 'Close sticky focus mode',
                   icon: <SquareArrowRightEnter className="h-3.5 w-3.5" />,
                   onClick: onExitFocusedMode,
                 }

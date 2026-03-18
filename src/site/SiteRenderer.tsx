@@ -1,3 +1,4 @@
+import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
 import { getNodeTextContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
@@ -21,6 +22,15 @@ export function SiteRenderer({ document, previewSticky = true }: SiteRendererPro
   );
 }
 
+function getExternalNavigationProps(node: Extract<RenderLeafPlanNode['node'], { role: 'link' | 'button' }>) {
+  return shouldOpenNavigationInNewTab(node)
+    ? {
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      }
+    : {};
+}
+
 function renderPlanNode(plan: RenderPlanNode): JSX.Element {
   return plan.kind === 'wrapper' ? renderWrapperPlan(plan) : renderLeafPlan(plan);
 }
@@ -30,7 +40,17 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): JSX.Element {
   const wrapperChildren = plan.children.map((child) => renderPlanNode(child));
   const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
   const wrapper = (
-    <Tag key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} data-top-level={plan.isTopLevel ? 'true' : 'false'}>
+    <Tag
+      key={plan.node.id}
+      className={plan.nodeClassName}
+      data-node-id={plan.node.id}
+      data-top-level={plan.isTopLevel ? 'true' : 'false'}
+      {...(
+        plan.node.role === 'header' || plan.node.role === 'section' || plan.node.role === 'footer'
+          ? { id: plan.node.id }
+          : {}
+      )}
+    >
       {plan.contentSticky ? (
         <>
           <div className={plan.contentClassName}>
@@ -89,12 +109,28 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
     );
   } else if (plan.node.role === 'link') {
     leaf = (
-      <a key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} href={plan.node.href}>
+      <a
+        key={plan.node.id}
+        className={plan.nodeClassName}
+        data-node-id={plan.node.id}
+        href={getLinkHref(plan.node)}
+        {...getExternalNavigationProps(plan.node)}
+      >
         {getNodeTextContent(plan.node)}
       </a>
     );
   } else {
-    leaf = (
+    leaf = getLinkHref(plan.node) ? (
+      <a
+        key={plan.node.id}
+        className={plan.nodeClassName}
+        data-node-id={plan.node.id}
+        href={getLinkHref(plan.node)}
+        {...getExternalNavigationProps(plan.node)}
+      >
+        {getNodeTextContent(plan.node)}
+      </a>
+    ) : (
       <button key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} type="button">
         {getNodeTextContent(plan.node)}
       </button>

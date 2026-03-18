@@ -38,6 +38,9 @@ function getRoot(state: ReturnType<typeof createInitialState>['document']) {
 function createWindowStorageStub() {
   const storage = new Map<string, string>();
   return {
+    location: {
+      search: '',
+    },
     localStorage: {
       getItem(key: string) {
         return storage.get(key) ?? null;
@@ -72,6 +75,18 @@ describe('editor/editorStore integration', () => {
     expect(state.ui.startupFocusedMode).toBeNull();
     expect(state.ui.inspectorCollapsed).toBe(false);
     expect(state.ui.temporaryInspectorOpen).toBe(false);
+  });
+
+  it('initializes from a focus-mode query override before any persisted state is loaded', () => {
+    const windowStub = createWindowStorageStub();
+    windowStub.location.search = '?focus-mode=design';
+    vi.stubGlobal('window', windowStub);
+
+    const state = createInitialState();
+
+    expect(state.ui.focusedMode).toBe('design');
+    expect(state.ui.startupFocusedMode).toBe('design');
+    expect(state.ui.inspectorCollapsed).toBe(true);
   });
 
   it('stores section bottom divider styles as wrapper style fields', () => {
@@ -363,6 +378,29 @@ describe('editor/editorStore integration', () => {
 
     expect(loadPersistedState().ui.focusedMode).toBeNull();
     expect(loadPersistedState().ui.inspectorCollapsed).toBe(true);
+  });
+
+  it('prefers the focus-mode query override over the persisted startup mode', () => {
+    const windowStub = createWindowStorageStub();
+    windowStub.location.search = '?focus-mode=content';
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const state = createInitialState();
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          startupFocusedMode: 'sticky',
+          focusedMode: 'sticky',
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.focusedMode).toBe('content');
+    expect(loadPersistedState().ui.startupFocusedMode).toBe('content');
   });
 
   it('restores persisted document and UI state while dropping transient editor state', () => {
