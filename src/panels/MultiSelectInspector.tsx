@@ -40,6 +40,7 @@ import {
   FontPickerPopover,
   FontSizeField,
   HoverColorField,
+  InspectorInlineRow,
   NumericUnitInlineField,
   NumberInput,
   OrderIconButton,
@@ -68,6 +69,16 @@ type Props = {
   onDistributeSelection: (mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom') => void;
   onBulkEdit: (operations: BulkEditOperation[]) => void;
 };
+
+const TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX = 32;
+const TYPOGRAPHY_FIELD_GAP_PX = 4;
+const TYPOGRAPHY_FONT_PICKER_WIDTH_PX = 104 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX;
+const TYPOGRAPHY_FONT_ROW_WIDTH_PX =
+  TYPOGRAPHY_FONT_PICKER_WIDTH_PX + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX + TYPOGRAPHY_FIELD_GAP_PX;
+const TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX = 96 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX / 2;
+const TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX = 40 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX / 2;
+const TYPOGRAPHY_SIZE_ROW_WIDTH_PX =
+  TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX + TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX + TYPOGRAPHY_FIELD_GAP_PX;
 
 export function MultiSelectInspector({
   document,
@@ -232,9 +243,8 @@ export function MultiSelectInspector({
             <CardTitle className="text-xs">Typography</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
-            <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-              <Label className="text-[11px] font-medium">Font</Label>
-              <div className="ml-auto flex w-[140px] items-center justify-between gap-1">
+            <InspectorInlineRow label="Font" controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`} controlClassName="gap-1">
+                <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_PICKER_WIDTH_PX}px` }}>
                   <FontPickerPopover
                     familyValue={fontFamilyState.value}
                     weightValue={fontWeightState.value ?? DEFAULT_FONT_WEIGHT}
@@ -244,49 +254,50 @@ export function MultiSelectInspector({
                     mixedWeight={fontWeightState.mixed}
                     onFamilyChange={(value) => actions.onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
                     onWeightChange={(value) => actions.onTextChange('fontWeight', value)}
-                    className="w-[104px]"
+                    className="w-full"
                   />
-                  <PopoverTooltip
-                    side="top"
-                    align="center"
-                    className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
-                    content={<div className="leading-3.5 font-medium">Manage fonts</div>}
+                </div>
+                <PopoverTooltip
+                  side="top"
+                  align="center"
+                  className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+                  content={<div className="leading-3.5 font-medium">Manage fonts</div>}
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-sm"
+                    aria-label="Manage fonts"
+                    onClick={actions.onOpenManageFonts}
                   >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 rounded-sm"
-                      aria-label="Manage fonts"
-                      onClick={actions.onOpenManageFonts}
-                    >
-                      <Settings2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </PopoverTooltip>
+                    <Settings2 className="h-3.5 w-3.5" />
+                  </Button>
+                </PopoverTooltip>
+            </InspectorInlineRow>
+              <InspectorInlineRow label="Size" controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}>
+                <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
+                  <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
+                    <FontSizeField
+                      nodeId={textNodes[0]?.id ?? ''}
+                      value={fontSizeState.value}
+                      onChange={(value) => actions.onTextChange('fontSize', value)}
+                      mixed={fontSizeState.mixed}
+                    />
+                  </div>
+                  <div className="shrink-0" style={{ width: `${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
+                    <NumberInput
+                      value={lineHeightState.value ?? 1.4}
+                      min={0.1}
+                      max={4}
+                      step={0.1}
+                      mixed={lineHeightState.mixed}
+                      onChange={(value) => actions.onTextChange('lineHeight', String(value))}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                <Label className="text-[11px] font-medium">Size</Label>
-                <div className="ml-auto grid w-[140px] grid-cols-[96px_40px] items-center gap-1">
-                  <FontSizeField
-                    nodeId={textNodes[0]?.id ?? ''}
-                    value={fontSizeState.value}
-                    onChange={(value) => actions.onTextChange('fontSize', value)}
-                    mixed={fontSizeState.mixed}
-                  />
-                  <NumberInput
-                    value={lineHeightState.value ?? 1.4}
-                    min={0.1}
-                    max={4}
-                    step={0.1}
-                    mixed={lineHeightState.mixed}
-                    onChange={(value) => actions.onTextChange('lineHeight', String(value))}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                <Label className="text-[11px] font-medium">Style</Label>
-                <div className="ml-auto flex items-center gap-1">
+              </InspectorInlineRow>
+              <InspectorInlineRow label="Style" controlClassName="gap-1">
                   <TextStyleIconButton
                     label="Bold"
                     active={Boolean(fontWeightState.value != null && isBoldFontWeight(fontWeightState.value) && !fontWeightState.mixed)}
@@ -322,11 +333,8 @@ export function MultiSelectInspector({
                   <TextStyleIconButton label="Strikethrough" active={hasLineThrough(decorationState.value) && !decorationState.mixed} mixed={decorationState.mixed} onClick={() => actions.onTextChange('textDecorationLine', toggleTextDecoration(decorationState.value, 'line-through'))}>
                     <span className="line-through">S</span>
                   </TextStyleIconButton>
-                </div>
-              </div>
-              <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                <Label className="text-[11px] font-medium">Align</Label>
-                <div className="ml-auto flex items-center gap-1">
+              </InspectorInlineRow>
+              <InspectorInlineRow label="Align" controlClassName="gap-1">
                   <TextStyleIconButton label="Align left" active={textAlignState.value === 'left' && !textAlignState.mixed} mixed={textAlignState.mixed} onClick={() => actions.onTextChange('textAlign', 'left')}>
                     <AlignLeft className="h-4 w-4" />
                   </TextStyleIconButton>
@@ -339,8 +347,7 @@ export function MultiSelectInspector({
                   <TextStyleIconButton label="Text direction" active={false} mixed={directionState.mixed} onClick={() => actions.onTextChange('direction', directionState.value === 'rtl' && !directionState.mixed ? 'ltr' : 'rtl')}>
                     {directionState.value === 'rtl' && !directionState.mixed ? <PilcrowLeft className="h-4 w-4" /> : <PilcrowRight className="h-4 w-4" />}
                   </TextStyleIconButton>
-                </div>
-              </div>
+              </InspectorInlineRow>
             </CardContent>
           </Card>
         ) : null}
@@ -353,12 +360,9 @@ export function MultiSelectInspector({
             <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
               {textNodes.length >= 2 ? (
                 <>
-                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium">Color</Label>
-                    <div className="ml-auto flex items-center gap-2">
-                      <HoverColorField value={foregroundState.value || undefined} mixed={foregroundState.mixed} onChange={(value) => actions.onTextChange('color', value)} ariaLabel="Text color" fallback={DEFAULT_SHADOW_COLOR} />
-                    </div>
-                  </div>
+                  <InspectorInlineRow label="Color" controlClassName="gap-2">
+                    <HoverColorField value={foregroundState.value || undefined} mixed={foregroundState.mixed} onChange={(value) => actions.onTextChange('color', value)} ariaLabel="Text color" fallback={DEFAULT_SHADOW_COLOR} />
+                  </InspectorInlineRow>
                 </>
               ) : null}
               {filterShadowNodes.length >= 2 ? (
@@ -389,53 +393,47 @@ export function MultiSelectInspector({
             <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
               {backgroundWrapperIds.length + backgroundLeafIds.length >= 2 ? (
                 <>
-                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium">Background</Label>
-                    <div className="ml-auto flex items-center gap-2">
-                      <HoverColorField
-                        value={backgroundState.value || undefined}
-                        mixed={backgroundState.mixed}
-                        onChange={(value) =>
-                          onBulkEdit([
-                            ...(backgroundLeafIds.length > 0
-                              ? ([{ kind: 'text', targetIds: backgroundLeafIds, field: 'background' as const, value }] satisfies BulkEditOperation[])
-                              : []),
-                            ...(backgroundWrapperIds.length > 0
-                              ? ([{ kind: 'wrapperStyle', targetIds: backgroundWrapperIds, field: 'background' as const, value }] satisfies BulkEditOperation[])
-                              : []),
-                          ])
-                        }
-                        ariaLabel="Background color"
-                      />
-                    </div>
-                  </div>
+                  <InspectorInlineRow label="Background" controlClassName="gap-2">
+                    <HoverColorField
+                      value={backgroundState.value || undefined}
+                      mixed={backgroundState.mixed}
+                      onChange={(value) =>
+                        onBulkEdit([
+                          ...(backgroundLeafIds.length > 0
+                            ? ([{ kind: 'text', targetIds: backgroundLeafIds, field: 'background' as const, value }] satisfies BulkEditOperation[])
+                            : []),
+                          ...(backgroundWrapperIds.length > 0
+                            ? ([{ kind: 'wrapperStyle', targetIds: backgroundWrapperIds, field: 'background' as const, value }] satisfies BulkEditOperation[])
+                            : []),
+                        ])
+                      }
+                      ariaLabel="Background color"
+                    />
+                  </InspectorInlineRow>
                 </>
               ) : null}
 
               {radiusWrapperIds.length + radiusLeafIds.length >= 2 ? (
                 <>
-                  <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                    <Label className="text-[11px] font-medium">Radius</Label>
-                    <div className="ml-auto w-[120px]">
-                      <NumericUnitInlineField
-                        value={radiusState.value}
-                        units={['px', '%']}
-                        onChange={(value) =>
-                          onBulkEdit([
-                            ...(radiusLeafIds.length > 0
-                              ? ([{ kind: 'text', targetIds: radiusLeafIds, field: 'borderRadius' as const, value }] satisfies BulkEditOperation[])
-                              : []),
-                            ...(radiusWrapperIds.length > 0
-                              ? ([{ kind: 'wrapperStyle', targetIds: radiusWrapperIds, field: 'borderRadius' as const, value }] satisfies BulkEditOperation[])
-                              : []),
-                          ])
-                        }
-                        placeholder={radiusState.mixed ? '-' : '16'}
-                        mixed={radiusState.mixed}
-                        min={0}
-                      />
-                    </div>
-                  </div>
+                  <InspectorInlineRow label="Radius" controlWidth="120px">
+                    <NumericUnitInlineField
+                      value={radiusState.value}
+                      units={['px', '%']}
+                      onChange={(value) =>
+                        onBulkEdit([
+                          ...(radiusLeafIds.length > 0
+                            ? ([{ kind: 'text', targetIds: radiusLeafIds, field: 'borderRadius' as const, value }] satisfies BulkEditOperation[])
+                            : []),
+                          ...(radiusWrapperIds.length > 0
+                            ? ([{ kind: 'wrapperStyle', targetIds: radiusWrapperIds, field: 'borderRadius' as const, value }] satisfies BulkEditOperation[])
+                            : []),
+                        ])
+                      }
+                      placeholder={radiusState.mixed ? '-' : '16'}
+                      mixed={radiusState.mixed}
+                      min={0}
+                    />
+                  </InspectorInlineRow>
                 </>
               ) : null}
 

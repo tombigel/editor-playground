@@ -182,7 +182,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('ui-popover-surface');
     expect(markup).toContain('popover="manual"');
     expect(markup).toContain('text-[13px] leading-4');
-    expect(markup).toContain('px-[3px]');
+    expect(markup).toContain('px-2');
     expect(markup).toContain('hover:text-[color:var(--editor-accent)]');
     expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
     expect(markup).toContain('text-[color:var(--editor-accent)] [background:var(--editor-select-highlight-background)]');

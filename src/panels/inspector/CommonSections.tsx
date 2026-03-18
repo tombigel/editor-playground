@@ -35,6 +35,7 @@ import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, Wrapp
 import {
   BorderControlGroup,
   HoverColorField,
+  InspectorInlineRow,
   NumericUnitInlineField,
   OrderIconButton,
   ShadowControlGroup,
@@ -448,17 +449,14 @@ export function WrapperDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Background</Label>
-          <div className="ml-auto flex items-center gap-2">
-            <HoverColorField
-              value={node.style.background}
-              onChange={(value) => onWrapperStyleChange('background', value)}
-              ariaLabel="Background color"
-              showOpacity={allowsBackgroundOpacity}
-            />
-          </div>
-        </div>
+        <InspectorInlineRow label="Background" controlClassName="gap-2">
+          <HoverColorField
+            value={node.style.background}
+            onChange={(value) => onWrapperStyleChange('background', value)}
+            ariaLabel="Background color"
+            showOpacity={allowsBackgroundOpacity}
+          />
+        </InspectorInlineRow>
         {supportsContainerSurfaceStyling ? (
           <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
             <Label className="pt-1 text-[11px] font-medium">Border</Label>
@@ -493,26 +491,23 @@ export function WrapperDesignSection({
         ) : null}
 
         {node.role === 'section' ? (
-          <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-            <Label className="text-[11px] font-medium">Divider</Label>
-            <div className="ml-auto flex items-center gap-2">
-              <NumericUnitInlineField
-                value={node.style.sectionBorderBottomWidth?.raw ?? ''}
-                units={['px']}
-                onChange={(value) => onWrapperStyleChange('sectionBorderBottomWidth', value)}
-                placeholder="1"
-                min={0}
-                className="w-[5.5rem]"
-              />
-              <HoverColorField
-                value={node.style.sectionBorderBottomColor}
-                onChange={(value) => onWrapperStyleChange('sectionBorderBottomColor', value)}
-                ariaLabel="Bottom border color"
-                fallback="#dbe3ee"
-                showOpacity={false}
-              />
-            </div>
-          </div>
+          <InspectorInlineRow label="Divider" controlClassName="gap-2">
+            <NumericUnitInlineField
+              value={node.style.sectionBorderBottomWidth?.raw ?? ''}
+              units={['px']}
+              onChange={(value) => onWrapperStyleChange('sectionBorderBottomWidth', value)}
+              placeholder="1"
+              min={0}
+              className="w-[5.5rem]"
+            />
+            <HoverColorField
+              value={node.style.sectionBorderBottomColor}
+              onChange={(value) => onWrapperStyleChange('sectionBorderBottomColor', value)}
+              ariaLabel="Bottom border color"
+              fallback="#dbe3ee"
+              showOpacity={false}
+            />
+          </InspectorInlineRow>
         ) : null}
     </InspectorSectionCard>
   );

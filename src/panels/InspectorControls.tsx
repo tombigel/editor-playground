@@ -584,7 +584,7 @@ export function FontPickerPopover({
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 w-full justify-start overflow-hidden rounded-sm px-[3px] text-[13px]"
+        className="h-8 w-full justify-start overflow-hidden rounded-sm px-2 text-[13px]"
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -1587,6 +1587,31 @@ export function FormField({ label, children }: { label: string; children: ReactN
     <div className="space-y-0.5">
       <Label className="text-[11px] font-medium">{label}</Label>
       {children}
+    </div>
+  );
+}
+
+export function InspectorInlineRow({
+  label,
+  children,
+  className,
+  labelClassName,
+  controlClassName,
+  controlWidth,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+  labelClassName?: string;
+  controlClassName?: string;
+  controlWidth?: string;
+}) {
+  return (
+    <div className={cn('flex items-center gap-1', className)}>
+      <Label className={cn('min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
+      <div className={cn('ml-auto flex min-w-0 items-center justify-end', controlClassName)} style={controlWidth ? { width: controlWidth } : undefined}>
+        {children}
+      </div>
     </div>
   );
 }

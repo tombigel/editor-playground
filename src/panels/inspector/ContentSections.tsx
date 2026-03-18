@@ -33,6 +33,7 @@ import {
   FontSizeField,
   FormField,
   HoverColorField,
+  InspectorInlineRow,
   NumberInput,
   ShadowControlGroup,
   SpacingField,
@@ -155,10 +156,9 @@ export function TextTextStyleSection({
           onTextChange={onTextChange}
           onOpenManageFonts={onOpenManageFonts}
         />
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">HTML tag</Label>
+        <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
           <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
-            <SelectTrigger className="ml-auto h-8 w-24 rounded-sm text-[11px]">
+            <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -173,7 +173,7 @@ export function TextTextStyleSection({
               <SelectItem value="div">div</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </InspectorInlineRow>
     </InspectorSectionCard>
   );
 }
@@ -321,28 +321,22 @@ export function ButtonDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Color</Label>
-          <div className="ml-auto flex items-center gap-2">
-            <HoverColorField
-              value={node.style?.color}
-              onChange={(value) => onTextChange('color', value)}
-              ariaLabel="Text color"
-              fallback={DEFAULT_BUTTON_TEXT_COLOR}
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Background</Label>
-          <div className="ml-auto flex items-center gap-2">
-            <HoverColorField
-              value={node.style?.background}
-              onChange={(value) => onTextChange('background', value)}
-              ariaLabel="Button background color"
-              fallback={DEFAULT_BUTTON_BACKGROUND}
-            />
-          </div>
-        </div>
+        <InspectorInlineRow label="Color" controlClassName="gap-2">
+          <HoverColorField
+            value={node.style?.color}
+            onChange={(value) => onTextChange('color', value)}
+            ariaLabel="Text color"
+            fallback={DEFAULT_BUTTON_TEXT_COLOR}
+          />
+        </InspectorInlineRow>
+        <InspectorInlineRow label="Background" controlClassName="gap-2">
+          <HoverColorField
+            value={node.style?.background}
+            onChange={(value) => onTextChange('background', value)}
+            ariaLabel="Button background color"
+            fallback={DEFAULT_BUTTON_BACKGROUND}
+          />
+        </InspectorInlineRow>
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>
           <BorderControlGroup
@@ -500,31 +494,28 @@ function NavigationFields({
 
   return (
     <>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">Type</Label>
-        <div className="flex justify-end">
-          <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-            <Button
-              type="button"
-              variant={linkType === 'anchor' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-7 px-2.5 text-[11px]"
-              onClick={() => handleLinkTypeChange('anchor')}
-            >
-              Internal
-            </Button>
-            <Button
-              type="button"
-              variant={linkType === 'external' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-7 px-2.5 text-[11px]"
-              onClick={() => handleLinkTypeChange('external')}
-            >
-              External
-            </Button>
-          </div>
+      <InspectorInlineRow label="Type">
+        <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+          <Button
+            type="button"
+            variant={linkType === 'anchor' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-7 px-2.5 text-[11px]"
+            onClick={() => handleLinkTypeChange('anchor')}
+          >
+            Internal
+          </Button>
+          <Button
+            type="button"
+            variant={linkType === 'external' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-7 px-2.5 text-[11px]"
+            onClick={() => handleLinkTypeChange('external')}
+          >
+            External
+          </Button>
         </div>
-      </div>
+      </InspectorInlineRow>
       {linkType === 'anchor' ? (
         <div className="space-y-0.5">
           <div className="flex items-center justify-between gap-2">
@@ -792,25 +783,24 @@ export function TextAppearanceSection({
         onTextChange={onTextChange}
         onOpenManageFonts={onOpenManageFonts}
       />
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">HTML tag</Label>
-        <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
-          <SelectTrigger className="ml-auto h-8 w-24 rounded-sm text-[11px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="h1">h1</SelectItem>
-            <SelectItem value="h2">h2</SelectItem>
-            <SelectItem value="h3">h3</SelectItem>
-            <SelectItem value="h4">h4</SelectItem>
-            <SelectItem value="h5">h5</SelectItem>
-            <SelectItem value="h6">h6</SelectItem>
-            <SelectItem value="p">p</SelectItem>
-            <SelectItem value="blockquote">blockquote</SelectItem>
-            <SelectItem value="div">div</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
+            <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="h1">h1</SelectItem>
+              <SelectItem value="h2">h2</SelectItem>
+              <SelectItem value="h3">h3</SelectItem>
+              <SelectItem value="h4">h4</SelectItem>
+              <SelectItem value="h5">h5</SelectItem>
+              <SelectItem value="h6">h6</SelectItem>
+              <SelectItem value="p">p</SelectItem>
+              <SelectItem value="blockquote">blockquote</SelectItem>
+              <SelectItem value="div">div</SelectItem>
+            </SelectContent>
+          </Select>
+      </InspectorInlineRow>
       <div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
         <TypographyDesignFields
           node={node}
@@ -1041,6 +1031,17 @@ function createShadowFallback(color: string, blur: number, spread: number, offse
 
 type TypographyInspectorNode = TextInspectorNode | LinkInspectorNode | ButtonInspectorNode;
 
+const TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX = 32;
+const TYPOGRAPHY_FIELD_GAP_PX = 4;
+const TYPOGRAPHY_FONT_PICKER_WIDTH_PX = 104 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX;
+const TYPOGRAPHY_FONT_ROW_WIDTH_PX =
+  TYPOGRAPHY_FONT_PICKER_WIDTH_PX + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX + TYPOGRAPHY_FIELD_GAP_PX;
+const TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX = TYPOGRAPHY_FONT_ROW_WIDTH_PX;
+const TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX = 96 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX / 2;
+const TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX = 40 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX / 2;
+const TYPOGRAPHY_SIZE_ROW_WIDTH_PX =
+  TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX + TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX + TYPOGRAPHY_FIELD_GAP_PX;
+
 function TypographyTextStyleFields({
   document,
   node,
@@ -1063,18 +1064,18 @@ function TypographyTextStyleFields({
 
   return (
     <>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">Font</Label>
-        <div className="ml-auto flex w-[140px] items-center justify-between gap-1">
-          <FontPickerPopover
-            familyValue={currentFamily}
-            weightValue={node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT}
-            families={documentFonts}
-            systemOptionValue={SYSTEM_FONT_VALUE}
-            onFamilyChange={(value) => onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
-            onWeightChange={(value) => onTextChange('fontWeight', value)}
-            className="w-[104px]"
-          />
+      <InspectorInlineRow label="Font" controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`} controlClassName="gap-1">
+          <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_PICKER_WIDTH_PX}px` }}>
+            <FontPickerPopover
+              familyValue={currentFamily}
+              weightValue={node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT}
+              families={documentFonts}
+              systemOptionValue={SYSTEM_FONT_VALUE}
+              onFamilyChange={(value) => onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
+              onWeightChange={(value) => onTextChange('fontWeight', value)}
+              className="w-full"
+            />
+          </div>
           <PopoverTooltip
             side="top"
             align="center"
@@ -1092,24 +1093,24 @@ function TypographyTextStyleFields({
               <Settings2 className="h-3.5 w-3.5" />
             </Button>
           </PopoverTooltip>
+      </InspectorInlineRow>
+      <InspectorInlineRow label="Size" controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}>
+        <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
+          <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
+            <FontSizeField nodeId={node.id} value={fontSizeFieldValueFromNode(node)} onChange={(value) => onTextChange('fontSize', value)} />
+          </div>
+          <div className="shrink-0" style={{ width: `${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
+            <NumberInput
+              value={lineHeightValue(node)}
+              min={0.1}
+              max={4}
+              step={0.1}
+              onChange={(value) => onTextChange('lineHeight', String(value))}
+            />
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">Size</Label>
-        <div className="ml-auto grid w-[140px] grid-cols-[96px_40px] items-center gap-1">
-          <FontSizeField nodeId={node.id} value={fontSizeFieldValueFromNode(node)} onChange={(value) => onTextChange('fontSize', value)} />
-          <NumberInput
-            value={lineHeightValue(node)}
-            min={0.1}
-            max={4}
-            step={0.1}
-            onChange={(value) => onTextChange('lineHeight', String(value))}
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">Style</Label>
-        <div className="ml-auto flex items-center gap-1">
+      </InspectorInlineRow>
+      <InspectorInlineRow label="Style" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
           <TextStyleIconButton
             label="Bold"
             active={isBoldFontWeight(node.style?.fontWeight)}
@@ -1150,11 +1151,8 @@ function TypographyTextStyleFields({
           >
             <span className="line-through">S</span>
           </TextStyleIconButton>
-        </div>
-      </div>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">Align</Label>
-        <div className="ml-auto flex items-center gap-1">
+      </InspectorInlineRow>
+      <InspectorInlineRow label="Align" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
           <TextStyleIconButton
             label="Align left"
             active={(node.style?.textAlign ?? 'left') === 'left'}
@@ -1187,12 +1185,9 @@ function TypographyTextStyleFields({
               <PilcrowRight className="h-4 w-4" />
             )}
           </TextStyleIconButton>
-        </div>
-      </div>
+      </InspectorInlineRow>
       {supportsWrap ? (
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">{wrapFieldLabel}</Label>
-          <div className="ml-auto flex items-center gap-1">
+        <InspectorInlineRow label={wrapFieldLabel} controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
             <TextStyleIconButton
               label={wrapEnabled ? 'Wrapped text' : 'Single line'}
               active={wrapEnabled}
@@ -1200,8 +1195,7 @@ function TypographyTextStyleFields({
             >
               <TextWrap className="h-4 w-4" />
             </TextStyleIconButton>
-          </div>
-        </div>
+        </InspectorInlineRow>
       ) : null}
     </>
   );
@@ -1222,17 +1216,14 @@ function TypographyDesignFields({
 }) {
   return (
     <>
-      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-        <Label className="text-[11px] font-medium">Color</Label>
-        <div className="ml-auto flex items-center gap-2">
-          <HoverColorField
-            value={node.style?.color}
-            onChange={(value) => onTextChange('color', value)}
-            ariaLabel="Text color"
-            fallback={colorFallback}
-          />
-        </div>
-      </div>
+      <InspectorInlineRow label="Color" controlClassName="gap-2">
+        <HoverColorField
+          value={node.style?.color}
+          onChange={(value) => onTextChange('color', value)}
+          ariaLabel="Text color"
+          fallback={colorFallback}
+        />
+      </InspectorInlineRow>
       <div className="space-y-1.5">
         <ShadowControlGroup
           color={shadow.color}
