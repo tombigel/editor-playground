@@ -56,4 +56,12 @@ describe('app/AppShell', () => {
     expect(markup).toContain('editor-insert-button-inner flex h-full w-full items-center justify-center rounded-lg border');
     expect(markup).toContain('flex h-10 w-10 items-center justify-center rounded-lg border');
   });
+
+  it('renders the manage fonts dialog with an inner scroll container', () => {
+    const markup = renderToStaticMarkup(<AppShell {...createProps()} manageFontsOpen />);
+
+    expect(markup).toContain('Manage Fonts');
+    expect(markup).toContain('max-h-[min(84vh,820px)]');
+    expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto pr-1');
+  });
 });

@@ -16,7 +16,7 @@ export function createDefaultHeader(parentId: NodeId) {
     x: '62px',
     y: '25.5px',
     width: 'fit-content',
-    style: { color: '#0f172a', fontSize: '20px', fontWeight: 'bold', htmlTag: 'h1' },
+    style: { color: '#0f172a', fontSize: '20px', fontWeight: 700, htmlTag: 'h1' },
   });
 
   const headerSubtitle = createTextNode(header.id, {
@@ -70,7 +70,7 @@ export function createDefaultFooter(parentId: NodeId) {
     x: '67px',
     y: '28px',
     width: 'fit-content',
-    style: { color: '#0f172a', fontSize: '16px', fontWeight: 'bold', lineHeight: 1.2, htmlTag: 'h2' },
+    style: { color: '#0f172a', fontSize: '16px', fontWeight: 700, lineHeight: 1.2, htmlTag: 'h2' },
   });
 
   const footerCopy = createTextNode(footer.id, {

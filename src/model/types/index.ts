@@ -34,6 +34,7 @@ export type ShadowStyleField =
   | 'shadowOffsetY';
 export type LeafTypographyField =
   | 'color'
+  | 'fontFamily'
   | 'fontSize'
   | 'fontWeight'
   | 'fontStyle'
@@ -129,10 +130,40 @@ export type ShadowStyle = {
   shadowOffsetY?: number;
 };
 
+export type FontSource = 'google-fonts';
+export type DocumentFontOrigin = 'default' | 'added';
+
+export type FontAxis = {
+  tag: string;
+  min: number;
+  max: number;
+};
+
+export type DocumentFontFamily = {
+  family: string;
+  category: string;
+  subsets: string[];
+  variants: string[];
+  axes?: FontAxis[];
+  isVariable: boolean;
+  source: FontSource;
+  lastModified?: string;
+  popularityRank?: number;
+  favorite: boolean;
+  origin: DocumentFontOrigin;
+};
+
+export type FontLibrary = {
+  defaults: string[];
+  favorites: string[];
+  usedFamilies: DocumentFontFamily[];
+};
+
 export type TypographyStyle = {
   color?: string;
+  fontFamily?: string;
   fontSize?: ParsedValue<FontSizeValue>;
-  fontWeight?: 'normal' | 'bold';
+  fontWeight?: number;
   fontStyle?: 'normal' | 'italic';
   textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through';
   lineHeight?: number;
@@ -265,6 +296,7 @@ export type DocumentNode =
 export type DocumentModel = {
   rootId: NodeId;
   nodes: Record<NodeId, DocumentNode>;
+  fontLibrary: FontLibrary;
 };
 
 export type ComputedStickyRegistration = {
@@ -302,8 +334,9 @@ export type TemplateNode = DocumentNode | WrapperNode;
 
 export type TextStyleOptions = {
   color?: string;
+  fontFamily?: string;
   fontSize?: string;
-  fontWeight?: 'normal' | 'bold';
+  fontWeight?: number;
   lineHeight?: number;
   htmlTag?: TextLeaf['htmlTag'];
 };

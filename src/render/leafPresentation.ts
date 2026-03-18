@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DocumentNode, ImageLeaf, LinkLeaf, TextLeaf, ButtonLeaf, TypographyStyle } from '../model/types';
+import { buildFontFamilyStack, DEFAULT_FONT_FALLBACK_STACK } from '../fonts';
 import {
 } from '../model/styleDefaults';
 import { formatValue } from '../model/units';
@@ -34,6 +35,7 @@ export function getTextLeafStyle(node: TextLeaf): StyleRecord {
     whiteSpace: 'pre-wrap',
     maxWidth: '100%',
     margin: 0,
+    fontFamily: DEFAULT_FONT_FALLBACK_STACK,
   });
 }
 
@@ -43,6 +45,7 @@ export function getLinkLeafStyle(node: LinkLeaf): StyleRecord {
     width: '100%',
     maxWidth: '100%',
     ...getTypographyStyle(node.style, {
+      fontFamily: DEFAULT_FONT_FALLBACK_STACK,
       whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,
     }),
   };
@@ -70,6 +73,7 @@ export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
 export function getButtonLeafStyle(node: ButtonLeaf): StyleRecord {
   const style: StyleRecord = {
     ...getTypographyStyle(node.style, {
+      fontFamily: DEFAULT_FONT_FALLBACK_STACK,
       whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,
     }, { includeFilter: false }),
     ...(node.style?.background ? { background: node.style.background } : {}),
@@ -125,6 +129,7 @@ export function getSiteLeafBaseRules(selectors: {
     {
       selector: selectors.link,
       style: {
+        fontFamily: 'inherit',
         textDecoration: 'inherit',
         textUnderlineOffset: 'inherit',
         fontWeight: 'inherit',
@@ -197,6 +202,7 @@ function getTypographyStyle(
     letterSpacing?: string;
     textDecorationLine?: string;
     lineHeight?: number;
+    fontFamily?: string;
     direction?: 'ltr' | 'rtl';
     textAlign?: 'left' | 'center' | 'right';
     whiteSpace?: 'normal' | 'nowrap' | 'pre-wrap';
@@ -213,6 +219,9 @@ function getTypographyStyle(
     ...(defaults.maxWidth ? { maxWidth: defaults.maxWidth } : {}),
     ...(defaults.whiteSpace ? { whiteSpace: defaults.whiteSpace } : {}),
     ...(style?.color || defaults.color ? { color: style?.color ?? defaults.color } : {}),
+    ...(style?.fontFamily || defaults.fontFamily
+      ? { fontFamily: style?.fontFamily ? buildFontFamilyStack(style.fontFamily) : defaults.fontFamily }
+      : {}),
     ...(style?.fontSize || defaults.fontSize
       ? { fontSize: style?.fontSize ? formatValue(style.fontSize.parsed) : defaults.fontSize }
       : {}),

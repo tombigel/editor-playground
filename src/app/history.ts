@@ -63,14 +63,17 @@ export function buildHistoryEntry(
     !deepEqual(beforeSelectedIds, afterSelectedIds);
   const pendingChanged = !deepEqual(before.pendingRoleSwap, after.pendingRoleSwap);
   const rootChanged = before.document.rootId !== after.document.rootId;
+  const fontLibraryChanged = !deepEqual(before.document.fontLibrary, after.document.fontLibrary);
 
-  if (!selectedChanged && !pendingChanged && !rootChanged && patches.length === 0) {
+  if (!selectedChanged && !pendingChanged && !rootChanged && !fontLibraryChanged && patches.length === 0) {
     return null;
   }
 
   return {
     rootIdBefore: before.document.rootId,
     rootIdAfter: after.document.rootId,
+    fontLibraryBefore: structuredClone(before.document.fontLibrary),
+    fontLibraryAfter: structuredClone(after.document.fontLibrary),
     nodePatches: patches,
     selectedBefore: before.selectedId,
     selectedAfter: after.selectedId,
@@ -116,6 +119,8 @@ export function composeHistoryEntries(previous: HistoryEntry, next: HistoryEntry
   return {
     rootIdBefore: previous.rootIdBefore,
     rootIdAfter: next.rootIdAfter,
+    fontLibraryBefore: previous.fontLibraryBefore,
+    fontLibraryAfter: next.fontLibraryAfter,
     nodePatches: Array.from(byId.values()),
     selectedBefore: previous.selectedBefore,
     selectedAfter: next.selectedAfter,
@@ -155,6 +160,7 @@ export function applyHistoryEntry(
     document: {
       rootId,
       nodes,
+      fontLibrary: structuredClone(direction === 'undo' ? entry.fontLibraryBefore : entry.fontLibraryAfter),
     },
     selectedId,
     selectedIds,

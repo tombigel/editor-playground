@@ -13,6 +13,7 @@ function createState(): EditorState {
   return {
     document: createInitialDocument(),
     selectedId: null,
+    selectedIds: [],
     pendingRoleSwap: null,
     ui: {
       previewSticky: true,

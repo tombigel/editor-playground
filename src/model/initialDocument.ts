@@ -2,6 +2,7 @@ import type { DocumentModel } from './types';
 import { nextId } from './defaultFactories';
 import { createDefaultFooter, createDefaultHeader } from './defaultChrome';
 import { createSectionFromTemplate } from './sectionTemplates';
+import { createDefaultFontLibrary } from '../fonts/defaults';
 
 export function createInitialDocument(): DocumentModel {
   const siteId = nextId('site');
@@ -11,6 +12,7 @@ export function createInitialDocument(): DocumentModel {
 
   return {
     rootId: siteId,
+    fontLibrary: createDefaultFontLibrary(),
     nodes: {
       [siteId]: {
         id: siteId,

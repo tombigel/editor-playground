@@ -23,8 +23,15 @@ const linkDesignSection: InspectorSectionDefinition = {
 
 const linkTextStyleSection: InspectorSectionDefinition = {
   id: 'link-text-style',
-  render: ({ node, actions }) =>
-    isLinkNode(node) ? <LinkTextStyleSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ document, node, actions }) =>
+    isLinkNode(node) ? (
+      <LinkTextStyleSection
+        document={document}
+        node={node}
+        onTextChange={actions.onTextChange}
+        onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+      />
+    ) : null,
 };
 
 export const LINK_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [

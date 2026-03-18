@@ -109,7 +109,7 @@ export function styleText(
   options: {
     color?: string;
     fontSize?: string;
-    fontWeight?: 'normal' | 'bold';
+    fontWeight?: number;
     lineHeight?: number;
     htmlTag?: TextLeaf['htmlTag'];
   },

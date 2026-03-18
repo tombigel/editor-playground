@@ -236,11 +236,13 @@ describe('panels/InspectorPanel', () => {
       />,
     );
 
-    expect(markup).toContain('2 nodes selected');
     expect(markup).toContain('First selected node is the alignment anchor.');
     expect(markup).not.toContain('>Multi-select<');
     expect(markup).toContain('>Layout<');
     expect(markup).toContain('>Typography<');
+    expect(markup).toContain('class="relative w-[104px]"');
+    expect(markup).toContain('aria-label="Manage fonts"');
+    expect(markup).not.toContain('class="h-8 rounded-sm text-[11px] w-[72px]"');
   });
 
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {
@@ -621,6 +623,12 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup).toContain('>Design<');
     expect(textMarkup).toContain('>Text<');
     expect(textMarkup.indexOf('>Text style<')).toBeLessThan(textMarkup.indexOf('>Design<'));
+    expect(textMarkup).toContain('aria-label="Manage fonts"');
+    expect(textMarkup).toContain('>Manage fonts<');
+    expect(textMarkup).toContain('ml-auto flex w-[140px] items-center justify-between gap-1');
+    expect(textMarkup).toContain('class="relative w-[104px]"');
+    expect(textMarkup).not.toContain('aria-label="Suggested font sizes"');
+    expect(textMarkup).not.toContain('>Weight<');
     expect(textMarkup).toContain('>HTML tag<');
     expect(textMarkup).toContain('>Color<');
     expect(textMarkup).toContain('>Shadow<');

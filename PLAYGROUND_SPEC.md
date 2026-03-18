@@ -40,6 +40,33 @@ Leaf roles:
 
 Node ids are monotonic per session and synchronized against the loaded document before insertions, so newly inserted templates/components cannot overwrite existing nodes.
 
+## Document Model
+
+The document persists a top-level `fontLibrary` manifest alongside `rootId` and `nodes`.
+
+Font library fields:
+
+- `defaults`
+- `usedFamilies`
+- `favorites`
+
+New documents seed these Google-backed defaults:
+
+- `Inter`
+- `Roboto`
+- `Lora`
+- `Playfair Display`
+- `Assistant`
+
+Font library behavior:
+
+- font management is document-level, not app-level
+- text, link, and button leaves can author `fontFamily` and numeric `fontWeight`
+- favorites are persisted per document
+- removing a font family is blocked while any text-capable node still uses it
+- purge-unused removes only unused families that are neither defaults nor favorites
+- imported legacy text weights such as `'bold'` and `'normal'` are normalized to numeric weights
+
 ## Wrapper Model
 
 All wrappers share the same structural behavior:
@@ -164,6 +191,9 @@ Keyboard shortcuts:
 - `Mod + Shift + [`: send to back (when a node is selected and no input field is focused)
 - `Mod + Shift + ]`: bring to front (when a node is selected and no input field is focused)
 - `Mod + B`: toggle bold on selected text-capable nodes when no input field is focused
+  - bold is active at effective weight `>= 700`
+  - toggle targets `400` and `800`
+  - static families resolve the target to the nearest supported weight
 - `Mod + I`: toggle italic on selected text-capable nodes when no input field is focused
 - `Mod + U`: toggle underline on selected text-capable nodes when no input field is focused
 - `Mod + Shift + X`: toggle strikethrough on selected text-capable nodes when no input field is focused
@@ -215,7 +245,7 @@ The playground imports and exports document JSON, and it can also export a rende
   - choosing a `.json` file
   - pasting JSON from clipboard into the settings panel import box
   - importing pasted JSON from the textarea
-- import normalizes the incoming document, validates graph integrity, replaces the current document, clears selection, and can be undone with `Cmd + Z`
+- import normalizes the incoming document, validates graph integrity, upgrades legacy font state, replaces the current document, clears selection, and can be undone with `Cmd + Z`
 
 Validation during import/persistence restore now checks document graph integrity in addition to role nesting:
 
@@ -233,6 +263,7 @@ Rendered site export is SSR-safe:
   - body HTML
   - generated CSS
   - a complete HTML document that links to the generated CSS file
+- rendered HTML adds Google Fonts preconnect and stylesheet links when the document authors Google-backed families
 - rendered site export does not depend on browser measurement APIs
 
 ## Units
@@ -257,7 +288,7 @@ Text-bearing leaves split typography from presentation in the inspector:
 
 - `text`
   - `Content`: body copy
-  - `Text style`: font size, line height, bold, italic, underline, strikethrough, alignment, direction, and HTML tag
+  - `Text style`: a combined font family/weight picker, bold, line height, italic, underline, strikethrough, alignment, direction, and HTML tag
   - `Design`: text color and filter-based shadow
 - `link`
   - `Content`: label and `href`
@@ -278,6 +309,74 @@ Text-bearing leaves split typography from presentation in the inspector:
   - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
   - button wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
 
+Typography picker behavior:
+
+- the family picker shows `Sans Serif` first, mapped to the browser/system sans-serif stack
+- recent font selections appear next
+- a divider separates recent fonts from the full document-font list
+- the remaining document font families are sorted by:
+  1. language/subset
+  2. family name
+- the family picker renders each family in its own font for preview
+- family menu entries use a single larger text line; subset/category helper text is omitted
+- selecting a family keeps the family menu open with the current family still focused so keyboard traversal can continue
+- the font row uses a combined two-stage picker: families on the left, family-specific weights on the right
+- the same combined picker is used for both single-node and multi-select typography editing
+- the combined picker keeps the family list order stable while it is open
+- the combined picker trigger previews the current weight directly on the family name instead of showing a separate weight label
+- when multi-select typography values differ, the combined picker trigger shows `Mixed` until a new family or weight is chosen
+- the open picker marks the currently selected family and weight with a left-aligned check icon
+- the weight dropdown shows readable names (`Light`, `Normal`, `Bold`, etc.) while still authoring numeric values
+- weight options preview in the currently selected family at their own weight
+- the family picker exposes a manage-fonts icon button next to the family/weight controls
+- the weight picker authors numeric values from `100` to `900`
+- variable families expose stepped weight options across their supported range
+- the bold button uses the same `400`/`800` toggle behavior as `Mod + B`
+- the size and line-height row uses the same total control width as the four style buttons below it
+
+## Font Management
+
+Google Fonts support is split between a no-UI data layer and document/editor surfaces.
+
+Data/runtime behavior:
+
+- `src/fonts/` owns Google Fonts fetch, normalization, search/filter/sort, weight resolution, document font-library helpers, and Google CSS2 URL generation
+- Google catalog filtering and sorting runs locally after the catalog is fetched
+- the Google catalog is cached locally in browser storage and refreshed when the cached snapshot becomes stale so repeated panel opens do not always spend Google Fonts API calls
+- language filters map to Google `subsets`, but the UI groups them into human-readable buckets
+- variable-font metadata is preserved, but variable-axis authoring UI is deferred
+
+Editor behavior:
+
+- a reusable `ManageFontsPanel` is available both as a standalone dialog and inside Settings
+- the panel can:
+  - browse Google Fonts
+  - paginate Google catalog results with a selectable page size of `10`, `20`, or `50` families; the default is `10`
+  - search by family, subset, and tag text
+  - filter by language, category, favorites, and used state
+  - default the language filter to `Western`
+  - expose grouped language options such as `Western`, `Hebrew`, `Arabic`, `Cyrillic`, and `Other` instead of raw Google subset ids
+  - persist browse search/filter state in browser storage so reopening the panel keeps the current query
+  - hide variable fonts by default while debugging static-font flows
+  - add document fonts
+  - remove unused document fonts
+  - mark and unmark favorites
+  - purge unused non-default, non-favorite families
+  - preview document-library families inline with larger family/sample text
+  - preview each family with a language-appropriate sample for the active language bucket when possible
+  - keep compact metadata (`category`, language, usage, styles/variable) pinned on the opposite side of each row so the card height stays stable
+  - preview only the currently visible Google catalog page with a lightweight shared stylesheet so browsing stays responsive
+
+Loading/export behavior:
+
+- the editor injects one shared Google Fonts stylesheet link for the current document font usage
+- editor preview loading also includes document-library families so family names can preview in the picker before they are used on-canvas
+- the management panel injects a second preview stylesheet only for the currently visible catalog page and document-library families
+- static families request only the numeric weights currently authored in the document
+- variable families request the authored weight range from the family metadata
+- Google Fonts Developer API capability flags are sent as repeated `capability=` params, not a comma-joined value
+- Google CSS2 family names are encoded directly through `URLSearchParams`; multi-word family names must not pre-replace spaces with `+` before serialization
+
 Shadow controls in the inspector edit `distance` and `angle`, but the persisted document model continues to store shadow offsets as `shadowOffsetX` / `shadowOffsetY`. The shadow numeric inputs use compact fixed unit suffixes with tighter padding than the geometry fields: `blur`, `spread`, and `distance` render with `px`, and `angle` renders with `°`. Shadow angle is edited and displayed on a `0..360` scale; when stored offsets are read back into the inspector, negative `atan2()` results are normalized into that positive range. Like the geometry number fields, these numeric inputs keep a local draft while editing: clearing the field or typing an out-of-range number does not immediately commit to the model, and the field restores the last valid committed value on blur. Text and link shadows render via CSS `filter: drop-shadow(...)`; wrapper, image, and button shadows render via CSS `box-shadow`. A fully transparent authored shadow color suppresses shadow output entirely instead of serializing a no-op shadow declaration. Button shadows do not also receive a redundant filter shadow. Wrapper, image, and button border surfaces use `box-sizing: border-box`, and bordered fills are clipped to `padding-box` so the border reads as an outer stroke instead of painting over the background.
 
 Unified border editors follow the same simplified treatment:
@@ -288,7 +387,7 @@ Unified border editors follow the same simplified treatment:
 - border width preserves its implicit stored unit, and border radius preserves/edits its explicit `px` or `%` unit
 - authored `0` border widths and `0` border radii suppress rendered border/radius CSS instead of serializing explicit zero-value declarations
 
-Inspector geometry controls use single composite fields instead of raw freeform text. `X` and `Y` are fixed `px` fields, so they render a static suffix instead of a unit dropdown. Top-level wrappers with role `section`, `header`, or `footer` do not show `X` and `Y` at all, because their stage position is structural rather than freely authored. Wrappers with role `section`, `header`, `footer`, or `container` expose content-wrapper padding directly in the `Layout` section as four unit-selectable spacing inputs with inline directional-arrow icons. Wrapper padding supports `px`, `em`, and `rem`, and unit switching measures the live rendered padding edge before converting so the visible inset stays stable. `Width` and `Height` use one shared shell with an editable numeric/value segment and a unit-or-mode segment. Numeric values edit as `number + unit`; width keywords and height `auto` render as a single full-field mode trigger; height `aspect-ratio` stays in the same shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`. Width numeric modes support `px` and `%`. Non-section height numeric modes support `px` and `%`. Section height is the only geometry control that also exposes viewport units, limited to `vh`, `vmin`, and `vmax`; `vw` is intentionally excluded because the current editor stage is not an iframe-backed viewport and cannot give components true stage-relative viewport semantics. Numeric geometry fields enforce a minimum of `0` on width and height. The numeric segment uses the browser number-input keyboard behavior while hiding native steppers. Shared controlled `Input` fields keep a local draft while focused, so users can temporarily clear or type an invalid value without losing the text immediately; when panel-level validation rejects the draft, blur restores the last committed external value. Composite numeric+unit fields such as border width/radius and font size follow the same policy instead of treating an empty draft as an immediate clear. The unit/mode segment uses brighter text than the numeric value, and its dropdown chevron appears only on hover/focus as a white overlay over the suffix area. Numeric field displays are capped to 2 decimal places and trim trailing zeroes. When switching between supported numeric units, or from keyword sizing into a numeric unit, the inspector measures the live rendered stage geometry and rewrites the numeric value through shared conversion helpers so the node keeps the same rendered size or position in the editor instead of only swapping suffixes. For section-height viewport conversion, editor viewport units resolve against the visible `.stage-shell` content area after editor chrome and stage padding, not the raw browser window. For `vmin` and `vmax`, conversion uses the smaller or larger dimension of that editor viewport. Font size (`px`/`em`/`rem`), wrapper padding (`px`/`em`/`rem`), button padding (`px`/`em`/`rem`), and border radius (`px`/`%`) use the same measured-reference conversion path: font-relative units resolve from computed font size, and border radius uses an average-dimension approximation when converting between pixels and percentages. Wrapper, image, and button box-shadow controls expose `blur`, `spread`, `distance`, and `angle`; text and link shadows stay filter-based and therefore do not expose spread. When converting spacing back to `px`, the committed pixel value is rounded to a whole number. If a control cannot obtain a trustworthy live reference, the authored value stays unchanged instead of being approximated from hidden fallback sizes. Committed values still serialize back to the existing model strings (`320px`, `fit-content`, `auto`, `aspect-ratio(16/9)`). For wrapper nodes with role `section`, `header`, or `footer`, the width control is hidden in the geometry grid while its slot stays reserved so the 2x2 geometry layout remains visually stable.
+Inspector geometry controls use single composite fields instead of raw freeform text. `X` and `Y` are fixed `px` fields, so they render a static suffix instead of a unit dropdown. Top-level wrappers with role `section`, `header`, or `footer` do not show `X` and `Y` at all, because their stage position is structural rather than freely authored. Wrappers with role `section`, `header`, `footer`, or `container` expose content-wrapper padding directly in the `Layout` section as four unit-selectable spacing inputs with inline directional-arrow icons. Wrapper padding supports `px`, `em`, and `rem`, and unit switching measures the live rendered padding edge before converting so the visible inset stays stable. `Width` and `Height` use one shared shell with an editable numeric/value segment and a unit-or-mode segment. Numeric values edit as `number + unit`; width keywords and height `auto` render as a single full-field mode trigger; height `aspect-ratio` stays in the same shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`. Width numeric modes support `px` and `%`. Non-section height numeric modes support `px` and `%`. Section height is the only geometry control that also exposes viewport units, limited to `vh`, `vmin`, and `vmax`; `vw` is intentionally excluded because the current editor stage is not an iframe-backed viewport and cannot give components true stage-relative viewport semantics. Numeric geometry fields enforce a minimum of `0` on width and height. The numeric segment uses the browser number-input keyboard behavior while hiding native steppers. Shared controlled `Input` fields keep a local draft while focused, so users can temporarily clear or type an invalid value without losing the text immediately; when panel-level validation rejects the draft, blur restores the last committed external value. Composite numeric+unit fields such as border width/radius and font size follow the same policy instead of treating an empty draft as an immediate clear. Font size uses an inline suggestion dropdown anchored to the numeric field itself, so common sizes can be picked from the field chrome while preserving the current unit. The font-size suggestion list uses the same hover highlight treatment as other editor menus, uses slightly taller rows for easier scanning, includes a `72px` preset, and caps its height with an internal scrollbar. The unit/mode segment uses brighter text than the numeric value, and its dropdown chevron appears only on hover/focus as a white overlay over the suffix area. Numeric field displays are capped to 2 decimal places and trim trailing zeroes. When switching between supported numeric units, or from keyword sizing into a numeric unit, the inspector measures the live rendered stage geometry and rewrites the numeric value through shared conversion helpers so the node keeps the same rendered size or position in the editor instead of only swapping suffixes. For section-height viewport conversion, editor viewport units resolve against the visible `.stage-shell` content area after editor chrome and stage padding, not the raw browser window. For `vmin` and `vmax`, conversion uses the smaller or larger dimension of that editor viewport. Font size (`px`/`em`/`rem`), wrapper padding (`px`/`em`/`rem`), button padding (`px`/`em`/`rem`), and border radius (`px`/`%`) use the same measured-reference conversion path: font-relative units resolve from computed font size, and border radius uses an average-dimension approximation when converting between pixels and percentages. Wrapper, image, and button box-shadow controls expose `blur`, `spread`, `distance`, and `angle`; text and link shadows stay filter-based and therefore do not expose spread. When converting spacing back to `px`, the committed pixel value is rounded to a whole number. If a control cannot obtain a trustworthy live reference, the authored value stays unchanged instead of being approximated from hidden fallback sizes. Committed values still serialize back to the existing model strings (`320px`, `fit-content`, `auto`, `aspect-ratio(16/9)`). For wrapper nodes with role `section`, `header`, or `footer`, the width control is hidden in the geometry grid while its slot stays reserved so the 2x2 geometry layout remains visually stable.
 
 When a `section`, `header`, `footer`, or `container` is selected in the stage, or when any descendant inside that wrapper is selected, the editor draws a thin dashed accent-blue rectangle at the inner content boundary of that wrapper's padding box. The overlay is purely visual and exists to show where the content-wrapper padding starts and ends while editing nested content.
 

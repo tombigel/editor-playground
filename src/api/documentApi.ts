@@ -4,6 +4,18 @@ import {
   createSectionFromTemplate,
   type SectionTemplateId,
 } from '../model/defaults';
+import {
+  addDocumentFontFamily,
+  ensureDocumentFontFamilyByName,
+  getDocumentFontLibrary,
+  getFontUsage,
+  isFontFamilyUsed,
+  listDocumentFonts,
+  normalizeDocumentFontState,
+  purgeUnusedDocumentFonts,
+  removeDocumentFontFamily,
+  toggleDocumentFontFavorite,
+} from '../fonts';
 import { getChildren, getNode } from '../model/selectors';
 import type {
   BorderColorField,
@@ -47,19 +59,27 @@ export type { DocumentCommand } from './types';
 
 export {
   SECTION_TEMPLATES,
+  addDocumentFontFamily,
   createInitialDocument,
   createSectionFromTemplate,
   formatValue,
+  getDocumentFontLibrary,
+  getFontUsage,
   getChildren,
   getNode,
+  isFontFamilyUsed,
+  listDocumentFonts,
   parseHeightValue,
   parseFontSizeValue,
   parseUnitValue,
   parseSpacingValue,
   parseWidthValue,
+  purgeUnusedDocumentFonts,
+  removeDocumentFontFamily,
   resolveStickyLayout,
   resolveWrapperStickyState,
   resolveUnitValuePx,
+  toggleDocumentFontFavorite,
   validateDocument,
 };
 
@@ -67,6 +87,7 @@ export function cloneDocument(document: DocumentModel): DocumentModel {
   return {
     rootId: document.rootId,
     nodes: structuredClone(document.nodes),
+    fontLibrary: structuredClone(document.fontLibrary),
   };
 }
 
@@ -142,7 +163,7 @@ export function setNodeTextField(
   field: EditorTextField,
   value: string,
 ): DocumentModel {
-  const next = cloneDocument(document);
+  let next = cloneDocument(document);
   const node = next.nodes[nodeId];
   if (!node || node.type === 'site') {
     return document;
@@ -199,6 +220,16 @@ export function setNodeTextField(
     return next;
   }
 
+  if (field === 'fontFamily' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+    node.style ??= {};
+    const trimmedValue = value.trim();
+    node.style.fontFamily = trimmedValue || undefined;
+    if (trimmedValue) {
+      next = ensureDocumentFontFamilyByName(next, trimmedValue);
+    }
+    return next;
+  }
+
   if (field === 'background' && node.type === 'leaf' && node.role === 'button') {
     node.style ??= {};
     node.style.background = value || undefined;
@@ -224,8 +255,12 @@ export function setNodeTextField(
   }
 
   if (field === 'fontWeight' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) {
+      return document;
+    }
     node.style ??= {};
-    node.style.fontWeight = value === 'bold' ? 'bold' : 'normal';
+    node.style.fontWeight = Math.min(900, Math.max(100, Math.round(parsed)));
     return next;
   }
 
@@ -374,7 +409,7 @@ function isShadowStyleField(field: EditorTextField): field is ShadowStyleField {
 }
 
 export function parseDocumentJson(raw: string): DocumentModel {
-  const parsed = JSON.parse(raw) as DocumentModel;
+  const parsed = normalizeDocumentFontState(JSON.parse(raw) as DocumentModel);
   const errors = validateDocument(parsed);
   if (errors.length > 0) {
     throw new Error(`Invalid document: ${errors.join('; ')}`);

@@ -1,11 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { forceOpaqueColorValue } from '../../model/colors';
 import {
+  applyPersistentSelectValueChange,
   BorderControlGroup,
   convertStageBorderRadiusToValue,
   convertStageSpacingToInput,
+  FontFamilySelect,
+  FontPickerPopover,
+  FontSizeField,
+  FontWeightSelect,
   HoverColorField,
+  orderFontFamiliesForPicker,
   ShadowControlGroup,
   offsetsFromDistanceAndAngle,
   readShadowFieldValues,
@@ -80,6 +86,181 @@ describe('panels/InspectorControls', () => {
     expect(markup.match(/min="0"/g)?.length).toBeGreaterThanOrEqual(2);
     expect(markup).toContain('>px<');
     expect(markup.match(/data-ui="select-trigger"/g)?.length).toBe(1);
+  });
+
+  it('renders named font weight options with family preview styling', () => {
+    const markup = renderToStaticMarkup(
+      <FontWeightSelect
+        value={700}
+        familyName="Assistant"
+        options={[
+          { value: 300, label: 'Light' },
+          { value: 400, label: 'Normal' },
+          { value: 700, label: 'Bold' },
+        ]}
+        onChange={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Bold');
+    expect(markup).toContain('font-weight:700');
+    expect(markup).toContain("font-family:Assistant, system-ui, -apple-system, BlinkMacSystemFont, &#x27;Segoe UI&#x27;, sans-serif");
+    expect(markup).not.toContain('editor-text-muted truncate text-[10px]');
+  });
+
+  it('renders the font family menu as a larger single-line list', () => {
+    const markup = renderToStaticMarkup(
+      <FontFamilySelect
+        value="Assistant"
+        families={[
+          {
+            family: 'Assistant',
+            category: 'sans-serif',
+            subsets: ['hebrew', 'latin'],
+            variants: ['regular', '700'],
+            isVariable: false,
+            source: 'google-fonts',
+            favorite: false,
+            origin: 'added',
+          },
+        ]}
+        systemOptionValue="__system-font__"
+        onChange={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('text-[13px]');
+    expect(markup).not.toContain('System default');
+    expect(markup).not.toContain('Browser fallback stack');
+    expect(markup).not.toContain('hebrew');
+    expect(markup).not.toContain('general');
+    expect(markup).not.toContain(' · ');
+  });
+
+  it('renders the combined font picker with nested family and weight lists', () => {
+    const markup = renderToStaticMarkup(
+      <FontPickerPopover
+        familyValue="Assistant"
+        weightValue={700}
+        families={[
+          {
+            family: 'Assistant',
+            category: 'sans-serif',
+            subsets: ['hebrew', 'latin'],
+            variants: ['regular', '700'],
+            isVariable: false,
+            source: 'google-fonts',
+            favorite: false,
+            origin: 'added',
+          },
+          {
+            family: 'Lora',
+            category: 'serif',
+            subsets: ['latin'],
+            variants: ['regular', '700'],
+            isVariable: false,
+            source: 'google-fonts',
+            favorite: false,
+            origin: 'added',
+          },
+        ]}
+        systemOptionValue="__system-font__"
+        onFamilyChange={() => {}}
+        onWeightChange={() => {}}
+        defaultOpen
+      />,
+    );
+
+    expect(markup).toContain('Sans Serif');
+    expect(markup).toContain('Assistant');
+    expect(markup).toContain('Lora');
+    expect(markup).toContain('Bold');
+    expect(markup).toContain('Normal');
+    expect(markup).toContain('w-[352px]');
+    expect(markup).toContain('grid-cols-[minmax(0,1fr)_140px]');
+    expect(markup).toContain('ui-popover-surface');
+    expect(markup).toContain('popover="manual"');
+    expect(markup).toContain('text-[13px] leading-4');
+    expect(markup).toContain('px-[3px]');
+    expect(markup).not.toContain('editor-text-muted ml-2 shrink-0 text-[10px]');
+    expect(markup.match(/lucide-check/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders font size suggestions with shared hover treatment and the 72px preset', () => {
+    const markup = renderToStaticMarkup(<FontSizeField nodeId="text_1" value="16px" onChange={() => {}} defaultSuggestionsOpen />);
+
+    expect(markup).toContain('72px');
+    expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
+    expect(markup).toContain('leading-5');
+    expect(markup).toContain('py-2');
+    expect(markup).toContain('max-h-[220px]');
+    expect(markup).toContain('editor-scrollbar');
+    expect(markup).toContain('overflow-y-auto');
+  });
+
+  it('orders picker fonts by recents first and then by language', () => {
+    const families = [
+      {
+        family: 'Lora',
+        category: 'serif',
+        subsets: ['latin'],
+        variants: ['regular'],
+        isVariable: false,
+        source: 'google-fonts',
+        favorite: false,
+        origin: 'added',
+      },
+      {
+        family: 'Assistant',
+        category: 'sans-serif',
+        subsets: ['hebrew', 'latin'],
+        variants: ['regular'],
+        isVariable: false,
+        source: 'google-fonts',
+        favorite: false,
+        origin: 'added',
+      },
+      {
+        family: 'Alef',
+        category: 'sans-serif',
+        subsets: ['hebrew'],
+        variants: ['regular'],
+        isVariable: false,
+        source: 'google-fonts',
+        favorite: false,
+        origin: 'added',
+      },
+    ] as const;
+
+    expect(orderFontFamiliesForPicker([...families], ['Lora', 'Missing'])).toEqual({
+      recent: [families[0]],
+      byLanguage: [families[2], families[1]],
+    });
+  });
+
+  it('reopens persistent select menus after a value change when requested', () => {
+    const onChange = vi.fn();
+    const reopen = vi.fn();
+
+    applyPersistentSelectValueChange({
+      nextValue: 'Roboto',
+      keepOpenOnSelect: true,
+      onChange,
+      reopen,
+    });
+
+    expect(onChange).toHaveBeenCalledWith('Roboto');
+    expect(reopen).toHaveBeenCalledTimes(1);
+
+    applyPersistentSelectValueChange({
+      nextValue: 'Lora',
+      keepOpenOnSelect: false,
+      onChange,
+      reopen,
+    });
+
+    expect(onChange).toHaveBeenCalledWith('Lora');
+    expect(reopen).toHaveBeenCalledTimes(1);
   });
 
   it('passes opaque values to non-alpha color fields', () => {

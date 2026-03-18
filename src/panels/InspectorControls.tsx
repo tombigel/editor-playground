@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import {
   ArrowDown,
   ArrowUp,
   BetweenHorizontalStart,
+  Check,
   ChevronDown,
   ListEnd,
   ListStart,
@@ -18,16 +19,67 @@ import {
   convertRenderedPxToSpacingUnit,
   formatDisplayValue,
 } from '../model/conversion';
+import { buildFontFamilyStack, listFontWeightOptions, resolveNearestSupportedFontWeight } from '../api/fontApi';
 import { forceOpaqueColorValue } from '../model/colors';
-import type { BorderStyle, ShadowStyle, ViewportMeasurement, WrapperNode } from '../model/types';
+import type { BorderStyle, DocumentFontFamily, ShadowStyle, ViewportMeasurement, WrapperNode } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PopoverTooltip } from '@/components/ui/popover';
+import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
+
+type FontWeightOption = {
+  value: number;
+  label: string;
+};
+
+type OrderedFontFamilyGroups = {
+  recent: DocumentFontFamily[];
+  byLanguage: DocumentFontFamily[];
+};
+
+const RECENT_FONT_FAMILIES_STORAGE_KEY = 'sticky-playground.recent-font-families';
+const RECENT_FONT_FAMILIES_LIMIT = 8;
+
+export function applyPersistentSelectValueChange(options: {
+  nextValue: string;
+  keepOpenOnSelect: boolean;
+  onChange: (value: string) => void;
+  reopen: () => void;
+}) {
+  options.onChange(options.nextValue);
+  if (options.keepOpenOnSelect) {
+    options.reopen();
+  }
+}
+
+export function orderFontFamiliesForPicker(families: DocumentFontFamily[], recentFamilyNames: string[]): OrderedFontFamilyGroups {
+  const familyMap = new Map(families.map((family) => [family.family, family]));
+  const recent: DocumentFontFamily[] = [];
+
+  for (const familyName of recentFamilyNames.map((name) => name.trim()).filter(Boolean)) {
+    const family = familyMap.get(familyName);
+    if (!family) {
+      continue;
+    }
+    recent.push(family);
+    familyMap.delete(familyName);
+  }
+
+  const byLanguage = [...familyMap.values()].sort((left, right) => {
+    const subsetDelta = (left.subsets[0] ?? '').localeCompare(right.subsets[0] ?? '');
+    if (subsetDelta !== 0) {
+      return subsetDelta;
+    }
+    return left.family.localeCompare(right.family);
+  });
+
+  return { recent, byLanguage };
+}
 
 export type SizeFieldAxis = 'x' | 'y' | 'width' | 'height';
 type SizeFieldMode =
@@ -58,9 +110,582 @@ const WIDTH_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'fit-content' | 'min-content
 ];
 const HEIGHT_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'auto' | 'aspect-ratio'>[] = ['auto', 'aspect-ratio'];
 const FONT_SIZE_UNIT_OPTIONS: FontSizeMode[] = ['px', 'em', 'rem'];
+const FONT_SIZE_SUGGESTIONS_BY_UNIT: Record<FontSizeMode, number[]> = {
+  px: [12, 14, 16, 18, 20, 24, 30, 36, 48, 64, 72],
+  em: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
+  rem: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
+};
 const COMPACT_UNIT_SUFFIX_WIDTH = 36;
 const COMPACT_UNIT_ICON_SUFFIX_WIDTH = 40;
 const MINIMAL_UNIT_SUFFIX_WIDTH = 24;
+
+export function FontFamilySelect({
+  value,
+  families,
+  onChange,
+  mixed = false,
+  systemOptionValue,
+  systemLabel = 'Sans Serif',
+  className,
+  keepOpenOnSelect = false,
+}: {
+  value: string;
+  families: DocumentFontFamily[];
+  onChange: (value: string) => void;
+  mixed?: boolean;
+  systemOptionValue: string;
+  systemLabel?: string;
+  className?: string;
+  keepOpenOnSelect?: boolean;
+}) {
+  const activeLabel = value === systemOptionValue ? systemLabel : value;
+  const activeStyle = value !== systemOptionValue ? { fontFamily: buildFontFamilyStack(value) } : undefined;
+  const [open, setOpen] = useState(false);
+  const [recentFamilyNames, setRecentFamilyNames] = useState<string[]>(() => readRecentFontFamilies());
+  const orderedFamilies = useMemo(() => orderFontFamiliesForPicker(families, recentFamilyNames), [families, recentFamilyNames]);
+  const [frozenFamilies, setFrozenFamilies] = useState<OrderedFontFamilyGroups | null>(null);
+  const visibleFamilies = open ? (frozenFamilies ?? orderedFamilies) : orderedFamilies;
+
+  useEffect(() => {
+    if (!open) {
+      setFrozenFamilies(null);
+      return;
+    }
+    setFrozenFamilies((current) => current ?? orderedFamilies);
+  }, [open, orderedFamilies]);
+
+  return (
+    <Select
+      value={mixed ? undefined : value}
+      open={open}
+      onOpenChange={setOpen}
+      onValueChange={(nextValue) => {
+        if (nextValue !== systemOptionValue) {
+          setRecentFamilyNames((current) => {
+            const next = [nextValue, ...current.filter((familyName) => familyName !== nextValue)].slice(0, RECENT_FONT_FAMILIES_LIMIT);
+            writeRecentFontFamilies(next);
+            return next;
+          });
+        }
+        applyPersistentSelectValueChange({
+          nextValue,
+          keepOpenOnSelect,
+          onChange,
+          reopen: () => requestAnimationFrame(() => setOpen(true)),
+        });
+      }}
+    >
+      <SelectTrigger className={cn('h-8 min-w-0 rounded-sm text-[13px]', className)}>
+        {mixed ? (
+          <span>Mixed</span>
+        ) : (
+          <span className="min-w-0 truncate text-left" style={activeStyle}>
+            {activeLabel}
+          </span>
+        )}
+      </SelectTrigger>
+      <SelectContent className="max-h-[18rem]">
+        <SelectItem value={systemOptionValue} className="py-2">
+          <div className="min-w-0 truncate text-[13px] font-medium">{systemLabel}</div>
+        </SelectItem>
+        {visibleFamilies.recent.map((family) => (
+          <SelectItem key={family.family} value={family.family} className="py-2">
+            <div className="min-w-0 truncate text-[13px] font-medium" style={{ fontFamily: buildFontFamilyStack(family.family) }}>
+              {family.family}
+            </div>
+          </SelectItem>
+        ))}
+        {visibleFamilies.recent.length > 0 && visibleFamilies.byLanguage.length > 0 ? <SelectSeparator /> : null}
+        {visibleFamilies.byLanguage.map((family) => (
+          <SelectItem key={family.family} value={family.family} className="py-2">
+            <div className="min-w-0 truncate text-[13px] font-medium" style={{ fontFamily: buildFontFamilyStack(family.family) }}>
+              {family.family}
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+export function FontWeightSelect({
+  value,
+  options,
+  onChange,
+  familyName,
+  mixed = false,
+  className,
+}: {
+  value: number;
+  options: FontWeightOption[];
+  onChange: (value: string) => void;
+  familyName?: string;
+  mixed?: boolean;
+  className?: string;
+}) {
+  const activeOption = options.find((option) => option.value === value) ?? options[0];
+  const familyStack = familyName ? buildFontFamilyStack(familyName) : undefined;
+
+  return (
+    <Select value={mixed ? undefined : String(value)} onValueChange={onChange}>
+      <SelectTrigger className={cn('h-8 rounded-sm text-[11px]', className)}>
+        {mixed ? (
+          <span>Mixed</span>
+        ) : (
+          <span style={familyStack ? { fontFamily: familyStack, fontWeight: activeOption?.value ?? value } : undefined}>
+            {activeOption?.label ?? value}
+          </span>
+        )}
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={String(option.value)} className="py-2">
+            <div className="min-w-0">
+              <div
+                className="truncate text-[13px] leading-5"
+                style={familyStack ? { fontFamily: familyStack, fontWeight: option.value } : { fontWeight: option.value }}
+              >
+                {option.label}
+              </div>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+export function FontPickerPopover({
+  familyValue,
+  weightValue,
+  families,
+  systemOptionValue,
+  systemLabel = 'Sans Serif',
+  onFamilyChange,
+  onWeightChange,
+  className,
+  defaultOpen = false,
+  mixedFamily = false,
+  mixedWeight = false,
+}: {
+  familyValue: string;
+  weightValue: number;
+  families: DocumentFontFamily[];
+  systemOptionValue: string;
+  systemLabel?: string;
+  onFamilyChange: (value: string) => void;
+  onWeightChange: (value: string) => void;
+  className?: string;
+  defaultOpen?: boolean;
+  mixedFamily?: boolean;
+  mixedWeight?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [recentFamilyNames, setRecentFamilyNames] = useState<string[]>(() => readRecentFontFamilies());
+  const orderedFamilies = useMemo(() => orderFontFamiliesForPicker(families, recentFamilyNames), [families, recentFamilyNames]);
+  const [frozenFamilies, setFrozenFamilies] = useState<OrderedFontFamilyGroups | null>(null);
+  const visibleFamilies = open ? (frozenFamilies ?? orderedFamilies) : orderedFamilies;
+  const [activeFamilyValue, setActiveFamilyValue] = useState(familyValue);
+  const [activePane, setActivePane] = useState<'family' | 'weight'>('family');
+  const [focusedWeightValue, setFocusedWeightValue] = useState(weightValue);
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({ top: 0, left: 0, visibility: 'hidden' });
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const familyRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const weightRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  useEffect(() => {
+    if (!open) {
+      setFrozenFamilies(null);
+      return;
+    }
+    setFrozenFamilies((current) => current ?? orderedFamilies);
+  }, [open, orderedFamilies]);
+
+  useEffect(() => {
+    if (open) {
+      setActiveFamilyValue(familyValue);
+      setActivePane('family');
+      setFocusedWeightValue(weightValue);
+    }
+  }, [familyValue, open, weightValue]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        closePicker();
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open]);
+
+  const familyOptions = useMemo(
+    () => [
+      { value: systemOptionValue, label: systemLabel },
+      ...visibleFamilies.recent.map((family) => ({
+        value: family.family,
+        label: family.family,
+        style: { fontFamily: buildFontFamilyStack(family.family) },
+      })),
+      ...visibleFamilies.byLanguage.map((family) => ({
+        value: family.family,
+        label: family.family,
+        style: { fontFamily: buildFontFamilyStack(family.family) },
+      })),
+    ],
+    [systemLabel, systemOptionValue, visibleFamilies.byLanguage, visibleFamilies.recent],
+  );
+  const activeFamily = activeFamilyValue === systemOptionValue ? undefined : families.find((family) => family.family === activeFamilyValue);
+  const activeWeightOptions = listFontWeightOptions(activeFamily, weightValue);
+  const activeWeightOption = activeWeightOptions.find((option) => option.value === weightValue) ?? activeWeightOptions[0];
+  const triggerLabel = mixedFamily ? 'Mixed' : familyValue === systemOptionValue ? systemLabel : familyValue;
+  const triggerStyle =
+    mixedFamily
+      ? undefined
+      : familyValue !== systemOptionValue
+        ? mixedWeight
+          ? { fontFamily: buildFontFamilyStack(familyValue) }
+          : { fontFamily: buildFontFamilyStack(familyValue), fontWeight: activeWeightOption?.value ?? weightValue }
+        : mixedWeight
+          ? undefined
+          : { fontWeight: activeWeightOption?.value ?? weightValue };
+  const activeFamilyIndex = Math.max(
+    0,
+    familyOptions.findIndex((option) => option.value === activeFamilyValue),
+  );
+  const activeWeightIndex = Math.max(
+    0,
+    activeWeightOptions.findIndex((option) => option.value === weightValue),
+  );
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function updatePopoverPosition() {
+      const trigger = triggerRef.current;
+      if (!trigger) {
+        return;
+      }
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const width = 320;
+      const margin = 12;
+      const nextLeft = Math.min(
+        Math.max(margin, triggerRect.right - width),
+        Math.max(margin, window.innerWidth - width - margin),
+      );
+      const nextTop = Math.min(triggerRect.bottom + 4, window.innerHeight - margin);
+      setPopoverStyle({ top: nextTop, left: nextLeft, visibility: 'visible' });
+    }
+
+    updatePopoverPosition();
+    const focusId = requestAnimationFrame(() => {
+      familyRefs.current[activeFamilyIndex]?.focus();
+    });
+    window.addEventListener('resize', updatePopoverPosition);
+    window.addEventListener('scroll', updatePopoverPosition, true);
+    return () => {
+      cancelAnimationFrame(focusId);
+      window.removeEventListener('resize', updatePopoverPosition);
+      window.removeEventListener('scroll', updatePopoverPosition, true);
+    };
+  }, [activeFamilyIndex, open]);
+
+  useEffect(() => {
+    if (open) {
+      return;
+    }
+    setPopoverStyle((current) => ({ ...current, visibility: 'hidden' }));
+  }, [open]);
+
+  function rememberRecentFontFamily(nextValue: string) {
+    if (nextValue === systemOptionValue) {
+      return;
+    }
+
+    setRecentFamilyNames((current) => {
+      const next = [nextValue, ...current.filter((familyName) => familyName !== nextValue)].slice(0, RECENT_FONT_FAMILIES_LIMIT);
+      writeRecentFontFamilies(next);
+      return next;
+    });
+  }
+
+  function closePicker() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  function focusFamilyOptionAt(index: number) {
+    const clampedIndex = Math.max(0, Math.min(familyOptions.length - 1, index));
+    const nextOption = familyOptions[clampedIndex];
+    if (!nextOption) {
+      return;
+    }
+    setActivePane('family');
+    setActiveFamilyValue(nextOption.value);
+    familyRefs.current[clampedIndex]?.focus();
+  }
+
+  function focusWeightOptionAt(index: number) {
+    const clampedIndex = Math.max(0, Math.min(activeWeightOptions.length - 1, index));
+    setActivePane('weight');
+    weightRefs.current[clampedIndex]?.focus();
+  }
+
+  function handleFamilySelect(nextValue: string) {
+    setActiveFamilyValue(nextValue);
+    onFamilyChange(nextValue);
+    rememberRecentFontFamily(nextValue);
+    if (nextValue !== systemOptionValue) {
+      const nextFamily = families.find((family) => family.family === nextValue);
+      const resolvedWeight = resolveNearestSupportedFontWeight(weightValue, nextFamily);
+      if (resolvedWeight !== weightValue) {
+        onWeightChange(String(resolvedWeight));
+      }
+    }
+  }
+
+  function handleWeightSelect(nextWeight: number) {
+    if (activeFamilyValue !== familyValue) {
+      onFamilyChange(activeFamilyValue);
+      rememberRecentFontFamily(activeFamilyValue);
+    }
+    onWeightChange(String(nextWeight));
+    closePicker();
+  }
+
+  function handleFamilyKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>, index: number) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      focusFamilyOptionAt(index + 1);
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      focusFamilyOptionAt(index - 1);
+      return;
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      focusWeightOptionAt(activeWeightIndex);
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleFamilySelect(familyOptions[index]?.value ?? familyValue);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closePicker();
+    }
+  }
+
+  function handleWeightKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>, index: number) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      focusWeightOptionAt(index + 1);
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      focusWeightOptionAt(index - 1);
+      return;
+    }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      focusFamilyOptionAt(activeFamilyIndex);
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleWeightSelect(activeWeightOptions[index]?.value ?? weightValue);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closePicker();
+    }
+  }
+
+  return (
+    <div ref={rootRef} className={cn('relative', className)}>
+      <Button
+        ref={triggerRef}
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 w-full justify-start overflow-hidden rounded-sm px-[3px] text-[13px]"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+      >
+        <span className="min-w-0 truncate text-left" style={triggerStyle}>
+          {triggerLabel}
+        </span>
+      </Button>
+      <PopoverSurface
+        open={open}
+        popoverMode="manual"
+        className="fixed inset-0 m-0 overflow-visible border-0 bg-transparent p-0 shadow-none outline-none pointer-events-none"
+      >
+        <div
+          className="editor-bg-surface editor-border-subtle pointer-events-auto fixed z-40 grid w-[352px] grid-cols-[minmax(0,1fr)_140px] overflow-hidden rounded-md border shadow-md"
+          style={popoverStyle}
+        >
+          <div className="editor-scrollbar max-h-[18rem] overflow-auto p-1">
+            <FontPickerRow
+              label={systemLabel}
+              active={activeFamilyValue === systemOptionValue}
+              selected={!mixedFamily && familyValue === systemOptionValue}
+              focused={activePane === 'family' && activeFamilyValue === systemOptionValue}
+              ref={(node) => {
+                familyRefs.current[0] = node;
+              }}
+              onMouseEnter={() => setActiveFamilyValue(systemOptionValue)}
+              onFocus={() => {
+                setActivePane('family');
+                setActiveFamilyValue(systemOptionValue);
+              }}
+              onClick={() => handleFamilySelect(systemOptionValue)}
+              onKeyDown={(event) => handleFamilyKeyDown(event, 0)}
+            />
+            {visibleFamilies.recent.map((family, index) => (
+              <FontPickerRow
+                key={family.family}
+                label={family.family}
+                active={activeFamilyValue === family.family}
+                selected={!mixedFamily && familyValue === family.family}
+                focused={activePane === 'family' && activeFamilyValue === family.family}
+                ref={(node) => {
+                  familyRefs.current[index + 1] = node;
+                }}
+                style={{ fontFamily: buildFontFamilyStack(family.family) }}
+                onMouseEnter={() => setActiveFamilyValue(family.family)}
+                onFocus={() => {
+                  setActivePane('family');
+                  setActiveFamilyValue(family.family);
+                }}
+                onClick={() => handleFamilySelect(family.family)}
+                onKeyDown={(event) => handleFamilyKeyDown(event, index + 1)}
+              />
+            ))}
+            {visibleFamilies.recent.length > 0 && visibleFamilies.byLanguage.length > 0 ? <div className="editor-border-subtle my-1 border-t" /> : null}
+            {visibleFamilies.byLanguage.map((family, index) => (
+              <FontPickerRow
+                key={family.family}
+                label={family.family}
+                active={activeFamilyValue === family.family}
+                selected={!mixedFamily && familyValue === family.family}
+                focused={activePane === 'family' && activeFamilyValue === family.family}
+                ref={(node) => {
+                  familyRefs.current[visibleFamilies.recent.length + index + 1] = node;
+                }}
+                style={{ fontFamily: buildFontFamilyStack(family.family) }}
+                onMouseEnter={() => setActiveFamilyValue(family.family)}
+                onFocus={() => {
+                  setActivePane('family');
+                  setActiveFamilyValue(family.family);
+                }}
+                onClick={() => handleFamilySelect(family.family)}
+                onKeyDown={(event) => handleFamilyKeyDown(event, visibleFamilies.recent.length + index + 1)}
+              />
+            ))}
+          </div>
+          <div className="editor-border-subtle editor-scrollbar max-h-[18rem] overflow-auto border-l p-1">
+            {activeWeightOptions.map((option, index) => (
+              <button
+                key={option.value}
+                type="button"
+                className={cn(
+                  'editor-text-strong flex w-full items-center rounded-sm px-2 py-1.5 text-[13px] leading-4 outline-none',
+                  !mixedWeight && option.value === weightValue
+                    ? '[background:var(--editor-select-highlight-background)]'
+                    : 'hover:[background:var(--editor-select-highlight-background)]',
+                  activePane === 'weight' && option.value === focusedWeightValue ? 'ring-1 ring-[color:var(--editor-accent)]' : '',
+                )}
+                style={activeFamily ? { fontFamily: buildFontFamilyStack(activeFamily.family), fontWeight: option.value } : { fontWeight: option.value }}
+                ref={(node) => {
+                  weightRefs.current[index] = node;
+                }}
+                onFocus={() => {
+                  setActivePane('weight');
+                  setFocusedWeightValue(option.value);
+                }}
+                onClick={() => handleWeightSelect(option.value)}
+                onKeyDown={(event) => handleWeightKeyDown(event, index)}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                    {!mixedWeight && option.value === weightValue ? <Check className="editor-text-muted h-3.5 w-3.5" /> : null}
+                  </span>
+                  <span className="truncate">{option.label}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </PopoverSurface>
+    </div>
+  );
+}
+
+const FontPickerRow = forwardRef<
+  HTMLButtonElement,
+  {
+    label: string;
+    active: boolean;
+    selected?: boolean;
+    focused?: boolean;
+    style?: CSSProperties;
+    onMouseEnter: () => void;
+    onFocus: () => void;
+    onClick: () => void;
+    onKeyDown: (event: ReactKeyboardEvent<HTMLButtonElement>) => void;
+  }
+>(function FontPickerRow({ label, active, selected = false, focused = false, style, onMouseEnter, onFocus, onClick, onKeyDown }, ref) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={cn(
+        'editor-text-strong flex w-full items-center rounded-sm px-2 py-1.5 text-left text-[13px] leading-4 outline-none',
+        active ? '[background:var(--editor-select-highlight-background)]' : 'hover:[background:var(--editor-select-highlight-background)]',
+        focused ? 'ring-1 ring-[color:var(--editor-accent)]' : '',
+      )}
+      style={style}
+      onMouseEnter={onMouseEnter}
+      onFocus={onFocus}
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+          {selected ? <Check className="editor-text-muted h-3.5 w-3.5" /> : null}
+        </span>
+        <span className="min-w-0 truncate">{label}</span>
+      </span>
+    </button>
+  );
+});
 
 export function SizeInlineField({
   label,
@@ -918,87 +1543,150 @@ export function FontSizeField({
   value,
   onChange,
   mixed = false,
+  defaultSuggestionsOpen = false,
 }: {
   nodeId: string;
   value: string;
   onChange: (value: string) => void;
   mixed?: boolean;
+  defaultSuggestionsOpen?: boolean;
 }) {
   const parsed = parseFontSizeValue(value);
   const fontSizeSuffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
   const [draft, setDraft] = useState(mixed ? '' : String(parsed.parsed.value));
   const [invalid, setInvalid] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(defaultSuggestionsOpen);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setDraft(mixed ? '' : String(parsed.parsed.value));
     setInvalid(false);
   }, [mixed, parsed.parsed.unit, parsed.parsed.value]);
 
+  useEffect(() => {
+    if (!suggestionsOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setSuggestionsOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSuggestionsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [suggestionsOpen]);
+
+  const suggestions = FONT_SIZE_SUGGESTIONS_BY_UNIT[parsed.parsed.unit].map((option) => ({
+    value: option,
+    label: `${formatFieldNumber(option)}${parsed.parsed.unit}`,
+  }));
+
   return (
-    <div
-      className={`editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
-        invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
-      }`}
-    >
-      <Input
-        type="number"
-        min={1}
-        step="any"
-        value={draft}
-        placeholder={mixed ? '-' : undefined}
-        onBlur={() => {
-          setDraft(mixed ? '' : String(parsed.parsed.value));
-          setInvalid(false);
-        }}
-        onChange={(e) => {
-          const nextDraft = e.target.value;
-          setDraft(nextDraft);
-          const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);
-          setInvalid(!validation.isValid);
-          if (validation.nextValue != null) {
-            onChange(`${validation.nextValue}${parsed.parsed.unit}`);
-          }
-        }}
-        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
+    <div ref={rootRef} className="relative">
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-        style={{ right: fontSizeSuffixWidth }}
-      />
-      <Select
-        value={parsed.parsed.unit}
-        onValueChange={(nextUnit) => {
-          const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
-          if (converted == null) {
-            return;
-          }
-          onChange(`${converted}${nextUnit as FontSizeMode}`);
-        }}
+        className={`editor-inline-field group/sizefield relative flex h-8 min-w-0 flex-1 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
+          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+        }`}
       >
-        <SelectTrigger
-          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
+        <Input
+          type="number"
+          min={1}
+          step="any"
+          value={draft}
+          placeholder={mixed ? '-' : undefined}
+          onBlur={() => {
+            setDraft(mixed ? '' : String(parsed.parsed.value));
+            setInvalid(false);
+          }}
+          onFocus={() => setSuggestionsOpen(true)}
+          onChange={(e) => {
+            const nextDraft = e.target.value;
+            setDraft(nextDraft);
+            const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);
+            setInvalid(!validation.isValid);
+            if (validation.nextValue != null) {
+              onChange(`${validation.nextValue}${parsed.parsed.unit}`);
+            }
+          }}
+          className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent pr-5 text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+          style={{ right: fontSizeSuffixWidth }}
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 flex items-center text-zinc-500"
+          style={{ right: `calc(${fontSizeSuffixWidth} + 4px)` }}
+        >
+          <ChevronDown className="h-3 w-3" />
+        </div>
+        <Select
+          value={parsed.parsed.unit}
+          onValueChange={(nextUnit) => {
+            const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
+            if (converted == null) {
+              return;
+            }
+            onChange(`${converted}${nextUnit as FontSizeMode}`);
+          }}
+        >
+          <SelectTrigger
+            className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
+            style={{ width: fontSizeSuffixWidth }}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_SIZE_UNIT_OPTIONS.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div
+          className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
           style={{ width: fontSizeSuffixWidth }}
         >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {FONT_SIZE_UNIT_OPTIONS.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div
-        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
-        style={{ width: fontSizeSuffixWidth }}
-      >
-        <ChevronDown className="editor-text-strong h-3 w-3" />
+          <ChevronDown className="editor-text-strong h-3 w-3" />
+        </div>
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
+          style={{ width: fontSizeSuffixWidth }}
+        />
       </div>
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-        style={{ width: fontSizeSuffixWidth }}
-      />
+      {suggestionsOpen ? (
+        <div className="editor-bg-surface editor-border-subtle editor-scrollbar absolute left-0 top-[calc(100%+4px)] z-30 max-h-[220px] min-w-full overflow-y-auto rounded-md border p-1 shadow-md">
+          {suggestions.map((option) => (
+            <button
+              key={option.label}
+              type="button"
+              className="editor-text-strong flex w-full items-center justify-between rounded-sm bg-transparent px-2 py-2 text-[11px] leading-5 hover:[background:var(--editor-select-highlight-background)] focus-visible:[background:var(--editor-select-highlight-background)]"
+              onClick={() => {
+                const formatted = formatFieldNumber(option.value);
+                setDraft(formatted);
+                setInvalid(false);
+                setSuggestionsOpen(false);
+                onChange(`${formatted}${parsed.parsed.unit}`);
+              }}
+            >
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1976,4 +2664,35 @@ export function validateNumberInputDraft(draft: string, min: number, max: number
   }
 
   return { isValid: true, nextValue };
+}
+
+function readRecentFontFamilies() {
+  if (typeof window === 'undefined') {
+    return [] as string[];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(RECENT_FONT_FAMILIES_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === 'string' && value.trim().length > 0).slice(0, RECENT_FONT_FAMILIES_LIMIT)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentFontFamilies(families: string[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(RECENT_FONT_FAMILIES_STORAGE_KEY, JSON.stringify(families));
+  } catch {
+    // Ignore storage quota and privacy-mode failures.
+  }
 }

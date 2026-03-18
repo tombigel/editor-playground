@@ -20,12 +20,24 @@ import {
   ArrowBigUpDash,
   PilcrowLeft,
   PilcrowRight,
+  Settings2,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import type { DocumentNode, EditorTextField } from '../api/editorApi';
+import { PopoverTooltip } from '@/components/ui/popover';
+import type { DocumentModel, DocumentNode } from '../api/editorApi';
+import {
+  BOLD_FONT_WEIGHT,
+  DEFAULT_FONT_WEIGHT,
+  getDocumentFontFamily,
+  isBoldFontWeight,
+  listDocumentFontsForPicker,
+  resolveNearestSupportedFontWeight,
+} from '../api/fontApi';
 import type { BulkEditOperation } from '../app/types';
 import {
+  FontPickerPopover,
   FontSizeField,
   HoverColorField,
   NumericUnitInlineField,
@@ -47,6 +59,7 @@ import { offsetsFromDistanceAndAngle } from './InspectorControls';
 import { MultiStickySection } from './MultiStickySection';
 
 type Props = {
+  document: DocumentModel;
   selectedNodes: DocumentNode[];
   orderState: InspectorOrderState;
   actions: InspectorActionHandlers;
@@ -56,6 +69,7 @@ type Props = {
 };
 
 export function MultiSelectInspector({
+  document,
   selectedNodes,
   orderState,
   actions,
@@ -85,7 +99,8 @@ export function MultiSelectInspector({
 
   const fontSizeState = resolveSharedString(textNodes.map((node) => node.style?.fontSize?.raw ?? '18px'));
   const lineHeightState = resolveSharedNumber(textNodes.map((node) => node.style?.lineHeight ?? 1.4));
-  const fontWeightState = resolveSharedString(textNodes.map((node) => node.style?.fontWeight ?? 'normal'));
+  const fontFamilyState = resolveSharedString(textNodes.map((node) => node.style?.fontFamily ?? SYSTEM_FONT_VALUE));
+  const fontWeightState = resolveSharedNumber(textNodes.map((node) => node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT));
   const fontStyleState = resolveSharedString(textNodes.map((node) => node.style?.fontStyle ?? 'normal'));
   const decorationState = resolveSharedString(textNodes.map((node) => node.style?.textDecorationLine ?? 'none'));
   const textAlignState = resolveSharedString(textNodes.map((node) => node.style?.textAlign ?? 'left'));
@@ -125,6 +140,7 @@ export function MultiSelectInspector({
       return [];
     }),
   );
+  const documentFonts = listDocumentFontsForPicker(document);
 
   return (
     <div className="editor-scrollbar h-full overflow-auto">
@@ -210,9 +226,42 @@ export function MultiSelectInspector({
         {textNodes.length >= 2 ? (
           <Card className="editor-border-subtle rounded-lg shadow-none">
             <CardHeader className="px-3 pt-3 pb-1">
-              <CardTitle className="text-xs">Typography</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+            <CardTitle className="text-xs">Typography</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+            <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+              <Label className="text-[11px] font-medium">Font</Label>
+              <div className="ml-auto flex w-[140px] items-center justify-between gap-1">
+                  <FontPickerPopover
+                    familyValue={fontFamilyState.value}
+                    weightValue={fontWeightState.value ?? DEFAULT_FONT_WEIGHT}
+                    families={documentFonts}
+                    systemOptionValue={SYSTEM_FONT_VALUE}
+                    mixedFamily={fontFamilyState.mixed}
+                    mixedWeight={fontWeightState.mixed}
+                    onFamilyChange={(value) => actions.onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
+                    onWeightChange={(value) => actions.onTextChange('fontWeight', value)}
+                    className="w-[104px]"
+                  />
+                  <PopoverTooltip
+                    side="top"
+                    align="center"
+                    className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+                    content={<div className="leading-3.5 font-medium">Manage fonts</div>}
+                  >
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-sm"
+                      aria-label="Manage fonts"
+                      onClick={actions.onOpenManageFonts}
+                    >
+                      <Settings2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </PopoverTooltip>
+                </div>
+              </div>
               <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                 <Label className="text-[11px] font-medium">Size</Label>
                 <div className="ml-auto grid w-[140px] grid-cols-[96px_40px] items-center gap-1">
@@ -235,7 +284,30 @@ export function MultiSelectInspector({
               <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                 <Label className="text-[11px] font-medium">Style</Label>
                 <div className="ml-auto flex items-center gap-1">
-                  <TextStyleIconButton label="Bold" active={fontWeightState.value === 'bold' && !fontWeightState.mixed} mixed={fontWeightState.mixed} onClick={() => actions.onTextChange('fontWeight', fontWeightState.value === 'bold' && !fontWeightState.mixed ? 'normal' : 'bold')}>
+                  <TextStyleIconButton
+                    label="Bold"
+                    active={Boolean(fontWeightState.value != null && isBoldFontWeight(fontWeightState.value) && !fontWeightState.mixed)}
+                    mixed={fontWeightState.mixed}
+                    onClick={() =>
+                      onBulkEdit(
+                        textNodes.map((node) => ({
+                          kind: 'text',
+                          targetIds: [node.id],
+                          field: 'fontWeight',
+                          value: String(
+                            resolveNearestSupportedFontWeight(
+                              textNodes.every((entry) => isBoldFontWeight(entry.style?.fontWeight))
+                                ? DEFAULT_FONT_WEIGHT
+                                : BOLD_FONT_WEIGHT,
+                              node.style?.fontFamily
+                                ? getDocumentFontFamily(document, node.style.fontFamily)
+                                : undefined,
+                            ),
+                          ),
+                        })),
+                      )
+                    }
+                  >
                     <span className="font-black tracking-[-0.02em] no-underline decoration-transparent">B</span>
                   </TextStyleIconButton>
                   <TextStyleIconButton label="Italic" active={fontStyleState.value === 'italic' && !fontStyleState.mixed} mixed={fontStyleState.mixed} onClick={() => actions.onTextChange('fontStyle', fontStyleState.value === 'italic' && !fontStyleState.mixed ? 'normal' : 'italic')}>
@@ -427,6 +499,8 @@ function resolveSharedNumber(values: number[]) {
     mixed: values.some((value) => value !== (values[0] ?? 0)),
   };
 }
+
+const SYSTEM_FONT_VALUE = '__system-font__';
 
 function resolveSharedShadow(styles: Array<DocumentNode extends never ? never : any>) {
   const values = styles.map((style) =>

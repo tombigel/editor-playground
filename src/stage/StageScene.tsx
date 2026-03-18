@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent } from 'react';
+import { buildDocumentDefaultFontStack } from '../fonts/defaults';
 import type {
   DocumentModel,
   DocumentNode,
@@ -80,7 +81,7 @@ export function StageScene({
   return (
     <>
       <div className="stage-frame">
-        <div className="stage-canvas">
+        <div className="stage-canvas" style={{ fontFamily: buildDocumentDefaultFontStack(document) }}>
           {plan.header
             ? renderWrapper({
                 document,

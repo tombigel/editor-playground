@@ -1,5 +1,6 @@
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { FocusedMode } from '../api/editorApi';
+import { createInitialDocument } from '../model/defaults';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiStickySection } from './MultiStickySection';
 import { resolveFocusedModeBlocks } from './focusedModes/schema';
@@ -8,6 +9,7 @@ import type { InspectorActionHandlers, InspectorOrderState } from './inspector/t
 
 type Props = Pick<
   InspectorPanelProps,
+  | 'document'
   | 'node'
   | 'selectedNodes'
   | 'focusedMode'
@@ -44,14 +46,16 @@ type Props = Pick<
   | 'onStickyDurationTop'
   | 'onStickyDurationBottom'
   | 'onEnterFocusedMode'
+  | 'onOpenManageFonts'
 > & {
   mode: Exclude<FocusedMode, null>;
   onExitFocusedMode: () => void;
 };
 
 export function FocusedModePanel({
+  document,
   node,
-  selectedNodes,
+  selectedNodes = [],
   focusedMode,
   showOrderControls,
   canOrderBack,
@@ -86,9 +90,11 @@ export function FocusedModePanel({
   onStickyDurationTop,
   onStickyDurationBottom,
   onEnterFocusedMode,
+  onOpenManageFonts,
   mode,
   onExitFocusedMode,
 }: Props) {
+  const resolvedDocument = document ?? createInitialDocument();
   const actions: InspectorActionHandlers = {
     onTextChange,
     onWrapperStyleChange,
@@ -106,6 +112,7 @@ export function FocusedModePanel({
     onStickyDurationTop,
     onStickyDurationBottom,
     onEnterFocusedMode,
+    onOpenManageFonts,
   };
   const orderState: InspectorOrderState = {
     showOrderControls,
@@ -179,6 +186,7 @@ export function FocusedModePanel({
   const blocks = resolveFocusedModeBlocks(
     mode,
     {
+      document: resolvedDocument,
       node,
       actions,
       orderState,

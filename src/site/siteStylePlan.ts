@@ -1,5 +1,6 @@
 import type { DocumentModel, DocumentNode } from '../model/types';
 import { formatValue } from '../model/units';
+import { buildDocumentDefaultFontStack } from '../fonts/defaults';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { walkRootPlan } from '../render/renderPlanHelpers';
 import {
@@ -41,7 +42,7 @@ import {
 
 export function buildSiteCssRules(document: DocumentModel, previewSticky = true): SharedCssRule[] {
   const rules = [
-    ...getBaseSiteCssRules(),
+    ...getBaseSiteCssRules(document),
     ...getSiteLeafBaseRules({
       text: `.${SITE_LEAF_CLASS}.sp-role-text`,
       blockquoteText: `blockquote.${SITE_LEAF_CLASS}.sp-role-text`,
@@ -59,7 +60,7 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
   return rules;
 }
 
-function getBaseSiteCssRules(): SharedCssRule[] {
+function getBaseSiteCssRules(document: DocumentModel): SharedCssRule[] {
   return [
     {
       selector: 'html, body',
@@ -71,7 +72,7 @@ function getBaseSiteCssRules(): SharedCssRule[] {
     {
       selector: 'body',
       style: {
-        fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: buildDocumentDefaultFontStack(document),
         background: '#ffffff',
         color: '#0f172a',
       },

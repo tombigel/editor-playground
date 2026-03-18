@@ -23,8 +23,15 @@ const buttonDesignSection: InspectorSectionDefinition = {
 
 const buttonTextStyleSection: InspectorSectionDefinition = {
   id: 'button-text-style',
-  render: ({ node, actions }) =>
-    isButtonNode(node) ? <ButtonTextStyleSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ document, node, actions }) =>
+    isButtonNode(node) ? (
+      <ButtonTextStyleSection
+        document={document}
+        node={node}
+        onTextChange={actions.onTextChange}
+        onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+      />
+    ) : null,
 };
 
 export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [

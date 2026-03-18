@@ -4,6 +4,15 @@ import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
 describe('site/siteExport', () => {
+  it('uses the document default font stack for site fallback typography', () => {
+    const document = createInitialDocument();
+    document.fontLibrary.defaults = ['Playfair Display'];
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain("font-family: 'Playfair Display', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;");
+  });
+
   it('renders a complete html document that links to the exported stylesheet', () => {
     const document = createInitialDocument();
     const html = renderSiteHtmlDocument(document, { title: 'Landing Page', htmlFileName: 'landing-page' });
@@ -27,7 +36,7 @@ describe('site/siteExport', () => {
 
     target.style ??= {};
     target.style.fontSize = parseFontSizeValue('31px');
-    target.style.fontWeight = 'bold';
+    target.style.fontWeight = 700;
     target.style.lineHeight = 1.4;
     target.style.textDecorationLine = 'underline';
 
@@ -35,7 +44,7 @@ describe('site/siteExport', () => {
 
     expect(css).toContain(`.sp-node-${target.id}.sp-role-text`);
     expect(css).toContain('font-size: 31px;');
-    expect(css).toContain('font-weight: bold;');
+    expect(css).toContain('font-weight: 700;');
     expect(css).toContain('line-height: 1.4;');
     expect(css).toContain('text-decoration-line: underline;');
   });
@@ -80,7 +89,7 @@ describe('site/siteExport', () => {
     text.style.shadowOffsetY = 8;
     link.style ??= {};
     link.style.color = '#1d4ed8';
-    link.style.fontWeight = 'bold';
+    link.style.fontWeight = 700;
     link.style.textAlign = 'center';
     link.style.textWrap = 'wrap';
     link.style.shadowColor = 'rgba(29, 78, 216, 0.28)';
@@ -96,7 +105,7 @@ describe('site/siteExport', () => {
     expect(css).toContain('display: block;');
     expect(css).toContain('width: 100%;');
     expect(css).toContain('color: #1d4ed8;');
-    expect(css).toContain('font-weight: bold;');
+    expect(css).toContain('font-weight: 700;');
     expect(css).toContain('text-align: center;');
     expect(css).toContain('white-space: normal;');
     expect(css).toContain('filter: drop-shadow(2px 6px 10px rgba(29, 78, 216, 0.28));');

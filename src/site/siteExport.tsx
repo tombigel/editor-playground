@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { buildDocumentGoogleFontsStylesheetHref } from '../fonts';
 import type { DocumentModel } from '../model/types';
 import { styleRecordToCssDeclarations } from '../render/leafPresentation';
 import { SiteRenderer } from './SiteRenderer';
@@ -34,6 +35,7 @@ export function renderSiteHtmlDocument(
   const { title = DEFAULT_SITE_TITLE } = options;
   const { cssFileName } = resolveSiteFileNames(options);
   const bodyHtml = renderSiteBodyHtml(document, options);
+  const fontHref = buildDocumentGoogleFontsStylesheetHref(document);
 
   return [
     '<!doctype html>',
@@ -42,6 +44,13 @@ export function renderSiteHtmlDocument(
     '  <meta charset="utf-8" />',
     '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
     `  <title>${escapeHtml(title)}</title>`,
+    ...(fontHref
+      ? [
+          '  <link rel="preconnect" href="https://fonts.googleapis.com" />',
+          '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
+          `  <link rel="stylesheet" href="${escapeHtml(fontHref)}" />`,
+        ]
+      : []),
     `  <link rel="stylesheet" href="${escapeHtml(cssFileName)}" />`,
     '</head>',
     '<body>',

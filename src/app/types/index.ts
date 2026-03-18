@@ -2,6 +2,7 @@ import type {
   DocumentModel,
   DocumentNode,
   EditorTextField,
+  FontLibrary,
   NodeId,
   SectionTemplateId,
   StickyDefinition,
@@ -18,6 +19,8 @@ export type NodePatch = {
 export type HistoryEntry = {
   rootIdBefore: NodeId;
   rootIdAfter: NodeId;
+  fontLibraryBefore: FontLibrary;
+  fontLibraryAfter: FontLibrary;
   nodePatches: NodePatch[];
   selectedBefore: NodeId | null;
   selectedAfter: NodeId | null;

@@ -1,5 +1,6 @@
-import type { DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
+import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
+import { createInitialDocument } from '../model/defaults';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiSelectInspector } from './MultiSelectInspector';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
@@ -20,8 +21,9 @@ export {
 } from './InspectorControls';
 
 export type InspectorPanelProps = {
+  document?: DocumentModel;
   node: DocumentNode | null;
-  selectedNodes: DocumentNode[];
+  selectedNodes?: DocumentNode[];
   focusedMode: FocusedMode;
   showOrderControls: boolean;
   canOrderBack: boolean;
@@ -40,9 +42,9 @@ export type InspectorPanelProps = {
   onBringToFront: () => void;
   onSectionBack: () => void;
   onSectionForward: () => void;
-  onAlignSelection: (mode: AlignmentAction) => void;
-  onDistributeSelection: (mode: DistributionMode) => void;
-  onBulkEdit: (operations: BulkEditOperation[]) => void;
+  onAlignSelection?: (mode: AlignmentAction) => void;
+  onDistributeSelection?: (mode: DistributionMode) => void;
+  onBulkEdit?: (operations: BulkEditOperation[]) => void;
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
@@ -59,9 +61,11 @@ export type InspectorPanelProps = {
   onStickyDurationTop: (value: number) => void;
   onStickyDurationBottom: (value: number) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
+  onOpenManageFonts?: () => void;
 };
 
 export function InspectorPanel({
+  document,
   node,
   selectedNodes = node ? [node] : [],
   focusedMode,
@@ -82,9 +86,9 @@ export function InspectorPanel({
   onBringToFront,
   onSectionBack,
   onSectionForward,
-  onAlignSelection,
-  onDistributeSelection,
-  onBulkEdit,
+  onAlignSelection = () => undefined,
+  onDistributeSelection = () => undefined,
+  onBulkEdit = () => undefined,
   onTextChange,
   onWrapperStyleChange,
   onRectChange,
@@ -101,7 +105,9 @@ export function InspectorPanel({
   onStickyDurationTop,
   onStickyDurationBottom,
   onEnterFocusedMode,
+  onOpenManageFonts = () => undefined,
 }: InspectorPanelProps) {
+  const resolvedDocument = document ?? createInitialDocument();
   const actions: InspectorActionHandlers = {
     onTextChange,
     onWrapperStyleChange,
@@ -119,6 +125,7 @@ export function InspectorPanel({
     onStickyDurationTop,
     onStickyDurationBottom,
     onEnterFocusedMode,
+    onOpenManageFonts,
   };
   const orderState: InspectorOrderState = {
     showOrderControls,
@@ -142,6 +149,7 @@ export function InspectorPanel({
   if (selectedNodes.length > 1) {
     return (
       <MultiSelectInspector
+        document={resolvedDocument}
         selectedNodes={selectedNodes}
         orderState={orderState}
         actions={actions}
@@ -151,7 +159,7 @@ export function InspectorPanel({
       />
     );
   }
-  const blocks = resolveInspectorBlocks({ node, actions, orderState, focusedMode });
+  const blocks = resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode });
 
   return <InspectorBlockList blocks={blocks} />;
 }

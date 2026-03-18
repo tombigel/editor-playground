@@ -115,7 +115,7 @@ function createPostSection(parentId: NodeId): TemplateBuild {
     style: {
       color: '#0f172a',
       fontSize: '44px',
-      fontWeight: 'bold',
+      fontWeight: 700,
       lineHeight: 1.1,
       htmlTag: 'h1',
     },
@@ -160,7 +160,7 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     y: '22.5px',
     width: '678px',
     height: '194px',
-    style: { color: '#0f172a', fontSize: '52px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' },
+    style: { color: '#0f172a', fontSize: '52px', fontWeight: 700, lineHeight: 1.06, htmlTag: 'h2' },
   });
 
   const copy = createTextNode(section.id, {
@@ -233,7 +233,7 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     y: '212.28125px',
     width: '360px',
     height: '234px',
-    style: { color: '#0f172a', fontSize: '46px', fontWeight: 'bold', lineHeight: 1.06, htmlTag: 'h2' },
+    style: { color: '#0f172a', fontSize: '46px', fontWeight: 700, lineHeight: 1.06, htmlTag: 'h2' },
   });
   lead.sticky = createTopSticky({
     duration: '220vh',
@@ -282,7 +282,7 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     x: '558px',
     y: '165px',
     width: '520px',
-    style: { color: '#0f172a', fontSize: '44px', fontWeight: 'bold', lineHeight: 1.1, htmlTag: 'h2' },
+    style: { color: '#0f172a', fontSize: '44px', fontWeight: 700, lineHeight: 1.1, htmlTag: 'h2' },
   });
 
   const mediaImage = createImageNode(section.id, {
@@ -349,7 +349,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     'Section Heading',
     { x: '72px', y: '86px', width: '980px' },
     'Sticky edge lab: top, both, bottom',
-    { color: '#0f172a', fontSize: '48px', fontWeight: 'bold', lineHeight: 1.04, htmlTag: 'h2' },
+    { color: '#0f172a', fontSize: '48px', fontWeight: 700, lineHeight: 1.04, htmlTag: 'h2' },
   );
 
   const intro = createSectionText(
@@ -560,7 +560,7 @@ function createStickyCardContainer(
     y: options.textY,
     width: options.textWidth,
     height: options.textHeight,
-    style: { color: '#0f172a', fontSize: '24px', fontWeight: 'bold', lineHeight: 1.18 },
+    style: { color: '#0f172a', fontSize: '24px', fontWeight: 700, lineHeight: 1.18 },
   });
 
   setChildren(container, [text]);

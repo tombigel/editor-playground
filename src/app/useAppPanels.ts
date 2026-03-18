@@ -3,6 +3,7 @@ import { useDismissFloatingPanels, useSectionTemplatePosition } from './useEdito
 
 export function useAppPanels() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [manageFontsOpen, setManageFontsOpen] = useState(false);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
   const [sectionTemplateAnchor, setSectionTemplateAnchor] = useState<HTMLElement | null>(null);
@@ -20,6 +21,7 @@ export function useAppPanels() {
   function closeTransientPanels() {
     closeSectionTemplatePopover();
     setSettingsOpen(false);
+    setManageFontsOpen(false);
     setShortcutHelpOpen(false);
   }
 
@@ -47,6 +49,8 @@ export function useAppPanels() {
   return {
     settingsOpen,
     setSettingsOpen,
+    manageFontsOpen,
+    setManageFontsOpen,
     shortcutHelpOpen,
     setShortcutHelpOpen,
     sectionTemplateOpen,
@@ -57,6 +61,6 @@ export function useAppPanels() {
     handleSectionTemplateOpenChange,
     closeSectionTemplatePopover,
     closeTransientPanels,
-    hasDismissiblePanels: settingsOpen || shortcutHelpOpen || sectionTemplateOpen,
+    hasDismissiblePanels: settingsOpen || manageFontsOpen || shortcutHelpOpen || sectionTemplateOpen,
   };
 }

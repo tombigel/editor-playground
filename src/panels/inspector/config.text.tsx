@@ -17,8 +17,15 @@ const textDesignSection: InspectorSectionDefinition = {
 
 const textTextStyleSection: InspectorSectionDefinition = {
   id: 'text-text-style',
-  render: ({ node, actions }) =>
-    isTextNode(node) ? <TextTextStyleSection node={node} onTextChange={actions.onTextChange} /> : null,
+  render: ({ document, node, actions }) =>
+    isTextNode(node) ? (
+      <TextTextStyleSection
+        document={document}
+        node={node}
+        onTextChange={actions.onTextChange}
+        onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+      />
+    ) : null,
 };
 
 const textStickySection: InspectorSectionDefinition = {

@@ -6,9 +6,17 @@ import type {
   StickyGeometrySnapshot,
   StickyLayoutState,
 } from '../api/editorApi';
+import type { DocumentFontFamily } from '../model/types';
+import {
+  addDocumentFontFamily,
+  purgeUnusedDocumentFonts,
+  removeDocumentFontFamily,
+  toggleDocumentFontFavorite,
+} from '../api/fontApi';
 import { InsertPanel } from '../panels/InsertPanel';
 import { ShortcutHelpDialog } from '../panels/ShortcutHelpDialog';
 import { SettingsPanel } from '../panels/SettingsPanel';
+import { ManageFontsPanel } from '../panels/fontManagement/ManageFontsPanel';
 import {
   EditorSidebar,
   INSPECTOR_COLLAPSED_WIDTH_PX,
@@ -38,6 +46,7 @@ type Props = {
   topbarClass: string;
   stageSelectableIds: string[];
   settingsOpen: boolean;
+  manageFontsOpen?: boolean;
   shortcutHelpOpen: boolean;
   sectionTemplateOpen: boolean;
   sectionTemplatePosition: { top: number; left: number };
@@ -52,6 +61,7 @@ type Props = {
   onSectionTemplateOpenChange: (open: boolean) => void;
   onCloseSectionTemplates: () => void;
   onSettingsOpenChange: (open: boolean) => void;
+  onManageFontsOpenChange?: (open: boolean) => void;
   onShortcutHelpOpenChange: (open: boolean) => void;
   onImportDocument: (raw: string) => Promise<ActionResult>;
   onResetData: () => void;
@@ -70,6 +80,7 @@ export function AppShell({
   topbarClass,
   stageSelectableIds,
   settingsOpen,
+  manageFontsOpen = false,
   shortcutHelpOpen,
   sectionTemplateOpen,
   sectionTemplatePosition,
@@ -84,6 +95,7 @@ export function AppShell({
   onSectionTemplateOpenChange,
   onCloseSectionTemplates,
   onSettingsOpenChange,
+  onManageFontsOpenChange = () => undefined,
   onShortcutHelpOpenChange,
   onImportDocument,
   onResetData,
@@ -110,6 +122,22 @@ export function AppShell({
         return [[nodeId, { left: rect.left, top: rect.top, width: rect.width, height: rect.height }]];
       }),
     );
+  }
+
+  function handleAddDocumentFont(family: DocumentFontFamily) {
+    dispatch({ type: 'importDocument', document: addDocumentFontFamily(state.document, family) });
+  }
+
+  function handleRemoveDocumentFont(familyName: string) {
+    dispatch({ type: 'importDocument', document: removeDocumentFontFamily(state.document, familyName) });
+  }
+
+  function handleToggleDocumentFontFavorite(familyName: string) {
+    dispatch({ type: 'importDocument', document: toggleDocumentFontFavorite(state.document, familyName) });
+  }
+
+  function handlePurgeUnusedFonts() {
+    dispatch({ type: 'importDocument', document: purgeUnusedDocumentFonts(state.document) });
   }
 
   return (
@@ -250,6 +278,7 @@ export function AppShell({
             {state.ui.focusedMode && selectedNodes.length > 0 ? (
               <div className="pointer-events-none absolute right-5 top-5 z-[340] w-[270px] max-w-[calc(100%-40px)]">
                 <FocusedModePanel
+                  document={state.document}
                   selectedNodes={selectedNodes}
                   node={selectedNode}
                   focusedMode={state.ui.focusedMode}
@@ -287,6 +316,7 @@ export function AppShell({
                   onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
                   onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
                   onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
+                  onOpenManageFonts={() => onManageFontsOpenChange(true)}
                   onExitFocusedMode={() => dispatch({ type: 'setFocusedMode', value: null })}
                 />
               </div>
@@ -295,6 +325,7 @@ export function AppShell({
 
           <EditorSidebar
             selectedNodes={selectedNodes}
+            document={state.document}
             node={selectedNode}
             focusedMode={state.ui.focusedMode}
             inspectorCollapsed={state.ui.inspectorCollapsed}
@@ -337,6 +368,7 @@ export function AppShell({
             onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
             onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
             onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
+            onOpenManageFonts={() => onManageFontsOpenChange(true)}
             onInspectorCollapsedChange={(value) => dispatch({ type: 'setInspectorCollapsed', value })}
             onTemporaryInspectorOpenChange={(value) => dispatch({ type: 'setTemporaryInspectorOpen', value })}
           />
@@ -373,6 +405,10 @@ export function AppShell({
             redoDepth={historyState.future.length}
             historyLimit={historyState.historyLimit}
             onClose={() => onSettingsOpenChange(false)}
+            onAddFont={handleAddDocumentFont}
+            onRemoveFont={handleRemoveDocumentFont}
+            onToggleFontFavorite={handleToggleDocumentFontFavorite}
+            onPurgeUnusedFonts={handlePurgeUnusedFonts}
             onPreviewStickyChange={(value) => dispatch({ type: 'setPreviewSticky', value })}
             onSpacerVisibilityChange={(value) => dispatch({ type: 'setSpacerVisibility', value })}
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
@@ -387,6 +423,24 @@ export function AppShell({
           />
         </PopoverSurface>
       ) : null}
+
+      <Dialog open={manageFontsOpen} onOpenChange={onManageFontsOpenChange}>
+        <DialogContent className="flex max-h-[min(84vh,820px)] max-w-[920px] min-h-0 flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Manage Fonts</DialogTitle>
+            <DialogDescription>Add, remove, favorite, and purge document fonts.</DialogDescription>
+          </DialogHeader>
+          <div className="editor-scrollbar min-h-0 overflow-y-auto pr-1">
+            <ManageFontsPanel
+              document={state.document}
+              onAddFont={handleAddDocumentFont}
+              onRemoveFont={handleRemoveDocumentFont}
+              onToggleFavorite={handleToggleDocumentFontFavorite}
+              onPurgeUnused={handlePurgeUnusedFonts}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(state.pendingRoleSwap)}

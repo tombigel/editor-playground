@@ -16,14 +16,17 @@ import {
   Magnet,
   Settings,
   SlidersHorizontal,
+  Type,
 } from 'lucide-react';
 import type { DocumentModel, DocumentNode, FocusedMode, StickyLayoutState } from '../api/editorApi';
+import type { DocumentFontFamily } from '../model/types';
 import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
+import { ManageFontsPanel } from './fontManagement/ManageFontsPanel';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/lib/theme';
@@ -35,7 +38,7 @@ import {
   type ActionResult,
 } from './settingsTransfer';
 
-type SectionId = 'display' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
+type SectionId = 'display' | 'fonts' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
 const DEFAULT_EXPORT_BASENAME = 'sticky-playground';
 
 type Props = {
@@ -54,6 +57,10 @@ type Props = {
   redoDepth: number;
   historyLimit: number;
   onClose: () => void;
+  onAddFont?: (family: DocumentFontFamily) => void;
+  onRemoveFont?: (familyName: string) => void;
+  onToggleFontFavorite?: (familyName: string) => void;
+  onPurgeUnusedFonts?: () => void;
   onPreviewStickyChange: (value: boolean) => void;
   onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
   onShowGridLanesChange: (value: boolean) => void;
@@ -78,6 +85,12 @@ const SECTION_META: Array<{
     label: 'UI',
     icon: Eye,
     description: 'Theme, preview, and guides.',
+  },
+  {
+    id: 'fonts',
+    label: 'Fonts',
+    icon: Type,
+    description: 'Document font library.',
   },
   {
     id: 'transfer',
@@ -121,6 +134,10 @@ export function SettingsPanel({
   redoDepth,
   historyLimit,
   onClose,
+  onAddFont = () => undefined,
+  onRemoveFont = () => undefined,
+  onToggleFontFavorite = () => undefined,
+  onPurgeUnusedFonts = () => undefined,
   onPreviewStickyChange,
   onSpacerVisibilityChange,
   onShowGridLanesChange,
@@ -141,6 +158,7 @@ export function SettingsPanel({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const displayRef = useRef<HTMLElement | null>(null);
+  const fontsRef = useRef<HTMLElement | null>(null);
   const transferRef = useRef<HTMLElement | null>(null);
   const advancedRef = useRef<HTMLElement | null>(null);
   const diagnosticsRef = useRef<HTMLElement | null>(null);
@@ -149,6 +167,7 @@ export function SettingsPanel({
   const sectionRefs = useMemo(
     () => ({
       display: displayRef,
+      fonts: fontsRef,
       transfer: transferRef,
       advanced: advancedRef,
       diagnostics: diagnosticsRef,
@@ -369,6 +388,21 @@ export function SettingsPanel({
                 note="Hold Alt while dragging to invert the current mode."
                 checked={snapEnabled}
                 onCheckedChange={onSnapEnabledChange}
+              />
+            </section>
+
+            <section ref={fontsRef} className="editor-border-subtle border-b py-6">
+              <SectionHeading
+                eyebrow="Fonts"
+                title="Document font library"
+                description="Manage available families, favorites, and cleanup for this document."
+              />
+              <ManageFontsPanel
+                document={document}
+                onAddFont={onAddFont}
+                onRemoveFont={onRemoveFont}
+                onToggleFavorite={onToggleFontFavorite}
+                onPurgeUnused={onPurgeUnusedFonts}
               />
             </section>
 

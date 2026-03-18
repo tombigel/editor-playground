@@ -9,6 +9,7 @@ import {
   syncIdCountersWithDocument,
   type SectionTemplateId,
 } from '../model/defaults';
+import { ensureDocumentFontFamilyByName, normalizeDocumentFontState } from '../fonts';
 import { validateDocument } from '../model/validation';
 import type {
   BorderColorField,
@@ -250,6 +251,7 @@ function cloneDocument(document: DocumentModel): DocumentModel {
   return {
     rootId: document.rootId,
     nodes: structuredClone(document.nodes),
+    fontLibrary: structuredClone(document.fontLibrary),
   };
 }
 
@@ -288,7 +290,7 @@ function normalizeSticky(sticky: StickyDefinition | undefined): StickyDefinition
 }
 
 function normalizeDocument(document: DocumentModel): DocumentModel {
-  const normalized = cloneDocument(document);
+  const normalized = normalizeDocumentFontState(cloneDocument(document));
   syncIdCountersWithDocument(normalized);
   for (const node of Object.values(normalized.nodes)) {
     if (node.type === 'site') {
@@ -548,7 +550,7 @@ function applyModernHeader(document: DocumentModel, header: WrapperNode) {
   title.style ??= {};
   title.style.color = '#0f172a';
   title.style.fontSize = parseFontSizeValue('20px');
-  title.style.fontWeight = 'bold';
+  title.style.fontWeight = 700;
   title.htmlTag = 'h1';
 
   const subtitle = createUniqueLeaf(document, 'text', header.id) as TextLeaf;
@@ -604,7 +606,7 @@ function applyModernFooter(document: DocumentModel, footer: WrapperNode) {
   title.style ??= {};
   title.style.color = '#0f172a';
   title.style.fontSize = parseFontSizeValue('16px');
-  title.style.fontWeight = 'bold';
+  title.style.fontWeight = 700;
   title.style.lineHeight = 1.2;
   title.htmlTag = 'h2';
 
@@ -834,7 +836,7 @@ export function updateTextField(
   field: EditorTextField,
   value: string,
 ): EditorState {
-  const document = cloneDocument(state.document);
+  let document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
   if (node.type === 'site') {
     return state;
@@ -849,6 +851,13 @@ export function updateTextField(
   } else if (field === 'color' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
     node.style.color = value || undefined;
+  } else if (field === 'fontFamily' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+    node.style ??= {};
+    const trimmedValue = value.trim();
+    node.style.fontFamily = trimmedValue || undefined;
+    if (trimmedValue) {
+      document = ensureDocumentFontFamilyByName(document, trimmedValue);
+    }
   } else if (field === 'background' && node.type === 'leaf' && node.role === 'button') {
     node.style ??= {};
     node.style.background = value || undefined;
@@ -859,8 +868,12 @@ export function updateTextField(
     node.style ??= {};
     node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
   } else if (field === 'fontWeight' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) {
+      return state;
+    }
     node.style ??= {};
-    node.style.fontWeight = value === 'bold' ? 'bold' : 'normal';
+    node.style.fontWeight = Math.min(900, Math.max(100, Math.round(parsed)));
   } else if (field === 'fontStyle' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
     node.style ??= {};
     node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
@@ -919,7 +932,7 @@ export function updateTextField(
     }
   }
 
-  return { ...state, document };
+  return { ...state, document: normalizeDocumentFontState(document) };
 }
 
 export function updateRectField(

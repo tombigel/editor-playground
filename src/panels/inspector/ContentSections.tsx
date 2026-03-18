@@ -6,16 +6,29 @@ import {
   ArrowUpDown,
   PilcrowLeft,
   PilcrowRight,
+  Settings2,
   TextWrap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  BOLD_FONT_WEIGHT,
+  DEFAULT_FONT_WEIGHT,
+  getDocumentFontFamily,
+  isBoldFontWeight,
+  listDocumentFontsForPicker,
+  resolveNearestSupportedFontWeight,
+} from '../../api/fontApi';
+import type { DocumentModel } from '../../api/editorApi';
+import {
   BorderControlGroup,
+  FontPickerPopover,
   FontSizeField,
   FormField,
   HoverColorField,
@@ -90,11 +103,15 @@ export function TextContentSection({
 }
 
 export function TextTextStyleSection({
+  document,
   node,
   onTextChange,
+  onOpenManageFonts,
 }: {
+  document: DocumentModel;
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onOpenManageFonts: () => void;
 }) {
   return (
     <Card className="editor-border-subtle rounded-lg shadow-none">
@@ -103,8 +120,10 @@ export function TextTextStyleSection({
       </CardHeader>
       <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
         <TypographyTextStyleFields
+          document={document}
           node={node}
           onTextChange={onTextChange}
+          onOpenManageFonts={onOpenManageFonts}
         />
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
           <Label className="text-[11px] font-medium">HTML tag</Label>
@@ -194,11 +213,15 @@ export function ButtonContentSection({
 }
 
 export function ButtonTextStyleSection({
+  document,
   node,
   onTextChange,
+  onOpenManageFonts,
 }: {
+  document: DocumentModel;
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onOpenManageFonts: () => void;
 }) {
   return (
     <Card className="editor-border-subtle rounded-lg shadow-none">
@@ -206,7 +229,14 @@ export function ButtonTextStyleSection({
         <CardTitle className="text-xs">Text style</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
-        <TypographyTextStyleFields node={node} onTextChange={onTextChange} supportsWrap wrapFieldLabel="Wrap" />
+        <TypographyTextStyleFields
+          document={document}
+          node={node}
+          onTextChange={onTextChange}
+          supportsWrap
+          wrapFieldLabel="Wrap"
+          onOpenManageFonts={onOpenManageFonts}
+        />
       </CardContent>
     </Card>
   );
@@ -360,11 +390,15 @@ export function LinkContentSection({
 }
 
 export function LinkTextStyleSection({
+  document,
   node,
   onTextChange,
+  onOpenManageFonts,
 }: {
+  document: DocumentModel;
   node: LinkInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onOpenManageFonts: () => void;
 }) {
   return (
     <Card className="editor-border-subtle rounded-lg shadow-none">
@@ -372,7 +406,14 @@ export function LinkTextStyleSection({
         <CardTitle className="text-xs">Text style</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
-        <TypographyTextStyleFields node={node} onTextChange={onTextChange} supportsWrap wrapFieldLabel="Wrap" />
+        <TypographyTextStyleFields
+          document={document}
+          node={node}
+          onTextChange={onTextChange}
+          supportsWrap
+          wrapFieldLabel="Wrap"
+          onOpenManageFonts={onOpenManageFonts}
+        />
       </CardContent>
     </Card>
   );
@@ -540,20 +581,58 @@ function createShadowFallback(color: string, blur: number, spread: number, offse
 type TypographyInspectorNode = TextInspectorNode | LinkInspectorNode | ButtonInspectorNode;
 
 function TypographyTextStyleFields({
+  document,
   node,
   onTextChange,
   supportsWrap = false,
   wrapFieldLabel = 'Wrap',
+  onOpenManageFonts,
 }: {
+  document: DocumentModel;
   node: TypographyInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
   supportsWrap?: boolean;
   wrapFieldLabel?: string;
+  onOpenManageFonts: () => void;
 }) {
   const wrapEnabled = supportsWrap && readTextWrapMode(node) === 'wrap';
+  const documentFonts = listDocumentFontsForPicker(document);
+  const currentFamily = node.style?.fontFamily ?? SYSTEM_FONT_VALUE;
+  const selectedFamily = node.style?.fontFamily ? getDocumentFontFamily(document, node.style.fontFamily) : undefined;
 
   return (
     <>
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
+        <Label className="text-[11px] font-medium">Font</Label>
+        <div className="ml-auto flex w-[140px] items-center justify-between gap-1">
+          <FontPickerPopover
+            familyValue={currentFamily}
+            weightValue={node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT}
+            families={documentFonts}
+            systemOptionValue={SYSTEM_FONT_VALUE}
+            onFamilyChange={(value) => onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
+            onWeightChange={(value) => onTextChange('fontWeight', value)}
+            className="w-[104px]"
+          />
+          <PopoverTooltip
+            side="top"
+            align="center"
+            className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+            content={<div className="leading-3.5 font-medium">Manage fonts</div>}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-sm"
+              aria-label="Manage fonts"
+              onClick={onOpenManageFonts}
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </Button>
+          </PopoverTooltip>
+        </div>
+      </div>
       <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
         <Label className="text-[11px] font-medium">Size</Label>
         <div className="ml-auto grid w-[140px] grid-cols-[96px_40px] items-center gap-1">
@@ -572,8 +651,18 @@ function TypographyTextStyleFields({
         <div className="ml-auto flex items-center gap-1">
           <TextStyleIconButton
             label="Bold"
-            active={node.style?.fontWeight === 'bold'}
-            onClick={() => onTextChange('fontWeight', node.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
+            active={isBoldFontWeight(node.style?.fontWeight)}
+            onClick={() =>
+              onTextChange(
+                'fontWeight',
+                String(
+                  resolveNearestSupportedFontWeight(
+                    isBoldFontWeight(node.style?.fontWeight) ? DEFAULT_FONT_WEIGHT : BOLD_FONT_WEIGHT,
+                    selectedFamily,
+                  ),
+                ),
+              )
+            }
           >
             <span className="font-black tracking-[-0.02em] no-underline decoration-transparent">B</span>
           </TextStyleIconButton>
@@ -703,6 +792,8 @@ function TypographyDesignFields({
 function fontSizeFieldValueFromNode(node: TypographyInspectorNode) {
   return node.style?.fontSize?.raw ?? '18px';
 }
+
+const SYSTEM_FONT_VALUE = '__system-font__';
 
 function readTextWrapMode(node: TypographyInspectorNode) {
   return node.type === 'leaf' && (node.role === 'link' || node.role === 'button') ? node.style?.textWrap : undefined;

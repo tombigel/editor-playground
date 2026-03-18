@@ -1,5 +1,13 @@
 import { useReducer, useState } from 'react';
 import { type StickyGeometrySnapshot } from '../api/editorApi';
+import {
+  BOLD_FONT_WEIGHT,
+  DEFAULT_FONT_WEIGHT,
+  getDocumentDefaultFontFamily,
+  getDocumentFontFamily,
+  isBoldFontWeight,
+  resolveNearestSupportedFontWeight,
+} from '../api/fontApi';
 import { getShortcutPlatform } from '@/lib/shortcuts';
 import { AppShell } from './AppShell';
 import { importSettingsDocument, resetEditorData, resetEditorState, toActionResult } from './appSettingsActions';
@@ -56,6 +64,31 @@ export function App() {
     dispatch({ type: 'bulkEdit', operations });
   }
 
+  function dispatchBoldToggleSelection() {
+    const nodes = getSelectedTypographyNodes();
+    if (nodes.length === 0) {
+      return;
+    }
+
+    const disableBold = nodes.every((node) => isBoldFontWeight(node.style?.fontWeight));
+    const targetWeight = disableBold ? DEFAULT_FONT_WEIGHT : BOLD_FONT_WEIGHT;
+    const operations: BulkEditOperation[] = nodes.map((node) => ({
+      kind: 'text',
+      targetIds: [node.id],
+      field: 'fontWeight',
+      value: String(
+        resolveNearestSupportedFontWeight(
+          targetWeight,
+          node.style?.fontFamily
+            ? getDocumentFontFamily(state.document, node.style.fontFamily)
+            : getDocumentDefaultFontFamily(state.document),
+        ),
+      ),
+    }));
+
+    dispatch({ type: 'bulkEdit', operations });
+  }
+
   function toggleTextDecoration(value: string, target: 'underline' | 'line-through') {
     const hasUnderline = value.includes('underline');
     const hasLineThrough = value.includes('line-through');
@@ -100,10 +133,7 @@ export function App() {
     onSetSnapEnabled: (value) => dispatch({ type: 'setSnapEnabled', value }),
     onNudgeSelection: (deltaX, deltaY) => dispatch({ type: 'nudgeSelection', deltaX, deltaY }),
     onDeleteSelection: () => dispatch({ type: 'delete' }),
-    onToggleBoldSelection: () =>
-      dispatchSelectedTextEdit('fontWeight', (nodes) =>
-        nodes.every((node) => (node.style?.fontWeight ?? 'normal') === 'bold') ? 'normal' : 'bold',
-      ),
+    onToggleBoldSelection: () => dispatchBoldToggleSelection(),
     onToggleItalicSelection: () =>
       dispatchSelectedTextEdit('fontStyle', (nodes) =>
         nodes.every((node) => (node.style?.fontStyle ?? 'normal') === 'italic') ? 'normal' : 'italic',
@@ -163,6 +193,7 @@ export function App() {
       topbarClass={viewModel.topbarClass}
       stageSelectableIds={viewModel.stageSelectableIds}
       settingsOpen={panels.settingsOpen}
+      manageFontsOpen={panels.manageFontsOpen}
       shortcutHelpOpen={panels.shortcutHelpOpen}
       sectionTemplateOpen={panels.sectionTemplateOpen}
       sectionTemplatePosition={panels.sectionTemplatePosition}
@@ -177,6 +208,7 @@ export function App() {
       onSectionTemplateOpenChange={panels.handleSectionTemplateOpenChange}
       onCloseSectionTemplates={panels.closeSectionTemplatePopover}
       onSettingsOpenChange={panels.setSettingsOpen}
+      onManageFontsOpenChange={panels.setManageFontsOpen}
       onShortcutHelpOpenChange={panels.setShortcutHelpOpen}
       onImportDocument={handleImportDocument}
       onResetData={handleResetData}

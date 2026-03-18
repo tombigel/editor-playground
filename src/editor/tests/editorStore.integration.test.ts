@@ -151,6 +151,31 @@ describe('editor/editorStore integration', () => {
     expect(updated.style.paddingTop?.parsed).toEqual({ value: 2, unit: 'em' });
   });
 
+  it('preserves font metadata when selecting an existing document font family', () => {
+    const state = createInitialState();
+    const textNode = Object.values(state.document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text',
+    );
+
+    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+      throw new Error('Expected text leaf');
+    }
+
+    const next = updateTextField(state, textNode.id, 'fontFamily', 'Inter');
+    const updatedNode = next.document.nodes[textNode.id];
+
+    if (!updatedNode || updatedNode.type !== 'leaf' || updatedNode.role !== 'text') {
+      throw new Error('Expected updated text leaf');
+    }
+
+    expect(updatedNode.style?.fontFamily).toBe('Inter');
+    expect(next.document.fontLibrary.usedFamilies.find((family) => family.family === 'Inter')).toMatchObject({
+      family: 'Inter',
+      isVariable: true,
+      variants: ['100', '200', '300', 'regular', '500', '600', '700', '800', '900'],
+    });
+  });
+
   it('strips alpha from structural wrapper background edits while keeping container alpha', () => {
     const state = createInitialState();
     const section = Object.values(state.document.nodes).find(

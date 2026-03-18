@@ -230,6 +230,7 @@ describe('render/layout', () => {
         [section.id]: section,
         [text.id]: text,
       },
+      fontLibrary: createInitialDocument().fontLibrary,
     };
 
     const plan = resolveWrapperRenderPlan(document, section, {

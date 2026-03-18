@@ -110,7 +110,7 @@ describe('api/documentApi', () => {
       'color(display-p3 0.24 0.52 0.88 / 0.9)',
     );
     const withButtonShadow = setNodeTextField(withButtonBackground, buttonId, 'shadowSpread', '12');
-    const withButtonTypography = setNodeTextField(withButtonShadow, buttonId, 'fontWeight', 'bold');
+    const withButtonTypography = setNodeTextField(withButtonShadow, buttonId, 'fontWeight', '700');
     const withButtonWrap = setNodeTextField(withButtonTypography, buttonId, 'textWrap', 'wrap');
 
     const textNode = withButtonWrap.nodes[textId];
@@ -132,8 +132,32 @@ describe('api/documentApi', () => {
     expect(imageNode.style?.borderRadius?.raw).toBe('24px');
     expect(buttonNode.style?.background).toBe('color(display-p3 0.24 0.52 0.88 / 0.9)');
     expect(buttonNode.style?.shadowSpread).toBe(12);
-    expect(buttonNode.style?.fontWeight).toBe('bold');
+    expect(buttonNode.style?.fontWeight).toBe(700);
     expect(buttonNode.style?.textWrap).toBe('wrap');
+  });
+
+  it('preserves catalog metadata when applying an existing document font family', () => {
+    const document = createInitialDocument();
+    const textId = Object.keys(document.nodes).find(
+      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+    );
+    if (!textId) {
+      throw new Error('Expected text node');
+    }
+
+    const next = setNodeTextField(document, textId, 'fontFamily', 'Assistant');
+    const node = next.nodes[textId];
+    if (node.type !== 'leaf' || node.role !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    expect(node.style?.fontFamily).toBe('Assistant');
+    expect(next.fontLibrary.usedFamilies.find((family) => family.family === 'Assistant')).toMatchObject({
+      family: 'Assistant',
+      isVariable: true,
+      variants: ['200', '300', 'regular', '500', '600', '700', '800'],
+      axes: [{ tag: 'wght', min: 200, max: 800 }],
+    });
   });
 
   it('returns original document when text field does not apply to node type', () => {
@@ -181,8 +205,9 @@ describe('api/documentApi', () => {
     const document = createInitialDocument();
     const serialized = JSON.parse(serializeDocumentJson(document)) as Record<string, unknown>;
 
-    expect(Object.keys(serialized).sort()).toEqual(['nodes', 'rootId']);
+    expect(Object.keys(serialized).sort()).toEqual(['fontLibrary', 'nodes', 'rootId']);
     expect(serialized.rootId).toBe(document.rootId);
+    expect(serialized.fontLibrary).toEqual(document.fontLibrary);
     expect(serialized.nodes).toEqual(document.nodes);
   });
 
