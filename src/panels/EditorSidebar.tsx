@@ -24,8 +24,18 @@ export function EditorSidebar({
   const temporaryCloseTimeoutRef = useRef<number | null>(null);
   const isFocusedModeActive = Boolean(inspectorProps.focusedMode);
   const showCollapsedHandle = inspectorCollapsed && !temporaryInspectorOpen;
-  const title = inspectorProps.node?.type === 'site' ? 'No selection' : inspectorProps.node?.name ?? 'No selection';
-  const roleLabel = inspectorProps.node && inspectorProps.node.type !== 'site' ? inspectorProps.node.role : null;
+  const selectedNodes = inspectorProps.selectedNodes ?? [];
+  const isMultiSelect = selectedNodes.length > 1;
+  const title = isMultiSelect
+    ? `${selectedNodes.length} selected`
+    : inspectorProps.node?.type === 'site'
+      ? 'No selection'
+      : inspectorProps.node?.name ?? 'No selection';
+  const roleLabel = isMultiSelect
+    ? null
+    : inspectorProps.node && inspectorProps.node.type !== 'site'
+      ? inspectorProps.node.role
+      : null;
   const collapsedLayerClass = showCollapsedHandle ? 'opacity-100' : 'pointer-events-none opacity-0';
   const expandedLayerClass = showCollapsedHandle ? 'pointer-events-none opacity-0' : 'opacity-100';
 

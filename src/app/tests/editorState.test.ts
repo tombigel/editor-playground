@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialState, insertLeaf, insertWrapper } from '../../api/editorApi';
+import { createInitialState, distributeNodes, insertLeaf, insertWrapper, parseUnitValue } from '../../api/editorApi';
 import { editorReducer, historyReducer, type HistoryState } from '../editorState';
 
 function createTestHistoryState(): HistoryState {
@@ -106,5 +106,264 @@ describe('app/editorState', () => {
       throw new Error('Expected wrapper node');
     }
     expect(sticky.sticky?.target).toBe('self');
+  });
+
+  it('keeps the first selected node as the master while toggling in additional nodes', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const firstId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const secondId = state.selectedId;
+
+    if (!firstId || !secondId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    const multi = editorReducer(state, { type: 'toggleSelect', id: firstId });
+
+    expect(multi.selectedId).toBe(secondId);
+    expect(multi.selectedIds).toEqual([secondId, firstId]);
+  });
+
+  it('keeps structural wrappers single-selected when the user tries to add them to a multi-selection', () => {
+    const initialState = createInitialState();
+    const section = Object.values(initialState.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const header = Object.values(initialState.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'header',
+    );
+    const footer = Object.values(initialState.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'footer',
+    );
+
+    if (!section || section.type !== 'wrapper' || !header || header.type !== 'wrapper' || !footer || footer.type !== 'wrapper') {
+      throw new Error('Expected structural wrappers');
+    }
+
+    let state = insertLeaf(initialState, 'text');
+    const textId = state.selectedId;
+    if (!textId) {
+      throw new Error('Expected inserted text node');
+    }
+
+    const withSectionToggledIn = editorReducer(state, { type: 'toggleSelect', id: section.id });
+    expect(withSectionToggledIn.selectedId).toBe(textId);
+    expect(withSectionToggledIn.selectedIds).toEqual([textId]);
+
+    const sectionOnly = editorReducer(state, { type: 'select', id: section.id });
+    const withLeafToggledIn = editorReducer(sectionOnly, { type: 'toggleSelect', id: textId });
+    expect(withLeafToggledIn.selectedId).toBe(textId);
+    expect(withLeafToggledIn.selectedIds).toEqual([textId]);
+
+    const marqueeSelection = editorReducer(state, {
+      type: 'selectMany',
+      ids: [section.id, textId],
+      mode: 'replace',
+    });
+    expect(marqueeSelection.selectedId).toBe(textId);
+    expect(marqueeSelection.selectedIds).toEqual([textId]);
+
+    const headerSelection = editorReducer(state, {
+      type: 'selectMany',
+      ids: [header.id, textId],
+      mode: 'replace',
+    });
+    expect(headerSelection.selectedId).toBe(textId);
+    expect(headerSelection.selectedIds).toEqual([textId]);
+
+    const footerSelection = editorReducer(state, {
+      type: 'selectMany',
+      ids: [footer.id, textId],
+      mode: 'replace',
+    });
+    expect(footerSelection.selectedId).toBe(textId);
+    expect(footerSelection.selectedIds).toEqual([textId]);
+  });
+
+  it('stores one history entry for a bulk multi-select edit', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'text');
+    const firstId = present.selectedId;
+    present = insertLeaf(present, 'text');
+    const secondId = present.selectedId;
+
+    if (!firstId || !secondId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    present = editorReducer(present, { type: 'toggleSelect', id: firstId });
+
+    const before = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const next = historyReducer(before, {
+      type: 'bulkEdit',
+      operations: [{ kind: 'text', targetIds: [firstId, secondId], field: 'color', value: '#112233' }],
+    });
+
+    expect(next.past).toHaveLength(1);
+    expect(next.past[0]?.nodePatches).toHaveLength(2);
+    expect(next.present.document.nodes[firstId]).toMatchObject({ style: { color: '#112233' } });
+    expect(next.present.document.nodes[secondId]).toMatchObject({ style: { color: '#112233' } });
+  });
+
+  it('stores one history entry for a group move', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'text');
+    const firstId = present.selectedId;
+    present = insertLeaf(present, 'text');
+    const secondId = present.selectedId;
+
+    if (!firstId || !secondId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    present = editorReducer(present, { type: 'toggleSelect', id: firstId });
+
+    const before = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const next = historyReducer(before, {
+      type: 'moveSelection',
+      moves: [
+        { id: firstId, x: '120px', y: '140px' },
+        { id: secondId, x: '220px', y: '240px' },
+      ],
+    });
+
+    expect(next.past).toHaveLength(1);
+    expect(next.past[0]?.nodePatches).toHaveLength(2);
+    expect(next.present.document.nodes[firstId]).toMatchObject({ rect: { x: { base: { raw: '120px' } }, y: { base: { raw: '140px' } } } });
+    expect(next.present.document.nodes[secondId]).toMatchObject({ rect: { x: { base: { raw: '220px' } }, y: { base: { raw: '240px' } } } });
+  });
+
+  it('distributes three selected siblings across the full selected span', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const firstId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const secondId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const thirdId = state.selectedId;
+
+    if (!firstId || !secondId || !thirdId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    const nextDocument = structuredClone(state.document);
+    const firstNode = nextDocument.nodes[firstId];
+    const secondNode = nextDocument.nodes[secondId];
+    const thirdNode = nextDocument.nodes[thirdId];
+    if (
+      !firstNode ||
+      firstNode.type === 'site' ||
+      !secondNode ||
+      secondNode.type === 'site' ||
+      !thirdNode ||
+      thirdNode.type === 'site'
+    ) {
+      throw new Error('Expected movable nodes');
+    }
+
+    firstNode.rect.x.base = parseUnitValue('0px');
+    secondNode.rect.x.base = parseUnitValue('120px');
+    thirdNode.rect.x.base = parseUnitValue('500px');
+    firstNode.rect.y.base = parseUnitValue('40px');
+    secondNode.rect.y.base = parseUnitValue('40px');
+    thirdNode.rect.y.base = parseUnitValue('40px');
+    firstNode.rect.width.base = parseUnitValue('50px');
+    secondNode.rect.width.base = parseUnitValue('50px');
+    thirdNode.rect.width.base = parseUnitValue('50px');
+
+    state = {
+      ...state,
+      document: nextDocument,
+      selectedId: firstId,
+      selectedIds: [firstId, secondId, thirdId],
+    };
+
+    const next = distributeNodes(
+      state,
+      [firstId, secondId, thirdId],
+      'horizontal',
+      {
+        [firstId]: { left: 0, top: 40, width: 50, height: 20 },
+        [secondId]: { left: 120, top: 40, width: 50, height: 20 },
+        [thirdId]: { left: 500, top: 40, width: 50, height: 20 },
+      },
+    );
+
+    expect(next.document.nodes[firstId]).toMatchObject({ rect: { x: { base: { raw: '0px' } } } });
+    expect(next.document.nodes[secondId]).toMatchObject({ rect: { x: { base: { raw: '250px' } } } });
+    expect(next.document.nodes[thirdId]).toMatchObject({ rect: { x: { base: { raw: '500px' } } } });
+  });
+
+  it('distributes selected siblings by left edges', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const firstId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const secondId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const thirdId = state.selectedId;
+
+    if (!firstId || !secondId || !thirdId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    const nextDocument = structuredClone(state.document);
+    const firstNode = nextDocument.nodes[firstId];
+    const secondNode = nextDocument.nodes[secondId];
+    const thirdNode = nextDocument.nodes[thirdId];
+    if (
+      !firstNode ||
+      firstNode.type === 'site' ||
+      !secondNode ||
+      secondNode.type === 'site' ||
+      !thirdNode ||
+      thirdNode.type === 'site'
+    ) {
+      throw new Error('Expected movable nodes');
+    }
+
+    firstNode.rect.x.base = parseUnitValue('0px');
+    secondNode.rect.x.base = parseUnitValue('120px');
+    thirdNode.rect.x.base = parseUnitValue('500px');
+    firstNode.rect.width.base = parseUnitValue('50px');
+    secondNode.rect.width.base = parseUnitValue('120px');
+    thirdNode.rect.width.base = parseUnitValue('80px');
+
+    state = {
+      ...state,
+      document: nextDocument,
+      selectedId: firstId,
+      selectedIds: [firstId, secondId, thirdId],
+    };
+
+    const next = distributeNodes(
+      state,
+      [firstId, secondId, thirdId],
+      'left',
+      {
+        [firstId]: { left: 0, top: 40, width: 50, height: 20 },
+        [secondId]: { left: 120, top: 40, width: 120, height: 20 },
+        [thirdId]: { left: 500, top: 40, width: 80, height: 20 },
+      },
+    );
+
+    expect(next.document.nodes[firstId]).toMatchObject({ rect: { x: { base: { raw: '0px' } } } });
+    expect(next.document.nodes[secondId]).toMatchObject({ rect: { x: { base: { raw: '250px' } } } });
+    expect(next.document.nodes[thirdId]).toMatchObject({ rect: { x: { base: { raw: '500px' } } } });
   });
 });

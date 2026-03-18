@@ -3,6 +3,7 @@ import { convertRenderedPxToGeometryUnit } from '../model/conversion';
 import { resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import type {
   DragGeometry,
+  DragPreviewItem,
   DragResolutionOptions,
   DragState,
   MeasuredNodeSizes,
@@ -13,6 +14,7 @@ import type {
 } from './types';
 export type {
   DragGeometry,
+  DragPreviewItem,
   DragResolutionOptions,
   DragState,
   MeasuredNodeSizes,
@@ -285,6 +287,8 @@ export function computeResizeFrame(
 
 export function createDragState({
   nodeId,
+  draggedNodeIds,
+  previewItems,
   parentId,
   element,
   clientX,
@@ -293,6 +297,8 @@ export function createDragState({
   originY,
 }: {
   nodeId: string;
+  draggedNodeIds?: NodeId[];
+  previewItems?: DragPreviewItem[];
   parentId?: string;
   element: HTMLElement;
   clientX: number;
@@ -303,6 +309,8 @@ export function createDragState({
   const dragGeometry = getDragElementRect(element, clientX, clientY, parentId, originX, originY);
   return {
     nodeId,
+    draggedNodeIds,
+    previewItems,
     startClientX: clientX,
     startClientY: clientY,
     currentClientX: clientX,
@@ -604,7 +612,7 @@ function isDescendant(model: DocumentModel, candidateId: NodeId, targetAncestorI
   return false;
 }
 
-export function measureStageNodeSizes(root: HTMLElement): MeasuredNodeSizes {
+export function measureStageNodeSizes(root: HTMLElement, document: DocumentModel): MeasuredNodeSizes {
   const next: MeasuredNodeSizes = {};
   const elements = root.querySelectorAll<HTMLElement>('[data-node-id]');
 
@@ -613,13 +621,26 @@ export function measureStageNodeSizes(root: HTMLElement): MeasuredNodeSizes {
     if (!nodeId) {
       continue;
     }
+    const node = document.nodes[nodeId];
+    if (!node || node.type === 'site') {
+      continue;
+    }
 
     const measured = measureStageNodeElement(element);
     if (!measured) {
       continue;
     }
 
-    next[nodeId] = measured;
+    const nextWidth = shouldMeasureNodeWidth(node) ? measured.width : 0;
+    const nextHeight = shouldMeasureNodeHeight(node) ? measured.height : 0;
+    if (nextWidth <= 0 && nextHeight <= 0) {
+      continue;
+    }
+
+    next[nodeId] = {
+      width: nextWidth,
+      height: nextHeight,
+    };
   }
 
   return next;
@@ -725,22 +746,26 @@ export function getNodeHeight(
   measuredNodeSizes: MeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
 ) {
-  const measured = measuredNodeSizes[node.id];
-  if (measured?.height && measured.height > 0) {
-    return measured.height;
-  }
-
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
+    const measured = measuredNodeSizes[node.id];
+    if (height.unit === '%' && measured?.height && measured.height > 0) {
+      return measured.height;
+    }
+
     return height.unit === 'px' ? height.value : height.unit === 'vh'
       ? (height.value / 100) * viewport.height
       : height.unit === 'vw'
         ? (height.value / 100) * viewport.width
         : height.unit === 'vmin'
           ? (height.value / 100) * Math.min(viewport.width, viewport.height)
-          : height.unit === 'vmax'
-            ? (height.value / 100) * Math.max(viewport.width, viewport.height)
+        : height.unit === 'vmax'
+          ? (height.value / 100) * Math.max(viewport.width, viewport.height)
             : 0;
+  }
+  const measured = measuredNodeSizes[node.id];
+  if (height.keyword === 'auto' && measured?.height && measured.height > 0) {
+    return measured.height;
   }
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node, measuredNodeSizes, viewport) / height.ratio;
@@ -789,6 +814,19 @@ function estimateAutoLeafHeight(
   }
 
   return 56;
+}
+
+function shouldMeasureNodeWidth(node: Exclude<DocumentNode, { type: 'site' }>) {
+  const width = node.rect.width.base.parsed;
+  return !('unit' in width) || width.unit === '%';
+}
+
+function shouldMeasureNodeHeight(node: Exclude<DocumentNode, { type: 'site' }>) {
+  const height = node.rect.height.base.parsed;
+  if ('unit' in height) {
+    return height.unit === '%';
+  }
+  return height.keyword === 'auto';
 }
 
 export function resolveOffsetPx(

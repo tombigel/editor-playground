@@ -7,7 +7,7 @@ import type {
   ViewportMeasurement,
   WrapperNode,
 } from '../model/types';
-import { formatValue, resolveFontSizePx, resolveSpacingPx, resolveUnitValuePx } from '../model/units';
+import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import { buildBorderStyle, buildBoxShadow } from './styleHelpers';
 import { resolveWrapperStickyState } from '../sticky/resolve';
 import type {
@@ -82,17 +82,7 @@ export function buildWrapperStyle(node: WrapperNode, isTopLevel: boolean): CSSPr
 }
 
 export function getWrapperBorderStyle(node: WrapperNode): CSSProperties {
-  const style: CSSProperties = {};
-
-  if (node.role === 'section' && (node.style.sectionBorderBottomColor || node.style.sectionBorderBottomWidth)) {
-    style.borderBottomStyle = 'solid';
-    style.borderBottomColor = node.style.sectionBorderBottomColor;
-    style.borderBottomWidth = node.style.sectionBorderBottomWidth
-      ? formatValue(node.style.sectionBorderBottomWidth.parsed)
-      : '1px';
-  }
-
-  return style;
+  return {};
 }
 
 export function getWrapperBorderDeclarations(node: WrapperNode): string[] {
@@ -106,12 +96,27 @@ export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties 
   };
 
   Object.assign(style, buildBorderStyle(node.style));
+  Object.assign(style, getSectionDividerStyle(node));
   const boxShadow = buildBoxShadow(node.style);
   if (boxShadow) {
     style.boxShadow = boxShadow;
   }
 
   return style;
+}
+
+function getSectionDividerStyle(node: WrapperNode): CSSProperties {
+  if (node.role !== 'section' || (!node.style.sectionBorderBottomColor && !node.style.sectionBorderBottomWidth)) {
+    return {};
+  }
+
+  return {
+    borderBottomStyle: 'solid',
+    borderBottomColor: node.style.sectionBorderBottomColor,
+    borderBottomWidth: node.style.sectionBorderBottomWidth
+      ? formatValue(node.style.sectionBorderBottomWidth.parsed)
+      : '1px',
+  };
 }
 
 export function getContentWrapperPaddingStyle(node: WrapperNode): CSSProperties {
@@ -197,6 +202,11 @@ export function getNodeHeight(
 ) {
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
+    const measured = measuredNodeSizes[node.id];
+    if (height.unit === '%' && measured?.height && measured.height > 0) {
+      return measured.height;
+    }
+
     const authoredHeight =
       height.unit === 'px' ? height.value : height.unit === 'vh'
       ? (height.value / 100) * viewport.height
@@ -204,14 +214,9 @@ export function getNodeHeight(
         ? (height.value / 100) * viewport.width
         : height.unit === 'vmin'
           ? (height.value / 100) * Math.min(viewport.width, viewport.height)
-          : height.unit === 'vmax'
+        : height.unit === 'vmax'
             ? (height.value / 100) * Math.max(viewport.width, viewport.height)
             : (height.value / 100) * 480;
-
-    if (node.type === 'wrapper' && node.role !== 'container') {
-      const measuredContentHeight = getMeasuredWrapperContentHeight(node, measuredNodeSizes, viewport);
-      return measuredContentHeight != null ? Math.max(authoredHeight, measuredContentHeight) : authoredHeight;
-    }
 
     return authoredHeight;
   }
@@ -226,38 +231,6 @@ export function getNodeHeight(
     return node.role === 'header' || node.role === 'footer' ? 0 : 480;
   }
   return estimateAutoLeafHeight(node, measuredNodeSizes, viewport);
-}
-
-function getMeasuredWrapperContentHeight(
-  node: WrapperNode,
-  measuredNodeSizes: RenderMeasuredNodeSizes,
-  viewport: ViewportMeasurement,
-) {
-  const measured = measuredNodeSizes[node.id];
-  if (!measured?.height || measured.height <= 0) {
-    return null;
-  }
-
-  const paddingTop = resolveWrapperPaddingPx(node, 'top', measuredNodeSizes, viewport);
-  const paddingBottom = resolveWrapperPaddingPx(node, 'bottom', measuredNodeSizes, viewport);
-  return Math.max(0, measured.height - paddingTop - paddingBottom);
-}
-
-function resolveWrapperPaddingPx(
-  node: WrapperNode,
-  edge: 'top' | 'bottom',
-  measuredNodeSizes: RenderMeasuredNodeSizes,
-  viewport: ViewportMeasurement,
-) {
-  const padding = edge === 'top' ? node.style.paddingTop : node.style.paddingBottom;
-  if (!padding) {
-    return 0;
-  }
-
-  return resolveSpacingPx(padding.parsed, {
-    rootFontSizePx: DEFAULT_LAYOUT_FONT_REFERENCE_PX,
-    inheritedFontSizePx: DEFAULT_LAYOUT_FONT_REFERENCE_PX,
-  });
 }
 
 export function resolveOffsetPx(

@@ -16,6 +16,7 @@ function createInspectorProps() {
   }
 
   const baseProps = {
+    selectedNodes: [textNode],
     showOrderControls: false,
     canOrderBack: false,
     canOrderForward: false,
@@ -73,6 +74,33 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain(textNode.role);
     expect(markup).toContain('Pin this node inside its structural range.');
     expect(markup).toContain('editor-scrollbar');
+  });
+
+  it('renders sticky-focused controls for multiple selected nodes', () => {
+    const { textNode, baseProps } = createInspectorProps();
+    const document = createInitialDocument();
+    const secondTextNode = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.id !== textNode.id,
+    );
+
+    if (!secondTextNode || secondTextNode.type !== 'leaf' || secondTextNode.role !== 'text') {
+      throw new Error('Expected second text node');
+    }
+
+    const markup = renderToStaticMarkup(
+      <FocusedModePanel
+        {...baseProps}
+        node={textNode}
+        selectedNodes={[textNode, secondTextNode]}
+        focusedMode="sticky"
+        mode="sticky"
+        onExitFocusedMode={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Sticky');
+    expect(markup).toContain('2 selected');
+    expect(markup).toContain('Pin selected nodes inside their structural range.');
   });
 
   it('renders an empty state when sticky focused mode has no compatible selection', () => {

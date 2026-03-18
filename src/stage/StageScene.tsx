@@ -36,7 +36,6 @@ import { buildRenderRootPlan } from '../render/renderPlan';
 import { getStickyCssProperties, getStickyEdgeMode, usesSyntheticStickyTrack } from '../render/sticky';
 import type { RenderLeafPlanNode } from '../render/types';
 import {
-  createDragState,
   getResizeStartSize,
   numericHeight,
   numericWidth,
@@ -45,6 +44,7 @@ import {
   type ResizeState,
   type SnapGuides,
 } from './stageMath';
+import { isNodeDescendantOf } from '../editor/selection';
 import type {
   RenderWrapperArgs,
   StageSceneLeafNode as LeafNode,
@@ -60,11 +60,11 @@ const DEFAULT_LAYOUT_FONT_REFERENCE_PX = 16;
 export function StageScene({
   document,
   selectedId,
+  selectedIds = selectedId ? [selectedId] : [],
+  multiSelectionBounds = null,
   previewSticky,
   spacerVisibility,
   showGridLanes,
-  onSelect,
-  onMove,
   onResizeStart,
   dragState,
   setDragState,
@@ -85,11 +85,10 @@ export function StageScene({
                 document,
                 plan: plan.header,
                 selectedId,
+                selectedIds,
                 previewSticky,
                 spacerVisibility,
                 showGridLanes,
-                onSelect,
-                onMove,
                 measuredNodeSizes,
                 viewport,
                 dragState,
@@ -108,11 +107,10 @@ export function StageScene({
                 document,
                 plan: wrapper,
                 selectedId,
+                selectedIds,
                 previewSticky,
                 spacerVisibility,
                 showGridLanes,
-                onSelect,
-                onMove,
                 measuredNodeSizes,
                 viewport,
                 dragState,
@@ -131,11 +129,10 @@ export function StageScene({
                 document,
                 plan: plan.footer,
                 selectedId,
+                selectedIds,
                 previewSticky,
                 spacerVisibility,
                 showGridLanes,
-                onSelect,
-                onMove,
                 measuredNodeSizes,
                 viewport,
                 dragState,
@@ -149,10 +146,25 @@ export function StageScene({
               })
             : <EmptySlot label="Footer slot" />}
         </div>
+        {multiSelectionBounds ? <MultiSelectionOutline bounds={multiSelectionBounds} /> : null}
       </div>
       {dragState ? renderSnapGuides(snapGuides) : null}
       {dragState ? renderDragPreview(document, dragState) : null}
     </>
+  );
+}
+
+function MultiSelectionOutline({ bounds }: { bounds: NonNullable<StageSceneProps['multiSelectionBounds']> }) {
+  return (
+    <div
+      className="stage-multi-selection-outline"
+      style={{
+        left: `${bounds.left - 1}px`,
+        top: `${bounds.top - 1}px`,
+        width: `${bounds.width + 2}px`,
+        height: `${bounds.height + 2}px`,
+      }}
+    />
   );
 }
 
@@ -161,61 +173,83 @@ function EmptySlot({ label }: { label: string }) {
 }
 
 function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState, null>) {
-  const node = document.nodes[dragState.nodeId];
-  if (!node || node.type === 'site') {
-    return null;
-  }
+  const previewItems = dragState.previewItems ?? [
+    {
+      nodeId: dragState.nodeId,
+      offsetX: 0,
+      offsetY: 0,
+      width: dragState.previewWidth,
+      height: dragState.previewHeight,
+    },
+  ];
+  const baseLeft = dragState.currentClientX - dragState.grabOffsetX;
+  const baseTop = dragState.currentClientY - dragState.grabOffsetY;
 
-  const style: CSSProperties = {
-    left: `${dragState.currentClientX - dragState.grabOffsetX}px`,
-    top: `${dragState.currentClientY - dragState.grabOffsetY}px`,
-    width: `${dragState.previewWidth}px`,
-    height: `${dragState.previewHeight}px`,
-  };
+  return previewItems.map((item) => {
+    const node = document.nodes[item.nodeId];
+    if (!node || node.type === 'site') {
+      return null;
+    }
 
-  return (
-    <div className="drag-preview" style={style}>
-      {node.type === 'wrapper' ? (
+    const style: CSSProperties = {
+      left: `${baseLeft + item.offsetX}px`,
+      top: `${baseTop + item.offsetY}px`,
+      width: `${item.width}px`,
+      height: `${item.height}px`,
+    };
+
+    return (
+      <div key={item.nodeId} className="drag-preview" style={style}>
+        {renderDragPreviewNode(node)}
+      </div>
+    );
+  });
+}
+
+function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {
+  if (node.type === 'wrapper') {
+    return (
+      <div
+        className={`drag-preview-inner drag-preview-wrapper role-${node.role}`}
+        style={{
+          ...getWrapperBorderStyle(node),
+        }}
+      >
         <div
-          className={`drag-preview-inner drag-preview-wrapper role-${node.role}`}
-          style={{
-            ...getWrapperBorderStyle(node),
-          }}
-        >
-          <div
-            className="drag-preview-content-wrapper content-wrapper"
-            style={{
-              width: '100%',
-              height: '100%',
-              ...getContentWrapperPaddingStyle(node),
-            }}
-          >
-            <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node)} />
-          </div>
-        </div>
-      ) : (
-        <div
-          data-node-id={node.id}
-          className={`drag-preview-inner stage-leaf role-${node.role} ${isBrandMark(node) ? 'is-brand-mark' : ''}`}
+          className="drag-preview-content-wrapper content-wrapper"
           style={{
             width: '100%',
             height: '100%',
+            ...getContentWrapperPaddingStyle(node),
           }}
         >
-          <div
-            className="stage-leaf-body"
-            style={node.role === 'image' ? styleRecordToReactStyle(getLeafInlineStyle(node)) : undefined}
-          >
-            {renderLeafContent(node, {
-              contentStyle: node.role === 'image' ? undefined : styleRecordToReactStyle(getLeafInlineStyle(node)),
-              imageClassName: 'stage-image',
-              imagePlaceholderClassName: 'image-placeholder',
-              imageDraggable: false,
-              disableTabNavigation: true,
-            })}
-          </div>
+          <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node)} />
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-node-id={node.id}
+      className={`drag-preview-inner stage-leaf role-${node.role} ${isBrandMark(node) ? 'is-brand-mark' : ''}`}
+      style={{
+        width: '100%',
+        height: '100%',
+      }}
+    >
+      <div
+        className="stage-leaf-body"
+        style={node.role === 'image' ? styleRecordToReactStyle(getLeafInlineStyle(node)) : undefined}
+      >
+        {renderLeafContent(node, {
+          contentStyle: node.role === 'image' ? undefined : styleRecordToReactStyle(getLeafInlineStyle(node)),
+          imageClassName: 'stage-image',
+          imagePlaceholderClassName: 'image-placeholder',
+          imageDraggable: false,
+          disableTabNavigation: true,
+        })}
+      </div>
     </div>
   );
 }
@@ -243,11 +277,10 @@ function renderWrapper({
   document,
   plan,
   selectedId,
+  selectedIds,
   previewSticky,
   spacerVisibility,
   showGridLanes,
-  onSelect,
-  onMove,
   measuredNodeSizes,
   viewport,
   dragState,
@@ -259,10 +292,11 @@ function renderWrapper({
   ownerBottomLanePx,
 }: RenderWrapperArgs): JSX.Element {
   const node = plan.node;
+  const draggedNodeIds = dragState?.draggedNodeIds ?? (dragState ? [dragState.nodeId] : []);
   const Tag = plan.tag;
   const meshLayout = plan.meshLayout;
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
-  const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, node.id);
+  const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, node.id);
   const isStickyContentWrapper = plan.contentSticky;
   const isSelfStickyTrack = Boolean(
     selfRegistration &&
@@ -273,8 +307,8 @@ function renderWrapper({
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
       ? getStageStickyCssProperties(node.sticky, { includePosition: true, includeZIndex: true })
       : undefined;
-  const wrapperLayerStyle = selectedId === node.id ? { zIndex: 'var(--editor-layer-selection)' } : undefined;
-  const showPaddingVisual = shouldShowWrapperPaddingVisual(document, node, selectedId);
+  const wrapperLayerStyle = selectedIds.includes(node.id) ? { zIndex: 'var(--editor-layer-selection)' } : undefined;
+  const showPaddingVisual = shouldShowWrapperPaddingVisual(document, node, selectedIds);
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
@@ -301,8 +335,12 @@ function renderWrapper({
       id={`stage-node-${node.id}`}
       data-node-id={node.id}
       data-node-label={formatNodeLabel(node)}
-      className={`stage-wrapper role-${node.role} ${selectedId === node.id ? 'selected' : ''} ${
-        dragState?.nodeId === node.id ? 'drag-source' : ''
+      className={`stage-wrapper role-${node.role} ${selectedIds.includes(node.id) ? 'selected' : ''} ${
+        selectedIds.length > 1 && selectedIds.includes(node.id) ? 'selected-multi' : ''
+      } ${
+        selectedIds.length === 1 && selectedId === node.id ? 'selected-primary' : ''
+      } ${
+        draggedNodeIds.includes(node.id) ? 'drag-source' : ''
       }`}
       aria-label={getNodeAriaLabel(node)}
       style={{
@@ -311,23 +349,6 @@ function renderWrapper({
         ...getWrapperBorderStyle(node),
         ...wrapperStickyCss,
         ...wrapperLayerStyle,
-      }}
-      onMouseDown={(event) => {
-        event.stopPropagation();
-        onSelect(node.id);
-        if (!plan.isTopLevel) {
-          setDragState(
-            createDragState({
-              nodeId: node.id,
-              parentId: node.parentId ?? undefined,
-              element: event.currentTarget,
-              clientX: event.clientX,
-              clientY: event.clientY,
-              originX: parseFloat(node.rect.x.base.raw) || 0,
-              originY: parseFloat(node.rect.y.base.raw) || 0,
-            }),
-          );
-        }
       }}
     >
       <div
@@ -371,6 +392,7 @@ function renderWrapper({
                 previewSticky,
                 spacerVisibility,
                 selectedId,
+                selectedIds,
                 measuredNodeSizes,
                 viewport,
               }),
@@ -393,11 +415,10 @@ function renderWrapper({
                 document,
                 plan: child,
                 selectedId,
+                selectedIds,
                 previewSticky,
                 spacerVisibility,
                 showGridLanes,
-                onSelect,
-                onMove,
                 measuredNodeSizes,
                 viewport,
                 dragState,
@@ -412,8 +433,8 @@ function renderWrapper({
             : renderLeaf({
                 plan: child,
                 selectedId,
+                selectedIds,
                 previewSticky,
-                onSelect,
                 dragState,
                 setDragState,
                 setResizeState,
@@ -424,7 +445,7 @@ function renderWrapper({
               }),
         )}
       </div>
-      {selectedId === node.id && !plan.isTopLevel ? (
+      {selectedIds.length === 1 && selectedId === node.id && !plan.isTopLevel ? (
         <ResizeHandleView
           onHandleMouseDown={(handle, event) => {
             event.stopPropagation();
@@ -478,8 +499,8 @@ function renderWrapper({
 function renderLeaf({
   plan,
   selectedId,
+  selectedIds,
   previewSticky,
-  onSelect,
   dragState,
   setDragState,
   setResizeState,
@@ -490,8 +511,8 @@ function renderLeaf({
 }: {
   plan: RenderLeafPlanNode;
   selectedId: NodeId | null;
+  selectedIds: NodeId[];
   previewSticky: boolean;
-  onSelect: (id: NodeId) => void;
   dragState: DragState;
   setDragState: (state: DragState) => void;
   setResizeState: (state: ResizeState) => void;
@@ -501,6 +522,7 @@ function renderLeaf({
   viewport: ViewportMeasurement;
 }) {
   const child = plan.node;
+  const draggedNodeIds = dragState?.draggedNodeIds ?? (dragState ? [dragState.nodeId] : []);
   const meshPlacement = plan.meshPlacement;
   const isAutoSticky =
     child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
@@ -518,8 +540,8 @@ function renderLeaf({
       data-node-id={child.id}
       data-node-label={formatNodeLabel(child)}
       className={`stage-leaf role-${child.role} ${brandMark ? 'is-brand-mark' : ''} ${
-        selectedId === child.id ? 'selected' : ''
-      } ${dragState?.nodeId === child.id ? 'drag-source' : ''}`}
+        selectedIds.includes(child.id) ? 'selected' : ''
+      } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${draggedNodeIds.includes(child.id) ? 'drag-source' : ''}`}
       aria-label={getNodeAriaLabel(child)}
       style={{
         ...(isSelfStickyTrack
@@ -541,22 +563,7 @@ function renderLeaf({
         ...(previewSticky && child.sticky?.enabled
           ? getStageStickyCssProperties(child.sticky, { includeZIndex: true })
           : {}),
-        ...(selectedId === child.id ? { zIndex: 'var(--editor-layer-selection)' } : {}),
-      }}
-      onMouseDown={(event) => {
-        event.stopPropagation();
-        onSelect(child.id);
-        setDragState(
-          createDragState({
-            nodeId: child.id,
-            parentId: child.parentId ?? undefined,
-            element: event.currentTarget,
-            clientX: event.clientX,
-            clientY: event.clientY,
-            originX: parseFloat(child.rect.x.base.raw) || 0,
-            originY: parseFloat(child.rect.y.base.raw) || 0,
-          }),
-        );
+        ...(selectedIds.includes(child.id) ? { zIndex: 'var(--editor-layer-selection)' } : {}),
       }}
     >
       <div
@@ -571,7 +578,7 @@ function renderLeaf({
           disableTabNavigation: true,
         })}
       </div>
-      {selectedId === child.id ? (
+      {selectedIds.length === 1 && selectedId === child.id ? (
         <ResizeHandleView
           onHandleMouseDown={(handle, event) => {
             event.stopPropagation();
@@ -628,6 +635,7 @@ function renderLeafSpacerOverlay({
   previewSticky,
   spacerVisibility,
   selectedId,
+  selectedIds,
   measuredNodeSizes,
   viewport,
 }: {
@@ -639,6 +647,7 @@ function renderLeafSpacerOverlay({
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   selectedId: NodeId | null;
+  selectedIds: NodeId[];
   measuredNodeSizes: RenderMeasuredNodeSizes;
   viewport: ViewportMeasurement;
 }) {
@@ -646,7 +655,7 @@ function renderLeafSpacerOverlay({
     return null;
   }
 
-  const showLeafSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedId, child.id);
+  const showLeafSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, child.id);
   if (!showLeafSpacerVisuals) {
     return null;
   }
@@ -1085,6 +1094,7 @@ function ResizeHandleView({
         <div
           key={handle}
           className={`resize-handle handle-${handle}`}
+          data-stage-resize-handle="true"
           onMouseDown={(event) => onHandleMouseDown(handle, event)}
         />
       ))}
@@ -1094,10 +1104,10 @@ function ResizeHandleView({
 
 function shouldShowSpacerVisuals(
   spacerVisibility: 'selected' | 'all',
-  selectedId: NodeId | null,
+  selectedIds: NodeId[],
   ownerId: NodeId,
 ) {
-  return spacerVisibility === 'all' || selectedId === ownerId;
+  return spacerVisibility === 'all' || selectedIds.includes(ownerId);
 }
 
 function renderOffsetVisual(
@@ -1340,9 +1350,9 @@ function getWrapperPaddingInsetStyle(node: WrapperNode): CSSProperties {
 function shouldShowWrapperPaddingVisual(
   document: DocumentModel,
   node: WrapperNode,
-  selectedId: NodeId | null,
+  selectedIds: NodeId[],
 ) {
-  if (!selectedId) {
+  if (selectedIds.length === 0) {
     return false;
   }
   if (node.role !== 'section' && node.role !== 'header' && node.role !== 'footer' && node.role !== 'container') {
@@ -1351,7 +1361,7 @@ function shouldShowWrapperPaddingVisual(
   if (!hasNonZeroWrapperPadding(node)) {
     return false;
   }
-  return selectedId === node.id || isNodeDescendantOf(document, selectedId, node.id);
+  return selectedIds.includes(node.id) || selectedIds.some((selectedId) => isNodeDescendantOf(document, selectedId, node.id));
 }
 
 function hasNonZeroWrapperPadding(node: WrapperNode) {
@@ -1361,15 +1371,4 @@ function hasNonZeroWrapperPadding(node: WrapperNode) {
     }
     return value.parsed.value !== 0;
   });
-}
-
-function isNodeDescendantOf(document: DocumentModel, nodeId: NodeId, ancestorId: NodeId) {
-  let current = document.nodes[nodeId];
-  while (current?.parentId) {
-    if (current.parentId === ancestorId) {
-      return true;
-    }
-    current = document.nodes[current.parentId];
-  }
-  return false;
 }

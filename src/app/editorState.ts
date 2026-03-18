@@ -1,22 +1,30 @@
 import {
+  alignNodes,
   cancelPromoteWrapperRole,
+  clearSelection,
   confirmPromoteWrapperRole,
   createFactoryResetState,
   deleteNode,
+  deleteNodes,
   demoteWrapperRole,
+  distributeNodes,
   importDocument as importEditorDocument,
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
   loadPersistedState,
   moveNode,
+  moveNodes,
   nudgeNode,
   parseUnitValue,
   reparentNode,
   reorderNode,
   requestPromoteWrapperRole,
   resizeNode,
+  reorderNodes,
   selectNode,
+  selectManyNodes,
+  toggleNodeSelection,
   updateRectField,
   updateStickyField,
   updateTextField,
@@ -44,9 +52,16 @@ export const MAX_HISTORY_LIMIT = 500;
 
 export function editorReducer(state: EditorState, action: EditorAction) {
   const selectedId = state.selectedId;
+  const selectedIds = state.selectedIds ?? (selectedId ? [selectedId] : []);
   switch (action.type) {
     case 'select':
       return selectNode(state, action.id);
+    case 'toggleSelect':
+      return toggleNodeSelection(state, action.id);
+    case 'clearSelection':
+      return clearSelection(state);
+    case 'selectMany':
+      return selectManyNodes(state, action.ids, action.mode);
     case 'insertWrapper':
       return insertWrapper(state, action.role);
     case 'insertSectionTemplate':
@@ -55,14 +70,20 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return insertLeaf(state, action.role);
     case 'move':
       return moveNode(state, action.id, { x: action.x, y: action.y });
+    case 'moveSelection':
+      return moveNodes(state, action.moves);
     case 'reparent':
       return reparentNode(state, action.id, action.parentId, action.x, action.y);
     case 'resize':
       return resizeNode(state, action.id, { width: action.width, height: action.height });
     case 'text':
-      return selectedId ? updateTextField(state, selectedId, action.field, action.value) : state;
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateTextField(nextState, nodeId, action.field, action.value),
+      );
     case 'wrapperStyle':
-      return selectedId ? updateWrapperStyleField(state, selectedId, action.field, action.value) : state;
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateWrapperStyleField(nextState, nodeId, action.field, action.value),
+      );
     case 'rect':
       return selectedId ? updateRectField(state, selectedId, action.field, action.value) : state;
     case 'promote':
@@ -74,89 +95,131 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     case 'demote':
       return selectedId ? demoteWrapperRole(state, selectedId) : state;
     case 'delete':
-      return selectedId ? deleteNode(state, selectedId) : state;
+      return selectedIds.length > 0 ? deleteNodes(state, selectedIds) : state;
     case 'stickyEnabled':
-      return selectedId ? updateStickyField(state, selectedId, { enabled: action.value }) : state;
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, { enabled: action.value }),
+      );
     case 'stickyTarget':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        target: selectedNodeDisallowsContentWrapperTarget(state, selectedId) ? 'self' : action.value,
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          target: selectedNodeDisallowsContentWrapperTarget(nextState, nodeId) ? 'self' : action.value,
+        }),
+      );
     case 'stickyEdges':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        edges:
-          action.value === 'both'
-            ? { top: true, bottom: true }
-            : action.value === 'bottom'
-              ? { top: false, bottom: true }
-              : { top: true, bottom: false },
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          edges:
+            action.value === 'both'
+              ? { top: true, bottom: true }
+              : action.value === 'bottom'
+                ? { top: false, bottom: true }
+                : { top: true, bottom: false },
+        }),
+      );
     case 'stickyOffset':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        offsetTop: selectedNodeHasTopEdge(state, selectedId) ? parseUnitValue(`${action.value}vh`) : undefined,
-        offsetBottom:
-          selectedNodeHasBottomEdge(state, selectedId) ? parseUnitValue(`${action.value}vh`) : undefined,
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          offsetTop: selectedNodeHasTopEdge(nextState, nodeId) ? parseUnitValue(`${action.value}vh`) : undefined,
+          offsetBottom:
+            selectedNodeHasBottomEdge(nextState, nodeId) ? parseUnitValue(`${action.value}vh`) : undefined,
+        }),
+      );
     case 'stickyOffsetTop':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        offsetTop: parseUnitValue(`${action.value}vh`),
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          offsetTop: parseUnitValue(`${action.value}vh`),
+        }),
+      );
     case 'stickyOffsetBottom':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        offsetBottom: parseUnitValue(`${action.value}vh`),
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          offsetBottom: parseUnitValue(`${action.value}vh`),
+        }),
+      );
     case 'stickyDurationMode':
-      return selectedId ? updateStickyField(state, selectedId, { durationMode: action.value }) : state;
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, { durationMode: action.value }),
+      );
     case 'stickyDuration':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
       {
         const parsedDuration = parseUnitValue(`${action.value}vh`);
-        return updateStickyField(state, selectedId, {
-          duration: parsedDuration,
-          durationTop: selectedNodeHasTopEdge(state, selectedId) ? parsedDuration : undefined,
-          durationBottom: selectedNodeHasBottomEdge(state, selectedId) ? parsedDuration : undefined,
-        });
+        return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+          updateStickyField(nextState, nodeId, {
+            duration: parsedDuration,
+            durationTop: selectedNodeHasTopEdge(nextState, nodeId) ? parsedDuration : undefined,
+            durationBottom: selectedNodeHasBottomEdge(nextState, nodeId) ? parsedDuration : undefined,
+          }),
+        );
       }
     case 'stickyDurationTop':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        durationTop: parseUnitValue(`${action.value}vh`),
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          durationTop: parseUnitValue(`${action.value}vh`),
+        }),
+      );
     case 'stickyDurationBottom':
-      if (!selectedId) {
+      if (selectedIds.length === 0) {
         return state;
       }
-      return updateStickyField(state, selectedId, {
-        durationBottom: parseUnitValue(`${action.value}vh`),
-      });
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, {
+          durationBottom: parseUnitValue(`${action.value}vh`),
+        }),
+      );
     case 'orderBack':
-      return selectedId ? reorderNode(state, selectedId, 'back') : state;
+      return selectedIds.length > 0 ? reorderNodes(state, selectedIds, 'back') : state;
     case 'orderForward':
-      return selectedId ? reorderNode(state, selectedId, 'forward') : state;
+      return selectedIds.length > 0 ? reorderNodes(state, selectedIds, 'forward') : state;
     case 'orderSendToBack':
-      return selectedId ? reorderNode(state, selectedId, 'sendToBack') : state;
+      return selectedIds.length > 0 ? reorderNodes(state, selectedIds, 'sendToBack') : state;
     case 'orderBringToFront':
-      return selectedId ? reorderNode(state, selectedId, 'bringToFront') : state;
+      return selectedIds.length > 0 ? reorderNodes(state, selectedIds, 'bringToFront') : state;
+    case 'alignSelection':
+      return selectedIds.length > 1 ? alignNodes(state, selectedIds, action.mode, action.rects) : state;
+    case 'distributeSelection':
+      return selectedIds.length > 2 ? distributeNodes(state, selectedIds, action.mode, action.rects) : state;
+    case 'bulkEdit':
+      return action.operations.reduce((nextState, operation) => {
+        if (operation.kind === 'text') {
+          return applySelectedNodeUpdate(nextState, operation.targetIds, (draftState, nodeId) =>
+            updateTextField(draftState, nodeId, operation.field, operation.value),
+          );
+        }
+        if (operation.kind === 'wrapperStyle') {
+          return applySelectedNodeUpdate(nextState, operation.targetIds, (draftState, nodeId) =>
+            updateWrapperStyleField(draftState, nodeId, operation.field, operation.value),
+          );
+        }
+        return applySelectedNodeUpdate(nextState, operation.targetIds, (draftState, nodeId) =>
+          updateStickyField(draftState, nodeId, operation.patch),
+        );
+      }, state);
     case 'nudgeSelection':
-      return selectedId ? nudgeNode(state, selectedId, { x: action.deltaX, y: action.deltaY }) : state;
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        nudgeNode(nextState, nodeId, { x: action.deltaX, y: action.deltaY }),
+      );
     case 'importDocument':
       return importEditorDocument(state, action.document);
     case 'setPreviewSticky':
@@ -371,7 +434,8 @@ function shouldTrackInHistory(action: EditorAction) {
 function isResizeStreamAction(action: EditorAction, nodeId: NodeId) {
   return (
     (action.type === 'resize' && action.id === nodeId) ||
-    (action.type === 'move' && action.id === nodeId)
+    (action.type === 'move' && action.id === nodeId) ||
+    action.type === 'moveSelection'
   );
 }
 
@@ -380,4 +444,16 @@ function getTextDebounceKey(action: EditorAction, selectedId: string | null) {
     return null;
   }
   return `text:${selectedId}:${action.field}`;
+}
+
+function applySelectedNodeUpdate(
+  state: EditorState,
+  selectedIds: NodeId[],
+  updater: (state: EditorState, nodeId: NodeId) => EditorState,
+) {
+  if (selectedIds.length === 0) {
+    return state;
+  }
+
+  return selectedIds.reduce((nextState, nodeId) => updater(nextState, nodeId), state);
 }

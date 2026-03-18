@@ -575,7 +575,7 @@ function TypographyTextStyleFields({
             active={node.style?.fontWeight === 'bold'}
             onClick={() => onTextChange('fontWeight', node.style?.fontWeight === 'bold' ? 'normal' : 'bold')}
           >
-            <span className="font-black tracking-[-0.02em]">B</span>
+            <span className="font-black tracking-[-0.02em] no-underline decoration-transparent">B</span>
           </TextStyleIconButton>
           <TextStyleIconButton
             label="Italic"

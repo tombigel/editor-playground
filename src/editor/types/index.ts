@@ -14,6 +14,7 @@ export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront'
 export type EditorState = {
   document: DocumentModel;
   selectedId: NodeId | null;
+  selectedIds: NodeId[];
   pendingRoleSwap: ConfirmReplaceRole | null;
   ui: {
     previewSticky: boolean;

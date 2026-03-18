@@ -1,8 +1,10 @@
 import type { DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
 import { InspectorBlockList } from './InspectorBlockList';
+import { MultiSelectInspector } from './MultiSelectInspector';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 import { resolveInspectorBlocks } from './inspector/schema';
+import type { BulkEditOperation, AlignmentAction, DistributionMode } from '../app/types';
 
 export {
   buildSizeFieldValue,
@@ -19,6 +21,7 @@ export {
 
 export type InspectorPanelProps = {
   node: DocumentNode | null;
+  selectedNodes: DocumentNode[];
   focusedMode: FocusedMode;
   showOrderControls: boolean;
   canOrderBack: boolean;
@@ -37,6 +40,9 @@ export type InspectorPanelProps = {
   onBringToFront: () => void;
   onSectionBack: () => void;
   onSectionForward: () => void;
+  onAlignSelection: (mode: AlignmentAction) => void;
+  onDistributeSelection: (mode: DistributionMode) => void;
+  onBulkEdit: (operations: BulkEditOperation[]) => void;
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
@@ -57,6 +63,7 @@ export type InspectorPanelProps = {
 
 export function InspectorPanel({
   node,
+  selectedNodes = node ? [node] : [],
   focusedMode,
   showOrderControls,
   canOrderBack,
@@ -75,6 +82,9 @@ export function InspectorPanel({
   onBringToFront,
   onSectionBack,
   onSectionForward,
+  onAlignSelection,
+  onDistributeSelection,
+  onBulkEdit,
   onTextChange,
   onWrapperStyleChange,
   onRectChange,
@@ -129,6 +139,18 @@ export function InspectorPanel({
     onSectionBack,
     onSectionForward,
   };
+  if (selectedNodes.length > 1) {
+    return (
+      <MultiSelectInspector
+        selectedNodes={selectedNodes}
+        orderState={orderState}
+        actions={actions}
+        onAlignSelection={onAlignSelection}
+        onDistributeSelection={onDistributeSelection}
+        onBulkEdit={onBulkEdit}
+      />
+    );
+  }
   const blocks = resolveInspectorBlocks({ node, actions, orderState, focusedMode });
 
   return <InspectorBlockList blocks={blocks} />;

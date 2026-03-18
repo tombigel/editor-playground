@@ -4,6 +4,7 @@ import type {
   EditorTextField,
   NodeId,
   SectionTemplateId,
+  StickyDefinition,
   WrapperStyleField,
 } from '../../model/types';
 import type { EditorState, FocusedMode } from '../../editor/types';
@@ -20,18 +21,52 @@ export type HistoryEntry = {
   nodePatches: NodePatch[];
   selectedBefore: NodeId | null;
   selectedAfter: NodeId | null;
+  selectedIdsBefore: NodeId[];
+  selectedIdsAfter: NodeId[];
   pendingBefore: EditorState['pendingRoleSwap'];
   pendingAfter: EditorState['pendingRoleSwap'];
   debounceKey: string | null;
   createdAt: number;
 };
 
+export type SelectionRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+export type AlignmentAction =
+  | 'left'
+  | 'center-x'
+  | 'right'
+  | 'top'
+  | 'center-y'
+  | 'bottom';
+
+export type DistributionMode = 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom';
+
+export type BulkEditOperation =
+  | { kind: 'text'; targetIds: NodeId[]; field: EditorTextField; value: string }
+  | { kind: 'wrapperStyle'; targetIds: NodeId[]; field: WrapperStyleField; value: string }
+  | { kind: 'sticky'; targetIds: NodeId[]; patch: Partial<StickyDefinition> };
+
+export type BulkMoveOperation = {
+  id: NodeId;
+  x: string;
+  y: string;
+};
+
 export type EditorAction =
   | { type: 'select'; id: string | null }
+  | { type: 'toggleSelect'; id: string }
+  | { type: 'clearSelection' }
+  | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
   | { type: 'insertLeaf'; role: 'text' | 'image' | 'link' | 'button' }
   | { type: 'move'; id: string; x: string; y: string }
+  | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
   | { type: 'resize'; id: string; width: string; height: string }
   | { type: 'text'; field: EditorTextField; value: string }
@@ -56,6 +91,9 @@ export type EditorAction =
   | { type: 'orderForward' }
   | { type: 'orderSendToBack' }
   | { type: 'orderBringToFront' }
+  | { type: 'alignSelection'; mode: AlignmentAction; rects: Record<NodeId, SelectionRect> }
+  | { type: 'distributeSelection'; mode: DistributionMode; rects: Record<NodeId, SelectionRect> }
+  | { type: 'bulkEdit'; operations: BulkEditOperation[] }
   | { type: 'nudgeSelection'; deltaX: number; deltaY: number }
   | { type: 'importDocument'; document: DocumentModel }
   | { type: 'setPreviewSticky'; value: boolean }
@@ -109,6 +147,12 @@ export type ShortcutExecutionHandlers = {
   setSnapEnabled: (value: boolean) => void;
   nudgeSelection: (deltaX: number, deltaY: number) => void;
   deleteSelection: () => void;
+  toggleBoldSelection: () => void;
+  toggleItalicSelection: () => void;
+  toggleUnderlineSelection: () => void;
+  toggleStrikethroughSelection: () => void;
+  alignSelection: (mode: AlignmentAction) => void;
+  distributeSelection: (mode: DistributionMode) => void;
   orderBack: () => void;
   orderForward: () => void;
   orderSendToBack: () => void;

@@ -486,6 +486,7 @@ Spec:
 - stage canvas uses dedicated canvas background token
 - selected node outline uses accent blue, square corners, `2px` border
 - selected node label uses accent blue fill, white text, `10px` bold type
+- marquee selection uses the same accent blue with square corners and a low-opacity fill
 - resize handles use accent blue
 
 Do not:

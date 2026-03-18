@@ -15,6 +15,10 @@ import { useSystemThemePreference } from './useEditorEnvironment';
 
 export function useAppViewModel(state: EditorState, stickyGeometry: StickyGeometrySnapshot) {
   const selectedNode = getNode(state.document, state.selectedId);
+  const selectedIds = state.selectedIds ?? (state.selectedId ? [state.selectedId] : []);
+  const selectedNodes = selectedIds
+    .map((selectedNodeId) => getNode(state.document, selectedNodeId))
+    .filter((node): node is NonNullable<typeof selectedNode> => Boolean(node));
   const orderState = getNodeOrderState(state, selectedNode);
   const sectionOrderState = getSectionOrderState(state, selectedNode);
   const errors = useMemo(() => getValidationErrors(state), [state]);
@@ -36,6 +40,7 @@ export function useAppViewModel(state: EditorState, stickyGeometry: StickyGeomet
 
   return {
     selectedNode,
+    selectedNodes,
     orderState,
     sectionOrderState,
     errors,

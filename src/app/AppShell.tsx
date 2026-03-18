@@ -30,6 +30,7 @@ type Props = {
   state: EditorState;
   historyState: Pick<HistoryState, 'past' | 'future' | 'historyLimit'>;
   selectedNode: DocumentNode | null;
+  selectedNodes: DocumentNode[];
   orderState: { show: boolean; canBack: boolean; canForward: boolean };
   sectionOrderState: { canBack: boolean; canForward: boolean };
   resolvedTheme: ResolvedTheme;
@@ -61,6 +62,7 @@ export function AppShell({
   state,
   historyState,
   selectedNode,
+  selectedNodes,
   orderState,
   sectionOrderState,
   resolvedTheme,
@@ -92,6 +94,23 @@ export function AppShell({
     ? `${INSPECTOR_COLLAPSED_WIDTH_PX}px`
     : `${INSPECTOR_EXPANDED_WIDTH_PX}px`;
   const sidebarTransitionTiming = isSidebarCollapsed ? 'ease-in' : 'ease-out';
+
+  function collectSelectionRects() {
+    if (typeof window === 'undefined') {
+      return {};
+    }
+
+    return Object.fromEntries(
+      state.selectedIds.flatMap((nodeId) => {
+        const element = window.document.getElementById(`stage-node-${nodeId}`);
+        if (!element) {
+          return [];
+        }
+        const rect = element.getBoundingClientRect();
+        return [[nodeId, { left: rect.left, top: rect.top, width: rect.width, height: rect.height }]];
+      }),
+    );
+  }
 
   return (
     <div
@@ -205,26 +224,33 @@ export function AppShell({
             <Stage
               document={state.document}
               selectedId={state.selectedId}
+              selectedIds={state.selectedIds}
               previewSticky={state.ui.previewSticky}
               spacerVisibility={state.ui.spacerVisibility}
               showGridLanes={state.ui.showGridLanes}
               snapEnabled={state.ui.snapEnabled}
               onStageFocus={() => {
-                if (!state.selectedId && stageSelectableIds.length > 0) {
+                if (state.selectedIds.length === 0 && stageSelectableIds.length > 0) {
                   dispatch({ type: 'select', id: stageSelectableIds[0] });
                 }
               }}
-              onSelect={(id) => dispatch({ type: 'select', id })}
+              onSelect={(id, mode = 'replace') =>
+                dispatch(mode === 'toggle' ? { type: 'toggleSelect', id } : { type: 'select', id })
+              }
+              onSelectMany={(ids, mode) => dispatch({ type: 'selectMany', ids, mode })}
+              onClearSelection={() => dispatch({ type: 'clearSelection' })}
               onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
+              onMoveSelection={(moves) => dispatch({ type: 'moveSelection', moves })}
               onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
               onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
               onResizeStart={(id) => dispatch({ type: 'beginResize', id })}
               onResizeEnd={(id) => dispatch({ type: 'endResize', id })}
               onStickyGeometryChange={onStickyGeometryChange}
             />
-            {state.ui.focusedMode ? (
+            {state.ui.focusedMode && selectedNodes.length > 0 ? (
               <div className="pointer-events-none absolute right-5 top-5 z-[340] w-[270px] max-w-[calc(100%-40px)]">
                 <FocusedModePanel
+                  selectedNodes={selectedNodes}
                   node={selectedNode}
                   focusedMode={state.ui.focusedMode}
                   mode={state.ui.focusedMode}
@@ -268,6 +294,7 @@ export function AppShell({
           </main>
 
           <EditorSidebar
+            selectedNodes={selectedNodes}
             node={selectedNode}
             focusedMode={state.ui.focusedMode}
             inspectorCollapsed={state.ui.inspectorCollapsed}
@@ -289,6 +316,11 @@ export function AppShell({
             onBringToFront={() => dispatch({ type: 'orderBringToFront' })}
             onSectionBack={() => dispatch({ type: 'orderBack' })}
             onSectionForward={() => dispatch({ type: 'orderForward' })}
+            onAlignSelection={(mode) => dispatch({ type: 'alignSelection', mode, rects: collectSelectionRects() })}
+            onDistributeSelection={(mode) =>
+              dispatch({ type: 'distributeSelection', mode, rects: collectSelectionRects() })
+            }
+            onBulkEdit={(operations) => dispatch({ type: 'bulkEdit', operations })}
             onTextChange={(field, value) => dispatch({ type: 'text', field, value })}
             onWrapperStyleChange={(field, value) => dispatch({ type: 'wrapperStyle', field, value })}
             onRectChange={(field, value) => dispatch({ type: 'rect', field, value })}

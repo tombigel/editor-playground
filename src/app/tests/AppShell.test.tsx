@@ -15,6 +15,7 @@ function createProps(): ComponentProps<typeof AppShell> {
       historyLimit: 100,
     },
     selectedNode: null,
+    selectedNodes: [],
     orderState: { show: false, canBack: false, canForward: false },
     sectionOrderState: { canBack: false, canForward: false },
     resolvedTheme: 'light',

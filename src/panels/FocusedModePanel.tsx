@@ -1,5 +1,7 @@
+import { SquareArrowRightEnter } from 'lucide-react';
 import type { FocusedMode } from '../api/editorApi';
 import { InspectorBlockList } from './InspectorBlockList';
+import { MultiStickySection } from './MultiStickySection';
 import { resolveFocusedModeBlocks } from './focusedModes/schema';
 import type { InspectorPanelProps } from './InspectorPanel';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
@@ -7,6 +9,7 @@ import type { InspectorActionHandlers, InspectorOrderState } from './inspector/t
 type Props = Pick<
   InspectorPanelProps,
   | 'node'
+  | 'selectedNodes'
   | 'focusedMode'
   | 'showOrderControls'
   | 'canOrderBack'
@@ -48,6 +51,7 @@ type Props = Pick<
 
 export function FocusedModePanel({
   node,
+  selectedNodes,
   focusedMode,
   showOrderControls,
   canOrderBack,
@@ -124,8 +128,16 @@ export function FocusedModePanel({
   };
   const title = node?.type === 'site' ? 'No component selected' : node?.name ?? 'No component selected';
   const roleLabel = node && node.type !== 'site' ? node.role : null;
+  const isMultiSticky = mode === 'sticky' && selectedNodes.length > 1;
   const headerContent =
-    node && node.type !== 'site' ? (
+    isMultiSticky ? (
+      <div className="min-w-0">
+        <div className="editor-text-strong text-sm font-medium">Sticky</div>
+        <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
+          <div className="truncate">{selectedNodes.length} selected</div>
+        </div>
+      </div>
+    ) : node && node.type !== 'site' ? (
       <div className="min-w-0">
         <div className="editor-text-strong text-sm font-medium">Sticky</div>
         <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
@@ -138,6 +150,32 @@ export function FocusedModePanel({
         </div>
       </div>
     ) : undefined;
+
+  if (isMultiSticky) {
+    return (
+      <div className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
+        <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
+          <div className="space-y-3">
+            <MultiStickySection
+              selectedNodes={selectedNodes}
+              actions={actions}
+              focusedMode={focusedMode}
+              headerContent={headerContent}
+              contentClassName="space-y-3 px-3 pt-1.5 pb-5"
+              headerAction={
+                {
+                  ariaLabel: 'Close sticky mode',
+                  icon: <SquareArrowRightEnter className="h-3.5 w-3.5" />,
+                  onClick: onExitFocusedMode,
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const blocks = resolveFocusedModeBlocks(
     mode,
     {

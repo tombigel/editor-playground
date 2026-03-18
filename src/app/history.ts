@@ -56,7 +56,11 @@ export function buildHistoryEntry(
     }
   }
 
-  const selectedChanged = before.selectedId !== after.selectedId;
+  const beforeSelectedIds = before.selectedIds ?? (before.selectedId ? [before.selectedId] : []);
+  const afterSelectedIds = after.selectedIds ?? (after.selectedId ? [after.selectedId] : []);
+  const selectedChanged =
+    before.selectedId !== after.selectedId ||
+    !deepEqual(beforeSelectedIds, afterSelectedIds);
   const pendingChanged = !deepEqual(before.pendingRoleSwap, after.pendingRoleSwap);
   const rootChanged = before.document.rootId !== after.document.rootId;
 
@@ -70,6 +74,8 @@ export function buildHistoryEntry(
     nodePatches: patches,
     selectedBefore: before.selectedId,
     selectedAfter: after.selectedId,
+    selectedIdsBefore: beforeSelectedIds,
+    selectedIdsAfter: afterSelectedIds,
     pendingBefore: before.pendingRoleSwap,
     pendingAfter: after.pendingRoleSwap,
     debounceKey,
@@ -113,6 +119,8 @@ export function composeHistoryEntries(previous: HistoryEntry, next: HistoryEntry
     nodePatches: Array.from(byId.values()),
     selectedBefore: previous.selectedBefore,
     selectedAfter: next.selectedAfter,
+    selectedIdsBefore: previous.selectedIdsBefore,
+    selectedIdsAfter: next.selectedIdsAfter,
     pendingBefore: previous.pendingBefore,
     pendingAfter: next.pendingAfter,
     debounceKey: next.debounceKey,
@@ -137,7 +145,10 @@ export function applyHistoryEntry(
 
   const rootId = direction === 'undo' ? entry.rootIdBefore : entry.rootIdAfter;
   const selectedCandidate = direction === 'undo' ? entry.selectedBefore : entry.selectedAfter;
-  const selectedId = selectedCandidate && nodes[selectedCandidate] ? selectedCandidate : null;
+  const selectedIdsCandidate = direction === 'undo' ? entry.selectedIdsBefore : entry.selectedIdsAfter;
+  const selectedIds = selectedIdsCandidate.filter((selectedId) => Boolean(nodes[selectedId]));
+  const selectedId =
+    selectedIds[0] ?? (selectedCandidate && nodes[selectedCandidate] ? selectedCandidate : null);
 
   return {
     ...present,
@@ -146,6 +157,7 @@ export function applyHistoryEntry(
       nodes,
     },
     selectedId,
+    selectedIds,
     pendingRoleSwap: direction === 'undo' ? entry.pendingBefore : entry.pendingAfter,
   };
 }

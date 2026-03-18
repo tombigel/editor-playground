@@ -149,6 +149,46 @@ describe('stage/Stage', () => {
     expect(markup).toContain('min-height:720px');
   });
 
+  it('renders section dividers on the inner surface so divider width does not change wrapper box metrics', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.style.sectionBorderBottomColor = '#cbd5e1';
+    section.style.sectionBorderBottomWidth = parseUnitValue('5px');
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={section.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    const wrapperMarkupMatch = markup.match(new RegExp(`id="stage-node-${section.id}"[^>]*style="([^"]+)"`));
+    expect(wrapperMarkupMatch?.[1]).not.toContain('border-bottom-width:5px');
+    expect(markup).toMatch(
+      new RegExp(
+        `data-content-wrapper-for="${section.id}"[\\s\\S]*?class="content-wrapper-surface"[^>]*border-bottom-width:5px`,
+      ),
+    );
+  });
+
   it('shows the section padding boundary when the section or one of its children is selected', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -262,6 +302,84 @@ describe('stage/Stage', () => {
     expect(containerSelectedMarkup).toContain('top:16px;right:16px;bottom:16px;left:16px');
     expect(childSelectedMarkup).toContain('class="wrapper-padding-overlay"');
     expect(childSelectedMarkup).toContain('top:16px;right:16px;bottom:16px;left:16px');
+  });
+
+  it('renders selection outlines for all selected nodes without primary label chrome during multi-select', () => {
+    const document = structuredClone(createInitialDocument());
+    const textLeaves = Object.values(document.nodes).filter(
+      (node): node is Extract<typeof document.nodes[string], { type: 'leaf'; role: 'text' }> =>
+        node.type === 'leaf' && node.role === 'text',
+    );
+
+    const primary = textLeaves[0];
+    const secondary = textLeaves[1];
+    if (!primary || !secondary) {
+      throw new Error('Expected multiple text leaves');
+    }
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={primary.id}
+        selectedIds={[primary.id, secondary.id]}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onSelectMany={() => {}}
+        onClearSelection={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain(`id="stage-node-${primary.id}"`);
+    expect(markup).toContain(`id="stage-node-${secondary.id}"`);
+    expect(markup).not.toContain('selected-primary');
+    expect(markup.match(/selected-multi/g)?.length).toBe(2);
+  });
+
+  it('does not render resize handles while multiple nodes are selected', () => {
+    const document = structuredClone(createInitialDocument());
+    const textLeaves = Object.values(document.nodes).filter(
+      (node): node is Extract<typeof document.nodes[string], { type: 'leaf'; role: 'text' }> =>
+        node.type === 'leaf' && node.role === 'text',
+    );
+
+    const primary = textLeaves[0];
+    const secondary = textLeaves[1];
+    if (!primary || !secondary) {
+      throw new Error('Expected multiple text leaves');
+    }
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={primary.id}
+        selectedIds={[primary.id, secondary.id]}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onSelectMany={() => {}}
+        onClearSelection={() => {}}
+        onMove={() => {}}
+        onMoveSelection={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).not.toContain('data-stage-resize-handle="true"');
   });
 
   it('retains container surface styling in the drag preview', () => {
@@ -592,6 +710,26 @@ describe('stage/Stage', () => {
 
     expect(getNodeWidth(target, measuredNodeSizes)).toBe(400);
     expect(getNodeHeight(target, measuredNodeSizes)).toBe(300);
+  });
+
+  it('does not let measured wrapper height override explicit section height in stage math', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const measuredNodeSizes = {
+      [section.id]: {
+        width: 998,
+        height: 1600,
+      },
+    };
+
+    expect(getNodeHeight(section, measuredNodeSizes)).toBe(450);
   });
 
   it('keeps auto height when resizing width from a horizontal handle', () => {

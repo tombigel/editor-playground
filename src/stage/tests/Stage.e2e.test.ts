@@ -134,6 +134,38 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
+  it('collapses a multi-selection back to a single node on a plain second click and shows the group outline only while grouped', async () => {
+    await openEditor();
+    const title = page.locator('.stage-leaf', {
+      hasText: 'Plan sticky behavior before building scroll-driven animations',
+    }).first();
+    const image = page.locator('.stage-leaf.role-image').first();
+
+    await title.click();
+    await image.click({ modifiers: ['Shift'] });
+
+    expect(await title.getAttribute('class')).toMatch(/\bselected\b/);
+    expect(await image.getAttribute('class')).toMatch(/\bselected\b/);
+    expect(await title.getAttribute('class')).not.toMatch(/\bselected-primary\b/);
+    expect(await image.getAttribute('class')).not.toMatch(/\bselected-primary\b/);
+
+    const groupOutline = page.locator('.stage-multi-selection-outline');
+    expect(await groupOutline.count()).toBe(1);
+    const groupBox = await groupOutline.boundingBox();
+    expect(groupBox).not.toBeNull();
+    expect(groupBox?.width ?? 0).toBeGreaterThan(0);
+    expect(groupBox?.height ?? 0).toBeGreaterThan(0);
+
+    await title.click();
+
+    expect(await title.getAttribute('class')).toMatch(/\bselected\b/);
+    expect(await title.getAttribute('class')).toMatch(/\bselected-primary\b/);
+    expect(await image.getAttribute('class')).not.toMatch(/\bselected\b/);
+    expect(await groupOutline.count()).toBe(0);
+
+    await closeEditor();
+  }, 30_000);
+
   it('resizes a selected image node from the south-east handle', async () => {
     await openEditor();
     const image = page.locator('.stage-leaf.role-image').first();

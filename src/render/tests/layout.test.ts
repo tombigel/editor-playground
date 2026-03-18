@@ -39,7 +39,7 @@ describe('render/layout', () => {
     expect(getNodeHeight(section, { [section.id]: { width: 1000, height: 222 } })).toBe(450);
   });
 
-  it('treats explicit section height as a minimum for structural geometry while containers stay fixed', () => {
+  it('keeps explicit section height driven by authored size instead of wrapper remeasurement', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
     if (!section || section.type !== 'wrapper') {
@@ -49,7 +49,7 @@ describe('render/layout', () => {
     const container = createWrapper('container', 'root');
     container.rect.height.base = parseHeightValue('180px');
 
-    expect(getNodeHeight(section, { [section.id]: { width: 998, height: 700 } })).toBe(564);
+    expect(getNodeHeight(section, { [section.id]: { width: 998, height: 700 } })).toBe(450);
     expect(getNodeHeight(container, { [container.id]: { width: 320, height: 260 } })).toBe(180);
   });
 
@@ -102,23 +102,20 @@ describe('render/layout', () => {
     expect(getContentWrapperBaseStyle(container)).toEqual({ width: '100%', height: '180px' });
   });
 
-  it('only emits explicit wrapper borders and supports section bottom dividers', () => {
+  it('keeps section bottom dividers on the inner surface instead of the wrapper box', () => {
     const section = createWrapper('section', 'root');
     section.style.borderColor = undefined;
     section.style.borderWidth = undefined;
     section.style.sectionBorderBottomColor = '#cbd5e1';
     section.style.sectionBorderBottomWidth = parseUnitValue('2px');
 
-    expect(getWrapperBorderStyle(section)).toEqual({
+    expect(getWrapperBorderStyle(section)).toEqual({});
+    expect(getWrapperBorderDeclarations(section)).toEqual([]);
+    expect(getContentWrapperSurfaceStyle(section)).toMatchObject({
       borderBottomStyle: 'solid',
       borderBottomColor: '#cbd5e1',
       borderBottomWidth: '2px',
     });
-    expect(getWrapperBorderDeclarations(section)).toEqual([
-      'border-bottom-style: solid',
-      'border-bottom-color: #cbd5e1',
-      'border-bottom-width: 2px',
-    ]);
 
     const container = createWrapper('container', 'root');
     container.style.borderColor = undefined;

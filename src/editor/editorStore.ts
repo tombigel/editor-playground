@@ -32,16 +32,25 @@ import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue
 import { forceOpaqueColorValue } from '../model/colors';
 import { normalizeThemeMode } from '../lib/theme';
 import type { EditorState, FocusedMode, NodeOrderAction } from './types';
+import { getTopLevelSelectedIds, normalizeSelectedIds, toggleSelectedId, toggleSelectedIds } from './selection';
 export type { ConfirmReplaceRole, EditorState, FocusedMode, NodeOrderAction } from './types';
 
 export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
 export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';
+
+type SelectionRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 
 export function createInitialState(): EditorState {
   const ui = createDefaultUiState();
   return {
     document: loadDefaultDocument(),
     selectedId: null,
+    selectedIds: [],
     pendingRoleSwap: null,
     ui: {
       ...ui,
@@ -65,10 +74,16 @@ export function loadPersistedState(): EditorState {
     const parsed = JSON.parse(raw) as EditorState;
     const normalizedDocument = normalizeDocument(parsed.document);
     const startupFocusedMode = normalizeFocusedMode(parsed.ui?.startupFocusedMode);
+    const selectedIds = normalizeSelectedIds(
+      normalizedDocument,
+      Array.isArray((parsed as Partial<EditorState>).selectedIds) ? (parsed as Partial<EditorState>).selectedIds : undefined,
+      parsed.selectedId,
+    );
     const candidate: EditorState = {
       ...parsed,
       document: normalizedDocument,
-      selectedId: parsed.selectedId && normalizedDocument.nodes[parsed.selectedId] ? parsed.selectedId : null,
+      selectedId: selectedIds[0] ?? null,
+      selectedIds,
       pendingRoleSwap: null,
       ui: {
         previewSticky: parsed.ui?.previewSticky ?? true,
@@ -133,6 +148,7 @@ export function createFactoryResetState(ui?: EditorState['ui']): EditorState {
   return {
     document,
     selectedId: null,
+    selectedIds: [],
     pendingRoleSwap: null,
     ui: ui ? { ...ui, temporaryInspectorOpen: false } : createDefaultUiState(),
   };
@@ -657,8 +673,46 @@ function assertWrapper(node: DocumentNode): WrapperNode {
   return node;
 }
 
+function applySelection(state: EditorState, selectedIds: NodeId[]) {
+  const normalized = normalizeSelectedIds(state.document, selectedIds);
+  return {
+    ...state,
+    selectedId: normalized[0] ?? null,
+    selectedIds: normalized,
+  };
+}
+
+function applySelectionToDocument(state: EditorState, document: DocumentModel, selectedIds = state.selectedIds) {
+  const normalized = normalizeSelectedIds(document, selectedIds);
+  return {
+    ...state,
+    document,
+    selectedId: normalized[0] ?? null,
+    selectedIds: normalized,
+  };
+}
+
 export function selectNode(state: EditorState, selectedId: NodeId | null): EditorState {
-  return { ...state, selectedId };
+  return applySelection(state, selectedId ? [selectedId] : []);
+}
+
+export function clearSelection(state: EditorState): EditorState {
+  return applySelection(state, []);
+}
+
+export function toggleNodeSelection(state: EditorState, selectedId: NodeId): EditorState {
+  return applySelection(state, toggleSelectedId(state.selectedIds, selectedId));
+}
+
+export function selectManyNodes(
+  state: EditorState,
+  selectedIds: NodeId[],
+  mode: 'replace' | 'toggle',
+): EditorState {
+  return applySelection(
+    state,
+    mode === 'toggle' ? toggleSelectedIds(state.selectedIds, selectedIds) : selectedIds,
+  );
 }
 
 export function importDocument(state: EditorState, document: DocumentModel): EditorState {
@@ -672,6 +726,7 @@ export function importDocument(state: EditorState, document: DocumentModel): Edi
     ...state,
     document: normalized,
     selectedId: null,
+    selectedIds: [],
     pendingRoleSwap: null,
   };
 }
@@ -687,7 +742,7 @@ export function insertWrapper(state: EditorState, role: WrapperRole): EditorStat
   const node = createUniqueWrapper(document, role, parentId);
   document.nodes[node.id] = node;
   document.nodes[parentId].children.push(node.id);
-  return { ...state, document, selectedId: node.id };
+  return applySelectionToDocument(state, document, [node.id]);
 }
 
 export function insertSectionTemplate(state: EditorState, templateId: SectionTemplateId): EditorState {
@@ -707,7 +762,7 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   const insertAt = footerIndex >= 0 ? footerIndex : root.children.length;
   root.children.splice(insertAt, 0, wrapper.id);
 
-  return { ...state, document, selectedId: wrapper.id };
+  return applySelectionToDocument(state, document, [wrapper.id]);
 }
 
 export function insertLeaf(state: EditorState, role: LeafRole): EditorState {
@@ -719,7 +774,7 @@ export function insertLeaf(state: EditorState, role: LeafRole): EditorState {
   const node = createUniqueLeaf(document, role, parentId);
   document.nodes[node.id] = node;
   document.nodes[parentId].children.push(node.id);
-  return { ...state, document, selectedId: node.id };
+  return applySelectionToDocument(state, document, [node.id]);
 }
 
 function findFirstSection(document: DocumentModel): NodeId | null {
@@ -1053,6 +1108,38 @@ export function moveNode(
   return { ...state, document };
 }
 
+export function moveNodes(
+  state: EditorState,
+  moves: Array<{ id: NodeId; x: string; y: string }>,
+): EditorState {
+  if (moves.length === 0) {
+    return state;
+  }
+
+  const document = cloneDocument(state.document);
+  let changed = false;
+
+  for (const move of moves) {
+    const node = document.nodes[move.id];
+    if (!node || node.type === 'site') {
+      continue;
+    }
+
+    const nextX = parseUnitValue(move.x);
+    const nextY = parseUnitValue(move.y);
+    if (node.rect.x.base.raw !== nextX.raw) {
+      node.rect.x.base = nextX;
+      changed = true;
+    }
+    if (node.rect.y.base.raw !== nextY.raw) {
+      node.rect.y.base = nextY;
+      changed = true;
+    }
+  }
+
+  return changed ? { ...state, document } : state;
+}
+
 export function nudgeNode(
   state: EditorState,
   nodeId: NodeId,
@@ -1160,6 +1247,223 @@ export function reorderNode(
   return { ...state, document };
 }
 
+export function reorderNodes(
+  state: EditorState,
+  nodeIds: NodeId[],
+  action: NodeOrderAction,
+): EditorState {
+  const selectedIds = normalizeSelectedIds(state.document, nodeIds);
+  if (selectedIds.length <= 1) {
+    return selectedIds[0] ? reorderNode(state, selectedIds[0], action) : state;
+  }
+
+  if (
+    selectedIds.some((nodeId) => {
+      const node = state.document.nodes[nodeId];
+      return node?.type === 'wrapper' && node.role === 'section';
+    })
+  ) {
+    return state;
+  }
+
+  const document = cloneDocument(state.document);
+  const selectedNodes = selectedIds.map((nodeId) => document.nodes[nodeId]).filter(Boolean) as Exclude<DocumentNode, { type: 'site' }>[];
+  const parentId = selectedNodes[0]?.parentId ?? null;
+  if (
+    !parentId ||
+    selectedNodes.some((node) => !isReorderableComponent(node) || node.parentId !== parentId)
+  ) {
+    return state;
+  }
+
+  const parent = document.nodes[parentId];
+  if (!parent) {
+    return state;
+  }
+
+  const selectedIdSet = new Set(selectedIds);
+  const nextChildren = [...parent.children];
+
+  if (action === 'sendToBack' || action === 'bringToFront') {
+    const selectedChildren = nextChildren.filter((childId) => selectedIdSet.has(childId));
+    const unselectedChildren = nextChildren.filter((childId) => !selectedIdSet.has(childId));
+    parent.children =
+      action === 'sendToBack'
+        ? [...selectedChildren, ...unselectedChildren]
+        : [...unselectedChildren, ...selectedChildren];
+    return { ...state, document };
+  }
+
+  if (action === 'back') {
+    for (let index = 1; index < nextChildren.length; index += 1) {
+      if (selectedIdSet.has(nextChildren[index]) && !selectedIdSet.has(nextChildren[index - 1])) {
+        [nextChildren[index - 1], nextChildren[index]] = [nextChildren[index], nextChildren[index - 1]];
+      }
+    }
+  } else {
+    for (let index = nextChildren.length - 2; index >= 0; index -= 1) {
+      if (selectedIdSet.has(nextChildren[index]) && !selectedIdSet.has(nextChildren[index + 1])) {
+        [nextChildren[index], nextChildren[index + 1]] = [nextChildren[index + 1], nextChildren[index]];
+      }
+    }
+  }
+
+  parent.children = nextChildren;
+  return { ...state, document };
+}
+
+export function alignNodes(
+  state: EditorState,
+  nodeIds: NodeId[],
+  mode: 'left' | 'center-x' | 'right' | 'top' | 'center-y' | 'bottom',
+  rects: Record<NodeId, SelectionRect>,
+): EditorState {
+  const context = getAlignmentContext(state.document, nodeIds);
+  if (!context) {
+    return state;
+  }
+
+  const anchorRect = rects[context.anchorId];
+  if (!anchorRect) {
+    return state;
+  }
+
+  const document = cloneDocument(state.document);
+  let changed = false;
+
+  for (const nodeId of context.targetIds) {
+    const node = document.nodes[nodeId];
+    const rect = rects[nodeId];
+    if (!node || node.type === 'site' || !rect) {
+      continue;
+    }
+
+    if (mode === 'left' || mode === 'center-x' || mode === 'right') {
+      const desiredLeft =
+        mode === 'left'
+          ? anchorRect.left
+          : mode === 'center-x'
+            ? anchorRect.left + anchorRect.width / 2 - rect.width / 2
+            : anchorRect.left + anchorRect.width - rect.width;
+      const nextX = Math.max(0, Math.round(readCoordinatePx(node.rect.x.base.raw) + (desiredLeft - rect.left)));
+      if (nextX !== Math.round(readCoordinatePx(node.rect.x.base.raw))) {
+        node.rect.x.base = parseUnitValue(`${nextX}px`);
+        changed = true;
+      }
+    } else {
+      const desiredTop =
+        mode === 'top'
+          ? anchorRect.top
+          : mode === 'center-y'
+            ? anchorRect.top + anchorRect.height / 2 - rect.height / 2
+            : anchorRect.top + anchorRect.height - rect.height;
+      const nextY = Math.max(0, Math.round(readCoordinatePx(node.rect.y.base.raw) + (desiredTop - rect.top)));
+      if (nextY !== Math.round(readCoordinatePx(node.rect.y.base.raw))) {
+        node.rect.y.base = parseUnitValue(`${nextY}px`);
+        changed = true;
+      }
+    }
+  }
+
+  return changed ? { ...state, document } : state;
+}
+
+export function distributeNodes(
+  state: EditorState,
+  nodeIds: NodeId[],
+  mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom',
+  rects: Record<NodeId, SelectionRect>,
+): EditorState {
+  const context = getAlignmentContext(state.document, nodeIds);
+  if (!context) {
+    return state;
+  }
+
+  const items = context.movableIds
+    .map((nodeId) => ({ nodeId, rect: rects[nodeId] }))
+    .filter((item): item is { nodeId: NodeId; rect: SelectionRect } => Boolean(item.rect))
+    .sort((left, right) =>
+      mode === 'horizontal' || mode === 'left' || mode === 'right'
+        ? left.rect.left - right.rect.left
+        : left.rect.top - right.rect.top,
+    );
+  if (items.length < 3) {
+    return state;
+  }
+
+  const first = items[0];
+  const last = items[items.length - 1];
+  const isHorizontal = mode === 'horizontal' || mode === 'left' || mode === 'right';
+  const totalSize = items.reduce((sum, item) => sum + (isHorizontal ? item.rect.width : item.rect.height), 0);
+  const span = isHorizontal
+    ? last.rect.left + last.rect.width - first.rect.left
+    : last.rect.top + last.rect.height - first.rect.top;
+  const gap = (span - totalSize) / (items.length - 1);
+
+  const document = cloneDocument(state.document);
+  let changed = false;
+  let cursor =
+    mode === 'horizontal'
+      ? first.rect.left + first.rect.width + gap
+      : mode === 'vertical'
+        ? first.rect.top + first.rect.height + gap
+        : mode === 'left'
+          ? first.rect.left + ((last.rect.left - first.rect.left) / (items.length - 1))
+          : mode === 'right'
+            ? first.rect.left + first.rect.width + ((last.rect.left + last.rect.width - (first.rect.left + first.rect.width)) / (items.length - 1))
+            : mode === 'top'
+              ? first.rect.top + ((last.rect.top - first.rect.top) / (items.length - 1))
+              : first.rect.top + first.rect.height + ((last.rect.top + last.rect.height - (first.rect.top + first.rect.height)) / (items.length - 1));
+
+  const edgeStep =
+    mode === 'left'
+      ? (last.rect.left - first.rect.left) / (items.length - 1)
+      : mode === 'right'
+        ? (last.rect.left + last.rect.width - (first.rect.left + first.rect.width)) / (items.length - 1)
+        : mode === 'top'
+          ? (last.rect.top - first.rect.top) / (items.length - 1)
+          : mode === 'bottom'
+            ? (last.rect.top + last.rect.height - (first.rect.top + first.rect.height)) / (items.length - 1)
+            : 0;
+
+  for (const item of items.slice(1, -1)) {
+    const node = document.nodes[item.nodeId];
+    if (!node || node.type === 'site') {
+      continue;
+    }
+
+    if (isHorizontal) {
+      const desiredLeft =
+        mode === 'horizontal'
+          ? cursor
+          : mode === 'left'
+            ? cursor
+            : cursor - item.rect.width;
+      const nextX = Math.max(0, Math.round(readCoordinatePx(node.rect.x.base.raw) + (desiredLeft - item.rect.left)));
+      if (nextX !== Math.round(readCoordinatePx(node.rect.x.base.raw))) {
+        node.rect.x.base = parseUnitValue(`${nextX}px`);
+        changed = true;
+      }
+      cursor += mode === 'horizontal' ? item.rect.width + gap : edgeStep;
+    } else {
+      const desiredTop =
+        mode === 'vertical'
+          ? cursor
+          : mode === 'top'
+            ? cursor
+            : cursor - item.rect.height;
+      const nextY = Math.max(0, Math.round(readCoordinatePx(node.rect.y.base.raw) + (desiredTop - item.rect.top)));
+      if (nextY !== Math.round(readCoordinatePx(node.rect.y.base.raw))) {
+        node.rect.y.base = parseUnitValue(`${nextY}px`);
+        changed = true;
+      }
+      cursor += mode === 'vertical' ? item.rect.height + gap : edgeStep;
+    }
+  }
+
+  return changed ? { ...state, document } : state;
+}
+
 function isReorderableComponent(node: Exclude<DocumentNode, { type: 'site' }>) {
   if (node.type === 'leaf') {
     return true;
@@ -1186,6 +1490,41 @@ function findSiblingSectionIndex(
 
 function isSiteSectionRole(role: WrapperRole) {
   return role === 'section' || role === 'header' || role === 'footer';
+}
+
+function isMovableAlignmentNode(node: Exclude<DocumentNode, { type: 'site' }>) {
+  return node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
+}
+
+function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {
+  const selectedIds = normalizeSelectedIds(document, nodeIds);
+  if (selectedIds.length < 2) {
+    return null;
+  }
+
+  const selectedNodes = selectedIds
+    .map((nodeId) => document.nodes[nodeId])
+    .filter((node): node is Exclude<DocumentNode, { type: 'site' }> => Boolean(node && node.type !== 'site'));
+  const anchorId = selectedIds[0];
+  const anchorNode = document.nodes[anchorId];
+  if (!anchorNode || anchorNode.type === 'site' || !isMovableAlignmentNode(anchorNode) || !anchorNode.parentId) {
+    return null;
+  }
+
+  if (
+    selectedIds.some((nodeId) => {
+      const node = document.nodes[nodeId];
+      return !node || node.type === 'site' || !isMovableAlignmentNode(node) || node.parentId !== anchorNode.parentId;
+    })
+  ) {
+    return null;
+  }
+
+  return {
+    anchorId,
+    movableIds: selectedIds,
+    targetIds: selectedIds.filter((nodeId) => nodeId !== anchorId),
+  };
 }
 
 function canParentNode(parent: DocumentNode, child: DocumentNode): boolean {
@@ -1365,22 +1704,30 @@ export function demoteWrapperRole(state: EditorState, wrapperId: NodeId): Editor
 }
 
 export function deleteNode(state: EditorState, nodeId: NodeId): EditorState {
+  return deleteNodes(state, [nodeId]);
+}
+
+export function deleteNodes(state: EditorState, nodeIds: NodeId[]): EditorState {
   const document = cloneDocument(state.document);
-  const node = document.nodes[nodeId];
-  if (!node || node.parentId === null) {
+  const nextNodeIds = getTopLevelSelectedIds(document, nodeIds);
+
+  if (nextNodeIds.length === 0) {
     return state;
   }
-  removeRecursively(document, nodeId);
-  const parent = document.nodes[node.parentId];
-  parent.children = parent.children.filter((childId) => childId !== nodeId);
-  return {
-    ...state,
-    document,
-    selectedId:
-      state.selectedId && !document.nodes[state.selectedId]
-        ? null
-        : state.selectedId,
-  };
+
+  for (const nodeId of nextNodeIds) {
+    const node = document.nodes[nodeId];
+    if (!node || node.parentId === null) {
+      continue;
+    }
+    removeRecursively(document, nodeId);
+    const parent = document.nodes[node.parentId];
+    if (parent) {
+      parent.children = parent.children.filter((childId) => childId !== nodeId);
+    }
+  }
+
+  return applySelectionToDocument(state, document);
 }
 
 function removeRecursively(document: DocumentModel, nodeId: NodeId) {

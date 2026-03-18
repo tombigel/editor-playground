@@ -6,13 +6,17 @@ import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../../stic
 export type StageProps = {
   document: DocumentModel;
   selectedId: NodeId | null;
+  selectedIds: NodeId[];
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
   snapEnabled: boolean;
   onStageFocus: () => void;
-  onSelect: (id: NodeId) => void;
+  onSelect: (id: NodeId, mode?: 'replace' | 'toggle') => void;
+  onSelectMany: (ids: NodeId[], mode: 'replace' | 'toggle') => void;
+  onClearSelection: () => void;
   onMove: (id: NodeId, x: string, y: string) => void;
+  onMoveSelection?: (moves: Array<{ id: NodeId; x: string; y: string }>) => void;
   onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
   onResize: (id: NodeId, width: string, height: string) => void;
   onResizeStart: (id: NodeId) => void;
@@ -20,8 +24,18 @@ export type StageProps = {
   onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
 };
 
+export type DragPreviewItem = {
+  nodeId: NodeId;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+};
+
 export type DragState = {
   nodeId: string;
+  draggedNodeIds?: NodeId[];
+  previewItems?: DragPreviewItem[];
   startClientX: number;
   startClientY: number;
   currentClientX: number;
@@ -98,11 +112,16 @@ export type StageSceneLeafNode = RenderLeafPlanNode['node'];
 export type StageSceneProps = {
   document: DocumentModel;
   selectedId: NodeId | null;
+  selectedIds: NodeId[];
+  multiSelectionBounds?: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null;
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
-  onSelect: (id: NodeId) => void;
-  onMove: (id: NodeId, x: string, y: string) => void;
   onResizeStart: (id: NodeId) => void;
   dragState: DragState;
   setDragState: (state: DragState) => void;
@@ -117,11 +136,10 @@ export type RenderWrapperArgs = {
   document: DocumentModel;
   plan: RenderWrapperPlanNode;
   selectedId: NodeId | null;
+  selectedIds: NodeId[];
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
-  onSelect: (id: NodeId) => void;
-  onMove: (id: NodeId, x: string, y: string) => void;
   measuredNodeSizes: RenderMeasuredNodeSizes;
   viewport: ViewportMeasurement;
   dragState: DragState;

@@ -232,9 +232,9 @@ describe('site/siteExport', () => {
     section.style.sectionBorderBottomWidth = parseUnitValue('2px');
 
     const css = renderSiteCss(document);
-    const sectionRule = css.match(new RegExp(`\\.sp-node-${section.id}[^}]+\\}`, 'm'))?.[0] ?? '';
+    const sectionRule = css.match(new RegExp(`\\.sp-node-${section.id}-content[^}]+\\}`, 'm'))?.[0] ?? '';
 
-    expect(sectionRule).toContain(`.sp-node-${section.id}`);
+    expect(sectionRule).toContain(`.sp-node-${section.id}-content`);
     expect(sectionRule).toContain('border-bottom-color: #cbd5e1;');
     expect(sectionRule).toContain('border-bottom-width: 2px;');
     expect(sectionRule).not.toContain('border-width: 1px;');

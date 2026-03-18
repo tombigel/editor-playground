@@ -25,6 +25,55 @@ export function getNodeOrderState(
   state: EditorState,
   node: ReturnType<typeof getNode>,
 ) {
+  const selectedIds = state.selectedIds ?? (state.selectedId ? [state.selectedId] : []);
+
+  if (selectedIds.length > 1) {
+    const selectedNodes = selectedIds
+      .map((selectedId) => state.document.nodes[selectedId])
+      .filter(Boolean);
+    if (
+      selectedNodes.length !== selectedIds.length ||
+      selectedNodes.some((selectedNode) => selectedNode.type === 'wrapper' && selectedNode.role === 'section')
+    ) {
+      return { show: false, canBack: false, canForward: false };
+    }
+
+    const parentId = selectedNodes[0]?.parentId;
+    if (
+      !parentId ||
+      selectedNodes.some(
+        (selectedNode) =>
+          selectedNode.type === 'site' ||
+          selectedNode.parentId !== parentId ||
+          (selectedNode.type === 'wrapper' && selectedNode.role !== 'container'),
+      )
+    ) {
+      return { show: false, canBack: false, canForward: false };
+    }
+
+    const parent = state.document.nodes[parentId];
+    if (!parent) {
+      return { show: false, canBack: false, canForward: false };
+    }
+
+    const selectedIdSet = new Set(selectedIds);
+    const canBack = parent.children.some(
+      (childId, index) => index > 0 && selectedIdSet.has(childId) && !selectedIdSet.has(parent.children[index - 1]),
+    );
+    const canForward = parent.children.some(
+      (childId, index) =>
+        index < parent.children.length - 1 &&
+        selectedIdSet.has(childId) &&
+        !selectedIdSet.has(parent.children[index + 1]),
+    );
+
+    return {
+      show: true,
+      canBack,
+      canForward,
+    };
+  }
+
   if (!node || node.type === 'site' || node.parentId === null) {
     return { show: false, canBack: false, canForward: false };
   }
@@ -55,6 +104,12 @@ export function getSectionOrderState(
   state: EditorState,
   node: ReturnType<typeof getNode>,
 ) {
+  const selectedIds = state.selectedIds ?? (state.selectedId ? [state.selectedId] : []);
+
+  if (selectedIds.length > 1) {
+    return { canBack: false, canForward: false };
+  }
+
   if (!node || node.type !== 'wrapper' || node.role !== 'section' || node.parentId !== state.document.rootId) {
     return { canBack: false, canForward: false };
   }

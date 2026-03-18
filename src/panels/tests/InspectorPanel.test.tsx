@@ -188,6 +188,61 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('data-allow-alpha="true"');
   });
 
+  it('renders the dedicated multi-select inspector for multiple selected nodes', () => {
+    const textNode = createLeaf('text', 'section_1');
+    const buttonNode = createLeaf('button', 'section_1');
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        node={textNode}
+        selectedNodes={[textNode, buttonNode]}
+        showOrderControls={true}
+        canOrderBack={true}
+        canOrderForward={true}
+        canSendToBack={true}
+        canBringToFront={true}
+        orderBackShortcut=""
+        orderForwardShortcut=""
+        sendToBackShortcut=""
+        bringToFrontShortcut=""
+        canSectionBack={false}
+        canSectionForward={false}
+        onOrderBack={() => {}}
+        onOrderForward={() => {}}
+        onSendToBack={() => {}}
+        onBringToFront={() => {}}
+        onSectionBack={() => {}}
+        onSectionForward={() => {}}
+        onAlignSelection={() => {}}
+        onDistributeSelection={() => {}}
+        onBulkEdit={() => {}}
+        onTextChange={() => {}}
+        onWrapperStyleChange={() => {}}
+        onRectChange={() => {}}
+        onPromote={() => {}}
+        onDemote={() => {}}
+        onStickyEnabled={() => {}}
+        onStickyTarget={() => {}}
+        onStickyEdges={() => {}}
+        onStickyOffset={() => {}}
+        onStickyOffsetTop={() => {}}
+        onStickyOffsetBottom={() => {}}
+        onStickyDurationMode={() => {}}
+        onStickyDuration={() => {}}
+        onStickyDurationTop={() => {}}
+        onStickyDurationBottom={() => {}}
+        focusedMode={null}
+        onEnterFocusedMode={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('2 nodes selected');
+    expect(markup).toContain('First selected node is the alignment anchor.');
+    expect(markup).not.toContain('>Multi-select<');
+    expect(markup).toContain('>Layout<');
+    expect(markup).toContain('>Typography<');
+  });
+
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {
     const document = createInitialDocument();
     const wrapperRoles: Array<'section' | 'header' | 'footer'> = ['section', 'header', 'footer'];

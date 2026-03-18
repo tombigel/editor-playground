@@ -352,6 +352,7 @@ describe('editor/editorStore integration', () => {
         ...state1,
         document: nextDocument,
         selectedId: 'missing_node',
+        selectedIds: ['missing_node'],
         pendingRoleSwap: {
           requestedId: textId,
           targetRole: 'header',

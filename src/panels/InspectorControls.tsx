@@ -274,19 +274,21 @@ export function NumericUnitInlineField({
   onUnitChangeValue,
   min,
   max,
+  mixed = false,
 }: {
   value: string;
-  units: ('px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax')[];
+  units: ('px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax' | 'em' | 'rem')[];
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
   onUnitChangeValue?: (nextUnit: string, currentValue: string) => string | null;
   min?: number;
   max?: number;
+  mixed?: boolean;
 }) {
   const parsed = value ? parseUnitValue(value) : null;
   const initialUnit = parsed && units.includes(parsed.parsed.unit) ? parsed.parsed.unit : units[0];
-  const [draft, setDraft] = useState(parsed ? String(parsed.parsed.value) : '');
+  const [draft, setDraft] = useState(mixed ? '' : parsed ? String(parsed.parsed.value) : '');
   const [unit, setUnit] = useState(initialUnit);
   const [invalid, setInvalid] = useState(false);
   const hasUnitSelector = units.length > 1;
@@ -295,10 +297,10 @@ export function NumericUnitInlineField({
   useEffect(() => {
     const nextParsed = value ? parseUnitValue(value) : null;
     const nextUnit = nextParsed && units.includes(nextParsed.parsed.unit) ? nextParsed.parsed.unit : units[0];
-    setDraft(nextParsed ? String(nextParsed.parsed.value) : '');
+    setDraft(mixed ? '' : nextParsed ? String(nextParsed.parsed.value) : '');
     setUnit(nextUnit);
     setInvalid(false);
-  }, [units, value]);
+  }, [mixed, units, value]);
 
   function commit(nextDraft: string, nextUnit: typeof unit) {
     const validation = validateNumberInputDraft(nextDraft, min ?? Number.NEGATIVE_INFINITY, max ?? Number.POSITIVE_INFINITY);
@@ -326,7 +328,7 @@ export function NumericUnitInlineField({
         placeholder={placeholder}
         onBlur={() => {
           const nextParsed = value ? parseUnitValue(value) : null;
-          setDraft(nextParsed ? String(nextParsed.parsed.value) : '');
+          setDraft(mixed ? '' : nextParsed ? String(nextParsed.parsed.value) : '');
           setInvalid(false);
         }}
         onChange={(event) => {
@@ -405,18 +407,20 @@ export function HoverColorField({
   ariaLabel,
   fallback = '#ffffff',
   showOpacity = true,
+  mixed = false,
 }: {
   value: string | undefined;
   onChange: (value: string) => void;
   ariaLabel: string;
   fallback?: string;
   showOpacity?: boolean;
+  mixed?: boolean;
 }) {
   const resolvedValue = showOpacity ? value : forceOpaqueColorValue(value);
   const resolvedFallback = showOpacity ? fallback : forceOpaqueColorValue(fallback) || '#ffffff';
 
   return (
-    <div className="flex justify-end">
+    <div className="relative flex justify-end">
       <ColorPicker
         value={resolvedValue}
         fallback={resolvedFallback}
@@ -425,6 +429,11 @@ export function HoverColorField({
         className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-sm border shadow-sm"
         onChange={(nextValue) => onChange(showOpacity ? nextValue : forceOpaqueColorValue(nextValue) || resolvedFallback)}
       />
+      {mixed ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="h-0.5 w-3 rounded-full bg-white/95 shadow-[0_0_0_1px_rgba(18,32,51,0.24)]" />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -498,6 +507,7 @@ export function ShadowControlGroup({
   onAngleChange,
   colorFallback,
   supportsSpread = false,
+  mixed = false,
 }: {
   label?: string;
   color: string;
@@ -512,21 +522,23 @@ export function ShadowControlGroup({
   onAngleChange: (value: number) => void;
   colorFallback: string;
   supportsSpread?: boolean;
+  mixed?: boolean;
 }) {
   return (
     <div className="w-full space-y-1.5">
       <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
         <Label className="text-[11px] font-medium">{label}</Label>
         <div className="ml-auto flex items-center gap-2">
-          <HoverColorField value={color || undefined} onChange={onColorChange} ariaLabel="Shadow color" fallback={colorFallback} />
+          <HoverColorField value={color || undefined} mixed={mixed} onChange={onColorChange} ariaLabel="Shadow color" fallback={colorFallback} />
         </div>
       </div>
       <div className={`grid w-full gap-1.5 ${supportsSpread ? 'grid-cols-4' : 'grid-cols-3'}`}>
-        <LabeledNumberField label="Blur" value={blur} onChange={onBlurChange} min={0} max={200} step={1} unitLabel="px" />
+        <LabeledNumberField label="Blur" value={blur} mixed={mixed} onChange={onBlurChange} min={0} max={200} step={1} unitLabel="px" />
         {supportsSpread ? (
           <LabeledNumberField
             label="Spread"
             value={spread ?? 0}
+            mixed={mixed}
             onChange={(value) => onSpreadChange?.(value)}
             min={-200}
             max={200}
@@ -534,8 +546,8 @@ export function ShadowControlGroup({
             unitLabel="px"
           />
         ) : null}
-        <LabeledNumberField label="Distance" value={distance} onChange={onDistanceChange} min={0} max={400} step={1} unitLabel="px" />
-        <LabeledNumberField label="Angle" value={angle} onChange={onAngleChange} min={0} max={360} step={1} unitLabel="°" />
+        <LabeledNumberField label="Distance" value={distance} mixed={mixed} onChange={onDistanceChange} min={0} max={400} step={1} unitLabel="px" />
+        <LabeledNumberField label="Angle" value={angle} mixed={mixed} onChange={onAngleChange} min={0} max={360} step={1} unitLabel="°" />
       </div>
     </div>
   );
@@ -544,6 +556,7 @@ export function ShadowControlGroup({
 export function LabeledNumberField({
   label,
   value,
+  mixed = false,
   onChange,
   min,
   max,
@@ -552,6 +565,7 @@ export function LabeledNumberField({
 }: {
   label: string;
   value: number;
+  mixed?: boolean;
   onChange: (value: number) => void;
   min: number;
   max: number;
@@ -561,7 +575,7 @@ export function LabeledNumberField({
   return (
     <div className="min-w-0 w-full space-y-0.5">
       <Label className="text-[11px] font-medium">{label}</Label>
-      <NumberInput value={value} min={min} max={max} step={step} onChange={onChange} unitLabel={unitLabel} />
+      <NumberInput value={value} mixed={mixed} min={min} max={max} step={step} onChange={onChange} unitLabel={unitLabel} />
     </div>
   );
 }
@@ -855,11 +869,15 @@ function TypeIconButton({
 export function TextStyleIconButton({
   label,
   active,
+  disabled = false,
+  mixed = false,
   onClick,
   children,
 }: {
   label: string;
   active: boolean;
+  disabled?: boolean;
+  mixed?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -875,8 +893,9 @@ export function TextStyleIconButton({
         variant={active ? 'default' : 'outline'}
         size="sm"
         aria-label={label}
-        aria-pressed={active}
+        aria-pressed={mixed ? 'mixed' : active}
         onClick={onClick}
+        disabled={disabled}
         className="h-8 w-8 p-0 text-xs"
       >
         {children}
@@ -898,20 +917,22 @@ export function FontSizeField({
   nodeId,
   value,
   onChange,
+  mixed = false,
 }: {
   nodeId: string;
   value: string;
   onChange: (value: string) => void;
+  mixed?: boolean;
 }) {
   const parsed = parseFontSizeValue(value);
   const fontSizeSuffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
-  const [draft, setDraft] = useState(String(parsed.parsed.value));
+  const [draft, setDraft] = useState(mixed ? '' : String(parsed.parsed.value));
   const [invalid, setInvalid] = useState(false);
 
   useEffect(() => {
-    setDraft(String(parsed.parsed.value));
+    setDraft(mixed ? '' : String(parsed.parsed.value));
     setInvalid(false);
-  }, [parsed.parsed.unit, parsed.parsed.value]);
+  }, [mixed, parsed.parsed.unit, parsed.parsed.value]);
 
   return (
     <div
@@ -924,8 +945,9 @@ export function FontSizeField({
         min={1}
         step="any"
         value={draft}
+        placeholder={mixed ? '-' : undefined}
         onBlur={() => {
-          setDraft(String(parsed.parsed.value));
+          setDraft(mixed ? '' : String(parsed.parsed.value));
           setInvalid(false);
         }}
         onChange={(e) => {
@@ -1059,6 +1081,7 @@ export function NumberInput({
   step,
   onChange,
   unitLabel,
+  mixed = false,
 }: {
   value: number;
   min: number;
@@ -1066,9 +1089,10 @@ export function NumberInput({
   step: number;
   onChange: (value: number) => void;
   unitLabel?: string;
+  mixed?: boolean;
 }) {
   const formattedValue = formatFieldNumber(clampFieldNumber(value));
-  const [draft, setDraft] = useState(formattedValue);
+  const [draft, setDraft] = useState(mixed ? '' : formattedValue);
   const [invalid, setInvalid] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -1076,9 +1100,9 @@ export function NumberInput({
     if (isEditing) {
       return;
     }
-    setDraft(formattedValue);
+    setDraft(mixed ? '' : formattedValue);
     setInvalid(false);
-  }, [formattedValue, isEditing]);
+  }, [formattedValue, isEditing, mixed]);
 
   function handleDraftChange(nextDraft: string) {
     setDraft(nextDraft);
@@ -1091,7 +1115,7 @@ export function NumberInput({
 
   function handleBlur() {
     setIsEditing(false);
-    setDraft(formattedValue);
+    setDraft(mixed ? '' : formattedValue);
     setInvalid(false);
   }
 
@@ -1109,6 +1133,7 @@ export function NumberInput({
           max={max}
           step={step}
           value={draft}
+          placeholder="-"
           onFocus={() => setIsEditing(true)}
           onBlur={handleBlur}
           onChange={(e) => handleDraftChange(e.target.value)}
@@ -1129,19 +1154,20 @@ export function NumberInput({
   }
 
   return (
-    <Input
-      type="number"
-      min={min}
-      max={max}
-      step={step}
-      value={draft}
-      onFocus={() => setIsEditing(true)}
-      onBlur={handleBlur}
-      onChange={(e) => handleDraftChange(e.target.value)}
-      className={`h-8 w-full rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-        invalid ? 'border-red-400 focus-visible:ring-red-200' : ''
-      }`}
-    />
+      <Input
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        value={draft}
+        placeholder="-"
+        onFocus={() => setIsEditing(true)}
+        onBlur={handleBlur}
+        onChange={(e) => handleDraftChange(e.target.value)}
+        className={`h-8 w-full rounded-sm px-2 text-center text-[11px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+          invalid ? 'border-red-400 focus-visible:ring-red-200' : ''
+        }`}
+      />
   );
 }
 
@@ -1153,6 +1179,7 @@ export function RangeField({
   step,
   unit,
   onValueChange,
+  mixed = false,
 }: {
   label: string | null;
   value: number;
@@ -1161,22 +1188,21 @@ export function RangeField({
   step: number;
   unit: string;
   onValueChange: (value: number) => void;
+  mixed?: boolean;
 }) {
   return (
     <div className="space-y-1">
       {label ? (
         <div className="flex items-center justify-between gap-2">
           <Label className="text-[11px] font-medium">{label}</Label>
-          <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
-            {value}
-            {unit}
+          <span className={`editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium ${mixed ? 'border border-dashed' : ''}`}>
+            {mixed ? '-' : `${value}${unit}`}
           </span>
         </div>
       ) : (
         <div className="flex justify-end">
-          <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
-            {value}
-            {unit}
+          <span className={`editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium ${mixed ? 'border border-dashed' : ''}`}>
+            {mixed ? '-' : `${value}${unit}`}
           </span>
         </div>
       )}
@@ -1193,6 +1219,7 @@ export function StickyOffsetBandField({
   step,
   unit,
   onValueChange,
+  mixed = false,
 }: {
   topOffset: number;
   bottomOffset: number;
@@ -1201,6 +1228,7 @@ export function StickyOffsetBandField({
   step: number;
   unit: string;
   onValueChange: (topOffset: number, bottomOffset: number) => void;
+  mixed?: boolean;
 }) {
   const topValue = clamp(topOffset, min, max);
   const bottomValue = clamp(bottomOffset, min, max);
@@ -1213,20 +1241,17 @@ export function StickyOffsetBandField({
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
         <Label className="text-[11px] font-medium">Offset Range</Label>
-        <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
-          Span {Math.round(rangeSpan)}
-          {unit}
+        <span className={`editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium ${mixed ? 'border border-dashed' : ''}`}>
+          {mixed ? '-' : `Span ${Math.round(rangeSpan)}${unit}`}
         </span>
       </div>
       <div className="editor-text-muted grid grid-cols-2 gap-1 text-[10px]">
         <span className="editor-bg-subtle inline-flex items-center gap-1 rounded-md px-2 py-0.5">
           <ArrowUp className="editor-text-muted h-3 w-3" />
-          Top {Math.round(topValue)}
-          {unit}
+          {mixed ? 'Top -' : `Top ${Math.round(topValue)}${unit}`}
         </span>
         <span className="editor-bg-subtle inline-flex items-center justify-end gap-1 rounded-md px-2 py-0.5 text-right">
-          Bottom {Math.round(bottomValue)}
-          {unit}
+          {mixed ? 'Bottom -' : `Bottom ${Math.round(bottomValue)}${unit}`}
           <ArrowDown className="editor-text-muted h-3 w-3" />
         </span>
       </div>

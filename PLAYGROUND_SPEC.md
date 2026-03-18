@@ -157,6 +157,14 @@ Keyboard shortcuts:
 - `Mod + ]`: position forward (when a node is selected and no input field is focused)
 - `Mod + Shift + [`: send to back (when a node is selected and no input field is focused)
 - `Mod + Shift + ]`: bring to front (when a node is selected and no input field is focused)
+- `Mod + B`: toggle bold on selected text-capable nodes when no input field is focused
+- `Mod + I`: toggle italic on selected text-capable nodes when no input field is focused
+- `Mod + U`: toggle underline on selected text-capable nodes when no input field is focused
+- `Mod + Shift + X`: toggle strikethrough on selected text-capable nodes when no input field is focused
+- `Mod + Alt + Left` / `Mod + Alt + H` / `Mod + Alt + Right`: align the current multi-selection left / center horizontally / right
+- `Mod + Alt + Up` / `Mod + Alt + V` / `Mod + Alt + Down`: align the current multi-selection top / center vertically / bottom
+- `Mod + Shift + Alt + H` / `Mod + Shift + Alt + V`: distribute the current multi-selection by horizontal / vertical gaps
+- `Mod + Shift + Alt + Left` / `Right` / `Up` / `Down`: distribute the current multi-selection by left / right / top / bottom edges
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
@@ -233,7 +241,7 @@ Supported unit types:
 
 Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
 
-In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry selectively. Absolute and relative sizes resolve from authored values; wrapper width is authored directly. For `section`/`header`/`footer`, an authored explicit wrapper height renders as the content-wrapper minimum height so the wrapper can still grow with content and sticky extents, and stage structural-range math uses the larger of that authored minimum or the current measured inner content height. For `container`, an authored explicit height renders as the actual content-wrapper height so border/padding surfaces and edit geometry stay aligned to the authored box. Auto-height wrapper mesh layout is recalculated from the current children/sticky extents rather than preserving stale previously measured wrapper height after edits. Intrinsic sizes such as text `height: auto` and keyword widths use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. Component presentation in the stage comes from the same shared render style semantics as site/export output; the stage should not add component-specific visual treatment beyond editor chrome with an intentional editing role. Exposed insert-time defaults for leaves are seeded into the authored model when the node is created; the renderer should not invent additional visual defaults that are absent from node state. Wrapper visuals render on a dedicated inner surface layer, so container borders/shadows behave like button and image surfaces instead of shrinking the overlay coordinate space. Wrapper drag previews reuse that same inner surface layer, so container background, border, radius, and shadow remain intact while dragging. Stage overlay layers that render guides and spacer ranges mirror the content-wrapper padding so their coordinate space stays aligned with padded wrapper content. The editor stage adds its shell inset to sticky preview positioning, while offset guides stay in authored units inside that compensated sticky preview so the indicators remain aligned to the sticky element. When a sticky node lives inside a padded wrapper, the offset guide appends that padding contribution as an additional owner-side segment and keeps the authored offset as the node-side segment, so the total visible guide length is `offset + padding`. The padding segment uses a muted dotted variant of the offset-guide color, and the `Padding` badge sits on the boundary between the padding and offset segments rather than at the outer end of the guide. The same additive padding treatment applies to top, bottom, and dual-edge sticky offset guides. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
+In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry selectively. Absolute and relative sizes resolve from authored values; wrapper width is authored directly. For `section`/`header`/`footer`, an authored explicit wrapper height renders as the content-wrapper minimum height so the wrapper can still grow with content and sticky extents, but stage structural-range math keeps that authored explicit height authoritative instead of feeding measured wrapper height back into layout on every rerender. When structural wrappers need to grow beyond that authored minimum, the mesh extends from child geometry and sticky extents rather than from a second-pass wrapper-box measurement. For `container`, an authored explicit height renders as the actual content-wrapper height so border/padding surfaces and edit geometry stay aligned to the authored box. Auto-height wrapper mesh layout is recalculated from the current children/sticky extents rather than preserving stale previously measured wrapper height after edits. Intrinsic sizes such as text `height: auto`, `%`-relative dimensions, and keyword widths still use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. Component presentation in the stage comes from the same shared render style semantics as site/export output; the stage should not add component-specific visual treatment beyond editor chrome with an intentional editing role. Exposed insert-time defaults for leaves are seeded into the authored model when the node is created; the renderer should not invent additional visual defaults that are absent from node state. Wrapper visuals render on a dedicated inner surface layer, so container borders/shadows and section bottom dividers behave like visual surfaces instead of changing the measured wrapper box. Wrapper drag previews reuse that same inner surface layer, so container background, border, radius, shadow, and section dividers remain intact while dragging. Stage overlay layers that render guides and spacer ranges mirror the content-wrapper padding so their coordinate space stays aligned with padded wrapper content. The editor stage adds its shell inset to sticky preview positioning, while offset guides stay in authored units inside that compensated sticky preview so the indicators remain aligned to the sticky element. When a sticky node lives inside a padded wrapper, the offset guide appends that padding contribution as an additional owner-side segment and keeps the authored offset as the node-side segment, so the total visible guide length is `offset + padding`. The padding segment uses a muted dotted variant of the offset-guide color, and the `Padding` badge sits on the boundary between the padding and offset segments rather than at the outer end of the guide. The same additive padding treatment applies to top, bottom, and dual-edge sticky offset guides. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
 
 For wrapper resizing in the stage, start-size measurement uses the inner `contentWrapper` surface so border/padding styling does not feed back into authored geometry, while the visible resize handles stay anchored to the outer wrapper shell so they align to the outer edge of bordered container surfaces.
 
@@ -423,13 +431,24 @@ Current UX includes:
 - startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it
 - left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
 - top bar utility actions for shortcut help and settings
-- shortcut help dialog opened by `?`, generated from the shared shortcut registry
+- shortcut help dialog opened by `?`, generated from the shared shortcut registry and shared pointer-modifier gesture list
 - shortcut guide also appears as the last section inside settings
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
-- the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current selection scrolls into view when needed, and arrow keys nudge positioned components
+- the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current primary selection scrolls into view when needed, and arrow keys nudge positioned components
 - pointer selection does not commit drag/reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not remeasure layout as a drag
 - intrinsic-height leaf nodes in the editor stage align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy
+- the editor supports multi-selection:
+  - `Cmd/Ctrl + Click` or `Shift + Click` toggles node membership
+  - the first selected node remains the primary/master selection unless removed
+  - a plain second click on any already-selected node in a multi-selection collapses the selection back to just that node
+  - top-level structural wrappers with role `section`, `header`, or `footer` are single-select only and are removed from any attempted multi-selection set
+  - dragging any already-selected node moves the current top-level multi-selection as one group and commits as one undoable action
+  - multi-selection suppresses per-node label pills, renders the outer group box with the same treatment as the single-selection outline, and downgrades member boxes to a 1px outline with a subtle translucent fill
+  - resize handles are hidden whenever more than one node is selected
+  - dragging from empty stage space or from non-draggable top-level structural wrappers (`section`, `header`, `footer`) starts marquee selection
+  - grouped drag is supported in v1; grouped resize and grouped reparent are not
+  - single-step bulk edits still undo as one action even when they update multiple nodes
 - auto-height wrapper sizing in the editor stage is measured from the inner content box, so dragging or repositioning selected nodes does not inflate surrounding header/section height by wrapper borders
 - button focus states use a stronger visible ring across editor controls
 - inspector sections that correspond to a focused mode can expose a small top-right `Go to mode` entry button; the sticky section is the first such entry point
@@ -437,6 +456,18 @@ Current UX includes:
 - top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when the authored width is locked to `100%`
 - the shared `Name` field lives in its own trailing `Properties` section instead of the layout section across non-site inspectors
 - `Content` is the standard content-editing section title across leaf inspectors; text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`
+- when multiple nodes are selected, the sidebar switches to a dedicated multi-select inspector instead of reusing single-node inspector schemas
+- multi-select controls use indeterminate visual states instead of rendering a literal `Mixed` label
+- multi-select v1 groups are:
+  - `Layout`: align left/center/right/top/middle/bottom using the first selected node as the alignment anchor, and distribute using horizontal/vertical gap spacing or left/right/top/bottom edge spacing with the outermost selected items on that axis as the fixed endpoints
+  - `Reorder`: enabled only when all selected movable nodes share the same parent; section wrappers never participate in multi-selection, and reorder moves the selected set as one block while preserving relative order
+  - `Typography`: shared text/link/button typography controls
+  - `Text Design`: shared foreground color for text/link/button plus filter-shadow controls for text/link selections
+  - `Surface Design`: shared background, border radius, and box-shadow controls for compatible surface nodes
+  - `Sticky`: shared sticky enabled / edge / offset / duration controls for sticky-capable selections
+- sticky focused mode can render the shared multi-select sticky card when multiple nodes are selected
+- indeterminate multi-select values still commit to the compatible subset only when edited
+- mixed wrapper/leaf bulk edits are dispatched as one reducer action so history captures them as one undoable step
 - drag, resize, reparenting, and snap guides
 - inspector ordering controls with icon actions and tooltips
 - in-memory incremental undo/redo
