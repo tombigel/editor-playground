@@ -13,6 +13,12 @@ function createHandlers() {
     setSnapEnabled: vi.fn(),
     nudgeSelection: vi.fn(),
     deleteSelection: vi.fn(),
+    toggleBoldSelection: vi.fn(),
+    toggleItalicSelection: vi.fn(),
+    toggleUnderlineSelection: vi.fn(),
+    toggleStrikethroughSelection: vi.fn(),
+    alignSelection: vi.fn(),
+    distributeSelection: vi.fn(),
     orderBack: vi.fn(),
     orderForward: vi.fn(),
     orderSendToBack: vi.fn(),
@@ -55,11 +61,19 @@ describe('app/shortcutController', () => {
     executeEditorShortcut('dismissPanels', baseState, false, handlers);
     executeEditorShortcut('openSettings', baseState, false, handlers);
     executeEditorShortcut('showShortcutHelp', baseState, false, handlers);
+    executeEditorShortcut('toggleBoldSelection', baseState, false, handlers);
+    executeEditorShortcut('toggleUnderlineSelection', baseState, false, handlers);
+    executeEditorShortcut('alignSelectionLeft', baseState, false, handlers);
+    executeEditorShortcut('distributeSelectionBottom', baseState, false, handlers);
     executeEditorShortcut('orderBringToFront', baseState, false, handlers);
 
     expect(handlers.closePanels).toHaveBeenCalledOnce();
     expect(handlers.toggleSettings).toHaveBeenCalledOnce();
     expect(handlers.openShortcutHelp).toHaveBeenCalledOnce();
+    expect(handlers.toggleBoldSelection).toHaveBeenCalledOnce();
+    expect(handlers.toggleUnderlineSelection).toHaveBeenCalledOnce();
+    expect(handlers.alignSelection).toHaveBeenCalledWith('left');
+    expect(handlers.distributeSelection).toHaveBeenCalledWith('bottom');
     expect(handlers.orderBringToFront).toHaveBeenCalledOnce();
   });
 });

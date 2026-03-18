@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findMatchingShortcut, getShortcutLabel } from '../shortcuts';
+import { findMatchingShortcut, getShortcutLabel, SHORTCUT_GESTURES } from '../shortcuts';
 
 describe('shortcut registry', () => {
   it('matches arrange shortcuts with industry-standard shift variants', () => {
@@ -128,5 +128,93 @@ describe('shortcut registry', () => {
     expect(blocked).toBeNull();
     expect(nudged?.id).toBe('nudgeSelectionRight');
     expect(getShortcutLabel('nudgeSelectionRight', 'other')).toBe('Right / Shift + Right');
+  });
+
+  it('matches text styling shortcuts', () => {
+    const bold = findMatchingShortcut(
+      {
+        code: 'KeyB',
+        metaKey: false,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    const strike = findMatchingShortcut(
+      {
+        code: 'KeyX',
+        metaKey: true,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'mac',
+    );
+
+    expect(bold?.id).toBe('toggleBoldSelection');
+    expect(strike?.id).toBe('toggleStrikethroughSelection');
+    expect(getShortcutLabel('toggleUnderlineSelection', 'other')).toBe('Ctrl + U');
+  });
+
+  it('matches alignment and distribution shortcuts', () => {
+    const alignLeft = findMatchingShortcut(
+      {
+        code: 'ArrowLeft',
+        metaKey: false,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: true,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    const distributeBottom = findMatchingShortcut(
+      {
+        code: 'ArrowDown',
+        metaKey: true,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: true,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'mac',
+    );
+
+    expect(alignLeft?.id).toBe('alignSelectionLeft');
+    expect(distributeBottom?.id).toBe('distributeSelectionBottom');
+    expect(getShortcutLabel('alignSelectionCenterX', 'mac')).toBe('Cmd + Alt + H');
+    expect(getShortcutLabel('distributeSelectionVertical', 'other')).toBe('Ctrl + Shift + Alt + V');
+  });
+
+  it('lists multi-select click modifiers in the shortcut help gestures', () => {
+    expect(SHORTCUT_GESTURES).toContainEqual({
+      label: 'Cmd/Ctrl + Click / Shift + Click',
+      description: 'Toggle multi-select',
+    });
   });
 });

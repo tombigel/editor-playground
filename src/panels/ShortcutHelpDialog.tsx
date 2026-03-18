@@ -11,8 +11,8 @@ export function ShortcutHelpDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         backdropVariant="transparent"
-        surfaceClassName="bg-transparent p-6 backdrop-blur-none"
-        className="editor-shortcut-help max-w-3xl gap-5"
+        surfaceClassName="bg-transparent p-5 backdrop-blur-none"
+        className="editor-shortcut-help max-h-[calc(100vh-1.5rem)] max-w-4xl gap-3 overflow-y-auto"
       >
         <DialogHeader>
           <DialogTitle>Keyboard Shortcuts</DialogTitle>

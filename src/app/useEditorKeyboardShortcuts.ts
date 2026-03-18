@@ -2,11 +2,13 @@ import { useEffect } from 'react';
 import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
+import type { AlignmentAction, DistributionMode } from './types';
 import { hasStageKeyboardFocus, isInteractiveFocus } from './useEditorEnvironment';
 
 type UseEditorKeyboardShortcutsArgs = {
   document: DocumentModel;
   selectedId: string | null;
+  selectedIds: string[];
   ui: ShortcutUiState;
   hasDismissiblePanels: boolean;
   shortcutPlatform: ShortcutPlatform;
@@ -21,6 +23,12 @@ type UseEditorKeyboardShortcutsArgs = {
   onSetSnapEnabled: (value: boolean) => void;
   onNudgeSelection: (deltaX: number, deltaY: number) => void;
   onDeleteSelection: () => void;
+  onToggleBoldSelection: () => void;
+  onToggleItalicSelection: () => void;
+  onToggleUnderlineSelection: () => void;
+  onToggleStrikethroughSelection: () => void;
+  onAlignSelection: (mode: AlignmentAction) => void;
+  onDistributeSelection: (mode: DistributionMode) => void;
   onOrderBack: () => void;
   onOrderForward: () => void;
   onOrderSendToBack: () => void;
@@ -30,6 +38,7 @@ type UseEditorKeyboardShortcutsArgs = {
 export function useEditorKeyboardShortcuts({
   document,
   selectedId,
+  selectedIds,
   ui,
   hasDismissiblePanels,
   shortcutPlatform,
@@ -44,6 +53,12 @@ export function useEditorKeyboardShortcuts({
   onSetSnapEnabled,
   onNudgeSelection,
   onDeleteSelection,
+  onToggleBoldSelection,
+  onToggleItalicSelection,
+  onToggleUnderlineSelection,
+  onToggleStrikethroughSelection,
+  onAlignSelection,
+  onDistributeSelection,
   onOrderBack,
   onOrderForward,
   onOrderSendToBack,
@@ -72,7 +87,7 @@ export function useEditorKeyboardShortcuts({
         event,
         {
           interactiveFocus,
-          hasSelection: Boolean(selectedId),
+          hasSelection: selectedIds.length > 0,
           hasDismissiblePanels,
           hasStageFocus: stageFocus,
         },
@@ -95,6 +110,12 @@ export function useEditorKeyboardShortcuts({
         setSnapEnabled: onSetSnapEnabled,
         nudgeSelection: onNudgeSelection,
         deleteSelection: onDeleteSelection,
+        toggleBoldSelection: onToggleBoldSelection,
+        toggleItalicSelection: onToggleItalicSelection,
+        toggleUnderlineSelection: onToggleUnderlineSelection,
+        toggleStrikethroughSelection: onToggleStrikethroughSelection,
+        alignSelection: onAlignSelection,
+        distributeSelection: onDistributeSelection,
         orderBack: onOrderBack,
         orderForward: onOrderForward,
         orderSendToBack: onOrderSendToBack,
@@ -109,8 +130,10 @@ export function useEditorKeyboardShortcuts({
     hasDismissiblePanels,
     onClosePanels,
     onDeleteSelection,
+    onDistributeSelection,
     onNudgeSelection,
     onOpenShortcutHelp,
+    onAlignSelection,
     onOrderBack,
     onOrderBringToFront,
     onOrderForward,
@@ -120,9 +143,14 @@ export function useEditorKeyboardShortcuts({
     onSetPreviewSticky,
     onSetSnapEnabled,
     onSetSpacerVisibility,
+    onToggleBoldSelection,
+    onToggleItalicSelection,
     onToggleSettings,
+    onToggleStrikethroughSelection,
+    onToggleUnderlineSelection,
     onUndo,
     selectedId,
+    selectedIds,
     shortcutPlatform,
     ui,
   ]);

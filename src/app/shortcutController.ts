@@ -48,6 +48,54 @@ export function executeEditorShortcut(
     case 'deleteSelection':
       handlers.deleteSelection();
       return;
+    case 'toggleBoldSelection':
+      handlers.toggleBoldSelection();
+      return;
+    case 'toggleItalicSelection':
+      handlers.toggleItalicSelection();
+      return;
+    case 'toggleUnderlineSelection':
+      handlers.toggleUnderlineSelection();
+      return;
+    case 'toggleStrikethroughSelection':
+      handlers.toggleStrikethroughSelection();
+      return;
+    case 'alignSelectionLeft':
+      handlers.alignSelection('left');
+      return;
+    case 'alignSelectionCenterX':
+      handlers.alignSelection('center-x');
+      return;
+    case 'alignSelectionRight':
+      handlers.alignSelection('right');
+      return;
+    case 'alignSelectionTop':
+      handlers.alignSelection('top');
+      return;
+    case 'alignSelectionCenterY':
+      handlers.alignSelection('center-y');
+      return;
+    case 'alignSelectionBottom':
+      handlers.alignSelection('bottom');
+      return;
+    case 'distributeSelectionHorizontal':
+      handlers.distributeSelection('horizontal');
+      return;
+    case 'distributeSelectionVertical':
+      handlers.distributeSelection('vertical');
+      return;
+    case 'distributeSelectionLeft':
+      handlers.distributeSelection('left');
+      return;
+    case 'distributeSelectionRight':
+      handlers.distributeSelection('right');
+      return;
+    case 'distributeSelectionTop':
+      handlers.distributeSelection('top');
+      return;
+    case 'distributeSelectionBottom':
+      handlers.distributeSelection('bottom');
+      return;
     case 'orderBack':
       handlers.orderBack();
       return;
