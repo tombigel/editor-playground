@@ -764,7 +764,7 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   const insertAt = footerIndex >= 0 ? footerIndex : root.children.length;
   root.children.splice(insertAt, 0, wrapper.id);
 
-  return applySelectionToDocument(state, document, [wrapper.id]);
+  return applySelectionToDocument(state, normalizeDocumentFontState(document), [wrapper.id]);
 }
 
 export function insertLeaf(state: EditorState, role: LeafRole): EditorState {

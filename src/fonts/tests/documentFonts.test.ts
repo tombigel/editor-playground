@@ -10,7 +10,13 @@ import {
   removeDocumentFontFamily,
   toggleDocumentFontFavorite,
 } from '../documentFonts';
-import { buildDocumentGoogleFontsStylesheetHref, buildEditorGoogleFontsStylesheetHref, collectDocumentFontRequests } from '../googleCss';
+import {
+  buildDocumentGoogleFontsStylesheetHref,
+  buildEditorGoogleFontsStylesheetHref,
+  buildFontPickerPreviewStylesheetHref,
+  collectDocumentFontRequests,
+} from '../googleCss';
+import { getBundledGoogleFontsCatalog } from '../googleFontsCatalog';
 import { getSupportedFontWeights, getFontWeightLabel, listFontWeightOptions, toggleBoldFontWeight } from '../weights';
 
 describe('fonts/documentFonts', () => {
@@ -88,6 +94,44 @@ describe('fonts/documentFonts', () => {
     expect(getDocumentFontFamily(normalized, 'Custom Sans')).toMatchObject({
       family: 'Custom Sans',
       variants: ['regular'],
+    });
+  });
+
+  it('resolves authored bundled Google fonts into full metadata during normalization', () => {
+    const document = createInitialDocument();
+    const bundledFamily = getBundledGoogleFontsCatalog().families.find((family) => family.family === 'Open Sans');
+    const postTitle = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    );
+
+    if (!bundledFamily || !postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
+      throw new Error('Expected bundled Open Sans metadata and a text node');
+    }
+
+    postTitle.style ??= {};
+    postTitle.style.fontFamily = bundledFamily.family;
+    document.fontLibrary.usedFamilies = document.fontLibrary.usedFamilies.filter((family) => family.family !== bundledFamily.family);
+    document.fontLibrary.usedFamilies.push({
+      family: bundledFamily.family,
+      category: 'sans-serif',
+      subsets: [],
+      variants: ['regular'],
+      isVariable: false,
+      source: 'google-fonts',
+      favorite: false,
+      origin: 'added',
+    });
+
+    const normalized = normalizeDocumentFontState(document);
+
+    expect(getDocumentFontFamily(normalized, bundledFamily.family)).toMatchObject({
+      family: bundledFamily.family,
+      category: bundledFamily.category,
+      subsets: bundledFamily.subsets,
+      variants: bundledFamily.variants,
+      isVariable: bundledFamily.isVariable,
+      axes: bundledFamily.axes,
+      source: 'google-fonts',
     });
   });
 
@@ -233,5 +277,20 @@ describe('fonts/documentFonts', () => {
       { value: 700, label: 'Bold' },
       { value: 800, label: 'Extra Bold' },
     ]);
+  });
+
+  it('requests all visible static weights for the active picker family preview', () => {
+    const crimsonText = getDocumentFontFamily(createInitialDocument(), 'Crimson Text');
+    if (!crimsonText) {
+      throw new Error('Expected Crimson Text family');
+    }
+
+    const href = buildFontPickerPreviewStylesheetHref({
+      families: [crimsonText],
+      activeFamilyName: 'Crimson Text',
+      activeWeights: [300, 400, 700, 900],
+    });
+
+    expect(href).toContain('family=Crimson+Text%3Awght%40300%3B400%3B700%3B900');
   });
 });

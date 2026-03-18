@@ -1,6 +1,10 @@
 import type { NodeId } from './types';
 import { createDefaultRect, createWrapper } from './defaultFactories';
 import { applyPadding, buildTemplate, createLinkNode, createTextNode } from './templateHelpers';
+import { parseFontSizeValue } from './units';
+
+const EDITORIAL_HEADING_FONT = 'Playfair Display';
+const EDITORIAL_BODY_FONT = 'Inter';
 
 export function createDefaultHeader(parentId: NodeId) {
   const header = createWrapper('header', parentId);
@@ -16,7 +20,14 @@ export function createDefaultHeader(parentId: NodeId) {
     x: '62px',
     y: '25.5px',
     width: 'fit-content',
-    style: { color: '#0f172a', fontSize: '20px', fontWeight: 700, htmlTag: 'h1' },
+    style: {
+      color: '#0f172a',
+      fontFamily: EDITORIAL_HEADING_FONT,
+      fontSize: '24px',
+      fontWeight: 700,
+      lineHeight: 1.08,
+      htmlTag: 'h1',
+    },
   });
 
   const headerSubtitle = createTextNode(header.id, {
@@ -25,7 +36,12 @@ export function createDefaultHeader(parentId: NodeId) {
     x: '61px',
     y: '60px',
     width: 'fit-content',
-    style: { color: '#516174', fontSize: '14px' },
+    style: {
+      color: '#516174',
+      fontFamily: EDITORIAL_BODY_FONT,
+      fontSize: '14px',
+      lineHeight: 1.5,
+    },
   });
 
   const navTemplates = createLinkNode(header.id, {
@@ -52,6 +68,13 @@ export function createDefaultHeader(parentId: NodeId) {
     width: '144px',
     height: '24px',
   });
+  for (const link of [navTemplates, navSticky, navTests]) {
+    link.style ??= {};
+    link.style.fontFamily = EDITORIAL_BODY_FONT;
+    link.style.fontSize = parseFontSizeValue('14px');
+    link.style.fontWeight = 600;
+    link.style.lineHeight = 1.35;
+  }
 
   return buildTemplate(header, [headerLogo, headerSubtitle, navTemplates, navSticky, navTests]);
 }
@@ -70,7 +93,14 @@ export function createDefaultFooter(parentId: NodeId) {
     x: '67px',
     y: '28px',
     width: 'fit-content',
-    style: { color: '#0f172a', fontSize: '16px', fontWeight: 700, lineHeight: 1.2, htmlTag: 'h2' },
+    style: {
+      color: '#0f172a',
+      fontFamily: EDITORIAL_HEADING_FONT,
+      fontSize: '18px',
+      fontWeight: 700,
+      lineHeight: 1.1,
+      htmlTag: 'h2',
+    },
   });
 
   const footerCopy = createTextNode(footer.id, {
@@ -80,7 +110,12 @@ export function createDefaultFooter(parentId: NodeId) {
     y: '53px',
     width: '271px',
     height: '38px',
-    style: { color: '#475569', fontSize: '14px', lineHeight: 1.3 },
+    style: {
+      color: '#475569',
+      fontFamily: EDITORIAL_BODY_FONT,
+      fontSize: '14px',
+      lineHeight: 1.5,
+    },
   });
 
   const footerLink = createLinkNode(footer.id, {
@@ -92,6 +127,11 @@ export function createDefaultFooter(parentId: NodeId) {
     width: '322px',
     height: '24px',
   });
+  footerLink.style ??= {};
+  footerLink.style.fontFamily = EDITORIAL_BODY_FONT;
+  footerLink.style.fontSize = parseFontSizeValue('14px');
+  footerLink.style.fontWeight = 500;
+  footerLink.style.lineHeight = 1.35;
 
   return buildTemplate(footer, [footerTitle, footerCopy, footerLink]);
 }

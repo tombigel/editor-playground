@@ -108,6 +108,7 @@ export function styleText(
   leaf: TextLeaf,
   options: {
     color?: string;
+    fontFamily?: string;
     fontSize?: string;
     fontWeight?: number;
     lineHeight?: number;
@@ -117,6 +118,9 @@ export function styleText(
   leaf.style ??= {};
   if (options.color) {
     leaf.style.color = options.color;
+  }
+  if (options.fontFamily) {
+    leaf.style.fontFamily = options.fontFamily;
   }
   if (options.fontSize) {
     leaf.style.fontSize = parseFontSizeValue(options.fontSize);

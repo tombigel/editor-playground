@@ -24,6 +24,14 @@ describe('site/siteExport', () => {
     expect(html).toContain('<main class="sp-site-main">');
   });
 
+  it('links the seeded Google Fonts needed by the default typography pairings', () => {
+    const html = renderSiteHtmlDocument(createInitialDocument());
+
+    expect(html).toContain('fonts.googleapis.com/css2');
+    expect(html).toContain('family=Playfair+Display');
+    expect(html).toContain('family=Inter');
+  });
+
   it('generates text styling in css instead of inline styles', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
@@ -62,11 +70,12 @@ describe('site/siteExport', () => {
     target.style = {};
 
     const css = renderSiteCss(document);
+    const targetRule = css.match(new RegExp(`\\.sp-node-${target.id}\\.sp-role-text[^}]+\\}`, 'm'))?.[0] ?? '';
 
-    expect(css).toContain(`.sp-node-${target.id}.sp-role-text`);
-    expect(css).not.toContain('color: #16202a;');
-    expect(css).not.toContain('font-size: 18px;');
-    expect(css).not.toContain('letter-spacing: -0.02em;');
+    expect(targetRule).toContain(`.sp-node-${target.id}.sp-role-text`);
+    expect(targetRule).not.toContain('color: #16202a;');
+    expect(targetRule).not.toContain('font-size: 18px;');
+    expect(targetRule).not.toContain('letter-spacing: -0.02em;');
   });
 
   it('exports custom text and link design styles including filter shadows', () => {

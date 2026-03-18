@@ -50,13 +50,18 @@ Font library fields:
 - `usedFamilies`
 - `favorites`
 
-New documents seed these Google-backed defaults:
+New documents seed these Google-backed starter families:
 
 - `Inter`
-- `Roboto`
-- `Lora`
-- `Playfair Display`
 - `Assistant`
+- `Playfair Display`
+- `Cormorant Garamond`
+- `Proza Libre`
+- `Poppins`
+- `Open Sans`
+- `Fraunces`
+- `Montserrat`
+- `Crimson Text`
 
 Font library behavior:
 
@@ -66,6 +71,7 @@ Font library behavior:
 - removing a font family is blocked while any text-capable node still uses it
 - purge-unused removes only unused families that are neither defaults nor favorites
 - imported legacy text weights such as `'bold'` and `'normal'` are normalized to numeric weights
+- document normalization resolves missing or stubbed Google-backed family names against the bundled catalog before falling back to a minimal placeholder entry
 
 ## Wrapper Model
 
@@ -328,6 +334,7 @@ Typography picker behavior:
 - the open picker marks the currently selected family and weight with a left-aligned check icon
 - the weight dropdown shows readable names (`Light`, `Normal`, `Bold`, etc.) while still authoring numeric values
 - weight options preview in the currently selected family at their own weight
+- while the combined picker is open, it injects a lightweight preview stylesheet for the visible families and all visible weights of the active family so weight previews do not wait for selection
 - the family picker exposes a manage-fonts icon button next to the family/weight controls
 - the weight picker authors numeric values from `100` to `900`
 - variable families expose stepped weight options across their supported range
@@ -618,10 +625,19 @@ Current templates:
 - `Sticky Media Reveal`
 - `Sticky Edge Lab`
 
+Typography pairings:
+
+- default header/footer chrome and `Post`: `Playfair Display` headings with `Inter` body/link styles
+- `Sticky Staggered Images`: `Cormorant Garamond` headings with `Proza Libre` supporting copy
+- `Sticky Pinned Cards`: `Poppins` lead heading with `Open Sans` body cards/copy
+- `Sticky Media Reveal`: `Fraunces` heading with `Open Sans` narrative blocks
+- `Sticky Edge Lab`: `Montserrat` heading/card labels with `Crimson Text` explainer copy
+
 `Sticky Media Reveal` uses direct sticky image leaves (not wrapper containers around the media) seeded from a locked baseline: pinned media at `x=77`, `y=165`, size `401x428`, sticky `duration=150vh`, `offsetTop=10vh`; reveal backdrop at `x=78`, `y=167`, size `399x426`, sticky `duration=25vh`, `offsetTop=10vh`; narrative blocks at `y=313.640625`, `1035`, `1687` with updated copy, and section child order `heading -> pinned media -> narrative A/B/C -> reveal backdrop`.
-`Sticky Staggered Images` is seeded from the locked staggered-gallery structure (fixed image coordinates and `150vh` duration / `15vh` offset per image).
-`Sticky Pinned Cards` is seeded from the locked pinned-cards baseline (pinned lead at `85/212.28125`, lead sticky `durationMode=auto` + `220vh` duration + `12vh` offset; narrative cards keep fixed coordinates with sticky `25vh/25vh/50vh` durations at `15vh` offset).
-`Sticky Edge Lab` is seeded as a 3-column top/both/bottom comparison. Only the three sticky card texts are wrapped in colored `container` wrappers, and sticky settings live on those card containers: top (`edges.top=true`, `offsetTop=10vh`, `durationTop=140vh`), both (`edges.top=true`, `edges.bottom=true`, `offsetTop=10vh`, `offsetBottom=10vh`, `durationTop=80vh`, `durationBottom=80vh`), and bottom (`edges.bottom=true`, `offsetBottom=10vh`, `durationBottom=140vh`). Baseline alignment is locked, including section height `2480px`, notes `y` values (`972`, `1293`, `1780`), sticky container anchors (`72/362`, `473/761`, `864/1179.9921875`), and footer note at `x=96`, `y=2604.984375`.
+`Post` keeps the editorial title/body/link stack clear with image/title/body/link anchors at `42/57`, `546/57`, `548/226.5`, and `549/350.40625`.
+`Sticky Staggered Images` is seeded from the locked staggered-gallery structure. The image anchors are `64/256.96875`, `332/444.46875`, `610/653.25`, and `884/898.84375` with widths `250`, `248`, `248`, and `208`, and each image keeps the same `150vh` duration / `15vh` offset.
+`Sticky Pinned Cards` is seeded from the locked pinned-cards baseline (pinned lead at `85/212.28125` with width `392`, lead copy at `83/490`, lead sticky `durationMode=auto` + `220vh` duration + `12vh` offset; narrative cards shift left to `x=500`, use width `468`, and keep sticky `25vh/25vh/50vh` durations at `15vh` offset).
+`Sticky Edge Lab` is seeded as a 3-column top/both/bottom comparison. Only the three sticky card texts are wrapped in colored `container` wrappers, and sticky settings live on those card containers: top (`edges.top=true`, `offsetTop=10vh`, `durationTop=140vh`), both (`edges.top=true`, `edges.bottom=true`, `offsetTop=10vh`, `offsetBottom=10vh`, `durationTop=80vh`, `durationBottom=80vh`), and bottom (`edges.bottom=true`, `offsetBottom=10vh`, `durationBottom=140vh`). Baseline alignment is locked, including section height `2480px`, notes `y` values (`972`, `1293`, `1780`), sticky container anchors (`72/362`, `420/761`, `770/1179.9921875`), right-column notes at `x=770` with width `320`, and footer note at `x=96`, `y=2604.984375`.
 
 Future-facing placeholders for scroll-driven animation templates are visible but non-insertable.
 
@@ -633,6 +649,7 @@ Factory seed now uses:
 - text-only header branding (no header image)
 - `Post` section template as the initial main section
 - redesigned project-focused footer
+- authored `Inter` defaults for inserted text, link, and button leaves
 
 When loading persisted legacy starter documents, untouched old default header/footer shells are auto-upgraded in place to the current baseline.
 When loading the untouched original starter document, the legacy single section with placeholder text/button content is replaced with the current `Post` template baseline.

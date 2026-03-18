@@ -23,6 +23,16 @@ import {
 } from './templateHelpers';
 import { parseSpacingValue, parseUnitValue } from './units';
 
+const EDITORIAL_HEADING_FONT = 'Playfair Display';
+const EDITORIAL_BODY_FONT = 'Inter';
+const GALLERY_HEADING_FONT = 'Cormorant Garamond';
+const GALLERY_BODY_FONT = 'Proza Libre';
+const PRODUCT_HEADING_FONT = 'Poppins';
+const PRODUCT_BODY_FONT = 'Open Sans';
+const FEATURE_HEADING_FONT = 'Fraunces';
+const LAB_HEADING_FONT = 'Montserrat';
+const LAB_BODY_FONT = 'Crimson Text';
+
 export const SECTION_TEMPLATES: readonly SectionTemplateSummary[] = [
   {
     id: 'blank',
@@ -100,8 +110,8 @@ function createPostSection(parentId: NodeId): TemplateBuild {
 
   const image = createImageNode(section.id, {
     name: 'Post Image',
-    x: '52px',
-    y: '88px',
+    x: '42px',
+    y: '57px',
     width: '420px',
     height: 'aspect-ratio(4/3)',
   });
@@ -109,14 +119,15 @@ function createPostSection(parentId: NodeId): TemplateBuild {
   const title = createTextNode(section.id, {
     name: 'Post Title',
     content: 'Plan sticky behavior before building scroll-driven animations',
-    x: '544px',
-    y: '118px',
+    x: '546px',
+    y: '57px',
     width: '520px',
     style: {
       color: '#0f172a',
-      fontSize: '44px',
+      fontFamily: EDITORIAL_HEADING_FONT,
+      fontSize: '46px',
       fontWeight: 700,
-      lineHeight: 1.1,
+      lineHeight: 1.08,
       htmlTag: 'h1',
     },
   });
@@ -126,22 +137,27 @@ function createPostSection(parentId: NodeId): TemplateBuild {
     content:
       'Use reusable section templates to validate offset, duration, and sticky overlap behavior before wiring production code.',
     x: '548px',
-    y: '282px',
+    y: '226.5px',
     width: '480px',
     style: {
       color: '#475569',
-      fontSize: '23px',
-      lineHeight: 1.28,
+      fontFamily: EDITORIAL_BODY_FONT,
+      fontSize: '20px',
+      lineHeight: 1.55,
     },
   });
 
   const link = createLinkNode(section.id, {
     name: 'Post Link',
     label: 'Open playground spec',
-    x: '548px',
-    y: '418px',
+    x: '549px',
+    y: '350.40625px',
     width: 'fit-content',
   });
+  link.style ??= {};
+  link.style.fontFamily = EDITORIAL_BODY_FONT;
+  link.style.fontWeight = 600;
+  link.style.lineHeight = 1.35;
 
   return buildTemplate(section, [image, title, body, link]);
 }
@@ -160,7 +176,14 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     y: '22.5px',
     width: '678px',
     height: '194px',
-    style: { color: '#0f172a', fontSize: '52px', fontWeight: 700, lineHeight: 1.06, htmlTag: 'h2' },
+    style: {
+      color: '#0f172a',
+      fontFamily: GALLERY_HEADING_FONT,
+      fontSize: '64px',
+      fontWeight: 700,
+      lineHeight: 0.96,
+      htmlTag: 'h2',
+    },
   });
 
   const copy = createTextNode(section.id, {
@@ -169,7 +192,12 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
     x: '68px',
     y: '92px',
     width: '540px',
-    style: { color: '#475569', fontSize: '22px', lineHeight: 1.26 },
+    style: {
+      color: '#475569',
+      fontFamily: GALLERY_BODY_FONT,
+      fontSize: '19px',
+      lineHeight: 1.55,
+    },
   });
 
   const imageA = createImageNode(section.id, {
@@ -185,9 +213,9 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
 
   const imageB = createImageNode(section.id, {
     name: 'Sticky Image B',
-    x: '340px',
+    x: '332px',
     y: '444.46875px',
-    width: '260px',
+    width: '248px',
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80',
     alt: 'Mist rising over a calm mountain lake',
@@ -196,9 +224,9 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
 
   const imageC = createImageNode(section.id, {
     name: 'Sticky Image C',
-    x: '638px',
+    x: '610px',
     y: '653.25px',
-    width: '270px',
+    width: '248px',
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
     alt: 'Modern interior with natural light and textured seating',
@@ -207,9 +235,9 @@ function createStickyStaggeredImagesSection(parentId: NodeId): TemplateBuild {
 
   const imageD = createImageNode(section.id, {
     name: 'Sticky Image D',
-    x: '949px',
+    x: '884px',
     y: '898.84375px',
-    width: '220px',
+    width: '208px',
     height: 'aspect-ratio(4/3)',
     src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
     alt: 'Golden desert dunes under soft sunlight',
@@ -231,9 +259,16 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     content: 'One pinned message, many scrolling details',
     x: '85px',
     y: '212.28125px',
-    width: '360px',
+    width: '392px',
     height: '234px',
-    style: { color: '#0f172a', fontSize: '46px', fontWeight: 700, lineHeight: 1.06, htmlTag: 'h2' },
+    style: {
+      color: '#0f172a',
+      fontFamily: PRODUCT_HEADING_FONT,
+      fontSize: '44px',
+      fontWeight: 700,
+      lineHeight: 1.02,
+      htmlTag: 'h2',
+    },
   });
   lead.sticky = createTopSticky({
     duration: '220vh',
@@ -245,22 +280,27 @@ function createStickyPinnedCardsSection(parentId: NodeId): TemplateBuild {
     name: 'Pinned Lead Copy',
     content: 'Use this to validate long sticky durations while content cards keep moving.',
     x: '83px',
-    y: '373px',
-    width: '340px',
-    style: { color: '#475569', fontSize: '18px', lineHeight: 1.3 },
+    y: '490px',
+    width: '352px',
+    style: {
+      color: '#475569',
+      fontFamily: PRODUCT_BODY_FONT,
+      fontSize: '17px',
+      lineHeight: 1.55,
+    },
   });
 
-  const card1 = createNarrativeCard(section.id, 'Narrative Card 1', 'Card 1\nTune offsets and verify the spacer end-line for the pinned lead.', '520px', '235.71875px');
+  const card1 = createNarrativeCard(section.id, 'Narrative Card 1', 'Card 1\nTune offsets and verify the spacer end-line for the pinned lead.', '500px', '235.71875px');
   card1.sticky = createTopSticky({ duration: '25vh', offsetTop: '15vh' });
 
-  const card2 = createNarrativeCard(section.id, 'Narrative Card 2', 'Card 2\nCheck snapping around sticky tracks while moving this block.', '520px', '700px');
+  const card2 = createNarrativeCard(section.id, 'Narrative Card 2', 'Card 2\nCheck snapping around sticky tracks while moving this block.', '500px', '700px');
   card2.sticky = createTopSticky({ duration: '25vh', offsetTop: '15vh' });
 
   const card3 = createNarrativeCard(
     section.id,
     'Narrative Card 3',
     'Card 3\nUse this section to regression-test reorder, resize, and undo behavior.',
-    '520px',
+    '500px',
     '1211.84375px',
     '201px',
   );
@@ -282,7 +322,14 @@ function createStickyMediaRevealSection(parentId: NodeId): TemplateBuild {
     x: '558px',
     y: '165px',
     width: '520px',
-    style: { color: '#0f172a', fontSize: '44px', fontWeight: 700, lineHeight: 1.1, htmlTag: 'h2' },
+    style: {
+      color: '#0f172a',
+      fontFamily: FEATURE_HEADING_FONT,
+      fontSize: '48px',
+      fontWeight: 700,
+      lineHeight: 1.04,
+      htmlTag: 'h2',
+    },
   });
 
   const mediaImage = createImageNode(section.id, {
@@ -349,7 +396,14 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     'Section Heading',
     { x: '72px', y: '86px', width: '980px' },
     'Sticky edge lab: top, both, bottom',
-    { color: '#0f172a', fontSize: '48px', fontWeight: 700, lineHeight: 1.04, htmlTag: 'h2' },
+    {
+      color: '#0f172a',
+      fontFamily: LAB_HEADING_FONT,
+      fontSize: '46px',
+      fontWeight: 700,
+      lineHeight: 1.04,
+      htmlTag: 'h2',
+    },
   );
 
   const intro = createSectionText(
@@ -357,7 +411,12 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     'Section Intro',
     { x: '74px', y: '170px', width: '980px' },
     'Use one section to compare sticky behavior for top, both, and bottom edges with the same viewport and drag context.',
-    { color: '#475569', fontSize: '22px', lineHeight: 1.24 },
+    {
+      color: '#475569',
+      fontFamily: LAB_BODY_FONT,
+      fontSize: '24px',
+      lineHeight: 1.34,
+    },
   );
 
   const topNotes = createSectionText(
@@ -365,23 +424,38 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     'Top Column Notes',
     { x: '78px', y: '972px', width: '330px' },
     'Top notes\nUse this column to verify top-edge pinning, offset marker placement, and drag snapping around a single top constraint.',
-    { color: '#0f172a', fontSize: '22px', lineHeight: 1.22 },
+    {
+      color: '#0f172a',
+      fontFamily: LAB_BODY_FONT,
+      fontSize: '24px',
+      lineHeight: 1.26,
+    },
   );
 
   const bothNotes = createSectionText(
     section.id,
     'Both Column Notes',
-    { x: '473px', y: '1293px', width: '330px' },
+    { x: '420px', y: '1293px', width: '330px' },
     'Both notes\nAdjust dual offsets and split durations to validate the combined top+bottom constraint and dual guide rendering.',
-    { color: '#0f172a', fontSize: '22px', lineHeight: 1.22 },
+    {
+      color: '#0f172a',
+      fontFamily: LAB_BODY_FONT,
+      fontSize: '24px',
+      lineHeight: 1.26,
+    },
   );
 
   const bottomNotes = createSectionText(
     section.id,
     'Bottom Column Notes',
-    { x: '870px', y: '1780px', width: '330px' },
+    { x: '770px', y: '1780px', width: '320px' },
     'Bottom notes\nCheck bottom-edge pinning, spacer direction, and that repeated drags do not introduce hidden Y feedback loops.',
-    { color: '#0f172a', fontSize: '22px', lineHeight: 1.22 },
+    {
+      color: '#0f172a',
+      fontFamily: LAB_BODY_FONT,
+      fontSize: '24px',
+      lineHeight: 1.26,
+    },
   );
 
   const footerNote = createSectionText(
@@ -389,7 +463,12 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
     'Section Footer Note',
     { x: '96px', y: '2604.984375px', width: '1120px', height: '44px' },
     'Tip: select each card and switch edge/offset/duration values in the inspector to compare how spacer and offset visuals respond.',
-    { color: '#475569', fontSize: '18px', lineHeight: 1.26 },
+    {
+      color: '#475569',
+      fontFamily: LAB_BODY_FONT,
+      fontSize: '20px',
+      lineHeight: 1.32,
+    },
   );
 
   const topCardContainer = createStickyCardContainer(section.id, {
@@ -411,7 +490,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
   const bothCardContainer = createStickyCardContainer(section.id, {
     containerName: 'Both Edges Card Container',
     textName: 'Both Edges Card',
-    x: '473px',
+    x: '420px',
     y: '761px',
     width: '330px',
     height: '201px',
@@ -434,7 +513,7 @@ function createStickyStepsSection(parentId: NodeId): TemplateBuild {
   const bottomCardContainer = createStickyCardContainer(section.id, {
     containerName: 'Bottom Edge Card Container',
     textName: 'Bottom Edge Card',
-    x: '864px',
+    x: '770px',
     y: '1179.9921875px',
     width: '330px',
     height: '146px',
@@ -487,9 +566,15 @@ function createNarrativeCard(parentId: NodeId, name: string, content: string, x:
     content,
     x,
     y,
-    width: '520px',
+    width: '468px',
     height,
-    style: { color: '#0f172a', fontSize: '26px', lineHeight: 1.2 },
+    style: {
+      color: '#0f172a',
+      fontFamily: PRODUCT_BODY_FONT,
+      fontSize: '24px',
+      fontWeight: 500,
+      lineHeight: 1.36,
+    },
   });
 }
 
@@ -501,7 +586,13 @@ function createNarrativeBlock(parentId: NodeId, name: string, content: string, x
     y,
     width: '530px',
     height,
-    style: { color: '#0f172a', fontSize: '24px', lineHeight: 1.22 },
+    style: {
+      color: '#0f172a',
+      fontFamily: PRODUCT_BODY_FONT,
+      fontSize: '24px',
+      lineHeight: 1.42,
+      fontWeight: 500,
+    },
   });
 }
 
@@ -560,7 +651,13 @@ function createStickyCardContainer(
     y: options.textY,
     width: options.textWidth,
     height: options.textHeight,
-    style: { color: '#0f172a', fontSize: '24px', fontWeight: 700, lineHeight: 1.18 },
+    style: {
+      color: '#0f172a',
+      fontFamily: LAB_HEADING_FONT,
+      fontSize: '23px',
+      fontWeight: 700,
+      lineHeight: 1.18,
+    },
   });
 
   setChildren(container, [text]);

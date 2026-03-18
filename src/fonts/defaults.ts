@@ -1,67 +1,42 @@
 import type { DocumentFontFamily, DocumentModel, FontLibrary } from '../model/types';
+import { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
 
-export const DEFAULT_DOCUMENT_FONT_FAMILIES: DocumentFontFamily[] = [
-  {
-    family: 'Inter',
-    category: 'sans-serif',
-    subsets: ['latin', 'latin-ext'],
-    variants: ['100', '200', '300', 'regular', '500', '600', '700', '800', '900'],
-    isVariable: true,
-    axes: [{ tag: 'wght', min: 100, max: 900 }],
-    source: 'google-fonts',
-    favorite: false,
-    origin: 'default',
-  },
-  {
-    family: 'Roboto',
-    category: 'sans-serif',
-    subsets: ['latin', 'latin-ext'],
-    variants: ['100', '300', 'regular', '500', '700', '900'],
-    isVariable: false,
-    source: 'google-fonts',
-    favorite: false,
-    origin: 'default',
-  },
-  {
-    family: 'Lora',
-    category: 'serif',
-    subsets: ['latin', 'latin-ext'],
-    variants: ['regular', '500', '600', '700'],
-    isVariable: true,
-    axes: [{ tag: 'wght', min: 400, max: 700 }],
-    source: 'google-fonts',
-    favorite: false,
-    origin: 'default',
-  },
-  {
-    family: 'Playfair Display',
-    category: 'serif',
-    subsets: ['latin', 'latin-ext'],
-    variants: ['regular', '500', '600', '700', '800', '900'],
-    isVariable: true,
-    axes: [{ tag: 'wght', min: 400, max: 900 }],
-    source: 'google-fonts',
-    favorite: false,
-    origin: 'default',
-  },
-  {
-    family: 'Assistant',
-    category: 'sans-serif',
-    subsets: ['hebrew', 'latin', 'latin-ext'],
-    variants: ['200', '300', 'regular', '500', '600', '700', '800'],
-    isVariable: true,
-    axes: [{ tag: 'wght', min: 200, max: 800 }],
-    source: 'google-fonts',
-    favorite: false,
-    origin: 'default',
-  },
-];
+const DEFAULT_DOCUMENT_FONT_DEFAULTS = ['Inter', 'Assistant'] as const;
+const DEFAULT_DOCUMENT_FONT_FAMILY_NAMES = [
+  'Inter',
+  'Assistant',
+  'Playfair Display',
+  'Cormorant Garamond',
+  'Proza Libre',
+  'Poppins',
+  'Open Sans',
+  'Fraunces',
+  'Montserrat',
+  'Crimson Text',
+] as const;
+
+const BUNDLED_GOOGLE_FONTS_CATALOG = getBundledGoogleFontsCatalog();
+
+export const DEFAULT_DOCUMENT_FONT_FAMILIES: DocumentFontFamily[] = DEFAULT_DOCUMENT_FONT_FAMILY_NAMES.flatMap((familyName) => {
+  const family = BUNDLED_GOOGLE_FONTS_CATALOG.families.find((entry) => entry.family === familyName);
+  if (!family) {
+    return [];
+  }
+
+  return [
+    {
+      ...structuredClone(family),
+      favorite: false,
+      origin: 'default',
+    },
+  ];
+});
 
 export const DEFAULT_FONT_FALLBACK_STACK = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
 export function createDefaultFontLibrary(): FontLibrary {
   return {
-    defaults: DEFAULT_DOCUMENT_FONT_FAMILIES.map((family) => family.family),
+    defaults: [...DEFAULT_DOCUMENT_FONT_DEFAULTS],
     favorites: [],
     usedFamilies: DEFAULT_DOCUMENT_FONT_FAMILIES.map((family) => structuredClone(family)),
   };

@@ -172,7 +172,20 @@ describe('editor/editorStore integration', () => {
     expect(next.document.fontLibrary.usedFamilies.find((family) => family.family === 'Inter')).toMatchObject({
       family: 'Inter',
       isVariable: true,
-      variants: ['100', '200', '300', 'regular', '500', '600', '700', '800', '900'],
+      variants: ['italic', 'regular'],
+      axes: expect.arrayContaining([expect.objectContaining({ tag: 'wght', min: 100, max: 900 })]),
+    });
+  });
+
+  it('re-registers template font families when inserting a section template', () => {
+    const state = createInitialState();
+    state.document.fontLibrary.usedFamilies = state.document.fontLibrary.usedFamilies.filter((family) => family.family !== 'Fraunces');
+
+    const next = insertSectionTemplate(state, 'stickyMediaReveal');
+
+    expect(next.document.fontLibrary.usedFamilies.find((family) => family.family === 'Fraunces')).toMatchObject({
+      family: 'Fraunces',
+      origin: 'default',
     });
   });
 

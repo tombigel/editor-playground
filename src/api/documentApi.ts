@@ -441,5 +441,5 @@ export function insertSectionTemplateBeforeFooter(
   root.children.splice(insertionIndex, 0, build.wrapper.id);
   Object.assign(next.nodes, build.nodes);
 
-  return next;
+  return normalizeDocumentFontState(next);
 }
