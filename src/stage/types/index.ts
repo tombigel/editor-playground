@@ -70,6 +70,8 @@ export type ResizeState = {
   originHeight: number;
   originX: number;
   originY: number;
+  minWidth?: number;
+  minHeight?: number;
 } | null;
 
 export type SnapGuides = {

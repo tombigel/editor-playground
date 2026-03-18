@@ -36,6 +36,7 @@ import { buildRenderRootPlan } from '../render/renderPlan';
 import { getStickyCssProperties, getStickyEdgeMode, usesSyntheticStickyTrack } from '../render/sticky';
 import type { RenderLeafPlanNode } from '../render/types';
 import {
+  getStructuralResizeMinHeight,
   getResizeStartSize,
   numericHeight,
   numericWidth,
@@ -295,6 +296,7 @@ function renderWrapper({
   const draggedNodeIds = dragState?.draggedNodeIds ?? (dragState ? [dragState.nodeId] : []);
   const Tag = plan.tag;
   const meshLayout = plan.meshLayout;
+  const wrapperResizeHandles = getWrapperResizeHandles(node, plan.isTopLevel);
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, node.id);
   const isStickyContentWrapper = plan.contentSticky;
@@ -445,8 +447,9 @@ function renderWrapper({
               }),
         )}
       </div>
-      {selectedIds.length === 1 && selectedId === node.id && !plan.isTopLevel ? (
+      {selectedIds.length === 1 && selectedId === node.id && wrapperResizeHandles.length > 0 ? (
         <ResizeHandleView
+          handles={wrapperResizeHandles}
           onHandleMouseDown={(handle, event) => {
             event.stopPropagation();
             onResizeStart(node.id);
@@ -462,6 +465,9 @@ function renderWrapper({
               originHeight: startSize.height,
               originX: parseFloat(node.rect.x.base.raw) || 0,
               originY: parseFloat(node.rect.y.base.raw) || 0,
+              minHeight: isStructuralTopLevelWrapper(node, plan.isTopLevel)
+                ? getStructuralResizeMinHeight(event.currentTarget, startSize.height)
+                : undefined,
             });
           }}
         />
@@ -1083,11 +1089,12 @@ function renderStickyTrackShell({
 }
 
 function ResizeHandleView({
+  handles = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'],
   onHandleMouseDown,
 }: {
+  handles?: ResizeHandle[];
   onHandleMouseDown: (handle: ResizeHandle, event: MouseEvent<HTMLDivElement>) => void;
 }) {
-  const handles: ResizeHandle[] = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
   return (
     <>
       {handles.map((handle) => (
@@ -1100,6 +1107,22 @@ function ResizeHandleView({
       ))}
     </>
   );
+}
+
+function isStructuralTopLevelWrapper(node: WrapperNode, isTopLevel: boolean) {
+  return isTopLevel && (node.role === 'section' || node.role === 'header' || node.role === 'footer');
+}
+
+function getWrapperResizeHandles(node: WrapperNode, isTopLevel: boolean): ResizeHandle[] {
+  if (isStructuralTopLevelWrapper(node, isTopLevel)) {
+    return usesAspectRatioHeight(node) ? [] : ['s'];
+  }
+
+  return isTopLevel ? [] : ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
+}
+
+function usesAspectRatioHeight(node: WrapperNode) {
+  return !('unit' in node.rect.height.base.parsed) && node.rect.height.base.parsed.keyword === 'aspect-ratio';
 }
 
 function shouldShowSpacerVisuals(

@@ -9,6 +9,7 @@ import {
   didDragPointerMove,
   findDropWrapper,
   getResizeCommitSize,
+  measureCssViewport,
   measureStageViewport,
   measureStageNodeSizes,
   px,
@@ -286,6 +287,7 @@ export function Stage({
           const originY = Math.round(resizeState.originY);
           const resizedNode = document.nodes[resizeState.nodeId];
           if (resizedNode && resizedNode.type !== 'site') {
+            const cssViewport = measureCssViewport(stageRef.current, viewport);
             const commit = getResizeCommitSize(
               resizedNode,
               resizeState,
@@ -293,7 +295,7 @@ export function Stage({
               nextHeight,
               document,
               measuredNodeSizes,
-              viewport,
+              cssViewport,
             );
             onResize(resizeState.nodeId, commit.width, commit.height);
           }

@@ -62,6 +62,51 @@ export function getResizeStartSize(handleElement: HTMLDivElement, fallbackWidth:
   };
 }
 
+export function getStructuralResizeMinHeight(handleElement: HTMLDivElement, fallbackHeight: number) {
+  const nodeElement = handleElement.closest<HTMLElement>('[data-node-id]');
+  if (!nodeElement) {
+    return fallbackHeight;
+  }
+
+  const nodeId = nodeElement.dataset.nodeId;
+  const contentWrapper =
+    nodeId && nodeElement.classList.contains('stage-wrapper')
+      ? nodeElement.querySelector<HTMLElement>(`[data-content-wrapper-for="${nodeId}"]`)
+      : null;
+  if (!contentWrapper) {
+    return fallbackHeight;
+  }
+
+  const ownerDocument = contentWrapper.ownerDocument;
+  const defaultView = ownerDocument.defaultView;
+  const contentWrapperRect = contentWrapper.getBoundingClientRect();
+  if (!defaultView || contentWrapperRect.height <= 0) {
+    return fallbackHeight;
+  }
+
+  const computed = defaultView.getComputedStyle(contentWrapper);
+  const paddingTop = Number.parseFloat(computed.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(computed.paddingBottom) || 0;
+  const descendants = contentWrapper.querySelectorAll<HTMLElement>('[data-node-id]');
+
+  let maxBottom = paddingTop;
+  for (const descendant of descendants) {
+    if (descendant.dataset.nodeId === nodeId) {
+      continue;
+    }
+
+    const directOwner = descendant.parentElement?.closest<HTMLElement>('[data-node-id]');
+    if (directOwner?.dataset.nodeId !== nodeId) {
+      continue;
+    }
+
+    const rect = descendant.getBoundingClientRect();
+    maxBottom = Math.max(maxBottom, rect.bottom - contentWrapperRect.top);
+  }
+
+  return Math.max(MIN_NODE_SIZE, Math.ceil(maxBottom + paddingBottom));
+}
+
 export function px(value: number) {
   return `${Math.round(value)}px`;
 }
@@ -97,6 +142,9 @@ function serializeResizedDimension(
   reference: { width: number; height: number; viewportWidth: number; viewportHeight: number } | null,
 ) {
   if ('unit' in parsed) {
+    if (parsed.unit === '%') {
+      return px(pxValue);
+    }
     const converted = convertPxToAuthorUnit(pxValue, parsed.unit, axis, reference);
     return converted == null ? px(pxValue) : `${formatResizeNumber(converted)}${parsed.unit}`;
   }
@@ -212,6 +260,8 @@ export function computeResizeFrame(
   const isNorth = resizeState.handle.includes('n');
   const isCornerHandle = (isEast || isWest) && (isSouth || isNorth);
   const ratio = resizeState.originWidth / Math.max(1, resizeState.originHeight);
+  const minWidth = resizeState.minWidth ?? MIN_NODE_SIZE;
+  const minHeight = resizeState.minHeight ?? MIN_NODE_SIZE;
 
   let width = resizeState.originWidth;
   let height = resizeState.originHeight;
@@ -250,25 +300,25 @@ export function computeResizeFrame(
     }
   }
 
-  if (width < MIN_NODE_SIZE) {
+  if (width < minWidth) {
     if (isWest) {
-      x -= MIN_NODE_SIZE - width;
+      x -= minWidth - width;
     }
-    width = MIN_NODE_SIZE;
+    width = minWidth;
   }
 
-  if (height < MIN_NODE_SIZE) {
+  if (height < minHeight) {
     if (isNorth) {
-      y -= MIN_NODE_SIZE - height;
+      y -= minHeight - height;
     }
-    height = MIN_NODE_SIZE;
+    height = minHeight;
   }
 
   if (shiftKey && isCornerHandle) {
     const scale = Math.max(
       1,
-      MIN_NODE_SIZE / Math.max(width, 1),
-      MIN_NODE_SIZE / Math.max(height, 1),
+      minWidth / Math.max(width, 1),
+      minHeight / Math.max(height, 1),
     );
     if (scale > 1) {
       width *= scale;
@@ -692,6 +742,21 @@ export function measureStageViewport(
         height,
       }
     : null;
+}
+
+export function measureCssViewport(
+  root: Pick<HTMLElement, 'ownerDocument'> | null,
+  fallback: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
+): ViewportMeasurement {
+  const defaultView = root?.ownerDocument.defaultView;
+  if (!defaultView || defaultView.innerWidth <= 0 || defaultView.innerHeight <= 0) {
+    return fallback;
+  }
+
+  return {
+    width: defaultView.innerWidth,
+    height: defaultView.innerHeight,
+  };
 }
 
 export function areMeasuredNodeSizesEqual(current: MeasuredNodeSizes, next: MeasuredNodeSizes) {

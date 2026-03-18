@@ -4,6 +4,7 @@ import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } f
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { resolveWrapperStickyState } from '../../sticky/resolve';
 import {
+  computeResizeFrame,
   didDragPointerMove,
   findDropWrapper,
   getDragElementRect,
@@ -11,7 +12,9 @@ import {
   getNodeWidth,
   getResizeCommitSize,
   getResizeStartSize,
+  getStructuralResizeMinHeight,
   getShiftLockedPointer,
+  measureCssViewport,
   measureStageNodeElement,
   resolveDragPointerPosition,
 } from '../stageMath';
@@ -922,6 +925,25 @@ describe('stage/Stage', () => {
     });
   });
 
+  it('measures CSS viewport units from the browser viewport instead of the stage canvas', () => {
+    expect(
+      measureCssViewport(
+        {
+          ownerDocument: {
+            defaultView: {
+              innerWidth: 1600,
+              innerHeight: 1000,
+            },
+          } as Document,
+        } as HTMLElement,
+        { width: 900, height: 700 },
+      ),
+    ).toEqual({
+      width: 1600,
+      height: 1000,
+    });
+  });
+
   it('measures wrapper resize starts from the inner content wrapper surface', () => {
     const size = getResizeStartSize(
       {
@@ -958,6 +980,57 @@ describe('stage/Stage', () => {
     });
   });
 
+  it('measures structural resize minimums from rendered child bottoms plus bottom padding', () => {
+    const size = getStructuralResizeMinHeight(
+      {
+        closest: () =>
+          ({
+            dataset: { nodeId: 'section_8' } as DOMStringMap,
+            classList: {
+              contains: (value: string) => value === 'stage-wrapper',
+            } as unknown as DOMTokenList,
+            querySelector: (selector: string) =>
+              selector === '[data-content-wrapper-for="section_8"]'
+                ? ({
+                    ownerDocument: {
+                      defaultView: {
+                        getComputedStyle: () => ({
+                          paddingTop: '20px',
+                          paddingBottom: '30px',
+                        }),
+                      },
+                    } as Document,
+                    getBoundingClientRect: () =>
+                      ({
+                        top: 100,
+                        height: 400,
+                      }) as DOMRect,
+                    querySelectorAll: () =>
+                      [
+                        {
+                          dataset: { nodeId: 'text_1' } as DOMStringMap,
+                          parentElement: {
+                            closest: () =>
+                              ({
+                                dataset: { nodeId: 'section_8' } as DOMStringMap,
+                              } as HTMLElement),
+                          } as HTMLElement,
+                          getBoundingClientRect: () =>
+                            ({
+                              bottom: 248,
+                            }) as DOMRect,
+                        } as HTMLElement,
+                      ] as unknown as NodeListOf<HTMLElement>,
+                  } as HTMLElement)
+                : null,
+          } as HTMLElement),
+      } as unknown as HTMLDivElement,
+      500,
+    );
+
+    expect(size).toBe(178);
+  });
+
   it('renders wrapper resize handles outside the content wrapper so they align to the outer border edge', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
@@ -989,6 +1062,168 @@ describe('stage/Stage', () => {
     expect(markup).toMatch(
       new RegExp(`data-content-wrapper-for="${container.id}"[\\s\\S]*?</div><div class="resize-handle handle-n"`),
     );
+  });
+
+  it.each(['section', 'header', 'footer'] as const)(
+    'renders a single bottom resize knob for a selected top-level %s wrapper',
+    (role) => {
+      const document = structuredClone(createInitialDocument());
+      const wrapper = Object.values(document.nodes).find(
+        (node) => node.type === 'wrapper' && node.role === role,
+      );
+
+      if (!wrapper || wrapper.type !== 'wrapper') {
+        throw new Error(`Expected ${role} wrapper`);
+      }
+
+      const markup = renderToStaticMarkup(
+        <Stage
+          document={document}
+          selectedId={wrapper.id}
+          previewSticky={true}
+          spacerVisibility="selected"
+          showGridLanes={false}
+          snapEnabled={true}
+          onStageFocus={() => {}}
+          onSelect={() => {}}
+          onMove={() => {}}
+          onReparent={() => {}}
+          onResize={() => {}}
+          onResizeStart={() => {}}
+          onResizeEnd={() => {}}
+        />,
+      );
+
+      expect(markup).toContain('class="resize-handle handle-s"');
+      expect(markup).not.toContain('class="resize-handle handle-n"');
+      expect(markup).not.toContain('class="resize-handle handle-e"');
+      expect(markup).not.toContain('class="resize-handle handle-se"');
+    },
+  );
+
+  it('suppresses the top-level structural resize knob for aspect-ratio heights', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.rect.height.base = parseHeightValue('aspect-ratio(4/3)');
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={section.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).not.toContain('data-stage-resize-handle="true"');
+  });
+
+  it.each([
+    ['px', '480px', 540, '540px'],
+    ['%', '50%', 360, '360px'],
+    ['vh', '50vh', 360, '40vh'],
+  ] as const)(
+    'serializes %s structural wrapper height correctly when resizing from the bottom handle',
+    (_label, authoredHeight, nextHeight, expectedHeight) => {
+      const document = structuredClone(createInitialDocument());
+      const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+      if (!section || section.type !== 'wrapper') {
+        throw new Error('Expected section wrapper');
+      }
+
+      section.rect.height.base = parseHeightValue(authoredHeight);
+
+      const commit = getResizeCommitSize(
+        section,
+        {
+          nodeId: section.id,
+          handle: 's',
+          startClientX: 0,
+          startClientY: 0,
+          originX: 0,
+          originY: 0,
+          originWidth: 1000,
+          originHeight: 480,
+        },
+        1000,
+        nextHeight,
+        document,
+        {},
+        { width: 1440, height: 900 },
+      );
+
+      expect(commit.height).toBe(expectedHeight);
+    },
+  );
+
+  it('converts structural auto height to px when resizing from the bottom handle', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.rect.height.base = parseHeightValue('auto');
+
+    const commit = getResizeCommitSize(
+      section,
+      {
+        nodeId: section.id,
+        handle: 's',
+        startClientX: 0,
+        startClientY: 0,
+        originX: 0,
+        originY: 0,
+        originWidth: 1000,
+        originHeight: 320,
+      },
+      1000,
+      412,
+      document,
+      {},
+      { width: 1440, height: 900 },
+    );
+
+    expect(commit.height).toBe('412px');
+  });
+
+  it('respects per-resize minimum height constraints when dragging a south handle', () => {
+    expect(
+      computeResizeFrame(
+        {
+          nodeId: 'section_1',
+          handle: 's',
+          startClientX: 0,
+          startClientY: 0,
+          originWidth: 1000,
+          originHeight: 300,
+          originX: 0,
+          originY: 0,
+          minHeight: 184,
+        },
+        0,
+        -400,
+        false,
+      ),
+    ).toMatchObject({
+      width: 1000,
+      height: 184,
+      x: 0,
+      y: 0,
+    });
   });
 
   it('derives content-wrapper sticky extent locally from measured wrapper geometry', () => {

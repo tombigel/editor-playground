@@ -228,6 +228,36 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
+  it('pushes following root sections when a top-level section is resized from the bottom knob', async () => {
+    await openEditor({ document: createStructuralResizeE2EDocument() });
+
+    const sections = page.locator('.stage-wrapper.role-section');
+    const firstSection = sections.nth(0);
+    const secondSection = sections.nth(1);
+
+    await firstSection.click();
+
+    const before = await secondSection.boundingBox();
+    expect(before).not.toBeNull();
+
+    const handle = firstSection.locator('.resize-handle.handle-s');
+    const handleBox = await handle.boundingBox();
+    expect(handleBox).not.toBeNull();
+
+    await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2 + 90, {
+      steps: 12,
+    });
+    await page.mouse.up();
+
+    const after = await secondSection.boundingBox();
+    expect(after).not.toBeNull();
+    expect((after?.y ?? 0) - before!.y).toBeGreaterThan(60);
+
+    await closeEditor();
+  }, 30_000);
+
   it('reparents a leaf into another container', async () => {
     const { document, ids } = createE2EDocument();
     await openEditor({ document });
@@ -518,6 +548,61 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
       reparentLeafId: reparentLeaf.id,
       axisLeafId: axisLeaf.id,
       snapLeafId: snapLeaf.id,
+    },
+  };
+}
+
+function createStructuralResizeE2EDocument(): DocumentModel {
+  const siteId = 'site_resize_e2e';
+  const header = createWrapper('header', siteId);
+  header.name = 'Resize Header';
+  header.rect = createDefaultRect('0px', '0px', '100%', '120px');
+
+  const sectionA = createWrapper('section', siteId);
+  sectionA.name = 'Resize Section A';
+  sectionA.rect = createDefaultRect('0px', '0px', '100%', '280px');
+
+  const sectionB = createWrapper('section', siteId);
+  sectionB.name = 'Resize Section B';
+  sectionB.rect = createDefaultRect('0px', '0px', '100%', '240px');
+
+  const footer = createWrapper('footer', siteId);
+  footer.name = 'Resize Footer';
+  footer.rect = createDefaultRect('0px', '0px', '100%', '96px');
+
+  const sectionAText = createLeaf('text', sectionA.id) as TextLeaf;
+  sectionAText.name = 'Resize Section A Text';
+  sectionAText.content = 'Section A';
+  sectionAText.rect = createDefaultRect('32px', '32px', '240px', 'auto');
+
+  const sectionBText = createLeaf('text', sectionB.id) as TextLeaf;
+  sectionBText.name = 'Resize Section B Text';
+  sectionBText.content = 'Section B';
+  sectionBText.rect = createDefaultRect('32px', '32px', '240px', 'auto');
+
+  header.children = [];
+  sectionA.children = [sectionAText.id];
+  sectionB.children = [sectionBText.id];
+  footer.children = [];
+
+  return {
+    rootId: siteId,
+    nodes: {
+      [siteId]: {
+        id: siteId,
+        type: 'site',
+        parentId: null,
+        children: [header.id, sectionA.id, sectionB.id, footer.id],
+        name: 'Site',
+        visible: true,
+        locked: false,
+      },
+      [header.id]: header,
+      [sectionA.id]: sectionA,
+      [sectionB.id]: sectionB,
+      [footer.id]: footer,
+      [sectionAText.id]: sectionAText,
+      [sectionBText.id]: sectionBText,
     },
   };
 }
