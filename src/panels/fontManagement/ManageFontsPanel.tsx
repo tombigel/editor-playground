@@ -115,6 +115,7 @@ export function ManageFontsPanel({
   const [catalogPage, setCatalogPage] = useState(1);
   const usageMap = useMemo(() => getDocumentFontUsageMap(document), [document]);
   const { search, subset, category, favoritesOnly, usedOnly, hideVariable, pageSize } = filters;
+  const catalogUpdatedAt = status === 'ready' ? formatGoogleFontsCatalogTimestamp(catalog.fetchedAt) : null;
 
   useEffect(() => {
     writeStoredBrowseState(filters);
@@ -319,8 +320,9 @@ export function ManageFontsPanel({
       </Card>
 
       <Card className="editor-border-subtle rounded-lg shadow-none">
-        <CardHeader className="px-3 pt-3 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 pt-3 pb-1">
           <CardTitle className="text-xs">Browse Google Fonts</CardTitle>
+          {status === 'ready' ? <div className="editor-text-muted text-[11px]">Catalog updated {catalogUpdatedAt}</div> : null}
         </CardHeader>
         <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px_140px]">
@@ -399,7 +401,7 @@ export function ManageFontsPanel({
               <div className="flex items-center justify-between gap-3">
                 <div className="editor-text-muted text-xs">
                   {catalogFamilies.length > 0
-                  ? `Showing ${visibleRangeStart}-${visibleRangeEnd} of ${catalogFamilies.length} families`
+                    ? `Showing ${visibleRangeStart}-${visibleRangeEnd} of ${catalogFamilies.length} families`
                     : 'No families match the current filters.'}
                 </div>
                 <div className="flex items-center gap-2">
@@ -566,6 +568,21 @@ export function normalizeCatalogPageSize(value: number) {
   return FONT_CATALOG_PAGE_SIZE_OPTIONS.includes(value as (typeof FONT_CATALOG_PAGE_SIZE_OPTIONS)[number])
     ? value
     : FONT_CATALOG_PAGE_SIZE;
+}
+
+export function formatGoogleFontsCatalogTimestamp(value: string) {
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) {
+    return 'unknown';
+  }
+
+  const date = new Date(timestamp);
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes} UTC`;
 }
 
 function buildPreviewStyle(family: DocumentFontFamily) {

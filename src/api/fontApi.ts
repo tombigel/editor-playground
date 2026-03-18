@@ -16,6 +16,7 @@ export {
   fetchGoogleFontCatalog,
   filterGoogleFontFamilies,
   getDefaultDocumentFontFamily,
+  getBundledGoogleFontsCatalog,
   getDocumentDefaultFontFamily,
   getDocumentFontFamily,
   getDocumentFontLibrary,

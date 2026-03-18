@@ -5,9 +5,10 @@
 Proceed in four phases, using plan defaults unless a real blocker appears.
 
 - keep plan and progress artifacts in the repo
-- do not commit `VITE_GOOGLE_FONTS_API_KEY`
+- do not commit `GOOGLE_FONTS_API_KEY`
 - use Google Fonts Developer API for catalog data
 - use Google Fonts CSS2 for runtime/export loading
+- bundle a generated Google Fonts catalog snapshot so runtime does not require the API key
 
 ## Phase 1: No-UI Google Fonts API Layer
 

@@ -15,9 +15,9 @@ const GOOGLE_FONTS_CAPABILITIES: GoogleFontsApiCapability[] = ['VF', 'FAMILY_TAG
 type GoogleFontsApiCapability = 'VF' | 'FAMILY_TAGS';
 
 export async function fetchGoogleFontCatalog(options: GoogleFontsFetchOptions = {}): Promise<GoogleFontsCatalog> {
-  const apiKey = options.apiKey ?? import.meta.env.VITE_GOOGLE_FONTS_API_KEY;
+  const apiKey = sanitizeString(options.apiKey);
   if (!apiKey) {
-    throw new Error('Missing VITE_GOOGLE_FONTS_API_KEY.');
+    throw new Error('Missing GOOGLE_FONTS_API_KEY.');
   }
 
   const remoteSort = options.sort ?? 'popularity';

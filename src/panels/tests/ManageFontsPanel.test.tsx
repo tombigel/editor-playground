@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { getBundledGoogleFontsCatalog } from '../../fonts/googleFontsCatalog';
+import { createInitialDocument } from '../../model/defaults';
 import {
   buildLanguageFilterOptions,
   DEFAULT_MANAGE_FONTS_LANGUAGE_FILTER,
+  formatGoogleFontsCatalogTimestamp,
+  ManageFontsPanel,
   normalizeCatalogPageSize,
   normalizeManageFontsLanguageFilter,
   resolveLanguageFilterSubsets,
@@ -48,5 +53,27 @@ describe('panels/ManageFontsPanel', () => {
     expect(normalizeCatalogPageSize(50)).toBe(50);
     expect(normalizeCatalogPageSize(15)).toBe(10);
     expect(normalizeCatalogPageSize(Number.NaN)).toBe(10);
+  });
+
+  it('formats bundled catalog timestamps in a stable UTC format', () => {
+    expect(formatGoogleFontsCatalogTimestamp('2026-03-18T08:05:00.000Z')).toBe('2026-03-18 08:05 UTC');
+    expect(formatGoogleFontsCatalogTimestamp('invalid')).toBe('unknown');
+  });
+
+  it('renders the bundled catalog timestamp in the browse panel', () => {
+    const document = createInitialDocument();
+    const expectedTimestamp = formatGoogleFontsCatalogTimestamp(getBundledGoogleFontsCatalog().fetchedAt);
+    const markup = renderToStaticMarkup(
+      <ManageFontsPanel
+        document={document}
+        onAddFont={() => {}}
+        onRemoveFont={() => {}}
+        onToggleFavorite={() => {}}
+        onPurgeUnused={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Browse Google Fonts');
+    expect(markup).toContain(`Catalog updated ${expectedTimestamp}`);
   });
 });

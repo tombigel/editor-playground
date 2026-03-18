@@ -8,7 +8,7 @@
 ## Completed
 
 - added repo-persisted Google Fonts plan and progress docs
-- added local env plumbing for `VITE_GOOGLE_FONTS_API_KEY`
+- moved Google Fonts API key usage into a refresh-only local env path
 - created `src/fonts/` subsystem for:
   - Google catalog fetch
   - normalization
@@ -28,6 +28,8 @@
 - moved bold back into the shared style button row
 - added reusable `ManageFontsPanel`
 - embedded font management in Settings and added a standalone manage-fonts dialog
+- bundled the Google Fonts catalog into the repo so runtime no longer fetches it from the API
+- added a catalog `last updated` timestamp to the manage-fonts browser
 - updated `PLAYGROUND_SPEC.md`
 - added targeted tests for font catalog querying, document font-library behavior, site export, and inspector wiring
 
@@ -55,7 +57,7 @@
 
 ### 2026-03-18
 
-- created env scaffolding for `VITE_GOOGLE_FONTS_API_KEY`
+- created refresh-time env scaffolding for `GOOGLE_FONTS_API_KEY`
 - implemented Google Fonts subsystem and document font library
 - extended runtime, export, editor state, history, and inspector typography flows
 - debugged live Google Fonts API 400 responses and confirmed the API key is valid
@@ -72,6 +74,8 @@
 - expanded variable-font weight pickers to stepped numeric options across the supported range
 - moved font-size suggestions into an inline dropdown anchored to the numeric field itself
 - fixed font-family dropdown mutations so selecting an existing family preserves its real catalog metadata instead of overwriting it with placeholder regular-only data
+- moved Google Fonts catalog loading to a bundled generated snapshot and removed runtime API-key dependence
+- added a bundled-catalog timestamp to the manage-fonts panel
 - updated spec and added targeted tests
 - validated targeted test suite:
   - `npx vitest run src/fonts/tests/googleFonts.test.ts src/fonts/tests/documentFonts.test.ts src/site/tests/siteExport.test.tsx src/panels/inspector/tests/schema.test.tsx src/app/tests/appSelectors.test.ts src/app/tests/AppShell.test.tsx src/panels/tests/SettingsPanel.test.tsx src/panels/tests/FocusedModePanel.test.tsx src/panels/tests/InspectorPanel.test.tsx`

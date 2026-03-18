@@ -1,4 +1,5 @@
 import type { GoogleFontsCatalog } from './types';
+import { isGoogleFontsCatalog } from './googleFontsValidation';
 
 export const GOOGLE_FONTS_CATALOG_CACHE_KEY = 'sticky-playground.google-fonts.catalog';
 export const GOOGLE_FONTS_CATALOG_CACHE_VERSION = 1;
@@ -64,22 +65,4 @@ export function shouldRefreshGoogleFontsCatalog(
   }
 
   return Date.now() - fetchedAtMs >= refreshAfterMs;
-}
-
-function isGoogleFontsCatalog(value: unknown): value is GoogleFontsCatalog {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
-  const maybeCatalog = value as Partial<GoogleFontsCatalog>;
-  return (
-    maybeCatalog.source === 'google-fonts' &&
-    typeof maybeCatalog.fetchedAt === 'string' &&
-    (maybeCatalog.remoteSort === 'alpha' ||
-      maybeCatalog.remoteSort === 'date' ||
-      maybeCatalog.remoteSort === 'popularity' ||
-      maybeCatalog.remoteSort === 'style' ||
-      maybeCatalog.remoteSort === 'trending') &&
-    Array.isArray(maybeCatalog.families)
-  );
 }

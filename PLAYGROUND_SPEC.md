@@ -340,9 +340,9 @@ Google Fonts support is split between a no-UI data layer and document/editor sur
 
 Data/runtime behavior:
 
-- `src/fonts/` owns Google Fonts fetch, normalization, search/filter/sort, weight resolution, document font-library helpers, and Google CSS2 URL generation
-- Google catalog filtering and sorting runs locally after the catalog is fetched
-- the Google catalog is cached locally in browser storage and refreshed when the cached snapshot becomes stale so repeated panel opens do not always spend Google Fonts API calls
+- `src/fonts/` owns Google Fonts fetch/refresh tooling, bundled catalog loading, normalization, search/filter/sort, weight resolution, document font-library helpers, and Google CSS2 URL generation
+- Google catalog filtering and sorting runs locally against a bundled repo snapshot
+- runtime/editor clients do not require a Google Fonts Developer API key; the key is only needed when refreshing the bundled catalog snapshot
 - language filters map to Google `subsets`, but the UI groups them into human-readable buckets
 - variable-font metadata is preserved, but variable-axis authoring UI is deferred
 
@@ -358,6 +358,7 @@ Editor behavior:
   - expose grouped language options such as `Western`, `Hebrew`, `Arabic`, `Cyrillic`, and `Other` instead of raw Google subset ids
   - persist browse search/filter state in browser storage so reopening the panel keeps the current query
   - hide variable fonts by default while debugging static-font flows
+  - show the bundled catalog `last updated` timestamp above the browse results
   - add document fonts
   - remove unused document fonts
   - mark and unmark favorites
