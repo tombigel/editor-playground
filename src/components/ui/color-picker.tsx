@@ -34,25 +34,44 @@ const loadHdrColorInput =
 
 const EDITOR_COLOR_PICKER_SHADOW_STYLE = `
   .preview {
-    min-inline-size: 0;
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0 !important;
+    max-inline-size: 100%;
     padding: 0.625rem;
-    gap: 0.3125rem;
-    margin: 0 0.1875rem 0.1875rem;
-    border-radius: 0 0 0.4375rem 0.4375rem;
-    box-shadow: inset 0 0 0 1px var(--editor-input-border);
+    gap: 0.375rem;
+    margin: 0.375rem 0 0;
+    border-radius: 0.625rem;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--contrast) 22%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--contrast) 18%, transparent);
+  }
+
+  .preview > * {
+    max-inline-size: 100%;
   }
 
   .tools {
-    top: 0.4375rem;
-    right: 0.4375rem;
-    gap: 0.3125rem;
+    top: 0.625rem;
+    right: 0.625rem;
+    gap: 0.375rem;
   }
 
   .copy-btn,
   .eyedropper-btn {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--contrast) 18%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--contrast) 14%, transparent);
     color: var(--contrast);
+    opacity: 0.96;
+    transition:
+      opacity 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease,
+      transform 150ms ease;
   }
 
   .copy-btn svg,
@@ -61,31 +80,52 @@ const EDITOR_COLOR_PICKER_SHADOW_STYLE = `
     height: 0.875rem;
   }
 
+  .copy-btn:hover,
+  .copy-btn:focus-visible,
+  .eyedropper-btn:hover,
+  .eyedropper-btn:focus-visible {
+    background: color-mix(in srgb, var(--contrast) 22%, transparent);
+    border-color: color-mix(in srgb, var(--contrast) 28%, transparent);
+    transform: translateY(-1px);
+  }
+
   .copy-message {
     font-family: Inter, "Helvetica Neue", Arial, sans-serif;
     font-size: 9px;
     font-weight: 600;
     line-height: 1.2;
+    padding: 0.1875rem 0.4375rem;
+    border: 1px solid color-mix(in srgb, var(--contrast) 18%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--contrast) 14%, transparent);
   }
 
   .space {
+    display: inline-flex;
+    align-items: center;
     font-family: Inter, "Helvetica Neue", Arial, sans-serif;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: -0.01em;
+    min-height: 1.5rem;
+    max-inline-size: 100%;
+    padding: 0 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--contrast) 18%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--contrast) 12%, transparent);
   }
 
   .controls .control label {
     font-family: Inter, "Helvetica Neue", Arial, sans-serif !important;
-    font-size: 10px !important;
+    font-size: 11px !important;
     font-weight: 500 !important;
     line-height: 1.2 !important;
     color: var(--editor-utility-text-muted) !important;
   }
 
   .controls .control {
-    grid-template-columns: min-content 1fr 3rem !important;
-    gap: 0.5rem !important;
+    grid-template-columns: minmax(0, 1.1rem) 1fr 3.25rem !important;
+    gap: 0.4375rem !important;
   }
 
   .controls .control .num-wrapper {
@@ -96,17 +136,40 @@ const EDITOR_COLOR_PICKER_SHADOW_STYLE = `
   .controls .control input[type="number"] {
     box-sizing: border-box !important;
     width: 100% !important;
-    min-height: 1.375rem !important;
-    padding: 0.0625rem 0.375rem !important;
-    border: 1px solid var(--editor-input-border) !important;
-    border-radius: 0.375rem !important;
-    background: var(--editor-input-background) !important;
+    min-height: 1.625rem !important;
+    padding: 0.0625rem 0.4375rem !important;
+    border: 1px solid var(--editor-utility-border) !important;
+    border-radius: 0.5rem !important;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--editor-surface-background) 94%, #ffffff 6%),
+        var(--editor-input-background)
+      ) !important;
     color: var(--editor-input-text) !important;
-    box-shadow: none !important;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #ffffff 35%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--editor-utility-border) 38%, transparent) !important;
     font-family: Inter, "Helvetica Neue", Arial, sans-serif !important;
-    font-size: 10px !important;
+    font-size: 11px !important;
     font-weight: 500 !important;
     line-height: 1.2 !important;
+    text-align: right !important;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      background-color 150ms ease !important;
+  }
+
+  .controls .control input[type="number"]:hover {
+    border-color: color-mix(in srgb, var(--editor-accent) 18%, var(--editor-utility-border)) !important;
+  }
+
+  .controls .control input[type="number"]:focus-visible {
+    border-color: var(--editor-accent) !important;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent),
+      0 0 0 3px color-mix(in srgb, var(--editor-accent) 16%, transparent) !important;
   }
 
   .control input[type="number"]:focus-visible,
@@ -119,24 +182,32 @@ const EDITOR_COLOR_PICKER_SHADOW_STYLE = `
   }
 
   .controls .control input[type="range"] {
-    height: 0.4375rem;
+    height: 0.375rem;
     border: 1px solid var(--editor-utility-border) !important;
-    box-shadow: none !important;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--editor-utility-border) 34%, transparent) !important;
   }
 
   .controls .control input[type="range"]::-webkit-slider-thumb {
     border: 3px solid var(--editor-slider-thumb-background) !important;
-    box-shadow: 0 0 0 1px var(--editor-slider-thumb-border) !important;
+    box-shadow:
+      0 0 0 1px var(--editor-slider-thumb-border),
+      0 4px 12px color-mix(in srgb, var(--editor-text) 16%, transparent) !important;
   }
 
   .controls .control input[type="range"]::-moz-range-thumb {
     border: 3px solid var(--editor-slider-thumb-background) !important;
-    box-shadow: 0 0 0 1px var(--editor-slider-thumb-border) !important;
+    box-shadow:
+      0 0 0 1px var(--editor-slider-thumb-border),
+      0 4px 12px color-mix(in srgb, var(--editor-text) 16%, transparent) !important;
   }
 
   .area-picker .area-thumb {
     border: 3px solid var(--editor-slider-thumb-background) !important;
-    box-shadow: 0 0 0 1px var(--editor-slider-thumb-border) !important;
+    box-shadow:
+      0 0 0 1px var(--editor-slider-thumb-border),
+      0 6px 14px color-mix(in srgb, var(--editor-text) 18%, transparent) !important;
   }
 `;
 

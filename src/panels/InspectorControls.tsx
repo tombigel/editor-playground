@@ -1104,7 +1104,7 @@ export function HoverColorField({
         fallback={resolvedFallback}
         allowAlpha={showOpacity}
         ariaLabel={ariaLabel}
-        className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-sm border shadow-sm"
+        className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm"
         onChange={(nextValue) => onChange(showOpacity ? nextValue : forceOpaqueColorValue(nextValue) || resolvedFallback)}
       />
       {mixed ? (

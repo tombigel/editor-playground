@@ -570,11 +570,11 @@ color-input[data-ui='color-picker'].editor-color-picker::part(error) {
 color-input[data-ui='color-picker'].editor-color-picker {
   --canvas: var(--editor-surface-background);
   --canvas-text: var(--editor-text);
-  --radius-2: 0.3125rem;
-  --radius-3: 0.625rem;
+  --radius-2: 0.5rem;
+  --radius-3: 0.75rem;
   --radius-round: 9999px;
   --shadow-elev: var(--editor-surface-shadow);
-  --shadow-inner: inset 0 0 0 1px var(--editor-input-border);
+  --shadow-inner: inset 0 0 0 1px color-mix(in srgb, var(--editor-utility-border) 82%, transparent);
   --checker:
     repeating-conic-gradient(
       color-mix(in srgb, var(--editor-utility-text-muted) 14%, transparent) 0% 25%,
@@ -613,23 +613,38 @@ color-input[data-ui='color-picker'].editor-color-picker::part(chip) {
 
 color-input[data-ui='color-picker'].editor-color-picker::part(panel) {
   border: 1px solid var(--editor-surface-border);
-  border-radius: 0.625rem;
-  padding: 0.1875rem;
-  background: var(--editor-utility-bg-subtle);
+  border-radius: 0.75rem;
+  padding: 0.4375rem;
+  inline-size: min(15.5rem, calc(100vw - 2rem));
+  max-inline-size: min(15.5rem, calc(100vw - 2rem));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--editor-surface-background) 94%, #ffffff 6%),
+      var(--editor-surface-background)
+    );
   color: var(--editor-text);
   box-shadow: var(--editor-surface-shadow);
 }
 
 color-input[data-ui='color-picker'].editor-color-picker::part(area) {
-  border-bottom: 1px solid var(--editor-utility-border);
-  border-radius: 0.4375rem 0.4375rem 0 0;
+  border: 1px solid var(--editor-utility-border);
+  border-bottom: 0;
+  border-radius: 0.625rem 0.625rem 0 0;
   background: var(--editor-surface-background);
 }
 
 color-input[data-ui='color-picker'].editor-color-picker::part(controls) {
-  padding: 0.625rem;
+  padding: 0.75rem 0.625rem 0.625rem;
   gap: 0.5rem;
-  background: var(--editor-surface-background);
+  border-top: 1px solid var(--editor-utility-border);
+  border-radius: 0 0 0.625rem 0.625rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--editor-utility-bg-subtle) 84%, transparent),
+      var(--editor-surface-background)
+    );
 }
 
 color-input[data-ui='color-picker'].editor-color-picker::part(output) {
@@ -638,7 +653,14 @@ color-input[data-ui='color-picker'].editor-color-picker::part(output) {
     "Helvetica Neue",
     Arial,
     sans-serif;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--contrast) 18%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--contrast) 12%, transparent);
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -649,8 +671,17 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
     "Helvetica Neue",
     Arial,
     sans-serif;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--contrast) 18%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--contrast) 12%, transparent);
   font-size: 9px;
   font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .editor-template-card {
