@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import type { DocumentModel } from '../../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { resolveWrapperStickyState } from '../../sticky/resolve';
 import {
@@ -22,6 +23,13 @@ import {
   Stage,
 } from '../Stage';
 import { StageScene } from '../StageScene';
+
+function withDocumentFontLibrary(document: Omit<DocumentModel, 'fontLibrary'>): DocumentModel {
+  return {
+    ...document,
+    fontLibrary: structuredClone(createInitialDocument().fontLibrary),
+  };
+}
 
 describe('stage/Stage', () => {
   it('applies the shared editor scrollbar class to the stage shell', () => {
@@ -415,8 +423,6 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        onSelect={() => {}}
-        onMove={() => {}}
         onResizeStart={() => {}}
         dragState={{
           nodeId: container.id,
@@ -640,7 +646,7 @@ describe('stage/Stage', () => {
     target.htmlTag = 'blockquote';
     target.style ??= {};
     target.style.fontSize = parseFontSizeValue('31px');
-    target.style.fontWeight = 'bold';
+    target.style.fontWeight = 700;
     target.style.lineHeight = 1.4;
 
     const markup = renderToStaticMarkup(
@@ -666,7 +672,7 @@ describe('stage/Stage', () => {
     expect(tagMarkupMatch?.[1]).toContain('max-width:100%');
     expect(tagMarkupMatch?.[1]).toContain('white-space:pre-wrap');
     expect(tagMarkupMatch?.[1]).toContain('font-size:31px');
-    expect(tagMarkupMatch?.[1]).toContain('font-weight:bold');
+    expect(tagMarkupMatch?.[1]).toContain('font-weight:700');
     expect(tagMarkupMatch?.[1]).toContain('line-height:1.4');
   });
 
@@ -934,8 +940,8 @@ describe('stage/Stage', () => {
               innerWidth: 1600,
               innerHeight: 1000,
             },
-          } as Document,
-        } as HTMLElement,
+          } as unknown as Document,
+        } as unknown as HTMLElement,
         { width: 900, height: 700 },
       ),
     ).toEqual({
@@ -961,14 +967,14 @@ describe('stage/Stage', () => {
                         width: 316,
                         height: 176,
                       }) as DOMRect,
-                  } as HTMLElement)
+                  } as unknown as HTMLElement)
                 : null,
             getBoundingClientRect: () =>
               ({
                 width: 320,
                 height: 180,
               }) as DOMRect,
-          } as HTMLElement),
+          } as unknown as HTMLElement),
       } as unknown as HTMLDivElement,
       240,
       120,
@@ -999,7 +1005,7 @@ describe('stage/Stage', () => {
                           paddingBottom: '30px',
                         }),
                       },
-                    } as Document,
+                    } as unknown as Document,
                     getBoundingClientRect: () =>
                       ({
                         top: 100,
@@ -1013,17 +1019,17 @@ describe('stage/Stage', () => {
                             closest: () =>
                               ({
                                 dataset: { nodeId: 'section_8' } as DOMStringMap,
-                              } as HTMLElement),
-                          } as HTMLElement,
+                              } as unknown as HTMLElement),
+                          } as unknown as HTMLElement,
                           getBoundingClientRect: () =>
                             ({
                               bottom: 248,
                             }) as DOMRect,
-                        } as HTMLElement,
+                        } as unknown as HTMLElement,
                       ] as unknown as NodeListOf<HTMLElement>,
-                  } as HTMLElement)
+                  } as unknown as HTMLElement)
                 : null,
-          } as HTMLElement),
+          } as unknown as HTMLElement),
       } as unknown as HTMLDivElement,
       500,
     );
@@ -1386,7 +1392,7 @@ describe('stage/Stage', () => {
 
     section.children = [target.id];
 
-    const document = {
+    const document = withDocumentFontLibrary({
       rootId: siteId,
       nodes: {
         [siteId]: {
@@ -1401,7 +1407,7 @@ describe('stage/Stage', () => {
         [section.id]: section,
         [target.id]: target,
       },
-    };
+    });
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -1457,7 +1463,7 @@ describe('stage/Stage', () => {
 
     section.children = [target.id];
 
-    const document = {
+    const document = withDocumentFontLibrary({
       rootId: siteId,
       nodes: {
         [siteId]: {
@@ -1472,7 +1478,7 @@ describe('stage/Stage', () => {
         [section.id]: section,
         [target.id]: target,
       },
-    };
+    });
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -1526,7 +1532,7 @@ describe('stage/Stage', () => {
 
     section.children = [target.id];
 
-    const document = {
+    const document = withDocumentFontLibrary({
       rootId: siteId,
       nodes: {
         [siteId]: {
@@ -1541,7 +1547,7 @@ describe('stage/Stage', () => {
         [section.id]: section,
         [target.id]: target,
       },
-    };
+    });
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -1595,7 +1601,7 @@ describe('stage/Stage', () => {
 
     section.children = [stickyLeaf.id];
 
-    const document = {
+    const document = withDocumentFontLibrary({
       rootId: siteId,
       nodes: {
         [siteId]: {
@@ -1610,7 +1616,7 @@ describe('stage/Stage', () => {
         [section.id]: section,
         [stickyLeaf.id]: stickyLeaf,
       },
-    };
+    });
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -1678,7 +1684,7 @@ describe('stage/Stage', () => {
     container.children = [target.id];
     section.children = [container.id];
 
-    const document = {
+    const document = withDocumentFontLibrary({
       rootId: siteId,
       nodes: {
         [siteId]: {
@@ -1694,7 +1700,7 @@ describe('stage/Stage', () => {
         [container.id]: container,
         [target.id]: target,
       },
-    };
+    });
 
     const markup = renderToStaticMarkup(
       <Stage

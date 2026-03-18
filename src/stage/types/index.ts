@@ -6,15 +6,15 @@ import type { StickyGeometrySnapshot, StickyMeasuredNodeSizes } from '../../stic
 export type StageProps = {
   document: DocumentModel;
   selectedId: NodeId | null;
-  selectedIds: NodeId[];
+  selectedIds?: NodeId[];
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
   snapEnabled: boolean;
   onStageFocus: () => void;
   onSelect: (id: NodeId, mode?: 'replace' | 'toggle') => void;
-  onSelectMany: (ids: NodeId[], mode: 'replace' | 'toggle') => void;
-  onClearSelection: () => void;
+  onSelectMany?: (ids: NodeId[], mode: 'replace' | 'toggle') => void;
+  onClearSelection?: () => void;
   onMove: (id: NodeId, x: string, y: string) => void;
   onMoveSelection?: (moves: Array<{ id: NodeId; x: string; y: string }>) => void;
   onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
@@ -114,7 +114,7 @@ export type StageSceneLeafNode = RenderLeafPlanNode['node'];
 export type StageSceneProps = {
   document: DocumentModel;
   selectedId: NodeId | null;
-  selectedIds: NodeId[];
+  selectedIds?: NodeId[];
   multiSelectionBounds?: {
     left: number;
     top: number;

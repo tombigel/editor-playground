@@ -8,7 +8,7 @@ import type {
   ViewportMeasurement,
   WrapperNode,
 } from '../model/types';
-import { formatValue, resolveSpacingPx, resolveUnitValuePx } from '../model/units';
+import { formatValue, resolveSpacingPx } from '../model/units';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../render/leafPresentation';
 import {
   formatNodeLabel,
@@ -509,7 +509,7 @@ function renderLeaf({
   selectedIds,
   previewSticky,
   dragState,
-  setDragState,
+  setDragState: _setDragState,
   setResizeState,
   onResizeStart,
   registration,
@@ -641,7 +641,7 @@ function renderLeafSpacerOverlay({
   wrapperBottomLanePx,
   previewSticky,
   spacerVisibility,
-  selectedId,
+  selectedId: _selectedId,
   selectedIds,
   measuredNodeSizes,
   viewport,
@@ -978,10 +978,10 @@ function getStickyTrackDistances(
 }
 
 function getPreviewWrapperBottomLanePx(
-  wrapper: WrapperNode,
+  _wrapper: WrapperNode,
   bottomLanePx: number,
-  measuredNodeSizes: RenderMeasuredNodeSizes = {},
-  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+  _measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  _viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   return bottomLanePx;
 }
@@ -989,8 +989,8 @@ function getPreviewWrapperBottomLanePx(
 function resolveWrapperPaddingPx(
   wrapper: WrapperNode,
   edge: 'top' | 'right' | 'bottom' | 'left',
-  measuredNodeSizes: RenderMeasuredNodeSizes = {},
-  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+  _measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  _viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   const padding =
     edge === 'top'
@@ -1314,8 +1314,8 @@ function getSpacerRangeStyle(
 function renderGridLaneOverlay(
   meshLayout: MeshLayout,
   node: WrapperNode,
-  measuredNodeSizes: RenderMeasuredNodeSizes = {},
-  viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+  _measuredNodeSizes: RenderMeasuredNodeSizes = {},
+  _viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   const verticalLines = meshLayout.columnLines.slice(1, -1);
   const horizontalLines = meshLayout.rowLines.slice(1, -1);

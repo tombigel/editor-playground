@@ -60,8 +60,8 @@ export function Stage({
   snapEnabled,
   onStageFocus,
   onSelect,
-  onSelectMany,
-  onClearSelection,
+  onSelectMany = () => {},
+  onClearSelection = () => {},
   onMove,
   onMoveSelection,
   onReparent,
@@ -71,6 +71,7 @@ export function Stage({
   onStickyGeometryChange,
 }: StageProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const [stageElement, setStageElement] = useState<HTMLDivElement | null>(null);
   const [measuredNodeSizes, setMeasuredNodeSizes] = useState<MeasuredNodeSizes>({});
   const [viewport, setViewport] = useState(DEFAULT_STAGE_VIEWPORT);
   const [dragState, setDragState] = useState<DragState>(null);
@@ -84,6 +85,11 @@ export function Stage({
   const [pendingNodeInteraction, setPendingNodeInteraction] = useState<PendingNodeInteraction | null>(null);
   const [marqueeState, setMarqueeState] = useState<MarqueeState | null>(null);
   const [multiSelectionBounds, setMultiSelectionBounds] = useState<MultiSelectionBounds | null>(null);
+
+  function handleStageRef(node: HTMLDivElement | null) {
+    stageRef.current = node;
+    setStageElement(node);
+  }
 
   useLayoutEffect(() => {
     const root = stageRef.current;
@@ -150,7 +156,7 @@ export function Stage({
 
   return (
     <div
-      ref={stageRef}
+      ref={handleStageRef}
       className="stage-shell editor-scrollbar"
       tabIndex={0}
       role="region"
@@ -419,7 +425,7 @@ export function Stage({
         measuredNodeSizes={measuredNodeSizes}
         viewport={viewport}
       />
-      {marqueeState?.active ? <MarqueeSelectionBox stageElement={stageRef.current} marqueeState={marqueeState} /> : null}
+      {marqueeState?.active ? <MarqueeSelectionBox stageElement={stageElement} marqueeState={marqueeState} /> : null}
     </div>
   );
 }

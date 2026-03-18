@@ -302,6 +302,11 @@ export function FontPickerPopover({
     setFrozenFamilies((current) => current ?? orderedFamilies);
   }, [open, orderedFamilies]);
 
+  function closePicker() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
   useEffect(() => {
     if (open) {
       setActiveFamilyValue(familyValue);
@@ -427,12 +432,6 @@ export function FontPickerPopover({
       return next;
     });
   }
-
-  function closePicker() {
-    setOpen(false);
-    triggerRef.current?.focus();
-  }
-
   function focusFamilyOptionAt(index: number) {
     const clampedIndex = Math.max(0, Math.min(familyOptions.length - 1, index));
     const nextOption = familyOptions[clampedIndex];
@@ -2062,7 +2061,7 @@ export function describeSizeFieldValue(value: string, axis: SizeFieldAxis): Size
     return {
       kind: 'numeric',
       mode: parsed.parsed.unit,
-      input: formatNumericFieldInput(parsed.parsed.value, parsed.parsed.unit),
+      input: formatNumericFieldInput(parsed.parsed.value),
     };
   }
   if (parsed.parsed.keyword === 'aspect-ratio') {
@@ -2227,7 +2226,7 @@ export function convertStageMeasurementToInput(
             : undefined;
 
   const converted = convertRenderedPxToUnitValue(px, axis, mode, parentSize, viewportSize);
-  return converted == null ? null : formatNumericFieldInput(converted, mode);
+  return converted == null ? null : formatNumericFieldInput(converted);
 }
 
 export function convertRenderedPxToFontSizeValue(
@@ -2550,10 +2549,7 @@ function resolveComputedRadiusSegmentPx(
   return null;
 }
 
-function formatNumericFieldInput(
-  value: number,
-  unit: NumericSizeFieldMode,
-) {
+function formatNumericFieldInput(value: number) {
   return formatFieldNumber(value);
 }
 

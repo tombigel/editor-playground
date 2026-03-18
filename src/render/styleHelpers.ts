@@ -73,7 +73,6 @@ export function buildBorderStyle(style: BorderStyle | undefined, defaults: Borde
     result.backgroundClip = 'padding-box';
   }
 
-  let hasCornerRadius = false;
   for (const [label, field] of BORDER_CORNERS) {
     const value =
       resolveOptionalUnitValue(style?.[field], undefined) ??
@@ -82,7 +81,6 @@ export function buildBorderStyle(style: BorderStyle | undefined, defaults: Borde
       continue;
     }
     result[`border${label}Radius`] = value;
-    hasCornerRadius = true;
   }
 
   if (!hasPerCornerRadius && shorthandRadius) {

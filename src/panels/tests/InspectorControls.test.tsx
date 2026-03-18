@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { forceOpaqueColorValue } from '../../model/colors';
+import type { DocumentFontFamily } from '../../model/types';
 import {
   applyPersistentSelectValueChange,
   BorderControlGroup,
@@ -199,7 +200,7 @@ describe('panels/InspectorControls', () => {
   });
 
   it('orders picker fonts by recents first and then by language', () => {
-    const families = [
+    const families: DocumentFontFamily[] = [
       {
         family: 'Lora',
         category: 'serif',
@@ -230,7 +231,7 @@ describe('panels/InspectorControls', () => {
         favorite: false,
         origin: 'added',
       },
-    ] as const;
+    ];
 
     expect(orderFontFamiliesForPicker([...families], ['Lora', 'Missing'])).toEqual({
       recent: [families[0]],

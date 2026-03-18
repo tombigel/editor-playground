@@ -30,7 +30,6 @@ export const DEFAULT_RENDER_VIEWPORT: ViewportMeasurement = {
   height: 900,
 };
 export const AUTO_WRAPPER_MIN_HEIGHT_PX = 120;
-const DEFAULT_LAYOUT_FONT_REFERENCE_PX = 16;
 
 export function resolveWrapperRenderPlan(
   document: DocumentModel,
@@ -81,7 +80,7 @@ export function buildWrapperStyle(node: WrapperNode, isTopLevel: boolean): CSSPr
   };
 }
 
-export function getWrapperBorderStyle(node: WrapperNode): CSSProperties {
+export function getWrapperBorderStyle(_node: WrapperNode): CSSProperties {
   return {};
 }
 

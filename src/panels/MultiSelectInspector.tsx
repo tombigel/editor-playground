@@ -55,6 +55,7 @@ import {
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_SHADOW_SPREAD_PX,
 } from '../model/styleDefaults';
+import type { ShadowStyle } from '../model/types';
 import { offsetsFromDistanceAndAngle } from './InspectorControls';
 import { MultiStickySection } from './MultiStickySection';
 
@@ -502,7 +503,7 @@ function resolveSharedNumber(values: number[]) {
 
 const SYSTEM_FONT_VALUE = '__system-font__';
 
-function resolveSharedShadow(styles: Array<DocumentNode extends never ? never : any>) {
+function resolveSharedShadow(styles: Array<ShadowStyle | undefined>) {
   const values = styles.map((style) =>
     readShadowFieldValues(style, {
       color: DEFAULT_SHADOW_COLOR,

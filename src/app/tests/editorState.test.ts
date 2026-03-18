@@ -141,7 +141,7 @@ describe('app/editorState', () => {
       throw new Error('Expected structural wrappers');
     }
 
-    let state = insertLeaf(initialState, 'text');
+    const state = insertLeaf(initialState, 'text');
     const textId = state.selectedId;
     if (!textId) {
       throw new Error('Expected inserted text node');

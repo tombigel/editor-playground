@@ -1515,9 +1515,6 @@ function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {
     return null;
   }
 
-  const selectedNodes = selectedIds
-    .map((nodeId) => document.nodes[nodeId])
-    .filter((node): node is Exclude<DocumentNode, { type: 'site' }> => Boolean(node && node.type !== 'site'));
   const anchorId = selectedIds[0];
   const anchorNode = document.nodes[anchorId];
   if (!anchorNode || anchorNode.type === 'site' || !isMovableAlignmentNode(anchorNode) || !anchorNode.parentId) {
