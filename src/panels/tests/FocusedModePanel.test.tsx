@@ -252,6 +252,7 @@ describe('panels/FocusedModePanel', () => {
     );
 
     expect(markup).toContain(textNode.name);
+    expect(markup).toContain('aria-label="Edit title"');
     expect(markup).toContain('Collapse inspector');
     expect(markup).toContain('Pin this node inside its structural range.');
   });

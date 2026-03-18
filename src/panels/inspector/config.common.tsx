@@ -6,6 +6,7 @@ export const summaryBlock: InspectorBlockDefinition = {
   bucket: 'summary',
   layout: 'custom',
   align: 'start',
+  when: ({ node }) => !node || node.type === 'site',
   render: ({ node, actions }) => <InspectorSummary node={node} actions={actions} />,
 };
 

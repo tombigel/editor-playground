@@ -70,8 +70,8 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Set type to Section');
     expect(markup).toContain('Set type to Header');
     expect(markup).toContain('Set type to Footer');
-    expect(markup).toContain('Playground Header');
-    expect(markup).toContain('aria-label="Edit title"');
+    expect(markup).not.toContain('Playground Header');
+    expect(markup).not.toContain('aria-label="Edit title"');
     expect(markup).not.toContain('>Properties<');
     expect(markup.match(/aria-pressed="true"/g)?.length).toBe(1);
   });

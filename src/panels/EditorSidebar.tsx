@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EditableNodeTitle } from './inspector/CommonSections';
 import { InspectorPanel, type InspectorPanelProps } from './InspectorPanel';
 
 export const INSPECTOR_EXPANDED_WIDTH_PX = 300;
@@ -14,6 +15,11 @@ type Props = InspectorPanelProps & {
   onTemporaryInspectorOpenChange: (value: boolean) => void;
 };
 
+export function resolveSidebarTitleCommit(value: string, fallbackValue: string) {
+  const trimmedValue = value.trim();
+  return trimmedValue || fallbackValue;
+}
+
 export function EditorSidebar({
   inspectorCollapsed,
   temporaryInspectorOpen,
@@ -26,15 +32,17 @@ export function EditorSidebar({
   const showCollapsedHandle = inspectorCollapsed && !temporaryInspectorOpen;
   const selectedNodes = inspectorProps.selectedNodes ?? [];
   const isMultiSelect = selectedNodes.length > 1;
+  const singleEditableNode =
+    !isMultiSelect && inspectorProps.node && inspectorProps.node.type !== 'site' ? inspectorProps.node : null;
   const title = isMultiSelect
     ? `${selectedNodes.length} selected`
     : inspectorProps.node?.type === 'site'
       ? 'No selection'
-      : inspectorProps.node?.name ?? 'No selection';
+      : singleEditableNode?.name?.trim() || singleEditableNode?.role || 'No selection';
   const roleLabel = isMultiSelect
     ? null
-    : inspectorProps.node && inspectorProps.node.type !== 'site'
-      ? inspectorProps.node.role
+    : singleEditableNode
+      ? singleEditableNode.role
       : null;
   const collapsedLayerClass = showCollapsedHandle ? 'opacity-100' : 'pointer-events-none opacity-0';
   const expandedLayerClass = showCollapsedHandle ? 'pointer-events-none opacity-0' : 'opacity-100';
@@ -99,10 +107,26 @@ export function EditorSidebar({
             className={`absolute inset-0 flex items-center justify-between gap-3 px-3 py-3 transition-opacity duration-150 ease-out ${expandedLayerClass}`}
           >
             <div className="min-w-0">
-              <div className="mt-0.5 flex items-center gap-2">
-                <div className="editor-text-strong truncate text-sm font-medium">{title}</div>
+              <div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 pl-1 text-left">
+                {singleEditableNode ? (
+                  <div className="min-w-0 flex-1">
+                    <EditableNodeTitle
+                      name={singleEditableNode.name}
+                      onCommit={(value) => {
+                        const nextValue = resolveSidebarTitleCommit(value, singleEditableNode.role);
+                        if (nextValue !== singleEditableNode.name) {
+                          inspectorProps.onTextChange('name', nextValue);
+                        }
+                      }}
+                      className="editor-text-strong min-w-0 self-start truncate rounded-sm text-sm leading-tight font-medium outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                      inputClassName="h-7 w-auto min-w-[8ch] max-w-full self-start rounded-sm px-1 py-0 text-sm leading-tight font-medium [field-sizing:content]"
+                    />
+                  </div>
+                ) : (
+                  <div className="editor-text-strong self-start truncate text-sm leading-tight font-medium">{title}</div>
+                )}
                 {roleLabel ? (
-                  <span className="editor-pill-subtle shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
+                  <span className="editor-pill-contrast inline-flex shrink-0 self-start rounded-md px-1.5 py-0 text-[10px] font-medium">
                     {roleLabel}
                   </span>
                 ) : null}

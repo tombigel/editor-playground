@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  PencilLine,
   SquareArrowOutUpRight,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -29,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
 import {
   BorderControlGroup,
@@ -114,9 +116,13 @@ export function InspectorSummary({
 export function EditableNodeTitle({
   name,
   onCommit,
+  className,
+  inputClassName,
 }: {
   name: string;
   onCommit: (value: string) => void;
+  className?: string;
+  inputClassName?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(name);
@@ -176,20 +182,36 @@ export function EditableNodeTitle({
           }
         }}
         aria-label="Edit title"
-        className="h-9 text-[15px] font-medium"
+        className={inputClassName ?? 'h-9 [field-sizing:content] text-[15px] font-medium'}
       />
     );
   }
 
   return (
-    <button
-      type="button"
-      className="editor-text-strong hover:editor-bg-subtle focus-visible:ring-2 focus-visible:ring-blue-500/20 w-full rounded-md px-2.5 py-2 text-left text-[15px] font-medium leading-5 outline-none"
+    <div
+      role="button"
+      tabIndex={0}
+      className={cn(
+        'editor-text-strong group min-w-0 cursor-text rounded-sm text-[15px] font-medium leading-5 outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-blue-500/20',
+        className,
+      )}
       aria-label="Edit title"
       onClick={() => setIsEditing(true)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setIsEditing(true);
+        }
+      }}
     >
-      {name}
-    </button>
+      <div className="flex items-center gap-1">
+        <div className="truncate">{name}</div>
+        <PencilLine
+          aria-hidden="true"
+          className="h-3.5 w-3.5 shrink-0 text-[color:var(--editor-utility-text-muted)] opacity-0 transition-[opacity,color] group-hover:opacity-100 group-hover:text-[color:var(--editor-utility-text-strong)]"
+        />
+      </div>
+    </div>
   );
 }
 

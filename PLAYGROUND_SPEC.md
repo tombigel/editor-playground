@@ -579,8 +579,8 @@ Current UX includes:
 - the floating focused-mode panel reuses the same inspector card chrome as the source section; it fills the shared section header leading slot with component name + type and replaces the header action with the close button
 - focused modes are mutually exclusive editor UI states; entering one closes any other active focused mode
 - top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when the authored width is locked to `100%`
-- non-site single-node inspectors do not use a trailing `Properties` section for naming; the inspector summary title itself is the editable node name surface
-- the summary title is keyboard-focusable, enters edit mode on click or keyboard activation, commits on `Enter` or focus leaving the input, and cancels on `Escape`
+- non-site single-node inspectors do not duplicate naming inside the inspector body; the sidebar chrome title itself is the editable node name surface
+- the sidebar title is keyboard-focusable, enters edit mode on click or keyboard activation, commits on `Enter` or focus leaving the input, cancels on `Escape`, and resolves an empty commit back to the component type label
 - sticky-capable single-node inspectors place `Sticky behavior` immediately after `Layout`; the multi-select inspector places `Sticky` immediately after `Layout`
 - `Content` is the standard content-editing section title across leaf inspectors; text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`
 - focused `Design` mode combines `Text style` + `Design` into one floating card for text/link/button nodes; wrappers and images render their existing `Design` card only

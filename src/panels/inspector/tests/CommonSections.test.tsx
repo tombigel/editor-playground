@@ -148,7 +148,7 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('Body');
   });
 
-  it('renders an editable title button in the summary for non-site nodes', () => {
+  it('renders the summary title itself as the editable surface for non-site nodes', () => {
     const document = createInitialDocument();
     const headerNode = Object.values(document.nodes).find(
       (node) => node.type === 'wrapper' && node.role === 'header',
@@ -166,6 +166,8 @@ describe('panels/inspector/CommonSections', () => {
     );
 
     expect(markup).toContain('aria-label="Edit title"');
+    expect(markup).toContain('role="button"');
+    expect(markup).not.toContain('<button');
     expect(markup).toContain('Playground Header');
     expect(markup).toContain('>header<');
   });
