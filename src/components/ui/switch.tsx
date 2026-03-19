@@ -10,7 +10,7 @@ const Switch = React.forwardRef<
   <SwitchPrimitive.Root
     data-ui="switch"
     className={cn(
-      'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-slate-300 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-blue-600',
+      'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-slate-300 transition-colors outline-none disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}

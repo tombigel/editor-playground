@@ -544,12 +544,23 @@ Current UX includes:
 - inspector panel with a collapsible right rail in normal mode
 - focused mode as editor chrome only; the first focused mode is `sticky`
 - focused mode renders as a floating workspace surface and stays detached from the inspector collapsed/open state
+- the focused floating panel can be dragged from its title area and is clamped against the window viewport below the top bar rather than against the stage; its default resting position still aligns with the pre-viewport workspace edge near the collapsed inspector, and its offset persists as editor UI state and does not enter undo history
 - entering focused mode collapses the inspector automatically
 - closing focused mode restores the inspector from its hidden state
 - when the inspector is collapsed, the right-rail opener can temporarily reopen it without changing the collapsed preference; while focused mode is active that temporary inspector closes on mouseout after a short delay
 - centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Import / Export`, `Advanced`, `Debug Info`, and `Shortcuts`
 - intentional editor scroll containers such as the stage shell, inspector lists, focused-mode scrollers, settings body, and section-template popover use one shared guttered auto-hide scrollbar treatment; scrollbar gutter space stays reserved and the thumb only becomes visible on hover, focus-within, or active scroll interaction
-- the settings `UI` section includes editor theme mode: `Light`, `Dark`, and `Auto` (`Auto` follows the system color scheme)
+- the settings `UI` section includes a compact editor theme mode control: `Light`, `Dark`, and `Auto`
+- the settings `UI` section includes a compact palette selector for the currently active light or dark editor mode
+- each palette option in the dropdown includes a one-line description
+- light editor palettes are `Air`, `Paper`, `Midday`, and `Clarity`
+- dark editor palettes are `Graphite`, `Monokai`, `Midnight`, and `Ink`
+- the settings `UI` section includes an editor accent control with preset swatches plus a custom picker; the accent drives selected, focused, checked, and active editor chrome across light and dark mode
+- `Midday` is the accent-derived light palette and pairs conceptually with `Midnight`
+- `Clarity` and `Ink` are the higher-contrast light and dark palette options
+- `Paper` uses its own editable warm accent while active
+- `Monokai` uses its own editable magenta accent while active
+- dark palettes keep neutral shells and use the accent on active chrome instead of tinting the full shell
 - the settings `UI` section also includes a startup focused-mode selector: `Normal` or `Sticky`
 - startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it
 - left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
@@ -608,7 +619,7 @@ Current UX includes:
 - `src/model/*` is the domain layer (types, units, defaults, selectors, validation) and has no editor UI concerns.
 - `src/sticky/resolve.ts` is the shared sticky domain resolver. It accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations / extra extent without depending on React or DOM APIs.
 - `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
-- focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
+- focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal`/`none` for no focused mode.
 - `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
@@ -688,6 +699,7 @@ The playground exposes:
 - preview sticky toggle
 - show spacers toggle (`selected` or `all`)
 - preview and spacer quick toggles remain in the left rail
+- sticky distance, offset, padding, and auto spacer guide colors are derived from the current editor accent instead of using fixed standalone hues
 - snap toggle remains in the left rail with tooltip guidance for `Alt` drag inversion and a `Shift + G` shortcut
 - sticky diagnostics output resolved by the shared sticky resolver using the same measured stage geometry the editor preview publishes
 - reset stage action

@@ -21,10 +21,16 @@ function createState(): EditorState {
       showGridLanes: false,
       snapEnabled: true,
       themeMode: 'auto',
+      accentColor: '#1668ff',
+      paperAccentColor: '#a36a2c',
+      monokaiAccentColor: '#ff6188',
+      lightTheme: 'air',
+      darkTheme: 'monokai',
       focusedMode: null,
       startupFocusedMode: null,
       inspectorCollapsed: false,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 0, y: 0 },
     },
   };
 }

@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { CSSProperties, ChangeEvent, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownToLine,
@@ -20,11 +20,24 @@ import type { DocumentModel, DocumentNode, FocusedMode, StickyLayoutState } from
 import type { DocumentFontFamily } from '../model/types';
 import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { Input } from '@/components/ui/input';
+import { PopoverTooltip } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EditorPanelHeader } from './EditorPanelHeader';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { ManageFontsPanel } from './fontManagement/ManageFontsPanel';
 import { Textarea } from '@/components/ui/textarea';
-import type { ThemeMode } from '@/lib/theme';
+import {
+  EDITOR_ACCENT_SWATCHES,
+  EDITOR_DARK_THEME_OPTIONS,
+  EDITOR_LIGHT_THEME_OPTIONS,
+  isEditorAccentSwatch,
+  type EditorDarkTheme,
+  type EditorLightTheme,
+  type ResolvedTheme,
+  type ThemeMode,
+} from '@/lib/theme';
 import {
   copyExportDocument,
   pasteClipboardImport,
@@ -59,6 +72,10 @@ type Props = {
   showGridLanes: boolean;
   snapEnabled: boolean;
   themeMode: ThemeMode;
+  accentColor: string;
+  lightTheme: EditorLightTheme;
+  darkTheme: EditorDarkTheme;
+  resolvedTheme: ResolvedTheme;
   startupFocusedMode: FocusedMode;
   undoDepth: number;
   redoDepth: number;
@@ -73,6 +90,9 @@ type Props = {
   onShowGridLanesChange: (value: boolean) => void;
   onSnapEnabledChange: (value: boolean) => void;
   onThemeModeChange: (value: ThemeMode) => void;
+  onAccentColorChange: (value: string) => void;
+  onLightThemeChange: (value: EditorLightTheme) => void;
+  onDarkThemeChange: (value: EditorDarkTheme) => void;
   onStartupFocusedModeChange: (value: FocusedMode) => void;
   onClearHistory: () => void;
   onHistoryLimitChange: (value: number) => void;
@@ -136,6 +156,10 @@ export function SettingsPanel({
   showGridLanes,
   snapEnabled,
   themeMode,
+  accentColor,
+  lightTheme,
+  darkTheme,
+  resolvedTheme,
   startupFocusedMode,
   undoDepth,
   redoDepth,
@@ -150,6 +174,9 @@ export function SettingsPanel({
   onShowGridLanesChange,
   onSnapEnabledChange,
   onThemeModeChange,
+  onAccentColorChange,
+  onLightThemeChange,
+  onDarkThemeChange,
   onStartupFocusedModeChange,
   onClearHistory,
   onHistoryLimitChange,
@@ -303,24 +330,18 @@ export function SettingsPanel({
   const spacerToggleOn = spacerVisibility === 'all';
 
   return (
-    <div role="dialog" aria-label="Settings" className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
+    <div role="dialog" aria-label="Settings" className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(760px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
       <div className="editor-bg-surface editor-border-subtle overflow-hidden rounded-2xl border">
-      <div className="editor-border-subtle flex items-center justify-between border-b px-5 py-3">
-        <div className="flex items-center gap-3">
-          <div className="editor-icon-surface flex h-9 w-9 items-center justify-center rounded-xl border">
-            <Settings className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="editor-text-strong text-sm font-medium">Settings</div>
-            <div className="editor-text-muted text-xs">Controls, transfer, diagnostics.</div>
-          </div>
-        </div>
-        <Button type="button" variant="ghost" size="icon" className="rounded-lg" onClick={onClose} aria-label="Close settings">
-          <span className="text-lg leading-none">×</span>
-        </Button>
-      </div>
+      <EditorPanelHeader
+        icon={Settings}
+        title="Settings"
+        description="Controls, transfer, diagnostics."
+        closeLabel="Close settings"
+        onClose={onClose}
+        className="px-5"
+      />
 
-      <div className="grid h-[min(78vh,720px)] min-h-0 grid-cols-[220px_minmax(0,1fr)]">
+      <div className="grid h-[min(76vh,680px)] min-h-0 grid-cols-[180px_minmax(0,1fr)]">
         <aside className="editor-bg-subtle editor-border-subtle border-r">
           <div className="sticky top-0 px-3 py-4">
             <div className="editor-text-muted mb-3 px-2 text-[11px] font-medium">
@@ -336,7 +357,7 @@ export function SettingsPanel({
                     type="button"
                     onClick={() => scrollToSection(section.id)}
                     data-active={active ? 'true' : 'false'}
-                    className={`settings-nav-link flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/45 focus-visible:ring-inset ${
+                    className={`settings-nav-link flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-inset ${
                       active ? 'shadow-sm' : ''
                     }`}
                   >
@@ -360,7 +381,16 @@ export function SettingsPanel({
           <div className="px-6 py-5">
             <section ref={displayRef} className="editor-border-subtle border-b pb-6">
               <SectionHeading eyebrow="UI" title="Appearance and guides" description="Theme, stage toggles, and guides." />
-              <ThemeModeRow value={themeMode} onChange={onThemeModeChange} />
+              <ThemePresetRow
+                themeMode={themeMode}
+                resolvedTheme={resolvedTheme}
+                lightTheme={lightTheme}
+                darkTheme={darkTheme}
+                onThemeModeChange={onThemeModeChange}
+                onLightThemeChange={onLightThemeChange}
+                onDarkThemeChange={onDarkThemeChange}
+              />
+              <AccentSwatchRow value={accentColor} onChange={onAccentColorChange} />
               <FocusedModeStartupRow
                 value={startupFocusedMode}
                 onChange={onStartupFocusedModeChange}
@@ -679,6 +709,156 @@ const DiagnosticsSection = memo(function DiagnosticsSection({
     </>
   );
 });
+
+function ThemePresetRow({
+  themeMode,
+  resolvedTheme,
+  lightTheme,
+  darkTheme,
+  onThemeModeChange,
+  onLightThemeChange,
+  onDarkThemeChange,
+}: {
+  themeMode: ThemeMode;
+  resolvedTheme: ResolvedTheme;
+  lightTheme: EditorLightTheme;
+  darkTheme: EditorDarkTheme;
+  onThemeModeChange: (value: ThemeMode) => void;
+  onLightThemeChange: (value: EditorLightTheme) => void;
+  onDarkThemeChange: (value: EditorDarkTheme) => void;
+}) {
+  const paletteTheme = themeMode === 'auto' ? resolvedTheme : themeMode;
+  const paletteOptions = paletteTheme === 'light' ? EDITOR_LIGHT_THEME_OPTIONS : EDITOR_DARK_THEME_OPTIONS;
+  const paletteValue = paletteTheme === 'light' ? lightTheme : darkTheme;
+
+  return (
+    <div className="editor-border-subtle border-t py-4">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <CompactSelectRow
+          title="Theme"
+          value={themeMode}
+          ariaLabel="Theme"
+          options={[
+            { value: 'auto', label: 'Auto' },
+            { value: 'light', label: 'Light' },
+            { value: 'dark', label: 'Dark' },
+          ]}
+          onChange={(next) => onThemeModeChange(next as ThemeMode)}
+        />
+        <CompactSelectRow
+          title="Palette"
+          value={paletteValue}
+          ariaLabel="Palette"
+          options={paletteOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+            description: option.description,
+          }))}
+          onChange={(next) =>
+            paletteTheme === 'light'
+              ? onLightThemeChange(next as EditorLightTheme)
+              : onDarkThemeChange(next as EditorDarkTheme)
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function AccentSwatchRow({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const isCustom = !isEditorAccentSwatch(value);
+
+  return (
+    <div className="editor-border-subtle border-t py-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="editor-text-strong text-sm font-medium">Accent</div>
+        </div>
+        <span className="editor-text-muted rounded-md border px-2 py-1 font-mono text-[11px] leading-none">{value}</span>
+      </div>
+      <div className="editor-scrollbar mt-3 grid grid-flow-col auto-cols-max items-center gap-2 overflow-x-auto pt-1 pb-1">
+        {EDITOR_ACCENT_SWATCHES.map((swatch) => {
+          const active = swatch.value.toLowerCase() === value.toLowerCase();
+          return (
+            <button
+              key={swatch.value}
+              type="button"
+              onClick={() => onChange(swatch.value)}
+              aria-label={swatch.label}
+              title={swatch.label}
+              data-active={active ? 'true' : 'false'}
+              className="editor-accent-swatch"
+              style={{ '--swatch-color': swatch.value } as CSSProperties}
+            />
+          );
+        })}
+        <div className="relative h-8 w-8 shrink-0">
+          <ColorPicker
+            value={value}
+            fallback={isCustom ? value : '#1668ff'}
+            allowAlpha={false}
+            ariaLabel="Custom accent color"
+            onChange={onChange}
+            className={`editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm ${isCustom ? 'editor-accent-swatch-custom-active' : ''}`}
+          />
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-white/92 mix-blend-plus-lighter drop-shadow-[0_1px_2px_rgba(15,23,42,0.35)]" />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactSelectRow({
+  title,
+  description,
+  value,
+  ariaLabel,
+  options,
+  onChange,
+}: {
+  title: string;
+  description?: string;
+  value: string;
+  ariaLabel: string;
+  options: Array<{ value: string; label: string; description?: string }>;
+  onChange: (value: string) => void;
+}) {
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <div className="editor-bg-subtle editor-border-subtle rounded-xl border px-3 py-3">
+      <div className="editor-text-strong text-sm font-medium">{title}</div>
+      {description ? <div className="editor-text-muted mt-1 text-xs leading-5">{description}</div> : null}
+      <div className={description ? 'mt-2' : 'mt-1.5'}>
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger aria-label={ariaLabel} className="h-8 text-xs">
+            <span className="truncate">{selectedOption?.label ?? value}</span>
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                <div className="flex min-w-0 flex-col">
+                  <span>{option.label}</span>
+                  {option.description ? (
+                    <span className="editor-text-muted mt-0.5 text-[11px] leading-4">{option.description}</span>
+                  ) : null}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
 
 function getSiteTitle(fileName: string) {
   const trimmed = fileName.trim();

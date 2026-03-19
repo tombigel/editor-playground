@@ -24,8 +24,19 @@ import type {
 } from '../model/types';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
-import { normalizeThemeMode } from '../lib/theme';
+import {
+  DEFAULT_EDITOR_ACCENT_COLOR,
+  DEFAULT_EDITOR_DARK_THEME,
+  DEFAULT_EDITOR_LIGHT_THEME,
+  DEFAULT_MONOKAI_ACCENT_COLOR,
+  DEFAULT_PAPER_ACCENT_COLOR,
+  normalizeEditorAccentColor,
+  normalizeEditorDarkTheme,
+  normalizeEditorLightTheme,
+  normalizeThemeMode,
+} from '../lib/theme';
 import { normalizeFocusedMode, resolveFocusedModeUrlOverride } from './focusedModes';
+import { DEFAULT_FOCUSED_PANEL_OFFSET, normalizeFocusedPanelOffset } from './focusedPanelPosition';
 import type { EditorState } from './types';
 import { normalizeSelectedIds } from './selection';
 
@@ -91,10 +102,19 @@ export function loadPersistedState(): EditorState {
         showGridLanes: parsed.ui?.showGridLanes ?? false,
         snapEnabled: parsed.ui?.snapEnabled ?? true,
         themeMode: normalizeThemeMode(parsed.ui?.themeMode),
+        accentColor: normalizeEditorAccentColor(parsed.ui?.accentColor),
+        paperAccentColor: normalizeEditorAccentColor(parsed.ui?.paperAccentColor, DEFAULT_PAPER_ACCENT_COLOR),
+        monokaiAccentColor: normalizeEditorAccentColor(
+          parsed.ui?.monokaiAccentColor,
+          DEFAULT_MONOKAI_ACCENT_COLOR,
+        ),
+        lightTheme: normalizeEditorLightTheme(parsed.ui?.lightTheme),
+        darkTheme: normalizeEditorDarkTheme(parsed.ui?.darkTheme),
         focusedMode: startupFocusedMode,
         startupFocusedMode,
         inspectorCollapsed: startupFocusedMode ? true : parsed.ui?.inspectorCollapsed ?? false,
         temporaryInspectorOpen: false,
+        focusedPanelOffset: normalizeFocusedPanelOffset(parsed.ui?.focusedPanelOffset),
       },
     };
     const errors = validateDocument(candidate.document);
@@ -158,10 +178,16 @@ function createDefaultUiState(): EditorState['ui'] {
     showGridLanes: false,
     snapEnabled: true,
     themeMode: 'auto',
+    accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
+    paperAccentColor: DEFAULT_PAPER_ACCENT_COLOR,
+    monokaiAccentColor: DEFAULT_MONOKAI_ACCENT_COLOR,
+    lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
+    darkTheme: DEFAULT_EDITOR_DARK_THEME,
     focusedMode: null,
     startupFocusedMode: null,
     inspectorCollapsed: false,
     temporaryInspectorOpen: false,
+    focusedPanelOffset: DEFAULT_FOCUSED_PANEL_OFFSET,
   };
 }
 

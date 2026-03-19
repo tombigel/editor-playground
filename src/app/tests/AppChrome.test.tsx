@@ -16,5 +16,6 @@ describe('app/AppChrome', () => {
 
     expect(markup).toContain('editor-scrollbar');
     expect(markup).toContain('Choose a layout to insert.');
+    expect(markup).toContain('editor-panel-header-close');
   });
 });

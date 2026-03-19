@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { persistState, type EditorState } from '../api/editorApi';
 import { buildEditorGoogleFontsStylesheetHref } from '../api/fontApi';
-import { useApplyResolvedTheme, useScrollSelectedNodeIntoView } from './useEditorEnvironment';
+import { useApplyEditorTheme, useScrollSelectedNodeIntoView } from './useEditorEnvironment';
 
 const EDITOR_FONT_LINK_ID = 'sticky-playground-google-fonts';
 
@@ -39,6 +39,13 @@ export function useAppRuntime(state: EditorState, resolvedTheme: 'light' | 'dark
     };
   }, [state.document]);
 
-  useApplyResolvedTheme(resolvedTheme);
+  useApplyEditorTheme(
+    resolvedTheme,
+    state.ui.accentColor,
+    state.ui.paperAccentColor,
+    state.ui.monokaiAccentColor,
+    state.ui.lightTheme,
+    state.ui.darkTheme,
+  );
   useScrollSelectedNodeIntoView(state.selectedId);
 }

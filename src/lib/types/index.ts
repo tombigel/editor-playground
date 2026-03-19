@@ -1,5 +1,7 @@
 export type ThemeMode = 'light' | 'dark' | 'auto';
 export type ResolvedTheme = 'light' | 'dark';
+export type EditorLightTheme = 'air' | 'paper' | 'midday' | 'clarity';
+export type EditorDarkTheme = 'graphite' | 'midnight' | 'monokai' | 'ink';
 
 export type ShortcutPlatform = 'mac' | 'other';
 

@@ -33,10 +33,6 @@ export function useAppViewModel(state: EditorState, stickyGeometry: StickyGeomet
     () => resolveThemeMode(state.ui.themeMode, systemPrefersDark),
     [state.ui.themeMode, systemPrefersDark],
   );
-  const topbarClass =
-    resolvedTheme === 'dark'
-      ? 'editor-topbar border-b border-white/10 bg-[#131720] px-4 text-white shadow-[0_1px_0_rgba(255,255,255,0.04)]'
-      : 'editor-topbar border-b border-[#245fe2] bg-[#2f6df6] px-4 text-white shadow-[0_1px_0_rgba(255,255,255,0.12)]';
 
   return {
     selectedNode,
@@ -48,6 +44,6 @@ export function useAppViewModel(state: EditorState, stickyGeometry: StickyGeomet
     documentJson,
     stageSelectableIds,
     resolvedTheme,
-    topbarClass,
+    topbarClass: 'editor-topbar px-4',
   };
 }

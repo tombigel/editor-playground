@@ -8,7 +8,7 @@ import type {
   StickyDefinition,
   WrapperStyleField,
 } from '../../model/types';
-import type { EditorState, FocusedMode } from '../../editor/types';
+import type { EditorState, FocusedMode, FocusedPanelOffset } from '../../editor/types';
 
 export type NodePatch = {
   id: NodeId;
@@ -104,10 +104,16 @@ export type EditorAction =
   | { type: 'setShowGridLanes'; value: boolean }
   | { type: 'setSnapEnabled'; value: boolean }
   | { type: 'setThemeMode'; value: EditorState['ui']['themeMode'] }
+  | { type: 'setAccentColor'; value: EditorState['ui']['accentColor'] }
+  | { type: 'setPaperAccentColor'; value: EditorState['ui']['paperAccentColor'] }
+  | { type: 'setMonokaiAccentColor'; value: EditorState['ui']['monokaiAccentColor'] }
+  | { type: 'setLightTheme'; value: EditorState['ui']['lightTheme'] }
+  | { type: 'setDarkTheme'; value: EditorState['ui']['darkTheme'] }
   | { type: 'setFocusedMode'; value: FocusedMode }
   | { type: 'setStartupFocusedMode'; value: FocusedMode }
   | { type: 'setInspectorCollapsed'; value: boolean }
-  | { type: 'setTemporaryInspectorOpen'; value: boolean };
+  | { type: 'setTemporaryInspectorOpen'; value: boolean }
+  | { type: 'setFocusedPanelOffset'; value: FocusedPanelOffset };
 
 export type HistoryAction =
   | EditorAction

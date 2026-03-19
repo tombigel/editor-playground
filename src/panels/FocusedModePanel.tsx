@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { SquareArrowRightEnter } from 'lucide-react';
+import type { PointerEventHandler } from 'react';
 import type { FocusedMode } from '../api/editorApi';
 import { getFocusedModeLabel } from '../editor/focusedModes';
 import { createInitialDocument } from '../model/defaults';
@@ -53,6 +54,8 @@ type Props = Pick<
 > & {
   mode: Exclude<FocusedMode, null>;
   onExitFocusedMode: () => void;
+  onHeaderDragPointerDown?: PointerEventHandler<HTMLDivElement>;
+  dragging?: boolean;
 };
 
 export function FocusedModePanel({
@@ -96,6 +99,8 @@ export function FocusedModePanel({
   onOpenManageFonts,
   mode,
   onExitFocusedMode,
+  onHeaderDragPointerDown,
+  dragging = false,
 }: Props) {
   const resolvedDocument = document ?? createInitialDocument();
   const actions: InspectorActionHandlers = {
@@ -152,14 +157,26 @@ export function FocusedModePanel({
   );
   const headerContent =
     isMultiSticky ? (
-      <div className="min-w-0">
+      <div
+        className={dragging ? 'min-w-0 cursor-grabbing select-none touch-none' : 'min-w-0 cursor-grab touch-none'}
+        aria-label={onHeaderDragPointerDown ? 'Drag focused panel' : undefined}
+        data-focused-panel-drag-zone={onHeaderDragPointerDown ? 'true' : undefined}
+        data-dragging={onHeaderDragPointerDown ? (dragging ? 'true' : 'false') : undefined}
+        onPointerDown={onHeaderDragPointerDown}
+      >
         <div className="editor-text-strong text-sm font-medium">{modeLabel}</div>
         <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
           <div className="truncate">{selectedNodes.length} selected</div>
         </div>
       </div>
     ) : node ? (
-      <div className="min-w-0">
+      <div
+        className={dragging ? 'min-w-0 cursor-grabbing select-none touch-none' : 'min-w-0 cursor-grab touch-none'}
+        aria-label={onHeaderDragPointerDown ? 'Drag focused panel' : undefined}
+        data-focused-panel-drag-zone={onHeaderDragPointerDown ? 'true' : undefined}
+        data-dragging={onHeaderDragPointerDown ? (dragging ? 'true' : 'false') : undefined}
+        onPointerDown={onHeaderDragPointerDown}
+      >
         <div className="editor-text-strong text-sm font-medium">{modeLabel}</div>
         <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
           <div className="truncate">{title}</div>
@@ -174,8 +191,8 @@ export function FocusedModePanel({
 
   if (isMultiSticky) {
     return (
-      <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-        <div className="editor-bg-surface editor-border-subtle editor-scrollbar max-h-[min(72vh,680px)] overflow-auto rounded-xl border">
+      <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="editor-focused-panel pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
+        <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
           <div className="space-y-3">
             <MultiStickySection
               selectedNodes={selectedNodes}
@@ -213,8 +230,8 @@ export function FocusedModePanel({
   );
 
   return (
-    <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-      <div className="editor-bg-surface editor-border-subtle editor-scrollbar max-h-[min(72vh,680px)] overflow-auto rounded-xl border">
+    <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="editor-focused-panel pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
+      <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
         <InspectorBlockList blocks={blocks} compact scrollable={false} />
       </div>
     </div>

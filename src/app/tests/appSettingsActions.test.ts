@@ -30,10 +30,16 @@ describe('app/appSettingsActions', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      accentColor: '#ff6b4a',
+      paperAccentColor: '#b07a3a',
+      monokaiAccentColor: '#ff4f9a',
+      lightTheme: 'paper',
+      darkTheme: 'midnight',
       focusedMode: 'sticky',
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: true,
+      focusedPanelOffset: { x: -36, y: 72 },
     });
 
     expect(next.selectedId).toBeNull();
@@ -43,10 +49,16 @@ describe('app/appSettingsActions', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      accentColor: '#ff6b4a',
+      paperAccentColor: '#b07a3a',
+      monokaiAccentColor: '#ff4f9a',
+      lightTheme: 'paper',
+      darkTheme: 'midnight',
       focusedMode: 'sticky',
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: -36, y: 72 },
     });
   });
 
@@ -59,10 +71,16 @@ describe('app/appSettingsActions', () => {
       showGridLanes: false,
       snapEnabled: true,
       themeMode: 'auto',
+      accentColor: '#1668ff',
+      paperAccentColor: '#a36a2c',
+      monokaiAccentColor: '#ff6188',
+      lightTheme: 'air',
+      darkTheme: 'monokai',
       focusedMode: null,
       startupFocusedMode: null,
       inspectorCollapsed: false,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 0, y: 0 },
     });
   });
 
