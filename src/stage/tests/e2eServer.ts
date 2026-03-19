@@ -10,11 +10,14 @@ export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
   const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port)], {
     cwd: process.cwd(),
     stdio: 'pipe',
+    detached: true,
     env: {
       ...process.env,
       CI: '1',
     },
   });
+  // Unref so orphaned stdio pipes don't prevent vitest from exiting
+  server.unref();
 
   try {
     await waitForServer(url, server);
@@ -69,11 +72,21 @@ async function stopServer(server: ChildProcessWithoutNullStreams) {
     return;
   }
 
-  server.kill('SIGTERM');
+  // Kill the entire process group (npm + vite + esbuild children) so no orphans remain
+  try {
+    process.kill(-(server.pid!), 'SIGTERM');
+  } catch {
+    server.kill('SIGTERM');
+  }
+
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(() => {
       if (server.exitCode == null) {
-        server.kill('SIGKILL');
+        try {
+          process.kill(-(server.pid!), 'SIGKILL');
+        } catch {
+          server.kill('SIGKILL');
+        }
       }
       resolve();
     }, 3_000);
