@@ -31,7 +31,7 @@ When a file grows beyond these limits, split it into focused submodules with a b
 
 ## Editor Style Guide
 
-Use [EDITOR_STYLE_GUIDE.md](./EDITOR_STYLE_GUIDE.md) as the source of truth for editor chrome visual language and token direction.
+Use [EDITOR_STYLE_GUIDE.md](./docs/EDITOR_STYLE_GUIDE.md) as the source of truth for editor chrome visual language and token direction.
 
 When changing editor-facing UI styling, align the change to the style guide first:
 
@@ -64,7 +64,7 @@ For every important functional change or addition, update documentation in the s
 
 Required files:
 
-- `PLAYGROUND_SPEC.md`: update behavior/model/UX descriptions.
+- `docs/PLAYGROUND_SPEC.md`: update behavior/model/UX descriptions.
 - automated tests: every testable behavior change must update existing tests or add new ones in the same change set.
 
 Important functional change includes (non-exhaustive):
@@ -76,3 +76,7 @@ Important functional change includes (non-exhaustive):
 
 When no doc change is needed, explicitly confirm why in the final summary.
 When a change is not reasonably testable, explicitly confirm why in the final summary.
+
+## Archived Documents
+
+Files under `archive/` are historical records only. Do not read, reference, or act on them unless explicitly asked. They reflect past state and may contradict current code or active plans.

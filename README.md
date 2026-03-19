@@ -2,7 +2,7 @@
 
 This project is a local playground for defining and testing a sticky layout model.
 
-It started from a conceptual sticky document and evolved into a more robust structural spec. This README keeps only the sticky behavior itself. The editor, data model, and playground implementation details are documented separately in [PLAYGROUND_SPEC.md](./PLAYGROUND_SPEC.md).
+It started from a conceptual sticky document and evolved into a more robust structural spec. This README keeps only the sticky behavior itself. The editor, data model, and playground implementation details are documented separately in [PLAYGROUND_SPEC.md](./docs/PLAYGROUND_SPEC.md).
 
 ## Core Principles
 
@@ -87,7 +87,7 @@ This is intentional. Sticky behavior is easier to reason about when its range is
 
 ## Related Docs
 
-- [PLAYGROUND_SPEC.md](./PLAYGROUND_SPEC.md) for the editor model, wrapper roles, nesting rules, units, persistence, and implementation notes
+- [PLAYGROUND_SPEC.md](./docs/PLAYGROUND_SPEC.md) for the editor model, wrapper roles, nesting rules, units, persistence, and implementation notes
 
 ## API Boundaries
 

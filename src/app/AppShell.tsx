@@ -45,7 +45,7 @@ import {
   resolveStickyGuideColors,
   type ResolvedTheme,
 } from '@/lib/theme';
-import stickyIconUrl from '../../sticky_512.png';
+import stickyIconUrl from '../../public/sticky_512.png';
 import {
   clampFocusedPanelOffset,
   FOCUSED_PANEL_RIGHT_OFFSET_PX,
