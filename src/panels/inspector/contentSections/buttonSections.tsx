@@ -193,16 +193,16 @@ export function ButtonDesignSection({
             <ButtonPaddingField
               nodeId={node.id}
               axis="block"
-              icon={<ArrowUpDown className="h-3.5 w-3.5" />}
-              ariaLabel="Vertical padding"
+              icon={<ArrowUpDown className="h-3.5 w-3.5" role="presentation" />}
+
               value={node.style?.paddingBlock?.raw ?? DEFAULT_BUTTON_PADDING_BLOCK}
               onChange={(value) => onTextChange('paddingBlock', value)}
             />
             <ButtonPaddingField
               nodeId={node.id}
               axis="inline"
-              icon={<ArrowLeftRight className="h-3.5 w-3.5" />}
-              ariaLabel="Horizontal padding"
+              icon={<ArrowLeftRight className="h-3.5 w-3.5" role="presentation" />}
+
               value={node.style?.paddingInline?.raw ?? DEFAULT_BUTTON_PADDING_INLINE}
               onChange={(value) => onTextChange('paddingInline', value)}
             />
@@ -310,16 +310,16 @@ export function ButtonAppearanceSection({
             <ButtonPaddingField
               nodeId={node.id}
               axis="block"
-              icon={<ArrowUpDown className="h-3.5 w-3.5" />}
-              ariaLabel="Vertical padding"
+              icon={<ArrowUpDown className="h-3.5 w-3.5" role="presentation" />}
+
               value={node.style?.paddingBlock?.raw ?? DEFAULT_BUTTON_PADDING_BLOCK}
               onChange={(value) => onTextChange('paddingBlock', value)}
             />
             <ButtonPaddingField
               nodeId={node.id}
               axis="inline"
-              icon={<ArrowLeftRight className="h-3.5 w-3.5" />}
-              ariaLabel="Horizontal padding"
+              icon={<ArrowLeftRight className="h-3.5 w-3.5" role="presentation" />}
+
               value={node.style?.paddingInline?.raw ?? DEFAULT_BUTTON_PADDING_INLINE}
               onChange={(value) => onTextChange('paddingInline', value)}
             />
@@ -334,20 +334,18 @@ function ButtonPaddingField({
   nodeId,
   axis,
   icon,
-  ariaLabel,
   value,
   onChange,
 }: {
   nodeId: string;
   axis: 'block' | 'inline';
   icon: ReactNode;
-  ariaLabel: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <div className="editor-text-muted flex h-8 items-center justify-center" aria-label={ariaLabel}>
+      <div className="editor-text-muted flex h-8 items-center justify-center">
         {icon}
       </div>
       <SpacingField nodeId={nodeId} axis={axis} value={value} onChange={onChange} />

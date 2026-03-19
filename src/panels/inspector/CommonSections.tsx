@@ -190,21 +190,14 @@ export function EditableNodeTitle({
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       className={cn(
         'editor-text-strong group min-w-0 cursor-text rounded-sm text-[15px] font-medium leading-5 outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)]',
         className,
       )}
       aria-label="Edit title"
       onClick={() => setIsEditing(true)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          setIsEditing(true);
-        }
-      }}
     >
       <div className="flex items-center gap-1">
         <div className="truncate">{name}</div>
@@ -213,7 +206,7 @@ export function EditableNodeTitle({
           className="h-3.5 w-3.5 shrink-0 text-[color:var(--editor-utility-text-muted)] opacity-0 transition-[opacity,color] group-hover:opacity-100 group-hover:text-[color:var(--editor-utility-text-strong)]"
         />
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -301,32 +294,32 @@ export function NodeBasicsSection({
             <LabeledPaddingField
               nodeId={wrapperPaddingNode.id}
               axis="top"
-              icon={<ArrowUp className="h-3.5 w-3.5" />}
-              ariaLabel="Top padding"
+              icon={<ArrowUp className="h-3.5 w-3.5" role="presentation" />}
+
               value={wrapperPaddingNode.style.paddingTop?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingTop', value)}
             />
             <LabeledPaddingField
               nodeId={wrapperPaddingNode.id}
               axis="right"
-              icon={<ArrowRight className="h-3.5 w-3.5" />}
-              ariaLabel="Right padding"
+              icon={<ArrowRight className="h-3.5 w-3.5" role="presentation" />}
+
               value={wrapperPaddingNode.style.paddingRight?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingRight', value)}
             />
             <LabeledPaddingField
               nodeId={wrapperPaddingNode.id}
               axis="bottom"
-              icon={<ArrowDown className="h-3.5 w-3.5" />}
-              ariaLabel="Bottom padding"
+              icon={<ArrowDown className="h-3.5 w-3.5" role="presentation" />}
+
               value={wrapperPaddingNode.style.paddingBottom?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingBottom', value)}
             />
             <LabeledPaddingField
               nodeId={wrapperPaddingNode.id}
               axis="left"
-              icon={<ArrowLeft className="h-3.5 w-3.5" />}
-              ariaLabel="Left padding"
+              icon={<ArrowLeft className="h-3.5 w-3.5" role="presentation" />}
+
               value={wrapperPaddingNode.style.paddingLeft?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingLeft', value)}
             />
@@ -393,20 +386,18 @@ function LabeledPaddingField({
   nodeId,
   axis,
   icon,
-  ariaLabel,
   value,
   onChange,
 }: {
   nodeId: string;
   axis: 'top' | 'right' | 'bottom' | 'left';
   icon: ReactNode;
-  ariaLabel: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <div className="editor-text-muted flex h-8 items-center justify-center" aria-label={ariaLabel}>
+      <div className="editor-text-muted flex h-8 items-center justify-center">
         {icon}
       </div>
       <SpacingField nodeId={nodeId} axis={axis} value={value || '0px'} onChange={onChange} />

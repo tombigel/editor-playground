@@ -91,7 +91,7 @@ export function renderWrapper({
         gridTemplateColumns: meshLayout.columnTemplate,
         gridTemplateRows: meshLayout.rowTemplate,
         ...(previewSticky
-          ? getStageStickyCssProperties(node.sticky!, { includePosition: true, includeZIndex: true })
+          ? getStageStickyCssProperties(node.sticky as StickyDefinition, { includePosition: true, includeZIndex: true })
           : {}),
       }
     : {

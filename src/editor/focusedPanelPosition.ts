@@ -59,10 +59,10 @@ export function clampFocusedPanelOffset({
 }
 
 function normalizeOffsetAxis(value: number | undefined) {
-  if (!Number.isFinite(value)) {
+  if (value === undefined || !Number.isFinite(value)) {
     return 0;
   }
-  return Math.round(value!);
+  return Math.round(value);
 }
 
 function clampNumber(value: number, min: number, max: number) {

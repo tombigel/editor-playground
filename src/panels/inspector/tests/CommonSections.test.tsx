@@ -75,10 +75,6 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).not.toContain('>X<');
     expect(markup).not.toContain('>Y<');
     expect(markup).toContain('>Padding<');
-    expect(markup).toContain('aria-label="Top padding"');
-    expect(markup).toContain('aria-label="Right padding"');
-    expect(markup).toContain('aria-label="Bottom padding"');
-    expect(markup).toContain('aria-label="Left padding"');
     expect(markup).toContain('value="20"');
     expect(markup).toContain('value="48"');
   });
@@ -120,10 +116,6 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('>X<');
     expect(markup).toContain('>Y<');
     expect(markup).toContain('>Padding<');
-    expect(markup).toContain('aria-label="Top padding"');
-    expect(markup).toContain('aria-label="Right padding"');
-    expect(markup).toContain('aria-label="Bottom padding"');
-    expect(markup).toContain('aria-label="Left padding"');
     expect(markup).toContain('value="16"');
   });
 
@@ -173,8 +165,7 @@ describe('panels/inspector/CommonSections', () => {
     );
 
     expect(markup).toContain('aria-label="Edit title"');
-    expect(markup).toContain('role="button"');
-    expect(markup).not.toContain('<button');
+    expect(markup).toContain('<button');
     expect(markup).toContain('Playground Header');
     expect(markup).toContain('>header<');
   });

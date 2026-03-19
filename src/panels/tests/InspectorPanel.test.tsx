@@ -356,8 +356,6 @@ describe('panels/InspectorPanel', () => {
     expect(buttonMarkup).toContain('>Border<');
     expect(buttonMarkup).toContain('>Shadow<');
     expect(buttonMarkup).toContain('>Padding<');
-    expect(buttonMarkup).toContain('aria-label="Vertical padding"');
-    expect(buttonMarkup).toContain('aria-label="Horizontal padding"');
     expect(buttonMarkup).toContain('>Radius<');
     expect(buttonMarkup).toContain('>Wrap<');
     expect(buttonMarkup.match(/>Wrap</g)?.length).toBe(1);

@@ -74,7 +74,7 @@ async function stopServer(server: ChildProcessWithoutNullStreams) {
 
   // Kill the entire process group (npm + vite + esbuild children) so no orphans remain
   try {
-    process.kill(-(server.pid!), 'SIGTERM');
+    process.kill(-(server.pid as number), 'SIGTERM');
   } catch {
     server.kill('SIGTERM');
   }
@@ -83,7 +83,7 @@ async function stopServer(server: ChildProcessWithoutNullStreams) {
     const timeout = setTimeout(() => {
       if (server.exitCode == null) {
         try {
-          process.kill(-(server.pid!), 'SIGKILL');
+          process.kill(-(server.pid as number), 'SIGKILL');
         } catch {
           server.kill('SIGKILL');
         }

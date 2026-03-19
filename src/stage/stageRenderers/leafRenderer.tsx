@@ -79,6 +79,7 @@ export function renderLeaf({
   const intrinsicHeightLeaf = usesIntrinsicHeight(child);
   const trackWidth = getTrackCssWidth(child);
   const leafBody = (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor canvas node, not web content
     <div
       key={child.id}
       id={`stage-node-${child.id}`}

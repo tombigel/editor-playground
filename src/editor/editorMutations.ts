@@ -135,13 +135,13 @@ function getInsertionParent(
       : selected.id;
   }
   if (insertType === 'leaf') {
-    return selected.type === 'wrapper' ? selected.id : selected.parentId!;
+    return selected.type === 'wrapper' ? selected.id : (selected.parentId ?? document.rootId);
   }
   if (insertType === 'containerWrapper') {
     if (selected.type === 'wrapper') {
       return selected.id;
     }
-    return selected.parentId!;
+    return selected.parentId ?? document.rootId;
   }
   if (selected.type === 'wrapper') {
     return document.rootId;

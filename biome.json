@@ -13,7 +13,7 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "recommended": false
+        "recommended": true
       },
       "correctness": {
         "noUnusedVariables": "error",
@@ -26,6 +26,21 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "globals": []
   }

@@ -28,6 +28,7 @@ export function ResizeHandleView({
   return (
     <>
       {handles.map((handle) => (
+        // biome-ignore lint/a11y/noStaticElementInteractions: editor resize handle, mouse-only interaction
         <div
           key={handle}
           className={`resize-handle handle-${handle}${handle === 's' && wideSouthHandle ? ' resize-handle-structural-s' : ''}`}

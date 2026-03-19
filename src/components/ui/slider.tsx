@@ -28,6 +28,7 @@ const Slider = React.forwardRef<
       </SliderPrimitive.Track>
       {Array.from({ length: thumbCount }).map((_, index) => (
         <SliderPrimitive.Thumb
+          // biome-ignore lint/suspicious/noArrayIndexKey: stable list of identical thumbs
           key={index}
           data-ui="slider-thumb"
           className="block size-4 rounded-full border bg-white shadow-sm transition-colors disabled:pointer-events-none disabled:opacity-50"

@@ -1,4 +1,4 @@
-import { forwardRef, memo, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import {
   ArrowDown,
@@ -291,10 +291,10 @@ export const FontPickerPopover = memo(function FontPickerPopover({
     setFrozenFamilies((current) => current ?? orderedFamilies);
   }, [open, orderedFamilies]);
 
-  function closePicker() {
+  const closePicker = useCallback(() => {
     setOpen(false);
     triggerRef.current?.focus();
-  }
+  }, []);
 
   useEffect(() => {
     if (open) {

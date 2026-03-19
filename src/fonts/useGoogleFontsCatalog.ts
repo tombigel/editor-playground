@@ -14,6 +14,7 @@ export function useGoogleFontsCatalog(): GoogleFontsCatalogState & { retry: () =
   );
   const [retryCount, setRetryCount] = useState(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: retryCount triggers intentional re-fetch
   useEffect(() => {
     let cancelled = false;
 

@@ -249,6 +249,7 @@ export function PopoverTooltip({
 
   return (
     <>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: tooltip trigger wrapper delegates interaction to children */}
       <span
         ref={triggerRef}
         className="inline-flex"

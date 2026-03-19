@@ -63,6 +63,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         }}
         {...props}
       >
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: stops propagation to prevent closing dialog when clicking content */}
         <div
           className={cn(
             'editor-bg-surface editor-border-subtle relative grid w-full max-w-md gap-4 rounded-xl border p-6 shadow-lg',

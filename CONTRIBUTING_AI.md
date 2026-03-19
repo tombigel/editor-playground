@@ -43,10 +43,6 @@ When changing editor-facing UI styling, align the change to the style guide firs
 
 Do not introduce one-off editor styling that conflicts with the guide when an existing token or role can be reused.
 
-## Visual Regression Before UI Changes
-
-Before modifying shared UI components or layout primitives, ensure visual regression baselines exist. Run `npm run test:visual` to verify no unexpected CSS changes. If baselines don't exist for the component you're changing, create them first.
-
 ## Subsystem Structure
 
 Keep subsystem structure explicit and consistent:

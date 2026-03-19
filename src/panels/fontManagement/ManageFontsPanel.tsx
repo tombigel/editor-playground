@@ -121,6 +121,7 @@ export function ManageFontsPanel({
     writeStoredBrowseState(filters);
   }, [filters]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset pagination when any filter field changes
   useEffect(() => {
     setCatalogPage(1);
   }, [search, subset, category, favoritesOnly, usedOnly, hideVariable, pageSize]);
@@ -709,6 +710,7 @@ function FilterToggle({
   onCheckedChange: (value: boolean) => void;
 }) {
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: label wraps Radix Switch which renders an internal input
     <label className="flex items-center gap-2 text-[11px] font-medium">
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
       <span>{label}</span>

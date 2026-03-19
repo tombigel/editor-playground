@@ -157,6 +157,7 @@ export function FocusedModePanel({
   );
   const headerContent =
     isMultiSticky ? (
+      // biome-ignore lint/a11y/useAriaPropsSupportedByRole: drag grip zone — no semantic element for drag handles
       <div
         className={dragging ? 'min-w-0 cursor-grabbing select-none touch-none' : 'min-w-0 cursor-grab touch-none'}
         aria-label={onHeaderDragPointerDown ? 'Drag focused panel' : undefined}
@@ -170,6 +171,7 @@ export function FocusedModePanel({
         </div>
       </div>
     ) : node ? (
+      // biome-ignore lint/a11y/useAriaPropsSupportedByRole: drag grip zone — no semantic element for drag handles
       <div
         className={dragging ? 'min-w-0 cursor-grabbing select-none touch-none' : 'min-w-0 cursor-grab touch-none'}
         aria-label={onHeaderDragPointerDown ? 'Drag focused panel' : undefined}

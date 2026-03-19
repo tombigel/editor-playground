@@ -155,11 +155,12 @@ export function Stage({
   }, [document, dragState, selectedIds]);
 
   return (
-    <div
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor stage needs aria-activedescendant for selection tracking
+    <section
       ref={handleStageRef}
       className="stage-shell editor-scrollbar"
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: editor stage requires keyboard focus for shortcuts and selection
       tabIndex={0}
-      role="region"
       aria-label="Editor stage"
       aria-activedescendant={selectedId ? `stage-node-${selectedId}` : undefined}
       data-stage-focus-scope="true"
@@ -426,7 +427,7 @@ export function Stage({
         viewport={viewport}
       />
       {marqueeState?.active ? <MarqueeSelectionBox stageElement={stageElement} marqueeState={marqueeState} /> : null}
-    </div>
+    </section>
   );
 }
 

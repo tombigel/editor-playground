@@ -114,7 +114,7 @@ function buildStickyRegistration(
   parentWrapper: WrapperNode,
   geometry: ResolvedStickyGeometry,
 ): StickyRegistration {
-  const sticky = owner.sticky!;
+  const sticky = owner.sticky as StickyDefinition;
   const edgeMode = getStickyEdgeMode(sticky);
   const topDurationPx = resolveStickyDurationPx(
     sticky.durationTop ?? sticky.duration,

@@ -13,7 +13,7 @@ export function appendHistoryEntry(past: HistoryEntry[], entry: HistoryEntry, hi
     );
 
   const nextPast = shouldDebounceMerge
-    ? [...past.slice(0, -1), composeHistoryEntries(last!, entry)]
+    ? [...past.slice(0, -1), composeHistoryEntries(last, entry)]
     : [...past, entry];
 
   if (nextPast.length > historyLimit) {
