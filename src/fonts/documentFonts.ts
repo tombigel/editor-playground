@@ -6,10 +6,8 @@ import type {
   TypographyStyle,
 } from '../model/types';
 import { createDefaultFontLibrary, getDefaultDocumentFontFamily } from './defaults';
-import { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
+import { getCachedGoogleFontsCatalog } from './googleFontsCatalog';
 import { clampFontWeight } from './weights';
-
-const BUNDLED_GOOGLE_FONTS_CATALOG = getBundledGoogleFontsCatalog();
 
 export function getDocumentFontLibrary(document: DocumentModel): FontLibrary {
   return document.fontLibrary;
@@ -268,7 +266,7 @@ function resolveKnownDocumentFontFamily(familyName: string) {
     return structuredClone(defaultFamily);
   }
 
-  const bundledFamily = BUNDLED_GOOGLE_FONTS_CATALOG.families.find((family) => family.family === familyName);
+  const bundledFamily = getCachedGoogleFontsCatalog()?.families.find((family) => family.family === familyName);
   return bundledFamily ? structuredClone(bundledFamily) : undefined;
 }
 

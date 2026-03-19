@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { getBundledGoogleFontsCatalog } from '../googleFontsCatalog';
 
 describe('fonts/googleFontsCatalog', () => {
-  it('loads a bundled Google Fonts catalog snapshot', () => {
-    const catalog = getBundledGoogleFontsCatalog();
+  it('loads a bundled Google Fonts catalog snapshot', async () => {
+    const catalog = await getBundledGoogleFontsCatalog();
 
     expect(catalog.source).toBe('google-fonts');
     expect(catalog.remoteSort).toBe('popularity');

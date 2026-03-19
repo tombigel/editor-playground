@@ -1,11 +1,21 @@
-import bundledCatalog from './generated/googleFontsCatalog.json';
 import type { GoogleFontsCatalog } from './types';
 import { isGoogleFontsCatalog } from './googleFontsValidation';
 
-const BUNDLED_GOOGLE_FONTS_CATALOG = parseBundledGoogleFontsCatalog(bundledCatalog);
+let _catalog: GoogleFontsCatalog | null = null;
 
-export function getBundledGoogleFontsCatalog() {
-  return BUNDLED_GOOGLE_FONTS_CATALOG;
+export async function loadGoogleFontsCatalog(): Promise<GoogleFontsCatalog> {
+  if (_catalog) return _catalog;
+  const { default: bundledCatalog } = await import('./generated/googleFontsCatalog.json');
+  _catalog = parseBundledGoogleFontsCatalog(bundledCatalog);
+  return _catalog;
+}
+
+export function getCachedGoogleFontsCatalog(): GoogleFontsCatalog | null {
+  return _catalog;
+}
+
+export async function getBundledGoogleFontsCatalog(): Promise<GoogleFontsCatalog> {
+  return loadGoogleFontsCatalog();
 }
 
 function parseBundledGoogleFontsCatalog(value: unknown): GoogleFontsCatalog {

@@ -97,9 +97,10 @@ describe('fonts/documentFonts', () => {
     });
   });
 
-  it('resolves authored bundled Google fonts into full metadata during normalization', () => {
+  it('resolves authored bundled Google fonts into full metadata during normalization', async () => {
     const document = createInitialDocument();
-    const bundledFamily = getBundledGoogleFontsCatalog().families.find((family) => family.family === 'Open Sans');
+    const catalog = await getBundledGoogleFontsCatalog();
+    const bundledFamily = catalog.families.find((family) => family.family === 'Open Sans');
     const postTitle = Object.values(document.nodes).find(
       (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
     );

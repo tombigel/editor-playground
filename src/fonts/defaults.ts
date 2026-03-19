@@ -1,36 +1,15 @@
 import type { DocumentFontFamily, DocumentModel, FontLibrary } from '../model/types';
-import { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
+import defaultFontFamiliesData from './generated/defaultFontFamilies.json';
 
 const DEFAULT_DOCUMENT_FONT_DEFAULTS = ['Inter', 'Assistant'] as const;
-const DEFAULT_DOCUMENT_FONT_FAMILY_NAMES = [
-  'Inter',
-  'Assistant',
-  'Playfair Display',
-  'Cormorant Garamond',
-  'Proza Libre',
-  'Poppins',
-  'Open Sans',
-  'Fraunces',
-  'Montserrat',
-  'Crimson Text',
-] as const;
 
-const BUNDLED_GOOGLE_FONTS_CATALOG = getBundledGoogleFontsCatalog();
-
-export const DEFAULT_DOCUMENT_FONT_FAMILIES: DocumentFontFamily[] = DEFAULT_DOCUMENT_FONT_FAMILY_NAMES.flatMap((familyName) => {
-  const family = BUNDLED_GOOGLE_FONTS_CATALOG.families.find((entry) => entry.family === familyName);
-  if (!family) {
-    return [];
-  }
-
-  return [
-    {
-      ...structuredClone(family),
-      favorite: false,
-      origin: 'default',
-    },
-  ];
-});
+export const DEFAULT_DOCUMENT_FONT_FAMILIES: DocumentFontFamily[] = (
+  defaultFontFamiliesData.families as DocumentFontFamily[]
+).map((family) => ({
+  ...structuredClone(family),
+  favorite: false,
+  origin: 'default',
+}));
 
 export const DEFAULT_FONT_FALLBACK_STACK = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 

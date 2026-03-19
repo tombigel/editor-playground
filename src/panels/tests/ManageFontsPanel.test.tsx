@@ -60,9 +60,10 @@ describe('panels/ManageFontsPanel', () => {
     expect(formatGoogleFontsCatalogTimestamp('invalid')).toBe('unknown');
   });
 
-  it('renders the bundled catalog timestamp in the browse panel', () => {
+  it('renders the bundled catalog timestamp in the browse panel', async () => {
     const document = createInitialDocument();
-    const expectedTimestamp = formatGoogleFontsCatalogTimestamp(getBundledGoogleFontsCatalog().fetchedAt);
+    const catalog = await getBundledGoogleFontsCatalog();
+    const expectedTimestamp = formatGoogleFontsCatalogTimestamp(catalog.fetchedAt);
     const markup = renderToStaticMarkup(
       <ManageFontsPanel
         document={document}

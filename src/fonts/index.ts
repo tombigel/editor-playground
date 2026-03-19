@@ -32,7 +32,7 @@ export {
   searchGoogleFontFamilies,
   sortGoogleFontFamilies,
 } from './googleFonts';
-export { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
+export { getBundledGoogleFontsCatalog, loadGoogleFontsCatalog, getCachedGoogleFontsCatalog } from './googleFontsCatalog';
 export {
   buildFontPickerPreviewStylesheetHref,
   buildFontPreviewStylesheetHref,

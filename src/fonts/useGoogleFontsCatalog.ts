@@ -1,8 +1,6 @@
-import { getBundledGoogleFontsCatalog } from './googleFontsCatalog';
+import { useEffect, useState } from 'react';
+import { getCachedGoogleFontsCatalog, loadGoogleFontsCatalog } from './googleFontsCatalog';
 import type { GoogleFontsCatalog } from './types';
-
-const BUNDLED_GOOGLE_FONTS_CATALOG = getBundledGoogleFontsCatalog();
-const RETRY_NOOP = () => undefined;
 
 type GoogleFontsCatalogState =
   | { status: 'loading'; catalog: null; error: null }
@@ -10,10 +8,33 @@ type GoogleFontsCatalogState =
   | { status: 'error'; catalog: null; error: string };
 
 export function useGoogleFontsCatalog(): GoogleFontsCatalogState & { retry: () => void } {
-  return {
-    status: 'ready' as const,
-    catalog: BUNDLED_GOOGLE_FONTS_CATALOG,
-    error: null,
-    retry: RETRY_NOOP,
-  };
+  const cached = getCachedGoogleFontsCatalog();
+  const [state, setState] = useState<GoogleFontsCatalogState>(
+    cached ? { status: 'ready', catalog: cached, error: null } : { status: 'loading', catalog: null, error: null },
+  );
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setState({ status: 'loading', catalog: null, error: null });
+
+    loadGoogleFontsCatalog()
+      .then((catalog) => {
+        if (!cancelled) {
+          setState({ status: 'ready', catalog, error: null });
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setState({ status: 'error', catalog: null, error: err instanceof Error ? err.message : String(err) });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [retryCount]);
+
+  return { ...state, retry: () => setRetryCount((n) => n + 1) };
 }

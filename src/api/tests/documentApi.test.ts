@@ -182,9 +182,10 @@ describe('api/documentApi', () => {
     expect(buttonNode.openInNewTab).toBe(true);
   });
 
-  it('preserves catalog metadata when applying an existing document font family', () => {
+  it('preserves catalog metadata when applying an existing document font family', async () => {
     const document = createInitialDocument();
-    const assistantFamily = getBundledGoogleFontsCatalog().families.find((family) => family.family === 'Assistant');
+    const catalog = await getBundledGoogleFontsCatalog();
+    const assistantFamily = catalog.families.find((family) => family.family === 'Assistant');
     const textId = Object.keys(document.nodes).find(
       (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
     );

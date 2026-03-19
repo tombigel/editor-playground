@@ -1,0 +1,320 @@
+{
+  "families": [
+    {
+      "family": "Inter",
+      "category": "sans-serif",
+      "subsets": [
+        "cyrillic",
+        "cyrillic-ext",
+        "greek",
+        "greek-ext",
+        "latin",
+        "latin-ext",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "opsz",
+          "min": 14,
+          "max": 32
+        },
+        {
+          "tag": "wght",
+          "min": 100,
+          "max": 900
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-10",
+      "popularityRank": 5,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Assistant",
+      "category": "sans-serif",
+      "subsets": [
+        "hebrew",
+        "latin",
+        "latin-ext"
+      ],
+      "variants": [
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 200,
+          "max": 800
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-08",
+      "popularityRank": 86,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Playfair Display",
+      "category": "serif",
+      "subsets": [
+        "cyrillic",
+        "latin",
+        "latin-ext",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 400,
+          "max": 900
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-11",
+      "popularityRank": 19,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Cormorant Garamond",
+      "category": "serif",
+      "subsets": [
+        "cyrillic",
+        "cyrillic-ext",
+        "latin",
+        "latin-ext",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 300,
+          "max": 700
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-08",
+      "popularityRank": 97,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Proza Libre",
+      "category": "sans-serif",
+      "subsets": [
+        "latin",
+        "latin-ext"
+      ],
+      "variants": [
+        "italic",
+        "regular",
+        "500",
+        "500italic",
+        "600",
+        "600italic",
+        "700",
+        "700italic",
+        "800",
+        "800italic"
+      ],
+      "isVariable": false,
+      "source": "google-fonts",
+      "lastModified": "2025-05-30",
+      "popularityRank": 538,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Poppins",
+      "category": "sans-serif",
+      "subsets": [
+        "devanagari",
+        "latin",
+        "latin-ext"
+      ],
+      "variants": [
+        "100",
+        "100italic",
+        "200",
+        "200italic",
+        "300",
+        "300italic",
+        "italic",
+        "regular",
+        "500",
+        "500italic",
+        "600",
+        "600italic",
+        "700",
+        "700italic",
+        "800",
+        "800italic",
+        "900",
+        "900italic"
+      ],
+      "isVariable": false,
+      "source": "google-fonts",
+      "lastModified": "2025-09-16",
+      "popularityRank": 7,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Open Sans",
+      "category": "sans-serif",
+      "subsets": [
+        "cyrillic",
+        "cyrillic-ext",
+        "greek",
+        "greek-ext",
+        "hebrew",
+        "latin",
+        "latin-ext",
+        "math",
+        "symbols",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "wdth",
+          "min": 75,
+          "max": 100
+        },
+        {
+          "tag": "wght",
+          "min": 300,
+          "max": 800
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-16",
+      "popularityRank": 2,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Fraunces",
+      "category": "serif",
+      "subsets": [
+        "latin",
+        "latin-ext",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "opsz",
+          "min": 9,
+          "max": 144
+        },
+        {
+          "tag": "SOFT",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "tag": "wght",
+          "min": 100,
+          "max": 900
+        },
+        {
+          "tag": "WONK",
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-10",
+      "popularityRank": 204,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Montserrat",
+      "category": "sans-serif",
+      "subsets": [
+        "cyrillic",
+        "cyrillic-ext",
+        "latin",
+        "latin-ext",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular"
+      ],
+      "axes": [
+        {
+          "tag": "wght",
+          "min": 100,
+          "max": 900
+        }
+      ],
+      "isVariable": true,
+      "source": "google-fonts",
+      "lastModified": "2025-09-05",
+      "popularityRank": 6,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    },
+    {
+      "family": "Crimson Text",
+      "category": "serif",
+      "subsets": [
+        "latin",
+        "latin-ext",
+        "vietnamese"
+      ],
+      "variants": [
+        "italic",
+        "regular",
+        "600",
+        "600italic",
+        "700",
+        "700italic"
+      ],
+      "isVariable": false,
+      "source": "google-fonts",
+      "lastModified": "2025-05-30",
+      "popularityRank": 113,
+      "favorite": false,
+      "origin": "added",
+      "tags": []
+    }
+  ]
+}

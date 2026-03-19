@@ -18,6 +18,8 @@ export {
   filterGoogleFontFamilies,
   getDefaultDocumentFontFamily,
   getBundledGoogleFontsCatalog,
+  getCachedGoogleFontsCatalog,
+  loadGoogleFontsCatalog,
   getDocumentDefaultFontFamily,
   getDocumentFontFamily,
   getDocumentFontLibrary,
