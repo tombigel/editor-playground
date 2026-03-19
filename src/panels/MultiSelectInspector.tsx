@@ -50,6 +50,15 @@ import {
 } from './InspectorControls';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 import {
+  SYSTEM_FONT_VALUE,
+  TYPOGRAPHY_FIELD_GAP_PX,
+  TYPOGRAPHY_FONT_PICKER_WIDTH_PX,
+  TYPOGRAPHY_FONT_ROW_WIDTH_PX,
+  TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX,
+  TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX,
+  TYPOGRAPHY_SIZE_ROW_WIDTH_PX,
+} from './inspector/contentSections/shared';
+import {
   DEFAULT_SHADOW_BLUR_PX,
   DEFAULT_SHADOW_COLOR,
   DEFAULT_SHADOW_OFFSET_X_PX,
@@ -59,6 +68,7 @@ import {
 import type { ShadowStyle } from '../model/types';
 import { offsetsFromDistanceAndAngle } from './InspectorControls';
 import { MultiStickySection } from './MultiStickySection';
+import { resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
 
 type Props = {
   document: DocumentModel;
@@ -69,16 +79,6 @@ type Props = {
   onDistributeSelection: (mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom') => void;
   onBulkEdit: (operations: BulkEditOperation[]) => void;
 };
-
-const TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX = 32;
-const TYPOGRAPHY_FIELD_GAP_PX = 4;
-const TYPOGRAPHY_FONT_PICKER_WIDTH_PX = 104 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX;
-const TYPOGRAPHY_FONT_ROW_WIDTH_PX =
-  TYPOGRAPHY_FONT_PICKER_WIDTH_PX + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX + TYPOGRAPHY_FIELD_GAP_PX;
-const TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX = 96 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX / 2;
-const TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX = 40 + TYPOGRAPHY_SQUARE_BUTTON_SIZE_PX / 2;
-const TYPOGRAPHY_SIZE_ROW_WIDTH_PX =
-  TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX + TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX + TYPOGRAPHY_FIELD_GAP_PX;
 
 export function MultiSelectInspector({
   document,
@@ -486,21 +486,6 @@ function isMovableAlignmentNode(node: DocumentNode) {
   return node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
 }
 
-function resolveSharedString(values: string[]) {
-  return {
-    value: values[0] ?? '',
-    mixed: values.some((value) => value !== (values[0] ?? '')),
-  };
-}
-
-function resolveSharedNumber(values: number[]) {
-  return {
-    value: values[0] ?? 0,
-    mixed: values.some((value) => value !== (values[0] ?? 0)),
-  };
-}
-
-const SYSTEM_FONT_VALUE = '__system-font__';
 
 function resolveSharedShadow(styles: Array<ShadowStyle | undefined>) {
   const values = styles.map((style) =>

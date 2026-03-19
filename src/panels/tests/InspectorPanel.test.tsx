@@ -10,12 +10,54 @@ import {
   describeSizeFieldValue,
   getSizeModeOptions,
   InspectorPanel,
+  type InspectorPanelProps,
   NumericUnitInlineField,
   normalizeAspectRatioExpression,
   SizeInlineField,
 } from '../InspectorPanel';
 
 describe('panels/InspectorPanel', () => {
+  function makeBaseInspectorProps(overrides?: Partial<InspectorPanelProps>): InspectorPanelProps {
+    return {
+      node: null,
+      showOrderControls: false,
+      canOrderBack: false,
+      canOrderForward: false,
+      canSendToBack: false,
+      canBringToFront: false,
+      orderBackShortcut: '',
+      orderForwardShortcut: '',
+      sendToBackShortcut: '',
+      bringToFrontShortcut: '',
+      canSectionBack: false,
+      canSectionForward: false,
+      onOrderBack: () => {},
+      onOrderForward: () => {},
+      onSendToBack: () => {},
+      onBringToFront: () => {},
+      onSectionBack: () => {},
+      onSectionForward: () => {},
+      onTextChange: () => {},
+      onWrapperStyleChange: () => {},
+      onRectChange: () => {},
+      onPromote: () => {},
+      onDemote: () => {},
+      onStickyEnabled: () => {},
+      onStickyTarget: () => {},
+      onStickyEdges: () => {},
+      onStickyOffset: () => {},
+      onStickyOffsetTop: () => {},
+      onStickyOffsetBottom: () => {},
+      onStickyDurationMode: () => {},
+      onStickyDuration: () => {},
+      onStickyDurationTop: () => {},
+      onStickyDurationBottom: () => {},
+      focusedMode: null,
+      onEnterFocusedMode: () => {},
+      ...overrides,
+    };
+  }
+
   it('renders the shared 3-button section type selector with the current type selected', () => {
     const document = createInitialDocument();
     const headerNode = Object.values(document.nodes).find(
@@ -27,43 +69,7 @@ describe('panels/InspectorPanel', () => {
     }
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel
-        node={headerNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: headerNode })} />,
     );
 
     expect(markup).toContain('Section type');
@@ -87,43 +93,7 @@ describe('panels/InspectorPanel', () => {
     }
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel
-        node={sectionNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: sectionNode })} />,
     );
 
     expect(markup).toContain('Divider');
@@ -148,43 +118,7 @@ describe('panels/InspectorPanel', () => {
     const containerNode = createWrapper('container', 'root');
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel
-        node={containerNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: containerNode })} />,
     );
 
     expect(markup).toContain('>Border<');
@@ -202,45 +136,18 @@ describe('panels/InspectorPanel', () => {
 
     const markup = renderToStaticMarkup(
       <InspectorPanel
-        node={textNode}
-        selectedNodes={[textNode, buttonNode]}
-        showOrderControls={true}
-        canOrderBack={true}
-        canOrderForward={true}
-        canSendToBack={true}
-        canBringToFront={true}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onAlignSelection={() => {}}
-        onDistributeSelection={() => {}}
-        onBulkEdit={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
+        {...makeBaseInspectorProps({
+          node: textNode,
+          selectedNodes: [textNode, buttonNode],
+          showOrderControls: true,
+          canOrderBack: true,
+          canOrderForward: true,
+          canSendToBack: true,
+          canBringToFront: true,
+          onAlignSelection: () => {},
+          onDistributeSelection: () => {},
+          onBulkEdit: () => {},
+        })}
       />,
     );
 
@@ -276,43 +183,7 @@ describe('panels/InspectorPanel', () => {
       }
 
       const markup = renderToStaticMarkup(
-        <InspectorPanel
-          node={wrapperNode}
-          showOrderControls={false}
-          canOrderBack={false}
-          canOrderForward={false}
-          canSendToBack={false}
-          canBringToFront={false}
-          orderBackShortcut=""
-          orderForwardShortcut=""
-          sendToBackShortcut=""
-          bringToFrontShortcut=""
-          canSectionBack={false}
-          canSectionForward={false}
-          onOrderBack={() => {}}
-          onOrderForward={() => {}}
-          onSendToBack={() => {}}
-          onBringToFront={() => {}}
-          onSectionBack={() => {}}
-          onSectionForward={() => {}}
-          onTextChange={() => {}}
-          onWrapperStyleChange={() => {}}
-          onRectChange={() => {}}
-          onPromote={() => {}}
-          onDemote={() => {}}
-          onStickyEnabled={() => {}}
-          onStickyTarget={() => {}}
-          onStickyEdges={() => {}}
-          onStickyOffset={() => {}}
-          onStickyOffsetTop={() => {}}
-          onStickyOffsetBottom={() => {}}
-          onStickyDurationMode={() => {}}
-          onStickyDuration={() => {}}
-          onStickyDurationTop={() => {}}
-          onStickyDurationBottom={() => {}}
-          focusedMode={null}
-          onEnterFocusedMode={() => {}}
-        />,
+        <InspectorPanel {...makeBaseInspectorProps({ node: wrapperNode })} />,
       );
 
       expect(markup).toContain('>W<');
@@ -343,43 +214,7 @@ describe('panels/InspectorPanel', () => {
     };
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel
-        node={sectionNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: sectionNode })} />,
     );
 
     expect(markup).toContain('Uses the page height as the sticky distance.');
@@ -409,43 +244,7 @@ describe('panels/InspectorPanel', () => {
     };
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel
-        node={containerNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: containerNode })} />,
     );
 
     expect(markup).not.toContain('>Target<');
@@ -478,162 +277,17 @@ describe('panels/InspectorPanel', () => {
     }
 
     const textMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        node={textNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: textNode })} />,
     );
 
     const imageMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        node={imageNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: imageNode })} />,
     );
     const linkMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        node={linkNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: linkNode })} />,
     );
     const buttonMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        document={document}
-        node={buttonNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: buttonNode })} />,
     );
 
     expect(textMarkup).toContain('>Content<');
@@ -731,44 +385,7 @@ describe('panels/InspectorPanel', () => {
     linkNode.anchorTargetId = section.id;
 
     const anchorMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        document={document}
-        node={linkNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: linkNode })} />,
     );
 
     expect(anchorMarkup).toContain('>Type<');
@@ -780,44 +397,7 @@ describe('panels/InspectorPanel', () => {
     linkNode.anchorTargetId = 'missing-section';
 
     const brokenMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        document={document}
-        node={linkNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: linkNode })} />,
     );
 
     expect(brokenMarkup).toContain('Broken anchor');
@@ -844,44 +424,7 @@ describe('panels/InspectorPanel', () => {
     buttonNode.anchorTargetId = section.id;
 
     const anchorMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        document={document}
-        node={buttonNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: buttonNode })} />,
     );
 
     expect(anchorMarkup).toContain('>Type<');
@@ -893,44 +436,7 @@ describe('panels/InspectorPanel', () => {
     buttonNode.anchorTargetId = 'missing-section';
 
     const brokenMarkup = renderToStaticMarkup(
-      <InspectorPanel
-        document={document}
-        node={buttonNode}
-        showOrderControls={false}
-        canOrderBack={false}
-        canOrderForward={false}
-        canSendToBack={false}
-        canBringToFront={false}
-        orderBackShortcut=""
-        orderForwardShortcut=""
-        sendToBackShortcut=""
-        bringToFrontShortcut=""
-        canSectionBack={false}
-        canSectionForward={false}
-        onOrderBack={() => {}}
-        onOrderForward={() => {}}
-        onSendToBack={() => {}}
-        onBringToFront={() => {}}
-        onSectionBack={() => {}}
-        onSectionForward={() => {}}
-        onTextChange={() => {}}
-        onWrapperStyleChange={() => {}}
-        onRectChange={() => {}}
-        onPromote={() => {}}
-        onDemote={() => {}}
-        onStickyEnabled={() => {}}
-        onStickyTarget={() => {}}
-        onStickyEdges={() => {}}
-        onStickyOffset={() => {}}
-        onStickyOffsetTop={() => {}}
-        onStickyOffsetBottom={() => {}}
-        onStickyDurationMode={() => {}}
-        onStickyDuration={() => {}}
-        onStickyDurationTop={() => {}}
-        onStickyDurationBottom={() => {}}
-        focusedMode={null}
-        onEnterFocusedMode={() => {}}
-      />,
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: buttonNode })} />,
     );
 
     expect(brokenMarkup).toContain('Broken anchor');

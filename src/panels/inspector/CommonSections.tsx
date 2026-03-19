@@ -53,6 +53,7 @@ import {
   applyUnifiedWrapperBorderWidth,
   applyWrapperShadowPatch,
 } from './styleFields';
+import { createShadowFallback } from './contentSections/shared';
 
 export type FocusedModeEntry = {
   mode: ActiveFocusedMode;
@@ -582,15 +583,6 @@ export function InspectorSectionCard({
   );
 }
 
-function createShadowFallback(color: string, blur: number, spread: number, offsetX: number, offsetY: number) {
-  return {
-    color,
-    blur,
-    spread,
-    distance: Math.round(Math.sqrt(offsetX ** 2 + offsetY ** 2) * 100) / 100,
-    angle: Math.round(((Math.atan2(offsetY, offsetX) * 180) / Math.PI) * 100) / 100,
-  };
-}
 
 export function createFocusedModeEntry(
   focusedMode: FocusedMode,
