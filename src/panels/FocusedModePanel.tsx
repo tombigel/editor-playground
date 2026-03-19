@@ -163,7 +163,7 @@ export function FocusedModePanel({
   if (isMultiSticky) {
     return (
       <div className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-        <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
+        <div className="editor-bg-surface editor-border-subtle editor-scrollbar max-h-[min(72vh,680px)] overflow-auto rounded-xl border">
           <div className="space-y-3">
             <MultiStickySection
               selectedNodes={selectedNodes}
@@ -202,7 +202,7 @@ export function FocusedModePanel({
 
   return (
     <div className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-      <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
+      <div className="editor-bg-surface editor-border-subtle editor-scrollbar max-h-[min(72vh,680px)] overflow-auto rounded-xl border">
         <InspectorBlockList blocks={blocks} compact scrollable={false} />
       </div>
     </div>
