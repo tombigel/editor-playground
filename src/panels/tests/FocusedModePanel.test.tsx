@@ -93,6 +93,7 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain(textNode.role);
     expect(markup).toContain('Pin this node inside its structural range.');
     expect(markup).toContain('editor-scrollbar');
+    expect(markup).toContain('editor-focused-panel');
     expect(markup).toContain('aria-label="Drag focused panel"');
   });
 

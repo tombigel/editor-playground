@@ -21,4 +21,17 @@ describe('stage/stage styles', () => {
     expect(styles).toContain('background: var(--editor-sticky-distance-label-background);');
     expect(styles).toContain('background: var(--editor-sticky-auto-label-background);');
   });
+
+  it('scopes inspector control tokens to the floating focused panel', () => {
+    const styles = readFileSync(new URL('../../styles.css', import.meta.url), 'utf8');
+
+    expect(styles).toContain('.editor-focused-panel');
+    expect(styles).toContain("[data-ui='button'][data-variant='default']");
+    expect(styles).toContain("[data-ui='button'][data-variant='ghost']");
+    expect(styles).toContain("[data-ui='switch']");
+    expect(styles).toContain("[data-ui='switch'][data-state='checked']");
+    expect(styles).toContain("[data-ui='slider-track']");
+    expect(styles).toContain("[data-ui='slider-range']");
+    expect(styles).toContain("[data-ui='slider-thumb']");
+  });
 });
