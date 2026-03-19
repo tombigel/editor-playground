@@ -252,7 +252,7 @@ function ColorPickerImpl({
     }
 
     void loadHdrColorInput().then(() => setIsReady(true));
-  }, [isReady]);
+  }, []);
 
   React.useEffect(() => {
     if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {

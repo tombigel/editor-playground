@@ -59,7 +59,7 @@ describe('panels/inspector/stageConversions', () => {
   describe('formatNumericFieldInput', () => {
     it('delegates to formatFieldNumber', () => {
       expect(formatNumericFieldInput(24)).toBe('24');
-      expect(formatNumericFieldInput(3.14159)).toBe('3.14');
+      expect(formatNumericFieldInput(Math.PI)).toBe('3.14');
     });
   });
 

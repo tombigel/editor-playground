@@ -358,11 +358,9 @@ export function MultiSelectInspector({
             </CardHeader>
             <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
               {textNodes.length >= 2 ? (
-                <>
-                  <InspectorInlineRow label="Color" controlClassName="gap-2">
+                <InspectorInlineRow label="Color" controlClassName="gap-2">
                     <HoverColorField value={foregroundState.value || undefined} mixed={foregroundState.mixed} onChange={(value) => actions.onTextChange('color', value)} ariaLabel="Text color" fallback={DEFAULT_SHADOW_COLOR} />
                   </InspectorInlineRow>
-                </>
               ) : null}
               {filterShadowNodes.length >= 2 ? (
                 <div className="space-y-1.5">
@@ -391,8 +389,7 @@ export function MultiSelectInspector({
             </CardHeader>
             <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
               {backgroundWrapperIds.length + backgroundLeafIds.length >= 2 ? (
-                <>
-                  <InspectorInlineRow label="Background" controlClassName="gap-2">
+                <InspectorInlineRow label="Background" controlClassName="gap-2">
                     <HoverColorField
                       value={backgroundState.value || undefined}
                       mixed={backgroundState.mixed}
@@ -409,12 +406,10 @@ export function MultiSelectInspector({
                       ariaLabel="Background color"
                     />
                   </InspectorInlineRow>
-                </>
               ) : null}
 
               {radiusWrapperIds.length + radiusLeafIds.length >= 2 ? (
-                <>
-                  <InspectorInlineRow label="Radius" controlWidth="120px">
+                <InspectorInlineRow label="Radius" controlWidth="120px">
                     <NumericUnitInlineField
                       value={radiusState.value}
                       units={['px', '%']}
@@ -433,7 +428,6 @@ export function MultiSelectInspector({
                       min={0}
                     />
                   </InspectorInlineRow>
-                </>
               ) : null}
 
               {boxShadowWrapperIds.length + boxShadowLeafIds.length >= 2 ? (

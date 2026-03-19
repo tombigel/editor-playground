@@ -199,7 +199,7 @@ describe('panels/inspector/schema', () => {
     const stickySection = blocks.find((block) => block.id === 'sticky-behavior')?.sections[0];
 
     expect(stickySection).toBeTruthy();
-    const markup = renderToStaticMarkup(<>{stickySection?.render()}</>);
+    const markup = renderToStaticMarkup(stickySection?.render());
     expect(markup).toContain('aria-label="Go to Sticky focus mode"');
   });
 });

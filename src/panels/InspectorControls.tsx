@@ -327,7 +327,7 @@ export const FontPickerPopover = memo(function FontPickerPopover({
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [open]);
+  }, [open, closePicker]);
 
   const familyOptions = useMemo(
     () => [
@@ -1511,7 +1511,7 @@ export function FontSizeField({
   useEffect(() => {
     setDraft(mixed ? '' : String(parsed.parsed.value));
     setInvalid(false);
-  }, [mixed, parsed.parsed.unit, parsed.parsed.value]);
+  }, [mixed, parsed.parsed.value]);
 
   useEffect(() => {
     if (!suggestionsOpen) {

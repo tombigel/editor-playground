@@ -6,8 +6,7 @@ export function appendHistoryEntry(past: HistoryEntry[], entry: HistoryEntry, hi
   const last = past[past.length - 1];
   const shouldDebounceMerge =
     Boolean(
-      last &&
-      last.debounceKey &&
+      last?.debounceKey &&
       entry.debounceKey &&
       last.debounceKey === entry.debounceKey &&
       entry.createdAt - last.createdAt <= 450,

@@ -57,7 +57,7 @@ describe('panels/SettingsPanel e2e', () => {
     await page.locator('[data-ui="select-content"]').last().waitFor({ state: 'visible' });
     const box = await trigger.boundingBox();
     expect(box).not.toBeNull();
-    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.click(box?.x + box?.width / 2, box?.y + box?.height / 2);
 
     await page.locator('.editor-settings-panel').waitFor({ state: 'visible' });
     expect(await page.locator('.editor-settings-panel').isVisible()).toBe(true);

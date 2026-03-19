@@ -279,7 +279,7 @@ function normalizeSticky(sticky: StickyDefinition | undefined): StickyDefinition
   }
 
   const bottom = sticky.edges?.bottom ?? false;
-  let top = sticky.edges?.top ?? (bottom ? false : true);
+  let top = sticky.edges?.top ?? (!bottom);
   let normalizedBottom = bottom;
 
   // Heuristic migration: keep single-edge intent when legacy data accidentally persisted both edges.

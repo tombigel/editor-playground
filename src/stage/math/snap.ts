@@ -152,7 +152,7 @@ function isValidDropParent(
 
 function isDescendant(model: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {
   let current: import('../../model/types').DocumentNode | undefined = model.nodes[candidateId];
-  while (current && current.parentId) {
+  while (current?.parentId) {
     if (current.parentId === targetAncestorId) {
       return true;
     }

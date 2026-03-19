@@ -94,7 +94,7 @@ describe('stage/Stage e2e', () => {
     }
 
     try {
-      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+      await page.mouse.move(box?.x + box?.width / 2, box?.y + box?.height / 2);
       await page.mouse.down();
       await page.mouse.move(targetX, targetY, { steps: 14 });
       await page.mouse.up();
@@ -121,15 +121,15 @@ describe('stage/Stage e2e', () => {
     await title.click();
     expect(await title.getAttribute('class')).toMatch(/\bselected\b/);
 
-    await page.mouse.move(before!.x + before!.width / 2, before!.y + before!.height / 2);
+    await page.mouse.move(before?.x + before?.width / 2, before?.y + before?.height / 2);
     await page.mouse.down();
-    await page.mouse.move(before!.x + before!.width / 2 + 120, before!.y + before!.height / 2 + 80, { steps: 10 });
+    await page.mouse.move(before?.x + before?.width / 2 + 120, before?.y + before?.height / 2 + 80, { steps: 10 });
     await page.mouse.up();
 
     const after = await title.boundingBox();
     expect(after).not.toBeNull();
-    expect(Math.abs((after?.x ?? 0) - before!.x)).toBeGreaterThan(20);
-    expect(Math.abs((after?.y ?? 0) - before!.y)).toBeGreaterThan(20);
+    expect(Math.abs((after?.x ?? 0) - before?.x)).toBeGreaterThan(20);
+    expect(Math.abs((after?.y ?? 0) - before?.y)).toBeGreaterThan(20);
 
     await closeEditor();
   }, 30_000);
@@ -180,17 +180,17 @@ describe('stage/Stage e2e', () => {
     const handleBox = await handle.boundingBox();
     expect(handleBox).not.toBeNull();
 
-    await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
+    await page.mouse.move(handleBox?.x + handleBox?.width / 2, handleBox?.y + handleBox?.height / 2);
     await page.mouse.down();
-    await page.mouse.move(handleBox!.x + handleBox!.width / 2 + 80, handleBox!.y + handleBox!.height / 2 + 60, {
+    await page.mouse.move(handleBox?.x + handleBox?.width / 2 + 80, handleBox?.y + handleBox?.height / 2 + 60, {
       steps: 10,
     });
     await page.mouse.up();
 
     const after = await image.boundingBox();
     expect(after).not.toBeNull();
-    expect((after?.width ?? 0) - before!.width).toBeGreaterThan(40);
-    expect((after?.height ?? 0) - before!.height).toBeGreaterThan(20);
+    expect((after?.width ?? 0) - before?.width).toBeGreaterThan(40);
+    expect((after?.height ?? 0) - before?.height).toBeGreaterThan(20);
 
     await closeEditor();
   }, 30_000);
@@ -209,9 +209,9 @@ describe('stage/Stage e2e', () => {
 
     await page.keyboard.down('Shift');
     try {
-      await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
+      await page.mouse.move(handleBox?.x + handleBox?.width / 2, handleBox?.y + handleBox?.height / 2);
       await page.mouse.down();
-      await page.mouse.move(handleBox!.x + handleBox!.width / 2 + 90, handleBox!.y + handleBox!.height / 2 + 30, {
+      await page.mouse.move(handleBox?.x + handleBox?.width / 2 + 90, handleBox?.y + handleBox?.height / 2 + 30, {
         steps: 12,
       });
       await page.mouse.up();
@@ -221,7 +221,7 @@ describe('stage/Stage e2e', () => {
 
     const after = await image.boundingBox();
     expect(after).not.toBeNull();
-    const beforeRatio = before!.width / before!.height;
+    const beforeRatio = before?.width / before?.height;
     const afterRatio = (after?.width ?? 1) / Math.max(after?.height ?? 1, 1);
     expect(Math.abs(afterRatio - beforeRatio)).toBeLessThan(0.05);
 
@@ -244,16 +244,16 @@ describe('stage/Stage e2e', () => {
     const handleBox = await handle.boundingBox();
     expect(handleBox).not.toBeNull();
 
-    await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
+    await page.mouse.move(handleBox?.x + handleBox?.width / 2, handleBox?.y + handleBox?.height / 2);
     await page.mouse.down();
-    await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2 + 90, {
+    await page.mouse.move(handleBox?.x + handleBox?.width / 2, handleBox?.y + handleBox?.height / 2 + 90, {
       steps: 12,
     });
     await page.mouse.up();
 
     const after = await secondSection.boundingBox();
     expect(after).not.toBeNull();
-    expect((after?.y ?? 0) - before!.y).toBeGreaterThan(60);
+    expect((after?.y ?? 0) - before?.y).toBeGreaterThan(60);
 
     await closeEditor();
   }, 30_000);
@@ -268,8 +268,8 @@ describe('stage/Stage e2e', () => {
 
     await dragLocatorToPoint(
       `[data-node-id="${ids.reparentLeafId}"]`,
-      targetBox!.x + targetBox!.width / 2,
-      targetBox!.y + targetBox!.height / 2,
+      targetBox?.x + targetBox?.width / 2,
+      targetBox?.y + targetBox?.height / 2,
     );
 
     await page.waitForFunction(
@@ -324,8 +324,8 @@ describe('stage/Stage e2e', () => {
 
     await dragLocatorToPoint(
       `[data-node-id="${ids.axisLeafId}"]`,
-      invalidOverlayBox!.x + invalidOverlayBox!.width / 2,
-      invalidOverlayBox!.y + invalidOverlayBox!.height / 2,
+      invalidOverlayBox?.x + invalidOverlayBox?.width / 2,
+      invalidOverlayBox?.y + invalidOverlayBox?.height / 2,
     );
     await page.waitForTimeout(150);
 
@@ -334,7 +334,7 @@ describe('stage/Stage e2e', () => {
 
     const state = await readPersistedState();
     expect(state.document.nodes[ids.axisLeafId].parentId).toBe(ids.sectionId);
-    expect(Math.abs((after?.x ?? 0) - before!.x) + Math.abs((after?.y ?? 0) - before!.y)).toBeGreaterThan(5);
+    expect(Math.abs((after?.x ?? 0) - before?.x) + Math.abs((after?.y ?? 0) - before?.y)).toBeGreaterThan(5);
 
     await closeEditor();
   }, 30_000);
@@ -349,15 +349,15 @@ describe('stage/Stage e2e', () => {
 
     await dragLocatorToPoint(
       `[data-node-id="${ids.axisLeafId}"]`,
-      before!.x + before!.width / 2 + 140,
-      before!.y + before!.height / 2 + 90,
+      before?.x + before?.width / 2 + 140,
+      before?.y + before?.height / 2 + 90,
       { shiftKey: true },
     );
 
     const after = await leaf.boundingBox();
     expect(after).not.toBeNull();
-    expect(Math.abs((after?.x ?? 0) - before!.x)).toBeGreaterThan(80);
-    expect(Math.abs((after?.y ?? 0) - before!.y)).toBeLessThan(3);
+    expect(Math.abs((after?.x ?? 0) - before?.x)).toBeGreaterThan(80);
+    expect(Math.abs((after?.y ?? 0) - before?.y)).toBeLessThan(3);
 
     await closeEditor();
   }, 30_000);
@@ -402,18 +402,18 @@ describe('stage/Stage e2e', () => {
     const before = await snapTarget.boundingBox();
     expect(before).not.toBeNull();
 
-    const nearCenterX = frameBox!.x + frameBox!.width / 2 + 6;
+    const nearCenterX = frameBox?.x + frameBox?.width / 2 + 6;
 
     await dragLocatorToPoint(
       `[data-node-id="${ids.snapLeafId}"]`,
       nearCenterX,
-      before!.y + before!.height / 2,
+      before?.y + before?.height / 2,
     );
 
     const snapped = await snapTarget.boundingBox();
     expect(snapped).not.toBeNull();
-    const snappedCenter = snapped!.x + snapped!.width / 2;
-    const frameCenter = frameBox!.x + frameBox!.width / 2;
+    const snappedCenter = snapped?.x + snapped?.width / 2;
+    const frameCenter = frameBox?.x + frameBox?.width / 2;
     expect(Math.abs(snappedCenter - frameCenter)).toBeLessThanOrEqual(2);
 
     await closeEditor();
@@ -431,15 +431,15 @@ describe('stage/Stage e2e', () => {
 
     await dragLocatorToPoint(
       `[data-node-id="${second.ids.snapLeafId}"]`,
-      secondFrameBox!.x + secondFrameBox!.width / 2 + 6,
-      secondBefore!.y + secondBefore!.height / 2,
+      secondFrameBox?.x + secondFrameBox?.width / 2 + 6,
+      secondBefore?.y + secondBefore?.height / 2,
       { altKey: true },
     );
 
     const unsnapped = await secondTarget.boundingBox();
     expect(unsnapped).not.toBeNull();
-    const unsnappedCenter = unsnapped!.x + unsnapped!.width / 2;
-    const secondFrameCenter = secondFrameBox!.x + secondFrameBox!.width / 2;
+    const unsnappedCenter = unsnapped?.x + unsnapped?.width / 2;
+    const secondFrameCenter = secondFrameBox?.x + secondFrameBox?.width / 2;
     expect(Math.abs(unsnappedCenter - secondFrameCenter)).toBeGreaterThanOrEqual(4);
 
     await closeEditor();
@@ -461,14 +461,14 @@ describe('stage/Stage e2e', () => {
 
     await dragLocatorToPoint(
       `[data-node-id="${ids.snapLeafId}"]`,
-      frameBox!.x + frameBox!.width / 2 + 6,
-      before!.y + before!.height / 2,
+      frameBox?.x + frameBox?.width / 2 + 6,
+      before?.y + before?.height / 2,
     );
 
     const after = await snapTarget.boundingBox();
     expect(after).not.toBeNull();
-    const frameCenter = frameBox!.x + frameBox!.width / 2;
-    const afterCenter = after!.x + after!.width / 2;
+    const frameCenter = frameBox?.x + frameBox?.width / 2;
+    const afterCenter = after?.x + after?.width / 2;
     expect(Math.abs(afterCenter - frameCenter)).toBeGreaterThanOrEqual(4);
 
     const state = await readPersistedState();

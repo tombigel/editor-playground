@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 
 describe('stage/stage styles', () => {
   it('removes box and filter shadows from dragged stage nodes', () => {

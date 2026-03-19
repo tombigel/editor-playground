@@ -48,10 +48,10 @@ describe('render/nodePresentation', () => {
     image.src = '';
 
     const imageMarkup = renderToStaticMarkup(
-      <>{renderLeafContent(image, { imagePlaceholderClassName: 'image-placeholder' })}</>,
+      renderLeafContent(image, { imagePlaceholderClassName: 'image-placeholder' }),
     );
     const linkMarkup = renderToStaticMarkup(
-      <>{renderLeafContent(link, { disableTabNavigation: true, contentStyle: { color: '#1d4ed8' } })}</>,
+      renderLeafContent(link, { disableTabNavigation: true, contentStyle: { color: '#1d4ed8' } }),
     );
 
     expect(imageMarkup).toContain('class="image-placeholder"');

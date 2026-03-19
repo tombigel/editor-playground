@@ -673,7 +673,7 @@ function removeSubtree(document: DocumentModel, nodeId: NodeId) {
 
 function isDescendantOf(document: DocumentModel, candidateId: NodeId, ancestorId: NodeId): boolean {
   let current = document.nodes[candidateId];
-  while (current && current.parentId) {
+  while (current?.parentId) {
     if (current.parentId === ancestorId) {
       return true;
     }

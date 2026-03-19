@@ -55,7 +55,7 @@ export function isNodeDescendantOf(document: DocumentModel, candidateId: NodeId,
   }
 
   let current = document.nodes[candidateId];
-  while (current && current.parentId) {
+  while (current?.parentId) {
     if (current.parentId === targetAncestorId) {
       return true;
     }

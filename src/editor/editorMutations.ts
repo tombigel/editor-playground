@@ -896,7 +896,7 @@ function isDescendant(document: DocumentModel, candidateId: NodeId, targetAncest
   }
 
   let current: DocumentNode | undefined = document.nodes[candidateId];
-  while (current && current.parentId) {
+  while (current?.parentId) {
     if (current.parentId === targetAncestorId) {
       return true;
     }

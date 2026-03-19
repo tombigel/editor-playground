@@ -247,7 +247,7 @@ export function editorReducer(state: EditorState, action: EditorAction) {
         ui: {
           ...state.ui,
           focusedMode: action.value,
-          inspectorCollapsed: action.value ? true : false,
+          inspectorCollapsed: !!action.value,
           temporaryInspectorOpen: false,
         },
       };

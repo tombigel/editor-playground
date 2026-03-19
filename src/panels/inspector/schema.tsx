@@ -70,7 +70,7 @@ export function resolveInspectorBlocks(context: InspectorSectionContext): Resolv
             id: section.id,
             render: () => section.render(context),
           })) ?? [],
-      render: definition.render ? () => definition.render!(context) : undefined,
+      render: definition.render ? () => definition.render?.(context) : undefined,
     }));
 }
 
