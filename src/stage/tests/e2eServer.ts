@@ -7,7 +7,7 @@ export type StartedServer = {
 
 export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
   const url = `http://127.0.0.1:${port}`;
-  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port)], {
+  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
     cwd: process.cwd(),
     stdio: 'pipe',
     detached: true,

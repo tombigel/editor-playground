@@ -57,7 +57,7 @@ async function seedPage(page: Page, serverUrl: string, document: DocumentModel, 
       seededDocument: document,
     },
   );
-  await page.goto(serverUrl);
+  await page.goto(serverUrl, { waitUntil: 'domcontentloaded' });
   // Wait for the app to render
   await page.waitForSelector('.editor-shell', { timeout: 10_000 });
   // Small delay to let CSS transitions finish
