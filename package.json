@@ -16,6 +16,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:visual": "vitest run --config vitest.visual.config.ts",
+    "test:visual:update": "vitest run --config vitest.visual.config.ts --update",
     "check:architecture": "sh -c 'rg -n -e \"from ../model\" -e \"from ../stage\" src/app src/panels && exit 1 || true; rg -n \"\\.\\./(editor|app|panels|stage|api)\" src/model src/sticky && exit 1 || true; rg -n \"\\.\\./(editor|api|app|panels|stage)\" src/site && exit 1 || true'"
   },
   "dependencies": {
