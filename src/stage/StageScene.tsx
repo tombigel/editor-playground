@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { buildDocumentDefaultFontStack } from '../fonts/defaults';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import type { StageSceneProps } from './types';
@@ -7,7 +8,7 @@ import { renderWrapper } from './stageRenderers/wrapperRenderer';
 import { renderDragPreview, renderSnapGuides } from './stageRenderers/dragOverlay';
 import { MultiSelectionOutline } from './stageRenderers/selectionVisuals';
 
-export function StageScene({
+export const StageScene = memo(function StageScene({
   document,
   selectedId,
   selectedIds = selectedId ? [selectedId] : [],
@@ -24,7 +25,10 @@ export function StageScene({
   measuredNodeSizes,
   viewport,
 }: StageSceneProps) {
-  const plan = buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport);
+  const plan = useMemo(
+    () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport),
+    [document, previewSticky, measuredNodeSizes, viewport],
+  );
 
   return (
     <>
@@ -102,7 +106,20 @@ export function StageScene({
       {dragState ? renderDragPreview(document, dragState) : null}
     </>
   );
-}
+}, (prev, next) =>
+  prev.document === next.document &&
+  prev.selectedId === next.selectedId &&
+  prev.selectedIds === next.selectedIds &&
+  prev.multiSelectionBounds === next.multiSelectionBounds &&
+  prev.previewSticky === next.previewSticky &&
+  prev.spacerVisibility === next.spacerVisibility &&
+  prev.showGridLanes === next.showGridLanes &&
+  prev.dragState === next.dragState &&
+  prev.resizeState === next.resizeState &&
+  prev.snapGuides === next.snapGuides &&
+  prev.measuredNodeSizes === next.measuredNodeSizes &&
+  prev.viewport === next.viewport,
+);
 
 function EmptySlot({ label }: { label: string }) {
   return <div className="empty-slot">{label}</div>;

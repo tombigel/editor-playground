@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { forwardRef, memo, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import {
   ArrowDown,
@@ -243,7 +243,7 @@ export function FontWeightSelect({
   );
 }
 
-export function FontPickerPopover({
+export const FontPickerPopover = memo(function FontPickerPopover({
   familyValue,
   weightValue,
   families,
@@ -682,7 +682,7 @@ export function FontPickerPopover({
       </PopoverSurface>
     </div>
   );
-}
+});
 
 const FontPickerRow = forwardRef<
   HTMLButtonElement,
@@ -722,7 +722,7 @@ const FontPickerRow = forwardRef<
   );
 });
 
-export function SizeInlineField({
+export const SizeInlineField = memo(function SizeInlineField({
   label,
   nodeId,
   axis,
@@ -739,6 +739,7 @@ export function SizeInlineField({
   isSectionHeight?: boolean;
   disabled?: boolean;
 }) {
+  const fieldId = useId();
   const modeOptions = getSizeModeOptions(axis, { isSectionHeight });
   const [mode, setMode] = useState<SizeFieldMode>(() => getInitialSizeFieldMode(value, axis, isSectionHeight));
   const [numericDraft, setNumericDraft] = useState(() => getInitialNumericDraft(value, axis, nodeId, isSectionHeight));
@@ -819,7 +820,7 @@ export function SizeInlineField({
 
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium">{label}</Label>
+      <Label htmlFor={fieldId} className="text-[11px] font-medium">{label}</Label>
       {showKeywordTriggerOnly ? (
         <div
           className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
@@ -847,6 +848,7 @@ export function SizeInlineField({
         >
           {showNumericInput ? (
             <Input
+              id={fieldId}
               type="number"
               step="any"
               min={numericMin}
@@ -865,6 +867,7 @@ export function SizeInlineField({
             />
           ) : (
             <Input
+              id={fieldId}
               value={aspectDraft}
               onChange={(e) => {
                 const next = e.target.value;
@@ -923,7 +926,7 @@ export function SizeInlineField({
       )}
     </div>
   );
-}
+});
 
 export function NumericUnitInlineField({
   value,
@@ -935,6 +938,7 @@ export function NumericUnitInlineField({
   min,
   max,
   mixed = false,
+  'aria-label': ariaLabel,
 }: {
   value: string;
   units: ('px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax' | 'em' | 'rem')[];
@@ -945,6 +949,7 @@ export function NumericUnitInlineField({
   min?: number;
   max?: number;
   mixed?: boolean;
+  'aria-label'?: string;
 }) {
   const parsed = value ? parseUnitValue(value) : null;
   const initialUnit = parsed && units.includes(parsed.parsed.unit) ? parsed.parsed.unit : units[0];
@@ -986,6 +991,7 @@ export function NumericUnitInlineField({
         max={max}
         value={draft}
         placeholder={placeholder}
+        aria-label={ariaLabel}
         onBlur={() => {
           const nextParsed = value ? parseUnitValue(value) : null;
           setDraft(mixed ? '' : nextParsed ? String(nextParsed.parsed.value) : '');
@@ -1098,7 +1104,7 @@ export function HoverColorField({
   );
 }
 
-export function BorderControlGroup({
+export const BorderControlGroup = memo(function BorderControlGroup({
   nodeId,
   colorValue,
   widthValue,
@@ -1151,9 +1157,9 @@ export function BorderControlGroup({
       </div>
     </div>
   );
-}
+});
 
-export function ShadowControlGroup({
+export const ShadowControlGroup = memo(function ShadowControlGroup({
   label = 'Shadow',
   color,
   blur,
@@ -1211,7 +1217,7 @@ export function ShadowControlGroup({
       </div>
     </div>
   );
-}
+});
 
 export function LabeledNumberField({
   label,
@@ -1232,10 +1238,11 @@ export function LabeledNumberField({
   step: number;
   unitLabel?: string;
 }) {
+  const fieldId = useId();
   return (
     <div className="min-w-0 w-full space-y-0.5">
-      <Label className="text-[11px] font-medium">{label}</Label>
-      <NumberInput value={value} mixed={mixed} min={min} max={max} step={step} onChange={onChange} unitLabel={unitLabel} />
+      <Label htmlFor={fieldId} className="text-[11px] font-medium">{label}</Label>
+      <NumberInput id={fieldId} value={value} mixed={mixed} min={min} max={max} step={step} onChange={onChange} unitLabel={unitLabel} />
     </div>
   );
 }
@@ -1257,6 +1264,7 @@ export function LabeledImplicitUnitField({
   min?: number;
   step?: number | 'any';
 }) {
+  const fieldId = useId();
   const parsed = value ? parseUnitValue(value) : null;
   const resolvedUnit = parsed && units.includes(parsed.parsed.unit as 'px' | '%') ? parsed.parsed.unit : units[0];
   const [draft, setDraft] = useState(parsed ? formatFieldNumber(clampFieldNumber(parsed.parsed.value)) : '');
@@ -1268,8 +1276,9 @@ export function LabeledImplicitUnitField({
 
   return (
     <div className="space-y-0.5">
-      <Label className="text-[11px] font-medium">{label}</Label>
+      <Label htmlFor={fieldId} className="text-[11px] font-medium">{label}</Label>
       <Input
+        id={fieldId}
         type="number"
         min={min}
         step={step}
@@ -1319,6 +1328,7 @@ export function LabeledUnitField({
         onChange={onChange}
         placeholder={placeholder}
         min={min}
+        aria-label={label}
         onUnitChangeValue={
           nodeId
             ? (nextUnit) => convertStageBorderRadiusToValue(nodeId, nextUnit as 'px' | '%')
@@ -1703,6 +1713,7 @@ export function SpacingField({
 }
 
 export function NumberInput({
+  id,
   value,
   min,
   max,
@@ -1711,6 +1722,7 @@ export function NumberInput({
   unitLabel,
   mixed = false,
 }: {
+  id?: string;
   value: number;
   min: number;
   max: number;
@@ -1756,6 +1768,7 @@ export function NumberInput({
         }`}
       >
         <Input
+          id={id}
           type="number"
           min={min}
           max={max}
@@ -1783,6 +1796,7 @@ export function NumberInput({
 
   return (
       <Input
+        id={id}
         type="number"
         min={min}
         max={max}
@@ -1834,7 +1848,7 @@ export function RangeField({
           </span>
         </div>
       )}
-      <Slider value={[value]} min={min} max={max} step={step} onValueChange={([next]) => onValueChange(next ?? value)} />
+      <Slider aria-label={label ?? undefined} value={[value]} min={min} max={max} step={step} onValueChange={([next]) => onValueChange(next ?? value)} />
     </div>
   );
 }
