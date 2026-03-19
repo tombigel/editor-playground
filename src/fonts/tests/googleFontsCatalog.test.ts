@@ -9,6 +9,7 @@ describe('fonts/googleFontsCatalog', () => {
     expect(catalog.remoteSort).toBe('popularity');
     expect(catalog.fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(Array.isArray(catalog.families)).toBe(true);
-    expect(catalog.families.length).toBeGreaterThan(0);
+    expect(catalog.families.length).toBeGreaterThan(100);
+    expect(catalog.families.some((f: { family: string }) => f.family === 'Inter')).toBe(true);
   });
 });

@@ -500,9 +500,8 @@ describe('editor/editorStore integration', () => {
       (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
     );
 
-    expect(migratedRepoLink).toBeTruthy();
     if (!migratedRepoLink || migratedRepoLink.type !== 'leaf' || migratedRepoLink.role !== 'link') {
-      return;
+      throw new Error('Expected migrated repository link node');
     }
 
     expect(migratedRepoLink.label).toBe('github.com/tombigel/sticky-playground');
@@ -646,9 +645,8 @@ describe('editor/editorStore integration', () => {
     );
 
     expect(root.children).toHaveLength(3);
-    expect(postSection).toBeTruthy();
     if (!postSection || postSection.type !== 'wrapper') {
-      return;
+      throw new Error('Expected migrated post section wrapper');
     }
 
     expect(postSection.rect.height.base.raw).toBe('50vh');
@@ -762,9 +760,8 @@ describe('editor/editorStore integration', () => {
 
     expect(rootAfter.children[rootAfter.children.length - 1]).toBe(footerBefore);
     expect(rootAfter.children.length).toBe(rootBefore.children.length + 1);
-    expect(next.selectedId).toBeTruthy();
     if (!next.selectedId) {
-      return;
+      throw new Error('Expected inserted section to be selected');
     }
     const selected = next.document.nodes[next.selectedId];
     expect(selected.type).toBe('wrapper');

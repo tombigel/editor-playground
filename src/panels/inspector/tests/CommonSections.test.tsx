@@ -129,23 +129,30 @@ describe('panels/inspector/CommonSections', () => {
 
   it('renders custom header content and action without affecting the shared card structure', () => {
     const onClick = vi.fn();
-    const markup = renderToStaticMarkup(
-      <InspectorSectionCard
-        title="Sticky"
-        headerContent={<div>Post Title</div>}
-        headerAction={{
-          ariaLabel: 'Close sticky mode',
-          icon: <span>close</span>,
-          onClick,
-        }}
-      >
-        <div>Body</div>
-      </InspectorSectionCard>,
-    );
+    const tree = InspectorSectionCard({
+      title: 'Sticky',
+      headerContent: <div>Post Title</div>,
+      headerAction: {
+        ariaLabel: 'Close sticky mode',
+        icon: <span>close</span>,
+        onClick,
+      },
+      children: <div>Body</div>,
+    });
+
+    const markup = renderToStaticMarkup(tree as ReactElement);
 
     expect(markup).toContain('Post Title');
     expect(markup).toContain('aria-label="Close sticky mode"');
     expect(markup).toContain('Body');
+
+    const button = findElementByAriaLabel(tree, 'Close sticky mode');
+    if (!button?.props.onClick) {
+      throw new Error('Expected header action button with onClick');
+    }
+
+    button.props.onClick();
+    expect(onClick).toHaveBeenCalled();
   });
 
   it('renders the summary title itself as the editable surface for non-site nodes', () => {

@@ -8,6 +8,7 @@ describe('lib/theme', () => {
     expect(normalizeThemeMode('auto')).toBe('auto');
     expect(normalizeThemeMode('nope')).toBe('auto');
     expect(normalizeThemeMode(undefined)).toBe('auto');
+    expect(normalizeThemeMode(null as unknown as string)).toBe('auto');
   });
 
   it('resolves auto against system preference', () => {

@@ -318,9 +318,8 @@ describe('api/documentApi', () => {
       (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
     );
 
-    expect(postLink).toBeTruthy();
     if (!postLink || postLink.type !== 'leaf' || postLink.role !== 'link') {
-      return;
+      throw new Error('Expected post link node');
     }
 
     expect(postLink.label).toBe('Open playground spec');
@@ -333,9 +332,8 @@ describe('api/documentApi', () => {
       (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
     );
 
-    expect(postSection).toBeTruthy();
     if (!postSection || postSection.type !== 'wrapper') {
-      return;
+      throw new Error('Expected post section wrapper');
     }
 
     expect(postSection.rect.height.base.raw).toBe('50vh');
@@ -353,23 +351,20 @@ describe('api/documentApi', () => {
       (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
     );
 
-    expect(headerTitle).toBeTruthy();
     if (!headerTitle || headerTitle.type !== 'leaf' || headerTitle.role !== 'text') {
-      return;
+      throw new Error('Expected header title text node');
     }
 
     expect(headerTitle.htmlTag).toBe('h1');
 
-    expect(footerTitle).toBeTruthy();
     if (!footerTitle || footerTitle.type !== 'leaf' || footerTitle.role !== 'text') {
-      return;
+      throw new Error('Expected footer title text node');
     }
 
     expect(footerTitle.htmlTag).toBe('h2');
 
-    expect(postTitle).toBeTruthy();
     if (!postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
-      return;
+      throw new Error('Expected post title text node');
     }
 
     expect(postTitle.htmlTag).toBe('h1');
@@ -413,9 +408,8 @@ describe('api/documentApi', () => {
       (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
     );
 
-    expect(repoLink).toBeTruthy();
     if (!repoLink || repoLink.type !== 'leaf' || repoLink.role !== 'link') {
-      return;
+      throw new Error('Expected repository link node');
     }
 
     expect(repoLink.label).toBe('github.com/tombigel/sticky-playground');
