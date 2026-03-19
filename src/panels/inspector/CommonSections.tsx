@@ -53,6 +53,7 @@ import {
   applyUnifiedWrapperBorderWidth,
   applyWrapperShadowPatch,
 } from './styleFields';
+import { createShadowFallback } from './contentSections/shared';
 
 export type FocusedModeEntry = {
   mode: ActiveFocusedMode;
@@ -193,7 +194,7 @@ export function EditableNodeTitle({
       role="button"
       tabIndex={0}
       className={cn(
-        'editor-text-strong group min-w-0 cursor-text rounded-sm text-[15px] font-medium leading-5 outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-blue-500/20',
+        'editor-text-strong group min-w-0 cursor-text rounded-sm text-[15px] font-medium leading-5 outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)]',
         className,
       )}
       aria-label="Edit title"
@@ -582,15 +583,6 @@ export function InspectorSectionCard({
   );
 }
 
-function createShadowFallback(color: string, blur: number, spread: number, offsetX: number, offsetY: number) {
-  return {
-    color,
-    blur,
-    spread,
-    distance: Math.round(Math.sqrt(offsetX ** 2 + offsetY ** 2) * 100) / 100,
-    angle: Math.round(((Math.atan2(offsetY, offsetX) * 180) / Math.PI) * 100) / 100,
-  };
-}
 
 export function createFocusedModeEntry(
   focusedMode: FocusedMode,

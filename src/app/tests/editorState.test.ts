@@ -61,6 +61,16 @@ describe('app/editorState', () => {
     expect(next.ui.focusedMode).toBeNull();
   });
 
+  it('stores focused panel offsets outside undo history', () => {
+    const initial = createTestHistoryState();
+
+    const next = historyReducer(initial, { type: 'setFocusedPanelOffset', value: { x: -42, y: 88 } });
+
+    expect(next.present.ui.focusedPanelOffset).toEqual({ x: -42, y: 88 });
+    expect(next.past).toHaveLength(0);
+    expect(next.future).toHaveLength(0);
+  });
+
   it('coalesces resize streams into a single history entry when the resize ends', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'text');

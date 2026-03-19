@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../model/defaults';
@@ -146,6 +147,12 @@ export function InspectorPanel({
     onSectionBack,
     onSectionForward,
   };
+  const blocks = useMemo(
+    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- actions/orderState are rebuilt each render; key on stable identities
+    [node?.id, focusedMode, resolvedDocument],
+  );
+
   if (selectedNodes.length > 1) {
     return (
       <MultiSelectInspector
@@ -159,7 +166,6 @@ export function InspectorPanel({
       />
     );
   }
-  const blocks = resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode });
 
   return <InspectorBlockList blocks={blocks} />;
 }

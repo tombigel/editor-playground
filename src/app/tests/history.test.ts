@@ -25,12 +25,11 @@ describe('app/history', () => {
   });
 
   it('builds no history entry when only pending role swap identity changes', () => {
-    const before = createInitialState();
-    const after = {
-      ...before,
-      pendingRoleSwap: before.pendingRoleSwap ? { ...before.pendingRoleSwap } : null,
-    };
+    const swap = { requestedId: 'section_1', targetRole: 'header' as const, existingId: 'header_1' };
+    const before = { ...createInitialState(), pendingRoleSwap: swap };
+    const after = { ...before, pendingRoleSwap: { ...swap } };
 
+    expect(before.pendingRoleSwap).not.toBe(after.pendingRoleSwap);
     expect(buildHistoryEntry(before, after, null, Date.now())).toBeNull();
   });
 

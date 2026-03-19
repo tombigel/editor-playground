@@ -156,7 +156,7 @@ Primary accent:
 
 ```css
 --editor-accent: #1668ff;
---editor-accent-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
+--editor-accent-shadow: 0 2px 8px color-mix(in srgb, var(--editor-accent) 24%, transparent);
 ```
 
 Use accent for:
@@ -174,6 +174,13 @@ Do not use accent for:
 - passive cards
 - generic panel backgrounds
 - large non-interactive fills
+
+Accent customization rules:
+
+- the active editor accent must be runtime-configurable from settings
+- provide a compact set of preset accent swatches plus a custom picker so the default blue remains easy to restore
+- runtime accent changes must flow through shared tokens, not one-off component overrides
+- derived dark-shell tinting may mix low percentages of accent into structural surfaces, but should remain clearly darker than active controls
 
 ### 8.2 Light Theme Tokens
 
@@ -198,28 +205,56 @@ Required baseline:
 --editor-settings-nav-active-muted: #5d7293;
 ```
 
+Light palette rules:
+
+- light mode must support multiple palettes selected from settings
+- ship at least two neutral light palettes, one accent-derived light palette, and one higher-contrast light palette
+- `Midday` may mix low percentages of accent into shells and panels, but passive surfaces should stay clearly lighter than selected controls
+- `Paper` may use a palette-owned warm accent instead of the global editor accent when it is the active light palette
+
+Closeable editor panels:
+
+- settings, section templates, keyboard shortcuts, and manage fonts should share one header structure
+- use an icon chip, a title, an optional one-line description, and the same square close button treatment on the right
+- do not apply this standard to the sticky floating focus header; that header remains bespoke
+
+Dark palette rules:
+
+- dark mode must support multiple palettes selected from settings
+- ship at least two neutral dark palettes, one styled dark palette, and one higher-contrast dark palette
+- `Graphite` and `Monokai` should stay restrained in saturation so the editor accent remains the primary active signal
+- `Monokai` may use a palette-owned magenta accent when it is the active dark palette
+
 ### 8.3 Dark Theme Tokens
 
 Required baseline:
 
 ```css
---editor-surface-background: #1a2534;
---editor-surface-border: #47607a;
---editor-input-background: #162130;
---editor-input-border: #47607a;
+--editor-surface-background: color-mix(in srgb, var(--editor-accent) 11%, #1a2534);
+--editor-surface-border: color-mix(in srgb, var(--editor-accent) 18%, #41586f);
+--editor-input-background: color-mix(in srgb, var(--editor-accent) 6%, #162130);
+--editor-input-border: color-mix(in srgb, var(--editor-accent) 18%, #41586f);
 --editor-input-text: #e6edf5;
---editor-select-content-background: #1a2534;
---editor-select-highlight-background: #2a3850;
+--editor-select-content-background: color-mix(in srgb, var(--editor-accent) 11%, #1a2534);
+--editor-select-highlight-background: color-mix(in srgb, var(--editor-accent) 22%, #2a3850);
 --editor-switch-background: #334155;
---editor-switch-background-checked: #1668ff;
---editor-tooltip-background: #0f1722;
---editor-tooltip-border: #36495f;
+--editor-switch-background-checked: var(--editor-accent);
+--editor-tooltip-background: color-mix(in srgb, var(--editor-accent) 6%, #0f1722);
+--editor-tooltip-border: color-mix(in srgb, var(--editor-accent) 11%, #36495f);
 --editor-tooltip-text: #d6e0ea;
 --editor-tooltip-muted-text: #a5b3c2;
---editor-settings-nav-active-background: #223147;
+--editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 11%, #223041);
 --editor-settings-nav-active-text: #f3f7fc;
 --editor-settings-nav-active-muted: #95a8bf;
 ```
+
+Dark shell palette rules:
+
+- dark mode must support multiple shell palettes selected from settings
+- ship at least three distinct dark palettes with clearly different neutral bases
+- `Monokai` should stay warm and neutral while using the accent on active/focused chrome rather than tinting the full shell
+- alternate dark palettes may change the neutral base family, but active/focused/selected states still use the shared accent token
+- palette differences belong in shared shell tokens, not per-component bespoke overrides
 
 ### 8.4 Utility Tokens
 
@@ -256,19 +291,20 @@ Rules:
 Approved interaction colors:
 
 - focus ring: accent blue at low alpha
-- focused field border: accent blue
-- checked switch track: accent blue
-- selected node outline: accent blue
-- selected node label fill: accent blue
+- focused field border: accent color
+- checked switch track: accent color
+- selected node outline: accent color
+- selected node label fill: accent color
+- sticky distance / offset / padding / auto guides: accent-derived related hues, not fixed standalone hard-coded colors
 
 Focus ring pattern:
 
-```css
-focus-visible:ring-2
-focus-visible:ring-blue-500/20
-```
+Use a token-backed equivalent such as:
 
-or token-backed equivalent.
+```css
+outline: 2px solid var(--editor-focus-ring-strong);
+outline-offset: 2px;
+```
 
 Transition timing:
 
@@ -301,7 +337,7 @@ Variants:
 
 | Variant | Background | Border | Text |
 |---|---|---|---|
-| default | accent blue | none | white |
+| default | accent color | none | white |
 | secondary | neutral subtle fill | none | strong text |
 | outline | surface | subtle border | muted/strong text |
 | ghost | transparent | none | muted text |
@@ -309,7 +345,7 @@ Variants:
 
 Focus:
 
-- blue ring
+- accent-derived ring
 - visible keyboard-only focus state
 
 ### 10.2 Inputs
@@ -331,8 +367,8 @@ Spec:
 
 Focus:
 
-- border switches to accent blue
-- `2px` low-alpha blue ring
+- border switches to the accent color
+- low-alpha accent focus treatment
 
 ### 10.3 Textareas
 

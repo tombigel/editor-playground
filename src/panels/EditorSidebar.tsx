@@ -75,6 +75,7 @@ export function EditorSidebar({
 
   return (
     <aside
+      aria-label="Inspector"
       className="editor-inspector-shell editor-bg-surface editor-border-subtle relative min-h-0 overflow-hidden border-l shadow-[-8px_0_24px_rgba(18,32,51,0.03)]"
       onMouseEnter={clearTemporaryCloseTimeout}
       onMouseLeave={scheduleTemporaryClose}
@@ -118,7 +119,7 @@ export function EditorSidebar({
                           inspectorProps.onTextChange('name', nextValue);
                         }
                       }}
-                      className="editor-text-strong min-w-0 self-start truncate rounded-sm text-sm leading-tight font-medium outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                      className="editor-text-strong min-w-0 self-start truncate rounded-sm text-sm leading-tight font-medium outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)]"
                       inputClassName="h-7 w-auto min-w-[8ch] max-w-full self-start rounded-sm px-1 py-0 text-sm leading-tight font-medium [field-sizing:content]"
                     />
                   </div>

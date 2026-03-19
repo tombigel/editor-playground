@@ -24,13 +24,13 @@ const Slider = React.forwardRef<
       {...props}
     >
       <SliderPrimitive.Track data-ui="slider-track" className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-slate-200">
-        <SliderPrimitive.Range data-ui="slider-range" className="absolute h-full bg-blue-600" />
+        <SliderPrimitive.Range data-ui="slider-range" className="absolute h-full" />
       </SliderPrimitive.Track>
       {Array.from({ length: thumbCount }).map((_, index) => (
         <SliderPrimitive.Thumb
           key={index}
           data-ui="slider-thumb"
-          className="block size-4 rounded-full border border-blue-600 bg-white shadow-sm transition-colors focus-visible:ring-4 focus-visible:ring-blue-500/20 disabled:pointer-events-none disabled:opacity-50"
+          className="block size-4 rounded-full border bg-white shadow-sm transition-colors disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

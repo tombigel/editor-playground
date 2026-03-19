@@ -41,6 +41,7 @@ import {
   selectedNodeHasBottomEdge,
   selectedNodeHasTopEdge,
 } from './appSelectors';
+import { normalizeFocusedPanelOffset } from '../editor/focusedPanelPosition';
 import type { EditorAction, HistoryAction, HistoryState } from './types';
 export type { EditorAction, HistoryAction, HistoryState } from './types';
 
@@ -230,6 +231,16 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, ui: { ...state.ui, snapEnabled: action.value } };
     case 'setThemeMode':
       return { ...state, ui: { ...state.ui, themeMode: action.value } };
+    case 'setAccentColor':
+      return { ...state, ui: { ...state.ui, accentColor: action.value } };
+    case 'setPaperAccentColor':
+      return { ...state, ui: { ...state.ui, paperAccentColor: action.value } };
+    case 'setMonokaiAccentColor':
+      return { ...state, ui: { ...state.ui, monokaiAccentColor: action.value } };
+    case 'setLightTheme':
+      return { ...state, ui: { ...state.ui, lightTheme: action.value } };
+    case 'setDarkTheme':
+      return { ...state, ui: { ...state.ui, darkTheme: action.value } };
     case 'setFocusedMode':
       return {
         ...state,
@@ -250,6 +261,14 @@ export function editorReducer(state: EditorState, action: EditorAction) {
         ui: {
           ...state.ui,
           temporaryInspectorOpen: state.ui.focusedMode ? action.value : false,
+        },
+      };
+    case 'setFocusedPanelOffset':
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          focusedPanelOffset: normalizeFocusedPanelOffset(action.value),
         },
       };
     default:
@@ -422,10 +441,16 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setShowGridLanes' &&
     action.type !== 'setSnapEnabled' &&
     action.type !== 'setThemeMode' &&
+    action.type !== 'setAccentColor' &&
+    action.type !== 'setPaperAccentColor' &&
+    action.type !== 'setMonokaiAccentColor' &&
+    action.type !== 'setLightTheme' &&
+    action.type !== 'setDarkTheme' &&
     action.type !== 'setFocusedMode' &&
     action.type !== 'setStartupFocusedMode' &&
     action.type !== 'setInspectorCollapsed' &&
-    action.type !== 'setTemporaryInspectorOpen'
+    action.type !== 'setTemporaryInspectorOpen' &&
+    action.type !== 'setFocusedPanelOffset'
   );
 }
 

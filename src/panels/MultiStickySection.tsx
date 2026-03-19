@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { FormField, RangeField, StickyOffsetBandField } from './InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard, type InspectorSectionHeaderAction } from './inspector/CommonSections';
 import type { InspectorActionHandlers } from './inspector/types';
+import { resolveSharedBoolean, resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
 
 const MIXED_SELECT_VALUE = '__mixed__';
 
@@ -272,23 +273,3 @@ function readStickyDurationBottomValue(node: Exclude<DocumentNode, { type: 'site
   return duration?.unit === 'vh' ? duration.value : 50;
 }
 
-function resolveSharedString(values: string[]) {
-  return {
-    value: values[0] ?? '',
-    mixed: values.some((value) => value !== (values[0] ?? '')),
-  };
-}
-
-function resolveSharedBoolean(values: boolean[]) {
-  return {
-    value: values[0] ?? false,
-    mixed: values.some((value) => value !== (values[0] ?? false)),
-  };
-}
-
-function resolveSharedNumber(values: number[]) {
-  return {
-    value: values[0] ?? 0,
-    mixed: values.some((value) => value !== (values[0] ?? 0)),
-  };
-}

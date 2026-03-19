@@ -8,6 +8,7 @@ describe('components/ui/popover', () => {
 
     expect(shouldBypassTooltipDelay(true, now, now)).toBe(true);
     expect(shouldBypassTooltipDelay(false, now + 100, graceUntil)).toBe(true);
+    expect(shouldBypassTooltipDelay(false, graceUntil, graceUntil)).toBe(false);
     expect(shouldBypassTooltipDelay(false, graceUntil + 1, graceUntil)).toBe(false);
   });
 
@@ -17,6 +18,7 @@ describe('components/ui/popover', () => {
 
     expect(getTooltipHoverDelay(true, now, now)).toBe(0);
     expect(getTooltipHoverDelay(false, now + 100, graceUntil)).toBe(0);
+    expect(getTooltipHoverDelay(false, graceUntil, graceUntil)).toBe(200);
     expect(getTooltipHoverDelay(false, graceUntil + 1, graceUntil)).toBe(200);
   });
 });

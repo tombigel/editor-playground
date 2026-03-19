@@ -66,6 +66,9 @@ describe('editor/editorStore integration', () => {
   it('defaults editor theme mode to auto', () => {
     const state = createInitialState();
     expect(state.ui.themeMode).toBe('auto');
+    expect(state.ui.accentColor).toBe('#1668ff');
+    expect(state.ui.lightTheme).toBe('air');
+    expect(state.ui.darkTheme).toBe('monokai');
   });
 
   it('defaults focused-mode ui state to the normal editor', () => {
@@ -75,6 +78,7 @@ describe('editor/editorStore integration', () => {
     expect(state.ui.startupFocusedMode).toBeNull();
     expect(state.ui.inspectorCollapsed).toBe(false);
     expect(state.ui.temporaryInspectorOpen).toBe(false);
+    expect(state.ui.focusedPanelOffset).toEqual({ x: 0, y: 0 });
   });
 
   it('initializes from a focus-mode query override before any persisted state is loaded', () => {
@@ -307,6 +311,55 @@ describe('editor/editorStore integration', () => {
     expect(loadPersistedState().ui.themeMode).toBe('dark');
   });
 
+  it('normalizes persisted accent color and dark theme values', () => {
+    const windowStub = createWindowStorageStub();
+    vi.stubGlobal('window', windowStub);
+    const { localStorage } = windowStub;
+    const state = createInitialState();
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          accentColor: '',
+          paperAccentColor: '',
+          monokaiAccentColor: '',
+          lightTheme: 'winter-mode',
+          darkTheme: 'night-mode',
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.accentColor).toBe('#1668ff');
+    expect(loadPersistedState().ui.paperAccentColor).toBe('#a36a2c');
+    expect(loadPersistedState().ui.monokaiAccentColor).toBe('#ff6188');
+    expect(loadPersistedState().ui.lightTheme).toBe('air');
+    expect(loadPersistedState().ui.darkTheme).toBe('monokai');
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...state,
+        ui: {
+          ...state.ui,
+          accentColor: '#ff6b4a',
+          paperAccentColor: '#b07a3a',
+          monokaiAccentColor: '#ff4f9a',
+          lightTheme: 'paper',
+          darkTheme: 'midnight',
+        },
+      }),
+    );
+
+    expect(loadPersistedState().ui.accentColor).toBe('#ff6b4a');
+    expect(loadPersistedState().ui.paperAccentColor).toBe('#b07a3a');
+    expect(loadPersistedState().ui.monokaiAccentColor).toBe('#ff4f9a');
+    expect(loadPersistedState().ui.lightTheme).toBe('paper');
+    expect(loadPersistedState().ui.darkTheme).toBe('midnight');
+  });
+
   it('restores startup focused mode while dropping transient inspector-open state', () => {
     const windowStub = createWindowStorageStub();
     vi.stubGlobal('window', windowStub);
@@ -332,6 +385,7 @@ describe('editor/editorStore integration', () => {
       focusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 0, y: 0 },
     });
   });
 
@@ -440,10 +494,16 @@ describe('editor/editorStore integration', () => {
           showGridLanes: true,
           snapEnabled: false,
           themeMode: 'dark',
+          accentColor: '#ff6b4a',
+          paperAccentColor: '#b07a3a',
+          monokaiAccentColor: '#ff4f9a',
+          lightTheme: 'paper',
+          darkTheme: 'midnight',
           focusedMode: 'sticky',
           startupFocusedMode: 'sticky',
           inspectorCollapsed: true,
           temporaryInspectorOpen: true,
+          focusedPanelOffset: { x: -48, y: 96 },
         },
       }),
     );
@@ -459,10 +519,16 @@ describe('editor/editorStore integration', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      accentColor: '#ff6b4a',
+      paperAccentColor: '#b07a3a',
+      monokaiAccentColor: '#ff4f9a',
+      lightTheme: 'paper',
+      darkTheme: 'midnight',
       focusedMode: 'sticky',
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: -48, y: 96 },
     });
     expect(loadedText.type).toBe('leaf');
     if (loadedText.type === 'leaf' && loadedText.role === 'text') {
@@ -500,9 +566,8 @@ describe('editor/editorStore integration', () => {
       (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
     );
 
-    expect(migratedRepoLink).toBeTruthy();
     if (!migratedRepoLink || migratedRepoLink.type !== 'leaf' || migratedRepoLink.role !== 'link') {
-      return;
+      throw new Error('Expected migrated repository link node');
     }
 
     expect(migratedRepoLink.label).toBe('github.com/tombigel/sticky-playground');
@@ -646,9 +711,8 @@ describe('editor/editorStore integration', () => {
     );
 
     expect(root.children).toHaveLength(3);
-    expect(postSection).toBeTruthy();
     if (!postSection || postSection.type !== 'wrapper') {
-      return;
+      throw new Error('Expected migrated post section wrapper');
     }
 
     expect(postSection.rect.height.base.raw).toBe('50vh');
@@ -714,10 +778,16 @@ describe('editor/editorStore integration', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      accentColor: '#ff6b4a',
+      paperAccentColor: '#b07a3a',
+      monokaiAccentColor: '#ff4f9a',
+      lightTheme: 'paper',
+      darkTheme: 'midnight',
       focusedMode: 'sticky',
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: true,
+      focusedPanelOffset: { x: 24, y: 60 },
     });
 
     const postSection = Object.values(reset.document.nodes).find(
@@ -732,10 +802,16 @@ describe('editor/editorStore integration', () => {
       showGridLanes: true,
       snapEnabled: false,
       themeMode: 'dark',
+      accentColor: '#ff6b4a',
+      paperAccentColor: '#b07a3a',
+      monokaiAccentColor: '#ff4f9a',
+      lightTheme: 'paper',
+      darkTheme: 'midnight',
       focusedMode: 'sticky',
       startupFocusedMode: 'sticky',
       inspectorCollapsed: true,
       temporaryInspectorOpen: false,
+      focusedPanelOffset: { x: 24, y: 60 },
     });
     expect(postSection).toBeTruthy();
     expect(reset.document).not.toBe(state.document);
@@ -762,9 +838,8 @@ describe('editor/editorStore integration', () => {
 
     expect(rootAfter.children[rootAfter.children.length - 1]).toBe(footerBefore);
     expect(rootAfter.children.length).toBe(rootBefore.children.length + 1);
-    expect(next.selectedId).toBeTruthy();
     if (!next.selectedId) {
-      return;
+      throw new Error('Expected inserted section to be selected');
     }
     const selected = next.document.nodes[next.selectedId];
     expect(selected.type).toBe('wrapper');

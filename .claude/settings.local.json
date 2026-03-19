@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(wc -l /Users/tombigel/Dev/Wix/sticky-playground/src/**/*.ts /Users/tombigel/Dev/Wix/sticky-playground/src/**/*.tsx)",
+      "Bash(git checkout:*)",
+      "Bash(ln -sf CONTRIBUTING_AI.md CLAUDE.md)",
+      "Bash(ln -sf CONTRIBUTING_AI.md .cursorrules)",
+      "Bash(ln -sf ../CONTRIBUTING_AI.md .github/copilot-instructions.md)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git log:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls playwright.config.*)",
+      "Bash(lsof -ti:4174 -ti:4175)",
+      "Bash(xargs -r kill)",
+      "Bash(git fetch:*)",
+      "Bash(npx eslint:*)"
+    ]
+  }
+}

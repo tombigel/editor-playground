@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialState, resolveStickyLayout } from '../../api/editorApi';
+import { createInitialState, insertLeaf, resolveStickyLayout } from '../../api/editorApi';
 import { AppShell } from '../AppShell';
 
 function createProps(): ComponentProps<typeof AppShell> {
@@ -45,6 +45,41 @@ function createProps(): ComponentProps<typeof AppShell> {
 }
 
 describe('app/AppShell', () => {
+  it('renders the editor accent and dark theme on the shell container', () => {
+    const props = createProps();
+    props.state.ui.accentColor = '#ff6b4a';
+    props.state.ui.lightTheme = 'midday';
+    props.state.ui.darkTheme = 'ink';
+
+    const markup = renderToStaticMarkup(<AppShell {...props} />);
+
+    expect(markup).toContain('data-editor-dark-theme="ink"');
+    expect(markup).toContain('data-editor-light-theme="midday"');
+    expect(markup).toContain('--editor-accent:#ff6b4a');
+  });
+
+  it('uses the palette-owned accent for paper and monokai shells', () => {
+    const paperProps = createProps();
+    paperProps.state.ui.accentColor = '#1668ff';
+    paperProps.state.ui.paperAccentColor = '#b07a3a';
+    paperProps.state.ui.lightTheme = 'paper';
+    paperProps.resolvedTheme = 'light';
+
+    const paperMarkup = renderToStaticMarkup(<AppShell {...paperProps} />);
+
+    expect(paperMarkup).toContain('--editor-accent:#b07a3a');
+
+    const monokaiProps = createProps();
+    monokaiProps.state.ui.accentColor = '#1668ff';
+    monokaiProps.state.ui.monokaiAccentColor = '#ff4f9a';
+    monokaiProps.state.ui.darkTheme = 'monokai';
+    monokaiProps.resolvedTheme = 'dark';
+
+    const monokaiMarkup = renderToStaticMarkup(<AppShell {...monokaiProps} />);
+
+    expect(monokaiMarkup).toContain('--editor-accent:#ff4f9a');
+  });
+
   it('renders the left rail with smaller buttons and a stronger add label', () => {
     const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
 
@@ -54,14 +89,45 @@ describe('app/AppShell', () => {
     expect(markup).toContain('editor-text-strong text-sm font-semibold');
     expect(markup).toContain('editor-insert-button group h-10 w-10 rounded-lg border');
     expect(markup).toContain('editor-insert-button-inner flex h-full w-full items-center justify-center rounded-lg border');
-    expect(markup).toContain('flex h-10 w-10 items-center justify-center rounded-lg border');
+    expect(markup).toContain('editor-rail-toggle-button');
   });
 
   it('renders the manage fonts dialog with an inner scroll container', () => {
     const markup = renderToStaticMarkup(<AppShell {...createProps()} manageFontsOpen />);
 
     expect(markup).toContain('Manage Fonts');
+    expect(markup).toContain('editor-panel-header-close');
     expect(markup).toContain('max-h-[min(84vh,820px)]');
-    expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto pr-1');
+    expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto p-5 pt-4');
+  });
+
+  it('renders the focused panel at its stored viewport offset from the workspace-aligned default', () => {
+    const props = createProps();
+    const state = insertLeaf(props.state, 'text');
+    if (!state.selectedId) {
+      throw new Error('Expected selected text node');
+    }
+    const selectedNode = state.document.nodes[state.selectedId];
+    if (!selectedNode) {
+      throw new Error('Expected selected node');
+    }
+
+    state.ui.focusedMode = 'sticky';
+    state.ui.focusedPanelOffset = { x: -48, y: 64 };
+
+    const markup = renderToStaticMarkup(
+      <AppShell
+        {...props}
+        state={state}
+        selectedNode={selectedNode}
+        selectedNodes={[selectedNode]}
+        stickyLayout={resolveStickyLayout(state.document)}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Drag focused panel"');
+    expect(markup).toContain('top:76px');
+    expect(markup).toContain('right:80px');
+    expect(markup).toContain('transform:translate(-48px, 64px)');
   });
 });

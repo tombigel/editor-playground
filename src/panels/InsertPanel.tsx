@@ -80,7 +80,7 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
               data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
               variant="ghost"
               title={`${item.label} · ${item.hint}`}
-              className="editor-insert-button group h-10 w-10 rounded-lg border p-0 shadow-[0_2px_10px_rgba(18,32,51,0.06)] hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-blue-500"
+              className="editor-insert-button group h-10 w-10 rounded-lg border p-0 shadow-[0_2px_10px_rgba(18,32,51,0.06)] hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-[color:var(--editor-accent)]"
               onClick={(event) => {
                 if (item.kind === 'wrapper') {
                   if (item.role === 'section') {

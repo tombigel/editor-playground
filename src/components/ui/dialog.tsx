@@ -36,10 +36,11 @@ type DialogContentProps = Omit<React.ComponentPropsWithoutRef<'div'>, 'children'
   children: React.ReactNode;
   surfaceClassName?: string;
   backdropVariant?: 'default' | 'transparent';
+  showCloseButton?: boolean;
 };
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ className, children, surfaceClassName, backdropVariant = 'default', ...props }, ref) => {
+  ({ className, children, surfaceClassName, backdropVariant = 'default', showCloseButton = true, ...props }, ref) => {
     const { open, onOpenChange } = useDialogContext();
 
     return (
@@ -70,14 +71,16 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           onMouseDown={(event) => event.stopPropagation()}
         >
           {children}
-          <button
-            type="button"
-            className="editor-icon-button-subtle absolute right-4 top-4 rounded-md border border-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="size-4" />
-            <span className="sr-only">Close</span>
-          </button>
+          {showCloseButton ? (
+            <button
+              type="button"
+              className="editor-icon-button-subtle absolute right-4 top-4 rounded-md border border-transparent p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--editor-focus-ring-offset)]"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="size-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          ) : null}
         </div>
       </PopoverSurface>
     );

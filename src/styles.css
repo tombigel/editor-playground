@@ -12,6 +12,17 @@
   button {
     cursor: pointer;
   }
+
+  /* Baseline focus-visible outlines for interactive elements */
+  :is(button, input, select, textarea, [role="button"], [tabindex="0"]):focus-visible {
+    outline: 2px solid var(--editor-accent, #1668ff);
+    outline-offset: 2px;
+  }
+
+  /* Suppress the default outline when a Tailwind ring utility is applied */
+  :is(button, input, select, textarea, [role="button"], [tabindex="0"])[class*="focus-visible:ring"]:focus-visible {
+    outline: none;
+  }
 }
 
 :root {
@@ -66,11 +77,11 @@
   --editor-select-content-background: #ffffff;
   --editor-select-highlight-background: #eff6ff;
   --editor-switch-background: #cbd5e1;
-  --editor-switch-background-checked: #3b82f6;
+  --editor-switch-background-checked: var(--editor-accent);
   --editor-slider-track-background: #dbe5f0;
-  --editor-slider-range-background: #3b82f6;
+  --editor-slider-range-background: var(--editor-accent);
   --editor-slider-thumb-background: #ffffff;
-  --editor-slider-thumb-border: #93c5fd;
+  --editor-slider-thumb-border: color-mix(in srgb, var(--editor-accent) 38%, #ffffff);
   --editor-tooltip-background: #ffffff;
   --editor-tooltip-border: #dbe5f0;
   --editor-tooltip-text: #475569;
@@ -97,15 +108,85 @@
   --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-utility-text-muted) 56%, transparent);
   --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-text) 52%, transparent);
   --editor-accent: #1668ff;
-  --editor-accent-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
+  --editor-accent-foreground: #f8fafc;
+  --editor-accent-foreground-muted: rgba(255, 255, 255, 0.68);
+  --editor-accent-shadow: 0 2px 8px color-mix(in srgb, var(--editor-accent) 24%, transparent);
+  --editor-focus-ring: color-mix(in srgb, var(--editor-accent) 20%, transparent);
+  --editor-focus-ring-strong: color-mix(in srgb, var(--editor-accent) 40%, transparent);
+  --editor-focus-ring-offset: var(--editor-surface-background);
+  --editor-topbar-background: color-mix(in srgb, var(--editor-accent) 82%, #113b91);
+  --editor-topbar-border: color-mix(in srgb, var(--editor-accent) 74%, #0e2b6f);
+  --editor-topbar-shadow: 0 1px 0 color-mix(in srgb, #ffffff 12%, transparent);
+  --editor-topbar-text: var(--editor-accent-foreground);
+  --editor-topbar-muted-text: var(--editor-accent-foreground-muted);
+  --editor-topbar-button-text: var(--editor-accent-foreground);
+  --editor-topbar-button-hover-text: var(--editor-accent-foreground);
+  --editor-topbar-button-active-text: var(--editor-accent-foreground);
+  --editor-topbar-button-background: color-mix(in srgb, var(--editor-accent) 76%, #184ebc);
+  --editor-topbar-button-border: color-mix(in srgb, var(--editor-accent) 48%, #ffffff);
+  --editor-topbar-button-hover-background: color-mix(in srgb, var(--editor-accent) 82%, #123f9c);
+  --editor-topbar-button-hover-border: color-mix(in srgb, var(--editor-accent) 38%, #ffffff);
+  --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 44%, #ffffff);
+  --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 28%, #ffffff);
+  --editor-topbar-button-shadow:
+    0 8px 18px color-mix(in srgb, var(--editor-accent) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 9%, transparent);
+  --editor-topbar-button-active-shadow:
+    0 12px 26px color-mix(in srgb, var(--editor-accent) 24%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 10%, transparent);
+  --editor-topbar-tooltip-background: #0f172a;
+  --editor-topbar-tooltip-border: color-mix(in srgb, var(--editor-accent) 18%, #243447);
+  --editor-topbar-tooltip-text: #f8fafc;
+  --editor-topbar-tooltip-shadow: 0 16px 36px rgba(2, 6, 23, 0.38);
+  --editor-dark-theme-chip:
+    linear-gradient(135deg, color-mix(in srgb, var(--editor-accent) 50%, #0f172a), color-mix(in srgb, var(--editor-accent) 18%, #ffffff));
+  --editor-sticky-distance-guide-color: var(--editor-accent);
+  --editor-sticky-distance-label-background: color-mix(in srgb, var(--editor-accent) 88%, #0f172a);
+  --editor-sticky-distance-label-text: var(--editor-accent-foreground);
+  --editor-sticky-offset-guide-color: color-mix(in srgb, var(--editor-accent) 54%, #d97706);
+  --editor-sticky-padding-guide-color: color-mix(
+    in srgb,
+    var(--editor-sticky-offset-guide-color) 72%,
+    #f4c66e
+  );
+  --editor-sticky-offset-label-background: color-mix(
+    in srgb,
+    var(--editor-sticky-offset-guide-color) 86%,
+    #fff4d6
+  );
+  --editor-sticky-offset-label-text: #4d3500;
+  --editor-sticky-auto-guide-color: color-mix(in srgb, var(--editor-accent) 46%, #16a34a);
+  --editor-sticky-auto-label-background: color-mix(in srgb, var(--editor-sticky-auto-guide-color) 84%, #e8fff1);
+  --editor-sticky-auto-label-text: var(--editor-accent-foreground);
   --editor-group-selection-border: #c4711c;
   --editor-group-selection-shadow: rgba(196, 113, 28, 0.18);
   --editor-drag-preview-background: rgba(255, 255, 255, 0.96);
   --editor-drag-preview-shadow:
-    0 0 0 3px rgba(22, 104, 255, 0.1),
+    0 0 0 3px color-mix(in srgb, var(--editor-accent) 10%, transparent),
     0 12px 28px rgba(18, 32, 51, 0.12);
-  --editor-resize-handle-background: #1668ff;
-  --editor-resize-handle-border: #1668ff;
+  --editor-resize-handle-background: var(--editor-accent);
+  --editor-resize-handle-border: var(--editor-accent);
+  --editor-dark-shell-top: #111927;
+  --editor-dark-shell-bottom: #0d141f;
+  --editor-dark-surface-base: #1a2534;
+  --editor-dark-surface-border-base: #41586f;
+  --editor-dark-stage-frame-base: #1d2a3a;
+  --editor-dark-stage-canvas-base: #243244;
+  --editor-dark-content-base: #1d2a39;
+  --editor-dark-button-base: #202d3e;
+  --editor-dark-button-hover-base: #29394d;
+  --editor-dark-input-base: #162130;
+  --editor-dark-utility-base: #223041;
+  --editor-dark-select-highlight-base: #2a3850;
+  --editor-dark-tooltip-base: #0f1722;
+  --editor-dark-tooltip-border-base: #36495f;
+  --editor-dark-topbar-base: #131720;
+  --editor-dark-topbar-button-base: rgba(255, 255, 255, 0.04);
+  --editor-dark-topbar-button-hover-base: rgba(255, 255, 255, 0.08);
+  --editor-dark-topbar-button-active-base: rgba(255, 255, 255, 0.13);
+  --editor-dark-tint-soft: 6%;
+  --editor-dark-tint-medium: 11%;
+  --editor-dark-tint-strong: 18%;
   --editor-layer-sticky-label: 1;
   --editor-layer-selection: 2;
   --editor-layer-resize-handle: 2;
@@ -129,63 +210,148 @@ body {
 }
 
 body[data-editor-theme='dark'] {
+  --editor-focus-ring-offset: var(--editor-dark-topbar-base);
   --app-background:
-    radial-gradient(circle at top left, rgba(90, 118, 168, 0.24), transparent 28%),
-    linear-gradient(180deg, #111927 0%, #0d141f 100%);
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--editor-accent) 24%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(180deg, var(--editor-dark-shell-top) 0%, var(--editor-dark-shell-bottom) 100%);
   --editor-text: #e6edf5;
   --editor-shell-background: var(--app-background);
-  --editor-surface-background: #1a2534;
-  --editor-surface-border: #47607a;
+  --editor-surface-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-surface-base)
+  );
+  --editor-surface-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
   --editor-surface-shadow:
     0 12px 28px rgba(1, 6, 15, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --editor-workspace-background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0)),
-    #131d2a;
-  --editor-stage-frame-background: #1d2a3a;
-  --editor-stage-frame-border: #4c6680;
+    color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-soft), #131d2a);
+  --editor-stage-frame-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-stage-frame-base)
+  );
+  --editor-stage-frame-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
   --editor-stage-frame-shadow:
     0 14px 30px rgba(0, 0, 0, 0.22),
     0 1px 8px rgba(0, 0, 0, 0.12);
   --editor-stage-canvas-background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0)),
-    #243244;
+    color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-medium), var(--editor-dark-stage-canvas-base));
   --editor-empty-slot-text: #93a3b8;
-  --editor-empty-slot-background: rgba(26, 37, 52, 0.88);
-  --editor-empty-slot-border: #47607a;
-  --editor-content-background: #1d2a39;
+  --editor-empty-slot-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    rgba(26, 37, 52, 0.88)
+  );
+  --editor-empty-slot-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-content-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-content-base)
+  );
   --editor-image-placeholder-background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
-    linear-gradient(135deg, #253446 0%, #16212f 100%);
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-medium), #253446) 0%,
+      color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-soft), #16212f) 100%
+    );
   --editor-image-placeholder-text: #a6b4c5;
-  --editor-button-surface: #202d3e;
-  --editor-button-surface-hover: #29394d;
-  --editor-button-border: #47607a;
-  --editor-button-border-hover: #5d7895;
+  --editor-button-surface: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-button-base)
+  );
+  --editor-button-surface-hover: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-button-hover-base)
+  );
+  --editor-button-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-button-border-hover: color-mix(
+    in srgb,
+    var(--editor-accent) calc(var(--editor-dark-tint-strong) + 4%),
+    #657f98
+  );
   --editor-button-ghost-text: #b6c2d1;
   --editor-button-ghost-hover-background: rgba(255, 255, 255, 0.1);
   --editor-button-ghost-hover-text: #eef4fb;
-  --editor-input-background: #162130;
-  --editor-input-border: #47607a;
+  --editor-input-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-input-base)
+  );
+  --editor-input-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
   --editor-input-text: #e6edf5;
   --editor-input-placeholder: #71839a;
-  --editor-select-content-background: #1a2534;
-  --editor-select-highlight-background: #2a3850;
+  --editor-select-content-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-surface-base)
+  );
+  --editor-select-highlight-background: color-mix(
+    in srgb,
+    var(--editor-accent) calc(var(--editor-dark-tint-strong) + 4%),
+    var(--editor-dark-select-highlight-base)
+  );
   --editor-switch-background: #334155;
-  --editor-switch-background-checked: #1668ff;
+  --editor-switch-background-checked: var(--editor-accent);
   --editor-slider-track-background: #263244;
-  --editor-slider-range-background: #748cbf;
-  --editor-slider-thumb-background: #0f1722;
-  --editor-slider-thumb-border: #8d9fc7;
-  --editor-tooltip-background: #0f1722;
-  --editor-tooltip-border: #36495f;
+  --editor-slider-range-background: color-mix(in srgb, var(--editor-accent) 68%, #c6d4ff);
+  --editor-slider-thumb-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-tooltip-base)
+  );
+  --editor-slider-thumb-border: color-mix(in srgb, var(--editor-accent) 40%, #cbd5e1);
+  --editor-tooltip-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-tooltip-base)
+  );
+  --editor-tooltip-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-tooltip-border-base)
+  );
   --editor-tooltip-text: #d6e0ea;
   --editor-tooltip-muted-text: #a5b3c2;
   --editor-tooltip-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
   --editor-settings-nav-text: #aab9ca;
   --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.06);
   --editor-settings-nav-hover-text: #eef4fb;
-  --editor-settings-nav-active-background: #223147;
+  --editor-settings-nav-active-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-utility-base)
+  );
   --editor-settings-nav-active-text: #f3f7fc;
   --editor-settings-nav-active-muted: #95a8bf;
   --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 18%, transparent);
@@ -197,21 +363,339 @@ body[data-editor-theme='dark'] {
   --editor-warning-text: #f0bf76;
   --editor-utility-text-strong: #e6edf5;
   --editor-utility-text-muted: #94a5b8;
-  --editor-utility-bg-subtle: #223041;
-  --editor-utility-border: #47607a;
+  --editor-utility-bg-subtle: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-utility-base)
+  );
+  --editor-utility-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
   --editor-scrollbar-track: color-mix(in srgb, var(--editor-utility-border) 46%, transparent);
   --editor-scrollbar-thumb: color-mix(in srgb, #d6e0ea 34%, transparent);
   --editor-scrollbar-thumb-hover: color-mix(in srgb, #f3f7fc 48%, transparent);
-  --editor-accent: #1668ff;
-  --editor-accent-shadow: 0 2px 8px rgba(22, 104, 255, 0.24);
   --editor-group-selection-border: #f0bf76;
   --editor-group-selection-shadow: rgba(240, 191, 118, 0.2);
   --editor-drag-preview-background: rgba(26, 37, 52, 0.96);
   --editor-drag-preview-shadow:
-    0 0 0 3px rgba(116, 140, 191, 0.08),
+    0 0 0 3px color-mix(in srgb, var(--editor-accent) 8%, transparent),
     0 12px 28px rgba(18, 32, 51, 0.12);
-  --editor-resize-handle-background: #1668ff;
-  --editor-resize-handle-border: #1668ff;
+  --editor-resize-handle-background: var(--editor-accent);
+  --editor-resize-handle-border: var(--editor-accent);
+  --editor-topbar-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-topbar-base)
+  );
+  --editor-topbar-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    rgba(255, 255, 255, 0.12)
+  );
+  --editor-topbar-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  --editor-topbar-text: #f8fafc;
+  --editor-topbar-muted-text: #a5b3c7;
+  --editor-topbar-button-text: #e6edf5;
+  --editor-topbar-button-hover-text: #f8fafc;
+  --editor-topbar-button-active-text: #f8fafc;
+  --editor-topbar-button-background: color-mix(
+    in srgb,
+    var(--editor-accent) 8%,
+    var(--editor-dark-topbar-button-base)
+  );
+  --editor-topbar-button-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    rgba(255, 255, 255, 0.12)
+  );
+  --editor-topbar-button-hover-background: color-mix(
+    in srgb,
+    var(--editor-accent) 12%,
+    var(--editor-dark-topbar-button-hover-base)
+  );
+  --editor-topbar-button-hover-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    rgba(255, 255, 255, 0.16)
+  );
+  --editor-topbar-button-active-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-topbar-button-active-base)
+  );
+  --editor-topbar-button-active-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    rgba(255, 255, 255, 0.18)
+  );
+  --editor-topbar-button-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --editor-topbar-button-active-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --editor-topbar-tooltip-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-tooltip-base)
+  );
+  --editor-topbar-tooltip-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-tooltip-border-base)
+  );
+  --editor-topbar-tooltip-text: #f8fafc;
+  --editor-topbar-tooltip-shadow: 0 16px 36px rgba(2, 6, 23, 0.38);
+  --editor-dark-theme-chip:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--editor-accent) 44%, var(--editor-dark-shell-top)),
+      color-mix(in srgb, var(--editor-accent) 16%, var(--editor-dark-surface-base))
+    );
+}
+
+body[data-editor-theme='light'][data-editor-light-theme='paper'] {
+  --app-background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(180deg, #f5efe6 0%, #ece4d7 100%);
+  --editor-surface-background: #fffaf1;
+  --editor-surface-border: #dccfbc;
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+    #efe6d8;
+  --editor-stage-frame-background: #fffaf1;
+  --editor-stage-frame-border: #dfd2bf;
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0)),
+    #faf4ea;
+  --editor-content-background: #fff9ef;
+  --editor-button-surface: #fff8ed;
+  --editor-button-surface-hover: #f6eddf;
+  --editor-button-border: #d8c8b1;
+  --editor-button-border-hover: #c7b18f;
+  --editor-input-background: #fff8ef;
+  --editor-input-border: #d8ccb9;
+  --editor-select-content-background: #fffaf1;
+  --editor-select-highlight-background: #f4ebdd;
+  --editor-tooltip-background: #fffaf3;
+  --editor-tooltip-border: #ded0bc;
+  --editor-settings-nav-hover-background: rgba(255, 250, 241, 0.88);
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 8%, #fffaf1);
+  --editor-settings-nav-active-text: #5d4120;
+  --editor-settings-nav-active-muted: #8b6f4d;
+  --editor-utility-text-strong: #2b2115;
+  --editor-utility-text-muted: #776657;
+  --editor-utility-bg-subtle: #f7efe2;
+  --editor-utility-border: #dfd1bd;
+  --editor-topbar-background: #7c6a54;
+  --editor-topbar-border: #655440;
+  --editor-topbar-button-background: #8b775e;
+  --editor-topbar-button-border: rgba(255, 255, 255, 0.36);
+  --editor-topbar-button-hover-background: #98856b;
+  --editor-topbar-button-hover-border: rgba(255, 255, 255, 0.48);
+  --editor-topbar-button-active-background: #b89a73;
+  --editor-topbar-button-active-border: rgba(255, 255, 255, 0.58);
+}
+
+body[data-editor-theme='light'][data-editor-light-theme='midday'] {
+  --app-background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--editor-accent) 20%, #ffffff), transparent 34%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--editor-accent) 10%, #eff4f9) 0%,
+      color-mix(in srgb, var(--editor-accent) 14%, #e6ecf4) 100%
+    );
+  --editor-surface-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-surface-border: color-mix(in srgb, var(--editor-accent) 14%, #d7e0eb);
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0)),
+    color-mix(in srgb, var(--editor-accent) 10%, #eff3f8);
+  --editor-stage-frame-background: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
+  --editor-stage-frame-border: color-mix(in srgb, var(--editor-accent) 13%, #dae3ef);
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)),
+    color-mix(in srgb, var(--editor-accent) 9%, #fbfcfe);
+  --editor-content-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-image-placeholder-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, color-mix(in srgb, var(--editor-accent) 18%, #d8e4f1) 0%, color-mix(in srgb, var(--editor-accent) 10%, #eef4fb) 100%);
+  --editor-button-surface: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
+  --editor-button-surface-hover: color-mix(in srgb, var(--editor-accent) 12%, #f8fbff);
+  --editor-button-border: color-mix(in srgb, var(--editor-accent) 16%, #d3dbe7);
+  --editor-button-border-hover: color-mix(in srgb, var(--editor-accent) 24%, #b2bfd1);
+  --editor-input-background: color-mix(in srgb, var(--editor-accent) 5%, #ffffff);
+  --editor-input-border: color-mix(in srgb, var(--editor-accent) 16%, #d3dbe7);
+  --editor-select-content-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-select-highlight-background: color-mix(in srgb, var(--editor-accent) 14%, #eff6ff);
+  --editor-tooltip-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-tooltip-border: color-mix(in srgb, var(--editor-accent) 14%, #dbe5f0);
+  --editor-settings-nav-hover-background: color-mix(in srgb, var(--editor-accent) 9%, rgba(255, 255, 255, 0.84));
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 14%, #ffffff);
+  --editor-settings-nav-active-text: color-mix(in srgb, var(--editor-accent) 38%, #16315f);
+  --editor-settings-nav-active-muted: color-mix(in srgb, var(--editor-accent) 24%, #5d7293);
+  --editor-utility-bg-subtle: color-mix(in srgb, var(--editor-accent) 9%, #f8fafc);
+  --editor-utility-border: color-mix(in srgb, var(--editor-accent) 14%, #dbe3ee);
+}
+
+body[data-editor-theme='light'][data-editor-light-theme='clarity'] {
+  --app-background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.94), transparent 26%),
+    linear-gradient(180deg, #f3f6fb 0%, #e8edf5 100%);
+  --editor-text: #0b1220;
+  --editor-surface-background: #ffffff;
+  --editor-surface-border: #b5c2d3;
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)),
+    #e7edf6;
+  --editor-stage-frame-background: #ffffff;
+  --editor-stage-frame-border: #bdcada;
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+    #ffffff;
+  --editor-content-background: #ffffff;
+  --editor-button-surface: #ffffff;
+  --editor-button-surface-hover: #edf3fb;
+  --editor-button-border: #b7c5d7;
+  --editor-button-border-hover: #8196b1;
+  --editor-input-background: #ffffff;
+  --editor-input-border: #aebed2;
+  --editor-input-text: #0b1220;
+  --editor-input-placeholder: #4c5c71;
+  --editor-select-content-background: #ffffff;
+  --editor-select-highlight-background: #dce8fb;
+  --editor-tooltip-background: #ffffff;
+  --editor-tooltip-border: #bfcfe2;
+  --editor-tooltip-text: #243244;
+  --editor-tooltip-muted-text: #57677d;
+  --editor-settings-nav-text: #2a3848;
+  --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.92);
+  --editor-settings-nav-hover-text: #0b1220;
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 12%, #ffffff);
+  --editor-settings-nav-active-text: #0f254b;
+  --editor-settings-nav-active-muted: #47637f;
+  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 24%, transparent);
+  --editor-utility-text-strong: #0b1220;
+  --editor-utility-text-muted: #49576a;
+  --editor-utility-bg-subtle: #eef3f9;
+  --editor-utility-border: #c0ccda;
+  --editor-topbar-background: #3d4b63;
+  --editor-topbar-border: #29364b;
+  --editor-topbar-button-background: #4d5d77;
+  --editor-topbar-button-border: rgba(255, 255, 255, 0.36);
+  --editor-topbar-button-hover-background: #5d6f8b;
+  --editor-topbar-button-hover-border: rgba(255, 255, 255, 0.5);
+  --editor-topbar-button-active-background: #8a9ab2;
+  --editor-topbar-button-active-border: rgba(255, 255, 255, 0.62);
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='graphite'] {
+  --editor-dark-shell-top: #1a1d22;
+  --editor-dark-shell-bottom: #121417;
+  --editor-dark-surface-base: #23272d;
+  --editor-dark-surface-border-base: #49505b;
+  --editor-dark-stage-frame-base: #272c33;
+  --editor-dark-stage-canvas-base: #2d333b;
+  --editor-dark-content-base: #262a31;
+  --editor-dark-button-base: #2a2f36;
+  --editor-dark-button-hover-base: #323841;
+  --editor-dark-input-base: #1d2127;
+  --editor-dark-utility-base: #2d323a;
+  --editor-dark-select-highlight-base: #3a414b;
+  --editor-dark-tooltip-base: #181b20;
+  --editor-dark-tooltip-border-base: #3f4752;
+  --editor-dark-topbar-base: #191d22;
+  --editor-dark-tint-soft: 2%;
+  --editor-dark-tint-medium: 4%;
+  --editor-dark-tint-strong: 8%;
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='midnight'] {
+  --editor-dark-shell-top: #0d1420;
+  --editor-dark-shell-bottom: #080d15;
+  --editor-dark-surface-base: #162131;
+  --editor-dark-surface-border-base: #39506a;
+  --editor-dark-stage-frame-base: #1a2636;
+  --editor-dark-stage-canvas-base: #1d2c40;
+  --editor-dark-content-base: #192636;
+  --editor-dark-button-base: #1b2738;
+  --editor-dark-button-hover-base: #223145;
+  --editor-dark-input-base: #121c2a;
+  --editor-dark-utility-base: #1f2d40;
+  --editor-dark-select-highlight-base: #29384d;
+  --editor-dark-tooltip-base: #0d1520;
+  --editor-dark-tooltip-border-base: #30445c;
+  --editor-dark-topbar-base: #101723;
+  --editor-dark-tint-soft: 5%;
+  --editor-dark-tint-medium: 10%;
+  --editor-dark-tint-strong: 16%;
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='monokai'] {
+  --editor-text: #f6f1f4;
+  --editor-dark-shell-top: #2d2a2e;
+  --editor-dark-shell-bottom: #242126;
+  --editor-dark-surface-base: #353239;
+  --editor-dark-surface-border-base: #5d5861;
+  --editor-dark-stage-frame-base: #37333b;
+  --editor-dark-stage-canvas-base: #3b3740;
+  --editor-dark-content-base: #343039;
+  --editor-dark-button-base: #403a45;
+  --editor-dark-button-hover-base: #4a4350;
+  --editor-dark-input-base: #29262d;
+  --editor-dark-utility-base: #3a3540;
+  --editor-dark-select-highlight-base: #4f4756;
+  --editor-dark-tooltip-base: #27232a;
+  --editor-dark-tooltip-border-base: #5c5660;
+  --editor-dark-topbar-base: #2a262d;
+  --editor-dark-tint-soft: 0%;
+  --editor-dark-tint-medium: 0%;
+  --editor-dark-tint-strong: 0%;
+  --editor-topbar-background: #2d2a2e;
+  --editor-topbar-border: #57515a;
+  --editor-topbar-button-background: #3a3640;
+  --editor-topbar-button-border: #675f6c;
+  --editor-topbar-button-hover-background: #453f4a;
+  --editor-topbar-button-hover-border: #7b7481;
+  --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 24%, #433d47);
+  --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 30%, #8f8795);
+  --editor-topbar-button-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --editor-topbar-button-active-shadow:
+    0 12px 26px color-mix(in srgb, var(--editor-accent) 24%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='ink'] {
+  --editor-text: #f2f7ff;
+  --editor-dark-shell-top: #090b10;
+  --editor-dark-shell-bottom: #05070b;
+  --editor-dark-surface-base: #111620;
+  --editor-dark-surface-border-base: #546278;
+  --editor-dark-stage-frame-base: #131924;
+  --editor-dark-stage-canvas-base: #161e2a;
+  --editor-dark-content-base: #121823;
+  --editor-dark-button-base: #18202d;
+  --editor-dark-button-hover-base: #212b3b;
+  --editor-dark-input-base: #0c111b;
+  --editor-dark-utility-base: #18212e;
+  --editor-dark-select-highlight-base: #33415a;
+  --editor-dark-tooltip-base: #0a0e15;
+  --editor-dark-tooltip-border-base: #4d607d;
+  --editor-dark-topbar-base: #0b1017;
+  --editor-dark-tint-soft: 1%;
+  --editor-dark-tint-medium: 2%;
+  --editor-dark-tint-strong: 4%;
+  --editor-topbar-background: #0d1219;
+  --editor-topbar-border: #4a5a73;
+  --editor-topbar-button-background: #17202c;
+  --editor-topbar-button-border: #62748f;
+  --editor-topbar-button-hover-background: #223043;
+  --editor-topbar-button-hover-border: #7e92b0;
+  --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 28%, #2b3950);
+  --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 36%, #97a9c2);
 }
 
 .editor-scrollbar {
@@ -266,6 +750,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel > div,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -285,6 +770,34 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='button'][data-variant='default'] {
+  background: var(--editor-accent);
+  border-color: transparent;
+  color: var(--editor-accent-foreground);
+  box-shadow: var(--editor-accent-shadow);
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='button'][data-variant='default']:hover {
+  background: color-mix(in srgb, var(--editor-accent) 88%, #0f172a);
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -293,6 +806,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -306,6 +820,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -314,6 +829,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -327,6 +843,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -338,6 +855,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -350,6 +868,46 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='button'][data-variant='destructive'] {
+  background: color-mix(in srgb, #ef4444 10%, var(--editor-surface-background));
+  border-color: color-mix(in srgb, #ef4444 24%, transparent);
+  color: #b42318;
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='button'][data-variant='destructive']:hover {
+  background: color-mix(in srgb, #ef4444 14%, var(--editor-surface-background));
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) :is([data-ui='button'], [data-ui='input'], [data-ui='textarea'], [data-ui='select-trigger'], [data-ui='switch'], [data-ui='slider-thumb']):focus-visible {
+  outline: 2px solid var(--editor-focus-ring-strong);
+  outline-offset: 2px;
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -363,6 +921,19 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) :is([data-ui='input'], [data-ui='textarea'], [data-ui='select-trigger']):focus-visible {
+  border-color: var(--editor-accent);
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -371,6 +942,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -392,11 +964,13 @@ body[data-editor-theme='dark'] {
 
 :is(.editor-shell, body) [data-ui='select-item']:is(:focus, [data-highlighted]) {
   background: var(--editor-select-highlight-background);
+  color: var(--editor-accent);
 }
 
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -408,6 +982,7 @@ body[data-editor-theme='dark'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -418,6 +993,7 @@ body[data-editor-theme='dark'] {
 
 :is(.editor-shell, body) :is(
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .ui-dialog-popover > div
 ) [data-ui='slider-track'] {
@@ -426,6 +1002,7 @@ body[data-editor-theme='dark'] {
 
 :is(.editor-shell, body) :is(
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .ui-dialog-popover > div
 ) [data-ui='slider-range'] {
@@ -434,6 +1011,7 @@ body[data-editor-theme='dark'] {
 
 :is(.editor-shell, body) :is(
   .editor-inspector-shell,
+  .editor-focused-panel,
   .editor-settings-panel,
   .ui-dialog-popover > div
 ) [data-ui='slider-thumb'] {
@@ -517,6 +1095,67 @@ body[data-editor-theme='dark'] {
   color: var(--editor-tooltip-muted-text);
 }
 
+.editor-topbar {
+  border-bottom: 1px solid var(--editor-topbar-border);
+  background: var(--editor-topbar-background);
+  color: var(--editor-topbar-text);
+  box-shadow: var(--editor-topbar-shadow);
+}
+
+.editor-topbar-subtitle {
+  color: var(--editor-topbar-muted-text);
+}
+
+.editor-topbar-tooltip {
+  background: var(--editor-topbar-tooltip-background);
+  border: 1px solid var(--editor-topbar-tooltip-border);
+  color: var(--editor-topbar-tooltip-text);
+  box-shadow: var(--editor-topbar-tooltip-shadow);
+}
+
+.editor-topbar-icon-button {
+  padding: 0;
+  height: 2rem;
+  width: 2rem;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0.375rem;
+  border-color: var(--editor-topbar-button-border);
+  background: var(--editor-topbar-button-background);
+  color: var(--editor-topbar-button-text);
+  box-shadow: var(--editor-topbar-button-shadow);
+}
+
+.editor-topbar-icon-button:hover,
+.editor-topbar-icon-button:focus-visible {
+  border-color: var(--editor-topbar-button-hover-border);
+  background: var(--editor-topbar-button-hover-background);
+  color: var(--editor-topbar-button-hover-text);
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--editor-topbar-button-hover-border) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.editor-topbar-icon-button[data-active='true'] {
+  border-color: var(--editor-topbar-button-active-border);
+  background: var(--editor-topbar-button-active-background);
+  color: var(--editor-topbar-button-active-text);
+  box-shadow: var(--editor-topbar-button-active-shadow);
+}
+
+.editor-topbar-icon-button[data-active='true']:hover,
+.editor-topbar-icon-button[data-active='true']:focus-visible {
+  border-color: var(--editor-topbar-button-active-border);
+  background: color-mix(in srgb, var(--editor-topbar-button-active-background) 88%, #ffffff);
+}
+
+.editor-panel-header-close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .editor-icon-button-subtle {
   background: var(--editor-button-surface);
   border-color: var(--editor-button-border);
@@ -560,6 +1199,81 @@ body[data-editor-theme='dark'] {
 
 .editor-inline-field-caret {
   background: var(--editor-input-background);
+}
+
+.editor-rail-toggle-button {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--editor-button-border);
+  background: var(--editor-button-surface);
+  color: var(--editor-utility-text-strong);
+  box-shadow: 0 2px 10px rgba(18, 32, 51, 0.05);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.editor-rail-toggle-button:hover,
+.editor-rail-toggle-button:focus-visible {
+  border-color: var(--editor-button-border-hover);
+  background: var(--editor-button-surface-hover);
+  box-shadow: 0 10px 22px rgba(18, 32, 51, 0.1);
+}
+
+.editor-rail-toggle-button[data-pressed='true'] {
+  border-color: color-mix(in srgb, var(--editor-accent) 40%, #ffffff);
+  background: var(--editor-accent);
+  color: var(--editor-accent-foreground);
+  box-shadow:
+    0 12px 24px color-mix(in srgb, var(--editor-accent) 22%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #000000 10%, transparent);
+}
+
+.editor-rail-toggle-button[data-pressed='true']:hover,
+.editor-rail-toggle-button[data-pressed='true']:focus-visible {
+  border-color: color-mix(in srgb, var(--editor-accent) 34%, #ffffff);
+  background: color-mix(in srgb, var(--editor-accent) 88%, #ffffff);
+}
+
+.editor-accent-swatch {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--editor-utility-border) 88%, #000000 5%);
+  background: var(--swatch-color);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 24%, transparent),
+    0 1px 2px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.editor-accent-swatch:hover,
+.editor-accent-swatch:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--editor-accent) 26%, var(--editor-utility-border));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 26%, transparent),
+    0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+.editor-accent-swatch[data-active='true'],
+.editor-accent-swatch-custom-active {
+  border-color: color-mix(in srgb, var(--editor-text) 34%, var(--editor-utility-border));
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, #ffffff 90%, transparent),
+    inset 0 0 0 4px color-mix(in srgb, var(--editor-text) 18%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--editor-focus-ring-strong) 92%, transparent),
+    0 6px 14px rgba(15, 23, 42, 0.16);
 }
 
 color-input[data-ui='color-picker'].editor-color-picker::part(input),
@@ -874,7 +1588,7 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   border-radius: 0;
   z-index: 1;
   background: var(--editor-accent);
-  color: #fff;
+  color: var(--editor-accent-foreground);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1072,7 +1786,7 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 .sticky-spacer-range {
   position: absolute;
   min-height: 24px;
-  --sticky-guide-color: #5f8fff;
+  --sticky-guide-color: var(--editor-sticky-distance-guide-color);
   --sticky-guide-thickness: 2.5px;
   --sticky-cap-width: 20px;
   --sticky-label-offset: 8px;
@@ -1084,8 +1798,8 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   right: 0;
   top: 0;
   min-height: 16px;
-  --sticky-guide-color: #d3a019;
-  --sticky-padding-guide-color: #c9a74b;
+  --sticky-guide-color: var(--editor-sticky-offset-guide-color);
+  --sticky-padding-guide-color: var(--editor-sticky-padding-guide-color);
   --sticky-guide-thickness: 2.5px;
   --sticky-cap-width: 20px;
   --sticky-label-offset: 8px;
@@ -1097,7 +1811,7 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   right: 0;
   top: 100%;
   min-height: 24px;
-  --sticky-guide-color: #5f8fff;
+  --sticky-guide-color: var(--editor-sticky-distance-guide-color);
   --sticky-guide-thickness: 2.5px;
   --sticky-cap-width: 20px;
   --sticky-label-offset: 8px;
@@ -1109,7 +1823,7 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   right: 0;
   top: 100%;
   min-height: 0;
-  --sticky-guide-color: #2d9f61;
+  --sticky-guide-color: var(--editor-sticky-auto-guide-color);
   --sticky-guide-thickness: 2.5px;
   --sticky-cap-width: 20px;
   --sticky-label-offset: 8px;
@@ -1263,11 +1977,11 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   min-height: 20px;
   padding: 0 8px;
   border-radius: 0;
-  background: #e4b12c;
-  color: #4d3500;
+  background: var(--editor-sticky-offset-label-background);
+  color: var(--editor-sticky-offset-label-text);
   font-size: 10px;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(211, 160, 25, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--editor-sticky-offset-guide-color) 15%, transparent);
   margin-top: var(--sticky-label-offset);
   position: relative;
   z-index: var(--editor-layer-sticky-label);
@@ -1280,9 +1994,9 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   transform: translate(-50%, -50%);
   margin: 0;
   background: var(--sticky-padding-guide-color);
-  color: rgba(77, 53, 0, 0.92);
+  color: color-mix(in srgb, var(--editor-sticky-offset-label-text) 92%, #000000);
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(211, 160, 25, 0.12);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--sticky-padding-guide-color) 16%, transparent);
 }
 
 .sticky-track {
@@ -1315,19 +2029,20 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   min-height: 20px;
   padding: 0 8px;
   border-radius: 0;
-  background: #3478ff;
-  color: #fff;
+  background: var(--editor-sticky-distance-label-background);
+  color: var(--editor-sticky-distance-label-text);
   font-size: 10px;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(52, 120, 255, 0.14);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--editor-sticky-distance-guide-color) 14%, transparent);
   margin-top: var(--sticky-label-offset);
   position: relative;
   z-index: var(--editor-layer-sticky-label);
 }
 
 .sticky-spacer-label-auto {
-  background: #16a34a;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.18);
+  background: var(--editor-sticky-auto-label-background);
+  color: var(--editor-sticky-auto-label-text);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--editor-sticky-auto-guide-color) 18%, transparent);
 }
 
 .sticky-flow-spacer {

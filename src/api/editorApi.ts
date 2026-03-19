@@ -4,6 +4,12 @@ import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
 import { getNode } from '../model/selectors';
 import { parseUnitValue } from '../model/units';
 import {
+  deleteNodeDoc,
+  deleteNodesDoc,
+  insertLeafDoc,
+  insertWrapperDoc,
+  reorderNodeDoc,
+  reparentNodeDoc,
   resolveStickyLayout,
   resolveWrapperStickyState,
   serializeDocumentJson,
@@ -11,6 +17,7 @@ import {
   type DocumentNode,
   type EditorTextField,
   type NodeId,
+  type NodeOrderAction,
   type StickyGeometrySnapshot,
   type StickyLayoutState,
 } from './documentApi';
@@ -20,6 +27,7 @@ export type {
   DocumentNode,
   EditorTextField,
   NodeId,
+  NodeOrderAction,
   StickyGeometrySnapshot,
   StickyLayoutState,
   SectionTemplateId,
@@ -68,8 +76,14 @@ export const getStageSelectableNodeIds = stageNavigation.getStageSelectableNodeI
 
 export {
   SECTION_TEMPLATES,
+  deleteNodeDoc,
+  deleteNodesDoc,
   getNode,
+  insertLeafDoc,
+  insertWrapperDoc,
   parseUnitValue,
+  reorderNodeDoc,
+  reparentNodeDoc,
   resolveStickyLayout,
   resolveWrapperStickyState,
   serializeDocumentJson,
