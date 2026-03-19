@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -301,10 +301,9 @@ export function SettingsPanel({
   }
 
   const spacerToggleOn = spacerVisibility === 'all';
-  const hasStickyRegistrations = Object.values(stickyLayout).length > 0;
 
   return (
-    <div className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
+    <div role="dialog" aria-label="Settings" className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(920px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
       <div className="editor-bg-surface editor-border-subtle overflow-hidden rounded-2xl border">
       <div className="editor-border-subtle flex items-center justify-between border-b px-5 py-3">
         <div className="flex items-center gap-3">
@@ -583,64 +582,11 @@ export function SettingsPanel({
             </section>
 
             <section ref={diagnosticsRef} className="py-6">
-              <SectionHeading
-                eyebrow="Debug Info"
-                title="Validation and sticky math"
-                description="Validation and computed sticky ranges."
+              <DiagnosticsSection
+                errors={errors}
+                stickyLayout={stickyLayout}
+                selectedNode={selectedNode}
               />
-              <PlainGroup title="Validation">
-                <div className="editor-text-muted space-y-2 text-sm">
-                  {errors.length === 0 ? <p>No errors.</p> : errors.map((error) => <p key={error}>{error}</p>)}
-                </div>
-              </PlainGroup>
-
-              <div className="mt-6">
-                <div className="editor-text-strong mb-3 text-sm font-medium">Sticky math</div>
-                {hasStickyRegistrations ? (
-                  <div className="editor-text-muted space-y-3 text-xs">
-                    {Object.values(stickyLayout).map((entry) => (
-                      <div key={entry.wrapperId} className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-3">
-                        <div className="editor-text-strong font-medium">{entry.wrapperId}</div>
-                        <div className="mt-1">extra extent: {Math.round(entry.totalExtraExtentPx)}px</div>
-                        <div className="mt-2 space-y-1">
-                          {entry.registrations.map((registration) => (
-                            <div key={registration.ownerId}>
-                              {registration.ownerId}: start {Math.round(registration.startPx)}px, end{' '}
-                              {Math.round(registration.endPx)}px, overflow {Math.round(registration.extentPx)}px
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="editor-text-muted text-sm">No sticky registrations.</div>
-                )}
-              </div>
-
-              {selectedNode && selectedNode.type !== 'site' ? (
-                <div className="mt-6">
-                  <div className="editor-text-strong mb-3 text-sm font-medium">Selected node</div>
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <MetricCell label="Width" value={formatValue(selectedNode.rect.width.base.parsed)} />
-                    <MetricCell label="Height" value={formatValue(selectedNode.rect.height.base.parsed)} />
-                    <MetricCell
-                      label="Duration"
-                      value={
-                        selectedNode.sticky
-                          ? selectedNode.sticky.durationMode === 'auto'
-                            ? 'auto'
-                            : `${formatValue(selectedNode.sticky.duration.parsed)} · top ${formatValue(
-                                (selectedNode.sticky.durationTop ?? selectedNode.sticky.duration).parsed,
-                              )} · bottom ${formatValue(
-                                (selectedNode.sticky.durationBottom ?? selectedNode.sticky.duration).parsed,
-                              )}`
-                          : 'not sticky'
-                      }
-                    />
-                  </div>
-                </div>
-              ) : null}
             </section>
 
             <section ref={shortcutsRef} className="editor-border-subtle border-t py-6">
@@ -658,6 +604,81 @@ export function SettingsPanel({
     </div>
   );
 }
+
+const DiagnosticsSection = memo(function DiagnosticsSection({
+  errors,
+  stickyLayout,
+  selectedNode,
+}: {
+  errors: string[];
+  stickyLayout: StickyLayoutState;
+  selectedNode: DocumentNode | null;
+}) {
+  const hasStickyRegistrations = Object.values(stickyLayout).length > 0;
+
+  return (
+    <>
+      <SectionHeading
+        eyebrow="Debug Info"
+        title="Validation and sticky math"
+        description="Validation and computed sticky ranges."
+      />
+      <PlainGroup title="Validation">
+        <div className="editor-text-muted space-y-2 text-sm">
+          {errors.length === 0 ? <p>No errors.</p> : errors.map((error) => <p key={error}>{error}</p>)}
+        </div>
+      </PlainGroup>
+
+      <div className="mt-6">
+        <div className="editor-text-strong mb-3 text-sm font-medium">Sticky math</div>
+        {hasStickyRegistrations ? (
+          <div className="editor-text-muted space-y-3 text-xs">
+            {Object.values(stickyLayout).map((entry) => (
+              <div key={entry.wrapperId} className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-3">
+                <div className="editor-text-strong font-medium">{entry.wrapperId}</div>
+                <div className="mt-1">extra extent: {Math.round(entry.totalExtraExtentPx)}px</div>
+                <div className="mt-2 space-y-1">
+                  {entry.registrations.map((registration) => (
+                    <div key={registration.ownerId}>
+                      {registration.ownerId}: start {Math.round(registration.startPx)}px, end{' '}
+                      {Math.round(registration.endPx)}px, overflow {Math.round(registration.extentPx)}px
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="editor-text-muted text-sm">No sticky registrations.</div>
+        )}
+      </div>
+
+      {selectedNode && selectedNode.type !== 'site' ? (
+        <div className="mt-6">
+          <div className="editor-text-strong mb-3 text-sm font-medium">Selected node</div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <MetricCell label="Width" value={formatValue(selectedNode.rect.width.base.parsed)} />
+            <MetricCell label="Height" value={formatValue(selectedNode.rect.height.base.parsed)} />
+            <MetricCell
+              label="Duration"
+              value={
+                selectedNode.sticky
+                  ? selectedNode.sticky.durationMode === 'auto'
+                    ? 'auto'
+                    : `${formatValue(selectedNode.sticky.duration.parsed)} · top ${formatValue(
+                        (selectedNode.sticky.durationTop ?? selectedNode.sticky.duration).parsed,
+                      )} · bottom ${formatValue(
+                        (selectedNode.sticky.durationBottom ?? selectedNode.sticky.duration).parsed,
+                      )}`
+                  : 'not sticky'
+              }
+            />
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+});
 
 function getSiteTitle(fileName: string) {
   const trimmed = fileName.trim();

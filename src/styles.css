@@ -12,6 +12,17 @@
   button {
     cursor: pointer;
   }
+
+  /* Baseline focus-visible outlines for interactive elements */
+  :is(button, input, select, textarea, [role="button"], [tabindex="0"]):focus-visible {
+    outline: 2px solid var(--editor-accent, #1668ff);
+    outline-offset: 2px;
+  }
+
+  /* Suppress the default outline when a Tailwind ring utility is applied */
+  :is(button, input, select, textarea, [role="button"], [tabindex="0"])[class*="focus-visible:ring"]:focus-visible {
+    outline: none;
+  }
 }
 
 :root {

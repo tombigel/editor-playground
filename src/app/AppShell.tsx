@@ -208,7 +208,7 @@ export function AppShell({
             transitionTimingFunction: sidebarTransitionTiming,
           }}
         >
-          <aside className="editor-rail-shell editor-border-subtle relative z-[360] overflow-visible border-r shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
+          <nav aria-label="Editor tools" className="editor-rail-shell editor-border-subtle relative z-[360] overflow-visible border-r shadow-[inset_-1px_0_0_rgba(255,255,255,0.7)] backdrop-blur">
             <div className="flex h-full flex-col overflow-visible p-3">
               <InsertPanel
                 onOpenSectionTemplates={onOpenSectionTemplates}
@@ -247,7 +247,7 @@ export function AppShell({
                 </div>
               </div>
             </div>
-          </aside>
+          </nav>
 
           <main className="editor-workspace-shell relative min-h-0 overflow-hidden">
             <Stage

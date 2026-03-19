@@ -75,6 +75,7 @@ export function EditorSidebar({
 
   return (
     <aside
+      aria-label="Inspector"
       className="editor-inspector-shell editor-bg-surface editor-border-subtle relative min-h-0 overflow-hidden border-l shadow-[-8px_0_24px_rgba(18,32,51,0.03)]"
       onMouseEnter={clearTemporaryCloseTimeout}
       onMouseLeave={scheduleTemporaryClose}

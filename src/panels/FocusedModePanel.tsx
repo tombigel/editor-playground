@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { FocusedMode } from '../api/editorApi';
 import { getFocusedModeLabel } from '../editor/focusedModes';
@@ -138,6 +140,16 @@ export function FocusedModePanel({
   const roleLabel = node ? (node.type === 'site' ? 'site' : node.role) : null;
   const isMultiSticky = mode === 'sticky' && selectedNodes.length > 1;
   const modeLabel = getFocusedModeLabel(mode);
+  const dialogLabel = `${modeLabel} focus mode`;
+  const handleKeyDown = useCallback(
+    (event: ReactKeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        onExitFocusedMode();
+      }
+    },
+    [onExitFocusedMode],
+  );
   const headerContent =
     isMultiSticky ? (
       <div className="min-w-0">
@@ -162,7 +174,7 @@ export function FocusedModePanel({
 
   if (isMultiSticky) {
     return (
-      <div className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
+      <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
         <div className="editor-bg-surface editor-border-subtle editor-scrollbar max-h-[min(72vh,680px)] overflow-auto rounded-xl border">
           <div className="space-y-3">
             <MultiStickySection
@@ -201,7 +213,7 @@ export function FocusedModePanel({
   );
 
   return (
-    <div className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
+    <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
       <div className="editor-bg-surface editor-border-subtle editor-scrollbar max-h-[min(72vh,680px)] overflow-auto rounded-xl border">
         <InspectorBlockList blocks={blocks} compact scrollable={false} />
       </div>
