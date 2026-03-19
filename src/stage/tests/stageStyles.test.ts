@@ -12,4 +12,13 @@ describe('stage/stage styles', () => {
     expect(styles).toContain('box-shadow: none !important;');
     expect(styles).toContain('filter: none !important;');
   });
+
+  it('derives sticky guide colors from shared editor accent tokens', () => {
+    const styles = readFileSync(new URL('../../styles.css', import.meta.url), 'utf8');
+
+    expect(styles).toContain('--editor-sticky-distance-guide-color: var(--editor-accent);');
+    expect(styles).toContain('--sticky-guide-color: var(--editor-sticky-offset-guide-color);');
+    expect(styles).toContain('background: var(--editor-sticky-distance-label-background);');
+    expect(styles).toContain('background: var(--editor-sticky-auto-label-background);');
+  });
 });

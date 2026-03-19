@@ -1,5 +1,5 @@
 import type { DocumentModel, NodeId } from '../../model/types';
-import type { ThemeMode } from '../../lib/types';
+import type { EditorDarkTheme, EditorLightTheme, ThemeMode } from '../../lib/types';
 
 export type FocusedMode = null | 'layout' | 'sticky' | 'content' | 'design';
 export type FocusedPanelOffset = { x: number; y: number };
@@ -23,6 +23,11 @@ export type EditorState = {
     showGridLanes: boolean;
     snapEnabled: boolean;
     themeMode: ThemeMode;
+    accentColor: string;
+    paperAccentColor: string;
+    monokaiAccentColor: string;
+    lightTheme: EditorLightTheme;
+    darkTheme: EditorDarkTheme;
     focusedMode: FocusedMode;
     startupFocusedMode: FocusedMode;
     inspectorCollapsed: boolean;

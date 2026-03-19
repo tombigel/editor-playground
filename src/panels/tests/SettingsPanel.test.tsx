@@ -18,6 +18,10 @@ describe('panels/SettingsPanel', () => {
         showGridLanes={false}
         snapEnabled={true}
         themeMode="auto"
+        accentColor="#1668ff"
+        lightTheme="air"
+        darkTheme="monokai"
+        resolvedTheme="light"
         startupFocusedMode={null}
         undoDepth={0}
         redoDepth={0}
@@ -28,6 +32,9 @@ describe('panels/SettingsPanel', () => {
         onShowGridLanesChange={() => {}}
         onSnapEnabledChange={() => {}}
         onThemeModeChange={() => {}}
+        onAccentColorChange={() => {}}
+        onLightThemeChange={() => {}}
+        onDarkThemeChange={() => {}}
         onStartupFocusedModeChange={() => {}}
         onClearHistory={() => {}}
         onHistoryLimitChange={() => {}}
@@ -38,6 +45,9 @@ describe('panels/SettingsPanel', () => {
     );
 
     expect(markup).toContain('Base file name');
+    expect(markup).toContain('Theme');
+    expect(markup).toContain('Palette');
+    expect(markup).toContain('Accent');
     expect(markup).toContain('Startup mode');
     expect(markup).toContain('Chooses which focused mode the editor opens with.');
     expect(markup).toContain('aria-label="Startup mode"');

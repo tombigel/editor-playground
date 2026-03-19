@@ -785,7 +785,7 @@ export function SizeInlineField({
   const numericMin = axis === 'width' || axis === 'height' ? 0 : undefined;
   const shellClass = invalid
     ? 'editor-inline-field editor-inline-field-invalid focus-within:border-red-400'
-    : 'editor-inline-field focus-within:border-blue-500';
+    : 'editor-inline-field focus-within:border-[color:var(--editor-accent)]';
 
   function commitDraft(nextMode: SizeFieldMode, nextInput?: string) {
     const candidateInput = nextInput ?? (nextMode === 'aspect-ratio' ? aspectDraft : numericDraft);
@@ -994,7 +994,7 @@ export function NumericUnitInlineField({
   return (
     <div
       className={`editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
-        invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+        invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-[color:var(--editor-accent)]'
       } ${className}`.trim()}
     >
       <Input
@@ -1675,7 +1675,7 @@ export function FontSizeField({
     <div ref={rootRef} className="relative">
       <div
         className={`editor-inline-field group/sizefield relative flex h-8 min-w-0 flex-1 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
-          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-[color:var(--editor-accent)]'
         }`}
       >
         <Input
@@ -1784,7 +1784,7 @@ export function SpacingField({
   const suffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
 
   return (
-    <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-blue-500">
+    <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-[color:var(--editor-accent)]">
       <Input
         type="number"
         min={0}
@@ -1890,7 +1890,7 @@ export function NumberInput({
     return (
       <div
         className={`editor-inline-field relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
-          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-blue-500'
+          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-[color:var(--editor-accent)]'
         }`}
       >
         <Input

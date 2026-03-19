@@ -50,7 +50,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     data-ui="select-trigger"
     className={cn(
-      'editor-bg-surface editor-border-subtle editor-text-strong flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50',
+      'editor-bg-surface editor-border-subtle editor-text-strong flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
@@ -116,12 +116,12 @@ const SelectItem = React.forwardRef<
     ref={ref}
     data-ui="select-item"
     className={cn(
-      'editor-text-strong relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'editor-text-strong relative flex w-full cursor-default select-none items-start rounded-sm py-2 pl-8 pr-2 text-sm outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex size-4 items-center justify-center">
+    <span className="absolute left-2 top-2.5 flex size-4 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
         <Check className="size-4" />
       </SelectPrimitive.ItemIndicator>
