@@ -1,7 +1,10 @@
 import {
   SECTION_TEMPLATES,
   createInitialDocument,
+  createLeaf,
   createSectionFromTemplate,
+  createWrapper,
+  syncIdCountersWithDocument,
   type SectionTemplateId,
 } from '../model/defaults';
 import {
@@ -40,6 +43,8 @@ import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolv
 import { formatValue, parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument } from '../model/validation';
 import type { DocumentCommand } from './types';
+
+export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
 
 export type {
   ComputedWrapperStickyState,
@@ -437,6 +442,280 @@ export function parseDocumentJson(raw: string): DocumentModel {
 
 export function serializeDocumentJson(document: DocumentModel): string {
   return JSON.stringify(document, null, 2);
+}
+
+// ---------------------------------------------------------------------------
+// Pure DocumentModel mutation functions (API-first variants)
+// ---------------------------------------------------------------------------
+
+/**
+ * Insert a wrapper node into the document without requiring EditorState.
+ * The wrapper is appended as the last child of `parentId`.
+ */
+export function insertWrapperDoc(
+  document: DocumentModel,
+  role: WrapperRole,
+  parentId: NodeId,
+): DocumentModel {
+  const next = cloneDocument(document);
+  syncIdCountersWithDocument(next);
+
+  const parent = next.nodes[parentId];
+  if (!parent) {
+    return document;
+  }
+
+  let node = createWrapper(role, parentId);
+  while (next.nodes[node.id]) {
+    node = createWrapper(role, parentId);
+  }
+
+  next.nodes[node.id] = node;
+  parent.children.push(node.id);
+  return next;
+}
+
+/**
+ * Insert a leaf node into the document without requiring EditorState.
+ * The leaf is appended as the last child of `parentId`.
+ */
+export function insertLeafDoc(
+  document: DocumentModel,
+  role: LeafRole,
+  parentId: NodeId,
+): DocumentModel {
+  const next = cloneDocument(document);
+  syncIdCountersWithDocument(next);
+
+  const parent = next.nodes[parentId];
+  if (!parent) {
+    return document;
+  }
+
+  let node = createLeaf(role, parentId);
+  while (next.nodes[node.id]) {
+    node = createLeaf(role, parentId);
+  }
+
+  next.nodes[node.id] = node;
+  parent.children.push(node.id);
+  return next;
+}
+
+/**
+ * Delete a single node (and its descendants) from the document.
+ */
+export function deleteNodeDoc(document: DocumentModel, nodeId: NodeId): DocumentModel {
+  return deleteNodesDoc(document, [nodeId]);
+}
+
+/**
+ * Delete multiple nodes (and their descendants) from the document.
+ * Automatically filters to top-level selected IDs so that deleting a parent
+ * and child simultaneously does not cause errors.
+ */
+export function deleteNodesDoc(document: DocumentModel, nodeIds: NodeId[]): DocumentModel {
+  if (nodeIds.length === 0) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+
+  // Filter to top-level IDs (skip nodes whose ancestor is also in the list).
+  const topLevel = nodeIds.filter((candidateId) =>
+    !nodeIds.some((otherId) => otherId !== candidateId && isDescendantOf(next, candidateId, otherId)),
+  );
+
+  if (topLevel.length === 0) {
+    return document;
+  }
+
+  for (const nodeId of topLevel) {
+    const node = next.nodes[nodeId];
+    if (!node || node.parentId === null) {
+      continue;
+    }
+    removeSubtree(next, nodeId);
+    const parent = next.nodes[node.parentId];
+    if (parent) {
+      parent.children = parent.children.filter((childId) => childId !== nodeId);
+    }
+  }
+
+  return next;
+}
+
+/**
+ * Reorder a node among its siblings within the document.
+ */
+export function reorderNodeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  action: NodeOrderAction,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || node.type === 'site' || !node.parentId) {
+    return document;
+  }
+
+  const parent = next.nodes[node.parentId];
+  if (!parent) {
+    return document;
+  }
+
+  const index = parent.children.indexOf(nodeId);
+  if (index === -1) {
+    return document;
+  }
+
+  // Sections are reordered only among sibling sections at root level.
+  if (node.type === 'wrapper' && node.role === 'section') {
+    if (parent.type !== 'site') {
+      return document;
+    }
+    if (action === 'sendToBack' || action === 'bringToFront') {
+      return document;
+    }
+    const targetIndex = findSiblingSectionIndex(next, parent.children, index, action === 'back' ? -1 : 1);
+    if (targetIndex === -1) {
+      return document;
+    }
+    const nextChildren = [...parent.children];
+    [nextChildren[targetIndex], nextChildren[index]] = [nextChildren[index], nextChildren[targetIndex]];
+    parent.children = nextChildren;
+    return next;
+  }
+
+  if (!isReorderableNode(node)) {
+    return document;
+  }
+
+  const nextChildren = [...parent.children];
+  if (action === 'back') {
+    if (index === 0) return document;
+    [nextChildren[index - 1], nextChildren[index]] = [nextChildren[index], nextChildren[index - 1]];
+  } else if (action === 'forward') {
+    if (index === nextChildren.length - 1) return document;
+    [nextChildren[index + 1], nextChildren[index]] = [nextChildren[index], nextChildren[index + 1]];
+  } else if (action === 'sendToBack') {
+    if (index === 0) return document;
+    nextChildren.splice(index, 1);
+    nextChildren.unshift(nodeId);
+  } else {
+    if (index === nextChildren.length - 1) return document;
+    nextChildren.splice(index, 1);
+    nextChildren.push(nodeId);
+  }
+
+  parent.children = nextChildren;
+  return next;
+}
+
+/**
+ * Reparent a node to a new parent within the document.
+ * Returns the original document unchanged when the operation is invalid
+ * (e.g. reparenting to a descendant, invalid parent type).
+ */
+export function reparentNodeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  newParentId: NodeId,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  const newParent = next.nodes[newParentId];
+
+  if (!node || !newParent || node.type === 'site' || newParent.type !== 'wrapper') {
+    return document;
+  }
+
+  if (newParentId === nodeId) {
+    return document;
+  }
+
+  if (node.parentId === null || node.parentId === newParentId) {
+    return document;
+  }
+
+  // Validate the parent-child relationship.
+  if (!canAcceptChild(newParent, node)) {
+    return document;
+  }
+
+  // Prevent reparenting into own descendants.
+  if (isDescendantOf(next, newParentId, nodeId)) {
+    return document;
+  }
+
+  const previousParent = next.nodes[node.parentId];
+  if (previousParent) {
+    previousParent.children = previousParent.children.filter((childId) => childId !== nodeId);
+  }
+  newParent.children.push(nodeId);
+  node.parentId = newParentId;
+
+  return next;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers for pure DocumentModel mutations
+// ---------------------------------------------------------------------------
+
+function removeSubtree(document: DocumentModel, nodeId: NodeId) {
+  const node = document.nodes[nodeId];
+  if (!node) return;
+  for (const childId of node.children) {
+    removeSubtree(document, childId);
+  }
+  delete document.nodes[nodeId];
+}
+
+function isDescendantOf(document: DocumentModel, candidateId: NodeId, ancestorId: NodeId): boolean {
+  let current = document.nodes[candidateId];
+  while (current && current.parentId) {
+    if (current.parentId === ancestorId) {
+      return true;
+    }
+    current = document.nodes[current.parentId];
+  }
+  return false;
+}
+
+function isReorderableNode(node: DocumentNode): boolean {
+  if (node.type === 'site') return false;
+  if (node.type === 'leaf') return true;
+  return node.role === 'container';
+}
+
+function isSiteSectionRole(role: WrapperRole): boolean {
+  return role === 'section' || role === 'header' || role === 'footer';
+}
+
+function canAcceptChild(parent: DocumentNode, child: DocumentNode): boolean {
+  if (parent.type !== 'wrapper') return false;
+  if (child.type === 'leaf') return true;
+  if (child.type !== 'wrapper') return false;
+  if (child.role !== 'container') return false;
+  if (parent.role === 'container') return true;
+  return isSiteSectionRole(parent.role);
+}
+
+function findSiblingSectionIndex(
+  document: DocumentModel,
+  siblingIds: NodeId[],
+  fromIndex: number,
+  direction: -1 | 1,
+): number {
+  let index = fromIndex + direction;
+  while (index >= 0 && index < siblingIds.length) {
+    const candidate = document.nodes[siblingIds[index]];
+    if (candidate?.type === 'wrapper' && candidate.role === 'section') {
+      return index;
+    }
+    index += direction;
+  }
+  return -1;
 }
 
 export function insertSectionTemplateBeforeFooter(

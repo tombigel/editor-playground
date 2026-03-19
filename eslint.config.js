@@ -36,6 +36,21 @@ export default tseslint.config(
       ],
       'react-hooks/set-state-in-effect': 'off',
       'react-refresh/only-export-components': 'off',
+      // Warn at 500 lines (consider splitting); see CLAUDE.md for 800-line hard limit.
+      'max-lines': [
+        'warn',
+        { max: 500, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
+  // Hard limit: error at 800 lines (overrides the 500-line warning for src files).
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'max-lines': [
+        'error',
+        { max: 800, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
 );
