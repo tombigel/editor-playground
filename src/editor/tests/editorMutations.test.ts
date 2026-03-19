@@ -1168,7 +1168,7 @@ describe('editor/editorMutations', () => {
     it('moves a leaf back by one position', () => {
       const state = createInitialState();
       const withLeaf1 = insertLeaf(state, 'text');
-      const leaf1Id = withLeaf1.selectedId!;
+      const _leaf1Id = withLeaf1.selectedId!;
       const withLeaf2 = insertLeaf(withLeaf1, 'text');
       const leaf2Id = withLeaf2.selectedId!;
 
@@ -1185,7 +1185,7 @@ describe('editor/editorMutations', () => {
       const withLeaf1 = insertLeaf(state, 'text');
       const leaf1Id = withLeaf1.selectedId!;
       const withLeaf2 = insertLeaf(withLeaf1, 'text');
-      const leaf2Id = withLeaf2.selectedId!;
+      const _leaf2Id = withLeaf2.selectedId!;
 
       const parent = withLeaf2.document.nodes[withLeaf2.document.nodes[leaf1Id].parentId!];
       const indexBefore = parent.children.indexOf(leaf1Id);
@@ -1295,7 +1295,7 @@ describe('editor/editorMutations', () => {
     it('delegates to reorderNode for single node', () => {
       const state = createInitialState();
       const withLeaf1 = insertLeaf(state, 'text');
-      const leaf1Id = withLeaf1.selectedId!;
+      const _leaf1Id = withLeaf1.selectedId!;
       const withLeaf2 = insertLeaf(withLeaf1, 'text');
       const leaf2Id = withLeaf2.selectedId!;
 
@@ -1326,7 +1326,7 @@ describe('editor/editorMutations', () => {
     it('moves multiple selected nodes back', () => {
       const state = createInitialState();
       const s1 = insertLeaf(state, 'text');
-      const l1 = s1.selectedId!;
+      const _l1 = s1.selectedId!;
       const s2 = insertLeaf(s1, 'text');
       const l2 = s2.selectedId!;
       const s3 = insertLeaf(s2, 'text');
@@ -1601,7 +1601,7 @@ describe('editor/editorMutations', () => {
     it('reparents a leaf to a different wrapper', () => {
       const state = createInitialState();
       const withContainer = insertWrapper(state, 'container');
-      const containerId = withContainer.selectedId!;
+      const _containerId = withContainer.selectedId!;
 
       const withLeaf = insertLeaf(withContainer, 'text');
       const leafId = withLeaf.selectedId!;
@@ -1938,6 +1938,7 @@ describe('editor/editorMutations', () => {
         fontLibrary: { defaults: [], favorites: [], usedFamilies: [] },
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => importDocument(state, badDocument as any)).toThrow('Import failed');
     });
   });

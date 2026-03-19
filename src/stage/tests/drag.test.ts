@@ -32,7 +32,7 @@ function makeDocumentRef(wrapperElements: Record<string, { left: number; top: nu
   for (const [id, rect] of Object.entries(wrapperElements)) {
     const el = makeFakeElement(rect);
     // findDropWrapperElement looks for data-drop-wrapper-id attribute
-    (el as Record<string, unknown>)['dataset'] = { dropWrapperId: id, nodeId: id };
+    (el as unknown as Record<string, unknown>)['dataset'] = { dropWrapperId: id, nodeId: id };
     elements.set(id, el);
   }
 

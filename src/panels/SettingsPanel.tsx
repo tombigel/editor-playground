@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, ChangeEvent, ReactNode } from 'react';
+import type { ChangeEvent } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownToLine,
@@ -20,19 +20,12 @@ import type { DocumentModel, DocumentNode, FocusedMode, StickyLayoutState } from
 import type { DocumentFontFamily } from '../model/types';
 import { formatValue } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
-import { ColorPicker } from '@/components/ui/color-picker';
 import { Input } from '@/components/ui/input';
-import { PopoverTooltip } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { ManageFontsPanel } from './fontManagement/ManageFontsPanel';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  EDITOR_ACCENT_SWATCHES,
-  EDITOR_DARK_THEME_OPTIONS,
-  EDITOR_LIGHT_THEME_OPTIONS,
-  isEditorAccentSwatch,
   type EditorDarkTheme,
   type EditorLightTheme,
   type ResolvedTheme,
@@ -54,8 +47,9 @@ import {
   NumericRow,
   MetricCell,
   StatusMessage,
-  ThemeModeRow,
   FocusedModeStartupRow,
+  ThemePresetRow,
+  AccentSwatchRow,
 } from './settings/SettingsShared';
 
 type SectionId = 'display' | 'fonts' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
@@ -710,155 +704,6 @@ const DiagnosticsSection = memo(function DiagnosticsSection({
   );
 });
 
-function ThemePresetRow({
-  themeMode,
-  resolvedTheme,
-  lightTheme,
-  darkTheme,
-  onThemeModeChange,
-  onLightThemeChange,
-  onDarkThemeChange,
-}: {
-  themeMode: ThemeMode;
-  resolvedTheme: ResolvedTheme;
-  lightTheme: EditorLightTheme;
-  darkTheme: EditorDarkTheme;
-  onThemeModeChange: (value: ThemeMode) => void;
-  onLightThemeChange: (value: EditorLightTheme) => void;
-  onDarkThemeChange: (value: EditorDarkTheme) => void;
-}) {
-  const paletteTheme = themeMode === 'auto' ? resolvedTheme : themeMode;
-  const paletteOptions = paletteTheme === 'light' ? EDITOR_LIGHT_THEME_OPTIONS : EDITOR_DARK_THEME_OPTIONS;
-  const paletteValue = paletteTheme === 'light' ? lightTheme : darkTheme;
-
-  return (
-    <div className="editor-border-subtle border-t py-4">
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <CompactSelectRow
-          title="Theme"
-          value={themeMode}
-          ariaLabel="Theme"
-          options={[
-            { value: 'auto', label: 'Auto' },
-            { value: 'light', label: 'Light' },
-            { value: 'dark', label: 'Dark' },
-          ]}
-          onChange={(next) => onThemeModeChange(next as ThemeMode)}
-        />
-        <CompactSelectRow
-          title="Palette"
-          value={paletteValue}
-          ariaLabel="Palette"
-          options={paletteOptions.map((option) => ({
-            value: option.value,
-            label: option.label,
-            description: option.description,
-          }))}
-          onChange={(next) =>
-            paletteTheme === 'light'
-              ? onLightThemeChange(next as EditorLightTheme)
-              : onDarkThemeChange(next as EditorDarkTheme)
-          }
-        />
-      </div>
-    </div>
-  );
-}
-
-function AccentSwatchRow({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const isCustom = !isEditorAccentSwatch(value);
-
-  return (
-    <div className="editor-border-subtle border-t py-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="editor-text-strong text-sm font-medium">Accent</div>
-        </div>
-        <span className="editor-text-muted rounded-md border px-2 py-1 font-mono text-[11px] leading-none">{value}</span>
-      </div>
-      <div className="editor-scrollbar mt-3 grid grid-flow-col auto-cols-max items-center gap-2 overflow-x-auto pt-1 pb-1">
-        {EDITOR_ACCENT_SWATCHES.map((swatch) => {
-          const active = swatch.value.toLowerCase() === value.toLowerCase();
-          return (
-            <button
-              key={swatch.value}
-              type="button"
-              onClick={() => onChange(swatch.value)}
-              aria-label={swatch.label}
-              title={swatch.label}
-              data-active={active ? 'true' : 'false'}
-              className="editor-accent-swatch"
-              style={{ '--swatch-color': swatch.value } as CSSProperties}
-            />
-          );
-        })}
-        <div className="relative h-8 w-8 shrink-0">
-          <ColorPicker
-            value={value}
-            fallback={isCustom ? value : '#1668ff'}
-            allowAlpha={false}
-            ariaLabel="Custom accent color"
-            onChange={onChange}
-            className={`editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm ${isCustom ? 'editor-accent-swatch-custom-active' : ''}`}
-          />
-          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-white/92 mix-blend-plus-lighter drop-shadow-[0_1px_2px_rgba(15,23,42,0.35)]" />
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CompactSelectRow({
-  title,
-  description,
-  value,
-  ariaLabel,
-  options,
-  onChange,
-}: {
-  title: string;
-  description?: string;
-  value: string;
-  ariaLabel: string;
-  options: Array<{ value: string; label: string; description?: string }>;
-  onChange: (value: string) => void;
-}) {
-  const selectedOption = options.find((option) => option.value === value);
-
-  return (
-    <div className="editor-bg-subtle editor-border-subtle rounded-xl border px-3 py-3">
-      <div className="editor-text-strong text-sm font-medium">{title}</div>
-      {description ? <div className="editor-text-muted mt-1 text-xs leading-5">{description}</div> : null}
-      <div className={description ? 'mt-2' : 'mt-1.5'}>
-        <Select value={value} onValueChange={onChange}>
-          <SelectTrigger aria-label={ariaLabel} className="h-8 text-xs">
-            <span className="truncate">{selectedOption?.label ?? value}</span>
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                <div className="flex min-w-0 flex-col">
-                  <span>{option.label}</span>
-                  {option.description ? (
-                    <span className="editor-text-muted mt-0.5 text-[11px] leading-4">{option.description}</span>
-                  ) : null}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
 
 function getSiteTitle(fileName: string) {
   const trimmed = fileName.trim();

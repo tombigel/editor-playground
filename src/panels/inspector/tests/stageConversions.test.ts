@@ -32,7 +32,7 @@ import {
   HEIGHT_KEYWORD_OPTIONS,
   WIDTH_KEYWORD_OPTIONS,
 } from '../stageConversions';
-import type { SizeFieldDescriptor, SizeFieldMode, NumericSizeFieldMode } from '../stageConversions';
+import type { SizeFieldDescriptor } from '../stageConversions';
 
 describe('panels/inspector/stageConversions', () => {
   // ---------------------------------------------------------------------------

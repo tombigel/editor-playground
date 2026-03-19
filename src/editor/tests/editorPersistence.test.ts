@@ -2,7 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createLeaf } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
 import type { DocumentModel, TextLeaf, WrapperNode } from '../../model/types';
-import type { EditorState } from '../types';
+import {
+  DEFAULT_EDITOR_ACCENT_COLOR,
+  DEFAULT_EDITOR_DARK_THEME,
+  DEFAULT_EDITOR_LIGHT_THEME,
+  DEFAULT_MONOKAI_ACCENT_COLOR,
+  DEFAULT_PAPER_ACCENT_COLOR,
+} from '../../lib/theme';
+import { DEFAULT_FOCUSED_PANEL_OFFSET } from '../focusedPanelPosition';
 import {
   cloneDocument,
   clearPersistedState,
@@ -54,11 +61,6 @@ function getRoot(document: DocumentModel) {
 function buildMinimalDocument(): DocumentModel {
   const doc = createInitialDocument();
   return doc;
-}
-
-function buildMinimalPersistedState(overrides?: Partial<EditorState>): EditorState {
-  const base = createInitialState();
-  return { ...base, ...overrides };
 }
 
 describe('editor/editorPersistence', () => {
@@ -193,7 +195,7 @@ describe('editor/editorPersistence', () => {
       const section = doc.nodes[sectionId] as WrapperNode;
 
       // Create a container child manually
-      const container = createLeaf('text', sectionId) as unknown as WrapperNode;
+      const _container = createLeaf('text', sectionId) as unknown as WrapperNode;
       // Simulate a wrapper node manually for the purpose of this test
       const containerId = `container_test_${Date.now()}`;
       doc.nodes[containerId] = {
@@ -403,6 +405,12 @@ describe('editor/editorPersistence', () => {
         startupFocusedMode: 'sticky',
         inspectorCollapsed: true,
         temporaryInspectorOpen: true,
+        accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
+        paperAccentColor: DEFAULT_PAPER_ACCENT_COLOR,
+        monokaiAccentColor: DEFAULT_MONOKAI_ACCENT_COLOR,
+        lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
+        darkTheme: DEFAULT_EDITOR_DARK_THEME,
+        focusedPanelOffset: DEFAULT_FOCUSED_PANEL_OFFSET,
       });
 
       expect(reset.ui.previewSticky).toBe(false);
@@ -564,7 +572,7 @@ describe('editor/editorPersistence', () => {
 
     it('is a no-op in server environment (no window)', () => {
       // persistState should not throw when window is undefined
-      const original = globalThis.window;
+      const _original = globalThis.window;
       vi.stubGlobal('window', undefined);
 
       expect(() => persistState(createInitialState())).not.toThrow();

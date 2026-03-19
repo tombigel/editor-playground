@@ -53,4 +53,28 @@ export default tseslint.config(
       ],
     },
   },
+  // Test files and e2e tests are exempt from max-lines.
+  {
+    files: [
+      'src/**/*.test.{ts,tsx}',
+      'src/**/tests/**/*.{ts,tsx}',
+      'e2e/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'max-lines': 'off',
+    },
+  },
+  // Known large files from Phase 1 splits — scheduled for further splitting.
+  {
+    files: [
+      'src/editor/editorMutations.ts',
+      'src/panels/InspectorControls.tsx',
+    ],
+    rules: {
+      'max-lines': [
+        'warn',
+        { max: 2000, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
 );

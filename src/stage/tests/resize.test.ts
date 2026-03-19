@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeResizeFrame, px, getResizeCommitSize } from '../math/resize';
 import type { ResizeState } from '../types';
+import type { DocumentNode } from '../../model/types';
 
 function makeResizeState(
   overrides: Partial<Exclude<ResizeState, null>> = {},
@@ -335,7 +336,7 @@ function makeNodeForCommit(widthRaw: string, heightRaw: string) {
       width: { base: { raw: widthRaw, parsed: widthParsed } },
       height: { base: { raw: heightRaw, parsed: heightParsed } },
     },
-  };
+  } as Exclude<DocumentNode, { type: 'site' }>;
 }
 
 function parseTestDimension(raw: string) {

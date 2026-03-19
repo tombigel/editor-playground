@@ -51,7 +51,6 @@ import {
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 import {
   SYSTEM_FONT_VALUE,
-  TYPOGRAPHY_FIELD_GAP_PX,
   TYPOGRAPHY_FONT_PICKER_WIDTH_PX,
   TYPOGRAPHY_FONT_ROW_WIDTH_PX,
   TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX,

@@ -147,6 +147,12 @@ export function InspectorPanel({
     onSectionBack,
     onSectionForward,
   };
+  const blocks = useMemo(
+    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- actions/orderState are rebuilt each render; key on stable identities
+    [node?.id, focusedMode, resolvedDocument],
+  );
+
   if (selectedNodes.length > 1) {
     return (
       <MultiSelectInspector
@@ -160,11 +166,6 @@ export function InspectorPanel({
       />
     );
   }
-  const blocks = useMemo(
-    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- actions/orderState are rebuilt each render; key on stable identities
-    [node?.id, focusedMode, resolvedDocument],
-  );
 
   return <InspectorBlockList blocks={blocks} />;
 }

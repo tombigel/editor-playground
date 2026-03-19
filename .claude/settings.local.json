@@ -17,7 +17,8 @@
       "Bash(ls playwright.config.*)",
       "Bash(lsof -ti:4174 -ti:4175)",
       "Bash(xargs -r kill)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(npx eslint:*)"
     ]
   }
 }
