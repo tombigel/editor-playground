@@ -750,7 +750,6 @@ body[data-editor-theme='dark'][data-editor-dark-theme='ink'] {
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,
-  .editor-focused-panel,
   .editor-settings-panel > div,
   .editor-section-templates,
   .editor-shortcut-help,
@@ -759,6 +758,11 @@ body[data-editor-theme='dark'][data-editor-dark-theme='ink'] {
 ) {
   background: var(--editor-surface-background);
   border-color: var(--editor-surface-border);
+  color: var(--editor-text);
+  box-shadow: var(--editor-surface-shadow);
+}
+
+:is(.editor-shell, body) .editor-focused-panel {
   color: var(--editor-text);
   box-shadow: var(--editor-surface-shadow);
 }

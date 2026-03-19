@@ -193,24 +193,22 @@ export function FocusedModePanel({
 
   if (isMultiSticky) {
     return (
-      <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="editor-focused-panel pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-        <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
-          <div className="space-y-3">
-            <MultiStickySection
-              selectedNodes={selectedNodes}
-              actions={actions}
-              focusedMode={focusedMode}
-              headerContent={headerContent}
-              contentClassName="space-y-3 px-3 pt-1.5 pb-5"
-              headerAction={
-                {
-                  ariaLabel: 'Close sticky focus mode',
-                  icon: <SquareArrowRightEnter className="h-3.5 w-3.5" />,
-                  onClick: onExitFocusedMode,
-                }
+      <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="editor-focused-panel pointer-events-auto">
+        <div className="space-y-3">
+          <MultiStickySection
+            selectedNodes={selectedNodes}
+            actions={actions}
+            focusedMode={focusedMode}
+            headerContent={headerContent}
+            contentClassName="space-y-3 px-3 pt-1.5 pb-5"
+            headerAction={
+              {
+                ariaLabel: 'Close sticky focus mode',
+                icon: <SquareArrowRightEnter className="h-3.5 w-3.5" />,
+                onClick: onExitFocusedMode,
               }
-            />
-          </div>
+            }
+          />
         </div>
       </div>
     );
@@ -232,10 +230,8 @@ export function FocusedModePanel({
   );
 
   return (
-    <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="editor-focused-panel pointer-events-auto" style={{ filter: 'drop-shadow(0 18px 40px rgba(18, 32, 51, 0.16))' }}>
-      <div className="editor-scrollbar max-h-[min(72vh,680px)] overflow-auto">
-        <InspectorBlockList blocks={blocks} compact scrollable={false} />
-      </div>
+    <div role="dialog" aria-label={dialogLabel} onKeyDown={handleKeyDown} className="editor-focused-panel pointer-events-auto">
+      <InspectorBlockList blocks={blocks} compact scrollable={false} />
     </div>
   );
 }
