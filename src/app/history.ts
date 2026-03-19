@@ -202,7 +202,7 @@ export function deepEqual(left: unknown, right: unknown): boolean {
   }
 
   for (const key of leftKeys) {
-    if (!Object.prototype.hasOwnProperty.call(rightRecord, key)) {
+    if (!Object.hasOwn(rightRecord, key)) {
       return false;
     }
     if (!deepEqual(leftRecord[key], rightRecord[key])) {

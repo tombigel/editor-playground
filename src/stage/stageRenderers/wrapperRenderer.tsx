@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import type {
   DocumentModel,
   DocumentNode,
@@ -62,7 +62,7 @@ export function renderWrapper({
   selfRegistration,
   ownerWrapper,
   ownerBottomLanePx,
-}: RenderWrapperArgs): JSX.Element {
+}: RenderWrapperArgs): ReactElement {
   const node = plan.node;
   const draggedNodeIds = dragState?.draggedNodeIds ?? (dragState ? [dragState.nodeId] : []);
   const Tag = plan.tag;
@@ -407,7 +407,7 @@ export function renderStickyTrackShell({
   bottomFirst: boolean;
   topDistancePx: number;
   bottomDistancePx: number;
-  body: JSX.Element;
+  body: ReactElement;
 }) {
   return (
     <div

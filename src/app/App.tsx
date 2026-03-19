@@ -1,5 +1,5 @@
 import { useReducer, useState } from 'react';
-import { type StickyGeometrySnapshot } from '../api/editorApi';
+import type { StickyGeometrySnapshot } from '../api/editorApi';
 import {
   BOLD_FONT_WEIGHT,
   DEFAULT_FONT_WEIGHT,

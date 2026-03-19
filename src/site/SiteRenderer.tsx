@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
 import { getNodeTextContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
@@ -31,11 +32,11 @@ function getExternalNavigationProps(node: Extract<RenderLeafPlanNode['node'], { 
     : {};
 }
 
-function renderPlanNode(plan: RenderPlanNode): JSX.Element {
+function renderPlanNode(plan: RenderPlanNode): ReactElement {
   return plan.kind === 'wrapper' ? renderWrapperPlan(plan) : renderLeafPlan(plan);
 }
 
-function renderWrapperPlan(plan: RenderWrapperPlanNode): JSX.Element {
+function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
   const Tag = plan.tag;
   const wrapperChildren = plan.children.map((child) => renderPlanNode(child));
   const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
@@ -85,7 +86,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): JSX.Element {
 
 function renderLeafPlan(plan: RenderLeafPlanNode) {
   const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
-  let leaf: JSX.Element;
+  let leaf: ReactElement;
   if (plan.node.role === 'text') {
     const Tag = plan.node.htmlTag;
     leaf = (

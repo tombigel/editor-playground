@@ -25,11 +25,11 @@ import { EditorPanelHeader } from './EditorPanelHeader';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
 import { ManageFontsPanel } from './fontManagement/ManageFontsPanel';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  type EditorDarkTheme,
-  type EditorLightTheme,
-  type ResolvedTheme,
-  type ThemeMode,
+import type {
+  EditorDarkTheme,
+  EditorLightTheme,
+  ResolvedTheme,
+  ThemeMode,
 } from '@/lib/theme';
 import {
   copyExportDocument,

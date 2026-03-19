@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error test-only Node builtin import without app-level Node typings
 import { readFileSync } from 'fs';
 
 describe('stage/stage styles', () => {

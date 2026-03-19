@@ -1,7 +1,6 @@
-import type * as React from 'react';
 import type { ColorInput as HdrColorInputElement } from 'hdr-color-input';
 
-declare global {
+declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
       'color-input': React.DetailedHTMLProps<React.HTMLAttributes<HdrColorInputElement>, HdrColorInputElement> & {
@@ -16,5 +15,3 @@ declare global {
     }
   }
 }
-
-export {};

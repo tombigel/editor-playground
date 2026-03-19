@@ -1,6 +1,6 @@
 import path from 'node:path';
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -13,14 +13,16 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'radix-vendor': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-select',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-switch',
-          ],
+        manualChunks: (id) => {
+          if (
+            id.includes('@radix-ui/react-dialog') ||
+            id.includes('@radix-ui/react-select') ||
+            id.includes('@radix-ui/react-slider') ||
+            id.includes('@radix-ui/react-slot') ||
+            id.includes('@radix-ui/react-switch')
+          ) {
+            return 'radix-vendor';
+          }
         },
       },
     },

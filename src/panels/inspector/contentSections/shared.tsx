@@ -32,7 +32,7 @@ import {
   NumberInput,
   ShadowControlGroup,
   TextStyleIconButton,
-  readShadowFieldValues,
+  type readShadowFieldValues,
 } from '../../InspectorControls';
 import type {
   ButtonInspectorNode,

@@ -20,11 +20,11 @@ describe('panels/inspector/CommonSections', () => {
     });
 
     const button = findElementByAriaLabel(tree, 'Go to Sticky focus mode');
-    if (!button?.props.onClick) {
+    if (typeof button?.props.onClick !== 'function') {
       throw new Error('Expected focused-mode entry button');
     }
 
-    button.props.onClick();
+    (button.props.onClick as () => void)();
     expect(onEnter).toHaveBeenCalledWith('sticky');
   });
 
@@ -147,11 +147,11 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('Body');
 
     const button = findElementByAriaLabel(tree, 'Close sticky mode');
-    if (!button?.props.onClick) {
+    if (typeof button?.props.onClick !== 'function') {
       throw new Error('Expected header action button with onClick');
     }
 
-    button.props.onClick();
+    (button.props.onClick as () => void)();
     expect(onClick).toHaveBeenCalled();
   });
 
@@ -195,19 +195,21 @@ describe('panels/inspector/CommonSections', () => {
   });
 });
 
-function findElementByAriaLabel(node: ReactNode, ariaLabel: string): ReactElement | null {
+function findElementByAriaLabel(node: ReactNode, ariaLabel: string): ReactElement<Record<string, unknown>> | null {
   if (!isValidElement(node)) {
     return null;
   }
 
-  if (node.props['aria-label'] === ariaLabel) {
-    return node;
+  const el = node as ReactElement<Record<string, unknown>>;
+
+  if (el.props['aria-label'] === ariaLabel) {
+    return el;
   }
 
-  return findInChildren(node.props.children, ariaLabel);
+  return findInChildren(el.props.children as ReactNode, ariaLabel);
 }
 
-function findInChildren(children: ReactNode, ariaLabel: string): ReactElement | null {
+function findInChildren(children: ReactNode, ariaLabel: string): ReactElement<Record<string, unknown>> | null {
   const childList = Array.isArray(children) ? children : [children];
 
   for (const child of childList) {

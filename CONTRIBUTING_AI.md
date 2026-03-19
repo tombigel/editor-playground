@@ -22,10 +22,10 @@ Prefer named exports over default exports.
 
 ## Component Size Limits
 
-Keep source files focused:
+Keep source files focused. As a guideline:
 
-- **Warning**: files exceeding 500 lines should be considered for splitting
-- **Hard limit**: files must not exceed 800 lines
+- Files exceeding 500 lines should be considered for splitting
+- Files exceeding 800 lines are a strong signal to split
 
 When a file grows beyond these limits, split it into focused submodules with a barrel re-export for backward compatibility.
 

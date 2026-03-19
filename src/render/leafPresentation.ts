@@ -1,8 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DocumentNode, ImageLeaf, LinkLeaf, TextLeaf, ButtonLeaf, TypographyStyle } from '../model/types';
 import { buildFontFamilyStack, DEFAULT_FONT_FALLBACK_STACK } from '../fonts';
-import {
-} from '../model/styleDefaults';
 import { formatValue } from '../model/units';
 import { buildBorderStyle, buildBoxShadow, buildFilterShadow } from './styleHelpers';
 import type { SharedCssRule, StyleRecord } from './types';
