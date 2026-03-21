@@ -27,7 +27,7 @@ export function HoverColorField({
   const resolvedFallback = showOpacity ? fallback : forceOpaqueColorValue(fallback) || '#ffffff';
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-start">
       <div className="relative">
         <ColorPicker
           value={resolvedValue}
@@ -78,7 +78,7 @@ export const BorderControlGroup = memo(function BorderControlGroup({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <HoverColorField value={colorValue || undefined} onChange={onColorChange} ariaLabel="Border color" fallback={colorFallback} />
       </div>
       <div className={`grid gap-1.5 ${showRadius ? 'grid-cols-2' : 'grid-cols-1'}`}>

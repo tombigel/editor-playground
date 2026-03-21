@@ -54,7 +54,7 @@ function ColorDemo() {
 			</div>
 			{/* Multi-select (mixed) */}
 			<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
-			<div className="flex w-fit gap-4">
+			<div className="flex gap-4">
 				<div>
 					<div className="editor-text-muted mb-1 text-[10px]">Opaque (mixed)</div>
 					<HoverColorField

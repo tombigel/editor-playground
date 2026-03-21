@@ -156,7 +156,7 @@ function SwitchDemo() {
 						<Switch
 							checked={false}
 							onCheckedChange={() => {}}
-							className="bg-slate-400 data-[state=unchecked]:bg-slate-400 [&>[data-ui=switch-thumb]]:translate-x-[10px]"
+							className="bg-slate-400 data-[state=unchecked]:bg-slate-400 [&>[data-ui=switch-thumb]]:translate-x-[9px]"
 						/>
 					),
 				},
