@@ -11,7 +11,7 @@ Items noted during the showcase rewrite. Do not pursue during the current implem
 
 ## Icon Cleanup
 
-- **Deduplicate AlertTriangle / TriangleAlert**: Both are used in the app (SettingsShared vs contentSections/shared). Pick one and migrate. `TriangleAlert` is the current lucide-react name; `AlertTriangle` is the legacy alias.
+- ~~**Deduplicate AlertTriangle / TriangleAlert**~~: DONE — migrated to `TriangleAlert` everywhere, removed `AlertTriangle` from showcase icon list.
 - **Audit icon list**: Verify every icon in the showcase is still actively imported somewhere in `src/` outside of the design system. Remove any that were added speculatively.
 
 ## Component Standalone Enhancements
@@ -20,9 +20,9 @@ Items noted during the showcase rewrite. Do not pursue during the current implem
 
 - **FontFamilySelect / FontPickerPopover**: Showcase uses a small mock font library. The full document font loading pipeline (Google Fonts catalog, preview stylesheets, favorites, recent tracking) is not exercised. Consider a dedicated font picker demo page.
 
-- **Font picker cleanup**: `FontFamilySelect` and `FontWeightSelect` are no longer used standalone — the only entry point is `FontPickerPopover`. Consider removing or deprecating the individual pickers. Also add an "open" chevron indicator to the `FontPickerPopover` trigger button.
+- ~~**Font picker cleanup**~~: DONE — `FontFamilySelect` and `FontWeightSelect` removed. ChevronDown added to `FontPickerPopover` trigger matching SelectTrigger styling.
 
-- **FontPickerPopover side effects**: The component injects a Google Fonts `<link>` stylesheet into `document.head` when opened (for font previews) and writes recent selections to localStorage via `writeRecentFontFamilies()`. These side effects don't belong in the picker — font loading should be the caller's responsibility. Remove the stylesheet injection and localStorage writes from `FontPickerPopover`, move them to the call sites that need them. Once fixed, update the design-system showcase demo to use real Google Font names instead of system font placeholders.
+- ~~**FontPickerPopover side effects**~~: DONE — Stylesheet injection extracted to `useFontPreviewStylesheet` hook. Recent-fonts persistence lifted to callers via `recentFamilyNames` / `onRecentFamiliesChange` props. Showcase demos pass explicit no-op props. ManageFontsPanel also migrated to the shared hook.
 
 - **StickySection**: The mock node may not include all sticky sub-fields. Some controls may show default/disabled states rather than fully populated states. Consider creating richer mock sticky data.
 
@@ -42,6 +42,6 @@ Items noted during the showcase rewrite. Do not pursue during the current implem
 
 ## Structural Improvements
 
-- **File size**: BaseComponentsSection.tsx and CompositeSection.tsx will be large. Consider splitting into `sections/base/*.tsx` and `sections/composite/*.tsx` subdirectories with barrel re-exports per the Component Size Limits rule in CLAUDE.md.
+- ~~**File size**~~: DONE — BaseComponentsSection split into `sections/base/` (7 demo files + barrel), CompositeSection split into `sections/composite/` (7 demo files + barrel). All files under 500 lines. InspectorControls.tsx also split into `panels/controls/` (6 component family files + barrel).
 
 - **Section title hierarchy**: Currently using h2 for major sections and h3 for subsections. The nav tracks subsection IDs. Consider adding major section IDs to the nav as well.
