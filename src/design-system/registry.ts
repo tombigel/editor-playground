@@ -1,0 +1,63 @@
+import { Blocks, Component, Paintbrush } from "lucide-react";
+import type { DSSection } from "./types";
+
+export const DS_SECTIONS: DSSection[] = [
+	{
+		id: "tokens",
+		label: "Design Tokens",
+		icon: Paintbrush,
+		subsections: [
+			{ id: "tokens-colors", label: "Colors" },
+			{ id: "tokens-typography", label: "Typography" },
+			{ id: "tokens-borders", label: "Borders & Radii" },
+			{ id: "tokens-shadows", label: "Shadows" },
+			{ id: "tokens-icons", label: "Icons" },
+		],
+	},
+	{
+		id: "base",
+		label: "Base Components",
+		icon: Component,
+		subsections: [
+			{ id: "base-title", label: "Title" },
+			{ id: "base-badge", label: "Component Badges" },
+			{ id: "base-text-button", label: "Text Button" },
+			{ id: "base-icon-button", label: "Icon Button" },
+			{ id: "base-label", label: "Label" },
+			{ id: "base-number-field", label: "Number Field" },
+			{ id: "base-number-unit", label: "Number with Unit" },
+			{ id: "base-input", label: "Text Input" },
+			{ id: "base-switch", label: "Toggle (Switch)" },
+			{ id: "base-slider", label: "Slider" },
+			{ id: "base-options-selector", label: "Options Selector" },
+			{ id: "base-textarea", label: "Text Field" },
+			{ id: "base-font-selector", label: "Font Picker" },
+			{ id: "base-select", label: "Dropdown (Select)" },
+			{ id: "base-color", label: "Color" },
+			{ id: "base-selection-chrome", label: "Selection Chrome" },
+			{ id: "base-sticky-indicator", label: "Sticky Indicators" },
+			{ id: "base-warning-info", label: "Warning / Info" },
+			{ id: "base-tooltip", label: "Tooltip" },
+			{ id: "base-shortcut-key", label: "Shortcut Key" },
+			{ id: "base-pager", label: "Pager" },
+		],
+	},
+	{
+		id: "composite",
+		label: "Composites",
+		icon: Blocks,
+		subsections: [
+			{ id: "composite-inspector-title", label: "Inspector Title" },
+			{ id: "composite-shadow-control", label: "Shadow Control" },
+			{ id: "composite-border-control", label: "Border Control" },
+			{ id: "composite-text-style", label: "Text Style" },
+			{ id: "composite-layout-controls", label: "Layout Controls" },
+			{ id: "composite-section-layout", label: "Section Layout" },
+			{ id: "composite-content-controls", label: "Content Controls" },
+			{ id: "composite-settings", label: "Settings Controls" },
+			{ id: "composite-settings-nav", label: "Settings Nav Item" },
+			{ id: "composite-shortcuts", label: "Shortcuts" },
+			{ id: "composite-focused-panel", label: "Focused Panel" },
+		],
+	},
+];

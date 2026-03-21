@@ -1,0 +1,80 @@
+import { useCallback, useState } from "react";
+import { DesignSystemHeader } from "./DesignSystemHeader";
+import { DesignSystemNav } from "./DesignSystemNav";
+import { DesignSystemStage } from "./DesignSystemStage";
+import { DesignSystemThemePanel } from "./DesignSystemThemePanel";
+import { DS_SECTIONS } from "./registry";
+import { BaseComponentsSection } from "./sections/BaseComponentsSection";
+import { CompositeSection } from "./sections/CompositeSection";
+import { DesignTokensSection } from "./sections/DesignTokensSection";
+import { useDesignSystemTheme } from "./useDesignSystemTheme";
+
+export default function DesignSystemApp() {
+	const {
+		config,
+		themeKey,
+		setThemeMode,
+		setLightTheme,
+		setDarkTheme,
+		setAccentColor,
+	} = useDesignSystemTheme();
+
+	const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(
+		null,
+	);
+	const [themePanelOpen, setThemePanelOpen] = useState(false);
+
+	const scrollRef = useCallback((node: HTMLElement | null) => {
+		setScrollContainer(node);
+	}, []);
+
+	return (
+		<div className="editor-shell editor-settings-panel flex h-screen w-screen flex-col overflow-hidden">
+			<DesignSystemHeader
+				themePanelOpen={themePanelOpen}
+				onToggleThemePanel={() => setThemePanelOpen((v) => !v)}
+			/>
+			<div className="flex min-h-0 flex-1">
+				<DesignSystemNav
+					sections={DS_SECTIONS}
+					scrollContainer={scrollContainer}
+				/>
+				<DesignSystemStage scrollRef={scrollRef}>
+					{/* Design Tokens */}
+					<section className="mb-16">
+						<h2 className="editor-text-strong mb-6 text-xl font-bold">
+							Design Tokens
+						</h2>
+						<DesignTokensSection themeKey={themeKey} />
+					</section>
+
+					{/* Base Components */}
+					<section className="mb-16">
+						<h2 className="editor-text-strong mb-6 text-xl font-bold">
+							Base Components
+						</h2>
+						<BaseComponentsSection />
+					</section>
+
+					{/* Composites + Inspector Sections */}
+					<section className="mb-16">
+						<h2 className="editor-text-strong mb-6 text-xl font-bold">
+							Composites
+						</h2>
+						<CompositeSection />
+					</section>
+				</DesignSystemStage>
+			</div>
+			{themePanelOpen ? (
+				<DesignSystemThemePanel
+					config={config}
+					onThemeModeChange={setThemeMode}
+					onLightThemeChange={setLightTheme}
+					onDarkThemeChange={setDarkTheme}
+					onAccentColorChange={setAccentColor}
+					onClose={() => setThemePanelOpen(false)}
+				/>
+			) : null}
+		</div>
+	);
+}

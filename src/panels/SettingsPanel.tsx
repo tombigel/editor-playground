@@ -1,714 +1,861 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from "lucide-react";
 import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  Bug,
-  Clipboard,
-  Eye,
-  FileDown,
-  FileUp,
-  Grid3X3,
-  Keyboard,
-  Magnet,
-  Settings,
-  SlidersHorizontal,
-  Type,
-} from 'lucide-react';
-import type { DocumentModel, DocumentNode, FocusedMode, StickyLayoutState } from '../api/editorApi';
-import type { DocumentFontFamily } from '../model/types';
-import { formatValue } from '../api/documentApi';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { EditorPanelHeader } from './EditorPanelHeader';
-import { ShortcutHelpContent } from './ShortcutHelpContent';
-import { ManageFontsPanel } from './fontManagement/ManageFontsPanel';
-import { Textarea } from '@/components/ui/textarea';
+	ArrowDownToLine,
+	ArrowUpFromLine,
+	Bug,
+	Clipboard,
+	Eye,
+	FileDown,
+	FileUp,
+	Grid3X3,
+	Keyboard,
+	Magnet,
+	Settings,
+	SlidersHorizontal,
+	SwatchBook,
+	Type,
+} from "lucide-react";
+import type { ChangeEvent } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type {
-  EditorDarkTheme,
-  EditorLightTheme,
-  ResolvedTheme,
-  ThemeMode,
-} from '@/lib/theme';
+	EditorDarkTheme,
+	EditorLightTheme,
+	ResolvedTheme,
+	ThemeMode,
+} from "@/lib/theme";
+import { formatValue } from "../api/documentApi";
+import type {
+	DocumentModel,
+	DocumentNode,
+	FocusedMode,
+	StickyLayoutState,
+} from "../api/editorApi";
+import type { DocumentFontFamily } from "../model/types";
+import { EditorPanelHeader } from "./EditorPanelHeader";
+import { ManageFontsPanel } from "./fontManagement/ManageFontsPanel";
+import { ShortcutHelpContent } from "./ShortcutHelpContent";
 import {
-  copyExportDocument,
-  pasteClipboardImport,
-  saveExportDocument,
-  saveExportSiteZip,
-  type ActionResult,
-} from './settingsTransfer';
+	AccentSwatchRow,
+	ActionRow,
+	FocusedModeStartupRow,
+	MetricCell,
+	NumericRow,
+	PlainGroup,
+	SectionHeading,
+	SettingRow,
+	StatusMessage,
+	ThemePresetRow,
+	TransferSubsection,
+} from "./settings/SettingsShared";
 import {
-  SectionHeading,
-  PlainGroup,
-  TransferSubsection,
-  SettingRow,
-  ActionRow,
-  NumericRow,
-  MetricCell,
-  StatusMessage,
-  FocusedModeStartupRow,
-  ThemePresetRow,
-  AccentSwatchRow,
-} from './settings/SettingsShared';
+	type ActionResult,
+	copyExportDocument,
+	pasteClipboardImport,
+	saveExportDocument,
+	saveExportSiteZip,
+} from "./settingsTransfer";
 
-type SectionId = 'display' | 'fonts' | 'transfer' | 'advanced' | 'diagnostics' | 'shortcuts';
-const DEFAULT_EXPORT_BASENAME = 'sticky-playground';
+type SectionId =
+	| "display"
+	| "fonts"
+	| "transfer"
+	| "advanced"
+	| "diagnostics"
+	| "shortcuts";
+const DEFAULT_EXPORT_BASENAME = "sticky-playground";
 
 type Props = {
-  document: DocumentModel;
-  documentJson: string;
-  errors: string[];
-  stickyLayout: StickyLayoutState;
-  selectedNode: DocumentNode | null;
-  previewSticky: boolean;
-  spacerVisibility: 'selected' | 'all';
-  showGridLanes: boolean;
-  snapEnabled: boolean;
-  themeMode: ThemeMode;
-  accentColor: string;
-  lightTheme: EditorLightTheme;
-  darkTheme: EditorDarkTheme;
-  resolvedTheme: ResolvedTheme;
-  startupFocusedMode: FocusedMode;
-  undoDepth: number;
-  redoDepth: number;
-  historyLimit: number;
-  onClose: () => void;
-  onAddFont?: (family: DocumentFontFamily) => void;
-  onRemoveFont?: (familyName: string) => void;
-  onToggleFontFavorite?: (familyName: string) => void;
-  onPurgeUnusedFonts?: () => void;
-  onPreviewStickyChange: (value: boolean) => void;
-  onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
-  onShowGridLanesChange: (value: boolean) => void;
-  onSnapEnabledChange: (value: boolean) => void;
-  onThemeModeChange: (value: ThemeMode) => void;
-  onAccentColorChange: (value: string) => void;
-  onLightThemeChange: (value: EditorLightTheme) => void;
-  onDarkThemeChange: (value: EditorDarkTheme) => void;
-  onStartupFocusedModeChange: (value: FocusedMode) => void;
-  onClearHistory: () => void;
-  onHistoryLimitChange: (value: number) => void;
-  onImport: (raw: string) => Promise<ActionResult> | ActionResult;
-  onResetData: () => void;
-  onResetAll: () => void;
+	document: DocumentModel;
+	documentJson: string;
+	errors: string[];
+	stickyLayout: StickyLayoutState;
+	selectedNode: DocumentNode | null;
+	previewSticky: boolean;
+	spacerVisibility: "selected" | "all";
+	showGridLanes: boolean;
+	snapEnabled: boolean;
+	themeMode: ThemeMode;
+	accentColor: string;
+	lightTheme: EditorLightTheme;
+	darkTheme: EditorDarkTheme;
+	resolvedTheme: ResolvedTheme;
+	startupFocusedMode: FocusedMode;
+	undoDepth: number;
+	redoDepth: number;
+	historyLimit: number;
+	onClose: () => void;
+	onAddFont?: (family: DocumentFontFamily) => void;
+	onRemoveFont?: (familyName: string) => void;
+	onToggleFontFavorite?: (familyName: string) => void;
+	onPurgeUnusedFonts?: () => void;
+	onPreviewStickyChange: (value: boolean) => void;
+	onSpacerVisibilityChange: (value: "selected" | "all") => void;
+	onShowGridLanesChange: (value: boolean) => void;
+	onSnapEnabledChange: (value: boolean) => void;
+	onThemeModeChange: (value: ThemeMode) => void;
+	onAccentColorChange: (value: string) => void;
+	onLightThemeChange: (value: EditorLightTheme) => void;
+	onDarkThemeChange: (value: EditorDarkTheme) => void;
+	onStartupFocusedModeChange: (value: FocusedMode) => void;
+	onClearHistory: () => void;
+	onHistoryLimitChange: (value: number) => void;
+	onImport: (raw: string) => Promise<ActionResult> | ActionResult;
+	onResetData: () => void;
+	onResetAll: () => void;
 };
 
 const SECTION_META: Array<{
-  id: SectionId;
-  label: string;
-  icon: LucideIcon;
-  description: string;
+	id: SectionId;
+	label: string;
+	icon: LucideIcon;
+	description: string;
 }> = [
-  {
-    id: 'display',
-    label: 'UI',
-    icon: Eye,
-    description: 'Theme, preview, and guides.',
-  },
-  {
-    id: 'fonts',
-    label: 'Fonts',
-    icon: Type,
-    description: 'Document font library.',
-  },
-  {
-    id: 'transfer',
-    label: 'Import / Export',
-    icon: ArrowDownToLine,
-    description: 'Move document JSON.',
-  },
-  {
-    id: 'advanced',
-    label: 'Advanced',
-    icon: SlidersHorizontal,
-    description: 'History and reset.',
-  },
-  {
-    id: 'diagnostics',
-    label: 'Debug Info',
-    icon: Bug,
-    description: 'Validation and sticky math.',
-  },
-  {
-    id: 'shortcuts',
-    label: 'Shortcuts',
-    icon: Keyboard,
-    description: 'Keyboard and pointer reference.',
-  },
+	{
+		id: "display",
+		label: "UI",
+		icon: Eye,
+		description: "Theme, preview, and guides.",
+	},
+	{
+		id: "fonts",
+		label: "Fonts",
+		icon: Type,
+		description: "Document font library.",
+	},
+	{
+		id: "transfer",
+		label: "Import / Export",
+		icon: ArrowDownToLine,
+		description: "Move document JSON.",
+	},
+	{
+		id: "advanced",
+		label: "Advanced",
+		icon: SlidersHorizontal,
+		description: "History and reset.",
+	},
+	{
+		id: "diagnostics",
+		label: "Debug Info",
+		icon: Bug,
+		description: "Validation and sticky math.",
+	},
+	{
+		id: "shortcuts",
+		label: "Shortcuts",
+		icon: Keyboard,
+		description: "Keyboard and pointer reference.",
+	},
 ];
 
 export function SettingsPanel({
-  document,
-  documentJson,
-  errors,
-  stickyLayout,
-  selectedNode,
-  previewSticky,
-  spacerVisibility,
-  showGridLanes,
-  snapEnabled,
-  themeMode,
-  accentColor,
-  lightTheme,
-  darkTheme,
-  resolvedTheme,
-  startupFocusedMode,
-  undoDepth,
-  redoDepth,
-  historyLimit,
-  onClose,
-  onAddFont = () => undefined,
-  onRemoveFont = () => undefined,
-  onToggleFontFavorite = () => undefined,
-  onPurgeUnusedFonts = () => undefined,
-  onPreviewStickyChange,
-  onSpacerVisibilityChange,
-  onShowGridLanesChange,
-  onSnapEnabledChange,
-  onThemeModeChange,
-  onAccentColorChange,
-  onLightThemeChange,
-  onDarkThemeChange,
-  onStartupFocusedModeChange,
-  onClearHistory,
-  onHistoryLimitChange,
-  onImport,
-  onResetData,
-  onResetAll,
+	document,
+	documentJson,
+	errors,
+	stickyLayout,
+	selectedNode,
+	previewSticky,
+	spacerVisibility,
+	showGridLanes,
+	snapEnabled,
+	themeMode,
+	accentColor,
+	lightTheme,
+	darkTheme,
+	resolvedTheme,
+	startupFocusedMode,
+	undoDepth,
+	redoDepth,
+	historyLimit,
+	onClose,
+	onAddFont = () => undefined,
+	onRemoveFont = () => undefined,
+	onToggleFontFavorite = () => undefined,
+	onPurgeUnusedFonts = () => undefined,
+	onPreviewStickyChange,
+	onSpacerVisibilityChange,
+	onShowGridLanesChange,
+	onSnapEnabledChange,
+	onThemeModeChange,
+	onAccentColorChange,
+	onLightThemeChange,
+	onDarkThemeChange,
+	onStartupFocusedModeChange,
+	onClearHistory,
+	onHistoryLimitChange,
+	onImport,
+	onResetData,
+	onResetAll,
 }: Props) {
-  const [activeSection, setActiveSection] = useState<SectionId>('display');
-  const [importBuffer, setImportBuffer] = useState('');
-  const [exportFileName, setExportFileName] = useState(DEFAULT_EXPORT_BASENAME);
-  const [exportStatus, setExportStatus] = useState<ActionResult | null>(null);
-  const [importStatus, setImportStatus] = useState<ActionResult | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const displayRef = useRef<HTMLElement | null>(null);
-  const fontsRef = useRef<HTMLElement | null>(null);
-  const transferRef = useRef<HTMLElement | null>(null);
-  const advancedRef = useRef<HTMLElement | null>(null);
-  const diagnosticsRef = useRef<HTMLElement | null>(null);
-  const shortcutsRef = useRef<HTMLElement | null>(null);
+	const [activeSection, setActiveSection] = useState<SectionId>("display");
+	const [importBuffer, setImportBuffer] = useState("");
+	const [exportFileName, setExportFileName] = useState(DEFAULT_EXPORT_BASENAME);
+	const [exportStatus, setExportStatus] = useState<ActionResult | null>(null);
+	const [importStatus, setImportStatus] = useState<ActionResult | null>(null);
+	const scrollRef = useRef<HTMLDivElement | null>(null);
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
+	const displayRef = useRef<HTMLElement | null>(null);
+	const fontsRef = useRef<HTMLElement | null>(null);
+	const transferRef = useRef<HTMLElement | null>(null);
+	const advancedRef = useRef<HTMLElement | null>(null);
+	const diagnosticsRef = useRef<HTMLElement | null>(null);
+	const shortcutsRef = useRef<HTMLElement | null>(null);
 
-  const sectionRefs = useMemo(
-    () => ({
-      display: displayRef,
-      fonts: fontsRef,
-      transfer: transferRef,
-      advanced: advancedRef,
-      diagnostics: diagnosticsRef,
-      shortcuts: shortcutsRef,
-    }),
-    [],
-  );
+	const sectionRefs = useMemo(
+		() => ({
+			display: displayRef,
+			fonts: fontsRef,
+			transfer: transferRef,
+			advanced: advancedRef,
+			diagnostics: diagnosticsRef,
+			shortcuts: shortcutsRef,
+		}),
+		[],
+	);
 
-  useEffect(() => {
-    if (!exportStatus) {
-      return;
-    }
-    const timeout = window.setTimeout(() => setExportStatus(null), 2400);
-    return () => window.clearTimeout(timeout);
-  }, [exportStatus]);
+	useEffect(() => {
+		if (!exportStatus) {
+			return;
+		}
+		const timeout = window.setTimeout(() => setExportStatus(null), 2400);
+		return () => window.clearTimeout(timeout);
+	}, [exportStatus]);
 
-  useEffect(() => {
-    if (!importStatus) {
-      return;
-    }
-    const timeout = window.setTimeout(() => setImportStatus(null), 3200);
-    return () => window.clearTimeout(timeout);
-  }, [importStatus]);
+	useEffect(() => {
+		if (!importStatus) {
+			return;
+		}
+		const timeout = window.setTimeout(() => setImportStatus(null), 3200);
+		return () => window.clearTimeout(timeout);
+	}, [importStatus]);
 
-  function scrollToSection(sectionId: SectionId) {
-    const element = sectionRefs[sectionId].current;
-    if (!element) {
-      return;
-    }
-    setActiveSection(sectionId);
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+	function scrollToSection(sectionId: SectionId) {
+		const element = sectionRefs[sectionId].current;
+		if (!element) {
+			return;
+		}
+		setActiveSection(sectionId);
+		element.scrollIntoView({ behavior: "smooth", block: "start" });
+	}
 
-  function updateActiveSection() {
-    const container = scrollRef.current;
-    if (!container) {
-      return;
-    }
+	function updateActiveSection() {
+		const container = scrollRef.current;
+		if (!container) {
+			return;
+		}
 
-    const candidates = SECTION_META.map((section) => {
-      const element = sectionRefs[section.id].current;
-      if (!element) {
-        return { id: section.id, distance: Number.POSITIVE_INFINITY };
-      }
-      return {
-        id: section.id,
-        distance: Math.abs(element.offsetTop - container.scrollTop - 16),
-      };
-    });
+		const candidates = SECTION_META.map((section) => {
+			const element = sectionRefs[section.id].current;
+			if (!element) {
+				return { id: section.id, distance: Number.POSITIVE_INFINITY };
+			}
+			return {
+				id: section.id,
+				distance: Math.abs(element.offsetTop - container.scrollTop - 16),
+			};
+		});
 
-    candidates.sort((left, right) => left.distance - right.distance);
-    setActiveSection(candidates[0]?.id ?? 'display');
-  }
+		candidates.sort((left, right) => left.distance - right.distance);
+		setActiveSection(candidates[0]?.id ?? "display");
+	}
 
-  async function handleCopyExport() {
-    setExportStatus(await copyExportDocument(documentJson));
-  }
+	async function handleCopyExport() {
+		setExportStatus(await copyExportDocument(documentJson));
+	}
 
-  async function handleSaveExport() {
-    const result = await saveExportDocument(documentJson, {
-      fileName: exportFileName,
-    });
-    if (result) {
-      setExportStatus(result);
-    }
-  }
+	async function handleSaveExport() {
+		const result = await saveExportDocument(documentJson, {
+			fileName: exportFileName,
+		});
+		if (result) {
+			setExportStatus(result);
+		}
+	}
 
-  async function handleSaveSiteZip() {
-    const bundle = await loadSiteExportBundle();
-    const zipFileName = bundle.htmlFileName.replace(/\.[a-z0-9]+$/i, '.zip');
-    const result = await saveExportSiteZip(
-      {
-        [bundle.htmlFileName]: bundle.htmlDocument,
-        [bundle.cssFileName]: bundle.css,
-      },
-      {
-        fileName: zipFileName,
-      },
-    );
-    if (result) {
-      setExportStatus(result);
-    }
-  }
+	async function handleSaveSiteZip() {
+		const bundle = await loadSiteExportBundle();
+		const zipFileName = bundle.htmlFileName.replace(/\.[a-z0-9]+$/i, ".zip");
+		const result = await saveExportSiteZip(
+			{
+				[bundle.htmlFileName]: bundle.htmlDocument,
+				[bundle.cssFileName]: bundle.css,
+			},
+			{
+				fileName: zipFileName,
+			},
+		);
+		if (result) {
+			setExportStatus(result);
+		}
+	}
 
-  async function handlePasteFromClipboard() {
-    const result = await pasteClipboardImport();
-    if (result.text != null) {
-      setImportBuffer(result.text);
-    }
-    setImportStatus(result.status);
-  }
+	async function handlePasteFromClipboard() {
+		const result = await pasteClipboardImport();
+		if (result.text != null) {
+			setImportBuffer(result.text);
+		}
+		setImportStatus(result.status);
+	}
 
-  async function runImport(raw: string) {
-    const result = await onImport(raw);
-    setImportStatus(result);
-  }
+	async function runImport(raw: string) {
+		const result = await onImport(raw);
+		setImportStatus(result);
+	}
 
-  async function handleImportBuffer() {
-    await runImport(importBuffer);
-  }
+	async function handleImportBuffer() {
+		await runImport(importBuffer);
+	}
 
-  async function loadSiteExportBundle() {
-    const { renderSiteExportBundle } = await import('../api/siteApi');
-    return renderSiteExportBundle(document, {
-      title: getSiteTitle(exportFileName),
-      htmlFileName: exportFileName,
-    });
-  }
+	async function loadSiteExportBundle() {
+		const { renderSiteExportBundle } = await import("../api/siteApi");
+		return renderSiteExportBundle(document, {
+			title: getSiteTitle(exportFileName),
+			htmlFileName: exportFileName,
+		});
+	}
 
-  async function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) {
-      return;
-    }
+	async function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
+		const file = event.target.files?.[0];
+		event.target.value = "";
+		if (!file) {
+			return;
+		}
 
-    try {
-      const raw = await file.text();
-      setImportBuffer(raw);
-      await runImport(raw);
-    } catch {
-      setImportStatus({ ok: false, message: 'File import failed.' });
-    }
-  }
+		try {
+			const raw = await file.text();
+			setImportBuffer(raw);
+			await runImport(raw);
+		} catch {
+			setImportStatus({ ok: false, message: "File import failed." });
+		}
+	}
 
-  const spacerToggleOn = spacerVisibility === 'all';
+	const spacerToggleOn = spacerVisibility === "all";
 
-  return (
-    <div role="dialog" aria-label="Settings" className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(760px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]">
-      <div className="editor-bg-surface editor-border-subtle overflow-hidden rounded-2xl border">
-      <EditorPanelHeader
-        icon={Settings}
-        title="Settings"
-        description="Controls, transfer, diagnostics."
-        closeLabel="Close settings"
-        onClose={onClose}
-        className="px-5"
-      />
+	return (
+		<div
+			role="dialog"
+			aria-label="Settings"
+			className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(760px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]"
+		>
+			<div className="editor-bg-surface editor-border-subtle overflow-hidden rounded-2xl border">
+				<EditorPanelHeader
+					icon={Settings}
+					title="Settings"
+					description="Controls, transfer, diagnostics."
+					closeLabel="Close settings"
+					onClose={onClose}
+					className="px-5"
+				/>
 
-      <div className="grid h-[min(76vh,680px)] min-h-0 grid-cols-[180px_minmax(0,1fr)]">
-        <aside className="editor-bg-subtle editor-border-subtle border-r">
-          <div className="sticky top-0 px-3 py-4">
-            <div className="editor-text-muted mb-3 px-2 text-[11px] font-medium">
-              On This Page
-            </div>
-            <nav className="space-y-1">
-              {SECTION_META.map((section) => {
-                const Icon = section.icon;
-                const active = activeSection === section.id;
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => scrollToSection(section.id)}
-                    data-active={active ? 'true' : 'false'}
-                    className={`settings-nav-link flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-inset ${
-                      active ? 'shadow-sm' : ''
-                    }`}
-                  >
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium">{section.label}</div>
-                      <div className="settings-nav-link-copy mt-0.5 text-xs leading-5">{section.description}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </aside>
+				<div className="grid h-[min(76vh,680px)] min-h-0 grid-cols-[180px_minmax(0,1fr)]">
+					<aside className="editor-bg-subtle editor-border-subtle border-r">
+						<div className="sticky top-0 px-3 py-4">
+							<div className="editor-text-muted mb-3 px-2 text-[11px] font-medium">
+								On This Page
+							</div>
+							<nav className="space-y-1">
+								{SECTION_META.map((section) => {
+									const Icon = section.icon;
+									const active = activeSection === section.id;
+									return (
+										<button
+											key={section.id}
+											type="button"
+											onClick={() => scrollToSection(section.id)}
+											data-active={active ? "true" : "false"}
+											className={`settings-nav-link flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-inset ${
+												active ? "shadow-sm" : ""
+											}`}
+										>
+											<Icon className="mt-0.5 h-4 w-4 shrink-0" />
+											<div className="min-w-0">
+												<div className="text-sm font-medium">
+													{section.label}
+												</div>
+												<div className="settings-nav-link-copy mt-0.5 text-xs leading-5">
+													{section.description}
+												</div>
+											</div>
+										</button>
+									);
+								})}
+							</nav>
+						</div>
+					</aside>
 
-        <div
-          ref={scrollRef}
-          className="editor-scrollbar min-h-0 overflow-y-auto"
-          onScroll={updateActiveSection}
-        >
-          <div className="px-6 py-5">
-            <section ref={displayRef} className="editor-border-subtle border-b pb-6">
-              <SectionHeading eyebrow="UI" title="Appearance and guides" description="Theme, stage toggles, and guides." />
-              <ThemePresetRow
-                themeMode={themeMode}
-                resolvedTheme={resolvedTheme}
-                lightTheme={lightTheme}
-                darkTheme={darkTheme}
-                onThemeModeChange={onThemeModeChange}
-                onLightThemeChange={onLightThemeChange}
-                onDarkThemeChange={onDarkThemeChange}
-              />
-              <AccentSwatchRow value={accentColor} onChange={onAccentColorChange} />
-              <FocusedModeStartupRow
-                value={startupFocusedMode}
-                onChange={onStartupFocusedModeChange}
-              />
-              <SettingRow
-                icon={Eye}
-                title="Sticky preview"
-                description="Applies CSS sticky behavior in preview."
-                checked={previewSticky}
-                onCheckedChange={onPreviewStickyChange}
-              />
-              <SettingRow
-                icon={ArrowDownToLine}
-                title="Show spacers"
-                description={spacerToggleOn ? 'Shows spacer visuals for all sticky nodes.' : 'Shows spacer visuals for the current selection.'}
-                checked={spacerToggleOn}
-                onCheckedChange={(checked) => onSpacerVisibilityChange(checked ? 'all' : 'selected')}
-                tooltip="On shows all spacer guides. Off scopes them to the current selection."
-              />
-              <SettingRow
-                icon={Grid3X3}
-                title="Grid lanes"
-                description="Shows mesh guides inside wrappers."
-                checked={showGridLanes}
-                onCheckedChange={onShowGridLanesChange}
-              />
-              <SettingRow
-                icon={Magnet}
-                title="Snap to guides"
-                description="Snaps drag movement to page and node guides."
-                note="Hold Alt while dragging to invert the current mode."
-                checked={snapEnabled}
-                onCheckedChange={onSnapEnabledChange}
-              />
-            </section>
+					<div
+						ref={scrollRef}
+						className="editor-scrollbar min-h-0 overflow-y-auto"
+						onScroll={updateActiveSection}
+					>
+						<div className="px-6 py-5">
+							<section
+								ref={displayRef}
+								className="editor-border-subtle border-b pb-6"
+							>
+								<div className="flex items-start justify-between gap-4">
+									<SectionHeading
+										eyebrow="UI"
+										title="Appearance and guides"
+										description="Theme, stage toggles, and guides."
+									/>
+									<Button
+										variant="outline"
+										size="sm"
+										className="mt-3 shrink-0 gap-1.5"
+										onClick={() => {
+											window.location.hash = "#/design-system";
+										}}
+									>
+										<SwatchBook className="h-3.5 w-3.5" />
+										Design System
+									</Button>
+								</div>
+								<ThemePresetRow
+									themeMode={themeMode}
+									resolvedTheme={resolvedTheme}
+									lightTheme={lightTheme}
+									darkTheme={darkTheme}
+									onThemeModeChange={onThemeModeChange}
+									onLightThemeChange={onLightThemeChange}
+									onDarkThemeChange={onDarkThemeChange}
+								/>
+								<AccentSwatchRow
+									value={accentColor}
+									onChange={onAccentColorChange}
+								/>
+								<FocusedModeStartupRow
+									value={startupFocusedMode}
+									onChange={onStartupFocusedModeChange}
+								/>
+								<SettingRow
+									icon={Eye}
+									title="Sticky preview"
+									description="Applies CSS sticky behavior in preview."
+									checked={previewSticky}
+									onCheckedChange={onPreviewStickyChange}
+								/>
+								<SettingRow
+									icon={ArrowDownToLine}
+									title="Show spacers"
+									description={
+										spacerToggleOn
+											? "Shows spacer visuals for all sticky nodes."
+											: "Shows spacer visuals for the current selection."
+									}
+									checked={spacerToggleOn}
+									onCheckedChange={(checked) =>
+										onSpacerVisibilityChange(checked ? "all" : "selected")
+									}
+									tooltip="On shows all spacer guides. Off scopes them to the current selection."
+								/>
+								<SettingRow
+									icon={Grid3X3}
+									title="Grid lanes"
+									description="Shows mesh guides inside wrappers."
+									checked={showGridLanes}
+									onCheckedChange={onShowGridLanesChange}
+								/>
+								<SettingRow
+									icon={Magnet}
+									title="Snap to guides"
+									description="Snaps drag movement to page and node guides."
+									note="Hold Alt while dragging to invert the current mode."
+									checked={snapEnabled}
+									onCheckedChange={onSnapEnabledChange}
+								/>
+							</section>
 
-            <section ref={fontsRef} className="editor-border-subtle border-b py-6">
-              <SectionHeading
-                eyebrow="Fonts"
-                title="Document font library"
-                description="Manage available families, favorites, and cleanup for this document."
-              />
-              <ManageFontsPanel
-                document={document}
-                onAddFont={onAddFont}
-                onRemoveFont={onRemoveFont}
-                onToggleFavorite={onToggleFontFavorite}
-                onPurgeUnused={onPurgeUnusedFonts}
-              />
-            </section>
+							<section
+								ref={fontsRef}
+								className="editor-border-subtle border-b py-6"
+							>
+								<SectionHeading
+									eyebrow="Fonts"
+									title="Document font library"
+									description="Manage available families, favorites, and cleanup for this document."
+								/>
+								<ManageFontsPanel
+									document={document}
+									onAddFont={onAddFont}
+									onRemoveFont={onRemoveFont}
+									onToggleFavorite={onToggleFontFavorite}
+									onPurgeUnused={onPurgeUnusedFonts}
+								/>
+							</section>
 
-            <section ref={transferRef} className="editor-border-subtle border-b py-6">
-              <SectionHeading
-                eyebrow="Import / Export"
-                title="Document transfer"
-                description="Import JSON or export the current document as JSON or a rendered site ZIP."
-              />
-              <PlainGroup title="Export">
-                <div className="space-y-4">
-                  <TransferSubsection
-                    title="Base file name"
-                    description="Used for fallback downloads and as the suggested native save name. JSON exports use `.json`; rendered site exports use `.zip`."
-                  >
-                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_280px] sm:items-center">
-                    <Input
-                      value={exportFileName}
-                      onChange={(event) => setExportFileName(event.target.value)}
-                      placeholder={DEFAULT_EXPORT_BASENAME}
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  </TransferSubsection>
+							<section
+								ref={transferRef}
+								className="editor-border-subtle border-b py-6"
+							>
+								<SectionHeading
+									eyebrow="Import / Export"
+									title="Document transfer"
+									description="Import JSON or export the current document as JSON or a rendered site ZIP."
+								/>
+								<PlainGroup title="Export">
+									<div className="space-y-4">
+										<TransferSubsection
+											title="Base file name"
+											description="Used for fallback downloads and as the suggested native save name. JSON exports use `.json`; rendered site exports use `.zip`."
+										>
+											<div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_280px] sm:items-center">
+												<Input
+													value={exportFileName}
+													onChange={(event) =>
+														setExportFileName(event.target.value)
+													}
+													placeholder={DEFAULT_EXPORT_BASENAME}
+													className="h-9 text-sm"
+												/>
+											</div>
+										</TransferSubsection>
 
-                  <TransferSubsection
-                    title="Document JSON"
-                    description="Model export for re-importing into the editor."
-                  >
-                    <ActionRow
-                      icon={FileDown}
-                      title="Save JSON"
-                      description="Uses the browser save picker when available, otherwise downloads a `.json` file."
-                      actions={
-                        <Button type="button" variant="outline" size="sm" onClick={handleSaveExport}>
-                          Save JSON
-                        </Button>
-                      }
-                    />
-                    <ActionRow
-                      icon={Clipboard}
-                      title="Copy JSON"
-                      description="Copies the current document model to the clipboard."
-                      actions={
-                        <Button type="button" variant="outline" size="sm" onClick={handleCopyExport}>
-                          Copy JSON
-                        </Button>
-                      }
-                    />
-                  </TransferSubsection>
+										<TransferSubsection
+											title="Document JSON"
+											description="Model export for re-importing into the editor."
+										>
+											<ActionRow
+												icon={FileDown}
+												title="Save JSON"
+												description="Uses the browser save picker when available, otherwise downloads a `.json` file."
+												actions={
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={handleSaveExport}
+													>
+														Save JSON
+													</Button>
+												}
+											/>
+											<ActionRow
+												icon={Clipboard}
+												title="Copy JSON"
+												description="Copies the current document model to the clipboard."
+												actions={
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={handleCopyExport}
+													>
+														Copy JSON
+													</Button>
+												}
+											/>
+										</TransferSubsection>
 
-                  <TransferSubsection
-                    title="Rendered Site"
-                    description="Generated site structure export for hosting or SSR."
-                  >
-                    <ActionRow
-                      icon={FileDown}
-                      title="Save site ZIP"
-                      description="Exports the rendered site as one ZIP archive containing the generated HTML and CSS bundle."
-                      actions={
-                        <Button type="button" variant="outline" size="sm" onClick={handleSaveSiteZip}>
-                          Save Site ZIP
-                        </Button>
-                      }
-                    />
-                  </TransferSubsection>
-                </div>
-                <StatusMessage result={exportStatus} fallback="Exports include document JSON or a rendered site ZIP containing separate HTML and CSS files." />
-              </PlainGroup>
+										<TransferSubsection
+											title="Rendered Site"
+											description="Generated site structure export for hosting or SSR."
+										>
+											<ActionRow
+												icon={FileDown}
+												title="Save site ZIP"
+												description="Exports the rendered site as one ZIP archive containing the generated HTML and CSS bundle."
+												actions={
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={handleSaveSiteZip}
+													>
+														Save Site ZIP
+													</Button>
+												}
+											/>
+										</TransferSubsection>
+									</div>
+									<StatusMessage
+										result={exportStatus}
+										fallback="Exports include document JSON or a rendered site ZIP containing separate HTML and CSS files."
+									/>
+								</PlainGroup>
 
-              <PlainGroup title="Import" className="mt-6">
-                <TransferSubsection
-                  title="Document JSON"
-                  description="Bring a saved document model back into the editor."
-                >
-                  <ActionRow
-                    icon={FileUp}
-                    title="Import from file"
-                    description="Replaces the current document from a JSON file."
-                    actions={
-                      <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                        Choose file
-                      </Button>
-                    }
-                  />
-                  <ActionRow
-                    icon={Clipboard}
-                    title="Paste from clipboard"
-                    description="Pastes JSON into the import editor."
-                    actions={
-                      <Button type="button" variant="outline" size="sm" onClick={handlePasteFromClipboard}>
-                        Paste
-                      </Button>
-                    }
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".json,application/json"
-                    className="hidden"
-                    onChange={handleFileSelection}
-                  />
-                  <div className="editor-border-subtle mt-4 border-t pt-4">
-                    <div className="editor-text-muted mb-2 text-xs font-medium">Imported JSON</div>
-                    <Textarea
-                      value={importBuffer}
-                      onChange={(event) => setImportBuffer(event.target.value)}
-                      placeholder="Paste exported document JSON here."
-                      className="min-h-[220px] rounded-lg font-mono text-xs leading-5"
-                    />
-                    <div className="mt-3 flex items-start justify-between gap-3">
-                      <div className="editor-text-muted max-w-[420px] text-xs leading-5">
-                        Import validates, normalizes, replaces the active document, and supports undo.
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="shrink-0"
-                        onClick={handleImportBuffer}
-                        disabled={importBuffer.trim().length === 0}
-                      >
-                        <ArrowUpFromLine className="h-4 w-4" />
-                        Import JSON
-                      </Button>
-                    </div>
-                  </div>
-                </TransferSubsection>
-                <StatusMessage result={importStatus} fallback="Invalid JSON leaves the current stage unchanged." />
-              </PlainGroup>
-            </section>
+								<PlainGroup title="Import" className="mt-6">
+									<TransferSubsection
+										title="Document JSON"
+										description="Bring a saved document model back into the editor."
+									>
+										<ActionRow
+											icon={FileUp}
+											title="Import from file"
+											description="Replaces the current document from a JSON file."
+											actions={
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={() => fileInputRef.current?.click()}
+												>
+													Choose file
+												</Button>
+											}
+										/>
+										<ActionRow
+											icon={Clipboard}
+											title="Paste from clipboard"
+											description="Pastes JSON into the import editor."
+											actions={
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={handlePasteFromClipboard}
+												>
+													Paste
+												</Button>
+											}
+										/>
+										<input
+											ref={fileInputRef}
+											type="file"
+											accept=".json,application/json"
+											className="hidden"
+											onChange={handleFileSelection}
+										/>
+										<div className="editor-border-subtle mt-4 border-t pt-4">
+											<div className="editor-text-muted mb-2 text-xs font-medium">
+												Imported JSON
+											</div>
+											<Textarea
+												value={importBuffer}
+												onChange={(event) =>
+													setImportBuffer(event.target.value)
+												}
+												placeholder="Paste exported document JSON here."
+												className="min-h-[220px] rounded-lg font-mono text-xs leading-5"
+											/>
+											<div className="mt-3 flex items-start justify-between gap-3">
+												<div className="editor-text-muted max-w-[420px] text-xs leading-5">
+													Import validates, normalizes, replaces the active
+													document, and supports undo.
+												</div>
+												<Button
+													type="button"
+													size="sm"
+													className="shrink-0"
+													onClick={handleImportBuffer}
+													disabled={importBuffer.trim().length === 0}
+												>
+													<ArrowUpFromLine className="h-4 w-4" />
+													Import JSON
+												</Button>
+											</div>
+										</div>
+									</TransferSubsection>
+									<StatusMessage
+										result={importStatus}
+										fallback="Invalid JSON leaves the current stage unchanged."
+									/>
+								</PlainGroup>
+							</section>
 
-            <section ref={advancedRef} className="editor-border-subtle border-b py-6">
-              <SectionHeading
-                eyebrow="Advanced"
-                title="Editing behavior"
-                description="History and reset tools."
-              />
-              <NumericRow
-                title="Undo retention"
-                description={`Current stack: ${undoDepth} undo / ${redoDepth} redo`}
-                value={historyLimit}
-                onChange={onHistoryLimitChange}
-              />
-              <ActionRow
-                title="Clear undo history"
-                description="Clears undo and redo without changing the document."
-                actions={
-                  <div className="flex w-full justify-end">
-                    <Button type="button" variant="outline" size="sm" className="w-[120px]" onClick={onClearHistory}>
-                      Clear
-                    </Button>
-                  </div>
-                }
-                actionsClassName="sm:min-w-[248px]"
-              />
-              <ActionRow
-                title="Reset stage"
-                description="Reset document data, or reset document data plus editor preferences."
-                actions={
-                  <div className="flex w-full flex-col gap-2 sm:flex-row">
-                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={onResetData}>
-                      Reset data
-                    </Button>
-                    <Button type="button" variant="destructive" size="sm" className="flex-1" onClick={onResetAll}>
-                      Reset all
-                    </Button>
-                  </div>
-                }
-                actionsClassName="sm:min-w-[248px]"
-              />
-            </section>
+							<section
+								ref={advancedRef}
+								className="editor-border-subtle border-b py-6"
+							>
+								<SectionHeading
+									eyebrow="Advanced"
+									title="Editing behavior"
+									description="History and reset tools."
+								/>
+								<NumericRow
+									title="Undo retention"
+									description={`Current stack: ${undoDepth} undo / ${redoDepth} redo`}
+									value={historyLimit}
+									onChange={onHistoryLimitChange}
+								/>
+								<ActionRow
+									title="Clear undo history"
+									description="Clears undo and redo without changing the document."
+									actions={
+										<div className="flex w-full justify-end">
+											<Button
+												type="button"
+												variant="outline"
+												size="sm"
+												className="w-[120px]"
+												onClick={onClearHistory}
+											>
+												Clear
+											</Button>
+										</div>
+									}
+									actionsClassName="sm:min-w-[248px]"
+								/>
+								<ActionRow
+									title="Reset stage"
+									description="Reset document data, or reset document data plus editor preferences."
+									actions={
+										<div className="flex w-full flex-col gap-2 sm:flex-row">
+											<Button
+												type="button"
+												variant="outline"
+												size="sm"
+												className="flex-1"
+												onClick={onResetData}
+											>
+												Reset data
+											</Button>
+											<Button
+												type="button"
+												variant="destructive"
+												size="sm"
+												className="flex-1"
+												onClick={onResetAll}
+											>
+												Reset all
+											</Button>
+										</div>
+									}
+									actionsClassName="sm:min-w-[248px]"
+								/>
+							</section>
 
-            <section ref={diagnosticsRef} className="py-6">
-              <DiagnosticsSection
-                errors={errors}
-                stickyLayout={stickyLayout}
-                selectedNode={selectedNode}
-              />
-            </section>
+							<section ref={diagnosticsRef} className="py-6">
+								<DiagnosticsSection
+									errors={errors}
+									stickyLayout={stickyLayout}
+									selectedNode={selectedNode}
+								/>
+							</section>
 
-            <section ref={shortcutsRef} className="editor-border-subtle border-t py-6">
-              <SectionHeading
-                eyebrow="Shortcuts"
-                title="Keyboard and pointer reference"
-                description="The same guide opened by the question-mark shortcut."
-              />
-              <ShortcutHelpContent compact />
-            </section>
-          </div>
-        </div>
-      </div>
-      </div>
-    </div>
-  );
+							<section
+								ref={shortcutsRef}
+								className="editor-border-subtle border-t py-6"
+							>
+								<SectionHeading
+									eyebrow="Shortcuts"
+									title="Keyboard and pointer reference"
+									description="The same guide opened by the question-mark shortcut."
+								/>
+								<ShortcutHelpContent compact />
+							</section>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }
 
 const DiagnosticsSection = memo(function DiagnosticsSection({
-  errors,
-  stickyLayout,
-  selectedNode,
+	errors,
+	stickyLayout,
+	selectedNode,
 }: {
-  errors: string[];
-  stickyLayout: StickyLayoutState;
-  selectedNode: DocumentNode | null;
+	errors: string[];
+	stickyLayout: StickyLayoutState;
+	selectedNode: DocumentNode | null;
 }) {
-  const hasStickyRegistrations = Object.values(stickyLayout).length > 0;
+	const hasStickyRegistrations = Object.values(stickyLayout).length > 0;
 
-  return (
-    <>
-      <SectionHeading
-        eyebrow="Debug Info"
-        title="Validation and sticky math"
-        description="Validation and computed sticky ranges."
-      />
-      <PlainGroup title="Validation">
-        <div className="editor-text-muted space-y-2 text-sm">
-          {errors.length === 0 ? <p>No errors.</p> : errors.map((error) => <p key={error}>{error}</p>)}
-        </div>
-      </PlainGroup>
+	return (
+		<>
+			<SectionHeading
+				eyebrow="Debug Info"
+				title="Validation and sticky math"
+				description="Validation and computed sticky ranges."
+			/>
+			<PlainGroup title="Validation">
+				<div className="editor-text-muted space-y-2 text-sm">
+					{errors.length === 0 ? (
+						<p>No errors.</p>
+					) : (
+						errors.map((error) => <p key={error}>{error}</p>)
+					)}
+				</div>
+			</PlainGroup>
 
-      <div className="mt-6">
-        <div className="editor-text-strong mb-3 text-sm font-medium">Sticky math</div>
-        {hasStickyRegistrations ? (
-          <div className="editor-text-muted space-y-3 text-xs">
-            {Object.values(stickyLayout).map((entry) => (
-              <div key={entry.wrapperId} className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-3">
-                <div className="editor-text-strong font-medium">{entry.wrapperId}</div>
-                <div className="mt-1">extra extent: {Math.round(entry.totalExtraExtentPx)}px</div>
-                <div className="mt-2 space-y-1">
-                  {entry.registrations.map((registration) => (
-                    <div key={registration.ownerId}>
-                      {registration.ownerId}: start {Math.round(registration.startPx)}px, end{' '}
-                      {Math.round(registration.endPx)}px, overflow {Math.round(registration.extentPx)}px
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="editor-text-muted text-sm">No sticky registrations.</div>
-        )}
-      </div>
+			<div className="mt-6">
+				<div className="editor-text-strong mb-3 text-sm font-medium">
+					Sticky math
+				</div>
+				{hasStickyRegistrations ? (
+					<div className="editor-text-muted space-y-3 text-xs">
+						{Object.values(stickyLayout).map((entry) => (
+							<div
+								key={entry.wrapperId}
+								className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-3"
+							>
+								<div className="editor-text-strong font-medium">
+									{entry.wrapperId}
+								</div>
+								<div className="mt-1">
+									extra extent: {Math.round(entry.totalExtraExtentPx)}px
+								</div>
+								<div className="mt-2 space-y-1">
+									{entry.registrations.map((registration) => (
+										<div key={registration.ownerId}>
+											{registration.ownerId}: start{" "}
+											{Math.round(registration.startPx)}px, end{" "}
+											{Math.round(registration.endPx)}px, overflow{" "}
+											{Math.round(registration.extentPx)}px
+										</div>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+				) : (
+					<div className="editor-text-muted text-sm">
+						No sticky registrations.
+					</div>
+				)}
+			</div>
 
-      {selectedNode && selectedNode.type !== 'site' ? (
-        <div className="mt-6">
-          <div className="editor-text-strong mb-3 text-sm font-medium">Selected node</div>
-          <div className="grid gap-3 md:grid-cols-3">
-            <MetricCell label="Width" value={formatValue(selectedNode.rect.width.base.parsed)} />
-            <MetricCell label="Height" value={formatValue(selectedNode.rect.height.base.parsed)} />
-            <MetricCell
-              label="Duration"
-              value={
-                selectedNode.sticky
-                  ? selectedNode.sticky.durationMode === 'auto'
-                    ? 'auto'
-                    : `${formatValue(selectedNode.sticky.duration.parsed)} · top ${formatValue(
-                        (selectedNode.sticky.durationTop ?? selectedNode.sticky.duration).parsed,
-                      )} · bottom ${formatValue(
-                        (selectedNode.sticky.durationBottom ?? selectedNode.sticky.duration).parsed,
-                      )}`
-                  : 'not sticky'
-              }
-            />
-          </div>
-        </div>
-      ) : null}
-    </>
-  );
+			{selectedNode && selectedNode.type !== "site" ? (
+				<div className="mt-6">
+					<div className="editor-text-strong mb-3 text-sm font-medium">
+						Selected node
+					</div>
+					<div className="grid gap-3 md:grid-cols-3">
+						<MetricCell
+							label="Width"
+							value={formatValue(selectedNode.rect.width.base.parsed)}
+						/>
+						<MetricCell
+							label="Height"
+							value={formatValue(selectedNode.rect.height.base.parsed)}
+						/>
+						<MetricCell
+							label="Duration"
+							value={
+								selectedNode.sticky
+									? selectedNode.sticky.durationMode === "auto"
+										? "auto"
+										: `${formatValue(selectedNode.sticky.duration.parsed)} · top ${formatValue(
+												(
+													selectedNode.sticky.durationTop ??
+													selectedNode.sticky.duration
+												).parsed,
+											)} · bottom ${formatValue(
+												(
+													selectedNode.sticky.durationBottom ??
+													selectedNode.sticky.duration
+												).parsed,
+											)}`
+									: "not sticky"
+							}
+						/>
+					</div>
+				</div>
+			) : null}
+		</>
+	);
 });
 
-
 function getSiteTitle(fileName: string) {
-  const trimmed = fileName.trim();
-  if (!trimmed) {
-    return 'Sticky Playground Site';
-  }
-  return trimmed.replace(/\.[a-z0-9]+$/i, '') || 'Sticky Playground Site';
+	const trimmed = fileName.trim();
+	if (!trimmed) {
+		return "Sticky Playground Site";
+	}
+	return trimmed.replace(/\.[a-z0-9]+$/i, "") || "Sticky Playground Site";
 }
