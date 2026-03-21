@@ -27,20 +27,22 @@ export function HoverColorField({
   const resolvedFallback = showOpacity ? fallback : forceOpaqueColorValue(fallback) || '#ffffff';
 
   return (
-    <div className="relative flex justify-end">
-      <ColorPicker
-        value={resolvedValue}
-        fallback={resolvedFallback}
-        allowAlpha={showOpacity}
-        ariaLabel={ariaLabel}
-        className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm"
-        onChange={(nextValue) => onChange(showOpacity ? nextValue : forceOpaqueColorValue(nextValue) || resolvedFallback)}
-      />
-      {mixed ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="h-0.5 w-3 rounded-full bg-white/95 shadow-[0_0_0_1px_rgba(18,32,51,0.24)]" />
-        </div>
-      ) : null}
+    <div className="flex justify-end">
+      <div className="relative">
+        <ColorPicker
+          value={resolvedValue}
+          fallback={resolvedFallback}
+          allowAlpha={showOpacity}
+          ariaLabel={ariaLabel}
+          className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm"
+          onChange={(nextValue) => onChange(showOpacity ? nextValue : forceOpaqueColorValue(nextValue) || resolvedFallback)}
+        />
+        {mixed ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="h-0.5 w-3 rounded-full bg-white/95 shadow-[0_0_0_1px_rgba(18,32,51,0.24)]" />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

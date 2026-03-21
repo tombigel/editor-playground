@@ -157,10 +157,10 @@ function SwitchDemo() {
 							<Switch
 								checked={false}
 								onCheckedChange={() => {}}
-								className="bg-slate-400 data-[state=unchecked]:bg-slate-400"
+								className="bg-slate-400 data-[state=unchecked]:bg-slate-400 [&>[data-ui=switch-thumb]]:translate-x-[0.47rem]"
 							/>
 							<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-								<span className="h-0.5 w-3 rounded-full bg-white" />
+								<span className="h-0.5 w-2 rounded-full bg-white shadow-[0_0_0_1px_rgba(18,32,51,0.15)]" />
 							</div>
 						</div>
 					),
