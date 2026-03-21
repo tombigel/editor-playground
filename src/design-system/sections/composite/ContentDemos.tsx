@@ -33,7 +33,7 @@ export function ContentDemos() {
 								Text
 							</div>
 							<FormField label="Text">
-								<Textarea value={mockTextLeaf.content} onChange={() => {}} />
+								<Textarea value={(mockTextLeaf as { content: string }).content} onChange={() => {}} />
 							</FormField>
 						</div>
 						<div className="w-[300px] space-y-2.5">
@@ -41,7 +41,7 @@ export function ContentDemos() {
 								Link
 							</div>
 							<FormField label="Label">
-								<Input value={mockLinkLeaf.label} onChange={() => {}} />
+								<Input value={(mockLinkLeaf as { label: string }).label} onChange={() => {}} />
 							</FormField>
 							<NavigationFields
 								document={mockDocument}
@@ -54,10 +54,10 @@ export function ContentDemos() {
 								Image
 							</div>
 							<FormField label="Src">
-								<Input value={mockImageLeaf.src ?? ""} onChange={() => {}} />
+								<Input value={(mockImageLeaf as { src?: string }).src ?? ""} onChange={() => {}} />
 							</FormField>
 							<FormField label="Alt">
-								<Input value={mockImageLeaf.alt ?? ""} onChange={() => {}} />
+								<Input value={(mockImageLeaf as { alt?: string }).alt ?? ""} onChange={() => {}} />
 							</FormField>
 						</div>
 					</div>

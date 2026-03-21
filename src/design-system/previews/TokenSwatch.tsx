@@ -10,6 +10,7 @@ export function TokenSwatch({
 	const ref = useRef<HTMLDivElement>(null);
 	const [computed, setComputed] = useState("");
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: themeKey triggers re-read of computed styles when theme changes
 	useEffect(() => {
 		if (!ref.current) {
 			return;

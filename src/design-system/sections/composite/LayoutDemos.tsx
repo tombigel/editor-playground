@@ -188,6 +188,7 @@ export function LayoutDemos() {
 								label="Position Forward"
 								shortcut="Mod+]"
 								onClick={() => {}}
+								disabled={false}
 							>
 								<ArrowBigUp className="h-4 w-4" />
 							</OrderIconButton>
@@ -195,6 +196,7 @@ export function LayoutDemos() {
 								label="Bring to Front"
 								shortcut="Mod+Shift+]"
 								onClick={() => {}}
+								disabled={false}
 							>
 								<ArrowBigUpDash className="h-4 w-4" />
 							</OrderIconButton>
@@ -202,6 +204,7 @@ export function LayoutDemos() {
 								label="Position Backward"
 								shortcut="Mod+["
 								onClick={() => {}}
+								disabled={false}
 							>
 								<ArrowBigDown className="h-4 w-4" />
 							</OrderIconButton>
@@ -209,6 +212,7 @@ export function LayoutDemos() {
 								label="Send to Back"
 								shortcut="Mod+Shift+["
 								onClick={() => {}}
+								disabled={false}
 							>
 								<ArrowBigDownDash className="h-4 w-4" />
 							</OrderIconButton>

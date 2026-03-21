@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
 	RangeField,
-	SizeInlineField,
 	StickyOffsetBandField,
 } from "@/panels/InspectorControls";
 import { ComponentPreview } from "../../previews/ComponentPreview";
