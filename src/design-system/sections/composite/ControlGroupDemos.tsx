@@ -145,8 +145,31 @@ export function ControlGroupDemos() {
 					},
 				]}
 			>
-				<div className="w-[300px]">
+				<div className="w-[300px] space-y-6">
 					<BorderControlDemo />
+					{/* Multi-select (mixed) */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+							Multi-select
+						</div>
+						<div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
+							<Label className="mt-2 text-[11px] font-medium">Border</Label>
+							<BorderControlGroup
+								nodeId="demo-mixed"
+								colorValue="#d8e0ea"
+								widthValue="1px"
+								radiusValue=""
+								onColorChange={() => {}}
+								onWidthChange={() => {}}
+								onRadiusChange={() => {}}
+								radiusPlaceholder="-"
+							/>
+						</div>
+						<p className="editor-text-muted mt-2 text-[10px] leading-relaxed">
+							In multi-select the radius NumericUnitInlineField shows a "-"
+							placeholder when values differ across selected nodes.
+						</p>
+					</div>
 				</div>
 			</ComponentPreview>
 		</>

@@ -142,18 +142,43 @@ function FontPickerDemo() {
 function SelectDemo() {
 	const [value, setValue] = useState("air");
 	return (
-		<div className="w-[200px]">
-			<Select value={value} onValueChange={setValue}>
-				<SelectTrigger aria-label="Select demo">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value="air">Air</SelectItem>
-					<SelectItem value="paper">Paper</SelectItem>
-					<SelectItem value="midday">Midday</SelectItem>
-					<SelectItem value="clarity">Clarity</SelectItem>
-				</SelectContent>
-			</Select>
+		<div className="space-y-6">
+			<div className="w-[200px]">
+				<Select value={value} onValueChange={setValue}>
+					<SelectTrigger aria-label="Select demo">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="air">Air</SelectItem>
+						<SelectItem value="paper">Paper</SelectItem>
+						<SelectItem value="midday">Midday</SelectItem>
+						<SelectItem value="clarity">Clarity</SelectItem>
+					</SelectContent>
+				</Select>
+			</div>
+			{/* Multi-select (mixed) */}
+			<div>
+				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+					Multi-select
+				</div>
+				<div className="w-[200px]">
+					<Select value="__mixed__" onValueChange={() => {}}>
+						<SelectTrigger
+							aria-label="Select demo mixed"
+							className="border-dashed"
+						>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="__mixed__">-</SelectItem>
+							<SelectItem value="air">Air</SelectItem>
+							<SelectItem value="paper">Paper</SelectItem>
+							<SelectItem value="midday">Midday</SelectItem>
+							<SelectItem value="clarity">Clarity</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+			</div>
 		</div>
 	);
 }

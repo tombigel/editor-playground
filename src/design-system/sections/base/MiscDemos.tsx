@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PopoverTooltip } from "@/components/ui/popover";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusMessage } from "@/panels/settings/SettingsShared";
@@ -45,33 +44,6 @@ const SWITCH_PROPS: PropDefinition[] = [
 		type: "boolean",
 		default: "false",
 		description: "Disabled state.",
-	},
-];
-
-const SLIDER_PROPS: PropDefinition[] = [
-	{ name: "value", type: "number[]", description: "Current value(s)." },
-	{
-		name: "min",
-		type: "number",
-		default: "0",
-		description: "Minimum value.",
-	},
-	{
-		name: "max",
-		type: "number",
-		default: "100",
-		description: "Maximum value.",
-	},
-	{
-		name: "step",
-		type: "number",
-		default: "1",
-		description: "Step increment.",
-	},
-	{
-		name: "onValueChange",
-		type: "(value: number[]) => void",
-		description: "Change handler.",
 	},
 ];
 
@@ -179,6 +151,21 @@ function SwitchDemo() {
 					),
 				},
 				{
+					label: "Mixed / Intermediate",
+					render: () => (
+						<div className="relative">
+							<Switch
+								checked={false}
+								onCheckedChange={() => {}}
+								className="bg-slate-400 data-[state=unchecked]:bg-slate-400"
+							/>
+							<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+								<span className="h-0.5 w-3 rounded-full bg-white" />
+							</div>
+						</div>
+					),
+				},
+				{
 					label: "Interactive (click)",
 					render: () => (
 						<Switch checked={checked} onCheckedChange={setChecked} />
@@ -186,29 +173,6 @@ function SwitchDemo() {
 				},
 			]}
 		/>
-	);
-}
-
-function SliderDemo() {
-	const [value, setValue] = useState([50]);
-	return (
-		<div>
-			<div className="editor-text-muted mb-2 text-[11px] font-medium">
-				Slider
-			</div>
-			<div className="w-full max-w-[300px] space-y-4">
-				<Slider
-					value={value}
-					onValueChange={setValue}
-					min={0}
-					max={100}
-					step={1}
-				/>
-				<div className="editor-text-muted text-center text-[11px]">
-					Value: {value[0]}
-				</div>
-			</div>
-		</div>
 	);
 }
 
@@ -266,6 +230,35 @@ function OptionsSelectorDemo() {
 						size="sm"
 						className="h-7 rounded-md px-2.5 text-[11px]"
 						onClick={() => setThreeOption("right")}
+					>
+						Right
+					</Button>
+				</div>
+			</div>
+			{/* Multi-select (mixed) */}
+			<div>
+				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+					Multi-select
+				</div>
+				<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border border-dashed p-1">
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-7 rounded-md border border-dashed px-2.5 text-[11px]"
+					>
+						Left
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-7 rounded-md px-2.5 text-[11px]"
+					>
+						Center
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-7 rounded-md px-2.5 text-[11px]"
 					>
 						Right
 					</Button>
@@ -336,17 +329,6 @@ export function MiscDemos() {
 				<SwitchDemo />
 			</ComponentPreview>
 
-			{/* Slider */}
-			<ComponentPreview
-				id="base-slider-basic"
-				name="Slider"
-				description="Range slider based on Radix UI."
-				sourceFile="src/components/ui/slider.tsx"
-				props={SLIDER_PROPS}
-			>
-				<SliderDemo />
-			</ComponentPreview>
-
 			{/* Options Selector */}
 			<ComponentPreview
 				id="base-options-selector"
@@ -369,6 +351,12 @@ export function MiscDemos() {
 				<div className="max-w-[300px] space-y-3">
 					<Textarea placeholder="Enter multi-line text…" rows={3} />
 					<Textarea disabled placeholder="Disabled" rows={3} />
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+							Multi-select (mixed)
+						</div>
+						<Textarea placeholder="-" rows={3} />
+					</div>
 				</div>
 			</ComponentPreview>
 
