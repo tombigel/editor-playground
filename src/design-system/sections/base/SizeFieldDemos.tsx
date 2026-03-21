@@ -128,7 +128,7 @@ export function SizeFieldDemos() {
 								}}
 							/>
 							<div
-								className="sticky-spacer-label"
+								className="sticky-spacer-label absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
 								style={{
 									background: "var(--editor-sticky-distance-label-background)",
 									color: "var(--editor-sticky-distance-label-text)",
@@ -169,7 +169,7 @@ export function SizeFieldDemos() {
 								}}
 							/>
 							<div
-								className="sticky-spacer-label"
+								className="sticky-spacer-label absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
 								style={{
 									background: "var(--editor-sticky-offset-label-background)",
 									color: "var(--editor-sticky-offset-label-text)",
@@ -209,7 +209,7 @@ export function SizeFieldDemos() {
 								}}
 							/>
 							<div
-								className="sticky-spacer-label sticky-spacer-label-auto"
+								className="sticky-spacer-label sticky-spacer-label-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
 								style={{
 									background: "var(--editor-sticky-auto-label-background)",
 									color: "var(--editor-sticky-auto-label-text)",

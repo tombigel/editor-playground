@@ -56,7 +56,7 @@ function ColorDemo() {
 			<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
 			<div className="flex gap-4">
 				<div>
-					<div className="editor-text-muted mb-1 text-[10px]">Opaque (mixed)</div>
+					<div className="editor-text-muted mb-1 text-[10px]">Opaque</div>
 					<HoverColorField
 						value="#1668ff"
 						onChange={() => {}}
@@ -66,7 +66,7 @@ function ColorDemo() {
 					/>
 				</div>
 				<div>
-					<div className="editor-text-muted mb-1 text-[10px]">With alpha (mixed)</div>
+					<div className="editor-text-muted mb-1 text-[10px]">With alpha</div>
 					<HoverColorField
 						value="rgba(22, 104, 255, 0.6)"
 						onChange={() => {}}
