@@ -4,8 +4,8 @@ import { DesignSystemNav } from "./DesignSystemNav";
 import { DesignSystemStage } from "./DesignSystemStage";
 import { DesignSystemThemePanel } from "./DesignSystemThemePanel";
 import { DS_SECTIONS } from "./registry";
-import { BaseComponentsSection } from "./sections/BaseComponentsSection";
-import { CompositeSection } from "./sections/CompositeSection";
+import { BaseComponentsSection } from "./sections/base";
+import { CompositeSection } from "./sections/composite";
 import { DesignTokensSection } from "./sections/DesignTokensSection";
 import { useDesignSystemTheme } from "./useDesignSystemTheme";
 

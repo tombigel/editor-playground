@@ -1,0 +1,191 @@
+import { useState } from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { FontPickerPopover } from "@/panels/InspectorControls";
+import type { DocumentFontFamily } from "../../../model/types";
+import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { PropDefinition } from "../../types";
+
+// ---------------------------------------------------------------------------
+// Prop definitions
+// ---------------------------------------------------------------------------
+
+const FONT_SELECTOR_PROPS: PropDefinition[] = [
+	{ name: "value", type: "string", description: "Selected font family name." },
+	{
+		name: "families",
+		type: "DocumentFontFamily[]",
+		description: "Available font families.",
+	},
+	{
+		name: "onChange",
+		type: "(value: string) => void",
+		description: "Selection change handler.",
+	},
+	{
+		name: "systemOptionValue",
+		type: "string",
+		description: "Value that represents the system/default font.",
+	},
+];
+
+const SELECT_PROPS: PropDefinition[] = [
+	{ name: "value", type: "string", description: "Selected value." },
+	{
+		name: "onValueChange",
+		type: "(value: string) => void",
+		description: "Change handler.",
+	},
+	{ name: "open", type: "boolean", description: "Open state (controlled)." },
+	{ name: "defaultOpen", type: "boolean", description: "Default open state." },
+];
+
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
+
+const MOCK_FONT_FAMILIES: DocumentFontFamily[] = [
+	{
+		family: "sans-serif",
+		category: "sans-serif",
+		subsets: ["latin"],
+		variants: ["400", "500", "600", "700"],
+	} as DocumentFontFamily,
+	{
+		family: "serif",
+		category: "serif",
+		subsets: ["latin"],
+		variants: ["300", "400", "500", "700"],
+	} as DocumentFontFamily,
+	{
+		family: "monospace",
+		category: "monospace",
+		subsets: ["latin"],
+		variants: ["400", "500", "700"],
+	} as DocumentFontFamily,
+	{
+		family: "cursive",
+		category: "display",
+		subsets: ["latin"],
+		variants: ["400", "700"],
+	} as DocumentFontFamily,
+];
+
+// ---------------------------------------------------------------------------
+// Interactive preview wrappers
+// ---------------------------------------------------------------------------
+
+function FontPickerDemo() {
+	return (
+		<div className="space-y-6">
+			<div style={{ width: 136 }}>
+				<FontPickerPopover
+					familyValue="sans-serif"
+					weightValue={400}
+					families={MOCK_FONT_FAMILIES}
+					systemOptionValue="__system__"
+					onFamilyChange={() => {}}
+					onWeightChange={() => {}}
+					className="w-full"
+					recentFamilyNames={[]}
+					onRecentFamiliesChange={() => {}}
+					previewStylesheetHref={null}
+				/>
+			</div>
+			{/* Multi-select (mixed) */}
+			<div>
+				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
+				<div className="flex gap-4">
+					<div style={{ width: 136 }}>
+						<div className="editor-text-muted mb-1 text-[10px]">Mixed family</div>
+						<FontPickerPopover
+							familyValue="sans-serif"
+							weightValue={400}
+							families={MOCK_FONT_FAMILIES}
+							systemOptionValue="__system__"
+							onFamilyChange={() => {}}
+							onWeightChange={() => {}}
+							className="w-full"
+							mixedFamily
+							recentFamilyNames={[]}
+							onRecentFamiliesChange={() => {}}
+							previewStylesheetHref={null}
+						/>
+					</div>
+					<div style={{ width: 136 }}>
+						<div className="editor-text-muted mb-1 text-[10px]">Mixed weight</div>
+						<FontPickerPopover
+							familyValue="sans-serif"
+							weightValue={400}
+							families={MOCK_FONT_FAMILIES}
+							systemOptionValue="__system__"
+							onFamilyChange={() => {}}
+							onWeightChange={() => {}}
+							className="w-full"
+							mixedWeight
+							recentFamilyNames={[]}
+							onRecentFamiliesChange={() => {}}
+							previewStylesheetHref={null}
+						/>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function SelectDemo() {
+	const [value, setValue] = useState("air");
+	return (
+		<div className="w-[200px]">
+			<Select value={value} onValueChange={setValue}>
+				<SelectTrigger aria-label="Select demo">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="air">Air</SelectItem>
+					<SelectItem value="paper">Paper</SelectItem>
+					<SelectItem value="midday">Midday</SelectItem>
+					<SelectItem value="clarity">Clarity</SelectItem>
+				</SelectContent>
+			</Select>
+		</div>
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Demos
+// ---------------------------------------------------------------------------
+
+export function FontControlDemos() {
+	return (
+		<>
+			{/* Font Picker */}
+			<ComponentPreview
+				id="base-font-selector"
+				name="Font Picker"
+				description="Font family dropdown and family + weight popover. Both share state — selecting a family in either updates both."
+				sourceFile="src/panels/InspectorControls.tsx"
+				props={FONT_SELECTOR_PROPS}
+			>
+				<FontPickerDemo />
+			</ComponentPreview>
+
+			{/* Dropdown (Select) */}
+			<ComponentPreview
+				id="base-select"
+				name="Dropdown (Select)"
+				description="Generic dropdown select based on Radix UI with PopoverSurface."
+				sourceFile="src/components/ui/select.tsx"
+				props={SELECT_PROPS}
+			>
+				<SelectDemo />
+			</ComponentPreview>
+		</>
+	);
+}
