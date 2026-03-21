@@ -7,10 +7,8 @@ import {
   BorderControlGroup,
   convertStageBorderRadiusToValue,
   convertStageSpacingToInput,
-  FontFamilySelect,
   FontPickerPopover,
   FontSizeField,
-  FontWeightSelect,
   HoverColorField,
   orderFontFamiliesForPicker,
   ShadowControlGroup,
@@ -87,55 +85,6 @@ describe('panels/InspectorControls', () => {
     expect(markup.match(/min="0"/g)?.length).toBeGreaterThanOrEqual(2);
     expect(markup).toContain('>px<');
     expect(markup.match(/data-ui="select-trigger"/g)?.length).toBe(1);
-  });
-
-  it('renders named font weight options with family preview styling', () => {
-    const markup = renderToStaticMarkup(
-      <FontWeightSelect
-        value={700}
-        familyName="Assistant"
-        options={[
-          { value: 300, label: 'Light' },
-          { value: 400, label: 'Normal' },
-          { value: 700, label: 'Bold' },
-        ]}
-        onChange={() => {}}
-      />,
-    );
-
-    expect(markup).toContain('Bold');
-    expect(markup).toContain('font-weight:700');
-    expect(markup).toContain("font-family:Assistant, system-ui, -apple-system, BlinkMacSystemFont, &#x27;Segoe UI&#x27;, sans-serif");
-    expect(markup).not.toContain('editor-text-muted truncate text-[10px]');
-  });
-
-  it('renders the font family menu as a larger single-line list', () => {
-    const markup = renderToStaticMarkup(
-      <FontFamilySelect
-        value="Assistant"
-        families={[
-          {
-            family: 'Assistant',
-            category: 'sans-serif',
-            subsets: ['hebrew', 'latin'],
-            variants: ['regular', '700'],
-            isVariable: false,
-            source: 'google-fonts',
-            favorite: false,
-            origin: 'added',
-          },
-        ]}
-        systemOptionValue="__system-font__"
-        onChange={() => {}}
-      />,
-    );
-
-    expect(markup).toContain('text-[13px]');
-    expect(markup).not.toContain('System default');
-    expect(markup).not.toContain('Browser fallback stack');
-    expect(markup).not.toContain('hebrew');
-    expect(markup).not.toContain('general');
-    expect(markup).not.toContain(' · ');
   });
 
   it('renders the combined font picker with nested family and weight lists', () => {

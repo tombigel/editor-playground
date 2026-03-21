@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-	AlertTriangle,
 	AlignCenter,
 	AlignCenterHorizontal,
 	AlignCenterVertical,
@@ -311,7 +310,6 @@ const SHADOW_ROLES = [
 ];
 
 const ICON_ENTRIES: Array<{ name: string; icon: LucideIcon }> = [
-	{ name: "AlertTriangle", icon: AlertTriangle },
 	{ name: "AlignCenter", icon: AlignCenter },
 	{ name: "AlignCenterHorizontal", icon: AlignCenterHorizontal },
 	{ name: "AlignCenterVertical", icon: AlignCenterVertical },

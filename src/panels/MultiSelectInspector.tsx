@@ -22,6 +22,7 @@ import {
   PilcrowRight,
   Settings2,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -30,9 +31,11 @@ import type { DocumentModel, DocumentNode } from '../api/editorApi';
 import {
   BOLD_FONT_WEIGHT,
   DEFAULT_FONT_WEIGHT,
+  buildFontPickerPreviewStylesheetHref,
   getDocumentFontFamily,
   isBoldFontWeight,
   listDocumentFontsForPicker,
+  listFontWeightOptions,
   resolveNearestSupportedFontWeight,
 } from '../api/fontApi';
 import type { BulkEditOperation } from '../app/types';
@@ -66,6 +69,8 @@ import {
 } from '../model/styleDefaults';
 import type { ShadowStyle } from '../model/types';
 import { offsetsFromDistanceAndAngle } from './InspectorControls';
+import { readRecentFontFamilies, writeRecentFontFamilies } from './inspector/fontPickerHelpers';
+import { useFontPreviewStylesheet } from './inspector/useFontPreviewStylesheet';
 import { MultiStickySection } from './MultiStickySection';
 import { resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
 
@@ -152,6 +157,28 @@ export function MultiSelectInspector({
     }),
   );
   const documentFonts = listDocumentFontsForPicker(document);
+
+  // Lifted state: recent fonts and preview stylesheet for multi-select font picker
+  const [recentFamilyNames, setRecentFamilyNames] = useState<string[]>(() => readRecentFontFamilies());
+  const hasTypographySection = textNodes.length >= 2;
+  const selectedFamily = fontFamilyState.mixed ? undefined : getDocumentFontFamily(document, fontFamilyState.value);
+  const activeWeightOptions = listFontWeightOptions(selectedFamily, fontWeightState.value ?? DEFAULT_FONT_WEIGHT);
+  const fontPreviewHref = useMemo(
+    () => hasTypographySection
+      ? buildFontPickerPreviewStylesheetHref({
+          families: documentFonts,
+          activeFamilyName: fontFamilyState.mixed ? undefined : fontFamilyState.value === SYSTEM_FONT_VALUE ? undefined : fontFamilyState.value,
+          activeWeights: activeWeightOptions.map((option) => option.value),
+        })
+      : null,
+    [activeWeightOptions, documentFonts, fontFamilyState, hasTypographySection],
+  );
+  useFontPreviewStylesheet(fontPreviewHref);
+
+  const handleRecentFamiliesChange = (families: string[]) => {
+    setRecentFamilyNames(families);
+    writeRecentFontFamilies(families);
+  };
 
   return (
     <div className="editor-scrollbar h-full overflow-auto">
@@ -254,6 +281,9 @@ export function MultiSelectInspector({
                     onFamilyChange={(value) => actions.onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
                     onWeightChange={(value) => actions.onTextChange('fontWeight', value)}
                     className="w-full"
+                    recentFamilyNames={recentFamilyNames}
+                    onRecentFamiliesChange={handleRecentFamiliesChange}
+                    previewStylesheetHref={fontPreviewHref}
                   />
                 </div>
                 <PopoverTooltip

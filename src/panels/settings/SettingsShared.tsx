@@ -1,9 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
-  AlertTriangle,
   Info,
   SlidersHorizontal,
+  TriangleAlert,
 } from 'lucide-react';
 import type { FocusedMode } from '../../api/editorApi';
 import { FOCUSED_MODE_VALUES, getFocusedModeLabel } from '../../editor/focusedModes';
@@ -237,7 +237,7 @@ export function StatusMessage({
           : 'border border-red-200 bg-red-50 text-red-700'
       }`}
     >
-      {result.ok ? null : <AlertTriangle className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />}
+      {result.ok ? null : <TriangleAlert className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />}
       {result.message}
     </div>
   );

@@ -1,4 +1,5 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useFontPreviewStylesheet } from '../inspector/useFontPreviewStylesheet';
 import { ChevronLeft, ChevronRight, Plus, RotateCcw, Star, Trash2 } from 'lucide-react';
 import type { DocumentFontFamily, DocumentModel } from '../../model/types';
 import {
@@ -110,7 +111,6 @@ export function ManageFontsPanel({
   onPurgeUnused,
 }: Props) {
   const { status, catalog, error, retry } = useGoogleFontsCatalog();
-  const previewLinkId = useId();
   const [filters, setFilters] = useState<StoredBrowseState>(() => readStoredBrowseState());
   const [catalogPage, setCatalogPage] = useState(1);
   const usageMap = useMemo(() => getDocumentFontUsageMap(document), [document]);
@@ -233,32 +233,7 @@ export function ManageFontsPanel({
     }
   }, [catalogPage, totalCatalogPages]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const existing = window.document.getElementById(previewLinkId) as HTMLLinkElement | null;
-    if (!previewHref) {
-      existing?.remove();
-      return;
-    }
-
-    if (existing) {
-      existing.href = previewHref;
-      return;
-    }
-
-    const link = window.document.createElement('link');
-    link.id = previewLinkId;
-    link.rel = 'stylesheet';
-    link.href = previewHref;
-    window.document.head.appendChild(link);
-
-    return () => {
-      link.remove();
-    };
-  }, [previewHref, previewLinkId]);
+  useFontPreviewStylesheet(previewHref);
 
   return (
     <div className="space-y-3">

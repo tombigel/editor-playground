@@ -363,10 +363,10 @@ const PAGER_PROPS: PropDefinition[] = [
 // ---------------------------------------------------------------------------
 
 /**
- * System font generic families — these don't trigger the picker's Google Fonts
- * stylesheet injection since they aren't real Google Font names.
- * TODO: switch to real Google Font names once FontPickerPopover side effects
- * are moved out of the component (see design-system-todo.md).
+ * System font generic families for the showcase demo.
+ * FontPickerPopover side effects have been moved to callers, so these could
+ * be switched to real Google Font names — but generic families work fine for
+ * demonstrating the picker UI without loading external stylesheets.
  */
 const MOCK_FONT_FAMILIES: DocumentFontFamily[] = [
 	{
@@ -875,6 +875,9 @@ function FontPickerDemo() {
 				onFamilyChange={() => {}}
 				onWeightChange={() => {}}
 				className="w-full"
+				recentFamilyNames={[]}
+				onRecentFamiliesChange={() => {}}
+				previewStylesheetHref={null}
 			/>
 		</div>
 	);

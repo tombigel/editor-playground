@@ -8,7 +8,10 @@ import {
   TextWrap,
   TriangleAlert,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { buildFontPickerPreviewStylesheetHref, listFontWeightOptions } from '../../../api/fontApi';
+import { useFontPreviewStylesheet } from '../useFontPreviewStylesheet';
+import { readRecentFontFamilies, writeRecentFontFamilies } from '../fontPickerHelpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -141,18 +144,40 @@ export function TypographyTextStyleFields({
   const currentFamily = node.style?.fontFamily ?? SYSTEM_FONT_VALUE;
   const selectedFamily = node.style?.fontFamily ? getDocumentFontFamily(document, node.style.fontFamily) : undefined;
 
+  // Lifted state: recent fonts and preview stylesheet
+  const [recentFamilyNames, setRecentFamilyNames] = useState<string[]>(() => readRecentFontFamilies());
+  const currentWeight = node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT;
+  const activeWeightOptions = listFontWeightOptions(selectedFamily, currentWeight);
+  const previewHref = useMemo(
+    () => buildFontPickerPreviewStylesheetHref({
+        families: documentFonts,
+        activeFamilyName: currentFamily === SYSTEM_FONT_VALUE ? undefined : currentFamily,
+        activeWeights: activeWeightOptions.map((option) => option.value),
+      }),
+    [activeWeightOptions, currentFamily, documentFonts],
+  );
+  useFontPreviewStylesheet(previewHref);
+
+  const handleRecentFamiliesChange = (families: string[]) => {
+    setRecentFamilyNames(families);
+    writeRecentFontFamilies(families);
+  };
+
   return (
     <>
       <InspectorInlineRow label="Font" controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`} controlClassName="gap-1">
           <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_PICKER_WIDTH_PX}px` }}>
             <FontPickerPopover
               familyValue={currentFamily}
-              weightValue={node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT}
+              weightValue={currentWeight}
               families={documentFonts}
               systemOptionValue={SYSTEM_FONT_VALUE}
               onFamilyChange={(value) => onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
               onWeightChange={(value) => onTextChange('fontWeight', value)}
               className="w-full"
+              recentFamilyNames={recentFamilyNames}
+              onRecentFamiliesChange={handleRecentFamiliesChange}
+              previewStylesheetHref={previewHref}
             />
           </div>
           <PopoverTooltip

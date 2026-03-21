@@ -160,6 +160,9 @@ function TextStyleFieldsDemo() {
 						onFamilyChange={() => {}}
 						onWeightChange={() => {}}
 						className="w-full"
+						recentFamilyNames={[]}
+						onRecentFamiliesChange={() => {}}
+						previewStylesheetHref={null}
 					/>
 				</div>
 				<Button

@@ -29,7 +29,6 @@ import { cn } from '@/lib/utils';
 import type { OrderedFontFamilyGroups } from './inspector/fontPickerHelpers';
 import {
   RECENT_FONT_FAMILIES_LIMIT,
-  applyPersistentSelectValueChange,
   orderFontFamiliesForPicker,
   readRecentFontFamilies,
   writeRecentFontFamilies,
@@ -107,142 +106,6 @@ const MINIMAL_UNIT_SUFFIX_WIDTH = 24;
 // React components
 // ---------------------------------------------------------------------------
 
-export function FontFamilySelect({
-  value,
-  families,
-  onChange,
-  mixed = false,
-  systemOptionValue,
-  systemLabel = 'Sans Serif',
-  className,
-  keepOpenOnSelect = false,
-}: {
-  value: string;
-  families: DocumentFontFamily[];
-  onChange: (value: string) => void;
-  mixed?: boolean;
-  systemOptionValue: string;
-  systemLabel?: string;
-  className?: string;
-  keepOpenOnSelect?: boolean;
-}) {
-  const activeLabel = value === systemOptionValue ? systemLabel : value;
-  const activeStyle = value !== systemOptionValue ? { fontFamily: buildFontFamilyStack(value) } : undefined;
-  const [open, setOpen] = useState(false);
-  const [recentFamilyNames, setRecentFamilyNames] = useState<string[]>(() => readRecentFontFamilies());
-  const orderedFamilies = useMemo(() => orderFontFamiliesForPicker(families, recentFamilyNames), [families, recentFamilyNames]);
-  const [frozenFamilies, setFrozenFamilies] = useState<OrderedFontFamilyGroups | null>(null);
-  const visibleFamilies = open ? (frozenFamilies ?? orderedFamilies) : orderedFamilies;
-
-  useEffect(() => {
-    if (!open) {
-      setFrozenFamilies(null);
-      return;
-    }
-    setFrozenFamilies((current) => current ?? orderedFamilies);
-  }, [open, orderedFamilies]);
-
-  return (
-    <Select
-      value={mixed ? undefined : value}
-      open={open}
-      onOpenChange={setOpen}
-      onValueChange={(nextValue) => {
-        if (nextValue !== systemOptionValue) {
-          setRecentFamilyNames((current) => {
-            const next = [nextValue, ...current.filter((familyName) => familyName !== nextValue)].slice(0, RECENT_FONT_FAMILIES_LIMIT);
-            writeRecentFontFamilies(next);
-            return next;
-          });
-        }
-        applyPersistentSelectValueChange({
-          nextValue,
-          keepOpenOnSelect,
-          onChange,
-          reopen: () => requestAnimationFrame(() => setOpen(true)),
-        });
-      }}
-    >
-      <SelectTrigger className={cn('h-8 min-w-0 rounded-sm text-[13px]', className)}>
-        {mixed ? (
-          <span>Mixed</span>
-        ) : (
-          <span className="min-w-0 truncate text-left" style={activeStyle}>
-            {activeLabel}
-          </span>
-        )}
-      </SelectTrigger>
-      <SelectContent className="max-h-[18rem]">
-        <SelectItem value={systemOptionValue} className="py-2">
-          <div className="min-w-0 truncate text-[13px] font-medium">{systemLabel}</div>
-        </SelectItem>
-        {visibleFamilies.recent.map((family) => (
-          <SelectItem key={family.family} value={family.family} className="py-2">
-            <div className="min-w-0 truncate text-[13px] font-medium" style={{ fontFamily: buildFontFamilyStack(family.family) }}>
-              {family.family}
-            </div>
-          </SelectItem>
-        ))}
-        {visibleFamilies.recent.length > 0 && visibleFamilies.byLanguage.length > 0 ? <SelectSeparator /> : null}
-        {visibleFamilies.byLanguage.map((family) => (
-          <SelectItem key={family.family} value={family.family} className="py-2">
-            <div className="min-w-0 truncate text-[13px] font-medium" style={{ fontFamily: buildFontFamilyStack(family.family) }}>
-              {family.family}
-            </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
-export function FontWeightSelect({
-  value,
-  options,
-  onChange,
-  familyName,
-  mixed = false,
-  className,
-}: {
-  value: number;
-  options: { value: number; label: string }[];
-  onChange: (value: string) => void;
-  familyName?: string;
-  mixed?: boolean;
-  className?: string;
-}) {
-  const activeOption = options.find((option) => option.value === value) ?? options[0];
-  const familyStack = familyName ? buildFontFamilyStack(familyName) : undefined;
-
-  return (
-    <Select value={mixed ? undefined : String(value)} onValueChange={onChange}>
-      <SelectTrigger className={cn('h-8 rounded-sm text-[11px]', className)}>
-        {mixed ? (
-          <span>Mixed</span>
-        ) : (
-          <span style={familyStack ? { fontFamily: familyStack, fontWeight: activeOption?.value ?? value } : undefined}>
-            {activeOption?.label ?? value}
-          </span>
-        )}
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={String(option.value)} className="py-2">
-            <div className="min-w-0">
-              <div
-                className="truncate text-[13px] leading-5"
-                style={familyStack ? { fontFamily: familyStack, fontWeight: option.value } : { fontWeight: option.value }}
-              >
-                {option.label}
-              </div>
-            </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
 export const FontPickerPopover = memo(function FontPickerPopover({
   familyValue,
   weightValue,
@@ -255,6 +118,9 @@ export const FontPickerPopover = memo(function FontPickerPopover({
   defaultOpen = false,
   mixedFamily = false,
   mixedWeight = false,
+  recentFamilyNames: externalRecentFamilies,
+  onRecentFamiliesChange,
+  previewStylesheetHref: externalPreviewHref,
 }: {
   familyValue: string;
   weightValue: number;
@@ -267,10 +133,19 @@ export const FontPickerPopover = memo(function FontPickerPopover({
   defaultOpen?: boolean;
   mixedFamily?: boolean;
   mixedWeight?: boolean;
+  /** When provided, the picker uses this list instead of reading localStorage. */
+  recentFamilyNames?: string[];
+  /** Called when the recent families list changes (selection). Caller is responsible for persistence. */
+  onRecentFamiliesChange?: (families: string[]) => void;
+  /** When provided, the picker skips its own stylesheet injection. Caller manages the preview link. */
+  previewStylesheetHref?: string | null;
 }) {
+  const managedRecent = externalRecentFamilies === undefined;
   const [open, setOpen] = useState(defaultOpen);
-  const [recentFamilyNames, setRecentFamilyNames] = useState<string[]>(() => readRecentFontFamilies());
-  const orderedFamilies = useMemo(() => orderFontFamiliesForPicker(families, recentFamilyNames), [families, recentFamilyNames]);
+  const [internalRecentFamilies, setInternalRecentFamilies] = useState<string[]>(() => managedRecent ? readRecentFontFamilies() : []);
+  const recentFamilyNamesResolved = externalRecentFamilies ?? internalRecentFamilies;
+  const setRecentFamilyNames = managedRecent ? setInternalRecentFamilies : (_updater: (current: string[]) => string[]) => {};
+  const orderedFamilies = useMemo(() => orderFontFamiliesForPicker(families, recentFamilyNamesResolved), [families, recentFamilyNamesResolved]);
   const [frozenFamilies, setFrozenFamilies] = useState<OrderedFontFamilyGroups | null>(null);
   const visibleFamilies = open ? (frozenFamilies ?? orderedFamilies) : orderedFamilies;
   const [activeFamilyValue, setActiveFamilyValue] = useState(familyValue);
@@ -428,7 +303,13 @@ export const FontPickerPopover = memo(function FontPickerPopover({
     setPopoverStyle((current) => ({ ...current, visibility: 'hidden' }));
   }, [open]);
 
+  // When the caller provides previewStylesheetHref, they own the <link> element.
+  // Otherwise, manage it internally (legacy behavior).
   useEffect(() => {
+    if (externalPreviewHref !== undefined) {
+      return; // Caller manages the stylesheet.
+    }
+
     if (typeof window === 'undefined') {
       return;
     }
@@ -453,18 +334,26 @@ export const FontPickerPopover = memo(function FontPickerPopover({
     return () => {
       link.remove();
     };
-  }, [previewHref, previewLinkId]);
+  }, [externalPreviewHref, previewHref, previewLinkId]);
 
   function rememberRecentFontFamily(nextValue: string) {
     if (nextValue === systemOptionValue) {
       return;
     }
 
-    setRecentFamilyNames((current) => {
-      const next = [nextValue, ...current.filter((familyName) => familyName !== nextValue)].slice(0, RECENT_FONT_FAMILIES_LIMIT);
-      writeRecentFontFamilies(next);
-      return next;
-    });
+    const computeNext = (current: string[]) =>
+      [nextValue, ...current.filter((familyName) => familyName !== nextValue)].slice(0, RECENT_FONT_FAMILIES_LIMIT);
+
+    if (onRecentFamiliesChange) {
+      const next = computeNext(recentFamilyNamesResolved);
+      onRecentFamiliesChange(next);
+    } else {
+      setRecentFamilyNames((current) => {
+        const next = computeNext(current);
+        writeRecentFontFamilies(next);
+        return next;
+      });
+    }
   }
   function focusFamilyOptionAt(index: number) {
     const clampedIndex = Math.max(0, Math.min(familyOptions.length - 1, index));
@@ -566,7 +455,7 @@ export const FontPickerPopover = memo(function FontPickerPopover({
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 w-full justify-start overflow-hidden rounded-sm px-2 text-[13px]"
+        className="h-8 w-full justify-between overflow-hidden rounded-sm px-2 text-[13px]"
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -574,6 +463,7 @@ export const FontPickerPopover = memo(function FontPickerPopover({
         <span className="min-w-0 truncate text-left" style={triggerStyle}>
           {triggerLabel}
         </span>
+        <ChevronDown className="editor-text-muted size-4 shrink-0" />
       </Button>
       <PopoverSurface
         open={open}
