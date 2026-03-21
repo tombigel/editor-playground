@@ -48,6 +48,7 @@ export const DS_SECTIONS: DSSection[] = [
 		icon: Blocks,
 		subsections: [
 			{ id: "composite-inspector-title", label: "Inspector Title" },
+			{ id: "composite-section-card", label: "Section Card" },
 			{ id: "composite-shadow-control", label: "Shadow Control" },
 			{ id: "composite-border-control", label: "Border Control" },
 			{ id: "composite-text-style", label: "Text Style" },

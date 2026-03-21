@@ -53,7 +53,7 @@ import {
 	TextStyleIconButton,
 	WrapperActions,
 } from "@/panels/InspectorControls";
-import { EditableNodeTitle } from "@/panels/inspector/CommonSections";
+import { EditableNodeTitle, InspectorSectionCard } from "@/panels/inspector/CommonSections";
 import {
 	NavigationFields,
 	TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX,
@@ -475,12 +475,78 @@ export function CompositeSection() {
 				</div>
 			</ComponentPreview>
 
+			{/* Section Card */}
+			<ComponentPreview
+				id="composite-section-card"
+				name="Section Card"
+				description="Titled card wrapper for inspector sections. Supports focused-mode entry, header actions, borderless mode, and custom header content."
+				sourceFile="src/panels/inspector/CommonSections.tsx"
+				props={[
+					{ name: "title", type: "string", description: "Card header title." },
+					{ name: "headerContent", type: "ReactNode", description: "Custom header content replacing the title." },
+					{ name: "headerAction", type: "{ ariaLabel, icon, onClick }", description: "Header action button." },
+					{ name: "focusedModeEntry", type: "FocusedModeEntry", description: "Focused-mode entry button shown in header." },
+					{ name: "contentClassName", type: "string", description: "Custom class for CardContent." },
+					{ name: "borderless", type: "boolean", default: "false", description: "Transparent card with no border or background." },
+					{ name: "hideHeader", type: "boolean", default: "false", description: "Hides the header entirely." },
+				]}
+			>
+				<div className="w-[300px] space-y-4">
+					{/* Default */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Default</div>
+						<InspectorSectionCard title="Layout">
+							<div className="editor-text-muted text-[11px]">Card content area</div>
+						</InspectorSectionCard>
+					</div>
+
+					{/* With focused-mode button */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Focused-mode entry</div>
+						<InspectorSectionCard
+							title="Design"
+							focusedModeEntry={{
+								mode: "design",
+								label: "Design focus mode",
+								tooltip: "Edit in focused mode",
+								onEnter: () => {},
+							}}
+						>
+							<div className="editor-text-muted text-[11px]">Card content area</div>
+						</InspectorSectionCard>
+					</div>
+
+					{/* With header action */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Header action</div>
+						<InspectorSectionCard
+							title="Sticky"
+							headerAction={{
+								ariaLabel: "Configure sticky",
+								icon: <Settings2 className="h-3.5 w-3.5" />,
+								onClick: () => {},
+							}}
+						>
+							<div className="editor-text-muted text-[11px]">Card content area</div>
+						</InspectorSectionCard>
+					</div>
+
+					{/* Borderless */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Borderless</div>
+						<InspectorSectionCard title="Content" borderless>
+							<div className="editor-text-muted text-[11px]">Card content area</div>
+						</InspectorSectionCard>
+					</div>
+				</div>
+			</ComponentPreview>
+
 			{/* Shadow Control */}
 			<ComponentPreview
 				id="composite-shadow-control"
 				name="Shadow Control"
 				description="Color + blur + spread + distance + angle composite for box-shadow editing."
-				sourceFile="src/panels/InspectorControls.tsx"
+				sourceFile="src/panels/controls/ColorAndEffects.tsx"
 				props={[
 					{ name: "color", type: "string", description: "Shadow color." },
 					{
