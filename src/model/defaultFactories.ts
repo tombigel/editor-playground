@@ -116,6 +116,13 @@ export function createWrapper(role: WrapperRole, parentId: NodeId): WrapperNode 
       paddingRight: parseSpacingValue('16px'),
       paddingBottom: parseSpacingValue('16px'),
       paddingLeft: parseSpacingValue('16px'),
+      ...(role === 'container'
+        ? {
+            borderColor: DEFAULT_IMAGE_BORDER_COLOR,
+            borderWidth: parseUnitValue(DEFAULT_IMAGE_BORDER_WIDTH),
+            borderRadius: parseUnitValue(DEFAULT_IMAGE_BORDER_RADIUS),
+          }
+        : {}),
     },
   };
 }
