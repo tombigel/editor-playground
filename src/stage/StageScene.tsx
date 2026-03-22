@@ -29,7 +29,6 @@ export const StageScene = memo(function StageScene({
   );
 
   return (
-    <>
       <div className="stage-frame">
         <div className="stage-canvas" style={{ fontFamily: buildDocumentDefaultFontStack(document) }}>
           {plan.header
@@ -100,7 +99,6 @@ export const StageScene = memo(function StageScene({
         </div>
         {multiSelectionBounds ? <MultiSelectionOutline bounds={multiSelectionBounds} /> : null}
       </div>
-    </>
   );
 }, (prev, next) =>
   prev.document === next.document &&

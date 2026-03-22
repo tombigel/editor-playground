@@ -22,7 +22,6 @@ import {
 import {
   Stage,
 } from '../Stage';
-import { StageScene } from '../StageScene';
 import { DragPreviewOverlay } from '../stageRenderers/dragOverlay';
 
 function withDocumentFontLibrary(document: Omit<DocumentModel, 'fontLibrary'>): DocumentModel {
