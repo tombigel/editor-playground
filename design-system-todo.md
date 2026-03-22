@@ -40,6 +40,10 @@ Items noted during the showcase rewrite. Do not pursue during the current implem
 
 - **Text style control groups**: The typography rows in `TypographyTextStyleFields` (Font, Size, Style, Align, Color) are assembled inline. Extract each as a named group component (e.g. `FontRow`, `SizeRow`, `StyleRow`, `AlignRow`, `ColorRow`) to make them reusable across single-select, multi-select, and showcase contexts.
 
+## Multi-Select Variants
+
+When adding or refactoring a component in the design system showcase, check if MultiSelectInspector.tsx or other multi-select contexts apply CSS overrides or mixed-value rendering for that component. If so, add a "Multi-select" variation to the showcase. Many inspector controls render differently in multi-select context (e.g., "Mixed" labels, reduced chrome, disabled states) — these variants are part of the component's visual contract.
+
 ## Structural Improvements
 
 - ~~**File size**~~: DONE — BaseComponentsSection split into `sections/base/` (7 demo files + barrel), CompositeSection split into `sections/composite/` (7 demo files + barrel). All files under 500 lines. InspectorControls.tsx also split into `panels/controls/` (6 component family files + barrel).

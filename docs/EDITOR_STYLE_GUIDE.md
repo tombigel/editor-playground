@@ -167,6 +167,7 @@ Use accent for:
 - focused fields
 - active segmented buttons
 - resize handles
+- drop target highlights during drag (outline + tinted background via `color-mix`)
 - editor interaction emphasis
 
 Do not use accent for:

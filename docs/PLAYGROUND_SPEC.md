@@ -155,9 +155,23 @@ Drag behavior includes:
 - `Alt` to invert current snap mode during drag
 - `Shift` to lock drag movement to a single axis
 - the dragged source node fades and suppresses local box/filter shadows while dragging so the drag silhouette stays clean
+- the drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it
+- when hovering over a valid drop target (section or container), that wrapper highlights with an accent-colored outline and tinted background to confirm where the element will land
+- on reparent, the element's position is clamped so it stays at least partially visible within the target container
 - snap guide colors:
   - component guides: teal
   - page guides: magenta
+
+Current implementation notes for the March 2026 drag/drop run:
+
+- drag preview placement is resolved from the pointer grab offset captured at drag start, with an additional visual-shift correction path for sticky-shifted nodes
+- snap targets are cached when drag commits so pointer-move work avoids recollecting DOM targets every frame
+- grouped drag is committed as a single bulk move action, but only for the subset of the current selection that shares the clicked node's parent wrapper
+- grouped reparent is not supported; only single-node drags can reparent into a new wrapper
+- marquee selection started from a top-level structural wrapper (`section`, `header`, `footer`) currently filters hits to direct children of that wrapper
+- drop target detection resolves from `elementFromPoint(...)` and walks ancestor `data-drop-wrapper-id` markers until it finds a valid wrapper parent
+- reparent commit position is currently derived from the hovered wrapper's live DOM rect together with the captured drag grab offset, then clamped to keep the dropped node at least partially visible in the target wrapper
+- valid drop targets receive a transient `drop-target` class on hover, and that class is cleared on drag end or pointer leave
 
 Resize behavior includes:
 
