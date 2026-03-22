@@ -78,7 +78,7 @@ export const BorderControlGroup = memo(function BorderControlGroup({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex">
+      <div className="flex place-content-end">
         <HoverColorField value={colorValue || undefined} onChange={onColorChange} ariaLabel="Border color" fallback={colorFallback} />
       </div>
       <div className={`grid gap-1.5 ${showRadius ? 'grid-cols-2' : 'grid-cols-1'}`}>
