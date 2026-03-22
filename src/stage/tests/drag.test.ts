@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getDragElementRect,
   didDragPointerMove,
+  getDropLocalPointerPosition,
   getShiftLockedPointer,
   resolveDragPointerPosition,
 } from '../math/drag';
@@ -47,6 +48,18 @@ function makeDocumentRef(wrapperElements: Record<string, { left: number; top: nu
   } as Pick<Document, 'querySelectorAll' | 'querySelector'>;
 }
 
+function makeWindowRef(padding: Partial<Record<'paddingLeft' | 'paddingTop' | 'paddingRight' | 'paddingBottom', string>> = {}): Pick<Window, 'getComputedStyle'> {
+  return {
+    getComputedStyle: () =>
+      ({
+        paddingLeft: padding.paddingLeft ?? '0px',
+        paddingTop: padding.paddingTop ?? '0px',
+        paddingRight: padding.paddingRight ?? '0px',
+        paddingBottom: padding.paddingBottom ?? '0px',
+      }) as CSSStyleDeclaration,
+  } as Pick<Window, 'getComputedStyle'>;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -56,7 +69,7 @@ describe('stage/drag', () => {
     it('returns visual offset when no parentId is given', () => {
       const element = makeFakeElement({ left: 100, top: 50, width: 200, height: 100 });
       const emptyDoc = makeDocumentRef({});
-      const result = getDragElementRect(element, 130, 70, undefined, undefined, undefined, emptyDoc);
+      const result = getDragElementRect(element, 130, 70, undefined, undefined, undefined, emptyDoc, makeWindowRef());
       expect(result.offsetX).toBe(30); // 130 - 100
       expect(result.offsetY).toBe(20); // 70 - 50
       expect(result.useVisualOffset).toBe(false);
@@ -69,7 +82,7 @@ describe('stage/drag', () => {
     it('returns visual offset when parentId is given but no parent element found', () => {
       const element = makeFakeElement({ left: 100, top: 50, width: 200, height: 100 });
       const emptyDoc = makeDocumentRef({});
-      const result = getDragElementRect(element, 130, 70, 'parent-1', 10, 10, emptyDoc);
+      const result = getDragElementRect(element, 130, 70, 'parent-1', 10, 10, emptyDoc, makeWindowRef());
       expect(result.offsetX).toBe(30);
       expect(result.offsetY).toBe(20);
       expect(result.useVisualOffset).toBe(false);
@@ -81,7 +94,7 @@ describe('stage/drag', () => {
       const docRef = makeDocumentRef({ 'parent-1': parentRect });
       // originX = 10, originY = 10 -> modelLeft = 80 + 10 = 90, modelTop = 40 + 10 = 50
       // element left = 90, top = 50 -> no shift (diff is 0)
-      const result = getDragElementRect(element, 100, 60, 'parent-1', 10, 10, docRef);
+      const result = getDragElementRect(element, 100, 60, 'parent-1', 10, 10, docRef, makeWindowRef());
       // modelLeft = 90, modelTop = 50
       // offsetX = clientX - modelLeft = 100 - 90 = 10
       // offsetY = clientY - modelTop = 60 - 50 = 10
@@ -99,7 +112,7 @@ describe('stage/drag', () => {
       const docRef = makeDocumentRef({ 'parent-1': parentRect });
       // originX = 10, originY = 10 -> modelLeft = 80+10=90, modelTop = 40+10=50
       // stickyShiftX = 200 - 90 = 110, stickyShiftY = 150 - 50 = 100
-      const result = getDragElementRect(element, 220, 170, 'parent-1', 10, 10, docRef);
+      const result = getDragElementRect(element, 220, 170, 'parent-1', 10, 10, docRef, makeWindowRef());
       // hasStickyVisualShift = true (110 > 1 and 100 > 1)
       // visualOffsetX = 220 - 200 = 20, visualOffsetY = 170 - 150 = 20
       expect(result.offsetX).toBe(20);
@@ -107,6 +120,96 @@ describe('stage/drag', () => {
       expect(result.useVisualOffset).toBe(true);
       expect(result.modelShiftX).toBe(110);
       expect(result.modelShiftY).toBe(100);
+    });
+  });
+
+  describe('getDropLocalPointerPosition', () => {
+    it('resolves drop coordinates from the wrapper content box instead of the padded border box', () => {
+      const dropElement = makeFakeElement({ left: 100, top: 50, width: 300, height: 200 });
+      const dragState = {
+        nodeId: 'n1',
+        startClientX: 0,
+        startClientY: 0,
+        grabOffsetX: 80,
+        grabOffsetY: 30,
+        useVisualOffset: false,
+        modelShiftX: 0,
+        modelShiftY: 0,
+        previewWidth: 160,
+        previewHeight: 40,
+        originX: 0,
+        originY: 0,
+      } as Exclude<DragState, null>;
+      const windowRef = makeWindowRef({
+        paddingLeft: '16px',
+        paddingTop: '24px',
+        paddingRight: '8px',
+        paddingBottom: '12px',
+      });
+
+      expect(
+        getDropLocalPointerPosition(dragState, dropElement, 250, 140, windowRef),
+      ).toEqual({
+        localX: 54,
+        localY: 36,
+        contentBox: {
+          left: 116,
+          top: 74,
+          width: 276,
+          height: 164,
+        },
+      });
+    });
+
+    it('subtracts sticky visual shift from drop coordinates when visual-offset dragging is active', () => {
+      const dropElement = makeFakeElement({ left: 400, top: 200, width: 320, height: 220 });
+      const dragState = {
+        nodeId: 'n1',
+        startClientX: 0,
+        startClientY: 0,
+        grabOffsetX: 20,
+        grabOffsetY: 18,
+        useVisualOffset: true,
+        modelShiftX: 14,
+        modelShiftY: 9,
+        previewWidth: 160,
+        previewHeight: 40,
+        originX: 0,
+        originY: 0,
+      } as Exclude<DragState, null>;
+      const windowRef = makeWindowRef({
+        paddingLeft: '16px',
+        paddingTop: '16px',
+        paddingRight: '16px',
+        paddingBottom: '16px',
+      });
+
+      expect(
+        getDropLocalPointerPosition(dragState, dropElement, 520, 300, windowRef),
+      ).toMatchObject({
+        localX: 70,
+        localY: 57,
+      });
+    });
+
+    it('measures model-space drag offsets from the parent content box', () => {
+      const parentRect = { left: 80, top: 40, width: 400, height: 300 };
+      const element = makeFakeElement({ left: 284, top: 102, width: 160, height: 40 });
+      const docRef = makeDocumentRef({ 'parent-1': parentRect });
+      const windowRef = makeWindowRef({
+        paddingLeft: '16px',
+        paddingTop: '16px',
+        paddingRight: '16px',
+        paddingBottom: '16px',
+      });
+
+      expect(
+        getDragElementRect(element, 364, 122, 'parent-1', 188, 46, docRef, windowRef),
+      ).toMatchObject({
+        offsetX: 80,
+        offsetY: 20,
+        useVisualOffset: false,
+      });
     });
   });
 

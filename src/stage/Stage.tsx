@@ -9,6 +9,7 @@ import {
 	DEFAULT_STAGE_VIEWPORT,
 	didDragPointerMove,
 	findDropWrapper,
+	getDropLocalPointerPosition,
 	getResizeCommitSize,
 	measureCssViewport,
 	measureStageNodeSizes,
@@ -477,29 +478,37 @@ export function Stage({
 							);
 							const draggedNode = document.nodes[dragState.nodeId];
 							if (drop && draggedNode && draggedNode.type !== "site") {
-								const pointerLocalX =
-									snapped.clientX -
-									drop.rect.left -
-									dragState.grabOffsetX -
-									(dragState.useVisualOffset ? dragState.modelShiftX : 0);
-								const pointerLocalY =
-									snapped.clientY -
-									drop.rect.top -
-									dragState.grabOffsetY -
-									(dragState.useVisualOffset ? dragState.modelShiftY : 0);
+								const dropPosition = getDropLocalPointerPosition(
+									dragState,
+									drop.element,
+									snapped.clientX,
+									snapped.clientY,
+								);
 								if (draggedNode.parentId !== drop.wrapperId) {
 									const maxX = Math.max(
 										0,
-										drop.rect.width -
-											Math.min(dragState.previewWidth, drop.rect.width * 0.5),
+										dropPosition.contentBox.width -
+											Math.min(
+												dragState.previewWidth,
+												dropPosition.contentBox.width * 0.5,
+											),
 									);
 									const maxY = Math.max(
 										0,
-										drop.rect.height -
-											Math.min(dragState.previewHeight, drop.rect.height * 0.5),
+										dropPosition.contentBox.height -
+											Math.min(
+												dragState.previewHeight,
+												dropPosition.contentBox.height * 0.5,
+											),
 									);
-									const localX = Math.max(0, Math.min(pointerLocalX, maxX));
-									const localY = Math.max(0, Math.min(pointerLocalY, maxY));
+									const localX = Math.max(
+										0,
+										Math.min(dropPosition.localX, maxX),
+									);
+									const localY = Math.max(
+										0,
+										Math.min(dropPosition.localY, maxY),
+									);
 									onReparent(
 										dragState.nodeId,
 										drop.wrapperId,
@@ -508,14 +517,14 @@ export function Stage({
 									);
 								} else {
 									const localX = dragState.useVisualOffset
-										? Math.max(0, pointerLocalX)
+										? Math.max(0, dropPosition.localX)
 										: Math.max(
 												0,
 												dragState.originX +
 													(snapped.clientX - dragState.startClientX),
 											);
 									const localY = dragState.useVisualOffset
-										? Math.max(0, pointerLocalY)
+										? Math.max(0, dropPosition.localY)
 										: Math.max(
 												0,
 												dragState.originY +

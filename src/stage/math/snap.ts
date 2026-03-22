@@ -92,6 +92,7 @@ export function findDropWrapper(
       ) {
         return {
           wrapperId,
+          element: current,
           rect: current.getBoundingClientRect(),
         };
       }
@@ -106,6 +107,7 @@ export function findDropWrapper(
 
   return {
     wrapperId: draggedNode.parentId,
+    element: fallback,
     rect: fallback.getBoundingClientRect(),
   };
 }

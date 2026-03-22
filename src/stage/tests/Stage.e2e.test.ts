@@ -262,6 +262,10 @@ describe('stage/Stage e2e', () => {
     const { document, ids } = createE2EDocument();
     await openEditor({ document });
 
+    const source = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+    const sourceBox = await source.boundingBox();
+    expect(sourceBox).not.toBeNull();
+
     const target = page.locator(`[data-drop-wrapper-id="${ids.targetContainerId}"]`).first();
     const targetBox = await target.boundingBox();
     expect(targetBox).not.toBeNull();
@@ -286,7 +290,8 @@ describe('stage/Stage e2e', () => {
 
     const state = await readPersistedState();
     expect(state.document.nodes[ids.reparentLeafId].parentId).toBe(ids.targetContainerId);
-    expect(parseFloat(state.document.nodes[ids.reparentLeafId].rect.x.base.raw)).toBeGreaterThan(10);
+    const expectedLocalX = (targetBox?.width ?? 0) / 2 - 16 - (sourceBox?.width ?? 0) / 2;
+    expect(parseFloat(state.document.nodes[ids.reparentLeafId].rect.x.base.raw)).toBeCloseTo(expectedLocalX, 0);
     expect(parseFloat(state.document.nodes[ids.reparentLeafId].rect.y.base.raw)).toBeGreaterThan(10);
 
     await closeEditor();

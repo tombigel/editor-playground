@@ -1919,6 +1919,15 @@ describe('stage/Stage', () => {
     const documentRef = {
       querySelectorAll: () => [parentWrapper] as unknown as NodeListOf<HTMLElement>,
     };
+    const windowRef = {
+      getComputedStyle: () =>
+        ({
+          paddingLeft: '0px',
+          paddingTop: '0px',
+          paddingRight: '0px',
+          paddingBottom: '0px',
+        }) as CSSStyleDeclaration,
+    } as Pick<Window, 'getComputedStyle'>;
     const draggedElement = {
       getBoundingClientRect: () =>
         ({
@@ -1931,7 +1940,7 @@ describe('stage/Stage', () => {
         }) as DOMRect,
     } as HTMLElement;
 
-    expect(getDragElementRect(draggedElement, 190, 180, 'section_1', 20, 30, documentRef)).toMatchObject({
+    expect(getDragElementRect(draggedElement, 190, 180, 'section_1', 20, 30, documentRef, windowRef)).toMatchObject({
       offsetX: 30,
       offsetY: 40,
       useVisualOffset: true,

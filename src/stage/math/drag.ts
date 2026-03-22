@@ -72,6 +72,7 @@ export function getDragElementRect(
 	originX?: number,
 	originY?: number,
 	documentRef: Pick<Document, "querySelectorAll"> = window.document,
+	windowRef: Pick<Window, "getComputedStyle"> = window,
 ): DragGeometry {
 	const rect = element.getBoundingClientRect();
 	const visualOffsetX = clientX - rect.left;
@@ -79,9 +80,9 @@ export function getDragElementRect(
 	if (parentId && Number.isFinite(originX) && Number.isFinite(originY)) {
 		const parentElement = findDropWrapperElement(parentId, documentRef);
 		if (parentElement) {
-			const parentRect = parentElement.getBoundingClientRect();
-			const modelLeft = parentRect.left + (originX ?? 0);
-			const modelTop = parentRect.top + (originY ?? 0);
+			const parentContentBox = getWrapperContentBoxRect(parentElement, windowRef);
+			const modelLeft = parentContentBox.left + (originX ?? 0);
+			const modelTop = parentContentBox.top + (originY ?? 0);
 			const stickyVisualShiftX = rect.left - modelLeft;
 			const stickyVisualShiftY = rect.top - modelTop;
 			const hasStickyVisualShift =
@@ -104,6 +105,43 @@ export function getDragElementRect(
 		useVisualOffset: false,
 		modelShiftX: 0,
 		modelShiftY: 0,
+	};
+}
+
+export function getWrapperContentBoxRect(
+	element: HTMLElement,
+	windowRef: Pick<Window, "getComputedStyle"> = window,
+) {
+	const rect = element.getBoundingClientRect();
+	const computed = windowRef.getComputedStyle(element);
+	const paddingLeft = Number.parseFloat(computed.paddingLeft) || 0;
+	const paddingTop = Number.parseFloat(computed.paddingTop) || 0;
+	const paddingRight = Number.parseFloat(computed.paddingRight) || 0;
+	const paddingBottom = Number.parseFloat(computed.paddingBottom) || 0;
+
+	return {
+		left: rect.left + paddingLeft,
+		top: rect.top + paddingTop,
+		width: Math.max(0, rect.width - paddingLeft - paddingRight),
+		height: Math.max(0, rect.height - paddingTop - paddingBottom),
+	};
+}
+
+export function getDropLocalPointerPosition(
+	dragState: Exclude<DragState, null>,
+	dropElement: HTMLElement,
+	clientX: number,
+	clientY: number,
+	windowRef: Pick<Window, "getComputedStyle"> = window,
+) {
+	const contentBox = getWrapperContentBoxRect(dropElement, windowRef);
+	const visualShiftX = dragState.useVisualOffset ? dragState.modelShiftX : 0;
+	const visualShiftY = dragState.useVisualOffset ? dragState.modelShiftY : 0;
+
+	return {
+		localX: clientX - contentBox.left - dragState.grabOffsetX - visualShiftX,
+		localY: clientY - contentBox.top - dragState.grabOffsetY - visualShiftY,
+		contentBox,
 	};
 }
 
