@@ -140,7 +140,7 @@ export function ActionRow({
     <div className="editor-border-subtle flex flex-col gap-3 border-t py-3 first:border-t-0 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-6">
       <div className={`min-w-0 ${icon ? 'flex gap-3' : ''}`}>
         {Icon ? (
-          <div className="editor-icon-surface mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border">
+          <div className="editor-icon-surface mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
             <Icon className="h-4 w-4" />
           </div>
         ) : null}

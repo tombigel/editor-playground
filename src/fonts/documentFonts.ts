@@ -211,10 +211,7 @@ function normalizeTypographyStyle(style: TypographyStyle | undefined) {
 }
 
 function syncFontLibraryFlags(fontLibrary: FontLibrary) {
-  fontLibrary.usedFamilies = uniqueFamilies(fontLibrary.usedFamilies).map((family) => ({
-    ...family,
-    favorite: fontLibrary.favorites.includes(family.family) || family.favorite,
-  }));
+  fontLibrary.usedFamilies = uniqueFamilies(fontLibrary.usedFamilies);
   fontLibrary.favorites = uniqueStrings(
     fontLibrary.usedFamilies.filter((family) => family.favorite).map((family) => family.family),
   );

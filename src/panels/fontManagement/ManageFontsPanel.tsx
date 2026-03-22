@@ -244,7 +244,7 @@ export function ManageFontsPanel({
         <CardContent className="space-y-3 px-3 pt-1.5 pb-3">
           <div className="flex items-center justify-between gap-3">
             <div className="editor-text-muted text-xs">{documentFamilies.length} families in this document library.</div>
-            <Button type="button" variant="outline" size="sm" onClick={onPurgeUnused}>
+            <Button type="button" variant="destructive" size="sm" onClick={onPurgeUnused}>
               <RotateCcw className="h-4 w-4" />
               Purge unused
             </Button>
