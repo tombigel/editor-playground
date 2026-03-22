@@ -377,12 +377,12 @@ export function ManageFontsPanel({
               <div className="flex items-center justify-between gap-3">
                 <div className="editor-text-muted text-xs">
                   {catalogFamilies.length > 0
-                    ? `Showing ${visibleRangeStart}-${visibleRangeEnd} of ${catalogFamilies.length} families`
+                    ? `Showing ${visibleRangeStart}-${visibleRangeEnd} of ${catalogFamilies.length}`
                     : 'No families match the current filters.'}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <Label className="editor-text-muted text-[11px] font-medium">Page size</Label>
+                    <Label className="editor-text-muted text-[11px] font-medium">Show</Label>
                     <Select
                       value={String(pageSize)}
                       onValueChange={(value) =>
