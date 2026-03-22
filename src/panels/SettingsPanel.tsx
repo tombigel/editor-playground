@@ -138,16 +138,16 @@ const SECTION_META: Array<{
 		description: "History and reset.",
 	},
 	{
-		id: "diagnostics",
-		label: "Debug Info",
-		icon: Bug,
-		description: "Validation and sticky math.",
-	},
-	{
 		id: "shortcuts",
 		label: "Shortcuts",
 		icon: Keyboard,
 		description: "Keyboard and pointer reference.",
+	},
+	{
+		id: "diagnostics",
+		label: "Debug Info",
+		icon: Bug,
+		description: "Validation and sticky math.",
 	},
 ];
 
