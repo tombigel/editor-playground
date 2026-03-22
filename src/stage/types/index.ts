@@ -38,8 +38,6 @@ export type DragState = {
   previewItems?: DragPreviewItem[];
   startClientX: number;
   startClientY: number;
-  currentClientX: number;
-  currentClientY: number;
   grabOffsetX: number;
   grabOffsetY: number;
   useVisualOffset: boolean;
@@ -50,6 +48,15 @@ export type DragState = {
   originX: number;
   originY: number;
 } | null;
+
+export type DragPosition = {
+  clientX: number;
+  clientY: number;
+  guideX: number | null;
+  guideY: number | null;
+  guideXSource: 'component' | 'page' | null;
+  guideYSource: 'component' | 'page' | null;
+};
 
 export type ResizeHandle =
   | 'n'
@@ -98,10 +105,16 @@ export type DragGeometry = {
   modelShiftY: number;
 };
 
+export type CachedSnapTargets = {
+  horizontal: SnapTarget[];
+  vertical: SnapTarget[];
+};
+
 export type DragResolutionOptions = {
   shiftKey: boolean;
   altKey: boolean;
   snapEnabled: boolean;
+  snapTargets?: CachedSnapTargets;
   documentRef?: Pick<Document, 'querySelector' | 'querySelectorAll'>;
   windowRef?: Pick<Window, 'innerWidth' | 'innerHeight'>;
 };
@@ -127,7 +140,6 @@ export type StageSceneProps = {
   onResizeStart: (id: NodeId) => void;
   dragState: DragState;
   setDragState: (state: DragState) => void;
-  snapGuides: SnapGuides;
   resizeState: ResizeState;
   setResizeState: (state: ResizeState) => void;
   measuredNodeSizes: RenderMeasuredNodeSizes;

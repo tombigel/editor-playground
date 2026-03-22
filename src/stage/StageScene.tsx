@@ -5,7 +5,6 @@ import type { StageSceneProps } from './types';
 export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
 
 import { renderWrapper } from './stageRenderers/wrapperRenderer';
-import { renderDragPreview, renderSnapGuides } from './stageRenderers/dragOverlay';
 import { MultiSelectionOutline } from './stageRenderers/selectionVisuals';
 
 export const StageScene = memo(function StageScene({
@@ -19,7 +18,6 @@ export const StageScene = memo(function StageScene({
   onResizeStart,
   dragState,
   setDragState,
-  snapGuides,
   resizeState,
   setResizeState,
   measuredNodeSizes,
@@ -102,8 +100,6 @@ export const StageScene = memo(function StageScene({
         </div>
         {multiSelectionBounds ? <MultiSelectionOutline bounds={multiSelectionBounds} /> : null}
       </div>
-      {dragState ? renderSnapGuides(snapGuides) : null}
-      {dragState ? renderDragPreview(document, dragState) : null}
     </>
   );
 }, (prev, next) =>
@@ -116,7 +112,6 @@ export const StageScene = memo(function StageScene({
   prev.showGridLanes === next.showGridLanes &&
   prev.dragState === next.dragState &&
   prev.resizeState === next.resizeState &&
-  prev.snapGuides === next.snapGuides &&
   prev.measuredNodeSizes === next.measuredNodeSizes &&
   prev.viewport === next.viewport,
 );

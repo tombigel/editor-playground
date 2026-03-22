@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { forwardRef, type CSSProperties, type RefObject } from 'react';
 import type { DocumentModel, DocumentNode } from '../../model/types';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
 import { isBrandMark, renderLeafContent } from '../../render/nodePresentation';
@@ -7,9 +7,12 @@ import {
   getContentWrapperSurfaceStyle,
   getWrapperBorderStyle,
 } from '../../render/layout';
-import type { DragState, SnapGuides } from '../types';
+import type { DragPosition, DragState } from '../types';
 
-export function renderDragPreview(document: DocumentModel, dragState: Exclude<DragState, null>) {
+export const DragPreviewOverlay = forwardRef<HTMLDivElement, {
+  document: DocumentModel;
+  dragState: Exclude<DragState, null>;
+}>(function DragPreviewOverlay({ document, dragState }, ref) {
   const previewItems = dragState.previewItems ?? [
     {
       nodeId: dragState.nodeId,
@@ -19,28 +22,99 @@ export function renderDragPreview(document: DocumentModel, dragState: Exclude<Dr
       height: dragState.previewHeight,
     },
   ];
-  const baseLeft = dragState.currentClientX - dragState.grabOffsetX;
-  const baseTop = dragState.currentClientY - dragState.grabOffsetY;
 
-  return previewItems.map((item) => {
-    const node = document.nodes[item.nodeId];
-    if (!node || node.type === 'site') {
-      return null;
+  return (
+    <div
+      ref={ref}
+      className="drag-preview-container"
+      style={{
+        transform: `translate(${dragState.startClientX - dragState.grabOffsetX}px, ${dragState.startClientY - dragState.grabOffsetY}px)`,
+      }}
+    >
+      {previewItems.map((item) => {
+        const node = document.nodes[item.nodeId];
+        if (!node || node.type === 'site') {
+          return null;
+        }
+
+        const style: CSSProperties = {
+          left: `${item.offsetX}px`,
+          top: `${item.offsetY}px`,
+          width: `${item.width}px`,
+          height: `${item.height}px`,
+        };
+
+        return (
+          <div key={item.nodeId} className="drag-preview" style={style}>
+            {renderDragPreviewNode(node)}
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
+export function SnapGuideOverlay({
+  xRef,
+  yRef,
+}: {
+  xRef: RefObject<HTMLDivElement | null>;
+  yRef: RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <>
+      <div
+        ref={xRef}
+        className="snap-guide snap-guide-vertical snap-guide-component"
+        style={{ display: 'none' }}
+      />
+      <div
+        ref={yRef}
+        className="snap-guide snap-guide-horizontal snap-guide-component"
+        style={{ display: 'none' }}
+      />
+    </>
+  );
+}
+
+export function updateDragPreviewPosition(
+  previewRef: RefObject<HTMLDivElement | null>,
+  dragState: Exclude<DragState, null>,
+  position: DragPosition,
+) {
+  if (!previewRef.current) return;
+  const baseLeft = position.clientX - dragState.grabOffsetX;
+  const baseTop = position.clientY - dragState.grabOffsetY;
+  previewRef.current.style.transform = `translate(${baseLeft}px, ${baseTop}px)`;
+}
+
+export function updateSnapGuidePositions(
+  xRef: RefObject<HTMLDivElement | null>,
+  yRef: RefObject<HTMLDivElement | null>,
+  position: DragPosition,
+) {
+  if (xRef.current) {
+    if (position.guideX !== null) {
+      xRef.current.style.display = '';
+      xRef.current.style.left = `${position.guideX}px`;
+      xRef.current.className = `snap-guide snap-guide-vertical ${
+        position.guideXSource === 'page' ? 'snap-guide-page' : 'snap-guide-component'
+      }`;
+    } else {
+      xRef.current.style.display = 'none';
     }
-
-    const style: CSSProperties = {
-      left: `${baseLeft + item.offsetX}px`,
-      top: `${baseTop + item.offsetY}px`,
-      width: `${item.width}px`,
-      height: `${item.height}px`,
-    };
-
-    return (
-      <div key={item.nodeId} className="drag-preview" style={style}>
-        {renderDragPreviewNode(node)}
-      </div>
-    );
-  });
+  }
+  if (yRef.current) {
+    if (position.guideY !== null) {
+      yRef.current.style.display = '';
+      yRef.current.style.top = `${position.guideY}px`;
+      yRef.current.className = `snap-guide snap-guide-horizontal ${
+        position.guideYSource === 'page' ? 'snap-guide-page' : 'snap-guide-component'
+      }`;
+    } else {
+      yRef.current.style.display = 'none';
+    }
+  }
 }
 
 function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {
@@ -88,24 +162,5 @@ function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {
         })}
       </div>
     </div>
-  );
-}
-
-export function renderSnapGuides(guides: SnapGuides) {
-  return (
-    <>
-      {guides.x !== null ? (
-        <div
-          className={`snap-guide snap-guide-vertical ${guides.xSource === 'page' ? 'snap-guide-page' : 'snap-guide-component'}`}
-          style={{ left: `${guides.x}px` }}
-        />
-      ) : null}
-      {guides.y !== null ? (
-        <div
-          className={`snap-guide snap-guide-horizontal ${guides.ySource === 'page' ? 'snap-guide-page' : 'snap-guide-component'}`}
-          style={{ top: `${guides.y}px` }}
-        />
-      ) : null}
-    </>
   );
 }

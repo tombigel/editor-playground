@@ -1,5 +1,6 @@
 import type { NodeId } from '../../model/types';
 import type {
+  CachedSnapTargets,
   DragGeometry,
   DragPreviewItem,
   DragResolutionOptions,
@@ -37,8 +38,6 @@ export function createDragState({
     previewItems,
     startClientX: clientX,
     startClientY: clientY,
-    currentClientX: clientX,
-    currentClientY: clientY,
     grabOffsetX: dragGeometry.offsetX,
     grabOffsetY: dragGeometry.offsetY,
     useVisualOffset: dragGeometry.useVisualOffset,
@@ -100,22 +99,33 @@ export function getSnappedDragPosition(
   clientY: number,
   documentRef: Pick<Document, 'querySelector' | 'querySelectorAll'> = window.document,
   windowRef: Pick<Window, 'innerWidth' | 'innerHeight'> = window,
+  cachedTargets?: CachedSnapTargets,
 ) {
   let left = clientX - dragState.grabOffsetX;
   let top = clientY - dragState.grabOffsetY;
   const width = dragState.previewWidth;
   const height = dragState.previewHeight;
-  const pageTargets = collectPageSnapTargets(documentRef, windowRef);
 
-  const horizontalSnap = findHorizontalSnap(left, width, [...pageTargets.horizontal]);
+  let horizontal: import('../types').SnapTarget[];
+  let vertical: import('../types').SnapTarget[];
+  if (cachedTargets) {
+    horizontal = cachedTargets.horizontal;
+    vertical = cachedTargets.vertical;
+  } else {
+    const pageTargets = collectPageSnapTargets(documentRef, windowRef);
+    horizontal = pageTargets.horizontal;
+    vertical = [
+      ...collectVerticalSnapTargets(dragState.nodeId, documentRef),
+      ...pageTargets.vertical,
+    ];
+  }
+
+  const horizontalSnap = findHorizontalSnap(left, width, horizontal);
   if (horizontalSnap) {
     left += horizontalSnap.delta;
   }
 
-  const verticalSnap = findVerticalSnap(top, height, [
-    ...collectVerticalSnapTargets(dragState.nodeId, documentRef),
-    ...pageTargets.vertical,
-  ]);
+  const verticalSnap = findVerticalSnap(top, height, vertical);
   if (verticalSnap) {
     top += verticalSnap.delta;
   }
@@ -168,6 +178,7 @@ export function resolveDragPointerPosition(
     shiftKey,
     altKey,
     snapEnabled,
+    snapTargets,
     documentRef = window.document,
     windowRef = window,
   }: DragResolutionOptions,
@@ -185,5 +196,5 @@ export function resolveDragPointerPosition(
     };
   }
 
-  return getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY, documentRef, windowRef);
+  return getSnappedDragPosition(dragState, axisLocked.clientX, axisLocked.clientY, documentRef, windowRef, snapTargets);
 }

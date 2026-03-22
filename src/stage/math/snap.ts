@@ -1,5 +1,6 @@
 import type { DocumentModel, NodeId } from '../../model/types';
 import type {
+  CachedSnapTargets,
   SnapTarget,
   StageMathWrapperNode as WrapperNode,
 } from '../types';
@@ -199,4 +200,19 @@ export function findVerticalSnap(top: number, height: number, targets: SnapTarge
   }
 
   return best;
+}
+
+export function collectAllSnapTargets(
+  draggedId: string,
+  documentRef: Pick<Document, 'querySelector' | 'querySelectorAll'> = window.document,
+  windowRef: Pick<Window, 'innerWidth' | 'innerHeight'> = window,
+): CachedSnapTargets {
+  const pageTargets = collectPageSnapTargets(documentRef, windowRef);
+  return {
+    horizontal: pageTargets.horizontal,
+    vertical: [
+      ...collectVerticalSnapTargets(draggedId, documentRef),
+      ...pageTargets.vertical,
+    ],
+  };
 }

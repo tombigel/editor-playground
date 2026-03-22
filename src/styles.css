@@ -2148,8 +2148,16 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   color: var(--editor-image-placeholder-text);
 }
 
-.drag-preview {
+.drag-preview-container {
   position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.drag-preview {
+  position: absolute;
   pointer-events: none;
 }
 

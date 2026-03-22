@@ -23,6 +23,7 @@ import {
   Stage,
 } from '../Stage';
 import { StageScene } from '../StageScene';
+import { DragPreviewOverlay } from '../stageRenderers/dragOverlay';
 
 function withDocumentFontLibrary(document: Omit<DocumentModel, 'fontLibrary'>): DocumentModel {
   return {
@@ -416,36 +417,25 @@ describe('stage/Stage', () => {
     section.children = [...section.children, container.id];
     document.nodes[container.id] = container;
 
+    const dragState = {
+      nodeId: container.id,
+      startClientX: 200,
+      startClientY: 200,
+      grabOffsetX: 20,
+      grabOffsetY: 30,
+      useVisualOffset: false,
+      modelShiftX: 0,
+      modelShiftY: 0,
+      previewWidth: 360,
+      previewHeight: 240,
+      originX: 0,
+      originY: 0,
+    } as const;
+
     const markup = renderToStaticMarkup(
-      <StageScene
+      <DragPreviewOverlay
         document={document}
-        selectedId={container.id}
-        previewSticky={true}
-        spacerVisibility="selected"
-        showGridLanes={false}
-        onResizeStart={() => {}}
-        dragState={{
-          nodeId: container.id,
-          startClientX: 200,
-          startClientY: 200,
-          currentClientX: 240,
-          currentClientY: 250,
-          grabOffsetX: 20,
-          grabOffsetY: 30,
-          useVisualOffset: false,
-          modelShiftX: 0,
-          modelShiftY: 0,
-          previewWidth: 360,
-          previewHeight: 240,
-          originX: 0,
-          originY: 0,
-        }}
-        setDragState={() => {}}
-        snapGuides={{ x: null, y: null, xSource: null, ySource: null }}
-        resizeState={null}
-        setResizeState={() => {}}
-        measuredNodeSizes={{}}
-        viewport={{ width: 1440, height: 900 }}
+        dragState={dragState}
       />,
     );
 
@@ -1802,8 +1792,6 @@ describe('stage/Stage', () => {
       nodeId: 'leaf_1',
       startClientX: 104,
       startClientY: 77,
-      currentClientX: 104,
-      currentClientY: 77,
       grabOffsetX: 0,
       grabOffsetY: 0,
       useVisualOffset: false,

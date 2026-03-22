@@ -191,8 +191,6 @@ describe('stage/drag', () => {
         nodeId: 'n1',
         startClientX: 100,
         startClientY: 100,
-        currentClientX: 100,
-        currentClientY: 100,
         grabOffsetX: 10,
         grabOffsetY: 10,
         useVisualOffset: false,

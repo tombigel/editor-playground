@@ -15,8 +15,15 @@ import {
   px,
   resolveDragPointerPosition,
 } from './stageMath';
+import {
+  DragPreviewOverlay,
+  SnapGuideOverlay,
+  updateDragPreviewPosition,
+  updateSnapGuidePositions,
+} from './stageRenderers/dragOverlay';
 import type { StageProps } from './types';
-import type { DragState, MeasuredNodeSizes, ResizeState, SnapGuides } from './types';
+import { collectAllSnapTargets } from './math/snap';
+import type { CachedSnapTargets, DragPosition, DragState, MeasuredNodeSizes, ResizeState } from './types';
 export type { StageProps } from './types';
 
 type PendingNodeInteraction = {
@@ -75,12 +82,11 @@ export function Stage({
   const [measuredNodeSizes, setMeasuredNodeSizes] = useState<MeasuredNodeSizes>({});
   const [viewport, setViewport] = useState(DEFAULT_STAGE_VIEWPORT);
   const [dragState, setDragState] = useState<DragState>(null);
-  const [snapGuides, setSnapGuides] = useState<SnapGuides>({
-    x: null,
-    y: null,
-    xSource: null,
-    ySource: null,
-  });
+  const dragPositionRef = useRef<DragPosition | null>(null);
+  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
+  const snapGuideXRef = useRef<HTMLDivElement | null>(null);
+  const snapGuideYRef = useRef<HTMLDivElement | null>(null);
+  const snapTargetsRef = useRef<CachedSnapTargets | null>(null);
   const [resizeState, setResizeState] = useState<ResizeState>(null);
   const [pendingNodeInteraction, setPendingNodeInteraction] = useState<PendingNodeInteraction | null>(null);
   const [marqueeState, setMarqueeState] = useState<MarqueeState | null>(null);
@@ -239,18 +245,19 @@ export function Stage({
             shiftKey: event.shiftKey,
             altKey: event.altKey,
             snapEnabled,
+            snapTargets: snapTargetsRef.current ?? undefined,
           });
-          setDragState({
-            ...dragState,
-            currentClientX: snapped.clientX,
-            currentClientY: snapped.clientY,
-          });
-          setSnapGuides({
-            x: snapped.guideX,
-            y: snapped.guideY,
-            xSource: snapped.guideXSource,
-            ySource: snapped.guideYSource,
-          });
+          const position: DragPosition = {
+            clientX: snapped.clientX,
+            clientY: snapped.clientY,
+            guideX: snapped.guideX,
+            guideY: snapped.guideY,
+            guideXSource: snapped.guideXSource,
+            guideYSource: snapped.guideYSource,
+          };
+          dragPositionRef.current = position;
+          updateDragPreviewPosition(dragPreviewRef, dragState, position);
+          updateSnapGuidePositions(snapGuideXRef, snapGuideYRef, position);
         }
 
         if (pendingNodeInteraction && didDragPointerMove(pendingNodeInteraction, event.clientX, event.clientY)) {
@@ -259,19 +266,19 @@ export function Stage({
             pendingNodeInteraction.element,
             pendingNodeInteraction.dragSelectionIds,
           );
-          setDragState(
-            createDragState({
-              nodeId: pendingNodeInteraction.nodeId,
-              draggedNodeIds: pendingNodeInteraction.dragSelectionIds,
-              previewItems,
-              parentId: pendingNodeInteraction.parentId,
-              element: pendingNodeInteraction.element,
-              clientX: pendingNodeInteraction.startClientX,
-              clientY: pendingNodeInteraction.startClientY,
-              originX: pendingNodeInteraction.originX,
-              originY: pendingNodeInteraction.originY,
-            }),
-          );
+          const newDragState = createDragState({
+            nodeId: pendingNodeInteraction.nodeId,
+            draggedNodeIds: pendingNodeInteraction.dragSelectionIds,
+            previewItems,
+            parentId: pendingNodeInteraction.parentId,
+            element: pendingNodeInteraction.element,
+            clientX: pendingNodeInteraction.startClientX,
+            clientY: pendingNodeInteraction.startClientY,
+            originX: pendingNodeInteraction.originX,
+            originY: pendingNodeInteraction.originY,
+          });
+          snapTargetsRef.current = collectAllSnapTargets(newDragState.nodeId);
+          setDragState(newDragState);
           setPendingNodeInteraction(null);
         }
 
@@ -391,7 +398,8 @@ export function Stage({
         setPendingNodeInteraction(null);
         setMarqueeState(null);
         setDragState(null);
-        setSnapGuides({ x: null, y: null, xSource: null, ySource: null });
+        dragPositionRef.current = null;
+        snapTargetsRef.current = null;
         setResizeState(null);
       }}
       onMouseLeave={() => {
@@ -401,7 +409,8 @@ export function Stage({
         setPendingNodeInteraction(null);
         setMarqueeState(null);
         setDragState(null);
-        setSnapGuides({ x: null, y: null, xSource: null, ySource: null });
+        dragPositionRef.current = null;
+        snapTargetsRef.current = null;
         setResizeState(null);
       }}
     >
@@ -420,12 +429,13 @@ export function Stage({
         onResizeStart={onResizeStart}
         dragState={dragState}
         setDragState={setDragState}
-        snapGuides={snapGuides}
         resizeState={resizeState}
         setResizeState={setResizeState}
         measuredNodeSizes={measuredNodeSizes}
         viewport={viewport}
       />
+      {dragState ? <SnapGuideOverlay xRef={snapGuideXRef} yRef={snapGuideYRef} /> : null}
+      {dragState ? <DragPreviewOverlay ref={dragPreviewRef} document={document} dragState={dragState} /> : null}
       {marqueeState?.active ? <MarqueeSelectionBox stageElement={stageElement} marqueeState={marqueeState} /> : null}
     </section>
   );
