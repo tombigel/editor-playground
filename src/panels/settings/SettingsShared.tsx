@@ -183,7 +183,7 @@ export function NumericRow({
               onChange(next);
             }
           }}
-          className="h-8 text-sm"
+          className="text-sm"
         />
       </div>
     </div>

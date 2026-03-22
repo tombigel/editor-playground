@@ -510,7 +510,7 @@ export function SettingsPanel({
 														setExportFileName(event.target.value)
 													}
 													placeholder={DEFAULT_EXPORT_BASENAME}
-													className="h-9 text-sm"
+													className="text-sm"
 												/>
 											</div>
 										</TransferSubsection>

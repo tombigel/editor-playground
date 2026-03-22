@@ -313,7 +313,7 @@ export function ManageFontsPanel({
             <div className="space-y-1">
               <Label className="text-[11px] font-medium">Language</Label>
               <Select value={subset} onValueChange={(value) => setFilters((current) => ({ ...current, subset: value }))}>
-                <SelectTrigger className="h-9 text-[11px]">
+                <SelectTrigger className="text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,7 +328,7 @@ export function ManageFontsPanel({
             <div className="space-y-1">
               <Label className="text-[11px] font-medium">Category</Label>
               <Select value={category} onValueChange={(value) => setFilters((current) => ({ ...current, category: value }))}>
-                <SelectTrigger className="h-9 text-[11px]">
+                <SelectTrigger className="text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

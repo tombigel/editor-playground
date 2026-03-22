@@ -50,7 +50,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     data-ui="select-trigger"
     className={cn(
-      'editor-bg-surface editor-border-subtle editor-text-strong flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
+      'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
