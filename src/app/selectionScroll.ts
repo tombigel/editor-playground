@@ -21,6 +21,6 @@ export function scrollSelectedStageNodeIntoView(
     return false;
   }
 
-  target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  target.scrollIntoView({ behavior: "smooth", block: 'nearest', inline: 'nearest' });
   return true;
 }
