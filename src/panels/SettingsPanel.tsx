@@ -123,7 +123,7 @@ const SECTION_META: Array<{
 		id: "fonts",
 		label: "Fonts",
 		icon: Type,
-		description: "Document font library.",
+		description: "Site font library.",
 	},
 	{
 		id: "transfer",
@@ -472,8 +472,8 @@ export function SettingsPanel({
 							>
 								<SectionHeading
 									eyebrow="Fonts"
-									title="Document font library"
-									description="Manage available families, favorites, and cleanup for this document."
+									title="Site font library"
+									description="Manage available families, favorites, and cleanup for this site."
 								/>
 								<ManageFontsPanel
 									document={document}

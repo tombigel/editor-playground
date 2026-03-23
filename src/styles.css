@@ -104,9 +104,9 @@
   --editor-utility-text-muted: #64748b;
   --editor-utility-bg-subtle: #f8fafc;
   --editor-utility-border: #dbe3ee;
-  --editor-scrollbar-track: color-mix(in srgb, var(--editor-utility-border) 44%, transparent);
-  --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-utility-text-muted) 56%, transparent);
-  --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-text) 52%, transparent);
+  --editor-scrollbar-track: color-mix(in srgb, var(--editor-accent) 8%, transparent);
+  --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-accent) 32%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-accent) 54%, transparent);
   --editor-accent: #1668ff;
   --editor-accent-foreground: #f8fafc;
   --editor-accent-foreground-muted: rgba(255, 255, 255, 0.68);
@@ -379,9 +379,9 @@ body[data-editor-theme='dark'] {
     var(--editor-accent) var(--editor-dark-tint-strong),
     var(--editor-dark-surface-border-base)
   );
-  --editor-scrollbar-track: color-mix(in srgb, var(--editor-utility-border) 46%, transparent);
-  --editor-scrollbar-thumb: color-mix(in srgb, #d6e0ea 34%, transparent);
-  --editor-scrollbar-thumb-hover: color-mix(in srgb, #f3f7fc 48%, transparent);
+  --editor-scrollbar-track: color-mix(in srgb, var(--editor-accent) 10%, transparent);
+  --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-accent) 36%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-accent) 58%, transparent);
   --editor-group-selection-border: #f0bf76;
   --editor-group-selection-shadow: rgba(240, 191, 118, 0.2);
   --editor-drag-preview-background: rgba(26, 37, 52, 0.96);
