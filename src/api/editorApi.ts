@@ -1,3 +1,11 @@
+/**
+ * @module editorApi
+ *
+ * Editor-layer API. Wraps documentApi operations with EditorState, selection
+ * management, and history. The editor UI always calls these variants.
+ * For pure model mutations without editor state, use documentApi directly.
+ */
+
 import * as editorStore from '../editor/editorStore';
 import * as stageNavigation from '../editor/stageNavigation';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
@@ -22,6 +30,7 @@ import {
   type StickyLayoutState,
 } from './documentApi';
 
+/** Types shared between documentApi and editorApi, plus editor-specific types. */
 export type {
   DocumentModel,
   DocumentNode,
@@ -34,6 +43,7 @@ export type {
 };
 export type { EditorState, FocusedMode } from '../editor/editorStore';
 
+/** State lifecycle: create, load, persist, and reset editor state. */
 export const cancelPromoteWrapperRole = editorStore.cancelPromoteWrapperRole;
 export const clearSessionState = editorStore.clearSessionState;
 export const clearPersistedState = editorStore.clearPersistedState;
@@ -71,9 +81,11 @@ export const updateTextField = editorStore.updateTextField;
 export const updateWrapperStyleField = editorStore.updateWrapperStyleField;
 export const reorderNodes = editorStore.reorderNodes;
 
+/** Stage keyboard navigation: enumerate selectable nodes and move between them. */
 export const getAdjacentStageSelection = stageNavigation.getAdjacentStageSelection;
 export const getStageSelectableNodeIds = stageNavigation.getStageSelectableNodeIds;
 
+/** documentApi pass-throughs: pure model utilities re-exported for consumer convenience. */
 export {
   SECTION_TEMPLATES,
   deleteNodeDoc,
