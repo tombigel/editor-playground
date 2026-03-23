@@ -2,10 +2,11 @@
 
 ## Architecture Overview
 
-The API layer is structured in three tiers:
+The API layer is structured as multiple modules:
 
 - **`documentApi`** — Pure `DocumentModel → DocumentModel` functions. No side effects, no editor state. Safe to use in scripts, tests, and server-side contexts.
 - **`editorApi`** — Wraps `documentApi` with editor state, selection management, and history concerns. The editor UI calls these variants.
+- **`dragDropApi`** — Pure headless drag-and-drop session lifecycle and drag resolution utilities for editor canvases.
 - **`fontApi` / `siteApi` / `editorViewApi`** — Subsystem pass-throughs that re-export public surface from the `fonts/`, `site/`, and `stage/` subsystems respectively.
 
 Every feature is achievable through the API layer without the editor UI.
@@ -326,6 +327,49 @@ Pass-through re-export from the `src/stage/` subsystem.
 | Type | Description |
 |---|---|
 | `StageProps` | Props for the `Stage` component. |
+
+---
+
+## `src/api/dragDropApi.ts`
+
+Pure headless drag-and-drop session lifecycle and drag resolution helpers for editor canvases. This module is DOM-free and can be driven from any renderer or input adapter.
+
+`dragDropApi` is intentionally DOM-agnostic: it only consumes a `DragStartContext` with pre-measured geometry and a `DragUpdateInput` stream. Public drag-drop types live in `src/api/types.ts` and are re-exported from `dragDropApi` for convenience.
+
+### Session lifecycle
+
+| Function | Signature | Description |
+|---|---|---|
+| `beginDragSession` | `(context: DragStartContext) => DragSession` | Starts a drag session from a document snapshot, pointer origin, and pre-measured geometry. |
+| `updateDragSession` | `(session: DragSession, input: DragUpdateInput) => DragSession` | Advances a drag session with pointer and modifier updates, including thresholding, snapping, drop resolution, and bounds clamping. |
+| `finishDragSession` | `(session: DragSession, input: DragUpdateInput) => DragCommitIntent` | Resolves the final drag commit as `none`, `move`, `moveSelection`, or `reparent`. |
+| `cancelDragSession` | `(session: DragSession \| null) => null` | Cancels an in-flight session without producing a commit. |
+
+### Drag resolution rules
+
+- Multi-selection is reduced to top-level ids first.
+- If a parent and child are both selected, dragging resolves to the parent only.
+- Grouped dragging is allowed only when all resolved drag ids share the same parent; otherwise the session falls back to a single anchor drag.
+- Coordinates are measured from wrapper content boxes, not border boxes, and move/reparent commits clamp fully inside the target content box.
+- `Shift` axis-locks before snapping.
+- `Alt` inverts the ambient snap toggle during drag.
+- Invalid hovered targets fall back to moving inside the current parent.
+
+### Geometry and exported types
+
+| Type | Description |
+|---|---|
+| `DragPreviewItem` | One visual preview item in the drag ghost, including offset and size. |
+| `DragGuide` | A resolved snap guide with value and source (`component` or `page`). |
+| `DragDropTarget` | A valid droppable wrapper target with measured content-box bounds and depth/order metadata. |
+| `DragGeometrySnapshot` | Pre-measured drag geometry: preview items, source offsets, source content box, snap targets, and drop targets. |
+| `DragStartContext` | Input required to begin a drag session: document, anchor id, current selection, start pointer, and geometry snapshot. |
+| `DragUpdateInput` | Pointer coordinates plus `Shift`, `Alt`, and `snapEnabled` state for one drag update. |
+| `DragSession` | Headless session state, including phase, resolved drag ids, preview position, guides, and highlighted drop target. |
+| `DragCommitIntent` | Final drag outcome: `none`, `move`, `moveSelection`, or `reparent`. |
+| `DocumentModel` | Re-exported document model type from `documentApi`. |
+| `DocumentNode` | Re-exported node union type from `documentApi`. |
+| `NodeId` | Re-exported node id type from `documentApi`. |
 
 ---
 

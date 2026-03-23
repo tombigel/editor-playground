@@ -55,8 +55,10 @@ export function renderWrapper({
   showGridLanes,
   measuredNodeSizes,
   viewport,
-  dragState,
-  setDragState,
+  dragSourceIds,
+  highlightedDropId,
+  registerDraggableNode,
+  registerDropTarget,
   setResizeState,
   onResizeStart,
   selfRegistration,
@@ -64,7 +66,6 @@ export function renderWrapper({
   ownerBottomLanePx,
 }: RenderWrapperArgs): ReactElement {
   const node = plan.node;
-  const draggedNodeIds = dragState?.draggedNodeIds ?? (dragState ? [dragState.nodeId] : []);
   const Tag = plan.tag;
   const meshLayout = plan.meshLayout;
   const wrapperResizeHandles = getWrapperResizeHandles(node, plan.isTopLevel);
@@ -106,6 +107,7 @@ export function renderWrapper({
     <Tag
       key={node.id}
       id={`stage-node-${node.id}`}
+      ref={(element) => registerDraggableNode(node.id, element)}
       data-node-id={node.id}
       data-node-label={formatNodeLabel(node)}
       className={`stage-wrapper role-${node.role} ${selectedIds.includes(node.id) ? 'selected' : ''} ${
@@ -113,7 +115,9 @@ export function renderWrapper({
       } ${
         selectedIds.length === 1 && selectedId === node.id ? 'selected-primary' : ''
       } ${
-        draggedNodeIds.includes(node.id) ? 'drag-source' : ''
+        dragSourceIds.includes(node.id) ? 'drag-source' : ''
+      } ${
+        highlightedDropId === node.id ? 'drop-target' : ''
       }`}
       aria-label={getNodeAriaLabel(node)}
       style={{
@@ -126,6 +130,7 @@ export function renderWrapper({
     >
       <div
         className="content-wrapper"
+        ref={(element) => registerDropTarget(node.id, element)}
         data-content-wrapper-for={node.id}
         data-drop-wrapper-id={node.id}
         style={contentWrapperStyle}
@@ -194,8 +199,10 @@ export function renderWrapper({
                 showGridLanes,
                 measuredNodeSizes,
                 viewport,
-                dragState,
-                setDragState,
+                dragSourceIds,
+                highlightedDropId,
+                registerDraggableNode,
+                registerDropTarget,
                 resizeState: null,
                 setResizeState,
                 onResizeStart,
@@ -208,8 +215,8 @@ export function renderWrapper({
                 selectedId,
                 selectedIds,
                 previewSticky,
-                dragState,
-                setDragState,
+                dragSourceIds,
+                registerDraggableNode,
                 setResizeState,
                 onResizeStart,
                 registration: plan.registrationMap.get(child.node.id),
@@ -261,7 +268,7 @@ export function renderWrapper({
   const trackHeight = wrapperBaseHeightPx + topDistancePx + bottomDistancePx;
   return renderStickyTrackShell({
     nodeId: node.id,
-    dragSourceId: dragState?.nodeId,
+    dragSourceIds,
     style: {
       ...plan.meshPlacement,
       width: '100%',
@@ -394,7 +401,7 @@ function renderTrackSpacer(heightPx: number) {
 
 export function renderStickyTrackShell({
   nodeId,
-  dragSourceId,
+  dragSourceIds,
   style,
   bottomFirst,
   topDistancePx,
@@ -402,7 +409,7 @@ export function renderStickyTrackShell({
   body,
 }: {
   nodeId: string;
-  dragSourceId: string | undefined;
+  dragSourceIds: string[];
   style: CSSProperties;
   bottomFirst: boolean;
   topDistancePx: number;
@@ -412,7 +419,7 @@ export function renderStickyTrackShell({
   return (
     <div
       key={`${nodeId}-track`}
-      className={`sticky-track ${dragSourceId === nodeId ? 'drag-source' : ''}`}
+      className={`sticky-track ${dragSourceIds.includes(nodeId) ? 'drag-source' : ''}`}
       style={style}
     >
       {bottomFirst ? renderTrackSpacer(bottomDistancePx) : null}

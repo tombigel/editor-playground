@@ -1,4 +1,5 @@
-import { forwardRef, type CSSProperties, type RefObject } from 'react';
+import type { CSSProperties } from 'react';
+import type { DragGuide, DragPreviewItem } from '../../api/types';
 import type { DocumentModel, DocumentNode } from '../../model/types';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
 import { isBrandMark, renderLeafContent } from '../../render/nodePresentation';
@@ -7,28 +8,48 @@ import {
   getContentWrapperSurfaceStyle,
   getWrapperBorderStyle,
 } from '../../render/layout';
-import type { DragPosition, DragState } from '../types';
+import type { DragState } from '../types';
 
-export const DragPreviewOverlay = forwardRef<HTMLDivElement, {
+type DragPreviewOverlayProps = {
   document: DocumentModel;
-  dragState: Exclude<DragState, null>;
-}>(function DragPreviewOverlay({ document, dragState }, ref) {
-  const previewItems = dragState.previewItems ?? [
-    {
-      nodeId: dragState.nodeId,
-      offsetX: 0,
-      offsetY: 0,
-      width: dragState.previewWidth,
-      height: dragState.previewHeight,
-    },
-  ];
+  previewItems?: DragPreviewItem[];
+  previewLeft?: number;
+  previewTop?: number;
+  dragState?: Exclude<DragState, null>;
+};
 
+type SnapGuideOverlayProps = {
+  guideX: DragGuide | null;
+  guideY: DragGuide | null;
+};
+
+export function DragPreviewOverlay(props: DragPreviewOverlayProps) {
+  const document = props.document;
+  const previewItems =
+    props.dragState
+      ? props.dragState.previewItems ?? [
+          {
+            nodeId: props.dragState.nodeId,
+            offsetX: 0,
+            offsetY: 0,
+            width: props.dragState.previewWidth,
+            height: props.dragState.previewHeight,
+          },
+        ]
+      : props.previewItems ?? [];
+  const previewLeft =
+    props.dragState
+      ? props.dragState.startClientX - props.dragState.grabOffsetX
+      : props.previewLeft ?? 0;
+  const previewTop =
+    props.dragState
+      ? props.dragState.startClientY - props.dragState.grabOffsetY
+      : props.previewTop ?? 0;
   return (
     <div
-      ref={ref}
       className="drag-preview-container"
       style={{
-        transform: `translate(${dragState.startClientX - dragState.grabOffsetX}px, ${dragState.startClientY - dragState.grabOffsetY}px)`,
+        transform: `translate(${previewLeft}px, ${previewTop}px)`,
       }}
     >
       {previewItems.map((item) => {
@@ -52,69 +73,30 @@ export const DragPreviewOverlay = forwardRef<HTMLDivElement, {
       })}
     </div>
   );
-});
+}
 
-export function SnapGuideOverlay({
-  xRef,
-  yRef,
-}: {
-  xRef: RefObject<HTMLDivElement | null>;
-  yRef: RefObject<HTMLDivElement | null>;
-}) {
+export function SnapGuideOverlay(props: SnapGuideOverlayProps) {
+  const { guideX, guideY } = props;
   return (
     <>
-      <div
-        ref={xRef}
-        className="snap-guide snap-guide-vertical snap-guide-component"
-        style={{ display: 'none' }}
-      />
-      <div
-        ref={yRef}
-        className="snap-guide snap-guide-horizontal snap-guide-component"
-        style={{ display: 'none' }}
-      />
+      {guideX ? (
+        <div
+          className={`snap-guide snap-guide-vertical ${
+            guideX.source === 'page' ? 'snap-guide-page' : 'snap-guide-component'
+          }`}
+          style={{ left: `${guideX.value}px` }}
+        />
+      ) : null}
+      {guideY ? (
+        <div
+          className={`snap-guide snap-guide-horizontal ${
+            guideY.source === 'page' ? 'snap-guide-page' : 'snap-guide-component'
+          }`}
+          style={{ top: `${guideY.value}px` }}
+        />
+      ) : null}
     </>
   );
-}
-
-export function updateDragPreviewPosition(
-  previewRef: RefObject<HTMLDivElement | null>,
-  dragState: Exclude<DragState, null>,
-  position: DragPosition,
-) {
-  if (!previewRef.current) return;
-  const baseLeft = position.clientX - dragState.grabOffsetX;
-  const baseTop = position.clientY - dragState.grabOffsetY;
-  previewRef.current.style.transform = `translate(${baseLeft}px, ${baseTop}px)`;
-}
-
-export function updateSnapGuidePositions(
-  xRef: RefObject<HTMLDivElement | null>,
-  yRef: RefObject<HTMLDivElement | null>,
-  position: DragPosition,
-) {
-  if (xRef.current) {
-    if (position.guideX !== null) {
-      xRef.current.style.display = '';
-      xRef.current.style.left = `${position.guideX}px`;
-      xRef.current.className = `snap-guide snap-guide-vertical ${
-        position.guideXSource === 'page' ? 'snap-guide-page' : 'snap-guide-component'
-      }`;
-    } else {
-      xRef.current.style.display = 'none';
-    }
-  }
-  if (yRef.current) {
-    if (position.guideY !== null) {
-      yRef.current.style.display = '';
-      yRef.current.style.top = `${position.guideY}px`;
-      yRef.current.className = `snap-guide snap-guide-horizontal ${
-        position.guideYSource === 'page' ? 'snap-guide-page' : 'snap-guide-component'
-      }`;
-    } else {
-      yRef.current.style.display = 'none';
-    }
-  }
 }
 
 function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {

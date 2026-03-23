@@ -42,7 +42,7 @@ import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolv
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument } from '../model/validation';
-import type { DocumentCommand } from './types';
+import type { DocumentCommand } from './types/index';
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
 
@@ -61,7 +61,7 @@ export type {
   WrapperStyleField,
   WrapperRole,
 };
-export type { DocumentCommand } from './types';
+export type { DocumentCommand } from './types/index';
 
 export {
   SECTION_TEMPLATES,

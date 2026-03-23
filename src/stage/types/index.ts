@@ -135,6 +135,10 @@ export type MeasuredNodeSizes = StickyMeasuredNodeSizes;
 export type StageStickyRegistration =
 	RenderWrapperPlanNode["stickyState"]["registrations"][number];
 export type StageSceneLeafNode = RenderLeafPlanNode["node"];
+export type StageNodeRegistration = (
+	id: NodeId,
+	element: HTMLElement | null,
+) => void;
 
 export type StageSceneProps = {
 	document: DocumentModel;
@@ -150,8 +154,10 @@ export type StageSceneProps = {
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;
 	onResizeStart: (id: NodeId) => void;
-	dragState: DragState;
-	setDragState: (state: DragState) => void;
+	dragSourceIds: NodeId[];
+	highlightedDropId: NodeId | null;
+	registerDraggableNode: StageNodeRegistration;
+	registerDropTarget: StageNodeRegistration;
 	resizeState: ResizeState;
 	setResizeState: (state: ResizeState) => void;
 	measuredNodeSizes: RenderMeasuredNodeSizes;
@@ -168,8 +174,10 @@ export type RenderWrapperArgs = {
 	showGridLanes: boolean;
 	measuredNodeSizes: RenderMeasuredNodeSizes;
 	viewport: ViewportMeasurement;
-	dragState: DragState;
-	setDragState: (state: DragState) => void;
+	dragSourceIds: NodeId[];
+	highlightedDropId: NodeId | null;
+	registerDraggableNode: StageNodeRegistration;
+	registerDropTarget: StageNodeRegistration;
 	resizeState: ResizeState;
 	setResizeState: (state: ResizeState) => void;
 	onResizeStart: (id: NodeId) => void;

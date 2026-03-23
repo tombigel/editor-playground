@@ -16,8 +16,10 @@ export const StageScene = memo(function StageScene({
   spacerVisibility,
   showGridLanes,
   onResizeStart,
-  dragState,
-  setDragState,
+  dragSourceIds,
+  highlightedDropId,
+  registerDraggableNode,
+  registerDropTarget,
   resizeState,
   setResizeState,
   measuredNodeSizes,
@@ -42,8 +44,10 @@ export const StageScene = memo(function StageScene({
                 showGridLanes,
                 measuredNodeSizes,
                 viewport,
-                dragState,
-                setDragState,
+                dragSourceIds,
+                highlightedDropId,
+                registerDraggableNode,
+                registerDropTarget,
                 resizeState,
                 setResizeState,
                 onResizeStart,
@@ -64,8 +68,10 @@ export const StageScene = memo(function StageScene({
                 showGridLanes,
                 measuredNodeSizes,
                 viewport,
-                dragState,
-                setDragState,
+                dragSourceIds,
+                highlightedDropId,
+                registerDraggableNode,
+                registerDropTarget,
                 resizeState,
                 setResizeState,
                 onResizeStart,
@@ -86,8 +92,10 @@ export const StageScene = memo(function StageScene({
                 showGridLanes,
                 measuredNodeSizes,
                 viewport,
-                dragState,
-                setDragState,
+                dragSourceIds,
+                highlightedDropId,
+                registerDraggableNode,
+                registerDropTarget,
                 resizeState,
                 setResizeState,
                 onResizeStart,
@@ -108,7 +116,10 @@ export const StageScene = memo(function StageScene({
   prev.previewSticky === next.previewSticky &&
   prev.spacerVisibility === next.spacerVisibility &&
   prev.showGridLanes === next.showGridLanes &&
-  prev.dragState === next.dragState &&
+  prev.dragSourceIds === next.dragSourceIds &&
+  prev.highlightedDropId === next.highlightedDropId &&
+  prev.registerDraggableNode === next.registerDraggableNode &&
+  prev.registerDropTarget === next.registerDropTarget &&
   prev.resizeState === next.resizeState &&
   prev.measuredNodeSizes === next.measuredNodeSizes &&
   prev.viewport === next.viewport,

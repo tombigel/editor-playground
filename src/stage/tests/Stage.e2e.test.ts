@@ -11,6 +11,8 @@ type TestDocumentIds = {
   nestedContainerId: string;
   targetContainerId: string;
   reparentLeafId: string;
+  siblingLeafId: string;
+  otherContainerLeafId: string;
   axisLeafId: string;
   snapLeafId: string;
 };
@@ -481,6 +483,150 @@ describe('stage/Stage e2e', () => {
 
     await closeEditor();
   }, 30_000);
+
+  it('drags same-parent multi-selection as a group', async () => {
+    const { document, ids } = createE2EDocument();
+    await openEditor({ document, snapEnabled: false });
+
+    const first = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+    const second = page.locator(`[data-node-id="${ids.siblingLeafId}"]`).first();
+
+    await first.click();
+    await second.click({ modifiers: ['Shift'] });
+
+    const before = await readPersistedState();
+    const beforeFirstX = before.document.nodes[ids.reparentLeafId].rect.x.base.raw;
+    const beforeFirstY = before.document.nodes[ids.reparentLeafId].rect.y.base.raw;
+    const beforeSecondX = before.document.nodes[ids.siblingLeafId].rect.x.base.raw;
+    const beforeSecondY = before.document.nodes[ids.siblingLeafId].rect.y.base.raw;
+
+    const firstBox = await first.boundingBox();
+    expect(firstBox).not.toBeNull();
+
+    await dragLocatorToPoint(
+      `[data-node-id="${ids.reparentLeafId}"]`,
+      (firstBox?.x ?? 0) + (firstBox?.width ?? 0) / 2 + 90,
+      (firstBox?.y ?? 0) + (firstBox?.height ?? 0) / 2 + 50,
+    );
+
+    await page.waitForFunction(
+      ({ storageKey, firstId, secondId, beforeA, beforeB }) => {
+        const state = JSON.parse(window.localStorage.getItem(storageKey) ?? 'null');
+        return (
+          state?.document?.nodes?.[firstId]?.rect?.x?.base?.raw !== beforeA ||
+          state?.document?.nodes?.[secondId]?.rect?.x?.base?.raw !== beforeB
+        );
+      },
+      {
+        storageKey: STORAGE_KEY,
+        firstId: ids.reparentLeafId,
+        secondId: ids.siblingLeafId,
+        beforeA: beforeFirstX,
+        beforeB: beforeSecondX,
+      },
+    );
+
+    const after = await readPersistedState();
+    expect(after.document.nodes[ids.reparentLeafId].parentId).toBe(ids.sourceContainerId);
+    expect(after.document.nodes[ids.siblingLeafId].parentId).toBe(ids.sourceContainerId);
+    expect(after.document.nodes[ids.reparentLeafId].rect.x.base.raw).not.toBe(beforeFirstX);
+    expect(after.document.nodes[ids.reparentLeafId].rect.y.base.raw).not.toBe(beforeFirstY);
+    expect(after.document.nodes[ids.siblingLeafId].rect.x.base.raw).not.toBe(beforeSecondX);
+    expect(after.document.nodes[ids.siblingLeafId].rect.y.base.raw).not.toBe(beforeSecondY);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('drags only the parent when a parent and child are both selected', async () => {
+    const { document, ids } = createE2EDocument();
+    await openEditor({ document, snapEnabled: false });
+
+    const container = page.locator(`[data-node-id="${ids.sourceContainerId}"]`).first();
+    const child = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+
+    const containerBox = await container.boundingBox();
+    expect(containerBox).not.toBeNull();
+
+    await page.mouse.click((containerBox?.x ?? 0) + 18, (containerBox?.y ?? 0) + 18);
+    await child.click({ modifiers: ['Shift'] });
+
+    const before = await readPersistedState();
+    const beforeContainerX = before.document.nodes[ids.sourceContainerId].rect.x.base.raw;
+    const beforeContainerY = before.document.nodes[ids.sourceContainerId].rect.y.base.raw;
+    const beforeChildX = before.document.nodes[ids.reparentLeafId].rect.x.base.raw;
+    const beforeChildY = before.document.nodes[ids.reparentLeafId].rect.y.base.raw;
+
+    const childBox = await child.boundingBox();
+    expect(childBox).not.toBeNull();
+
+    await dragLocatorToPoint(
+      `[data-node-id="${ids.reparentLeafId}"]`,
+      (childBox?.x ?? 0) + (childBox?.width ?? 0) / 2 + 110,
+      (childBox?.y ?? 0) + (childBox?.height ?? 0) / 2 + 60,
+    );
+
+    await page.waitForFunction(
+      ({ storageKey, nodeId, beforeX }) => {
+        const state = JSON.parse(window.localStorage.getItem(storageKey) ?? 'null');
+        return state?.document?.nodes?.[nodeId]?.rect?.x?.base?.raw !== beforeX;
+      },
+      {
+        storageKey: STORAGE_KEY,
+        nodeId: ids.sourceContainerId,
+        beforeX: beforeContainerX,
+      },
+    );
+
+    const after = await readPersistedState();
+    expect(after.document.nodes[ids.sourceContainerId].rect.x.base.raw).not.toBe(beforeContainerX);
+    expect(after.document.nodes[ids.sourceContainerId].rect.y.base.raw).not.toBe(beforeContainerY);
+    expect(after.document.nodes[ids.reparentLeafId].rect.x.base.raw).toBe(beforeChildX);
+    expect(after.document.nodes[ids.reparentLeafId].rect.y.base.raw).toBe(beforeChildY);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('falls back to dragging only the anchor for mixed-parent multi-selection', async () => {
+    const { document, ids } = createE2EDocument();
+    await openEditor({ document, snapEnabled: false });
+
+    const first = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+    const other = page.locator(`[data-node-id="${ids.otherContainerLeafId}"]`).first();
+
+    await first.click();
+    await other.click({ modifiers: ['Shift'] });
+
+    const before = await readPersistedState();
+    const beforeFirstX = before.document.nodes[ids.reparentLeafId].rect.x.base.raw;
+    const beforeOtherX = before.document.nodes[ids.otherContainerLeafId].rect.x.base.raw;
+
+    const firstBox = await first.boundingBox();
+    expect(firstBox).not.toBeNull();
+
+    await dragLocatorToPoint(
+      `[data-node-id="${ids.reparentLeafId}"]`,
+      (firstBox?.x ?? 0) + (firstBox?.width ?? 0) / 2 + 90,
+      (firstBox?.y ?? 0) + (firstBox?.height ?? 0) / 2 + 50,
+    );
+
+    await page.waitForFunction(
+      ({ storageKey, nodeId, beforeX }) => {
+        const state = JSON.parse(window.localStorage.getItem(storageKey) ?? 'null');
+        return state?.document?.nodes?.[nodeId]?.rect?.x?.base?.raw !== beforeX;
+      },
+      {
+        storageKey: STORAGE_KEY,
+        nodeId: ids.reparentLeafId,
+        beforeX: beforeFirstX,
+      },
+    );
+
+    const after = await readPersistedState();
+    expect(after.document.nodes[ids.reparentLeafId].rect.x.base.raw).not.toBe(beforeFirstX);
+    expect(after.document.nodes[ids.otherContainerLeafId].rect.x.base.raw).toBe(beforeOtherX);
+
+    await closeEditor();
+  }, 30_000);
 });
 
 function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } {
@@ -506,6 +652,16 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
   reparentLeaf.content = 'Reparent me';
   reparentLeaf.rect = createDefaultRect('188px', '36px', '160px', 'auto');
 
+  const siblingLeaf = createLeaf('text', sourceContainer.id) as TextLeaf;
+  siblingLeaf.name = 'Sibling Group Leaf';
+  siblingLeaf.content = 'Group drag me too';
+  siblingLeaf.rect = createDefaultRect('52px', '160px', '160px', 'auto');
+
+  const otherContainerLeaf = createLeaf('text', targetContainer.id) as TextLeaf;
+  otherContainerLeaf.name = 'Other Container Leaf';
+  otherContainerLeaf.content = 'Different parent';
+  otherContainerLeaf.rect = createDefaultRect('36px', '44px', '160px', 'auto');
+
   const axisLeaf = createLeaf('text', section.id) as TextLeaf;
   axisLeaf.name = 'Axis Lock Leaf';
   axisLeaf.content = 'Shift drag me';
@@ -516,8 +672,8 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
   snapLeaf.content = 'Snap me';
   snapLeaf.rect = createDefaultRect('160px', '620px', '180px', 'auto');
 
-  sourceContainer.children = [nestedContainer.id, reparentLeaf.id];
-  targetContainer.children = [];
+  sourceContainer.children = [nestedContainer.id, reparentLeaf.id, siblingLeaf.id];
+  targetContainer.children = [otherContainerLeaf.id];
   nestedContainer.children = [];
   section.children = [sourceContainer.id, targetContainer.id, axisLeaf.id, snapLeaf.id];
 
@@ -538,6 +694,8 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
       [nestedContainer.id]: nestedContainer,
       [targetContainer.id]: targetContainer,
       [reparentLeaf.id]: reparentLeaf,
+      [siblingLeaf.id]: siblingLeaf,
+      [otherContainerLeaf.id]: otherContainerLeaf,
       [axisLeaf.id]: axisLeaf,
       [snapLeaf.id]: snapLeaf,
     },
@@ -551,6 +709,8 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
       nestedContainerId: nestedContainer.id,
       targetContainerId: targetContainer.id,
       reparentLeafId: reparentLeaf.id,
+      siblingLeafId: siblingLeaf.id,
+      otherContainerLeafId: otherContainerLeaf.id,
       axisLeafId: axisLeaf.id,
       snapLeafId: snapLeaf.id,
     },

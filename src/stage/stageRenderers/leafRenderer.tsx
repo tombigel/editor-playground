@@ -25,11 +25,11 @@ import {
   getResizeStartSize,
   numericHeight,
   numericWidth,
-  type DragState,
   type ResizeState,
 } from '../stageMath';
 import type {
   StageSceneLeafNode as LeafNode,
+  StageNodeRegistration,
   StageStickyRegistration,
 } from '../types';
 import { ResizeHandleView, renderOffsetVisual } from './resizeHandles';
@@ -46,8 +46,8 @@ export function renderLeaf({
   selectedId,
   selectedIds,
   previewSticky,
-  dragState,
-  setDragState: _setDragState,
+  dragSourceIds,
+  registerDraggableNode,
   setResizeState,
   onResizeStart,
   registration,
@@ -58,8 +58,8 @@ export function renderLeaf({
   selectedId: NodeId | null;
   selectedIds: NodeId[];
   previewSticky: boolean;
-  dragState: DragState;
-  setDragState: (state: DragState) => void;
+  dragSourceIds: NodeId[];
+  registerDraggableNode: StageNodeRegistration;
   setResizeState: (state: ResizeState) => void;
   onResizeStart: (id: NodeId) => void;
   registration?: StageStickyRegistration;
@@ -67,7 +67,6 @@ export function renderLeaf({
   viewport: ViewportMeasurement;
 }) {
   const child = plan.node;
-  const draggedNodeIds = dragState?.draggedNodeIds ?? (dragState ? [dragState.nodeId] : []);
   const meshPlacement = plan.meshPlacement;
   const isAutoSticky =
     child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
@@ -83,11 +82,12 @@ export function renderLeaf({
     <div
       key={child.id}
       id={`stage-node-${child.id}`}
+      ref={(element) => registerDraggableNode(child.id, element)}
       data-node-id={child.id}
       data-node-label={formatNodeLabel(child)}
       className={`stage-leaf role-${child.role} ${brandMark ? 'is-brand-mark' : ''} ${
         selectedIds.includes(child.id) ? 'selected' : ''
-      } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${draggedNodeIds.includes(child.id) ? 'drag-source' : ''}`}
+      } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${dragSourceIds.includes(child.id) ? 'drag-source' : ''}`}
       aria-label={getNodeAriaLabel(child)}
       style={{
         ...(isSelfStickyTrack
@@ -159,7 +159,7 @@ export function renderLeaf({
       : leafHeightPx + topDistancePx + bottomDistancePx;
   return renderStickyTrackShell({
     nodeId: child.id,
-    dragSourceId: dragState?.nodeId,
+    dragSourceIds,
     style: {
       ...meshPlacement,
       width: trackWidth,

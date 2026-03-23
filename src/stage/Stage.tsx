@@ -1,52 +1,29 @@
-import { type RefObject, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { getTopLevelSelectedIds } from "../editor/selection";
-import { collectAllSnapTargets } from "./math/snap";
+import { useStageDragDrop } from "./dragDrop/useStageDragDrop";
 import { StageScene } from "./StageScene";
 import {
 	areMeasuredNodeSizesEqual,
 	computeResizeFrame,
-	createDragState,
 	DEFAULT_STAGE_VIEWPORT,
 	didDragPointerMove,
-	findDropWrapper,
-	getDropLocalPointerPosition,
 	getResizeCommitSize,
 	measureCssViewport,
 	measureStageNodeSizes,
 	measureStageViewport,
 	px,
-	resolveDragPointerPosition,
 } from "./stageMath";
 import {
 	DragPreviewOverlay,
 	SnapGuideOverlay,
-	updateDragPreviewPosition,
-	updateSnapGuidePositions,
 } from "./stageRenderers/dragOverlay";
 import type {
-	CachedSnapTargets,
-	DragPosition,
-	DragState,
 	MeasuredNodeSizes,
 	ResizeState,
 	StageProps,
 } from "./types";
 
 export type { StageProps } from "./types";
-
-type PendingNodeInteraction = {
-	kind: "node";
-	nodeId: string;
-	mode: "replace" | "toggle";
-	preservedSelection: boolean;
-	dragSelectionIds: string[];
-	element: HTMLElement;
-	startClientX: number;
-	startClientY: number;
-	originX: number;
-	originY: number;
-	parentId?: string;
-};
 
 type MarqueeState = {
 	clickedId: string | null;
@@ -91,16 +68,7 @@ export function Stage({
 		{},
 	);
 	const [viewport, setViewport] = useState(DEFAULT_STAGE_VIEWPORT);
-	const [dragState, setDragState] = useState<DragState>(null);
-	const dragPositionRef = useRef<DragPosition | null>(null);
-	const dragPreviewRef = useRef<HTMLDivElement | null>(null);
-	const snapGuideXRef = useRef<HTMLDivElement | null>(null);
-	const snapGuideYRef = useRef<HTMLDivElement | null>(null);
-	const snapTargetsRef = useRef<CachedSnapTargets | null>(null);
-	const dropTargetRef = useRef<HTMLElement | null>(null);
 	const [resizeState, setResizeState] = useState<ResizeState>(null);
-	const [pendingNodeInteraction, setPendingNodeInteraction] =
-		useState<PendingNodeInteraction | null>(null);
 	const [marqueeState, setMarqueeState] = useState<MarqueeState | null>(null);
 	const [multiSelectionBounds, setMultiSelectionBounds] =
 		useState<MultiSelectionBounds | null>(null);
@@ -114,6 +82,17 @@ export function Stage({
 		stageRef.current = node;
 		setStageElement(node);
 	}
+
+	const dragDrop = useStageDragDrop({
+		document,
+		selectedIds,
+		snapEnabled,
+		stageElement,
+		onSelect,
+		onMove,
+		onMoveSelection,
+		onReparent,
+	});
 
 	useLayoutEffect(() => {
 		const root = stageRef.current;
@@ -156,7 +135,7 @@ export function Stage({
 	}, [document, onStickyGeometryChange]);
 
 	useLayoutEffect(() => {
-		if (selectedIds.length <= 1 || dragState) {
+		if (selectedIds.length <= 1 || dragDrop.isDragging) {
 			setMultiSelectionBounds(null);
 			return;
 		}
@@ -202,25 +181,7 @@ export function Stage({
 			width: Math.max(0, right - left),
 			height: Math.max(0, bottom - top),
 		});
-	}, [document, dragState, selectedIds]);
-
-	// When drag state transitions from null → non-null, the DragPreviewOverlay
-	// mounts with a stale initial position (mousedown coords). Apply the
-	// pre-computed current-pointer position before the browser paints.
-	useLayoutEffect(() => {
-		if (dragState && dragPositionRef.current && dragPreviewRef.current) {
-			updateDragPreviewPosition(
-				dragPreviewRef,
-				dragState,
-				dragPositionRef.current,
-			);
-			updateSnapGuidePositions(
-				snapGuideXRef,
-				snapGuideYRef,
-				dragPositionRef.current,
-			);
-		}
-	}, [dragState]);
+	}, [document, dragDrop.isDragging, selectedIds]);
 
 	return (
 		// biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor stage needs aria-activedescendant for selection tracking
@@ -235,7 +196,7 @@ export function Stage({
 			}
 			data-stage-focus-scope="true"
 			onFocus={onStageFocus}
-			onMouseDown={(event) => {
+			onPointerDown={(event) => {
 				const target = event.target as HTMLElement;
 				if (target.closest('[data-stage-resize-handle="true"]')) {
 					return;
@@ -266,42 +227,12 @@ export function Stage({
 						currentClientY: event.clientY,
 						active: false,
 					});
-					setPendingNodeInteraction(null);
 					return;
 				}
 
 				if (nodeElement && nodeId && node && node.type !== "site") {
-					const preservesSelection =
-						mode === "replace" &&
-						selectedIds.includes(nodeId) &&
-						selectedIds.length > 1;
-					// Scope multi-drag to same-parent siblings: elements in
-					// different parents use different coordinate systems, so
-					// a single viewport delta can't move them correctly.
-					const dragSelectionIds = preservesSelection
-						? getTopLevelSelectedIds(document, selectedIds).filter(
-								(id) => document.nodes[id]?.parentId === node.parentId,
-							)
-						: [nodeId];
-
-					if (!preservesSelection) {
-						onSelect(nodeId, mode);
-					}
-
-					setPendingNodeInteraction({
-						kind: "node",
-						nodeId,
-						mode,
-						preservedSelection: preservesSelection,
-						dragSelectionIds,
-						element: nodeElement,
-						startClientX: event.clientX,
-						startClientY: event.clientY,
-						originX: parseFloat(node.rect.x.base.raw) || 0,
-						originY: parseFloat(node.rect.y.base.raw) || 0,
-						parentId: node.parentId ?? undefined,
-					});
 					setMarqueeState(null);
+					dragDrop.handleNodePointerDown(event);
 					return;
 				}
 
@@ -314,84 +245,9 @@ export function Stage({
 					currentClientY: event.clientY,
 					active: false,
 				});
-				setPendingNodeInteraction(null);
 			}}
-			onMouseMove={(event) => {
-				if (dragState) {
-					const snapped = resolveDragPointerPosition(
-						dragState,
-						event.clientX,
-						event.clientY,
-						{
-							shiftKey: event.shiftKey,
-							altKey: event.altKey,
-							snapEnabled,
-							snapTargets: snapTargetsRef.current ?? undefined,
-						},
-					);
-					const position: DragPosition = {
-						clientX: snapped.clientX,
-						clientY: snapped.clientY,
-						guideX: snapped.guideX,
-						guideY: snapped.guideY,
-						guideXSource: snapped.guideXSource,
-						guideYSource: snapped.guideYSource,
-					};
-					dragPositionRef.current = position;
-					updateDragPreviewPosition(dragPreviewRef, dragState, position);
-					updateSnapGuidePositions(snapGuideXRef, snapGuideYRef, position);
-					updateDropTargetHighlight(
-						document,
-						dragState,
-						snapped.clientX,
-						snapped.clientY,
-						dropTargetRef,
-						stageRef.current,
-					);
-				}
-
-				if (
-					pendingNodeInteraction &&
-					didDragPointerMove(
-						pendingNodeInteraction,
-						event.clientX,
-						event.clientY,
-					)
-				) {
-					const previewItems = collectDragPreviewItems(
-						stageRef.current,
-						pendingNodeInteraction.element,
-						pendingNodeInteraction.dragSelectionIds,
-					);
-					const newDragState = createDragState({
-						nodeId: pendingNodeInteraction.nodeId,
-						draggedNodeIds: pendingNodeInteraction.dragSelectionIds,
-						previewItems,
-						parentId: pendingNodeInteraction.parentId,
-						element: pendingNodeInteraction.element,
-						clientX: pendingNodeInteraction.startClientX,
-						clientY: pendingNodeInteraction.startClientY,
-						originX: pendingNodeInteraction.originX,
-						originY: pendingNodeInteraction.originY,
-					});
-					snapTargetsRef.current = collectAllSnapTargets(newDragState.nodeId);
-					// Pre-compute the drag position for the current pointer so the
-					// preview mounts at the right place (see useLayoutEffect below).
-					dragPositionRef.current = resolveDragPointerPosition(
-						newDragState,
-						event.clientX,
-						event.clientY,
-						{
-							shiftKey: event.shiftKey,
-							altKey: event.altKey,
-							snapEnabled,
-							snapTargets: snapTargetsRef.current,
-						},
-					);
-					setDragState(newDragState);
-					setPendingNodeInteraction(null);
-				}
-
+			onPointerMove={(event) => {
+				dragDrop.handlePointerMove(event);
 				if (marqueeState) {
 					setMarqueeState({
 						...marqueeState,
@@ -435,112 +291,8 @@ export function Stage({
 					}
 				}
 			}}
-			onMouseUp={(event) => {
-				if (dragState) {
-					if (didDragPointerMove(dragState, event.clientX, event.clientY)) {
-						const snapped = resolveDragPointerPosition(
-							dragState,
-							event.clientX,
-							event.clientY,
-							{
-								shiftKey: event.shiftKey,
-								altKey: event.altKey,
-								snapEnabled,
-							},
-						);
-						const draggedNodeIds = dragState.draggedNodeIds ?? [
-							dragState.nodeId,
-						];
-						if (draggedNodeIds.length > 1) {
-							const deltaX = snapped.clientX - dragState.startClientX;
-							const deltaY = snapped.clientY - dragState.startClientY;
-							onMoveSelection?.(
-								draggedNodeIds.flatMap((nodeId) => {
-									const draggedNode = document.nodes[nodeId];
-									if (!draggedNode || draggedNode.type === "site") {
-										return [];
-									}
-									return [
-										{
-											id: nodeId,
-											x: `${Math.max(0, (parseFloat(draggedNode.rect.x.base.raw) || 0) + deltaX)}px`,
-											y: `${Math.max(0, (parseFloat(draggedNode.rect.y.base.raw) || 0) + deltaY)}px`,
-										},
-									];
-								}),
-							);
-						} else {
-							const drop = findDropWrapper(
-								document,
-								dragState.nodeId,
-								snapped.clientX,
-								snapped.clientY,
-							);
-							const draggedNode = document.nodes[dragState.nodeId];
-							if (drop && draggedNode && draggedNode.type !== "site") {
-								const dropPosition = getDropLocalPointerPosition(
-									dragState,
-									drop.element,
-									snapped.clientX,
-									snapped.clientY,
-								);
-								if (draggedNode.parentId !== drop.wrapperId) {
-									const maxX = Math.max(
-										0,
-										dropPosition.contentBox.width -
-											Math.min(
-												dragState.previewWidth,
-												dropPosition.contentBox.width * 0.5,
-											),
-									);
-									const maxY = Math.max(
-										0,
-										dropPosition.contentBox.height -
-											Math.min(
-												dragState.previewHeight,
-												dropPosition.contentBox.height * 0.5,
-											),
-									);
-									const localX = Math.max(
-										0,
-										Math.min(dropPosition.localX, maxX),
-									);
-									const localY = Math.max(
-										0,
-										Math.min(dropPosition.localY, maxY),
-									);
-									onReparent(
-										dragState.nodeId,
-										drop.wrapperId,
-										`${localX}px`,
-										`${localY}px`,
-									);
-								} else {
-									const localX = dragState.useVisualOffset
-										? Math.max(0, dropPosition.localX)
-										: Math.max(
-												0,
-												dragState.originX +
-													(snapped.clientX - dragState.startClientX),
-											);
-									const localY = dragState.useVisualOffset
-										? Math.max(0, dropPosition.localY)
-										: Math.max(
-												0,
-												dragState.originY +
-													(snapped.clientY - dragState.startClientY),
-											);
-									onMove(dragState.nodeId, `${localX}px`, `${localY}px`);
-								}
-							}
-						}
-					}
-				}
-
-				if (pendingNodeInteraction?.preservedSelection) {
-					onSelect(pendingNodeInteraction.nodeId);
-				}
-
+			onPointerUp={(event) => {
+				dragDrop.handlePointerUp(event);
 				if (marqueeState) {
 					if (marqueeState.active) {
 						onSelectMany(
@@ -561,26 +313,18 @@ export function Stage({
 				if (resizeState) {
 					onResizeEnd(resizeState.nodeId);
 				}
-				setPendingNodeInteraction(null);
 				setMarqueeState(null);
-				clearDropTargetHighlight(dropTargetRef);
-				setDragState(null);
-				dragPositionRef.current = null;
-				snapTargetsRef.current = null;
 				setResizeState(null);
 			}}
-			onMouseLeave={() => {
+			onPointerCancel={(event) => {
+				dragDrop.handlePointerCancel(event);
 				if (resizeState) {
 					onResizeEnd(resizeState.nodeId);
 				}
-				setPendingNodeInteraction(null);
 				setMarqueeState(null);
-				clearDropTargetHighlight(dropTargetRef);
-				setDragState(null);
-				dragPositionRef.current = null;
-				snapTargetsRef.current = null;
 				setResizeState(null);
 			}}
+			onLostPointerCapture={dragDrop.handleLostPointerCapture}
 		>
 			<p className="sr-only">
 				Tab selects components in stage order. Arrow keys move the selected
@@ -595,21 +339,27 @@ export function Stage({
 				spacerVisibility={spacerVisibility}
 				showGridLanes={showGridLanes}
 				onResizeStart={onResizeStart}
-				dragState={dragState}
-				setDragState={setDragState}
+				dragSourceIds={dragDrop.dragSourceIds}
+				highlightedDropId={dragDrop.highlightedDropId}
+				registerDraggableNode={dragDrop.registerDraggableNode}
+				registerDropTarget={dragDrop.registerDropTarget}
 				resizeState={resizeState}
 				setResizeState={setResizeState}
 				measuredNodeSizes={measuredNodeSizes}
 				viewport={viewport}
 			/>
-			{dragState ? (
-				<SnapGuideOverlay xRef={snapGuideXRef} yRef={snapGuideYRef} />
+			{dragDrop.dragPresentation ? (
+				<SnapGuideOverlay
+					guideX={dragDrop.dragPresentation.guideX}
+					guideY={dragDrop.dragPresentation.guideY}
+				/>
 			) : null}
-			{dragState ? (
+			{dragDrop.dragPresentation ? (
 				<DragPreviewOverlay
-					ref={dragPreviewRef}
 					document={document}
-					dragState={dragState}
+					previewItems={dragDrop.dragPresentation.previewItems}
+					previewLeft={dragDrop.dragPresentation.previewLeft}
+					previewTop={dragDrop.dragPresentation.previewTop}
 				/>
 			) : null}
 			{marqueeState?.active ? (
@@ -620,80 +370,6 @@ export function Stage({
 			) : null}
 		</section>
 	);
-}
-
-function updateDropTargetHighlight(
-	document: StageProps["document"],
-	dragState: Exclude<DragState, null>,
-	clientX: number,
-	clientY: number,
-	dropTargetRef: RefObject<HTMLElement | null>,
-	stageElement: HTMLElement | null,
-) {
-	// Multi-selection drags don't support reparenting
-	const draggedNodeIds = dragState.draggedNodeIds ?? [dragState.nodeId];
-	if (draggedNodeIds.length > 1) {
-		clearDropTargetHighlight(dropTargetRef);
-		return;
-	}
-
-	const drop = findDropWrapper(document, dragState.nodeId, clientX, clientY);
-	if (!drop) {
-		clearDropTargetHighlight(dropTargetRef);
-		return;
-	}
-
-	// Target the wrapper element (not content-wrapper) so the ::after
-	// pseudo-element renders on top of the content-wrapper-surface.
-	const targetElement =
-		stageElement?.querySelector<HTMLElement>(`#stage-node-${drop.wrapperId}`) ??
-		null;
-	if (targetElement === dropTargetRef.current) {
-		return;
-	}
-
-	clearDropTargetHighlight(dropTargetRef);
-	targetElement?.classList.add("drop-target");
-	dropTargetRef.current = targetElement;
-}
-
-function clearDropTargetHighlight(
-	dropTargetRef: RefObject<HTMLElement | null>,
-) {
-	if (dropTargetRef.current) {
-		dropTargetRef.current.classList.remove("drop-target");
-		dropTargetRef.current = null;
-	}
-}
-
-function collectDragPreviewItems(
-	stageElement: HTMLDivElement | null,
-	anchorElement: HTMLElement,
-	draggedIds: string[],
-) {
-	if (!stageElement || draggedIds.length === 0) {
-		return [];
-	}
-
-	const anchorRect = anchorElement.getBoundingClientRect();
-	return draggedIds.flatMap((nodeId) => {
-		const element = stageElement.querySelector<HTMLElement>(
-			`#stage-node-${nodeId}`,
-		);
-		if (!element) {
-			return [];
-		}
-		const rect = element.getBoundingClientRect();
-		return [
-			{
-				nodeId,
-				offsetX: rect.left - anchorRect.left,
-				offsetY: rect.top - anchorRect.top,
-				width: rect.width,
-				height: rect.height,
-			},
-		];
-	});
 }
 
 function collectMarqueeSelectionIds(
