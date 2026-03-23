@@ -27,10 +27,10 @@ export function SingleSelectionOverlay({
     <div
       className="stage-single-selection-overlay"
       style={{
-        left: `${overlay.bounds.left}px`,
-        top: `${overlay.bounds.top}px`,
-        width: `${overlay.bounds.width}px`,
-        height: `${overlay.bounds.height}px`,
+        left: `${overlay.bounds.left - 2}px`,
+        top: `${overlay.bounds.top - 2}px`,
+        width: `${overlay.bounds.width + 4}px`,
+        height: `${overlay.bounds.height + 4}px`,
       }}
     >
       <div className="stage-single-selection-label">

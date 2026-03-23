@@ -196,6 +196,8 @@
   --editor-layer-sticky-label: 1;
   --editor-layer-selection: 2;
   --editor-layer-resize-handle: 2;
+  --resize-handle-size: 8px;
+  --resize-handle-offset: calc(var(--resize-handle-size) / -2 + 2px);
 }
 
 * {
@@ -2224,8 +2226,8 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 .resize-handle {
   position: absolute;
   z-index: var(--editor-layer-resize-handle);
-  width: 7px;
-  height: 7px;
+  width: var(--resize-handle-size);
+  height: var(--resize-handle-size);
   border-radius: 999px;
   background: var(--editor-resize-handle-background);
   border: 1px solid var(--editor-resize-handle-border);
@@ -2234,56 +2236,56 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 }
 
 .handle-n {
-  top: -3.5px;
-  left: calc(50% - 3.5px);
+  top: var(--resize-handle-offset);
+  left: calc(50% - var(--resize-handle-size) / 2);
   cursor: ns-resize;
 }
-
+  
 .handle-ne {
-  top: -3.5px;
-  right: -3.5px;
+  top: var(--resize-handle-offset);
+  right: var(--resize-handle-offset);
   cursor: nesw-resize;
 }
 
 .handle-e {
-  top: calc(50% - 3.5px);
-  right: -3.5px;
+  top: calc(50% - var(--resize-handle-size) / 2);
+  right: var(--resize-handle-offset);
   cursor: ew-resize;
 }
 
 .handle-se {
-  right: -3.5px;
-  bottom: -3.5px;
+  right: var(--resize-handle-offset);
+  bottom: var(--resize-handle-offset);
   cursor: nwse-resize;
 }
 
 .handle-s {
-  bottom: -3.5px;
-  left: calc(50% - 3.5px);
+  bottom: var(--resize-handle-offset);
+  left: calc(50% - var(--resize-handle-size) / 2);
   cursor: ns-resize;
 }
 
 .resize-handle-structural-s.handle-s {
-  bottom: -4px;
-  left: calc(50% - 11px);
-  width: 22px;
-  height: 8px;
+  bottom: var(--resize-handle-offset);
+  left: calc(50% - calc(var(--resize-handle-size) * 3) / 2);
+  width: calc(var(--resize-handle-size) * 3);
+  height: var(--resize-handle-size);
 }
 
 .handle-sw {
-  left: -3.5px;
-  bottom: -3.5px;
+  left: var(--resize-handle-offset);
+  bottom: var(--resize-handle-offset);
   cursor: nesw-resize;
 }
 
 .handle-w {
-  top: calc(50% - 3.5px);
-  left: -3.5px;
+  top: calc(50% - var(--resize-handle-size) / 2);
+  left: var(--resize-handle-offset);
   cursor: ew-resize;
 }
 
 .handle-nw {
-  top: -3.5px;
-  left: -3.5px;
+  top: var(--resize-handle-offset);
+  left: var(--resize-handle-offset);
   cursor: nwse-resize;
 }
