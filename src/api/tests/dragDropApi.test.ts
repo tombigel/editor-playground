@@ -152,7 +152,8 @@ describe('api/dragDropApi', () => {
       clientY: 120,
       shiftKey: false,
       altKey: false,
-      snapEnabled: false,
+      guideSnap: { enabled: false, threshold: 8, power: 1 },
+      containerSnap: { enabled: true, threshold: 0, power: 1 },
     }).phase).toBe('pending');
 
     expect(updateDragSession(session, {
@@ -160,7 +161,8 @@ describe('api/dragDropApi', () => {
       clientY: 120,
       shiftKey: false,
       altKey: false,
-      snapEnabled: false,
+      guideSnap: { enabled: false, threshold: 8, power: 1 },
+      containerSnap: { enabled: true, threshold: 0, power: 1 },
     }).phase).toBe('dragging');
   });
 
@@ -217,7 +219,8 @@ describe('api/dragDropApi', () => {
         clientY: 150,
         shiftKey: false,
         altKey: false,
-        snapEnabled: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
       },
     );
 
@@ -272,7 +275,8 @@ describe('api/dragDropApi', () => {
         clientY: 180,
         shiftKey: false,
         altKey: false,
-        snapEnabled: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
       },
     );
 
@@ -312,7 +316,8 @@ describe('api/dragDropApi', () => {
         clientY: 220,
         shiftKey: false,
         altKey: false,
-        snapEnabled: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
       },
     );
 
@@ -348,7 +353,8 @@ describe('api/dragDropApi', () => {
         clientY: 220,
         shiftKey: false,
         altKey: false,
-        snapEnabled: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
       },
     );
 
@@ -391,7 +397,8 @@ describe('api/dragDropApi', () => {
         clientY: 300,
         shiftKey: false,
         altKey: false,
-        snapEnabled: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
       },
     );
 
@@ -416,8 +423,8 @@ describe('api/dragDropApi', () => {
           previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
           nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
           sourceParentId: containerAId,
-          horizontalGuides: [{ value: 200, source: 'page' }],
-          verticalGuides: [{ value: 150, source: 'component' }],
+          horizontalGuides: [{ value: 200, source: 'page', anchor: 'edge' }],
+          verticalGuides: [{ value: 150, source: 'component', anchor: 'edge' }],
         }),
       }),
       {
@@ -425,15 +432,16 @@ describe('api/dragDropApi', () => {
         clientY: 146,
         shiftKey: false,
         altKey: false,
-        snapEnabled: true,
+        guideSnap: { enabled: true, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
       },
     );
 
     expect(session.phase).toBe('dragging');
     expect(session.currentClientX).toBe(200);
     expect(session.currentClientY).toBe(150);
-    expect(session.guideX).toEqual({ value: 200, source: 'page' });
-    expect(session.guideY).toEqual({ value: 150, source: 'component' });
+    expect(session.guideX).toEqual({ value: 200, source: 'page', anchor: 'edge' });
+    expect(session.guideY).toEqual({ value: 150, source: 'component', anchor: 'edge' });
   });
 
   it('locks to the dominant axis before snapping and inverts snapping with Alt', () => {
@@ -448,8 +456,8 @@ describe('api/dragDropApi', () => {
         previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
         nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
         sourceParentId: containerAId,
-        horizontalGuides: [{ value: 160, source: 'page' }],
-        verticalGuides: [{ value: 200, source: 'page' }],
+        horizontalGuides: [{ value: 160, source: 'page', anchor: 'edge' }],
+        verticalGuides: [{ value: 200, source: 'page', anchor: 'edge' }],
       }),
     });
 
@@ -458,7 +466,8 @@ describe('api/dragDropApi', () => {
       clientY: 120,
       shiftKey: true,
       altKey: false,
-      snapEnabled: false,
+      guideSnap: { enabled: false, threshold: 8, power: 1 },
+      containerSnap: { enabled: true, threshold: 0, power: 1 },
     });
     expect(shifted.currentClientY).toBe(100);
 
@@ -467,7 +476,8 @@ describe('api/dragDropApi', () => {
       clientY: 120,
       shiftKey: false,
       altKey: true,
-      snapEnabled: true,
+      guideSnap: { enabled: true, threshold: 8, power: 1 },
+      containerSnap: { enabled: true, threshold: 0, power: 1 },
     });
     expect(altDisabled.guideX).toBeNull();
     expect(altDisabled.guideY).toBeNull();

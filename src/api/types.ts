@@ -16,14 +16,18 @@ export type DragNodeOrigin = {
   parentId?: NodeId;
 };
 
+export type DragSnapSource = 'component' | 'page' | 'section' | 'header' | 'footer' | 'container';
+
 export type DragSnapTarget = {
   value: number;
-  source: 'component' | 'page';
+  source: DragSnapSource;
+  anchor: 'edge' | 'center';
 };
 
 export type DragGuide = {
   value: number;
-  source: 'component' | 'page';
+  source: DragSnapSource;
+  anchor: 'edge' | 'center';
 };
 
 export type DragPreviewItem = {
@@ -72,7 +76,8 @@ export type DragUpdateInput = {
   clientY: number;
   shiftKey: boolean;
   altKey: boolean;
-  snapEnabled: boolean;
+  guideSnap: { enabled: boolean; threshold: number; power: number };
+  containerSnap: { enabled: boolean; threshold: number; power: number };
 };
 
 export type DragCommitIntent =

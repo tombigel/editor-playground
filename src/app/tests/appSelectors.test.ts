@@ -8,6 +8,7 @@ import {
   selectedNodeHasBottomEdge,
   selectedNodeHasTopEdge,
 } from '../appSelectors';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 function createState(): EditorState {
   return {
@@ -19,7 +20,7 @@ function createState(): EditorState {
       previewSticky: true,
       spacerVisibility: 'selected',
       showGridLanes: false,
-      snapEnabled: true,
+      snapSettings: DEFAULT_SNAP_SETTINGS,
       themeMode: 'auto',
       accentColor: '#1668ff',
       paperAccentColor: '#a36a2c',

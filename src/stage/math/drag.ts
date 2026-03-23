@@ -232,7 +232,7 @@ export function resolveDragPointerPosition(
 	{
 		shiftKey,
 		altKey,
-		snapEnabled,
+		snapSettings,
 		snapTargets,
 		documentRef = window.document,
 		windowRef = window,
@@ -244,7 +244,8 @@ export function resolveDragPointerPosition(
 		clientY,
 		shiftKey,
 	);
-	const shouldSnap = altKey ? !snapEnabled : snapEnabled;
+	const guideSnapEnabled = snapSettings.guideSnap.enabled;
+	const shouldSnap = altKey ? !guideSnapEnabled : guideSnapEnabled;
 	if (!shouldSnap) {
 		return {
 			clientX: axisLocked.clientX,

@@ -298,6 +298,31 @@ Approved interaction colors:
 - selected node label fill: accent color
 - sticky distance / offset / padding / auto guides: accent-derived related hues, not fixed standalone hard-coded colors
 
+### Snap Guide Visual Language
+
+Snap guides are 1px overlay lines that appear during drag to indicate alignment. Each source role uses a distinct hue, and center/middle guides use a dashed style to distinguish from edge guides.
+
+Snap guide color tokens:
+
+| Role | Token | Color |
+|---|---|---|
+| Component (leaf) | `--editor-snap-guide-component` | Teal |
+| Page bounds | `--editor-snap-guide-page` | Magenta |
+| Section | `--editor-snap-guide-section` | Amber |
+| Header | `--editor-snap-guide-header` | Sky blue |
+| Footer | `--editor-snap-guide-footer` | Indigo |
+| Container | `--editor-snap-guide-container` | Lime |
+
+Anchor type differentiation:
+
+- Edge guides (top/bottom/left/right): solid gradient line
+- Center/middle guides: dashed line using the same source color
+
+CSS classes:
+
+- `.snap-guide-{source}` applies the source color (component, page, section, header, footer, container)
+- `.snap-guide-center` switches from solid gradient to dashed border
+
 Focus ring pattern:
 
 Use a token-backed equivalent such as:

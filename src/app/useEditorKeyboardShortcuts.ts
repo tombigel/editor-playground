@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
-import type { AlignmentAction, DistributionMode } from './types';
+import type { AlignmentAction, DistributionMode, SnapSettings } from './types';
 import { hasStageKeyboardFocus, isInteractiveFocus } from './useEditorEnvironment';
 
 type UseEditorKeyboardShortcutsArgs = {
@@ -20,7 +20,7 @@ type UseEditorKeyboardShortcutsArgs = {
   onOpenShortcutHelp: () => void;
   onSetPreviewSticky: (value: boolean) => void;
   onSetSpacerVisibility: (value: 'selected' | 'all') => void;
-  onSetSnapEnabled: (value: boolean) => void;
+  onSetSnapSettings: (value: Partial<SnapSettings>) => void;
   onNudgeSelection: (deltaX: number, deltaY: number) => void;
   onDeleteSelection: () => void;
   onToggleBoldSelection: () => void;
@@ -50,7 +50,7 @@ export function useEditorKeyboardShortcuts({
   onOpenShortcutHelp,
   onSetPreviewSticky,
   onSetSpacerVisibility,
-  onSetSnapEnabled,
+  onSetSnapSettings,
   onNudgeSelection,
   onDeleteSelection,
   onToggleBoldSelection,
@@ -107,7 +107,7 @@ export function useEditorKeyboardShortcuts({
         openShortcutHelp: onOpenShortcutHelp,
         setPreviewSticky: onSetPreviewSticky,
         setSpacerVisibility: onSetSpacerVisibility,
-        setSnapEnabled: onSetSnapEnabled,
+        setSnapSettings: onSetSnapSettings,
         nudgeSelection: onNudgeSelection,
         deleteSelection: onDeleteSelection,
         toggleBoldSelection: onToggleBoldSelection,
@@ -141,7 +141,7 @@ export function useEditorKeyboardShortcuts({
     onRedo,
     onSelect,
     onSetPreviewSticky,
-    onSetSnapEnabled,
+    onSetSnapSettings,
     onSetSpacerVisibility,
     onToggleBoldSelection,
     onToggleItalicSelection,

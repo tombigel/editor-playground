@@ -33,7 +33,6 @@ export type {
 } from './types';
 
 const DRAG_COMMIT_THRESHOLD_PX = 1;
-const SNAP_THRESHOLD_PX = 8;
 
 export function beginDragSession(context: DragStartContext): DragSession {
   const resolvedSelection = resolveDragSelection(
@@ -85,11 +84,16 @@ export function updateDragSession(
     input.clientY,
     input.shiftKey,
   );
+  const guideSnapEnabled = input.altKey
+    ? !input.guideSnap.enabled
+    : input.guideSnap.enabled;
   const snapped = resolveSnappedPointerPosition(
     session.geometry,
     axisLocked.clientX,
     axisLocked.clientY,
-    input.altKey ? !input.snapEnabled : input.snapEnabled,
+    guideSnapEnabled,
+    input.guideSnap.threshold,
+    input.guideSnap.power,
   );
   const highlightedDropId =
     session.dragIds.length > 1
@@ -102,13 +106,15 @@ export function updateDragSession(
           snapped.clientX,
           snapped.clientY,
         );
-  const clamped = resolveClampedPreviewPosition(
+  const contentBox = highlightedDropId
+    ? getDropTargetById(session.geometry.dropTargets, highlightedDropId)?.contentBox
+    : session.geometry.sourceContentBox;
+  const clamped = resolveContainerSnappedPosition(
     session.geometry,
     snapped.clientX,
     snapped.clientY,
-    highlightedDropId
-      ? getDropTargetById(session.geometry.dropTargets, highlightedDropId)?.contentBox
-      : session.geometry.sourceContentBox,
+    contentBox,
+    input.containerSnap,
   );
 
   return {
@@ -165,7 +171,8 @@ export function finishDragSession(
     contentBox,
     resolved.currentClientX,
     resolved.currentClientY,
-    true,
+    input.containerSnap.threshold,
+    input.containerSnap.power,
   );
 
   if (targetId !== sourceParentId) {
@@ -335,6 +342,8 @@ function resolveSnappedPointerPosition(
   clientX: number,
   clientY: number,
   snapEnabled: boolean,
+  threshold: number,
+  power: number,
 ) {
   if (!snapEnabled) {
     return {
@@ -347,28 +356,20 @@ function resolveSnappedPointerPosition(
 
   let left = clientX - geometry.grabOffsetX;
   let top = clientY - geometry.grabOffsetY;
-  const horizontalSnap = findSnap(
-    left,
-    geometry.previewWidth,
-    geometry.horizontalGuides,
-  );
-  const verticalSnap = findSnap(
-    top,
-    geometry.previewHeight,
-    geometry.verticalGuides,
-  );
+  const horizontalSnap = findSnap(left, geometry.previewWidth, geometry.horizontalGuides, threshold);
+  const verticalSnap = findSnap(top, geometry.previewHeight, geometry.verticalGuides, threshold);
   if (horizontalSnap) {
-    left += horizontalSnap.delta;
+    left += horizontalSnap.delta * power;
   }
   if (verticalSnap) {
-    top += verticalSnap.delta;
+    top += verticalSnap.delta * power;
   }
 
   return {
     clientX: left + geometry.grabOffsetX,
     clientY: top + geometry.grabOffsetY,
-    guideX: horizontalSnap ? { value: horizontalSnap.target, source: horizontalSnap.source } : null,
-    guideY: verticalSnap ? { value: verticalSnap.target, source: verticalSnap.source } : null,
+    guideX: horizontalSnap ? { value: horizontalSnap.target, source: horizontalSnap.source, anchor: horizontalSnap.anchor } : null,
+    guideY: verticalSnap ? { value: verticalSnap.target, source: verticalSnap.source, anchor: verticalSnap.anchor } : null,
   };
 }
 
@@ -376,6 +377,7 @@ function findSnap(
   start: number,
   size: number,
   targets: DragSnapTarget[],
+  threshold: number,
 ) {
   const anchors = [start, start + size / 2, start + size];
   let best:
@@ -383,7 +385,8 @@ function findSnap(
         delta: number;
         distance: number;
         target: number;
-        source: 'component' | 'page';
+        source: DragSnapTarget['source'];
+        anchor: DragSnapTarget['anchor'];
       }
     | null = null;
 
@@ -391,7 +394,7 @@ function findSnap(
     for (const anchor of anchors) {
       const delta = target.value - anchor;
       const distance = Math.abs(delta);
-      if (distance > SNAP_THRESHOLD_PX) {
+      if (distance > threshold) {
         continue;
       }
       if (!best || distance < best.distance) {
@@ -400,6 +403,7 @@ function findSnap(
           distance,
           target: target.value,
           source: target.source,
+          anchor: target.anchor,
         };
       }
     }
@@ -429,13 +433,14 @@ function resolveHighlightedDropId(
   return validTargets[0]?.id ?? sourceParentId ?? null;
 }
 
-function resolveClampedPreviewPosition(
+function resolveContainerSnappedPosition(
   geometry: DragGeometrySnapshot,
   clientX: number,
   clientY: number,
   contentBox: Rect | undefined,
+  containerSnap: { enabled: boolean; threshold: number; power: number },
 ) {
-  if (!contentBox) {
+  if (!contentBox || !containerSnap.enabled) {
     return {
       clientX,
       clientY,
@@ -449,7 +454,8 @@ function resolveClampedPreviewPosition(
     contentBox,
     clientX,
     clientY,
-    true,
+    containerSnap.threshold,
+    containerSnap.power,
   );
   const visualShiftX = geometry.useVisualOffset ? geometry.modelShiftX : 0;
   const visualShiftY = geometry.useVisualOffset ? geometry.modelShiftY : 0;
@@ -469,30 +475,34 @@ function resolveLocalPosition(
   contentBox: Rect,
   clientX: number,
   clientY: number,
-  clampToBounds: boolean,
+  threshold: number,
+  power: number,
 ) {
   const visualShiftX = geometry.useVisualOffset ? geometry.modelShiftX : 0;
   const visualShiftY = geometry.useVisualOffset ? geometry.modelShiftY : 0;
   const rawLocalX = clientX - contentBox.left - geometry.grabOffsetX - visualShiftX;
   const rawLocalY = clientY - contentBox.top - geometry.grabOffsetY - visualShiftY;
 
-  if (!clampToBounds) {
-    return {
-      localX: rawLocalX,
-      localY: rawLocalY,
-    };
-  }
+  const minX = threshold;
+  const minY = threshold;
+  const maxX = Math.max(threshold, contentBox.width - geometry.previewWidth - threshold);
+  const maxY = Math.max(threshold, contentBox.height - geometry.previewHeight - threshold);
 
-  const maxX = Math.max(0, contentBox.width - geometry.previewWidth);
-  const maxY = Math.max(0, contentBox.height - geometry.previewHeight);
-  return {
-    localX: clamp(rawLocalX, 0, maxX),
-    localY: clamp(rawLocalY, 0, maxY),
-  };
+  const localX = magneticClamp(rawLocalX, minX, maxX, power);
+  const localY = magneticClamp(rawLocalY, minY, maxY, power);
+  return { localX, localY };
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+function magneticClamp(value: number, min: number, max: number, power: number) {
+  if (value < min) {
+    const overshoot = min - value;
+    return min - overshoot * (1 - power);
+  }
+  if (value > max) {
+    const overshoot = value - max;
+    return max + overshoot * (1 - power);
+  }
+  return value;
 }
 
 function pointInRect(x: number, y: number, rect: Rect) {

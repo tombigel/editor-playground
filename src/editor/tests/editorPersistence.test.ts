@@ -9,6 +9,7 @@ import {
   DEFAULT_MONOKAI_ACCENT_COLOR,
   DEFAULT_PAPER_ACCENT_COLOR,
 } from '../../lib/theme';
+import { DEFAULT_SNAP_SETTINGS } from '../types';
 import { DEFAULT_FOCUSED_PANEL_OFFSET } from '../focusedPanelPosition';
 import {
   cloneDocument,
@@ -357,7 +358,7 @@ describe('editor/editorPersistence', () => {
       expect(state.ui.previewSticky).toBe(true);
       expect(state.ui.spacerVisibility).toBe('selected');
       expect(state.ui.showGridLanes).toBe(false);
-      expect(state.ui.snapEnabled).toBe(true);
+      expect(state.ui.snapSettings.guideSnap.enabled).toBe(true);
       expect(state.ui.themeMode).toBe('auto');
       expect(state.ui.focusedMode).toBeNull();
       expect(state.ui.startupFocusedMode).toBeNull();
@@ -399,7 +400,7 @@ describe('editor/editorPersistence', () => {
         previewSticky: false,
         spacerVisibility: 'all',
         showGridLanes: true,
-        snapEnabled: false,
+        snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
         themeMode: 'dark',
         focusedMode: 'sticky',
         startupFocusedMode: 'sticky',
@@ -479,7 +480,7 @@ describe('editor/editorPersistence', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapEnabled: true,
+            snapSettings: DEFAULT_SNAP_SETTINGS,
             themeMode: 'auto',
             focusedMode: null,
             startupFocusedMode: null,
@@ -547,7 +548,7 @@ describe('editor/editorPersistence', () => {
 
       const loaded = loadPersistedState();
       expect(loaded.ui.previewSticky).toBe(true);
-      expect(loaded.ui.snapEnabled).toBe(true);
+      expect(loaded.ui.snapSettings.guideSnap.enabled).toBe(true);
       expect(loaded.ui.showGridLanes).toBe(false);
     });
 

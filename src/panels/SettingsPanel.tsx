@@ -9,12 +9,12 @@ import {
 	FileUp,
 	Grid3X3,
 	Keyboard,
-	Magnet,
 	Settings,
 	SlidersHorizontal,
 	SwatchBook,
 	Type,
 } from "lucide-react";
+import { SnapSettingsGroup } from "./settings/SnapSettingsGroup";
 import type { ChangeEvent } from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -76,7 +76,7 @@ type Props = {
 	previewSticky: boolean;
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;
-	snapEnabled: boolean;
+	snapSettings: import('../editor/types').SnapSettings;
 	themeMode: ThemeMode;
 	accentColor: string;
 	lightTheme: EditorLightTheme;
@@ -94,7 +94,7 @@ type Props = {
 	onPreviewStickyChange: (value: boolean) => void;
 	onSpacerVisibilityChange: (value: "selected" | "all") => void;
 	onShowGridLanesChange: (value: boolean) => void;
-	onSnapEnabledChange: (value: boolean) => void;
+	onSnapSettingsChange: (value: Partial<import('../editor/types').SnapSettings>) => void;
 	onThemeModeChange: (value: ThemeMode) => void;
 	onAccentColorChange: (value: string) => void;
 	onLightThemeChange: (value: EditorLightTheme) => void;
@@ -160,7 +160,7 @@ export function SettingsPanel({
 	previewSticky,
 	spacerVisibility,
 	showGridLanes,
-	snapEnabled,
+	snapSettings,
 	themeMode,
 	accentColor,
 	lightTheme,
@@ -178,7 +178,7 @@ export function SettingsPanel({
 	onPreviewStickyChange,
 	onSpacerVisibilityChange,
 	onShowGridLanesChange,
-	onSnapEnabledChange,
+	onSnapSettingsChange,
 	onThemeModeChange,
 	onAccentColorChange,
 	onLightThemeChange,
@@ -460,13 +460,9 @@ export function SettingsPanel({
 									checked={showGridLanes}
 									onCheckedChange={onShowGridLanesChange}
 								/>
-								<SettingRow
-									icon={Magnet}
-									title="Snap to guides"
-									description="Snaps drag movement to page and node guides."
-									note="Hold Alt while dragging to invert the current mode."
-									checked={snapEnabled}
-									onCheckedChange={onSnapEnabledChange}
+								<SnapSettingsGroup
+									snapSettings={snapSettings}
+									onSnapSettingsChange={onSnapSettingsChange}
 								/>
 							</section>
 

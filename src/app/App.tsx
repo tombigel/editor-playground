@@ -115,7 +115,7 @@ export function App() {
     ui: {
       previewSticky: state.ui.previewSticky,
       spacerVisibility: state.ui.spacerVisibility,
-      snapEnabled: state.ui.snapEnabled,
+      snapSettings: state.ui.snapSettings,
     },
     hasDismissiblePanels: panels.hasDismissiblePanels || state.ui.temporaryInspectorOpen,
     shortcutPlatform,
@@ -130,7 +130,7 @@ export function App() {
     onOpenShortcutHelp: () => panels.setShortcutHelpOpen(true),
     onSetPreviewSticky: (value) => dispatch({ type: 'setPreviewSticky', value }),
     onSetSpacerVisibility: (value) => dispatch({ type: 'setSpacerVisibility', value }),
-    onSetSnapEnabled: (value) => dispatch({ type: 'setSnapEnabled', value }),
+    onSetSnapSettings: (value) => dispatch({ type: 'setSnapSettings', value }),
     onNudgeSelection: (deltaX, deltaY) => dispatch({ type: 'nudgeSelection', deltaX, deltaY }),
     onDeleteSelection: () => dispatch({ type: 'delete' }),
     onToggleBoldSelection: () => dispatchBoldToggleSelection(),

@@ -204,6 +204,17 @@ const COLOR_TOKEN_GROUPS: Array<{ title: string; tokens: string[] }> = [
 		],
 	},
 	{
+		title: "Snap Guides",
+		tokens: [
+			"--editor-snap-guide-component",
+			"--editor-snap-guide-page",
+			"--editor-snap-guide-section",
+			"--editor-snap-guide-header",
+			"--editor-snap-guide-footer",
+			"--editor-snap-guide-container",
+		],
+	},
+	{
 		title: "Scrollbar",
 		tokens: [
 			"--editor-scrollbar-track",

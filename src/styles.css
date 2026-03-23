@@ -114,6 +114,12 @@
   --editor-focus-ring: color-mix(in srgb, var(--editor-accent) 20%, transparent);
   --editor-focus-ring-strong: color-mix(in srgb, var(--editor-accent) 40%, transparent);
   --editor-focus-ring-offset: var(--editor-surface-background);
+  --editor-snap-guide-component: rgba(20, 184, 166, 0.75);
+  --editor-snap-guide-page: rgba(217, 70, 239, 0.78);
+  --editor-snap-guide-section: rgba(245, 158, 11, 0.78);
+  --editor-snap-guide-header: rgba(56, 189, 248, 0.78);
+  --editor-snap-guide-footer: rgba(129, 140, 248, 0.78);
+  --editor-snap-guide-container: rgba(132, 204, 22, 0.78);
   --editor-topbar-background: color-mix(in srgb, var(--editor-accent) 82%, #113b91);
   --editor-topbar-border: color-mix(in srgb, var(--editor-accent) 74%, #0e2b6f);
   --editor-topbar-shadow: 0 1px 0 color-mix(in srgb, #ffffff 12%, transparent);
@@ -1738,44 +1744,60 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 }
 
 .snap-guide-component.snap-guide-vertical {
-  background: linear-gradient(
-    to bottom,
-    rgba(20, 184, 166, 0),
-    rgba(20, 184, 166, 0.75) 20%,
-    rgba(20, 184, 166, 0.75) 80%,
-    rgba(20, 184, 166, 0)
-  );
+  background: linear-gradient(to bottom, transparent, var(--editor-snap-guide-component) 20%, var(--editor-snap-guide-component) 80%, transparent);
 }
-
 .snap-guide-component.snap-guide-horizontal {
-  background: linear-gradient(
-    to right,
-    rgba(20, 184, 166, 0),
-    rgba(20, 184, 166, 0.75) 20%,
-    rgba(20, 184, 166, 0.75) 80%,
-    rgba(20, 184, 166, 0)
-  );
+  background: linear-gradient(to right, transparent, var(--editor-snap-guide-component) 20%, var(--editor-snap-guide-component) 80%, transparent);
 }
 
 .snap-guide-page.snap-guide-vertical {
-  background: linear-gradient(
-    to bottom,
-    rgba(217, 70, 239, 0),
-    rgba(217, 70, 239, 0.78) 20%,
-    rgba(217, 70, 239, 0.78) 80%,
-    rgba(217, 70, 239, 0)
-  );
+  background: linear-gradient(to bottom, transparent, var(--editor-snap-guide-page) 20%, var(--editor-snap-guide-page) 80%, transparent);
+}
+.snap-guide-page.snap-guide-horizontal {
+  background: linear-gradient(to right, transparent, var(--editor-snap-guide-page) 20%, var(--editor-snap-guide-page) 80%, transparent);
 }
 
-.snap-guide-page.snap-guide-horizontal {
-  background: linear-gradient(
-    to right,
-    rgba(217, 70, 239, 0),
-    rgba(217, 70, 239, 0.78) 20%,
-    rgba(217, 70, 239, 0.78) 80%,
-    rgba(217, 70, 239, 0)
-  );
+.snap-guide-section.snap-guide-vertical {
+  background: linear-gradient(to bottom, transparent, var(--editor-snap-guide-section) 20%, var(--editor-snap-guide-section) 80%, transparent);
 }
+.snap-guide-section.snap-guide-horizontal {
+  background: linear-gradient(to right, transparent, var(--editor-snap-guide-section) 20%, var(--editor-snap-guide-section) 80%, transparent);
+}
+
+.snap-guide-header.snap-guide-vertical {
+  background: linear-gradient(to bottom, transparent, var(--editor-snap-guide-header) 20%, var(--editor-snap-guide-header) 80%, transparent);
+}
+.snap-guide-header.snap-guide-horizontal {
+  background: linear-gradient(to right, transparent, var(--editor-snap-guide-header) 20%, var(--editor-snap-guide-header) 80%, transparent);
+}
+
+.snap-guide-footer.snap-guide-vertical {
+  background: linear-gradient(to bottom, transparent, var(--editor-snap-guide-footer) 20%, var(--editor-snap-guide-footer) 80%, transparent);
+}
+.snap-guide-footer.snap-guide-horizontal {
+  background: linear-gradient(to right, transparent, var(--editor-snap-guide-footer) 20%, var(--editor-snap-guide-footer) 80%, transparent);
+}
+
+.snap-guide-container.snap-guide-vertical {
+  background: linear-gradient(to bottom, transparent, var(--editor-snap-guide-container) 20%, var(--editor-snap-guide-container) 80%, transparent);
+}
+.snap-guide-container.snap-guide-horizontal {
+  background: linear-gradient(to right, transparent, var(--editor-snap-guide-container) 20%, var(--editor-snap-guide-container) 80%, transparent);
+}
+
+.snap-guide-center.snap-guide-vertical {
+  background: none !important;
+  border-left: 1px dashed var(--editor-snap-guide-component);
+}
+.snap-guide-center.snap-guide-horizontal {
+  background: none !important;
+  border-top: 1px dashed var(--editor-snap-guide-component);
+}
+.snap-guide-center.snap-guide-section { border-color: var(--editor-snap-guide-section); }
+.snap-guide-center.snap-guide-header { border-color: var(--editor-snap-guide-header); }
+.snap-guide-center.snap-guide-footer { border-color: var(--editor-snap-guide-footer); }
+.snap-guide-center.snap-guide-container { border-color: var(--editor-snap-guide-container); }
+.snap-guide-center.snap-guide-page { border-color: var(--editor-snap-guide-page); }
 
 .stage-wrapper.role-header .content-wrapper,
 .stage-wrapper.role-footer .content-wrapper {

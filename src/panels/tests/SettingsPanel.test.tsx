@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument } from '../../model/defaults';
 import { SettingsPanel } from '../SettingsPanel';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 describe('panels/SettingsPanel', () => {
   it('renders an editable export file name field in the export section', () => {
@@ -16,7 +17,7 @@ describe('panels/SettingsPanel', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         themeMode="auto"
         accentColor="#1668ff"
         lightTheme="air"
@@ -30,7 +31,7 @@ describe('panels/SettingsPanel', () => {
         onPreviewStickyChange={() => {}}
         onSpacerVisibilityChange={() => {}}
         onShowGridLanesChange={() => {}}
-        onSnapEnabledChange={() => {}}
+        onSnapSettingsChange={() => {}}
         onThemeModeChange={() => {}}
         onAccentColorChange={() => {}}
         onLightThemeChange={() => {}}

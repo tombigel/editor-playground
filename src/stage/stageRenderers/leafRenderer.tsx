@@ -21,7 +21,6 @@ import {
 } from '../../render/layout';
 import { getStickyEdgeMode, usesSyntheticStickyTrack } from '../../render/sticky';
 import type { RenderLeafPlanNode } from '../../render/types';
-import { type ResizeState } from '../stageMath';
 import type {
   StageSceneLeafNode as LeafNode,
   StageNodeRegistration,
@@ -43,8 +42,6 @@ export function renderLeaf({
   previewSticky,
   dragSourceIds,
   registerDraggableNode,
-  setResizeState,
-  onResizeStart,
   registration,
   measuredNodeSizes,
   viewport,
@@ -55,8 +52,6 @@ export function renderLeaf({
   previewSticky: boolean;
   dragSourceIds: NodeId[];
   registerDraggableNode: StageNodeRegistration;
-  setResizeState: (state: ResizeState) => void;
-  onResizeStart: (id: NodeId) => void;
   registration?: StageStickyRegistration;
   measuredNodeSizes: RenderMeasuredNodeSizes;
   viewport: ViewportMeasurement;

@@ -390,11 +390,20 @@ export function AppShell({
                   />
                   <RailToggleButton
                     icon={Magnet}
-                    pressed={state.ui.snapEnabled}
-                    label={state.ui.snapEnabled ? 'Snap to guides on' : 'Snap to guides off'}
+                    pressed={state.ui.snapSettings.guideSnap.enabled}
+                    label={state.ui.snapSettings.guideSnap.enabled ? 'Snap to guides on' : 'Snap to guides off'}
                     shortcut={getShortcutLabel('toggleSnapEnabled', shortcutPlatform)}
                     detail="Alt reverses while dragging"
-                    onClick={() => dispatch({ type: 'setSnapEnabled', value: !state.ui.snapEnabled })}
+                    onClick={() =>
+                      dispatch({
+                        type: 'setSnapSettings',
+                        value: { guideSnap: {
+                          enabled: !state.ui.snapSettings.guideSnap.enabled,
+                          threshold: state.ui.snapSettings.guideSnap.threshold,
+                          power: state.ui.snapSettings.guideSnap.power,
+                        } },
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -409,7 +418,7 @@ export function AppShell({
               previewSticky={state.ui.previewSticky}
               spacerVisibility={state.ui.spacerVisibility}
               showGridLanes={state.ui.showGridLanes}
-              snapEnabled={state.ui.snapEnabled}
+              snapSettings={state.ui.snapSettings}
               onStageFocus={() => {
                 if (state.selectedIds.length === 0 && stageSelectableIds.length > 0) {
                   dispatch({ type: 'select', id: stageSelectableIds[0] });
@@ -563,7 +572,7 @@ export function AppShell({
             previewSticky={state.ui.previewSticky}
             spacerVisibility={state.ui.spacerVisibility}
             showGridLanes={state.ui.showGridLanes}
-            snapEnabled={state.ui.snapEnabled}
+            snapSettings={state.ui.snapSettings}
             themeMode={state.ui.themeMode}
             accentColor={activeAccentColor}
             lightTheme={state.ui.lightTheme}
@@ -581,7 +590,7 @@ export function AppShell({
             onPreviewStickyChange={(value) => dispatch({ type: 'setPreviewSticky', value })}
             onSpacerVisibilityChange={(value) => dispatch({ type: 'setSpacerVisibility', value })}
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
-            onSnapEnabledChange={(value) => dispatch({ type: 'setSnapEnabled', value })}
+            onSnapSettingsChange={(value) => dispatch({ type: 'setSnapSettings', value })}
             onThemeModeChange={(value) => dispatch({ type: 'setThemeMode', value })}
             onAccentColorChange={(value) =>
               dispatch(

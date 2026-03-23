@@ -35,6 +35,7 @@ import {
   normalizeEditorLightTheme,
   normalizeThemeMode,
 } from '../lib/theme';
+import { DEFAULT_SNAP_SETTINGS } from './types';
 import { normalizeFocusedMode, resolveFocusedModeUrlOverride } from './focusedModes';
 import { DEFAULT_FOCUSED_PANEL_OFFSET, normalizeFocusedPanelOffset } from './focusedPanelPosition';
 import type { EditorState } from './types';
@@ -100,7 +101,7 @@ export function loadPersistedState(): EditorState {
             ? parsed.ui.spacerVisibility
             : 'selected',
         showGridLanes: parsed.ui?.showGridLanes ?? false,
-        snapEnabled: parsed.ui?.snapEnabled ?? true,
+        snapSettings: normalizeSnapSettings(parsed.ui),
         themeMode: normalizeThemeMode(parsed.ui?.themeMode),
         accentColor: normalizeEditorAccentColor(parsed.ui?.accentColor),
         paperAccentColor: normalizeEditorAccentColor(parsed.ui?.paperAccentColor, DEFAULT_PAPER_ACCENT_COLOR),
@@ -176,7 +177,7 @@ function createDefaultUiState(): EditorState['ui'] {
     previewSticky: true,
     spacerVisibility: 'selected',
     showGridLanes: false,
-    snapEnabled: true,
+    snapSettings: DEFAULT_SNAP_SETTINGS,
     themeMode: 'auto',
     accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
     paperAccentColor: DEFAULT_PAPER_ACCENT_COLOR,
@@ -304,6 +305,36 @@ function normalizeSticky(sticky: StickyDefinition | undefined): StickyDefinition
     durationTop,
     durationBottom,
     edges: { top, bottom: normalizedBottom },
+  };
+}
+
+function normalizeSnapSettings(ui: Partial<EditorState['ui']> | undefined) {
+  // Migration: if old snapEnabled boolean exists and no snapSettings, derive from it
+  const legacy = (ui as Record<string, unknown> | undefined);
+  if (legacy && 'snapEnabled' in legacy && !('snapSettings' in legacy)) {
+    const wasEnabled = typeof legacy.snapEnabled === 'boolean' ? legacy.snapEnabled : true;
+    return {
+      guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: wasEnabled },
+      containerSnap: { ...DEFAULT_SNAP_SETTINGS.containerSnap },
+    };
+  }
+
+  const persisted = ui?.snapSettings;
+  if (!persisted) {
+    return DEFAULT_SNAP_SETTINGS;
+  }
+
+  return {
+    guideSnap: {
+      enabled: persisted.guideSnap?.enabled ?? DEFAULT_SNAP_SETTINGS.guideSnap.enabled,
+      threshold: persisted.guideSnap?.threshold ?? DEFAULT_SNAP_SETTINGS.guideSnap.threshold,
+      power: persisted.guideSnap?.power ?? DEFAULT_SNAP_SETTINGS.guideSnap.power,
+    },
+    containerSnap: {
+      enabled: persisted.containerSnap?.enabled ?? DEFAULT_SNAP_SETTINGS.containerSnap.enabled,
+      threshold: persisted.containerSnap?.threshold ?? DEFAULT_SNAP_SETTINGS.containerSnap.threshold,
+      power: persisted.containerSnap?.power ?? DEFAULT_SNAP_SETTINGS.containerSnap.power,
+    },
   };
 }
 

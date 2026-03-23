@@ -75,22 +75,33 @@ export function DragPreviewOverlay(props: DragPreviewOverlayProps) {
   );
 }
 
+function snapGuideSourceClass(source: string) {
+  switch (source) {
+    case 'page': return 'snap-guide-page';
+    case 'section': return 'snap-guide-section';
+    case 'header': return 'snap-guide-header';
+    case 'footer': return 'snap-guide-footer';
+    case 'container': return 'snap-guide-container';
+    default: return 'snap-guide-component';
+  }
+}
+
 export function SnapGuideOverlay(props: SnapGuideOverlayProps) {
   const { guideX, guideY } = props;
   return (
     <>
       {guideX ? (
         <div
-          className={`snap-guide snap-guide-vertical ${
-            guideX.source === 'page' ? 'snap-guide-page' : 'snap-guide-component'
+          className={`snap-guide snap-guide-vertical ${snapGuideSourceClass(guideX.source)}${
+            guideX.anchor === 'center' ? ' snap-guide-center' : ''
           }`}
           style={{ left: `${guideX.value}px` }}
         />
       ) : null}
       {guideY ? (
         <div
-          className={`snap-guide snap-guide-horizontal ${
-            guideY.source === 'page' ? 'snap-guide-page' : 'snap-guide-component'
+          className={`snap-guide snap-guide-horizontal ${snapGuideSourceClass(guideY.source)}${
+            guideY.anchor === 'center' ? ' snap-guide-center' : ''
           }`}
           style={{ top: `${guideY.value}px` }}
         />

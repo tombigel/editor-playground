@@ -63,7 +63,7 @@ export function Stage({
 	previewSticky,
 	spacerVisibility,
 	showGridLanes,
-	snapEnabled,
+	snapSettings,
 	onStageFocus,
 	onSelect,
 	onSelectMany = () => {},
@@ -102,7 +102,7 @@ export function Stage({
 	const dragDrop = useStageDragDrop({
 		document,
 		selectedIds,
-		snapEnabled,
+		snapSettings,
 		stageElement,
 		onSelect,
 		onMove,

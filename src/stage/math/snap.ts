@@ -22,9 +22,9 @@ export function collectVerticalSnapTargets(
       continue;
     }
     targets.push(
-      { value: rect.top, source: 'component' },
-      { value: rect.top + rect.height / 2, source: 'component' },
-      { value: rect.bottom, source: 'component' },
+      { value: rect.top, source: 'component', anchor: 'edge' },
+      { value: rect.top + rect.height / 2, source: 'component', anchor: 'center' },
+      { value: rect.bottom, source: 'component', anchor: 'edge' },
     );
   }
   return targets;
@@ -38,14 +38,14 @@ export function collectPageSnapTargets(
   if (!frame) {
     return {
       horizontal: [
-        { value: 0, source: 'page' as const },
-        { value: windowRef.innerWidth / 2, source: 'page' as const },
-        { value: windowRef.innerWidth, source: 'page' as const },
+        { value: 0, source: 'page' as const, anchor: 'edge' as const },
+        { value: windowRef.innerWidth / 2, source: 'page' as const, anchor: 'center' as const },
+        { value: windowRef.innerWidth, source: 'page' as const, anchor: 'edge' as const },
       ],
       vertical: [
-        { value: 0, source: 'page' as const },
-        { value: windowRef.innerHeight / 2, source: 'page' as const },
-        { value: windowRef.innerHeight, source: 'page' as const },
+        { value: 0, source: 'page' as const, anchor: 'edge' as const },
+        { value: windowRef.innerHeight / 2, source: 'page' as const, anchor: 'center' as const },
+        { value: windowRef.innerHeight, source: 'page' as const, anchor: 'edge' as const },
       ],
     };
   }
@@ -53,14 +53,14 @@ export function collectPageSnapTargets(
   const rect = frame.getBoundingClientRect();
   return {
     horizontal: [
-      { value: rect.left, source: 'page' as const },
-      { value: rect.left + rect.width / 2, source: 'page' as const },
-      { value: rect.right, source: 'page' as const },
+      { value: rect.left, source: 'page' as const, anchor: 'edge' as const },
+      { value: rect.left + rect.width / 2, source: 'page' as const, anchor: 'center' as const },
+      { value: rect.right, source: 'page' as const, anchor: 'edge' as const },
     ],
     vertical: [
-      { value: rect.top, source: 'page' as const },
-      { value: rect.top + rect.height / 2, source: 'page' as const },
-      { value: rect.bottom, source: 'page' as const },
+      { value: rect.top, source: 'page' as const, anchor: 'edge' as const },
+      { value: rect.top + rect.height / 2, source: 'page' as const, anchor: 'center' as const },
+      { value: rect.bottom, source: 'page' as const, anchor: 'edge' as const },
     ],
   };
 }
@@ -166,7 +166,7 @@ function isDescendant(model: DocumentModel, candidateId: NodeId, targetAncestorI
 
 export function findHorizontalSnap(left: number, width: number, targets: SnapTarget[]) {
   const anchors = [left, left + width / 2, left + width];
-  let best: { delta: number; distance: number; target: number; source: 'component' | 'page' } | null = null;
+  let best: { delta: number; distance: number; target: number; source: SnapTarget['source']; anchor: SnapTarget['anchor'] } | null = null;
 
   for (const target of targets) {
     for (const anchor of anchors) {
@@ -176,7 +176,7 @@ export function findHorizontalSnap(left: number, width: number, targets: SnapTar
         continue;
       }
       if (!best || distance < best.distance) {
-        best = { delta, distance, target: target.value, source: target.source };
+        best = { delta, distance, target: target.value, source: target.source, anchor: target.anchor };
       }
     }
   }
@@ -186,7 +186,7 @@ export function findHorizontalSnap(left: number, width: number, targets: SnapTar
 
 export function findVerticalSnap(top: number, height: number, targets: SnapTarget[]) {
   const anchors = [top, top + height / 2, top + height];
-  let best: { delta: number; distance: number; target: number; source: 'component' | 'page' } | null = null;
+  let best: { delta: number; distance: number; target: number; source: SnapTarget['source']; anchor: SnapTarget['anchor'] } | null = null;
 
   for (const target of targets) {
     for (const anchor of anchors) {
@@ -196,7 +196,7 @@ export function findVerticalSnap(top: number, height: number, targets: SnapTarge
         continue;
       }
       if (!best || distance < best.distance) {
-        best = { delta, distance, target: target.value, source: target.source };
+        best = { delta, distance, target: target.value, source: target.source, anchor: target.anchor };
       }
     }
   }

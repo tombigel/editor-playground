@@ -7,6 +7,7 @@ import {
   resolveDragPointerPosition,
 } from '../math/drag';
 import type { DragState } from '../types';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 // ---------------------------------------------------------------------------
 // Minimal DOM stubs
@@ -312,7 +313,7 @@ describe('stage/drag', () => {
       const result = resolveDragPointerPosition(state, 150, 120, {
         shiftKey: false,
         altKey: false,
-        snapEnabled: false,
+        snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
         documentRef: { querySelectorAll: () => [] } as unknown as Document,
         windowRef: { getComputedStyle: () => ({}) } as unknown as Window,
       });
@@ -324,11 +325,11 @@ describe('stage/drag', () => {
 
     it('inverts snap behavior with altKey', () => {
       const state = makeDragState();
-      // snapEnabled = true, altKey = true -> should disable snap -> no guides
+      // guideSnap.enabled = true, altKey = true -> should disable snap -> no guides
       const result = resolveDragPointerPosition(state, 150, 120, {
         shiftKey: false,
         altKey: true,
-        snapEnabled: true,
+        snapSettings: DEFAULT_SNAP_SETTINGS,
         documentRef: { querySelectorAll: () => [] } as unknown as Document,
         windowRef: { getComputedStyle: () => ({}) } as unknown as Window,
       });
@@ -342,7 +343,7 @@ describe('stage/drag', () => {
       const result = resolveDragPointerPosition(state, 150, 110, {
         shiftKey: true,
         altKey: false,
-        snapEnabled: false,
+        snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
         documentRef: { querySelectorAll: () => [] } as unknown as Document,
         windowRef: { getComputedStyle: () => ({}) } as unknown as Window,
       });

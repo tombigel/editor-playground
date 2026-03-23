@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveStickyLayout } from '../../sticky/resolve';
 import { createInitialDocument, createWrapper } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
+import { DEFAULT_SNAP_SETTINGS } from '../types';
 import {
   clearSessionState,
   confirmPromoteWrapperRole,
@@ -492,7 +493,7 @@ describe('editor/editorStore integration', () => {
           previewSticky: false,
           spacerVisibility: 'all',
           showGridLanes: true,
-          snapEnabled: false,
+          snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
           themeMode: 'dark',
           accentColor: '#ff6b4a',
           paperAccentColor: '#b07a3a',
@@ -517,7 +518,7 @@ describe('editor/editorStore integration', () => {
       previewSticky: false,
       spacerVisibility: 'all',
       showGridLanes: true,
-      snapEnabled: false,
+      snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
       themeMode: 'dark',
       accentColor: '#ff6b4a',
       paperAccentColor: '#b07a3a',
@@ -772,11 +773,12 @@ describe('editor/editorStore integration', () => {
 
   it('builds a factory reset state while preserving the provided ui settings', () => {
     const state = createInitialState();
+    const customSnapSettings = { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } };
     const reset = createFactoryResetState({
       previewSticky: false,
       spacerVisibility: 'all',
       showGridLanes: true,
-      snapEnabled: false,
+      snapSettings: customSnapSettings,
       themeMode: 'dark',
       accentColor: '#ff6b4a',
       paperAccentColor: '#b07a3a',
@@ -800,7 +802,7 @@ describe('editor/editorStore integration', () => {
       previewSticky: false,
       spacerVisibility: 'all',
       showGridLanes: true,
-      snapEnabled: false,
+      snapSettings: customSnapSettings,
       themeMode: 'dark',
       accentColor: '#ff6b4a',
       paperAccentColor: '#b07a3a',

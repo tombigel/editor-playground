@@ -3,6 +3,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { STORAGE_KEY, DEFAULT_DOCUMENT_STORAGE_KEY } from '../../editor/editorStore';
 import { createDefaultRect, createLeaf, createWrapper } from '../../model/defaultFactories';
 import type { DocumentModel, TextLeaf } from '../../model/types';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { startViteE2EServer, type StartedServer } from './e2eServer';
 
 type TestDocumentIds = {
@@ -34,6 +35,9 @@ describe('stage/Stage e2e', () => {
 
   async function openEditor(options?: { document?: DocumentModel; snapEnabled?: boolean }) {
     page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+    const snapSettings = options?.snapEnabled === false
+      ? { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } }
+      : DEFAULT_SNAP_SETTINGS;
     const state = options?.document
       ? {
           document: options.document,
@@ -43,7 +47,7 @@ describe('stage/Stage e2e', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapEnabled: options.snapEnabled ?? true,
+            snapSettings,
             themeMode: 'auto',
           },
         }

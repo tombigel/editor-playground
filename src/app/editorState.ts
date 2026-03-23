@@ -227,8 +227,23 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, ui: { ...state.ui, spacerVisibility: action.value } };
     case 'setShowGridLanes':
       return { ...state, ui: { ...state.ui, showGridLanes: action.value } };
-    case 'setSnapEnabled':
-      return { ...state, ui: { ...state.ui, snapEnabled: action.value } };
+    case 'setSnapSettings':
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          snapSettings: {
+            guideSnap: {
+              ...state.ui.snapSettings.guideSnap,
+              ...(action.value.guideSnap ?? {}),
+            },
+            containerSnap: {
+              ...state.ui.snapSettings.containerSnap,
+              ...(action.value.containerSnap ?? {}),
+            },
+          },
+        },
+      };
     case 'setThemeMode':
       return { ...state, ui: { ...state.ui, themeMode: action.value } };
     case 'setAccentColor':
@@ -439,7 +454,7 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setPreviewSticky' &&
     action.type !== 'setSpacerVisibility' &&
     action.type !== 'setShowGridLanes' &&
-    action.type !== 'setSnapEnabled' &&
+    action.type !== 'setSnapSettings' &&
     action.type !== 'setThemeMode' &&
     action.type !== 'setAccentColor' &&
     action.type !== 'setPaperAccentColor' &&

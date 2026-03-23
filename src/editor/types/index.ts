@@ -12,6 +12,22 @@ export type ConfirmReplaceRole = {
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
 
+export type SnapFeatureSettings = {
+  enabled: boolean;
+  threshold: number;
+  power: number;
+};
+
+export type SnapSettings = {
+  guideSnap: SnapFeatureSettings;
+  containerSnap: SnapFeatureSettings;
+};
+
+export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
+  guideSnap: { enabled: true, threshold: 8, power: 1 },
+  containerSnap: { enabled: true, threshold: 0, power: 1 },
+};
+
 export type EditorState = {
   document: DocumentModel;
   selectedId: NodeId | null;
@@ -21,7 +37,7 @@ export type EditorState = {
     previewSticky: boolean;
     spacerVisibility: 'selected' | 'all';
     showGridLanes: boolean;
-    snapEnabled: boolean;
+    snapSettings: SnapSettings;
     themeMode: ThemeMode;
     accentColor: string;
     paperAccentColor: string;

@@ -3,6 +3,8 @@ import type {
 	NodeId,
 	ViewportMeasurement,
 } from "../../model/types";
+import type { SnapSettings } from "../../editor/types";
+export type { SnapSettings };
 import type {
 	RenderLeafPlanNode,
 	RenderMeasuredNodeSizes,
@@ -20,7 +22,7 @@ export type StageProps = {
 	previewSticky: boolean;
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;
-	snapEnabled: boolean;
+	snapSettings: SnapSettings;
 	onStageFocus: () => void;
 	onSelect: (id: NodeId, mode?: "replace" | "toggle") => void;
 	onSelectMany?: (ids: NodeId[], mode: "replace" | "toggle") => void;
@@ -104,7 +106,8 @@ export type StageMathWrapperNode = Extract<
 
 export type SnapTarget = {
 	value: number;
-	source: "component" | "page";
+	source: "component" | "page" | "section" | "header" | "footer" | "container";
+	anchor: "edge" | "center";
 };
 
 export type DragGeometry = {
@@ -124,7 +127,7 @@ export type CachedSnapTargets = {
 export type DragResolutionOptions = {
 	shiftKey: boolean;
 	altKey: boolean;
-	snapEnabled: boolean;
+	snapSettings: SnapSettings;
 	snapTargets?: CachedSnapTargets;
 	documentRef?: Pick<Document, "querySelector" | "querySelectorAll">;
 	windowRef?: Pick<Window, "innerWidth" | "innerHeight">;
@@ -192,8 +195,6 @@ export type RenderWrapperArgs = {
 	registerDraggableNode: StageNodeRegistration;
 	registerDropTarget: StageNodeRegistration;
 	resizeState: ResizeState;
-	setResizeState: (state: ResizeState) => void;
-	onResizeStart: (id: NodeId) => void;
 	selfRegistration?: StageStickyRegistration;
 	ownerWrapper?: StageMathWrapperNode;
 	ownerBottomLanePx?: number;

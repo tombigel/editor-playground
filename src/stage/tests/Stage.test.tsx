@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
 import type { DocumentModel } from '../../model/types';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { resolveWrapperStickyState } from '../../sticky/resolve';
 import {
@@ -42,7 +43,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -77,7 +78,7 @@ describe('stage/Stage', () => {
           previewSticky={true}
           spacerVisibility="selected"
           showGridLanes={false}
-          snapEnabled={true}
+          snapSettings={DEFAULT_SNAP_SETTINGS}
           onStageFocus={() => {}}
           onSelect={() => {}}
           onMove={() => {}}
@@ -114,7 +115,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -147,7 +148,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -182,7 +183,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -222,7 +223,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -240,7 +241,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -282,7 +283,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -300,7 +301,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -338,7 +339,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onSelectMany={() => {}}
@@ -378,7 +379,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onSelectMany={() => {}}
@@ -412,7 +413,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -511,7 +512,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -558,7 +559,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -604,7 +605,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -642,7 +643,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -679,7 +680,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -909,7 +910,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1344,7 +1345,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="selected"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1417,7 +1418,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="all"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1488,7 +1489,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="all"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1557,7 +1558,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="all"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1626,7 +1627,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="all"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1710,7 +1711,7 @@ describe('stage/Stage', () => {
         previewSticky={true}
         spacerVisibility="all"
         showGridLanes={false}
-        snapEnabled={true}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
         onStageFocus={() => {}}
         onSelect={() => {}}
         onMove={() => {}}
@@ -1804,7 +1805,7 @@ describe('stage/Stage', () => {
       resolveDragPointerPosition(dragState, 104, 77, {
         shiftKey: false,
         altKey: false,
-        snapEnabled: true,
+        snapSettings: DEFAULT_SNAP_SETTINGS,
         documentRef,
         windowRef,
       }),
@@ -1818,7 +1819,7 @@ describe('stage/Stage', () => {
       resolveDragPointerPosition(dragState, 104, 77, {
         shiftKey: false,
         altKey: true,
-        snapEnabled: true,
+        snapSettings: DEFAULT_SNAP_SETTINGS,
         documentRef,
         windowRef,
       }),

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { executeEditorShortcut, type ShortcutExecutionHandlers, type ShortcutUiState } from '../shortcutController';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 function createHandlers() {
   return {
@@ -10,7 +11,7 @@ function createHandlers() {
     openShortcutHelp: vi.fn(),
     setPreviewSticky: vi.fn(),
     setSpacerVisibility: vi.fn(),
-    setSnapEnabled: vi.fn(),
+    setSnapSettings: vi.fn(),
     nudgeSelection: vi.fn(),
     deleteSelection: vi.fn(),
     toggleBoldSelection: vi.fn(),
@@ -29,7 +30,7 @@ function createHandlers() {
 const baseState: ShortcutUiState = {
   previewSticky: true,
   spacerVisibility: 'selected',
-  snapEnabled: true,
+  snapSettings: DEFAULT_SNAP_SETTINGS,
 };
 
 describe('app/shortcutController', () => {
@@ -42,7 +43,7 @@ describe('app/shortcutController', () => {
 
     expect(handlers.setPreviewSticky).toHaveBeenCalledWith(false);
     expect(handlers.setSpacerVisibility).toHaveBeenCalledWith('all');
-    expect(handlers.setSnapEnabled).toHaveBeenCalledWith(false);
+    expect(handlers.setSnapSettings).toHaveBeenCalledWith({ guideSnap: { enabled: false, threshold: 8, power: 1 } });
   });
 
   it('maps shift-modified nudge shortcuts to larger movement deltas', () => {

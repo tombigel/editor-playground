@@ -10,10 +10,13 @@ import type {
   DragGuide,
   DragPreviewItem,
   DragSession,
+  DragSnapSource,
+  DragSnapTarget,
   DragUpdateInput,
 } from '../../api/types';
 import { getTopLevelSelectedIds } from '../../editor/selection';
 import type { DocumentModel, NodeId } from '../../model/types';
+import type { SnapSettings } from '../../editor/types';
 import type { StageProps } from '../types';
 
 type PendingNodeInteraction = {
@@ -41,7 +44,7 @@ type StageDragPresentation = {
 type DragControllerArgs = {
   document: DocumentModel;
   selectedIds: NodeId[];
-  snapEnabled: boolean;
+  snapSettings: SnapSettings;
   stageElement: HTMLElement | null;
   onSelect: StageProps['onSelect'];
   onMove: StageProps['onMove'];
@@ -52,7 +55,7 @@ type DragControllerArgs = {
 export function useStageDragDrop({
   document,
   selectedIds,
-  snapEnabled,
+  snapSettings,
   stageElement,
   onSelect,
   onMove,
@@ -246,11 +249,12 @@ export function useStageDragDrop({
       clientY: event.clientY,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
-      snapEnabled,
+      guideSnap: snapSettings.guideSnap,
+      containerSnap: snapSettings.containerSnap,
     };
     activePointerIdRef.current = event.pointerId;
     stageElement?.setPointerCapture(event.pointerId);
-  }, [document, onSelect, selectedIds, snapEnabled, stageElement]);
+  }, [document, onSelect, selectedIds, snapSettings, stageElement]);
 
   const handlePointerMove = useCallback((event: PointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) {
@@ -262,7 +266,8 @@ export function useStageDragDrop({
       clientY: event.clientY,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
-      snapEnabled,
+      guideSnap: snapSettings.guideSnap,
+      containerSnap: snapSettings.containerSnap,
     };
     latestInputRef.current = input;
 
@@ -278,7 +283,7 @@ export function useStageDragDrop({
     ) {
       beginSessionFromPending(input);
     }
-  }, [beginSessionFromPending, schedulePointerUpdate, snapEnabled]);
+  }, [beginSessionFromPending, schedulePointerUpdate, snapSettings]);
 
   const handlePointerUp = useCallback((event: PointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) {
@@ -290,7 +295,8 @@ export function useStageDragDrop({
       clientY: event.clientY,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
-      snapEnabled,
+      guideSnap: snapSettings.guideSnap,
+      containerSnap: snapSettings.containerSnap,
     };
 
     if (sessionRef.current) {
@@ -318,7 +324,7 @@ export function useStageDragDrop({
     onMoveSelection,
     onReparent,
     onSelect,
-    snapEnabled,
+    snapSettings,
   ]);
 
   const handlePointerCancel = useCallback((event?: PointerEvent<HTMLElement>) => {
@@ -441,8 +447,8 @@ function buildGeometrySnapshot({
     useVisualOffset: dragGeometry.useVisualOffset,
     modelShiftX: dragGeometry.modelShiftX,
     modelShiftY: dragGeometry.modelShiftY,
-    horizontalGuides: collectHorizontalGuides(stageElement, dragIds, dragElements),
-    verticalGuides: collectVerticalGuides(stageElement, dragIds, dragElements),
+    horizontalGuides: collectHorizontalGuides(document, stageElement, dragIds, dragElements),
+    verticalGuides: collectVerticalGuides(document, stageElement, dragIds, dragElements),
     dropTargets: collectDropTargets(dropTargetElements),
   };
 }
@@ -490,7 +496,25 @@ function collectDropTargets(elements: Map<NodeId, HTMLElement>) {
   });
 }
 
+function resolveNodeSnapSource(
+  document: DocumentModel,
+  id: NodeId,
+): DragSnapSource {
+  const node = document.nodes[id];
+  if (!node || node.type === 'site') {
+    return 'component';
+  }
+  if (node.type === 'wrapper') {
+    const role = node.role;
+    if (role === 'section' || role === 'header' || role === 'footer' || role === 'container') {
+      return role;
+    }
+  }
+  return 'component';
+}
+
 function collectHorizontalGuides(
+  document: DocumentModel,
   stageElement: HTMLElement | null,
   dragIds: NodeId[],
   dragElements: Map<NodeId, HTMLElement>,
@@ -503,10 +527,11 @@ function collectHorizontalGuides(
     if (rect.width < 1 || rect.height < 1) {
       return [];
     }
+    const source = resolveNodeSnapSource(document, id);
     return [
-      { value: rect.left, source: 'component' as const },
-      { value: rect.left + rect.width / 2, source: 'component' as const },
-      { value: rect.right, source: 'component' as const },
+      { value: rect.left, source, anchor: 'edge' as const },
+      { value: rect.left + rect.width / 2, source, anchor: 'center' as const },
+      { value: rect.right, source, anchor: 'edge' as const },
     ];
   });
   const pageGuides = collectPageGuides(stageElement);
@@ -514,6 +539,7 @@ function collectHorizontalGuides(
 }
 
 function collectVerticalGuides(
+  document: DocumentModel,
   stageElement: HTMLElement | null,
   dragIds: NodeId[],
   dragElements: Map<NodeId, HTMLElement>,
@@ -526,10 +552,11 @@ function collectVerticalGuides(
     if (rect.width < 1 || rect.height < 1) {
       return [];
     }
+    const source = resolveNodeSnapSource(document, id);
     return [
-      { value: rect.top, source: 'component' as const },
-      { value: rect.top + rect.height / 2, source: 'component' as const },
-      { value: rect.bottom, source: 'component' as const },
+      { value: rect.top, source, anchor: 'edge' as const },
+      { value: rect.top + rect.height / 2, source, anchor: 'center' as const },
+      { value: rect.bottom, source, anchor: 'edge' as const },
     ];
   });
 
@@ -541,21 +568,21 @@ function collectPageGuides(stageElement: HTMLElement | null) {
   const frame = stageElement?.querySelector<HTMLElement>('.stage-frame');
   if (!frame) {
     return {
-      horizontal: [],
-      vertical: [],
+      horizontal: [] as DragSnapTarget[],
+      vertical: [] as DragSnapTarget[],
     };
   }
   const rect = frame.getBoundingClientRect();
   return {
     horizontal: [
-      { value: rect.left, source: 'page' as const },
-      { value: rect.left + rect.width / 2, source: 'page' as const },
-      { value: rect.right, source: 'page' as const },
+      { value: rect.left, source: 'page' as const, anchor: 'edge' as const },
+      { value: rect.left + rect.width / 2, source: 'page' as const, anchor: 'center' as const },
+      { value: rect.right, source: 'page' as const, anchor: 'edge' as const },
     ],
     vertical: [
-      { value: rect.top, source: 'page' as const },
-      { value: rect.top + rect.height / 2, source: 'page' as const },
-      { value: rect.bottom, source: 'page' as const },
+      { value: rect.top, source: 'page' as const, anchor: 'edge' as const },
+      { value: rect.top + rect.height / 2, source: 'page' as const, anchor: 'center' as const },
+      { value: rect.bottom, source: 'page' as const, anchor: 'edge' as const },
     ],
   };
 }

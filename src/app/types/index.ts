@@ -8,7 +8,9 @@ import type {
   StickyDefinition,
   WrapperStyleField,
 } from '../../model/types';
-import type { EditorState, FocusedMode, FocusedPanelOffset } from '../../editor/types';
+import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings } from '../../editor/types';
+
+export type { SnapSettings };
 
 export type NodePatch = {
   id: NodeId;
@@ -102,7 +104,7 @@ export type EditorAction =
   | { type: 'setPreviewSticky'; value: boolean }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
   | { type: 'setShowGridLanes'; value: boolean }
-  | { type: 'setSnapEnabled'; value: boolean }
+  | { type: 'setSnapSettings'; value: Partial<SnapSettings> }
   | { type: 'setThemeMode'; value: EditorState['ui']['themeMode'] }
   | { type: 'setAccentColor'; value: EditorState['ui']['accentColor'] }
   | { type: 'setPaperAccentColor'; value: EditorState['ui']['paperAccentColor'] }
@@ -142,7 +144,7 @@ export type HistoryState = {
 export type ShortcutUiState = {
   previewSticky: boolean;
   spacerVisibility: 'selected' | 'all';
-  snapEnabled: boolean;
+  snapSettings: SnapSettings;
 };
 
 export type ShortcutExecutionHandlers = {
@@ -153,7 +155,7 @@ export type ShortcutExecutionHandlers = {
   openShortcutHelp: () => void;
   setPreviewSticky: (value: boolean) => void;
   setSpacerVisibility: (value: 'selected' | 'all') => void;
-  setSnapEnabled: (value: boolean) => void;
+  setSnapSettings: (value: Partial<SnapSettings>) => void;
   nudgeSelection: (deltaX: number, deltaY: number) => void;
   deleteSelection: () => void;
   toggleBoldSelection: () => void;

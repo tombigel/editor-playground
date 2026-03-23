@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, serializeDocumentJson } from '../../api/editorApi';
 import { importSettingsDocument, resetEditorData, resetEditorState, toActionResult } from '../appSettingsActions';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 describe('app/appSettingsActions', () => {
   it('returns a parsed document and success message for valid imports', () => {
@@ -24,11 +25,12 @@ describe('app/appSettingsActions', () => {
   });
 
   it('preserves ui settings when resetting only editor data', () => {
+    const customSnapSettings = { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } };
     const next = resetEditorData({
       previewSticky: false,
       spacerVisibility: 'all',
       showGridLanes: true,
-      snapEnabled: false,
+      snapSettings: customSnapSettings,
       themeMode: 'dark',
       accentColor: '#ff6b4a',
       paperAccentColor: '#b07a3a',
@@ -47,7 +49,7 @@ describe('app/appSettingsActions', () => {
       previewSticky: false,
       spacerVisibility: 'all',
       showGridLanes: true,
-      snapEnabled: false,
+      snapSettings: customSnapSettings,
       themeMode: 'dark',
       accentColor: '#ff6b4a',
       paperAccentColor: '#b07a3a',
@@ -69,7 +71,7 @@ describe('app/appSettingsActions', () => {
       previewSticky: true,
       spacerVisibility: 'selected',
       showGridLanes: false,
-      snapEnabled: true,
+      snapSettings: DEFAULT_SNAP_SETTINGS,
       themeMode: 'auto',
       accentColor: '#1668ff',
       paperAccentColor: '#a36a2c',

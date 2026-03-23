@@ -53,8 +53,6 @@ export function renderWrapper({
   highlightedDropId,
   registerDraggableNode,
   registerDropTarget,
-  setResizeState,
-  onResizeStart,
   selfRegistration,
   ownerWrapper,
   ownerBottomLanePx,
@@ -62,7 +60,6 @@ export function renderWrapper({
   const node = plan.node;
   const Tag = plan.tag;
   const meshLayout = plan.meshLayout;
-  const wrapperResizeHandles = getWrapperResizeHandles(node, plan.isTopLevel);
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, node.id);
   const isStickyContentWrapper = plan.contentSticky;
@@ -196,8 +193,6 @@ export function renderWrapper({
                 registerDraggableNode,
                 registerDropTarget,
                 resizeState: null,
-                setResizeState,
-                onResizeStart,
                 selfRegistration: plan.registrationMap.get(child.node.id),
                 ownerWrapper: node,
                 ownerBottomLanePx: getPreviewWrapperBottomLanePx(node, meshLayout.bottomLanePx, measuredNodeSizes, viewport),
@@ -209,8 +204,6 @@ export function renderWrapper({
                 previewSticky,
                 dragSourceIds,
                 registerDraggableNode,
-                setResizeState,
-                onResizeStart,
                 registration: plan.registrationMap.get(child.node.id),
                 measuredNodeSizes,
                 viewport,
