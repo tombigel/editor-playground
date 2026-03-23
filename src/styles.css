@@ -1511,6 +1511,13 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   overflow-x: clip;
   overflow-y: auto;
   padding: 22px clamp(14px, 2vw, 28px) 48px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+.stage-shell * {
+  -webkit-user-drag: none;
 }
 
 .stage-frame {

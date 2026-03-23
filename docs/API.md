@@ -320,7 +320,7 @@ Pass-through re-export from the `src/stage/` subsystem.
 
 | Export | Description |
 |---|---|
-| `Stage` | React component that renders the interactive stage (editor canvas). |
+| `Stage` | React component that renders the interactive stage (editor canvas) and suppresses native browser drag/drop so editor pointer-drag logic remains authoritative. |
 
 ### Exported types
 

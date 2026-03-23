@@ -584,6 +584,7 @@ Current UX includes:
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
 - the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current primary selection scrolls into view when needed, and arrow keys nudge positioned components
+- the stage suppresses native browser drag/drop and text-selection drag initiation inside the canvas so component moves always route through the editor drag system rather than the browser's HTML drag preview
 - pointer selection does not commit drag/reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not remeasure layout as a drag
 - intrinsic-height leaf nodes in the editor stage align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy
 - the editor supports multi-selection:

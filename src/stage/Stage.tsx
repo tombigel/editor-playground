@@ -196,6 +196,15 @@ export function Stage({
 			}
 			data-stage-focus-scope="true"
 			onFocus={onStageFocus}
+			onDragStartCapture={(event) => {
+				event.preventDefault();
+			}}
+			onDragOverCapture={(event) => {
+				event.preventDefault();
+			}}
+			onDropCapture={(event) => {
+				event.preventDefault();
+			}}
 			onPointerDown={(event) => {
 				const target = event.target as HTMLElement;
 				if (target.closest('[data-stage-resize-handle="true"]')) {

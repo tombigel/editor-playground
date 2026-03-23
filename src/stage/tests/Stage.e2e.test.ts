@@ -484,6 +484,45 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
+  it('suppresses native browser drag behavior inside the stage', async () => {
+    await openEditor();
+
+    const result = await page.evaluate(() => {
+      const stage = window.document.querySelector<HTMLElement>('.stage-shell');
+      const image = window.document.querySelector<HTMLElement>('.stage-leaf.role-image img, .stage-leaf.role-image');
+      const text = Array.from(window.document.querySelectorAll<HTMLElement>('.stage-leaf.role-text')).find((node) =>
+        node.textContent?.includes('Plan sticky behavior before building scroll-driven animations'),
+      );
+
+      if (!stage || !image || !text) {
+        throw new Error('Expected stage, image, and text nodes');
+      }
+
+      const imageDragEvent = new DragEvent('dragstart', { bubbles: true, cancelable: true });
+      const textDragEvent = new DragEvent('dragstart', { bubbles: true, cancelable: true });
+
+      image.dispatchEvent(imageDragEvent);
+      text.dispatchEvent(textDragEvent);
+
+      const stageStyle = window.getComputedStyle(stage);
+      return {
+        imageDragPrevented: imageDragEvent.defaultPrevented,
+        textDragPrevented: textDragEvent.defaultPrevented,
+        userSelect: stageStyle.userSelect,
+        webkitUserSelect: stageStyle.webkitUserSelect,
+        webkitUserDrag: stageStyle.getPropertyValue('-webkit-user-drag'),
+      };
+    });
+
+    expect(result.imageDragPrevented).toBe(true);
+    expect(result.textDragPrevented).toBe(true);
+    expect(result.userSelect).toBe('none');
+    expect(result.webkitUserSelect).toBe('none');
+    expect(result.webkitUserDrag).toBe('none');
+
+    await closeEditor();
+  }, 30_000);
+
   it('drags same-parent multi-selection as a group', async () => {
     const { document, ids } = createE2EDocument();
     await openEditor({ document, snapEnabled: false });
