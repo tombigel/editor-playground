@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { getTopLevelSelectedIds } from "../editor/selection";
+import { formatNodeLabel } from "../render/nodePresentation";
 import { useStageDragDrop } from "./dragDrop/useStageDragDrop";
 import { StageScene } from "./StageScene";
 import {
@@ -8,17 +9,26 @@ import {
 	DEFAULT_STAGE_VIEWPORT,
 	didDragPointerMove,
 	getResizeCommitSize,
+	getResizeStartSizeForNode,
 	measureCssViewport,
 	measureStageNodeSizes,
 	measureStageViewport,
+	numericHeight,
+	numericWidth,
 	px,
+	getStructuralResizeMinHeightForNode,
 } from "./stageMath";
 import {
 	DragPreviewOverlay,
 	SnapGuideOverlay,
 } from "./stageRenderers/dragOverlay";
+import {
+	getWrapperResizeHandles,
+	isStructuralTopLevelWrapper,
+} from "./stageRenderers/wrapperRenderer";
 import type {
 	MeasuredNodeSizes,
+	ResizeHandle,
 	ResizeState,
 	StageProps,
 } from "./types";
@@ -41,6 +51,10 @@ type MultiSelectionBounds = {
 	width: number;
 	height: number;
 };
+
+type SingleSelectionOverlay = NonNullable<
+	import("./types").StageSceneProps["singleSelectionOverlay"]
+>;
 
 export function Stage({
 	document,
@@ -70,6 +84,8 @@ export function Stage({
 	const [viewport, setViewport] = useState(DEFAULT_STAGE_VIEWPORT);
 	const [resizeState, setResizeState] = useState<ResizeState>(null);
 	const [marqueeState, setMarqueeState] = useState<MarqueeState | null>(null);
+	const [singleSelectionOverlay, setSingleSelectionOverlay] =
+		useState<SingleSelectionOverlay | null>(null);
 	const [multiSelectionBounds, setMultiSelectionBounds] =
 		useState<MultiSelectionBounds | null>(null);
 	const lastGeometryRef = useRef<{
@@ -135,6 +151,51 @@ export function Stage({
 	}, [document, onStickyGeometryChange]);
 
 	useLayoutEffect(() => {
+		if (selectedIds.length !== 1 || !selectedId || dragDrop.isDragging) {
+			setSingleSelectionOverlay(null);
+			return;
+		}
+
+		const root = stageRef.current;
+		if (!root) {
+			setSingleSelectionOverlay(null);
+			return;
+		}
+
+		const frameElement = root.querySelector<HTMLElement>(".stage-frame");
+		const nodeElement = root.querySelector<HTMLElement>(`#stage-node-${selectedId}`);
+		const node = document.nodes[selectedId];
+		if (!frameElement || !nodeElement || !node || node.type === "site") {
+			setSingleSelectionOverlay(null);
+			return;
+		}
+
+		const frameRect = frameElement.getBoundingClientRect();
+		const frameOffsetLeft = frameElement.clientLeft;
+		const frameOffsetTop = frameElement.clientTop;
+		const nodeRect = nodeElement.getBoundingClientRect();
+		const isTopLevel = node.parentId === document.rootId;
+		const handles =
+			node.type === "wrapper"
+				? getWrapperResizeHandles(node, isTopLevel)
+				: (["n", "ne", "e", "se", "s", "sw", "w", "nw"] as ResizeHandle[]);
+
+		setSingleSelectionOverlay({
+			nodeId: node.id,
+			label: formatNodeLabel(node),
+			bounds: {
+				left: nodeRect.left - frameRect.left - frameOffsetLeft,
+				top: nodeRect.top - frameRect.top - frameOffsetTop,
+				width: nodeRect.width,
+				height: nodeRect.height,
+			},
+			handles,
+			wideSouthHandle:
+				node.type === "wrapper" && isStructuralTopLevelWrapper(node, isTopLevel),
+		});
+	}, [document, dragDrop.isDragging, selectedId, selectedIds]);
+
+	useLayoutEffect(() => {
 		if (selectedIds.length <= 1 || dragDrop.isDragging) {
 			setMultiSelectionBounds(null);
 			return;
@@ -153,6 +214,8 @@ export function Stage({
 		}
 
 		const frameRect = frameElement.getBoundingClientRect();
+		const frameOffsetLeft = frameElement.clientLeft;
+		const frameOffsetTop = frameElement.clientTop;
 		const topLevelSelectedIds = getTopLevelSelectedIds(document, selectedIds);
 		const nodeRects = topLevelSelectedIds
 			.map(
@@ -169,12 +232,12 @@ export function Stage({
 		}
 
 		const left =
-			Math.min(...nodeRects.map((rect) => rect.left)) - frameRect.left;
-		const top = Math.min(...nodeRects.map((rect) => rect.top)) - frameRect.top;
+			Math.min(...nodeRects.map((rect) => rect.left)) - frameRect.left - frameOffsetLeft;
+		const top = Math.min(...nodeRects.map((rect) => rect.top)) - frameRect.top - frameOffsetTop;
 		const right =
-			Math.max(...nodeRects.map((rect) => rect.right)) - frameRect.left;
+			Math.max(...nodeRects.map((rect) => rect.right)) - frameRect.left - frameOffsetLeft;
 		const bottom =
-			Math.max(...nodeRects.map((rect) => rect.bottom)) - frameRect.top;
+			Math.max(...nodeRects.map((rect) => rect.bottom)) - frameRect.top - frameOffsetTop;
 		setMultiSelectionBounds({
 			left,
 			top,
@@ -343,6 +406,7 @@ export function Stage({
 				document={document}
 				selectedId={selectedId}
 				selectedIds={selectedIds}
+				singleSelectionOverlay={singleSelectionOverlay}
 				multiSelectionBounds={multiSelectionBounds}
 				previewSticky={previewSticky}
 				spacerVisibility={spacerVisibility}
@@ -354,6 +418,46 @@ export function Stage({
 				registerDropTarget={dragDrop.registerDropTarget}
 				resizeState={resizeState}
 				setResizeState={setResizeState}
+				onSelectionOverlayHandleMouseDown={(handle, event) => {
+					const overlay = singleSelectionOverlay;
+					if (!overlay) {
+						return;
+					}
+
+					event.stopPropagation();
+					onResizeStart(overlay.nodeId);
+
+					const node = document.nodes[overlay.nodeId];
+					const nodeElement = stageRef.current?.querySelector<HTMLElement>(
+						`#stage-node-${overlay.nodeId}`,
+					) ?? null;
+					if (!node || node.type === "site") {
+						return;
+					}
+
+					const fallbackWidth = numericWidth(node.rect.width.base.raw);
+					const fallbackHeight = numericHeight(node.rect.height.base.raw);
+					const startSize = getResizeStartSizeForNode(
+						nodeElement,
+						fallbackWidth,
+						fallbackHeight,
+					);
+					setResizeState({
+						nodeId: overlay.nodeId,
+						handle,
+						startClientX: event.clientX,
+						startClientY: event.clientY,
+						originWidth: startSize.width,
+						originHeight: startSize.height,
+						originX: parseFloat(node.rect.x.base.raw) || 0,
+						originY: parseFloat(node.rect.y.base.raw) || 0,
+						minHeight:
+							node.type === "wrapper" &&
+							isStructuralTopLevelWrapper(node, node.parentId === document.rootId)
+								? getStructuralResizeMinHeightForNode(nodeElement, startSize.height)
+								: undefined,
+					});
+				}}
 				measuredNodeSizes={measuredNodeSizes}
 				viewport={viewport}
 			/>

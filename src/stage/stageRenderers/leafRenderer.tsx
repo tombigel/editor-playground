@@ -21,18 +21,13 @@ import {
 } from '../../render/layout';
 import { getStickyEdgeMode, usesSyntheticStickyTrack } from '../../render/sticky';
 import type { RenderLeafPlanNode } from '../../render/types';
-import {
-  getResizeStartSize,
-  numericHeight,
-  numericWidth,
-  type ResizeState,
-} from '../stageMath';
+import { type ResizeState } from '../stageMath';
 import type {
   StageSceneLeafNode as LeafNode,
   StageNodeRegistration,
   StageStickyRegistration,
 } from '../types';
-import { ResizeHandleView, renderOffsetVisual } from './resizeHandles';
+import { renderOffsetVisual } from './resizeHandles';
 import {
   getStageStickyCssProperties,
   getStickyTrackDistances,
@@ -109,7 +104,6 @@ export function renderLeaf({
         ...(previewSticky && child.sticky?.enabled
           ? getStageStickyCssProperties(child.sticky, { includeZIndex: true })
           : {}),
-        ...(selectedIds.includes(child.id) ? { zIndex: 'var(--editor-layer-selection)' } : {}),
       }}
     >
       <div
@@ -124,27 +118,6 @@ export function renderLeaf({
           disableTabNavigation: true,
         })}
       </div>
-      {selectedIds.length === 1 && selectedId === child.id ? (
-        <ResizeHandleView
-          onHandleMouseDown={(handle, event) => {
-            event.stopPropagation();
-            onResizeStart(child.id);
-            const fallbackWidth = numericWidth(child.rect.width.base.raw);
-            const fallbackHeight = numericHeight(child.rect.height.base.raw);
-            const startSize = getResizeStartSize(event.currentTarget, fallbackWidth, fallbackHeight);
-            setResizeState({
-              nodeId: child.id,
-              handle,
-              startClientX: event.clientX,
-              startClientY: event.clientY,
-              originWidth: startSize.width,
-              originHeight: startSize.height,
-              originX: parseFloat(child.rect.x.base.raw) || 0,
-              originY: parseFloat(child.rect.y.base.raw) || 0,
-            });
-          }}
-        />
-      ) : null}
     </div>
   );
 

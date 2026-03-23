@@ -242,7 +242,7 @@ describe('stage/Stage e2e', () => {
     const before = await secondSection.boundingBox();
     expect(before).not.toBeNull();
 
-    const handle = firstSection.locator('.resize-handle.handle-s');
+    const handle = page.locator('.resize-handle.handle-s').first();
     const handleBox = await handle.boundingBox();
     expect(handleBox).not.toBeNull();
 

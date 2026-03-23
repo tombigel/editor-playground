@@ -1580,14 +1580,26 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 .stage-wrapper.selected,
 .stage-leaf.selected {
   position: relative;
-  isolation: isolate;
   outline: none;
   box-shadow: none;
 }
 
-.stage-wrapper.selected-primary::before,
-.stage-leaf.selected-primary::before {
-  content: attr(data-node-label);
+.stage-marquee-selection {
+  position: absolute;
+  border: 1px solid var(--editor-accent);
+  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
+  pointer-events: none;
+  z-index: var(--editor-layer-selection);
+}
+
+.stage-single-selection-overlay {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: var(--editor-layer-selection);
+}
+
+.stage-single-selection-label {
   position: absolute;
   top: 0;
   left: 0;
@@ -1597,7 +1609,6 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   min-height: 20px;
   padding: 0 10px;
   border-radius: 0;
-  z-index: 1;
   background: var(--editor-accent);
   color: var(--editor-accent-foreground);
   font-size: 10px;
@@ -1607,29 +1618,13 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   pointer-events: none;
 }
 
-.stage-wrapper.selected::after,
-.stage-leaf.selected::after {
-  content: '';
+.stage-single-selection-outline {
   position: absolute;
   inset: 0;
+  box-sizing: border-box;
   border: 2px solid var(--editor-accent);
   border-radius: 0;
-  z-index: 0;
   pointer-events: none;
-}
-
-.stage-wrapper.selected-multi::after,
-.stage-leaf.selected-multi::after {
-  border-width: 1px;
-  background: color-mix(in srgb, var(--editor-accent) 5%, transparent);
-}
-
-.stage-marquee-selection {
-  position: absolute;
-  border: 1px solid var(--editor-accent);
-  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
-  pointer-events: none;
-  z-index: var(--editor-layer-selection);
 }
 
 .stage-multi-selection-outline {
@@ -2213,6 +2208,7 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   background: var(--editor-resize-handle-background);
   border: 1px solid var(--editor-resize-handle-border);
   box-shadow: 0 1px 3px rgba(18, 32, 51, 0.08);
+  pointer-events: auto;
 }
 
 .handle-n {

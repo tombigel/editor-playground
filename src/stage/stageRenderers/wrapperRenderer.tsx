@@ -27,19 +27,13 @@ import {
 } from '../../render/layout';
 import { getStickyCssProperties, getStickyEdgeMode, usesSyntheticStickyTrack } from '../../render/sticky';
 import type { RenderLeafPlanNode } from '../../render/types';
-import {
-  getStructuralResizeMinHeight,
-  getResizeStartSize,
-  numericHeight,
-  numericWidth,
-} from '../stageMath';
 import { isNodeDescendantOf } from '../../editor/selection';
 import type {
   RenderWrapperArgs,
   ResizeHandle,
   StageStickyRegistration,
 } from '../types';
-import { ResizeHandleView, renderOffsetVisual } from './resizeHandles';
+import { renderOffsetVisual } from './resizeHandles';
 import { renderLeaf, renderLeafSpacerOverlay } from './leafRenderer';
 
 const STAGE_STICKY_VIEWPORT_INSET_TOP_PX = 22;
@@ -81,7 +75,6 @@ export function renderWrapper({
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
       ? getStageStickyCssProperties(node.sticky, { includePosition: true, includeZIndex: true })
       : undefined;
-  const wrapperLayerStyle = selectedIds.includes(node.id) ? { zIndex: 'var(--editor-layer-selection)' } : undefined;
   const showPaddingVisual = shouldShowWrapperPaddingVisual(document, node, selectedIds);
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
@@ -125,7 +118,6 @@ export function renderWrapper({
         ...(isSelfStickyTrack ? {} : plan.meshPlacement),
         ...getWrapperBorderStyle(node),
         ...wrapperStickyCss,
-        ...wrapperLayerStyle,
       }}
     >
       <div
@@ -225,32 +217,6 @@ export function renderWrapper({
               }),
         )}
       </div>
-      {selectedIds.length === 1 && selectedId === node.id && wrapperResizeHandles.length > 0 ? (
-        <ResizeHandleView
-          handles={wrapperResizeHandles}
-          wideSouthHandle={isStructuralTopLevelWrapper(node, plan.isTopLevel)}
-          onHandleMouseDown={(handle, event) => {
-            event.stopPropagation();
-            onResizeStart(node.id);
-            const fallbackWidth = numericWidth(node.rect.width.base.raw);
-            const fallbackHeight = numericHeight(node.rect.height.base.raw);
-            const startSize = getResizeStartSize(event.currentTarget, fallbackWidth, fallbackHeight);
-            setResizeState({
-              nodeId: node.id,
-              handle,
-              startClientX: event.clientX,
-              startClientY: event.clientY,
-              originWidth: startSize.width,
-              originHeight: startSize.height,
-              originX: parseFloat(node.rect.x.base.raw) || 0,
-              originY: parseFloat(node.rect.y.base.raw) || 0,
-              minHeight: isStructuralTopLevelWrapper(node, plan.isTopLevel)
-                ? getStructuralResizeMinHeight(event.currentTarget, startSize.height)
-                : undefined,
-            });
-          }}
-        />
-      ) : null}
       {plan.extraExtent > 0 ? (
         <div
           className={`sticky-flow-spacer ${showWrapperSpacerVisuals ? '' : 'spacer-visual-hidden'}`}
@@ -429,11 +395,11 @@ export function renderStickyTrackShell({
   );
 }
 
-function isStructuralTopLevelWrapper(node: WrapperNode, isTopLevel: boolean) {
+export function isStructuralTopLevelWrapper(node: WrapperNode, isTopLevel: boolean) {
   return isTopLevel && (node.role === 'section' || node.role === 'header' || node.role === 'footer');
 }
 
-function getWrapperResizeHandles(node: WrapperNode, isTopLevel: boolean): ResizeHandle[] {
+export function getWrapperResizeHandles(node: WrapperNode, isTopLevel: boolean): ResizeHandle[] {
   if (isStructuralTopLevelWrapper(node, isTopLevel)) {
     return usesAspectRatioHeight(node) ? [] : ['s'];
   }

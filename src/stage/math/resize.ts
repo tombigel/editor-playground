@@ -7,6 +7,14 @@ const MIN_NODE_SIZE = 24;
 
 export function getResizeStartSize(handleElement: HTMLDivElement, fallbackWidth: number, fallbackHeight: number) {
   const nodeElement = handleElement.closest<HTMLElement>('[data-node-id]');
+  return getResizeStartSizeForNode(nodeElement, fallbackWidth, fallbackHeight);
+}
+
+export function getResizeStartSizeForNode(
+  nodeElement: HTMLElement | null,
+  fallbackWidth: number,
+  fallbackHeight: number,
+) {
   if (!nodeElement) {
     return { width: fallbackWidth, height: fallbackHeight };
   }
@@ -25,6 +33,10 @@ export function getResizeStartSize(handleElement: HTMLDivElement, fallbackWidth:
 
 export function getStructuralResizeMinHeight(handleElement: HTMLDivElement, fallbackHeight: number) {
   const nodeElement = handleElement.closest<HTMLElement>('[data-node-id]');
+  return getStructuralResizeMinHeightForNode(nodeElement, fallbackHeight);
+}
+
+export function getStructuralResizeMinHeightForNode(nodeElement: HTMLElement | null, fallbackHeight: number) {
   if (!nodeElement) {
     return fallbackHeight;
   }

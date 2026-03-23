@@ -23,6 +23,8 @@ import {
   Stage,
 } from '../Stage';
 import { DragPreviewOverlay } from '../stageRenderers/dragOverlay';
+import { SingleSelectionOverlay } from '../stageRenderers/selectionVisuals';
+import { getWrapperResizeHandles } from '../stageRenderers/wrapperRenderer';
 
 function withDocumentFontLibrary(document: Omit<DocumentModel, 'fontLibrary'>): DocumentModel {
   return {
@@ -391,6 +393,38 @@ describe('stage/Stage', () => {
     );
 
     expect(markup).not.toContain('data-stage-resize-handle="true"');
+  });
+
+  it('does not lift selected stage nodes with selection z-index chrome', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'image',
+    );
+
+    if (!target || target.type !== 'leaf') {
+      throw new Error('Expected image leaf');
+    }
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapEnabled={true}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    const nodeMarkupMatch = markup.match(new RegExp(`id="stage-node-${target.id}"[^>]*style="([^"]+)"`));
+    expect(nodeMarkupMatch?.[1]).not.toContain('z-index:var(--editor-layer-selection)');
   });
 
   it('retains container surface styling in the drag preview', () => {
@@ -1026,41 +1060,8 @@ describe('stage/Stage', () => {
     expect(size).toBe(178);
   });
 
-  it('renders wrapper resize handles outside the content wrapper so they align to the outer border edge', () => {
-    const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
-      throw new Error('Expected section wrapper');
-    }
-    const container = createWrapper('container', section.id);
-    document.nodes[container.id] = container;
-    section.children.push(container.id);
-
-    const markup = renderToStaticMarkup(
-      <Stage
-        document={document}
-        selectedId={container.id}
-        previewSticky={true}
-        spacerVisibility="selected"
-        showGridLanes={false}
-        snapEnabled={true}
-        onStageFocus={() => {}}
-        onSelect={() => {}}
-        onMove={() => {}}
-        onReparent={() => {}}
-        onResize={() => {}}
-        onResizeStart={() => {}}
-        onResizeEnd={() => {}}
-      />,
-    );
-
-    expect(markup).toMatch(
-      new RegExp(`data-content-wrapper-for="${container.id}"[\\s\\S]*?</div><div class="resize-handle handle-n"`),
-    );
-  });
-
   it.each(['section', 'header', 'footer'] as const)(
-    'renders a single bottom resize knob for a selected top-level %s wrapper',
+    'reports a single bottom resize knob for a selected top-level %s wrapper',
     (role) => {
       const document = structuredClone(createInitialDocument());
       const wrapper = Object.values(document.nodes).find(
@@ -1071,62 +1072,58 @@ describe('stage/Stage', () => {
         throw new Error(`Expected ${role} wrapper`);
       }
 
-      const markup = renderToStaticMarkup(
-        <Stage
-          document={document}
-          selectedId={wrapper.id}
-          previewSticky={true}
-          spacerVisibility="selected"
-          showGridLanes={false}
-          snapEnabled={true}
-          onStageFocus={() => {}}
-          onSelect={() => {}}
-          onMove={() => {}}
-          onReparent={() => {}}
-          onResize={() => {}}
-          onResizeStart={() => {}}
-          onResizeEnd={() => {}}
-        />,
-      );
-
-      expect(markup).toContain('class="resize-handle handle-s resize-handle-structural-s"');
-      expect(markup).not.toContain('class="resize-handle handle-n"');
-      expect(markup).not.toContain('class="resize-handle handle-e"');
-      expect(markup).not.toContain('class="resize-handle handle-se"');
+      expect(getWrapperResizeHandles(wrapper, true)).toEqual(['s']);
     },
   );
 
-  it('keeps the bottom resize handle round for selected non-structural wrappers', () => {
-    const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
-      throw new Error('Expected section wrapper');
-    }
-
-    const container = createWrapper('container', section.id);
-    document.nodes[container.id] = container;
-    section.children.push(container.id);
-
+  it('keeps the bottom resize handle round for selected non-structural wrappers in the overlay', () => {
     const markup = renderToStaticMarkup(
-      <Stage
-        document={document}
-        selectedId={container.id}
-        previewSticky={true}
-        spacerVisibility="selected"
-        showGridLanes={false}
-        snapEnabled={true}
-        onStageFocus={() => {}}
-        onSelect={() => {}}
-        onMove={() => {}}
-        onReparent={() => {}}
-        onResize={() => {}}
-        onResizeStart={() => {}}
-        onResizeEnd={() => {}}
+      <SingleSelectionOverlay
+        overlay={{
+          nodeId: 'container_1',
+          label: 'Container',
+          bounds: {
+            left: 24,
+            top: 36,
+            width: 280,
+            height: 180,
+          },
+          handles: ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'],
+          wideSouthHandle: false,
+        }}
+        onHandleMouseDown={() => {}}
       />,
     );
 
+    expect(markup).toContain('class="stage-single-selection-overlay"');
+    expect(markup).toContain('class="stage-single-selection-label">Container</div>');
     expect(markup).toContain('class="resize-handle handle-s"');
     expect(markup).not.toContain('resize-handle-structural-s');
+  });
+
+  it('renders the structural single-selection overlay with only the wide south handle', () => {
+    const markup = renderToStaticMarkup(
+      <SingleSelectionOverlay
+        overlay={{
+          nodeId: 'section_1',
+          label: 'Section',
+          bounds: {
+            left: 12,
+            top: 18,
+            width: 960,
+            height: 320,
+          },
+          handles: ['s'],
+          wideSouthHandle: true,
+        }}
+        onHandleMouseDown={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('class="resize-handle handle-s resize-handle-structural-s"');
+    expect(markup).not.toContain('class="resize-handle handle-n"');
+    expect(markup).not.toContain('class="resize-handle handle-e"');
+    expect(markup).not.toContain('class="resize-handle handle-se"');
   });
 
   it('suppresses the top-level structural resize knob for aspect-ratio heights', () => {
@@ -1138,25 +1135,7 @@ describe('stage/Stage', () => {
 
     section.rect.height.base = parseHeightValue('aspect-ratio(4/3)');
 
-    const markup = renderToStaticMarkup(
-      <Stage
-        document={document}
-        selectedId={section.id}
-        previewSticky={true}
-        spacerVisibility="selected"
-        showGridLanes={false}
-        snapEnabled={true}
-        onStageFocus={() => {}}
-        onSelect={() => {}}
-        onMove={() => {}}
-        onReparent={() => {}}
-        onResize={() => {}}
-        onResizeStart={() => {}}
-        onResizeEnd={() => {}}
-      />,
-    );
-
-    expect(markup).not.toContain('data-stage-resize-handle="true"');
+    expect(getWrapperResizeHandles(section, true)).toEqual([]);
   });
 
   it.each([

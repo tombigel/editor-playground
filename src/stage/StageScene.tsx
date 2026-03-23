@@ -5,12 +5,13 @@ import type { StageSceneProps } from './types';
 export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
 
 import { renderWrapper } from './stageRenderers/wrapperRenderer';
-import { MultiSelectionOutline } from './stageRenderers/selectionVisuals';
+import { MultiSelectionOutline, SingleSelectionOverlay } from './stageRenderers/selectionVisuals';
 
 export const StageScene = memo(function StageScene({
   document,
   selectedId,
   selectedIds = selectedId ? [selectedId] : [],
+  singleSelectionOverlay = null,
   multiSelectionBounds = null,
   previewSticky,
   spacerVisibility,
@@ -24,6 +25,7 @@ export const StageScene = memo(function StageScene({
   setResizeState,
   measuredNodeSizes,
   viewport,
+  onSelectionOverlayHandleMouseDown,
 }: StageSceneProps) {
   const plan = useMemo(
     () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport),
@@ -105,6 +107,12 @@ export const StageScene = memo(function StageScene({
               })
             : <EmptySlot label="Footer slot" />}
         </div>
+        {singleSelectionOverlay ? (
+          <SingleSelectionOverlay
+            overlay={singleSelectionOverlay}
+            onHandleMouseDown={onSelectionOverlayHandleMouseDown}
+          />
+        ) : null}
         {multiSelectionBounds ? <MultiSelectionOutline bounds={multiSelectionBounds} /> : null}
       </div>
   );
@@ -112,6 +120,7 @@ export const StageScene = memo(function StageScene({
   prev.document === next.document &&
   prev.selectedId === next.selectedId &&
   prev.selectedIds === next.selectedIds &&
+  prev.singleSelectionOverlay === next.singleSelectionOverlay &&
   prev.multiSelectionBounds === next.multiSelectionBounds &&
   prev.previewSticky === next.previewSticky &&
   prev.spacerVisibility === next.spacerVisibility &&
@@ -122,7 +131,8 @@ export const StageScene = memo(function StageScene({
   prev.registerDropTarget === next.registerDropTarget &&
   prev.resizeState === next.resizeState &&
   prev.measuredNodeSizes === next.measuredNodeSizes &&
-  prev.viewport === next.viewport,
+  prev.viewport === next.viewport &&
+  prev.onSelectionOverlayHandleMouseDown === next.onSelectionOverlayHandleMouseDown,
 );
 
 function EmptySlot({ label }: { label: string }) {

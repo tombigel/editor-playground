@@ -144,6 +144,18 @@ export type StageSceneProps = {
 	document: DocumentModel;
 	selectedId: NodeId | null;
 	selectedIds?: NodeId[];
+	singleSelectionOverlay?: {
+		nodeId: NodeId;
+		label: string;
+		bounds: {
+			left: number;
+			top: number;
+			width: number;
+			height: number;
+		};
+		handles: ResizeHandle[];
+		wideSouthHandle: boolean;
+	} | null;
 	multiSelectionBounds?: {
 		left: number;
 		top: number;
@@ -160,6 +172,7 @@ export type StageSceneProps = {
 	registerDropTarget: StageNodeRegistration;
 	resizeState: ResizeState;
 	setResizeState: (state: ResizeState) => void;
+	onSelectionOverlayHandleMouseDown: (handle: ResizeHandle, event: import('react').MouseEvent<HTMLDivElement>) => void;
 	measuredNodeSizes: RenderMeasuredNodeSizes;
 	viewport: ViewportMeasurement;
 };
