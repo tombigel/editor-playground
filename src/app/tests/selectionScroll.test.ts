@@ -12,7 +12,7 @@ describe('app/selectionScroll', () => {
 
     expect(didScroll).toBe(true);
     expect(ownerDocument.getElementById).toHaveBeenCalledWith('stage-node-text_12');
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' });
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   });
 
   it('does nothing when there is no selected node or matching element', () => {
