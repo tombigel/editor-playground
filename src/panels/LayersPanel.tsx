@@ -668,7 +668,7 @@ function LayersTreeRowItem({
               </span>
             )}
             {projectedTypeLabel ? (
-              <span className="editor-layers-type-transition mt-0.5 inline-flex items-center gap-1 text-[11px] leading-4">
+              <span className="editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4">
                 <span className="editor-layers-row-type truncate">{row.typeLabel}</span>
                 <span className="editor-layers-type-arrow" aria-hidden="true">-&gt;</span>
                 <span className="editor-layers-row-type truncate">{projectedTypeLabel}</span>
@@ -772,7 +772,7 @@ function LayersDragGhost({
             {row.displayName}
           </span>
           {projectedTypeLabel ? (
-            <span className="editor-layers-type-transition mt-0.5 inline-flex items-center gap-1 text-[11px] leading-4">
+            <span className="editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4">
               <span className="editor-layers-row-type truncate">{row.typeLabel}</span>
               <span className="editor-layers-type-arrow" aria-hidden="true">-&gt;</span>
               <span className="editor-layers-row-type truncate">{projectedTypeLabel}</span>
