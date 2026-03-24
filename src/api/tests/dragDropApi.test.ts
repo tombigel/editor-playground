@@ -329,6 +329,72 @@ describe('api/dragDropApi', () => {
     });
   });
 
+  it('does not highlight the source parent or its ancestors while dragging inside it', () => {
+    const { document, leafAId, containerAId, sectionId } = createDragDocument();
+    const session = updateDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 140,
+        startClientY: 120,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          dropTargets: [
+            { id: containerAId, contentBox: { left: 100, top: 100, width: 300, height: 200 }, depth: 0, order: 1 },
+            { id: sectionId, contentBox: { left: 0, top: 0, width: 960, height: 900 }, depth: 0, order: 2 },
+          ],
+        }),
+      }),
+      {
+        clientX: 180,
+        clientY: 150,
+        shiftKey: false,
+        altKey: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
+      },
+    );
+
+    expect(session.highlightedDropId).toBeNull();
+  });
+
+  it('highlights a structural source parent while dragging a container wrapper', () => {
+    const { document, containerAId, sectionId } = createDragDocument();
+    const session = updateDragSession(
+      beginDragSession({
+        document,
+        anchorId: containerAId,
+        selectedIds: [containerAId],
+        startClientX: 190,
+        startClientY: 160,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: containerAId, offsetX: 0, offsetY: 0, width: 300, height: 240 }],
+          previewWidth: 300,
+          previewHeight: 240,
+          nodes: [{ id: containerAId, originX: 40, originY: 40, parentId: sectionId }],
+          sourceParentId: sectionId,
+          sourceContentBox: { left: 0, top: 0, width: 960, height: 900 },
+          dropTargets: [
+            { id: sectionId, contentBox: { left: 0, top: 0, width: 960, height: 900 }, depth: 0, order: 1 },
+          ],
+        }),
+      }),
+      {
+        clientX: 240,
+        clientY: 220,
+        shiftKey: false,
+        altKey: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
+      },
+    );
+
+    expect(session.highlightedDropId).toBe(sectionId);
+  });
+
   it('clamps movement inside the parent content box on the right and bottom edges', () => {
     const { document, leafAId, containerAId } = createDragDocument();
     const commit = finishDragSession(

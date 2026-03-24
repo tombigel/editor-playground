@@ -62,6 +62,7 @@ export function renderWrapper({
   const meshLayout = plan.meshLayout;
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, node.id);
+  const isHighlightedDropTarget = highlightedDropId === node.id;
   const isStickyContentWrapper = plan.contentSticky;
   const isSelfStickyTrack = Boolean(
     selfRegistration &&
@@ -72,7 +73,9 @@ export function renderWrapper({
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
       ? getStageStickyCssProperties(node.sticky, { includePosition: true, includeZIndex: true })
       : undefined;
-  const showPaddingVisual = shouldShowWrapperPaddingVisual(document, node, selectedIds);
+  const showPaddingVisual =
+    shouldShowWrapperPaddingVisual(document, node, selectedIds) ||
+    shouldShowDropTargetPaddingVisual(node, isHighlightedDropTarget);
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
@@ -106,9 +109,7 @@ export function renderWrapper({
         selectedIds.length === 1 && selectedId === node.id ? 'selected-primary' : ''
       } ${
         dragSourceIds.includes(node.id) ? 'drag-source' : ''
-      } ${
-        highlightedDropId === node.id ? 'drop-target' : ''
-      }`}
+      } ${isHighlightedDropTarget ? 'drop-target' : ''}`}
       aria-label={getNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,
@@ -681,4 +682,17 @@ function hasNonZeroWrapperPadding(node: WrapperNode) {
     }
     return value.parsed.value !== 0;
   });
+}
+
+function shouldShowDropTargetPaddingVisual(
+  node: WrapperNode,
+  isHighlightedDropTarget: boolean,
+) {
+  if (!isHighlightedDropTarget) {
+    return false;
+  }
+  if (node.role !== 'section' && node.role !== 'header' && node.role !== 'footer' && node.role !== 'container') {
+    return false;
+  }
+  return hasNonZeroWrapperPadding(node);
 }

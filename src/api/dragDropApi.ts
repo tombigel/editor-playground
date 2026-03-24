@@ -420,9 +420,31 @@ function resolveHighlightedDropId(
   clientX: number,
   clientY: number,
 ) {
+  const allowSourceParentHighlight = shouldAllowSourceParentHighlight(
+    document,
+    draggedId,
+    sourceParentId,
+  );
+  const sourceParentTarget = sourceParentId
+    ? getDropTargetById(targets, sourceParentId)
+    : undefined;
+  const pointerInsideSourceParent = Boolean(
+    sourceParentTarget && pointInRect(clientX, clientY, sourceParentTarget.contentBox),
+  );
   const validTargets = targets
     .filter((target) => pointInRect(clientX, clientY, target.contentBox))
     .filter((target) => isValidDropParent(document, draggedId, target.id))
+    // Keep source-parent visual noise down by default, except for
+    // structural wrapper drags that intentionally surface section/header/footer.
+    .filter((target) => target.id !== sourceParentId || allowSourceParentHighlight)
+    // While still inside the source parent, do not promote ancestor wrappers
+    // (for example section) as drop highlights for in-place child drags.
+    .filter((target) => {
+      if (!pointerInsideSourceParent || !sourceParentId || allowSourceParentHighlight) {
+        return true;
+      }
+      return !isNodeDescendantOf(document, sourceParentId, target.id);
+    })
     .sort((left, right) => {
       if (left.depth !== right.depth) {
         return right.depth - left.depth;
@@ -430,7 +452,7 @@ function resolveHighlightedDropId(
       return right.order - left.order;
     });
 
-  return validTargets[0]?.id ?? sourceParentId ?? null;
+  return validTargets[0]?.id ?? null;
 }
 
 function resolveContainerSnappedPosition(
@@ -547,4 +569,26 @@ function isValidDropParent(
     return true;
   }
   return candidate.role === 'section' || candidate.role === 'header' || candidate.role === 'footer';
+}
+
+function shouldAllowSourceParentHighlight(
+  document: DocumentModel,
+  draggedId: NodeId,
+  sourceParentId: NodeId | undefined,
+) {
+  if (!sourceParentId) {
+    return false;
+  }
+
+  const draggedNode = document.nodes[draggedId];
+  const sourceParent = document.nodes[sourceParentId];
+  if (!draggedNode || !sourceParent || sourceParent.type !== 'wrapper') {
+    return false;
+  }
+
+  return (
+    draggedNode.type === 'wrapper' &&
+    draggedNode.role === 'container' &&
+    (sourceParent.role === 'section' || sourceParent.role === 'header' || sourceParent.role === 'footer')
+  );
 }

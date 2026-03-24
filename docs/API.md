@@ -351,6 +351,9 @@ Pure headless drag-and-drop session lifecycle and drag resolution helpers for ed
 - If a parent and child are both selected, dragging resolves to the parent only.
 - Grouped dragging is allowed only when all resolved drag ids share the same parent; otherwise the session falls back to a single anchor drag.
 - Coordinates are measured from wrapper content boxes, not border boxes, and move/reparent commits clamp fully inside the target content box.
+- Drop highlighting resolves to the deepest valid hovered target.
+- Standard in-parent child drags do not highlight the source parent wrapper, and while the pointer remains inside that source parent, ancestor wrappers are not promoted as highlights.
+- Container-wrapper drags are the exception: the structural source parent (`section`/`header`/`footer`) may highlight to indicate structural reparent intent.
 - `Shift` axis-locks before snapping.
 - `Alt` inverts the ambient snap toggle during drag.
 - Invalid hovered targets fall back to moving inside the current parent.

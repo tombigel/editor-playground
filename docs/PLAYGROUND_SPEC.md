@@ -157,6 +157,9 @@ Drag behavior includes:
 - the dragged source node fades and suppresses local box/filter shadows while dragging so the drag silhouette stays clean
 - the drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it
 - when hovering over a valid drop target (section or container), that wrapper highlights with an accent-colored outline and tinted background to confirm where the element will land
+- highlighted drop targets with non-zero wrapper padding also render the padding boundary line so the drop inset is visible
+- while dragging a child inside its current parent, that source parent (and its ancestors) are not highlighted as drop targets
+- when dragging a `container` wrapper, its structural source parent (`section`/`header`/`footer`) may highlight
 - on reparent, the element's position is clamped so it stays at least partially visible within the target container
 - snap guide colors:
   - component guides: teal
@@ -170,6 +173,7 @@ Current implementation notes for the March 2026 drag/drop run:
 - grouped reparent is not supported; only single-node drags can reparent into a new wrapper
 - marquee selection started from a top-level structural wrapper (`section`, `header`, `footer`) currently filters hits to direct children of that wrapper
 - drop target detection resolves from `elementFromPoint(...)` and walks ancestor `data-drop-wrapper-id` markers until it finds a valid wrapper parent
+- drop target highlighting prefers the deepest valid hovered target and suppresses ancestor promotion while the pointer remains inside the current source parent during child drags
 - reparent commit position is currently derived from the hovered wrapper's live DOM rect together with the captured drag grab offset, then clamped to keep the dropped node at least partially visible in the target wrapper
 - valid drop targets receive a transient `drop-target` class on hover, and that class is cleared on drag end or pointer leave
 

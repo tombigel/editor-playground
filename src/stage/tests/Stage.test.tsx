@@ -7,6 +7,7 @@ import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue
 import { resolveWrapperStickyState } from '../../sticky/resolve';
 import {
   computeResizeFrame,
+  DEFAULT_STAGE_VIEWPORT,
   didDragPointerMove,
   findDropWrapper,
   getDragElementRect,
@@ -23,6 +24,7 @@ import {
 import {
   Stage,
 } from '../Stage';
+import { StageScene } from '../StageScene';
 import { DragPreviewOverlay } from '../stageRenderers/dragOverlay';
 import { SingleSelectionOverlay } from '../stageRenderers/selectionVisuals';
 import { getWrapperResizeHandles } from '../stageRenderers/wrapperRenderer';
@@ -316,6 +318,46 @@ describe('stage/Stage', () => {
     expect(containerSelectedMarkup).toContain('top:16px;right:16px;bottom:16px;left:16px');
     expect(childSelectedMarkup).toContain('class="wrapper-padding-overlay"');
     expect(childSelectedMarkup).toContain('top:16px;right:16px;bottom:16px;left:16px');
+  });
+
+  it('shows the padding boundary line on a highlighted drop target wrapper', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const markup = renderToStaticMarkup(
+      <StageScene
+        document={document}
+        selectedId={null}
+        selectedIds={[]}
+        singleSelectionOverlay={null}
+        multiSelectionBounds={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        onResizeStart={() => {}}
+        dragSourceIds={[]}
+        highlightedDropId={section.id}
+        registerDraggableNode={() => {}}
+        registerDropTarget={() => {}}
+        resizeState={null}
+        setResizeState={() => {}}
+        onSelectionOverlayHandleMouseDown={() => {}}
+        measuredNodeSizes={{}}
+        viewport={DEFAULT_STAGE_VIEWPORT}
+      />,
+    );
+
+    expect(markup).toContain(`id="stage-node-${section.id}"`);
+    expect(markup).toContain('drop-target');
+    expect(markup).toContain('class="wrapper-padding-overlay"');
+    expect(markup).toContain('class="wrapper-padding-overlay-boundary"');
+    expect(markup).toContain('top:64px;right:72px;bottom:72px;left:72px');
   });
 
   it('renders selection outlines for all selected nodes without primary label chrome during multi-select', () => {
