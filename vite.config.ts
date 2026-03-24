@@ -59,6 +59,7 @@ export default defineConfig({
         'src/app/useAppRuntime.ts',
         'src/app/useAppViewModel.ts',
         'src/app/useEditorEnvironment.ts',
+        'src/design-system/**/*.{ts,tsx}',
       ],
       thresholds: {
         lines: 60,
