@@ -1,0 +1,680 @@
+:root {
+  font-family:
+    Inter,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  color: #172033;
+  background: #e9edf4;
+  line-height: 1.4;
+  --app-background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 28%),
+    linear-gradient(180deg, #edf1f7 0%, #e6ebf3 100%);
+  --editor-text: #172033;
+  --editor-shell-background: var(--app-background);
+  --editor-surface-background: #ffffff;
+  --editor-surface-border: #dbe3ee;
+  --editor-surface-shadow:
+    0 10px 24px rgba(18, 32, 51, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0)),
+    #eef2f7;
+  --editor-stage-frame-background: #ffffff;
+  --editor-stage-frame-border: #dde5f0;
+  --editor-stage-frame-shadow:
+    0 12px 28px rgba(18, 32, 51, 0.06),
+    0 1px 6px rgba(18, 32, 51, 0.04);
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)),
+    #fbfcfe;
+  --editor-empty-slot-text: #708093;
+  --editor-empty-slot-background: rgba(243, 247, 252, 0.66);
+  --editor-empty-slot-border: #d8e1ec;
+  --editor-content-background: #ffffff;
+  --editor-image-placeholder-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #d7e2f0 0%, #eef4fb 100%);
+  --editor-image-placeholder-text: #4b6075;
+  --editor-button-surface: #ffffff;
+  --editor-button-surface-hover: #f8fbff;
+  --editor-button-border: #d3dbe7;
+  --editor-button-border-hover: #b2bfd1;
+  --editor-button-ghost-text: #475569;
+  --editor-button-ghost-hover-background: rgba(15, 23, 42, 0.06);
+  --editor-button-ghost-hover-text: #172033;
+  --editor-input-background: #ffffff;
+  --editor-input-border: #d3dbe7;
+  --editor-input-text: #172033;
+  --editor-input-placeholder: #64748b;
+  --editor-select-content-background: #ffffff;
+  --editor-select-highlight-background: #eff6ff;
+  --editor-switch-background: #cbd5e1;
+  --editor-switch-background-checked: var(--editor-accent);
+  --editor-slider-track-background: #dbe5f0;
+  --editor-slider-range-background: var(--editor-accent);
+  --editor-slider-thumb-background: #ffffff;
+  --editor-slider-thumb-border: color-mix(in srgb, var(--editor-accent) 38%, #ffffff);
+  --editor-tooltip-background: #ffffff;
+  --editor-tooltip-border: #dbe5f0;
+  --editor-tooltip-text: #475569;
+  --editor-tooltip-muted-text: #7b8796;
+  --editor-tooltip-shadow: 0 10px 22px rgba(15, 23, 42, 0.1);
+  --editor-settings-nav-text: #475569;
+  --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.8);
+  --editor-settings-nav-hover-text: #0f172a;
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
+  --editor-settings-nav-active-text: #16315f;
+  --editor-settings-nav-active-muted: #5d7293;
+  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 14%, transparent);
+  --editor-template-tag-background: rgba(16, 185, 129, 0.12);
+  --editor-template-tag-text: #047857;
+  --editor-template-tag-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.14);
+  --editor-warning-background: #fff7e6;
+  --editor-warning-border: #d7b24c;
+  --editor-warning-text: #8a6200;
+  --editor-utility-text-strong: #0f172a;
+  --editor-utility-text-muted: #64748b;
+  --editor-utility-bg-subtle: #f8fafc;
+  --editor-utility-border: #dbe3ee;
+  --editor-scrollbar-track: color-mix(in srgb, var(--editor-accent) 8%, transparent);
+  --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-accent) 32%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-accent) 54%, transparent);
+  --editor-accent: #1668ff;
+  --editor-accent-foreground: #f8fafc;
+  --editor-accent-foreground-muted: rgba(255, 255, 255, 0.68);
+  --editor-accent-shadow: 0 2px 8px color-mix(in srgb, var(--editor-accent) 24%, transparent);
+  --editor-focus-ring: color-mix(in srgb, var(--editor-accent) 20%, transparent);
+  --editor-focus-ring-strong: color-mix(in srgb, var(--editor-accent) 40%, transparent);
+  --editor-focus-ring-offset: var(--editor-surface-background);
+  --editor-snap-guide-component: rgba(20, 184, 166, 0.75);
+  --editor-snap-guide-page: rgba(217, 70, 239, 0.78);
+  --editor-snap-guide-section: rgba(245, 158, 11, 0.78);
+  --editor-snap-guide-header: rgba(56, 189, 248, 0.78);
+  --editor-snap-guide-footer: rgba(129, 140, 248, 0.78);
+  --editor-snap-guide-container: rgba(132, 204, 22, 0.78);
+  --editor-topbar-background: color-mix(in srgb, var(--editor-accent) 82%, #113b91);
+  --editor-topbar-border: color-mix(in srgb, var(--editor-accent) 74%, #0e2b6f);
+  --editor-topbar-shadow: 0 1px 0 color-mix(in srgb, #ffffff 12%, transparent);
+  --editor-topbar-text: var(--editor-accent-foreground);
+  --editor-topbar-muted-text: var(--editor-accent-foreground-muted);
+  --editor-topbar-button-text: var(--editor-accent-foreground);
+  --editor-topbar-button-hover-text: var(--editor-accent-foreground);
+  --editor-topbar-button-active-text: var(--editor-accent-foreground);
+  --editor-topbar-button-background: color-mix(in srgb, var(--editor-accent) 76%, #184ebc);
+  --editor-topbar-button-border: color-mix(in srgb, var(--editor-accent) 48%, #ffffff);
+  --editor-topbar-button-hover-background: color-mix(in srgb, var(--editor-accent) 82%, #123f9c);
+  --editor-topbar-button-hover-border: color-mix(in srgb, var(--editor-accent) 38%, #ffffff);
+  --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 44%, #ffffff);
+  --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 28%, #ffffff);
+  --editor-topbar-button-shadow:
+    0 8px 18px color-mix(in srgb, var(--editor-accent) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 9%, transparent);
+  --editor-topbar-button-active-shadow:
+    0 12px 26px color-mix(in srgb, var(--editor-accent) 24%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 10%, transparent);
+  --editor-topbar-tooltip-background: #0f172a;
+  --editor-topbar-tooltip-border: color-mix(in srgb, var(--editor-accent) 18%, #243447);
+  --editor-topbar-tooltip-text: #f8fafc;
+  --editor-topbar-tooltip-shadow: 0 16px 36px rgba(2, 6, 23, 0.38);
+  --editor-dark-theme-chip:
+    linear-gradient(135deg, color-mix(in srgb, var(--editor-accent) 50%, #0f172a), color-mix(in srgb, var(--editor-accent) 18%, #ffffff));
+  --editor-sticky-distance-guide-color: var(--editor-accent);
+  --editor-sticky-distance-label-background: color-mix(in srgb, var(--editor-accent) 88%, #0f172a);
+  --editor-sticky-distance-label-text: var(--editor-accent-foreground);
+  --editor-sticky-offset-guide-color: color-mix(in srgb, var(--editor-accent) 54%, #d97706);
+  --editor-sticky-padding-guide-color: color-mix(
+    in srgb,
+    var(--editor-sticky-offset-guide-color) 72%,
+    #f4c66e
+  );
+  --editor-sticky-offset-label-background: color-mix(
+    in srgb,
+    var(--editor-sticky-offset-guide-color) 86%,
+    #fff4d6
+  );
+  --editor-sticky-offset-label-text: #4d3500;
+  --editor-sticky-auto-guide-color: color-mix(in srgb, var(--editor-accent) 46%, #16a34a);
+  --editor-sticky-auto-label-background: color-mix(in srgb, var(--editor-sticky-auto-guide-color) 84%, #e8fff1);
+  --editor-sticky-auto-label-text: var(--editor-accent-foreground);
+  --editor-group-selection-border: #c4711c;
+  --editor-group-selection-shadow: rgba(196, 113, 28, 0.18);
+  --editor-drag-preview-background: rgba(255, 255, 255, 0.96);
+  --editor-drag-preview-shadow:
+    0 0 0 3px color-mix(in srgb, var(--editor-accent) 10%, transparent),
+    0 12px 28px rgba(18, 32, 51, 0.12);
+  --editor-resize-handle-background: var(--editor-accent);
+  --editor-resize-handle-border: var(--editor-accent);
+  --editor-dark-shell-top: #111927;
+  --editor-dark-shell-bottom: #0d141f;
+  --editor-dark-surface-base: #1a2534;
+  --editor-dark-surface-border-base: #41586f;
+  --editor-dark-stage-frame-base: #1d2a3a;
+  --editor-dark-stage-canvas-base: #243244;
+  --editor-dark-content-base: #1d2a39;
+  --editor-dark-button-base: #202d3e;
+  --editor-dark-button-hover-base: #29394d;
+  --editor-dark-input-base: #162130;
+  --editor-dark-utility-base: #223041;
+  --editor-dark-select-highlight-base: #2a3850;
+  --editor-dark-tooltip-base: #0f1722;
+  --editor-dark-tooltip-border-base: #36495f;
+  --editor-dark-topbar-base: #131720;
+  --editor-dark-topbar-button-base: rgba(255, 255, 255, 0.04);
+  --editor-dark-topbar-button-hover-base: rgba(255, 255, 255, 0.08);
+  --editor-dark-topbar-button-active-base: rgba(255, 255, 255, 0.13);
+  --editor-dark-tint-soft: 6%;
+  --editor-dark-tint-medium: 11%;
+  --editor-dark-tint-strong: 18%;
+  --editor-layer-sticky-label: 1;
+  --editor-layer-selection: 2;
+  --editor-layer-resize-handle: 2;
+  --resize-handle-size: 8px;
+  --resize-handle-offset: calc(var(--resize-handle-size) / -2 + 2px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--app-background);
+}
+
+body[data-editor-theme='dark'] {
+  --editor-focus-ring-offset: var(--editor-dark-topbar-base);
+  --app-background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--editor-accent) 24%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(180deg, var(--editor-dark-shell-top) 0%, var(--editor-dark-shell-bottom) 100%);
+  --editor-text: #e6edf5;
+  --editor-shell-background: var(--app-background);
+  --editor-surface-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-surface-base)
+  );
+  --editor-surface-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-surface-shadow:
+    0 12px 28px rgba(1, 6, 15, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0)),
+    color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-soft), #131d2a);
+  --editor-stage-frame-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-stage-frame-base)
+  );
+  --editor-stage-frame-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-stage-frame-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.22),
+    0 1px 8px rgba(0, 0, 0, 0.12);
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0)),
+    color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-medium), var(--editor-dark-stage-canvas-base));
+  --editor-empty-slot-text: #93a3b8;
+  --editor-empty-slot-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    rgba(26, 37, 52, 0.88)
+  );
+  --editor-empty-slot-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-content-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-content-base)
+  );
+  --editor-image-placeholder-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-medium), #253446) 0%,
+      color-mix(in srgb, var(--editor-accent) var(--editor-dark-tint-soft), #16212f) 100%
+    );
+  --editor-image-placeholder-text: #a6b4c5;
+  --editor-button-surface: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-button-base)
+  );
+  --editor-button-surface-hover: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-button-hover-base)
+  );
+  --editor-button-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-button-border-hover: color-mix(
+    in srgb,
+    var(--editor-accent) calc(var(--editor-dark-tint-strong) + 4%),
+    #657f98
+  );
+  --editor-button-ghost-text: #b6c2d1;
+  --editor-button-ghost-hover-background: rgba(255, 255, 255, 0.1);
+  --editor-button-ghost-hover-text: #eef4fb;
+  --editor-input-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-input-base)
+  );
+  --editor-input-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-input-text: #e6edf5;
+  --editor-input-placeholder: #71839a;
+  --editor-select-content-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-surface-base)
+  );
+  --editor-select-highlight-background: color-mix(
+    in srgb,
+    var(--editor-accent) calc(var(--editor-dark-tint-strong) + 4%),
+    var(--editor-dark-select-highlight-base)
+  );
+  --editor-switch-background: #334155;
+  --editor-switch-background-checked: var(--editor-accent);
+  --editor-slider-track-background: #263244;
+  --editor-slider-range-background: color-mix(in srgb, var(--editor-accent) 68%, #c6d4ff);
+  --editor-slider-thumb-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-tooltip-base)
+  );
+  --editor-slider-thumb-border: color-mix(in srgb, var(--editor-accent) 40%, #cbd5e1);
+  --editor-tooltip-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-tooltip-base)
+  );
+  --editor-tooltip-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-tooltip-border-base)
+  );
+  --editor-tooltip-text: #d6e0ea;
+  --editor-tooltip-muted-text: #a5b3c2;
+  --editor-tooltip-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  --editor-settings-nav-text: #aab9ca;
+  --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.06);
+  --editor-settings-nav-hover-text: #eef4fb;
+  --editor-settings-nav-active-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-utility-base)
+  );
+  --editor-settings-nav-active-text: #f3f7fc;
+  --editor-settings-nav-active-muted: #95a8bf;
+  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 18%, transparent);
+  --editor-template-tag-background: rgba(16, 185, 129, 0.14);
+  --editor-template-tag-text: #86efc5;
+  --editor-template-tag-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.14);
+  --editor-warning-background: rgba(143, 99, 10, 0.18);
+  --editor-warning-border: #9c7420;
+  --editor-warning-text: #f0bf76;
+  --editor-utility-text-strong: #e6edf5;
+  --editor-utility-text-muted: #94a5b8;
+  --editor-utility-bg-subtle: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-utility-base)
+  );
+  --editor-utility-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    var(--editor-dark-surface-border-base)
+  );
+  --editor-scrollbar-track: color-mix(in srgb, var(--editor-accent) 10%, transparent);
+  --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-accent) 36%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-accent) 58%, transparent);
+  --editor-group-selection-border: #f0bf76;
+  --editor-group-selection-shadow: rgba(240, 191, 118, 0.2);
+  --editor-drag-preview-background: rgba(26, 37, 52, 0.96);
+  --editor-drag-preview-shadow:
+    0 0 0 3px color-mix(in srgb, var(--editor-accent) 8%, transparent),
+    0 12px 28px rgba(18, 32, 51, 0.12);
+  --editor-resize-handle-background: var(--editor-accent);
+  --editor-resize-handle-border: var(--editor-accent);
+  --editor-topbar-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-topbar-base)
+  );
+  --editor-topbar-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    rgba(255, 255, 255, 0.12)
+  );
+  --editor-topbar-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  --editor-topbar-text: #f8fafc;
+  --editor-topbar-muted-text: #a5b3c7;
+  --editor-topbar-button-text: #e6edf5;
+  --editor-topbar-button-hover-text: #f8fafc;
+  --editor-topbar-button-active-text: #f8fafc;
+  --editor-topbar-button-background: color-mix(
+    in srgb,
+    var(--editor-accent) 8%,
+    var(--editor-dark-topbar-button-base)
+  );
+  --editor-topbar-button-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    rgba(255, 255, 255, 0.12)
+  );
+  --editor-topbar-button-hover-background: color-mix(
+    in srgb,
+    var(--editor-accent) 12%,
+    var(--editor-dark-topbar-button-hover-base)
+  );
+  --editor-topbar-button-hover-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    rgba(255, 255, 255, 0.16)
+  );
+  --editor-topbar-button-active-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-topbar-button-active-base)
+  );
+  --editor-topbar-button-active-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-strong),
+    rgba(255, 255, 255, 0.18)
+  );
+  --editor-topbar-button-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --editor-topbar-button-active-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --editor-topbar-tooltip-background: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-soft),
+    var(--editor-dark-tooltip-base)
+  );
+  --editor-topbar-tooltip-border: color-mix(
+    in srgb,
+    var(--editor-accent) var(--editor-dark-tint-medium),
+    var(--editor-dark-tooltip-border-base)
+  );
+  --editor-topbar-tooltip-text: #f8fafc;
+  --editor-topbar-tooltip-shadow: 0 16px 36px rgba(2, 6, 23, 0.38);
+  --editor-dark-theme-chip:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--editor-accent) 44%, var(--editor-dark-shell-top)),
+      color-mix(in srgb, var(--editor-accent) 16%, var(--editor-dark-surface-base))
+    );
+}
+
+body[data-editor-theme='light'][data-editor-light-theme='paper'] {
+  --app-background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(180deg, #f5efe6 0%, #ece4d7 100%);
+  --editor-surface-background: #fffaf1;
+  --editor-surface-border: #dccfbc;
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0)),
+    #efe6d8;
+  --editor-stage-frame-background: #fffaf1;
+  --editor-stage-frame-border: #dfd2bf;
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0)),
+    #faf4ea;
+  --editor-content-background: #fff9ef;
+  --editor-button-surface: #fff8ed;
+  --editor-button-surface-hover: #f6eddf;
+  --editor-button-border: #d8c8b1;
+  --editor-button-border-hover: #c7b18f;
+  --editor-input-background: #fff8ef;
+  --editor-input-border: #d8ccb9;
+  --editor-select-content-background: #fffaf1;
+  --editor-select-highlight-background: #f4ebdd;
+  --editor-tooltip-background: #fffaf3;
+  --editor-tooltip-border: #ded0bc;
+  --editor-settings-nav-hover-background: rgba(255, 250, 241, 0.88);
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 8%, #fffaf1);
+  --editor-settings-nav-active-text: #5d4120;
+  --editor-settings-nav-active-muted: #8b6f4d;
+  --editor-utility-text-strong: #2b2115;
+  --editor-utility-text-muted: #776657;
+  --editor-utility-bg-subtle: #f7efe2;
+  --editor-utility-border: #dfd1bd;
+  --editor-topbar-background: #7c6a54;
+  --editor-topbar-border: #655440;
+  --editor-topbar-button-background: #8b775e;
+  --editor-topbar-button-border: rgba(255, 255, 255, 0.36);
+  --editor-topbar-button-hover-background: #98856b;
+  --editor-topbar-button-hover-border: rgba(255, 255, 255, 0.48);
+  --editor-topbar-button-active-background: #b89a73;
+  --editor-topbar-button-active-border: rgba(255, 255, 255, 0.58);
+}
+
+body[data-editor-theme='light'][data-editor-light-theme='midday'] {
+  --app-background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--editor-accent) 20%, #ffffff), transparent 34%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--editor-accent) 10%, #eff4f9) 0%,
+      color-mix(in srgb, var(--editor-accent) 14%, #e6ecf4) 100%
+    );
+  --editor-surface-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-surface-border: color-mix(in srgb, var(--editor-accent) 14%, #d7e0eb);
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0)),
+    color-mix(in srgb, var(--editor-accent) 10%, #eff3f8);
+  --editor-stage-frame-background: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
+  --editor-stage-frame-border: color-mix(in srgb, var(--editor-accent) 13%, #dae3ef);
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)),
+    color-mix(in srgb, var(--editor-accent) 9%, #fbfcfe);
+  --editor-content-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-image-placeholder-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, color-mix(in srgb, var(--editor-accent) 18%, #d8e4f1) 0%, color-mix(in srgb, var(--editor-accent) 10%, #eef4fb) 100%);
+  --editor-button-surface: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
+  --editor-button-surface-hover: color-mix(in srgb, var(--editor-accent) 12%, #f8fbff);
+  --editor-button-border: color-mix(in srgb, var(--editor-accent) 16%, #d3dbe7);
+  --editor-button-border-hover: color-mix(in srgb, var(--editor-accent) 24%, #b2bfd1);
+  --editor-input-background: color-mix(in srgb, var(--editor-accent) 5%, #ffffff);
+  --editor-input-border: color-mix(in srgb, var(--editor-accent) 16%, #d3dbe7);
+  --editor-select-content-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-select-highlight-background: color-mix(in srgb, var(--editor-accent) 14%, #eff6ff);
+  --editor-tooltip-background: color-mix(in srgb, var(--editor-accent) 6%, #ffffff);
+  --editor-tooltip-border: color-mix(in srgb, var(--editor-accent) 14%, #dbe5f0);
+  --editor-settings-nav-hover-background: color-mix(in srgb, var(--editor-accent) 9%, rgba(255, 255, 255, 0.84));
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 14%, #ffffff);
+  --editor-settings-nav-active-text: color-mix(in srgb, var(--editor-accent) 38%, #16315f);
+  --editor-settings-nav-active-muted: color-mix(in srgb, var(--editor-accent) 24%, #5d7293);
+  --editor-utility-bg-subtle: color-mix(in srgb, var(--editor-accent) 9%, #f8fafc);
+  --editor-utility-border: color-mix(in srgb, var(--editor-accent) 14%, #dbe3ee);
+}
+
+body[data-editor-theme='light'][data-editor-light-theme='clarity'] {
+  --app-background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.94), transparent 26%),
+    linear-gradient(180deg, #f3f6fb 0%, #e8edf5 100%);
+  --editor-text: #0b1220;
+  --editor-surface-background: #ffffff;
+  --editor-surface-border: #b5c2d3;
+  --editor-workspace-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)),
+    #e7edf6;
+  --editor-stage-frame-background: #ffffff;
+  --editor-stage-frame-border: #bdcada;
+  --editor-stage-canvas-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+    #ffffff;
+  --editor-content-background: #ffffff;
+  --editor-button-surface: #ffffff;
+  --editor-button-surface-hover: #edf3fb;
+  --editor-button-border: #b7c5d7;
+  --editor-button-border-hover: #8196b1;
+  --editor-input-background: #ffffff;
+  --editor-input-border: #aebed2;
+  --editor-input-text: #0b1220;
+  --editor-input-placeholder: #4c5c71;
+  --editor-select-content-background: #ffffff;
+  --editor-select-highlight-background: #dce8fb;
+  --editor-tooltip-background: #ffffff;
+  --editor-tooltip-border: #bfcfe2;
+  --editor-tooltip-text: #243244;
+  --editor-tooltip-muted-text: #57677d;
+  --editor-settings-nav-text: #2a3848;
+  --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.92);
+  --editor-settings-nav-hover-text: #0b1220;
+  --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 12%, #ffffff);
+  --editor-settings-nav-active-text: #0f254b;
+  --editor-settings-nav-active-muted: #47637f;
+  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 24%, transparent);
+  --editor-utility-text-strong: #0b1220;
+  --editor-utility-text-muted: #49576a;
+  --editor-utility-bg-subtle: #eef3f9;
+  --editor-utility-border: #c0ccda;
+  --editor-topbar-background: #3d4b63;
+  --editor-topbar-border: #29364b;
+  --editor-topbar-button-background: #4d5d77;
+  --editor-topbar-button-border: rgba(255, 255, 255, 0.36);
+  --editor-topbar-button-hover-background: #5d6f8b;
+  --editor-topbar-button-hover-border: rgba(255, 255, 255, 0.5);
+  --editor-topbar-button-active-background: #8a9ab2;
+  --editor-topbar-button-active-border: rgba(255, 255, 255, 0.62);
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='graphite'] {
+  --editor-dark-shell-top: #1a1d22;
+  --editor-dark-shell-bottom: #121417;
+  --editor-dark-surface-base: #23272d;
+  --editor-dark-surface-border-base: #49505b;
+  --editor-dark-stage-frame-base: #272c33;
+  --editor-dark-stage-canvas-base: #2d333b;
+  --editor-dark-content-base: #262a31;
+  --editor-dark-button-base: #2a2f36;
+  --editor-dark-button-hover-base: #323841;
+  --editor-dark-input-base: #1d2127;
+  --editor-dark-utility-base: #2d323a;
+  --editor-dark-select-highlight-base: #3a414b;
+  --editor-dark-tooltip-base: #181b20;
+  --editor-dark-tooltip-border-base: #3f4752;
+  --editor-dark-topbar-base: #191d22;
+  --editor-dark-tint-soft: 2%;
+  --editor-dark-tint-medium: 4%;
+  --editor-dark-tint-strong: 8%;
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='midnight'] {
+  --editor-dark-shell-top: #0d1420;
+  --editor-dark-shell-bottom: #080d15;
+  --editor-dark-surface-base: #162131;
+  --editor-dark-surface-border-base: #39506a;
+  --editor-dark-stage-frame-base: #1a2636;
+  --editor-dark-stage-canvas-base: #1d2c40;
+  --editor-dark-content-base: #192636;
+  --editor-dark-button-base: #1b2738;
+  --editor-dark-button-hover-base: #223145;
+  --editor-dark-input-base: #121c2a;
+  --editor-dark-utility-base: #1f2d40;
+  --editor-dark-select-highlight-base: #29384d;
+  --editor-dark-tooltip-base: #0d1520;
+  --editor-dark-tooltip-border-base: #30445c;
+  --editor-dark-topbar-base: #101723;
+  --editor-dark-tint-soft: 5%;
+  --editor-dark-tint-medium: 10%;
+  --editor-dark-tint-strong: 16%;
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='monokai'] {
+  --editor-text: #f6f1f4;
+  --editor-dark-shell-top: #2d2a2e;
+  --editor-dark-shell-bottom: #242126;
+  --editor-dark-surface-base: #353239;
+  --editor-dark-surface-border-base: #5d5861;
+  --editor-dark-stage-frame-base: #37333b;
+  --editor-dark-stage-canvas-base: #3b3740;
+  --editor-dark-content-base: #343039;
+  --editor-dark-button-base: #403a45;
+  --editor-dark-button-hover-base: #4a4350;
+  --editor-dark-input-base: #29262d;
+  --editor-dark-utility-base: #3a3540;
+  --editor-dark-select-highlight-base: #4f4756;
+  --editor-dark-tooltip-base: #27232a;
+  --editor-dark-tooltip-border-base: #5c5660;
+  --editor-dark-topbar-base: #2a262d;
+  --editor-dark-tint-soft: 0%;
+  --editor-dark-tint-medium: 0%;
+  --editor-dark-tint-strong: 0%;
+  --editor-topbar-background: #2d2a2e;
+  --editor-topbar-border: #57515a;
+  --editor-topbar-button-background: #3a3640;
+  --editor-topbar-button-border: #675f6c;
+  --editor-topbar-button-hover-background: #453f4a;
+  --editor-topbar-button-hover-border: #7b7481;
+  --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 24%, #433d47);
+  --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 30%, #8f8795);
+  --editor-topbar-button-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --editor-topbar-button-active-shadow:
+    0 12px 26px color-mix(in srgb, var(--editor-accent) 24%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+body[data-editor-theme='dark'][data-editor-dark-theme='ink'] {
+  --editor-text: #f2f7ff;
+  --editor-dark-shell-top: #090b10;
+  --editor-dark-shell-bottom: #05070b;
+  --editor-dark-surface-base: #111620;
+  --editor-dark-surface-border-base: #546278;
+  --editor-dark-stage-frame-base: #131924;
+  --editor-dark-stage-canvas-base: #161e2a;
+  --editor-dark-content-base: #121823;
+  --editor-dark-button-base: #18202d;
+  --editor-dark-button-hover-base: #212b3b;
+  --editor-dark-input-base: #0c111b;
+  --editor-dark-utility-base: #18212e;
+  --editor-dark-select-highlight-base: #33415a;
+  --editor-dark-tooltip-base: #0a0e15;
+  --editor-dark-tooltip-border-base: #4d607d;
+  --editor-dark-topbar-base: #0b1017;
+  --editor-dark-tint-soft: 1%;
+  --editor-dark-tint-medium: 2%;
+  --editor-dark-tint-strong: 4%;
+  --editor-topbar-background: #0d1219;
+  --editor-topbar-border: #4a5a73;
+  --editor-topbar-button-background: #17202c;
+  --editor-topbar-button-border: #62748f;
+  --editor-topbar-button-hover-background: #223043;
+  --editor-topbar-button-hover-border: #7e92b0;
+  --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 28%, #2b3950);
+  --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 36%, #97a9c2);
+}
