@@ -28,7 +28,11 @@ function SnapSubRow({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className={`flex items-center justify-between gap-4 py-3 pl-11${borderTop ? ' editor-border-subtle border-t' : ''}`}>
+    <div
+      className={`flex items-center justify-between gap-4 pl-11 ${
+        borderTop ? 'editor-border-subtle border-t py-3' : 'pt-0 pb-3'
+      }`}
+    >
       <div className="editor-text-muted min-w-0 text-sm">{label}</div>
       <div className="flex shrink-0 items-center gap-1.5">
         <div className="w-[72px]">
