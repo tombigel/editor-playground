@@ -811,31 +811,6 @@ function findSiblingSectionIndex(
   return -1;
 }
 
-function isSectionRootOrderValid(document: DocumentModel) {
-  const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
-    return false;
-  }
-
-  const headerIndex = root.children.findIndex((childId) => {
-    const child = document.nodes[childId];
-    return child?.type === 'wrapper' && child.role === 'header';
-  });
-  if (headerIndex > 0) {
-    return false;
-  }
-
-  const footerIndex = root.children.findIndex((childId) => {
-    const child = document.nodes[childId];
-    return child?.type === 'wrapper' && child.role === 'footer';
-  });
-  if (footerIndex !== -1 && footerIndex !== root.children.length - 1) {
-    return false;
-  }
-
-  return true;
-}
-
 function normalizeRootStructuralRoles(document: DocumentModel) {
   const root = document.nodes[document.rootId];
   if (!root || root.type !== 'site') {

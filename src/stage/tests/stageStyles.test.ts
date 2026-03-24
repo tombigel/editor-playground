@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
+const CSS_FILES = ['variables.css', 'editor-chrome.css', 'layers-panel.css', 'inspector.css', 'stage.css'];
+
+const styles = CSS_FILES
+  .map((file) => readFileSync(new URL(`../../styles/${file}`, import.meta.url), 'utf8'))
+  .join('\n');
+
 describe('stage/stage styles', () => {
   it('removes box and filter shadows from dragged stage nodes', () => {
-    const styles = readFileSync(new URL('../../styles.css', import.meta.url), 'utf8');
-
     expect(styles).toContain('.drag-source,');
     expect(styles).toContain('.drag-source *');
     expect(styles).toContain('.drag-source::before');
@@ -13,8 +17,6 @@ describe('stage/stage styles', () => {
   });
 
   it('derives sticky guide colors from shared editor accent tokens', () => {
-    const styles = readFileSync(new URL('../../styles.css', import.meta.url), 'utf8');
-
     expect(styles).toContain('--editor-sticky-distance-guide-color: var(--editor-accent);');
     expect(styles).toContain('--sticky-guide-color: var(--editor-sticky-offset-guide-color);');
     expect(styles).toContain('background: var(--editor-sticky-distance-label-background);');
@@ -22,8 +24,6 @@ describe('stage/stage styles', () => {
   });
 
   it('scopes inspector control tokens to the floating focused panel', () => {
-    const styles = readFileSync(new URL('../../styles.css', import.meta.url), 'utf8');
-
     expect(styles).toContain('.editor-focused-panel');
     expect(styles).toContain("[data-ui='button'][data-variant='default']");
     expect(styles).toContain("[data-ui='button'][data-variant='ghost']");

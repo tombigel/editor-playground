@@ -9,10 +9,12 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type Ref,
@@ -241,18 +243,19 @@ export function LayersPanelContent({
   const rowElementsRef = useRef(new Map<NodeId, HTMLDivElement>());
   const dragJustEndedRef = useRef(false);
 
-  function updateDragState(
-    nextState: DragState | null | ((current: DragState | null) => DragState | null),
-  ) {
-    setDragState((current) => {
-      const resolved =
-        typeof nextState === 'function'
-          ? nextState(current)
-          : nextState;
-      dragStateRef.current = resolved;
-      return resolved;
-    });
-  }
+  const updateDragState = useCallback(
+    (nextState: DragState | null | ((current: DragState | null) => DragState | null)) => {
+      setDragState((current) => {
+        const resolved =
+          typeof nextState === 'function'
+            ? nextState(current)
+            : nextState;
+        dragStateRef.current = resolved;
+        return resolved;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     setExpandedIds((current) => {
@@ -441,7 +444,7 @@ export function LayersPanelContent({
       window.removeEventListener('pointerup', handlePointerEnd);
       window.removeEventListener('pointercancel', handlePointerEnd);
     };
-  }, [document, dragState, onMoveNodeInTree, rows]);
+  }, [document, dragState, onMoveNodeInTree, rows, updateDragState]);
 
   function handleToggleExpanded(nodeId: NodeId) {
     setExpandedIds((current) => {
@@ -558,7 +561,6 @@ function LayersTreeRowItem({
   onPointerDown,
   onClick,
   onRenameNode,
-  onDeleteNode,
   onSetNodeVisibility,
   onRefChange,
   editing,
@@ -600,12 +602,20 @@ function LayersTreeRowItem({
         style={{
           paddingLeft: `${8 + row.depth * ROW_INDENT_PX}px`,
         }}
+        role="option"
+        aria-selected={row.isSelected}
+        tabIndex={0}
         onClick={(event) => {
           const target = event.target as HTMLElement | null;
           if (target?.closest('[data-layers-control="true"], [data-layers-title-editor="true"]')) {
             return;
           }
           onClick(event, row.id);
+        }}
+        onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            onClick(event as unknown as ReactMouseEvent<HTMLDivElement>, row.id);
+          }
         }}
       >
         {row.hasChildren ? (

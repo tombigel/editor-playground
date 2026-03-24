@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import type React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFontPreviewStylesheet } from '../inspector/useFontPreviewStylesheet';
 import { ChevronLeft, ChevronRight, Plus, RotateCcw, Star, Trash2 } from 'lucide-react';
 import type { DocumentFontFamily, DocumentModel } from '../../model/types';
