@@ -73,8 +73,9 @@ export type EditorAction =
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
+  | { type: 'moveNodeInTree'; id: string; targetParentId: string; targetIndex: number }
   | { type: 'resize'; id: string; width: string; height: string }
-  | { type: 'text'; field: EditorTextField; value: string }
+  | { type: 'text'; field: EditorTextField; value: string; id?: string }
   | { type: 'wrapperStyle'; field: WrapperStyleField; value: string }
   | { type: 'rect'; field: 'x' | 'y' | 'width' | 'height'; value: string }
   | { type: 'promote'; role: 'header' | 'footer' }
@@ -82,6 +83,8 @@ export type EditorAction =
   | { type: 'cancelPromote' }
   | { type: 'demote' }
   | { type: 'delete' }
+  | { type: 'deleteNode'; id: string }
+  | { type: 'setNodeVisibility'; id: string; value: boolean }
   | { type: 'stickyEnabled'; value: boolean }
   | { type: 'stickyTarget'; value: 'self' | 'contentWrapper' }
   | { type: 'stickyEdges'; value: 'top' | 'bottom' | 'both' }

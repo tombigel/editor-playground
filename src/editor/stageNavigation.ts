@@ -40,7 +40,7 @@ export function getAdjacentStageSelection(
 
 function visitStageNode(document: DocumentModel, nodeId: NodeId, ids: NodeId[]) {
   const node = document.nodes[nodeId];
-  if (!node || node.type === 'site') {
+  if (!node || node.type === 'site' || !node.visible) {
     return;
   }
 

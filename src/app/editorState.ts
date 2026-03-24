@@ -4,6 +4,7 @@ import {
   clearSelection,
   confirmPromoteWrapperRole,
   createFactoryResetState,
+  deleteNode,
   deleteNodes,
   demoteWrapperRole,
   distributeNodes,
@@ -11,6 +12,7 @@ import {
   insertLeaf,
   insertSectionTemplate,
   insertWrapper,
+  moveNodeInTree,
   loadPersistedState,
   moveNode,
   moveNodes,
@@ -20,6 +22,7 @@ import {
   requestPromoteWrapperRole,
   resizeNode,
   reorderNodes,
+  setNodeVisibility,
   selectNode,
   selectManyNodes,
   toggleNodeSelection,
@@ -73,10 +76,12 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return moveNodes(state, action.moves);
     case 'reparent':
       return reparentNode(state, action.id, action.parentId, action.x, action.y);
+    case 'moveNodeInTree':
+      return moveNodeInTree(state, action.id, action.targetParentId, action.targetIndex);
     case 'resize':
       return resizeNode(state, action.id, { width: action.width, height: action.height });
     case 'text':
-      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+      return applySelectedNodeUpdate(state, action.id ? [action.id] : selectedIds, (nextState, nodeId) =>
         updateTextField(nextState, nodeId, action.field, action.value),
       );
     case 'wrapperStyle':
@@ -95,6 +100,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return selectedId ? demoteWrapperRole(state, selectedId) : state;
     case 'delete':
       return selectedIds.length > 0 ? deleteNodes(state, selectedIds) : state;
+    case 'deleteNode':
+      return deleteNode(state, action.id);
+    case 'setNodeVisibility':
+      return setNodeVisibility(state, action.id, action.value);
     case 'stickyEnabled':
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         updateStickyField(nextState, nodeId, { enabled: action.value }),

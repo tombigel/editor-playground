@@ -16,11 +16,13 @@ import {
   deleteNodesDoc,
   insertLeafDoc,
   insertWrapperDoc,
+  moveNodeInTreeDoc,
   reorderNodeDoc,
   reparentNodeDoc,
   resolveStickyLayout,
   resolveWrapperStickyState,
   serializeDocumentJson,
+  setNodeVisibilityDoc,
   type DocumentModel,
   type DocumentNode,
   type EditorTextField,
@@ -64,6 +66,7 @@ export const insertWrapper = editorStore.insertWrapper;
 export const loadPersistedState = editorStore.loadPersistedState;
 export const moveNode = editorStore.moveNode;
 export const moveNodes = editorStore.moveNodes;
+export const moveNodeInTree = editorStore.moveNodeInTree;
 export const nudgeNode = editorStore.nudgeNode;
 export const persistDefaultDocument = editorStore.persistDefaultDocument;
 export const persistState = editorStore.persistState;
@@ -74,6 +77,7 @@ export const requestPromoteWrapperRole = editorStore.requestPromoteWrapperRole;
 export const resizeNode = editorStore.resizeNode;
 export const selectNode = editorStore.selectNode;
 export const selectManyNodes = editorStore.selectManyNodes;
+export const setNodeVisibility = editorStore.setNodeVisibility;
 export const toggleNodeSelection = editorStore.toggleNodeSelection;
 export const updateRectField = editorStore.updateRectField;
 export const updateStickyField = editorStore.updateStickyField;
@@ -93,10 +97,12 @@ export {
   getNode,
   insertLeafDoc,
   insertWrapperDoc,
+  moveNodeInTreeDoc,
   parseUnitValue,
   reorderNodeDoc,
   reparentNodeDoc,
   resolveStickyLayout,
   resolveWrapperStickyState,
   serializeDocumentJson,
+  setNodeVisibilityDoc,
 };

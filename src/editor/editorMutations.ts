@@ -24,6 +24,7 @@ import type {
 } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
+import { moveNodeInTreeDoc, setNodeVisibilityDoc } from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
 import { cloneDocument, normalizeDocument, normalizeTextHtmlTag, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
@@ -330,6 +331,15 @@ export function updateStickyField(
     node.sticky.target = 'self';
   }
   return { ...state, document };
+}
+
+export function setNodeVisibility(
+  state: EditorState,
+  nodeId: NodeId,
+  visible: boolean,
+): EditorState {
+  const document = setNodeVisibilityDoc(state.document, nodeId, visible);
+  return document === state.document ? state : applySelectionToDocument(state, document);
 }
 
 export function updateWrapperStyleField(
@@ -944,6 +954,23 @@ export function reparentNode(
   node.rect.y.base = parseUnitValue(y);
 
   return { ...state, document };
+}
+
+export function moveNodeInTree(
+  state: EditorState,
+  nodeId: NodeId,
+  targetParentId: NodeId,
+  targetIndex: number,
+): EditorState {
+  const document = moveNodeInTreeDoc(state.document, nodeId, targetParentId, targetIndex);
+  if (document === state.document) {
+    return state;
+  }
+
+  return {
+    ...applySelectionToDocument(state, document),
+    pendingRoleSwap: null,
+  };
 }
 
 export function requestPromoteWrapperRole(

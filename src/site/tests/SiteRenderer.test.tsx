@@ -128,4 +128,23 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain(`data-node-id="${pinnedLead.id}"`);
     expect(markup).not.toContain(`data-node-track-for="${pinnedLead.id}"`);
   });
+
+  it('omits hidden wrappers and their descendants from site output', () => {
+    const document = structuredClone(createInitialDocument());
+    const hiddenSection = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!hiddenSection || hiddenSection.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const hiddenChildId = hiddenSection.children[0];
+    hiddenSection.visible = false;
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).not.toContain(`id="${hiddenSection.id}"`);
+    expect(markup).not.toContain(`data-node-id="${hiddenChildId}"`);
+  });
 });

@@ -1,4 +1,4 @@
-import { ImageIcon, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
+import { ImageIcon, Layers3, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
 import type { LeafRole } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { PopoverTooltip } from '@/components/ui/popover';
@@ -7,6 +7,9 @@ type Props = {
   onInsertWrapper: (role: 'container') => void;
   onOpenSectionTemplates: (trigger: HTMLElement) => void;
   onInsertLeaf: (role: LeafRole) => void;
+  layersOpen?: boolean;
+  onOpenLayers?: (trigger: HTMLElement) => void;
+  onCloseLayers?: () => void;
 };
 
 const INSERT_ITEMS = [
@@ -54,7 +57,14 @@ const INSERT_ITEMS = [
   },
 ];
 
-export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertLeaf }: Props) {
+export function InsertPanel({
+  onInsertWrapper,
+  onOpenSectionTemplates,
+  onInsertLeaf,
+  layersOpen = false,
+  onOpenLayers = () => undefined,
+  onCloseLayers = () => undefined,
+}: Props) {
   return (
     <div className="flex flex-col items-center gap-2 overflow-visible">
       <div className="pb-1">
@@ -101,6 +111,33 @@ export function InsertPanel({ onInsertWrapper, onOpenSectionTemplates, onInsertL
         );
       })}
       <div aria-hidden="true" className="editor-border-subtle mt-2 w-full border-b" />
+      <PopoverTooltip
+        side="right"
+        align="center"
+        className="min-w-[148px] text-left font-normal"
+        content={
+          <>
+            <span className="editor-text-strong block text-sm font-medium">Layers</span>
+            <span className="editor-text-muted mt-0.5 block text-xs">Structure, visibility, and order</span>
+          </>
+        }
+      >
+        <button
+          type="button"
+          data-panel-trigger="layers"
+          aria-pressed={layersOpen}
+          className="editor-rail-entry-button mt-2"
+          onClick={(event) => {
+            if (layersOpen) {
+              onCloseLayers();
+              return;
+            }
+            onOpenLayers(event.currentTarget);
+          }}
+        >
+          <Layers3 className="h-4 w-4" strokeWidth={1.9} />
+        </button>
+      </PopoverTooltip>
     </div>
   );
 }

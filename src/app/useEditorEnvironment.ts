@@ -211,6 +211,31 @@ export function useSectionTemplatePosition(
 	anchor: HTMLElement | null,
 	onPositionChange: (position: { top: number; left: number }) => void,
 ) {
+	useAnchoredPanelPosition(open, anchor, onPositionChange, {
+		maxPanelHeight: 480,
+		topOffset: -10,
+		leftOffset: 16,
+	});
+}
+
+export function useAnchoredPanelPosition(
+	open: boolean,
+	anchor: HTMLElement | null,
+	onPositionChange: (position: { top: number; left: number }) => void,
+	options: {
+		minTop?: number;
+		maxPanelHeight?: number;
+		topOffset?: number;
+		leftOffset?: number;
+	} = {},
+) {
+	const {
+		minTop = 72,
+		maxPanelHeight = 480,
+		topOffset = -10,
+		leftOffset = 16,
+	} = options;
+
 	useEffect(() => {
 		if (!open || !anchor) {
 			return;
@@ -220,8 +245,11 @@ export function useSectionTemplatePosition(
 		function updatePosition() {
 			const rect = resolvedAnchor.getBoundingClientRect();
 			onPositionChange({
-				top: Math.max(72, Math.min(window.innerHeight - 480, rect.top - 10)),
-				left: rect.right + 16,
+				top: Math.max(
+					minTop,
+					Math.min(window.innerHeight - maxPanelHeight, rect.top + topOffset),
+				),
+				left: rect.right + leftOffset,
 			});
 		}
 
@@ -232,7 +260,15 @@ export function useSectionTemplatePosition(
 			window.removeEventListener("resize", updatePosition);
 			window.removeEventListener("scroll", updatePosition, true);
 		};
-	}, [anchor, onPositionChange, open]);
+	}, [
+		anchor,
+		leftOffset,
+		maxPanelHeight,
+		minTop,
+		onPositionChange,
+		open,
+		topOffset,
+	]);
 }
 
 export function useDismissFloatingPanels({
@@ -242,6 +278,9 @@ export function useDismissFloatingPanels({
 	sectionTemplateOpen,
 	sectionTemplatePanelRef,
 	onCloseSectionTemplates,
+	layersOpen = false,
+	layersPanelRef,
+	onCloseLayers,
 }: {
 	settingsOpen: boolean;
 	settingsPanelRef: RefObject<HTMLDivElement | null>;
@@ -249,6 +288,9 @@ export function useDismissFloatingPanels({
 	sectionTemplateOpen: boolean;
 	sectionTemplatePanelRef: RefObject<HTMLDivElement | null>;
 	onCloseSectionTemplates: () => void;
+	layersOpen?: boolean;
+	layersPanelRef?: RefObject<HTMLDivElement | null>;
+	onCloseLayers?: () => void;
 }) {
 	useEffect(() => {
 		function handlePointerDown(event: PointerEvent) {
@@ -279,6 +321,15 @@ export function useDismissFloatingPanels({
 			) {
 				onCloseSectionTemplates();
 			}
+
+			if (
+				layersOpen &&
+				layersPanelRef?.current &&
+				!layersPanelRef.current.contains(target) &&
+				!target.closest('[data-panel-trigger="layers"]')
+			) {
+				onCloseLayers?.();
+			}
 		}
 
 		window.addEventListener("pointerdown", handlePointerDown, true);
@@ -286,7 +337,10 @@ export function useDismissFloatingPanels({
 			window.removeEventListener("pointerdown", handlePointerDown, true);
 	}, [
 		onCloseSectionTemplates,
+		onCloseLayers,
 		onCloseSettings,
+		layersOpen,
+		layersPanelRef,
 		sectionTemplateOpen,
 		sectionTemplatePanelRef,
 		settingsOpen,

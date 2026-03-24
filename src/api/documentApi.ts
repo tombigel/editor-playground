@@ -373,6 +373,21 @@ export function setNodeTextField(
   return document;
 }
 
+export function setNodeVisibilityDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  visible: boolean,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || node.type === 'site' || node.visible === visible) {
+    return document;
+  }
+
+  node.visible = visible;
+  return next;
+}
+
 function normalizeTextDecorationLine(
   value: string,
 ): 'none' | 'underline' | 'line-through' | 'underline line-through' {
@@ -658,6 +673,84 @@ export function reparentNodeDoc(
   return next;
 }
 
+export function moveNodeInTreeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  targetParentId: NodeId,
+  targetIndex: number,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  const targetParent = next.nodes[targetParentId];
+
+  if (!node || node.type === 'site' || !targetParent || targetIndex < 0) {
+    return document;
+  }
+
+  const movingStructuralRootNode =
+    node.type === 'wrapper' &&
+    isSiteSectionRole(node.role) &&
+    targetParent.type === 'site' &&
+    targetParentId === next.rootId;
+
+  if (targetParent.type === 'site') {
+    if (!movingStructuralRootNode) {
+      return document;
+    }
+  } else if (!canAcceptChild(targetParent, node)) {
+    return document;
+  }
+
+  if (node.parentId == null) {
+    return document;
+  }
+
+  if (targetParentId === nodeId || isDescendantOf(next, targetParentId, nodeId)) {
+    return document;
+  }
+
+  const currentParent = next.nodes[node.parentId];
+  if (!currentParent) {
+    return document;
+  }
+
+  const currentIndex = currentParent.children.indexOf(nodeId);
+  if (currentIndex === -1) {
+    return document;
+  }
+
+  if (
+    currentParent.id === targetParent.id &&
+    (targetIndex === currentIndex || targetIndex === currentIndex + 1)
+  ) {
+    return document;
+  }
+
+  const maxTargetIndex = targetParent.children.length;
+  if (targetIndex > maxTargetIndex) {
+    return document;
+  }
+
+  currentParent.children = currentParent.children.filter((childId) => childId !== nodeId);
+  const nextIndex =
+    currentParent.id === targetParent.id && currentIndex < targetIndex
+      ? targetIndex - 1
+      : targetIndex;
+
+  if (nextIndex < 0 || nextIndex > targetParent.children.length) {
+    return document;
+  }
+
+  targetParent.children.splice(nextIndex, 0, nodeId);
+  node.parentId = targetParentId;
+
+  if (movingStructuralRootNode) {
+    normalizeRootStructuralRoles(next);
+  }
+
+  return next;
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers for pure DocumentModel mutations
 // ---------------------------------------------------------------------------
@@ -716,6 +809,58 @@ function findSiblingSectionIndex(
     index += direction;
   }
   return -1;
+}
+
+function isSectionRootOrderValid(document: DocumentModel) {
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return false;
+  }
+
+  const headerIndex = root.children.findIndex((childId) => {
+    const child = document.nodes[childId];
+    return child?.type === 'wrapper' && child.role === 'header';
+  });
+  if (headerIndex > 0) {
+    return false;
+  }
+
+  const footerIndex = root.children.findIndex((childId) => {
+    const child = document.nodes[childId];
+    return child?.type === 'wrapper' && child.role === 'footer';
+  });
+  if (footerIndex !== -1 && footerIndex !== root.children.length - 1) {
+    return false;
+  }
+
+  return true;
+}
+
+function normalizeRootStructuralRoles(document: DocumentModel) {
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return;
+  }
+
+  const structuralWrappers = root.children
+    .map((childId) => document.nodes[childId])
+    .filter(
+      (node): node is WrapperNode =>
+        node?.type === 'wrapper' && isSiteSectionRole(node.role),
+    );
+
+  if (structuralWrappers.length === 0) {
+    return;
+  }
+
+  for (const wrapper of structuralWrappers) {
+    wrapper.role = 'section';
+  }
+
+  structuralWrappers[0].role = 'header';
+  if (structuralWrappers.length > 1) {
+    structuralWrappers[structuralWrappers.length - 1].role = 'footer';
+  }
 }
 
 export function insertSectionTemplateBeforeFooter(

@@ -57,6 +57,7 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "composite-content-controls", label: "Content Controls" },
 			{ id: "composite-settings", label: "Settings Controls" },
 			{ id: "composite-settings-nav", label: "Settings Nav Item" },
+			{ id: "composite-layers-panel", label: "Layers Panel" },
 			{ id: "composite-shortcuts", label: "Shortcuts" },
 			{ id: "composite-focused-panel", label: "Focused Panel" },
 		],

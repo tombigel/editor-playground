@@ -89,7 +89,16 @@ describe('app/AppShell', () => {
     expect(markup).toContain('editor-text-strong text-sm font-semibold');
     expect(markup).toContain('editor-insert-button group h-10 w-10 rounded-lg border');
     expect(markup).toContain('editor-insert-button-inner flex h-full w-full items-center justify-center rounded-lg border');
+    expect(markup).toContain('data-panel-trigger="layers"');
+    expect(markup).toContain('editor-rail-entry-button');
     expect(markup).toContain('editor-rail-toggle-button');
+  });
+
+  it('renders the layers panel surface when the rail entry is active', () => {
+    const markup = renderToStaticMarkup(<AppShell {...createProps()} layersOpen />);
+
+    expect(markup).toContain('editor-layers-panel');
+    expect(markup).toContain('Structure, visibility, and order.');
   });
 
   it('renders the manage fonts dialog with an inner scroll container', () => {

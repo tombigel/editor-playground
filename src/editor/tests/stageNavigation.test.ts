@@ -34,4 +34,23 @@ describe('editor/stageNavigation', () => {
     expect(getAdjacentStageSelection(document, first, 'backward')).toBeNull();
     expect(getAdjacentStageSelection(document, last, 'forward')).toBeNull();
   });
+
+  it('skips hidden nodes and their descendants', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const hiddenChildId = section.children[0];
+    section.visible = false;
+
+    const ids = getStageSelectableNodeIds(document);
+
+    expect(ids).not.toContain(section.id);
+    expect(ids).not.toContain(hiddenChildId);
+    expect(getAdjacentStageSelection(document, hiddenChildId, 'forward')).not.toBe(hiddenChildId);
+  });
 });

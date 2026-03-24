@@ -27,12 +27,12 @@ export function getRootWrappers(document: DocumentModel) {
   if (!root || root.type !== 'site') {
     return [];
   }
-  return getChildren(document, root.id).filter((node): node is WrapperNode => node.type === 'wrapper');
+  return getChildren(document, root.id).filter((node): node is WrapperNode => node.type === 'wrapper' && node.visible);
 }
 
 export function getWrapperChildren(document: DocumentModel, wrapperId: string) {
   return getChildren(document, wrapperId).filter(
-    (child): child is ExportableNode => child.type !== 'site',
+    (child): child is ExportableNode => child.type !== 'site' && child.visible,
   );
 }
 

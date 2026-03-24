@@ -22,6 +22,7 @@ import {
   toggleDocumentFontFavorite,
 } from '../api/fontApi';
 import { InsertPanel } from '../panels/InsertPanel';
+import { LayersPanel } from '../panels/LayersPanel';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
 import { ShortcutHelpDialog } from '../panels/ShortcutHelpDialog';
 import { SettingsPanel } from '../panels/SettingsPanel';
@@ -68,15 +69,22 @@ type Props = {
   settingsOpen: boolean;
   manageFontsOpen?: boolean;
   shortcutHelpOpen: boolean;
+  layersOpen?: boolean;
+  layersPosition?: { top: number; left: number };
   sectionTemplateOpen: boolean;
   sectionTemplatePosition: { top: number; left: number };
   settingsPanelRef: Ref<HTMLDivElement>;
+  layersPanelRef?: Ref<HTMLDivElement>;
   sectionTemplatePanelRef: Ref<HTMLDivElement>;
   documentJson: string;
   errors: string[];
   stickyLayout: StickyLayoutState;
   dispatch: Dispatch<HistoryAction>;
   onStickyGeometryChange: (geometry: StickyGeometrySnapshot) => void;
+  onOpenLayers?: (trigger: HTMLElement) => void;
+  onLayersOpenChange?: (open: boolean) => void;
+  onLayersPositionChange?: (position: { top: number; left: number }) => void;
+  onCloseLayers?: () => void;
   onOpenSectionTemplates: (trigger: HTMLElement) => void;
   onSectionTemplateOpenChange: (open: boolean) => void;
   onCloseSectionTemplates: () => void;
@@ -102,15 +110,22 @@ export function AppShell({
   settingsOpen,
   manageFontsOpen = false,
   shortcutHelpOpen,
+  layersOpen = false,
+  layersPosition = { top: 112, left: 102 },
   sectionTemplateOpen,
   sectionTemplatePosition,
   settingsPanelRef,
+  layersPanelRef,
   sectionTemplatePanelRef,
   documentJson,
   errors,
   stickyLayout,
   dispatch,
   onStickyGeometryChange,
+  onOpenLayers = () => undefined,
+  onLayersOpenChange = () => undefined,
+  onLayersPositionChange = () => undefined,
+  onCloseLayers = () => undefined,
   onOpenSectionTemplates,
   onSectionTemplateOpenChange,
   onCloseSectionTemplates,
@@ -366,6 +381,9 @@ export function AppShell({
                 onOpenSectionTemplates={onOpenSectionTemplates}
                 onInsertWrapper={(role) => dispatch({ type: 'insertWrapper', role })}
                 onInsertLeaf={(role) => dispatch({ type: 'insertLeaf', role })}
+                layersOpen={layersOpen}
+                onOpenLayers={onOpenLayers}
+                onCloseLayers={onCloseLayers}
               />
               <div className="mt-auto flex justify-center pt-3">
                 <div className="flex flex-col gap-2">
@@ -559,6 +577,26 @@ export function AppShell({
           dispatch({ type: 'insertSectionTemplate', templateId });
           onCloseSectionTemplates();
         }}
+      />
+
+      <LayersPanel
+        panelRef={layersPanelRef}
+        open={layersOpen}
+        position={layersPosition}
+        document={state.document}
+        selectedIds={state.selectedIds}
+        onOpenChange={onLayersOpenChange}
+        onPositionChange={onLayersPositionChange}
+        onClose={onCloseLayers}
+        onSelectNode={(id, mode) =>
+          dispatch(mode === 'toggle' ? { type: 'toggleSelect', id } : { type: 'select', id })
+        }
+        onRenameNode={(id, value) => dispatch({ type: 'text', field: 'name', value, id })}
+        onDeleteNode={(id) => dispatch({ type: 'deleteNode', id })}
+        onSetNodeVisibility={(id, value) => dispatch({ type: 'setNodeVisibility', id, value })}
+        onMoveNodeInTree={(id, targetParentId, targetIndex) =>
+          dispatch({ type: 'moveNodeInTree', id, targetParentId, targetIndex })
+        }
       />
 
       {settingsOpen ? (

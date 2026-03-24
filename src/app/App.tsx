@@ -195,6 +195,9 @@ export function App() {
       settingsOpen={panels.settingsOpen}
       manageFontsOpen={panels.manageFontsOpen}
       shortcutHelpOpen={panels.shortcutHelpOpen}
+      layersOpen={panels.layersOpen}
+      layersPosition={panels.layersPosition}
+      layersPanelRef={panels.layersPanelRef}
       sectionTemplateOpen={panels.sectionTemplateOpen}
       sectionTemplatePosition={panels.sectionTemplatePosition}
       settingsPanelRef={panels.settingsPanelRef}
@@ -204,6 +207,10 @@ export function App() {
       stickyLayout={viewModel.stickyLayout}
       dispatch={dispatch}
       onStickyGeometryChange={setStickyGeometry}
+      onOpenLayers={panels.openLayers}
+      onLayersOpenChange={panels.handleLayersOpenChange}
+      onLayersPositionChange={panels.handleLayersPositionChange}
+      onCloseLayers={panels.closeLayersPanel}
       onOpenSectionTemplates={panels.openSectionTemplates}
       onSectionTemplateOpenChange={panels.handleSectionTemplateOpenChange}
       onCloseSectionTemplates={panels.closeSectionTemplatePopover}

@@ -38,7 +38,7 @@ export function resolveWrapperRenderPlan(
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): WrapperRenderPlan {
   const children = getChildren(document, node.id).filter(
-    (child): child is ExportableNode => child.type !== 'site',
+    (child): child is ExportableNode => child.type !== 'site' && child.visible,
   );
   const stickyGeometry = {
     nodeSizes: measuredNodeSizes,
@@ -56,7 +56,7 @@ export function resolveWrapperRenderPlan(
       continue;
     }
     const childChildren = getChildren(document, child.id).filter(
-      (candidate): candidate is ExportableNode => candidate.type !== 'site',
+      (candidate): candidate is ExportableNode => candidate.type !== 'site' && candidate.visible,
     );
     childWrapperExtraExtentMap.set(
       child.id,

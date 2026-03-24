@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledGoogleFontsCatalog } from '../../fonts';
-import { createLeaf, createSectionFromTemplate } from '../../model/defaults';
+import { createLeaf, createSectionFromTemplate, createWrapper } from '../../model/defaults';
 import {
   applyDocumentCommands,
   createInitialDocument,
   insertSectionTemplateBeforeFooter,
+  moveNodeInTreeDoc,
   parseDocumentJson,
   serializeDocumentJson,
+  setNodeVisibilityDoc,
   setNodeRect,
   setNodeSticky,
   setNodeTextField,
@@ -219,6 +221,150 @@ describe('api/documentApi', () => {
 
     const unchanged = setNodeTextField(document, wrapperId, 'content', 'no-op');
     expect(unchanged).toBe(document);
+  });
+
+  it('updates node visibility immutably', () => {
+    const document = createInitialDocument();
+    const nodeId = firstEditableNodeId(document);
+
+    const next = setNodeVisibilityDoc(document, nodeId, false);
+
+    expect(next).not.toBe(document);
+    expect(next.nodes[nodeId]?.visible).toBe(false);
+    expect(document.nodes[nodeId]?.visible).toBe(true);
+  });
+
+  it('moves nodes to an exact tree index', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!section || section.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const first = createLeaf('text', section.id);
+    const second = createLeaf('button', section.id);
+    const third = createLeaf('link', section.id);
+    document.nodes[first.id] = first;
+    document.nodes[second.id] = second;
+    document.nodes[third.id] = third;
+    document.nodes[section.id].children.push(first.id, second.id, third.id);
+
+    const next = moveNodeInTreeDoc(document, third.id, section.id, section.children.indexOf(first.id));
+
+    expect(next.nodes[section.id]?.children.slice(-3)).toEqual([third.id, first.id, second.id]);
+  });
+
+  it('promotes the first root structural wrapper to header during tree moves', () => {
+    const document = createInitialDocument();
+    const root = document.nodes[document.rootId];
+    if (!root || root.type !== 'site') {
+      throw new Error('Expected site root');
+    }
+
+    const sectionId = root.children.find((childId) => {
+      const node = document.nodes[childId];
+      return node?.type === 'wrapper' && node.role === 'section';
+    });
+    if (!sectionId) {
+      throw new Error('Expected section wrapper');
+    }
+
+    const previousHeaderId = root.children[0];
+    const next = moveNodeInTreeDoc(document, sectionId, document.rootId, 0);
+    const movedSection = next.nodes[sectionId];
+    const previousHeader = next.nodes[previousHeaderId];
+
+    if (movedSection?.type !== 'wrapper' || previousHeader?.type !== 'wrapper') {
+      throw new Error('Expected structural wrappers');
+    }
+
+    expect(next.nodes[next.rootId]?.type).toBe('site');
+    expect((next.nodes[next.rootId]?.type === 'site' && next.nodes[next.rootId].children[0]) || null).toBe(sectionId);
+    expect(movedSection.role).toBe('header');
+    expect(previousHeader.role).toBe('section');
+  });
+
+  it('promotes the last root structural wrapper to footer during tree moves', () => {
+    const document = createInitialDocument();
+    const root = document.nodes[document.rootId];
+    if (!root || root.type !== 'site') {
+      throw new Error('Expected site root');
+    }
+
+    const sectionId = root.children.find((childId) => {
+      const node = document.nodes[childId];
+      return node?.type === 'wrapper' && node.role === 'section';
+    });
+    const previousFooterId = root.children[root.children.length - 1];
+    if (!sectionId) {
+      throw new Error('Expected section wrapper');
+    }
+
+    const next = moveNodeInTreeDoc(document, sectionId, document.rootId, root.children.length);
+    const movedSection = next.nodes[sectionId];
+    const previousFooter = next.nodes[previousFooterId];
+
+    if (movedSection?.type !== 'wrapper' || previousFooter?.type !== 'wrapper') {
+      throw new Error('Expected structural wrappers');
+    }
+
+    expect(next.nodes[next.rootId]?.type).toBe('site');
+    expect(
+      (next.nodes[next.rootId]?.type === 'site' &&
+        next.nodes[next.rootId].children[next.nodes[next.rootId].children.length - 1]) ||
+        null,
+    ).toBe(sectionId);
+    expect(movedSection.role).toBe('footer');
+    expect(previousFooter.role).toBe('section');
+  });
+
+  it('demotes a dragged header to section when moved into a middle root slot', () => {
+    const document = createInitialDocument();
+    const root = document.nodes[document.rootId];
+    if (!root || root.type !== 'site') {
+      throw new Error('Expected site root');
+    }
+
+    const headerId = root.children.find((childId) => {
+      const node = document.nodes[childId];
+      return node?.type === 'wrapper' && node.role === 'header';
+    });
+    if (!headerId) {
+      throw new Error('Expected header wrapper');
+    }
+
+    const extraSection = createWrapper('section', root.id);
+    document.nodes[extraSection.id] = extraSection;
+    root.children.splice(root.children.length - 1, 0, extraSection.id);
+
+    const next = moveNodeInTreeDoc(document, headerId, document.rootId, 2);
+    const movedHeader = next.nodes[headerId];
+    const promotedFirst = next.nodes[next.nodes[next.rootId]?.type === 'site' ? next.nodes[next.rootId].children[0] : ''];
+
+    if (movedHeader?.type !== 'wrapper' || promotedFirst?.type !== 'wrapper') {
+      throw new Error('Expected structural wrappers');
+    }
+
+    expect(movedHeader.role).toBe('section');
+    expect(promotedFirst.role).toBe('header');
+  });
+
+  it('rejects invalid structural drops into section children', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    const header = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'header',
+    );
+
+    if (!section || section.type !== 'wrapper' || !header || header.type !== 'wrapper') {
+      throw new Error('Expected section and header wrappers');
+    }
+
+    expect(moveNodeInTreeDoc(document, header.id, section.id, 0)).toBe(document);
   });
 
   it('chains commands and serializes/parses valid documents', () => {
