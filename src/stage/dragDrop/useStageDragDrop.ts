@@ -50,6 +50,7 @@ type DragControllerArgs = {
   onMove: StageProps['onMove'];
   onMoveSelection?: StageProps['onMoveSelection'];
   onReparent: StageProps['onReparent'];
+  onReparentSelection?: StageProps['onReparentSelection'];
 };
 
 export function useStageDragDrop({
@@ -61,6 +62,7 @@ export function useStageDragDrop({
   onMove,
   onMoveSelection,
   onReparent,
+  onReparentSelection,
 }: DragControllerArgs) {
   const draggableElementsRef = useRef(new Map<NodeId, HTMLElement>());
   const dropTargetElementsRef = useRef(new Map<NodeId, HTMLElement>());
@@ -310,6 +312,8 @@ export function useStageDragDrop({
           onMoveSelection?.(commit.moves);
         } else if (commit.type === 'reparent') {
           onReparent(commit.id, commit.parentId, commit.x, commit.y);
+        } else if (commit.type === 'reparentSelection') {
+          onReparentSelection?.(commit.parentId, commit.moves);
         }
       }
     } else if (pendingInteractionRef.current?.preservedSelection) {
@@ -323,6 +327,7 @@ export function useStageDragDrop({
     onMove,
     onMoveSelection,
     onReparent,
+    onReparentSelection,
     onSelect,
     snapSettings,
   ]);

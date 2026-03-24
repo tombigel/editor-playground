@@ -44,6 +44,7 @@ export {
   alignNodes,
   distributeNodes,
   reparentNode,
+  reparentNodes,
   requestPromoteWrapperRole,
   confirmPromoteWrapperRole,
   cancelPromoteWrapperRole,

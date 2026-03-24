@@ -289,6 +289,53 @@ describe('api/dragDropApi', () => {
     });
   });
 
+  it('returns a reparentSelection commit for a valid multi-drop target', () => {
+    const { document, leafAId, leafBId, containerAId, containerBId } = createDragDocument();
+    const commit = finishDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId, leafBId],
+        startClientX: 140,
+        startClientY: 120,
+        geometry: makeGeometry({
+          previewItems: [
+            { nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 },
+            { nodeId: leafBId, offsetX: 120, offsetY: 0, width: 80, height: 40 },
+          ],
+          previewWidth: 200,
+          previewHeight: 40,
+          nodes: [
+            { id: leafAId, originX: 20, originY: 30, parentId: containerAId },
+            { id: leafBId, originX: 140, originY: 30, parentId: containerAId },
+          ],
+          sourceParentId: containerAId,
+          dropTargets: [
+            { id: containerAId, contentBox: { left: 100, top: 100, width: 300, height: 200 }, depth: 0, order: 1 },
+            { id: containerBId, contentBox: { left: 480, top: 100, width: 300, height: 200 }, depth: 0, order: 2 },
+          ],
+        }),
+      }),
+      {
+        clientX: 560,
+        clientY: 180,
+        shiftKey: false,
+        altKey: false,
+        guideSnap: { enabled: false, threshold: 8, power: 1 },
+        containerSnap: { enabled: true, threshold: 0, power: 1 },
+      },
+    );
+
+    expect(commit).toEqual({
+      type: 'reparentSelection',
+      parentId: containerBId,
+      moves: [
+        { id: leafAId, x: '40px', y: '60px' },
+        { id: leafBId, x: '160px', y: '60px' },
+      ],
+    });
+  });
+
   it('falls back to moving inside the current parent when the hovered drop target is invalid', () => {
     const { document, containerAId, childContainerId, sectionId } = createDragDocument();
     const commit = finishDragSession(
@@ -535,7 +582,7 @@ describe('api/dragDropApi', () => {
       guideSnap: { enabled: false, threshold: 8, power: 1 },
       containerSnap: { enabled: true, threshold: 0, power: 1 },
     });
-    expect(shifted.currentClientY).toBe(100);
+    expect(shifted.currentClientY).toBe(120);
 
     const altDisabled = updateDragSession(baseSession, {
       clientX: 160,

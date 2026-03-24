@@ -17,6 +17,7 @@ import {
   moveNodes,
   nudgeNode,
   reparentNode,
+  reparentNodes,
   reorderNode,
   reorderNodes,
   requestPromoteWrapperRole,
@@ -1690,6 +1691,61 @@ describe('editor/editorMutations', () => {
       // sections cannot be parented under containers (canParentNode returns false for non-container child)
       const next = reparentNode(withContainer, section.id, containerId, '0px', '0px');
       expect(next).toBe(withContainer);
+    });
+  });
+
+  describe('reparentNodes', () => {
+    it('reparents multiple siblings to a different wrapper', () => {
+      const state = createInitialState();
+      const withContainer = insertWrapper(state, 'container');
+
+      const withLeafA = insertLeaf(withContainer, 'text');
+      const leafAId = withLeafA.selectedId!;
+      const withLeafB = insertLeaf(withLeafA, 'text');
+      const leafBId = withLeafB.selectedId!;
+
+      const withContainerB = insertWrapper(withLeafB, 'container');
+      const containerBId = withContainerB.selectedId!;
+      const sourceParentId = withContainerB.document.nodes[leafAId].parentId!;
+
+      const next = reparentNodes(
+        withContainerB,
+        [
+          { id: leafAId, x: '20px', y: '30px' },
+          { id: leafBId, x: '140px', y: '30px' },
+        ],
+        containerBId,
+      );
+
+      expect(next.document.nodes[leafAId].parentId).toBe(containerBId);
+      expect(next.document.nodes[leafBId].parentId).toBe(containerBId);
+      const leafA = next.document.nodes[leafAId];
+      const leafB = next.document.nodes[leafBId];
+      if (leafA.type !== 'site' && leafB.type !== 'site') {
+        expect(leafA.rect.x.base.raw).toBe('20px');
+        expect(leafB.rect.x.base.raw).toBe('140px');
+      }
+
+      const oldParent = next.document.nodes[sourceParentId];
+      expect(oldParent.children).not.toContain(leafAId);
+      expect(oldParent.children).not.toContain(leafBId);
+
+      const newParent = next.document.nodes[containerBId];
+      expect(newParent.children).toEqual(expect.arrayContaining([leafAId, leafBId]));
+    });
+
+    it('returns unchanged state for invalid target parent', () => {
+      const state = createInitialState();
+      const withLeaf = insertLeaf(state, 'text');
+      const leafId = withLeaf.selectedId!;
+
+      const next = reparentNodes(
+        withLeaf,
+        [{ id: leafId, x: '20px', y: '30px' }],
+        withLeaf.document.rootId,
+      );
+
+      expect(next).toBe(withLeaf);
     });
   });
 

@@ -72,6 +72,7 @@ export const persistDefaultDocument = editorStore.persistDefaultDocument;
 export const persistState = editorStore.persistState;
 export const parseImportedDocumentJson = editorStore.parseImportedDocumentJson;
 export const reparentNode = editorStore.reparentNode;
+export const reparentNodes = editorStore.reparentNodes;
 export const reorderNode = editorStore.reorderNode;
 export const requestPromoteWrapperRole = editorStore.requestPromoteWrapperRole;
 export const resizeNode = editorStore.resizeNode;

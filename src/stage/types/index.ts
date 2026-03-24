@@ -32,6 +32,10 @@ export type StageProps = {
 		moves: Array<{ id: NodeId; x: string; y: string }>,
 	) => void;
 	onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
+	onReparentSelection?: (
+		parentId: NodeId,
+		moves: Array<{ id: NodeId; x: string; y: string }>,
+	) => void;
 	onResize: (id: NodeId, width: string, height: string) => void;
 	onResizeStart: (id: NodeId) => void;
 	onResizeEnd: (id: NodeId) => void;

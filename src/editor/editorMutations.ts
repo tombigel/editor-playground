@@ -956,6 +956,67 @@ export function reparentNode(
   return { ...state, document };
 }
 
+export function reparentNodes(
+  state: EditorState,
+  moves: Array<{ id: NodeId; x: string; y: string }>,
+  parentId: NodeId,
+): EditorState {
+  if (moves.length === 0) {
+    return state;
+  }
+
+  const document = cloneDocument(state.document);
+  const nextParent = document.nodes[parentId];
+  if (!nextParent || nextParent.type !== 'wrapper') {
+    return state;
+  }
+
+  const moveMap = new Map(moves.map((move) => [move.id, move]));
+  const nodes = moves.map((move) => document.nodes[move.id]);
+  if (nodes.some((node) => !node || node.type === 'site')) {
+    return state;
+  }
+
+  const sourceParentId = nodes[0]?.parentId ?? null;
+  if (!sourceParentId || nodes.some((node) => node?.parentId !== sourceParentId)) {
+    return state;
+  }
+  if (sourceParentId === parentId) {
+    return moveNodes(state, moves);
+  }
+
+  for (const node of nodes) {
+    if (!node || !canParentNode(nextParent, node)) {
+      return state;
+    }
+    if (parentId === node.id || isDescendant(document, parentId, node.id)) {
+      return state;
+    }
+  }
+
+  const sourceParent = document.nodes[sourceParentId];
+  if (!sourceParent) {
+    return state;
+  }
+
+  const movedIds = sourceParent.children.filter((childId) => moveMap.has(childId));
+  sourceParent.children = sourceParent.children.filter((childId) => !moveMap.has(childId));
+  nextParent.children.push(...movedIds);
+
+  for (const nodeId of movedIds) {
+    const node = document.nodes[nodeId];
+    const move = moveMap.get(nodeId);
+    if (!node || !move || node.type === 'site') {
+      continue;
+    }
+    node.parentId = parentId;
+    node.rect.x.base = parseUnitValue(move.x);
+    node.rect.y.base = parseUnitValue(move.y);
+  }
+
+  return { ...state, document };
+}
+
 export function moveNodeInTree(
   state: EditorState,
   nodeId: NodeId,

@@ -450,6 +450,7 @@ export function AppShell({
               onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
               onMoveSelection={(moves) => dispatch({ type: 'moveSelection', moves })}
               onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
+              onReparentSelection={(parentId, moves) => dispatch({ type: 'reparentSelection', parentId, moves })}
               onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
               onResizeStart={(id) => dispatch({ type: 'beginResize', id })}
               onResizeEnd={(id) => dispatch({ type: 'endResize', id })}

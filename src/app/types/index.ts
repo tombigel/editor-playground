@@ -73,6 +73,7 @@ export type EditorAction =
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
+  | { type: 'reparentSelection'; parentId: string; moves: BulkMoveOperation[] }
   | { type: 'moveNodeInTree'; id: string; targetParentId: string; targetIndex: number }
   | { type: 'resize'; id: string; width: string; height: string }
   | { type: 'text'; field: EditorTextField; value: string; id?: string }

@@ -19,6 +19,7 @@ import {
   nudgeNode,
   parseUnitValue,
   reparentNode,
+  reparentNodes,
   requestPromoteWrapperRole,
   resizeNode,
   reorderNodes,
@@ -76,6 +77,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return moveNodes(state, action.moves);
     case 'reparent':
       return reparentNode(state, action.id, action.parentId, action.x, action.y);
+    case 'reparentSelection':
+      return reparentNodes(state, action.moves, action.parentId);
     case 'moveNodeInTree':
       return moveNodeInTree(state, action.id, action.targetParentId, action.targetIndex);
     case 'resize':

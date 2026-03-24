@@ -84,7 +84,8 @@ export type DragCommitIntent =
   | { type: 'none' }
   | { type: 'move'; id: NodeId; x: string; y: string }
   | { type: 'moveSelection'; moves: Array<{ id: NodeId; x: string; y: string }> }
-  | { type: 'reparent'; id: NodeId; parentId: NodeId; x: string; y: string };
+  | { type: 'reparent'; id: NodeId; parentId: NodeId; x: string; y: string }
+  | { type: 'reparentSelection'; parentId: NodeId; moves: Array<{ id: NodeId; x: string; y: string }> };
 
 export type DragSession = {
   phase: 'pending' | 'dragging';

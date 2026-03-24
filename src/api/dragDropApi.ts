@@ -96,16 +96,14 @@ export function updateDragSession(
     input.guideSnap.power,
   );
   const highlightedDropId =
-    session.dragIds.length > 1
-      ? null
-      : resolveHighlightedDropId(
-          session.document,
-          session.anchorId,
-          session.geometry.sourceParentId,
-          session.geometry.dropTargets,
-          snapped.clientX,
-          snapped.clientY,
-        );
+    resolveHighlightedDropId(
+      session.document,
+      session.dragIds,
+      session.geometry.sourceParentId,
+      session.geometry.dropTargets,
+      snapped.clientX,
+      snapped.clientY,
+    );
   const contentBox = highlightedDropId
     ? getDropTargetById(session.geometry.dropTargets, highlightedDropId)?.contentBox
     : session.geometry.sourceContentBox;
@@ -145,13 +143,43 @@ export function finishDragSession(
   }
 
   if (resolved.dragIds.length > 1) {
+    const anchorNode = resolved.geometry.nodes.find((node) => node.id === resolved.anchorId);
+    const targetId = resolved.highlightedDropId ?? sourceParentId;
+    const target = getDropTargetById(resolved.geometry.dropTargets, targetId);
+    const contentBox = target?.contentBox ?? resolved.geometry.sourceContentBox;
+    if (!anchorNode || !contentBox) {
+      return { type: 'none' };
+    }
+
+    const localPosition = resolveLocalPosition(
+      resolved.geometry,
+      contentBox,
+      resolved.currentClientX,
+      resolved.currentClientY,
+      input.containerSnap.threshold,
+      input.containerSnap.power,
+    );
+    const anchorLocalX = localPosition.localX;
+    const anchorLocalY = localPosition.localY;
+    const draggedNodes = resolved.geometry.nodes.filter((node) => resolved.dragIds.includes(node.id));
+
+    if (targetId !== sourceParentId) {
+      return {
+        type: 'reparentSelection',
+        parentId: targetId,
+        moves: draggedNodes.map((node) => ({
+          id: node.id,
+          x: `${Math.round(anchorLocalX + (node.originX - anchorNode.originX))}px`,
+          y: `${Math.round(anchorLocalY + (node.originY - anchorNode.originY))}px`,
+        })),
+      };
+    }
+
     const deltaX = resolved.currentClientX - resolved.startClientX;
     const deltaY = resolved.currentClientY - resolved.startClientY;
     return {
       type: 'moveSelection',
-      moves: resolved.geometry.nodes
-        .filter((node) => resolved.dragIds.includes(node.id))
-        .map((node) => ({
+      moves: draggedNodes.map((node) => ({
           id: node.id,
           x: `${Math.max(0, Math.round(node.originX + deltaX))}px`,
           y: `${Math.max(0, Math.round(node.originY + deltaY))}px`,
@@ -414,12 +442,16 @@ function findSnap(
 
 function resolveHighlightedDropId(
   document: DocumentModel,
-  draggedId: NodeId,
+  draggedIds: NodeId[],
   sourceParentId: NodeId | undefined,
   targets: DragDropTarget[],
   clientX: number,
   clientY: number,
 ) {
+  const draggedId = draggedIds[0];
+  if (!draggedId) {
+    return null;
+  }
   const allowSourceParentHighlight = shouldAllowSourceParentHighlight(
     document,
     draggedId,
@@ -433,7 +465,7 @@ function resolveHighlightedDropId(
   );
   const validTargets = targets
     .filter((target) => pointInRect(clientX, clientY, target.contentBox))
-    .filter((target) => isValidDropParent(document, draggedId, target.id))
+    .filter((target) => isValidDropParentSelection(document, draggedIds, target.id))
     // Keep source-parent visual noise down by default, except for
     // structural wrapper drags that intentionally surface section/header/footer.
     .filter((target) => target.id !== sourceParentId || allowSourceParentHighlight)
@@ -569,6 +601,17 @@ function isValidDropParent(
     return true;
   }
   return candidate.role === 'section' || candidate.role === 'header' || candidate.role === 'footer';
+}
+
+function isValidDropParentSelection(
+  document: DocumentModel,
+  draggedIds: NodeId[],
+  candidateId: NodeId,
+) {
+  if (draggedIds.length === 0) {
+    return false;
+  }
+  return draggedIds.every((draggedId) => isValidDropParent(document, draggedId, candidateId));
 }
 
 function shouldAllowSourceParentHighlight(
