@@ -131,11 +131,13 @@ function makeGeometry(
   };
 }
 
+type DragInputOverrides = Omit<Partial<DragUpdateInput>, 'guideSnap' | 'containerSnap'> & {
+  guideSnap?: Partial<DragUpdateInput['guideSnap']>;
+  containerSnap?: Partial<DragUpdateInput['containerSnap']>;
+};
+
 function makeDragInput(
-  overrides: Partial<DragUpdateInput> & {
-    guideSnap?: Partial<DragUpdateInput['guideSnap']>;
-    containerSnap?: Partial<DragUpdateInput['containerSnap']>;
-  } = {},
+  overrides: DragInputOverrides = {},
 ): DragUpdateInput {
   return {
     clientX: overrides.clientX ?? 140,
