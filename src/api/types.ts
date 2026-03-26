@@ -68,15 +68,32 @@ export type DragStartContext = {
   selectedIds: NodeId[];
   startClientX: number;
   startClientY: number;
+  startTimestampMs: number;
   geometry: DragGeometrySnapshot;
+};
+
+export type DragMotion = {
+  deltaX: number;
+  deltaY: number;
+  velocityX: number;
+  velocityY: number;
+  speedPxPerSecond: number;
+  dominantAxis: 'horizontal' | 'vertical' | null;
+};
+
+export type DragMotionSample = {
+  clientX: number;
+  clientY: number;
+  timestampMs: number;
 };
 
 export type DragUpdateInput = {
   clientX: number;
   clientY: number;
+  timestampMs: number;
   shiftKey: boolean;
   altKey: boolean;
-  guideSnap: { enabled: boolean; threshold: number; power: number };
+  guideSnap: { enabled: boolean; threshold: number; power: number; maxSpeedPxPerSecond: number };
   containerSnap: { enabled: boolean; threshold: number; power: number };
 };
 
@@ -97,6 +114,8 @@ export type DragSession = {
   startClientY: number;
   currentClientX: number;
   currentClientY: number;
+  lastMotionSample: DragMotionSample;
+  motion: DragMotion;
   previewLeft: number;
   previewTop: number;
   guideX: DragGuide | null;

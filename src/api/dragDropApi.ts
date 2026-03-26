@@ -17,6 +17,7 @@ import type {
   NodeId,
   Rect,
 } from './types';
+import { DRAG_COMMIT_THRESHOLD_PX } from '../lib/dragConstants';
 
 export type {
   DocumentModel,
@@ -25,6 +26,8 @@ export type {
   DragDropTarget,
   DragGeometrySnapshot,
   DragGuide,
+  DragMotion,
+  DragMotionSample,
   DragPreviewItem,
   DragSession,
   DragStartContext,
@@ -32,7 +35,12 @@ export type {
   NodeId,
 } from './types';
 
-const DRAG_COMMIT_THRESHOLD_PX = 1;
+const DRAG_MOTION = {
+  smoothingAlpha: 0.35,
+  minDtMs: 8,
+  dominantAxisRatio: 1.35,
+  dominantAxisMinSpeedPxPerSecond: 80,
+} as const;
 
 export function beginDragSession(context: DragStartContext): DragSession {
   const resolvedSelection = resolveDragSelection(
@@ -53,6 +61,12 @@ export function beginDragSession(context: DragStartContext): DragSession {
     startClientY: context.startClientY,
     currentClientX: context.startClientX,
     currentClientY: context.startClientY,
+    lastMotionSample: {
+      clientX: context.startClientX,
+      clientY: context.startClientY,
+      timestampMs: context.startTimestampMs,
+    },
+    motion: createStationaryMotion(),
     previewLeft,
     previewTop,
     guideX: null,
@@ -66,6 +80,19 @@ export function updateDragSession(
   session: DragSession,
   input: DragUpdateInput,
 ): DragSession {
+  const axisLocked = getShiftLockedPointer(
+    session,
+    input.clientX,
+    input.clientY,
+    input.shiftKey,
+  );
+  const nextMotion = resolveDragMotion(
+    session.lastMotionSample,
+    axisLocked.clientX,
+    axisLocked.clientY,
+    input.timestampMs,
+    session.motion,
+  );
   const phase = didPointerMove(session, input.clientX, input.clientY)
     ? 'dragging'
     : session.phase;
@@ -75,25 +102,25 @@ export function updateDragSession(
       ...session,
       currentClientX: input.clientX,
       currentClientY: input.clientY,
+      lastMotionSample: nextMotion.sample,
+      motion: nextMotion.motion,
     };
   }
 
-  const axisLocked = getShiftLockedPointer(
-    session,
-    input.clientX,
-    input.clientY,
-    input.shiftKey,
-  );
   const guideSnapEnabled = input.altKey
     ? !input.guideSnap.enabled
     : input.guideSnap.enabled;
+  const shouldGuideSnap =
+    guideSnapEnabled &&
+    nextMotion.motion.speedPxPerSecond <= input.guideSnap.maxSpeedPxPerSecond;
   const snapped = resolveSnappedPointerPosition(
     session.geometry,
     axisLocked.clientX,
     axisLocked.clientY,
-    guideSnapEnabled,
+    shouldGuideSnap,
     input.guideSnap.threshold,
     input.guideSnap.power,
+    nextMotion.motion,
   );
   const highlightedDropId =
     resolveHighlightedDropId(
@@ -120,6 +147,8 @@ export function updateDragSession(
     phase,
     currentClientX: clamped.clientX,
     currentClientY: clamped.clientY,
+    lastMotionSample: nextMotion.sample,
+    motion: nextMotion.motion,
     previewLeft: clamped.previewLeft,
     previewTop: clamped.previewTop,
     guideX: snapped.guideX,
@@ -365,6 +394,89 @@ function getShiftLockedPointer(
   };
 }
 
+function createStationaryMotion(): DragSession['motion'] {
+  return {
+    deltaX: 0,
+    deltaY: 0,
+    velocityX: 0,
+    velocityY: 0,
+    speedPxPerSecond: 0,
+    dominantAxis: null,
+  };
+}
+
+function resolveDragMotion(
+  previousSample: DragSession['lastMotionSample'],
+  clientX: number,
+  clientY: number,
+  timestampMs: number,
+  previousMotion: DragSession['motion'],
+) {
+  if (
+    previousSample.clientX === clientX &&
+    previousSample.clientY === clientY &&
+    previousSample.timestampMs === timestampMs
+  ) {
+    return {
+      sample: previousSample,
+      motion: previousMotion,
+    };
+  }
+
+  const deltaX = clientX - previousSample.clientX;
+  const deltaY = clientY - previousSample.clientY;
+  const rawDtMs = Math.max(0, timestampMs - previousSample.timestampMs);
+  const dtMs = Math.max(rawDtMs, DRAG_MOTION.minDtMs);
+  const rawVelocityX = deltaX / dtMs * 1000;
+  const rawVelocityY = deltaY / dtMs * 1000;
+  const velocityX = blendVelocity(previousMotion.velocityX, rawVelocityX);
+  const velocityY = blendVelocity(previousMotion.velocityY, rawVelocityY);
+  const speedPxPerSecond = Math.hypot(velocityX, velocityY);
+
+  return {
+    sample: {
+      clientX,
+      clientY,
+      timestampMs,
+    },
+    motion: {
+      deltaX,
+      deltaY,
+      velocityX,
+      velocityY,
+      speedPxPerSecond,
+      dominantAxis: resolveDominantAxis(velocityX, velocityY, speedPxPerSecond),
+    },
+  };
+}
+
+function blendVelocity(previousVelocity: number, nextVelocity: number) {
+  return previousVelocity + (nextVelocity - previousVelocity) * DRAG_MOTION.smoothingAlpha;
+}
+
+function resolveDominantAxis(
+  velocityX: number,
+  velocityY: number,
+  speedPxPerSecond: number,
+): DragSession['motion']['dominantAxis'] {
+  if (speedPxPerSecond < DRAG_MOTION.dominantAxisMinSpeedPxPerSecond) {
+    return null;
+  }
+
+  const absX = Math.abs(velocityX);
+  const absY = Math.abs(velocityY);
+  if (absX === 0 && absY === 0) {
+    return null;
+  }
+  if (absX >= absY * DRAG_MOTION.dominantAxisRatio) {
+    return 'horizontal';
+  }
+  if (absY >= absX * DRAG_MOTION.dominantAxisRatio) {
+    return 'vertical';
+  }
+  return null;
+}
+
 function resolveSnappedPointerPosition(
   geometry: DragGeometrySnapshot,
   clientX: number,
@@ -372,6 +484,7 @@ function resolveSnappedPointerPosition(
   snapEnabled: boolean,
   threshold: number,
   power: number,
+  motion: DragSession['motion'],
 ) {
   if (!snapEnabled) {
     return {
@@ -384,8 +497,12 @@ function resolveSnappedPointerPosition(
 
   let left = clientX - geometry.grabOffsetX;
   let top = clientY - geometry.grabOffsetY;
-  const horizontalSnap = findSnap(left, geometry.previewWidth, geometry.horizontalGuides, threshold);
-  const verticalSnap = findSnap(top, geometry.previewHeight, geometry.verticalGuides, threshold);
+  const horizontalSnap = motion.dominantAxis === 'vertical'
+    ? null
+    : findSnap(left, geometry.previewWidth, geometry.horizontalGuides, threshold);
+  const verticalSnap = motion.dominantAxis === 'horizontal'
+    ? null
+    : findSnap(top, geometry.previewHeight, geometry.verticalGuides, threshold);
   if (horizontalSnap) {
     left += horizontalSnap.delta * power;
   }

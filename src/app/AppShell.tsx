@@ -419,6 +419,7 @@ export function AppShell({
                           enabled: !state.ui.snapSettings.guideSnap.enabled,
                           threshold: state.ui.snapSettings.guideSnap.threshold,
                           power: state.ui.snapSettings.guideSnap.power,
+                          maxSpeedPxPerSecond: state.ui.snapSettings.guideSnap.maxSpeedPxPerSecond,
                         } },
                       })
                     }

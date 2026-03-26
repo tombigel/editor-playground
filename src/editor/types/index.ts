@@ -12,19 +12,26 @@ export type ConfirmReplaceRole = {
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
 
-export type SnapFeatureSettings = {
+export type GuideSnapSettings = {
+  enabled: boolean;
+  threshold: number;
+  power: number;
+  maxSpeedPxPerSecond: number;
+};
+
+export type ContainerSnapSettings = {
   enabled: boolean;
   threshold: number;
   power: number;
 };
 
 export type SnapSettings = {
-  guideSnap: SnapFeatureSettings;
-  containerSnap: SnapFeatureSettings;
+  guideSnap: GuideSnapSettings;
+  containerSnap: ContainerSnapSettings;
 };
 
 export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
-  guideSnap: { enabled: true, threshold: 8, power: 1 },
+  guideSnap: { enabled: true, threshold: 8, power: 1, maxSpeedPxPerSecond: 1200 },
   containerSnap: { enabled: true, threshold: 0, power: 1 },
 };
 

@@ -43,7 +43,14 @@ describe('app/shortcutController', () => {
 
     expect(handlers.setPreviewSticky).toHaveBeenCalledWith(false);
     expect(handlers.setSpacerVisibility).toHaveBeenCalledWith('all');
-    expect(handlers.setSnapSettings).toHaveBeenCalledWith({ guideSnap: { enabled: false, threshold: 8, power: 1 } });
+    expect(handlers.setSnapSettings).toHaveBeenCalledWith({
+      guideSnap: {
+        enabled: false,
+        threshold: 8,
+        power: 1,
+        maxSpeedPxPerSecond: 1200,
+      },
+    });
   });
 
   it('maps shift-modified nudge shortcuts to larger movement deltas', () => {

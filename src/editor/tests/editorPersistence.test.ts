@@ -359,6 +359,7 @@ describe('editor/editorPersistence', () => {
       expect(state.ui.spacerVisibility).toBe('selected');
       expect(state.ui.showGridLanes).toBe(false);
       expect(state.ui.snapSettings.guideSnap.enabled).toBe(true);
+      expect(state.ui.snapSettings.guideSnap.maxSpeedPxPerSecond).toBe(1200);
       expect(state.ui.themeMode).toBe('auto');
       expect(state.ui.focusedMode).toBeNull();
       expect(state.ui.startupFocusedMode).toBeNull();
@@ -549,7 +550,39 @@ describe('editor/editorPersistence', () => {
       const loaded = loadPersistedState();
       expect(loaded.ui.previewSticky).toBe(true);
       expect(loaded.ui.snapSettings.guideSnap.enabled).toBe(true);
+      expect(loaded.ui.snapSettings.guideSnap.maxSpeedPxPerSecond).toBe(1200);
       expect(loaded.ui.showGridLanes).toBe(false);
+    });
+
+    it('backfills missing guide snap max speed for older persisted state', () => {
+      const windowStub = createWindowStorageStub();
+      vi.stubGlobal('window', windowStub);
+
+      const state = createInitialState();
+      windowStub.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          ...state,
+          ui: {
+            ...state.ui,
+            snapSettings: {
+              guideSnap: {
+                enabled: true,
+                threshold: 8,
+                power: 1,
+              },
+              containerSnap: {
+                enabled: true,
+                threshold: 0,
+                power: 1,
+              },
+            },
+          },
+        }),
+      );
+
+      const loaded = loadPersistedState();
+      expect(loaded.ui.snapSettings.guideSnap.maxSpeedPxPerSecond).toBe(1200);
     });
 
     it('drops selectedId that references a missing node', () => {

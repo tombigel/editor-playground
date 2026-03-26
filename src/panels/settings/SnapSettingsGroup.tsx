@@ -50,7 +50,7 @@ function SnapSubRow({
             className="h-8 text-right text-sm"
           />
         </div>
-        <span className="editor-text-muted w-5 text-xs">{suffix}</span>
+        <span className="editor-text-muted w-10 text-right text-xs">{suffix}</span>
       </div>
     </div>
   );
@@ -103,6 +103,17 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
             borderTop={false}
             onChange={(pct) =>
               onSnapSettingsChange({ guideSnap: { ...guideSnap, power: pct / 100 } })
+            }
+          />
+          <SnapSubRow
+            label="Max snap speed"
+            value={Math.round(guideSnap.maxSpeedPxPerSecond)}
+            min={0}
+            max={4000}
+            suffix="px/s"
+            borderTop={false}
+            onChange={(maxSpeedPxPerSecond) =>
+              onSnapSettingsChange({ guideSnap: { ...guideSnap, maxSpeedPxPerSecond } })
             }
           />
         </>

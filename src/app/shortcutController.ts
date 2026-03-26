@@ -31,10 +31,13 @@ export function executeEditorShortcut(
       handlers.setSpacerVisibility(state.spacerVisibility === 'all' ? 'selected' : 'all');
       return;
     case 'toggleSnapEnabled':
-      handlers.setSnapSettings({ 
-        guideSnap: { enabled: !state.snapSettings.guideSnap.enabled, 
-        threshold: state.snapSettings.guideSnap.threshold, 
-        power: state.snapSettings.guideSnap.power } 
+      handlers.setSnapSettings({
+        guideSnap: {
+          enabled: !state.snapSettings.guideSnap.enabled,
+          threshold: state.snapSettings.guideSnap.threshold,
+          power: state.snapSettings.guideSnap.power,
+          maxSpeedPxPerSecond: state.snapSettings.guideSnap.maxSpeedPxPerSecond,
+        },
       });
       return;
     case 'nudgeSelectionLeft':

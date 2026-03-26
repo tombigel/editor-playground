@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { STORAGE_KEY, DEFAULT_DOCUMENT_STORAGE_KEY } from '../../editor/editorStore';
+import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { createInitialDocument } from '../../model/defaults';
 import type { DocumentModel, TextLeaf } from '../../model/types';
 import { startViteE2EServer, type StartedServer } from '../../stage/tests/e2eServer';
@@ -108,7 +109,7 @@ describe('panels/InspectorControls e2e', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapSettings: { guideSnap: { enabled: true, threshold: 8, power: 1 }, containerSnap: { enabled: true, threshold: 0, power: 1 } },
+            snapSettings: DEFAULT_SNAP_SETTINGS,
             themeMode: 'auto',
             accentColor: '#1668ff',
             paperAccentColor: '#a36a2c',
@@ -177,7 +178,7 @@ describe('panels/InspectorControls e2e', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapSettings: { guideSnap: { enabled: true, threshold: 8, power: 1 }, containerSnap: { enabled: true, threshold: 0, power: 1 } },
+            snapSettings: DEFAULT_SNAP_SETTINGS,
             themeMode: 'auto',
             accentColor: '#1668ff',
             paperAccentColor: '#a36a2c',
@@ -233,7 +234,7 @@ describe('panels/InspectorControls e2e', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapSettings: { guideSnap: { enabled: true, threshold: 8, power: 1 }, containerSnap: { enabled: true, threshold: 0, power: 1 } },
+            snapSettings: DEFAULT_SNAP_SETTINGS,
             themeMode: 'auto',
             accentColor: '#1668ff',
             paperAccentColor: '#a36a2c',
@@ -311,7 +312,7 @@ describe('panels/InspectorControls e2e', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapSettings: { guideSnap: { enabled: true, threshold: 8, power: 1 }, containerSnap: { enabled: true, threshold: 0, power: 1 } },
+            snapSettings: DEFAULT_SNAP_SETTINGS,
             themeMode: 'auto',
             accentColor: '#1668ff',
             paperAccentColor: '#a36a2c',
@@ -384,7 +385,7 @@ describe('panels/InspectorControls e2e', () => {
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
-            snapSettings: { guideSnap: { enabled: true, threshold: 8, power: 1 }, containerSnap: { enabled: true, threshold: 0, power: 1 } },
+            snapSettings: DEFAULT_SNAP_SETTINGS,
             themeMode: 'auto',
             accentColor: '#1668ff',
             paperAccentColor: '#a36a2c',

@@ -25,6 +25,7 @@ type PendingNodeInteraction = {
   preservedSelection: boolean;
   startClientX: number;
   startClientY: number;
+  startTimestampMs: number;
   originX: number;
   originY: number;
   parentId?: NodeId;
@@ -163,6 +164,7 @@ export function useStageDragDrop({
       selectedIds,
       startClientX: pending.startClientX,
       startClientY: pending.startClientY,
+      startTimestampMs: pending.startTimestampMs,
       geometry: firstGeometry,
     });
 
@@ -176,6 +178,7 @@ export function useStageDragDrop({
         selectedIds,
         startClientX: pending.startClientX,
         startClientY: pending.startClientY,
+        startTimestampMs: pending.startTimestampMs,
         geometry: buildGeometrySnapshot({
           document,
           dragIds: session.dragIds,
@@ -240,6 +243,7 @@ export function useStageDragDrop({
       preservedSelection,
       startClientX: event.clientX,
       startClientY: event.clientY,
+      startTimestampMs: event.timeStamp,
       originX: parseFloat(node.rect.x.base.raw) || 0,
       originY: parseFloat(node.rect.y.base.raw) || 0,
       parentId: node.parentId ?? undefined,
@@ -249,6 +253,7 @@ export function useStageDragDrop({
     latestInputRef.current = {
       clientX: event.clientX,
       clientY: event.clientY,
+      timestampMs: event.timeStamp,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
       guideSnap: snapSettings.guideSnap,
@@ -266,6 +271,7 @@ export function useStageDragDrop({
     const input = {
       clientX: event.clientX,
       clientY: event.clientY,
+      timestampMs: event.timeStamp,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
       guideSnap: snapSettings.guideSnap,
@@ -295,6 +301,7 @@ export function useStageDragDrop({
     const input = {
       clientX: event.clientX,
       clientY: event.clientY,
+      timestampMs: event.timeStamp,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
       guideSnap: snapSettings.guideSnap,

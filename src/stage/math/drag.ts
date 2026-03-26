@@ -13,8 +13,7 @@ import {
 	findHorizontalSnap,
 	findVerticalSnap,
 } from "./snap";
-
-const DRAG_COMMIT_THRESHOLD_PX = 1;
+import { DRAG_COMMIT_THRESHOLD_PX } from "../../lib/dragConstants";
 
 export function createDragState({
 	nodeId,

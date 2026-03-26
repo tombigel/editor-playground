@@ -5,7 +5,7 @@ import {
   finishDragSession,
   updateDragSession,
 } from '../dragDropApi';
-import type { DragGeometrySnapshot } from '../types';
+import type { DragGeometrySnapshot, DragUpdateInput } from '../types';
 import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
 import type { DocumentModel, NodeId, TextLeaf, WrapperNode } from '../../model/types';
 
@@ -131,6 +131,34 @@ function makeGeometry(
   };
 }
 
+function makeDragInput(
+  overrides: Partial<DragUpdateInput> & {
+    guideSnap?: Partial<DragUpdateInput['guideSnap']>;
+    containerSnap?: Partial<DragUpdateInput['containerSnap']>;
+  } = {},
+): DragUpdateInput {
+  return {
+    clientX: overrides.clientX ?? 140,
+    clientY: overrides.clientY ?? 120,
+    timestampMs: overrides.timestampMs ?? 16,
+    shiftKey: overrides.shiftKey ?? false,
+    altKey: overrides.altKey ?? false,
+    guideSnap: {
+      enabled: true,
+      threshold: 8,
+      power: 1,
+      maxSpeedPxPerSecond: 1200,
+      ...(overrides.guideSnap ?? {}),
+    },
+    containerSnap: {
+      enabled: true,
+      threshold: 0,
+      power: 1,
+      ...(overrides.containerSnap ?? {}),
+    },
+  };
+}
+
 describe('api/dragDropApi', () => {
   it('keeps the drag session pending until movement exceeds 1px', () => {
     const { document, leafAId } = createDragDocument();
@@ -140,6 +168,7 @@ describe('api/dragDropApi', () => {
       selectedIds: [leafAId],
       startClientX: 140,
       startClientY: 120,
+      startTimestampMs: 0,
       geometry: makeGeometry({
         previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
         nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: document.nodes[leafAId]?.parentId ?? undefined }],
@@ -147,23 +176,19 @@ describe('api/dragDropApi', () => {
       }),
     });
 
-    expect(updateDragSession(session, {
+    expect(updateDragSession(session, makeDragInput({
       clientX: 141,
       clientY: 120,
-      shiftKey: false,
-      altKey: false,
-      guideSnap: { enabled: false, threshold: 8, power: 1 },
-      containerSnap: { enabled: true, threshold: 0, power: 1 },
-    }).phase).toBe('pending');
+      timestampMs: 16,
+      guideSnap: { enabled: false },
+    })).phase).toBe('pending');
 
-    expect(updateDragSession(session, {
+    expect(updateDragSession(session, makeDragInput({
       clientX: 142,
       clientY: 120,
-      shiftKey: false,
-      altKey: false,
-      guideSnap: { enabled: false, threshold: 8, power: 1 },
-      containerSnap: { enabled: true, threshold: 0, power: 1 },
-    }).phase).toBe('dragging');
+      timestampMs: 32,
+      guideSnap: { enabled: false },
+    })).phase).toBe('dragging');
   });
 
   it('dedupes parent and child selection to drag only the parent', () => {
@@ -174,6 +199,7 @@ describe('api/dragDropApi', () => {
       selectedIds: [containerAId, leafAId],
       startClientX: 180,
       startClientY: 140,
+      startTimestampMs: 0,
       geometry: makeGeometry({
         previewItems: [{ nodeId: containerAId, offsetX: 0, offsetY: 0, width: 300, height: 240 }],
         previewWidth: 300,
@@ -200,6 +226,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId, leafBId],
         startClientX: 140,
         startClientY: 120,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [
             { nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 },
@@ -214,14 +241,12 @@ describe('api/dragDropApi', () => {
           sourceParentId: containerAId,
         }),
       }),
-      {
+      makeDragInput({
         clientX: 190,
         clientY: 150,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 40,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(commit).toMatchObject({
@@ -241,6 +266,7 @@ describe('api/dragDropApi', () => {
       selectedIds: [leafAId, leafOtherId],
       startClientX: 140,
       startClientY: 120,
+      startTimestampMs: 0,
       geometry: makeGeometry({
         previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
         nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: document.nodes[leafAId]?.parentId ?? undefined }],
@@ -260,6 +286,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId],
         startClientX: 140,
         startClientY: 120,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
           nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
@@ -270,14 +297,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 560,
         clientY: 180,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(commit).toEqual({
@@ -298,6 +323,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId, leafBId],
         startClientX: 140,
         startClientY: 120,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [
             { nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 },
@@ -316,14 +342,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 560,
         clientY: 180,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(commit).toEqual({
@@ -345,6 +369,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [containerAId],
         startClientX: 190,
         startClientY: 160,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: containerAId, offsetX: 0, offsetY: 0, width: 300, height: 240 }],
           previewWidth: 300,
@@ -358,14 +383,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 240,
         clientY: 220,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(commit).toEqual({
@@ -385,6 +408,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId],
         startClientX: 140,
         startClientY: 120,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
           nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
@@ -395,14 +419,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 180,
         clientY: 150,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(session.highlightedDropId).toBeNull();
@@ -417,6 +439,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [containerAId],
         startClientX: 190,
         startClientY: 160,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: containerAId, offsetX: 0, offsetY: 0, width: 300, height: 240 }],
           previewWidth: 300,
@@ -429,14 +452,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 240,
         clientY: 220,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(session.highlightedDropId).toBe(sectionId);
@@ -451,6 +472,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId],
         startClientX: 140,
         startClientY: 120,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
           nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
@@ -461,14 +483,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 260,
         clientY: 220,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(commit).toEqual({
@@ -488,6 +508,7 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId],
         startClientX: 0,
         startClientY: 0,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 160, height: 40 }],
           previewWidth: 160,
@@ -505,14 +526,12 @@ describe('api/dragDropApi', () => {
           ],
         }),
       }),
-      {
+      makeDragInput({
         clientX: 520,
         clientY: 300,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: false, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
     );
 
     expect(commit).toEqual({
@@ -523,7 +542,7 @@ describe('api/dragDropApi', () => {
     });
   });
 
-  it('applies snapping on both axes after shift-lock and exposes guide sources', () => {
+  it('applies snapping on both axes for near-diagonal motion and exposes guide sources', () => {
     const { document, leafAId, containerAId } = createDragDocument();
     const session = updateDragSession(
       beginDragSession({
@@ -532,28 +551,26 @@ describe('api/dragDropApi', () => {
         selectedIds: [leafAId],
         startClientX: 100,
         startClientY: 100,
+        startTimestampMs: 0,
         geometry: makeGeometry({
           previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
           nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
           sourceParentId: containerAId,
-          horizontalGuides: [{ value: 200, source: 'page', anchor: 'edge' }],
+          horizontalGuides: [{ value: 150, source: 'page', anchor: 'edge' }],
           verticalGuides: [{ value: 150, source: 'component', anchor: 'edge' }],
         }),
       }),
-      {
-        clientX: 206,
+      makeDragInput({
+        clientX: 146,
         clientY: 146,
-        shiftKey: false,
-        altKey: false,
-        guideSnap: { enabled: true, threshold: 8, power: 1 },
-        containerSnap: { enabled: true, threshold: 0, power: 1 },
-      },
+        timestampMs: 48,
+      }),
     );
 
     expect(session.phase).toBe('dragging');
-    expect(session.currentClientX).toBe(200);
+    expect(session.currentClientX).toBe(150);
     expect(session.currentClientY).toBe(150);
-    expect(session.guideX).toEqual({ value: 200, source: 'page', anchor: 'edge' });
+    expect(session.guideX).toEqual({ value: 150, source: 'page', anchor: 'edge' });
     expect(session.guideY).toEqual({ value: 150, source: 'component', anchor: 'edge' });
   });
 
@@ -565,6 +582,7 @@ describe('api/dragDropApi', () => {
       selectedIds: [leafAId],
       startClientX: 100,
       startClientY: 100,
+      startTimestampMs: 0,
       geometry: makeGeometry({
         previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
         nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
@@ -574,26 +592,116 @@ describe('api/dragDropApi', () => {
       }),
     });
 
-    const shifted = updateDragSession(baseSession, {
+    const shifted = updateDragSession(baseSession, makeDragInput({
       clientX: 160,
       clientY: 120,
+      timestampMs: 48,
       shiftKey: true,
-      altKey: false,
-      guideSnap: { enabled: false, threshold: 8, power: 1 },
-      containerSnap: { enabled: true, threshold: 0, power: 1 },
-    });
+      guideSnap: { enabled: false },
+    }));
     expect(shifted.currentClientY).toBe(120);
 
-    const altDisabled = updateDragSession(baseSession, {
+    const altDisabled = updateDragSession(baseSession, makeDragInput({
       clientX: 160,
       clientY: 120,
-      shiftKey: false,
+      timestampMs: 48,
       altKey: true,
-      guideSnap: { enabled: true, threshold: 8, power: 1 },
-      containerSnap: { enabled: true, threshold: 0, power: 1 },
-    });
+    }));
     expect(altDisabled.guideX).toBeNull();
     expect(altDisabled.guideY).toBeNull();
+  });
+
+  it('computes smoothed drag motion from timestamped pointer updates', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const session = updateDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 100,
+        startClientY: 100,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+        }),
+      }),
+      makeDragInput({
+        clientX: 116,
+        clientY: 108,
+        timestampMs: 16,
+        guideSnap: { enabled: false },
+      }),
+    );
+
+    expect(session.motion.deltaX).toBe(16);
+    expect(session.motion.deltaY).toBe(8);
+    expect(session.motion.velocityX).toBeCloseTo(350, 5);
+    expect(session.motion.velocityY).toBeCloseTo(175, 5);
+    expect(session.motion.speedPxPerSecond).toBeCloseTo(Math.hypot(350, 175), 5);
+    expect(session.motion.dominantAxis).toBe('horizontal');
+  });
+
+  it('skips guide snapping when drag speed exceeds the configured threshold', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const session = updateDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 100,
+        startClientY: 100,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          horizontalGuides: [{ value: 200, source: 'page', anchor: 'edge' }],
+        }),
+      }),
+      makeDragInput({
+        clientX: 206,
+        clientY: 120,
+        timestampMs: 8,
+      }),
+    );
+
+    expect(session.currentClientX).toBe(206);
+    expect(session.guideX).toBeNull();
+    expect(session.motion.speedPxPerSecond).toBeGreaterThan(1200);
+  });
+
+  it('suppresses perpendicular guide snap when a dominant axis is clear', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const session = updateDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 100,
+        startClientY: 100,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          horizontalGuides: [{ value: 200, source: 'page', anchor: 'edge' }],
+          verticalGuides: [{ value: 150, source: 'component', anchor: 'edge' }],
+        }),
+      }),
+      makeDragInput({
+        clientX: 206,
+        clientY: 146,
+        timestampMs: 80,
+      }),
+    );
+
+    expect(session.currentClientX).toBe(200);
+    expect(session.currentClientY).toBe(146);
+    expect(session.guideX).toEqual({ value: 200, source: 'page', anchor: 'edge' });
+    expect(session.guideY).toBeNull();
+    expect(session.motion.dominantAxis).toBe('horizontal');
   });
 
   it('cancels a session to null', () => {

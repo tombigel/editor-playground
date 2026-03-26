@@ -329,6 +329,8 @@ function normalizeSnapSettings(ui: Partial<EditorState['ui']> | undefined) {
       enabled: persisted.guideSnap?.enabled ?? DEFAULT_SNAP_SETTINGS.guideSnap.enabled,
       threshold: persisted.guideSnap?.threshold ?? DEFAULT_SNAP_SETTINGS.guideSnap.threshold,
       power: persisted.guideSnap?.power ?? DEFAULT_SNAP_SETTINGS.guideSnap.power,
+      maxSpeedPxPerSecond:
+        persisted.guideSnap?.maxSpeedPxPerSecond ?? DEFAULT_SNAP_SETTINGS.guideSnap.maxSpeedPxPerSecond,
     },
     containerSnap: {
       enabled: persisted.containerSnap?.enabled ?? DEFAULT_SNAP_SETTINGS.containerSnap.enabled,

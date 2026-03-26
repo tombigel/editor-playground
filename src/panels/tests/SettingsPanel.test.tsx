@@ -59,6 +59,7 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Model export for re-importing into the editor.');
     expect(markup).toContain('Generated site structure export for hosting or SSR.');
     expect(markup).toContain('Bring a saved document model back into the editor.');
+    expect(markup).toContain('Max snap speed');
     expect(markup).toContain('Save JSON');
     expect(markup).toContain('Save Site ZIP');
     expect(markup).toContain('editor-scrollbar');
