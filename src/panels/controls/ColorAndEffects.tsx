@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { forceOpaqueColorValue } from '../../model/colors';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,17 @@ export function HoverColorField({
   const resolvedValue = showOpacity ? value : forceOpaqueColorValue(value);
   const resolvedFallback = showOpacity ? fallback : forceOpaqueColorValue(fallback) || '#ffffff';
 
+  // Keep a ref to the latest callback values so the stable onChange passed to
+  // ColorPicker always dispatches with the current handler, even when ColorPicker
+  // skips re-renders (its memo comparator intentionally ignores onChange).
+  const callbackRef = useRef({ onChange, showOpacity, resolvedFallback });
+  callbackRef.current = { onChange, showOpacity, resolvedFallback };
+
+  const stableOnChange = useRef((nextValue: string) => {
+    const { onChange: cb, showOpacity: opacity, resolvedFallback: fb } = callbackRef.current;
+    cb(opacity ? nextValue : forceOpaqueColorValue(nextValue) || fb);
+  }).current;
+
   return (
     <div className="flex">
       <div className="relative">
@@ -35,7 +46,7 @@ export function HoverColorField({
           allowAlpha={showOpacity}
           ariaLabel={ariaLabel}
           className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm"
-          onChange={(nextValue) => onChange(showOpacity ? nextValue : forceOpaqueColorValue(nextValue) || resolvedFallback)}
+          onChange={stableOnChange}
         />
         {mixed ? (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
