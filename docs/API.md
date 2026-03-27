@@ -1,5 +1,17 @@
 # API Reference
 
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [`src/api/documentApi.ts`](#srcapidocumentapits)
+- [`src/api/editorApi.ts`](#srcapieditorapits)
+- [`src/api/fontApi.ts`](#srcapifontapits)
+- [`src/api/siteApi.ts`](#srcapisiteapits)
+- [`src/api/editorViewApi.ts`](#srcapieditorviewapits)
+- [`src/api/dragDropApi.ts`](#srcapidragdropapits)
+- [`src/api/animationApi.ts`](#srcapianimationapits)
+- [`src/api/types/index.ts`](#srcapitypesindexts)
+
 ## Architecture Overview
 
 The API layer is structured as multiple modules:
