@@ -18,6 +18,11 @@ function createState(): EditorState {
     pendingRoleSwap: null,
     ui: {
       previewSticky: true,
+      animationPreview: {
+        enabled: false,
+        mode: 'passive',
+        triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+      },
       spacerVisibility: 'selected',
       showGridLanes: false,
       snapSettings: DEFAULT_SNAP_SETTINGS,

@@ -12,6 +12,10 @@ declare module 'react' {
         value?: string;
         suppressHydrationWarning?: boolean;
       };
+      'interact-element': React.ClassAttributes<HTMLElement> & React.HTMLAttributes<HTMLElement> & {
+        'data-interact-key'?: string;
+        'data-interact-initial'?: string;
+      };
     }
   }
 }

@@ -15,6 +15,8 @@ describe('panels/SettingsPanel', () => {
         stickyLayout={{}}
         selectedNode={document.nodes[document.rootId] ?? null}
         previewSticky={true}
+        animationPreview={{ enabled: false, mode: 'passive', triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true } }}
+        onAnimationPreviewChange={() => {}}
         spacerVisibility="selected"
         showGridLanes={false}
         snapSettings={DEFAULT_SNAP_SETTINGS}

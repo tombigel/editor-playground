@@ -483,6 +483,11 @@ describe('editor/editorStore integration', () => {
         },
         ui: {
           previewSticky: false,
+          animationPreview: {
+            enabled: false,
+            mode: 'passive',
+            triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+          },
           spacerVisibility: 'all',
           showGridLanes: true,
           snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
@@ -506,6 +511,11 @@ describe('editor/editorStore integration', () => {
     expect(loaded.pendingRoleSwap).toBeNull();
     expect(loaded.ui).toEqual({
       previewSticky: false,
+      animationPreview: {
+        enabled: false,
+        mode: 'passive',
+        triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+      },
       spacerVisibility: 'all',
       showGridLanes: true,
       snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
@@ -764,6 +774,11 @@ describe('editor/editorStore integration', () => {
     const customSnapSettings = { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } };
     const reset = createFactoryResetState({
       previewSticky: false,
+      animationPreview: {
+        enabled: false,
+        mode: 'passive',
+        triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+      },
       spacerVisibility: 'all',
       showGridLanes: true,
       snapSettings: customSnapSettings,
@@ -786,6 +801,11 @@ describe('editor/editorStore integration', () => {
     expect(reset.pendingRoleSwap).toBeNull();
     expect(reset.ui).toEqual({
       previewSticky: false,
+      animationPreview: {
+        enabled: false,
+        mode: 'passive',
+        triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+      },
       spacerVisibility: 'all',
       showGridLanes: true,
       snapSettings: customSnapSettings,

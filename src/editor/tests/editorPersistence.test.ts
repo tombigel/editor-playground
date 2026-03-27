@@ -397,6 +397,11 @@ describe('editor/editorPersistence', () => {
     it('preserves provided UI settings but clears temporaryInspectorOpen', () => {
       const reset = createFactoryResetState({
         previewSticky: false,
+        animationPreview: {
+          enabled: false,
+          mode: 'passive',
+          triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+        },
         spacerVisibility: 'all',
         showGridLanes: true,
         snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },

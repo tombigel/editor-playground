@@ -106,7 +106,7 @@ export function App() {
     return 'none';
   }
 
-  useAppRuntime(state, viewModel.resolvedTheme);
+  useAppRuntime(state, viewModel.resolvedTheme, dispatch);
 
   useEditorKeyboardShortcuts({
     document: state.document,
@@ -114,6 +114,7 @@ export function App() {
     selectedIds: state.selectedIds,
     ui: {
       previewSticky: state.ui.previewSticky,
+      animationPreview: state.ui.animationPreview,
       spacerVisibility: state.ui.spacerVisibility,
       snapSettings: state.ui.snapSettings,
     },
@@ -129,6 +130,7 @@ export function App() {
     onToggleSettings: () => panels.setSettingsOpen((open) => !open),
     onOpenShortcutHelp: () => panels.setShortcutHelpOpen(true),
     onSetPreviewSticky: (value) => dispatch({ type: 'setPreviewSticky', value }),
+    onSetAnimationPreview: (value) => dispatch({ type: 'setAnimationPreview', value }),
     onSetSpacerVisibility: (value) => dispatch({ type: 'setSpacerVisibility', value }),
     onSetSnapSettings: (value) => dispatch({ type: 'setSnapSettings', value }),
     onNudgeSelection: (deltaX, deltaY) => dispatch({ type: 'nudgeSelection', deltaX, deltaY }),

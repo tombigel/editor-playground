@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
 import { useStageDragDrop } from "./dragDrop/useStageDragDrop";
+import { useStageAnimations } from "./useStageAnimations";
 import { StageScene } from "./StageScene";
 import {
 	areMeasuredNodeSizesEqual,
@@ -61,6 +62,7 @@ export function Stage({
 	selectedId,
 	selectedIds = selectedId ? [selectedId] : [],
 	previewSticky,
+	animationPreview,
 	spacerVisibility,
 	showGridLanes,
 	snapSettings,
@@ -94,6 +96,9 @@ export function Stage({
 		viewportWidth: number;
 		viewportHeight: number;
 	} | null>(null);
+
+	const defaultAnimationPreview = { enabled: false, mode: 'passive' as const, triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true } };
+	useStageAnimations(document, animationPreview ?? defaultAnimationPreview);
 
 	function handleStageRef(node: HTMLDivElement | null) {
 		stageRef.current = node;
@@ -411,6 +416,7 @@ export function Stage({
 				singleSelectionOverlay={singleSelectionOverlay}
 				multiSelectionBounds={multiSelectionBounds}
 				previewSticky={previewSticky}
+				animationPreview={animationPreview}
 				spacerVisibility={spacerVisibility}
 				showGridLanes={showGridLanes}
 				onResizeStart={onResizeStart}

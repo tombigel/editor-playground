@@ -97,6 +97,11 @@ export function loadPersistedState(): EditorState {
       pendingRoleSwap: null,
       ui: {
         previewSticky: parsed.ui?.previewSticky ?? true,
+        animationPreview: parsed.ui?.animationPreview ?? {
+          enabled: false,
+          mode: 'passive',
+          triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+        },
         spacerVisibility:
           parsed.ui?.spacerVisibility === 'all' || parsed.ui?.spacerVisibility === 'selected'
             ? parsed.ui.spacerVisibility
@@ -171,6 +176,11 @@ export function createFactoryResetState(ui?: EditorState['ui']): EditorState {
 function createDefaultUiState(): EditorState['ui'] {
   return {
     previewSticky: true,
+    animationPreview: {
+      enabled: false,
+      mode: 'passive',
+      triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+    },
     spacerVisibility: 'selected',
     showGridLanes: false,
     snapSettings: DEFAULT_SNAP_SETTINGS,

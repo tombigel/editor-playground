@@ -10,6 +10,7 @@ function createHandlers() {
     toggleSettings: vi.fn(),
     openShortcutHelp: vi.fn(),
     setPreviewSticky: vi.fn(),
+    setAnimationPreview: vi.fn(),
     setSpacerVisibility: vi.fn(),
     setSnapSettings: vi.fn(),
     nudgeSelection: vi.fn(),
@@ -29,6 +30,11 @@ function createHandlers() {
 
 const baseState: ShortcutUiState = {
   previewSticky: true,
+  animationPreview: {
+    enabled: false,
+    mode: 'passive',
+    triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+  },
   spacerVisibility: 'selected',
   snapSettings: DEFAULT_SNAP_SETTINGS,
 };

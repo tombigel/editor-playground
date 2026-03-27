@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { buildDocumentInteractConfig } from '../animations/animationApi';
 import { buildDocumentGoogleFontsStylesheetHref } from '../fonts';
 import type { DocumentModel } from '../model/types';
 import { styleRecordToCssDeclarations } from '../render/leafPresentation';
@@ -12,11 +13,16 @@ const DEFAULT_SITE_TITLE = 'Sticky Playground Site';
 export const DEFAULT_SITE_HTML_FILE_NAME = 'sticky-playground-site.html';
 export const DEFAULT_SITE_CSS_FILE_NAME = 'sticky-playground-site.css';
 
+const INTERACT_CDN_URL = 'https://unpkg.com/@wix/interact@2.1.4/dist/es/web.js';
+const MOTION_PRESETS_CDN_URL = 'https://unpkg.com/@wix/motion-presets@1.0.0/dist/es/motion-presets.js';
+
 export function renderSiteBodyHtml(
   document: DocumentModel,
-  { previewSticky = true }: SiteExportOptions = {},
+  { previewSticky = true, includeAnimations = true }: SiteExportOptions = {},
 ) {
-  return renderToStaticMarkup(<SiteRenderer document={document} previewSticky={previewSticky} />);
+  return renderToStaticMarkup(
+    <SiteRenderer document={document} previewSticky={previewSticky} includeAnimations={includeAnimations} />,
+  );
 }
 
 export function renderSiteCss(
@@ -32,10 +38,13 @@ export function renderSiteHtmlDocument(
   document: DocumentModel,
   options: SiteExportOptions = {},
 ) {
-  const { title = DEFAULT_SITE_TITLE } = options;
+  const { title = DEFAULT_SITE_TITLE, includeAnimations = true } = options;
   const { cssFileName } = resolveSiteFileNames(options);
   const bodyHtml = renderSiteBodyHtml(document, options);
   const fontHref = buildDocumentGoogleFontsStylesheetHref(document);
+
+  const interactConfig = includeAnimations ? buildDocumentInteractConfig(document) : null;
+  const hasAnimations = interactConfig && interactConfig.interactions.length > 0;
 
   return [
     '<!doctype html>',
@@ -55,6 +64,16 @@ export function renderSiteHtmlDocument(
     '</head>',
     '<body>',
     bodyHtml,
+    ...(hasAnimations
+      ? [
+          `<script type="module">`,
+          `import { Interact } from '${INTERACT_CDN_URL}';`,
+          `import * as presets from '${MOTION_PRESETS_CDN_URL}';`,
+          `Interact.registerEffects(presets);`,
+          `Interact.create(${JSON.stringify(interactConfig)});`,
+          `</script>`,
+        ]
+      : []),
     '</body>',
     '</html>',
   ].join('\n');

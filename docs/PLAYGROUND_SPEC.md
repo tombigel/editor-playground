@@ -553,6 +553,70 @@ JavaScript is used for:
 
 JavaScript is not used for live sticky movement during scroll.
 
+## Animation Model
+
+Animations are configured hierarchically with three levels of accessibility settings:
+
+- `DocumentModel.animationSettings`: global defaults applied to all animations
+- per-trigger settings: override global defaults for a specific trigger type
+- per-animation settings: override both global and trigger-level defaults for an individual animation
+
+All non-site nodes support a singular `animation?: AnimationDefinition` property:
+
+- `WrapperNode` (section, header, footer, container)
+- `TextLeaf`
+- `ImageLeaf`
+- `LinkLeaf`
+- `ButtonLeaf`
+
+`SiteNode` does not support animation.
+
+### Trigger Types
+
+Six trigger types are supported, each with preset effect constraints:
+
+- `entrance` (viewEnter): animation plays when element enters viewport
+- `ongoing` (viewEnter with loop): animation loops continuously while element is in viewport
+- `scroll` (viewProgress): animation progresses with scroll position
+- `click`: animation plays on click
+- `hover`: animation plays on hover; entrance animations reverse on hover-out (alternate), ongoing animations obey `ongoingOnOut: 'reset' | 'keep'`
+- `mouse` (pointerMove): animation progresses with pointer movement
+
+Trigger types have inherent preset constraints; `keyframe` effects bypass trigger constraints and work with any trigger.
+
+### Effect Types
+
+Two effect types are supported:
+
+- **Named effects**: wrap @wix/motion-presets types with a `kind: 'named'` discriminant. Named effects are constrained by trigger type.
+- **Keyframe effects**: unrestricted CSS keyframe definitions that work with any trigger type.
+
+### Trigger and Target Separation
+
+A `triggerId` field enables one element to trigger while another animates. The `triggerId` references a node id that owns the trigger gesture; if omitted, the animated node triggers itself.
+
+### Hover Behavior
+
+For `hover` trigger:
+- entrance animations reverse on hover-out using alternate playback
+- ongoing animations can be configured with `ongoingOnOut: 'reset'` (stop and reset to start) or `ongoingOnOut: 'keep'` (continue from current position)
+
+### Sticky Requirement
+
+The `requiresSticky` flag marks an animation that depends on the sticky subsystem being active. Animations with this flag do not function correctly if sticky is disabled on the document.
+
+### Site Export
+
+Exported HTML includes:
+
+- `data-interact-key` attributes on animated nodes and trigger nodes for runtime animation hookup
+- @wix/interact script injection to enable animation playback in the exported site
+- `collectInteractKeys()` helper function to gather all interact keys from the document
+
+### Development Console
+
+In DEV mode, `window.playgroundAnimationApi` is available for testing and debugging animation state without going through the editor UI.
+
 ## Editor UX
 
 Current UX includes:

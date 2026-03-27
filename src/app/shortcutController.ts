@@ -27,6 +27,9 @@ export function executeEditorShortcut(
     case 'togglePreviewSticky':
       handlers.setPreviewSticky(!state.previewSticky);
       return;
+    case 'toggleAnimationPreview':
+      handlers.setAnimationPreview({ enabled: !state.animationPreview.enabled });
+      return;
     case 'toggleSpacerVisibility':
       handlers.setSpacerVisibility(state.spacerVisibility === 'all' ? 'selected' : 'all');
       return;

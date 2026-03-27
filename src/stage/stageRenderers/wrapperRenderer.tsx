@@ -56,6 +56,7 @@ export function renderWrapper({
   selfRegistration,
   ownerWrapper,
   ownerBottomLanePx,
+  interactKeys,
 }: RenderWrapperArgs): ReactElement {
   const node = plan.node;
   const Tag = plan.tag;
@@ -103,6 +104,7 @@ export function renderWrapper({
       ref={(element) => registerDraggableNode(node.id, element)}
       data-node-id={node.id}
       data-node-label={formatNodeLabel(node)}
+      {...(interactKeys?.has(node.id) ? { 'data-interact-key': node.id } : {})}
       className={`stage-wrapper role-${node.role} ${selectedIds.includes(node.id) ? 'selected' : ''} ${
         selectedIds.length > 1 && selectedIds.includes(node.id) ? 'selected-multi' : ''
       } ${
@@ -197,6 +199,7 @@ export function renderWrapper({
                 selfRegistration: plan.registrationMap.get(child.node.id),
                 ownerWrapper: node,
                 ownerBottomLanePx: getPreviewWrapperBottomLanePx(node, meshLayout.bottomLanePx, measuredNodeSizes, viewport),
+                interactKeys,
               })
             : renderLeaf({
                 plan: child,
@@ -208,6 +211,7 @@ export function renderWrapper({
                 registration: plan.registrationMap.get(child.node.id),
                 measuredNodeSizes,
                 viewport,
+                interactKeys,
               }),
         )}
       </div>

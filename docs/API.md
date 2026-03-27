@@ -376,6 +376,132 @@ Pure headless drag-and-drop session lifecycle and drag resolution helpers for ed
 
 ---
 
+## `src/api/animationApi.ts`
+
+Pass-through re-exports from the `src/animations/` subsystem. Built against `@wix/interact@2.1.4` and `@wix/motion-presets`.
+
+### Version
+
+| Export | Description |
+|---|---|
+| `INTERACT_VERSION` | Semver string of the `@wix/interact` version this API targets (`'2.1.4'`). |
+
+### High-level API (preferred)
+
+All mutating functions are pure `DocumentModel → DocumentModel`.
+
+| Function | Signature | Description |
+|---|---|---|
+| `setPresetAnimation` | `(doc, target, { trigger, preset, options?, source?, ongoingOnOut?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a named preset animation on a node. Validates preset/trigger compatibility. |
+| `setKeyframeAnimation` | `(doc, target, { trigger, name, keyframes, duration?, easing?, source?, ongoingOnOut?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a custom WAAPI-style keyframe animation on a node. |
+| `updateAnimationOptions` | `(doc, target, { source?, ongoingOnOut?, reducedMotion?, requiresSticky? }) → DocumentModel` | Merges options onto an existing animation. Throws if the node has no animation. |
+| `clearAnimation` | `(doc, target) → DocumentModel` | Removes an animation from a node. Silent no-op if absent. |
+| `setDocumentAnimationSettings` | `(doc, settings) → DocumentModel` | Sets document-level animation settings (a11y policy). |
+
+### Low-level API (direct data access)
+
+| Function | Signature | Description |
+|---|---|---|
+| `setNodeAnimation` | `(doc, nodeId, def \| undefined) → DocumentModel` | Sets or clears a full `AnimationDefinition` on a node. |
+| `getNodeAnimation` | `(doc, nodeId) → AnimationDefinition \| undefined` | Reads the animation stored on a node. |
+| `getAnimatedNodes` | `(doc) → NodeId[]` | Returns IDs of all nodes that have an animation. |
+
+### Preset catalog
+
+| Function | Signature | Description |
+|---|---|---|
+| `getMotionPresets` | `() → { entrance, ongoing, scroll, mouse }` | Returns all preset names grouped by category. |
+| `getPresetCategory` | `(preset) → 'entrance' \| 'ongoing' \| 'scroll' \| 'mouse' \| null` | Returns the category of a preset name. |
+| `getPresetsForTrigger` | `(trigger) → PresetInfo[]` | Returns presets valid for a trigger, with parameter schemas. |
+| `getPresetParams` | `(preset) → PresetParamSchema \| null` | Returns the parameter schema for a preset. |
+
+### Config builder
+
+| Function | Signature | Description |
+|---|---|---|
+| `buildDocumentInteractConfig` | `(doc) → InteractConfig` | Builds the full `@wix/interact` config for all animated nodes. |
+
+### Animation Options vs Preset Parameters
+
+There are two distinct layers of configuration on an animation:
+
+- **Preset parameters** (`direction`, `blur`, `intensity`, `distance`, `depth`, etc.) are set on the named effect object and control what the animation looks like. These are preset-specific; use `getPresetParams` to discover the available parameters and their allowed values for any given preset.
+- **Animation options** (`duration`, `delay`, `easing`, `iterations`, `rangeStart`/`rangeEnd`, `fill`, `alternate`) are set on the effect wrapper by the config builder and control how and when the animation plays. These are independent of which preset is used.
+
+### Config Builder Defaults
+
+`buildDocumentInteractConfig` applies the following defaults per trigger when building the `@wix/interact` config:
+
+| Trigger | Interact Trigger | Duration | Easing | Iterations | Scroll Range | Interaction Params |
+|---------|-----------------|----------|--------|------------|--------------|-------------------|
+| `entrance` | `viewEnter` | 1000ms | browser default | 1 | n/a | `{ type: 'once' }` |
+| `ongoing` | `viewEnter` | 1000ms | browser default | `Infinity` | n/a | `{ type: 'once', threshold: -0.1 }` |
+| `scroll` | `viewProgress` | n/a (scrub) | `'linear'` | 1 | `entry 0%` → `exit 100%` | — |
+| `hover` | `hover` | 1000ms | browser default | 1 | n/a | `{ type: 'alternate' }` |
+| `click` | `click` | 1000ms | browser default | 1 | n/a | — |
+| `mouse` | `pointerMove` | n/a | n/a | n/a | n/a | `{ hitArea: 'self' }` |
+
+Scroll range defaults are exported as `SCROLL_DEFAULT_RANGE_START` and `SCROLL_DEFAULT_RANGE_END`.
+
+### Duration Guidelines
+
+From the official `@wix/motion-presets` documentation:
+
+| Animation type | Recommended duration |
+|---------------|---------------------|
+| Functional UI animations | < 500ms |
+| Decorative animations | up to 1200ms |
+| Hero / showcase animations | up to 2000ms |
+
+The config builder defaults to **1000ms**, which sits in the decorative range.
+
+### Special Hover Behavior
+
+The config builder applies additional rules when the trigger is `hover`:
+
+- **Entrance presets** used with a `hover` trigger get `alternate: true`, so the animation reverses automatically on pointer leave.
+- **Ongoing presets** with `ongoingOnOut: 'keep'` get `fill: 'forwards'`, so the element holds its end state after the animation completes.
+- **Keyframe effects** on hover without `ongoingOnOut` also get `alternate: true`.
+
+### Reduced Motion Priority Chain
+
+When computing the effective reduced-motion response for a given animation, the first matching rule in the following chain wins:
+
+1. `doc.animationSettings.a11y.reducedMotion` — global document-level override
+2. `doc.animationSettings.a11y.perTrigger[trigger]` — per-trigger override
+3. `animationDef.reducedMotion` — per-animation override
+
+Resolution behavior:
+
+- When the resolved response is `'disable'`: the interaction is wrapped in a `(prefers-reduced-motion: no-preference)` media condition, so it plays only when the user has not requested reduced motion.
+- When the resolved response is `{ alternative: ... }`: two conditional effects are created — the main animation under `no-preference` and the alternative animation under `reduce`.
+
+### Official Preset Documentation
+
+Per-preset parameter details (defaults, intensity guides, atmosphere selection, and accessibility notes) are covered in the official `@wix/motion-presets` package documentation. Individual category references document all parameters with their defaults and allowed ranges.
+
+### Error handling
+
+- **Throws** on: unknown node, site root, unknown preset, invalid preset/trigger combo, `updateAnimationOptions` on unanimated node.
+- **Silent no-op** on: `clearAnimation` when no animation exists.
+
+### Exported types
+
+| Type | Description |
+|---|---|
+| `AnimationTriggerType` | `'entrance' \| 'ongoing' \| 'scroll' \| 'click' \| 'hover' \| 'mouse'` |
+| `AnimationDefinition` | Discriminated union of per-trigger animation definitions. |
+| `NamedAnimationEffect` | Union of all named preset effect wrappers. |
+| `KeyframeAnimationEffect` | WAAPI-style keyframe effect shape. |
+| `ReducedMotionResponse` | `'disable' \| { alternative: ... }` — per-animation a11y override. |
+| `DocumentAnimationSettings` | Document-level a11y settings. |
+| `PresetInfo` | Preset name + category + param schema (for editor UI). |
+| `PresetParamSchema` | Full parameter schema for a preset. |
+| `PresetParam` | Single parameter descriptor (name, type, enum, min/max). |
+| `InteractConfig` | Re-exported from `@wix/interact`. |
+
+---
+
 ## `src/api/types/index.ts`
 
 Internal types shared across the `src/api/` subsystem.

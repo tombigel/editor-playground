@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
-import type { AlignmentAction, DistributionMode, SnapSettings } from './types';
+import type { AlignmentAction, DistributionMode, SnapSettings, AnimationPreviewState } from './types';
 import { hasStageKeyboardFocus, isInteractiveFocus } from './useEditorEnvironment';
 
 type UseEditorKeyboardShortcutsArgs = {
@@ -19,6 +19,7 @@ type UseEditorKeyboardShortcutsArgs = {
   onToggleSettings: () => void;
   onOpenShortcutHelp: () => void;
   onSetPreviewSticky: (value: boolean) => void;
+  onSetAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
   onSetSpacerVisibility: (value: 'selected' | 'all') => void;
   onSetSnapSettings: (value: Partial<SnapSettings>) => void;
   onNudgeSelection: (deltaX: number, deltaY: number) => void;
@@ -49,6 +50,7 @@ export function useEditorKeyboardShortcuts({
   onToggleSettings,
   onOpenShortcutHelp,
   onSetPreviewSticky,
+  onSetAnimationPreview,
   onSetSpacerVisibility,
   onSetSnapSettings,
   onNudgeSelection,
@@ -106,6 +108,7 @@ export function useEditorKeyboardShortcuts({
         toggleSettings: onToggleSettings,
         openShortcutHelp: onOpenShortcutHelp,
         setPreviewSticky: onSetPreviewSticky,
+        setAnimationPreview: onSetAnimationPreview,
         setSpacerVisibility: onSetSpacerVisibility,
         setSnapSettings: onSetSnapSettings,
         nudgeSelection: onNudgeSelection,
@@ -141,6 +144,7 @@ export function useEditorKeyboardShortcuts({
     onRedo,
     onSelect,
     onSetPreviewSticky,
+    onSetAnimationPreview,
     onSetSnapSettings,
     onSetSpacerVisibility,
     onToggleBoldSelection,

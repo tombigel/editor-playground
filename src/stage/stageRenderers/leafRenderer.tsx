@@ -45,6 +45,7 @@ export function renderLeaf({
   registration,
   measuredNodeSizes,
   viewport,
+  interactKeys,
 }: {
   plan: RenderLeafPlanNode;
   selectedId: NodeId | null;
@@ -55,6 +56,7 @@ export function renderLeaf({
   registration?: StageStickyRegistration;
   measuredNodeSizes: RenderMeasuredNodeSizes;
   viewport: ViewportMeasurement;
+  interactKeys?: Set<NodeId>;
 }) {
   const child = plan.node;
   const meshPlacement = plan.meshPlacement;
@@ -75,6 +77,7 @@ export function renderLeaf({
       ref={(element) => registerDraggableNode(child.id, element)}
       data-node-id={child.id}
       data-node-label={formatNodeLabel(child)}
+      {...(interactKeys?.has(child.id) ? { 'data-interact-key': child.id } : {})}
       className={`stage-leaf role-${child.role} ${brandMark ? 'is-brand-mark' : ''} ${
         selectedIds.includes(child.id) ? 'selected' : ''
       } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${dragSourceIds.includes(child.id) ? 'drag-source' : ''}`}

@@ -59,6 +59,12 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     combos: [{ code: 'KeyP', keyLabel: 'P', shift: true }],
   },
   {
+    id: 'toggleAnimationPreview',
+    category: 'View',
+    description: 'Animation preview',
+    combos: [{ code: 'KeyA', keyLabel: 'A', shift: true }],
+  },
+  {
     id: 'toggleSpacerVisibility',
     category: 'View',
     description: 'Spacer visibility',

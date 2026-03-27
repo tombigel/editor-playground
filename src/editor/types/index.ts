@@ -35,6 +35,12 @@ export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
   containerSnap: { enabled: true, threshold: 0, power: 1 },
 };
 
+export type AnimationPreviewState = {
+  enabled: boolean;
+  mode: 'passive' | 'interactive';
+  triggers: Record<'entrance' | 'ongoing' | 'scroll' | 'mouse' | 'click' | 'hover', boolean>;
+};
+
 export type EditorState = {
   document: DocumentModel;
   selectedId: NodeId | null;
@@ -42,6 +48,7 @@ export type EditorState = {
   pendingRoleSwap: ConfirmReplaceRole | null;
   ui: {
     previewSticky: boolean;
+    animationPreview: AnimationPreviewState;
     spacerVisibility: 'selected' | 'all';
     showGridLanes: boolean;
     snapSettings: SnapSettings;

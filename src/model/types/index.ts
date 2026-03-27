@@ -1,3 +1,5 @@
+import type { AnimationDefinition, DocumentAnimationSettings } from '../../animations/types';
+
 export type NodeId = string;
 
 export type NodeType = 'site' | 'wrapper' | 'leaf';
@@ -235,6 +237,7 @@ export type WrapperNode = BaseNode & {
   role: WrapperRole;
   rect: RectModel;
   sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
   style: BorderStyle &
     ShadowStyle & {
     background?: string;
@@ -254,6 +257,7 @@ export type TextLeaf = BaseNode & {
   content: string;
   htmlTag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'blockquote' | 'div';
   sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
   style?: ShadowStyle & TypographyStyle;
 };
 
@@ -264,6 +268,7 @@ export type ImageLeaf = BaseNode & {
   src?: string;
   alt?: string;
   sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
   style?: BorderStyle & ShadowStyle;
 };
 
@@ -277,6 +282,7 @@ export type LinkLeaf = BaseNode & {
   href?: string;
   openInNewTab?: boolean;
   sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
   style?: TypographyStyle &
     ShadowStyle & {
       textWrap?: TextWrapMode;
@@ -293,6 +299,7 @@ export type ButtonLeaf = BaseNode & {
   href?: string;
   openInNewTab?: boolean;
   sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
   style?: TypographyStyle &
     BorderStyle &
     ShadowStyle & {
@@ -315,6 +322,7 @@ export type DocumentModel = {
   rootId: NodeId;
   nodes: Record<NodeId, DocumentNode>;
   fontLibrary: FontLibrary;
+  animationSettings?: DocumentAnimationSettings;
 };
 
 export type ComputedStickyRegistration = {

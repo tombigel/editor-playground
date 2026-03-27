@@ -235,6 +235,14 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return importEditorDocument(state, action.document);
     case 'setPreviewSticky':
       return { ...state, ui: { ...state.ui, previewSticky: action.value } };
+    case 'setAnimationPreview':
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          animationPreview: { ...state.ui.animationPreview, ...action.value },
+        },
+      };
     case 'setSpacerVisibility':
       return { ...state, ui: { ...state.ui, spacerVisibility: action.value } };
     case 'setShowGridLanes':

@@ -12,6 +12,7 @@ export type ShortcutId =
   | 'openSettings'
   | 'showShortcutHelp'
   | 'togglePreviewSticky'
+  | 'toggleAnimationPreview'
   | 'toggleSpacerVisibility'
   | 'toggleSnapEnabled'
   | 'nudgeSelectionLeft'

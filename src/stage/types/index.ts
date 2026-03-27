@@ -3,8 +3,8 @@ import type {
 	NodeId,
 	ViewportMeasurement,
 } from "../../model/types";
-import type { SnapSettings } from "../../editor/types";
-export type { SnapSettings };
+import type { AnimationPreviewState, SnapSettings } from "../../editor/types";
+export type { AnimationPreviewState, SnapSettings };
 import type {
 	RenderLeafPlanNode,
 	RenderMeasuredNodeSizes,
@@ -20,6 +20,7 @@ export type StageProps = {
 	selectedId: NodeId | null;
 	selectedIds?: NodeId[];
 	previewSticky: boolean;
+	animationPreview?: AnimationPreviewState;
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;
 	snapSettings: SnapSettings;
@@ -170,6 +171,7 @@ export type StageSceneProps = {
 		height: number;
 	} | null;
 	previewSticky: boolean;
+	animationPreview?: AnimationPreviewState;
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;
 	onResizeStart: (id: NodeId) => void;
@@ -202,4 +204,5 @@ export type RenderWrapperArgs = {
 	selfRegistration?: StageStickyRegistration;
 	ownerWrapper?: StageMathWrapperNode;
 	ownerBottomLanePx?: number;
+	interactKeys?: Set<NodeId>;
 };

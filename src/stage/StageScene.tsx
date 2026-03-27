@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { buildDocumentDefaultFontStack } from '../fonts/defaults';
 import { buildRenderRootPlan } from '../render/renderPlan';
+import { collectInteractKeys } from '../site/siteShared';
 import type { StageSceneProps } from './types';
 export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
 
@@ -14,6 +15,7 @@ export const StageScene = memo(function StageScene({
   singleSelectionOverlay = null,
   multiSelectionBounds = null,
   previewSticky,
+  animationPreview,
   spacerVisibility,
   showGridLanes,
   dragSourceIds,
@@ -28,6 +30,11 @@ export const StageScene = memo(function StageScene({
   const plan = useMemo(
     () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport),
     [document, previewSticky, measuredNodeSizes, viewport],
+  );
+
+  const interactKeys = useMemo(
+    () => (animationPreview?.enabled ? collectInteractKeys(document) : new Set<string>()),
+    [document, animationPreview?.enabled],
   );
 
   return (
@@ -52,6 +59,7 @@ export const StageScene = memo(function StageScene({
                 selfRegistration: plan.header.registrationMap.get(plan.header.node.id),
                 ownerWrapper: undefined,
                 ownerBottomLanePx: plan.header.meshLayout.bottomLanePx,
+                interactKeys,
               })
             : <EmptySlot label="Header slot" />}
           <main className="site-main">
@@ -74,6 +82,7 @@ export const StageScene = memo(function StageScene({
                 selfRegistration: wrapper.registrationMap.get(wrapper.node.id),
                 ownerWrapper: undefined,
                 ownerBottomLanePx: wrapper.meshLayout.bottomLanePx,
+                interactKeys,
               }),
             )}
           </main>
@@ -96,6 +105,7 @@ export const StageScene = memo(function StageScene({
                 selfRegistration: plan.footer.registrationMap.get(plan.footer.node.id),
                 ownerWrapper: undefined,
                 ownerBottomLanePx: plan.footer.meshLayout.bottomLanePx,
+                interactKeys,
               })
             : <EmptySlot label="Footer slot" />}
         </div>
@@ -115,6 +125,7 @@ export const StageScene = memo(function StageScene({
   prev.singleSelectionOverlay === next.singleSelectionOverlay &&
   prev.multiSelectionBounds === next.multiSelectionBounds &&
   prev.previewSticky === next.previewSticky &&
+  prev.animationPreview === next.animationPreview &&
   prev.spacerVisibility === next.spacerVisibility &&
   prev.showGridLanes === next.showGridLanes &&
   prev.dragSourceIds === next.dragSourceIds &&

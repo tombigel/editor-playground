@@ -1,16 +1,33 @@
 import type { ReactElement } from 'react';
+import type { NodeId } from '../model/types';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
 import { getNodeTextContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
 import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
-import { SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
+import { collectInteractKeys, SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
 import type { SiteRendererProps } from './types';
 
 export type { SiteRendererProps } from './types';
 
-export function SiteRenderer({ document, previewSticky = true }: SiteRendererProps) {
+// Module-level set populated per render pass — avoids threading through every function
+let activeInteractKeys: Set<NodeId> = new Set();
+
+/** Wraps a rendered element in <interact-element> if the node has animations. */
+function wrapInteract(nodeId: NodeId, element: ReactElement): ReactElement {
+  if (activeInteractKeys.has(nodeId)) {
+    return (
+      <interact-element key={`interact-${nodeId}`} data-interact-key={nodeId}>
+        {element}
+      </interact-element>
+    );
+  }
+  return element;
+}
+
+export function SiteRenderer({ document, previewSticky = true, includeAnimations = true }: SiteRendererProps) {
   const plan = buildRenderRootPlan(document, previewSticky);
+  activeInteractKeys = includeAnimations ? collectInteractKeys(document) : new Set();
 
   return (
     <div className={SITE_ROOT_CLASS}>
@@ -73,7 +90,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
         {trackSpacers.before.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-before`} className={descriptor.className} aria-hidden="true" />
         ))}
-        {wrapper}
+        {wrapInteract(plan.node.id, wrapper)}
         {trackSpacers.after.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-after`} className={descriptor.className} aria-hidden="true" />
         ))}
@@ -81,7 +98,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
     );
   }
 
-  return wrapper;
+  return wrapInteract(plan.node.id, wrapper);
 }
 
 function renderLeafPlan(plan: RenderLeafPlanNode) {
@@ -144,7 +161,7 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
         {trackSpacers.before.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-before`} className={descriptor.className} aria-hidden="true" />
         ))}
-        {leaf}
+        {wrapInteract(plan.node.id, leaf)}
         {trackSpacers.after.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-after`} className={descriptor.className} aria-hidden="true" />
         ))}
@@ -152,5 +169,5 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
     );
   }
 
-  return leaf;
+  return wrapInteract(plan.node.id, leaf);
 }

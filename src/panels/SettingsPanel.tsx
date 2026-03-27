@@ -11,6 +11,7 @@ import {
 	Keyboard,
 	Settings,
 	SlidersHorizontal,
+	Play,
 	SwatchBook,
 	Type,
 } from "lucide-react";
@@ -74,6 +75,8 @@ type Props = {
 	stickyLayout: StickyLayoutState;
 	selectedNode: DocumentNode | null;
 	previewSticky: boolean;
+	animationPreview: import('../editor/types').AnimationPreviewState;
+	onAnimationPreviewChange: (value: Partial<import('../editor/types').AnimationPreviewState>) => void;
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;
 	snapSettings: import('../editor/types').SnapSettings;
@@ -158,6 +161,8 @@ export function SettingsPanel({
 	stickyLayout,
 	selectedNode,
 	previewSticky,
+	animationPreview,
+	onAnimationPreviewChange,
 	spacerVisibility,
 	showGridLanes,
 	snapSettings,
@@ -438,6 +443,13 @@ export function SettingsPanel({
 									description="Applies CSS sticky behavior in preview."
 									checked={previewSticky}
 									onCheckedChange={onPreviewStickyChange}
+								/>
+								<SettingRow
+									icon={Play}
+									title="Animation preview"
+									description="Runs animations live in the editor stage."
+									checked={animationPreview.enabled}
+									onCheckedChange={(value) => onAnimationPreviewChange({ enabled: value })}
 								/>
 								<SettingRow
 									icon={ArrowDownToLine}

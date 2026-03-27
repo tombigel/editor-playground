@@ -7,7 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type Ref,
 } from 'react';
-import { CircleQuestionMark, Eye, Magnet, Redo2, Settings, Type, Undo2 } from 'lucide-react';
+import { CircleQuestionMark, Eye, Magnet, Play, Redo2, Settings, Type, Undo2 } from 'lucide-react';
 import type {
   DocumentNode,
   EditorState,
@@ -384,6 +384,13 @@ export function AppShell({
                     onClick={() => dispatch({ type: 'setPreviewSticky', value: !state.ui.previewSticky })}
                   />
                   <RailToggleButton
+                    icon={Play}
+                    pressed={state.ui.animationPreview.enabled}
+                    label={state.ui.animationPreview.enabled ? 'Animation preview on' : 'Animation preview off'}
+                    shortcut={getShortcutLabel('toggleAnimationPreview', shortcutPlatform)}
+                    onClick={() => dispatch({ type: 'setAnimationPreview', value: { enabled: !state.ui.animationPreview.enabled } })}
+                  />
+                  <RailToggleButton
                     icon={SpacerIcon}
                     pressed={state.ui.spacerVisibility === 'all'}
                     label={state.ui.spacerVisibility === 'all' ? 'Show all spacers' : 'Show selected spacers'}
@@ -424,6 +431,7 @@ export function AppShell({
               selectedId={state.selectedId}
               selectedIds={state.selectedIds}
               previewSticky={state.ui.previewSticky}
+              animationPreview={state.ui.animationPreview}
               spacerVisibility={state.ui.spacerVisibility}
               showGridLanes={state.ui.showGridLanes}
               snapSettings={state.ui.snapSettings}
@@ -616,6 +624,8 @@ export function AppShell({
             onRemoveFont={handleRemoveDocumentFont}
             onToggleFontFavorite={handleToggleDocumentFontFavorite}
             onPurgeUnusedFonts={handlePurgeUnusedFonts}
+            animationPreview={state.ui.animationPreview}
+            onAnimationPreviewChange={(value) => dispatch({ type: 'setAnimationPreview', value })}
             onPreviewStickyChange={(value) => dispatch({ type: 'setPreviewSticky', value })}
             onSpacerVisibilityChange={(value) => dispatch({ type: 'setSpacerVisibility', value })}
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}

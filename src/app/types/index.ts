@@ -8,9 +8,9 @@ import type {
   StickyDefinition,
   WrapperStyleField,
 } from '../../model/types';
-import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings } from '../../editor/types';
+import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
 
-export type { SnapSettings };
+export type { SnapSettings, AnimationPreviewState };
 
 export type NodePatch = {
   id: NodeId;
@@ -106,6 +106,7 @@ export type EditorAction =
   | { type: 'nudgeSelection'; deltaX: number; deltaY: number }
   | { type: 'importDocument'; document: DocumentModel }
   | { type: 'setPreviewSticky'; value: boolean }
+  | { type: 'setAnimationPreview'; value: Partial<AnimationPreviewState> }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
   | { type: 'setShowGridLanes'; value: boolean }
   | { type: 'setSnapSettings'; value: Partial<SnapSettings> }
@@ -145,6 +146,7 @@ export type HistoryState = {
 
 export type ShortcutUiState = {
   previewSticky: boolean;
+  animationPreview: AnimationPreviewState;
   spacerVisibility: 'selected' | 'all';
   snapSettings: SnapSettings;
 };
@@ -156,6 +158,7 @@ export type ShortcutExecutionHandlers = {
   toggleSettings: () => void;
   openShortcutHelp: () => void;
   setPreviewSticky: (value: boolean) => void;
+  setAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
   setSpacerVisibility: (value: 'selected' | 'all') => void;
   setSnapSettings: (value: Partial<SnapSettings>) => void;
   nudgeSelection: (deltaX: number, deltaY: number) => void;
