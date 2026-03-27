@@ -42,8 +42,6 @@ export function useAppRuntime(state: EditorState, resolvedTheme: 'light' | 'dark
   useApplyEditorTheme(
     resolvedTheme,
     state.ui.accentColor,
-    state.ui.paperAccentColor,
-    state.ui.monokaiAccentColor,
     state.ui.lightTheme,
     state.ui.darkTheme,
   );

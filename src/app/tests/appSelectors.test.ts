@@ -23,8 +23,6 @@ function createState(): EditorState {
       snapSettings: DEFAULT_SNAP_SETTINGS,
       themeMode: 'auto',
       accentColor: '#1668ff',
-      paperAccentColor: '#a36a2c',
-      monokaiAccentColor: '#ff6188',
       lightTheme: 'air',
       darkTheme: 'monokai',
       focusedMode: null,

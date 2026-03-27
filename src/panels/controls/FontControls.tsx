@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PopoverSurface } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ValueWithUnit, type ValueWithUnitOption, type ValueWithUnitSuggestion } from '@/components/ui/value-with-unit';
 import { cn } from '@/lib/utils';
 
 import type { OrderedFontFamilyGroups } from '../inspector/fontPickerHelpers';
@@ -434,7 +435,7 @@ export const FontPickerPopover = memo(function FontPickerPopover({
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 w-full justify-between overflow-hidden rounded-sm px-2 text-[13px]"
+        className="editor-font-picker-trigger h-8 w-full justify-between overflow-hidden rounded-sm px-2 text-[13px]"
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -450,7 +451,7 @@ export const FontPickerPopover = memo(function FontPickerPopover({
         className="fixed inset-0 m-0 overflow-visible border-0 bg-transparent p-0 shadow-none outline-none pointer-events-none"
       >
         <div
-          className="editor-bg-surface editor-border-subtle pointer-events-auto fixed z-40 grid w-[352px] grid-cols-[minmax(0,1fr)_140px] overflow-hidden rounded-md border shadow-md"
+          className="editor-bg-surface editor-border-subtle pointer-events-auto fixed z-40 grid w-[352px] grid-cols-[minmax(0,1fr)_140px] overflow-hidden rounded-sm border shadow-md"
           style={popoverStyle}
         >
           <div className="editor-scrollbar max-h-[18rem] overflow-auto p-1">
@@ -562,151 +563,71 @@ export function FontSizeField({
   value,
   onChange,
   mixed = false,
+  mixedUnit = mixed,
   defaultSuggestionsOpen = false,
 }: {
   nodeId: string;
   value: string;
   onChange: (value: string) => void;
   mixed?: boolean;
+  mixedUnit?: boolean;
   defaultSuggestionsOpen?: boolean;
 }) {
   const parsed = parseFontSizeValue(value);
-  const fontSizeSuffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
   const [draft, setDraft] = useState(mixed ? '' : String(parsed.parsed.value));
   const [invalid, setInvalid] = useState(false);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(defaultSuggestionsOpen);
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const options: ValueWithUnitOption[] = FONT_SIZE_UNIT_OPTIONS.map((option) => ({
+    type: 'option',
+    value: option,
+    label: option,
+    inputMode: 'numeric',
+  }));
+  const suggestions: ValueWithUnitSuggestion[] = FONT_SIZE_SUGGESTIONS_BY_UNIT[parsed.parsed.unit].map((option) => ({
+    value: formatFieldNumber(option),
+    label: `${formatFieldNumber(option)}${parsed.parsed.unit}`,
+  }));
 
   useEffect(() => {
     setDraft(mixed ? '' : String(parsed.parsed.value));
     setInvalid(false);
   }, [mixed, parsed.parsed.value]);
 
-  useEffect(() => {
-    if (!suggestionsOpen) {
-      return;
-    }
-
-    function handlePointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setSuggestionsOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setSuggestionsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [suggestionsOpen]);
-
-  const suggestions = FONT_SIZE_SUGGESTIONS_BY_UNIT[parsed.parsed.unit].map((option) => ({
-    value: option,
-    label: `${formatFieldNumber(option)}${parsed.parsed.unit}`,
-  }));
-
   return (
-    <div ref={rootRef} className="relative">
-      <div
-        className={`editor-inline-field group/sizefield relative flex h-8 min-w-0 flex-1 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${
-          invalid ? 'editor-inline-field-invalid focus-within:border-red-400' : 'focus-within:border-[color:var(--editor-accent)]'
-        }`}
-      >
-        <Input
-          type="number"
-          min={1}
-          step="any"
-          value={draft}
-          placeholder={mixed ? '-' : undefined}
-          onBlur={() => {
-            setDraft(mixed ? '' : String(parsed.parsed.value));
-            setInvalid(false);
-          }}
-          onFocus={() => setSuggestionsOpen(true)}
-          onChange={(e) => {
-            const nextDraft = e.target.value;
-            setDraft(nextDraft);
-            const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);
-            setInvalid(!validation.isValid);
-            if (validation.nextValue != null) {
-              onChange(`${validation.nextValue}${parsed.parsed.unit}`);
-            }
-          }}
-          className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent pr-5 text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-          style={{ right: fontSizeSuffixWidth }}
-        />
-        <div
-          className="pointer-events-none absolute inset-y-0 flex items-center text-zinc-500"
-          style={{ right: `calc(${fontSizeSuffixWidth} + 4px)` }}
-        >
-          <ChevronDown className="h-3 w-3" />
-        </div>
-        <Select
-          value={parsed.parsed.unit}
-          onValueChange={(nextUnit) => {
-            const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
-            if (converted == null) {
-              return;
-            }
-            onChange(`${converted}${nextUnit as FontSizeMode}`);
-          }}
-        >
-          <SelectTrigger
-            className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
-            style={{ width: fontSizeSuffixWidth }}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FONT_SIZE_UNIT_OPTIONS.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div
-          className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
-          style={{ width: fontSizeSuffixWidth }}
-        >
-          <ChevronDown className="editor-text-strong h-3 w-3" />
-        </div>
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-          style={{ width: fontSizeSuffixWidth }}
-        />
-      </div>
-      {suggestionsOpen ? (
-        <div className="editor-bg-surface editor-border-subtle editor-scrollbar absolute left-0 top-[calc(100%+4px)] z-30 max-h-[220px] min-w-full overflow-y-auto rounded-md border p-1 shadow-md">
-          {suggestions.map((option) => (
-            <button
-              key={option.label}
-              type="button"
-              className="editor-text-strong flex w-full items-center justify-between rounded-sm bg-transparent px-2 py-2 text-[11px] leading-5 hover:[background:var(--editor-select-highlight-background)] focus-visible:[background:var(--editor-select-highlight-background)]"
-              onClick={() => {
-                const formatted = formatFieldNumber(option.value);
-                setDraft(formatted);
-                setInvalid(false);
-                setSuggestionsOpen(false);
-                onChange(`${formatted}${parsed.parsed.unit}`);
-              }}
-            >
-              <span>{option.label}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
+    <ValueWithUnit
+      mode="number-select"
+      value={value}
+      onChange={onChange}
+      options={options}
+      inputValue={draft}
+      selectedOption={parsed.parsed.unit}
+      min={1}
+      step="any"
+      mixed={mixed}
+      mixedSegment={mixedUnit}
+      invalid={invalid}
+      segmentWidth={COMPACT_UNIT_SUFFIX_WIDTH}
+      suggestions={suggestions}
+      defaultSuggestionsOpen={defaultSuggestionsOpen}
+      onInputBlur={() => {
+        setDraft(mixed ? '' : String(parsed.parsed.value));
+        setInvalid(false);
+      }}
+      onInputValueChange={(nextDraft) => {
+        setDraft(nextDraft);
+        const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);
+        setInvalid(!validation.isValid);
+        if (validation.nextValue != null) {
+          onChange(`${validation.nextValue}${parsed.parsed.unit}`);
+        }
+      }}
+      onResolveOptionValue={(nextUnit) => {
+        const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
+        if (converted == null) {
+          return null;
+        }
+        return `${converted}${nextUnit as FontSizeMode}`;
+      }}
+    />
   );
 }
 
@@ -741,11 +662,7 @@ export function SpacingField({
             onChange(`${next}${parsed.parsed.unit}`);
           }
         }}
-        className="editor-inline-field-value peer/valueinput h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[11px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-        style={{ right: suffixWidth }}
+        className="editor-inline-field-value h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[12px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <Select
         value={parsed.parsed.unit}
@@ -758,7 +675,7 @@ export function SpacingField({
         }}
       >
         <SelectTrigger
-          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
+          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
           style={{ width: suffixWidth }}
         >
           <SelectValue />
@@ -777,10 +694,6 @@ export function SpacingField({
       >
         <ChevronDown className="editor-text-strong h-3 w-3" />
       </div>
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-        style={{ width: suffixWidth }}
-      />
     </div>
   );
 }

@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { parseUnitValue } from '../api/documentApi';
 import type { DocumentModel, DocumentNode } from '../api/editorApi';
 import {
   BOLD_FONT_WEIGHT,
@@ -113,7 +114,9 @@ export function MultiSelectInspector({
   const canAlign = canAlignSelection(selectedNodes);
   const canDistribute = canAlign && selectedNodes.length >= 3;
 
-  const fontSizeState = resolveSharedString(textNodes.map((node) => node.style?.fontSize?.raw ?? '18px'));
+  const fontSizeValues = textNodes.map((node) => node.style?.fontSize?.raw ?? '18px');
+  const fontSizeState = resolveSharedString(fontSizeValues);
+  const fontSizeUnitState = resolveSharedParsedUnit(fontSizeValues);
   const lineHeightState = resolveSharedNumber(textNodes.map((node) => node.style?.lineHeight ?? 1.4));
   const fontFamilyState = resolveSharedString(textNodes.map((node) => node.style?.fontFamily ?? SYSTEM_FONT_VALUE));
   const fontWeightState = resolveSharedNumber(textNodes.map((node) => node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT));
@@ -134,17 +137,17 @@ export function MultiSelectInspector({
       return [];
     }),
   );
-  const radiusState = resolveSharedString(
-    selectedNodes.flatMap((node) => {
-      if (node.type === 'wrapper' && node.role === 'container') {
-        return [node.style.borderRadius?.raw ?? ''];
-      }
-      if (node.type === 'leaf' && (node.role === 'button' || node.role === 'image')) {
-        return [node.style?.borderRadius?.raw ?? ''];
-      }
-      return [];
-    }),
-  );
+  const radiusValues = selectedNodes.flatMap((node) => {
+    if (node.type === 'wrapper' && node.role === 'container') {
+      return [node.style.borderRadius?.raw ?? ''];
+    }
+    if (node.type === 'leaf' && (node.role === 'button' || node.role === 'image')) {
+      return [node.style?.borderRadius?.raw ?? ''];
+    }
+    return [];
+  });
+  const radiusState = resolveSharedString(radiusValues);
+  const radiusUnitState = resolveSharedParsedUnit(radiusValues);
   const boxShadowState = resolveSharedShadow(
     selectedNodes.flatMap((node) => {
       if (node.type === 'wrapper' && node.role === 'container') {
@@ -312,6 +315,7 @@ export function MultiSelectInspector({
                       value={fontSizeState.value}
                       onChange={(value) => actions.onTextChange('fontSize', value)}
                       mixed={fontSizeState.mixed}
+                      mixedUnit={fontSizeUnitState.mixed}
                     />
                   </div>
                   <div className="shrink-0" style={{ width: `${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
@@ -455,6 +459,7 @@ export function MultiSelectInspector({
                       }
                       placeholder={radiusState.mixed ? '-' : '16'}
                       mixed={radiusState.mixed}
+                      mixedUnit={radiusUnitState.mixed}
                       min={0}
                     />
                   </InspectorInlineRow>
@@ -509,6 +514,21 @@ function isMovableAlignmentNode(node: DocumentNode) {
   return node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
 }
 
+function resolveSharedParsedUnit(values: string[]) {
+  const parsedUnits = values.map((value) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+    try {
+      return parseUnitValue(trimmed).parsed.unit;
+    } catch {
+      return '';
+    }
+  });
+
+  return resolveSharedString(parsedUnits);
+}
 
 function resolveSharedShadow(styles: Array<ShadowStyle | undefined>) {
   const values = styles.map((style) =>

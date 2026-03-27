@@ -15,20 +15,11 @@ export { useSystemThemePreference } from "@/lib/useSystemThemePreference";
 export function useApplyEditorTheme(
 	resolvedTheme: ResolvedTheme,
 	accentColor: string,
-	paperAccentColor: string,
-	monokaiAccentColor: string,
 	lightTheme: EditorLightTheme,
 	darkTheme: EditorDarkTheme,
 ) {
 	useEffect(() => {
-		const resolvedAccent = resolveEditorAccentColor(
-			accentColor,
-			paperAccentColor,
-			monokaiAccentColor,
-			resolvedTheme,
-			lightTheme,
-			darkTheme,
-		);
+		const resolvedAccent = resolveEditorAccentColor(accentColor);
 		const stickyGuideColors = resolveStickyGuideColors(resolvedAccent);
 		const accentSurfaceColors = resolveAccentSurfaceColors(
 			resolvedAccent,
@@ -186,8 +177,6 @@ export function useApplyEditorTheme(
 		accentColor,
 		darkTheme,
 		lightTheme,
-		monokaiAccentColor,
-		paperAccentColor,
 		resolvedTheme,
 	]);
 }

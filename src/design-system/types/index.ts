@@ -12,8 +12,6 @@ export type ThemeConfig = {
 	lightTheme: EditorLightTheme;
 	darkTheme: EditorDarkTheme;
 	accentColor: string;
-	paperAccentColor: string;
-	monokaiAccentColor: string;
 };
 
 export type ResolvedThemeConfig = ThemeConfig & {

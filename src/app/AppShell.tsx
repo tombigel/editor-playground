@@ -41,6 +41,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PopoverSurface } from '@/components/ui/popover';
 import { getShortcutLabel, type ShortcutPlatform } from '@/lib/shortcuts';
 import {
+  getAccentColorForDarkThemeSelection,
+  getAccentColorForLightThemeSelection,
   resolveAccentSurfaceColors,
   resolveEditorAccentColor,
   resolveStickyGuideColors,
@@ -152,22 +154,9 @@ export function AppShell({
     : `${INSPECTOR_EXPANDED_WIDTH_PX}px`;
   const focusedPanelRightOffsetPx = INSPECTOR_COLLAPSED_WIDTH_PX + FOCUSED_PANEL_RIGHT_OFFSET_PX;
   const sidebarTransitionTiming = isSidebarCollapsed ? 'ease-in' : 'ease-out';
-  const resolvedAccent = resolveEditorAccentColor(
-    state.ui.accentColor,
-    state.ui.paperAccentColor,
-    state.ui.monokaiAccentColor,
-    resolvedTheme,
-    state.ui.lightTheme,
-    state.ui.darkTheme,
-  );
+  const resolvedAccent = resolveEditorAccentColor(state.ui.accentColor);
   const stickyGuideColors = resolveStickyGuideColors(resolvedAccent);
   const accentSurfaceColors = resolveAccentSurfaceColors(resolvedAccent, stickyGuideColors);
-  const activeAccentColor =
-    resolvedTheme === 'light' && state.ui.lightTheme === 'paper'
-      ? state.ui.paperAccentColor
-      : resolvedTheme === 'dark' && state.ui.darkTheme === 'monokai'
-        ? state.ui.monokaiAccentColor
-        : state.ui.accentColor;
 
   useEffect(() => {
     focusedPanelOffsetDraftRef.current = focusedPanelOffsetDraft;
@@ -614,7 +603,7 @@ export function AppShell({
             showGridLanes={state.ui.showGridLanes}
             snapSettings={state.ui.snapSettings}
             themeMode={state.ui.themeMode}
-            accentColor={activeAccentColor}
+            accentColor={resolvedAccent}
             lightTheme={state.ui.lightTheme}
             darkTheme={state.ui.darkTheme}
             startupFocusedMode={state.ui.startupFocusedMode}
@@ -632,17 +621,25 @@ export function AppShell({
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
             onSnapSettingsChange={(value) => dispatch({ type: 'setSnapSettings', value })}
             onThemeModeChange={(value) => dispatch({ type: 'setThemeMode', value })}
-            onAccentColorChange={(value) =>
-              dispatch(
-                resolvedTheme === 'light' && state.ui.lightTheme === 'paper'
-                  ? { type: 'setPaperAccentColor', value }
-                  : resolvedTheme === 'dark' && state.ui.darkTheme === 'monokai'
-                    ? { type: 'setMonokaiAccentColor', value }
-                    : { type: 'setAccentColor', value },
-              )
-            }
-            onLightThemeChange={(value) => dispatch({ type: 'setLightTheme', value })}
-            onDarkThemeChange={(value) => dispatch({ type: 'setDarkTheme', value })}
+            onAccentColorChange={(value) => dispatch({ type: 'setAccentColor', value })}
+            onLightThemeChange={(value) => {
+              dispatch({ type: 'setLightTheme', value });
+              if (value === 'paper') {
+                dispatch({
+                  type: 'setAccentColor',
+                  value: getAccentColorForLightThemeSelection(value, state.ui.accentColor),
+                });
+              }
+            }}
+            onDarkThemeChange={(value) => {
+              dispatch({ type: 'setDarkTheme', value });
+              if (value === 'monokai') {
+                dispatch({
+                  type: 'setAccentColor',
+                  value: getAccentColorForDarkThemeSelection(value, state.ui.accentColor),
+                });
+              }
+            }}
             onStartupFocusedModeChange={(value) => dispatch({ type: 'setStartupFocusedMode', value })}
             onClearHistory={() => dispatch({ type: 'clearHistory' })}
             onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}

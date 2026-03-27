@@ -25,7 +25,7 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "base-icon-button", label: "Icon Button" },
 			{ id: "base-label", label: "Label" },
 			{ id: "base-number-field", label: "Number Field" },
-			{ id: "base-number-unit", label: "Number with Unit" },
+			{ id: "base-number-unit", label: "ValueWithUnit" },
 			{ id: "base-input", label: "Text Input" },
 			{ id: "base-switch", label: "Toggle (Switch)" },
 			{ id: "base-slider", label: "Slider" },

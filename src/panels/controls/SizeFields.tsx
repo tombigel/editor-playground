@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
 import type { SizeFieldAxis, SizeFieldMode } from '../inspector/stageConversions';
 import {
   buildSizeFieldValue,
@@ -20,36 +21,69 @@ import {
 import { COMPACT_UNIT_SUFFIX_WIDTH, COMPACT_UNIT_ICON_SUFFIX_WIDTH } from './NumberFields';
 
 // ---------------------------------------------------------------------------
-// renderSizeModeOptions (internal)
+// size mode options (internal)
 // ---------------------------------------------------------------------------
+
+function buildSizeModeFieldOptions(
+  axis: SizeFieldAxis,
+  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+): ValueWithUnitOption[] {
+  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis, { isSectionHeight });
+  const hasKeywords = Boolean(keywords?.length);
+  const hasViewportUnits = viewportUnits.length > 0;
+  const options: ValueWithUnitOption[] = [];
+
+  options.push(
+    ...scalarUnits.map((option) => ({
+      type: 'option' as const,
+      value: option,
+      label: option,
+      inputMode: 'numeric' as const,
+    })),
+  );
+
+  if (hasKeywords) {
+    options.push({ type: 'separator', id: `${axis}-keywords` });
+    options.push(
+      ...(keywords ?? []).map((option) => ({
+        type: 'option' as const,
+        value: option,
+        label: option === 'aspect-ratio' ? 'Aspect ratio' : option,
+        inputMode: 'keyword' as const,
+      })),
+    );
+  }
+
+  if (hasViewportUnits) {
+    options.push({ type: 'separator', id: `${axis}-viewport` });
+    options.push(
+      ...viewportUnits.map((option) => ({
+        type: 'option' as const,
+        value: option,
+        label: option,
+        inputMode: 'numeric' as const,
+      })),
+    );
+  }
+
+  return options;
+}
 
 function renderSizeModeOptions(
   axis: SizeFieldAxis,
   { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
 ) {
-  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis, { isSectionHeight });
-  const hasKeywords = Boolean(keywords?.length);
-  const hasViewportUnits = viewportUnits.length > 0;
-
   return (
     <>
-      {scalarUnits.map((option) => (
-        <SelectItem key={`${axis}-${option}`} value={option}>
-          {option}
-        </SelectItem>
-      ))}
-      {hasKeywords ? <SelectSeparator /> : null}
-      {keywords?.map((option) => (
-        <SelectItem key={`${axis}-${option}`} value={option}>
-          {option}
-        </SelectItem>
-      ))}
-      {hasViewportUnits ? <SelectSeparator /> : null}
-      {viewportUnits.map((option) => (
-        <SelectItem key={`${axis}-${option}`} value={option}>
-          {option}
-        </SelectItem>
-      ))}
+      {buildSizeModeFieldOptions(axis, { isSectionHeight }).map((option) =>
+        option.type === 'separator' ? (
+          <SelectSeparator key={option.id} />
+        ) : (
+          <SelectItem key={`${axis}-${option.value}`} value={option.value} disabled={option.disabled}>
+            {option.label}
+          </SelectItem>
+        ),
+      )}
     </>
   );
 }
@@ -97,14 +131,13 @@ export const SizeInlineField = memo(function SizeInlineField({
   const descriptor = describeSizeFieldValue(value, axis);
   const showNumericInput = isNumericSizeFieldMode(mode);
   const showAspectInput = mode === 'aspect-ratio';
-  const showKeywordTriggerOnly = !showNumericInput && !showAspectInput;
   const hasStaticNumericUnitSuffix = showNumericInput && modeOptions.selectableModes.length === 1;
   const suffixWidth = showAspectInput ? COMPACT_UNIT_ICON_SUFFIX_WIDTH : COMPACT_UNIT_SUFFIX_WIDTH;
-  const usesIconSuffix = mode === 'aspect-ratio';
   const numericMin = axis === 'width' || axis === 'height' ? 0 : undefined;
   const shellClass = invalid
     ? 'editor-inline-field editor-inline-field-invalid focus-within:border-red-400'
     : 'editor-inline-field focus-within:border-[color:var(--editor-accent)]';
+  const fieldOptions = buildSizeModeFieldOptions(axis, { isSectionHeight });
 
   function commitDraft(nextMode: SizeFieldMode, nextInput?: string) {
     const candidateInput = nextInput ?? (nextMode === 'aspect-ratio' ? aspectDraft : numericDraft);
@@ -154,111 +187,122 @@ export const SizeInlineField = memo(function SizeInlineField({
     }
   }
 
+  function resolveValueWithUnitModeChange(nextMode: string) {
+    const resolvedMode = nextMode as SizeFieldMode;
+
+    if (resolvedMode === 'aspect-ratio') {
+      const nextAspect = descriptor.kind === 'aspect-ratio' ? descriptor.input : aspectDraft || '16/9';
+      setAspectDraft(nextAspect);
+      const nextRaw = buildSizeFieldValue(axis, resolvedMode, nextAspect, { isSectionHeight });
+      if (!nextRaw) {
+        setInvalid(true);
+        return null;
+      }
+      setMode(resolvedMode);
+      setInvalid(false);
+      return nextRaw;
+    }
+
+    if (
+      resolvedMode === 'auto' ||
+      resolvedMode === 'fit-content' ||
+      resolvedMode === 'min-content' ||
+      resolvedMode === 'max-content'
+    ) {
+      const nextRaw = buildSizeFieldValue(axis, resolvedMode, '', { isSectionHeight });
+      if (!nextRaw) {
+        setInvalid(true);
+        return null;
+      }
+      setMode(resolvedMode);
+      setInvalid(false);
+      return nextRaw;
+    }
+
+    const convertedNumeric = convertStageMeasurementToInput(nodeId, axis, resolvedMode);
+    if (convertedNumeric == null) {
+      return null;
+    }
+    const nextRaw = buildSizeFieldValue(axis, resolvedMode, convertedNumeric, { isSectionHeight });
+    if (!nextRaw) {
+      setInvalid(true);
+      return null;
+    }
+    setNumericDraft(convertedNumeric);
+    setMode(resolvedMode);
+    setInvalid(false);
+    return nextRaw;
+  }
+
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <Label htmlFor={fieldId} className="text-[11px] font-medium">{label}</Label>
-      {showKeywordTriggerOnly ? (
+      <Label htmlFor={fieldId} className="text-[12px] font-medium">{label}</Label>
+      {showAspectInput ? (
         <div
           className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
-          <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
-          <SelectTrigger className="peer/keywordtrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left text-[10px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>{renderSizeModeOptions(axis, { isSectionHeight })}</SelectContent>
-          </Select>
-          <div
-            className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/keywordtrigger:opacity-100 peer-data-[state=open]/keywordtrigger:opacity-100 peer-disabled/keywordtrigger:opacity-0"
-            style={{ width: `${COMPACT_UNIT_SUFFIX_WIDTH}px` }}
-          >
-            <ChevronDown className="editor-text-strong h-3 w-3" />
-          </div>
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/keywordtrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-            style={{ width: `${COMPACT_UNIT_SUFFIX_WIDTH}px` }}
-          />
-        </div>
-      ) : (
-        <div
-          className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
-        >
-          {showNumericInput ? (
-            <Input
-              id={fieldId}
-              type="number"
-              step="any"
-              min={numericMin}
-              value={numericDraft}
-              onChange={(e) => {
-                const next = e.target.value;
-                setNumericDraft(next);
-                const nextRaw = buildSizeFieldValue(axis, mode, next, { isSectionHeight });
-                setInvalid(!nextRaw);
-                if (nextRaw && !disabled) {
-                  onChange(nextRaw);
-                }
-              }}
-              disabled={disabled}
-              className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none [appearance:textfield] [padding-inline-end:0] focus-visible:border-0 focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-          ) : (
-            <Input
-              id={fieldId}
-              value={aspectDraft}
-              onChange={(e) => {
-                const next = e.target.value;
-                setAspectDraft(next);
-                const nextRaw = buildSizeFieldValue(axis, 'aspect-ratio', next);
-                setInvalid(!nextRaw);
-                if (nextRaw && !disabled) {
-                  onChange(nextRaw);
-                }
-              }}
-              disabled={disabled}
-              className="editor-inline-field-value peer/valueinput h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[11px] shadow-none focus-visible:border-0 focus-visible:ring-0"
-            />
-          )}
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-20 rounded-l-sm shadow-none transition-[box-shadow] peer-focus-visible/valueinput:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-            style={{ right: `${suffixWidth}px` }}
+          <Input
+            id={fieldId}
+            value={aspectDraft}
+            onChange={(e) => {
+              const next = e.target.value;
+              setAspectDraft(next);
+              const nextRaw = buildSizeFieldValue(axis, 'aspect-ratio', next);
+              setInvalid(!nextRaw);
+              if (nextRaw && !disabled) {
+                onChange(nextRaw);
+              }
+            }}
+            disabled={disabled}
+            className="editor-inline-field-value h-full flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-3 text-[12px] shadow-none focus-visible:border-0 focus-visible:ring-0"
           />
           <div className="group/unitsuffix relative shrink-0" style={{ width: `${suffixWidth}px`, minWidth: `${suffixWidth}px` }}>
-            {hasStaticNumericUnitSuffix ? (
-              <div
-                className="editor-inline-field-trigger editor-inline-field-trigger-static pointer-events-none relative z-10 flex h-full w-full items-center justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center text-[10px] font-medium tracking-[-0.01em] shadow-none"
+            <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
+              <SelectTrigger
+                className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full w-full justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60"
               >
-                {mode}
-              </div>
-            ) : (
-              <>
-                <Select value={mode} onValueChange={handleModeChange} disabled={disabled}>
-                  <SelectTrigger
-                    className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full w-full justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[10px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60"
-                  >
-                    {usesIconSuffix ? (
-                      <span className="flex w-full items-center justify-center">
-                        <Proportions className="h-3.5 w-3.5" />
-                      </span>
-                    ) : (
-                      <SelectValue />
-                    )}
-                  </SelectTrigger>
-                  <SelectContent>{renderSizeModeOptions(axis, { isSectionHeight })}</SelectContent>
-                </Select>
-                <div
-                  className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
-                  style={{ width: `${suffixWidth}px` }}
-                >
-                  <ChevronDown className="editor-text-strong h-3 w-3" />
-                </div>
-                <div
-                  className="pointer-events-none absolute inset-y-0 right-0 z-20 rounded-r-sm shadow-none transition-[box-shadow] peer-focus-visible/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)] peer-data-[state=open]/unittrigger:shadow-[inset_0_0_0_2px_rgba(59,130,246,0.4)]"
-                  style={{ width: `${suffixWidth}px` }}
-                />
-              </>
-            )}
+                <span className="flex w-full items-center justify-center">
+                  <Proportions className="h-3.5 w-3.5" />
+                </span>
+              </SelectTrigger>
+              <SelectContent>{renderSizeModeOptions(axis, { isSectionHeight })}</SelectContent>
+            </Select>
+            <div
+              className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/unitsuffix:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
+              style={{ width: `${suffixWidth}px` }}
+            >
+              <ChevronDown className="editor-text-strong h-3 w-3" />
+            </div>
           </div>
         </div>
+      ) : (
+        <ValueWithUnit
+          id={fieldId}
+          mode={hasStaticNumericUnitSuffix ? 'number-fixed' : 'number-or-keyword-select'}
+          value={value}
+          onChange={(nextValue) => {
+            if (!disabled) {
+              onChange(nextValue);
+            }
+          }}
+          options={fieldOptions}
+          inputValue={numericDraft}
+          selectedOption={mode}
+          min={numericMin}
+          step="any"
+          disabled={disabled}
+          invalid={invalid}
+          segmentWidth={suffixWidth}
+          onInputValueChange={(next) => {
+            setNumericDraft(next);
+            const nextRaw = buildSizeFieldValue(axis, mode, next, { isSectionHeight });
+            setInvalid(!nextRaw);
+            if (nextRaw && !disabled) {
+              onChange(nextRaw);
+            }
+          }}
+          onResolveOptionValue={resolveValueWithUnitModeChange}
+        />
       )}
     </div>
   );

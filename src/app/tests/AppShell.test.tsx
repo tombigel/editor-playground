@@ -58,10 +58,9 @@ describe('app/AppShell', () => {
     expect(markup).toContain('--editor-accent:#ff6b4a');
   });
 
-  it('uses the palette-owned accent for paper and monokai shells', () => {
+  it('uses the shared accent for paper and monokai shells', () => {
     const paperProps = createProps();
-    paperProps.state.ui.accentColor = '#1668ff';
-    paperProps.state.ui.paperAccentColor = '#b07a3a';
+    paperProps.state.ui.accentColor = '#b07a3a';
     paperProps.state.ui.lightTheme = 'paper';
     paperProps.resolvedTheme = 'light';
 
@@ -70,8 +69,7 @@ describe('app/AppShell', () => {
     expect(paperMarkup).toContain('--editor-accent:#b07a3a');
 
     const monokaiProps = createProps();
-    monokaiProps.state.ui.accentColor = '#1668ff';
-    monokaiProps.state.ui.monokaiAccentColor = '#ff4f9a';
+    monokaiProps.state.ui.accentColor = '#ff4f9a';
     monokaiProps.state.ui.darkTheme = 'monokai';
     monokaiProps.resolvedTheme = 'dark';
 

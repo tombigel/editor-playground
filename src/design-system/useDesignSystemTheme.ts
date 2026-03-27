@@ -4,11 +4,11 @@ import {
 	DEFAULT_EDITOR_ACCENT_COLOR,
 	DEFAULT_EDITOR_DARK_THEME,
 	DEFAULT_EDITOR_LIGHT_THEME,
-	DEFAULT_MONOKAI_ACCENT_COLOR,
-	DEFAULT_PAPER_ACCENT_COLOR,
 	type EditorDarkTheme,
 	type EditorLightTheme,
-	type ResolvedTheme,
+	getAccentColorForDarkThemeSelection,
+	getAccentColorForLightThemeSelection,
+	type ThemeMode,
 	resolveEditorAccentColor,
 	resolveThemeMode,
 } from "@/lib/theme";
@@ -20,14 +20,7 @@ function resolveConfig(
 	systemPrefersDark: boolean,
 ): ResolvedThemeConfig {
 	const resolved = resolveThemeMode(config.themeMode, systemPrefersDark);
-	const resolvedAccent = resolveEditorAccentColor(
-		config.accentColor,
-		config.paperAccentColor,
-		config.monokaiAccentColor,
-		resolved,
-		config.lightTheme,
-		config.darkTheme,
-	);
+	const resolvedAccent = resolveEditorAccentColor(config.accentColor);
 	return { ...config, resolved, resolvedAccent };
 }
 
@@ -49,9 +42,6 @@ function readPersistedThemeConfig(): ThemeConfig {
 					lightTheme: ui.lightTheme ?? DEFAULT_EDITOR_LIGHT_THEME,
 					darkTheme: ui.darkTheme ?? DEFAULT_EDITOR_DARK_THEME,
 					accentColor: ui.accentColor ?? DEFAULT_EDITOR_ACCENT_COLOR,
-					paperAccentColor: ui.paperAccentColor ?? DEFAULT_PAPER_ACCENT_COLOR,
-					monokaiAccentColor:
-						ui.monokaiAccentColor ?? DEFAULT_MONOKAI_ACCENT_COLOR,
 				};
 			}
 		}
@@ -63,8 +53,6 @@ function readPersistedThemeConfig(): ThemeConfig {
 		lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
 		darkTheme: DEFAULT_EDITOR_DARK_THEME,
 		accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
-		paperAccentColor: DEFAULT_PAPER_ACCENT_COLOR,
-		monokaiAccentColor: DEFAULT_MONOKAI_ACCENT_COLOR,
 	};
 }
 
@@ -89,8 +77,6 @@ export function useDesignSystemTheme() {
 	useApplyEditorTheme(
 		resolved.resolved,
 		resolved.accentColor,
-		resolved.paperAccentColor,
-		resolved.monokaiAccentColor,
 		resolved.lightTheme,
 		resolved.darkTheme,
 	);
@@ -98,16 +84,24 @@ export function useDesignSystemTheme() {
 	// Cache key for TokenSwatch recomputation when theme changes.
 	const themeKey = `${resolved.resolved}-${resolved.lightTheme}-${resolved.darkTheme}-${resolved.resolvedAccent}`;
 
-	const setThemeMode = useCallback((themeMode: ResolvedTheme) => {
+	const setThemeMode = useCallback((themeMode: ThemeMode) => {
 		setConfig((prev) => ({ ...prev, themeMode }));
 	}, []);
 
 	const setLightTheme = useCallback((lightTheme: EditorLightTheme) => {
-		setConfig((prev) => ({ ...prev, lightTheme }));
+		setConfig((prev) => ({
+			...prev,
+			lightTheme,
+			accentColor: getAccentColorForLightThemeSelection(lightTheme, prev.accentColor),
+		}));
 	}, []);
 
 	const setDarkTheme = useCallback((darkTheme: EditorDarkTheme) => {
-		setConfig((prev) => ({ ...prev, darkTheme }));
+		setConfig((prev) => ({
+			...prev,
+			darkTheme,
+			accentColor: getAccentColorForDarkThemeSelection(darkTheme, prev.accentColor),
+		}));
 	}, []);
 
 	const setAccentColor = useCallback((accentColor: string) => {

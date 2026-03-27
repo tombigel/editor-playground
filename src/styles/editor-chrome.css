@@ -152,6 +152,18 @@
   .editor-section-templates,
   .editor-shortcut-help,
   .ui-dialog-popover > div
+) [data-ui='button'][data-variant='outline'].editor-font-picker-trigger:is(:focus-visible, [aria-expanded='true']) {
+  border-color: var(--editor-accent);
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
 ) [data-ui='button'][data-variant='ghost'] {
   color: var(--editor-button-ghost-text);
 }
@@ -180,7 +192,7 @@
 ) [data-ui='button'][data-variant='destructive'] {
   background: color-mix(in srgb, #ef4444 10%, var(--editor-surface-background));
   border-color: color-mix(in srgb, #ef4444 24%, transparent);
-  color: #b42318;
+  color: var(--editor-button-destructive-text);
 }
 
 :is(.editor-shell, body) :is(
@@ -193,6 +205,7 @@
   .ui-dialog-popover > div
 ) [data-ui='button'][data-variant='destructive']:hover {
   background: color-mix(in srgb, #ef4444 14%, var(--editor-surface-background));
+  color: var(--editor-button-destructive-text-hover);
 }
 
 :is(.editor-shell, body) :is(
@@ -480,10 +493,20 @@
 
 .editor-inline-field {
   background: var(--editor-input-background);
-  border-color: var(--editor-utility-border);
+  border-color: var(--editor-input-border);
+}
+
+.value-with-unit {
+  background: var(--editor-input-background);
+  border-color: var(--editor-input-border);
 }
 
 .editor-inline-field-invalid {
+  background: color-mix(in srgb, #ef4444 12%, var(--editor-input-background));
+  border-color: #f87171;
+}
+
+.value-with-unit-invalid {
   background: color-mix(in srgb, #ef4444 12%, var(--editor-input-background));
   border-color: #f87171;
 }
@@ -492,8 +515,17 @@
   color: var(--editor-utility-text-muted);
 }
 
+.value-with-unit-value {
+  color: var(--editor-utility-text-muted);
+}
+
 .editor-inline-field-trigger {
-  border-color: var(--editor-utility-border);
+  box-shadow: inset 1px 0 0 var(--editor-input-border);
+  color: var(--editor-utility-text-strong);
+}
+
+.value-with-unit-segment {
+  box-shadow: inset 1px 0 0 var(--editor-input-border);
   color: var(--editor-utility-text-strong);
 }
 
@@ -501,8 +533,55 @@
   color: color-mix(in srgb, var(--editor-text) 88%, var(--editor-utility-text-strong));
 }
 
+.value-with-unit-segment-static {
+  color: color-mix(in srgb, var(--editor-text) 88%, var(--editor-utility-text-strong));
+}
+
 .editor-inline-field-caret {
   background: var(--editor-input-background);
+}
+
+.value-with-unit-caret,
+.value-with-unit-suggestions {
+  background: var(--editor-input-background);
+}
+
+.value-with-unit-suggestions {
+  border-color: var(--editor-utility-border);
+}
+
+.value-with-unit-mixed {
+  border-style: dashed;
+}
+
+.value-with-unit-segment-mixed {
+  background: color-mix(in srgb, var(--editor-utility-bg-subtle) 88%, transparent);
+}
+
+.editor-inline-field:focus-within,
+.value-with-unit:focus-within {
+  outline: 2px solid var(--editor-focus-ring-strong);
+  outline-offset: 2px;
+}
+
+.editor-inline-field :is([data-ui='input'], [data-ui='select-trigger']):focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.value-with-unit :is([data-ui='input'], [data-ui='select-trigger']):focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border-color: var(--editor-accent) !important;
+  box-shadow: inset 0 0 0 1px var(--editor-accent) !important;
+}
+
+.value-with-unit [data-ui='select-trigger'][data-state='open'] {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border-color: var(--editor-accent) !important;
+  box-shadow: inset 0 0 0 1px var(--editor-accent) !important;
 }
 
 .editor-rail-toggle-button {
@@ -589,4 +668,85 @@
 .editor-rail-entry-button[aria-pressed='true']:hover,
 .editor-rail-entry-button[aria-pressed='true']:focus-visible {
   background: color-mix(in srgb, var(--editor-accent) 14%, var(--editor-surface-background));
+}
+
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] :is(
+  [data-ui='button'][data-variant='outline'],
+  [data-ui='button'][data-variant='secondary'],
+  [data-ui='button'][data-variant='destructive'],
+  [data-ui='input'],
+  [data-ui='textarea'],
+  [data-ui='select-trigger'],
+  [data-ui='select-content'],
+  [data-ui='switch'],
+  .editor-icon-button-subtle,
+  .editor-topbar-icon-button,
+  .editor-rail-toggle-button,
+  .editor-rail-entry-button
+),
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit,
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] :is(
+  [data-ui='button'][data-variant='outline'],
+  [data-ui='button'][data-variant='secondary'],
+  [data-ui='button'][data-variant='destructive'],
+  [data-ui='input'],
+  [data-ui='textarea'],
+  [data-ui='select-trigger'],
+  [data-ui='select-content'],
+  [data-ui='switch'],
+  .editor-icon-button-subtle,
+  .editor-topbar-icon-button,
+  .editor-rail-toggle-button,
+  .editor-rail-entry-button
+),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit {
+  border-width: 2px;
+}
+
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static),
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static) {
+  box-shadow: inset 2px 0 0 var(--editor-input-border);
+}
+
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field [data-ui='input'],
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit [data-ui='input'],
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field [data-ui='input'],
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit [data-ui='input'] {
+  font-size: 12px !important;
+}
+
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static, [data-ui='select-trigger']),
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static, [data-ui='select-trigger']),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static, [data-ui='select-trigger']),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static, [data-ui='select-trigger']) {
+  font-size: 11px !important;
+}
+
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] :is(
+  .editor-topbar-icon-button:hover,
+  .editor-topbar-icon-button:focus-visible,
+  .editor-rail-toggle-button,
+  .editor-rail-toggle-button:hover,
+  .editor-rail-toggle-button:focus-visible,
+  .editor-rail-toggle-button[data-pressed='true'],
+  .editor-rail-entry-button,
+  .editor-rail-entry-button:hover,
+  .editor-rail-entry-button:focus-visible,
+  .editor-rail-entry-button[aria-pressed='true']
+),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] :is(
+  .editor-topbar-icon-button:hover,
+  .editor-topbar-icon-button:focus-visible,
+  .editor-rail-toggle-button,
+  .editor-rail-toggle-button:hover,
+  .editor-rail-toggle-button:focus-visible,
+  .editor-rail-toggle-button[data-pressed='true'],
+  .editor-rail-entry-button,
+  .editor-rail-entry-button:hover,
+  .editor-rail-entry-button:focus-visible,
+  .editor-rail-entry-button[aria-pressed='true']
+) {
+  box-shadow: none;
 }

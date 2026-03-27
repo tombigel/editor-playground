@@ -102,8 +102,8 @@ Approved radii:
 
 | Token level | Typical class | Use |
 |---|---|---|
-| Tight | `rounded-sm` | compact inline controls |
-| Default | `rounded-md` | buttons, inputs, selects |
+| Tight | `rounded-sm` | compact inline controls, inputs, selects, dropdown popups |
+| Default | `rounded-md` | buttons and general-purpose small surfaces |
 | Section | `rounded-lg` | nav items, sub-panels |
 | Panel | `rounded-xl` | cards, dialogs |
 | Shell | `rounded-2xl` | settings shell, large surfaces |
@@ -211,7 +211,9 @@ Light palette rules:
 - light mode must support multiple palettes selected from settings
 - ship at least two neutral light palettes, one accent-derived light palette, and one higher-contrast light palette
 - `Midday` may mix low percentages of accent into shells and panels, but passive surfaces should stay clearly lighter than selected controls
-- `Paper` may use a palette-owned warm accent instead of the global editor accent when it is the active light palette
+- selecting `Paper` should reset the shared editor accent to its warm default
+- `Clarity` should avoid decorative glows/shadows and use `2px` borders on form fields and interactive controls
+- `Clarity` should also raise compact field typography so composite numeric controls do not drop below `12px` for values and `11px` for suffixes/modes
 
 Closeable editor panels:
 
@@ -224,7 +226,9 @@ Dark palette rules:
 - dark mode must support multiple palettes selected from settings
 - ship at least two neutral dark palettes, one styled dark palette, and one higher-contrast dark palette
 - `Graphite` and `Monokai` should stay restrained in saturation so the editor accent remains the primary active signal
-- `Monokai` may use a palette-owned magenta accent when it is the active dark palette
+- selecting `Monokai` should reset the shared editor accent to its magenta default
+- `Ink` should avoid decorative glows/shadows and use `2px` borders on form fields and interactive controls
+- `Ink` should also raise compact field typography so composite numeric controls do not drop below `12px` for values and `11px` for suffixes/modes
 
 ### 8.3 Dark Theme Tokens
 
@@ -367,7 +371,7 @@ Variants:
 | secondary | neutral subtle fill | none | strong text |
 | outline | surface | subtle border | muted/strong text |
 | ghost | transparent | none | muted text |
-| destructive | light red tint | none | red text |
+| destructive | light red tint | subtle red border | red text in light mode, near-white text in dark mode |
 
 Focus:
 
@@ -384,7 +388,7 @@ Spec:
 
 - height: `36px`
 - padding-x: `12px`
-- radius: `rounded-md`
+- radius: `rounded-sm`
 - border: `1px solid var(--editor-input-border)`
 - background: `var(--editor-input-background)`
 - text: `var(--editor-input-text)`
@@ -395,6 +399,7 @@ Focus:
 
 - border switches to the accent color
 - low-alpha accent focus treatment
+- suggestion-enabled composite inputs should render one visible suggestion surface at a time; when a styled popup is present, it owns the visible interaction instead of layering on top of the browser's native `datalist` popup
 
 ### 10.3 Textareas
 
@@ -407,7 +412,7 @@ Spec:
 - same visual treatment as inputs
 - min height: `80px`
 - padding: `12px x 8px`
-- radius: `rounded-md`
+- radius: `rounded-sm`
 
 ### 10.4 Selects
 
@@ -418,7 +423,7 @@ Implementation reference:
 Trigger:
 
 - height: `36px`
-- radius: `rounded-md`
+- radius: `rounded-sm`
 - border + background same as inputs
 - text: strong text
 - chevron icon: muted text
@@ -427,12 +432,25 @@ Content:
 
 - background: `--editor-select-content-background`
 - border: subtle border
-- radius: `rounded-md`
+- radius: `rounded-sm`
 - shadow: medium surface shadow
 
 Item highlight:
 
 - background: `--editor-select-highlight-background`
+
+### 10.5 Composite Value Fields
+
+Implementation reference:
+
+- `src/components/ui/value-with-unit.tsx`
+
+Spec:
+
+- one continuous outer shell owned by the composite wrapper
+- the shared shell keeps the outer `focus-within` treatment, while the active inner input or trigger only gets an accent-colored inner border
+- mixed-selection styling belongs to the shared component, not per-caller overrides
+- suggestion-enabled variants should use the shared styled popup with combobox/listbox semantics by default; do not bind `list`/`datalist` at the same time because native autosuggest chrome cannot be styled or coordinated with the editor popup
 
 ### 10.5 Switches
 

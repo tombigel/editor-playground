@@ -17,25 +17,32 @@ export function resolveDisplayedInputValue(options: {
   isFocused: boolean;
   controlledValue: React.ComponentProps<'input'>['value'] | null;
   draftValue: string;
+  syncWhileFocused?: boolean;
 }) {
   if (!options.isControlled) {
     return options.controlledValue ?? undefined;
   }
-  return options.isFocused ? options.draftValue : options.controlledValue ?? undefined;
+  if (options.isFocused && !options.syncWhileFocused) {
+    return options.draftValue;
+  }
+  return options.controlledValue ?? undefined;
 }
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
-  ({ className, type, value, onChange, onFocus, onBlur, ...props }, ref) => {
+const Input = React.forwardRef<
+  HTMLInputElement,
+  React.ComponentProps<'input'> & { syncValueWhileFocused?: boolean }
+>(
+  ({ className, type, value, onChange, onFocus, onBlur, syncValueWhileFocused = false, ...props }, ref) => {
     const isControlled = value !== undefined;
     const [isFocused, setIsFocused] = React.useState(false);
     const [draftValue, setDraftValue] = React.useState(() => stringifyControlledInputValue(value));
 
     React.useEffect(() => {
-      if (!isControlled || isFocused) {
+      if (!isControlled || (isFocused && !syncValueWhileFocused)) {
         return;
       }
       setDraftValue(stringifyControlledInputValue(value));
-    }, [isControlled, isFocused, value]);
+    }, [isControlled, isFocused, syncValueWhileFocused, value]);
 
     return (
       <input
@@ -46,6 +53,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
           isFocused,
           controlledValue: value,
           draftValue,
+          syncWhileFocused: syncValueWhileFocused,
         })}
         onFocus={(event) => {
           setIsFocused(true);
@@ -64,7 +72,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
           onChange?.(event);
         }}
         className={cn(
-          'flex h-8 w-full min-w-0 rounded-md border px-3 py-1 text-sm shadow-sm transition-[color,box-shadow,border-color] outline-none placeholder:text-slate-400 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-8 w-full min-w-0 rounded-sm border px-3 py-1 text-sm shadow-sm transition-[color,box-shadow,border-color] outline-none placeholder:text-slate-400 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}
         ref={ref}

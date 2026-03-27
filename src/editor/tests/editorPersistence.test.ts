@@ -6,8 +6,6 @@ import {
   DEFAULT_EDITOR_ACCENT_COLOR,
   DEFAULT_EDITOR_DARK_THEME,
   DEFAULT_EDITOR_LIGHT_THEME,
-  DEFAULT_MONOKAI_ACCENT_COLOR,
-  DEFAULT_PAPER_ACCENT_COLOR,
 } from '../../lib/theme';
 import { DEFAULT_SNAP_SETTINGS } from '../types';
 import { DEFAULT_FOCUSED_PANEL_OFFSET } from '../focusedPanelPosition';
@@ -408,8 +406,6 @@ describe('editor/editorPersistence', () => {
         inspectorCollapsed: true,
         temporaryInspectorOpen: true,
         accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
-        paperAccentColor: DEFAULT_PAPER_ACCENT_COLOR,
-        monokaiAccentColor: DEFAULT_MONOKAI_ACCENT_COLOR,
         lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
         darkTheme: DEFAULT_EDITOR_DARK_THEME,
         focusedPanelOffset: DEFAULT_FOCUSED_PANEL_OFFSET,

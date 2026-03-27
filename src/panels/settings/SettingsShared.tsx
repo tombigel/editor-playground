@@ -392,7 +392,7 @@ export function AccentSwatchRow({
         </div>
         <span className="editor-text-muted rounded-md border px-2 py-1 font-mono text-[11px] leading-none">{value}</span>
       </div>
-      <div className="editor-scrollbar mt-3 grid grid-flow-col auto-cols-max items-center gap-2 overflow-x-auto pt-1 pb-1">
+      <div className="mt-3 flex flex-wrap items-center gap-2 pt-1">
         {EDITOR_ACCENT_SWATCHES.map((swatch) => {
           const active = swatch.value.toLowerCase() === value.toLowerCase();
           return (
@@ -462,4 +462,3 @@ export function FocusedModeStartupRow({
     </div>
   );
 }
-

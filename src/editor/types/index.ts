@@ -47,8 +47,6 @@ export type EditorState = {
     snapSettings: SnapSettings;
     themeMode: ThemeMode;
     accentColor: string;
-    paperAccentColor: string;
-    monokaiAccentColor: string;
     lightTheme: EditorLightTheme;
     darkTheme: EditorDarkTheme;
     focusedMode: FocusedMode;

@@ -53,7 +53,7 @@ export const EDITOR_DARK_THEME_OPTIONS: ReadonlyArray<{
   {
     value: 'monokai',
     label: 'Monokai',
-    description: 'Plum charcoal, editable magenta.',
+    description: 'Plum charcoal with a magenta reset accent.',
   },
   {
     value: 'midnight',
@@ -129,20 +129,15 @@ export function resolveThemeMode(themeMode: ThemeMode, prefersDark: boolean): Re
   return themeMode;
 }
 
-export function resolveEditorAccentColor(
-  accentColor: string,
-  paperAccentColor: string,
-  monokaiAccentColor: string,
-  resolvedTheme: ResolvedTheme,
-  lightTheme: EditorLightTheme,
-  darkTheme: EditorDarkTheme,
-) {
-  if (resolvedTheme === 'light' && lightTheme === 'paper') {
-    return paperAccentColor;
-  }
-  if (resolvedTheme === 'dark' && darkTheme === 'monokai') {
-    return monokaiAccentColor;
-  }
+export function getAccentColorForLightThemeSelection(lightTheme: EditorLightTheme, currentAccentColor: string) {
+  return lightTheme === 'paper' ? DEFAULT_PAPER_ACCENT_COLOR : currentAccentColor;
+}
+
+export function getAccentColorForDarkThemeSelection(darkTheme: EditorDarkTheme, currentAccentColor: string) {
+  return darkTheme === 'monokai' ? DEFAULT_MONOKAI_ACCENT_COLOR : currentAccentColor;
+}
+
+export function resolveEditorAccentColor(accentColor: string) {
   return accentColor;
 }
 

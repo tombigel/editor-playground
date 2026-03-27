@@ -50,7 +50,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     data-ui="select-trigger"
     className={cn(
-      'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
+      'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full items-center justify-between rounded-sm border px-3 py-2 text-sm shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
@@ -79,7 +79,7 @@ const SelectContent = React.forwardRef<
         ref={ref}
         data-ui="select-content"
         className={cn(
-          'editor-bg-surface editor-border-subtle editor-text-strong pointer-events-auto relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md',
+          'editor-bg-surface editor-border-subtle editor-text-strong pointer-events-auto relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-sm border shadow-md',
           position === 'popper' &&
             'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
           className,

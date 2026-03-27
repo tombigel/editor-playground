@@ -445,6 +445,7 @@ describe('panels/InspectorPanel', () => {
       <NumericUnitInlineField value="2px" units={['px']} onChange={() => {}} />,
     );
 
+    expect(markup).toContain('value-with-unit');
     expect(markup).toContain('>px<');
     expect(markup).not.toContain('data-ui="select-trigger"');
   });

@@ -28,8 +28,6 @@ import {
   DEFAULT_EDITOR_ACCENT_COLOR,
   DEFAULT_EDITOR_DARK_THEME,
   DEFAULT_EDITOR_LIGHT_THEME,
-  DEFAULT_MONOKAI_ACCENT_COLOR,
-  DEFAULT_PAPER_ACCENT_COLOR,
   normalizeEditorAccentColor,
   normalizeEditorDarkTheme,
   normalizeEditorLightTheme,
@@ -88,6 +86,9 @@ export function loadPersistedState(): EditorState {
       Array.isArray((parsed as Partial<EditorState>).selectedIds) ? (parsed as Partial<EditorState>).selectedIds : undefined,
       parsed.selectedId,
     );
+    const themeMode = normalizeThemeMode(parsed.ui?.themeMode);
+    const lightTheme = normalizeEditorLightTheme(parsed.ui?.lightTheme);
+    const darkTheme = normalizeEditorDarkTheme(parsed.ui?.darkTheme);
     const candidate: EditorState = {
       ...parsed,
       document: normalizedDocument,
@@ -102,15 +103,10 @@ export function loadPersistedState(): EditorState {
             : 'selected',
         showGridLanes: parsed.ui?.showGridLanes ?? false,
         snapSettings: normalizeSnapSettings(parsed.ui),
-        themeMode: normalizeThemeMode(parsed.ui?.themeMode),
-        accentColor: normalizeEditorAccentColor(parsed.ui?.accentColor),
-        paperAccentColor: normalizeEditorAccentColor(parsed.ui?.paperAccentColor, DEFAULT_PAPER_ACCENT_COLOR),
-        monokaiAccentColor: normalizeEditorAccentColor(
-          parsed.ui?.monokaiAccentColor,
-          DEFAULT_MONOKAI_ACCENT_COLOR,
-        ),
-        lightTheme: normalizeEditorLightTheme(parsed.ui?.lightTheme),
-        darkTheme: normalizeEditorDarkTheme(parsed.ui?.darkTheme),
+        themeMode,
+        accentColor: normalizePersistedAccentColor(parsed.ui, themeMode, lightTheme, darkTheme),
+        lightTheme,
+        darkTheme,
         focusedMode: startupFocusedMode,
         startupFocusedMode,
         inspectorCollapsed: startupFocusedMode ? true : parsed.ui?.inspectorCollapsed ?? false,
@@ -180,8 +176,6 @@ function createDefaultUiState(): EditorState['ui'] {
     snapSettings: DEFAULT_SNAP_SETTINGS,
     themeMode: 'auto',
     accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
-    paperAccentColor: DEFAULT_PAPER_ACCENT_COLOR,
-    monokaiAccentColor: DEFAULT_MONOKAI_ACCENT_COLOR,
     lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
     darkTheme: DEFAULT_EDITOR_DARK_THEME,
     focusedMode: null,
@@ -190,6 +184,27 @@ function createDefaultUiState(): EditorState['ui'] {
     temporaryInspectorOpen: false,
     focusedPanelOffset: DEFAULT_FOCUSED_PANEL_OFFSET,
   };
+}
+
+function normalizePersistedAccentColor(
+  ui: Partial<EditorState['ui']> | undefined,
+  themeMode: EditorState['ui']['themeMode'],
+  lightTheme: EditorState['ui']['lightTheme'],
+  darkTheme: EditorState['ui']['darkTheme'],
+) {
+  const legacyUi = ui as
+    | (Partial<EditorState['ui']> & {
+        paperAccentColor?: unknown;
+        monokaiAccentColor?: unknown;
+      })
+    | undefined;
+  if (themeMode === 'light' && lightTheme === 'paper') {
+    return normalizeEditorAccentColor(legacyUi?.paperAccentColor);
+  }
+  if (themeMode === 'dark' && darkTheme === 'monokai') {
+    return normalizeEditorAccentColor(legacyUi?.monokaiAccentColor);
+  }
+  return normalizeEditorAccentColor(ui?.accentColor);
 }
 
 export function parseImportedDocumentJson(raw: string): DocumentModel {

@@ -1,5 +1,6 @@
 // Barrel re-export of all public controls
 export { FormField, InspectorInlineRow } from './FormLayout';
+export { ValueWithUnit } from '@/components/ui/value-with-unit';
 export {
   NumberInput,
   NumericUnitInlineField,

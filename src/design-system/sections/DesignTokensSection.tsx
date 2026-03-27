@@ -288,9 +288,9 @@ const RADIUS_TIERS = [
 	{
 		name: "sm",
 		value: "4px (rounded-sm)",
-		usage: "Inspector compact controls",
+		usage: "Inspector compact controls, inputs, selects, dropdown popups",
 	},
-	{ name: "md", value: "6px (rounded-md)", usage: "Buttons, inputs, selects" },
+	{ name: "md", value: "6px (rounded-md)", usage: "Buttons and small utility surfaces" },
 	{ name: "lg", value: "8px (rounded-lg)", usage: "Cards, nav items, icons" },
 	{ name: "xl", value: "12px (rounded-xl)", usage: "Panels, surfaces" },
 	{

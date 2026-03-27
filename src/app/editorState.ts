@@ -260,10 +260,6 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, ui: { ...state.ui, themeMode: action.value } };
     case 'setAccentColor':
       return { ...state, ui: { ...state.ui, accentColor: action.value } };
-    case 'setPaperAccentColor':
-      return { ...state, ui: { ...state.ui, paperAccentColor: action.value } };
-    case 'setMonokaiAccentColor':
-      return { ...state, ui: { ...state.ui, monokaiAccentColor: action.value } };
     case 'setLightTheme':
       return { ...state, ui: { ...state.ui, lightTheme: action.value } };
     case 'setDarkTheme':
@@ -469,8 +465,6 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setSnapSettings' &&
     action.type !== 'setThemeMode' &&
     action.type !== 'setAccentColor' &&
-    action.type !== 'setPaperAccentColor' &&
-    action.type !== 'setMonokaiAccentColor' &&
     action.type !== 'setLightTheme' &&
     action.type !== 'setDarkTheme' &&
     action.type !== 'setFocusedMode' &&

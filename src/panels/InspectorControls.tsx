@@ -25,6 +25,7 @@ export {
   SpacingField,
   StickyOffsetBandField,
   TextStyleIconButton,
+  ValueWithUnit,
   WrapperActions,
 } from './controls';
 

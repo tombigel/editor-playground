@@ -5,6 +5,8 @@ import {
   DEFAULT_EDITOR_LIGHT_THEME,
   DEFAULT_MONOKAI_ACCENT_COLOR,
   DEFAULT_PAPER_ACCENT_COLOR,
+  getAccentColorForDarkThemeSelection,
+  getAccentColorForLightThemeSelection,
   normalizeEditorAccentColor,
   normalizeEditorDarkTheme,
   normalizeEditorLightTheme,
@@ -48,37 +50,12 @@ describe('lib/theme', () => {
     expect(resolveThemeMode('auto', false)).toBe('light');
   });
 
-  it('uses palette-owned accents for paper and monokai', () => {
-    expect(
-      resolveEditorAccentColor(
-        '#1668ff',
-        DEFAULT_PAPER_ACCENT_COLOR,
-        DEFAULT_MONOKAI_ACCENT_COLOR,
-        'light',
-        'paper',
-        'graphite',
-      ),
-    ).toBe(DEFAULT_PAPER_ACCENT_COLOR);
-    expect(
-      resolveEditorAccentColor(
-        '#1668ff',
-        DEFAULT_PAPER_ACCENT_COLOR,
-        DEFAULT_MONOKAI_ACCENT_COLOR,
-        'dark',
-        'air',
-        'monokai',
-      ),
-    ).toBe(DEFAULT_MONOKAI_ACCENT_COLOR);
-    expect(
-      resolveEditorAccentColor(
-        '#1668ff',
-        DEFAULT_PAPER_ACCENT_COLOR,
-        DEFAULT_MONOKAI_ACCENT_COLOR,
-        'light',
-        'clarity',
-        'ink',
-      ),
-    ).toBe('#1668ff');
+  it('resets the shared accent to the palette defaults when paper or monokai is selected', () => {
+    expect(getAccentColorForLightThemeSelection('paper', '#1668ff')).toBe(DEFAULT_PAPER_ACCENT_COLOR);
+    expect(getAccentColorForLightThemeSelection('clarity', '#1668ff')).toBe('#1668ff');
+    expect(getAccentColorForDarkThemeSelection('monokai', '#1668ff')).toBe(DEFAULT_MONOKAI_ACCENT_COLOR);
+    expect(getAccentColorForDarkThemeSelection('ink', '#1668ff')).toBe('#1668ff');
+    expect(resolveEditorAccentColor('#1668ff')).toBe('#1668ff');
   });
 
   it('keeps the blue sticky guide family on the familiar green and yellow baseline', () => {

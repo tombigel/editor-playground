@@ -130,6 +130,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('grid-cols-[minmax(0,1fr)_140px]');
     expect(markup).toContain('ui-popover-surface');
     expect(markup).toContain('popover="manual"');
+    expect(markup).toContain('editor-font-picker-trigger');
     expect(markup).toContain('text-[13px] leading-4');
     expect(markup).toContain('px-2');
     expect(markup).toContain('hover:text-[color:var(--editor-accent)]');
@@ -140,10 +141,14 @@ describe('panels/InspectorControls', () => {
     expect(markup.match(/lucide-check/g)?.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders font size suggestions with shared hover treatment and the 72px preset', () => {
+  it('renders font size suggestions with shared hover treatment and combobox semantics', () => {
     const markup = renderToStaticMarkup(<FontSizeField nodeId="text_1" value="16px" onChange={() => {}} defaultSuggestionsOpen />);
 
     expect(markup).toContain('72px');
+    expect(markup).toContain('role="combobox"');
+    expect(markup).toContain('role="listbox"');
+    expect(markup).toContain('aria-autocomplete="list"');
+    expect(markup).toContain('value-with-unit-suggestions');
     expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
     expect(markup).toContain('leading-5');
     expect(markup).toContain('py-2');

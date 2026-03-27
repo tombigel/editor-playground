@@ -87,6 +87,8 @@
   --editor-focus-ring: color-mix(in srgb, var(--editor-accent) 20%, transparent);
   --editor-focus-ring-strong: color-mix(in srgb, var(--editor-accent) 40%, transparent);
   --editor-focus-ring-offset: var(--editor-surface-background);
+  --editor-button-destructive-text: #b42318;
+  --editor-button-destructive-text-hover: #b42318;
   --editor-snap-guide-component: rgba(20, 184, 166, 0.75);
   --editor-snap-guide-page: rgba(217, 70, 239, 0.78);
   --editor-snap-guide-section: rgba(245, 158, 11, 0.78);
@@ -336,6 +338,8 @@ body[data-editor-theme='dark'] {
   --editor-settings-nav-active-text: #f3f7fc;
   --editor-settings-nav-active-muted: #95a8bf;
   --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 18%, transparent);
+  --editor-button-destructive-text: rgba(255, 255, 255, 0.94);
+  --editor-button-destructive-text-hover: #ffffff;
   --editor-template-tag-background: rgba(16, 185, 129, 0.14);
   --editor-template-tag-text: #86efc5;
   --editor-template-tag-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.14);
@@ -521,20 +525,16 @@ body[data-editor-theme='light'][data-editor-light-theme='midday'] {
 }
 
 body[data-editor-theme='light'][data-editor-light-theme='clarity'] {
-  --app-background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.94), transparent 26%),
-    linear-gradient(180deg, #f3f6fb 0%, #e8edf5 100%);
+  --app-background: #eef3f9;
   --editor-text: #0b1220;
   --editor-surface-background: #ffffff;
   --editor-surface-border: #b5c2d3;
-  --editor-workspace-background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)),
-    #e7edf6;
+  --editor-surface-shadow: none;
+  --editor-workspace-background: #e7edf6;
   --editor-stage-frame-background: #ffffff;
   --editor-stage-frame-border: #bdcada;
-  --editor-stage-canvas-background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
-    #ffffff;
+  --editor-stage-frame-shadow: none;
+  --editor-stage-canvas-background: #ffffff;
   --editor-content-background: #ffffff;
   --editor-button-surface: #ffffff;
   --editor-button-surface-hover: #edf3fb;
@@ -550,25 +550,31 @@ body[data-editor-theme='light'][data-editor-light-theme='clarity'] {
   --editor-tooltip-border: #bfcfe2;
   --editor-tooltip-text: #243244;
   --editor-tooltip-muted-text: #57677d;
+  --editor-tooltip-shadow: none;
   --editor-settings-nav-text: #2a3848;
   --editor-settings-nav-hover-background: rgba(255, 255, 255, 0.92);
   --editor-settings-nav-hover-text: #0b1220;
   --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 12%, #ffffff);
   --editor-settings-nav-active-text: #0f254b;
   --editor-settings-nav-active-muted: #47637f;
-  --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 24%, transparent);
+  --editor-settings-nav-active-shadow: none;
   --editor-utility-text-strong: #0b1220;
   --editor-utility-text-muted: #49576a;
   --editor-utility-bg-subtle: #eef3f9;
   --editor-utility-border: #c0ccda;
+  --editor-accent-shadow: none;
   --editor-topbar-background: #3d4b63;
   --editor-topbar-border: #29364b;
+  --editor-topbar-shadow: none;
   --editor-topbar-button-background: #4d5d77;
   --editor-topbar-button-border: rgba(255, 255, 255, 0.36);
   --editor-topbar-button-hover-background: #5d6f8b;
   --editor-topbar-button-hover-border: rgba(255, 255, 255, 0.5);
   --editor-topbar-button-active-background: #8a9ab2;
   --editor-topbar-button-active-border: rgba(255, 255, 255, 0.62);
+  --editor-topbar-button-shadow: none;
+  --editor-topbar-button-active-shadow: none;
+  --editor-topbar-tooltip-shadow: none;
 }
 
 body[data-editor-theme='dark'][data-editor-dark-theme='graphite'] {
@@ -669,12 +675,21 @@ body[data-editor-theme='dark'][data-editor-dark-theme='ink'] {
   --editor-dark-tint-soft: 1%;
   --editor-dark-tint-medium: 2%;
   --editor-dark-tint-strong: 4%;
+  --editor-surface-shadow: none;
+  --editor-stage-frame-shadow: none;
+  --editor-tooltip-shadow: none;
+  --editor-settings-nav-active-shadow: none;
+  --editor-accent-shadow: none;
   --editor-topbar-background: #0d1219;
   --editor-topbar-border: #4a5a73;
+  --editor-topbar-shadow: none;
   --editor-topbar-button-background: #17202c;
   --editor-topbar-button-border: #62748f;
   --editor-topbar-button-hover-background: #223043;
   --editor-topbar-button-hover-border: #7e92b0;
   --editor-topbar-button-active-background: color-mix(in srgb, var(--editor-accent) 28%, #2b3950);
   --editor-topbar-button-active-border: color-mix(in srgb, var(--editor-accent) 36%, #97a9c2);
+  --editor-topbar-button-shadow: none;
+  --editor-topbar-button-active-shadow: none;
+  --editor-topbar-tooltip-shadow: none;
 }

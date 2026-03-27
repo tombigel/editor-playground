@@ -325,8 +325,6 @@ describe('editor/editorStore integration', () => {
         ui: {
           ...state.ui,
           accentColor: '',
-          paperAccentColor: '',
-          monokaiAccentColor: '',
           lightTheme: 'winter-mode',
           darkTheme: 'night-mode',
         },
@@ -334,8 +332,6 @@ describe('editor/editorStore integration', () => {
     );
 
     expect(loadPersistedState().ui.accentColor).toBe('#1668ff');
-    expect(loadPersistedState().ui.paperAccentColor).toBe('#a36a2c');
-    expect(loadPersistedState().ui.monokaiAccentColor).toBe('#ff6188');
     expect(loadPersistedState().ui.lightTheme).toBe('air');
     expect(loadPersistedState().ui.darkTheme).toBe('monokai');
 
@@ -346,8 +342,6 @@ describe('editor/editorStore integration', () => {
         ui: {
           ...state.ui,
           accentColor: '#ff6b4a',
-          paperAccentColor: '#b07a3a',
-          monokaiAccentColor: '#ff4f9a',
           lightTheme: 'paper',
           darkTheme: 'midnight',
         },
@@ -355,8 +349,6 @@ describe('editor/editorStore integration', () => {
     );
 
     expect(loadPersistedState().ui.accentColor).toBe('#ff6b4a');
-    expect(loadPersistedState().ui.paperAccentColor).toBe('#b07a3a');
-    expect(loadPersistedState().ui.monokaiAccentColor).toBe('#ff4f9a');
     expect(loadPersistedState().ui.lightTheme).toBe('paper');
     expect(loadPersistedState().ui.darkTheme).toBe('midnight');
   });
@@ -496,8 +488,6 @@ describe('editor/editorStore integration', () => {
           snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
           themeMode: 'dark',
           accentColor: '#ff6b4a',
-          paperAccentColor: '#b07a3a',
-          monokaiAccentColor: '#ff4f9a',
           lightTheme: 'paper',
           darkTheme: 'midnight',
           focusedMode: 'sticky',
@@ -521,8 +511,6 @@ describe('editor/editorStore integration', () => {
       snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
       themeMode: 'dark',
       accentColor: '#ff6b4a',
-      paperAccentColor: '#b07a3a',
-      monokaiAccentColor: '#ff4f9a',
       lightTheme: 'paper',
       darkTheme: 'midnight',
       focusedMode: 'sticky',
@@ -781,8 +769,6 @@ describe('editor/editorStore integration', () => {
       snapSettings: customSnapSettings,
       themeMode: 'dark',
       accentColor: '#ff6b4a',
-      paperAccentColor: '#b07a3a',
-      monokaiAccentColor: '#ff4f9a',
       lightTheme: 'paper',
       darkTheme: 'midnight',
       focusedMode: 'sticky',
@@ -805,8 +791,6 @@ describe('editor/editorStore integration', () => {
       snapSettings: customSnapSettings,
       themeMode: 'dark',
       accentColor: '#ff6b4a',
-      paperAccentColor: '#b07a3a',
-      monokaiAccentColor: '#ff4f9a',
       lightTheme: 'paper',
       darkTheme: 'midnight',
       focusedMode: 'sticky',

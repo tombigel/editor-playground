@@ -8,6 +8,11 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+	getAccentColorForDarkThemeSelection,
+	getAccentColorForLightThemeSelection,
+	resolveEditorAccentColor,
+} from "@/lib/theme";
+import {
 	AccentSwatchRow,
 	ActionRow,
 	NumericRow,
@@ -32,6 +37,7 @@ function SettingsDemo() {
 	const [accent, setAccent] = useState("#1668ff");
 	const [historyLimit, setHistoryLimit] = useState(100);
 	const resolvedTheme = mode === "auto" ? "light" : mode;
+	const resolvedAccent = resolveEditorAccentColor(accent);
 
 	return (
 		<div className="space-y-8">
@@ -46,10 +52,20 @@ function SettingsDemo() {
 					lightTheme={lightTheme}
 					darkTheme={darkTheme}
 					onThemeModeChange={setMode}
-					onLightThemeChange={setLightTheme}
-					onDarkThemeChange={setDarkTheme}
+					onLightThemeChange={(value) => {
+						setLightTheme(value);
+						setAccent((current) =>
+							getAccentColorForLightThemeSelection(value, current),
+						);
+					}}
+					onDarkThemeChange={(value) => {
+						setDarkTheme(value);
+						setAccent((current) =>
+							getAccentColorForDarkThemeSelection(value, current),
+						);
+					}}
 				/>
-				<AccentSwatchRow value={accent} onChange={setAccent} />
+				<AccentSwatchRow value={resolvedAccent} onChange={setAccent} />
 			</div>
 
 			{/* Toggle item */}
