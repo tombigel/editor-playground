@@ -7,11 +7,7 @@ import {
 	useState,
 } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	type EditorDarkTheme,
-	type EditorLightTheme,
-	type ThemeMode,
-} from "@/lib/theme";
+import type { EditorDarkTheme, EditorLightTheme, ThemeMode } from "@/lib/theme";
 import { AccentSwatchRow, ThemePresetRow } from "@/panels/settings/SettingsShared";
 import type { ResolvedThemeConfig } from "./types";
 

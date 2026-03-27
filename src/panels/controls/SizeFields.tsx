@@ -2,7 +2,7 @@ import { memo, useEffect, useId, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, Proportions } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
 import type { SizeFieldAxis, SizeFieldMode } from '../inspector/stageConversions';

@@ -104,7 +104,7 @@ describe('components/ui/value-with-unit', () => {
     expect(markup).toContain('role="combobox"');
     expect(markup).toContain('aria-controls="font-size-suggestions"');
     expect(markup).toContain('role="listbox"');
-    expect(markup).toContain('id="font-size-suggestions-option-0"');
+    expect(markup).toContain('id="font-size-suggestions-option-12"');
     expect(markup).toContain('value-with-unit-suggestions');
     expect(markup).not.toContain('<datalist');
     expect(markup).toContain('12px');

@@ -359,14 +359,12 @@ export function ValueWithUnit({
         ) : null}
 
         {hasSuggestions ? (
-          <>
-            <div
-              className="pointer-events-none absolute inset-y-0 flex items-center text-zinc-500"
-              style={{ right: `calc(${resolvedSegmentWidth} + 4px)` }}
-            >
-              <ChevronDown className="h-3 w-3" />
-            </div>
-          </>
+          <div
+            className="pointer-events-none absolute inset-y-0 flex items-center text-zinc-500"
+            style={{ right: `calc(${resolvedSegmentWidth} + 4px)` }}
+          >
+            <ChevronDown className="h-3 w-3" />
+          </div>
         ) : null}
 
         {showsFullTrigger ? (
@@ -465,8 +463,8 @@ export function ValueWithUnit({
             const isActive = index === activeSuggestionIndex;
             return (
               <button
-                id={`${resolvedSuggestionListId}-option-${index}`}
-                key={`${suggestion.value}-${index}`}
+                id={`${resolvedSuggestionListId}-option-${suggestion.value}`}
+                key={suggestion.value}
                 type="button"
                 role="option"
                 aria-selected={isActive}
