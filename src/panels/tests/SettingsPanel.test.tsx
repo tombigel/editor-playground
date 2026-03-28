@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument } from '../../model/defaults';
 import { SettingsPanel } from '../SettingsPanel';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
+import { SETTINGS_SECTION_META } from '../settings/settingsSections';
 
 describe('panels/SettingsPanel', () => {
   it('renders an editable export file name field in the export section', () => {
@@ -52,6 +53,8 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Palette');
     expect(markup).toContain('Accent');
     expect(markup).toContain('Startup mode');
+    expect(markup).toContain('Animation preview');
+    expect(markup).toContain('Fonts');
     expect(markup).toContain('Chooses which focused mode the editor opens with.');
     expect(markup).toContain('aria-label="Startup mode"');
     expect(markup).toContain('sticky-playground');
@@ -69,5 +72,21 @@ describe('panels/SettingsPanel', () => {
     expect(markup).not.toContain('Save Site CSS');
     expect(markup).not.toContain('Copy Site HTML');
     expect(markup).not.toContain('Copy Site CSS');
+
+    const navOrder = Array.from(
+      markup.matchAll(/data-settings-nav="([^"]+)"/g),
+      (match) => match[1],
+    );
+    const sectionOrder = Array.from(
+      markup.matchAll(/data-settings-section="([^"]+)"/g),
+      (match) => match[1],
+    );
+    const expectedOrder = SETTINGS_SECTION_META.map((section) => section.id);
+
+    expect(navOrder).toEqual(expectedOrder);
+    expect(sectionOrder).toEqual(expectedOrder);
+    expect(sectionOrder.indexOf('shortcuts')).toBeLessThan(
+      sectionOrder.indexOf('diagnostics'),
+    );
   });
 });

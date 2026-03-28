@@ -630,7 +630,7 @@ Current UX includes:
 - entering focused mode collapses the inspector automatically
 - closing focused mode restores the inspector from its hidden state
 - when the inspector is collapsed, the right-rail opener can temporarily reopen it without changing the collapsed preference; while focused mode is active that temporary inspector closes on mouseout after a short delay
-- centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Import / Export`, `Advanced`, `Debug Info`, and `Shortcuts`
+- centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`
 - intentional editor scroll containers such as the stage shell, inspector lists, focused-mode scrollers, settings body, and section-template popover use one shared guttered auto-hide scrollbar treatment; scrollbar gutter space stays reserved and the thumb only becomes visible on hover, focus-within, or active scroll interaction
 - the settings `UI` section includes a compact editor theme mode control: `Light`, `Dark`, and `Auto`
 - the settings `UI` section includes a compact palette selector for the currently active light or dark editor mode

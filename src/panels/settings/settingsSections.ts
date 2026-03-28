@@ -1,0 +1,65 @@
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowDownToLine,
+  Bug,
+  Eye,
+  Keyboard,
+  SlidersHorizontal,
+  Type,
+} from 'lucide-react';
+
+export type SettingsSectionId =
+  | 'display'
+  | 'fonts'
+  | 'transfer'
+  | 'advanced'
+  | 'shortcuts'
+  | 'diagnostics';
+
+export type SettingsSectionMeta = {
+  id: SettingsSectionId;
+  label: string;
+  icon: LucideIcon;
+  description: string;
+};
+
+export const DEFAULT_SETTINGS_SECTION_ID: SettingsSectionId = 'display';
+
+export const SETTINGS_SECTION_META: SettingsSectionMeta[] = [
+  {
+    id: 'display',
+    label: 'UI',
+    icon: Eye,
+    description: 'Theme, preview, and guides.',
+  },
+  {
+    id: 'fonts',
+    label: 'Fonts',
+    icon: Type,
+    description: 'Site font library.',
+  },
+  {
+    id: 'transfer',
+    label: 'Import / Export',
+    icon: ArrowDownToLine,
+    description: 'Move document JSON.',
+  },
+  {
+    id: 'advanced',
+    label: 'Advanced',
+    icon: SlidersHorizontal,
+    description: 'History and reset.',
+  },
+  {
+    id: 'shortcuts',
+    label: 'Shortcuts',
+    description: 'Keyboard and pointer reference.',
+    icon: Keyboard,
+  },
+  {
+    id: 'diagnostics',
+    label: 'Debug Info',
+    description: 'Validation and sticky math.',
+    icon: Bug,
+  },
+];

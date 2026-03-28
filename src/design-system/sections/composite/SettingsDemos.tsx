@@ -8,15 +8,17 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+	ActionRow,
+	NumericRow,
+	SettingRow,
+} from "@/components/ui/settings-panel";
+import {
 	getAccentColorForDarkThemeSelection,
 	getAccentColorForLightThemeSelection,
 	resolveEditorAccentColor,
 } from "@/lib/theme";
 import {
 	AccentSwatchRow,
-	ActionRow,
-	NumericRow,
-	SettingRow,
 	ThemePresetRow,
 } from "@/panels/settings/SettingsShared";
 import { ComponentPreview } from "../../previews/ComponentPreview";
@@ -25,8 +27,7 @@ import { ComponentPreview } from "../../previews/ComponentPreview";
 // Interactive demo wrappers
 // ---------------------------------------------------------------------------
 
-function SettingsDemo() {
-	const [previewSticky, setPreviewSticky] = useState(true);
+function ThemeSettingsDemo() {
 	const [mode, setMode] = useState<"light" | "dark" | "auto">("auto");
 	const [lightTheme, setLightTheme] = useState<
 		"air" | "paper" | "midday" | "clarity"
@@ -35,40 +36,41 @@ function SettingsDemo() {
 		"graphite" | "monokai" | "midnight" | "ink"
 	>("monokai");
 	const [accent, setAccent] = useState("#1668ff");
-	const [historyLimit, setHistoryLimit] = useState(100);
 	const resolvedTheme = mode === "auto" ? "light" : mode;
 	const resolvedAccent = resolveEditorAccentColor(accent);
 
 	return (
-		<div className="space-y-8">
-			{/* Appearance */}
-			<div>
-				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					Appearance (theme + accent)
-				</div>
-				<ThemePresetRow
-					themeMode={mode}
-					resolvedTheme={resolvedTheme}
-					lightTheme={lightTheme}
-					darkTheme={darkTheme}
-					onThemeModeChange={setMode}
-					onLightThemeChange={(value) => {
-						setLightTheme(value);
-						setAccent((current) =>
-							getAccentColorForLightThemeSelection(value, current),
-						);
-					}}
-					onDarkThemeChange={(value) => {
-						setDarkTheme(value);
-						setAccent((current) =>
-							getAccentColorForDarkThemeSelection(value, current),
-						);
-					}}
-				/>
-				<AccentSwatchRow value={resolvedAccent} onChange={setAccent} />
-			</div>
+		<div className="space-y-4">
+			<ThemePresetRow
+				themeMode={mode}
+				resolvedTheme={resolvedTheme}
+				lightTheme={lightTheme}
+				darkTheme={darkTheme}
+				onThemeModeChange={setMode}
+				onLightThemeChange={(value) => {
+					setLightTheme(value);
+					setAccent((current) =>
+						getAccentColorForLightThemeSelection(value, current),
+					);
+				}}
+				onDarkThemeChange={(value) => {
+					setDarkTheme(value);
+					setAccent((current) =>
+						getAccentColorForDarkThemeSelection(value, current),
+					);
+				}}
+			/>
+			<AccentSwatchRow value={resolvedAccent} onChange={setAccent} />
+		</div>
+	);
+}
 
-			{/* Toggle item */}
+function SettingsPrimitivesDemo() {
+	const [previewSticky, setPreviewSticky] = useState(true);
+	const [historyLimit, setHistoryLimit] = useState(100);
+
+	return (
+		<div className="space-y-8">
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Toggle item (SettingRow)
@@ -82,7 +84,6 @@ function SettingsDemo() {
 				/>
 			</div>
 
-			{/* Action items */}
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Action items (ActionRow)
@@ -109,7 +110,6 @@ function SettingsDemo() {
 				/>
 			</div>
 
-			{/* Numeric items */}
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Numeric items (NumericRow)
@@ -122,7 +122,6 @@ function SettingsDemo() {
 				/>
 			</div>
 
-			{/* Action with destructive */}
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Destructive action items
@@ -153,20 +152,30 @@ function SettingsDemo() {
 export function SettingsDemos() {
 	return (
 		<>
-			{/* Settings Controls */}
 			<ComponentPreview
-				id="composite-settings"
-				name="Settings Controls"
-				description="Shared settings panel building blocks: theme/accent pickers, toggle rows, action rows, and numeric rows."
+				id="composite-settings-theme"
+				name="Settings Theme Controls"
+				description="Theme and accent controls shared between editor settings and the design system."
 				sourceFile="src/panels/settings/SettingsShared.tsx"
 				props={[]}
 			>
 				<div className="w-[560px]">
-					<SettingsDemo />
+					<ThemeSettingsDemo />
 				</div>
 			</ComponentPreview>
 
-			{/* Settings Nav Item */}
+			<ComponentPreview
+				id="composite-settings-primitives"
+				name="Settings Panel Primitives"
+				description="Reusable settings panel rows and layout primitives promoted to the shared UI surface."
+				sourceFile="src/components/ui/settings-panel.tsx"
+				props={[]}
+			>
+				<div className="w-[560px]">
+					<SettingsPrimitivesDemo />
+				</div>
+			</ComponentPreview>
+
 			<ComponentPreview
 				id="composite-settings-nav"
 				name="Settings Nav Item"
