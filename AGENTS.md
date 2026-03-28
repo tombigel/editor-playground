@@ -73,6 +73,14 @@ Important functional change includes (non-exhaustive):
 When no doc change is needed, explicitly confirm why in the final summary.
 When a change is not reasonably testable, explicitly confirm why in the final summary.
 
+## Build Gate
+
+For every substantial or multi-file task, run `npm run build` before finishing the task.
+
+- treat build failures as blockers for completion
+- fix build issues introduced by the change before handing off
+- if a pre-existing unrelated build failure prevents completion, call it out explicitly in the final summary with the failing area
+
 ## Archived Documents
 
 Files under `archive/` are historical records only. Do not read, reference, or act on them unless explicitly asked. They reflect past state and may contradict current code or active plans.
