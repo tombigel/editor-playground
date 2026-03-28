@@ -106,7 +106,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td><a href="#animation--sticky-ux-behaviors-and-a11y">Animation + sticky UI, behaviors, a11y</a></td>
       <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
       <td>UX</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
+      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap;">Partially present</span></td>
       <td>Shared</td>
       <td>Dep: <code>RI-05</code></td>
     </tr>
@@ -124,7 +124,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td><a href="#responsive-and-adaptive-authoring-model">Responsive and adaptive authoring model</a></td>
       <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
       <td>Feature</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
+      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap;">Partially present</span></td>
       <td>Shared</td>
       <td>-</td>
     </tr>
