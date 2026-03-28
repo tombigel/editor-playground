@@ -52,7 +52,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <th>Type</th>
       <th>Status</th>
       <th>Owner lane</th>
-      <th>Dependencies</th>
+      <th>Notes / dependencies</th>
     </tr>
   </thead>
   <tbody>
@@ -72,7 +72,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>UX</td>
       <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
       <td>LLM</td>
-      <td>-</td>
+      <td>Note: standalone or can land as part of <code>RI-03</code>/<code>RI-04</code>/<code>RI-05</code></td>
     </tr>
     <tr>
       <td><code>RI-03</code></td>
@@ -99,7 +99,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>UX</td>
       <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
       <td>Human</td>
-      <td>-</td>
+      <td>Dep: <code>RI-03</code>, <code>RI-04</code></td>
     </tr>
     <tr>
       <td><code>RI-06</code></td>
@@ -108,7 +108,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>UX</td>
       <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
       <td>Shared</td>
-      <td><code>RI-05</code></td>
+      <td>Dep: <code>RI-05</code></td>
     </tr>
     <tr>
       <td><code>RI-07</code></td>
@@ -120,7 +120,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>-</td>
     </tr>
     <tr>
-      <td><code>RI-09</code></td>
+      <td>Dep: <code>RI-09</code></td>
       <td><a href="#responsive-and-adaptive-authoring-model">Responsive and adaptive authoring model</a></td>
       <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
       <td>Feature</td>
@@ -135,7 +135,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>Feature</td>
       <td><span style="background:#92400e;color:#fff;padding:2px 8px;border-radius:999px;">Needs audit</span></td>
       <td>Shared</td>
-      <td><code>RI-09</code></td>
+      <td>Dep: <code>RI-09</code></td>
     </tr>
     <tr>
       <td><code>RI-11</code></td>
@@ -147,7 +147,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>-</td>
     </tr>
     <tr>
-      <td><code>RI-12</code></td>
+      <td><code>RI-12A</code></td>
       <td><a href="#more-semantic-components">More semantic components</a></td>
       <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
       <td>Feature</td>
@@ -156,39 +156,12 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>-</td>
     </tr>
     <tr>
-      <td><code>RI-12</code></td>
+      <td><code>RI-12B</code></td>
       <td><a href="#semantic-wrappers-and-grouping">Semantic wrappers and grouping</a></td>
       <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
       <td>UX</td>
       <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
       <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-14</code></td>
-      <td><a href="#export-surface-expansion">Export surface expansion</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-23</code></td>
-      <td><a href="#arbitrary-code-support-for-components">Arbitrary code support for components</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Research</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-24</code></td>
-      <td><a href="#arbitrary-css-support-for-components">Arbitrary CSS support for components</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Research</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
       <td>-</td>
     </tr>
     <tr>
@@ -210,24 +183,6 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>-</td>
     </tr>
     <tr>
-      <td><code>RI-28</code></td>
-      <td><a href="#rich-text-component-with-inline-styling-preferably-md-backed">Rich text component with inline styling, preferably MD-backed</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-08</code></td>
-      <td><a href="#view-transitions-between-pages-and-beyond">View transitions between pages and beyond</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
       <td><code>RI-13</code></td>
       <td><a href="#ai-integration-for-site-building-animations-skills-and-mcps">AI integration for site building, animations, skills, MCPs</a></td>
       <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
@@ -237,26 +192,17 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>-</td>
     </tr>
     <tr>
-      <td><code>RI-15</code></td>
-      <td><a href="#import-from-external-sources">Import from external sources</a></td>
+      <td><code>RI-14</code></td>
+      <td><a href="#export-surface-expansion">Export surface expansion</a></td>
       <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
       <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
       <td>Shared</td>
       <td>-</td>
     </tr>
     <tr>
       <td><code>RI-16</code></td>
       <td><a href="#user-management">User management</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-17</code></td>
-      <td><a href="#collaboration">Collaboration</a></td>
       <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
       <td>Platform</td>
       <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
@@ -291,9 +237,45 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
       <td>-</td>
     </tr>
     <tr>
+      <td><code>RI-28</code></td>
+      <td><a href="#rich-text-component-with-inline-styling-preferably-md-backed">Rich text component with inline styling, preferably MD-backed</a></td>
+      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
+      <td>Feature</td>
+      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td>Shared</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><code>RI-08</code></td>
+      <td><a href="#view-transitions-between-pages-and-beyond">View transitions between pages and beyond</a></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
+      <td>Feature</td>
+      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td>Human</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><code>RI-15</code></td>
+      <td><a href="#import-from-external-sources">Import from external sources</a></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
+      <td>Feature</td>
+      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td>Shared</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><code>RI-17</code></td>
+      <td><a href="#collaboration">Collaboration</a></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
+      <td>Platform</td>
+      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td>Human</td>
+      <td>-</td>
+    </tr>
+    <tr>
       <td><code>RI-21</code></td>
       <td><a href="#connect-to-external-cms">Connect to external CMS</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
       <td>Platform</td>
       <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
       <td>Human</td>
@@ -302,8 +284,26 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
     <tr>
       <td><code>RI-22</code></td>
       <td><a href="#connect-to-wix-services">Connect to Wix services</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
       <td>Platform</td>
+      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td>Human</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><code>RI-23</code></td>
+      <td><a href="#arbitrary-code-support-for-components">Arbitrary code support for components</a></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
+      <td>Research</td>
+      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
+      <td>Human</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><code>RI-24</code></td>
+      <td><a href="#arbitrary-css-support-for-components">Arbitrary CSS support for components</a></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
+      <td>Research</td>
       <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
       <td>Human</td>
       <td>-</td>
@@ -311,11 +311,11 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
     <tr>
       <td><code>RI-26</code></td>
       <td><a href="#interact-custom-effects-support">Interact custom effects support</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
+      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
       <td>Feature</td>
       <td><span style="background:#92400e;color:#fff;padding:2px 8px;border-radius:999px;">Needs audit</span></td>
       <td>Shared</td>
-      <td>-</td>
+      <td>Dep: <code>RI-02</code>, <code>RI-03</code>, <code>RI-04</code>, <code>RI-05</code>, <code>RI-06</code></td>
     </tr>
   </tbody>
 </table>
@@ -335,7 +335,8 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-09` responsivity - support for media queriers - breakpoints, but not only - toch device media quesries, a11y media queries, other interesting.
 - `RI-10` editor stage responsive behavior
 - `RI-11` more components - svg, video, gradients
-- `RI-12` more semantics, maybe expose as components or compliations - nav, aside, etc.
+- `RI-12A` more semantic components - for example links have more types than just a web url, we need dialogs, landmarks etc.
+- `RI-12B` semantic wrappers / grouping - wrapping links with nav makes them a menu, aside, article etc. changes the semantics of components and can also change the ux of handling them
 - `RI-13` ai integration, preliminary integration, both for site building and for aniamtions, skills, mcps
 - `RI-14` different export abilities - static site (current), react app, electron app?, pdf? image?, presentation?
 - `RI-15` import from existing html, image (ai?), figma (with mcp?)?
@@ -407,6 +408,7 @@ None yet.
 - `Owner lane`: `LLM`
 - `Status`: `Not started`
 - `Source`: `RI-02`
+- `Relationship`: Standalone task, or it can land as part of `RI-03`, `RI-04`, or `RI-05`.
 - `Why it matters`: A functional animation authoring flow needs visible stage feedback, especially if sticky already has clear stage indicators.
 - `Current state`: Sticky preview and guides are well defined in the stage; animation preview exists globally, but an equivalent node-level on-stage indicator is not documented.
 - `Next move`: Decide whether the first indicator is a badge, outline, trigger hint, or a richer overlay model.
@@ -427,6 +429,7 @@ None yet.
 - `Owner lane`: `Human`
 - `Status`: `Not started`
 - `Source`: `RI-05`
+- `Dependencies`: `RI-03`, `RI-04`
 - `Why it matters`: Once the subsystem is proven functionally, it needs a designed authoring experience with clear product thinking, understandable UX, and intentional editing flows.
 - `Current state`: Current animation affordances are model- and preview-oriented; no designed product-grade inspector or focused-mode workflow is documented yet.
 - `Next review question`: What should the final user-facing animation workflow feel like once we move past the functional development UI?
@@ -486,16 +489,6 @@ None yet.
 - `Current state`: Current docs and export flow are centered on a single document/site page.
 - `Next review question`: Is the first version truly multi-page authoring, or a looser linked-pages system with separate documents?
 
-##### Export surface expansion
-
-- `Type`: `Feature`
-- `Owner lane`: `Shared`
-- `Status`: `Partially present`
-- `Source`: `RI-14`
-- `Why it matters`: Export format breadth determines where the playground can be used and how reusable the model becomes.
-- `Current state`: JSON import/export and static rendered-site export already exist; React app, Electron, PDF, image, and presentation exports do not.
-- `Next move`: Rank target exports by strategic value and by how much shared render logic they can reuse.
-
 ##### More components: SVG, video, gradients
 
 - `Type`: `Feature`
@@ -506,22 +499,12 @@ None yet.
 - `Current state`: The current core leaf set is text, image, link, and button.
 - `Next move`: Rank candidate components by model complexity and export/site value rather than by visual novelty alone.
 
-##### Rich text component with inline styling, preferably MD-backed
-
-- `Type`: `Feature`
-- `Owner lane`: `Shared`
-- `Status`: `Not started`
-- `Source`: `RI-28`
-- `Why it matters`: A richer text surface can unlock more realistic content authoring without forcing authors to decompose every text pattern into many separate nodes.
-- `Current state`: The current text model supports text content, semantic tags, and typography/design controls, but not a richer inline-styled text authoring surface.
-- `Next review question`: Should the first version optimize for markdown-backed authoring, rich inline editing UX, or a model that can support both?
-
 ##### More semantic components
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
 - `Status`: `Partially present`
-- `Source`: `RI-12`
+- `Source`: `RI-12A`
 - `Why it matters`: The editor needs richer semantic building blocks, not just generic visual nodes, so authored output can express more real UI and content patterns.
 - `Current state`: Some semantic capability already exists through wrapper roles and text tag authoring, but there is no broader semantic component surface for cases like richer link types, dialogs, landmarks, and related semantic elements.
 - `Next move`: Separate semantic component expansion from wrapper semantics and rank the first additions by authoring value, export value, and accessibility impact.
@@ -531,7 +514,7 @@ None yet.
 - `Type`: `UX`
 - `Owner lane`: `Shared`
 - `Status`: `Partially present`
-- `Source`: `RI-12`
+- `Source`: `RI-12B`
 - `Why it matters`: Group-level semantics such as `nav`, `aside`, or `article` can change both exported meaning and the editor UX for how grouped content is handled.
 - `Current state`: The editor already has structural wrapper roles such as `section`, `header`, `footer`, and `container`, but it does not yet expose a broader grouping semantics layer that can reinterpret child meaning or authoring behavior.
 - `Next move`: Define how semantic grouping should affect export semantics, inspector controls, and editing affordances without collapsing into arbitrary wrapper complexity.
@@ -558,25 +541,7 @@ None yet.
 
 #### Research
 
-##### Arbitrary code support for components
-
-- `Type`: `Research`
-- `Owner lane`: `Human`
-- `Status`: `Not started`
-- `Source`: `RI-23`
-- `Why it matters`: Arbitrary code support can unlock power-user extensibility, but it has major security, portability, and editor-boundary implications.
-- `Current state`: The current architecture is API-first and model-driven; arbitrary component code is outside the present contract.
-- `Next review question`: Is this a strategic capability or a pressure valve for missing built-in components?
-
-##### Arbitrary CSS support for components
-
-- `Type`: `Research`
-- `Owner lane`: `Human`
-- `Status`: `Not started`
-- `Source`: `RI-24`
-- `Why it matters`: Arbitrary CSS could unlock fast experimentation, but it may weaken editor predictability and renderer parity.
-- `Current state`: Styling is currently modeled and exported through the existing node/style system rather than freeform CSS injection.
-- `Next review question`: Should arbitrary CSS exist at all, and if so at what scope: component, page, or project?
+None yet.
 
 ### Priority: Low
 
@@ -597,35 +562,25 @@ None yet.
 - `Current state`: There is no productized AI layer in the current editor flow.
 - `Next review question`: Which role comes first: generation, transformation, animation help, or operator tooling?
 
-##### View transitions between pages and beyond
-
-- `Type`: `Feature`
-- `Owner lane`: `Human`
-- `Status`: `Not started`
-- `Source`: `RI-08`
-- `Why it matters`: Transition systems can become a major part of site feel, especially if the product expands past one page.
-- `Current state`: No view-transition system is currently documented.
-- `Next move`: Revisit after the first multi-page decision, while keeping room for same-page/state transitions too.
-
-##### Interact custom effects support
+##### Export surface expansion
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Needs audit`
-- `Source`: `RI-26`
-- `Why it matters`: Custom effects could close the gap between built-in presets and advanced animation needs.
-- `Current state`: The project already supports named motion presets plus custom keyframe effects and uses `@wix/interact` for runtime wiring, but “custom effects” needs a sharper product definition.
-- `Next review question`: Is this asking for richer authoring of existing keyframes, deeper Interact surface exposure, or something else?
+- `Status`: `Partially present`
+- `Source`: `RI-14`
+- `Why it matters`: Export format breadth determines where the playground can be used and how reusable the model becomes.
+- `Current state`: JSON import/export and static rendered-site export already exist; React app, Electron, PDF, image, and presentation exports do not.
+- `Next move`: Rank target exports by strategic value and by how much shared render logic they can reuse.
 
-##### Import from external sources
+##### Rich text component with inline styling, preferably MD-backed
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
 - `Status`: `Not started`
-- `Source`: `RI-15`
-- `Why it matters`: Import can accelerate adoption and create a bridge from existing content/design sources into the editor.
-- `Current state`: Import currently focuses on the project’s own document JSON format.
-- `Next review question`: Which source matters first: HTML, image-to-structure, or Figma/MCP-assisted intake?
+- `Source`: `RI-28`
+- `Why it matters`: A richer text surface can unlock more realistic content authoring without forcing authors to decompose every text pattern into many separate nodes.
+- `Current state`: The current text model supports text content, semantic tags, and typography/design controls, but not a richer inline-styled text authoring surface.
+- `Next review question`: Should the first version optimize for markdown-backed authoring, rich inline editing UX, or a model that can support both?
 
 #### Platform
 
@@ -638,16 +593,6 @@ None yet.
 - `Why it matters`: Identity and account boundaries are foundational if the tool grows beyond a local playground.
 - `Current state`: The current project behaves like a local editor, not a multi-user product.
 - `Next review question`: Does this belong to the playground roadmap now, or only once hosted product goals become real?
-
-##### Collaboration
-
-- `Type`: `Platform`
-- `Owner lane`: `Human`
-- `Status`: `Not started`
-- `Source`: `RI-17`
-- `Why it matters`: Collaboration changes document ownership, state consistency, editing flows, and product positioning.
-- `Current state`: No collaboration model is present in the current editor.
-- `Next move`: Keep this visible, but revisit only after document/page/project boundaries are clearer.
 
 ##### Project management
 
@@ -679,6 +624,73 @@ None yet.
 - `Current state`: The document is currently fully authored in-editor rather than bound to live content collections.
 - `Next review question`: Is native CMS a goal, or is connector-based external CMS support enough?
 
+#### Refactor
+
+None yet.
+
+#### Infra
+
+None yet.
+
+#### Research
+
+None yet.
+
+### Priority: Optional
+
+#### Bug
+
+None yet.
+
+#### UX
+
+None yet.
+
+#### Feature
+
+##### View transitions between pages and beyond
+
+- `Type`: `Feature`
+- `Owner lane`: `Human`
+- `Status`: `Not started`
+- `Source`: `RI-08`
+- `Why it matters`: Transition systems can become a major part of site feel, especially if the product expands past one page.
+- `Current state`: No view-transition system is currently documented.
+- `Next move`: Revisit after the first multi-page decision, while keeping room for same-page/state transitions too.
+
+##### Import from external sources
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-15`
+- `Why it matters`: Import can accelerate adoption and create a bridge from existing content/design sources into the editor.
+- `Current state`: Import currently focuses on the project’s own document JSON format.
+- `Next review question`: Which source matters first: HTML, image-to-structure, or Figma/MCP-assisted intake?
+
+##### Interact custom effects support
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Needs audit`
+- `Source`: `RI-26`
+- `Dependencies`: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`
+- `Why it matters`: Custom effects could close the gap between built-in presets and advanced animation needs.
+- `Current state`: The project already supports named motion presets plus custom keyframe effects and uses `@wix/interact` for runtime wiring, but “custom effects” needs a sharper product definition.
+- `Next review question`: Is this asking for richer authoring of existing keyframes, deeper Interact surface exposure, or something else?
+
+#### Platform
+
+##### Collaboration
+
+- `Type`: `Platform`
+- `Owner lane`: `Human`
+- `Status`: `Not started`
+- `Source`: `RI-17`
+- `Why it matters`: Collaboration changes document ownership, state consistency, editing flows, and product positioning.
+- `Current state`: No collaboration model is present in the current editor.
+- `Next move`: Keep this visible, but revisit only after document/page/project boundaries are clearer.
+
 ##### Connect to external CMS
 
 - `Type`: `Platform`
@@ -709,37 +721,25 @@ None yet.
 
 #### Research
 
-None yet.
+##### Arbitrary code support for components
 
-### Priority: Optional
+- `Type`: `Research`
+- `Owner lane`: `Human`
+- `Status`: `Not started`
+- `Source`: `RI-23`
+- `Why it matters`: Arbitrary code support can unlock power-user extensibility, but it has major security, portability, and editor-boundary implications.
+- `Current state`: The current architecture is API-first and model-driven; arbitrary component code is outside the present contract.
+- `Next review question`: Is this a strategic capability or a pressure valve for missing built-in components?
 
-#### Bug
+##### Arbitrary CSS support for components
 
-None yet.
-
-#### UX
-
-None yet.
-
-#### Feature
-
-None yet.
-
-#### Platform
-
-None yet.
-
-#### Refactor
-
-None yet.
-
-#### Infra
-
-None yet.
-
-#### Research
-
-None yet.
+- `Type`: `Research`
+- `Owner lane`: `Human`
+- `Status`: `Not started`
+- `Source`: `RI-24`
+- `Why it matters`: Arbitrary CSS could unlock fast experimentation, but it may weaken editor predictability and renderer parity.
+- `Current state`: Styling is currently modeled and exported through the existing node/style system rather than freeform CSS injection.
+- `Next review question`: Should arbitrary CSS exist at all, and if so at what scope: component, page, or project?
 
 ## Implementation Pre-Plan
 
@@ -749,7 +749,7 @@ It is still pre-planning, not a final technical implementation spec. The goal is
 
 ### Pre-Plan 01: Unified text system evolution
 
-- `Related roadmap items`: `RI-11`, `RI-12`, `RI-28`
+- `Related roadmap items`: `RI-11`, `RI-12A`, `RI-12B`, `RI-28`
 - `May expand later`: `RI-20`
 - `Intent`: Evolve text-related components into a more coherent system where simple text, links, richer text, and semantic grouping are related rather than isolated point features.
 - `Working idea`: Keep the current single-style text component as the simple baseline. Let the link component derive from that model rather than feeling like completely separate logic. Add a richer text component that supports inline styling, preferably with markdown behind the scenes.
