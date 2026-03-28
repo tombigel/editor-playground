@@ -184,14 +184,14 @@ describe('filterInteractConfig', () => {
 
     // Both should be present
     expect(config.interactions.some((i) => i.trigger === 'viewEnter')).toBe(true);
-    expect(config.interactions.some((i) => i.trigger === 'click')).toBe(true);
+    expect(config.interactions.some((i) => i.trigger === 'activate')).toBe(true);
 
     // Filter with only entrance enabled
     const filtered = filterInteractConfig(config, { entrance: true, click: false });
 
     // Only viewEnter should remain
     expect(filtered.interactions.some((i) => i.trigger === 'viewEnter')).toBe(true);
-    expect(filtered.interactions.some((i) => i.trigger === 'click')).toBe(false);
+    expect(filtered.interactions.some((i) => i.trigger === 'activate')).toBe(false);
   });
 });
 
@@ -262,7 +262,7 @@ describe('buildPreviewConfig', () => {
 
     // Should have entrance but not hover
     expect(config.interactions.some((i) => i.trigger === 'viewEnter')).toBe(true);
-    expect(config.interactions.some((i) => i.trigger === 'hover')).toBe(false);
+    expect(config.interactions.some((i) => i.trigger === 'interest')).toBe(false);
   });
 });
 
@@ -365,5 +365,53 @@ describe('createAnimationPreview', () => {
     expect(() => handle.invoke(nodeId, 'click')).not.toThrow();
     expect(() => handle.invoke(nodeId, 'hoverIn')).not.toThrow();
     expect(() => handle.invoke(nodeId, 'hoverOut')).not.toThrow();
+  });
+
+  it('invoke dispatches mouseenter and mouseleave for hover actions', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const withAnim = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'FadeIn',
+      outAction: 'none',
+    });
+    const config = buildDocumentInteractConfig(withAnim);
+
+    const dispatched: string[] = [];
+    const el = {
+      dispatchEvent: vi.fn((event: Event) => {
+        dispatched.push(event.type);
+        return true;
+      }),
+    };
+    const originalDocument = globalThis.document;
+    const originalMouseEvent = globalThis.MouseEvent;
+    vi.stubGlobal('document', {
+      querySelector: vi.fn(() => el),
+      querySelectorAll: vi.fn(() => []),
+    });
+    vi.stubGlobal('MouseEvent', class extends Event {});
+
+    try {
+      const handle = createAnimationPreview(config);
+      handle.invoke(nodeId, 'hoverIn');
+      handle.invoke(nodeId, 'hoverOut');
+
+      expect(dispatched).toContain('mouseenter');
+      expect(dispatched).toContain('mouseleave');
+    } finally {
+      if (originalDocument === undefined) {
+        // @ts-expect-error restoring deleted global in test
+        delete globalThis.document;
+      } else {
+        vi.stubGlobal('document', originalDocument);
+      }
+      if (originalMouseEvent === undefined) {
+        // @ts-expect-error restoring deleted global in test
+        delete globalThis.MouseEvent;
+      } else {
+        vi.stubGlobal('MouseEvent', originalMouseEvent);
+      }
+    }
   });
 });

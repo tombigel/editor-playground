@@ -6,7 +6,15 @@ export type { InteractConfig } from '@wix/interact/web';
 
 // ── Triggers ──────────────────────────────────────────────────────────────────
 
-export type AnimationTriggerType = 'entrance' | 'ongoing' | 'scroll' | 'click' | 'hover' | 'mouse';
+export type AnimationTriggerType =
+  | 'entrance'
+  | 'ongoing'
+  | 'scroll'
+  | 'click'
+  | 'activate'
+  | 'hover'
+  | 'interest'
+  | 'mouse';
 
 // ── Named effect base types ──────────────────────────────────────────────────
 // @wix/motion-presets does not export its preset union types from the public
@@ -78,18 +86,20 @@ export type MouseAnimationDefinition = {
 };
 
 export type ClickAnimationDefinition = {
-  trigger: 'click';
+  trigger: 'click' | 'activate';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | NamedOngoingEffect | KeyframeAnimationEffect;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
 
+export type HoverOutAction = 'keep' | 'reverse' | 'none';
+
 export type HoverAnimationDefinition = {
-  trigger: 'hover';
+  trigger: 'hover' | 'interest';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | NamedOngoingEffect | KeyframeAnimationEffect;
-  ongoingOnOut?: 'reset' | 'keep';
+  outAction?: HoverOutAction;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };

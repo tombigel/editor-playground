@@ -573,16 +573,17 @@ All non-site nodes support a singular `animation?: AnimationDefinition` property
 
 ### Trigger Types
 
-Six trigger types are supported, each with preset effect constraints:
+Six trigger families are supported, with `hover`/`interest` and `click`/`activate` acting as aliases at the document-model level:
 
 - `entrance` (viewEnter): animation plays when element enters viewport
 - `ongoing` (viewEnter with loop): animation loops continuously while element is in viewport
 - `scroll` (viewProgress): animation progresses with scroll position
-- `click`: animation plays on click
-- `hover`: animation plays on hover; entrance animations reverse on hover-out (alternate), ongoing animations obey `ongoingOnOut: 'reset' | 'keep'`
+- `click` / `activate`: animation plays on activation
+- `hover` / `interest`: animation plays on hover/interest and can define an explicit `outAction: 'reverse' | 'keep' | 'none'`
 - `mouse` (pointerMove): animation progresses with pointer movement
 
 Trigger types have inherent preset constraints; `keyframe` effects bypass trigger constraints and work with any trigger.
+When exporting/building Interact config, click-like triggers are canonicalized to `activate` and hover-like triggers are canonicalized to `interest`.
 
 ### Effect Types
 
@@ -597,9 +598,15 @@ A `triggerId` field enables one element to trigger while another animates. The `
 
 ### Hover Behavior
 
-For `hover` trigger:
-- entrance animations reverse on hover-out using alternate playback
-- ongoing animations can be configured with `ongoingOnOut: 'reset'` (stop and reset to start) or `ongoingOnOut: 'keep'` (continue from current position)
+For `hover` / `interest` triggers:
+- `outAction: 'reverse'` maps to Interact hover mode `{ type: 'alternate' }`
+- `outAction: 'keep'` maps to Interact hover mode `{ type: 'state' }`, so hover behaves like play/pause
+- `outAction: 'none'` maps to Interact hover mode `{ type: 'repeat' }`, so hover-out cancels and resets
+- `outAction` is supported for hover entrance, hover ongoing, and hover keyframe animations
+- hover reverse effects are emitted with `fill: 'both'` so alternate enter/leave holds the active state correctly
+- hover `keep` and `none` omit `fill`, matching Interact's native `state` and `repeat` behavior
+- hover ongoing named presets with `outAction: 'keep'` are emitted with `iterations: Infinity` so they can resume naturally
+- when `outAction` is omitted, hover defaults to `'reverse'`
 
 ### Sticky Requirement
 

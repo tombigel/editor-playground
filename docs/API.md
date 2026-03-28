@@ -404,9 +404,9 @@ All mutating functions are pure `DocumentModel → DocumentModel`.
 
 | Function | Signature | Description |
 |---|---|---|
-| `setPresetAnimation` | `(doc, target, { trigger, preset, options?, source?, ongoingOnOut?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a named preset animation on a node. Validates preset/trigger compatibility. |
-| `setKeyframeAnimation` | `(doc, target, { trigger, name, keyframes, duration?, easing?, source?, ongoingOnOut?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a custom WAAPI-style keyframe animation on a node. |
-| `updateAnimationOptions` | `(doc, target, { source?, ongoingOnOut?, reducedMotion?, requiresSticky? }) → DocumentModel` | Merges options onto an existing animation. Throws if the node has no animation. |
+| `setPresetAnimation` | `(doc, target, { trigger, preset, options?, source?, outAction?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a named preset animation on a node. Validates preset/trigger compatibility. |
+| `setKeyframeAnimation` | `(doc, target, { trigger, name, keyframes, duration?, easing?, source?, outAction?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a custom WAAPI-style keyframe animation on a node. |
+| `updateAnimationOptions` | `(doc, target, { source?, outAction?, reducedMotion?, requiresSticky? }) → DocumentModel` | Merges options onto an existing animation. Throws if the node has no animation. |
 | `clearAnimation` | `(doc, target) → DocumentModel` | Removes an animation from a node. Silent no-op if absent. |
 | `setDocumentAnimationSettings` | `(doc, settings) → DocumentModel` | Sets document-level animation settings (a11y policy). |
 
@@ -449,8 +449,8 @@ There are two distinct layers of configuration on an animation:
 | `entrance` | `viewEnter` | 1000ms | browser default | 1 | n/a | `{ type: 'once' }` |
 | `ongoing` | `viewEnter` | 1000ms | browser default | `Infinity` | n/a | `{ type: 'once', threshold: -0.1 }` |
 | `scroll` | `viewProgress` | n/a (scrub) | `'linear'` | 1 | `entry 0%` → `exit 100%` | — |
-| `hover` | `hover` | 1000ms | browser default | 1 | n/a | `{ type: 'alternate' }` |
-| `click` | `click` | 1000ms | browser default | 1 | n/a | — |
+| `hover` / `interest` | `interest` | 1000ms | browser default | 1 | n/a | `reverse -> { type: 'alternate' }`, `keep -> { type: 'state' }`, `none -> { type: 'repeat' }` |
+| `click` / `activate` | `activate` | 1000ms | browser default | 1 | n/a | — |
 | `mouse` | `pointerMove` | n/a | n/a | n/a | n/a | `{ hitArea: 'self' }` |
 
 Scroll range defaults are exported as `SCROLL_DEFAULT_RANGE_START` and `SCROLL_DEFAULT_RANGE_END`.
@@ -467,13 +467,24 @@ From the official `@wix/motion-presets` documentation:
 
 The config builder defaults to **1000ms**, which sits in the decorative range.
 
+### Trigger Aliases
+
+- The document model accepts both `hover` and `interest` for hover-like interactions.
+- The document model accepts both `click` and `activate` for click-like interactions.
+- `buildDocumentInteractConfig` always canonicalizes those aliases to Interact's accessibility-aware triggers: `interest` and `activate`.
+
 ### Special Hover Behavior
 
-The config builder applies additional rules when the trigger is `hover`:
+The config builder applies additional rules when the trigger is `hover` or `interest`:
 
-- **Entrance presets** used with a `hover` trigger get `alternate: true`, so the animation reverses automatically on pointer leave.
-- **Ongoing presets** with `ongoingOnOut: 'keep'` get `fill: 'forwards'`, so the element holds its end state after the animation completes.
-- **Keyframe effects** on hover without `ongoingOnOut` also get `alternate: true`.
+- `outAction: 'reverse'` maps to Interact hover mode `{ type: 'alternate' }`, so enter plays forward and leave reverses.
+- `outAction: 'keep'` maps to Interact hover mode `{ type: 'state' }`, so hover behaves like play/pause instead of reset/restart.
+- `outAction: 'none'` maps to Interact hover mode `{ type: 'repeat' }`, so enter restarts and leave cancels/resets.
+- Hover reverse effects are emitted with `fill: 'both'` so alternate enter/leave can hold the active hover state correctly.
+- Hover `keep` and `none` modes omit `fill`, following Interact's native `state` and `repeat` patterns.
+- `outAction` is supported for hover entrance, hover ongoing, and hover keyframe animations.
+- Hover ongoing named presets with `outAction: 'keep'` get `iterations: Infinity` so they can genuinely pause and resume.
+- When omitted, `outAction` defaults to `'reverse'`.
 
 ### Reduced Motion Priority Chain
 
@@ -501,7 +512,8 @@ Per-preset parameter details (defaults, intensity guides, atmosphere selection, 
 
 | Type | Description |
 |---|---|
-| `AnimationTriggerType` | `'entrance' \| 'ongoing' \| 'scroll' \| 'click' \| 'hover' \| 'mouse'` |
+| `AnimationTriggerType` | `'entrance' \| 'ongoing' \| 'scroll' \| 'click' \| 'activate' \| 'hover' \| 'interest' \| 'mouse'` |
+| `HoverOutAction` | `'keep' \| 'reverse' \| 'none'` — hover leave behavior selector. |
 | `AnimationDefinition` | Discriminated union of per-trigger animation definitions. |
 | `NamedAnimationEffect` | Union of all named preset effect wrappers. |
 | `KeyframeAnimationEffect` | WAAPI-style keyframe effect shape. |

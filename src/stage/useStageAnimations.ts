@@ -4,13 +4,17 @@ import type { AnimationPreviewState } from '../editor/types';
 import type { AnimationInvokeAction, AnimationPreviewHandle, AnimationTriggerType } from '../animations/types';
 import { createAnimationPreview, buildPreviewConfig } from '../animations/animationRuntime';
 
-const PASSIVE_DISABLED: AnimationTriggerType[] = ['click'];
+const PASSIVE_DISABLED: AnimationTriggerType[] = ['click', 'activate'];
 
 function buildEffectiveTriggers(
   preview: AnimationPreviewState,
 ): Record<AnimationTriggerType, boolean> | null {
   if (!preview.enabled) return null;
-  const base = { ...preview.triggers };
+  const base: Record<AnimationTriggerType, boolean> = {
+    ...preview.triggers,
+    activate: preview.triggers.click,
+    interest: preview.triggers.hover,
+  };
   if (preview.mode === 'passive') {
     for (const t of PASSIVE_DISABLED) {
       base[t] = false;

@@ -81,9 +81,9 @@ export function createAnimationPreview(config: InteractConfig): AnimationPreview
       if (action === 'click') {
         el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       } else if (action === 'hoverIn') {
-        el.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
+        el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
       } else if (action === 'hoverOut') {
-        el.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }));
+        el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
       }
     },
 
@@ -105,21 +105,37 @@ export function createAnimationPreview(config: InteractConfig): AnimationPreview
 const TRIGGER_TYPE_TO_INTERACT: Record<string, AnimationTriggerType[]> = {
   viewEnter: ['entrance', 'ongoing'],
   viewProgress: ['scroll'],
-  click: ['click'],
-  hover: ['hover'],
+  click: ['click', 'activate'],
+  activate: ['click', 'activate'],
+  hover: ['hover', 'interest'],
+  interest: ['hover', 'interest'],
   pointerMove: ['mouse'],
 };
+
+function isInteractionEnabled(
+  interactionTrigger: string,
+  triggers: Partial<Record<AnimationTriggerType, boolean>>,
+): boolean {
+  if (interactionTrigger === 'activate' || interactionTrigger === 'click') {
+    return triggers.activate ?? triggers.click ?? true;
+  }
+  if (interactionTrigger === 'interest' || interactionTrigger === 'hover') {
+    return triggers.interest ?? triggers.hover ?? true;
+  }
+
+  const mappedTypes = TRIGGER_TYPE_TO_INTERACT[interactionTrigger];
+  if (!mappedTypes) {
+    return true;
+  }
+  return mappedTypes.some((type) => triggers[type] !== false);
+}
 
 export function filterInteractConfig(
   config: InteractConfig,
   triggers: Partial<Record<AnimationTriggerType, boolean>>,
 ): InteractConfig {
   const filteredInteractions = config.interactions.filter((interaction) => {
-    const mappedTypes = TRIGGER_TYPE_TO_INTERACT[interaction.trigger];
-    if (!mappedTypes) {
-      return true;
-    }
-    return mappedTypes.some((type) => triggers[type] !== false);
+    return isInteractionEnabled(interaction.trigger, triggers);
   });
 
   return {

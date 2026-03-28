@@ -3,6 +3,8 @@ import type {
   AnimationDefinition,
   AnimationTriggerType,
   DocumentAnimationSettings,
+  HoverOutAction,
+  HoverAnimationDefinition,
   InteractConfig,
   KeyframeAnimationEffect,
   PresetInfo,
@@ -67,7 +69,9 @@ const TRIGGER_ALLOWED_CATEGORIES: Record<AnimationTriggerType, PresetCategory[]>
   scroll: ['scroll'],
   mouse: ['mouse'],
   click: ['entrance', 'ongoing'],
+  activate: ['entrance', 'ongoing'],
   hover: ['entrance', 'ongoing'],
+  interest: ['entrance', 'ongoing'],
 };
 
 // ── Preset param value enums ─────────────────────────────────────────────────
@@ -298,7 +302,7 @@ export function setPresetAnimation(
     preset: string;
     options?: Record<string, unknown>;
     source?: NodeId;
-    ongoingOnOut?: 'reset' | 'keep';
+    outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
     requiresSticky?: boolean;
   },
@@ -329,7 +333,7 @@ export function setPresetAnimation(
   const def: AnimationDefinition = buildDefinition(params.trigger, {
     effect,
     triggerId: params.source,
-    ongoingOnOut: params.ongoingOnOut,
+    outAction: params.outAction,
     reducedMotion: params.reducedMotion,
     requiresSticky: params.requiresSticky,
   });
@@ -347,7 +351,7 @@ export function setKeyframeAnimation(
     duration?: number;
     easing?: string;
     source?: NodeId;
-    ongoingOnOut?: 'reset' | 'keep';
+    outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
     requiresSticky?: boolean;
   },
@@ -366,7 +370,7 @@ export function setKeyframeAnimation(
   const def: AnimationDefinition = buildDefinition(params.trigger, {
     effect,
     triggerId: params.source,
-    ongoingOnOut: params.ongoingOnOut,
+    outAction: params.outAction,
     reducedMotion: params.reducedMotion,
     requiresSticky: params.requiresSticky,
   });
@@ -379,7 +383,7 @@ export function updateAnimationOptions(
   target: NodeId,
   updates: {
     source?: NodeId;
-    ongoingOnOut?: 'reset' | 'keep';
+    outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
     requiresSticky?: boolean;
   },
@@ -394,7 +398,7 @@ export function updateAnimationOptions(
 
   const updated = { ...existing } as Record<string, unknown>;
   if (updates.source !== undefined) updated.triggerId = updates.source;
-  if (updates.ongoingOnOut !== undefined) updated.ongoingOnOut = updates.ongoingOnOut;
+  if (updates.outAction !== undefined) updated.outAction = updates.outAction;
   if (updates.reducedMotion !== undefined) updated.reducedMotion = updates.reducedMotion;
   if (updates.requiresSticky !== undefined) updated.requiresSticky = updates.requiresSticky;
 
@@ -423,12 +427,18 @@ export function setDocumentAnimationSettings(
 
 // ── Config builder ───────────────────────────────────────────────────────────
 
+function isHoverLikeTrigger(trigger: AnimationTriggerType): trigger is 'hover' | 'interest' {
+  return trigger === 'hover' || trigger === 'interest';
+}
+
 const TRIGGER_MAP: Record<AnimationTriggerType, TriggerType> = {
   entrance: 'viewEnter',
   ongoing: 'viewEnter',
   scroll: 'viewProgress',
-  click: 'click',
-  hover: 'hover',
+  click: 'activate',
+  activate: 'activate',
+  hover: 'interest',
+  interest: 'interest',
   mouse: 'pointerMove',
 };
 
@@ -443,15 +453,16 @@ function resolveReducedMotion(
   return animDef.reducedMotion;
 }
 
+function getHoverOutAction(animDef: AnimationDefinition): HoverOutAction {
+  if (!isHoverLikeTrigger(animDef.trigger)) return 'none';
+  return (animDef as HoverAnimationDefinition).outAction ?? 'reverse';
+}
+
 function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
   const { effect } = animDef;
-  const isHoverEntrance =
-    animDef.trigger === 'hover' && effect.kind === 'named' && getPresetCategory(effect.type) === 'entrance';
+  const hoverOutAction = isHoverLikeTrigger(animDef.trigger) ? getHoverOutAction(animDef) : null;
   const isHoverOngoing =
-    animDef.trigger === 'hover' && effect.kind === 'named' && getPresetCategory(effect.type) === 'ongoing';
-  const isHoverKeyframeAlternate =
-    animDef.trigger === 'hover' && effect.kind === 'keyframe' &&
-    (animDef.trigger === 'hover' && !('ongoingOnOut' in animDef && animDef.ongoingOnOut));
+    isHoverLikeTrigger(animDef.trigger) && effect.kind === 'named' && getPresetCategory(effect.type) === 'ongoing';
 
   if (effect.kind === 'named') {
     // Strip `kind`, pass rest as namedEffect
@@ -473,12 +484,14 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
       duration: 1000,
     };
 
-    if (isHoverEntrance || isHoverKeyframeAlternate) {
-      timeEffect.alternate = true;
+    if (isHoverLikeTrigger(animDef.trigger) && hoverOutAction === 'reverse') {
+      timeEffect.fill = 'both';
     }
 
-    if (isHoverOngoing && 'ongoingOnOut' in animDef && animDef.ongoingOnOut === 'keep') {
-      timeEffect.fill = 'forwards';
+    // Interact's hover state mode is play/pause oriented; give ongoing presets
+    // infinite iterations so they can truly resume instead of finishing once.
+    if (hoverOutAction === 'keep' && isHoverOngoing) {
+      timeEffect.iterations = Infinity;
     }
 
     if (animDef.trigger === 'ongoing') {
@@ -514,16 +527,8 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
     easing: effect.easing,
   };
 
-  if (isHoverKeyframeAlternate) {
-    timeEffect.alternate = true;
-  }
-
-  if (
-    animDef.trigger === 'hover' &&
-    'ongoingOnOut' in animDef &&
-    animDef.ongoingOnOut === 'keep'
-  ) {
-    timeEffect.fill = 'forwards';
+  if (isHoverLikeTrigger(animDef.trigger) && hoverOutAction === 'reverse') {
+    timeEffect.fill = 'both';
   }
 
   if (animDef.trigger === 'ongoing') {
@@ -600,8 +605,14 @@ export function buildDocumentInteractConfig(doc: DocumentModel): InteractConfig 
       interaction.params = { type: 'once' };
     } else if (animDef.trigger === 'ongoing') {
       interaction.params = { type: 'once', threshold: -0.1 };
-    } else if (animDef.trigger === 'hover') {
-      interaction.params = { type: 'alternate' };
+    } else if (isHoverLikeTrigger(animDef.trigger)) {
+      const outAction = getHoverOutAction(animDef);
+      interaction.params =
+        outAction === 'reverse'
+          ? { type: 'alternate' }
+          : outAction === 'keep'
+            ? { type: 'state' }
+            : { type: 'repeat' };
     } else if (animDef.trigger === 'mouse') {
       interaction.params = { hitArea: 'self' };
     }
@@ -623,7 +634,7 @@ function buildDefinition(
   parts: {
     effect: AnimationDefinition['effect'];
     triggerId?: NodeId;
-    ongoingOnOut?: 'reset' | 'keep';
+    outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
     requiresSticky?: boolean;
   },
@@ -635,8 +646,8 @@ function buildDefinition(
   if (parts.triggerId) base.triggerId = parts.triggerId;
   if (parts.reducedMotion) base.reducedMotion = parts.reducedMotion;
   if (parts.requiresSticky) base.requiresSticky = parts.requiresSticky;
-  if (trigger === 'hover' && parts.ongoingOnOut) {
-    base.ongoingOnOut = parts.ongoingOnOut;
+  if (isHoverLikeTrigger(trigger) && parts.outAction) {
+    base.outAction = parts.outAction;
   }
   return base as AnimationDefinition;
 }

@@ -34,6 +34,7 @@ export type {
   MouseAnimationDefinition,
   ClickAnimationDefinition,
   HoverAnimationDefinition,
+  HoverOutAction,
   NamedEntranceEffect,
   NamedOngoingEffect,
   NamedScrollEffect,

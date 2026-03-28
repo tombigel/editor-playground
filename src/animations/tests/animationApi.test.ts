@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
-import type { AnimationDefinition } from '../types';
 import type { DocumentModel } from '../../model/types';
+import type { AnimationDefinition } from '../types';
 import {
   setPresetAnimation,
   setKeyframeAnimation,
@@ -136,6 +136,16 @@ describe('setPresetAnimation', () => {
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'FadeIn' });
   });
 
+  it('allows entrance preset on activate trigger', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, { trigger: 'activate', preset: 'FadeIn' });
+
+    const anim = getNodeAnimation(next, nodeId);
+    expect(anim?.trigger).toBe('activate');
+    expect(anim?.effect).toMatchObject({ kind: 'named', type: 'FadeIn' });
+  });
+
   it('allows entrance preset on hover trigger', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
@@ -143,6 +153,16 @@ describe('setPresetAnimation', () => {
 
     const anim = getNodeAnimation(next, nodeId);
     expect(anim?.trigger).toBe('hover');
+    expect(anim?.effect).toMatchObject({ kind: 'named', type: 'SlideIn' });
+  });
+
+  it('allows entrance preset on interest trigger', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, { trigger: 'interest', preset: 'SlideIn' });
+
+    const anim = getNodeAnimation(next, nodeId);
+    expect(anim?.trigger).toBe('interest');
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'SlideIn' });
   });
 
@@ -166,19 +186,19 @@ describe('setPresetAnimation', () => {
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'Bounce' });
   });
 
-  it('sets ongoingOnOut for hover trigger', () => {
+  it('sets outAction for hover trigger', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'Pulse',
-      ongoingOnOut: 'keep',
+      outAction: 'keep',
     });
 
     const anim = getNodeAnimation(next, nodeId);
     expect(anim?.trigger).toBe('hover');
     if (anim?.trigger === 'hover') {
-      expect(anim.ongoingOnOut).toBe('keep');
+      expect(anim.outAction).toBe('keep');
     }
   });
 });
@@ -213,7 +233,7 @@ describe('setKeyframeAnimation', () => {
   it('accepts any trigger type with keyframes', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
-    const triggers = ['entrance', 'ongoing', 'scroll', 'click', 'hover', 'mouse'] as const;
+    const triggers = ['entrance', 'ongoing', 'scroll', 'click', 'activate', 'hover', 'interest', 'mouse'] as const;
 
     for (const trigger of triggers) {
       const next = setKeyframeAnimation(doc, nodeId, {
@@ -553,8 +573,26 @@ describe('getPresetsForTrigger', () => {
     expect(categories.has('mouse')).toBe(false);
   });
 
+  it('returns entrance + ongoing presets for activate trigger', () => {
+    const results = getPresetsForTrigger('activate');
+    const categories = new Set(results.map((p) => p.category));
+    expect(categories.has('entrance')).toBe(true);
+    expect(categories.has('ongoing')).toBe(true);
+    expect(categories.has('scroll')).toBe(false);
+    expect(categories.has('mouse')).toBe(false);
+  });
+
   it('returns entrance + ongoing presets for hover trigger', () => {
     const results = getPresetsForTrigger('hover');
+    const categories = new Set(results.map((p) => p.category));
+    expect(categories.has('entrance')).toBe(true);
+    expect(categories.has('ongoing')).toBe(true);
+    expect(categories.has('scroll')).toBe(false);
+    expect(categories.has('mouse')).toBe(false);
+  });
+
+  it('returns entrance + ongoing presets for interest trigger', () => {
+    const results = getPresetsForTrigger('interest');
     const categories = new Set(results.map((p) => p.category));
     expect(categories.has('entrance')).toBe(true);
     expect(categories.has('ongoing')).toBe(true);
@@ -579,7 +617,7 @@ describe('getPresetsForTrigger', () => {
   });
 
   it('each entry has a params array', () => {
-    for (const trigger of ['entrance', 'ongoing', 'scroll', 'click', 'hover', 'mouse'] as const) {
+    for (const trigger of ['entrance', 'ongoing', 'scroll', 'click', 'activate', 'hover', 'interest', 'mouse'] as const) {
       const results = getPresetsForTrigger(trigger);
       for (const p of results) {
         expect(Array.isArray(p.params)).toBe(true);
@@ -647,23 +685,23 @@ describe('buildDocumentInteractConfig', () => {
     expect(interaction).toBeDefined();
   });
 
-  it('returns interaction with click trigger for click animation', () => {
+  it('returns interaction with activate trigger for click animation alias', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, { trigger: 'click', preset: 'FadeIn' });
     const config = buildDocumentInteractConfig(next);
 
-    const interaction = config.interactions.find((i) => i.trigger === 'click');
+    const interaction = config.interactions.find((i) => i.trigger === 'activate');
     expect(interaction).toBeDefined();
   });
 
-  it('returns interaction with hover trigger for hover animation', () => {
+  it('returns interaction with interest trigger for hover animation alias', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, { trigger: 'hover', preset: 'FadeIn' });
     const config = buildDocumentInteractConfig(next);
 
-    const interaction = config.interactions.find((i) => i.trigger === 'hover');
+    const interaction = config.interactions.find((i) => i.trigger === 'interest');
     expect(interaction).toBeDefined();
   });
 
@@ -693,28 +731,116 @@ describe('buildDocumentInteractConfig', () => {
 
     // Hover + entrance should configure an alternate (reverse on leave)
     const configStr = JSON.stringify(config);
-    expect(configStr).toContain('hover');
+    expect(configStr).toContain('interest');
     // The effects or sequences should encode alternating behaviour
-    const hoverInteraction = config.interactions.find((i) => i.trigger === 'hover');
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
     expect(hoverInteraction).toBeDefined();
     const effectsOrSequences =
       (hoverInteraction?.effects?.length ?? 0) + (hoverInteraction?.sequences?.length ?? 0);
     expect(effectsOrSequences).toBeGreaterThan(0);
   });
 
-  it('hover + ongoing with ongoingOnOut keep: has fill forwards config', () => {
+  it('hover + ongoing with outAction keep: uses state params', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'Pulse',
-      ongoingOnOut: 'keep',
+      outAction: 'keep',
     });
     const config = buildDocumentInteractConfig(next);
 
-    // fill: 'forwards' should appear somewhere in the effects when ongoingOnOut is 'keep'
-    const configStr = JSON.stringify(config);
-    expect(configStr).toContain('forwards');
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
+    expect(hoverInteraction?.params).toEqual({ type: 'state' });
+  });
+
+  it('hover + ongoing with outAction keep: loops while state-controlled', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'Pulse',
+      outAction: 'keep',
+    });
+    const config = buildDocumentInteractConfig(next);
+
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.iterations).toBe(Infinity);
+  });
+
+  it('hover reverse effects use fill both so the hovered state persists while active', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'SlideIn',
+      outAction: 'reverse',
+    });
+    const config = buildDocumentInteractConfig(next);
+
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.fill).toBe('both');
+  });
+
+  it('hover none effects omit fill both so leave cancels cleanly after completion', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'SlideIn',
+      outAction: 'none',
+    });
+    const config = buildDocumentInteractConfig(next);
+
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.fill).toBeUndefined();
+  });
+
+  it('hover + entrance with outAction none: uses repeat config', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'SlideIn',
+      outAction: 'none',
+    });
+    const config = buildDocumentInteractConfig(next);
+
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
+    expect(hoverInteraction).toBeDefined();
+    expect(hoverInteraction?.params).toEqual({ type: 'repeat' });
+  });
+
+  it('hover + entrance defaults to reverse outAction', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'SlideIn',
+    });
+    const config = buildDocumentInteractConfig(next);
+
+    const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
+    expect(hoverInteraction?.params).toEqual({ type: 'alternate' });
+  });
+
+  it('updateAnimationOptions merges outAction onto hover animations', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const withAnim = setPresetAnimation(doc, nodeId, {
+      trigger: 'hover',
+      preset: 'Pulse',
+      outAction: 'reverse',
+    });
+
+    const next = updateAnimationOptions(withAnim, nodeId, { outAction: 'none' });
+    const anim = getNodeAnimation(next, nodeId);
+    if (anim?.trigger === 'hover') {
+      expect(anim.outAction).toBe('none');
+    }
   });
 
   it('scroll preset config includes rangeStart and rangeEnd defaults', () => {

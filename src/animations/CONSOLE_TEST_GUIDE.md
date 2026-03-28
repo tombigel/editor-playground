@@ -27,8 +27,20 @@ playgroundAnimationApi.applyDocument(doc)
 doc = playgroundAnimationApi.setPresetAnimation(nodeId, { trigger: 'scroll', preset: 'FadeScroll' })
 playgroundAnimationApi.applyDocument(doc)
 
-// Hover animation
-doc = playgroundAnimationApi.setPresetAnimation(nodeId, { trigger: 'hover', preset: 'Bounce' })
+// Interest animation that reverses on leave/focus-out
+doc = playgroundAnimationApi.setPresetAnimation(nodeId, { trigger: 'interest', preset: 'Bounce', outAction: 'reverse' })
+playgroundAnimationApi.applyDocument(doc)
+
+// Hover alias for the same underlying trigger family
+doc = playgroundAnimationApi.setPresetAnimation(nodeId, { trigger: 'hover', preset: 'Bounce', outAction: 'reverse' })
+playgroundAnimationApi.applyDocument(doc)
+
+// Activate animation (click alias canonicalizes to activate in Interact)
+doc = playgroundAnimationApi.setPresetAnimation(nodeId, { trigger: 'activate', preset: 'Pulse' })
+playgroundAnimationApi.applyDocument(doc)
+
+// Hover/interest animation that keeps its state on leave
+doc = playgroundAnimationApi.setPresetAnimation(nodeId, { trigger: 'interest', preset: 'SlideIn', outAction: 'keep' })
 playgroundAnimationApi.applyDocument(doc)
 ```
 
