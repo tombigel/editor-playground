@@ -43,282 +43,46 @@ Initial priorities in this document are a draft, not a commitment.
 
 This table is a compact scan view of the roadmap. It should stay lightweight and point back to the detailed entries below rather than replace them.
 
-<table>
-  <thead>
-    <tr>
-      <th>Raw intake id</th>
-      <th>Short name</th>
-      <th>Priority</th>
-      <th>Type</th>
-      <th>Status</th>
-      <th>Owner lane</th>
-      <th>Notes / dependencies</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>RI-01</code></td>
-      <td><a href="#animation-undo-coverage">Animation undo coverage</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Bug</td>
-      <td><span style="background:#92400e;color:#fff;padding:2px 8px;border-radius:999px;">Needs audit</span></td>
-      <td>Shared</td>
-      <td>Dep: <code>RI-05</code></td>
-    </tr>
-    <tr>
-      <td><code>RI-02</code></td>
-      <td><a href="#on-stage-animation-indicator">On-stage animation indicator</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>LLM</td>
-      <td>Note: standalone or can land as part of <code>RI-03</code>/<code>RI-04</code>/<code>RI-05</code></td>
-    </tr>
-    <tr>
-      <td><code>RI-03</code></td>
-      <td><a href="#animation-authoring-ui-for-development-phase">Animation presets UI for development phase</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>LLM</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-04</code></td>
-      <td><a href="#animation-authoring-ui-for-development-phase">Animation keyframes UI for development phase</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>LLM</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-05</code></td>
-      <td><a href="#animation-authoring-ui-with-real-productux-design">Designed animation UI with product/UX intent</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>Dep: <code>RI-03</code>, <code>RI-04</code></td>
-    </tr>
-    <tr>
-      <td><code>RI-06</code></td>
-      <td><a href="#animation--sticky-ux-behaviors-and-a11y">Animation + sticky UI, behaviors, a11y</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap;">Partially present</span></td>
-      <td>Shared</td>
-      <td>Dep: <code>RI-05</code></td>
-    </tr>
-    <tr>
-      <td><code>RI-07</code></td>
-      <td><a href="#multiple-pages--mpa-approach">Multiple pages / MPA approach</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td>Dep: <code>RI-09</code></td>
-      <td><a href="#responsive-and-adaptive-authoring-model">Responsive and adaptive authoring model</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap;">Partially present</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-10</code></td>
-      <td><a href="#editor-stage-responsive-behavior">Editor stage responsive behavior</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#92400e;color:#fff;padding:2px 8px;border-radius:999px;">Needs audit</span></td>
-      <td>Shared</td>
-      <td>Dep: <code>RI-09</code></td>
-    </tr>
-    <tr>
-      <td><code>RI-11</code></td>
-      <td><a href="#more-components-svg-video-gradients">More components: SVG, video, gradients</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-12A</code></td>
-      <td><a href="#more-semantic-components">More semantic components</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Feature</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-12B</code></td>
-      <td><a href="#semantic-wrappers-and-grouping">Semantic wrappers and grouping</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-25</code></td>
-      <td><a href="#performance-optimization-program">Performance optimization program</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>Platform</td>
-      <td><span style="background:#166534;color:#fff;padding:2px 8px;border-radius:999px;">In progress</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-27</code></td>
-      <td><a href="#variable-fonts-as-an-authoring-workflow">Variable fonts as an authoring workflow</a></td>
-      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
-      <td>UX</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-13</code></td>
-      <td><a href="#ai-integration-for-site-building-animations-skills-and-mcps">AI integration for site building, animations, skills, MCPs</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-14</code></td>
-      <td><a href="#export-surface-expansion">Export surface expansion</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Feature</td>
-      <td><span style="background:#0369a1;color:#fff;padding:2px 8px;border-radius:999px;">Partially present</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-16</code></td>
-      <td><a href="#user-management">User management</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-18</code></td>
-      <td><a href="#project-management">Project management</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-19</code></td>
-      <td><a href="#assets-management">Assets management</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-20</code></td>
-      <td><a href="#cms">CMS</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-28</code></td>
-      <td><a href="#rich-text-component-with-inline-styling-preferably-md-backed">Rich text component with inline styling, preferably MD-backed</a></td>
-      <td><span style="background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:999px;">Low</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-08</code></td>
-      <td><a href="#view-transitions-between-pages-and-beyond">View transitions between pages and beyond</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-15</code></td>
-      <td><a href="#import-from-external-sources">Import from external sources</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Feature</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Shared</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-17</code></td>
-      <td><a href="#collaboration">Collaboration</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-21</code></td>
-      <td><a href="#connect-to-external-cms">Connect to external CMS</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-22</code></td>
-      <td><a href="#connect-to-wix-services">Connect to Wix services</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Platform</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-23</code></td>
-      <td><a href="#arbitrary-code-support-for-components">Arbitrary code support for components</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Research</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-24</code></td>
-      <td><a href="#arbitrary-css-support-for-components">Arbitrary CSS support for components</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Research</td>
-      <td><span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:999px;">Not started</span></td>
-      <td>Human</td>
-      <td>-</td>
-    </tr>
-    <tr>
-      <td><code>RI-26</code></td>
-      <td><a href="#interact-custom-effects-support">Interact custom effects support</a></td>
-      <td><span style="background:#475569;color:#fff;padding:2px 8px;border-radius:999px;">Optional</span></td>
-      <td>Feature</td>
-      <td><span style="background:#92400e;color:#fff;padding:2px 8px;border-radius:999px;">Needs audit</span></td>
-      <td>Shared</td>
-      <td>Dep: <code>RI-02</code>, <code>RI-03</code>, <code>RI-04</code>, <code>RI-05</code>, <code>RI-06</code></td>
-    </tr>
-  </tbody>
-</table>
+Priority and status use emoji color markers so the table stays plain markdown:
+
+- `🟠` high priority
+- `🔵` low priority
+- `⚪` optional or not started
+- `🟤` needs audit
+- `🟣` partially present
+- `🟢` in progress
+
+| Raw intake id | Short name | Priority | Type | Status | Owner lane | Notes / dependencies |
+| --- | --- | --- | --- | --- | --- | --- |
+| `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🟠 High` | Bug | `🟤 Needs audit` | Shared | Dep: `RI-05` |
+| `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🟠 High` | UX | `⚪ Not started` | LLM | Note: standalone or can land as part of `RI-03`/`RI-04`/`RI-05` |
+| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `⚪ Not started` | LLM | - |
+| `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `⚪ Not started` | LLM | - |
+| `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🟠 High` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
+| `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
+| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `⚪ Not started` | Human | - |
+| `RI-09` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
+| `RI-10` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-09` |
+| `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🟠 High` | Feature | `⚪ Not started` | Shared | - |
+| `RI-12A` | [More semantic components](#more-semantic-components) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
+| `RI-12B` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🟠 High` | UX | `🟣 Partially present` | Shared | - |
+| `RI-25` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | `🟢 In progress` | Shared | - |
+| `RI-27` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | `🟣 Partially present` | Shared | - |
+| `RI-13` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | `⚪ Not started` | Human | - |
+| `RI-14` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | `🟣 Partially present` | Shared | - |
+| `RI-16` | [User management](#user-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
+| `RI-18` | [Project management](#project-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
+| `RI-19` | [Assets management](#assets-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
+| `RI-20` | [CMS](#cms) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
+| `RI-28` | [Rich text component with inline styling, preferably MD-backed](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
+| `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
+| `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
+| `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
+| `RI-21` | [Connect to external CMS](#connect-to-external-cms) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
+| `RI-22` | [Connect to Wix services](#connect-to-wix-services) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
+| `RI-23` | [Arbitrary code support for components](#arbitrary-code-support-for-components) | `⚪ Optional` | Research | `⚪ Not started` | Human | - |
+| `RI-24` | [Arbitrary CSS support for components](#arbitrary-css-support-for-components) | `⚪ Optional` | Research | `⚪ Not started` | Human | - |
+| `RI-26` | [Interact custom effects support](#interact-custom-effects-support) | `⚪ Optional` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06` |
 
 ## Raw Intake
 

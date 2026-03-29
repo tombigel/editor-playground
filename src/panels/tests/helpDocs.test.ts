@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   getConfiguredHelpDocOrder,
@@ -61,5 +63,13 @@ describe('panels/helpDocs', () => {
   it('matches github-style heading anchors used by the docs table of contents', () => {
     expect(slugifyMarkdownHeading('src/api/documentApi.ts')).toBe('srcapidocumentapits');
     expect(slugifyMarkdownHeading('Priority: Blocker')).toBe('priority-blocker');
+  });
+
+  it('keeps the roadmap summary table in markdown so help docs do not need raw html rendering', () => {
+    const roadmap = readFileSync(resolve(process.cwd(), 'docs/PLAYGROUND_ROADMAP.md'), 'utf8');
+
+    expect(roadmap).toContain('| Raw intake id | Short name | Priority | Type | Status | Owner lane | Notes / dependencies |');
+    expect(roadmap).not.toContain('<table>');
+    expect(roadmap).not.toContain('<span style=');
   });
 });

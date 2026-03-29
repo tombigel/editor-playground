@@ -40,3 +40,4 @@ Edit the `HELP_DOC_ORDER` list there:
 - relative `.md` links navigate inside the Help browser
 - `#anchor` links scroll within the current document
 - absolute filesystem links render as inert text
+- prefer plain markdown and GFM tables for help docs; the Help browser does not rely on raw HTML rendering

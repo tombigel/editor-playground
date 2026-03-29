@@ -667,7 +667,7 @@ Current UX includes:
 - markdown help entries render the source filename in a compact status bar above the document pane instead of in the nav button
 - markdown help entry bodies are loaded from copied static files under `assets/help-docs/` instead of being embedded inline in the main app bundle
 - the Help browser markdown entries support in-panel `#anchor` jumps and relative `.md` doc navigation, and inertly render absolute filesystem links referenced by docs
-- markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables and raw HTML support for repo-owned docs
+- markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables; help docs should stay markdown-native instead of relying on raw HTML
 - shortcut guide also appears as the last section inside settings
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
