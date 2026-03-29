@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialState, insertLeaf, resolveStickyLayout } from '../../api/editorApi';
 import { AppShell } from '../AppShell';
+import { LayersPanel } from '../../panels/LayersPanel';
 
 function createProps(): ComponentProps<typeof AppShell> {
   const state = createInitialState();
@@ -93,7 +94,23 @@ describe('app/AppShell', () => {
   });
 
   it('renders the layers panel surface when the rail entry is active', () => {
-    const markup = renderToStaticMarkup(<AppShell {...createProps()} layersOpen />);
+    const { document } = createInitialState();
+    const markup = renderToStaticMarkup(
+      <LayersPanel
+        open
+        position={{ top: 112, left: 102 }}
+        document={document}
+        selectedIds={[]}
+        onOpenChange={() => undefined}
+        onPositionChange={() => undefined}
+        onClose={() => undefined}
+        onSelectNode={() => undefined}
+        onRenameNode={() => undefined}
+        onDeleteNode={() => undefined}
+        onSetNodeVisibility={() => undefined}
+        onMoveNodeInTree={() => undefined}
+      />,
+    );
 
     expect(markup).toContain('editor-layers-panel');
     expect(markup).toContain('Structure, visibility, and order.');

@@ -24,21 +24,25 @@ import {
   toggleDocumentFontFavorite,
 } from '../api/fontApi';
 import { InsertPanel } from '../panels/InsertPanel';
-import { LayersPanel } from '../panels/LayersPanel';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
 import { HelpDialog } from '../panels/HelpDialog';
+import {
+  INSPECTOR_COLLAPSED_WIDTH_PX,
+  INSPECTOR_EXPANDED_WIDTH_PX,
+  INSPECTOR_TRANSITION_MS,
+} from '../panels/inspectorLayout';
+const LayersPanel = lazy(() =>
+  import('../panels/LayersPanel').then((m) => ({ default: m.LayersPanel }))
+);
 const SettingsPanel = lazy(() =>
   import('../panels/SettingsPanel').then((m) => ({ default: m.SettingsPanel }))
 );
 const ManageFontsPanel = lazy(() =>
   import('../panels/fontManagement/ManageFontsPanel').then((m) => ({ default: m.ManageFontsPanel }))
 );
-import {
-  EditorSidebar,
-  INSPECTOR_COLLAPSED_WIDTH_PX,
-  INSPECTOR_EXPANDED_WIDTH_PX,
-  INSPECTOR_TRANSITION_MS,
-} from '../panels/EditorSidebar';
+const EditorSidebar = lazy(() =>
+  import('../panels/EditorSidebar').then((m) => ({ default: m.EditorSidebar }))
+);
 import { FocusedModePanel } from '../panels/FocusedModePanel';
 import type { ActionResult } from '../panels/settingsTransfer';
 import { Stage } from '../api/editorViewApi';
@@ -464,6 +468,7 @@ export function AppShell({
             />
           </main>
 
+          <Suspense fallback={null}>
           <EditorSidebar
             selectedNodes={selectedNodes}
             document={state.document}
@@ -513,6 +518,7 @@ export function AppShell({
             onInspectorCollapsedChange={(value) => dispatch({ type: 'setInspectorCollapsed', value })}
             onTemporaryInspectorOpenChange={(value) => dispatch({ type: 'setTemporaryInspectorOpen', value })}
           />
+          </Suspense>
         </div>
       </div>
 
@@ -586,25 +592,29 @@ export function AppShell({
         }}
       />
 
-      <LayersPanel
-        panelRef={layersPanelRef}
-        open={layersOpen}
-        position={layersPosition}
-        document={state.document}
-        selectedIds={state.selectedIds}
-        onOpenChange={onLayersOpenChange}
-        onPositionChange={onLayersPositionChange}
-        onClose={onCloseLayers}
-        onSelectNode={(id, mode) =>
-          dispatch(mode === 'toggle' ? { type: 'toggleSelect', id } : { type: 'select', id })
-        }
-        onRenameNode={(id, value) => dispatch({ type: 'text', field: 'name', value, id })}
-        onDeleteNode={(id) => dispatch({ type: 'deleteNode', id })}
-        onSetNodeVisibility={(id, value) => dispatch({ type: 'setNodeVisibility', id, value })}
-        onMoveNodeInTree={(id, targetParentId, targetIndex) =>
-          dispatch({ type: 'moveNodeInTree', id, targetParentId, targetIndex })
-        }
-      />
+      {layersOpen ? (
+        <Suspense fallback={null}>
+          <LayersPanel
+            panelRef={layersPanelRef}
+            open={layersOpen}
+            position={layersPosition}
+            document={state.document}
+            selectedIds={state.selectedIds}
+            onOpenChange={onLayersOpenChange}
+            onPositionChange={onLayersPositionChange}
+            onClose={onCloseLayers}
+            onSelectNode={(id, mode) =>
+              dispatch(mode === 'toggle' ? { type: 'toggleSelect', id } : { type: 'select', id })
+            }
+            onRenameNode={(id, value) => dispatch({ type: 'text', field: 'name', value, id })}
+            onDeleteNode={(id) => dispatch({ type: 'deleteNode', id })}
+            onSetNodeVisibility={(id, value) => dispatch({ type: 'setNodeVisibility', id, value })}
+            onMoveNodeInTree={(id, targetParentId, targetIndex) =>
+              dispatch({ type: 'moveNodeInTree', id, targetParentId, targetIndex })
+            }
+          />
+        </Suspense>
+      ) : null}
 
       {settingsOpen ? (
         <PopoverSurface ref={settingsPanelRef} open={settingsOpen} onOpenChange={onSettingsOpenChange}>

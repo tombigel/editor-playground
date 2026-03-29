@@ -3,10 +3,8 @@ import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EditableNodeTitle } from './inspector/CommonSections';
 import { InspectorPanel, type InspectorPanelProps } from './InspectorPanel';
-
-export const INSPECTOR_EXPANDED_WIDTH_PX = 300;
-export const INSPECTOR_COLLAPSED_WIDTH_PX = 60;
-export const INSPECTOR_TRANSITION_MS = 180;
+export { INSPECTOR_COLLAPSED_WIDTH_PX, INSPECTOR_EXPANDED_WIDTH_PX, INSPECTOR_TRANSITION_MS } from './inspectorLayout';
+import { INSPECTOR_EXPANDED_WIDTH_PX } from './inspectorLayout';
 
 type Props = InspectorPanelProps & {
   inspectorCollapsed: boolean;
