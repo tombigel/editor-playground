@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialState, insertLeaf, resolveStickyLayout } from '../../api/editorApi';
 import { AppShell } from '../AppShell';
 import { LayersPanel } from '../../panels/LayersPanel';
+import { INSPECTOR_COLLAPSED_WIDTH_PX, INSPECTOR_EXPANDED_WIDTH_PX } from '../../panels/inspectorLayout';
 
 function createProps(): ComponentProps<typeof AppShell> {
   const state = createInitialState();
@@ -82,12 +83,12 @@ describe('app/AppShell', () => {
   it('renders the left rail with smaller buttons and a stronger add label', () => {
     const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
 
-    expect(markup).toContain('grid-template-columns:76px minmax(0,1fr) 300px');
+    expect(markup).toContain(`grid-template-columns:${INSPECTOR_COLLAPSED_WIDTH_PX}px minmax(0,1fr) ${INSPECTOR_EXPANDED_WIDTH_PX}px`);
     expect(markup).not.toContain('editor-bg-subtle editor-border-subtle overflow-visible rounded-2xl border p-2');
     expect(markup).toContain('editor-border-subtle mt-2 w-full border-b');
     expect(markup).toContain('editor-text-strong text-sm font-semibold');
-    expect(markup).toContain('editor-insert-button group h-10 w-10 rounded-lg border');
-    expect(markup).toContain('editor-insert-button-inner flex h-full w-full items-center justify-center rounded-lg border');
+    expect(markup).toContain('editor-insert-button h-8 w-8 rounded-md p-0');
+    expect(markup).not.toContain('editor-insert-button-inner');
     expect(markup).toContain('data-panel-trigger="layers"');
     expect(markup).toContain('editor-rail-entry-button');
     expect(markup).toContain('editor-rail-toggle-button');

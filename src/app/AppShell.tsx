@@ -160,6 +160,7 @@ export function AppShell({
   const [focusedPanelOffsetDraft, setFocusedPanelOffsetDraft] = useState(state.ui.focusedPanelOffset);
   const [focusedPanelDragging, setFocusedPanelDragging] = useState(false);
   const isSidebarCollapsed = state.ui.inspectorCollapsed && !state.ui.temporaryInspectorOpen;
+  const leftRailWidth = `${INSPECTOR_COLLAPSED_WIDTH_PX}px`;
   const sidebarWidth = isSidebarCollapsed
     ? `${INSPECTOR_COLLAPSED_WIDTH_PX}px`
     : `${INSPECTOR_EXPANDED_WIDTH_PX}px`;
@@ -371,7 +372,7 @@ export function AppShell({
         <div
           className="grid min-h-0 transition-[grid-template-columns] ease-out"
           style={{
-            gridTemplateColumns: `76px minmax(0,1fr) ${sidebarWidth}`,
+            gridTemplateColumns: `${leftRailWidth} minmax(0,1fr) ${sidebarWidth}`,
             transitionDuration: `${INSPECTOR_TRANSITION_MS}ms`,
             transitionTimingFunction: sidebarTransitionTiming,
           }}

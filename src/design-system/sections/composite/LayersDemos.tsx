@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { EditorPanelHeader } from '@/panels/EditorPanelHeader';
+import { INSPECTOR_COLLAPSED_WIDTH_PX } from '@/panels/inspectorLayout';
 import { ComponentPreview } from '../../previews/ComponentPreview';
 
 const INSPECTOR_TOOLTIP_CLASS_NAME =
@@ -111,7 +112,10 @@ export function LayersDemos() {
       props={[]}
     >
       <div className="flex items-start gap-4">
-        <div className="editor-bg-subtle editor-border-subtle flex h-[316px] w-[72px] items-start justify-center rounded-2xl border p-3">
+        <div
+          className="editor-bg-subtle editor-border-subtle flex h-[316px] items-start justify-center rounded-2xl border p-3"
+          style={{ width: `${INSPECTOR_COLLAPSED_WIDTH_PX}px` }}
+        >
           <button type="button" className="editor-rail-entry-button" aria-pressed="true">
             <Layers3 className="h-4 w-4" />
           </button>

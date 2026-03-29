@@ -141,35 +141,22 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 }
 
 .editor-insert-button {
-  background: var(--editor-surface-background);
-  border-color: var(--editor-button-border);
   color: var(--editor-utility-text-strong);
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
+    color 150ms ease,
     box-shadow 150ms ease,
     transform 150ms ease;
 }
 
 .editor-insert-button:hover,
 .editor-insert-button:focus-visible {
-  background: var(--editor-utility-bg-subtle);
-  border-color: var(--editor-button-border-hover);
-}
-
-.editor-insert-button-inner {
-  background: var(--editor-surface-background);
-  color: var(--editor-utility-text-strong);
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease;
-}
-
-.editor-insert-button:hover .editor-insert-button-inner,
-.editor-insert-button:focus-visible .editor-insert-button-inner {
-  background: var(--editor-utility-bg-subtle);
-  border-color: var(--editor-button-border-hover);
+  color: var(--editor-text);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--editor-button-border-hover) 30%, transparent),
+    0 10px 22px rgba(18, 32, 51, 0.1);
+  transform: translateY(-1px);
 }
 
 :is(.editor-shell, body) .settings-nav-link {

@@ -918,7 +918,9 @@ The editor surface is organized around one stage, a small set of persistent rail
 - Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
 - Top-bar utility actions expose help and settings.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
-- Left pop panels such as section templates and settings close on outside click or `Esc` and stay above stage selection overlays.
+- Left-rail pop panels open from a shared resting position near the top-left workspace edge below the top bar rather than vertically following the trigger button.
+- Section templates keep outside-click and `Esc` dismissal and stay above stage selection overlays.
+- The Layers panel stays open on outside click and closes only through its own close affordance, toggle action, or keyboard dismissal.
 
 ### Theme, palette, and accent controls
 
@@ -1097,6 +1099,7 @@ Adding a section opens a section-template picker instead of inserting immediatel
 
 - The picker opens from the left-rail `Section` add button.
 - It renders as a compact left-side pop panel rather than a full-screen dialog.
+- Its initial resting position matches the shared top-left left-rail panel placement below the top bar.
 - It closes on outside click and `Esc`.
 - It shows template cards in a two-column grid.
 - Clicking an active template inserts one top-level section and selects it.

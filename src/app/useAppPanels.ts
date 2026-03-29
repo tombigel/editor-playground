@@ -1,20 +1,13 @@
 import { useRef, useState } from 'react';
-import {
-  useDismissFloatingPanels,
-  useSectionTemplatePosition,
-} from './useEditorEnvironment';
+import { useDismissFloatingPanels } from './useEditorEnvironment';
 
-const LAYERS_PANEL_DEFAULT_LEFT_PX = 88;
-const LAYERS_PANEL_ESTIMATED_HEIGHT_PX = 420;
+const LEFT_FLOATING_PANEL_DEFAULT_TOP_PX = 76;
+const LEFT_FLOATING_PANEL_DEFAULT_LEFT_PX = 80;
 
-function getDefaultLayersPanelPosition() {
-  if (typeof window === 'undefined') {
-    return { top: 148, left: LAYERS_PANEL_DEFAULT_LEFT_PX };
-  }
-
+function getDefaultLeftFloatingPanelPosition() {
   return {
-    top: Math.max(72, Math.round(window.innerHeight / 2 - LAYERS_PANEL_ESTIMATED_HEIGHT_PX / 2)),
-    left: LAYERS_PANEL_DEFAULT_LEFT_PX,
+    top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
+    left: LEFT_FLOATING_PANEL_DEFAULT_LEFT_PX,
   };
 }
 
@@ -23,16 +16,13 @@ export function useAppPanels() {
   const [manageFontsOpen, setManageFontsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
-  const [layersPosition, setLayersPosition] = useState(getDefaultLayersPanelPosition);
+  const [layersPosition, setLayersPosition] = useState(getDefaultLeftFloatingPanelPosition);
   const [layersPositionCustomized, setLayersPositionCustomized] = useState(false);
   const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
-  const [sectionTemplateAnchor, setSectionTemplateAnchor] = useState<HTMLElement | null>(null);
-  const [sectionTemplatePosition, setSectionTemplatePosition] = useState({ top: 72, left: 102 });
+  const [sectionTemplatePosition, setSectionTemplatePosition] = useState(getDefaultLeftFloatingPanelPosition);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
   const layersPanelRef = useRef<HTMLDivElement | null>(null);
   const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
-
-  useSectionTemplatePosition(sectionTemplateOpen, sectionTemplateAnchor, setSectionTemplatePosition);
 
   function closeLayersPanel() {
     setLayersOpen(false);
@@ -40,7 +30,6 @@ export function useAppPanels() {
 
   function closeSectionTemplatePopover() {
     setSectionTemplateOpen(false);
-    setSectionTemplateAnchor(null);
   }
 
   function closeTransientPanels() {
@@ -53,7 +42,7 @@ export function useAppPanels() {
 
   function openLayers(_trigger: HTMLElement) {
     if (!layersPositionCustomized) {
-      setLayersPosition(getDefaultLayersPanelPosition());
+      setLayersPosition(getDefaultLeftFloatingPanelPosition());
     }
     setLayersOpen(true);
   }
@@ -67,16 +56,13 @@ export function useAppPanels() {
     setLayersPositionCustomized(true);
   }
 
-  function openSectionTemplates(trigger: HTMLElement) {
-    setSectionTemplateAnchor(trigger);
+  function openSectionTemplates(_trigger: HTMLElement) {
+    setSectionTemplatePosition(getDefaultLeftFloatingPanelPosition());
     setSectionTemplateOpen(true);
   }
 
   function handleSectionTemplateOpenChange(open: boolean) {
     setSectionTemplateOpen(open);
-    if (!open) {
-      setSectionTemplateAnchor(null);
-    }
   }
 
   useDismissFloatingPanels({
@@ -86,9 +72,6 @@ export function useAppPanels() {
     sectionTemplateOpen,
     sectionTemplatePanelRef,
     onCloseSectionTemplates: closeSectionTemplatePopover,
-    layersOpen,
-    layersPanelRef,
-    onCloseLayers: closeLayersPanel,
   });
 
   return {

@@ -88,9 +88,10 @@ export function InsertPanel({
             <Button
               type="button"
               data-panel-trigger={item.kind === 'wrapper' && item.role === 'section' ? 'section-templates' : undefined}
-              variant="ghost"
+              variant="outline"
+              size="icon"
               title={`${item.label} · ${item.hint}`}
-              className="editor-insert-button group h-10 w-10 rounded-lg border p-0 shadow-[0_2px_10px_rgba(18,32,51,0.06)] hover:shadow-[0_8px_18px_rgba(18,32,51,0.12)] focus-visible:border-[color:var(--editor-accent)]"
+              className="editor-insert-button h-8 w-8 rounded-md p-0"
               onClick={(event) => {
                 if (item.kind === 'wrapper') {
                   if (item.role === 'section') {
@@ -103,9 +104,7 @@ export function InsertPanel({
                 onInsertLeaf(item.role);
               }}
             >
-              <span className="editor-insert-button-inner flex h-full w-full items-center justify-center rounded-lg border border-black/8">
-                <Icon className="h-4 w-4" strokeWidth={1.9} />
-              </span>
+              <Icon className="h-4 w-4" strokeWidth={1.9} />
             </Button>
           </PopoverTooltip>
         );

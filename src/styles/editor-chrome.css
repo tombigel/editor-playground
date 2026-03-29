@@ -586,11 +586,11 @@
 
 .editor-rail-toggle-button {
   display: flex;
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 2rem;
+  width: 2rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   border: 1px solid var(--editor-button-border);
   background: var(--editor-button-surface);
   color: var(--editor-utility-text-strong);
@@ -627,11 +627,11 @@
 
 .editor-rail-entry-button {
   display: flex;
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 2rem;
+  width: 2rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   border: 1px solid var(--editor-button-border);
   background:
     linear-gradient(
