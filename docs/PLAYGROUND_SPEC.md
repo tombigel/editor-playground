@@ -1,6 +1,6 @@
 # Playground Spec
 
-This document captures the current editor and implementation model used by the sticky playground.
+This document captures the editor and implementation model used by the sticky playground.
 
 Related documentation:
 
@@ -8,7 +8,52 @@ Related documentation:
 - [Sticky Render Model](./STICKY_RENDER_MODEL.md): rendered-site sticky data and DOM structure
 - [Animation API – Console Testing Guide](./CONSOLE_TEST_GUIDE.md): dev-console testing flow for `window.playgroundAnimationApi`
 
+## Reading Guide
+
+This spec is implementation-oriented. For the quickest path through it:
+
+1. Read `Goal`, `Node Model`, `Document Model`, and `Wrapper Model` for the shared vocabulary.
+2. Read `Layout Model`, `Units`, `Sticky Model`, and `Spacer Model` for geometry and sticky behavior.
+3. Read `Site Rendering`, `Preview Model`, and `Animation Model` for runtime/export semantics.
+4. Read `Editor UX`, `Architecture Boundaries`, and `Section Templates` for product behavior and system boundaries.
+
+## Table of Contents
+
+- [Goal](#goal)
+- [Node Model](#node-model)
+- [Document Model](#document-model)
+- [Wrapper Model](#wrapper-model)
+- [Nesting Rules](#nesting-rules)
+- [Layout Model](#layout-model)
+- [Ordering Model](#ordering-model)
+- [History Model](#history-model)
+- [Import / Export](#import--export)
+- [Units](#units)
+- [Font Management](#font-management)
+- [Inspector Field Model](#inspector-field-model)
+- [Sticky Model](#sticky-model)
+- [Spacer Model](#spacer-model)
+- [Site Rendering](#site-rendering)
+- [Preview Model](#preview-model)
+- [Animation Model](#animation-model)
+- [Editor UX](#editor-ux)
+- [Architecture Boundaries](#architecture-boundaries)
+- [Section Templates](#section-templates)
+- [Default Seed Content](#default-seed-content)
+- [Validation Policy](#validation-policy)
+- [Debugging Aids](#debugging-aids)
+- [Running the Playground](#running-the-playground)
+
 ## Goal
+
+The playground exists to validate a small set of core sticky-layout questions across the model, the editor, and the rendered output.
+
+| Area | What the playground validates |
+|---|---|
+| Data model | the minimal representation needed for sticky layout behavior |
+| DOM structure | how sticky duration and spacer structure should be expressed in the DOM |
+| Editor UX | how sticky controls should be exposed predictably |
+| Interaction model | how multiple sticky elements inside one section interact |
 
 The playground exists to test:
 
@@ -19,39 +64,37 @@ The playground exists to test:
 
 ## Node Model
 
-There are three node families:
+### Node families
 
-- `site`
-- `wrapper`
-- `leaf`
+| Category | Allowed values | Notes |
+|---|---|---|
+| Node family | `site`, `wrapper`, `leaf` | Top-level taxonomy for all nodes. |
+| Wrapper role | `section`, `header`, `footer`, `container` | Structural and layout-oriented nodes. |
+| Leaf role | `text`, `image`, `link`, `button` | Content-oriented nodes. |
 
-Wrapper roles:
+### Node identity
 
-- `section`
-- `header`
-- `footer`
-- `container`
-
-Leaf roles:
-
-- `text`
-- `image`
-- `link`
-- `button`
-
-Node ids are monotonic per session and synchronized against the loaded document before insertions, so newly inserted templates/components cannot overwrite existing nodes.
+Node ids are monotonic per session and are synchronized against the loaded document before insertions, so newly inserted templates or components cannot overwrite existing nodes.
 
 ## Document Model
 
-The document persists a top-level `fontLibrary` manifest alongside `rootId` and `nodes`.
+### Top-level document shape
 
-Font library fields:
+| Field | Purpose |
+|---|---|
+| `rootId` | Site root node id |
+| `nodes` | Full document node graph |
+| `fontLibrary` | Document-scoped font manifest |
 
-- `defaults`
-- `usedFamilies`
-- `favorites`
+### Font library fields
 
-New documents seed these Google-backed starter families:
+| Field | Purpose |
+|---|---|
+| `defaults` | Baseline families included with the document |
+| `usedFamilies` | Document font entries available to nodes |
+| `favorites` | Pinned families for quick access |
+
+### Default seeded families
 
 - `Inter`
 - `Assistant`
@@ -64,45 +107,57 @@ New documents seed these Google-backed starter families:
 - `Montserrat`
 - `Crimson Text`
 
-Font library behavior:
+### Font library rules
 
-- font management is document-level, not app-level
-- text, link, and button leaves can author `fontFamily` and numeric `fontWeight`
-- favorites are persisted per document
-- removing a font family is blocked while any text-capable node still uses it
-- purge-unused removes only unused families that are neither defaults nor favorites
-- imported legacy text weights such as `'bold'` and `'normal'` are normalized to numeric weights
-- document normalization resolves missing or stubbed Google-backed family names against the bundled catalog before falling back to a minimal placeholder entry
+- Font management is document-level, not app-level.
+- Text, link, and button leaves can author `fontFamily` and numeric `fontWeight`.
+- Favorites are persisted per document.
+- Removing a font family is blocked while any text-capable node still uses it.
+- `purge-unused` removes only unused families that are neither defaults nor favorites.
+- Imported legacy text weights such as `'bold'` and `'normal'` are normalized to numeric weights.
+- Document normalization resolves missing or stubbed Google-backed family names against the bundled catalog before falling back to a minimal placeholder entry.
 
 ## Wrapper Model
 
-All wrappers share the same structural behavior:
+### Shared wrapper structure
 
-- outer wrapper element
-- one internal `contentWrapper`
-- child positioning relative to that content wrapper
-- sticky can apply to the wrapper or the content wrapper
+| Wrapper concern | Rule |
+|---|---|
+| Outer shell | Every wrapper has one outer wrapper element. |
+| `contentWrapper` | Every wrapper has one internal `contentWrapper`. |
+| Child positioning | Children are positioned relative to the `contentWrapper`. |
+| Sticky target | Sticky can apply to either the wrapper or the `contentWrapper`. |
 
-Wrapper style behavior:
+### Shared wrapper styling rules
 
-- wrappers do not get an implicit visible border by default
-- wrapper visual styling is applied on the inner `contentWrapper` surface, not on the outer layout shell
-- only `container` wrappers expose generic surface styling controls for border, radius, and shadow
-- `section` wrappers support a dedicated bottom divider style with:
-  - color
-  - width
+| Wrapper role | Background | Border | Radius | Shadow | Divider |
+|---|---|---|---|---|---|
+| `section` | yes | no | no | no | bottom divider only |
+| `header` | yes | no | no | no | no |
+| `footer` | yes | no | no | no | no |
+| `container` | yes | yes | yes | yes | no |
+
+Shared rules:
+
+- Wrappers do not get an implicit visible border by default.
+- Wrapper visual styling is applied on the inner `contentWrapper` surface rather than on the outer layout shell.
 
 ### Section type
+
+#### Role transitions
 
 A wrapper can be promoted or demoted between:
 
 - `section`
 - `header`
 - `footer`
-
 The inspector labels this control as `Section type`, and the wrapper keeps the same id.
 
+#### Existing header/footer replacement flow
+
 If a header or footer already exists, promotion asks whether to demote the current one and replace it.
+
+#### Section, header, and footer design controls
 
 Section/header/footer design controls stay minimal:
 
@@ -110,7 +165,9 @@ Section/header/footer design controls stay minimal:
 - `section` also exposes a section-only bottom divider editor
 - header/footer do not expose generic border, radius, or shadow controls
 
-The section design controls also expose a section-only bottom divider editor:
+#### Section divider controls
+
+The section design controls expose a dedicated bottom divider editor:
 
 - `Divider`: one row containing:
   - bottom border width
@@ -125,96 +182,111 @@ The section design controls also expose a section-only bottom divider editor:
 
 ## Nesting Rules
 
-- `section`, `header`, and `footer` cannot contain another `section`, `header`, or `footer`
-- `container` can contain other `container`s indefinitely
-- wrappers can contain leaves
+| Parent | Allowed children | Disallowed children |
+|---|---|---|
+| `section`, `header`, `footer` | containers, leaves | other `section`, `header`, `footer` |
+| `container` | containers, leaves | none beyond validation rules |
 
-This keeps site sections top-level while allowing deep nested layout composition through containers.
+This keeps site sections top-level while still allowing deep nested layout composition through containers.
 
 ## Layout Model
 
 The editor uses a freeform placement model, not a predefined fixed grid.
 
-Children are positioned with:
+### Editable geometry
 
-- `x`
-- `y`
-- `width`
-- `height`
+| Field | Meaning |
+|---|---|
+| `x` | horizontal position |
+| `y` | vertical position |
+| `width` | authored width |
+| `height` | authored height |
 
-Children can be:
+Children can be dragged, resized, and reparented between sections and containers.
 
-- dragged
-- resized
-- reparented between sections and containers
+### Drag behavior
 
-Drag behavior includes:
+Snapping and guides:
 
-- snap targets for page bounds and page centers (left/right/top/bottom + horizontal/vertical center)
-- snap targets for element top/center/bottom alignment
-- a global snap toggle in the left rail
-- `Alt` to invert current snap mode during drag
-- `Shift` to lock drag movement to a single axis
-- the dragged source node fades and suppresses local box/filter shadows while dragging so the drag silhouette stays clean
-- the drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it
-- when hovering over a valid drop target (section or container), that wrapper highlights with an accent-colored outline and tinted background to confirm where the element will land
-- highlighted drop targets with non-zero wrapper padding also render the padding boundary line so the drop inset is visible
-- while dragging a child inside its current parent, that source parent (and its ancestors) are not highlighted as drop targets
-- when dragging a `container` wrapper, its structural source parent (`section`/`header`/`footer`) may highlight
-- on reparent, the element's position is clamped so it stays at least partially visible within the target container
-- snap guide colors:
+- Snap targets include page bounds, page centers, and element top/center/bottom alignment.
+- A global snap toggle lives in the left rail.
+- Snap guide colors are:
   - component guides: teal
   - page guides: magenta
 
-Current implementation notes for the March 2026 drag/drop run:
+Drag modifiers:
 
-- drag preview placement is resolved from the pointer grab offset captured at drag start, with an additional visual-shift correction path for sticky-shifted nodes
-- snap targets are cached when drag commits so pointer-move work avoids recollecting DOM targets every frame
-- grouped drag is committed as a single bulk move action, but only for the subset of the current selection that shares the clicked node's parent wrapper
-- grouped reparent is not supported; only single-node drags can reparent into a new wrapper
-- marquee selection started from a top-level structural wrapper (`section`, `header`, `footer`) currently filters hits to direct children of that wrapper
-- drop target detection resolves from `elementFromPoint(...)` and walks ancestor `data-drop-wrapper-id` markers until it finds a valid wrapper parent
-- drop target highlighting prefers the deepest valid hovered target and suppresses ancestor promotion while the pointer remains inside the current source parent during child drags
-- reparent commit position is currently derived from the hovered wrapper's live DOM rect together with the captured drag grab offset, then clamped to keep the dropped node at least partially visible in the target wrapper
-- valid drop targets receive a transient `drop-target` class on hover, and that class is cleared on drag end or pointer leave
+- `Alt` inverts the current snap mode during drag.
+- `Shift` locks drag movement to a single axis.
 
-Resize behavior includes:
+Drag preview and drop targeting:
 
-- `Shift` on corner handles to preserve the current aspect ratio
-- resize start normalization to rendered box size when stored values are non-numeric (`auto`, `fit-content`, `min-content`, `max-content`, `%`, `aspect-ratio(...)`) to avoid first-frame jumps
-- drag/resize coordinate commits are anchored to model-space origin so sticky-preview viewport pinning does not leak into persisted `x`/`y`
-- top-level `section`, `header`, and `footer` wrappers expose a single bottom-center stage resize knob
-- structural wrapper resize is height-only and keeps root wrappers in normal DOM flow, so growing a header or section pushes later root wrappers down and shrinking pulls them up
-- structural wrapper resize preserves authored height units for `px`, `vw`, `vh`, `vmin`, and `vmax`
-- resizing a structural wrapper with `height: auto` or `%` converts the authored height to `px`
-- structural wrappers with `height: aspect-ratio(...)` do not show the stage resize knob
-- structural wrapper resize clamps to rendered content fit, including wrapper padding and child layout extents, so the knob cannot be dragged below the content minimum
+- The dragged source node fades and suppresses local box/filter shadows so the drag silhouette stays clean.
+- The drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it.
+- Hovering a valid drop target (`section` or `container`) highlights that wrapper with an accent-colored outline and tinted background.
+- Highlighted drop targets with non-zero wrapper padding also render the padding boundary line so the drop inset is visible.
+- While dragging a child inside its current parent, that source parent and its ancestors are not highlighted as drop targets.
+- When dragging a `container` wrapper, its structural source parent (`section`, `header`, `footer`) may still highlight.
+- On reparent, the element position is clamped so it stays at least partially visible within the target container.
+
+### Drag implementation details
+
+- Drag preview placement resolves from the pointer grab offset captured at drag start, with an additional visual-shift correction path for sticky-shifted nodes.
+- Snap targets are cached when drag commits so pointer-move work avoids recollecting DOM targets every frame.
+- Grouped drag commits as a single bulk move action, but only for the subset of the selection that shares the clicked node's parent wrapper.
+- Grouped reparent is not supported; only single-node drags can reparent into a new wrapper.
+- Marquee selection started from a top-level structural wrapper (`section`, `header`, `footer`) filters hits to direct children of that wrapper.
+- Drop target detection resolves from `elementFromPoint(...)` and walks ancestor `data-drop-wrapper-id` markers until it finds a valid wrapper parent.
+- Drop target highlighting prefers the deepest valid hovered target and suppresses ancestor promotion while the pointer remains inside the current source parent during child drags.
+- Reparent commit position derives from the hovered wrapper's live DOM rect together with the captured drag grab offset, then clamps to keep the dropped node at least partially visible in the target wrapper.
+- Valid drop targets receive a transient `drop-target` class on hover, and that class clears on drag end or pointer leave.
+
+### Resize behavior
+
+- `Shift` on corner handles preserves the current aspect ratio.
+- Resize start normalizes to rendered box size when stored values are non-numeric (`auto`, `fit-content`, `min-content`, `max-content`, `%`, `aspect-ratio(...)`) so the first frame does not jump.
+- Drag and resize coordinate commits stay anchored to model-space origin so sticky-preview viewport pinning does not leak into persisted `x` / `y`.
+
+### Structural wrapper resize rules
+
+- Top-level `section`, `header`, and `footer` wrappers expose a single bottom-center stage resize knob.
+- Structural wrapper resize is height-only and keeps root wrappers in normal DOM flow, so growing a header or section pushes later root wrappers down and shrinking pulls them up.
+- Structural wrapper resize preserves authored height units for `px`, `vw`, `vh`, `vmin`, and `vmax`.
+- Resizing a structural wrapper with `height: auto` or `%` converts the authored height to `px`.
+- Structural wrappers with `height: aspect-ratio(...)` do not show the stage resize knob.
+- Structural wrapper resize clamps to rendered content fit, including wrapper padding and child layout extents, so the knob cannot be dragged below the content minimum.
 
 ## Ordering Model
 
 Layer/order operations are implemented via DOM order (parent `children` array), not `z-index`.
 
-Reorderable nodes:
+### Reorderable node types
 
-- all leaves
-- wrapper nodes with role `container`
-- wrapper nodes with role `section` (root-level only, up/down between sibling sections)
+| Node type | Reorderable | Notes |
+|---|---|---|
+| leaves | yes | All leaves participate. |
+| `container` wrappers | yes | Reordered among siblings. |
+| root-level `section` wrappers | yes | Moved only among sibling sections. |
+| `header` | no | Fixed structural role. |
+| `footer` | no | Fixed structural role. |
 
-Non-reorderable wrappers:
+### Section ordering behavior
 
-- `header`
-- `footer`
+Section ordering uses dedicated up/down controls in the inspector role row and only moves a section among sibling sections.
 
-Section ordering uses dedicated up/down controls in the inspector role row (DOM move between section siblings only).
-
-Keyboard shortcuts:
+### Keyboard shortcuts
 
 `Mod` maps to `Cmd` on macOS and `Ctrl` on Windows/Linux.
 
-- `Mod + [`: position backward (when a node is selected and no input field is focused)
-- `Mod + ]`: position forward (when a node is selected and no input field is focused)
-- `Mod + Shift + [`: send to back (when a node is selected and no input field is focused)
-- `Mod + Shift + ]`: bring to front (when a node is selected and no input field is focused)
+Ordering:
+
+- `Mod + [`: position backward
+- `Mod + ]`: position forward
+- `Mod + Shift + [`: send to back
+- `Mod + Shift + ]`: bring to front
+
+Text styling:
+
 - `Mod + B`: toggle bold on selected text-capable nodes when no input field is focused
   - bold is active at effective weight `>= 700`
   - toggle targets `400` and `800`
@@ -222,252 +294,418 @@ Keyboard shortcuts:
 - `Mod + I`: toggle italic on selected text-capable nodes when no input field is focused
 - `Mod + U`: toggle underline on selected text-capable nodes when no input field is focused
 - `Mod + Shift + X`: toggle strikethrough on selected text-capable nodes when no input field is focused
+
+Alignment and distribution:
+
 - `Mod + Alt + Left` / `Mod + Alt + H` / `Mod + Alt + Right`: align the current multi-selection left / center horizontally / right
 - `Mod + Alt + Up` / `Mod + Alt + V` / `Mod + Alt + Down`: align the current multi-selection top / center vertically / bottom
 - `Mod + Shift + Alt + H` / `Mod + Shift + Alt + V`: distribute the current multi-selection by horizontal / vertical gaps
 - `Mod + Shift + Alt + Left` / `Right` / `Up` / `Down`: distribute the current multi-selection by left / right / top / bottom edges
+
+Preview and stage controls:
+
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
 - `Left` / `Right` / `Up` / `Down`: move the focused stage selection by `1px`
 - `Shift + Left` / `Shift + Right` / `Shift + Up` / `Shift + Down`: move the focused stage selection by `10px`
+
+Global controls:
+
 - `Mod + ,`: open settings
 - `?`: open the Help browser when no input field is focused
-- `Esc`: close open panels / dialogs
+- `Esc`: close open panels and dialogs
 
 ## History Model
 
-Undo/redo is implemented as an in-memory history stack.
+Undo/redo uses an in-memory history stack.
 
-- history is not persisted to `localStorage`
-- changes are stored incrementally as per-node before/after patches
-- full document snapshots are avoided for performance
-- resize interactions are recorded as a single transaction on release (not per mousemove frame)
-- move and non-text updates create a new transaction per action
-- text field updates are debounced into grouped history entries after short idle
-- `Cmd + Z` / `Cmd + Shift + Z` is handled by the app globally, including when text fields are focused (native browser undo is intercepted)
+### Storage and scope
 
-Controls:
+- History is not persisted to `localStorage`.
+- Entries are stored incrementally as per-node before/after patches.
+- History stores incremental patches rather than full document snapshots.
 
-- top bar buttons: undo / redo / help / settings
-- shortcuts: `Mod + Z`, `Mod + Shift + Z` (and `Ctrl + Y` on non-mac platforms)
-- settings panel: clear undo history, configurable max retained undo steps
-- document import replaces the current document as a single undoable transaction
+### Transaction semantics
+
+| Change type | History behavior |
+|---|---|
+| Resize | One transaction on release, not per mousemove frame |
+| Move / non-text update | One transaction per action |
+| Text edits | Debounced into grouped entries after a short idle |
+| Document import | One undoable replacement transaction |
+
+### User controls
+
+| Surface | Control |
+|---|---|
+| Top bar | undo / redo / help / settings |
+| Keyboard | `Mod + Z`, `Mod + Shift + Z`, and `Ctrl + Y` on non-mac platforms |
+| Settings | clear undo history, configurable max retained undo steps |
+
+### Browser undo behavior
+
+- `Cmd + Z` / `Cmd + Shift + Z` is handled by the app globally, including when text fields are focused, so native browser undo is intercepted.
 
 ## Import / Export
 
-The playground imports and exports document JSON, and it can also export a rendered site bundle made of separate HTML and CSS files. It does not export full editor session state.
+The playground imports and exports document JSON and exports a rendered site bundle. It does not export full editor session state.
 
-- export lives in the settings panel under `Import / Export`
-- export supports:
-  - an editable base file name field in settings
-  - save to file with that file name suggested when browser APIs allow it
-  - fallback named download using that same file name when native save picker is unavailable
-  - copy JSON to clipboard
-  - save rendered site ZIP (HTML + CSS bundle)
-  - separate export groupings for `Document JSON` and `Rendered Site`
-- import supports:
-  - choosing a `.json` file
-  - pasting JSON from clipboard into the settings panel import box
-  - importing pasted JSON from the textarea
-- import normalizes the incoming document, validates graph integrity, upgrades legacy font state, replaces the current document, clears selection, and can be undone with `Cmd + Z`
+### Scope
 
-Validation during import/persistence restore now checks document graph integrity in addition to role nesting:
+- Import and export live in the settings panel under `Import / Export`.
+- Export UI is grouped into `Document JSON` and `Rendered Site`.
 
-- `rootId` must resolve to a `site` node
-- non-root nodes must have a parent
-- parent `children` references must resolve to existing nodes
-- child `parentId` must point back to the owning parent
-- duplicate child ids inside one parent are rejected
-- unreachable/orphaned subtrees are rejected
+### Document JSON import
 
-Rendered site export is SSR-safe:
+- Choose a `.json` file.
+- Paste JSON from the clipboard into the settings import box.
+- Import pasted JSON from the textarea.
+- Imported documents are normalized, validated, upgraded for legacy font state, replace the current document, clear selection, and can be undone with `Cmd + Z`.
 
-- `src/site/SiteRenderer.tsx` renders structural site markup without editor concerns
-- `src/site/siteExport.tsx` renders:
-  - body HTML
-  - generated CSS
-  - a complete HTML document that links to the generated CSS file
-- rendered HTML adds Google Fonts preconnect and stylesheet links when the document authors Google-backed families
-- rendered site export does not depend on browser measurement APIs
+### Document JSON export
+
+- The settings panel exposes an editable base filename field.
+- When browser APIs allow it, export suggests that filename in a native save flow.
+- When native save is unavailable, export falls back to a named download using the same filename.
+- JSON can also be copied to the clipboard.
+
+### Rendered site export
+
+| Output | Notes |
+|---|---|
+| HTML body | structural site markup |
+| CSS | generated site stylesheet |
+| Full HTML document | links the generated CSS file |
+| ZIP bundle | HTML + CSS export bundle |
+
+### Validation and normalization
+
+Validation during import and persistence restore checks document graph integrity in addition to role nesting:
+
+| Rule | Requirement |
+|---|---|
+| Root node | `rootId` resolves to a `site` node |
+| Parent ownership | non-root nodes have a parent |
+| Parent references | parent `children` ids resolve to existing nodes |
+| Child back-reference | child `parentId` points back to the owning parent |
+| Duplicate children | duplicate child ids inside one parent are rejected |
+| Orphaned subtrees | unreachable/orphaned subtrees are rejected |
+
+### Runtime / SSR guarantees
+
+- `src/site/SiteRenderer.tsx` renders structural site markup without editor concerns.
+- `src/site/siteExport.tsx` renders body HTML, generated CSS, and a full HTML document that links the generated CSS file.
+- Rendered HTML adds Google Fonts preconnect and stylesheet links when the document authors Google-backed families.
+- Rendered site export does not depend on browser measurement APIs.
 
 ## Units
 
-The model is breakpoint-ready, even though the current editor only exposes a base breakpoint.
+The model is breakpoint-ready even though the editor exposes only a base breakpoint. The key rule is that the document stores authored values, while the editor selectively uses measured geometry for interaction, preview, and conversion.
 
-Supported unit types:
+### Supported authored value kinds
 
-- `x`, `y`: `px`
-- `width`: unit value, `fit-content`, `min-content`, or `max-content`
-- `height`: unit value, `auto`, or `aspect-ratio(...)`
+| Field | Allowed authored forms | Notes |
+|---|---|---|
+| `x`, `y` | `px` | Position values are currently pixel-only. |
+| `width` | unit value, `fit-content`, `min-content`, `max-content` | Width keywords are preserved in both the stage and the site renderer. |
+| `height` | unit value, `auto`, `aspect-ratio(...)` | `aspect-ratio(...)` remains a width-derived height mode. |
 
-Width keyword values are preserved in both the editor stage and site renderer, so text leaves keep their authored `fit-content` / `min-content` / `max-content` sizing instead of being expanded to full width.
+### Resolution principles
 
-In the editor stage, authored sizes remain the source of truth, but editor mechanics use resolved runtime geometry selectively. Absolute and relative sizes resolve from authored values; wrapper width is authored directly. For `section`/`header`/`footer`, an authored explicit wrapper height renders as the content-wrapper minimum height so the wrapper can still grow with content and sticky extents, but stage structural-range math keeps that authored explicit height authoritative instead of feeding measured wrapper height back into layout on every rerender. When structural wrappers need to grow beyond that authored minimum, the mesh extends from child geometry and sticky extents rather than from a second-pass wrapper-box measurement. For `container`, an authored explicit height renders as the actual content-wrapper height so border/padding surfaces and edit geometry stay aligned to the authored box. Auto-height wrapper mesh layout is recalculated from the current children/sticky extents rather than preserving stale previously measured wrapper height after edits. Intrinsic sizes such as text `height: auto`, `%`-relative dimensions, and keyword widths still use measured DOM layout so selection boxes, sticky tracks, snapping, and drag geometry follow the browser's real layout instead of heuristic estimates. Component presentation in the stage comes from the same shared render style semantics as site/export output; the stage should not add component-specific visual treatment beyond editor chrome with an intentional editing role. Exposed insert-time defaults for leaves are seeded into the authored model when the node is created; the renderer should not invent additional visual defaults that are absent from node state. Wrapper visuals render on a dedicated inner surface layer, so container borders/shadows and section bottom dividers behave like visual surfaces instead of changing the measured wrapper box. Wrapper drag previews reuse that same inner surface layer, so container background, border, radius, shadow, and section dividers remain intact while dragging. Stage overlay layers that render guides and spacer ranges mirror the content-wrapper padding so their coordinate space stays aligned with padded wrapper content. The editor stage adds its shell inset to sticky preview positioning, while offset guides stay in authored units inside that compensated sticky preview so the indicators remain aligned to the sticky element. When a sticky node lives inside a padded wrapper, the offset guide appends that padding contribution as an additional owner-side segment and keeps the authored offset as the node-side segment, so the total visible guide length is `offset + padding`. The padding segment uses a muted dotted variant of the offset-guide color, and the `Padding` badge sits on the boundary between the padding and offset segments rather than at the outer end of the guide. The same additive padding treatment applies to top, bottom, and dual-edge sticky offset guides. `aspect-ratio(...)` remains a height-side derived mode driven by resolved width.
+- Authored values remain the source of truth for persisted document geometry.
+- Runtime measurement is used where the editor needs live layout: selection boxes, sticky tracks, snapping, drag geometry, and intrinsic sizing.
+- The stage and site renderer share the same presentation semantics; the stage should not invent component visuals that are not present in node state.
+- Insert-time defaults are written into the model when the node is created rather than being added later by the renderer.
 
-For wrapper resizing in the stage, start-size measurement uses the inner `contentWrapper` surface so border/padding styling does not feed back into authored geometry, while the visible resize handles stay anchored to the outer wrapper shell so they align to the outer edge of bordered container surfaces. Top-level structural wrapper resizing uses a single bottom knob and computes its minimum height from child layout bottoms plus wrapper padding rather than from the current authored explicit height, so explicit section heights can shrink back down to content fit instead of becoming their own minimum.
+### Wrapper sizing behavior
 
-Text leaves also store an HTML tag, editable in the inspector. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the text node. Changing the tag updates semantics only; the renderer and stage styling normalize native tag defaults so browser heading/blockquote styles and stage-only paragraph selectors do not override the text node's authored styling. Seeded templates use semantic heading tags for primary titles: the default post title is `h1`, and the primary titles in the sticky demo sections are seeded as `h2`.
+| Wrapper role | Authored explicit height renders as | Resize behavior | Notes |
+|---|---|---|---|
+| `section`, `header`, `footer` | `contentWrapper` minimum height | bottom-only structural resize | Wrappers can still grow beyond the authored minimum from child geometry and sticky extents. |
+| `container` | actual `contentWrapper` height | regular wrapper resize behavior | Visual surfaces and edit geometry stay aligned to the authored box. |
 
-Text-bearing leaves split typography from presentation in the inspector:
+Additional rules:
 
-- `text`
-  - `Content`: body copy
-  - `Text style`: a combined font family/weight picker, bold, line height, italic, underline, strikethrough, alignment, direction, and HTML tag
-  - `Design`: text color and filter-based shadow
-- `link`
-  - `Content`: label plus a destination type switch
-  - newly inserted links default to the internal/anchor destination type
-  - `Anchor` destination: a right-aligned pill-style internal/external selector followed by an internal target picker populated from top-level `Top`, section, and `Bottom` targets, with section ids shown on a muted second line and exporting a same-page `#sectionId` href
-  - `External link` destination: `href` and an `Open in a new tab` toggle
-  - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
-  - `Design`: text color and filter-based shadow
-  - links render as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame
-  - external links with `Open in a new tab` enabled render/export with `target="_blank"` plus `rel="noopener noreferrer"`
-  - anchor links ignore the new-tab toggle and resolve against section wrapper DOM ids in site/export output
-  - if an authored anchor target no longer exists, the selected link shows a compact dark-yellow `Broken anchor` annotation with a triangle-alert icon inline beside the `Section` picker label; broken links are not auto-repaired
-  - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
-  - link wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
-- `image`
-  - `Content`: `src` and `alt`
-  - `Design`: unified border width/color/radius plus box shadow
-- `button`
-  - `Content`: the same destination model as `link` with label, a right-aligned internal/external type switch, an internal section picker, or external `href` plus `Open in a new tab`
-  - newly inserted buttons default to the external destination type
-  - `Text style`: the same typography controls as text except HTML tag, plus a wrap toggle
-  - `Design`: text color, background color, unified border color/width/radius, box shadow, and block/inline padding in that order
-  - external buttons with `Open in a new tab` enabled render/export with `target="_blank"` plus `rel="noopener noreferrer"`
-  - anchor buttons ignore the new-tab toggle, resolve against section wrapper DOM ids in site/export output, and show the same compact selected `Broken anchor` annotation inline beside the `Section` picker label when their target no longer exists
-  - buttons without an `href` render/export as native `button` elements; buttons with an external or anchor destination render/export as styled anchors so navigation behavior matches links
-  - button padding is edited as `Y` and `X` fields that serialize to `paddingBlock` / `paddingInline`
-  - button padding units support `px`, `em`, and `rem`, and use the same inline unit-switch field treatment as wrapper padding controls
-  - the wrap toggle lives on a single `Wrap` row immediately after `Align` in the text-style section
-  - button wrap defaults to `single-line`; enabling the wrap toggle switches it to multi-line wrapping
+- Auto-height wrapper mesh layout is recalculated from current children and sticky extents instead of preserving stale measured wrapper height.
+- Wrapper resize start measurement uses the inner `contentWrapper` surface so border and padding styling do not feed back into authored geometry.
+- Visible resize handles remain anchored to the outer wrapper shell so they align with bordered container surfaces.
+- Top-level structural wrapper resizing computes its minimum height from child layout bottoms plus wrapper padding, allowing an explicit section height to shrink back down to content fit.
 
-Typography picker behavior:
+### Sticky guide coordinate space
 
-- the family picker shows `Sans Serif` first, mapped to the browser/system sans-serif stack
-- recent font selections appear next
-- a divider separates recent fonts from the full document-font list
-- the remaining document font families are sorted by:
-  1. language/subset
+- Stage overlay layers mirror `contentWrapper` padding so guide coordinates stay aligned with padded wrapper content.
+- Sticky preview adds the editor shell inset when positioning sticky elements, while the guides themselves remain expressed in authored units.
+- If a sticky node lives inside a padded wrapper, the visible offset guide becomes `offset + padding`:
+  - the node-side segment represents the authored offset
+  - the owner-side segment represents padding
+- The padding segment uses a muted dotted treatment, and the `Padding` badge sits on the boundary between the padding and offset segments.
+- The same additive padding treatment applies to top, bottom, and dual-edge sticky offset guides.
+
+### Leaf authoring model
+
+| Leaf kind | Content section | Style section(s) | Special semantics |
+|---|---|---|---|
+| `text` | body copy | `Text style`, `Design` | Editable HTML tag |
+| `link` | label + destination | `Text style`, `Design` | Internal/anchor vs external link behavior |
+| `image` | `src`, `alt` | `Design` | Unified border/radius/shadow surface |
+| `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
+
+### Text leaf semantics
+
+Text leaves store an editable HTML tag. Supported tags are `h1`-`h6`, `p`, `blockquote`, and `div`, and both the editor stage and site renderer use that tag when rendering the node.
+
+Rules:
+
+- Changing the tag updates semantics only.
+- Renderer and stage styling normalize native tag defaults so browser heading and blockquote styles do not override authored styles.
+- Seeded templates use semantic heading tags for primary titles:
+  - the default post title is `h1`
+  - the primary titles in the sticky demo sections are seeded as `h2`
+
+### Link leaf behavior
+
+Content and styling:
+
+- Links use `Content`, `Text style`, and `Design` sections.
+- Newly inserted links default to the internal or anchor destination type.
+- Links render as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame.
+- Link wrap defaults to `single-line`; enabling `Wrap` switches the link to multi-line wrapping.
+
+Destination behavior:
+
+- `Anchor` destinations use an internal target picker populated from top-level `Top`, section, and `Bottom` targets.
+- Exported anchor links resolve to same-page `#sectionId` hrefs against section wrapper DOM ids.
+- `External link` destinations expose `href` and `Open in a new tab`.
+- External links with `Open in a new tab` enabled render and export with `target="_blank"` plus `rel="noopener noreferrer"`.
+- Anchor links ignore the new-tab toggle.
+
+Broken anchor behavior:
+
+- If an authored anchor target no longer exists, the selected link shows a compact dark-yellow `Broken anchor` annotation with a triangle-alert icon inline beside the `Section` picker label.
+- Broken anchors are surfaced to the editor but are not auto-repaired.
+
+### Button leaf behavior
+
+Content and styling:
+
+- Buttons use the same destination model as links, with label plus an internal or external destination selector.
+- Newly inserted buttons default to the external destination type.
+- Buttons use the same typography controls as text, except HTML tag editing is omitted.
+- Button `Design` exposes text color, background, unified border controls, box shadow, and block/inline padding.
+- Button padding is edited as `Y` and `X` fields that serialize to `paddingBlock` and `paddingInline`.
+- Button padding units support `px`, `em`, and `rem`.
+- Button wrap defaults to `single-line`; enabling `Wrap` switches the button to multi-line wrapping.
+
+Export behavior:
+
+- Buttons without an `href` render and export as native `button` elements.
+- Buttons with an external or anchor destination render and export as styled anchors so navigation behavior matches links.
+- External buttons with `Open in a new tab` enabled render and export with `target="_blank"` plus `rel="noopener noreferrer"`.
+- Anchor buttons ignore the new-tab toggle and resolve against section wrapper DOM ids in site/export output.
+- Broken anchor buttons show the same compact selected `Broken anchor` annotation used by links.
+
+### Typography picker behavior
+
+Ordering and browsing:
+
+- The family picker shows `Sans Serif` first, mapped to the browser or system sans-serif stack.
+- Recent font selections appear next.
+- A divider separates recent fonts from the full document-font list.
+- Remaining document font families are sorted by:
+  1. language or subset
   2. family name
-- the family picker renders each family in its own font for preview
-- family menu entries use a single larger text line; subset/category helper text is omitted
-- selecting a family keeps the family menu open with the current family still focused so keyboard traversal can continue
-- the font row uses a combined two-stage picker: families on the left, family-specific weights on the right
-- the same combined picker is used for both single-node and multi-select typography editing
-- the combined picker keeps the family list order stable while it is open
-- the combined picker trigger previews the current weight directly on the family name instead of showing a separate weight label
-- when multi-select typography values differ, the combined picker trigger shows `Mixed` until a new family or weight is chosen
-- the open picker marks the currently selected family and weight with a left-aligned check icon
-- the weight dropdown shows readable names (`Light`, `Normal`, `Bold`, etc.) while still authoring numeric values
-- weight options preview in the currently selected family at their own weight
-- while the combined picker is open, it injects a lightweight preview stylesheet for the visible families and all visible weights of the active family so weight previews do not wait for selection
-- the family picker exposes a manage-fonts icon button next to the family/weight controls
-- the weight picker authors numeric values from `100` to `900`
-- variable families expose stepped weight options across their supported range
-- the bold button uses the same `400`/`800` toggle behavior as `Mod + B`
-- the size and line-height row uses the same total control width as the four style buttons below it
+- Each family renders in its own font for preview, using a single larger text line without subset or category helper text.
+- Selecting a family keeps the family menu open with the current family still focused so keyboard traversal can continue.
+
+Multi-select behavior:
+
+- The same combined family-and-weight picker is used for both single-node and multi-select editing.
+- While open, the picker keeps the family list order stable.
+- The trigger previews the current weight directly on the family name instead of showing a separate weight label.
+- When multi-select values differ, the trigger shows `Mixed` until a new family or weight is chosen.
+
+Weight behavior and preview loading:
+
+- The open picker marks the currently selected family and weight with a left-aligned check icon.
+- Weight options show readable labels such as `Light`, `Normal`, and `Bold` while still authoring numeric values.
+- Weight options preview in the currently selected family at their own weight.
+- The weight picker authors numeric values from `100` to `900`.
+- Variable families expose stepped weight options across their supported range.
+- The bold button uses the same `400` / `800` toggle behavior as `Mod + B`.
+- While the combined picker is open, it injects a lightweight preview stylesheet for visible families and all visible weights of the active family so weight previews do not wait for selection.
+- The family picker exposes a manage-fonts icon button next to the family and weight controls.
+- The size and line-height row uses the same total control width as the four style buttons below it.
 
 ## Font Management
 
-Google Fonts support is split between a no-UI data layer and document/editor surfaces.
+Google Fonts support is split between a headless data layer and editor-facing document surfaces.
 
-Data/runtime behavior:
+### Data layer responsibilities
 
-- `src/fonts/` owns Google Fonts fetch/refresh tooling, bundled catalog loading, normalization, search/filter/sort, weight resolution, document font-library helpers, and Google CSS2 URL generation
-- Google catalog filtering and sorting runs locally against a bundled repo snapshot
-- runtime/editor clients do not require a Google Fonts Developer API key; the key is only needed when refreshing the bundled catalog snapshot
-- language filters map to Google `subsets`, but the UI groups them into human-readable buckets
-- variable-font metadata is preserved, but variable-axis authoring UI is deferred
+- `src/fonts/` owns Google Fonts fetch and refresh tooling, bundled catalog loading, normalization, search, filtering, sorting, weight resolution, document font-library helpers, and Google CSS2 URL generation.
+- Catalog filtering and sorting run locally against the bundled repository snapshot.
+- Runtime and editor clients do not require a Google Fonts Developer API key; the key is only needed when refreshing the bundled catalog snapshot.
+- Language filters map to Google `subsets`, but the UI groups them into human-readable buckets.
+- Variable-font metadata is preserved even though variable-axis authoring UI is still deferred.
 
-Editor behavior:
+### Editor surfaces
 
-- a reusable `ManageFontsPanel` is available both as a standalone dialog and inside Settings
-- the panel can:
-  - browse Google Fonts
-  - paginate Google catalog results with a selectable page size of `10`, `20`, or `50` families; the default is `10`
-  - search by family, subset, and tag text
-  - filter by language, category, favorites, and used state
-  - default the language filter to `Western`
-  - expose grouped language options such as `Western`, `Hebrew`, `Arabic`, `Cyrillic`, and `Other` instead of raw Google subset ids
-  - persist browse search/filter state in browser storage so reopening the panel keeps the current query
-  - hide variable fonts by default while debugging static-font flows
-  - show the bundled catalog `last updated` timestamp above the browse results
-  - add document fonts
-  - remove unused document fonts
-  - mark and unmark favorites
-  - purge unused non-default, non-favorite families
-  - preview document-library families inline with larger family/sample text
-  - preview each family with a language-appropriate sample for the active language bucket when possible
-  - keep compact metadata (`category`, language, usage, styles/variable) pinned on the opposite side of each row so the card height stays stable
-  - preview only the currently visible Google catalog page with a lightweight shared stylesheet so browsing stays responsive
+| Surface | Behavior |
+|---|---|
+| `ManageFontsPanel` | Available both as a standalone dialog and inside Settings. |
+| Browsing | Supports Google catalog pagination, search, language/category/favorite/used filters, and bundled-catalog timestamps. |
+| Library management | Supports add, remove unused, favorite/unfavorite, and purge-unused operations. |
+| Preview | Shows document-library previews inline and uses language-appropriate samples when possible. |
+| Persistence | Keeps browse search and filter state in browser storage so the panel reopens in the same state. |
 
-Loading/export behavior:
+Detailed editor rules:
 
-- the editor injects one shared Google Fonts stylesheet link for the current document font usage
-- editor preview loading also includes document-library families so family names can preview in the picker before they are used on-canvas
-- the management panel injects a second preview stylesheet only for the currently visible catalog page and document-library families
-- static families request only the numeric weights currently authored in the document
-- variable families request the authored weight range from the family metadata
-- Google Fonts Developer API capability flags are sent as repeated `capability=` params, not a comma-joined value
-- Google CSS2 family names are encoded directly through `URLSearchParams`; multi-word family names must not pre-replace spaces with `+` before serialization
+- Catalog browsing supports page sizes of `10`, `20`, or `50` families, with `10` as the default.
+- The default language filter is `Western`.
+- Grouped language filters such as `Western`, `Hebrew`, `Arabic`, `Cyrillic`, and `Other` are exposed instead of raw Google subset ids.
+- Variable fonts are hidden by default while static-font flows are being debugged.
+- Row metadata such as `category`, language, usage, and styles or variable state stays pinned opposite the preview so card height remains stable.
+- Only the currently visible Google catalog page is preview-loaded so browsing remains responsive.
 
-Shadow controls in the inspector edit `distance` and `angle`, but the persisted document model continues to store shadow offsets as `shadowOffsetX` / `shadowOffsetY`. The shadow numeric inputs use compact fixed unit suffixes with tighter padding than the geometry fields: `blur`, `spread`, and `distance` render with `px`, and `angle` renders with `°`. Shadow angle is edited and displayed on a `0..360` scale; when stored offsets are read back into the inspector, negative `atan2()` results are normalized into that positive range. Like the geometry number fields, these numeric inputs keep a local draft while editing: clearing the field or typing an out-of-range number does not immediately commit to the model, and the field restores the last valid committed value on blur. Text and link shadows render via CSS `filter: drop-shadow(...)`; wrapper, image, and button shadows render via CSS `box-shadow`. A fully transparent authored shadow color suppresses shadow output entirely instead of serializing a no-op shadow declaration. Button shadows do not also receive a redundant filter shadow. Wrapper, image, and button border surfaces use `box-sizing: border-box`, and bordered fills are clipped to `padding-box` so the border reads as an outer stroke instead of painting over the background.
+### Loading and export behavior
 
-Unified border editors follow the same simplified treatment:
+- The editor injects one shared Google Fonts stylesheet link for the current document font usage.
+- Editor preview loading also includes document-library families so picker previews can render before those fonts are used on-canvas.
+- The management panel injects a second preview stylesheet only for the currently visible catalog page and document-library families.
+- Static families request only the numeric weights currently authored in the document.
+- Variable families request the authored weight range from the family metadata.
+- Google Fonts Developer API capability flags are sent as repeated `capability=` query parameters rather than as a comma-joined value.
+- Google CSS2 family names are encoded through `URLSearchParams`; multi-word family names must not pre-replace spaces with `+` before serialization.
 
-- border color uses the shared advanced color picker
-- border width renders as a fixed `px` field without a unit dropdown
-- border radius uses an explicit inline unit selector, supports `px` and `%`, and enforces a minimum of `0`
-- border width preserves its implicit stored unit, and border radius preserves/edits its explicit `px` or `%` unit
-- authored `0` border widths and `0` border radii suppress rendered border/radius CSS instead of serializing explicit zero-value declarations
+## Inspector Field Model
 
-Inspector geometry controls use single composite fields instead of raw freeform text. `X` and `Y` are fixed `px` fields, so they render a static suffix instead of a unit dropdown. Top-level wrappers with role `section`, `header`, or `footer` do not show `X` and `Y` at all, because their stage position is structural rather than freely authored. Wrappers with role `section`, `header`, `footer`, or `container` expose content-wrapper padding directly in the `Layout` section as four unit-selectable spacing inputs with inline directional-arrow icons. Wrapper padding supports `px`, `em`, and `rem`, and unit switching measures the live rendered padding edge before converting so the visible inset stays stable. `Width` and `Height` use one shared shell with an editable numeric/value segment and a unit-or-mode segment. Numeric values edit as `number + unit`; width keywords and height `auto` render as a single full-field mode trigger; height `aspect-ratio` stays in the same shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`. Width numeric modes support `px` and `%`. Non-section height numeric modes support `px` and `%`. Section height is the only geometry control that also exposes viewport units, limited to `vh`, `vmin`, and `vmax`; `vw` is intentionally excluded because the current editor stage is not an iframe-backed viewport and cannot give components true stage-relative viewport semantics. Numeric geometry fields enforce a minimum of `0` on width and height. The numeric segment uses the browser number-input keyboard behavior while hiding native steppers, except for suggestion-enabled value fields that switch to a validated text input with decimal keyboard hints so the shared popup can use a single styled combobox surface. Shared controlled `Input` fields keep a local draft while focused, so users can temporarily clear or type an invalid value without losing the text immediately; when panel-level validation rejects the draft, blur restores the last committed external value. Composite numeric+unit fields such as border width/radius and font size follow the same policy instead of treating an empty draft as an immediate clear. These inspector composites now share the `ValueWithUnit` wrapper in `src/components/ui/value-with-unit.tsx`. Composite field shells keep one continuous outer border around the whole control; the shell uses the shared outer `focus-within` treatment, and the focused numeric or unit/mode segment only gets an accent-colored inner border instead of its own separate focus ring. Mixed-selection dashed styling is owned by that shared component instead of per-caller ad hoc classes. In the higher-contrast palettes, compact numeric values render at `12px` minimum and suffixes/modes render at `11px` minimum for legibility. Font size uses an inline suggestion dropdown anchored to the numeric field itself, so common sizes can be picked from the field chrome while preserving the current unit. Suggestion-enabled value fields use one styled listbox popup with combobox wiring instead of layering a browser `datalist` popup underneath editor chrome. The font-size suggestion list uses the same hover highlight treatment as other editor menus, uses slightly taller rows for easier scanning, includes a `72px` preset, and caps its height with an internal scrollbar. The unit/mode segment uses brighter text than the numeric value, and its dropdown chevron appears only on hover as a white overlay over the suffix area. Numeric field displays are capped to 2 decimal places and trim trailing zeroes. When switching between supported numeric units, or from keyword sizing into a numeric unit, the inspector measures the live rendered stage geometry and rewrites the numeric value through shared conversion helpers so the node keeps the same rendered size or position in the editor instead of only swapping suffixes. For section-height viewport conversion, editor viewport units resolve against the visible `.stage-shell` content area after editor chrome and stage padding, not the raw browser window. For `vmin` and `vmax`, conversion uses the smaller or larger dimension of that editor viewport. Font size (`px`/`em`/`rem`), wrapper padding (`px`/`em`/`rem`), button padding (`px`/`em`/`rem`), and border radius (`px`/`%`) use the same measured-reference conversion path: font-relative units resolve from computed font size, and border radius uses an average-dimension approximation when converting between pixels and percentages. Wrapper, image, and button box-shadow controls expose `blur`, `spread`, `distance`, and `angle`; text and link shadows stay filter-based and therefore do not expose spread. When converting spacing back to `px`, the committed pixel value is rounded to a whole number. If a control cannot obtain a trustworthy live reference, the authored value stays unchanged instead of being approximated from hidden fallback sizes. Committed values still serialize back to the existing model strings (`320px`, `fit-content`, `auto`, `aspect-ratio(16/9)`). For wrapper nodes with role `section`, `header`, or `footer`, the width control is hidden in the geometry grid while its slot stays reserved so the 2x2 geometry layout remains visually stable.
+This section describes how compact editor controls author values without losing the original model shape.
 
-When a `section`, `header`, `footer`, or `container` is selected in the stage, or when any descendant inside that wrapper is selected, the editor draws a thin dashed accent-blue rectangle at the inner content boundary of that wrapper's padding box. The overlay is purely visual and exists to show where the content-wrapper padding starts and ends while editing nested content.
+### Shadow controls
 
-Deferred limitation: child `height: %` conversion inside `section` / `header` / `footer` wrappers remains intentionally unresolved in this stage. Those wrappers still render explicit authored height as `min-height` for editor growth behavior, so inspector conversion does not try to reinterpret that box as a reliable `%` height reference yet.
+- The inspector edits shadow `distance` and `angle`, but the document model continues to store `shadowOffsetX` and `shadowOffsetY`.
+- `blur`, `spread`, and `distance` use compact fixed `px` suffixes.
+- `angle` uses a `°` suffix and is edited on a `0..360` scale.
+- When stored offsets are read back into the inspector, negative `atan2()` results are normalized into that positive range.
+- Numeric fields keep a local draft while editing; clearing the field or typing an out-of-range value does not immediately commit to the model, and blur restores the last valid committed value.
+- Text and link shadows render with `filter: drop-shadow(...)`.
+- Wrapper, image, and button shadows render with `box-shadow`.
+- A fully transparent shadow color suppresses shadow output instead of serializing a no-op declaration.
+- Button shadows do not also receive a redundant filter shadow.
 
-Editor resize and width/height field edits are isolated per axis. Changing one axis preserves the untouched axis as-authored, including keywords and non-pixel units. That means `height:auto` stays `auto` when width changes, `height:aspect-ratio(...)` stays authored when width changes, and keyword widths such as `fit-content` stay authored when only height changes. When a resized axis already uses a numeric unit, the editor preserves viewport-based units (`vw`, `vh`, `vmin`, `vmax`) and `px`, but converts `%` to concrete pixels on commit. Keywords remain preserved only on the untouched axis; if the keyword axis itself is explicitly resized, that axis is authored as a concrete size.
+### Border editors
 
-Shared hover tooltips in the editor follow a delayed-open plus grace-period model:
+- Border color uses the shared advanced color picker.
+- Border width renders as a fixed `px` field without a unit dropdown.
+- Border radius uses an inline unit selector, supports `px` and `%`, and enforces a minimum of `0`.
+- Border width preserves its implicit stored unit.
+- Border radius preserves and edits its explicit `px` or `%` unit.
+- Authored `0` border widths and `0` border radii suppress rendered border and radius CSS instead of serializing explicit zero-value declarations.
+- Wrapper, image, and button border surfaces use `box-sizing: border-box`, and bordered fills are clipped to `padding-box` so the border reads as an outer stroke.
 
-- when no tooltip is currently open, hovering a tooltip trigger waits 200ms before opening
-- if the pointer leaves before that tooltip opens, the pending open is canceled
-- entering another tooltip trigger while no tooltip is open starts a fresh 200ms wait
-- once a tooltip is visible, leaving its trigger closes it immediately
-- after a visible tooltip closes, the next 200ms act as a grace period: entering the same or another tooltip trigger during that window opens immediately with no delay
-- after the grace period ends, hover-open returns to the normal 200ms delay
-- keyboard focus opens tooltips immediately
+### Geometry editors
 
-Shortcut hints inside tooltips render as a secondary monospace line with lower contrast than the main label.
+| Control | Behavior |
+|---|---|
+| `X`, `Y` | Fixed `px` fields with static suffixes. |
+| Structural wrapper `X`, `Y` | Hidden for `section`, `header`, and `footer` because those positions are structural. |
+| Wrapper padding | Exposed directly in `Layout` for `section`, `header`, `footer`, and `container` using four unit-selectable spacing inputs. |
+| `Width`, `Height` | Shared composite shell with value segment plus unit-or-mode segment. |
+| Width modes | Numeric `px` / `%`, plus `fit-content`, `min-content`, `max-content`. |
+| Non-section height modes | Numeric `px` / `%`, plus `auto` and `aspect-ratio(...)`. |
+| Section height modes | Numeric `px`, `%`, `vh`, `vmin`, `vmax`, plus `auto` and `aspect-ratio(...)` where supported by the authored model. |
 
-Internally, values are stored as parsed data shaped like `CSSUnitValue`, but as plain app data rather than browser Typed OM objects.
+Additional geometry rules:
+
+- Wrapper padding supports `px`, `em`, and `rem`, and unit switching measures the live rendered padding edge before converting so the visible inset stays stable.
+- `Height: aspect-ratio(...)` stays in the shared shell but uses a freeform value segment that accepts either a positive number or a simple ratio expression like `16/9`.
+- `vw` is intentionally excluded from section-height editing because the current stage is not iframe-backed and cannot provide true stage-relative viewport semantics.
+- Numeric geometry fields enforce a minimum of `0` on width and height.
+- For wrapper nodes with role `section`, `header`, or `footer`, the width control is hidden in the geometry grid while its slot stays reserved so the 2x2 layout remains visually stable.
+
+### Shared composite field behavior
+
+- Composite numeric fields use a single shared shell rather than separate bordered sub-controls.
+- Shared controlled `Input` fields keep a local draft while focused so users can temporarily clear or type an invalid value without losing the text immediately.
+- If validation rejects the draft, blur restores the last committed external value.
+- `ValueWithUnit` owns the continuous outer border, shared `focus-within` treatment, and mixed-selection dashed styling.
+- The active inner input or unit segment gets an accent-colored inner border instead of its own separate focus ring.
+- Suggestion-enabled value fields switch to a validated text input with decimal-keyboard hints so the shared popup can use one styled combobox surface.
+- Suggestion-enabled value fields use a styled listbox popup instead of layering browser `datalist` UI under editor chrome.
+- The font-size suggestion list uses the same hover highlight treatment as other editor menus, slightly taller rows, a `72px` preset, and an internal scrollbar.
+- In higher-contrast palettes, compact numeric values render at `12px` minimum and suffixes or modes at `11px` minimum.
+- Numeric field displays are capped to two decimal places and trim trailing zeroes.
+
+### Unit conversion rules
+
+- When switching between supported numeric units, or from a keyword sizing mode into a numeric unit, the inspector measures live rendered stage geometry and rewrites the numeric value through shared conversion helpers.
+- The goal is to preserve the rendered size or position rather than merely swapping suffixes.
+- Section-height viewport conversion resolves against the visible `.stage-shell` content area after editor chrome and stage padding, not the raw browser window.
+- `vmin` and `vmax` conversion use the smaller or larger dimension of that editor viewport.
+- Font size (`px` / `em` / `rem`), wrapper padding (`px` / `em` / `rem`), button padding (`px` / `em` / `rem`), and border radius (`px` / `%`) all use the same measured-reference conversion path.
+- Font-relative units resolve from computed font size.
+- Border radius uses an average-dimension approximation when converting between pixels and percentages.
+- Wrapper, image, and button box-shadow controls expose `blur`, `spread`, `distance`, and `angle`; text and link shadows stay filter-based and therefore do not expose spread.
+- When converting spacing back to `px`, the committed pixel value is rounded to a whole number.
+- If a control cannot obtain a trustworthy live reference, the authored value stays unchanged instead of being approximated from hidden fallback sizes.
+- Committed values still serialize back to the existing model strings such as `320px`, `fit-content`, `auto`, and `aspect-ratio(16/9)`.
+- Width and height edits stay isolated per axis:
+  - changing one axis preserves the other axis as-authored, including keywords and non-pixel units
+  - `%` converts to concrete pixels when that axis itself is explicitly resized
+  - untouched keyword axes stay authored as keywords
+
+### Selection overlays and known limitation
+
+- When a `section`, `header`, `footer`, or `container` is selected, or when any descendant inside it is selected, the stage draws a thin dashed accent-blue rectangle at the inner content boundary of that wrapper's padding box.
+- The overlay is purely visual and exists to show where the `contentWrapper` padding starts and ends while editing nested content.
+- Deferred limitation: child `height: %` conversion inside `section`, `header`, and `footer` wrappers remains intentionally unresolved. Those wrappers still render explicit authored height as `min-height` for editor growth behavior, so inspector conversion does not yet reinterpret that box as a reliable `%` height reference.
+
+### Tooltip behavior
+
+- When no tooltip is open, hovering a trigger waits `200ms` before opening.
+- Leaving before that delay cancels the open.
+- Entering another trigger while no tooltip is open starts a fresh `200ms` wait.
+- Once a tooltip is visible, leaving its trigger closes it immediately.
+- After a visible tooltip closes, the next `200ms` acts as a grace period:
+  - entering the same or another trigger during that window opens immediately
+  - after the grace period ends, hover-open returns to the normal `200ms` delay
+- Keyboard focus opens tooltips immediately.
+- Shortcut hints inside tooltips render as a secondary monospace line with lower contrast than the main label.
+
+### Typed storage model
+
+Internally, parsed values are stored as plain app data shaped like `CSSUnitValue`, not as browser Typed OM objects.
 
 ## Sticky Model
 
-Sticky can be defined on:
+Sticky can be authored on leaves, wrappers, and wrapper content wrappers, but the editor exposes that capability selectively depending on node type.
 
-- any leaf
-- any wrapper
-- any wrapper content wrapper
+### Where sticky can be applied
 
-Sticky properties:
+| Node kind | Supported target(s) | Notes |
+|---|---|---|
+| leaf | `self` | Leaves do not expose `contentWrapper`. |
+| wrapper | `self`, `contentWrapper` | `contentWrapper` support is retained in the model even when the UI hides it. |
 
-- enabled
-- target: `self` or `contentWrapper`
-- edge: `top`, `bottom`, or `both`
-- offset (`offsetTop`, `offsetBottom`)
-- duration (`duration` legacy + split `durationTop`, `durationBottom`)
+### Sticky definition shape
+
+| Field | Allowed values | Notes |
+|---|---|---|
+| `enabled` | boolean | Master on/off toggle. |
+| `target` | `self`, `contentWrapper` | Determines which box receives sticky positioning. |
+| `edge` | `top`, `bottom`, `both` | Backed by `edges.top` / `edges.bottom` in the model. |
+| `offsetTop`, `offsetBottom` | unit values | Express sticky inset from the viewport edge. |
+| `duration` | unit value | Legacy single-duration field. |
+| `durationTop`, `durationBottom` | unit values | Split duration fields for top and bottom travel. |
+| `durationMode` | `auto`, `custom` | `auto` derives travel distance from available space. |
 
 ### Current editor controls
 
-- duration slider: `0vh` to `400vh` in `25vh` steps
-- offset slider: `0vh` to `100vh`
-- when edge is `both`, inspector uses a dual-knob offset range slider (top/bottom band) and separate top/bottom duration sliders
-- for wrappers, sticky `target` is hidden from the editor UI for now; the product currently presents wrapper sticky as self-targeted only, while internal `contentWrapper` support remains retained for future enablement
+- Duration slider: `0vh` to `400vh` in `25vh` steps.
+- Offset slider: `0vh` to `100vh`.
+- When edge is `both`, the inspector uses a dual-knob offset range slider and separate top and bottom duration sliders.
+- For wrappers, sticky `target` is hidden in the UI; wrapper sticky is presented as self-targeted even though internal `contentWrapper` support remains in the model for future enablement.
 
 Defaults:
 
@@ -479,72 +717,99 @@ Defaults:
 
 Spacers are real structural elements.
 
-### Rules
+### Core rules
 
-- For `target = self`, the sticky element lives in a sticky track:
+- For `target=self`, the sticky element lives in a sticky track:
   - element first
   - spacer immediately after it
-- For `target = contentWrapper`, a real flow spacer after the content wrapper extends the parent
-- Spacer visuals can be shown or hidden in the editor
-- Offset is visualized separately from duration
+- For `target=contentWrapper`, a real flow spacer after the content wrapper extends the parent.
+- Spacer visuals can be shown or hidden in the editor.
+- Offset is visualized separately from duration.
 
-### Multiple sticky items in one section
+### Overlap and extent resolution
 
-Multiple sticky spacers can overlap in vertical range.
+- Multiple sticky spacers in one section can overlap in vertical range.
+- Spacer extents do not add together.
+- The final section height is determined by the spacer whose end reaches furthest down.
 
-They do not add together.
+### Auto-duration behavior in preview
 
-The final section height is determined by the spacer whose end is furthest down.
+For self-target sticky guides in the editor preview, `durationMode=auto` uses the actual free space around the sticky node inside the owner's padded content box:
 
-For self-target sticky guides in the editor preview, `durationMode=auto` uses the actual free space around the sticky node inside the owner's padded content box. Top-edge auto uses the free space below the node, bottom-edge auto uses the free space above the node, and both-edge auto renders those two guide heights independently instead of mirroring one distance to both sides.
+- top-edge auto uses the free space below the node
+- bottom-edge auto uses the free space above the node
+- both-edge auto renders those two guide heights independently instead of mirroring one distance to both sides
 
-For sticky containers:
+### Container-specific behavior
 
-- `target=self` applies sticky positioning to the container wrapper itself
-- `target=contentWrapper` applies sticky positioning to the internal content wrapper
-- when nested container `contentWrapper` sticky adds extra extent, parent mesh sizing includes that extent so scroll range and sticky duration stay consistent
+- `target=self` applies sticky positioning to the container wrapper itself.
+- `target=contentWrapper` applies sticky positioning to the internal content wrapper.
+- When nested container `contentWrapper` sticky adds extra extent, parent mesh sizing includes that extent so scroll range and sticky duration stay consistent.
 
 ## Site Rendering
 
-`src/site/SiteRenderer.tsx` is now the canonical site/runtime renderer boundary for non-editor output.
+`src/site/SiteRenderer.tsx` is the canonical site/runtime renderer boundary for non-editor output.
 
-- it is detached from editor interactions (`drag`, `resize`, `selection`, diagnostics)
-- it renders semantic wrapper tags (`header`, `section`, `footer`, `div`) plus leaf tags/content
-- it preserves authored width keywords and text HTML tags
-- it uses the same mesh-grid child placement baseline as the editor stage for non-editor layout, instead of falling back to absolute-position child export
-- it carries the renderer's default presentation layer for text, links, buttons, and images into the exported CSS, then layers authored model values on top
-- it preserves authored explicit wrapper/content sizing in export:
-  - `section`/`header`/`footer` keep authored `min-height`
+### Renderer boundary
+
+- The site renderer is detached from editor interactions such as drag, resize, selection, and diagnostics.
+- It renders semantic wrapper tags (`header`, `section`, `footer`, `div`) plus the authored leaf tags and content.
+- It preserves authored width keywords and text HTML tags.
+- It uses the same mesh-grid child placement baseline as the editor stage instead of falling back to absolute-position export.
+- It carries the renderer's default presentation layer for text, links, buttons, and images into exported CSS, then layers authored model values on top.
+
+### Sizing and sticky export behavior
+
+- Authored explicit wrapper and content sizing is preserved in export:
+  - `section`, `header`, and `footer` keep authored `min-height`
   - `container` keeps authored fixed `height`
-  - it does not add an extra generic height floor to short wrappers
-- it renders sticky structure with real exported spacer elements:
-  - `target=self`: sticky track + edge-aware spacer ordering + sticky node
-  - `target=contentWrapper`: wrapper + sticky content wrapper + flow spacer
-- custom sticky durations export as authored CSS lengths
-- `durationMode=auto` exports no synthetic measured spacer extent because site export is model-driven and does not depend on runtime DOM measurement
-- `target=self` with `durationMode=auto` exports sticky directly on the node/wrapper without a synthetic track wrapper, matching the editor stage baseline
+  - short wrappers do not receive an extra generic height floor
+- Sticky structure exports as real spacer-backed DOM:
+  - `target=self`: sticky track plus edge-aware spacer ordering plus sticky node
+  - `target=contentWrapper`: wrapper plus sticky content wrapper plus flow spacer
+- Custom sticky durations export as authored CSS lengths.
+- `durationMode=auto` exports no synthetic measured spacer extent because site export is model-driven and does not depend on runtime DOM measurement.
+- `target=self` with `durationMode=auto` exports sticky directly on the node or wrapper without a synthetic track wrapper, matching the editor stage baseline.
 
-`src/site/siteExport.tsx` exposes the programmatic export surface:
+### Programmatic export surface
 
-- `renderSiteBodyHtml(document)`
-- `renderSiteCss(document)`
-- `renderSiteHtmlDocument(document)`
-- `renderSiteExportBundle(document)`
+| Export | Purpose |
+|---|---|
+| `renderSiteBodyHtml(document)` | Renders the site `<body>` HTML. |
+| `renderSiteCss(document)` | Renders the generated site CSS. |
+| `renderSiteHtmlDocument(document)` | Renders a complete standalone HTML document. |
+| `renderSiteExportBundle(document)` | Returns the full export bundle used by ZIP and site export. |
 
 ## Preview Model
 
 Sticky preview is CSS-native.
 
-Bottom-edge self sticky uses inverted track spacer ordering (spacer before node) so viewport pinning remains stable during scroll.
-For `edges: both`, preview applies both sticky constraints together (`top` and `bottom`) and uses split offsets (`offsetTop`, `offsetBottom`).
-For `edges: both`, visual guides render top and bottom offsets together, and distance guides render both top and bottom tracks together.
-Wrapper `target=self` sticky uses the same sticky-track/spacer pattern as leaf components for custom durations, including bottom-edge spacer ordering.
-Wrapper `target=self` sticky also renders `Distance: auto` indicators in preview (including top/bottom labeling in `edges: both`).
-For single-edge `target=self` auto duration, preview renders exactly one distance guide on the active travel side rather than dual top/bottom guides.
-Top-level wrappers (`section`, `header`, `footer`) treat `target=self` as an auto-only preview mode. They keep offset indicators, show `Distance: auto`, and do not render synthetic custom-distance track shells.
-In the inspector, top-level wrappers with `target=self` also treat duration as fixed auto mode: the panel shows a selected non-changeable `Auto` state, hides `Custom`, and the helper copy reads `Uses the page height as the sticky distance.`
-Sticky layering uses one shared low z-index baseline across the editor stage and exported site, instead of renderer-specific sticky stacking values. Editor-only layering prefers DOM order and local stacking contexts first; the remaining explicit layers are limited to a small named stack for selected nodes, sticky labels, and resize handles rather than large arbitrary z-index jumps.
-In the editor stage only, sticky offsets are compensated against the stage shell top/bottom breathing space so authored `top`/`bottom` offsets pin to the visible stage frame rather than to the outer scroll-shell padding.
+### Preview principles
+
+- Sticky movement in preview is CSS-native.
+- Sticky layering uses one shared low z-index baseline across the editor stage and exported site rather than renderer-specific stacks.
+- Editor-only layering still prefers DOM order and local stacking contexts first; explicit layers are limited to a small named stack for selected nodes, sticky labels, and resize handles.
+
+### Sticky preview behavior
+
+- Bottom-edge self sticky uses inverted track spacer ordering (spacer before node) so viewport pinning remains stable during scroll.
+- For `edges: both`, preview applies both sticky constraints together and uses split offsets (`offsetTop`, `offsetBottom`).
+- For `edges: both`, visual guides render top and bottom offsets together, and distance guides render both top and bottom tracks together.
+- Wrapper `target=self` sticky uses the same sticky-track/spacer pattern as leaf components for custom durations, including bottom-edge spacer ordering.
+- Wrapper `target=self` sticky also renders `Distance: auto` indicators in preview, including top/bottom labeling in `edges: both`.
+- For single-edge `target=self` auto duration, preview renders exactly one distance guide on the active travel side rather than dual top/bottom guides.
+- In the editor stage only, sticky offsets are compensated against stage-shell top and bottom breathing space so authored `top` and `bottom` offsets pin to the visible stage frame rather than outer scroll-shell padding.
+
+### Structural wrapper special cases
+
+- Top-level wrappers (`section`, `header`, `footer`) treat `target=self` as an auto-only preview mode.
+- They keep offset indicators, show `Distance: auto`, and do not render synthetic custom-distance track shells.
+- In the inspector, those same wrappers treat duration as fixed auto mode:
+  - `Auto` remains selected and non-changeable
+  - `Custom` is hidden
+  - helper copy reads `Uses the page height as the sticky distance.`
+
+### What stays CSS-native
 
 JavaScript is used for:
 
@@ -556,70 +821,78 @@ JavaScript is not used for live sticky movement during scroll.
 
 ## Animation Model
 
-Animations are configured hierarchically with three levels of accessibility settings:
+Animations are configured hierarchically and can inherit accessibility behavior from the document, from a trigger family, or from the individual animated node.
 
-- `DocumentModel.animationSettings`: global defaults applied to all animations
-- per-trigger settings: override global defaults for a specific trigger type
-- per-animation settings: override both global and trigger-level defaults for an individual animation
+### Scope and inheritance
 
-All non-site nodes support a singular `animation?: AnimationDefinition` property:
+- `DocumentModel.animationSettings` provides global animation defaults.
+- Per-trigger settings override those global defaults for one trigger family.
+- Per-animation settings override both the global defaults and the trigger-level defaults.
+- `SiteNode` does not support animation.
 
-- `WrapperNode` (section, header, footer, container)
-- `TextLeaf`
-- `ImageLeaf`
-- `LinkLeaf`
-- `ButtonLeaf`
+### Supported animated node types
 
-`SiteNode` does not support animation.
+| Node type | Supports `animation` |
+|---|---|
+| `WrapperNode` (`section`, `header`, `footer`, `container`) | yes |
+| `TextLeaf` | yes |
+| `ImageLeaf` | yes |
+| `LinkLeaf` | yes |
+| `ButtonLeaf` | yes |
+| `SiteNode` | no |
 
-### Trigger Types
+### Trigger families
 
-Six trigger families are supported, with `hover`/`interest` and `click`/`activate` acting as aliases at the document-model level:
+| Trigger | Runtime meaning | Notes |
+|---|---|---|
+| `entrance` | view-enter animation | Plays when the element enters the viewport. |
+| `ongoing` | looping in-view animation | Uses `viewEnter` with looping behavior. |
+| `scroll` | scroll-progress animation | Driven by `viewProgress`. |
+| `click` / `activate` | activation-driven animation | Canonicalizes to `activate` in Interact config. |
+| `hover` / `interest` | hover or interest animation | Canonicalizes to `interest`; supports `outAction`. |
+| `mouse` | pointer-move animation | Driven by pointer movement. |
 
-- `entrance` (viewEnter): animation plays when element enters viewport
-- `ongoing` (viewEnter with loop): animation loops continuously while element is in viewport
-- `scroll` (viewProgress): animation progresses with scroll position
-- `click` / `activate`: animation plays on activation
-- `hover` / `interest`: animation plays on hover/interest and can define an explicit `outAction: 'reverse' | 'keep' | 'none'`
-- `mouse` (pointerMove): animation progresses with pointer movement
-
-Trigger types have inherent preset constraints; `keyframe` effects bypass trigger constraints and work with any trigger.
-When exporting/building Interact config, click-like triggers are canonicalized to `activate` and hover-like triggers are canonicalized to `interest`.
+Trigger types have preset constraints; keyframe effects bypass those preset-category constraints and work with any trigger type.
 
 ### Effect Types
 
-Two effect types are supported:
-
-- **Named effects**: wrap @wix/motion-presets types with a `kind: 'named'` discriminant. Named effects are constrained by trigger type.
-- **Keyframe effects**: unrestricted CSS keyframe definitions that work with any trigger type.
+- Named effects wrap `@wix/motion-presets` types with a local `kind: 'named'` discriminant.
+- Keyframe effects are unrestricted CSS keyframe definitions and are not limited by preset category.
 
 ### Trigger and Target Separation
 
-A `triggerId` field enables one element to trigger while another animates. The `triggerId` references a node id that owns the trigger gesture; if omitted, the animated node triggers itself.
+A `triggerId` field allows one node to trigger while another animates:
+
+- `triggerId` references the node that owns the trigger gesture
+- if omitted, the animated node triggers itself
 
 ### Hover Behavior
 
-For `hover` / `interest` triggers:
-- `outAction: 'reverse'` maps to Interact hover mode `{ type: 'alternate' }`
-- `outAction: 'keep'` maps to Interact hover mode `{ type: 'state' }`, so hover behaves like play/pause
-- `outAction: 'none'` maps to Interact hover mode `{ type: 'repeat' }`, so hover-out cancels and resets
-- `outAction` is supported for hover entrance, hover ongoing, and hover keyframe animations
-- hover reverse effects are emitted with `fill: 'both'` so alternate enter/leave holds the active state correctly
-- hover `keep` and `none` omit `fill`, matching Interact's native `state` and `repeat` behavior
-- hover ongoing named presets with `outAction: 'keep'` are emitted with `iterations: Infinity` so they can resume naturally
-- when `outAction` is omitted, hover defaults to `'reverse'`
+| `outAction` | Interact mode | Result |
+|---|---|---|
+| `reverse` | `{ type: 'alternate' }` | Enter plays forward and leave reverses. |
+| `keep` | `{ type: 'state' }` | Hover behaves like play/pause. |
+| `none` | `{ type: 'repeat' }` | Hover-out cancels and resets. |
+
+Additional hover rules:
+
+- `outAction` is supported for hover entrance, hover ongoing, and hover keyframe animations.
+- Hover reverse effects emit `fill: 'both'` so alternate enter and leave hold the active state correctly.
+- Hover `keep` and `none` omit `fill`, matching Interact's native `state` and `repeat` behavior.
+- Hover ongoing named presets with `outAction: 'keep'` emit `iterations: Infinity` so they can resume naturally.
+- When `outAction` is omitted, hover defaults to `'reverse'`.
 
 ### Sticky Requirement
 
-The `requiresSticky` flag marks an animation that depends on the sticky subsystem being active. Animations with this flag do not function correctly if sticky is disabled on the document.
+`requiresSticky` marks an animation that depends on the sticky subsystem being active. Such animations do not behave correctly if sticky is disabled on the document.
 
 ### Site Export
 
 Exported HTML includes:
 
-- `data-interact-key` attributes on animated nodes and trigger nodes for runtime animation hookup
-- @wix/interact script injection to enable animation playback in the exported site
-- `collectInteractKeys()` helper function to gather all interact keys from the document
+- `data-interact-key` attributes on animated nodes and trigger nodes for runtime hookup
+- `@wix/interact` script injection for exported playback
+- `collectInteractKeys()` to gather interact keys from the document
 
 ### Development Console
 
@@ -627,198 +900,323 @@ In DEV mode, `window.playgroundAnimationApi` is available for testing and debugg
 
 ## Editor UX
 
-Current UX includes:
+The editor surface is organized around one stage, a small set of persistent rails and panels, and a handful of modal or popover-based global tools.
 
-- full-stage canvas
-- insert panel
-- inspector panel with a collapsible right rail in normal mode
-- focused mode as editor chrome only; the first focused mode is `sticky`
-- focused mode renders as a floating workspace surface and stays detached from the inspector collapsed/open state
-- the focused floating panel can be dragged from its title area and is clamped against the window viewport below the top bar rather than against the stage; its default resting position still aligns with the pre-viewport workspace edge near the collapsed inspector, and its offset persists as editor UI state and does not enter undo history
-- entering focused mode collapses the inspector automatically
-- closing focused mode restores the inspector from its hidden state
-- when the inspector is collapsed, the right-rail opener can temporarily reopen it without changing the collapsed preference; while focused mode is active that temporary inspector closes on mouseout after a short delay
-- centered settings panel with a scrollable main body and sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`
-- intentional editor scroll containers such as the stage shell, inspector lists, focused-mode scrollers, settings body, and section-template popover use one shared guttered auto-hide scrollbar treatment; scrollbar gutter space stays reserved and the thumb only becomes visible on hover, focus-within, or active scroll interaction
-- the settings `UI` section includes a compact editor theme mode control: `Light`, `Dark`, and `Auto`
-- the settings `UI` section includes a compact palette selector for the currently active light or dark editor mode
-- each palette option in the dropdown includes a one-line description
-- light editor palettes are `Air`, `Paper`, `Midday`, and `Clarity`
-- dark editor palettes are `Graphite`, `Monokai`, `Midnight`, and `Ink`
-- the settings `UI` section includes an editor accent control with preset swatches plus a custom picker; the accent drives selected, focused, checked, and active editor chrome across light and dark mode
-- the design system showcase reuses the same shared theme and accent controls as the editor settings UI so palette and accent behavior stay in lockstep
-- `Midday` is the accent-derived light palette and pairs conceptually with `Midnight`
-- `Clarity` and `Ink` are the higher-contrast light and dark palette options
-- `Clarity` and `Ink` minimize decorative shadows/glows and use `2px` borders on form fields and interactive controls
-- selecting `Paper` resets the shared editor accent to its warm default
-- selecting `Monokai` resets the shared editor accent to its magenta default
-- dark palettes keep neutral shells and use the accent on active chrome instead of tinting the full shell
-- the settings `UI` section also includes a startup focused-mode selector: `Normal` or `Sticky`
-- startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it
-- left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
-- top bar utility actions for help and settings
-- `?` opens a unified Help browser dialog with a collapsible left nav: `Keyboard shortcuts` first, followed by all markdown documents from `docs/`
-- help-doc ordering is configurable in the help-doc registry; newly added `docs/*.md` files that are not listed there still appear automatically after the explicitly ordered entries
-- help-browser nav buttons do not show doc filenames; for titles containing a spaced dash separator (`-`, `–`, `—`), the text after the separator renders as the button subtitle and the separator itself is hidden
-- the left nav reserves a dedicated bottom entry for `How to add docs?`, backed by the docs folder like the other markdown entries
-- the Help browser left nav can collapse into a slim rail with a single reopen control to widen the reading pane without leaving the current document
-- closing the Help browser preserves the last selected document, but resets transient view state such as nav collapse and in-document anchor position before the next open
-- the `Keyboard shortcuts` help entry renders the shared shortcut registry and pointer-modifier gesture list
-- markdown help entries render the source filename in a compact status bar above the document pane instead of in the nav button
-- markdown help entry bodies are loaded from copied static files under `assets/help-docs/` instead of being embedded inline in the main app bundle
-- the Help browser markdown entries support in-panel `#anchor` jumps and relative `.md` doc navigation, and inertly render absolute filesystem links referenced by docs
-- markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables; help docs should stay markdown-native instead of relying on raw HTML
-- shortcut guide also appears as the last section inside settings
-- editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
-- left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays
-- the stage is a single keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current primary selection scrolls into view when needed, and arrow keys nudge positioned components
-- the stage suppresses native browser drag/drop and text-selection drag initiation inside the canvas so component moves always route through the editor drag system rather than the browser's HTML drag preview
-- pointer selection does not commit drag/reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not remeasure layout as a drag
-- intrinsic-height leaf nodes in the editor stage align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy
-- the editor supports multi-selection:
-  - `Cmd/Ctrl + Click` or `Shift + Click` toggles node membership
-  - the first selected node remains the primary/master selection unless removed
-  - a plain second click on any already-selected node in a multi-selection collapses the selection back to just that node
-  - top-level structural wrappers with role `section`, `header`, or `footer` are single-select only and are removed from any attempted multi-selection set
-  - dragging any already-selected node moves the current top-level multi-selection as one group and commits as one undoable action
-  - multi-selection suppresses per-node label pills, renders the outer group box with the same treatment as the single-selection outline, and downgrades member boxes to a 1px outline with a subtle translucent fill
-  - resize handles are hidden whenever more than one node is selected
-  - dragging from empty stage space or from non-draggable top-level structural wrappers (`section`, `header`, `footer`) starts marquee selection
-  - grouped drag is supported in v1; grouped resize and grouped reparent are not
-  - single-step bulk edits still undo as one action even when they update multiple nodes
-- auto-height wrapper sizing in the editor stage is measured from the inner content box, so dragging or repositioning selected nodes does not inflate surrounding header/section height by wrapper borders
-- button focus states use a stronger visible ring across editor controls
-- inspector sections that correspond to a focused mode can expose a small top-right `Go to mode` entry button with a tooltip; supported entry points are `Layout`, `Sticky`, `Content`, and `Design`
-- `Sticky` uses the `Sticky focus mode` tooltip, and the other focused-mode entry buttons follow the same `X focus mode` pattern
-- the floating focused-mode panel reuses the same inspector card chrome as the source section; it fills the shared section header leading slot with component name + type and replaces the header action with the close button
-- focused modes are mutually exclusive editor UI states; entering one closes any other active focused mode
-- top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when the authored width is locked to `100%`
-- non-site single-node inspectors do not duplicate naming inside the inspector body; the sidebar chrome title itself is the editable node name surface
-- the sidebar title is keyboard-focusable, enters edit mode on click or keyboard activation, commits on `Enter` or focus leaving the input, cancels on `Escape`, and resolves an empty commit back to the component type label
-- sticky-capable single-node inspectors place `Sticky behavior` immediately after `Layout`; the multi-select inspector places `Sticky` immediately after `Layout`
-- `Content` is the standard content-editing section title across leaf inspectors; text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`
-- focused `Design` mode combines `Text style` + `Design` into one floating card for text/link/button nodes; wrappers and images render their existing `Design` card only
-- when multiple nodes are selected, the sidebar switches to a dedicated multi-select inspector instead of reusing single-node inspector schemas
-- multi-select controls use indeterminate visual states instead of rendering a literal `Mixed` label
-- multi-select v1 groups are:
-  - `Layout`: align left/center/right/top/middle/bottom using the first selected node as the alignment anchor, and distribute using horizontal/vertical gap spacing or left/right/top/bottom edge spacing with the outermost selected items on that axis as the fixed endpoints
-  - `Reorder`: enabled only when all selected movable nodes share the same parent; section wrappers never participate in multi-selection, and reorder moves the selected set as one block while preserving relative order
-  - `Typography`: shared text/link/button typography controls
-  - `Text Design`: shared foreground color for text/link/button plus filter-shadow controls for text/link selections
-  - `Surface Design`: shared background, border radius, and box-shadow controls for compatible surface nodes
-  - `Sticky`: shared sticky enabled / edge / offset / duration controls for sticky-capable selections
-- sticky focused mode can render the shared multi-select sticky card when multiple nodes are selected
-- indeterminate multi-select values still commit to the compatible subset only when edited
-- mixed wrapper/leaf bulk edits are dispatched as one reducer action so history captures them as one undoable step
-- drag, resize, reparenting, and snap guides
-- inspector ordering controls with icon actions and tooltips
-- in-memory incremental undo/redo
-- local session persistence in `localStorage`
-- `Reset data` restores the factory document baseline and clears undo/redo while preserving editor UI preferences
-- `Reset all` also clears persisted editor UI/session state and restores the full editor baseline
+### Workspace model
+
+- The editor presents a full-stage canvas plus an insert panel and a collapsible inspector rail.
+- Focused mode is an editor-only workspace state; the first focused mode is `sticky`.
+- The focused floating panel is detached from the inspector collapsed or open preference.
+- That floating panel can be dragged by its title area and is clamped against the window viewport below the top bar rather than against the stage.
+- Its default resting position still aligns with the pre-viewport workspace edge near the collapsed inspector.
+- Focused-panel offset persists as editor UI state and does not enter undo history.
+- Intentional editor scroll containers such as the stage shell, inspector lists, focused-mode scrollers, settings body, and section-template popover use one shared guttered auto-hide scrollbar treatment.
+
+### Settings and global panels
+
+- The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`.
+- Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
+- Top-bar utility actions expose help and settings.
+- Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
+- Left pop panels such as section templates and settings close on outside click or `Esc` and stay above stage selection overlays.
+
+### Theme, palette, and accent controls
+
+| Control | Values | Notes |
+|---|---|---|
+| Theme mode | `Light`, `Dark`, `Auto` | Global editor shell mode. |
+| Light palettes | `Air`, `Paper`, `Midday`, `Clarity` | `Midday` is accent-derived; `Clarity` is higher-contrast. |
+| Dark palettes | `Graphite`, `Monokai`, `Midnight`, `Ink` | `Monokai` resets accent; `Ink` is higher-contrast. |
+| Accent | preset swatches + custom picker | Drives selected, focused, checked, and active editor chrome. |
+| Startup focused mode | `Normal`, `Sticky` | Affects initial editor load only. |
+
+Additional rules:
+
+- Each palette option in the dropdown includes a one-line description.
+- The design system showcase reuses the same shared theme and accent controls as the editor settings UI so palette and accent behavior stay in lockstep.
+- `Midday` is the accent-derived light palette and pairs conceptually with `Midnight`.
+- `Clarity` and `Ink` minimize decorative shadows and glows and use `2px` borders on form fields and interactive controls.
+- Selecting `Paper` resets the shared editor accent to its warm default.
+- Selecting `Monokai` resets the shared editor accent to its magenta default.
+- Dark palettes keep neutral shells and use the accent on active chrome instead of tinting the full shell.
+- Startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it.
+
+### Help browser
+
+Navigation model:
+
+- `?` opens a unified Help browser dialog with a collapsible left nav.
+- `Keyboard shortcuts` appears first, followed by markdown documents from `docs/`.
+- Help-doc ordering is configurable in the help-doc registry; unlisted `docs/*.md` files still appear automatically after explicitly ordered entries.
+- Nav buttons do not show filenames. If a title contains a spaced dash separator (`-`, `–`, `—`), the text after the separator becomes the subtitle and the separator is hidden.
+- The left nav reserves a dedicated bottom entry for `How to add docs?`.
+- The left nav can collapse into a slim rail with a single reopen control to widen the reading pane without leaving the current document.
+
+Document sourcing and rendering:
+
+- The `Keyboard shortcuts` entry renders the shared shortcut registry and pointer-modifier gesture list.
+- Markdown help entries render the source filename in a compact status bar above the document pane rather than in the nav button.
+- Markdown bodies are loaded from copied static files under `assets/help-docs/` instead of being embedded inline in the main app bundle.
+- Help entries support in-panel `#anchor` jumps and relative `.md` navigation.
+- Absolute filesystem links referenced by docs are rendered inertly.
+- Markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables, and help docs are expected to stay markdown-native instead of relying on raw HTML.
+- The shortcut guide also appears as the last section inside settings.
+
+State persistence:
+
+- Closing the Help browser preserves the last selected document.
+- Reopening resets transient view state such as nav collapse and in-document anchor position.
+
+### Stage interaction
+
+- The stage is one keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current primary selection scrolls into view when needed, and arrow keys nudge positioned components.
+- The stage suppresses native browser drag and drop plus text-selection drag initiation so component moves always route through the editor drag system.
+- Pointer selection does not commit drag or reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not trigger drag remeasurement.
+- Intrinsic-height leaf nodes align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy.
+- Auto-height wrapper sizing in the stage is measured from the inner content box so dragging or repositioning selected nodes does not inflate surrounding header or section height through wrapper borders.
+- Button focus states use a stronger visible ring across editor controls.
+
+### Multi-selection
+
+Selection rules:
+
+- `Cmd/Ctrl + Click` or `Shift + Click` toggles node membership.
+- The first selected node remains the primary or master selection unless removed.
+- A plain second click on an already-selected node in a multi-selection collapses the selection back to just that node.
+- Top-level structural wrappers with role `section`, `header`, or `footer` are single-select only and are removed from any attempted multi-selection set.
+
+Supported operations:
+
+- Dragging any already-selected node moves the current top-level multi-selection as one group and commits as one undoable action.
+- Multi-selection suppresses per-node label pills, renders the outer group box with the same treatment as the single-selection outline, and downgrades member boxes to a `1px` outline with a subtle translucent fill.
+- Resize handles are hidden whenever more than one node is selected.
+- Dragging from empty stage space or from non-draggable top-level structural wrappers starts marquee selection.
+- Grouped drag is supported in v1.
+- Grouped resize and grouped reparent are not supported in v1.
+- Single-step bulk edits still undo as one action even when they update multiple nodes.
+
+### Inspector model
+
+Single-node inspector:
+
+- Inspector sections can expose a small top-right `Go to mode` entry button with a tooltip for `Layout`, `Sticky`, `Content`, and `Design`.
+- Sticky-capable single-node inspectors place `Sticky behavior` immediately after `Layout`.
+- `Content` is the standard content-editing section title across leaf inspectors.
+- Text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`.
+- Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
+
+Multi-select inspector:
+
+- When multiple nodes are selected, the sidebar switches to a dedicated multi-select inspector instead of reusing single-node schemas.
+- Multi-select controls use indeterminate visual states instead of rendering a literal `Mixed` label.
+- Indeterminate values still commit to the compatible subset only when edited.
+- Mixed wrapper and leaf bulk edits are dispatched as one reducer action so history captures them as one undoable step.
+
+| Group | Scope | Notes |
+|---|---|---|
+| `Layout` | compatible selections | Align uses the first selected node as the anchor; distribution uses outermost selected items as endpoints. |
+| `Reorder` | same-parent movable nodes | Section wrappers never participate; reorder preserves relative order. |
+| `Typography` | text, link, button | Shared typography controls. |
+| `Text Design` | text, link, button | Shared foreground color and filter-shadow controls. |
+| `Surface Design` | compatible surface nodes | Shared background, border radius, and box shadow. |
+| `Sticky` | sticky-capable selections | Shared enabled, edge, offset, and duration controls. |
+
+Naming and title behavior:
+
+- Non-site single-node inspectors do not duplicate naming inside the inspector body; the sidebar chrome title itself is the editable node name surface.
+- The sidebar title is keyboard-focusable, enters edit mode on click or keyboard activation, commits on `Enter` or focus leaving the input, cancels on `Escape`, and resolves an empty commit back to the component type label.
+- Inspector ordering controls remain available as icon actions with tooltips.
+
+### Focused modes
+
+- Focused modes are mutually exclusive editor UI states; entering one closes any other active focused mode.
+- Entering focused mode collapses the inspector automatically.
+- Closing focused mode restores the inspector from its hidden state.
+- When the inspector is collapsed, the right-rail opener can temporarily reopen it without changing the collapsed preference; while focused mode is active that temporary inspector closes on mouseout after a short delay.
+- `Sticky` uses the `Sticky focus mode` tooltip, and the other focused-mode entry buttons follow the same `X focus mode` pattern.
+- The floating focused-mode panel reuses the same inspector card chrome as the source section, fills the leading slot with component name plus type, and replaces the header action with the close button.
+- Focused `Design` mode combines `Text style` and `Design` into one floating card for text, link, and button nodes; wrappers and images keep their existing `Design` card only.
+- Sticky focused mode can render the shared multi-select sticky card when multiple nodes are selected.
+
+### History, persistence, and reset
+
+- Undo and redo remain in-memory incremental history operations.
+- Editor UI and session state persist in `localStorage`.
+- `Reset data` restores the factory document baseline and clears undo/redo while preserving editor UI preferences.
+- `Reset all` also clears persisted editor UI and session state and restores the full editor baseline.
 
 ## Architecture Boundaries
 
-- `src/model/*` is the domain layer (types, units, defaults, selectors, validation) and has no editor UI concerns.
-- `src/sticky/resolve.ts` is the shared sticky domain resolver. It accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations / extra extent without depending on React or DOM APIs.
-- `src/editor/editorStore.ts` owns editor session state (`selectedId`, panel UI flags, persistence keys, undo-related state usage in app).
-- focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only; it does not change document semantics, sticky math, stage rendering, or site export behavior.
-- `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal`/`none` for no focused mode.
-- `src/api/documentApi.ts` provides editor-agnostic document API primitives so document data can be manipulated from non-editor contexts (for example CLI scripts).
-- `src/api/editorApi.ts` is the editor-facing API boundary used by app/panels; editor UI avoids direct imports from `src/model/*`.
+| Layer | Owns | Must not depend on |
+|---|---|---|
+| `src/model/*` | types, units, defaults, selectors, validation | editor UI |
+| `src/sticky/resolve.ts` | sticky resolution | React, DOM APIs |
+| `src/api/*` | public document/editor/site operations | panel-level UI |
+| `src/render/*` | shared layout and render-plan logic | editor-only overlays |
+| `src/stage/*` | editor rendering and measurement | site export concerns |
+| `src/site/*` | runtime and export rendering | editor interaction state |
+
+### Domain layer
+
+- `src/model/*` is the domain layer and has no editor UI concerns.
+- `src/sticky/resolve.ts` accepts document data plus a renderer-provided geometry snapshot and returns sticky registrations and extra extent without depending on React or DOM APIs.
+
+### API layer
+
+- `src/api/documentApi.ts` provides editor-agnostic document operations for non-editor contexts such as scripts.
+- `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
-- `src/render/layout.ts` is the shared non-editor layout baseline for mesh-grid placement, wrapper sizing, and sticky structure inputs used by both the editor stage renderer and the site export renderer.
-- `src/render/renderPlan.ts` and `src/render/renderPlanHelpers.ts` own the shared non-editor render tree and traversal helpers consumed by both the editor stage renderer and the site/runtime renderer.
-- `src/render/leafPresentation.ts` is a shared presentation layer for leaf content defaults used by both the editor stage renderer and the site export renderer.
-- `src/stage/Stage.tsx` is an editor renderer. It measures live node geometry, renders the preview, publishes that geometry upward so other editor surfaces can reuse the same sticky resolution inputs, and owns editor-only visuals such as selection chrome, drag preview, snap guides, and sticky guides.
-- `src/site/SiteRenderer.tsx` and `src/site/siteExport.tsx` are the site/runtime renderer boundary detached from editor interactions and browser measurement requirements. They consume the shared render plan and shared render style semantics, but not editor-only preview visuals.
+
+### Shared render layer
+
+- `src/render/layout.ts` owns the shared non-editor layout baseline for mesh-grid placement, wrapper sizing, and sticky-structure inputs.
+- `src/render/renderPlan.ts` and `src/render/renderPlanHelpers.ts` own the shared render tree and traversal helpers.
+- `src/render/leafPresentation.ts` owns shared leaf-content presentation defaults used by both editor stage rendering and site export.
+
+### Editor renderer
+
+- `src/stage/Stage.tsx` is an editor renderer.
+- It measures live node geometry, renders the preview, publishes geometry upward for reuse, and owns editor-only visuals such as selection chrome, drag preview, snap guides, and sticky guides.
+
+### Site renderer
+
+- `src/site/SiteRenderer.tsx` and `src/site/siteExport.tsx` define the site/runtime renderer boundary.
+- They consume the shared render plan and shared render style semantics, but not editor-only preview visuals or editor interaction state.
+
+### Editor-only UI state
+
+- `src/editor/editorStore.ts` owns editor session state such as selection, panel UI flags, persistence keys, and undo-related app state usage.
+- Focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only and does not affect document semantics, sticky math, stage rendering, or site export behavior.
+- `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal` / `none` for no focused mode.
 
 ## Section Templates
 
-Adding a section now opens a section-template picker instead of inserting immediately.
+Adding a section opens a section-template picker instead of inserting immediately.
 
-Template picker behavior:
+### Insertion flow
 
-- opens from the left-rail `Section` add button
-- renders as a compact left-side pop panel (non-modal), not full-screen dialog
-- closes on outside click and `Esc`
-- shows template cards in a 2-column grid
-- clicking an active template inserts one top-level section and selects it
-- section insertion places the new section before footer when footer exists
+- The picker opens from the left-rail `Section` add button.
+- It renders as a compact left-side pop panel rather than a full-screen dialog.
+- It closes on outside click and `Esc`.
+- It shows template cards in a two-column grid.
+- Clicking an active template inserts one top-level section and selects it.
+- Inserted sections are placed before the footer when a footer exists.
 
-Current templates:
+### Template catalog
 
-- `Blank` with default section height `50vh`
-- `Post` (image + title + text) with default section height `50vh`
-- `Sticky Staggered Images`
-- `Sticky Pinned Cards`
-- `Sticky Media Reveal`
-- `Sticky Edge Lab`
+| Template | Default height | Purpose |
+|---|---:|---|
+| `Blank` | `50vh` | Empty section canvas for custom layout. |
+| `Post` | `50vh` | Editorial starter with image, title, body, and link. |
+| `Sticky Staggered Images` | `1820px` | Four sticky images with staggered anchors and shared timing. |
+| `Sticky Pinned Cards` | `1760px` | Pinned lead column with progressive narrative cards. |
+| `Sticky Media Reveal` | `1840px` | Pinned media with layered reveal backdrop and narrative blocks. |
+| `Sticky Edge Lab` | `2480px` | Top/both/bottom sticky comparison section. |
 
-Typography pairings:
+### Typography pairings
 
-- default header/footer chrome and `Post`: `Playfair Display` headings with `Inter` body/link styles
-- `Sticky Staggered Images`: `Cormorant Garamond` headings with `Proza Libre` supporting copy
-- `Sticky Pinned Cards`: `Poppins` lead heading with `Open Sans` body cards/copy
-- `Sticky Media Reveal`: `Fraunces` heading with `Open Sans` narrative blocks
-- `Sticky Edge Lab`: `Montserrat` heading/card labels with `Crimson Text` explainer copy
+- Default header/footer chrome and `Post`: `Playfair Display` headings with `Inter` body and link styles.
+- `Sticky Staggered Images`: `Cormorant Garamond` headings with `Proza Libre` supporting copy.
+- `Sticky Pinned Cards`: `Poppins` lead heading with `Open Sans` body cards and copy.
+- `Sticky Media Reveal`: `Fraunces` heading with `Open Sans` narrative blocks.
+- `Sticky Edge Lab`: `Montserrat` heading/card labels with `Crimson Text` explainer copy.
 
-`Sticky Media Reveal` uses direct sticky image leaves (not wrapper containers around the media) seeded from a locked baseline: pinned media at `x=77`, `y=165`, size `401x428`, sticky `duration=150vh`, `offsetTop=10vh`; reveal backdrop at `x=78`, `y=167`, size `399x426`, sticky `duration=25vh`, `offsetTop=10vh`; narrative blocks at `y=313.640625`, `1035`, `1687` with updated copy, and section child order `heading -> pinned media -> narrative A/B/C -> reveal backdrop`.
-`Post` keeps the editorial title/body/link stack clear with image/title/body/link anchors at `42/57`, `546/57`, `548/226.5`, and `549/350.40625`.
-`Sticky Staggered Images` is seeded from the locked staggered-gallery structure. The image anchors are `64/256.96875`, `332/444.46875`, `610/653.25`, and `884/898.84375` with widths `250`, `248`, `248`, and `208`, and each image keeps the same `150vh` duration / `15vh` offset.
-`Sticky Pinned Cards` is seeded from the locked pinned-cards baseline (pinned lead at `85/212.28125` with width `392`, lead copy at `83/490`, lead sticky `durationMode=auto` + `220vh` duration + `12vh` offset; narrative cards shift left to `x=500`, use width `468`, and keep sticky `25vh/25vh/50vh` durations at `15vh` offset).
-`Sticky Edge Lab` is seeded as a 3-column top/both/bottom comparison. Only the three sticky card texts are wrapped in colored `container` wrappers, and sticky settings live on those card containers: top (`edges.top=true`, `offsetTop=10vh`, `durationTop=140vh`), both (`edges.top=true`, `edges.bottom=true`, `offsetTop=10vh`, `offsetBottom=10vh`, `durationTop=80vh`, `durationBottom=80vh`), and bottom (`edges.bottom=true`, `offsetBottom=10vh`, `durationBottom=140vh`). Baseline alignment is locked, including section height `2480px`, notes `y` values (`972`, `1293`, `1780`), sticky container anchors (`72/362`, `420/761`, `770/1179.9921875`), right-column notes at `x=770` with width `320`, and footer note at `x=96`, `y=2604.984375`.
+### Locked layout baselines
+
+#### `Post`
+
+- Keeps the editorial title/body/link stack at locked anchors: image `42/57`, title `546/57`, body `548/226.5`, link `549/350.40625`.
+- Uses the seeded editorial typography pairing rather than a generic default layout.
+
+#### `Sticky Staggered Images`
+
+- Seeds a locked staggered-gallery structure.
+- Image anchors are `64/256.96875`, `332/444.46875`, `610/653.25`, and `884/898.84375`.
+- Image widths are `250`, `248`, `248`, and `208`.
+- Each image keeps the same sticky timing: `150vh` duration and `15vh` offset.
+
+#### `Sticky Pinned Cards`
+
+- Seeds the locked pinned-cards baseline.
+- Pinned lead sits at `85/212.28125` with width `392`.
+- Lead copy sits at `83/490`.
+- Lead sticky uses `durationMode=auto`, `220vh` duration, and `12vh` offset.
+- Narrative cards shift left to `x=500`, use width `468`, and keep `25vh`, `25vh`, and `50vh` durations at `15vh` offset.
+
+#### `Sticky Media Reveal`
+
+- Uses direct sticky image leaves rather than wrapper containers around the media.
+- Pinned media sits at `x=77`, `y=165`, size `401x428`, with sticky `duration=150vh` and `offsetTop=10vh`.
+- Reveal backdrop sits at `x=78`, `y=167`, size `399x426`, with sticky `duration=25vh` and `offsetTop=10vh`.
+- Narrative blocks are seeded at `y=313.640625`, `1035`, and `1687`.
+- Section child order is locked as `heading -> pinned media -> narrative A/B/C -> reveal backdrop`.
+
+#### `Sticky Edge Lab`
+
+- Seeds a three-column top/both/bottom sticky comparison.
+- Only the three sticky card texts are wrapped in colored `container` wrappers.
+- Sticky settings live on those card containers:
+  - top: `edges.top=true`, `offsetTop=10vh`, `durationTop=140vh`
+  - both: `edges.top=true`, `edges.bottom=true`, `offsetTop=10vh`, `offsetBottom=10vh`, `durationTop=80vh`, `durationBottom=80vh`
+  - bottom: `edges.bottom=true`, `offsetBottom=10vh`, `durationBottom=140vh`
+- Baseline alignment is locked, including:
+  - section height `2480px`
+  - note `y` values `972`, `1293`, `1780`
+  - sticky container anchors `72/362`, `420/761`, `770/1179.9921875`
+  - right-column notes at `x=770` with width `320`
+  - footer note at `x=96`, `y=2604.984375`
+
+### Deferred templates
 
 Future-facing placeholders for scroll-driven animation templates are visible but non-insertable.
 
 ## Default Seed Content
 
-Factory seed now uses:
+### Current factory seed
 
 - redesigned project-focused header
-- text-only header branding (no header image)
-- `Post` section template as the initial main section
+- text-only header branding with no header image
+- `Post` as the initial main section
 - redesigned project-focused footer
 - authored `Inter` defaults for inserted text, link, and button leaves
 
-When loading persisted legacy starter documents, untouched old default header/footer shells are auto-upgraded in place to the current baseline.
-When loading the untouched original starter document, the legacy single section with placeholder text/button content is replaced with the current `Post` template baseline.
+### Legacy upgrade behavior
+
+- When loading persisted legacy starter documents, untouched old default header/footer shells are auto-upgraded in place to the baseline described here.
+- When loading the untouched original starter document, the legacy single section with placeholder text and button content is replaced with the `Post` baseline described here.
 
 ## Validation Policy
 
-Validation stays in the UI.
+Validation remains a UI-side concern.
 
-Invalid input is not written into the document model.
-
-This applies especially to parsed unit fields.
+- Invalid input is not written into the document model.
+- This applies especially to parsed unit fields.
 
 ## Debugging Aids
 
-The playground exposes:
+| Area | Controls |
+|---|---|
+| Visuals | spacer visuals, offset visuals, accent-derived sticky distance/offset/padding/auto guide colors |
+| Quick toggles | preview sticky, show spacers (`selected` or `all`), snap toggle in the left rail |
+| Diagnostics | sticky diagnostics output resolved by the shared sticky resolver from measured stage geometry |
+| Recovery / history | reset stage, clear undo history, undo step retention |
+| Settings exposure | import/export controls, startup focused mode settings for `Normal`, `Layout`, `Sticky`, `Content`, and `Design` |
 
-- spacer visuals
-- offset visuals
-- sticky focused mode
-- preview sticky toggle
-- show spacers toggle (`selected` or `all`)
-- preview and spacer quick toggles remain in the left rail
-- sticky distance, offset, padding, and auto spacer guide colors are derived from the current editor accent instead of using fixed standalone hues
-- snap toggle remains in the left rail with tooltip guidance for `Alt` drag inversion and a `Shift + G` shortcut
-- sticky diagnostics output resolved by the shared sticky resolver using the same measured stage geometry the editor preview publishes
-- reset stage action
-- clear undo history action
-- undo step retention control
-- import / export controls in settings
-- startup focused mode settings for `Normal`, `Layout`, `Sticky`, `Content`, and `Design`
+Additional notes:
+
+- Preview and spacer quick toggles remain in the left rail.
+- The snap toggle includes tooltip guidance for `Alt` drag inversion and the `Shift + G` shortcut.
 
 ## Running the Playground
+
+### Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-For a production build:
+### Production preview
 
 ```bash
 npm run build

@@ -18,20 +18,63 @@ Out of scope:
 - rendered site content styling
 - exported site CSS
 
+Table of contents:
+
+- [Implementation Baseline](#implementation-baseline)
+- [Design System Correspondence](#design-system-correspondence)
+- [1. Required Conventions](#1-required-conventions)
+- [2. Font System](#2-font-system)
+- [3. Type Scale](#3-type-scale)
+- [4. Icon System](#4-icon-system)
+- [5. Radius System](#5-radius-system)
+- [6. Border System](#6-border-system)
+- [7. Shadow System](#7-shadow-system)
+- [8. Color Tokens](#8-color-tokens)
+- [9. Scrollbars](#9-scrollbars)
+- [10. Interaction Tokens](#10-interaction-tokens)
+- [11. Component Specs](#11-component-specs)
+- [12. Settings Navigation](#12-settings-navigation)
+- [13. Inspector Compact Controls](#13-inspector-compact-controls)
+- [14. Stage Chrome](#14-stage-chrome)
+- [15. Z-Index](#15-z-index)
+- [16. Token Authoring Rules](#16-token-authoring-rules)
+- [17. Source Of Truth](#17-source-of-truth)
+
+## Implementation Baseline
+
 Implementation baseline:
 
-- [src/styles.css](/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css)
-- [src/components/ui/button.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/button.tsx)
-- [src/components/ui/input.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/input.tsx)
-- [src/components/ui/textarea.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/textarea.tsx)
-- [src/components/ui/select.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/select.tsx)
-- [src/components/ui/switch.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/switch.tsx)
-- [src/components/ui/card.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/card.tsx)
-- [src/components/ui/dialog.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/dialog.tsx)
+- [src/styles.css](../src/styles.css)
+- [src/lib/theme.ts](../src/lib/theme.ts)
+- [src/design-system/registry.ts](../src/design-system/registry.ts)
+- [src/design-system/DesignSystemApp.tsx](../src/design-system/DesignSystemApp.tsx)
+- [src/components/ui/button.tsx](../src/components/ui/button.tsx)
+- [src/components/ui/input.tsx](../src/components/ui/input.tsx)
+- [src/components/ui/textarea.tsx](../src/components/ui/textarea.tsx)
+- [src/components/ui/select.tsx](../src/components/ui/select.tsx)
+- [src/components/ui/switch.tsx](../src/components/ui/switch.tsx)
+- [src/components/ui/card.tsx](../src/components/ui/card.tsx)
+- [src/components/ui/dialog.tsx](../src/components/ui/dialog.tsx)
+
+## Design System Correspondence
+
+The design system showcase is the visual verification surface for this guide. It is organized into three top-level sections, and this document should map cleanly onto them:
+
+| Showcase section | Showcase source | What this guide covers |
+|---|---|---|
+| `Design Tokens` | `src/design-system/registry.ts` → `tokens` | Sections `2` through `10`: typography, radii, borders, shadows, color tokens, scrollbars, and interaction tokens. |
+| `Base Components` | `src/design-system/registry.ts` → `base` | Section `11`: primitive controls such as buttons, inputs, selects, switches, dialogs, and value fields. |
+| `Composites` | `src/design-system/registry.ts` → `composite` | Sections `12` through `14`: settings nav, inspector controls, and stage/editor chrome patterns. |
+
+Rules:
+
+- if a token, primitive, or composite is visible in the showcase, this guide should describe the intended styling rule behind it
+- if this guide changes a normative rule, the design system showcase should be updated in the same change set so the visual surface stays representative
+- the showcase is not a second style guide; it is the fastest place to confirm that the guide is reflected in implementation
 
 ## 1. Required Conventions
 
-- Editor chrome must use CSS tokens from [src/styles.css](/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css), not one-off hard-coded colors.
+- Editor chrome must use CSS tokens from [src/styles.css](../src/styles.css), not one-off hard-coded colors.
 - Prefer token names by role, not raw color names.
 - Light and dark mode must keep the same accent hue for active/selected/focused/checked state.
 - Use named editor classes or token-backed utility classes for editor chrome.
@@ -209,6 +252,8 @@ Required baseline:
 Light palette rules:
 
 - light mode must support multiple palettes selected from settings
+- the supported light palettes are `Air`, `Paper`, `Midday`, and `Clarity`
+- `Air` is the default light palette
 - ship at least two neutral light palettes, one accent-derived light palette, and one higher-contrast light palette
 - `Midday` may mix low percentages of accent into shells and panels, but passive surfaces should stay clearly lighter than selected controls
 - selecting `Paper` should reset the shared editor accent to its warm default
@@ -224,6 +269,8 @@ Closeable editor panels:
 Dark palette rules:
 
 - dark mode must support multiple palettes selected from settings
+- the supported dark palettes are `Graphite`, `Monokai`, `Midnight`, and `Ink`
+- `Monokai` is the default dark palette
 - ship at least two neutral dark palettes, one styled dark palette, and one higher-contrast dark palette
 - `Graphite` and `Monokai` should stay restrained in saturation so the editor accent remains the primary active signal
 - selecting `Monokai` should reset the shared editor accent to its magenta default
@@ -288,7 +335,7 @@ Rules:
 - keep scrollbar styling scoped to editor chrome; do not restyle browser scrollbars globally
 - reserve space with `scrollbar-gutter: stable both-edges` so the stage and panels do not reflow when the scrollbar appears
 - default to auto-hide behavior: track and thumb stay transparent until the scroll surface is hovered, focused, or actively scrolled
-- derive scrollbar colors from editor tokens in [src/styles.css](/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css), not ad hoc values
+- derive scrollbar colors from editor tokens in [src/styles.css](../src/styles.css), not ad hoc values
 - apply the shared scrollbar to editor scroll containers such as the stage shell, inspector scrollers, focused-mode surfaces, settings body, and editor popover lists
 
 ## 10. Interaction Tokens
@@ -348,13 +395,13 @@ Approved transition properties:
 - `box-shadow`
 - `transform`
 
-## 10. Component Specs
+## 11. Component Specs
 
-### 10.1 Buttons
+### 11.1 Buttons
 
 Implementation reference:
 
-- [src/components/ui/button.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/button.tsx)
+- [src/components/ui/button.tsx](../src/components/ui/button.tsx)
 
 Default geometry:
 
@@ -378,11 +425,11 @@ Focus:
 - accent-derived ring
 - visible keyboard-only focus state
 
-### 10.2 Inputs
+### 11.2 Inputs
 
 Implementation reference:
 
-- [src/components/ui/input.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/input.tsx)
+- [src/components/ui/input.tsx](../src/components/ui/input.tsx)
 
 Spec:
 
@@ -401,11 +448,11 @@ Focus:
 - low-alpha accent focus treatment
 - suggestion-enabled composite inputs should render one visible suggestion surface at a time; when a styled popup is present, it owns the visible interaction instead of layering on top of the browser's native `datalist` popup
 
-### 10.3 Textareas
+### 11.3 Textareas
 
 Implementation reference:
 
-- [src/components/ui/textarea.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/textarea.tsx)
+- [src/components/ui/textarea.tsx](../src/components/ui/textarea.tsx)
 
 Spec:
 
@@ -414,11 +461,11 @@ Spec:
 - padding: `12px x 8px`
 - radius: `rounded-sm`
 
-### 10.4 Selects
+### 11.4 Selects
 
 Implementation reference:
 
-- [src/components/ui/select.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/select.tsx)
+- [src/components/ui/select.tsx](../src/components/ui/select.tsx)
 
 Trigger:
 
@@ -439,7 +486,7 @@ Item highlight:
 
 - background: `--editor-select-highlight-background`
 
-### 10.5 Composite Value Fields
+### 11.5 Composite Value Fields
 
 Implementation reference:
 
@@ -452,11 +499,11 @@ Spec:
 - mixed-selection styling belongs to the shared component, not per-caller overrides
 - suggestion-enabled variants should use the shared styled popup with combobox/listbox semantics by default; do not bind `list`/`datalist` at the same time because native autosuggest chrome cannot be styled or coordinated with the editor popup
 
-### 10.5 Switches
+### 11.6 Switches
 
 Implementation reference:
 
-- [src/components/ui/switch.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/switch.tsx)
+- [src/components/ui/switch.tsx](../src/components/ui/switch.tsx)
 
 Spec:
 
@@ -466,11 +513,11 @@ Spec:
 - checked track: accent blue
 - thumb: white, circular, small shadow
 
-### 10.6 Cards
+### 11.7 Cards
 
 Implementation reference:
 
-- [src/components/ui/card.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/card.tsx)
+- [src/components/ui/card.tsx](../src/components/ui/card.tsx)
 
 Spec:
 
@@ -485,11 +532,11 @@ Header:
 - title: `14px`, semibold
 - description: `12px`, muted
 
-### 10.7 Dialogs
+### 11.8 Dialogs
 
 Implementation reference:
 
-- [src/components/ui/dialog.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/components/ui/dialog.tsx)
+- [src/components/ui/dialog.tsx](../src/components/ui/dialog.tsx)
 
 Spec:
 
@@ -498,12 +545,12 @@ Spec:
 - panel uses editor surface background, subtle border, `rounded-xl`, padded content
 - close button uses icon-button subtle style
 
-### 10.8 Rail Controls
+### 11.9 Rail Controls
 
 Implementation references:
 
-- [src/panels/InsertPanel.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/panels/InsertPanel.tsx)
-- [src/app/AppChrome.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/app/AppChrome.tsx)
+- [src/panels/InsertPanel.tsx](../src/panels/InsertPanel.tsx)
+- [src/app/AppChrome.tsx](../src/app/AppChrome.tsx)
 
 Spec:
 
@@ -513,11 +560,11 @@ Spec:
 - icon size stays `16px`
 - use border separation and shared surface tokens instead of wrapping the add-button cluster in an extra framed card
 
-## 11. Settings Navigation
+## 12. Settings Navigation
 
 Implementation reference:
 
-- [src/panels/SettingsPanel.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/panels/SettingsPanel.tsx)
+- [src/panels/SettingsPanel.tsx](../src/panels/SettingsPanel.tsx)
 
 Spec:
 
@@ -539,11 +586,11 @@ Dark active state:
 - text: `#f3f7fc`
 - inset accent outline
 
-## 12. Inspector Compact Controls
+## 13. Inspector Compact Controls
 
 Implementation reference:
 
-- [src/panels/InspectorControls.tsx](/Users/tombigel/Dev/Wix/sticky-playground/src/panels/InspectorControls.tsx)
+- [src/panels/InspectorControls.tsx](../src/panels/InspectorControls.tsx)
 
 Spec:
 
@@ -558,7 +605,7 @@ Rules:
 - compact controls may be tighter than shared primitives
 - they must still use the same token-backed border/background/focus language
 
-## 13. Stage Chrome
+## 14. Stage Chrome
 
 Spec:
 
@@ -574,7 +621,7 @@ Do not:
 - round the editor selection box
 - use a second dark-mode selection color
 
-## 14. Z-Index
+## 15. Z-Index
 
 Rules:
 
@@ -582,7 +629,7 @@ Rules:
 - only use explicit layers for editor chrome where unavoidable
 - do not introduce a new z-index without a named editor role
 
-## 15. Token Authoring Rules
+## 16. Token Authoring Rules
 
 When adding a new editor token:
 
@@ -602,7 +649,7 @@ Bad:
 - `--panel-special-border`
 - hard-coded `#3b82f6` in a component file
 
-## 16. Source Of Truth
+## 17. Source Of Truth
 
 This guide is normative for editor chrome.
 
@@ -610,3 +657,4 @@ If implementation drifts:
 
 - update tokens and components to match this document
 - or update this document in the same change set if the system standard changed intentionally
+- keep the design system showcase aligned in the same change set so the visual verification surface matches the written rule

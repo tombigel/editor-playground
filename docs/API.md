@@ -125,6 +125,29 @@ Every feature is achievable through the API layer without the editor UI.
 | `StickyLayoutState` | Computed sticky layout state for a full document. |
 | `ComputedWrapperStickyState` | Resolved sticky state for a single wrapper node. |
 
+### Common value reference
+
+These unions show up repeatedly across `documentApi` signatures and returned data.
+
+| Type / field | Allowed values | Notes |
+|---|---|---|
+| `WrapperRole` | `'section' \| 'header' \| 'footer' \| 'container'` | Structural wrappers. |
+| `LeafRole` | `'text' \| 'image' \| 'link' \| 'button'` | Leaf/content nodes. |
+| `SectionTemplateId` | `'blank' \| 'post' \| 'stickyStaggeredImages' \| 'stickyPinnedCards' \| 'stickyMediaReveal' \| 'stickySteps'` | `stickySteps` is the internal id for the template labeled `Sticky Edge Lab`. |
+| `NodeOrderAction` | `'back' \| 'forward' \| 'sendToBack' \| 'bringToFront'` | Used by reorder helpers in both `documentApi` and `editorApi`. |
+| `setNodeRect.field` | `'x' \| 'y' \| 'width' \| 'height'` | `x`/`y` are position; `width`/`height` accept the same string formats the model stores. |
+| `StickyDefinition.target` | `'self' \| 'contentWrapper'` | `contentWrapper` is meaningful for wrappers only; leaves effectively use `self`. |
+| `StickyDefinition.durationMode` | `'auto' \| 'custom'` | `auto` derives distance from available space; `custom` uses authored duration values. |
+| `NodeTextField` | `'name' \| 'content' \| 'htmlTag' \| 'label' \| 'linkType' \| 'anchorTargetId' \| 'href' \| 'openInNewTab' \| 'src' \| 'alt'` | Content / metadata fields for text-capable leaves, links, buttons, and images. |
+| `LinkKind` | `'anchor' \| 'external'` | Used by `linkType` on links and buttons. |
+| `TextLeaf.htmlTag` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p' \| 'blockquote' \| 'div'` | Semantics for text leaves. |
+| `TypographyStyle.fontStyle` | `'normal' \| 'italic'` | Text, link, and button typography. |
+| `TypographyStyle.textDecorationLine` | `'none' \| 'underline' \| 'line-through' \| 'underline line-through'` | Supports combined underline + strikethrough. |
+| `TypographyStyle.direction` | `'ltr' \| 'rtl'` | Writing direction. |
+| `TypographyStyle.textAlign` | `'left' \| 'center' \| 'right'` | Horizontal alignment for text-bearing leaves. |
+| `TextWrapMode` | `'single-line' \| 'wrap'` | Used by links and buttons. |
+| `DocumentCommand.type` | `'setRect' \| 'setSticky' \| 'setText'` | Batch command discriminator for `applyDocumentCommands`. |
+
 ---
 
 ## `src/api/editorApi.ts`
@@ -209,6 +232,19 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 | `StickyGeometrySnapshot` | Re-exported from `documentApi`. |
 | `StickyLayoutState` | Re-exported from `documentApi`. |
 | `SectionTemplateId` | Identifier for a built-in section template. |
+
+### Editor-specific value reference
+
+| Function / type | Allowed values | Notes |
+|---|---|---|
+| `selectManyNodes(..., mode)` | `'replace' \| 'toggle'` | `replace` overwrites the current multi-selection; `toggle` adds/removes ids. |
+| `getAdjacentStageSelection(..., direction)` | `'forward' \| 'backward'` | DOM-order stage traversal. |
+| `alignNodes(..., alignment)` | `'left' \| 'center-x' \| 'right' \| 'top' \| 'center-y' \| 'bottom'` | Shared with keyboard shortcuts and reducer actions. |
+| `distributeNodes(..., axis)` | `'horizontal' \| 'vertical' \| 'left' \| 'right' \| 'top' \| 'bottom'` | Gap distribution (`horizontal`/`vertical`) or edge distribution. |
+| `FocusedMode` | `null \| 'layout' \| 'sticky' \| 'content' \| 'design'` | `null` means normal mode with no focused floating panel. |
+| `EditorState.ui.spacerVisibility` | `'selected' \| 'all'` | Drives spacer debugging overlays. |
+| `EditorState.ui.animationPreview.mode` | `'passive' \| 'interactive'` | Passive previews autoplay supported triggers; interactive previews wait for user input. |
+| `EditorState.ui.animationPreview.triggers` | `entrance`, `ongoing`, `scroll`, `mouse`, `click`, `hover` keys mapped to `boolean` | Canonical editor preview trigger set. |
 
 ---
 
@@ -410,6 +446,40 @@ All mutating functions are pure `DocumentModel → DocumentModel`.
 | `clearAnimation` | `(doc, target) → DocumentModel` | Removes an animation from a node. Silent no-op if absent. |
 | `setDocumentAnimationSettings` | `(doc, settings) → DocumentModel` | Sets document-level animation settings (a11y policy). |
 
+### High-level option value reference
+
+`setPresetAnimation`, `setKeyframeAnimation`, and `updateAnimationOptions` all accept a small set of shared option fields. Those fields are typed, but the signatures alone do not show the allowed values clearly:
+
+| Option | Allowed values | Applies to | Notes |
+|---|---|---|---|
+| `trigger` | `'entrance' \| 'ongoing' \| 'scroll' \| 'click' \| 'activate' \| 'hover' \| 'interest' \| 'mouse'` | `setPresetAnimation`, `setKeyframeAnimation` | `click`/`activate` and `hover`/`interest` are document-model aliases; the config builder canonicalizes them to `activate` and `interest`. |
+| `source` | `NodeId \| undefined` | `setPresetAnimation`, `setKeyframeAnimation`, `updateAnimationOptions` | Stored internally as `triggerId`. When omitted, the animated node triggers itself. |
+| `outAction` | `'reverse' \| 'keep' \| 'none'` | Hover / interest animations only | Ignored for non-hover triggers. When omitted on hover-like triggers, defaults to `'reverse'`. |
+| `reducedMotion` | `'disable' \| { alternative: NamedAnimationEffect \| KeyframeAnimationEffect }` | All animation definitions and document settings | `'disable'` suppresses playback for users who prefer reduced motion. `alternative` swaps in a reduced-motion-safe effect. |
+| `requiresSticky` | `boolean \| undefined` | All animation definitions | Marks an animation as depending on sticky behavior being active for the node/document. |
+
+### Document animation settings shape
+
+`setDocumentAnimationSettings(doc, settings)` writes a `DocumentAnimationSettings` object of the form:
+
+```ts
+{
+  a11y?: {
+    reducedMotion?: 'disable' | { alternative: NamedAnimationEffect | KeyframeAnimationEffect };
+    perTrigger?: Partial<Record<
+      'entrance' | 'ongoing' | 'scroll' | 'click' | 'activate' | 'hover' | 'interest' | 'mouse',
+      'disable' | { alternative: NamedAnimationEffect | KeyframeAnimationEffect }
+    >>;
+  };
+}
+```
+
+Notes:
+
+- `a11y.reducedMotion` is the global default.
+- `a11y.perTrigger` lets a specific trigger family override that global default.
+- Per-animation `reducedMotion` on the node still has the lowest precedence in the final resolution chain.
+
 ### Low-level API (direct data access)
 
 | Function | Signature | Description |
@@ -473,6 +543,17 @@ The config builder defaults to **1000ms**, which sits in the decorative range.
 - The document model accepts both `click` and `activate` for click-like interactions.
 - `buildDocumentInteractConfig` always canonicalizes those aliases to Interact's accessibility-aware triggers: `interest` and `activate`.
 
+### Trigger compatibility summary
+
+| Trigger | Named preset categories allowed | Keyframes allowed | Notes |
+|---|---|---|---|
+| `entrance` | `entrance` | Yes | View-enter, one-shot style animations. |
+| `ongoing` | `ongoing` | Yes | Looping in-view animations. |
+| `scroll` | `scroll` | Yes | Scroll-scrubbed effects. |
+| `mouse` | `mouse` | Yes | Pointer-move driven effects. |
+| `click` / `activate` | `entrance`, `ongoing` | Yes | Triggered by activation, not viewport presence. |
+| `hover` / `interest` | `entrance`, `ongoing` | Yes | Supports `outAction`. |
+
 ### Special Hover Behavior
 
 The config builder applies additional rules when the trigger is `hover` or `interest`:
@@ -535,3 +616,11 @@ Internal types shared across the `src/api/` subsystem.
 | Type | Description |
 |---|---|
 | `DocumentCommand` | Discriminated union of batch document commands: `setRect`, `setSticky`, `setText`. |
+
+### `DocumentCommand` variants
+
+| Variant | Shape | Notes |
+|---|---|---|
+| `setRect` | `{ type: 'setRect'; nodeId; field: 'x' \| 'y' \| 'width' \| 'height'; value: string }` | Writes one rect field exactly as an authored model string. |
+| `setSticky` | `{ type: 'setSticky'; nodeId; patch: Partial<StickyDefinition> }` | Partial patch over the sticky object. |
+| `setText` | `{ type: 'setText'; nodeId; field: EditorTextField; value: string }` | Covers both content fields and text/style fields. |
