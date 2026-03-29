@@ -26,6 +26,8 @@ Edit the `HELP_DOC_ORDER` list there:
 - the filename is shown in the document status bar, not in the sidebar
 - the sidebar label comes from the first `#` heading in the file
 - if that heading contains a spaced dash separator such as `Title - Subtitle`, the left side becomes the button title and the right side becomes the subtitle
+- the sidebar can collapse into a slim rail so the document pane has more reading room, while keeping a single button visible to reopen navigation
+- closing and reopening the Help browser keeps the last selected document, but re-expands the sidebar and clears any in-document anchor jump
 
 ## Link behavior
 

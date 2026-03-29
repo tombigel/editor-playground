@@ -657,10 +657,12 @@ Current UX includes:
 - startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it
 - left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
 - top bar utility actions for help and settings
-- `?` opens a unified Help browser dialog with a flat left nav: `Keyboard shortcuts` first, followed by all markdown documents from `docs/`
+- `?` opens a unified Help browser dialog with a collapsible left nav: `Keyboard shortcuts` first, followed by all markdown documents from `docs/`
 - help-doc ordering is configurable in the help-doc registry; newly added `docs/*.md` files that are not listed there still appear automatically after the explicitly ordered entries
 - help-browser nav buttons do not show doc filenames; for titles containing a spaced dash separator (`-`, `–`, `—`), the text after the separator renders as the button subtitle and the separator itself is hidden
 - the left nav reserves a dedicated bottom entry for `How to add docs?`, backed by the docs folder like the other markdown entries
+- the Help browser left nav can collapse into a slim rail with a single reopen control to widen the reading pane without leaving the current document
+- closing the Help browser preserves the last selected document, but resets transient view state such as nav collapse and in-document anchor position before the next open
 - the `Keyboard shortcuts` help entry renders the shared shortcut registry and pointer-modifier gesture list
 - markdown help entries render the source filename in a compact status bar above the document pane instead of in the nav button
 - the Help browser markdown entries support in-panel `#anchor` jumps and relative `.md` doc navigation, and inertly render absolute filesystem links referenced by docs

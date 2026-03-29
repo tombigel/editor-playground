@@ -1,5 +1,6 @@
-import { CircleQuestionMark, FilePlus2, FileText, Keyboard } from 'lucide-react';
+import { CircleQuestionMark, FilePlus2, FileText, Keyboard, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import {
@@ -11,6 +12,9 @@ import {
 } from './helpDocs';
 import { ShortcutHelpContent } from './ShortcutHelpContent';
 
+export const HELP_NAV_EXPANDED_WIDTH_PX = 240;
+export const HELP_NAV_COLLAPSED_WIDTH_PX = 56;
+
 const LazyHelpMarkdownDocument = lazy(async () => {
   const module = await import('./HelpMarkdownDocument');
   return { default: module.HelpMarkdownDocument };
@@ -21,6 +25,29 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
+type HelpDialogState = {
+  activeEntryId: HelpEntry['id'];
+  pendingAnchor: string | null;
+  navCollapsed: boolean;
+};
+
+export function getHelpDialogGridTemplateColumns(navCollapsed: boolean) {
+  const navWidth = navCollapsed ? HELP_NAV_COLLAPSED_WIDTH_PX : HELP_NAV_EXPANDED_WIDTH_PX;
+  return `${navWidth}px minmax(0,1fr)`;
+}
+
+export function getHelpNavToggleLabel(navCollapsed: boolean) {
+  return navCollapsed ? 'Expand help navigation' : 'Collapse help navigation';
+}
+
+export function closeHelpDialogState(state: HelpDialogState): HelpDialogState {
+  return {
+    ...state,
+    pendingAnchor: null,
+    navCollapsed: false,
+  };
+}
+
 export function HelpDialog({ open, onOpenChange }: Props) {
   const entries = useMemo(() => getHelpEntries(), []);
   const markdownEntries = entries.filter((entry): entry is MarkdownHelpEntry => entry.kind === 'markdown');
@@ -30,16 +57,21 @@ export function HelpDialog({ open, onOpenChange }: Props) {
   );
   const availableDocPaths = useMemo(() => new Set(markdownEntries.map((entry) => entry.path)), [markdownEntries]);
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const [activeEntryId, setActiveEntryId] = useState<HelpEntry['id']>('shortcuts');
-  const [pendingAnchor, setPendingAnchor] = useState<string | null>(null);
+  const lastScrolledEntryIdRef = useRef<HelpEntry['id'] | null>(null);
+  const [state, setState] = useState<HelpDialogState>({
+    activeEntryId: 'shortcuts',
+    pendingAnchor: null,
+    navCollapsed: false,
+  });
+  const { activeEntryId, pendingAnchor, navCollapsed } = state;
   const activeEntry = entries.find((entry) => entry.id === activeEntryId) ?? entries[0];
+  const NavToggleIcon = navCollapsed ? PanelLeftOpen : PanelLeftClose;
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
       return;
     }
-    setActiveEntryId('shortcuts');
-    setPendingAnchor(null);
+    setState((current) => closeHelpDialogState(current));
   }, [open]);
 
   useEffect(() => {
@@ -48,6 +80,13 @@ export function HelpDialog({ open, onOpenChange }: Props) {
     }
 
     const container = contentRef.current;
+    const entryChanged = lastScrolledEntryIdRef.current !== activeEntryId;
+    lastScrolledEntryIdRef.current = activeEntryId;
+
+    if (entryChanged) {
+      container.scrollTop = 0;
+    }
+
     if (!pendingAnchor) {
       container.scrollTop = 0;
       return;
@@ -63,16 +102,22 @@ export function HelpDialog({ open, onOpenChange }: Props) {
     }
 
     container.scrollTop = 0;
-  }, [open, pendingAnchor]);
+  }, [open, activeEntryId, pendingAnchor]);
 
   function handleEntrySelect(entryId: HelpEntry['id']) {
-    setActiveEntryId(entryId);
-    setPendingAnchor(null);
+    setState((current) => ({
+      ...current,
+      activeEntryId: entryId,
+      pendingAnchor: null,
+    }));
   }
 
   function handleNavigate(target: HelpLinkTarget) {
     if (target.kind === 'anchor') {
-      setPendingAnchor(target.anchor);
+      setState((current) => ({
+        ...current,
+        pendingAnchor: target.anchor,
+      }));
       return;
     }
 
@@ -82,8 +127,11 @@ export function HelpDialog({ open, onOpenChange }: Props) {
         return;
       }
 
-      setActiveEntryId(nextEntry.id);
-      setPendingAnchor(target.anchor);
+      setState((current) => ({
+        ...current,
+        activeEntryId: nextEntry.id,
+        pendingAnchor: target.anchor,
+      }));
     }
   }
 
@@ -102,31 +150,81 @@ export function HelpDialog({ open, onOpenChange }: Props) {
           closeLabel="Close help"
           onClose={() => onOpenChange(false)}
         />
-        <div className="grid h-[min(78vh,760px)] min-h-0 grid-cols-[240px_minmax(0,1fr)]">
-          <aside className="editor-bg-subtle editor-border-subtle grid min-h-0 grid-rows-[minmax(0,1fr)_auto] border-r px-3 py-4">
-            <div className="min-h-0">
-              <div className="editor-text-muted mb-3 px-2 text-[11px] font-medium">Browse help</div>
-              <nav className="editor-scrollbar max-h-full space-y-1 overflow-y-auto pr-1">
-                {mainEntries.map((entry) =>
-                  renderEntryButton({
-                    entry,
-                    active: entry.id === activeEntry.id,
-                    onSelect: handleEntrySelect,
-                  }),
-                )}
-              </nav>
-            </div>
+        <div
+          data-help-nav-collapsed={navCollapsed ? 'true' : 'false'}
+          className="grid h-[min(78vh,760px)] min-h-0 transition-[grid-template-columns] duration-200 ease-out"
+          style={{ gridTemplateColumns: getHelpDialogGridTemplateColumns(navCollapsed) }}
+        >
+          <aside
+            className={`editor-bg-subtle editor-border-subtle min-h-0 border-r ${
+              navCollapsed ? 'flex items-start justify-center px-2 py-3' : 'grid grid-rows-[auto_minmax(0,1fr)_auto] px-3 py-4'
+            }`}
+          >
+            {navCollapsed ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="editor-icon-button-subtle rounded-lg border"
+                aria-label={getHelpNavToggleLabel(navCollapsed)}
+                aria-controls="help-dialog-nav"
+                aria-expanded={!navCollapsed}
+                onClick={() =>
+                  setState((current) => ({
+                    ...current,
+                    navCollapsed: false,
+                  }))
+                }
+              >
+                <NavToggleIcon className="h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <div className="mb-3 flex items-center justify-between gap-2 px-2">
+                  <div className="editor-text-muted text-[11px] font-medium">Browse help</div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="editor-icon-button-subtle rounded-lg border"
+                    aria-label={getHelpNavToggleLabel(navCollapsed)}
+                    aria-controls="help-dialog-nav"
+                    aria-expanded={!navCollapsed}
+                    onClick={() =>
+                      setState((current) => ({
+                        ...current,
+                        navCollapsed: true,
+                      }))
+                    }
+                  >
+                    <NavToggleIcon className="h-4 w-4" />
+                  </Button>
+                </div>
 
-            {footerEntry ? (
-              <div className="editor-border-subtle mt-4 border-t pt-4">
-                {renderEntryButton({
-                  entry: footerEntry,
-                  active: footerEntry.id === activeEntry.id,
-                  onSelect: handleEntrySelect,
-                  compact: true,
-                })}
-              </div>
-            ) : null}
+                <div id="help-dialog-nav" className="min-h-0">
+                  <nav className="editor-scrollbar max-h-full space-y-1 overflow-y-auto pr-1">
+                    {mainEntries.map((entry) =>
+                      renderEntryButton({
+                        entry,
+                        active: entry.id === activeEntry.id,
+                        onSelect: handleEntrySelect,
+                      }),
+                    )}
+                  </nav>
+                </div>
+
+                {footerEntry ? (
+                  <div className="editor-border-subtle mt-4 border-t pt-4">
+                    {renderEntryButton({
+                      entry: footerEntry,
+                      active: footerEntry.id === activeEntry.id,
+                      onSelect: handleEntrySelect,
+                      compact: true,
+                    })}
+                  </div>
+                ) : null}
+              </>
+            )}
           </aside>
 
           <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)]">

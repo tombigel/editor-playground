@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { HelpDialog } from '../HelpDialog';
+import {
+  closeHelpDialogState,
+  HelpDialog,
+  getHelpDialogGridTemplateColumns,
+  getHelpNavToggleLabel,
+  HELP_NAV_COLLAPSED_WIDTH_PX,
+  HELP_NAV_EXPANDED_WIDTH_PX,
+} from '../HelpDialog';
 
 describe('panels/HelpDialog', () => {
   it('uses the shared editor panel header and defaults to shortcuts content', () => {
@@ -17,7 +24,32 @@ describe('panels/HelpDialog', () => {
     expect(markup).toContain('Animation API');
     expect(markup).toContain('Console Testing Guide');
     expect(markup).toContain('How to add docs?');
+    expect(markup).toContain('Collapse help navigation');
+    expect(markup).toContain('data-help-nav-collapsed="false"');
     expect(markup).not.toContain('settings-nav-link-copy mt-0.5 text-xs leading-5">API.md<');
     expect(markup).not.toContain('settings-nav-link-copy mt-0.5 text-xs leading-5">CONSOLE_TEST_GUIDE.md<');
+  });
+
+  it('uses the expected nav widths and toggle labels for expanded and collapsed states', () => {
+    expect(HELP_NAV_EXPANDED_WIDTH_PX).toBe(240);
+    expect(HELP_NAV_COLLAPSED_WIDTH_PX).toBe(56);
+    expect(getHelpDialogGridTemplateColumns(false)).toBe('240px minmax(0,1fr)');
+    expect(getHelpDialogGridTemplateColumns(true)).toBe('56px minmax(0,1fr)');
+    expect(getHelpNavToggleLabel(false)).toBe('Collapse help navigation');
+    expect(getHelpNavToggleLabel(true)).toBe('Expand help navigation');
+  });
+
+  it('keeps the current document while resetting transient view state on close', () => {
+    expect(
+      closeHelpDialogState({
+        activeEntryId: 'doc:docs/API.md',
+        pendingAnchor: 'architecture-overview',
+        navCollapsed: true,
+      }),
+    ).toEqual({
+      activeEntryId: 'doc:docs/API.md',
+      pendingAnchor: null,
+      navCollapsed: false,
+    });
   });
 });
