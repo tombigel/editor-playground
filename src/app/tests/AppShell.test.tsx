@@ -23,7 +23,7 @@ function createProps(): ComponentProps<typeof AppShell> {
     topbarClass: 'editor-topbar',
     stageSelectableIds: [],
     settingsOpen: false,
-    shortcutHelpOpen: false,
+    helpOpen: false,
     sectionTemplateOpen: false,
     sectionTemplatePosition: { top: 0, left: 0 },
     settingsPanelRef: null,
@@ -37,7 +37,7 @@ function createProps(): ComponentProps<typeof AppShell> {
     onSectionTemplateOpenChange: () => undefined,
     onCloseSectionTemplates: () => undefined,
     onSettingsOpenChange: () => undefined,
-    onShortcutHelpOpenChange: () => undefined,
+    onHelpOpenChange: () => undefined,
     onImportDocument: async () => ({ ok: true, message: 'Imported.' }),
     onResetData: () => undefined,
     onResetAll: () => undefined,
@@ -106,6 +106,19 @@ describe('app/AppShell', () => {
     expect(markup).toContain('editor-panel-header-close');
     expect(markup).toContain('max-h-[min(84vh,820px)]');
     expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto p-5 pt-4');
+  });
+
+  it('renders the unified help dialog and top-bar help action', () => {
+    const markup = renderToStaticMarkup(<AppShell {...createProps()} helpOpen />);
+
+    expect(markup).toContain('aria-label="Help"');
+    expect(markup).toContain('data-help-entry="shortcuts"');
+    expect(markup).toContain('Browse help');
+    expect(markup).toContain('Keyboard shortcuts');
+    expect(markup).toContain('API Reference');
+    expect(markup).toContain('Animation API');
+    expect(markup).toContain('Console Testing Guide');
+    expect(markup).toContain('How to add docs?');
   });
 
   it('renders the focused panel at its stored viewport offset from the workspace-aligned default', () => {

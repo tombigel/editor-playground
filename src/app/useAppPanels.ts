@@ -21,7 +21,7 @@ function getDefaultLayersPanelPosition() {
 export function useAppPanels() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manageFontsOpen, setManageFontsOpen] = useState(false);
-  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [layersPosition, setLayersPosition] = useState(getDefaultLayersPanelPosition);
   const [layersPositionCustomized, setLayersPositionCustomized] = useState(false);
@@ -48,7 +48,7 @@ export function useAppPanels() {
     closeSectionTemplatePopover();
     setSettingsOpen(false);
     setManageFontsOpen(false);
-    setShortcutHelpOpen(false);
+    setHelpOpen(false);
   }
 
   function openLayers(_trigger: HTMLElement) {
@@ -96,8 +96,8 @@ export function useAppPanels() {
     setSettingsOpen,
     manageFontsOpen,
     setManageFontsOpen,
-    shortcutHelpOpen,
-    setShortcutHelpOpen,
+    helpOpen,
+    setHelpOpen,
     layersOpen,
     layersPosition,
     layersPanelRef,
@@ -114,6 +114,6 @@ export function useAppPanels() {
     closeSectionTemplatePopover,
     closeTransientPanels,
     hasDismissiblePanels:
-      settingsOpen || manageFontsOpen || shortcutHelpOpen || layersOpen || sectionTemplateOpen,
+      settingsOpen || manageFontsOpen || helpOpen || layersOpen || sectionTemplateOpen,
   };
 }

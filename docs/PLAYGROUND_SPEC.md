@@ -6,6 +6,7 @@ Related documentation:
 
 - [Editor Style Guide](./EDITOR_STYLE_GUIDE.md): visual rules and token guidance for editor chrome
 - [Sticky Render Model](./STICKY_RENDER_MODEL.md): rendered-site sticky data and DOM structure
+- [Animation API – Console Testing Guide](./CONSOLE_TEST_GUIDE.md): dev-console testing flow for `window.playgroundAnimationApi`
 
 ## Goal
 
@@ -231,7 +232,7 @@ Keyboard shortcuts:
 - `Left` / `Right` / `Up` / `Down`: move the focused stage selection by `1px`
 - `Shift + Left` / `Shift + Right` / `Shift + Up` / `Shift + Down`: move the focused stage selection by `10px`
 - `Mod + ,`: open settings
-- `?`: open shortcut help when no input field is focused
+- `?`: open the Help browser when no input field is focused
 - `Esc`: close open panels / dialogs
 
 ## History Model
@@ -248,7 +249,7 @@ Undo/redo is implemented as an in-memory history stack.
 
 Controls:
 
-- top bar buttons: undo / redo / shortcut help / settings
+- top bar buttons: undo / redo / help / settings
 - shortcuts: `Mod + Z`, `Mod + Shift + Z` (and `Ctrl + Y` on non-mac platforms)
 - settings panel: clear undo history, configurable max retained undo steps
 - document import replaces the current document as a single undoable transaction
@@ -655,8 +656,15 @@ Current UX includes:
 - the settings `UI` section also includes a startup focused-mode selector: `Normal` or `Sticky`
 - startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it
 - left rail quick actions for sticky preview, spacer visibility, and snap-to-guides
-- top bar utility actions for shortcut help and settings
-- shortcut help dialog opened by `?`, generated from the shared shortcut registry and shared pointer-modifier gesture list
+- top bar utility actions for help and settings
+- `?` opens a unified Help browser dialog with a flat left nav: `Keyboard shortcuts` first, followed by all markdown documents from `docs/`
+- help-doc ordering is configurable in the help-doc registry; newly added `docs/*.md` files that are not listed there still appear automatically after the explicitly ordered entries
+- help-browser nav buttons do not show doc filenames; for titles containing a spaced dash separator (`-`, `–`, `—`), the text after the separator renders as the button subtitle and the separator itself is hidden
+- the left nav reserves a dedicated bottom entry for `How to add docs?`, backed by the docs folder like the other markdown entries
+- the `Keyboard shortcuts` help entry renders the shared shortcut registry and pointer-modifier gesture list
+- markdown help entries render the source filename in a compact status bar above the document pane instead of in the nav button
+- the Help browser markdown entries support in-panel `#anchor` jumps and relative `.md` doc navigation, and inertly render absolute filesystem links referenced by docs
+- markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables and raw HTML support for repo-owned docs
 - shortcut guide also appears as the last section inside settings
 - editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer
 - left pop panels (section templates + settings panel) close on outside click / `Esc` and stay above stage selection overlays

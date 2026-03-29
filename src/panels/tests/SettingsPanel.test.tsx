@@ -61,6 +61,7 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('JSON exports use `.json`; rendered site exports use `.zip`.');
     expect(markup).toContain('Document JSON');
     expect(markup).toContain('Rendered Site');
+    expect(markup).toContain('Keyboard and pointer reference');
     expect(markup).toContain('Model export for re-importing into the editor.');
     expect(markup).toContain('Generated site structure export for hosting or SSR.');
     expect(markup).toContain('Bring a saved document model back into the editor.');
@@ -72,6 +73,8 @@ describe('panels/SettingsPanel', () => {
     expect(markup).not.toContain('Save Site CSS');
     expect(markup).not.toContain('Copy Site HTML');
     expect(markup).not.toContain('Copy Site CSS');
+    expect(markup).not.toContain('Browse help');
+    expect(markup).not.toContain('API Reference');
 
     const navOrder = Array.from(
       markup.matchAll(/data-settings-nav="([^"]+)"/g),

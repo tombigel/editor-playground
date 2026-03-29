@@ -8,7 +8,7 @@ function createHandlers() {
     undo: vi.fn(),
     redo: vi.fn(),
     toggleSettings: vi.fn(),
-    openShortcutHelp: vi.fn(),
+    openHelp: vi.fn(),
     setPreviewSticky: vi.fn(),
     setAnimationPreview: vi.fn(),
     setSpacerVisibility: vi.fn(),
@@ -83,7 +83,7 @@ describe('app/shortcutController', () => {
 
     expect(handlers.closePanels).toHaveBeenCalledOnce();
     expect(handlers.toggleSettings).toHaveBeenCalledOnce();
-    expect(handlers.openShortcutHelp).toHaveBeenCalledOnce();
+    expect(handlers.openHelp).toHaveBeenCalledOnce();
     expect(handlers.toggleBoldSelection).toHaveBeenCalledOnce();
     expect(handlers.toggleUnderlineSelection).toHaveBeenCalledOnce();
     expect(handlers.alignSelection).toHaveBeenCalledWith('left');

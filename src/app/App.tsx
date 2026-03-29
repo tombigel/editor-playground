@@ -128,7 +128,7 @@ export function App() {
     onUndo: () => dispatch({ type: 'undo' }),
     onRedo: () => dispatch({ type: 'redo' }),
     onToggleSettings: () => panels.setSettingsOpen((open) => !open),
-    onOpenShortcutHelp: () => panels.setShortcutHelpOpen(true),
+    onOpenHelp: () => panels.setHelpOpen(true),
     onSetPreviewSticky: (value) => dispatch({ type: 'setPreviewSticky', value }),
     onSetAnimationPreview: (value) => dispatch({ type: 'setAnimationPreview', value }),
     onSetSpacerVisibility: (value) => dispatch({ type: 'setSpacerVisibility', value }),
@@ -196,7 +196,7 @@ export function App() {
       stageSelectableIds={viewModel.stageSelectableIds}
       settingsOpen={panels.settingsOpen}
       manageFontsOpen={panels.manageFontsOpen}
-      shortcutHelpOpen={panels.shortcutHelpOpen}
+      helpOpen={panels.helpOpen}
       layersOpen={panels.layersOpen}
       layersPosition={panels.layersPosition}
       layersPanelRef={panels.layersPanelRef}
@@ -218,7 +218,7 @@ export function App() {
       onCloseSectionTemplates={panels.closeSectionTemplatePopover}
       onSettingsOpenChange={panels.setSettingsOpen}
       onManageFontsOpenChange={panels.setManageFontsOpen}
-      onShortcutHelpOpenChange={panels.setShortcutHelpOpen}
+      onHelpOpenChange={panels.setHelpOpen}
       onImportDocument={handleImportDocument}
       onResetData={handleResetData}
       onResetAll={handleResetAll}

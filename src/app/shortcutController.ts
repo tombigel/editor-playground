@@ -22,7 +22,7 @@ export function executeEditorShortcut(
       handlers.toggleSettings();
       return;
     case 'showShortcutHelp':
-      handlers.openShortcutHelp();
+      handlers.openHelp();
       return;
     case 'togglePreviewSticky':
       handlers.setPreviewSticky(!state.previewSticky);

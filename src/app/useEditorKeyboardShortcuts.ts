@@ -17,7 +17,7 @@ type UseEditorKeyboardShortcutsArgs = {
   onUndo: () => void;
   onRedo: () => void;
   onToggleSettings: () => void;
-  onOpenShortcutHelp: () => void;
+  onOpenHelp: () => void;
   onSetPreviewSticky: (value: boolean) => void;
   onSetAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
   onSetSpacerVisibility: (value: 'selected' | 'all') => void;
@@ -48,7 +48,7 @@ export function useEditorKeyboardShortcuts({
   onUndo,
   onRedo,
   onToggleSettings,
-  onOpenShortcutHelp,
+  onOpenHelp,
   onSetPreviewSticky,
   onSetAnimationPreview,
   onSetSpacerVisibility,
@@ -106,7 +106,7 @@ export function useEditorKeyboardShortcuts({
         undo: onUndo,
         redo: onRedo,
         toggleSettings: onToggleSettings,
-        openShortcutHelp: onOpenShortcutHelp,
+        openHelp: onOpenHelp,
         setPreviewSticky: onSetPreviewSticky,
         setAnimationPreview: onSetAnimationPreview,
         setSpacerVisibility: onSetSpacerVisibility,
@@ -135,7 +135,7 @@ export function useEditorKeyboardShortcuts({
     onDeleteSelection,
     onDistributeSelection,
     onNudgeSelection,
-    onOpenShortcutHelp,
+    onOpenHelp,
     onAlignSelection,
     onOrderBack,
     onOrderBringToFront,

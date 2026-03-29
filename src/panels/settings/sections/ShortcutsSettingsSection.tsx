@@ -7,7 +7,7 @@ export function ShortcutsSettingsSection() {
       <SectionHeading
         eyebrow="Shortcuts"
         title="Keyboard and pointer reference"
-        description="The same guide opened by the question-mark shortcut."
+        description="The same guide available from the Help browser."
       />
       <ShortcutHelpContent compact />
     </>

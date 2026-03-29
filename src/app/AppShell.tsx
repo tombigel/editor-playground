@@ -24,7 +24,7 @@ import {
 import { InsertPanel } from '../panels/InsertPanel';
 import { LayersPanel } from '../panels/LayersPanel';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
-import { ShortcutHelpDialog } from '../panels/ShortcutHelpDialog';
+import { HelpDialog } from '../panels/HelpDialog';
 import { SettingsPanel } from '../panels/SettingsPanel';
 import { ManageFontsPanel } from '../panels/fontManagement/ManageFontsPanel';
 import {
@@ -70,7 +70,7 @@ type Props = {
   stageSelectableIds: string[];
   settingsOpen: boolean;
   manageFontsOpen?: boolean;
-  shortcutHelpOpen: boolean;
+  helpOpen: boolean;
   layersOpen?: boolean;
   layersPosition?: { top: number; left: number };
   sectionTemplateOpen: boolean;
@@ -92,7 +92,7 @@ type Props = {
   onCloseSectionTemplates: () => void;
   onSettingsOpenChange: (open: boolean) => void;
   onManageFontsOpenChange?: (open: boolean) => void;
-  onShortcutHelpOpenChange: (open: boolean) => void;
+  onHelpOpenChange: (open: boolean) => void;
   onImportDocument: (raw: string) => Promise<ActionResult>;
   onResetData: () => void;
   onResetAll: () => void;
@@ -111,7 +111,7 @@ export function AppShell({
   stageSelectableIds,
   settingsOpen,
   manageFontsOpen = false,
-  shortcutHelpOpen,
+  helpOpen,
   layersOpen = false,
   layersPosition = { top: 112, left: 102 },
   sectionTemplateOpen,
@@ -133,7 +133,7 @@ export function AppShell({
   onCloseSectionTemplates,
   onSettingsOpenChange,
   onManageFontsOpenChange = () => undefined,
-  onShortcutHelpOpenChange,
+  onHelpOpenChange,
   onImportDocument,
   onResetData,
   onResetAll,
@@ -336,11 +336,12 @@ export function AppShell({
               />
               <TopbarIconAction
                 icon={CircleQuestionMark}
-                label="Keyboard shortcuts"
+                label="Help"
                 shortcut={getShortcutLabel('showShortcutHelp', shortcutPlatform)}
-                active={shortcutHelpOpen}
-                expanded={shortcutHelpOpen}
-                onClick={() => onShortcutHelpOpenChange(!shortcutHelpOpen)}
+                active={helpOpen}
+                expanded={helpOpen}
+                hasPopup="dialog"
+                onClick={() => onHelpOpenChange(!helpOpen)}
               />
               <TopbarIconAction
                 icon={Settings}
@@ -706,7 +707,7 @@ export function AppShell({
         </DialogContent>
       </Dialog>
 
-      <ShortcutHelpDialog open={shortcutHelpOpen} onOpenChange={onShortcutHelpOpenChange} />
+      <HelpDialog open={helpOpen} onOpenChange={onHelpOpenChange} />
     </div>
   );
 }
