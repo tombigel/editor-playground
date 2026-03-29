@@ -59,11 +59,11 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
     <tr>
       <td><code>RI-01</code></td>
       <td><a href="#animation-undo-coverage">Animation undo coverage</a></td>
-      <td><span style="background:#7f1d1d;color:#fff;padding:2px 8px;border-radius:999px;">Blocker</span></td>
+      <td><span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:999px;">High</span></td>
       <td>Bug</td>
       <td><span style="background:#92400e;color:#fff;padding:2px 8px;border-radius:999px;">Needs audit</span></td>
       <td>Shared</td>
-      <td>-</td>
+      <td>Dep: <code>RI-05</code></td>
     </tr>
     <tr>
       <td><code>RI-02</code></td>
@@ -360,15 +360,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 
 #### Bug
 
-##### Animation undo coverage
-
-- `Type`: `Bug`
-- `Owner lane`: `Shared`
-- `Status`: `Needs audit`
-- `Source`: `RI-01`
-- `Why it matters`: If animation editing is not fully undoable, animation authoring will feel unsafe and inconsistent with the rest of the editor.
-- `Current state`: The app has document undo/redo and animation APIs exist, but this item still needs an explicit user-flow audit from animation mutation through editor history.
-- `Next review question`: Which animation changes are already captured by normal history, and which paths are still console-only or missing from editor-facing flows?
+None yet.
 
 #### UX
 
@@ -398,7 +390,16 @@ None yet.
 
 #### Bug
 
-None yet.
+##### Animation undo coverage
+
+- `Type`: `Bug`
+- `Owner lane`: `Shared`
+- `Status`: `Needs audit`
+- `Source`: `RI-01`
+- `Dependencies`: `RI-05`
+- `Why it matters`: If animation authoring actions do not create reliable undo entries, the editing workflow will feel unsafe and inconsistent with the rest of the editor.
+- `Current state`: The app has document undo/redo and animation APIs, but this item now depends on the designed animation UI because the real risk is missing history coverage in user-facing authoring flows rather than raw data mutations alone.
+- `Next review question`: Once `RI-05` lands, which animation interactions create correct undo/redo history entries, and which editor-facing flows still bypass or fragment history?
 
 #### UX
 
