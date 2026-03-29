@@ -1,5 +1,5 @@
 import { Keyboard } from 'lucide-react';
-import { SHORTCUT_GESTURES, getShortcutDefinitionsByCategory, getShortcutPlatform } from '@/lib/shortcuts';
+import { getShortcutDefinitionsByCategory, getShortcutGestures, getShortcutPlatform } from '@/lib/shortcuts';
 
 type Props = {
   compact?: boolean;
@@ -8,6 +8,7 @@ type Props = {
 export function ShortcutHelpContent({ compact = false }: Props) {
   const platform = getShortcutPlatform();
   const categories = getShortcutDefinitionsByCategory(platform);
+  const gestures = getShortcutGestures(platform);
   const modLabel = platform === 'mac' ? 'Cmd' : 'Ctrl';
   const itemTextClass = compact ? 'text-xs leading-4' : 'text-[13px] leading-4';
   const categoriesByName = Object.fromEntries(categories.map((category) => [category.category, category])) as Record<
@@ -41,7 +42,7 @@ export function ShortcutHelpContent({ compact = false }: Props) {
               />
             ))}
           </div>
-          <PointerModifiersSection itemTextClass={itemTextClass} compact />
+          <PointerModifiersSection gestures={gestures} itemTextClass={itemTextClass} compact />
         </>
       ) : (
         <div className="grid gap-3 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
@@ -56,7 +57,7 @@ export function ShortcutHelpContent({ compact = false }: Props) {
               items={categoriesByName.View.items}
               itemTextClass={itemTextClass}
             />
-            <PointerModifiersSection itemTextClass={itemTextClass} />
+            <PointerModifiersSection gestures={gestures} itemTextClass={itemTextClass} />
           </div>
           <div className="space-y-3">
             <ShortcutSection
@@ -161,9 +162,11 @@ function ShortcutRow({
 }
 
 function PointerModifiersSection({
+  gestures,
   itemTextClass,
   compact = false,
 }: {
+  gestures: ReturnType<typeof getShortcutGestures>;
   itemTextClass: string;
   compact?: boolean;
 }) {
@@ -171,7 +174,7 @@ function PointerModifiersSection({
     <section className="editor-bg-subtle editor-border-subtle rounded-lg border p-3.5">
       <div className="editor-text-muted text-[11px] font-medium leading-4">Pointer Modifiers</div>
       <div className={`mt-2.5 grid gap-2.5 ${compact ? 'sm:grid-cols-2' : ''}`}>
-        {SHORTCUT_GESTURES.map((gesture) => (
+        {gestures.map((gesture) => (
           <div key={gesture.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
             <div className="min-w-0">
               <div className={`editor-text-strong ${itemTextClass}`}>{gesture.description}</div>

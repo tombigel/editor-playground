@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findMatchingShortcut, getShortcutLabel, SHORTCUT_GESTURES } from '../shortcuts';
+import { findMatchingShortcut, getShortcutGestures, getShortcutLabel } from '../shortcuts';
 
 describe('shortcut registry', () => {
   it('matches arrange shortcuts with industry-standard shift variants', () => {
@@ -212,8 +212,12 @@ describe('shortcut registry', () => {
   });
 
   it('lists multi-select click modifiers in the shortcut help gestures', () => {
-    expect(SHORTCUT_GESTURES).toContainEqual({
-      label: 'Cmd/Ctrl + Click / Shift + Click',
+    expect(getShortcutGestures('mac')).toContainEqual({
+      label: 'Cmd + Click / Shift + Click',
+      description: 'Toggle multi-select',
+    });
+    expect(getShortcutGestures('other')).toContainEqual({
+      label: 'Ctrl + Click / Shift + Click',
       description: 'Toggle multi-select',
     });
   });

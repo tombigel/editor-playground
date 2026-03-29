@@ -272,25 +272,6 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
   },
 ];
 
-export const SHORTCUT_GESTURES: ShortcutGesture[] = [
-  {
-    label: 'Cmd/Ctrl + Click / Shift + Click',
-    description: 'Toggle multi-select',
-  },
-  {
-    label: 'Shift + Drag',
-    description: 'Lock axis',
-  },
-  {
-    label: 'Shift + Corner Resize',
-    description: 'Keep ratio',
-  },
-  {
-    label: 'Alt + Drag',
-    description: 'Invert snap',
-  },
-];
-
 export function getShortcutPlatform(): ShortcutPlatform {
   if (typeof navigator === 'undefined') {
     return 'mac';
@@ -351,6 +332,29 @@ export function getShortcutDefinitionsByCategory(platform = getShortcutPlatform(
       label: getShortcutLabel(definition.id, platform),
     })),
   }));
+}
+
+export function getShortcutGestures(platform = getShortcutPlatform()): ShortcutGesture[] {
+  const modLabel = platform === 'mac' ? 'Cmd' : 'Ctrl';
+
+  return [
+    {
+      label: `${modLabel} + Click / Shift + Click`,
+      description: 'Toggle multi-select',
+    },
+    {
+      label: 'Shift + Drag',
+      description: 'Lock axis',
+    },
+    {
+      label: 'Shift + Corner Resize',
+      description: 'Keep ratio',
+    },
+    {
+      label: 'Alt + Drag',
+      description: 'Invert snap',
+    },
+  ];
 }
 
 function matchesShortcutCombo(
