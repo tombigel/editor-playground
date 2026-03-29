@@ -665,6 +665,7 @@ Current UX includes:
 - closing the Help browser preserves the last selected document, but resets transient view state such as nav collapse and in-document anchor position before the next open
 - the `Keyboard shortcuts` help entry renders the shared shortcut registry and pointer-modifier gesture list
 - markdown help entries render the source filename in a compact status bar above the document pane instead of in the nav button
+- markdown help entry bodies are loaded from copied static files under `assets/help-docs/` instead of being embedded inline in the main app bundle
 - the Help browser markdown entries support in-panel `#anchor` jumps and relative `.md` doc navigation, and inertly render absolute filesystem links referenced by docs
 - markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables and raw HTML support for repo-owned docs
 - shortcut guide also appears as the last section inside settings

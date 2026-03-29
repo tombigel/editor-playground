@@ -57,7 +57,8 @@ export function HelpDialog({ open, onOpenChange }: Props) {
   );
   const availableDocPaths = useMemo(() => new Set(markdownEntries.map((entry) => entry.path)), [markdownEntries]);
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const lastScrolledEntryIdRef = useRef<HelpEntry['id'] | null>(null);
+  const lastScrollContextKeyRef = useRef<string | null>(null);
+  const [contentReadyVersion, setContentReadyVersion] = useState(0);
   const [state, setState] = useState<HelpDialogState>({
     activeEntryId: 'shortcuts',
     pendingAnchor: null,
@@ -65,6 +66,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
   });
   const { activeEntryId, pendingAnchor, navCollapsed } = state;
   const activeEntry = entries.find((entry) => entry.id === activeEntryId) ?? entries[0];
+  const activeEntryKind = activeEntry.kind;
   const NavToggleIcon = navCollapsed ? PanelLeftOpen : PanelLeftClose;
 
   useEffect(() => {
@@ -80,8 +82,9 @@ export function HelpDialog({ open, onOpenChange }: Props) {
     }
 
     const container = contentRef.current;
-    const entryChanged = lastScrolledEntryIdRef.current !== activeEntryId;
-    lastScrolledEntryIdRef.current = activeEntryId;
+    const scrollContextKey = `${activeEntryId}:${activeEntryKind === 'markdown' ? contentReadyVersion : 0}`;
+    const entryChanged = lastScrollContextKeyRef.current !== scrollContextKey;
+    lastScrollContextKeyRef.current = scrollContextKey;
 
     if (entryChanged) {
       container.scrollTop = 0;
@@ -102,7 +105,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
     }
 
     container.scrollTop = 0;
-  }, [open, activeEntryId, pendingAnchor]);
+  }, [open, activeEntryId, activeEntryKind, pendingAnchor, contentReadyVersion]);
 
   function handleEntrySelect(entryId: HelpEntry['id']) {
     setState((current) => ({
@@ -240,7 +243,12 @@ export function HelpDialog({ open, onOpenChange }: Props) {
                 <ShortcutHelpContent />
               ) : (
                 <Suspense fallback={<HelpMarkdownFallback fileName={activeEntry.fileName} />}>
-                  <LazyHelpMarkdownDocument entry={activeEntry} availableDocPaths={availableDocPaths} onNavigate={handleNavigate} />
+                  <LazyHelpMarkdownDocument
+                    entry={activeEntry}
+                    availableDocPaths={availableDocPaths}
+                    onNavigate={handleNavigate}
+                    onContentReady={() => setContentReadyVersion((current) => current + 1)}
+                  />
                 </Suspense>
               )}
             </div>

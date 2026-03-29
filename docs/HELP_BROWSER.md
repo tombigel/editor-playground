@@ -6,7 +6,7 @@ Use this help browser for all editor-facing documentation that should be discove
 
 1. Create a new top-level markdown file in `docs/`.
 2. Add a first-level `#` heading. The sidebar label is derived from that heading.
-3. Reload the app or let Vite refresh. New `docs/*.md` files are discovered automatically.
+3. Run `npm run sync:public` or restart `npm run dev`. The help-doc manifest is regenerated and the markdown files are copied into the generated `public/assets/help-docs/` folder.
 
 ## Control ordering
 
@@ -20,6 +20,12 @@ Edit the `HELP_DOC_ORDER` list there:
 
 - listed docs appear first, in that exact order
 - new docs not listed still appear automatically after the ordered ones
+
+## Delivery
+
+- help markdown files are served from `assets/help-docs/` instead of being embedded into the app bundle
+- `scripts/sync-public-assets.mjs` regenerates the manifest at `src/panels/generated/helpDocsManifest.json` and copies the source markdown files into the generated `public/assets/help-docs/` folder
+- `public/` is generated output and should not be treated as a source-of-truth location for help docs or other static assets
 
 ## Sidebar naming
 

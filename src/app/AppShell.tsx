@@ -48,7 +48,6 @@ import {
   resolveStickyGuideColors,
   type ResolvedTheme,
 } from '@/lib/theme';
-import stickyIconUrl from '../../public/sticky_512.png';
 import {
   clampFocusedPanelOffset,
   FOCUSED_PANEL_RIGHT_OFFSET_PX,
@@ -56,6 +55,8 @@ import {
 } from '../editor/focusedPanelPosition';
 import { RailToggleButton, SectionTemplatePopover, SpacerIcon, TopbarIconAction } from './AppChrome';
 import type { HistoryAction, HistoryState } from './editorState';
+
+const stickyIconUrl = '/sticky_512.png';
 
 type Props = {
   state: EditorState;

@@ -1,8 +1,17 @@
+import helpDocsManifest from './generated/helpDocsManifest.json';
+
 export type ShortcutHelpEntry = {
   id: 'shortcuts';
   kind: 'shortcuts';
   title: string;
   subtitle?: string;
+};
+
+type HelpDocManifestEntry = {
+  path: string;
+  fileName: string;
+  fullTitle: string;
+  assetUrl: string;
 };
 
 export type MarkdownHelpEntry = {
@@ -12,7 +21,7 @@ export type MarkdownHelpEntry = {
   subtitle?: string;
   path: string;
   fileName: string;
-  raw: string;
+  assetUrl: string;
 };
 
 export type HelpEntry = ShortcutHelpEntry | MarkdownHelpEntry;
@@ -23,11 +32,7 @@ export type HelpLinkTarget =
   | { kind: 'external'; href: string }
   | { kind: 'inert'; href: string };
 
-const DOC_FILES = import.meta.glob('../../docs/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
+const DOC_FILES = helpDocsManifest as HelpDocManifestEntry[];
 
 export const HELP_BROWSER_DOC_PATH = 'docs/HELP_BROWSER.md';
 
@@ -51,21 +56,19 @@ export function getHelpEntries() {
   return [SHORTCUTS_HELP_ENTRY, ...getMarkdownHelpEntries()];
 }
 
-export function getMarkdownHelpEntries(source: Record<string, string> = DOC_FILES): MarkdownHelpEntry[] {
-  return Object.entries(source)
-    .map(([sourcePath, raw]) => {
-      const path = normalizeHelpDocPath(sourcePath);
-      const fullTitle = extractHelpDocTitle(raw, path);
-      const { title, subtitle } = splitHelpEntryTitle(fullTitle);
+export function getMarkdownHelpEntries(source: readonly HelpDocManifestEntry[] = DOC_FILES): MarkdownHelpEntry[] {
+  return source
+    .map((entry) => {
+      const { title, subtitle } = splitHelpEntryTitle(entry.fullTitle.trim());
 
       return {
-        id: `doc:${path}`,
+        id: `doc:${entry.path}`,
         kind: 'markdown' as const,
         title,
         subtitle,
-        path,
-        fileName: path.split('/').pop() ?? path,
-        raw,
+        path: entry.path,
+        fileName: entry.fileName,
+        assetUrl: entry.assetUrl,
       };
     })
     .sort(compareHelpEntriesByConfiguredOrder);
@@ -137,29 +140,6 @@ export function resolveHelpLink(currentPath: string, href: string, availableDocP
     path: resolvedPath,
     anchor: rawHash ? normalizeHelpAnchor(rawHash) : null,
   };
-}
-
-function extractHelpDocTitle(raw: string, path: string) {
-  const headingMatch = raw.match(/^#\s+(.+)$/m);
-  if (headingMatch?.[1]) {
-    return headingMatch[1]
-      .trim()
-      .replace(/\\([\\`*_{}[\]()#+\-.!])/g, '$1');
-  }
-
-  return path
-    .replace(/^docs\//, '')
-    .replace(/\.md$/i, '')
-    .replace(/[_-]+/g, ' ');
-}
-
-function normalizeHelpDocPath(sourcePath: string) {
-  const normalized = sourcePath.replace(/\\/g, '/');
-  const docsIndex = normalized.lastIndexOf('/docs/');
-  if (docsIndex === -1) {
-    throw new Error(`Unsupported help document path: ${sourcePath}`);
-  }
-  return `docs/${normalized.slice(docsIndex + '/docs/'.length)}`;
 }
 
 function resolveRelativeHelpDocPath(currentPath: string, relativePath: string) {

@@ -1,0 +1,80 @@
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const docsDir = path.join(rootDir, 'docs');
+const staticAssetSourceDir = path.join(rootDir, 'src', 'assets', 'static');
+const publicDir = path.join(rootDir, 'public');
+const rootAssetDir = publicDir;
+const helpDocAssetDir = path.join(publicDir, 'assets', 'help-docs');
+const manifestPath = path.join(rootDir, 'src', 'panels', 'generated', 'helpDocsManifest.json');
+
+const docFiles = (await readdir(docsDir))
+  .filter((fileName) => fileName.toLowerCase().endsWith('.md'))
+  .sort((left, right) => left.localeCompare(right));
+const rootAssetFiles = (await readdir(staticAssetSourceDir))
+  .filter((fileName) => fileName.toLowerCase().endsWith('.png'))
+  .sort((left, right) => left.localeCompare(right));
+
+await mkdir(rootAssetDir, { recursive: true });
+await mkdir(helpDocAssetDir, { recursive: true });
+
+const manifest = [];
+const desiredHelpDocFileNames = new Set(docFiles);
+const desiredRootAssetFileNames = new Set(rootAssetFiles);
+
+for (const fileName of rootAssetFiles) {
+  await copyFile(path.join(staticAssetSourceDir, fileName), path.join(rootAssetDir, fileName));
+}
+
+for (const fileName of docFiles) {
+  const sourcePath = path.join(docsDir, fileName);
+  const outputPath = path.join(helpDocAssetDir, fileName);
+  const raw = await readFile(sourcePath, 'utf8');
+
+  await copyFile(sourcePath, outputPath);
+
+  manifest.push({
+    path: `docs/${fileName}`,
+    fileName,
+    fullTitle: extractHelpDocTitle(raw, fileName),
+    assetUrl: `/assets/help-docs/${fileName}`,
+  });
+}
+
+const existingRootAssetEntries = await readdir(rootAssetDir, { withFileTypes: true }).catch(() => []);
+
+for (const entry of existingRootAssetEntries) {
+  if (!entry.isFile() || desiredRootAssetFileNames.has(entry.name)) {
+    continue;
+  }
+
+  await rm(path.join(rootAssetDir, entry.name), { force: true });
+}
+
+const existingHelpDocAssetEntries = await readdir(helpDocAssetDir, { withFileTypes: true }).catch(() => []);
+
+for (const entry of existingHelpDocAssetEntries) {
+  if (!entry.isFile() || desiredHelpDocFileNames.has(entry.name)) {
+    continue;
+  }
+
+  await rm(path.join(helpDocAssetDir, entry.name), { force: true });
+}
+
+await mkdir(path.dirname(manifestPath), { recursive: true });
+await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+function extractHelpDocTitle(raw, fileName) {
+  const headingMatch = raw.match(/^#\s+(.+)$/m);
+  if (headingMatch?.[1]) {
+    return headingMatch[1]
+      .trim()
+      .replace(/\\([\\`*_{}[\]()#+\-.!])/g, '$1');
+  }
+
+  return fileName
+    .replace(/\.md$/i, '')
+    .replace(/[_-]+/g, ' ');
+}

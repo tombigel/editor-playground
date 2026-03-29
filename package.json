@@ -7,6 +7,13 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
+    "sync:public": "node scripts/sync-public-assets.mjs",
+    "sync:help-docs": "npm run sync:public",
+    "predev": "npm run sync:public",
+    "pretest": "npm run sync:public",
+    "pretest:run": "npm run sync:public",
+    "pretest:coverage": "npm run sync:public",
+    "prebuild": "npm run sync:public",
     "dev": "vite",
     "lint": "biome lint ./src",
     "typecheck": "tsc -b",

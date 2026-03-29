@@ -1,0 +1,44 @@
+[
+  {
+    "path": "docs/API.md",
+    "fileName": "API.md",
+    "fullTitle": "API Reference",
+    "assetUrl": "/assets/help-docs/API.md"
+  },
+  {
+    "path": "docs/CONSOLE_TEST_GUIDE.md",
+    "fileName": "CONSOLE_TEST_GUIDE.md",
+    "fullTitle": "Animation API – Console Testing Guide",
+    "assetUrl": "/assets/help-docs/CONSOLE_TEST_GUIDE.md"
+  },
+  {
+    "path": "docs/EDITOR_STYLE_GUIDE.md",
+    "fileName": "EDITOR_STYLE_GUIDE.md",
+    "fullTitle": "Editor Style Guide",
+    "assetUrl": "/assets/help-docs/EDITOR_STYLE_GUIDE.md"
+  },
+  {
+    "path": "docs/HELP_BROWSER.md",
+    "fileName": "HELP_BROWSER.md",
+    "fullTitle": "How to add docs?",
+    "assetUrl": "/assets/help-docs/HELP_BROWSER.md"
+  },
+  {
+    "path": "docs/PLAYGROUND_ROADMAP.md",
+    "fileName": "PLAYGROUND_ROADMAP.md",
+    "fullTitle": "Playground Roadmap",
+    "assetUrl": "/assets/help-docs/PLAYGROUND_ROADMAP.md"
+  },
+  {
+    "path": "docs/PLAYGROUND_SPEC.md",
+    "fileName": "PLAYGROUND_SPEC.md",
+    "fullTitle": "Playground Spec",
+    "assetUrl": "/assets/help-docs/PLAYGROUND_SPEC.md"
+  },
+  {
+    "path": "docs/STICKY_RENDER_MODEL.md",
+    "fileName": "STICKY_RENDER_MODEL.md",
+    "fullTitle": "Sticky - Principles, Guidelines and Model",
+    "assetUrl": "/assets/help-docs/STICKY_RENDER_MODEL.md"
+  }
+]

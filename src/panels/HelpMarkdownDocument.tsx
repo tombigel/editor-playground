@@ -1,16 +1,64 @@
-import { createElement, type ReactNode } from 'react';
+import { createElement, type ReactNode, useEffect, useEffectEvent, useState } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { resolveHelpLink, slugifyMarkdownHeading, type HelpLinkTarget, type MarkdownHelpEntry } from './helpDocs';
 
+const helpDocumentCache = new Map<string, string>();
+
 type Props = {
   entry: MarkdownHelpEntry;
   availableDocPaths: Set<string>;
   onNavigate: (target: HelpLinkTarget) => void;
+  onContentReady: () => void;
 };
 
-export function HelpMarkdownDocument({ entry, availableDocPaths, onNavigate }: Props) {
+export function HelpMarkdownDocument({ entry, availableDocPaths, onNavigate, onContentReady }: Props) {
+  const [raw, setRaw] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const notifyContentReady = useEffectEvent(onContentReady);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const cachedRaw = helpDocumentCache.get(entry.assetUrl);
+
+    if (cachedRaw != null) {
+      setRaw(cachedRaw);
+      setLoadError(false);
+      return () => controller.abort();
+    }
+
+    setRaw(null);
+    setLoadError(false);
+
+    void fetch(entry.assetUrl, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load help document: ${entry.assetUrl}`);
+        }
+        return response.text();
+      })
+      .then((nextRaw) => {
+        helpDocumentCache.set(entry.assetUrl, nextRaw);
+        setRaw(nextRaw);
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isAbortError(error)) {
+          return;
+        }
+        setLoadError(true);
+      });
+
+    return () => controller.abort();
+  }, [entry.assetUrl]);
+
+  useEffect(() => {
+    if (raw == null) {
+      return;
+    }
+    notifyContentReady();
+  }, [raw]);
+
   const components: Components = {
     h1: createHeadingComponent('h1', 'editor-text-strong text-2xl font-semibold tracking-tight'),
     h2: createHeadingComponent('h2', 'editor-text-strong pt-2 text-lg font-semibold tracking-tight'),
@@ -78,10 +126,24 @@ export function HelpMarkdownDocument({ entry, availableDocPaths, onNavigate }: P
     },
   };
 
+  if (loadError) {
+    return <div className="editor-text-muted text-sm">Unable to load {entry.fileName}.</div>;
+  }
+
+  if (raw == null) {
+    return (
+      <div className="space-y-3">
+        <div className="editor-text-muted text-sm">Loading {entry.fileName}…</div>
+        <div className="editor-bg-subtle editor-border-subtle h-24 rounded-lg border" />
+        <div className="editor-bg-subtle editor-border-subtle h-24 rounded-lg border" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 text-sm leading-6">
       <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={components}>
-        {entry.raw}
+        {raw}
       </Markdown>
     </div>
   );
@@ -108,4 +170,8 @@ function childrenToText(children: ReactNode): string {
     return childrenToText((children as { props?: { children?: ReactNode } }).props?.children);
   }
   return '';
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
 }

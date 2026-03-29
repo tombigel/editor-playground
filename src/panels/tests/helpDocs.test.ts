@@ -22,6 +22,7 @@ describe('panels/helpDocs', () => {
     expect(paths).toContain('docs/CONSOLE_TEST_GUIDE.md');
     expect(paths).toContain(HELP_BROWSER_DOC_PATH);
     expect(paths.every((path) => path.startsWith('docs/'))).toBe(true);
+    expect(entries.every((entry) => entry.assetUrl.startsWith('/assets/help-docs/'))).toBe(true);
   });
 
   it('splits dashed titles into button title and subtitle while keeping filename separate', () => {
