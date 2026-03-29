@@ -273,7 +273,7 @@ describe('createAnimationPreview', () => {
     vi.clearAllMocks();
   });
 
-  it('isActive returns true after creation', () => {
+  it('isActive returns true after creation', async () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const withAnim = setPresetAnimation(doc, nodeId, {
@@ -282,12 +282,12 @@ describe('createAnimationPreview', () => {
     });
     const config = buildDocumentInteractConfig(withAnim);
 
-    const handle = createAnimationPreview(config);
+    const handle = await createAnimationPreview(config);
 
     expect(handle.isActive()).toBe(true);
   });
 
-  it('isActive returns false after destroy', () => {
+  it('isActive returns false after destroy', async () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const withAnim = setPresetAnimation(doc, nodeId, {
@@ -296,7 +296,7 @@ describe('createAnimationPreview', () => {
     });
     const config = buildDocumentInteractConfig(withAnim);
 
-    const handle = createAnimationPreview(config);
+    const handle = await createAnimationPreview(config);
     expect(handle.isActive()).toBe(true);
 
     handle.destroy();
@@ -304,7 +304,7 @@ describe('createAnimationPreview', () => {
     expect(handle.isActive()).toBe(false);
   });
 
-  it('destroy is idempotent', () => {
+  it('destroy is idempotent', async () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const withAnim = setPresetAnimation(doc, nodeId, {
@@ -313,7 +313,7 @@ describe('createAnimationPreview', () => {
     });
     const config = buildDocumentInteractConfig(withAnim);
 
-    const handle = createAnimationPreview(config);
+    const handle = await createAnimationPreview(config);
 
     // First destroy
     expect(() => handle.destroy()).not.toThrow();
@@ -324,7 +324,7 @@ describe('createAnimationPreview', () => {
     expect(handle.isActive()).toBe(false);
   });
 
-  it('updateConfig accepts new config', () => {
+  it('updateConfig accepts new config', async () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const withAnim = setPresetAnimation(doc, nodeId, {
@@ -333,7 +333,7 @@ describe('createAnimationPreview', () => {
     });
     const config = buildDocumentInteractConfig(withAnim);
 
-    const handle = createAnimationPreview(config);
+    const handle = await createAnimationPreview(config);
     expect(handle.isActive()).toBe(true);
 
     // Create a new config
@@ -350,7 +350,7 @@ describe('createAnimationPreview', () => {
     expect(handle.isActive()).toBe(true);
   });
 
-  it('invoke accepts valid actions', () => {
+  it('invoke accepts valid actions', async () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const withAnim = setPresetAnimation(doc, nodeId, {
@@ -359,7 +359,7 @@ describe('createAnimationPreview', () => {
     });
     const config = buildDocumentInteractConfig(withAnim);
 
-    const handle = createAnimationPreview(config);
+    const handle = await createAnimationPreview(config);
 
     // These should not throw
     expect(() => handle.invoke(nodeId, 'click')).not.toThrow();
@@ -367,7 +367,7 @@ describe('createAnimationPreview', () => {
     expect(() => handle.invoke(nodeId, 'hoverOut')).not.toThrow();
   });
 
-  it('invoke dispatches mouseenter and mouseleave for hover actions', () => {
+  it('invoke dispatches mouseenter and mouseleave for hover actions', async () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const withAnim = setPresetAnimation(doc, nodeId, {
@@ -393,7 +393,7 @@ describe('createAnimationPreview', () => {
     vi.stubGlobal('MouseEvent', class extends Event {});
 
     try {
-      const handle = createAnimationPreview(config);
+      const handle = await createAnimationPreview(config);
       handle.invoke(nodeId, 'hoverIn');
       handle.invoke(nodeId, 'hoverOut');
 

@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useRef,
   useState,
@@ -25,8 +27,12 @@ import { InsertPanel } from '../panels/InsertPanel';
 import { LayersPanel } from '../panels/LayersPanel';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
 import { HelpDialog } from '../panels/HelpDialog';
-import { SettingsPanel } from '../panels/SettingsPanel';
-import { ManageFontsPanel } from '../panels/fontManagement/ManageFontsPanel';
+const SettingsPanel = lazy(() =>
+  import('../panels/SettingsPanel').then((m) => ({ default: m.SettingsPanel }))
+);
+const ManageFontsPanel = lazy(() =>
+  import('../panels/fontManagement/ManageFontsPanel').then((m) => ({ default: m.ManageFontsPanel }))
+);
 import {
   EditorSidebar,
   INSPECTOR_COLLAPSED_WIDTH_PX,
@@ -602,6 +608,7 @@ export function AppShell({
 
       {settingsOpen ? (
         <PopoverSurface ref={settingsPanelRef} open={settingsOpen} onOpenChange={onSettingsOpenChange}>
+          <Suspense fallback={null}>
           <SettingsPanel
             document={state.document}
             documentJson={documentJson}
@@ -659,6 +666,7 @@ export function AppShell({
             onResetData={onResetData}
             onResetAll={onResetAll}
           />
+          </Suspense>
         </PopoverSurface>
       ) : null}
 
@@ -672,13 +680,15 @@ export function AppShell({
             onClose={() => onManageFontsOpenChange(false)}
           />
           <div className="editor-scrollbar min-h-0 overflow-y-auto p-5 pt-4">
-            <ManageFontsPanel
-              document={state.document}
-              onAddFont={handleAddDocumentFont}
-              onRemoveFont={handleRemoveDocumentFont}
-              onToggleFavorite={handleToggleDocumentFontFavorite}
-              onPurgeUnused={handlePurgeUnusedFonts}
-            />
+            <Suspense fallback={null}>
+              <ManageFontsPanel
+                document={state.document}
+                onAddFont={handleAddDocumentFont}
+                onRemoveFont={handleRemoveDocumentFont}
+                onToggleFavorite={handleToggleDocumentFontFavorite}
+                onPurgeUnused={handlePurgeUnusedFonts}
+              />
+            </Suspense>
           </div>
         </DialogContent>
       </Dialog>

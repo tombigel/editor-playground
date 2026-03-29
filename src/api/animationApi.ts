@@ -55,6 +55,7 @@ export {
   createAnimationPreview,
   filterInteractConfig,
   buildPreviewConfig,
+  preloadMotionPresets,
 } from '../animations/animationRuntime';
 
 export type {

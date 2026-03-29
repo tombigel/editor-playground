@@ -8,7 +8,6 @@
 
 import { Interact, add, remove } from '@wix/interact/web';
 import type { InteractConfig } from '@wix/interact/web';
-import * as motionPresets from '@wix/motion-presets';
 import type { DocumentModel } from '../model/types';
 import type { AnimationInvokeAction, AnimationPreviewHandle, AnimationTriggerType } from './types';
 import { buildDocumentInteractConfig } from './animationApi';
@@ -16,14 +15,28 @@ import { buildDocumentInteractConfig } from './animationApi';
 // ── Preset registration (once per session) ──────────────────────────────────
 
 let presetsRegistered = false;
+let loadPromise: Promise<void> | null = null;
 
-function ensurePresetsRegistered() {
-  if (!presetsRegistered) {
-    // Type mismatch between @wix/motion-presets exports and registerEffects signature —
-    // the runtime accepts it fine, the types just don't align across packages.
-    Interact.registerEffects(motionPresets as unknown as Parameters<typeof Interact.registerEffects>[0]);
-    presetsRegistered = true;
-  }
+/**
+ * Starts loading @wix/motion-presets if not already in flight.
+ * Safe to call multiple times — only one load is ever started.
+ */
+export function preloadMotionPresets(): void {
+  if (loadPromise) return;
+  loadPromise = import('@wix/motion-presets').then((m) => {
+    if (!presetsRegistered) {
+      // Type mismatch between @wix/motion-presets exports and registerEffects signature —
+      // the runtime accepts it fine, the types just don't align across packages.
+      Interact.registerEffects(m as unknown as Parameters<typeof Interact.registerEffects>[0]);
+      presetsRegistered = true;
+    }
+  });
+}
+
+async function ensurePresetsRegistered(): Promise<void> {
+  if (presetsRegistered) return;
+  preloadMotionPresets();
+  await loadPromise;
 }
 
 // ── createAnimationPreview ────────────────────────────────────────────────────
@@ -54,8 +67,8 @@ function unregisterInteractElements(keys: Set<string>) {
   }
 }
 
-export function createAnimationPreview(config: InteractConfig): AnimationPreviewHandle {
-  ensurePresetsRegistered();
+export async function createAnimationPreview(config: InteractConfig): Promise<AnimationPreviewHandle> {
+  await ensurePresetsRegistered();
 
   let instance: Interact | null = Interact.create(config);
   let registeredKeys = registerInteractElements();
