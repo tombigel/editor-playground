@@ -196,7 +196,7 @@ export function Stage({
 			label: formatNodeLabel(node),
 			isSticky,
 			hasAnimation: node.animation !== undefined,
-			isElevated: isSticky ? resolveStickyIsElevated(node.sticky!, globalStickyElevation) : false,
+			isElevated: isSticky && node.sticky ? resolveStickyIsElevated(node.sticky, globalStickyElevation) : false,
 			bounds: {
 				left: nodeRect.left - frameRect.left - frameOffsetLeft,
 				top: nodeRect.top - frameRect.top - frameOffsetTop,

@@ -209,7 +209,7 @@ function appendLayersTreeRow(
   const typeLabel = formatNodeLabel(node);
   const isSticky = Boolean(node.sticky?.enabled);
   const hasAnimation = node.animation !== undefined;
-  const isElevated = isSticky ? resolveStickyIsElevated(node.sticky!, globalStickyElevation) : false;
+  const isElevated = isSticky && node.sticky ? resolveStickyIsElevated(node.sticky, globalStickyElevation) : false;
   rows.push({
     id: node.id,
     node,
