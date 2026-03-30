@@ -67,6 +67,9 @@ function createInspectorProps() {
     onStickyDurationBottom: () => {},
     onEnterFocusedMode: () => {},
     onOpenManageFonts: () => {},
+    globalStickyElevation: true,
+    onStickyElevation: () => undefined,
+    onStickyElevated: () => undefined,
   };
 
   return { document, textNode, linkNode, buttonNode, siteNode, baseProps };

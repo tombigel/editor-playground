@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm test:*)",
       "Bash(gh api:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(grep \"import.*lucide\\\\|from ''lucide\" /Users/tombigel/Dev/sticky-playground/src/panels/inspector/CommonSections.tsx)"
     ],
     "additionalDirectories": [
       "/tmp"

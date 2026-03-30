@@ -1,5 +1,5 @@
 // Barrel re-export of all public controls
-export { FormField, InspectorInlineRow } from './FormLayout';
+export { FormField, InspectorInlineRow, SwitchBlock } from './FormLayout';
 export { ValueWithUnit } from '@/components/ui/value-with-unit';
 export {
   NumberInput,

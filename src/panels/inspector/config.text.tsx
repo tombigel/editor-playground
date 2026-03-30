@@ -61,8 +61,8 @@ export const textAppearanceSection: InspectorSectionDefinition = {
 
 const textStickySection: InspectorSectionDefinition = {
   id: 'sticky',
-  render: ({ node, actions, focusedMode }) =>
-    isTextNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+  render: ({ node, actions, focusedMode, globalStickyElevation }) =>
+    isTextNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
 export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [

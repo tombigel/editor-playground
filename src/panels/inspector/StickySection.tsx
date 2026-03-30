@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import type { FocusedMode } from '../../api/editorApi';
+import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { FormField, RangeField, StickyOffsetBandField } from '../InspectorControls';
+import { FormField, RangeField, StickyOffsetBandField, SwitchBlock } from '../InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard, type InspectorSectionHeaderAction } from './CommonSections';
 import type { InspectorActionHandlers, NonSiteInspectorNode } from './types';
 
@@ -12,6 +13,7 @@ export function StickySection({
   node,
   actions,
   focusedMode,
+  globalStickyElevation,
   headerContent,
   headerAction,
   contentClassName,
@@ -29,9 +31,12 @@ export function StickySection({
     | 'onStickyDuration'
     | 'onStickyDurationTop'
     | 'onStickyDurationBottom'
+    | 'onStickyElevation'
+    | 'onStickyElevated'
     | 'onEnterFocusedMode'
   >;
   focusedMode: FocusedMode;
+  globalStickyElevation: boolean;
   headerContent?: ReactNode;
   headerAction?: InspectorSectionHeaderAction;
   contentClassName?: string;
@@ -48,13 +53,15 @@ export function StickySection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode, 'sticky', actions.onEnterFocusedMode)}
     >
-      <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
-          <div>
-            <div className="editor-text-strong text-xs font-medium">{node.sticky?.enabled ? 'Enabled' : 'Disabled'}</div>
-            <div className="editor-text-muted text-[11px]">Pin this node inside its structural range.</div>
-          </div>
-          <Switch checked={Boolean(node.sticky?.enabled)} onCheckedChange={actions.onStickyEnabled} />
-      </div>
+      <SwitchBlock
+        icon={node.sticky?.enabled
+          ? <Pin className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
+          : <PinOff className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+        title={node.sticky?.enabled ? 'Enabled' : 'Disabled'}
+        description="Pin this node inside its structural range."
+        checked={Boolean(node.sticky?.enabled)}
+        onCheckedChange={actions.onStickyEnabled}
+      />
 
         {node.sticky?.enabled ? (
           <>
@@ -175,6 +182,23 @@ export function StickySection({
                 </div>
               )}
             </div>
+
+            <SwitchBlock
+              title="Global elevation"
+              description="Elevate all sticky elements above siblings."
+              checked={globalStickyElevation}
+              onCheckedChange={actions.onStickyElevation}
+            >
+              {!globalStickyElevation ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="editor-text-strong text-xs font-medium">Elevate this node</div>
+                    <div className="editor-text-muted text-[11px]">Pin above siblings for this sticky only.</div>
+                  </div>
+                  <Switch checked={Boolean(node.sticky?.elevated)} onCheckedChange={actions.onStickyElevated} />
+                </div>
+              ) : null}
+            </SwitchBlock>
           </>
         ) : null}
     </InspectorSectionCard>

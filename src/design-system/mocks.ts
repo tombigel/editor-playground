@@ -27,6 +27,8 @@ export const noopActions: InspectorActionHandlers = {
 	onStickyDurationBottom: noop,
 	onEnterFocusedMode: noop,
 	onOpenManageFonts: noop,
+	onStickyElevation: () => undefined,
+	onStickyElevated: () => undefined,
 };
 
 export const noopOrderState: InspectorOrderState = {

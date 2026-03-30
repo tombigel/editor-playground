@@ -18,8 +18,8 @@ const wrapperDesignSection: InspectorSectionDefinition = {
 
 const wrapperStickySection: InspectorSectionDefinition = {
   id: 'sticky',
-  render: ({ node, actions, focusedMode }) =>
-    isWrapperNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+  render: ({ node, actions, focusedMode, globalStickyElevation }) =>
+    isWrapperNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
 export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonly InspectorBlockDefinition[] {

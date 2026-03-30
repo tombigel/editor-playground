@@ -20,6 +20,8 @@ const actions: InspectorActionHandlers = {
   onStickyDuration: () => {},
   onStickyDurationTop: () => {},
   onStickyDurationBottom: () => {},
+  onStickyElevation: () => {},
+  onStickyElevated: () => {},
   onEnterFocusedMode: () => {},
   onOpenManageFonts: () => {},
 };
@@ -48,7 +50,7 @@ describe('panels/inspector/schema', () => {
   it('returns only the summary section when no node is selected', () => {
     const document = createInitialDocument();
     expect(resolveInspectorConfigKey(null)).toBe('empty');
-    const blocks = resolveInspectorBlocks({ document, node: null, actions, orderState, focusedMode: null });
+    const blocks = resolveInspectorBlocks({ document, node: null, actions, orderState, focusedMode: null, globalStickyElevation: true });
     expect(blocks.map((block) => block.id)).toEqual(['summary']);
     expect(blocks[0]?.layout).toBe('custom');
   });
@@ -63,7 +65,7 @@ describe('panels/inspector/schema', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const blocks = resolveInspectorBlocks({ document, node: wrapper, actions, orderState, focusedMode: null });
+    const blocks = resolveInspectorBlocks({ document, node: wrapper, actions, orderState, focusedMode: null, globalStickyElevation: true });
     expect(resolveInspectorConfigKey(wrapper)).toBe('section');
     expect(blocks.map((block) => block.id)).toEqual(['layout', 'sticky-behavior', 'design']);
     expect(blocks.map((block) => block.bucket)).toEqual(['primary', 'behavior', 'primary']);
@@ -82,7 +84,7 @@ describe('panels/inspector/schema', () => {
       throw new Error('Expected text node');
     }
 
-    const blocks = resolveInspectorBlocks({ document, node: textNode, actions, orderState, focusedMode: null });
+    const blocks = resolveInspectorBlocks({ document, node: textNode, actions, orderState, focusedMode: null, globalStickyElevation: true });
     expect(resolveInspectorConfigKey(textNode)).toBe('text');
     expect(blocks.map((block) => block.id)).toEqual(['layout', 'sticky-behavior', 'content', 'text-style', 'design']);
     expect(blocks[1]?.title).toBe('Sticky behavior');
@@ -98,7 +100,7 @@ describe('panels/inspector/schema', () => {
     const document = createInitialDocument();
     const siteNode = document.nodes[document.rootId];
 
-    const blocks = resolveInspectorBlocks({ document, node: siteNode, actions, orderState, focusedMode: null });
+    const blocks = resolveInspectorBlocks({ document, node: siteNode, actions, orderState, focusedMode: null, globalStickyElevation: true });
 
     expect(blocks).toHaveLength(1);
     expect(blocks[0]).toMatchObject({
@@ -141,20 +143,20 @@ describe('panels/inspector/schema', () => {
       throw new Error('Expected link, image, and button leaves');
     }
 
-    expect(resolveInspectorBlocks({ document, node: linkNode, actions, orderState, focusedMode: null }).map((block) => block.id)).toEqual([
+    expect(resolveInspectorBlocks({ document, node: linkNode, actions, orderState, focusedMode: null, globalStickyElevation: true }).map((block) => block.id)).toEqual([
       'layout',
       'sticky-behavior',
       'content',
       'text-style',
       'design',
     ]);
-    expect(resolveInspectorBlocks({ document, node: imageNode, actions, orderState, focusedMode: null }).map((block) => block.id)).toEqual([
+    expect(resolveInspectorBlocks({ document, node: imageNode, actions, orderState, focusedMode: null, globalStickyElevation: true }).map((block) => block.id)).toEqual([
       'layout',
       'sticky-behavior',
       'content',
       'design',
     ]);
-    expect(resolveInspectorBlocks({ document, node: buttonNode, actions, orderState, focusedMode: null }).map((block) => block.id)).toEqual([
+    expect(resolveInspectorBlocks({ document, node: buttonNode, actions, orderState, focusedMode: null, globalStickyElevation: true }).map((block) => block.id)).toEqual([
       'layout',
       'sticky-behavior',
       'content',
@@ -195,7 +197,7 @@ describe('panels/inspector/schema', () => {
       throw new Error('Expected text node');
     }
 
-    const blocks = resolveInspectorBlocks({ document, node: textNode, actions, orderState, focusedMode: null });
+    const blocks = resolveInspectorBlocks({ document, node: textNode, actions, orderState, focusedMode: null, globalStickyElevation: true });
     const stickySection = blocks.find((block) => block.id === 'sticky-behavior')?.sections[0];
 
     expect(stickySection).toBeTruthy();

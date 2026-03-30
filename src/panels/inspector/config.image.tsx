@@ -18,8 +18,8 @@ const imageContentSection: InspectorSectionDefinition = {
 
 const imageStickySection: InspectorSectionDefinition = {
   id: 'sticky',
-  render: ({ node, actions, focusedMode }) =>
-    isImageNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+  render: ({ node, actions, focusedMode, globalStickyElevation }) =>
+    isImageNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
 const imageDesignSection: InspectorSectionDefinition = {

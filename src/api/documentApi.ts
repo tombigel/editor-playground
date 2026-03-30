@@ -165,6 +165,19 @@ export function setNodeSticky(
   return next;
 }
 
+export function setSiteNodeStickyElevation(
+  document: DocumentModel,
+  enabled: boolean,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const site = next.nodes[next.rootId];
+  if (site.type !== 'site') {
+    return document;
+  }
+  site.stickyElevation = enabled;
+  return next;
+}
+
 export function setNodeTextField(
   document: DocumentModel,
   nodeId: NodeId,

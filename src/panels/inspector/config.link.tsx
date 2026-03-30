@@ -19,8 +19,8 @@ const linkContentSection: InspectorSectionDefinition = {
 
 const linkStickySection: InspectorSectionDefinition = {
   id: 'sticky',
-  render: ({ node, actions, focusedMode }) =>
-    isLinkNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+  render: ({ node, actions, focusedMode, globalStickyElevation }) =>
+    isLinkNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
 const linkDesignSection: InspectorSectionDefinition = {

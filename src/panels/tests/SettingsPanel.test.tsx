@@ -15,6 +15,8 @@ describe('panels/SettingsPanel', () => {
         errors={[]}
         stickyLayout={{}}
         selectedNode={document.nodes[document.rootId] ?? null}
+        globalStickyElevation={true}
+        onStickyElevationChange={() => undefined}
         previewSticky={true}
         animationPreview={{ enabled: false, mode: 'passive', triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true } }}
         onAnimationPreviewChange={() => {}}

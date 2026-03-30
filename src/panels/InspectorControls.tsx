@@ -24,6 +24,7 @@ export {
   SizeInlineField,
   SpacingField,
   StickyOffsetBandField,
+  SwitchBlock,
   TextStyleIconButton,
   ValueWithUnit,
   WrapperActions,

@@ -96,6 +96,8 @@ export type EditorAction =
   | { type: 'stickyDuration'; value: number }
   | { type: 'stickyDurationTop'; value: number }
   | { type: 'stickyDurationBottom'; value: number }
+  | { type: 'stickyElevation'; value: boolean }
+  | { type: 'stickyElevated'; value: boolean }
   | { type: 'orderBack' }
   | { type: 'orderForward' }
   | { type: 'orderSendToBack' }

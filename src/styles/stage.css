@@ -577,6 +577,14 @@
   box-shadow: 0 4px 12px color-mix(in srgb, var(--editor-sticky-auto-guide-color) 18%, transparent);
 }
 
+.sticky-spacer-label-elevated {
+  /* elevated state — icon signals elevation visually */
+}
+
+.sticky-spacer-label-grounded {
+  /* grounded state — no icon, no opacity change */
+}
+
 .sticky-flow-spacer {
   width: 100%;
   pointer-events: none;

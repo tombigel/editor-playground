@@ -54,6 +54,9 @@ describe('panels/InspectorPanel', () => {
       onStickyDurationBottom: () => {},
       focusedMode: null,
       onEnterFocusedMode: () => {},
+      globalStickyElevation: true,
+      onStickyElevation: () => undefined,
+      onStickyElevated: () => undefined,
       ...overrides,
     };
   }

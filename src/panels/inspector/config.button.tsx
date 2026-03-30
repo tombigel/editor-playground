@@ -19,8 +19,8 @@ const buttonContentSection: InspectorSectionDefinition = {
 
 const buttonStickySection: InspectorSectionDefinition = {
   id: 'sticky',
-  render: ({ node, actions, focusedMode }) =>
-    isButtonNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+  render: ({ node, actions, focusedMode, globalStickyElevation }) =>
+    isButtonNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
 const buttonDesignSection: InspectorSectionDefinition = {

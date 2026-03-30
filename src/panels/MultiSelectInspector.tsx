@@ -80,6 +80,7 @@ type Props = {
   selectedNodes: DocumentNode[];
   orderState: InspectorOrderState;
   actions: InspectorActionHandlers;
+  globalStickyElevation: boolean;
   onAlignSelection: (mode: 'left' | 'center-x' | 'right' | 'top' | 'center-y' | 'bottom') => void;
   onDistributeSelection: (mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom') => void;
   onBulkEdit: (operations: BulkEditOperation[]) => void;
@@ -90,6 +91,7 @@ export function MultiSelectInspector({
   selectedNodes,
   orderState,
   actions,
+  globalStickyElevation,
   onAlignSelection,
   onDistributeSelection,
   onBulkEdit,
@@ -264,7 +266,7 @@ export function MultiSelectInspector({
           </CardContent>
         </Card>
 
-        {stickyNodes.length >= 2 ? <MultiStickySection selectedNodes={stickyNodes} actions={actions} focusedMode={null} /> : null}
+        {stickyNodes.length >= 2 ? <MultiStickySection selectedNodes={stickyNodes} actions={actions} focusedMode={null} globalStickyElevation={globalStickyElevation} /> : null}
 
         {textNodes.length >= 2 ? (
           <Card className="editor-border-subtle rounded-lg shadow-none">

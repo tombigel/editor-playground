@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
+import { Layers2 } from 'lucide-react';
 import type {
+  DocumentModel,
   NodeId,
   ViewportMeasurement,
   WrapperNode,
@@ -19,7 +21,8 @@ import {
   type RenderMeasuredNodeSizes,
   usesIntrinsicHeight,
 } from '../../render/layout';
-import { getStickyEdgeMode, usesSyntheticStickyTrack } from '../../render/sticky';
+import { getStickyEdgeMode, resolveStickyIsElevated, usesSyntheticStickyTrack } from '../../render/sticky';
+import { STICKY_LAYER_Z_INDEX } from '../../render/layers';
 import type { RenderLeafPlanNode } from '../../render/types';
 import type {
   StageSceneLeafNode as LeafNode,
@@ -36,6 +39,7 @@ import {
 } from './wrapperRenderer';
 
 export function renderLeaf({
+  document,
   plan,
   selectedId,
   selectedIds,
@@ -47,6 +51,7 @@ export function renderLeaf({
   viewport,
   interactKeys,
 }: {
+  document: DocumentModel;
   plan: RenderLeafPlanNode;
   selectedId: NodeId | null;
   selectedIds: NodeId[];
@@ -63,6 +68,11 @@ export function renderLeaf({
   const isAutoSticky =
     child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
   const isSelfStickyTrack = usesSyntheticStickyTrack(child) && registration;
+  const siteNode = document.nodes[document.rootId];
+  const globalStickyElevation = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const isElevated = child.sticky?.enabled
+    ? resolveStickyIsElevated(child.sticky, globalStickyElevation)
+    : true;
   const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(registration, child.sticky);
   const brandMark = isBrandMark(child);
   const leafBaseWidth = formatValue(child.rect.width.base.parsed);
@@ -135,6 +145,7 @@ export function renderLeaf({
       ...meshPlacement,
       width: trackWidth,
       minHeight: `${trackHeight}px`,
+      ...(isElevated ? { zIndex: STICKY_LAYER_Z_INDEX } : {}),
     },
     bottomFirst,
     topDistancePx,
@@ -144,6 +155,7 @@ export function renderLeaf({
 }
 
 export function renderLeafSpacerOverlay({
+  document,
   child,
   owner,
   registration,
@@ -156,6 +168,7 @@ export function renderLeafSpacerOverlay({
   measuredNodeSizes,
   viewport,
 }: {
+  document: DocumentModel;
   child: LeafNode;
   owner: WrapperNode;
   registration?: StageStickyRegistration;
@@ -177,6 +190,10 @@ export function renderLeafSpacerOverlay({
     return null;
   }
 
+  const siteNode = document.nodes[document.rootId];
+  const globalStickyElevation = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const isElevated = resolveStickyIsElevated(child.sticky, globalStickyElevation);
+  const elevationClass = isElevated ? 'sticky-spacer-label-elevated' : 'sticky-spacer-label-grounded';
   const edgeMode = getStickyEdgeMode(child.sticky);
   const isBottomOnlySticky = edgeMode === 'bottom';
   const isBothSticky = edgeMode === 'both';
@@ -249,7 +266,8 @@ export function renderLeafSpacerOverlay({
                 height: `${bottomDistancePx}px`,
               }}
             >
-              <span className="sticky-spacer-label sticky-spacer-label-auto">
+              <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
+                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky ? 'Bottom Distance: auto' : 'Distance: auto'}
               </span>
             </div>
@@ -262,7 +280,8 @@ export function renderLeafSpacerOverlay({
                 height: `${topDistancePx}px`,
               }}
             >
-              <span className="sticky-spacer-label sticky-spacer-label-auto">
+              <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
+                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky ? 'Top Distance: auto' : 'Distance: auto'}
               </span>
             </div>
@@ -278,7 +297,8 @@ export function renderLeafSpacerOverlay({
                 height: `${bottomDistancePx}px`,
               }}
             >
-              <span className="sticky-spacer-label">
+              <span className={`sticky-spacer-label ${elevationClass}`}>
+                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky
                   ? `Bottom Distance · ${Math.round(bottomDistancePx)}px`
                   : `Distance · ${Math.round(bottomDistancePx)}px`}
@@ -293,7 +313,8 @@ export function renderLeafSpacerOverlay({
                 height: `${topDistancePx}px`,
               }}
             >
-              <span className="sticky-spacer-label">
+              <span className={`sticky-spacer-label ${elevationClass}`}>
+                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky
                   ? `Top Distance · ${Math.round(topDistancePx)}px`
                   : `Distance · ${Math.round(topDistancePx)}px`}

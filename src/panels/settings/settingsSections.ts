@@ -5,11 +5,13 @@ import {
   Eye,
   Keyboard,
   SlidersHorizontal,
+  ToggleRight,
   Type,
 } from 'lucide-react';
 
 export type SettingsSectionId =
   | 'display'
+  | 'defaults'
   | 'fonts'
   | 'transfer'
   | 'advanced'
@@ -31,6 +33,12 @@ export const SETTINGS_SECTION_META: SettingsSectionMeta[] = [
     label: 'UI',
     icon: Eye,
     description: 'Theme, preview, and guides.',
+  },
+  {
+    id: 'defaults',
+    label: 'Defaults',
+    icon: ToggleRight,
+    description: 'Document-wide default behaviors.',
   },
   {
     id: 'fonts',

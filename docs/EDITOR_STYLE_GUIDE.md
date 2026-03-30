@@ -621,6 +621,27 @@ Do not:
 - round the editor selection box
 - use a second dark-mode selection color
 
+### Sticky Indicators
+
+Sticky guide overlays use dedicated CSS tokens so they stay readable across accent colors and both light/dark themes.
+
+| Token | Role |
+|---|---|
+| `--editor-sticky-offset-guide-color` | border/line color for offset guide band |
+| `--editor-sticky-offset-label-background` | pill background for offset labels |
+| `--editor-sticky-offset-label-text` | text inside offset label pills |
+| `--editor-sticky-padding-guide-color` | padding guide band color |
+| `--editor-sticky-auto-guide-color` | auto-duration guide band color |
+| `--editor-sticky-auto-label-background` | pill background for auto-duration labels |
+| `--editor-sticky-auto-label-text` | text inside auto-duration label pills |
+| `--editor-sticky-distance-label-text` | text inside distance/duration label pills |
+
+Rules:
+
+- do not hard-code guide colors in stage components; always use the tokens above
+- token values are resolved by `resolveStickyGuideColors` and `resolveAccentSurfaceColors` in `src/lib/theme.ts` and injected as CSS custom properties on the root shell element
+- the elevation inspector controls (Elevation toggle, Elevate this node toggle) follow the same Switch styling as all other boolean inspector controls — no custom accent or one-off color treatment
+
 ## 15. Z-Index
 
 Rules:

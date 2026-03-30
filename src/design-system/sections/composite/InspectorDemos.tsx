@@ -1,6 +1,8 @@
-import { PanelRightClose, Settings2, SquareArrowOutUpRight } from "lucide-react";
+import { PanelRightClose, Pin, PinOff, Settings2, SquareArrowOutUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { SwitchBlock } from "@/panels/InspectorControls";
 import { EditableNodeTitle, InspectorSectionCard } from "@/panels/inspector/CommonSections";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 
@@ -135,6 +137,61 @@ export function InspectorDemos() {
 						<InspectorSectionCard title="Content" borderless>
 							<div className="editor-text-muted text-[11px]">Card content area</div>
 						</InspectorSectionCard>
+					</div>
+				</div>
+			</ComponentPreview>
+			{/* SwitchBlock */}
+			<ComponentPreview
+				id="composite-switch-block"
+				name="Switch Block"
+				description="Bordered toggle card with icon, title, description, and switch. Accepts optional children rendered below a divider in the same block — used for nested controls that are only relevant when the toggle is active."
+				sourceFile="src/panels/controls/FormLayout.tsx"
+				props={[
+					{ name: "icon", type: "ReactNode", description: "Optional icon element shown left of the title." },
+					{ name: "title", type: "string", description: "Primary label." },
+					{ name: "description", type: "string", description: "Secondary explanation text." },
+					{ name: "checked", type: "boolean", description: "Switch value." },
+					{ name: "onCheckedChange", type: "(value: boolean) => void", description: "Switch handler." },
+					{ name: "children", type: "ReactNode", description: "Optional content shown below a divider when non-null." },
+				]}
+			>
+				<div className="w-[300px] space-y-3">
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Enabled</div>
+						<SwitchBlock
+							icon={<Pin className="h-3.5 w-3.5 shrink-0 editor-text-accent" />}
+							title="Enabled"
+							description="Pin this node inside its structural range."
+							checked={true}
+							onCheckedChange={() => {}}
+						/>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Disabled</div>
+						<SwitchBlock
+							icon={<PinOff className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+							title="Disabled"
+							description="Pin this node inside its structural range."
+							checked={false}
+							onCheckedChange={() => {}}
+						/>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">With nested child</div>
+						<SwitchBlock
+							title="Global elevation"
+							description="Elevate all sticky elements above siblings."
+							checked={false}
+							onCheckedChange={() => {}}
+						>
+							<div className="flex items-center justify-between gap-3">
+								<div>
+									<div className="editor-text-strong text-xs font-medium">Elevate this node</div>
+									<div className="editor-text-muted text-[11px]">Pin above siblings for this sticky only.</div>
+								</div>
+								<Switch checked={false} onCheckedChange={() => {}} />
+							</div>
+						</SwitchBlock>
 					</div>
 				</div>
 			</ComponentPreview>

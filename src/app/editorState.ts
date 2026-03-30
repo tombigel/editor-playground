@@ -34,6 +34,7 @@ import {
   type EditorState,
   type NodeId,
 } from '../api/editorApi';
+import { setSiteNodeStickyElevation } from '../api/documentApi';
 import {
   appendHistoryEntry,
   applyHistoryEntry,
@@ -198,6 +199,12 @@ export function editorReducer(state: EditorState, action: EditorAction) {
         updateStickyField(nextState, nodeId, {
           durationBottom: parseUnitValue(`${action.value}vh`),
         }),
+      );
+    case 'stickyElevation':
+      return { ...state, document: setSiteNodeStickyElevation(state.document, action.value) };
+    case 'stickyElevated':
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        updateStickyField(nextState, nodeId, { elevated: action.value }),
       );
     case 'orderBack':
       return selectedIds.length > 0 ? reorderNodes(state, selectedIds, 'back') : state;

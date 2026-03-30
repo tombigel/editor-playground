@@ -26,6 +26,8 @@ export type InspectorActionHandlers = {
   onStickyDuration: (value: number) => void;
   onStickyDurationTop: (value: number) => void;
   onStickyDurationBottom: (value: number) => void;
+  onStickyElevation: (value: boolean) => void;
+  onStickyElevated: (value: boolean) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onOpenManageFonts?: () => void;
 };
@@ -56,6 +58,7 @@ export type InspectorSectionContext = {
   actions: InspectorActionHandlers;
   orderState: InspectorOrderState;
   focusedMode: FocusedMode;
+  globalStickyElevation: boolean;
 };
 
 export type InspectorBlockBucket = 'summary' | 'primary' | 'behavior';

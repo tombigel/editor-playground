@@ -16,7 +16,11 @@ export function getStickyEdgeMode(sticky: StickyDefinition | undefined): 'top' |
 
 export function getStickyCssProperties(
   sticky: StickyDefinition | undefined,
-  { includePosition = false, includeZIndex = false }: { includePosition?: boolean; includeZIndex?: boolean } = {},
+  {
+    includePosition = false,
+    includeZIndex = false,
+    isElevated = true,
+  }: { includePosition?: boolean; includeZIndex?: boolean; isElevated?: boolean } = {},
 ): CSSProperties {
   if (!sticky?.enabled) {
     return {};
@@ -26,7 +30,7 @@ export function getStickyCssProperties(
   if (includePosition) {
     style.position = 'sticky';
   }
-  if (includeZIndex) {
+  if (includeZIndex && isElevated) {
     style.zIndex = STICKY_LAYER_Z_INDEX;
   }
 
@@ -41,6 +45,16 @@ export function getStickyCssProperties(
   }
 
   return style;
+}
+
+export function resolveStickyIsElevated(
+  sticky: StickyDefinition,
+  globalStickyElevation: boolean,
+): boolean {
+  if (globalStickyElevation) {
+    return true;
+  }
+  return sticky.elevated === true;
 }
 
 export function usesSyntheticStickyTrack(

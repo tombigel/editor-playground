@@ -21,6 +21,7 @@ import type { ActionResult } from './settingsTransfer';
 import type { SettingsTransferState } from './settings/useSettingsTransferState';
 import { useSettingsTransferState } from './settings/useSettingsTransferState';
 import { AdvancedSettingsSection } from './settings/sections/AdvancedSettingsSection';
+import { DefaultsSettingsSection } from './settings/sections/DefaultsSettingsSection';
 import { DiagnosticsSettingsSection } from './settings/sections/DiagnosticsSettingsSection';
 import { DisplaySettingsSection } from './settings/sections/DisplaySettingsSection';
 import { FontsSettingsSection } from './settings/sections/FontsSettingsSection';
@@ -69,6 +70,8 @@ type Props = {
   onLightThemeChange: (value: EditorLightTheme) => void;
   onDarkThemeChange: (value: EditorDarkTheme) => void;
   onStartupFocusedModeChange: (value: FocusedMode) => void;
+  globalStickyElevation: boolean;
+  onStickyElevationChange: (value: boolean) => void;
   onClearHistory: () => void;
   onHistoryLimitChange: (value: number) => void;
   onImport: (raw: string) => Promise<ActionResult> | ActionResult;
@@ -111,6 +114,8 @@ export function SettingsPanel({
   onLightThemeChange,
   onDarkThemeChange,
   onStartupFocusedModeChange,
+  globalStickyElevation,
+  onStickyElevationChange,
   onClearHistory,
   onHistoryLimitChange,
   onImport,
@@ -122,6 +127,7 @@ export function SettingsPanel({
   );
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const displayRef = useRef<HTMLElement | null>(null);
+  const defaultsRef = useRef<HTMLElement | null>(null);
   const fontsRef = useRef<HTMLElement | null>(null);
   const transferRef = useRef<HTMLElement | null>(null);
   const advancedRef = useRef<HTMLElement | null>(null);
@@ -136,6 +142,7 @@ export function SettingsPanel({
   const sectionRefs = useMemo(
     () => ({
       display: displayRef,
+      defaults: defaultsRef,
       fonts: fontsRef,
       transfer: transferRef,
       advanced: advancedRef,
@@ -231,6 +238,7 @@ export function SettingsPanel({
                     undoDepth,
                     redoDepth,
                     historyLimit,
+                    globalStickyElevation,
                     transfer,
                     onAddFont,
                     onRemoveFont,
@@ -246,6 +254,7 @@ export function SettingsPanel({
                     onLightThemeChange,
                     onDarkThemeChange,
                     onStartupFocusedModeChange,
+                    onStickyElevationChange,
                     onClearHistory,
                     onHistoryLimitChange,
                     onResetData,
@@ -294,6 +303,7 @@ function renderSectionContent(
     undoDepth: number;
     redoDepth: number;
     historyLimit: number;
+    globalStickyElevation: boolean;
     transfer: SettingsTransferState;
     onAddFont: (family: DocumentFontFamily) => void;
     onRemoveFont: (familyName: string) => void;
@@ -309,6 +319,7 @@ function renderSectionContent(
     onLightThemeChange: (value: EditorLightTheme) => void;
     onDarkThemeChange: (value: EditorDarkTheme) => void;
     onStartupFocusedModeChange: (value: FocusedMode) => void;
+    onStickyElevationChange: (value: boolean) => void;
     onClearHistory: () => void;
     onHistoryLimitChange: (value: number) => void;
     onResetData: () => void;
@@ -340,6 +351,13 @@ function renderSectionContent(
           onLightThemeChange={props.onLightThemeChange}
           onDarkThemeChange={props.onDarkThemeChange}
           onStartupFocusedModeChange={props.onStartupFocusedModeChange}
+        />
+      );
+    case 'defaults':
+      return (
+        <DefaultsSettingsSection
+          globalStickyElevation={props.globalStickyElevation}
+          onStickyElevationChange={props.onStickyElevationChange}
         />
       );
     case 'fonts':

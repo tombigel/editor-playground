@@ -49,6 +49,9 @@ type Props = Pick<
   | 'onStickyDuration'
   | 'onStickyDurationTop'
   | 'onStickyDurationBottom'
+  | 'onStickyElevation'
+  | 'onStickyElevated'
+  | 'globalStickyElevation'
   | 'onEnterFocusedMode'
   | 'onOpenManageFonts'
 > & {
@@ -95,6 +98,9 @@ export function FocusedModePanel({
   onStickyDuration,
   onStickyDurationTop,
   onStickyDurationBottom,
+  onStickyElevation,
+  onStickyElevated,
+  globalStickyElevation,
   onEnterFocusedMode,
   onOpenManageFonts,
   mode,
@@ -119,6 +125,8 @@ export function FocusedModePanel({
     onStickyDuration,
     onStickyDurationTop,
     onStickyDurationBottom,
+    onStickyElevation,
+    onStickyElevated,
     onEnterFocusedMode,
     onOpenManageFonts,
   };
@@ -199,6 +207,7 @@ export function FocusedModePanel({
             selectedNodes={selectedNodes}
             actions={actions}
             focusedMode={focusedMode}
+            globalStickyElevation={globalStickyElevation}
             headerContent={headerContent}
             contentClassName="space-y-3 px-3 pt-1.5 pb-5"
             headerAction={
@@ -222,6 +231,7 @@ export function FocusedModePanel({
       actions,
       orderState,
       focusedMode,
+      globalStickyElevation,
     },
     {
       headerContent,

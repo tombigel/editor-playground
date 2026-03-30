@@ -159,6 +159,8 @@ export function AppShell({
   const focusedPanelOffsetDraftRef = useRef(state.ui.focusedPanelOffset);
   const [focusedPanelOffsetDraft, setFocusedPanelOffsetDraft] = useState(state.ui.focusedPanelOffset);
   const [focusedPanelDragging, setFocusedPanelDragging] = useState(false);
+  const siteNode = state.document.nodes[state.document.rootId];
+  const globalStickyElevation = siteNode?.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
   const isSidebarCollapsed = state.ui.inspectorCollapsed && !state.ui.temporaryInspectorOpen;
   const leftRailWidth = `${INSPECTOR_COLLAPSED_WIDTH_PX}px`;
   const sidebarWidth = isSidebarCollapsed
@@ -514,6 +516,9 @@ export function AppShell({
             onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
             onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
             onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
+            onStickyElevation={(value) => dispatch({ type: 'stickyElevation', value })}
+            onStickyElevated={(value) => dispatch({ type: 'stickyElevated', value })}
+            globalStickyElevation={globalStickyElevation}
             onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
             onOpenManageFonts={() => onManageFontsOpenChange(true)}
             onInspectorCollapsedChange={(value) => dispatch({ type: 'setInspectorCollapsed', value })}
@@ -572,6 +577,9 @@ export function AppShell({
             onStickyDuration={(value) => dispatch({ type: 'stickyDuration', value })}
             onStickyDurationTop={(value) => dispatch({ type: 'stickyDurationTop', value })}
             onStickyDurationBottom={(value) => dispatch({ type: 'stickyDurationBottom', value })}
+            onStickyElevation={(value) => dispatch({ type: 'stickyElevation', value })}
+            onStickyElevated={(value) => dispatch({ type: 'stickyElevated', value })}
+            globalStickyElevation={globalStickyElevation}
             onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
             onOpenManageFonts={() => onManageFontsOpenChange(true)}
             onExitFocusedMode={() => dispatch({ type: 'setFocusedMode', value: null })}
@@ -673,6 +681,8 @@ export function AppShell({
             onStartupFocusedModeChange={(value) => dispatch({ type: 'setStartupFocusedMode', value })}
             onClearHistory={() => dispatch({ type: 'clearHistory' })}
             onHistoryLimitChange={(value) => dispatch({ type: 'setHistoryLimit', value })}
+            globalStickyElevation={globalStickyElevation}
+            onStickyElevationChange={(value) => dispatch({ type: 'stickyElevation', value })}
             onImport={onImportDocument}
             onResetData={onResetData}
             onResetAll={onResetAll}

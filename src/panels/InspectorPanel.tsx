@@ -61,6 +61,9 @@ export type InspectorPanelProps = {
   onStickyDuration: (value: number) => void;
   onStickyDurationTop: (value: number) => void;
   onStickyDurationBottom: (value: number) => void;
+  onStickyElevation: (value: boolean) => void;
+  onStickyElevated: (value: boolean) => void;
+  globalStickyElevation: boolean;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onOpenManageFonts?: () => void;
 };
@@ -105,6 +108,9 @@ export function InspectorPanel({
   onStickyDuration,
   onStickyDurationTop,
   onStickyDurationBottom,
+  onStickyElevation,
+  onStickyElevated,
+  globalStickyElevation,
   onEnterFocusedMode,
   onOpenManageFonts = () => undefined,
 }: InspectorPanelProps) {
@@ -125,6 +131,8 @@ export function InspectorPanel({
     onStickyDuration,
     onStickyDurationTop,
     onStickyDurationBottom,
+    onStickyElevation,
+    onStickyElevated,
     onEnterFocusedMode,
     onOpenManageFonts,
   };
@@ -148,10 +156,10 @@ export function InspectorPanel({
     onSectionForward,
   };
   const blocks = useMemo(
-    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode }),
+    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode, globalStickyElevation }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- actions/orderState are rebuilt each render; key on stable identities
     // biome-ignore lint/correctness/useExhaustiveDependencies: actions/orderState are rebuilt each render; key on stable identities
-    [node?.id, focusedMode, resolvedDocument, node, actions, orderState],
+    [node?.id, focusedMode, resolvedDocument, node, actions, orderState, globalStickyElevation],
   );
 
   if (selectedNodes.length > 1) {
@@ -161,6 +169,7 @@ export function InspectorPanel({
         selectedNodes={selectedNodes}
         orderState={orderState}
         actions={actions}
+        globalStickyElevation={globalStickyElevation}
         onAlignSelection={onAlignSelection}
         onDistributeSelection={onDistributeSelection}
         onBulkEdit={onBulkEdit}

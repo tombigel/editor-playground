@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import type { DocumentNode, FocusedMode } from '../api/editorApi';
+import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { FormField, RangeField, StickyOffsetBandField } from './InspectorControls';
+import { FormField, RangeField, StickyOffsetBandField, SwitchBlock } from './InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard, type InspectorSectionHeaderAction } from './inspector/CommonSections';
 import type { InspectorActionHandlers } from './inspector/types';
 import { resolveSharedBoolean, resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
@@ -24,9 +25,12 @@ type Props = {
     | 'onStickyDuration'
     | 'onStickyDurationTop'
     | 'onStickyDurationBottom'
+    | 'onStickyElevation'
+    | 'onStickyElevated'
     | 'onEnterFocusedMode'
   >;
   focusedMode: FocusedMode;
+  globalStickyElevation: boolean;
   headerContent?: ReactNode;
   headerAction?: InspectorSectionHeaderAction;
   contentClassName?: string;
@@ -36,6 +40,7 @@ export function MultiStickySection({
   selectedNodes,
   actions,
   focusedMode,
+  globalStickyElevation,
   headerContent,
   headerAction,
   contentClassName,
@@ -54,6 +59,7 @@ export function MultiStickySection({
   const stickyDurationState = resolveSharedNumber(stickyNodes.map(readStickyDurationValue));
   const stickyDurationTopState = resolveSharedNumber(stickyNodes.map(readStickyDurationTopValue));
   const stickyDurationBottomState = resolveSharedNumber(stickyNodes.map(readStickyDurationBottomValue));
+  const stickyElevatedState = resolveSharedBoolean(stickyNodes.map((node) => Boolean(node.sticky?.elevated)));
   const forceAutoDuration = stickyNodes.every(isAutoDurationLocked);
   const showOffsetBand = stickyEdgesState.mixed || stickyEdgesState.value === 'both';
   const showCustomDuration = !forceAutoDuration && (stickyDurationModeState.mixed || stickyDurationModeState.value === 'custom');
@@ -68,9 +74,16 @@ export function MultiStickySection({
       focusedModeEntry={createFocusedModeEntry(focusedMode, 'sticky', actions.onEnterFocusedMode)}
     >
       <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
-        <div>
-          <div className="editor-text-strong text-xs font-medium">{statusLabel}</div>
-          <div className="editor-text-muted text-[11px]">Pin selected nodes inside their structural range.</div>
+        <div className="flex items-center gap-2">
+          {stickyEnabledState.mixed
+            ? <Pin className="h-3.5 w-3.5 shrink-0 editor-text-muted" />
+            : stickyEnabledState.value
+              ? <Pin className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
+              : <PinOff className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+          <div>
+            <div className="editor-text-strong text-xs font-medium">{statusLabel}</div>
+            <div className="editor-text-muted text-[11px]">Pin selected nodes inside their structural range.</div>
+          </div>
         </div>
         <div className="relative">
           <Switch
@@ -212,6 +225,34 @@ export function MultiStickySection({
               </div>
             )}
           </div>
+
+          <SwitchBlock
+            title="Global elevation"
+            description="Elevate all sticky elements above siblings."
+            checked={globalStickyElevation}
+            onCheckedChange={actions.onStickyElevation}
+          >
+            {!globalStickyElevation ? (
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="editor-text-strong text-xs font-medium">Elevate selected</div>
+                  <div className="editor-text-muted text-[11px]">Override elevation for these stickies.</div>
+                </div>
+                <div className="relative">
+                  <Switch
+                    checked={stickyElevatedState.mixed ? false : stickyElevatedState.value}
+                    onCheckedChange={actions.onStickyElevated}
+                    className={stickyElevatedState.mixed ? 'bg-slate-400 data-[state=unchecked]:bg-slate-400' : undefined}
+                  />
+                  {stickyElevatedState.mixed ? (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <span className="h-0.5 w-3 rounded-full bg-white" />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </SwitchBlock>
         </>
       ) : null}
     </InspectorSectionCard>

@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactElement } from 'react';
+import { Layers2 } from 'lucide-react';
 import type {
   DocumentModel,
   DocumentNode,
@@ -25,7 +26,8 @@ import {
   type MeshLayout,
   type RenderMeasuredNodeSizes,
 } from '../../render/layout';
-import { getStickyCssProperties, getStickyEdgeMode, usesSyntheticStickyTrack } from '../../render/sticky';
+import { getStickyCssProperties, getStickyEdgeMode, resolveStickyIsElevated, usesSyntheticStickyTrack } from '../../render/sticky';
+import { STICKY_LAYER_Z_INDEX } from '../../render/layers';
 import type { RenderLeafPlanNode } from '../../render/types';
 import { isNodeDescendantOf } from '../../editor/selection';
 import type {
@@ -69,6 +71,11 @@ export function renderWrapper({
     selfRegistration &&
     usesSyntheticStickyTrack(node, { isTopLevel: plan.isTopLevel }),
   );
+  const siteNode = document.nodes[document.rootId];
+  const globalStickyElevation = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const isElevated = node.sticky?.enabled
+    ? resolveStickyIsElevated(node.sticky, globalStickyElevation)
+    : true;
   const { topDistancePx, bottomDistancePx, bottomFirst } = getStickyTrackDistances(selfRegistration, node.sticky);
   const wrapperStickyCss =
     previewSticky && node.sticky?.enabled && node.sticky.target === 'self'
@@ -138,6 +145,7 @@ export function renderWrapper({
               ownerBottomLanePx,
               measuredNodeSizes,
               viewport,
+              isElevated,
             )
           : null}
         <div
@@ -154,6 +162,7 @@ export function renderWrapper({
             .filter((child): child is RenderLeafPlanNode => child.kind === 'leaf')
             .map((child) =>
               renderLeafSpacerOverlay({
+                document,
                 child: child.node,
                 owner: node,
                 registration: plan.registrationMap.get(child.node.id),
@@ -202,6 +211,7 @@ export function renderWrapper({
                 interactKeys,
               })
             : renderLeaf({
+                document,
                 plan: child,
                 selectedId,
                 selectedIds,
@@ -237,6 +247,7 @@ export function renderWrapper({
       ...plan.meshPlacement,
       width: '100%',
       minHeight: `${trackHeight}px`,
+      ...(isElevated ? { zIndex: STICKY_LAYER_Z_INDEX } : {}),
     },
     bottomFirst,
     topDistancePx,
@@ -423,6 +434,7 @@ function renderWrapperSelfDistanceVisual(
   ownerBottomLanePx?: number,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
+  isElevated = true,
 ) {
   if (!registration || !node.sticky?.enabled || node.sticky.target !== 'self') {
     return null;
@@ -434,19 +446,22 @@ function renderWrapperSelfDistanceVisual(
   const isTopLevelAutoOnly = node.role !== 'container' && node.sticky.target === 'self';
   const isAuto = isTopLevelAutoOnly || (node.sticky.durationMode ?? 'auto') === 'auto';
   const nodeHeightPx = getNodeHeight(node, measuredNodeSizes, viewport);
+  const elevationClass = isElevated ? 'sticky-spacer-label-elevated' : 'sticky-spacer-label-grounded';
   if (isTopLevelAutoOnly) {
     return (
       <>
         {isBottomOnlySticky || isBothSticky ? (
           <div className="sticky-auto-indicator sticky-auto-indicator-bottom">
-            <span className="sticky-spacer-label sticky-spacer-label-auto">
+            <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
+              {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
               {isBothSticky ? 'Bottom Distance: auto' : 'Distance: auto'}
             </span>
           </div>
         ) : null}
         {!isBottomOnlySticky ? (
           <div className="sticky-auto-indicator sticky-auto-indicator-top">
-            <span className="sticky-spacer-label sticky-spacer-label-auto">
+            <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
+              {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
               {isBothSticky ? 'Top Distance: auto' : 'Distance: auto'}
             </span>
           </div>
@@ -500,7 +515,8 @@ function renderWrapperSelfDistanceVisual(
             height: `${bottomDistancePx}px`,
           }}
         >
-          <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''}`}>
+          <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''} ${elevationClass}`}>
+            {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
             {isAuto
               ? isBothSticky
                 ? 'Bottom Distance: auto'
@@ -523,7 +539,8 @@ function renderWrapperSelfDistanceVisual(
             height: `${topDistancePx}px`,
           }}
         >
-          <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''}`}>
+          <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''} ${elevationClass}`}>
+            {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
             {isAuto
               ? isBothSticky
                 ? 'Top Distance: auto'
@@ -558,6 +575,12 @@ function renderSpacerRanges(
       }
 
       const style = getSpacerRangeStyle(owner, registration, wrapper, measuredNodeSizes, viewport);
+      const siteNode = document.nodes[document.rootId];
+      const globalElev = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+      const ownerIsElevated = owner.sticky?.enabled
+        ? resolveStickyIsElevated(owner.sticky, globalElev)
+        : true;
+      const ownerElevationClass = ownerIsElevated ? 'sticky-spacer-label-elevated' : 'sticky-spacer-label-grounded';
       return (
         <div
           key={registration.ownerId}
@@ -565,9 +588,15 @@ function renderSpacerRanges(
           style={style}
         >
           {owner.sticky?.durationMode === 'auto' ? (
-            <span className="sticky-spacer-label sticky-spacer-label-auto">Distance: auto</span>
+            <span className={`sticky-spacer-label sticky-spacer-label-auto ${ownerElevationClass}`}>
+              {ownerIsElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
+              Distance: auto
+            </span>
           ) : (
-            <span className="sticky-spacer-label">{`Distance · ${Math.round(registration.durationPx)}px`}</span>
+            <span className={`sticky-spacer-label ${ownerElevationClass}`}>
+              {ownerIsElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
+              {`Distance · ${Math.round(registration.durationPx)}px`}
+            </span>
           )}
         </div>
       );

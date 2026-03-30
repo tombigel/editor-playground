@@ -45,6 +45,7 @@ export function resolveFocusedModeBlocks(
           node={node}
           actions={context.actions}
           focusedMode={context.focusedMode}
+          globalStickyElevation={context.globalStickyElevation}
           headerContent={options.headerContent}
           headerAction={headerAction}
           contentClassName="space-y-3 px-3 pt-1.5 pb-5"

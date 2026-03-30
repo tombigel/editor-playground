@@ -216,6 +216,7 @@ export type StickyDefinition = {
   duration: ParsedValue<UnitValue>;
   durationTop?: ParsedValue<UnitValue>;
   durationBottom?: ParsedValue<UnitValue>;
+  elevated?: boolean; // only meaningful when siteNode.stickyElevation === false
 };
 
 export type BaseNode = {
@@ -230,6 +231,7 @@ export type BaseNode = {
 
 export type SiteNode = BaseNode & {
   type: 'site';
+  stickyElevation?: boolean; // undefined/true = all stickies elevated (default); false = per-sticky control
 };
 
 export type WrapperNode = BaseNode & {

@@ -699,6 +699,23 @@ Sticky can be authored on leaves, wrappers, and wrapper content wrappers, but th
 | `duration` | unit value | Legacy single-duration field. |
 | `durationTop`, `durationBottom` | unit values | Split duration fields for top and bottom travel. |
 | `durationMode` | `auto`, `custom` | `auto` derives travel distance from available space. |
+| `elevated` | boolean | Per-node elevation override; only meaningful when `siteNode.stickyElevation` is `false`. |
+
+### Sticky elevation
+
+Elevation controls whether sticky elements render above page content using `z-index`.
+
+There are two levels:
+
+- **Global elevation** (`siteNode.stickyElevation`): when `undefined` or `true`, all sticky elements are elevated. When `false`, per-node elevation controls take effect.
+- **Per-node elevation** (`StickyDefinition.elevated`): only applied when global elevation is `false`. When `true`, that sticky node is individually elevated; otherwise it is not.
+
+The inspector exposes:
+
+- An **Elevation** toggle (global switch) available in every sticky section. Toggling it calls `setSiteNodeStickyElevation` on the document and dispatches `stickyElevation`.
+- An **Elevate this node** toggle that appears below the global switch only when global elevation is off. It dispatches `stickyElevated` and sets `elevated` on the node's sticky definition.
+
+In multi-select mode the per-node switch uses the mixed-state indicator pattern (grey track with a dash) when selected nodes have differing `elevated` values.
 
 ### Current editor controls
 
@@ -706,12 +723,14 @@ Sticky can be authored on leaves, wrappers, and wrapper content wrappers, but th
 - Offset slider: `0vh` to `100vh`.
 - When edge is `both`, the inspector uses a dual-knob offset range slider and separate top and bottom duration sliders.
 - For wrappers, sticky `target` is hidden in the UI; wrapper sticky is presented as self-targeted even though internal `contentWrapper` support remains in the model for future enablement.
+- Elevation toggle is always visible when sticky is enabled. Per-node elevation appears only when global elevation is off.
 
 Defaults:
 
 - edge: `top`
 - offset: `0`
 - duration: `50vh`
+- global elevation: `true` (all stickies elevated)
 
 ## Spacer Model
 

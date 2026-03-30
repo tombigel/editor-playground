@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseUnitValue } from '../../model/units';
 import { STICKY_LAYER_Z_INDEX } from '../layers';
-import { getStickyCssProperties, getStickyEdgeMode } from '../sticky';
+import { getStickyCssProperties, getStickyEdgeMode, resolveStickyIsElevated } from '../sticky';
 
 const bothSticky = {
   enabled: true,
@@ -30,5 +30,19 @@ describe('render/sticky', () => {
       top: '8px',
       bottom: '12px',
     });
+  });
+
+  it('resolves sticky elevation', () => {
+    expect(resolveStickyIsElevated(bothSticky, true)).toBe(true);
+    expect(resolveStickyIsElevated({ ...bothSticky, elevated: false }, true)).toBe(true);
+    expect(resolveStickyIsElevated(bothSticky, false)).toBe(false);
+    expect(resolveStickyIsElevated({ ...bothSticky, elevated: true }, false)).toBe(true);
+  });
+
+  it('respects isElevated in sticky css properties', () => {
+    expect(getStickyCssProperties(bothSticky, { includeZIndex: true, isElevated: true })).toMatchObject({
+      zIndex: STICKY_LAYER_Z_INDEX,
+    });
+    expect(getStickyCssProperties(bothSticky, { includeZIndex: true, isElevated: false })).not.toHaveProperty('zIndex');
   });
 });
