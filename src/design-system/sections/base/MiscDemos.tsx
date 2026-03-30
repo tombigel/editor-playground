@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Rocket, Layers2, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PopoverTooltip } from "@/components/ui/popover";
@@ -365,17 +366,11 @@ export function MiscDemos() {
 			>
 				<div className="flex flex-wrap gap-8">
 					<div>
-						<div className="editor-text-muted mb-2 text-[11px] font-medium">
+						<div className="editor-text-muted mb-6 text-[11px] font-medium">
 							Single selection
 						</div>
 						<div className="relative" style={{ width: 180, height: 80 }}>
-							<div
-								className="absolute -top-5 left-0 rounded-sm px-1.5 py-0.5 text-[10px] font-bold"
-								style={{
-									background: "var(--editor-accent)",
-									color: "var(--editor-accent-foreground)",
-								}}
-							>
+							<div className="stage-single-selection-label">
 								Text
 							</div>
 							<div
@@ -386,17 +381,31 @@ export function MiscDemos() {
 						</div>
 					</div>
 					<div>
-						<div className="editor-text-muted mb-2 text-[11px] font-medium">
+						<div className="editor-text-muted mb-6 text-[11px] font-medium">
+							With indicators
+						</div>
+						<div className="relative" style={{ width: 180, height: 80 }}>
+							<div className="stage-single-selection-label">
+								Sticky Card
+								<span className="stage-single-selection-label-badges">
+									<Pin className="h-3 w-3" />
+									<Rocket className="h-3 w-3" />
+									<Layers2 className="h-3 w-3" />
+								</span>
+							</div>
+							<div
+								className="h-full w-full rounded-none"
+								style={{ border: "2px solid var(--editor-accent)" }}
+							/>
+							<ResizeHandleView onHandleMouseDown={() => {}} />
+						</div>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-6 text-[11px] font-medium">
 							Section / header / footer
 						</div>
 						<div className="relative" style={{ width: 180, height: 80 }}>
-							<div
-								className="absolute -top-5 left-0 rounded-sm px-1.5 py-0.5 text-[10px] font-bold"
-								style={{
-									background: "var(--editor-accent)",
-									color: "var(--editor-accent-foreground)",
-								}}
-							>
+							<div className="stage-single-selection-label">
 								Section
 							</div>
 							<div
@@ -411,7 +420,7 @@ export function MiscDemos() {
 						</div>
 					</div>
 					<div>
-						<div className="editor-text-muted mb-2 text-[11px] font-medium">
+						<div className="editor-text-muted mb-6 text-[11px] font-medium">
 							Multi selection
 						</div>
 						<div className="relative" style={{ width: 180, height: 80 }}>

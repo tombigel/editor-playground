@@ -1,11 +1,14 @@
 import {
   Ban,
+  Rocket,
   ChevronDown,
   ChevronRight,
   Eye,
   EyeOff,
+  Layers2,
   Layers3,
   PencilLine,
+  Pin,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -663,8 +666,17 @@ function LayersTreeRowItem({
                 />
               </span>
             ) : (
-              <span className="editor-layers-row-title block truncate text-sm font-medium">
-                {row.displayName}
+              <span className="flex min-w-0 items-center gap-1">
+                <span className="editor-layers-row-title truncate text-sm font-medium">
+                  {row.displayName}
+                </span>
+                {(row.isSticky || row.hasAnimation || row.isElevated) && (
+                  <span className="editor-layers-row-badges flex shrink-0 items-center gap-0.5">
+                    {row.isSticky && <Pin className="h-3 w-3" />}
+                    {row.hasAnimation && <Rocket className="h-3 w-3" />}
+                    {row.isElevated && <Layers2 className="h-3 w-3" />}
+                  </span>
+                )}
               </span>
             )}
             {projectedTypeLabel ? (
@@ -768,8 +780,17 @@ function LayersDragGhost({
           <NodeIcon className="h-3.5 w-3.5" />
         </span>
         <span className="min-w-0">
-          <span className="editor-layers-row-title block truncate text-sm font-medium">
-            {row.displayName}
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="editor-layers-row-title truncate text-sm font-medium">
+              {row.displayName}
+            </span>
+            {(row.isSticky || row.hasAnimation || row.isElevated) && (
+              <span className="editor-layers-row-badges flex shrink-0 items-center gap-0.5">
+                {row.isSticky && <Pin className="h-3 w-3" />}
+                {row.hasAnimation && <Rocket className="h-3 w-3" />}
+                {row.isElevated && <Layers2 className="h-3 w-3" />}
+              </span>
+            )}
           </span>
           {projectedTypeLabel ? (
             <span className="editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4">

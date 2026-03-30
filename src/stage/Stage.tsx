@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
+import { resolveStickyIsElevated } from "../render/sticky";
 import { useStageDragDrop } from "./dragDrop/useStageDragDrop";
 import { useStageAnimations } from "./useStageAnimations";
 import { StageScene } from "./StageScene";
@@ -187,9 +188,15 @@ export function Stage({
 				? getWrapperResizeHandles(node, isTopLevel)
 				: (["n", "ne", "e", "se", "s", "sw", "w", "nw"] as ResizeHandle[]);
 
+		const siteNode = document.nodes[document.rootId];
+		const globalStickyElevation = siteNode?.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+		const isSticky = Boolean(node.sticky?.enabled);
 		setSingleSelectionOverlay({
 			nodeId: node.id,
 			label: formatNodeLabel(node),
+			isSticky,
+			hasAnimation: node.animation !== undefined,
+			isElevated: isSticky ? resolveStickyIsElevated(node.sticky!, globalStickyElevation) : false,
 			bounds: {
 				left: nodeRect.left - frameRect.left - frameOffsetLeft,
 				top: nodeRect.top - frameRect.top - frameOffsetTop,

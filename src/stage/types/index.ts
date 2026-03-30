@@ -155,6 +155,9 @@ export type StageSceneProps = {
 	singleSelectionOverlay?: {
 		nodeId: NodeId;
 		label: string;
+		isSticky: boolean;
+		hasAnimation: boolean;
+		isElevated: boolean;
 		bounds: {
 			left: number;
 			top: number;

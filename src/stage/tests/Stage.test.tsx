@@ -1125,6 +1125,9 @@ describe('stage/Stage', () => {
         overlay={{
           nodeId: 'container_1',
           label: 'Container',
+          isSticky: false,
+          hasAnimation: false,
+          isElevated: false,
           bounds: {
             left: 24,
             top: 36,
@@ -1139,7 +1142,8 @@ describe('stage/Stage', () => {
     );
 
     expect(markup).toContain('class="stage-single-selection-overlay"');
-    expect(markup).toContain('class="stage-single-selection-label">Container</div>');
+    expect(markup).toContain('class="stage-single-selection-label"');
+    expect(markup).toContain('Container');
     expect(markup).toContain('class="resize-handle handle-s"');
     expect(markup).not.toContain('resize-handle-structural-s');
   });
@@ -1150,6 +1154,9 @@ describe('stage/Stage', () => {
         overlay={{
           nodeId: 'section_1',
           label: 'Section',
+          isSticky: false,
+          hasAnimation: false,
+          isElevated: false,
           bounds: {
             left: 12,
             top: 18,

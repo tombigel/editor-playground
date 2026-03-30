@@ -4,7 +4,8 @@
       "Bash(npm test:*)",
       "Bash(gh api:*)",
       "Bash(npm run:*)",
-      "Bash(grep \"import.*lucide\\\\|from ''lucide\" /Users/tombigel/Dev/sticky-playground/src/panels/inspector/CommonSections.tsx)"
+      "Bash(grep \"import.*lucide\\\\|from ''lucide\" /Users/tombigel/Dev/sticky-playground/src/panels/inspector/CommonSections.tsx)",
+      "Bash(grep -r \"selection\\\\|Selection\\\\|overlay\\\\|Overlay\" /Users/tombigel/Dev/sticky-playground/src/design-system/sections/composite/*.tsx)"
     ],
     "additionalDirectories": [
       "/tmp"

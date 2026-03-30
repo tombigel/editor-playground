@@ -1,6 +1,7 @@
 import { moveNodeInTreeDoc } from '../api/documentApi';
 import type { DocumentModel, DocumentNode, NodeId } from '../model/types';
 import { formatNodeLabel } from '../render/nodePresentation';
+import { resolveStickyIsElevated } from '../render/sticky';
 
 export type LayersTreeNode = Exclude<DocumentNode, { type: 'site' }>;
 export type LayersDropPosition = 'before' | 'after' | 'inside';
@@ -15,6 +16,9 @@ export type LayersTreeRow = {
   isSelected: boolean;
   displayName: string;
   typeLabel: string;
+  isSticky: boolean;
+  hasAnimation: boolean;
+  isElevated: boolean;
 };
 
 export type LayersMoveTarget = {
@@ -32,6 +36,7 @@ export function buildLayersTreeRows(
     return [];
   }
 
+  const globalStickyElevation = root.stickyElevation ?? true;
   const selectedIdSet = new Set(selectedIds);
   const rows: LayersTreeRow[] = [];
   let previousRootRoleGroup: 'header' | 'section' | 'footer' | null = null;
@@ -45,7 +50,7 @@ export function buildLayersTreeRows(
       previousRootRoleGroup != null &&
       roleGroup !== previousRootRoleGroup;
 
-    appendLayersTreeRow(document, childId, 0, expandedIds, selectedIdSet, rows, dividerBefore);
+    appendLayersTreeRow(document, childId, 0, expandedIds, selectedIdSet, rows, dividerBefore, globalStickyElevation);
 
     if (roleGroup != null) {
       previousRootRoleGroup = roleGroup;
@@ -192,6 +197,7 @@ function appendLayersTreeRow(
   selectedIdSet: ReadonlySet<NodeId>,
   rows: LayersTreeRow[],
   dividerBefore = false,
+  globalStickyElevation = true,
 ) {
   const node = document.nodes[nodeId];
   if (!node || node.type === 'site') {
@@ -201,6 +207,9 @@ function appendLayersTreeRow(
   const hasChildren = node.children.some((childId) => Boolean(document.nodes[childId]));
   const isExpanded = hasChildren && expandedIds.has(node.id);
   const typeLabel = formatNodeLabel(node);
+  const isSticky = Boolean(node.sticky?.enabled);
+  const hasAnimation = node.animation !== undefined;
+  const isElevated = isSticky ? resolveStickyIsElevated(node.sticky!, globalStickyElevation) : false;
   rows.push({
     id: node.id,
     node,
@@ -211,6 +220,9 @@ function appendLayersTreeRow(
     isSelected: selectedIdSet.has(node.id),
     displayName: node.name.trim() || typeLabel,
     typeLabel,
+    isSticky,
+    hasAnimation,
+    isElevated,
   });
 
   if (!hasChildren || !isExpanded) {
@@ -218,7 +230,7 @@ function appendLayersTreeRow(
   }
 
   for (const childId of node.children) {
-    appendLayersTreeRow(document, childId, depth + 1, expandedIds, selectedIdSet, rows);
+    appendLayersTreeRow(document, childId, depth + 1, expandedIds, selectedIdSet, rows, false, globalStickyElevation);
   }
 }
 

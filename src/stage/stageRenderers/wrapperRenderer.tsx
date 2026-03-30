@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactElement } from 'react';
-import { Layers2 } from 'lucide-react';
 import type {
   DocumentModel,
   DocumentNode,
@@ -453,7 +452,6 @@ function renderWrapperSelfDistanceVisual(
         {isBottomOnlySticky || isBothSticky ? (
           <div className="sticky-auto-indicator sticky-auto-indicator-bottom">
             <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
-              {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
               {isBothSticky ? 'Bottom Distance: auto' : 'Distance: auto'}
             </span>
           </div>
@@ -461,7 +459,6 @@ function renderWrapperSelfDistanceVisual(
         {!isBottomOnlySticky ? (
           <div className="sticky-auto-indicator sticky-auto-indicator-top">
             <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
-              {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
               {isBothSticky ? 'Top Distance: auto' : 'Distance: auto'}
             </span>
           </div>
@@ -516,7 +513,6 @@ function renderWrapperSelfDistanceVisual(
           }}
         >
           <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''} ${elevationClass}`}>
-            {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
             {isAuto
               ? isBothSticky
                 ? 'Bottom Distance: auto'
@@ -540,7 +536,6 @@ function renderWrapperSelfDistanceVisual(
           }}
         >
           <span className={`sticky-spacer-label ${isAuto ? 'sticky-spacer-label-auto' : ''} ${elevationClass}`}>
-            {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
             {isAuto
               ? isBothSticky
                 ? 'Top Distance: auto'
@@ -589,12 +584,10 @@ function renderSpacerRanges(
         >
           {owner.sticky?.durationMode === 'auto' ? (
             <span className={`sticky-spacer-label sticky-spacer-label-auto ${ownerElevationClass}`}>
-              {ownerIsElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
               Distance: auto
             </span>
           ) : (
             <span className={`sticky-spacer-label ${ownerElevationClass}`}>
-              {ownerIsElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
               {`Distance · ${Math.round(registration.durationPx)}px`}
             </span>
           )}

@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react';
-import { Layers2 } from 'lucide-react';
 import type {
   DocumentModel,
   NodeId,
@@ -267,7 +266,6 @@ export function renderLeafSpacerOverlay({
               }}
             >
               <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
-                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky ? 'Bottom Distance: auto' : 'Distance: auto'}
               </span>
             </div>
@@ -281,7 +279,6 @@ export function renderLeafSpacerOverlay({
               }}
             >
               <span className={`sticky-spacer-label sticky-spacer-label-auto ${elevationClass}`}>
-                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky ? 'Top Distance: auto' : 'Distance: auto'}
               </span>
             </div>
@@ -298,7 +295,6 @@ export function renderLeafSpacerOverlay({
               }}
             >
               <span className={`sticky-spacer-label ${elevationClass}`}>
-                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky
                   ? `Bottom Distance · ${Math.round(bottomDistancePx)}px`
                   : `Distance · ${Math.round(bottomDistancePx)}px`}
@@ -314,7 +310,6 @@ export function renderLeafSpacerOverlay({
               }}
             >
               <span className={`sticky-spacer-label ${elevationClass}`}>
-                {isElevated && <Layers2 className="mr-1 h-2.5 w-2.5 shrink-0" />}
                 {isBothSticky
                   ? `Top Distance · ${Math.round(topDistancePx)}px`
                   : `Distance · ${Math.round(topDistancePx)}px`}

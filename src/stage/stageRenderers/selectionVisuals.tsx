@@ -1,4 +1,5 @@
 import type { MouseEvent } from 'react';
+import { Rocket, Layers2, Pin } from 'lucide-react';
 import { ResizeHandleView } from './resizeHandles';
 import type { ResizeHandle, StageSceneProps } from '../types';
 
@@ -35,6 +36,13 @@ export function SingleSelectionOverlay({
     >
       <div className="stage-single-selection-label">
         {overlay.label}
+        {(overlay.isSticky || overlay.hasAnimation || overlay.isElevated) && (
+          <span className="stage-single-selection-label-badges">
+            {overlay.isSticky && <Pin className="h-3 w-3" />}
+            {overlay.hasAnimation && <Rocket className="h-3 w-3" />}
+            {overlay.isElevated && <Layers2 className="h-3 w-3" />}
+          </span>
+        )}
       </div>
       <div className="stage-single-selection-outline" />
       <ResizeHandleView

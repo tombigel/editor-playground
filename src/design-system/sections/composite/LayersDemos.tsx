@@ -1,13 +1,16 @@
 import {
+  Rocket,
   ChevronDown,
   ChevronRight,
   Eye,
   EyeOff,
   ImageIcon,
+  Layers2,
   Layers3,
   PanelBottom,
   PanelTop,
   PencilLine,
+  Pin,
   RectangleEllipsis,
   Rows3,
   SquareStack,
@@ -31,6 +34,9 @@ const DEMO_ROWS: Array<{
   selected: boolean;
   hidden: boolean;
   hasChildren: boolean;
+  isSticky?: boolean;
+  hasAnimation?: boolean;
+  isElevated?: boolean;
   dropIntent?: 'after';
 }> = [
   {
@@ -81,13 +87,29 @@ const DEMO_ROWS: Array<{
   {
     id: 'content',
     depth: 1,
-    label: 'Feature Stack',
+    label: 'Sticky Card',
     typeLabel: 'Container',
     icon: SquareStack,
     expanded: false,
     selected: false,
     hidden: false,
     hasChildren: false,
+    isSticky: true,
+    isElevated: true,
+  },
+  {
+    id: 'reveal',
+    depth: 1,
+    label: 'Reveal Image',
+    typeLabel: 'Image',
+    icon: ImageIcon,
+    expanded: false,
+    selected: false,
+    hidden: false,
+    hasChildren: false,
+    isSticky: true,
+    hasAnimation: true,
+    isElevated: true,
   },
   {
     id: 'footer',
@@ -164,9 +186,18 @@ export function LayersDemos() {
                         <span className="editor-layers-row-icon">
                           <Icon className="h-3.5 w-3.5" />
                         </span>
-                        <span className="min-w-0">
-                          <span className="editor-layers-row-title block truncate text-sm font-medium">
-                            {row.label}
+                        <span className="min-w-0 flex-1">
+                          <span className="flex min-w-0 items-center gap-1">
+                            <span className="editor-layers-row-title truncate text-sm font-medium">
+                              {row.label}
+                            </span>
+                            {(row.isSticky || row.hasAnimation || row.isElevated) && (
+                              <span className="editor-layers-row-badges flex shrink-0 items-center gap-0.5">
+                                {row.isSticky && <Pin className="h-3 w-3" />}
+                                {row.hasAnimation && <Rocket className="h-3 w-3" />}
+                                {row.isElevated && <Layers2 className="h-3 w-3" />}
+                              </span>
+                            )}
                           </span>
                           <span className="editor-layers-row-type block truncate text-[11px]">
                             {row.typeLabel}
