@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../model/defaults';
+import { buildNodeDebugInfo } from '../editor/debugInfo';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiSelectInspector } from './MultiSelectInspector';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
@@ -66,6 +67,7 @@ export type InspectorPanelProps = {
   globalStickyElevation: boolean;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onOpenManageFonts?: () => void;
+  showDebugInfo?: boolean;
 };
 
 export function InspectorPanel({
@@ -113,53 +115,91 @@ export function InspectorPanel({
   globalStickyElevation,
   onEnterFocusedMode,
   onOpenManageFonts = () => undefined,
+  showDebugInfo = false,
 }: InspectorPanelProps) {
-  const resolvedDocument = document ?? createInitialDocument();
-  const actions: InspectorActionHandlers = {
-    onTextChange,
-    onWrapperStyleChange,
-    onRectChange,
-    onPromote,
-    onDemote,
-    onStickyEnabled,
-    onStickyTarget,
-    onStickyEdges,
-    onStickyOffset,
-    onStickyOffsetTop,
-    onStickyOffsetBottom,
-    onStickyDurationMode,
-    onStickyDuration,
-    onStickyDurationTop,
-    onStickyDurationBottom,
-    onStickyElevation,
-    onStickyElevated,
-    onEnterFocusedMode,
-    onOpenManageFonts,
-  };
-  const orderState: InspectorOrderState = {
-    showOrderControls,
-    canOrderBack,
-    canOrderForward,
-    canSendToBack,
-    canBringToFront,
-    orderBackShortcut,
-    orderForwardShortcut,
-    sendToBackShortcut,
-    bringToFrontShortcut,
-    canSectionBack,
-    canSectionForward,
-    onOrderBack,
-    onOrderForward,
-    onSendToBack,
-    onBringToFront,
-    onSectionBack,
-    onSectionForward,
-  };
+  const resolvedDocument = useMemo(
+    () => document ?? createInitialDocument(),
+    [document],
+  );
+  const actions = useMemo<InspectorActionHandlers>(
+    () => ({
+      onTextChange,
+      onWrapperStyleChange,
+      onRectChange,
+      onPromote,
+      onDemote,
+      onStickyEnabled,
+      onStickyTarget,
+      onStickyEdges,
+      onStickyOffset,
+      onStickyOffsetTop,
+      onStickyOffsetBottom,
+      onStickyDurationMode,
+      onStickyDuration,
+      onStickyDurationTop,
+      onStickyDurationBottom,
+      onStickyElevation,
+      onStickyElevated,
+      onEnterFocusedMode,
+      onOpenManageFonts,
+    }),
+    [
+      onTextChange, onWrapperStyleChange, onRectChange, onPromote, onDemote,
+      onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
+      onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
+      onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
+      onStickyElevation, onStickyElevated, onEnterFocusedMode, onOpenManageFonts,
+    ],
+  );
+  const orderState = useMemo<InspectorOrderState>(
+    () => ({
+      showOrderControls,
+      canOrderBack,
+      canOrderForward,
+      canSendToBack,
+      canBringToFront,
+      orderBackShortcut,
+      orderForwardShortcut,
+      sendToBackShortcut,
+      bringToFrontShortcut,
+      canSectionBack,
+      canSectionForward,
+      onOrderBack,
+      onOrderForward,
+      onSendToBack,
+      onBringToFront,
+      onSectionBack,
+      onSectionForward,
+    }),
+    [
+      showOrderControls, canOrderBack, canOrderForward, canSendToBack, canBringToFront,
+      orderBackShortcut, orderForwardShortcut, sendToBackShortcut, bringToFrontShortcut,
+      canSectionBack, canSectionForward, onOrderBack, onOrderForward, onSendToBack,
+      onBringToFront, onSectionBack, onSectionForward,
+    ],
+  );
+  const debugInfo = useMemo(
+    () => {
+      if (!showDebugInfo || !node || node.type === 'site') return null;
+      return buildNodeDebugInfo(resolvedDocument, node, {
+        documentRef: typeof window !== 'undefined' ? window.document : undefined,
+      });
+    },
+    [showDebugInfo, node, resolvedDocument],
+  );
+  const debugInfoItems = useMemo(
+    () => {
+      if (!showDebugInfo) return [];
+      const docRef = typeof window !== 'undefined' ? window.document : undefined;
+      return selectedNodes
+        .filter((n): n is Exclude<typeof n, { type: 'site' }> => n.type !== 'site')
+        .map((n) => buildNodeDebugInfo(resolvedDocument, n, { documentRef: docRef }));
+    },
+    [showDebugInfo, selectedNodes, resolvedDocument],
+  );
   const blocks = useMemo(
-    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode, globalStickyElevation }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- actions/orderState are rebuilt each render; key on stable identities
-    // biome-ignore lint/correctness/useExhaustiveDependencies: actions/orderState are rebuilt each render; key on stable identities
-    [node?.id, focusedMode, resolvedDocument, node, actions, orderState, globalStickyElevation],
+    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode, globalStickyElevation, showDebugInfo, debugInfo }),
+    [resolvedDocument, node, actions, orderState, focusedMode, globalStickyElevation, showDebugInfo, debugInfo],
   );
 
   if (selectedNodes.length > 1) {
@@ -170,6 +210,8 @@ export function InspectorPanel({
         orderState={orderState}
         actions={actions}
         globalStickyElevation={globalStickyElevation}
+        showDebugInfo={showDebugInfo}
+        debugInfoItems={debugInfoItems}
         onAlignSelection={onAlignSelection}
         onDistributeSelection={onDistributeSelection}
         onBulkEdit={onBulkEdit}

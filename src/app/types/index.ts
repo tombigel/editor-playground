@@ -111,6 +111,7 @@ export type EditorAction =
   | { type: 'setAnimationPreview'; value: Partial<AnimationPreviewState> }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
   | { type: 'setShowGridLanes'; value: boolean }
+  | { type: 'setShowDebugInfo'; value: boolean }
   | { type: 'setSnapSettings'; value: Partial<SnapSettings> }
   | { type: 'setThemeMode'; value: EditorState['ui']['themeMode'] }
   | { type: 'setAccentColor'; value: EditorState['ui']['accentColor'] }

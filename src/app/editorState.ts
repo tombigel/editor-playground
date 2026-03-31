@@ -254,6 +254,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, ui: { ...state.ui, spacerVisibility: action.value } };
     case 'setShowGridLanes':
       return { ...state, ui: { ...state.ui, showGridLanes: action.value } };
+    case 'setShowDebugInfo':
+      return { ...state, ui: { ...state.ui, showDebugInfo: action.value } };
     case 'setSnapSettings':
       return {
         ...state,
@@ -477,6 +479,7 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setPreviewSticky' &&
     action.type !== 'setSpacerVisibility' &&
     action.type !== 'setShowGridLanes' &&
+    action.type !== 'setShowDebugInfo' &&
     action.type !== 'setSnapSettings' &&
     action.type !== 'setThemeMode' &&
     action.type !== 'setAccentColor' &&

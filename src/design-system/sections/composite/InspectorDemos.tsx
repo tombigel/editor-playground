@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { SwitchBlock } from "@/panels/InspectorControls";
 import { EditableNodeTitle, InspectorSectionCard } from "@/panels/inspector/CommonSections";
+import { DebugInfoSection } from "@/panels/inspector/DebugInfoSection";
 import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { NodeDebugInfo } from "@/editor/types";
 
 // ---------------------------------------------------------------------------
 // Demos
@@ -195,6 +197,107 @@ export function InspectorDemos() {
 					</div>
 				</div>
 			</ComponentPreview>
+
+			{/* Debug Info Section */}
+			<ComponentPreview
+				id="composite-debug-info"
+				name="Debug Info Card"
+				description="Debug information panel showing node identity, geometry, sticky state, and animation config. Conditionally renders rows based on data presence."
+				sourceFile="src/panels/inspector/DebugInfoSection.tsx"
+				props={[
+					{
+						name: "items",
+						type: "NodeDebugInfo[]",
+						description: "Array of node debug info to display. Renders nothing when empty. Shows prev/next navigation when more than one item.",
+					},
+				]}
+			>
+				<div className="w-[300px] space-y-4">
+					{/* Single node */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Single Node</div>
+						<DebugInfoSection items={[fullDebugInfo]} />
+					</div>
+
+					{/* Multi-node (prev/next navigation) */}
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-node (2 items)</div>
+						<DebugInfoSection items={[fullDebugInfo, minimalDebugInfo]} />
+					</div>
+				</div>
+			</ComponentPreview>
 		</>
 	);
 }
+
+// ---------------------------------------------------------------------------
+// Debug Info Fixtures
+// ---------------------------------------------------------------------------
+
+const fullDebugInfo: NodeDebugInfo = {
+	dataId: 'section_abc123def',
+	htmlId: 'section_abc123def',
+	stageId: 'stage-node-section_abc123def',
+	name: 'Hero Section',
+	family: 'wrapper' as const,
+	role: 'section',
+	parentId: 'site_root',
+	authoredRect: { x: '0px', y: '120px', width: '100%', height: '480px' },
+	measuredBounds: { left: 0, top: 120, width: 1280, height: 480 },
+	sticky: {
+		enabled: true,
+		target: 'self' as const,
+		edges: 'top' as const,
+		durationMode: 'auto' as const,
+		elevated: true,
+		offsetTop: '0px',
+		offsetBottom: null,
+		duration: '100vh',
+		durationTop: null,
+		durationBottom: null,
+	},
+	animation: {
+		enabled: true,
+		isTriggerTarget: false,
+		triggerId: null,
+		trigger: 'scroll',
+		effect: 'fadeIn',
+		effectKind: 'keyframe',
+		requiresSticky: true,
+		rawConfig: { trigger: 'scroll', effect: { kind: 'named', type: 'fadeIn' }, requiresSticky: true },
+	},
+};
+
+const minimalDebugInfo: NodeDebugInfo = {
+	dataId: 'text_xyz789',
+	htmlId: null,
+	stageId: 'stage-node-text_xyz789',
+	name: 'Body Text',
+	family: 'leaf' as const,
+	role: 'text',
+	parentId: 'section_abc123def',
+	authoredRect: { x: '24px', y: '0px', width: 'fit-content', height: 'auto' },
+	measuredBounds: null,
+	sticky: {
+		enabled: false,
+		target: null,
+		edges: 'none' as const,
+		durationMode: null,
+		elevated: null,
+		offsetTop: null,
+		offsetBottom: null,
+		duration: null,
+		durationTop: null,
+		durationBottom: null,
+	},
+	animation: {
+		enabled: false,
+		isTriggerTarget: false,
+		triggerId: null,
+		trigger: null,
+		effect: null,
+		effectKind: null,
+		requiresSticky: null,
+		rawConfig: null,
+	},
+};

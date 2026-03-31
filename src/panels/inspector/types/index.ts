@@ -1,5 +1,6 @@
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode } from '../../../api/editorApi';
 import type { WrapperStyleField } from '../../../api/documentApi';
+import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 
 export type InspectorNode = DocumentNode;
@@ -59,6 +60,8 @@ export type InspectorSectionContext = {
   orderState: InspectorOrderState;
   focusedMode: FocusedMode;
   globalStickyElevation: boolean;
+  showDebugInfo?: boolean;
+  debugInfo?: NodeDebugInfo | null;
 };
 
 export type InspectorBlockBucket = 'summary' | 'primary' | 'behavior';

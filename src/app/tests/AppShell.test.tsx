@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialState, insertLeaf, resolveStickyLayout } from '../../api/editorApi';
+import { createInitialState, insertLeaf } from '../../api/editorApi';
 import { AppShell } from '../AppShell';
 import { LayersPanel } from '../../panels/LayersPanel';
 import { INSPECTOR_COLLAPSED_WIDTH_PX, INSPECTOR_EXPANDED_WIDTH_PX } from '../../panels/inspectorLayout';
@@ -31,8 +31,6 @@ function createProps(): ComponentProps<typeof AppShell> {
     settingsPanelRef: null,
     sectionTemplatePanelRef: null,
     documentJson: '{}',
-    errors: [],
-    stickyLayout: resolveStickyLayout(state.document),
     dispatch: () => undefined,
     onStickyGeometryChange: () => undefined,
     onOpenSectionTemplates: () => undefined,
@@ -159,7 +157,6 @@ describe('app/AppShell', () => {
         state={state}
         selectedNode={selectedNode}
         selectedNodes={[selectedNode]}
-        stickyLayout={resolveStickyLayout(state.document)}
       />,
     );
 

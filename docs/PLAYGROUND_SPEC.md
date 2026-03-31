@@ -1229,6 +1229,26 @@ Additional notes:
 - Preview and spacer quick toggles remain in the left rail.
 - The snap toggle includes tooltip guidance for `Alt` drag inversion and the `Shift + G` shortcut.
 
+### Show debug info toggle
+
+**Location:** Settings → Display → "Show debug info" toggle (last toggle in the Display section)
+
+When enabled, a compact "Debug" inspector card appears above the Layout section whenever a non-site node is selected. The card displays:
+
+- **Identity:** `dataId`, `htmlId` (null shown as `—`), `family · role`, `parentId`
+- **Geometry:** authored rect (`x/y/w/h` raw values), measured DOM bounds if available (`width×height @ (left, top)`)
+- **Sticky:** (only when `sticky.enabled=true`) edges, target, duration mode, elevation state
+- **Animation:** (only when `animation.enabled=true`) effect, trigger, requiresSticky flag
+
+**Console logging:** When the debug info toggle is enabled, the following are logged to the browser console with color-coded prefixes:
+
+- `[debug:add]` (green) — when a new node is added to the document
+- `[debug:remove]` (red) — when a node is removed from the document
+- `[debug:select]` (blue) — when the selected node changes, with a rect + sticky/animation summary
+- `[debug:change]` (amber) — when the selected node's data changes, showing only the diff
+
+**Persistence:** The `showDebugInfo` preference is persisted as a UI setting and survives page reload.
+
 ## Running the Playground
 
 ### Development

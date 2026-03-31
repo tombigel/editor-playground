@@ -74,6 +74,8 @@ import { readRecentFontFamilies, writeRecentFontFamilies } from './inspector/fon
 import { useFontPreviewStylesheet } from './inspector/useFontPreviewStylesheet';
 import { MultiStickySection } from './MultiStickySection';
 import { resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
+import { DebugInfoSection } from './inspector/DebugInfoSection';
+import type { NodeDebugInfo } from '../editor/types';
 
 type Props = {
   document: DocumentModel;
@@ -81,6 +83,8 @@ type Props = {
   orderState: InspectorOrderState;
   actions: InspectorActionHandlers;
   globalStickyElevation: boolean;
+  showDebugInfo?: boolean;
+  debugInfoItems?: NodeDebugInfo[];
   onAlignSelection: (mode: 'left' | 'center-x' | 'right' | 'top' | 'center-y' | 'bottom') => void;
   onDistributeSelection: (mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom') => void;
   onBulkEdit: (operations: BulkEditOperation[]) => void;
@@ -92,6 +96,8 @@ export function MultiSelectInspector({
   orderState,
   actions,
   globalStickyElevation,
+  showDebugInfo = false,
+  debugInfoItems = [],
   onAlignSelection,
   onDistributeSelection,
   onBulkEdit,
@@ -188,6 +194,9 @@ export function MultiSelectInspector({
   return (
     <div className="editor-scrollbar h-full overflow-auto">
       <div className="space-y-3 p-3">
+        {showDebugInfo && debugInfoItems.length > 0 && (
+          <DebugInfoSection items={debugInfoItems} />
+        )}
         <Card className="editor-border-subtle rounded-lg shadow-none">
           <CardHeader className="px-3 pt-3 pb-1">
             <CardTitle className="text-xs">Layout</CardTitle>

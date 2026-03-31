@@ -205,8 +205,6 @@ export function App() {
       settingsPanelRef={panels.settingsPanelRef}
       sectionTemplatePanelRef={panels.sectionTemplatePanelRef}
       documentJson={viewModel.documentJson}
-      errors={viewModel.errors}
-      stickyLayout={viewModel.stickyLayout}
       dispatch={dispatch}
       onStickyGeometryChange={setStickyGeometry}
       onOpenLayers={panels.openLayers}

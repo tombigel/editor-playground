@@ -1,5 +1,6 @@
 import {
   ArrowDownToLine,
+  Bug,
   Eye,
   Grid3X3,
   Play,
@@ -30,6 +31,7 @@ type DisplaySettingsSectionProps = {
   animationPreview: AnimationPreviewState;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
+  showDebugInfo: boolean;
   snapSettings: SnapSettings;
   themeMode: ThemeMode;
   accentColor: string;
@@ -41,6 +43,7 @@ type DisplaySettingsSectionProps = {
   onAnimationPreviewChange: (value: Partial<AnimationPreviewState>) => void;
   onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
   onShowGridLanesChange: (value: boolean) => void;
+  onShowDebugInfoChange: (value: boolean) => void;
   onSnapSettingsChange: (value: Partial<SnapSettings>) => void;
   onThemeModeChange: (value: ThemeMode) => void;
   onAccentColorChange: (value: string) => void;
@@ -54,6 +57,7 @@ export function DisplaySettingsSection({
   animationPreview,
   spacerVisibility,
   showGridLanes,
+  showDebugInfo,
   snapSettings,
   themeMode,
   accentColor,
@@ -65,6 +69,7 @@ export function DisplaySettingsSection({
   onAnimationPreviewChange,
   onSpacerVisibilityChange,
   onShowGridLanesChange,
+  onShowDebugInfoChange,
   onSnapSettingsChange,
   onThemeModeChange,
   onAccentColorChange,
@@ -146,6 +151,13 @@ export function DisplaySettingsSection({
       <SnapSettingsGroup
         snapSettings={snapSettings}
         onSnapSettingsChange={onSnapSettingsChange}
+      />
+      <SettingRow
+        icon={Bug}
+        title="Show debug info"
+        description="Adds a compact diagnostics card to the inspector and logs node changes to the console."
+        checked={showDebugInfo}
+        onCheckedChange={onShowDebugInfoChange}
       />
     </>
   );

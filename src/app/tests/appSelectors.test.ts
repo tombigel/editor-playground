@@ -25,6 +25,7 @@ function createState(): EditorState {
       },
       spacerVisibility: 'selected',
       showGridLanes: false,
+      showDebugInfo: false,
       snapSettings: DEFAULT_SNAP_SETTINGS,
       themeMode: 'auto',
       accentColor: '#1668ff',

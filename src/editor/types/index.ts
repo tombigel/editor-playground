@@ -41,6 +41,47 @@ export type AnimationPreviewState = {
   triggers: Record<'entrance' | 'ongoing' | 'scroll' | 'mouse' | 'click' | 'hover', boolean>;
 };
 
+export type MeasuredNodeBounds = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+export type NodeDebugInfo = {
+  dataId: string;
+  htmlId: string | null;
+  stageId: string;
+  name: string;
+  family: 'wrapper' | 'leaf';
+  role: string;
+  parentId: string | null;
+  authoredRect: { x: string; y: string; width: string; height: string };
+  measuredBounds: MeasuredNodeBounds | null;
+  sticky: {
+    enabled: boolean;
+    target: 'self' | 'contentWrapper' | null;
+    edges: 'top' | 'bottom' | 'both' | 'none';
+    durationMode: 'auto' | 'custom' | null;
+    elevated: boolean | null;
+    offsetTop: string | null;
+    offsetBottom: string | null;
+    duration: string | null;
+    durationTop: string | null;
+    durationBottom: string | null;
+  };
+  animation: {
+    enabled: boolean;
+    isTriggerTarget: boolean;
+    triggerId: string | null;
+    trigger: string | null;
+    effect: string | null;
+    effectKind: string | null;
+    requiresSticky: boolean | null;
+    rawConfig: object | null;
+  };
+};
+
 export type EditorState = {
   document: DocumentModel;
   selectedId: NodeId | null;
@@ -51,6 +92,7 @@ export type EditorState = {
     animationPreview: AnimationPreviewState;
     spacerVisibility: 'selected' | 'all';
     showGridLanes: boolean;
+    showDebugInfo: boolean;
     snapSettings: SnapSettings;
     themeMode: ThemeMode;
     accentColor: string;

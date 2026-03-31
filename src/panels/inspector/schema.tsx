@@ -8,6 +8,7 @@ import { LINK_INSPECTOR_CONFIG } from './config.link';
 import { SECTION_INSPECTOR_CONFIG } from './config.section';
 import { SITE_INSPECTOR_CONFIG } from './config.site';
 import { TEXT_INSPECTOR_CONFIG } from './config.text';
+import { DebugInfoSection } from './DebugInfoSection';
 import type {
   InspectorBlockDefinition,
   InspectorNode,
@@ -51,8 +52,30 @@ export function resolveInspectorConfigKey(node: InspectorNode | null): Inspector
   return 'image';
 }
 
-export function resolveInspectorBlocks(context: InspectorSectionContext): ResolvedInspectorBlock[] {
+function getInspectorDefinitions(
+  context: InspectorSectionContext,
+): readonly InspectorBlockDefinition[] {
   const definitions = getInspectorConfig(context.node);
+
+  if (!context.showDebugInfo || !context.node || context.node.type === 'site' || !context.debugInfo) {
+    return definitions;
+  }
+
+  return [
+    {
+      id: 'debug-info',
+      bucket: 'primary' as const,
+      layout: 'custom' as const,
+      render: (_ctx: InspectorSectionContext) => (
+        <DebugInfoSection items={context.debugInfo ? [context.debugInfo] : []} />
+      ),
+    },
+    ...definitions,
+  ];
+}
+
+export function resolveInspectorBlocks(context: InspectorSectionContext): ResolvedInspectorBlock[] {
+  const definitions = getInspectorDefinitions(context);
 
   return definitions
     .filter((definition) => definition.when?.(context) ?? true)

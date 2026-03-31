@@ -71,6 +71,26 @@ describe('app/editorState', () => {
     expect(next.future).toHaveLength(0);
   });
 
+  it('setShowDebugInfo toggles ui.showDebugInfo', () => {
+    const initial = createInitialState();
+
+    const withTrue = editorReducer(initial, { type: 'setShowDebugInfo', value: true });
+    expect(withTrue.ui.showDebugInfo).toBe(true);
+
+    const withFalse = editorReducer(withTrue, { type: 'setShowDebugInfo', value: false });
+    expect(withFalse.ui.showDebugInfo).toBe(false);
+  });
+
+  it('setShowDebugInfo is excluded from undo history', () => {
+    const initial = createTestHistoryState();
+
+    const next = historyReducer(initial, { type: 'setShowDebugInfo', value: true });
+
+    expect(next.present.ui.showDebugInfo).toBe(true);
+    expect(next.past).toHaveLength(0);
+    expect(next.future).toHaveLength(0);
+  });
+
   it('coalesces resize streams into a single history entry when the resize ends', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'text');

@@ -1,7 +1,8 @@
 import { BoxSelect, Magnet, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
+import { SettingRow } from '@/components/ui/settings-panel';
+
 import type { SnapSettings } from '../../editor/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
@@ -16,7 +17,6 @@ function SnapSubRow({
   min,
   max,
   suffix,
-  borderTop = true,
   onChange,
 }: {
   label: string;
@@ -24,18 +24,13 @@ function SnapSubRow({
   min: number;
   max: number;
   suffix: string;
-  borderTop?: boolean;
   onChange: (value: number) => void;
 }) {
   return (
-    <div
-      className={`flex items-center justify-between gap-4 pl-11 ${
-        borderTop ? 'editor-border-subtle border-t py-3' : 'pt-0 pb-3'
-      }`}
-    >
-      <div className="editor-text-muted min-w-0 text-sm">{label}</div>
+    <div className="flex items-center justify-between gap-3 px-3 py-2">
+      <span className="editor-text-muted text-xs">{label}</span>
       <div className="flex shrink-0 items-center gap-1.5">
-        <div className="w-[72px]">
+        <div className="w-16">
           <Input
             type="number"
             min={min}
@@ -47,10 +42,10 @@ function SnapSubRow({
                 onChange(Math.min(max, Math.max(min, next)));
               }
             }}
-            className="h-8 text-right text-sm"
+            className="h-7 text-right text-xs"
           />
         </div>
-        <span className="editor-text-muted w-10 text-right text-xs">{suffix}</span>
+        <span className="editor-text-muted w-8 text-right text-xs">{suffix}</span>
       </div>
     </div>
   );
@@ -61,29 +56,18 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
 
   return (
     <>
-      <div className="editor-border-subtle flex items-start justify-between gap-4 border-t py-4">
-        <div className="flex min-w-0 gap-3">
-          <div className="editor-icon-surface mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-            <Magnet className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="editor-text-strong text-sm font-medium">Snap to guides</div>
-            <div className="editor-text-muted mt-1 text-sm">Aligns to component and page edges.</div>
-            {guideSnap.enabled ? (
-              <div className="editor-text-muted mt-1 text-xs">Hold Alt while dragging to invert.</div>
-            ) : null}
-          </div>
-        </div>
-        <Switch
-          checked={guideSnap.enabled}
-          onCheckedChange={(enabled) =>
-            onSnapSettingsChange({ guideSnap: { ...guideSnap, enabled } })
-          }
-        />
-      </div>
-
-      {guideSnap.enabled ? (
-        <>
+      <SettingRow
+        icon={Magnet}
+        title="Snap to guides"
+        description="Aligns to component and page edges."
+        note={guideSnap.enabled ? 'Hold Alt while dragging to invert.' : undefined}
+        checked={guideSnap.enabled}
+        onCheckedChange={(enabled) =>
+          onSnapSettingsChange({ guideSnap: { ...guideSnap, enabled } })
+        }
+      />
+      {guideSnap.enabled && (
+        <div className="editor-border-subtle editor-bg-subtle -mt-2 mb-2 ml-11 overflow-hidden rounded-lg border">
           <SnapSubRow
             label="Snap distance"
             value={guideSnap.threshold}
@@ -100,7 +84,6 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
             min={0}
             max={100}
             suffix="%"
-            borderTop={false}
             onChange={(pct) =>
               onSnapSettingsChange({ guideSnap: { ...guideSnap, power: pct / 100 } })
             }
@@ -111,34 +94,24 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
             min={0}
             max={4000}
             suffix="px/s"
-            borderTop={false}
             onChange={(maxSpeedPxPerSecond) =>
               onSnapSettingsChange({ guideSnap: { ...guideSnap, maxSpeedPxPerSecond } })
             }
           />
-        </>
-      ) : null}
-
-      <div className="editor-border-subtle flex items-start justify-between gap-4 border-t py-4">
-        <div className="flex min-w-0 gap-3">
-          <div className="editor-icon-surface mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-            <BoxSelect className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="editor-text-strong text-sm font-medium">Container snap</div>
-            <div className="editor-text-muted mt-1 text-sm">Magnetic pull at container boundaries.</div>
-          </div>
         </div>
-        <Switch
-          checked={containerSnap.enabled}
-          onCheckedChange={(enabled) =>
-            onSnapSettingsChange({ containerSnap: { ...containerSnap, enabled } })
-          }
-        />
-      </div>
+      )}
 
-      {containerSnap.enabled ? (
-        <>
+      <SettingRow
+        icon={BoxSelect}
+        title="Container snap"
+        description="Magnetic pull at container boundaries."
+        checked={containerSnap.enabled}
+        onCheckedChange={(enabled) =>
+          onSnapSettingsChange({ containerSnap: { ...containerSnap, enabled } })
+        }
+      />
+      {containerSnap.enabled && (
+        <div className="editor-border-subtle editor-bg-subtle -mt-2 mb-2 ml-11 overflow-hidden rounded-lg border">
           <SnapSubRow
             label="Detection distance"
             value={containerSnap.threshold}
@@ -155,13 +128,12 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
             min={0}
             max={100}
             suffix="%"
-            borderTop={false}
             onChange={(pct) =>
               onSnapSettingsChange({ containerSnap: { ...containerSnap, power: pct / 100 } })
             }
           />
-        </>
-      ) : null}
+        </div>
+      )}
 
       <div className="editor-border-subtle flex justify-end border-t py-3">
         <Button

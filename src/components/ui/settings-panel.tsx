@@ -74,7 +74,7 @@ export function SettingRow({
   return (
     <div className="editor-border-subtle flex items-start justify-between gap-4 border-t py-4 first:border-t-0">
       <div className="flex min-w-0 gap-3">
-        <div className="editor-icon-surface mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border">
+        <div className="editor-icon-surface mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">

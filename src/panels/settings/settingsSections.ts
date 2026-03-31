@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownToLine,
-  Bug,
   Eye,
   Keyboard,
   SlidersHorizontal,
@@ -15,8 +14,7 @@ export type SettingsSectionId =
   | 'fonts'
   | 'transfer'
   | 'advanced'
-  | 'shortcuts'
-  | 'diagnostics';
+  | 'shortcuts';
 
 export type SettingsSectionMeta = {
   id: SettingsSectionId;
@@ -63,11 +61,5 @@ export const SETTINGS_SECTION_META: SettingsSectionMeta[] = [
     label: 'Shortcuts',
     description: 'Keyboard and pointer reference.',
     icon: Keyboard,
-  },
-  {
-    id: 'diagnostics',
-    label: 'Debug Info',
-    description: 'Validation and sticky math.',
-    icon: Bug,
   },
 ];

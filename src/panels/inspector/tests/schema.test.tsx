@@ -204,4 +204,97 @@ describe('panels/inspector/schema', () => {
     const markup = renderToStaticMarkup(stickySection?.render());
     expect(markup).toContain('aria-label="Go to Sticky focus mode"');
   });
+
+  // ─── debug-info block ─────────────────────────────────────────────
+
+  it('debug-info block appears first when showDebugInfo=true and non-site node selected', () => {
+    const document = createInitialDocument();
+    const textNode = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text',
+    );
+
+    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    const stubDebugInfo = {
+      dataId: 'test-id',
+      htmlId: null,
+      stageId: 'stage-node-test-id',
+      name: 'Test Node',
+      family: 'leaf' as const,
+      role: 'text',
+      parentId: null,
+      authoredRect: { x: '0px', y: '0px', width: '100%', height: '400px' },
+      measuredBounds: null,
+      sticky: { enabled: false, target: null, edges: 'none' as const, durationMode: null, elevated: null, offsetTop: null, offsetBottom: null, duration: null, durationTop: null, durationBottom: null },
+      animation: { enabled: false, isTriggerTarget: false, triggerId: null, trigger: null, effect: null, effectKind: null, requiresSticky: null, rawConfig: null },
+    };
+
+    const blocks = resolveInspectorBlocks({
+      document,
+      node: textNode,
+      actions,
+      orderState,
+      focusedMode: null,
+      globalStickyElevation: true,
+      showDebugInfo: true,
+      debugInfo: stubDebugInfo,
+    });
+
+    expect(blocks[0]?.id).toBe('debug-info');
+    expect(blocks[1]?.id).toBe('layout');
+    expect(blocks[2]?.id).toBe('sticky-behavior');
+  });
+
+  it('debug-info block absent when showDebugInfo is false or undefined', () => {
+    const document = createInitialDocument();
+    const textNode = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'text',
+    );
+
+    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    const blocksWithFalse = resolveInspectorBlocks({
+      document,
+      node: textNode,
+      actions,
+      orderState,
+      focusedMode: null,
+      globalStickyElevation: true,
+      showDebugInfo: false,
+    });
+
+    expect(blocksWithFalse.map((b) => b.id)).not.toContain('debug-info');
+
+    const blocksWithUndefined = resolveInspectorBlocks({
+      document,
+      node: textNode,
+      actions,
+      orderState,
+      focusedMode: null,
+      globalStickyElevation: true,
+    });
+
+    expect(blocksWithUndefined.map((b) => b.id)).not.toContain('debug-info');
+  });
+
+  it('debug-info block absent for site node even when showDebugInfo=true', () => {
+    const document = createInitialDocument();
+    const siteNode = document.nodes[document.rootId];
+
+    const blocks = resolveInspectorBlocks({
+      document,
+      node: siteNode,
+      actions,
+      orderState,
+      focusedMode: null,
+      globalStickyElevation: true,
+      showDebugInfo: true,
+    });
+
+    expect(blocks.map((b) => b.id)).not.toContain('debug-info');
+  });
 });

@@ -404,6 +404,7 @@ describe('editor/editorPersistence', () => {
         },
         spacerVisibility: 'all',
         showGridLanes: true,
+        showDebugInfo: false,
         snapSettings: { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } },
         themeMode: 'dark',
         focusedMode: 'sticky',
@@ -955,6 +956,40 @@ describe('editor/editorPersistence', () => {
       const normalized = normalizeDocument(doc);
       const s = normalized.nodes[section.id] as WrapperNode;
       expect(s.sticky).toBeUndefined();
+    });
+  });
+
+  // ─── showDebugInfo persistence ────────────────────────────────────
+
+  describe('showDebugInfo defaults and persistence', () => {
+    it('showDebugInfo defaults to false in createDefaultUiState', () => {
+      const state = createInitialState();
+      expect(state.ui.showDebugInfo).toBe(false);
+    });
+
+    it('showDebugInfo is loaded from persisted state', () => {
+      const windowStub = createWindowStorageStub();
+      vi.stubGlobal('window', windowStub);
+
+      const state = createInitialState();
+      const modifiedState = { ...state, ui: { ...state.ui, showDebugInfo: true } };
+      persistState(modifiedState);
+
+      const loaded = loadPersistedState();
+      expect(loaded.ui.showDebugInfo).toBe(true);
+    });
+
+    it('showDebugInfo falls back to false when absent from persisted state', () => {
+      const windowStub = createWindowStorageStub();
+      vi.stubGlobal('window', windowStub);
+
+      const state = createInitialState();
+      const { showDebugInfo, ...uiWithoutDebugInfo } = state.ui;
+      const modifiedState = { ...state, ui: uiWithoutDebugInfo as typeof state.ui };
+      window.localStorage.setItem('sticky-playground.editor-state.v1', JSON.stringify(modifiedState));
+
+      const loaded = loadPersistedState();
+      expect(loaded.ui.showDebugInfo).toBe(false);
     });
   });
 });

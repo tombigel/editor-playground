@@ -107,6 +107,7 @@ export function loadPersistedState(): EditorState {
             ? parsed.ui.spacerVisibility
             : 'selected',
         showGridLanes: parsed.ui?.showGridLanes ?? false,
+        showDebugInfo: parsed.ui?.showDebugInfo ?? false,
         snapSettings: normalizeSnapSettings(parsed.ui),
         themeMode,
         accentColor: normalizePersistedAccentColor(parsed.ui, themeMode, lightTheme, darkTheme),
@@ -183,6 +184,7 @@ function createDefaultUiState(): EditorState['ui'] {
     },
     spacerVisibility: 'selected',
     showGridLanes: false,
+    showDebugInfo: false,
     snapSettings: DEFAULT_SNAP_SETTINGS,
     themeMode: 'auto',
     accentColor: DEFAULT_EDITOR_ACCENT_COLOR,

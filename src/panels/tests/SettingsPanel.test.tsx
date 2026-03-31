@@ -12,9 +12,6 @@ describe('panels/SettingsPanel', () => {
       <SettingsPanel
         document={document}
         documentJson='{"rootId":"site_1"}'
-        errors={[]}
-        stickyLayout={{}}
-        selectedNode={document.nodes[document.rootId] ?? null}
         globalStickyElevation={true}
         onStickyElevationChange={() => undefined}
         previewSticky={true}
@@ -22,6 +19,7 @@ describe('panels/SettingsPanel', () => {
         onAnimationPreviewChange={() => {}}
         spacerVisibility="selected"
         showGridLanes={false}
+        showDebugInfo={false}
         snapSettings={DEFAULT_SNAP_SETTINGS}
         themeMode="auto"
         accentColor="#1668ff"
@@ -36,6 +34,7 @@ describe('panels/SettingsPanel', () => {
         onPreviewStickyChange={() => {}}
         onSpacerVisibilityChange={() => {}}
         onShowGridLanesChange={() => {}}
+        onShowDebugInfoChange={() => {}}
         onSnapSettingsChange={() => {}}
         onThemeModeChange={() => {}}
         onAccentColorChange={() => {}}
@@ -90,8 +89,5 @@ describe('panels/SettingsPanel', () => {
 
     expect(navOrder).toEqual(expectedOrder);
     expect(sectionOrder).toEqual(expectedOrder);
-    expect(sectionOrder.indexOf('shortcuts')).toBeLessThan(
-      sectionOrder.indexOf('diagnostics'),
-    );
   });
 });

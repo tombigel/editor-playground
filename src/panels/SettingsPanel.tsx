@@ -2,9 +2,7 @@ import { Settings } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import type {
   DocumentModel,
-  DocumentNode,
   FocusedMode,
-  StickyLayoutState,
 } from '../api/editorApi';
 import type {
   AnimationPreviewState,
@@ -22,7 +20,6 @@ import type { SettingsTransferState } from './settings/useSettingsTransferState'
 import { useSettingsTransferState } from './settings/useSettingsTransferState';
 import { AdvancedSettingsSection } from './settings/sections/AdvancedSettingsSection';
 import { DefaultsSettingsSection } from './settings/sections/DefaultsSettingsSection';
-import { DiagnosticsSettingsSection } from './settings/sections/DiagnosticsSettingsSection';
 import { DisplaySettingsSection } from './settings/sections/DisplaySettingsSection';
 import { FontsSettingsSection } from './settings/sections/FontsSettingsSection';
 import { SettingsSectionNav } from './settings/sections/SettingsSectionNav';
@@ -38,14 +35,12 @@ import type {
 type Props = {
   document: DocumentModel;
   documentJson: string;
-  errors: string[];
-  stickyLayout: StickyLayoutState;
-  selectedNode: DocumentNode | null;
   previewSticky: boolean;
   animationPreview: AnimationPreviewState;
   onAnimationPreviewChange: (value: Partial<AnimationPreviewState>) => void;
   spacerVisibility: 'selected' | 'all';
   showGridLanes: boolean;
+  showDebugInfo: boolean;
   snapSettings: SnapSettings;
   themeMode: ThemeMode;
   accentColor: string;
@@ -64,6 +59,7 @@ type Props = {
   onPreviewStickyChange: (value: boolean) => void;
   onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
   onShowGridLanesChange: (value: boolean) => void;
+  onShowDebugInfoChange: (value: boolean) => void;
   onSnapSettingsChange: (value: Partial<SnapSettings>) => void;
   onThemeModeChange: (value: ThemeMode) => void;
   onAccentColorChange: (value: string) => void;
@@ -82,14 +78,12 @@ type Props = {
 export function SettingsPanel({
   document,
   documentJson,
-  errors,
-  stickyLayout,
-  selectedNode,
   previewSticky,
   animationPreview,
   onAnimationPreviewChange,
   spacerVisibility,
   showGridLanes,
+  showDebugInfo,
   snapSettings,
   themeMode,
   accentColor,
@@ -108,6 +102,7 @@ export function SettingsPanel({
   onPreviewStickyChange,
   onSpacerVisibilityChange,
   onShowGridLanesChange,
+  onShowDebugInfoChange,
   onSnapSettingsChange,
   onThemeModeChange,
   onAccentColorChange,
@@ -132,7 +127,6 @@ export function SettingsPanel({
   const transferRef = useRef<HTMLElement | null>(null);
   const advancedRef = useRef<HTMLElement | null>(null);
   const shortcutsRef = useRef<HTMLElement | null>(null);
-  const diagnosticsRef = useRef<HTMLElement | null>(null);
   const transfer = useSettingsTransferState({
     document,
     documentJson,
@@ -147,7 +141,6 @@ export function SettingsPanel({
       transfer: transferRef,
       advanced: advancedRef,
       shortcuts: shortcutsRef,
-      diagnostics: diagnosticsRef,
     }),
     [],
   );
@@ -221,13 +214,11 @@ export function SettingsPanel({
                 >
                   {renderSectionContent(section.id, {
                     document,
-                    errors,
-                    stickyLayout,
-                    selectedNode,
                     previewSticky,
                     animationPreview,
                     spacerVisibility,
                     showGridLanes,
+                    showDebugInfo,
                     snapSettings,
                     themeMode,
                     accentColor,
@@ -248,6 +239,7 @@ export function SettingsPanel({
                     onAnimationPreviewChange,
                     onSpacerVisibilityChange,
                     onShowGridLanesChange,
+                    onShowDebugInfoChange,
                     onSnapSettingsChange,
                     onThemeModeChange,
                     onAccentColorChange,
@@ -275,10 +267,6 @@ function getSectionClassName(sectionId: SettingsSectionId) {
     return 'editor-border-subtle border-b pb-6';
   }
 
-  if (sectionId === 'diagnostics') {
-    return 'py-6';
-  }
-
   return 'editor-border-subtle border-b py-6';
 }
 
@@ -286,13 +274,11 @@ function renderSectionContent(
   sectionId: SettingsSectionId,
   props: {
     document: DocumentModel;
-    errors: string[];
-    stickyLayout: StickyLayoutState;
-    selectedNode: DocumentNode | null;
     previewSticky: boolean;
     animationPreview: AnimationPreviewState;
     spacerVisibility: 'selected' | 'all';
     showGridLanes: boolean;
+    showDebugInfo: boolean;
     snapSettings: SnapSettings;
     themeMode: ThemeMode;
     accentColor: string;
@@ -313,6 +299,7 @@ function renderSectionContent(
     onAnimationPreviewChange: (value: Partial<AnimationPreviewState>) => void;
     onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
     onShowGridLanesChange: (value: boolean) => void;
+    onShowDebugInfoChange: (value: boolean) => void;
     onSnapSettingsChange: (value: Partial<SnapSettings>) => void;
     onThemeModeChange: (value: ThemeMode) => void;
     onAccentColorChange: (value: string) => void;
@@ -334,6 +321,7 @@ function renderSectionContent(
           animationPreview={props.animationPreview}
           spacerVisibility={props.spacerVisibility}
           showGridLanes={props.showGridLanes}
+          showDebugInfo={props.showDebugInfo}
           snapSettings={props.snapSettings}
           themeMode={props.themeMode}
           accentColor={props.accentColor}
@@ -345,6 +333,7 @@ function renderSectionContent(
           onAnimationPreviewChange={props.onAnimationPreviewChange}
           onSpacerVisibilityChange={props.onSpacerVisibilityChange}
           onShowGridLanesChange={props.onShowGridLanesChange}
+          onShowDebugInfoChange={props.onShowDebugInfoChange}
           onSnapSettingsChange={props.onSnapSettingsChange}
           onThemeModeChange={props.onThemeModeChange}
           onAccentColorChange={props.onAccentColorChange}
@@ -386,13 +375,5 @@ function renderSectionContent(
       );
     case 'shortcuts':
       return <ShortcutsSettingsSection />;
-    case 'diagnostics':
-      return (
-        <DiagnosticsSettingsSection
-          errors={props.errors}
-          stickyLayout={props.stickyLayout}
-          selectedNode={props.selectedNode}
-        />
-      );
   }
 }

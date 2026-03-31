@@ -14,7 +14,6 @@ import type {
   DocumentNode,
   EditorState,
   StickyGeometrySnapshot,
-  StickyLayoutState,
 } from '../api/editorApi';
 import type { DocumentFontFamily } from '../model/types';
 import {
@@ -63,6 +62,7 @@ import {
   FOCUSED_PANEL_RIGHT_OFFSET_PX,
   FOCUSED_PANEL_TOP_OFFSET_PX,
 } from '../editor/focusedPanelPosition';
+import { useDebugLogger } from '../editor/useDebugLogger';
 import { RailToggleButton, SectionTemplatePopover, SpacerIcon, TopbarIconAction } from './AppChrome';
 import type { HistoryAction, HistoryState } from './editorState';
 
@@ -90,8 +90,6 @@ type Props = {
   layersPanelRef?: Ref<HTMLDivElement>;
   sectionTemplatePanelRef: Ref<HTMLDivElement>;
   documentJson: string;
-  errors: string[];
-  stickyLayout: StickyLayoutState;
   dispatch: Dispatch<HistoryAction>;
   onStickyGeometryChange: (geometry: StickyGeometrySnapshot) => void;
   onOpenLayers?: (trigger: HTMLElement) => void;
@@ -131,8 +129,6 @@ export function AppShell({
   layersPanelRef,
   sectionTemplatePanelRef,
   documentJson,
-  errors,
-  stickyLayout,
   dispatch,
   onStickyGeometryChange,
   onOpenLayers = () => undefined,
@@ -250,6 +246,8 @@ export function AppShell({
       window.removeEventListener('pointercancel', handlePointerEnd);
     };
   }, [dispatch, focusedPanelDragging, focusedPanelRightOffsetPx, state.ui.focusedPanelOffset]);
+
+  useDebugLogger(state.ui.showDebugInfo, state.document, state.selectedId);
 
   function handleFocusedPanelDragStart(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.button !== 0) {
@@ -519,6 +517,7 @@ export function AppShell({
             onStickyElevation={(value) => dispatch({ type: 'stickyElevation', value })}
             onStickyElevated={(value) => dispatch({ type: 'stickyElevated', value })}
             globalStickyElevation={globalStickyElevation}
+            showDebugInfo={state.ui.showDebugInfo}
             onEnterFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
             onOpenManageFonts={() => onManageFontsOpenChange(true)}
             onInspectorCollapsedChange={(value) => dispatch({ type: 'setInspectorCollapsed', value })}
@@ -631,9 +630,6 @@ export function AppShell({
           <SettingsPanel
             document={state.document}
             documentJson={documentJson}
-            errors={errors}
-            stickyLayout={stickyLayout}
-            selectedNode={selectedNode}
             previewSticky={state.ui.previewSticky}
             spacerVisibility={state.ui.spacerVisibility}
             showGridLanes={state.ui.showGridLanes}
@@ -656,7 +652,9 @@ export function AppShell({
             onAnimationPreviewChange={(value) => dispatch({ type: 'setAnimationPreview', value })}
             onPreviewStickyChange={(value) => dispatch({ type: 'setPreviewSticky', value })}
             onSpacerVisibilityChange={(value) => dispatch({ type: 'setSpacerVisibility', value })}
+            showDebugInfo={state.ui.showDebugInfo}
             onShowGridLanesChange={(value) => dispatch({ type: 'setShowGridLanes', value })}
+            onShowDebugInfoChange={(value) => dispatch({ type: 'setShowDebugInfo', value })}
             onSnapSettingsChange={(value) => dispatch({ type: 'setSnapSettings', value })}
             onThemeModeChange={(value) => dispatch({ type: 'setThemeMode', value })}
             onAccentColorChange={(value) => dispatch({ type: 'setAccentColor', value })}
