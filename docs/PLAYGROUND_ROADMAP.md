@@ -76,6 +76,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-19` | [Assets management](#assets-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-20` | [CMS](#cms) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-28` | [Rich text component with inline styling, preferably MD-backed](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
+| `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `⚪ Not started` | Shared | - |
 | `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
 | `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
 | `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
@@ -119,6 +120,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-27` support variable fonts
 - `RI-28` add a text component that can be styled inline, preferably md behind the scenes
 - `RI-29` make sticky indicators more sticky motion aware, and make them interactive so stickyness can be set on stage, create another visual option for them to be on the stage sidelines and not clutter the viewport
+- `RI-30` add a versioning system to the project
 
 ## Structured Roadmap
 
@@ -401,6 +403,16 @@ None yet.
 - `Why it matters`: CMS support changes how content is modeled, previewed, exported, and potentially hosted.
 - `Current state`: The document is currently fully authored in-editor rather than bound to live content collections.
 - `Next review question`: Is native CMS a goal, or is connector-based external CMS support enough?
+
+##### Project versioning system
+
+- `Type`: `Platform`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-30`
+- `Why it matters`: Versioning creates safer iteration, clearer milestone management, and a path to compare, restore, branch, or publish project states without relying only on local undo history.
+- `Current state`: The project has document undo/redo and import/export flows, but there is no project-level version history or named snapshot model described in the roadmap.
+- `Next review question`: Should the first versioning milestone be simple named snapshots, linear history, or a richer branch/restore workflow tied to import/export and future collaboration?
 
 #### Refactor
 
