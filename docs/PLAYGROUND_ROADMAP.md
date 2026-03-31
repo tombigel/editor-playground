@@ -56,7 +56,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | --- | --- | --- | --- | --- | --- | --- |
 | `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🟠 High` | Bug | `🟤 Needs audit` | Shared | Dep: `RI-05` |
 | `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🟠 High` | UX | `⚪ Not started` | LLM | Note: standalone or can land as part of `RI-03`/`RI-04`/`RI-05` |
-| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `⚪ Not started` | LLM | - |
+| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `🟣 Partially present` | LLM | Simple on/off animated-state indicator implemented |
 | `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `⚪ Not started` | LLM | - |
 | `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🟠 High` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
 | `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
@@ -186,11 +186,11 @@ None yet.
 
 - `Type`: `UX`
 - `Owner lane`: `LLM`
-- `Status`: `Not started`
+- `Status`: `Partially present`
 - `Source`: `RI-03`, `RI-04`
 - `Why it matters`: The animation subsystem needs a functional authoring surface that is good enough for development, testing, and iteration before the designed product UI is ready.
-- `Current state`: The animation model, preview runtime, and console API exist, but there is no documented editor UI for presets or keyframe authoring.
-- `Next move`: Define the smallest functional authoring surface that proves preset selection, keyframe editing, and state inspection without over-investing in final UX.
+- `Current state`: The animation model, preview runtime, and console API exist, and the editor now has a simple on/off indicator showing when a node is animated. Preset and keyframe authoring UI are still not documented.
+- `Next move`: Extend the current basic indicator into a minimal development authoring surface for preset selection, keyframe editing, and state inspection without over-investing in final UX.
 
 ##### Animation authoring UI with real product/UX design
 
