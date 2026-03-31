@@ -60,6 +60,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `⚪ Not started` | LLM | - |
 | `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🟠 High` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
 | `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
+| `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🟠 High` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
 | `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `⚪ Not started` | Human | - |
 | `RI-09` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
 | `RI-10` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-09` |
@@ -117,6 +118,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-26` interact custom effects support
 - `RI-27` support variable fonts
 - `RI-28` add a text component that can be styled inline, preferably md behind the scenes
+- `RI-29` make sticky indicators more sticky motion aware, and make them interactive so stickyness can be set on stage, create another visual option for them to be on the stage sidelines and not clutter the viewport
 
 ## Structured Roadmap
 
@@ -210,6 +212,17 @@ None yet.
 - `Why it matters`: Animation and sticky can amplify each other, but they can also create confusing behavior or accessibility regressions.
 - `Current state`: The animation model includes accessibility settings and a `requiresSticky` flag, while sticky already has strong editor-stage visibility; the combined authoring story is still incomplete.
 - `Next move`: Treat this as the follow-on phase after the designed animation UI work, then review behavior combinations, reduced-motion policy, and authoring guardrails.
+
+##### Sticky indicators: motion-aware, interactive, and sideline-capable
+
+- `Type`: `UX`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-29`
+- `Dependencies`: `RI-06`
+- `Why it matters`: Sticky indicators are already part of the editor’s trust model, but they should better explain sticky motion over scroll, support direct manipulation on stage, and avoid obscuring the viewport when documents get dense.
+- `Current state`: Sticky guides and labels are visible in the stage, but they are still mostly passive overlays inside the main viewport and are not yet described as a direct on-stage editing surface or as motion-aware representations of sticky behavior.
+- `Next move`: Define a first interaction model that covers motion-aware indicator states, direct on-stage stickiness editing, and an alternate sideline presentation that keeps the viewport readable while preserving clear mapping back to the node.
 
 ##### Variable fonts as an authoring workflow
 
