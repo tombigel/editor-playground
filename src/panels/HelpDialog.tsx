@@ -207,11 +207,15 @@ export function HelpDialog({ open, onOpenChange }: Props) {
                 <div id="help-dialog-nav" className="min-h-0">
                   <nav className="editor-scrollbar max-h-full space-y-1 overflow-y-auto pr-1">
                     {mainEntries.map((entry) =>
-                      renderEntryButton({
-                        entry,
-                        active: entry.id === activeEntry.id,
-                        onSelect: handleEntrySelect,
-                      }),
+                      entry.kind === 'divider' ? (
+                        <hr key={entry.id} className="editor-border-subtle my-1 border-t" />
+                      ) : (
+                        renderEntryButton({
+                          entry,
+                          active: entry.id === activeEntry.id,
+                          onSelect: handleEntrySelect,
+                        })
+                      ),
                     )}
                   </nav>
                 </div>
@@ -241,7 +245,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
             <div ref={contentRef} className="editor-scrollbar min-h-0 overflow-y-auto p-6">
               {activeEntry.kind === 'shortcuts' ? (
                 <ShortcutHelpContent />
-              ) : (
+              ) : activeEntry.kind === 'markdown' ? (
                 <Suspense fallback={<HelpMarkdownFallback fileName={activeEntry.fileName} />}>
                   <LazyHelpMarkdownDocument
                     entry={activeEntry}
@@ -250,7 +254,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
                     onContentReady={() => setContentReadyVersion((current) => current + 1)}
                   />
                 </Suspense>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -265,7 +269,7 @@ function renderEntryButton({
   onSelect,
   compact = false,
 }: {
-  entry: HelpEntry;
+  entry: Exclude<HelpEntry, { kind: 'divider' }>;
   active: boolean;
   onSelect: (entryId: HelpEntry['id']) => void;
   compact?: boolean;
