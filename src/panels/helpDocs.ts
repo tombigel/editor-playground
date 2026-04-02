@@ -7,6 +7,11 @@ export type ShortcutHelpEntry = {
   subtitle?: string;
 };
 
+export type DividerHelpEntry = {
+  id: string;
+  kind: 'divider';
+};
+
 type HelpDocManifestEntry = {
   path: string;
   fileName: string;
@@ -24,7 +29,7 @@ export type MarkdownHelpEntry = {
   assetUrl: string;
 };
 
-export type HelpEntry = ShortcutHelpEntry | MarkdownHelpEntry;
+export type HelpEntry = ShortcutHelpEntry | MarkdownHelpEntry | DividerHelpEntry;
 
 export type HelpLinkTarget =
   | { kind: 'anchor'; anchor: string }
@@ -36,13 +41,19 @@ const DOC_FILES = helpDocsManifest as HelpDocManifestEntry[];
 
 export const HELP_BROWSER_DOC_PATH = 'docs/HELP_BROWSER.md';
 
-const HELP_DOC_ORDER: readonly string[] = [
+export const HELP_DOC_DIVIDER = '---' as const;
+
+const HELP_DOC_ORDER: readonly (string | typeof HELP_DOC_DIVIDER)[] = [
   'docs/PLAYGROUND_SPEC.md',
   'docs/API.md',
-  'docs/STICKY_RENDER_MODEL.md',
   'docs/EDITOR_STYLE_GUIDE.md',
-  'docs/CONSOLE_TEST_GUIDE.md',
+  HELP_DOC_DIVIDER,
   'docs/PLAYGROUND_ROADMAP.md',
+  'docs/NEXT_STAGE_BRIEF.md',
+  HELP_DOC_DIVIDER,
+  'docs/CONSOLE_TEST_GUIDE.md',
+  'docs/STICKY_RENDER_MODEL.md',
+  'docs/Interact Accessibility Discussion.md',
   HELP_BROWSER_DOC_PATH,
 ];
 
@@ -56,22 +67,50 @@ export function getHelpEntries() {
   return [SHORTCUTS_HELP_ENTRY, ...getMarkdownHelpEntries()];
 }
 
-export function getMarkdownHelpEntries(source: readonly HelpDocManifestEntry[] = DOC_FILES): MarkdownHelpEntry[] {
-  return source
-    .map((entry) => {
+export function getMarkdownHelpEntries(
+  source: readonly HelpDocManifestEntry[] = DOC_FILES,
+): (MarkdownHelpEntry | DividerHelpEntry)[] {
+  const entryByPath = new Map(
+    source.map((entry) => {
       const { title, subtitle } = splitHelpEntryTitle(entry.fullTitle.trim());
+      return [
+        entry.path,
+        {
+          id: `doc:${entry.path}`,
+          kind: 'markdown' as const,
+          title,
+          subtitle,
+          path: entry.path,
+          fileName: entry.fileName,
+          assetUrl: entry.assetUrl,
+        } satisfies MarkdownHelpEntry,
+      ];
+    }),
+  );
 
-      return {
-        id: `doc:${entry.path}`,
-        kind: 'markdown' as const,
-        title,
-        subtitle,
-        path: entry.path,
-        fileName: entry.fileName,
-        assetUrl: entry.assetUrl,
-      };
-    })
-    .sort(compareHelpEntriesByConfiguredOrder);
+  const result: (MarkdownHelpEntry | DividerHelpEntry)[] = [];
+  const used = new Set<string>();
+  let dividerCount = 0;
+
+  for (const item of HELP_DOC_ORDER) {
+    if (item === HELP_DOC_DIVIDER) {
+      result.push({ id: `divider-${dividerCount++}`, kind: 'divider' });
+    } else {
+      const entry = entryByPath.get(item);
+      if (entry) {
+        result.push(entry);
+        used.add(item);
+      }
+    }
+  }
+
+  for (const [path, entry] of entryByPath) {
+    if (!used.has(path)) {
+      result.push(entry);
+    }
+  }
+
+  return result;
 }
 
 export function getConfiguredHelpDocOrder() {
@@ -160,23 +199,3 @@ function resolveRelativeHelpDocPath(currentPath: string, relativePath: string) {
   return currentSegments.join('/');
 }
 
-function compareHelpEntriesByConfiguredOrder(left: MarkdownHelpEntry, right: MarkdownHelpEntry) {
-  const leftIndex = HELP_DOC_ORDER.indexOf(left.path);
-  const rightIndex = HELP_DOC_ORDER.indexOf(right.path);
-  const leftConfigured = leftIndex !== -1;
-  const rightConfigured = rightIndex !== -1;
-
-  if (leftConfigured && rightConfigured) {
-    return leftIndex - rightIndex;
-  }
-
-  if (leftConfigured) {
-    return -1;
-  }
-
-  if (rightConfigured) {
-    return 1;
-  }
-
-  return left.path.localeCompare(right.path);
-}

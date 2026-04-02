@@ -24,6 +24,18 @@
     "assetUrl": "/assets/help-docs/HELP_BROWSER.md"
   },
   {
+    "path": "docs/Interact Accessibility Discussion.md",
+    "fileName": "Interact Accessibility Discussion.md",
+    "fullTitle": "Interact A11y",
+    "assetUrl": "/assets/help-docs/Interact Accessibility Discussion.md"
+  },
+  {
+    "path": "docs/NEXT_STAGE_BRIEF.md",
+    "fileName": "NEXT_STAGE_BRIEF.md",
+    "fullTitle": "Next Stage Brief — Authoring Foundation",
+    "assetUrl": "/assets/help-docs/NEXT_STAGE_BRIEF.md"
+  },
+  {
     "path": "docs/PLAYGROUND_ROADMAP.md",
     "fileName": "PLAYGROUND_ROADMAP.md",
     "fullTitle": "Playground Roadmap",

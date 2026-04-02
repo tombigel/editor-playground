@@ -8,12 +8,13 @@ import {
   resolveHelpLink,
   splitHelpEntryTitle,
   slugifyMarkdownHeading,
+  type MarkdownHelpEntry,
 } from '../helpDocs';
 
 describe('panels/helpDocs', () => {
   it('loads help markdown entries only from the docs folder in configured order with alphabetical fallback', () => {
-    const entries = getMarkdownHelpEntries();
-    const paths = entries.map((entry) => entry.path);
+    const markdownEntries = getMarkdownHelpEntries().filter((entry): entry is MarkdownHelpEntry => entry.kind === 'markdown');
+    const paths = markdownEntries.map((entry) => entry.path);
     const configuredOrder = getConfiguredHelpDocOrder().filter((path) => paths.includes(path));
     const configuredSlice = paths.slice(0, configuredOrder.length);
     const remainingSlice = paths.slice(configuredOrder.length);
@@ -24,11 +25,11 @@ describe('panels/helpDocs', () => {
     expect(paths).toContain('docs/CONSOLE_TEST_GUIDE.md');
     expect(paths).toContain(HELP_BROWSER_DOC_PATH);
     expect(paths.every((path) => path.startsWith('docs/'))).toBe(true);
-    expect(entries.every((entry) => entry.assetUrl.startsWith('/assets/help-docs/'))).toBe(true);
+    expect(markdownEntries.every((entry) => entry.assetUrl.startsWith('/assets/help-docs/'))).toBe(true);
   });
 
   it('splits dashed titles into button title and subtitle while keeping filename separate', () => {
-    const guide = getMarkdownHelpEntries().find((entry) => entry.path === 'docs/CONSOLE_TEST_GUIDE.md');
+    const guide = getMarkdownHelpEntries().find((entry): entry is MarkdownHelpEntry => entry.kind === 'markdown' && entry.path === 'docs/CONSOLE_TEST_GUIDE.md');
 
     expect(guide?.title).toBe('Animation API');
     expect(guide?.subtitle).toBe('Console Testing Guide');
