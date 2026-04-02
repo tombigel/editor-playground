@@ -12,13 +12,7 @@ Related roadmap items are listed per section. See [PLAYGROUND_ROADMAP.md](./PLAY
 
 ## Animation Integration
 
-<!-- RI-01: animation undo coverage -->
-<!-- RI-02: on-stage animation indicator -->
-<!-- RI-03: animation presets UI (dev phase) -->
-<!-- RI-04: animation keyframes UI (dev phase) -->
-<!-- RI-05: designed animation UI with product/UX intent -->
-<!-- RI-06: animation + sticky UI, behaviors, a11y -->
-<!-- RI-29: sticky indicators — motion-aware, interactive, sideline-capable -->
+_Related: RI-01, RI-02, RI-03, RI-04, RI-05, RI-06, RI-29_
 
 ### Product Vision
 
@@ -81,7 +75,7 @@ All this should be done API first - The editor can define product diretions, but
 
 ## Multiple Pages
 
-<!-- RI-07: multiple pages / MPA approach -->
+_Related: RI-07_
 
 ### Product Vision
 
@@ -140,9 +134,7 @@ As a site, a basic requirement is to have multiple pages. We choose to go the MP
 
 ## More Components
 
-<!-- RI-11: SVG, video, gradients -->
-<!-- RI-12A: more semantic components -->
-<!-- RI-12B: semantic wrappers and grouping -->
+_Related: RI-11, RI-12A, RI-12B_
 
 ### Product Vision
 
