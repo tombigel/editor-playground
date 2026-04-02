@@ -17,6 +17,7 @@ Current-state notes in the structured roadmap should stay short and point back t
 
 - [Item Format](#item-format)
 - [Summary Table](#summary-table)
+- [Active Stage](#active-stage)
 - [Raw Intake](#raw-intake)
 - [Structured Roadmap](#structured-roadmap)
   - [Priority: Blocker](#priority-blocker)
@@ -45,6 +46,7 @@ This table is a compact scan view of the roadmap. It should stay lightweight and
 
 Priority and status use emoji color markers so the table stays plain markdown:
 
+- `🔴` next / active focus
 - `🟠` high priority
 - `🔵` low priority
 - `⚪` optional or not started
@@ -54,19 +56,19 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 | Raw intake id | Short name | Priority | Type | Status | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🟠 High` | Bug | `🟤 Needs audit` | Shared | Dep: `RI-05` |
-| `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🟠 High` | UX | `⚪ Not started` | LLM | Note: standalone or can land as part of `RI-03`/`RI-04`/`RI-05` |
-| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `🟣 Partially present` | LLM | Simple on/off animated-state indicator implemented |
-| `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | `⚪ Not started` | LLM | - |
-| `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🟠 High` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
-| `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
-| `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🟠 High` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
-| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `⚪ Not started` | Human | - |
+| `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | `🟤 Needs audit` | Shared | Dep: `RI-05` |
+| `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | `⚪ Not started` | LLM | Note: standalone or can land as part of `RI-03`/`RI-04`/`RI-05` |
+| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `🟣 Partially present` | LLM | Simple on/off animated-state indicator implemented |
+| `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `⚪ Not started` | LLM | - |
+| `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
+| `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
+| `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
+| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🔴 Next` | Feature | `⚪ Not started` | Human | - |
+| `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | `⚪ Not started` | Shared | - |
+| `RI-12A` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | `🟣 Partially present` | Shared | - |
+| `RI-12B` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | `🟣 Partially present` | Shared | - |
 | `RI-09` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
 | `RI-10` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-09` |
-| `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🟠 High` | Feature | `⚪ Not started` | Shared | - |
-| `RI-12A` | [More semantic components](#more-semantic-components) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
-| `RI-12B` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🟠 High` | UX | `🟣 Partially present` | Shared | - |
 | `RI-25` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | `🟢 In progress` | Shared | - |
 | `RI-27` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | `🟣 Partially present` | Shared | - |
 | `RI-13` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | `⚪ Not started` | Human | - |
@@ -75,8 +77,10 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-18` | [Project management](#project-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-19` | [Assets management](#assets-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-20` | [CMS](#cms) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
-| `RI-28` | [Rich text component with inline styling, preferably MD-backed](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
+| `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
 | `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `⚪ Not started` | Shared | - |
+| `RI-31` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | `⚪ Not started` | Shared | Dep: `RI-07` |
+| `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `⚪ Not started` | Shared | Dep: `RI-11`, `RI-28` |
 | `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
 | `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
 | `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
@@ -85,6 +89,14 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-23` | [Arbitrary code support for components](#arbitrary-code-support-for-components) | `⚪ Optional` | Research | `⚪ Not started` | Human | - |
 | `RI-24` | [Arbitrary CSS support for components](#arbitrary-css-support-for-components) | `⚪ Optional` | Research | `⚪ Not started` | Human | - |
 | `RI-26` | [Interact custom effects support](#interact-custom-effects-support) | `⚪ Optional` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06` |
+
+## Active Stage
+
+**Authoring Foundation** — moves the playground from a sticky/animation prototype to a real authoring environment across three workstreams: animation controls and on-stage feedback, multi-page navigation, and a richer component and semantic model.
+
+Extended product vision, feature requests, UX ideas, and open questions for this stage live in [NEXT_STAGE_BRIEF.md](./NEXT_STAGE_BRIEF.md).
+
+Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-07`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`
 
 ## Raw Intake
 
@@ -118,9 +130,11 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-25` performance optimizations
 - `RI-26` interact custom effects support
 - `RI-27` support variable fonts
-- `RI-28` add a text component that can be styled inline, preferably md behind the scenes
+- `RI-28` add a text component that can be styled inline
 - `RI-29` make sticky indicators more sticky motion aware, and make them interactive so stickyness can be set on stage, create another visual option for them to be on the stage sidelines and not clutter the viewport
 - `RI-30` add a versioning system to the project
+- `RI-31` migrate persistence from localStorage to IndexedDB to remove the 5MB storage ceiling as site data grows
+- `RI-32` unified node type discriminator model — text, media, and container node families each use a type discriminator so the renderer picks the right component, and nodes within a family are interchangeable by switching type
 
 ## Structured Roadmap
 
@@ -313,7 +327,16 @@ None yet.
 
 #### Refactor
 
-None yet. Promote here when a concrete structural rewrite becomes necessary to unblock roadmap items.
+##### Unified node type discriminator model
+
+- `Type`: `Refactor`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-32`
+- `Dependencies`: `RI-11`, `RI-28`
+- `Why it matters`: As text, media, and container node families grow, each needs interchangeable subtypes (single-block vs rich text, image vs video vs inline SVG, container vs display-contents group). A shared type discriminator pattern lets the renderer pick the right component per node and lets the editor switch types by changing one property, with shared data (position, size, styles) transferring automatically.
+- `Current state`: Nodes currently use a `NodeType` (`wrapper` | `leaf`) and a role string. There is no discriminated subtype model within a family, so interchangeability requires ad-hoc logic.
+- `Next move`: Define the discriminator model for the media family first (image/video/SVG/embed) as it has the clearest interchangeability need, then apply the same pattern to text (single-block/rich-text) and container (container/display-contents group). Keep backward compatibility with existing role strings during migration.
 
 #### Infra
 
@@ -360,7 +383,7 @@ None yet.
 - `Source`: `RI-28`
 - `Why it matters`: A richer text surface can unlock more realistic content authoring without forcing authors to decompose every text pattern into many separate nodes.
 - `Current state`: The current text model supports text content, semantic tags, and typography/design controls, but not a richer inline-styled text authoring surface.
-- `Next review question`: Should the first version optimize for markdown-backed authoring, rich inline editing UX, or a model that can support both?
+- `Next review question`: Should the first version optimize for markdown-backed authoring, rich inline editing UX, or a model that can support both? if we want fonts we need html support, md is simple but doesn't cover all the bases.
 
 #### Platform
 
@@ -413,6 +436,17 @@ None yet.
 - `Why it matters`: Versioning creates safer iteration, clearer milestone management, and a path to compare, restore, branch, or publish project states without relying only on local undo history.
 - `Current state`: The project has document undo/redo and import/export flows, but there is no project-level version history or named snapshot model described in the roadmap.
 - `Next review question`: Should the first versioning milestone be simple named snapshots, linear history, or a richer branch/restore workflow tied to import/export and future collaboration?
+
+##### Migrate persistence to IndexedDB
+
+- `Type`: `Platform`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-31`
+- `Dependencies`: `RI-07`
+- `Why it matters`: localStorage has a hard ~5MB limit per origin. As the model grows with multiple pages, shared components, animations, and richer node trees, this ceiling becomes a real constraint with no graceful failure — it throws a quota error and stops saving.
+- `Current state`: All editor state is stored in localStorage. This is sufficient for single-page sites with URL-referenced media, but not a long-term solution. IndexedDB offers the same browser-local, no-server model with storage limits of 50MB+ and a path to storing larger blobs if needed.
+- `Next move`: Add a storage size warning in the editor when the model approaches the localStorage limit. Plan the IndexedDB migration as a discrete platform task once multi-page sites make the constraint real. Migration is straightforward — same model, different persistence backend.
 
 #### Refactor
 
