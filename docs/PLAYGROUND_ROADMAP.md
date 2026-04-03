@@ -64,6 +64,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
 | `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
 | `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🔴 Next` | Feature | `⚪ Not started` | Human | - |
+| `RI-33` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: `RI-07` |
 | `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | `⚪ Not started` | Shared | - |
 | `RI-12A` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | `🟣 Partially present` | Shared | - |
 | `RI-12B` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | `🟣 Partially present` | Shared | - |
@@ -135,6 +136,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-30` add a versioning system to the project
 - `RI-31` migrate persistence from localStorage to IndexedDB to remove the 5MB storage ceiling as site data grows
 - `RI-32` unified node type discriminator model — text, media, and container node families each use a type discriminator so the renderer picks the right component, and nodes within a family are interchangeable by switching type
+- `RI-33` editor support for copy/paste components and sections within a page and between pages, plus page duplication flows
 
 ## Structured Roadmap
 
@@ -282,6 +284,17 @@ None yet.
 - `Why it matters`: Multi-page support changes the document model, navigation semantics, export shape, and future product scope.
 - `Current state`: Current docs and export flow are centered on a single document/site page.
 - `Next review question`: Is the first version truly multi-page authoring, or a looser linked-pages system with separate documents?
+
+##### Copy/paste and duplication across page structure
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-33`
+- `Dependencies`: `RI-07`
+- `Why it matters`: Once the editor supports more than one page, authors need reusable editing workflows for moving or cloning content without rebuilding it manually. Copy/paste of components and sections, cross-page paste targets, and duplicate-page actions are part of the baseline trust model for authoring at page/site scope.
+- `Current state`: The roadmap identifies multi-page support as a core workstream, but there is no explicit task yet for clipboard-style editing flows across page boundaries or for whole-page duplication semantics.
+- `Next move`: Define the first supported transfer units and behaviors: single component, subtree/section, same-page paste, cross-page paste, and duplicate page. Clarify whether these flows are backed by an internal clipboard model, browser clipboard integration, or both, and how IDs, links, selection, and history behave after duplication.
 
 ##### More components: SVG, video, gradients
 
