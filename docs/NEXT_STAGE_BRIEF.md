@@ -79,11 +79,11 @@ _Related: RI-07_
 
 ### Product Vision
 
-As a site, a basic requirement is to have multiple pages. We choose to go the MPA path, and support "real" server side routing and hashbang routing for static environments.
+As a site, a basic requirement is to have multiple pages. We choose to go the MPA path, and support "real" server side routing and static file output for static environments.
 
 ### Feature Requests
 
-* MPA routing: hashbang for static, server-side for deployed environments. Export produces a route manifest + server config or setup instructions for common environments.
+* MPA routing: static file output for static environments (two shapes: directory-per-route `about/index.html` or flat `about.html`, selectable in export settings), server-side for deployed environments. Export produces a route manifest + server config or setup instructions for common environments.
 * Each page has a display name and a URL slug (auto-generated, manually editable, real-time validated).
 * Draft/published flag on the site — drives slug redirect defaults and will expand to affect export and future collaboration.
 * Page slug changes: internal links auto-fixed when draft (opt-in), aliases preserved by default when published (opt-out). Manual alias management in the pages panel.
@@ -94,7 +94,7 @@ As a site, a basic requirement is to have multiple pages. We choose to go the MP
 
 ### UX Ideas
 
-* **Routing model:** Hashbang is solved (fully static). Server-side: editor tracks the desired route structure and export produces a route manifest plus either generated server config or guided instructions for common environments (Nginx, Netlify, Vercel, etc.). No client-side-only MPA routing — that's SPA territory.
+* **Routing model:** Static routing is solved via SSG-style file output — no hashbang. Two configurable output shapes (set in export settings): **directory** (default) — `about/index.html`, clean URLs work on any static host without extra config; **flat** — `about.html`, simpler output but URL prettification depends on host config. Server-side: editor tracks the desired route structure and export produces a route manifest plus either generated server config or guided instructions for common environments (Nginx, Netlify, Vercel, etc.). No client-side-only MPA routing — that's SPA territory.
 
 * **Page name + slug:** Each page has a display name (title) and a URL slug. Slug is auto-generated from name (slugified) but always manually editable. Both are validated in real-time in the editor UI.
 
@@ -123,7 +123,7 @@ As a site, a basic requirement is to have multiple pages. We choose to go the MP
 
 * **Routing in the editor preview — resolved:**
   1. On-stage: Google Docs model — clicking a link selects it; an interactive tooltip allows navigating to the target page. No routing inside the stage.
-  2. Editor URL space is sacred: the editor's own hash routing (`#/design-system` etc.) must never collide with the authored site's page routing. Site routing only activates in preview/export mode.
+  2. Editor URL space is sacred: the editor's own hash routing (`#/design-system` etc.) must never collide with the authored site's page routing. The site uses static file output (not hash-based routing), so there is no collision risk in the editor — site routing only activates in preview/export mode.
   3. URL-based editor modes: same app, different modes driven by URL parameter (e.g. `?mode=preview`). Preview mode strips editor chrome and renders the site fullscreen — openable in a new tab.
   4. Local dev: a `/preview` route on the local server renders the site with real routing outside editor chrome.
   5. Deployed (`sticky.tombigel.com`): a `preview.html` that loads the current site from localStorage in fullscreen mode. Subdomain option deferred.
