@@ -63,7 +63,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
 | `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
 | `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
-| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🔴 Next` | Feature | `⚪ Not started` | Human | - |
+| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `🟣 Partially present` | Shared | Wave 1-2: page model, editor UI, preview mode, export |
 | `RI-33` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: `RI-07` |
 | `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | `⚪ Not started` | Shared | - |
 | `RI-12A` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | `🟣 Partially present` | Shared | - |
@@ -278,12 +278,13 @@ None yet.
 ##### Multiple pages / MPA approach
 
 - `Type`: `Feature`
-- `Owner lane`: `Human`
-- `Status`: `Not started`
+- `Owner lane`: `Shared`
+- `Status`: `Partially present`
 - `Source`: `RI-07`
 - `Why it matters`: Multi-page support changes the document model, navigation semantics, export shape, and future product scope.
-- `Current state`: Current docs and export flow are centered on a single document/site page.
-- `Next review question`: Is the first version truly multi-page authoring, or a looser linked-pages system with separate documents?
+- `Current state`: **Wave 1-2 complete**: Page model with hierarchy, slug management, and aliases. Editor page switching via four UI entry points. Page linking with internal anchor support. Export with `outputStructure` selection (directory vs. flat). Preview mode with navigation. Missing: copy/paste, full page templates, advanced slug conflict resolution.
+- `Implemented features`: Page model with displayName, slug, sectionIds, slugAliases, parentPageId. Page hierarchy validation (cycle detection). URL resolution with nested paths. Editor UI (pages tab in layers, dedicated panel, inspector no-selection, topbar dropdown). Follow-link popup for page navigation. Preview mode (`?mode=preview`). Multi-page export with configurable output structure. Route manifest building.
+- `Next review question`: Are the deferred features (copy/paste, page templates) blocking real-world authoring workflows, or can they land in a follow-up wave?
 
 ##### Copy/paste and duplication across page structure
 

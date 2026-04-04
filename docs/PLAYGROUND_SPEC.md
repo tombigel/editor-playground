@@ -22,6 +22,7 @@ This spec is implementation-oriented. For the quickest path through it:
 - [Goal](#goal)
 - [Node Model](#node-model)
 - [Document Model](#document-model)
+- [Multiple Pages & Navigation](#multiple-pages--navigation)
 - [Wrapper Model](#wrapper-model)
 - [Nesting Rules](#nesting-rules)
 - [Layout Model](#layout-model)
@@ -85,6 +86,8 @@ Node ids are monotonic per session and are synchronized against the loaded docum
 | `rootId` | Site root node id |
 | `nodes` | Full document node graph |
 | `fontLibrary` | Document-scoped font manifest |
+| `pages` | Array of page definitions (each with `id`, `displayName`, `slug`, `sectionIds`, `slugAliases`, `parentPageId`) |
+| `siteSettings` | Site-level settings including `outputStructure` ('directory' or 'flat') |
 
 ### Font library fields
 
@@ -116,6 +119,52 @@ Node ids are monotonic per session and are synchronized against the loaded docum
 - `purge-unused` removes only unused families that are neither defaults nor favorites.
 - Imported legacy text weights such as `'bold'` and `'normal'` are normalized to numeric weights.
 - Document normalization resolves missing or stubbed Google-backed family names against the bundled catalog before falling back to a minimal placeholder entry.
+
+## Multiple Pages & Navigation
+
+The playground supports multi-page sites with nested page hierarchies, slug management, and internal page linking.
+
+### Page model
+
+Each page has:
+
+- `id`: unique page identifier
+- `displayName`: human-readable page title
+- `slug`: URL-safe identifier (auto-generated from displayName, manually editable)
+- `sectionIds`: ordered list of section node IDs belonging to this page
+- `slugAliases`: array of alternative slugs for redirect/alias support
+- `parentPageId`: optional ID of parent page for nested URL hierarchies
+
+### Page hierarchy and URL resolution
+
+- Root/home page has `slug: ''` and resolves to `/`
+- Non-root pages resolve to `/slug/` (single level) or `/parent-slug/child-slug/` (nested)
+- Parent-child relationships prevent cycles and allow multiple child pages per parent
+- `resolvePageUrl(document, pageId)` computes the full page path including all ancestor slugs
+
+### Page linking
+
+Links support `linkType: 'page'` in addition to `'anchor'` and `'external'`:
+
+- `linkType: 'page'` links carry `targetPageId` and optional `pageAnchorId` (target section on that page)
+- `getLinkHref(link, document)` resolves page links to absolute URLs
+- Page links with `pageAnchorId` append the anchor to the URL: `/about/#section-1`
+- Editor follow-link popups allow clicking links to navigate between pages
+- Broken page links (missing target page) are flagged by validation
+
+### Editor page switching
+
+- `activePageId` in editor state determines which page's sections render on stage
+- Stage displays only the active page's main sections plus shared header/footer
+- Page switching is immediate; undo/redo preserves page selection
+- No-selection state shows page inspector allowing creation and settings
+
+### Preview mode and export
+
+- Pages are rendered as static HTML files during export
+- `outputStructure` in `siteSettings` determines file layout: `'directory'` (index.html per directory) or `'flat'` (one .html per page)
+- `renderSiteExportBundles` returns bundles with paths and content for all pages
+- Each page gets its own full HTML document with shared header/footer
 
 ## Wrapper Model
 
@@ -790,6 +839,15 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 - `durationMode=auto` exports no synthetic measured spacer extent because site export is model-driven and does not depend on runtime DOM measurement.
 - `target=self` with `durationMode=auto` exports sticky directly on the node or wrapper without a synthetic track wrapper, matching the editor stage baseline.
 
+### Multi-page export
+
+- `renderSiteExportBundles(document, options)` generates an export bundle for each page in the document.
+- `outputStructure` option determines file naming:
+  - `'directory'`: each page gets its own directory with `index.html` (e.g., `about/index.html`)
+  - `'flat'`: all pages are HTML files in the root (e.g., `about.html`)
+- Home page always exports as `index.html`
+- Nested pages include their full URL path in the filename (e.g., `parent/child/index.html`)
+
 ### Programmatic export surface
 
 | Export | Purpose |
@@ -798,12 +856,22 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 | `renderSiteCss(document)` | Renders the generated site CSS. |
 | `renderSiteHtmlDocument(document)` | Renders a complete standalone HTML document. |
 | `renderSiteExportBundle(document)` | Returns the full export bundle used by ZIP and site export. |
+| `renderSiteExportBundles(document, options)` | Returns export bundles for all pages with configurable output structure. |
+| `buildRouteManifest(document)` | Builds a manifest mapping page slugs to file paths and URLs. |
 
 ## Preview Model
 
-Sticky preview is CSS-native.
+The preview surface allows viewing the rendered site at full width without editor controls.
 
-### Preview principles
+### Preview mode activation
+
+- `?mode=preview` URL parameter opens preview mode
+- Preview-mode tab label displays the current page name
+- Floating "Back to Editor" button returns to the editor UI
+- Preview renders the full multi-page site with navigation
+- Sticky behavior is CSS-native in preview as in the editor
+
+### Preview rendering
 
 - Sticky movement in preview is CSS-native.
 - Sticky layering uses one shared low z-index baseline across the editor stage and exported site rather than renderer-specific stacks.
@@ -921,6 +989,35 @@ In DEV mode, `window.playgroundAnimationApi` is available for testing and debugg
 
 The editor surface is organized around one stage, a small set of persistent rails and panels, and a handful of modal or popover-based global tools.
 
+### Page switching and management
+
+The editor supports multi-page management with four UI entry points:
+
+1. **Layers panel Pages tab**: collapsible multi-level tree showing page hierarchy with add, delete, and settings buttons
+2. **Dedicated Pages panel**: full-screen page management accessible from topbar button
+3. **Inspector no-selection state**: when no node is selected, inspector shows page inspector for creating/renaming pages
+4. **Top-bar pages dropdown**: quick switcher to jump between pages
+
+Page switching behavior:
+
+- `activePageId` in editor state determines which page's sections appear on the stage
+- Clicking a page in the UI updates `activePageId` and re-renders the stage
+- Page switching preserves undo/redo history (history is per-document, not per-page)
+- Stage always shows the active page's sections plus shared header/footer
+
+Page settings:
+
+- Each page has a popup for displayName, slug, and parent-page selection
+- `autoSyncSlugs` site setting controls automatic slug generation during renames
+- Slug conflicts are validated; pending slug changes show a warning banner
+- Pages support slug aliases for redirect support
+
+Follow-link popups:
+
+- When a link node with `linkType: 'page'` is selected, a "Follow link" popup appears
+- Clicking the popup navigates to the target page in the editor
+- The popup shows the target page name and target anchor (if specified)
+
 ### Workspace model
 
 - The editor presents a full-stage canvas plus an insert panel and a collapsible inspector rail.
@@ -935,7 +1032,9 @@ The editor surface is organized around one stage, a small set of persistent rail
 
 - The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`.
 - Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
-- Top-bar utility actions expose help and settings.
+- Top-bar utility actions expose help, settings, pages panel, and preview mode button.
+- Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
+- Pages panel button toggles a dedicated panel for multi-page management.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
 - Left-rail pop panels open from a shared resting position near the top-left workspace edge below the top bar rather than vertically following the trigger button.
 - Section templates keep outside-click and `Esc` dismissal and stay above stage selection overlays.
@@ -1018,6 +1117,13 @@ Supported operations:
 
 ### Inspector model
 
+No-selection state:
+
+- When no node is selected (stage is idle), the inspector shows the page inspector
+- Page inspector allows creating new pages and switching between existing pages
+- Current page is highlighted; clicking a page updates `activePageId`
+- Page settings button opens a popup for slug, displayName, and parent-page management
+
 Single-node inspector:
 
 - Inspector sections can expose a small top-right `Go to mode` entry button with a tooltip for `Layout`, `Sticky`, `Content`, and `Design`.
@@ -1025,6 +1131,7 @@ Single-node inspector:
 - `Content` is the standard content-editing section title across leaf inspectors.
 - Text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`.
 - Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
+- Link nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
 
 Multi-select inspector:
 

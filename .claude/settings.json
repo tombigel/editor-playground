@@ -8,7 +8,9 @@
       "Bash(grep -r \"selection\\\\|Selection\\\\|overlay\\\\|Overlay\" /Users/tombigel/Dev/sticky-playground/src/design-system/sections/composite/*.tsx)",
       "Bash(grep -r \"case ''diagnostics''\" /Users/tombigel/Dev/Wix/sticky-playground/src --include=\"*.tsx\" --include=\"*.ts\")",
       "Bash(grep -r \"DiagnosticsSettingsSection\\\\|diagnosticsRef\\\\|case ''diagnostics''\" /Users/tombigel/Dev/Wix/sticky-playground/src --include=\"*.tsx\" --include=\"*.ts\")",
-      "Bash(grep -r Bug /Users/tombigel/Dev/Wix/sticky-playground/src --include=*.tsx --include=*.ts)"
+      "Bash(grep -r Bug /Users/tombigel/Dev/Wix/sticky-playground/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")"
     ],
     "additionalDirectories": [
       "/tmp"
