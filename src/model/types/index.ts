@@ -1,11 +1,14 @@
 import type { AnimationDefinition, DocumentAnimationSettings } from '../../animations/types';
+import type { DocumentPage, PageId, SiteSettings } from './site';
+
+export type { DocumentPage, PageId, SiteSettings };
 
 export type NodeId = string;
 
 export type NodeType = 'site' | 'wrapper' | 'leaf';
 export type WrapperRole = 'section' | 'header' | 'footer' | 'container';
 export type LeafRole = 'text' | 'image' | 'link' | 'button';
-export type LinkKind = 'anchor' | 'external';
+export type LinkKind = 'anchor' | 'external' | 'page';
 export type BreakpointId = 'base' | 'tablet' | 'mobile';
 export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
 export type FontSizeUnit = 'px' | 'em' | 'rem';
@@ -283,6 +286,8 @@ export type LinkLeaf = BaseNode & {
   anchorTargetId?: NodeId;
   href?: string;
   openInNewTab?: boolean;
+  targetPageId?: PageId;
+  pageAnchorId?: NodeId;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   style?: TypographyStyle &
@@ -300,6 +305,8 @@ export type ButtonLeaf = BaseNode & {
   anchorTargetId?: NodeId;
   href?: string;
   openInNewTab?: boolean;
+  targetPageId?: PageId;
+  pageAnchorId?: NodeId;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   style?: TypographyStyle &
@@ -325,6 +332,9 @@ export type DocumentModel = {
   nodes: Record<NodeId, DocumentNode>;
   fontLibrary: FontLibrary;
   animationSettings?: DocumentAnimationSettings;
+  pages?: DocumentPage[];
+  siteSettings?: SiteSettings;
+  sharedRegionIds?: NodeId[];
 };
 
 export type ComputedStickyRegistration = {
