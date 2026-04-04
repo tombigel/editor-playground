@@ -49,6 +49,28 @@ describe('addPage', () => {
     const result = addPage(doc, { displayName: 'First' });
     expect(result.pages).toHaveLength(1);
   });
+
+  it('increments duplicate page names and slugs for new pages', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'New Page' });
+    const result = addPage(doc, { displayName: 'New Page' });
+    const newPage = (result.pages ?? []).at(-1);
+    expect(newPage?.displayName).toBe('New Page 2');
+    expect(newPage?.slug).toBe('new-page-2');
+  });
+
+  it('avoids collisions with existing slugs and slug aliases', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, {
+      displayName: 'About',
+      slug: 'about',
+      slugAliases: ['about-2'],
+    });
+    const result = addPage(doc, { displayName: 'About', slug: 'about' });
+    const newPage = (result.pages ?? []).at(-1);
+    expect(newPage?.displayName).toBe('About 2');
+    expect(newPage?.slug).toBe('about-3');
+  });
 });
 
 describe('deletePage', () => {

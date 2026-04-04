@@ -7,9 +7,50 @@ export function addPage(
   options?: Partial<Omit<DocumentPage, 'type' | 'id'>>,
 ): DocumentModel {
   const pages = structuredClone(document.pages ?? []);
-  const newPage = createPage(options);
+  const displayName = ensureUniquePageDisplayName(pages, options?.displayName ?? 'New Page');
+  const requestedSlug = options?.slug ?? generateSlug(displayName);
+  const slug = ensureUniquePageSlug(document, requestedSlug);
+  const newPage = createPage({ ...options, displayName, slug });
   pages.push(newPage);
   return { ...document, pages };
+}
+
+function ensureUniquePageDisplayName(
+  pages: DocumentPage[],
+  requestedDisplayName: string,
+): string {
+  const baseName = requestedDisplayName.trim() || 'New Page';
+  const existingNames = new Set(pages.map((page) => page.displayName.trim().toLowerCase()));
+  if (!existingNames.has(baseName.toLowerCase())) return baseName;
+
+  let counter = 2;
+  while (existingNames.has(`${baseName} ${counter}`.toLowerCase())) {
+    counter += 1;
+  }
+  return `${baseName} ${counter}`;
+}
+
+function ensureUniquePageSlug(document: DocumentModel, requestedSlug: string): string {
+  const claimedSlugs = getClaimedPageSlugs(document);
+  const baseSlug = requestedSlug.trim() || 'page';
+  if (!claimedSlugs.has(baseSlug)) return baseSlug;
+
+  let counter = 2;
+  while (claimedSlugs.has(`${baseSlug}-${counter}`)) {
+    counter += 1;
+  }
+  return `${baseSlug}-${counter}`;
+}
+
+function getClaimedPageSlugs(document: DocumentModel): Set<string> {
+  const claimedSlugs = new Set<string>();
+  for (const page of document.pages ?? []) {
+    claimedSlugs.add(page.slug);
+    for (const alias of page.slugAliases ?? []) {
+      claimedSlugs.add(alias);
+    }
+  }
+  return claimedSlugs;
 }
 
 export function deletePage(document: DocumentModel, pageId: PageId): DocumentModel {
