@@ -399,7 +399,7 @@ describe('api/documentApi', () => {
     const document = createInitialDocument();
     const serialized = JSON.parse(serializeDocumentJson(document)) as Record<string, unknown>;
 
-    expect(Object.keys(serialized).sort()).toEqual(['fontLibrary', 'nodes', 'rootId']);
+    expect(Object.keys(serialized).sort()).toEqual(['fontLibrary', 'nodes', 'pages', 'rootId', 'sharedRegionIds', 'siteSettings']);
     expect(serialized.rootId).toBe(document.rootId);
     expect(serialized.fontLibrary).toEqual(document.fontLibrary);
     expect(serialized.nodes).toEqual(document.nodes);

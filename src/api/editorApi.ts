@@ -85,6 +85,23 @@ export const updateStickyField = editorStore.updateStickyField;
 export const updateTextField = editorStore.updateTextField;
 export const updateWrapperStyleField = editorStore.updateWrapperStyleField;
 export const reorderNodes = editorStore.reorderNodes;
+export const setActivePage = editorStore.setActivePage;
+
+export {
+  addPage,
+  deletePage,
+  reorderPage,
+  setPageDisplayName,
+  setPageSlug,
+  setPageParent,
+  setSiteSettings,
+  moveSectionToPage,
+  getPageForSection,
+  getActiveSections,
+  resolvePageUrl,
+  validatePageSlug,
+} from './pageApi';
+export type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
 
 /** Stage keyboard navigation: enumerate selectable nodes and move between them. */
 export const getAdjacentStageSelection = stageNavigation.getAdjacentStageSelection;

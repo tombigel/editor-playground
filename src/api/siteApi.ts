@@ -16,14 +16,19 @@ import {
   renderSiteCss,
   renderSiteExportBundle,
   renderSiteHtmlDocument,
+  renderPageHtmlDocument,
+  renderSiteExportBundles,
+  buildRouteManifest,
   type SiteExportBundle,
   type SiteExportOptions,
+  type SitePageExportBundle,
+  type RouteManifest,
 } from '../site/siteExport';
 
 /** React component that renders a full site from a DocumentModel. */
 export const SiteRenderer = SiteRendererComponent;
 
-export type { SiteRendererProps, SiteExportBundle, SiteExportOptions };
+export type { SiteRendererProps, SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteManifest };
 
 /** Static site export: render HTML, CSS, and full export bundles from a DocumentModel. */
 export {
@@ -33,4 +38,7 @@ export {
   renderSiteCss,
   renderSiteExportBundle,
   renderSiteHtmlDocument,
+  renderPageHtmlDocument,
+  renderSiteExportBundles,
+  buildRouteManifest,
 };
