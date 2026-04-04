@@ -24,6 +24,7 @@ import {
   parseImportedDocumentJson,
   persistState,
   STORAGE_KEY,
+  STORAGE_KEY_V2,
 } from '../editorPersistence';
 
 function createWindowStorageStub() {
@@ -515,7 +516,7 @@ describe('editor/editorPersistence', () => {
       };
       persistState(stateWithSwap);
 
-      const raw = JSON.parse(windowStub.localStorage.getItem(STORAGE_KEY)!);
+      const raw = JSON.parse(windowStub.localStorage.getItem(STORAGE_KEY_V2)!);
       expect(raw.pendingRoleSwap).toBeNull();
     });
 

@@ -9,6 +9,7 @@ import type {
   WrapperStyleField,
 } from '../../model/types';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
+import type { PageId, DocumentPage, SiteSettings } from '../../model/types/site';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -32,6 +33,12 @@ export type HistoryEntry = {
   pendingAfter: EditorState['pendingRoleSwap'];
   debounceKey: string | null;
   createdAt: number;
+  pagesBefore: DocumentPage[] | undefined;
+  pagesAfter: DocumentPage[] | undefined;
+  siteSettingsBefore: SiteSettings | undefined;
+  siteSettingsAfter: SiteSettings | undefined;
+  activePageIdBefore: PageId | null;
+  activePageIdAfter: PageId | null;
 };
 
 export type SelectionRect = {
@@ -121,7 +128,18 @@ export type EditorAction =
   | { type: 'setStartupFocusedMode'; value: FocusedMode }
   | { type: 'setInspectorCollapsed'; value: boolean }
   | { type: 'setTemporaryInspectorOpen'; value: boolean }
-  | { type: 'setFocusedPanelOffset'; value: FocusedPanelOffset };
+  | { type: 'setFocusedPanelOffset'; value: FocusedPanelOffset }
+  | { type: 'setActivePage'; pageId: PageId }
+  | { type: 'addPage'; options?: Partial<DocumentPage> }
+  | { type: 'deletePage'; pageId: PageId }
+  | { type: 'reorderPage'; pageId: PageId; direction: 'back' | 'forward' }
+  | { type: 'setPageDisplayName'; pageId: PageId; displayName: string }
+  | { type: 'setPageSlug'; pageId: PageId; slug: string }
+  | { type: 'setPageParent'; pageId: PageId; parentPageId: PageId | null }
+  | { type: 'setPageVisibility'; pageId: PageId; visible: boolean }
+  | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
+  | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
+  | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
 
 export type HistoryAction =
   | EditorAction

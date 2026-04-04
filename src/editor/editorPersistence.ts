@@ -7,6 +7,7 @@ import {
   createSectionFromTemplate,
   syncIdCountersWithDocument,
 } from '../model/defaults';
+import { createPage, createInitialSiteSettings } from '../model/pageDefaults';
 import { normalizeDocumentFontState } from '../fonts';
 import { getLinkHref } from '../model/links';
 import { validateDocument } from '../model/validation';
@@ -40,6 +41,7 @@ import type { EditorState } from './types';
 import { normalizeSelectedIds } from './selection';
 
 export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
+export const STORAGE_KEY_V2 = 'sticky-playground.editor-state.v2';
 export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';
 
 export function createInitialState(): EditorState {
@@ -48,8 +50,10 @@ export function createInitialState(): EditorState {
     typeof window !== 'undefined' ? (window as Window & { location?: { search?: string } }).location?.search : undefined,
   );
   const startupFocusedMode = focusedModeOverride === undefined ? ui.startupFocusedMode : focusedModeOverride;
+  const document = loadDefaultDocument();
   return {
-    document: loadDefaultDocument(),
+    document,
+    activePageId: document.pages?.[0]?.id ?? null,
     selectedId: null,
     selectedIds: [],
     pendingRoleSwap: null,
@@ -62,6 +66,100 @@ export function createInitialState(): EditorState {
   };
 }
 
+function normalizePersistedState(parsed: EditorState): EditorState | null {
+  const normalizedDocument = normalizeDocument(parsed.document);
+  const persistedStartupFocusedMode = normalizeFocusedMode(parsed.ui?.startupFocusedMode);
+  const focusedModeOverride = resolveFocusedModeUrlOverride(
+    typeof window !== 'undefined' ? (window as Window & { location?: { search?: string } }).location?.search : undefined,
+  );
+  const startupFocusedMode =
+    focusedModeOverride === undefined ? persistedStartupFocusedMode : focusedModeOverride;
+  const selectedIds = normalizeSelectedIds(
+    normalizedDocument,
+    Array.isArray((parsed as Partial<EditorState>).selectedIds) ? (parsed as Partial<EditorState>).selectedIds : undefined,
+    parsed.selectedId,
+  );
+  const themeMode = normalizeThemeMode(parsed.ui?.themeMode);
+  const lightTheme = normalizeEditorLightTheme(parsed.ui?.lightTheme);
+  const darkTheme = normalizeEditorDarkTheme(parsed.ui?.darkTheme);
+  const candidate: EditorState = {
+    ...parsed,
+    document: normalizedDocument,
+    activePageId: parsed.activePageId ?? normalizedDocument.pages?.[0]?.id ?? null,
+    selectedId: selectedIds[0] ?? null,
+    selectedIds,
+    pendingRoleSwap: null,
+    ui: {
+      previewSticky: parsed.ui?.previewSticky ?? true,
+      animationPreview: parsed.ui?.animationPreview ?? {
+        enabled: false,
+        mode: 'passive',
+        triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
+      },
+      spacerVisibility:
+        parsed.ui?.spacerVisibility === 'all' || parsed.ui?.spacerVisibility === 'selected'
+          ? parsed.ui.spacerVisibility
+          : 'selected',
+      showGridLanes: parsed.ui?.showGridLanes ?? false,
+      showDebugInfo: parsed.ui?.showDebugInfo ?? false,
+      snapSettings: normalizeSnapSettings(parsed.ui),
+      themeMode,
+      accentColor: normalizePersistedAccentColor(parsed.ui, themeMode, lightTheme, darkTheme),
+      lightTheme,
+      darkTheme,
+      focusedMode: startupFocusedMode,
+      startupFocusedMode,
+      inspectorCollapsed: startupFocusedMode ? true : parsed.ui?.inspectorCollapsed ?? false,
+      temporaryInspectorOpen: false,
+      focusedPanelOffset: normalizeFocusedPanelOffset(parsed.ui?.focusedPanelOffset),
+    },
+  };
+  const errors = validateDocument(candidate.document);
+  if (errors.length > 0) {
+    return null;
+  }
+  return candidate;
+}
+
+function migrateV1ToV2(v1State: EditorState): EditorState {
+  const doc = v1State.document;
+  if (doc.pages && doc.pages.length > 0) {
+    return {
+      ...v1State,
+      activePageId: v1State.activePageId ?? doc.pages[0]?.id ?? null,
+    };
+  }
+
+  const root = doc.nodes[doc.rootId];
+  const sectionIds: string[] = [];
+  const sharedRegionIds: string[] = [];
+
+  if (root && root.type === 'site') {
+    for (const childId of root.children) {
+      const child = doc.nodes[childId];
+      if (!child || child.type !== 'wrapper') continue;
+      if (child.role === 'header' || child.role === 'footer') {
+        sharedRegionIds.push(childId);
+      } else if (child.role === 'section') {
+        sectionIds.push(childId);
+      }
+    }
+  }
+
+  const homePage = createPage({ displayName: 'Home', slug: '', sectionIds });
+
+  return {
+    ...v1State,
+    activePageId: homePage.id,
+    document: {
+      ...doc,
+      pages: [homePage],
+      siteSettings: createInitialSiteSettings(),
+      sharedRegionIds,
+    },
+  };
+}
+
 export function loadPersistedState(): EditorState {
   if (typeof window === 'undefined') {
     return createInitialState();
@@ -69,62 +167,29 @@ export function loadPersistedState(): EditorState {
 
   try {
     ensureDefaultDocumentSeeded();
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+
+    const rawV2 = window.localStorage.getItem(STORAGE_KEY_V2);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2) as EditorState;
+      const normalized = normalizePersistedState(parsed);
+      if (normalized) {
+        return normalized;
+      }
       return createInitialState();
     }
-    const parsed = JSON.parse(raw) as EditorState;
-    const normalizedDocument = normalizeDocument(parsed.document);
-    const persistedStartupFocusedMode = normalizeFocusedMode(parsed.ui?.startupFocusedMode);
-    const focusedModeOverride = resolveFocusedModeUrlOverride(
-      (window as Window & { location?: { search?: string } }).location?.search,
-    );
-    const startupFocusedMode =
-      focusedModeOverride === undefined ? persistedStartupFocusedMode : focusedModeOverride;
-    const selectedIds = normalizeSelectedIds(
-      normalizedDocument,
-      Array.isArray((parsed as Partial<EditorState>).selectedIds) ? (parsed as Partial<EditorState>).selectedIds : undefined,
-      parsed.selectedId,
-    );
-    const themeMode = normalizeThemeMode(parsed.ui?.themeMode);
-    const lightTheme = normalizeEditorLightTheme(parsed.ui?.lightTheme);
-    const darkTheme = normalizeEditorDarkTheme(parsed.ui?.darkTheme);
-    const candidate: EditorState = {
-      ...parsed,
-      document: normalizedDocument,
-      selectedId: selectedIds[0] ?? null,
-      selectedIds,
-      pendingRoleSwap: null,
-      ui: {
-        previewSticky: parsed.ui?.previewSticky ?? true,
-        animationPreview: parsed.ui?.animationPreview ?? {
-          enabled: false,
-          mode: 'passive',
-          triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true },
-        },
-        spacerVisibility:
-          parsed.ui?.spacerVisibility === 'all' || parsed.ui?.spacerVisibility === 'selected'
-            ? parsed.ui.spacerVisibility
-            : 'selected',
-        showGridLanes: parsed.ui?.showGridLanes ?? false,
-        showDebugInfo: parsed.ui?.showDebugInfo ?? false,
-        snapSettings: normalizeSnapSettings(parsed.ui),
-        themeMode,
-        accentColor: normalizePersistedAccentColor(parsed.ui, themeMode, lightTheme, darkTheme),
-        lightTheme,
-        darkTheme,
-        focusedMode: startupFocusedMode,
-        startupFocusedMode,
-        inspectorCollapsed: startupFocusedMode ? true : parsed.ui?.inspectorCollapsed ?? false,
-        temporaryInspectorOpen: false,
-        focusedPanelOffset: normalizeFocusedPanelOffset(parsed.ui?.focusedPanelOffset),
-      },
-    };
-    const errors = validateDocument(candidate.document);
-    if (errors.length > 0) {
-      return createInitialState();
+
+    const rawV1 = window.localStorage.getItem(STORAGE_KEY);
+    if (rawV1) {
+      const parsed = JSON.parse(rawV1) as EditorState;
+      const migrated = migrateV1ToV2({ ...parsed, activePageId: null });
+      const normalized = normalizePersistedState(migrated);
+      if (normalized) {
+        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(normalized));
+        return normalized;
+      }
     }
-    return candidate;
+
+    return createInitialState();
   } catch {
     return createInitialState();
   }
@@ -134,11 +199,7 @@ export function persistState(state: EditorState) {
   if (typeof window === 'undefined') {
     return;
   }
-  const serializable: EditorState = {
-    ...state,
-    pendingRoleSwap: null,
-  };
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+  window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify({ ...state, pendingRoleSwap: null }));
 }
 
 export function persistDefaultDocument(document: DocumentModel) {
@@ -153,6 +214,7 @@ export function clearSessionState() {
     return;
   }
   window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(STORAGE_KEY_V2);
 }
 
 export function clearPersistedState() {
@@ -167,6 +229,7 @@ export function createFactoryResetState(ui?: EditorState['ui']): EditorState {
   const document = createInitialDocument();
   return {
     document,
+    activePageId: document.pages?.[0]?.id ?? null,
     selectedId: null,
     selectedIds: [],
     pendingRoleSwap: null,
@@ -298,6 +361,10 @@ export function cloneDocument(document: DocumentModel): DocumentModel {
     rootId: document.rootId,
     nodes: structuredClone(document.nodes),
     fontLibrary: structuredClone(document.fontLibrary),
+    ...(document.animationSettings ? { animationSettings: structuredClone(document.animationSettings) } : {}),
+    ...(document.pages ? { pages: structuredClone(document.pages) } : {}),
+    ...(document.siteSettings ? { siteSettings: structuredClone(document.siteSettings) } : {}),
+    ...(document.sharedRegionIds ? { sharedRegionIds: [...document.sharedRegionIds] } : {}),
   };
 }
 

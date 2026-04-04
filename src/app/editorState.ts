@@ -36,6 +36,19 @@ import {
 } from '../api/editorApi';
 import { setSiteNodeStickyElevation } from '../api/documentApi';
 import {
+  addPage,
+  addPageSlugAlias,
+  deletePage,
+  reorderPage,
+  setPageDisplayName,
+  setPageSlug,
+  setPageParent,
+  setPageVisibility,
+  removePageSlugAlias,
+  setSiteSettings,
+} from '../api/pageApi';
+import { setActivePage } from '../editor/editorMutations';
+import {
   appendHistoryEntry,
   applyHistoryEntry,
   buildHistoryEntry,
@@ -311,6 +324,36 @@ export function editorReducer(state: EditorState, action: EditorAction) {
           focusedPanelOffset: normalizeFocusedPanelOffset(action.value),
         },
       };
+    case 'setActivePage':
+      return setActivePage(state, action.pageId);
+    case 'addPage': {
+      const nextDoc = addPage(state.document, action.options);
+      const newPage = nextDoc.pages?.[nextDoc.pages.length - 1];
+      return { ...state, document: nextDoc, activePageId: newPage?.id ?? state.activePageId };
+    }
+    case 'deletePage': {
+      const nextDoc = deletePage(state.document, action.pageId);
+      const activePageId = nextDoc.pages?.find((p) => p.id === state.activePageId)
+        ? state.activePageId
+        : nextDoc.pages?.[0]?.id ?? null;
+      return { ...state, document: nextDoc, activePageId, selectedId: null, selectedIds: [] };
+    }
+    case 'reorderPage':
+      return { ...state, document: reorderPage(state.document, action.pageId, action.direction) };
+    case 'setPageDisplayName':
+      return { ...state, document: setPageDisplayName(state.document, action.pageId, action.displayName) };
+    case 'setPageSlug':
+      return { ...state, document: setPageSlug(state.document, action.pageId, action.slug) };
+    case 'setPageParent':
+      return { ...state, document: setPageParent(state.document, action.pageId, action.parentPageId) };
+    case 'setPageVisibility':
+      return { ...state, document: setPageVisibility(state.document, action.pageId, action.visible) };
+    case 'addPageSlugAlias':
+      return { ...state, document: addPageSlugAlias(state.document, action.pageId, action.alias) };
+    case 'removePageSlugAlias':
+      return { ...state, document: removePageSlugAlias(state.document, action.pageId, action.alias) };
+    case 'setSiteSettings':
+      return { ...state, document: setSiteSettings(state.document, action.patch) };
     default:
       return state;
   }

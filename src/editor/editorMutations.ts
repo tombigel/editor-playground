@@ -4,6 +4,7 @@ import {
   syncIdCountersWithDocument,
   type SectionTemplateId,
 } from '../model/defaults';
+import type { PageId } from '../model/types/site';
 import { ensureDocumentFontFamilyByName, normalizeDocumentFontState } from '../fonts';
 import { validateDocument } from '../model/validation';
 import type {
@@ -69,6 +70,18 @@ export function importDocument(state: EditorState, document: DocumentModel): Edi
   };
 }
 
+export function setActivePage(state: EditorState, pageId: PageId): EditorState {
+  const page = state.document.pages?.find((p) => p.id === pageId);
+  if (!page) return state;
+  return {
+    ...state,
+    activePageId: pageId,
+    selectedId: null,
+    selectedIds: [],
+    pendingRoleSwap: null,
+  };
+}
+
 export function insertWrapper(state: EditorState, role: WrapperRole): EditorState {
   const document = cloneDocument(state.document);
   syncIdCountersWithDocument(document);
@@ -80,6 +93,14 @@ export function insertWrapper(state: EditorState, role: WrapperRole): EditorStat
   const node = createUniqueWrapper(document, role, parentId);
   document.nodes[node.id] = node;
   document.nodes[parentId].children.push(node.id);
+  if (role === 'section' && state.activePageId && document.pages) {
+    const pageIndex = document.pages.findIndex((p) => p.id === state.activePageId);
+    if (pageIndex >= 0) {
+      document.pages = document.pages.map((p, i) =>
+        i === pageIndex ? { ...p, sectionIds: [...p.sectionIds, node.id] } : p,
+      );
+    }
+  }
   return applySelectionToDocument(state, document, [node.id]);
 }
 
@@ -99,6 +120,15 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   });
   const insertAt = footerIndex >= 0 ? footerIndex : root.children.length;
   root.children.splice(insertAt, 0, wrapper.id);
+
+  if (state.activePageId && document.pages) {
+    const pageIndex = document.pages.findIndex((p) => p.id === state.activePageId);
+    if (pageIndex >= 0) {
+      document.pages = document.pages.map((p, i) =>
+        i === pageIndex ? { ...p, sectionIds: [...p.sectionIds, wrapper.id] } : p,
+      );
+    }
+  }
 
   return applySelectionToDocument(state, normalizeDocumentFontState(document), [wrapper.id]);
 }

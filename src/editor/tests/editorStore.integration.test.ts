@@ -23,6 +23,7 @@ import {
   reorderNode,
   requestPromoteWrapperRole,
   STORAGE_KEY,
+  STORAGE_KEY_V2,
   updateStickyField,
   updateTextField,
   updateWrapperStyleField,
@@ -299,7 +300,7 @@ describe('editor/editorStore integration', () => {
     expect(loadPersistedState().ui.themeMode).toBe('auto');
 
     localStorage.setItem(
-      STORAGE_KEY,
+      STORAGE_KEY_V2,
       JSON.stringify({
         ...state,
         ui: {
@@ -331,12 +332,13 @@ describe('editor/editorStore integration', () => {
       }),
     );
 
-    expect(loadPersistedState().ui.accentColor).toBe('#1668ff');
-    expect(loadPersistedState().ui.lightTheme).toBe('air');
-    expect(loadPersistedState().ui.darkTheme).toBe('monokai');
+    const firstLoad = loadPersistedState();
+    expect(firstLoad.ui.accentColor).toBe('#1668ff');
+    expect(firstLoad.ui.lightTheme).toBe('air');
+    expect(firstLoad.ui.darkTheme).toBe('monokai');
 
     localStorage.setItem(
-      STORAGE_KEY,
+      STORAGE_KEY_V2,
       JSON.stringify({
         ...state,
         ui: {
@@ -348,9 +350,10 @@ describe('editor/editorStore integration', () => {
       }),
     );
 
-    expect(loadPersistedState().ui.accentColor).toBe('#ff6b4a');
-    expect(loadPersistedState().ui.lightTheme).toBe('paper');
-    expect(loadPersistedState().ui.darkTheme).toBe('midnight');
+    const secondLoad = loadPersistedState();
+    expect(secondLoad.ui.accentColor).toBe('#ff6b4a');
+    expect(secondLoad.ui.lightTheme).toBe('paper');
+    expect(secondLoad.ui.darkTheme).toBe('midnight');
   });
 
   it('restores startup focused mode while dropping transient inspector-open state', () => {

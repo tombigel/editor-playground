@@ -63,8 +63,11 @@ export function buildHistoryEntry(
   const pendingChanged = !deepEqual(before.pendingRoleSwap, after.pendingRoleSwap);
   const rootChanged = before.document.rootId !== after.document.rootId;
   const fontLibraryChanged = !deepEqual(before.document.fontLibrary, after.document.fontLibrary);
+  const pagesChanged = !deepEqual(before.document.pages, after.document.pages);
+  const siteSettingsChanged = !deepEqual(before.document.siteSettings, after.document.siteSettings);
+  const activePageIdChanged = before.activePageId !== after.activePageId;
 
-  if (!selectedChanged && !pendingChanged && !rootChanged && !fontLibraryChanged && patches.length === 0) {
+  if (!selectedChanged && !pendingChanged && !rootChanged && !fontLibraryChanged && !pagesChanged && !siteSettingsChanged && !activePageIdChanged && patches.length === 0) {
     return null;
   }
 
@@ -82,6 +85,12 @@ export function buildHistoryEntry(
     pendingAfter: after.pendingRoleSwap,
     debounceKey,
     createdAt,
+    pagesBefore: structuredClone(before.document.pages),
+    pagesAfter: structuredClone(after.document.pages),
+    siteSettingsBefore: structuredClone(before.document.siteSettings),
+    siteSettingsAfter: structuredClone(after.document.siteSettings),
+    activePageIdBefore: before.activePageId,
+    activePageIdAfter: after.activePageId,
   };
 }
 
@@ -129,6 +138,12 @@ export function composeHistoryEntries(previous: HistoryEntry, next: HistoryEntry
     pendingAfter: next.pendingAfter,
     debounceKey: next.debounceKey,
     createdAt: next.createdAt,
+    pagesBefore: previous.pagesBefore,
+    pagesAfter: next.pagesAfter,
+    siteSettingsBefore: previous.siteSettingsBefore,
+    siteSettingsAfter: next.siteSettingsAfter,
+    activePageIdBefore: previous.activePageIdBefore,
+    activePageIdAfter: next.activePageIdAfter,
   };
 }
 
@@ -153,6 +168,9 @@ export function applyHistoryEntry(
   const selectedIds = selectedIdsCandidate.filter((selectedId) => Boolean(nodes[selectedId]));
   const selectedId =
     selectedIds[0] ?? (selectedCandidate && nodes[selectedCandidate] ? selectedCandidate : null);
+  const pages = direction === 'undo' ? entry.pagesBefore : entry.pagesAfter;
+  const siteSettings = direction === 'undo' ? entry.siteSettingsBefore : entry.siteSettingsAfter;
+  const activePageId = direction === 'undo' ? entry.activePageIdBefore : entry.activePageIdAfter;
 
   return {
     ...present,
@@ -160,7 +178,12 @@ export function applyHistoryEntry(
       rootId,
       nodes,
       fontLibrary: structuredClone(direction === 'undo' ? entry.fontLibraryBefore : entry.fontLibraryAfter),
+      ...(present.document.animationSettings ? { animationSettings: present.document.animationSettings } : {}),
+      ...(pages !== undefined ? { pages: structuredClone(pages) } : {}),
+      ...(siteSettings !== undefined ? { siteSettings: structuredClone(siteSettings) } : {}),
+      ...(present.document.sharedRegionIds ? { sharedRegionIds: present.document.sharedRegionIds } : {}),
     },
+    activePageId: activePageId ?? present.activePageId,
     selectedId,
     selectedIds,
     pendingRoleSwap: direction === 'undo' ? entry.pendingBefore : entry.pendingAfter,

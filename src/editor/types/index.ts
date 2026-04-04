@@ -1,5 +1,6 @@
 import type { DocumentModel, NodeId } from '../../model/types';
 import type { EditorDarkTheme, EditorLightTheme, ThemeMode } from '../../lib/types';
+import type { PageId } from '../../model/types/site';
 
 export type FocusedMode = null | 'layout' | 'sticky' | 'content' | 'design';
 export type FocusedPanelOffset = { x: number; y: number };
@@ -84,6 +85,7 @@ export type NodeDebugInfo = {
 
 export type EditorState = {
   document: DocumentModel;
+  activePageId: PageId | null;
   selectedId: NodeId | null;
   selectedIds: NodeId[];
   pendingRoleSwap: ConfirmReplaceRole | null;
