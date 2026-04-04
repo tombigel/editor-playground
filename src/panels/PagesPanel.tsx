@@ -1,7 +1,8 @@
-import { LayoutGrid } from 'lucide-react';
+import { CheckCircle, ClipboardCopy, LayoutGrid, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { DocumentModel } from '../model/types';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
+import type { LinkValidationError } from '../model/validation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +37,7 @@ export type PagesPanelProps = {
   onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
   onReorderPage: (pageId: PageId, direction: 'back' | 'forward') => void;
   onSyncPageLinks: (oldUrl: string, newUrl: string) => void;
+  onValidateLinks: () => LinkValidationError[];
   onExport: () => void;
 };
 
@@ -57,10 +59,13 @@ export function PagesPanel({
   onSetPageParent,
   onReorderPage,
   onSyncPageLinks,
+  onValidateLinks,
   onExport,
 }: PagesPanelProps) {
   const [settingsPageId, setSettingsPageId] = useState<PageId | null>(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLElement | null>(null);
+  const [linkErrors, setLinkErrors] = useState<LinkValidationError[] | null>(null);
+  const [copied, setCopied] = useState(false);
   const gearButtonRefs = useRef(new Map<PageId, HTMLElement>());
 
   const siteSettings = document.siteSettings;
@@ -87,6 +92,25 @@ export function PagesPanel({
 
   function handleSetPageViewTransition(pageId: PageId, transition: DocumentPage['viewTransition']) {
     onSetPageViewTransition(pageId, transition);
+  }
+
+  function handleValidateLinks() {
+    const errors = onValidateLinks();
+    setLinkErrors(errors);
+    setCopied(false);
+  }
+
+  function handleCopyResults() {
+    if (!linkErrors) return;
+    const text =
+      linkErrors.length === 0
+        ? 'No broken links found.'
+        : linkErrors
+            .map((e) => `[${e.nodeRole}] "${e.nodeName}" (${e.nodeId}): ${e.description}`)
+            .join('\n');
+    void navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -246,8 +270,8 @@ export function PagesPanel({
                   variant="outline"
                   size="sm"
                   className="flex-1 text-sm"
-                  disabled
-                  aria-label="Validate links (coming soon)"
+                  onClick={handleValidateLinks}
+                  aria-label="Validate links"
                 >
                   Validate links
                 </Button>
@@ -261,6 +285,50 @@ export function PagesPanel({
                   Export site
                 </Button>
               </div>
+
+              {linkErrors !== null && (
+                <div className="editor-border-subtle rounded-lg border">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      {linkErrors.length === 0 ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-red-500" />
+                      )}
+                      <span className="editor-text-strong text-xs font-medium">
+                        {linkErrors.length === 0
+                          ? 'No broken links found'
+                          : `${linkErrors.length} broken link${linkErrors.length === 1 ? '' : 's'}`}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyResults}
+                      className="editor-text-muted hover:editor-text-strong flex items-center gap-1 text-xs"
+                      aria-label="Copy results to clipboard"
+                    >
+                      <ClipboardCopy className="h-3 w-3" />
+                      {copied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  {linkErrors.length > 0 && (
+                    <ul className="editor-border-subtle border-t">
+                      {linkErrors.map((err) => (
+                        <li
+                          key={err.nodeId + err.errorType}
+                          className="editor-border-subtle border-b px-3 py-2 last:border-b-0"
+                        >
+                          <div className="editor-text-strong text-xs font-medium">
+                            {err.nodeName}
+                            <span className="editor-text-muted ml-1 font-normal">({err.nodeRole})</span>
+                          </div>
+                          <div className="editor-text-muted mt-0.5 text-xs">{err.description}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         </div>

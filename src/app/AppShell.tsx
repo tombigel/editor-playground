@@ -5,12 +5,13 @@ import {
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
   type CSSProperties,
   type Dispatch,
   type PointerEvent as ReactPointerEvent,
   type Ref,
 } from 'react';
-import { ChevronDown, CircleQuestionMark, Eye, FilePlus2, Magnet, Play, Redo2, ScanEye, Settings, Type, Undo2 } from 'lucide-react';
+import { Magnet, Play, ScanEye, Type } from 'lucide-react';
 import type {
   DocumentNode,
   EditorState,
@@ -26,11 +27,14 @@ import {
 import { InsertPanel } from '../panels/InsertPanel';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
 import { HelpDialog } from '../panels/HelpDialog';
+import { ShortcutsDialog } from '../panels/ShortcutsDialog';
+import { AboutDialog } from '../panels/AboutDialog';
 import {
   INSPECTOR_COLLAPSED_WIDTH_PX,
   INSPECTOR_EXPANDED_WIDTH_PX,
   INSPECTOR_TRANSITION_MS,
 } from '../panels/inspectorLayout';
+import { EditorTopbar } from './EditorTopbar';
 const LayersPanel = lazy(() =>
   import('../panels/LayersPanel').then((m) => ({ default: m.LayersPanel }))
 );
@@ -69,10 +73,11 @@ import {
   FOCUSED_PANEL_TOP_OFFSET_PX,
 } from '../editor/focusedPanelPosition';
 import { useDebugLogger } from '../editor/useDebugLogger';
-import { RailToggleButton, SectionTemplatePopover, SpacerIcon, TopbarIconAction } from './AppChrome';
+import { RailToggleButton, SectionTemplatePopover, SpacerIcon } from './AppChrome';
 import type { HistoryAction, HistoryState } from './editorState';
-
-const stickyIconUrl = '/sticky_512.png';
+import type { SettingsSectionId } from '../panels/settings/settingsSections';
+import type { HelpEntry } from '../panels/helpDocs';
+import { validateLinks } from '../model/validation';
 
 type Props = {
   state: EditorState;
@@ -88,7 +93,10 @@ type Props = {
   settingsOpen: boolean;
   manageFontsOpen?: boolean;
   helpOpen: boolean;
+  shortcutsOpen?: boolean;
+  aboutOpen?: boolean;
   layersOpen?: boolean;
+  pagesOpen?: boolean;
   layersPosition?: { top: number; left: number };
   sectionTemplateOpen: boolean;
   sectionTemplatePosition: { top: number; left: number };
@@ -108,6 +116,9 @@ type Props = {
   onSettingsOpenChange: (open: boolean) => void;
   onManageFontsOpenChange?: (open: boolean) => void;
   onHelpOpenChange: (open: boolean) => void;
+  onShortcutsOpenChange?: (open: boolean) => void;
+  onAboutOpenChange?: (open: boolean) => void;
+  onPagesOpenChange?: (open: boolean) => void;
   onImportDocument: (raw: string) => Promise<ActionResult>;
   onResetData: () => void;
   onResetAll: () => void;
@@ -127,7 +138,10 @@ export function AppShell({
   settingsOpen,
   manageFontsOpen = false,
   helpOpen,
+  shortcutsOpen = false,
+  aboutOpen = false,
   layersOpen = false,
+  pagesOpen = false,
   layersPosition = { top: 112, left: 102 },
   sectionTemplateOpen,
   sectionTemplatePosition,
@@ -147,6 +161,9 @@ export function AppShell({
   onSettingsOpenChange,
   onManageFontsOpenChange = () => undefined,
   onHelpOpenChange,
+  onShortcutsOpenChange = () => undefined,
+  onAboutOpenChange = () => undefined,
+  onPagesOpenChange = () => undefined,
   onImportDocument,
   onResetData,
   onResetAll,
@@ -160,11 +177,10 @@ export function AppShell({
 
   const [showStorageWarning, setShowStorageWarning] = useState(false);
   const [linkPopupVisible, setLinkPopupVisible] = useState(false);
-  const [pagesOpen, setPagesOpen] = useState(false);
   const [requestedPageSettingsId, setRequestedPageSettingsId] = useState<string | null>(null);
-  const [pageSwitcherOpen, setPageSwitcherOpen] = useState(false);
-  const pageSwitcherTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const [pageSwitcherStyle, setPageSwitcherStyle] = useState<CSSProperties>({ top: 0, left: 0, visibility: 'hidden' });
+  const [settingsSectionTarget, setSettingsSectionTarget] = useState<SettingsSectionId | undefined>(undefined);
+  const [helpEntryTarget, setHelpEntryTarget] = useState<HelpEntry['id'] | undefined>(undefined);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const focusedPanelRef = useRef<HTMLDivElement | null>(null);
   const focusedPanelDragRef = useRef<{
@@ -292,30 +308,16 @@ export function AppShell({
   }, [state.selectedId, state.document.nodes]);
 
   useEffect(() => {
-    if (!pageSwitcherOpen || !pageSwitcherTriggerRef.current) {
-      return;
+    if (!settingsOpen) {
+      setSettingsSectionTarget(undefined);
     }
+  }, [settingsOpen]);
 
-    const updatePosition = () => {
-      const rect = pageSwitcherTriggerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const width = 240;
-      const margin = 12;
-      setPageSwitcherStyle({
-        top: Math.max(margin, rect.bottom + 8),
-        left: Math.max(margin, Math.min(window.innerWidth - width - margin, rect.left)),
-        visibility: 'visible',
-      });
-    };
-
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [pageSwitcherOpen]);
+  useEffect(() => {
+    if (!helpOpen) {
+      setHelpEntryTarget(undefined);
+    }
+  }, [helpOpen]);
 
   function handleStageSelect(id: string, mode: 'replace' | 'toggle' = 'replace') {
     if (mode !== 'toggle') {
@@ -376,13 +378,55 @@ export function AppShell({
 
   function handleOpenPagesPanel() {
     setRequestedPageSettingsId(null);
-    setPagesOpen(true);
+    onPagesOpenChange(true);
   }
 
   function handleOpenCurrentPageSettings() {
     if (!state.activePageId) return;
     setRequestedPageSettingsId(state.activePageId);
-    setPagesOpen(true);
+    onPagesOpenChange(true);
+  }
+
+  function handleOpenSettingsSection(section: SettingsSectionId) {
+    setSettingsSectionTarget(section);
+    onSettingsOpenChange(true);
+  }
+
+  function handleSetLightTheme(value: typeof state.ui.lightTheme) {
+    dispatch({ type: 'setThemeMode', value: 'light' });
+    dispatch({
+      type: 'setAccentColor',
+      value: getAccentColorForLightThemeSelection(value, state.ui.accentColor),
+    });
+    dispatch({ type: 'setLightTheme', value });
+  }
+
+  function handleSetDarkTheme(value: typeof state.ui.darkTheme) {
+    dispatch({ type: 'setThemeMode', value: 'dark' });
+    dispatch({
+      type: 'setAccentColor',
+      value: getAccentColorForDarkThemeSelection(value, state.ui.accentColor),
+    });
+    dispatch({ type: 'setDarkTheme', value });
+  }
+
+  async function handleImportJson() {
+    importInputRef.current?.click();
+  }
+
+  async function handleImportJsonFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) {
+      return;
+    }
+    const raw = await file.text();
+    await onImportDocument(raw);
+  }
+
+  async function handleExportJson() {
+    const { saveExportDocument } = await import('../panels/settingsTransfer');
+    await saveExportDocument(documentJson);
   }
 
   async function handleExportSite() {
@@ -447,139 +491,83 @@ export function AppShell({
         } as CSSProperties
       }
     >
-      <div className="grid h-full grid-rows-[56px_minmax(0,1fr)]">
-        <header className={topbarClass}>
-          <div className="flex h-full items-center gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <img src={stickyIconUrl} alt="" className="h-8 w-8 shrink-0 object-contain" />
-              <div className="min-w-0">
-                <div className="text-sm font-semibold tracking-[0.01em]">Sticky Playground</div>
-                <div className="editor-topbar-subtitle truncate text-[11px]">
-                  Editor bootstrap · mesh layout · spacer-based sticky behavior
-                </div>
-              </div>
-            </div>
-            {(state.document.pages?.length ?? 0) > 0 && (
-              <>
-                <Button
-                  ref={pageSwitcherTriggerRef}
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="editor-topbar-page-switcher"
-                  aria-haspopup="listbox"
-                  aria-expanded={pageSwitcherOpen}
-                  onClick={() => setPageSwitcherOpen((v) => !v)}
-                >
-                  <span className="editor-topbar-page-switcher-indicator" aria-hidden="true" />
-                  <span className="editor-topbar-page-switcher-label">
-                    {state.document.pages?.find((p) => p.id === state.activePageId)?.displayName ?? 'Untitled'}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                </Button>
-                <PopoverSurface
-                  open={pageSwitcherOpen}
-                  onOpenChange={setPageSwitcherOpen}
-                  className="editor-topbar-page-switcher-menu fixed z-[400] w-[240px] rounded-lg border p-1 shadow-lg"
-                  style={pageSwitcherStyle}
-                >
-                  <div role="listbox" aria-label="Switch page" className="flex flex-col gap-0.5">
-                    {(state.document.pages ?? []).map((page) => {
-                      const depth = (() => {
-                        let d = 0;
-                        let cur = page;
-                        while (cur.parentPageId) {
-                          d++;
-                          cur = state.document.pages?.find((p) => p.id === cur.parentPageId) ?? cur;
-                          if (d > 8) break;
-                        }
-                        return d;
-                      })();
-                      const isActive = page.id === state.activePageId;
-                      return (
-                        <Button
-                          key={page.id}
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          role="option"
-                          aria-selected={isActive}
-                          data-active={isActive ? 'true' : 'false'}
-                          className="editor-topbar-page-switcher-row"
-                          style={{ paddingLeft: `${10 + depth * 14}px` }}
-                          onClick={() => {
-                            dispatch({ type: 'setActivePage', pageId: page.id });
-                            setPageSwitcherOpen(false);
-                          }}
-                        >
-                          <span className="editor-topbar-page-switcher-row-indicator" aria-hidden="true" />
-                          <span className="min-w-0 truncate">{page.displayName || 'Untitled'}</span>
-                        </Button>
-                      );
-                    })}
-                    <div className="editor-border-subtle my-1 border-t" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="editor-topbar-page-switcher-create"
-                      onClick={() => {
-                        dispatch({ type: 'addPage' });
-                        setPageSwitcherOpen(false);
-                      }}
-                    >
-                      <FilePlus2 className="h-3.5 w-3.5 shrink-0" />
-                      <span>New page</span>
-                    </Button>
-                  </div>
-                </PopoverSurface>
-              </>
-            )}
-            <div className="ml-auto flex items-center gap-2">
-              <TopbarIconAction
-                icon={Undo2}
-                label="Undo"
-                shortcut={getShortcutLabel('undo', shortcutPlatform)}
-                disabled={historyState.past.length === 0}
-                onClick={() => dispatch({ type: 'undo' })}
-              />
-              <TopbarIconAction
-                icon={Redo2}
-                label="Redo"
-                shortcut={getShortcutLabel('redo', shortcutPlatform)}
-                disabled={historyState.future.length === 0}
-                onClick={() => dispatch({ type: 'redo' })}
-              />
-              <TopbarIconAction
-                icon={Eye}
-                label="Preview site"
-                onClick={() => {
-                  const previewUrl = `${window.location.origin}${window.location.pathname}?mode=preview`;
-                  window.open(previewUrl, 'sticky-preview');
-                }}
-              />
-              <TopbarIconAction
-                icon={CircleQuestionMark}
-                label="Help"
-                shortcut={getShortcutLabel('showShortcutHelp', shortcutPlatform)}
-                active={helpOpen}
-                expanded={helpOpen}
-                hasPopup="dialog"
-                onClick={() => onHelpOpenChange(!helpOpen)}
-              />
-              <TopbarIconAction
-                icon={Settings}
-                label="Settings"
-                shortcut={getShortcutLabel('openSettings', shortcutPlatform)}
-                active={settingsOpen}
-                expanded={settingsOpen}
-                hasPopup="dialog"
-                panelTrigger="settings"
-                onClick={() => onSettingsOpenChange(!settingsOpen)}
-              />
-            </div>
-          </div>
-        </header>
+      <div className="grid h-full grid-rows-[88px_minmax(0,1fr)]">
+        <EditorTopbar
+          topbarClass={topbarClass}
+          shortcutPlatform={shortcutPlatform}
+          pages={state.document.pages ?? []}
+          activePageId={state.activePageId}
+          previewSticky={state.ui.previewSticky}
+          animationPreviewEnabled={state.ui.animationPreview.enabled}
+          spacerVisibility={state.ui.spacerVisibility}
+          showGridLanes={state.ui.showGridLanes}
+          snapEnabled={state.ui.snapSettings.guideSnap.enabled}
+          showDebugInfo={state.ui.showDebugInfo}
+          focusedMode={state.ui.focusedMode}
+          lightTheme={state.ui.lightTheme}
+          darkTheme={state.ui.darkTheme}
+          historyState={historyState}
+          canDeleteSelection={selectedNodes.length > 0}
+          layersOpen={layersOpen}
+          pagesOpen={pagesOpen}
+          onSetActivePage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
+          onAddPage={() => dispatch({ type: 'addPage' })}
+          onUndo={() => dispatch({ type: 'undo' })}
+          onRedo={() => dispatch({ type: 'redo' })}
+          onPreview={() => {
+            const previewUrl = `${window.location.origin}${window.location.pathname}?mode=preview`;
+            window.open(previewUrl, 'sticky-preview');
+          }}
+          onImportJson={handleImportJson}
+          onExportJson={handleExportJson}
+          onExportSite={handleExportSite}
+          onOpenSettingsSection={handleOpenSettingsSection}
+          onDeleteSelection={() => dispatch({ type: 'delete' })}
+          onSetLightTheme={handleSetLightTheme}
+          onSetDarkTheme={handleSetDarkTheme}
+          onTogglePreviewSticky={() => dispatch({ type: 'setPreviewSticky', value: !state.ui.previewSticky })}
+          onToggleAnimationPreview={() =>
+            dispatch({ type: 'setAnimationPreview', value: { enabled: !state.ui.animationPreview.enabled } })
+          }
+          onToggleSpacerVisibility={() =>
+            dispatch({
+              type: 'setSpacerVisibility',
+              value: state.ui.spacerVisibility === 'all' ? 'selected' : 'all',
+            })
+          }
+          onToggleShowGridLanes={() => dispatch({ type: 'setShowGridLanes', value: !state.ui.showGridLanes })}
+          onToggleSnapEnabled={() =>
+            dispatch({
+              type: 'setSnapSettings',
+              value: {
+                guideSnap: {
+                  enabled: !state.ui.snapSettings.guideSnap.enabled,
+                  threshold: state.ui.snapSettings.guideSnap.threshold,
+                  power: state.ui.snapSettings.guideSnap.power,
+                  maxSpeedPxPerSecond: state.ui.snapSettings.guideSnap.maxSpeedPxPerSecond,
+                },
+              },
+            })
+          }
+          onOpenSnapSettings={() => handleOpenSettingsSection('display')}
+          onToggleShowDebugInfo={() => dispatch({ type: 'setShowDebugInfo', value: !state.ui.showDebugInfo })}
+          onSetFocusedMode={(value) => dispatch({ type: 'setFocusedMode', value })}
+          onToggleLayersPanel={() => onLayersOpenChange(!layersOpen)}
+          onTogglePagesPanel={() => onPagesOpenChange(!pagesOpen)}
+          onOpenShortcuts={() => onShortcutsOpenChange(true)}
+          onOpenDocumentation={(entryId) => {
+            setHelpEntryTarget(entryId);
+            onHelpOpenChange(true);
+          }}
+          onOpenAbout={() => onAboutOpenChange(true)}
+        />
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".json,application/json"
+          className="hidden"
+          onChange={handleImportJsonFile}
+        />
 
         <div
           className="grid min-h-0 transition-[grid-template-columns] ease-out"
@@ -600,7 +588,7 @@ export function AppShell({
                 onCloseLayers={onCloseLayers}
                 pagesOpen={pagesOpen}
                 onOpenPages={() => handleOpenPagesPanel()}
-                onClosePages={() => setPagesOpen(false)}
+                onClosePages={() => onPagesOpenChange(false)}
               />
               <div className="mt-auto flex justify-center pt-3">
                 <div className="flex flex-col gap-2">
@@ -882,7 +870,7 @@ export function AppShell({
             onDeletePage={(pageId) => dispatch({ type: 'deletePage', pageId })}
             onOpenPageSettings={(pageId) => {
               setRequestedPageSettingsId(pageId);
-              setPagesOpen(true);
+              onPagesOpenChange(true);
             }}
             onSetPageParent={(pageId, parentPageId) => dispatch({ type: 'setPageParent', pageId, parentPageId })}
             onReorderPage={(pageId, direction) => dispatch({ type: 'reorderPage', pageId, direction })}
@@ -898,7 +886,7 @@ export function AppShell({
             activePageId={state.activePageId}
             openSettingsPageId={requestedPageSettingsId}
             onClose={() => {
-              setPagesOpen(false);
+              onPagesOpenChange(false);
               setRequestedPageSettingsId(null);
             }}
             onSetSiteSettings={(patch) => dispatch({ type: 'setSiteSettings', patch })}
@@ -910,6 +898,7 @@ export function AppShell({
             onAddPageAlias={(pageId, alias) => dispatch({ type: 'addPageSlugAlias', pageId, alias })}
             onRemovePageAlias={(pageId, alias) => dispatch({ type: 'removePageSlugAlias', pageId, alias })}
             onSyncPageLinks={(oldUrl, newUrl) => dispatch({ type: 'syncPageLinks', oldUrl, newUrl })}
+            onValidateLinks={() => validateLinks(state.document)}
             onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
             onSetPageViewTransition={(pageId, transition) => dispatch({ type: 'setPageViewTransition', pageId, transition })}
             onSetPageParent={(pageId, parentPageId) => dispatch({ type: 'setPageParent', pageId, parentPageId })}
@@ -980,6 +969,7 @@ export function AppShell({
             onResetData={onResetData}
             onResetAll={onResetAll}
             onSiteSettingsChange={(patch) => dispatch({ type: 'setSiteSettings', patch })}
+            activeSection={settingsSectionTarget}
           />
           </Suspense>
         </PopoverSurface>
@@ -1033,7 +1023,9 @@ export function AppShell({
         </DialogContent>
       </Dialog>
 
-      <HelpDialog open={helpOpen} onOpenChange={onHelpOpenChange} />
+      <HelpDialog open={helpOpen} onOpenChange={onHelpOpenChange} initialEntryId={helpEntryTarget} />
+      <ShortcutsDialog open={shortcutsOpen} onOpenChange={onShortcutsOpenChange} />
+      <AboutDialog open={aboutOpen} onOpenChange={onAboutOpenChange} />
 
     </div>
   );

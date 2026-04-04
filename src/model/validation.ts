@@ -1,5 +1,69 @@
-import type { DocumentModel, DocumentNode, WrapperNode } from './types';
+import type { ButtonLeaf, DocumentModel, DocumentNode, LinkLeaf, NodeId, WrapperNode } from './types';
 import type { DocumentPage } from './types/site';
+
+export type LinkValidationError = {
+  nodeId: NodeId;
+  nodeName: string;
+  nodeRole: 'link' | 'button';
+  errorType: 'broken-page-link' | 'broken-anchor-link';
+  description: string;
+};
+
+export function validateLinks(document: DocumentModel): LinkValidationError[] {
+  const errors: LinkValidationError[] = [];
+  const pageIds = new Set((document.pages ?? []).map((p) => p.id));
+
+  for (const node of Object.values(document.nodes)) {
+    if (node.type !== 'leaf') continue;
+    if (node.role !== 'link' && node.role !== 'button') continue;
+
+    const leaf = node as LinkLeaf | ButtonLeaf;
+
+    if (leaf.linkType === 'page') {
+      if (!leaf.targetPageId) {
+        errors.push({
+          nodeId: leaf.id,
+          nodeName: leaf.name,
+          nodeRole: leaf.role,
+          errorType: 'broken-page-link',
+          description: 'Link has no target page set.',
+        });
+      } else if (!pageIds.has(leaf.targetPageId)) {
+        errors.push({
+          nodeId: leaf.id,
+          nodeName: leaf.name,
+          nodeRole: leaf.role,
+          errorType: 'broken-page-link',
+          description: `Target page "${leaf.targetPageId}" no longer exists.`,
+        });
+      }
+
+      if (leaf.pageAnchorId && !document.nodes[leaf.pageAnchorId]) {
+        errors.push({
+          nodeId: leaf.id,
+          nodeName: leaf.name,
+          nodeRole: leaf.role,
+          errorType: 'broken-anchor-link',
+          description: `Page anchor target "${leaf.pageAnchorId}" does not exist.`,
+        });
+      }
+    }
+
+    if (leaf.linkType === 'anchor' && leaf.anchorTargetId) {
+      if (!document.nodes[leaf.anchorTargetId]) {
+        errors.push({
+          nodeId: leaf.id,
+          nodeName: leaf.name,
+          nodeRole: leaf.role,
+          errorType: 'broken-anchor-link',
+          description: `Anchor target "${leaf.anchorTargetId}" does not exist.`,
+        });
+      }
+    }
+  }
+
+  return errors;
+}
 
 function isSiteSectionRole(role: WrapperNode['role']) {
   return role === 'section' || role === 'header' || role === 'footer';

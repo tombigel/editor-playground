@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { addPage, setPageParent } from '../../api/pageApi';
 import { createInitialDocument, createLeaf, createWrapper } from '../defaults';
 import { getMainWrappers } from '../selectors';
-import { validateDocument } from '../validation';
+import { validateDocument, validateLinks } from '../validation';
 
 describe('model/validation', () => {
   it('accepts the default document', () => {
@@ -251,6 +251,157 @@ describe('model/validation', () => {
       };
       const errors = validateDocument(doc);
       expect(errors.some((e) => e.includes('Page parent cycle detected'))).toBe(true);
+    });
+  });
+
+  describe('link validation', () => {
+    it('reports no errors for a document with no broken links', () => {
+      const doc = createInitialDocument();
+      // initial document has anchor-type links with no anchorTargetId — these are
+      // unconfigured, not broken, and should not produce errors
+      expect(validateLinks(doc)).toEqual([]);
+    });
+
+    it('reports no errors for a valid page link', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      const pageId = doc.pages![1].id;
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'page';
+      (link as any).targetPageId = pageId;
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toEqual([]);
+    });
+
+    it('reports error for a page link pointing to a nonexistent page', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'page';
+      (link as any).targetPageId = 'nonexistent_page_id';
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-page-link');
+    });
+
+    it('reports error for a page link with no targetPageId set', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'page';
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-page-link');
+      expect(errors[0].description).toMatch(/no target page/i);
+    });
+
+    it('reports error for a button with a broken page link', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const button = createLeaf('button', section.id);
+      button.linkType = 'page';
+      (button as any).targetPageId = 'gone_page_id';
+      doc.nodes[button.id] = button;
+      section.children.push(button.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === button.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-page-link');
+      expect(errors[0].nodeRole).toBe('button');
+    });
+
+    it('reports no errors for a valid anchor link', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const target = createLeaf('text', section.id);
+      doc.nodes[target.id] = target;
+      section.children.push(target.id);
+      const link = createLeaf('link', section.id);
+      link.linkType = 'anchor';
+      (link as any).anchorTargetId = target.id;
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toEqual([]);
+    });
+
+    it('reports error for an anchor link pointing to a nonexistent node', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'anchor';
+      (link as any).anchorTargetId = 'nonexistent_node_id';
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-anchor-link');
+    });
+
+    it('does not report an error for an anchor link with no anchorTargetId set', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'anchor';
+      (link as any).anchorTargetId = undefined;
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      // unconfigured anchor links are not flagged — only explicitly broken ones are
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('reports error for a page link with a missing pageAnchorId', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      const pageId = doc.pages![1].id;
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'page';
+      (link as any).targetPageId = pageId;
+      (link as any).pageAnchorId = 'nonexistent_anchor_id';
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-anchor-link');
+    });
+
+    it('ignores external links and text/image nodes', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const link = createLeaf('link', section.id);
+      link.linkType = 'external';
+      (link as any).href = 'https://example.com';
+      doc.nodes[link.id] = link;
+      section.children.push(link.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
+      expect(errors).toEqual([]);
+    });
+
+    it('reports multiple errors across multiple broken links', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const link1 = createLeaf('link', section.id);
+      link1.linkType = 'page';
+      (link1 as any).targetPageId = 'missing_page_1';
+      doc.nodes[link1.id] = link1;
+      section.children.push(link1.id);
+      const link2 = createLeaf('button', section.id);
+      link2.linkType = 'page';
+      (link2 as any).targetPageId = 'missing_page_2';
+      doc.nodes[link2.id] = link2;
+      section.children.push(link2.id);
+      const errors = validateLinks(doc).filter(
+        (e) => e.nodeId === link1.id || e.nodeId === link2.id,
+      );
+      expect(errors).toHaveLength(2);
     });
   });
 

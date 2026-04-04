@@ -857,7 +857,8 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 | `renderSiteHtmlDocument(document)` | Renders a complete standalone HTML document. |
 | `renderSiteExportBundle(document)` | Returns the full export bundle used by ZIP and site export. |
 | `renderSiteExportBundles(document, options)` | Returns export bundles for all pages with configurable output structure. |
-| `buildRouteManifest(document)` | Builds a manifest mapping page slugs to file paths and URLs. |
+| `buildRouteManifest(document, options)` | Builds a manifest mapping page slugs to file paths and URLs. Respects `outputStructure` ('directory' or 'flat') from options. |
+| `buildHostingConfigs(document, options)` | Returns a `Record<string, string>` of hosting config files (Netlify `_redirects`, Vercel `vercel.json`, Nginx `nginx.conf`, and a README) keyed by their ZIP path under `hosting/`. Content adapts to `outputStructure`. |
 
 ## Preview Model
 
@@ -994,9 +995,9 @@ The editor surface is organized around one stage, a small set of persistent rail
 The editor supports multi-page management with four UI entry points:
 
 1. **Layers panel Pages tab**: collapsible multi-level tree showing page hierarchy with add, delete, and settings buttons
-2. **Dedicated Pages panel**: full-screen page management accessible from topbar button
-3. **Inspector no-selection state**: when no node is selected, inspector shows page inspector for creating/renaming pages
-4. **Top-bar pages dropdown**: quick switcher to jump between pages
+2. **Dedicated Pages panel**: full-screen page management accessible from a left-rail Pages entry next to Layers
+3. **Inspector no-selection state**: when no node is selected, inspector shows the current page editor with direct actions for page settings and the full pages panel
+4. **Top-bar pages dropdown**: quick switcher to jump between pages and create a new page
 
 Page switching behavior:
 
@@ -1018,6 +1019,20 @@ Follow-link popups:
 - Clicking the popup navigates to the target page in the editor
 - The popup shows the target page name and target anchor (if specified)
 
+Link validation:
+
+- The Pages panel Export section includes a **Validate links** button
+- Clicking it runs `validateLinks(document)` and shows results inline below the button
+- `validateLinks` checks all link and button nodes in the document for:
+  - `linkType: 'page'` with no `targetPageId` set
+  - `linkType: 'page'` with a `targetPageId` pointing to a page that no longer exists
+  - `linkType: 'page'` with a `pageAnchorId` pointing to a node that does not exist
+  - `linkType: 'anchor'` with an `anchorTargetId` set to a node that does not exist (unconfigured anchor links with no `anchorTargetId` are not flagged)
+- External links (`linkType: 'external'`) and unlinked nodes are not checked
+- Results show the node name, role, and a human-readable description of each error
+- A copy-to-clipboard button copies the full results as plain text
+- Validation is purely read-only and does not modify the document
+
 ### Workspace model
 
 - The editor presents a full-stage canvas plus an insert panel and a collapsible inspector rail.
@@ -1031,10 +1046,11 @@ Follow-link popups:
 ### Settings and global panels
 
 - The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`.
+- Left-rail primary entries expose Layers and Pages directly below the insert tools.
 - Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
-- Top-bar utility actions expose help, settings, pages panel, and preview mode button.
+- Top-bar utility actions expose the pages switcher, help, settings, and preview mode button.
 - Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
-- Pages panel button toggles a dedicated panel for multi-page management.
+- Pages panel entry toggles a dedicated panel for multi-page management.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
 - Left-rail pop panels open from a shared resting position near the top-left workspace edge below the top bar rather than vertically following the trigger button.
 - Section templates keep outside-click and `Esc` dismissal and stay above stage selection overlays.
