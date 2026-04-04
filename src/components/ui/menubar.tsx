@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronRight, ChevronsRight, MoreHorizontal } from 'lucide-react';
+import { Check, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { PopoverSurface } from './popover';
 import { cn } from '@/lib/utils';
 
@@ -502,7 +502,7 @@ export function MenubarCheckboxItem({
 }
 
 export function MenubarPanelLinkItem(props: MenubarItemBaseProps) {
-  return <MenubarItem endSlot={<ChevronsRight className="h-3.5 w-3.5 opacity-60" />} {...props} />;
+  return <MenubarItem endSlot={<MoreHorizontal className="h-3.5 w-3.5 opacity-60" />} {...props} />;
 }
 
 export function MenubarToggleWithMoreItem({
