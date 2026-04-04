@@ -55,6 +55,21 @@ describe('app/pageActions', () => {
       expect(newPage?.displayName).toBe('About');
       expect(newPage?.slug).toBe('about');
     });
+
+    it('keeps default addPage name and slug counters in sync', () => {
+      const initial = createInitialState();
+      const withFirst = editorReducer(initial, { type: 'addPage', options: { displayName: 'New Page', slug: 'new-page' } });
+      const withSecond = editorReducer(withFirst, {
+        type: 'addPage',
+        options: { displayName: 'New Page 2', slug: 'new-page-2' },
+      });
+
+      const next = editorReducer(withSecond, { type: 'addPage', options: { displayName: 'New Page', slug: 'new-page' } });
+      const newPage = next.document.pages?.[next.document.pages.length - 1];
+
+      expect(newPage?.displayName).toBe('New Page 3');
+      expect(newPage?.slug).toBe('new-page-3');
+    });
   });
 
   describe('editorReducer/deletePage', () => {

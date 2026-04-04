@@ -71,6 +71,18 @@ describe('addPage', () => {
     expect(newPage?.displayName).toBe('About 2');
     expect(newPage?.slug).toBe('about-3');
   });
+
+  it('regenerates auto-derived slugs from the uniquified page name', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'New Page', slug: 'new-page' });
+    doc = addPage(doc, { displayName: 'New Page 2', slug: 'new-page-2' });
+
+    const result = addPage(doc, { displayName: 'New Page', slug: 'new-page' });
+    const newPage = (result.pages ?? []).at(-1);
+
+    expect(newPage?.displayName).toBe('New Page 3');
+    expect(newPage?.slug).toBe('new-page-3');
+  });
 });
 
 describe('deletePage', () => {

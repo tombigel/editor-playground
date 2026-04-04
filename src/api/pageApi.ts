@@ -7,12 +7,25 @@ export function addPage(
   options?: Partial<Omit<DocumentPage, 'type' | 'id'>>,
 ): DocumentModel {
   const pages = structuredClone(document.pages ?? []);
-  const displayName = ensureUniquePageDisplayName(pages, options?.displayName ?? 'New Page');
-  const requestedSlug = options?.slug ?? generateSlug(displayName);
+  const requestedDisplayName = options?.displayName ?? 'New Page';
+  const displayName = ensureUniquePageDisplayName(pages, requestedDisplayName);
+  const requestedSlug = shouldRegenerateSlugFromDisplayName(options, requestedDisplayName)
+    ? generateSlug(displayName)
+    : (options?.slug ?? generateSlug(displayName));
   const slug = ensureUniquePageSlug(document, requestedSlug);
   const newPage = createPage({ ...options, displayName, slug });
   pages.push(newPage);
   return { ...document, pages };
+}
+
+function shouldRegenerateSlugFromDisplayName(
+  options: Partial<Omit<DocumentPage, 'type' | 'id'>> | undefined,
+  requestedDisplayName: string,
+): boolean {
+  if (!options?.slug) {
+    return true;
+  }
+  return options.slug === generateSlug(requestedDisplayName);
 }
 
 function ensureUniquePageDisplayName(
@@ -35,11 +48,13 @@ function ensureUniquePageSlug(document: DocumentModel, requestedSlug: string): s
   const baseSlug = requestedSlug.trim() || 'page';
   if (!claimedSlugs.has(baseSlug)) return baseSlug;
 
-  let counter = 2;
-  while (claimedSlugs.has(`${baseSlug}-${counter}`)) {
+  const match = baseSlug.match(/^(.*?)-(\d+)$/);
+  const slugStem = match?.[1] ? match[1] : baseSlug;
+  let counter = match?.[2] ? Number.parseInt(match[2], 10) + 1 : 2;
+  while (claimedSlugs.has(`${slugStem}-${counter}`)) {
     counter += 1;
   }
-  return `${baseSlug}-${counter}`;
+  return `${slugStem}-${counter}`;
 }
 
 function getClaimedPageSlugs(document: DocumentModel): Set<string> {
