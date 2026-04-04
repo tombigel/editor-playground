@@ -39,6 +39,7 @@ export default defineConfig({
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
       'src/**/*.e2e.test.ts',
       'src/**/*.e2e.test.tsx',
+      '.claude/worktrees/**',
     ],
     coverage: {
       provider: 'v8',

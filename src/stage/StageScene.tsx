@@ -10,6 +10,7 @@ import { MultiSelectionOutline, SingleSelectionOverlay } from './stageRenderers/
 
 export const StageScene = memo(function StageScene({
   document,
+  activePageId,
   selectedId,
   selectedIds = selectedId ? [selectedId] : [],
   singleSelectionOverlay = null,
@@ -28,8 +29,8 @@ export const StageScene = memo(function StageScene({
   onSelectionOverlayHandleMouseDown,
 }: StageSceneProps) {
   const plan = useMemo(
-    () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport),
-    [document, previewSticky, measuredNodeSizes, viewport],
+    () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport, activePageId ?? undefined),
+    [document, previewSticky, measuredNodeSizes, viewport, activePageId],
   );
 
   const interactKeys = useMemo(
@@ -120,6 +121,7 @@ export const StageScene = memo(function StageScene({
   );
 }, (prev, next) =>
   prev.document === next.document &&
+  prev.activePageId === next.activePageId &&
   prev.selectedId === next.selectedId &&
   prev.selectedIds === next.selectedIds &&
   prev.singleSelectionOverlay === next.singleSelectionOverlay &&

@@ -4,6 +4,7 @@ import type {
 	ViewportMeasurement,
 } from "../../model/types";
 import type { AnimationPreviewState, SnapSettings } from "../../editor/types";
+import type { PageId } from "../../model/types/site";
 export type { AnimationPreviewState, SnapSettings };
 import type {
 	RenderLeafPlanNode,
@@ -150,6 +151,7 @@ export type StageNodeRegistration = (
 
 export type StageSceneProps = {
 	document: DocumentModel;
+	activePageId?: PageId | null;
 	selectedId: NodeId | null;
 	selectedIds?: NodeId[];
 	singleSelectionOverlay?: {
