@@ -38,12 +38,11 @@ The multiple-pages foundation is materially better than in the initial audit. Se
 - Help is now split into detached `Shortcuts`, documentation browsing, and detached `About`
 - new page creation now auto-increments duplicate page names and slugs, including alias-aware slug collisions
 
-The feature is still only partially complete. The remaining issues are now concentrated in the dedicated Pages panel, page-tree interaction depth, the still-missing link-validation workflow, and documentation accuracy rather than basic stage/render correctness or top-level chrome alignment.
+The feature is still only partially complete. The remaining issues are now concentrated in the dedicated Pages panel, page-tree interaction depth, and documentation accuracy rather than basic stage/render correctness or top-level chrome alignment.
 
 The main open gaps are:
 
 - pages panel and pages tree UX are still simpler than the plan
-- link validation workflow is still missing
 - roadmap/spec language still overstates current completion in some areas
 
 ## Addressed Since Initial Audit
@@ -221,9 +220,8 @@ Planned:
 
 Current state:
 
-- panel exists and is functional for basic settings
+- panel exists and is functional for basic settings and link validation
 - visual treatment and interaction depth are still simpler than the rest of the editor
-- `Validate links` remains explicitly disabled
 
 Evidence:
 
@@ -277,27 +275,19 @@ Relevant subsystems:
 - `src/app/AppShell.tsx`
 - `src/api/tests/pageApi.test.ts`
 
-### 3. Link validation workflow is still missing
+### ~~3. Link validation workflow is still missing~~ Fixed
 
-Planned:
+- `validateLinks(document)` added to `src/model/validation.ts`: checks all link/button nodes for broken page references (no `targetPageId`, nonexistent page), broken `pageAnchorId`, and broken `anchorTargetId`; external links and unconfigured anchors are not flagged
+- `PagesPanel` now exposes a live "Validate links" button with a copyable per-error results list (node name, role, description)
+- `AppShell` wires `onValidateLinks` as a read-only callback calling `validateLinks(state.document)` directly (no reducer action needed)
+- 11 tests added in `src/model/tests/validation.test.ts` covering all error and non-error cases
 
-- validate-on-export option
-- manual validate-links workflow
-- copyable results and inline correction path
+Relevant subsystems:
 
-Current state:
-
-- `Validate links` is still disabled in the pages panel
-- no broader validation workflow was found
-
-Evidence:
-
+- `src/model/validation.ts`
+- `src/model/tests/validation.test.ts`
 - `src/panels/PagesPanel.tsx`
-- `docs/NEXT_STAGE_BRIEF.md`
-
-Impact:
-
-- authors do not yet have the planned safety net for internal routing and link integrity
+- `src/app/AppShell.tsx`
 
 ### 4. Documentation still overstates completion
 
@@ -351,7 +341,7 @@ Impact:
 | Page settings popup | Partial |
 | Slug sync flow | Implemented |
 | Follow-link popup | Implemented |
-| Link validation workflow | Missing |
+| Link validation workflow | Implemented |
 | Server-side routing export support | Implemented |
 
 ## Recommended Fix Plan
@@ -390,10 +380,9 @@ Impact:
 
 The current state is meaningfully better than the initial audit suggested. The core stage/render/page-link correctness blockers are addressed, and the top-level page chrome now matches the intended product direction much more closely.
 
-The remaining work is now concentrated in three areas:
+The remaining work is now concentrated in two areas:
 
-- page-management UX depth
-- final product polish and documentation accuracy
-- the still-missing link-validation workflow
+- page-management UX depth (page tree interactions, dedicated panel visual polish)
+- documentation accuracy
 
 This should now be treated as a partially completed product feature with solid core plumbing and much stronger editor integration, rather than a fundamentally broken implementation.

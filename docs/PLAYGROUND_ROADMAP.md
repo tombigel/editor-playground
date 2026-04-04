@@ -282,7 +282,7 @@ None yet.
 - `Status`: `Partially present`
 - `Source`: `RI-07`
 - `Why it matters`: Multi-page support changes the document model, navigation semantics, export shape, and future product scope.
-- `Current state`: **Wave 1-2 complete**: Page model with hierarchy, slug management, aliases, and uniqueness checks during new-page creation. Editor page switching via four UI entry points. Page linking with internal anchor support. Export with `outputStructure` selection (directory vs. flat). Preview mode with navigation. Missing: copy/paste, full page templates, and the planned link-validation workflow.
+- `Current state`: **Wave 1-2 complete**: Page model with hierarchy, slug management, aliases, and uniqueness checks during new-page creation. Editor page switching via four UI entry points. Page linking with internal anchor support. Export with `outputStructure` selection (directory vs. flat). Preview mode with navigation. Missing: copy/paste and full page templates.
 - `Implemented features`: Page model with displayName, slug, sectionIds, slugAliases, parentPageId. Page hierarchy validation (cycle detection). URL resolution with nested paths. Editor UI (pages tab in layers, dedicated panel, inspector no-selection, topbar dropdown). New-page auto-increment for duplicate names/slugs with alias-aware slug collision handling. Follow-link popup for page navigation. Preview mode (`?mode=preview`). Multi-page export with configurable output structure. Route manifest building.
 - `Next review question`: Are the deferred features (copy/paste, page templates) blocking real-world authoring workflows, or can they land in a follow-up wave?
 
