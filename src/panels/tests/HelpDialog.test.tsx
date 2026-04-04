@@ -19,6 +19,7 @@ describe('panels/HelpDialog', () => {
     expect(markup).toContain('data-help-entry="shortcuts"');
     expect(markup).toContain('data-active="true"');
     expect(markup).toContain('Keyboard shortcuts');
+    expect(markup).toContain('About');
     expect(markup).toContain('Pointer Modifiers');
     expect(markup).toContain('API Reference');
     expect(markup).toContain('Animation API');
@@ -28,6 +29,9 @@ describe('panels/HelpDialog', () => {
     expect(markup).toContain('data-help-nav-collapsed="false"');
     expect(markup).not.toContain('settings-nav-link-copy mt-0.5 text-xs leading-5">API.md<');
     expect(markup).not.toContain('settings-nav-link-copy mt-0.5 text-xs leading-5">CONSOLE_TEST_GUIDE.md<');
+    expect(markup.indexOf('data-help-entry="doc:docs/HELP_BROWSER.md"')).toBeLessThan(markup.indexOf('data-help-entry="shortcuts"'));
+    expect(markup.indexOf('data-help-entry="shortcuts"')).toBeLessThan(markup.indexOf('data-help-entry="about"'));
+    expect(markup).toContain('divider-special');
   });
 
   it('supports opening directly to documentation mode', () => {

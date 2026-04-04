@@ -1092,6 +1092,7 @@ Navigation model:
 - `Help → Documentation` opens the documentation browser dialog with a collapsible left nav.
 - `Help → About` opens a detached about dialog.
 - The documentation browser lists markdown documents from `docs/`; shortcuts are no longer the default top-level entry there.
+- The help-browser nav ends with a separator followed by `Keyboard shortcuts` and `About`, so those reference surfaces remain browseable there even though they also have detached dialogs.
 - Help-doc ordering is configurable in the help-doc registry; unlisted `docs/*.md` files still appear automatically after explicitly ordered entries.
 - Nav buttons do not show filenames. If a title contains a spaced dash separator (`-`, `–`, `—`), the text after the separator becomes the subtitle and the separator is hidden.
 - The left nav reserves a dedicated bottom entry for `How to add docs?`.

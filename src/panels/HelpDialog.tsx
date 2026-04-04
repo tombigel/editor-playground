@@ -1,11 +1,11 @@
-import { CircleQuestionMark, FilePlus2, FileText, Keyboard, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { CircleQuestionMark, FileText, Keyboard, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AboutContent } from './AboutContent';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import {
   getHelpEntries,
-  HELP_BROWSER_DOC_PATH,
   type HelpEntry,
   type MarkdownHelpEntry,
   type HelpLinkTarget,
@@ -52,10 +52,7 @@ export function closeHelpDialogState(state: HelpDialogState): HelpDialogState {
 export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
   const entries = useMemo(() => getHelpEntries(), []);
   const markdownEntries = entries.filter((entry): entry is MarkdownHelpEntry => entry.kind === 'markdown');
-  const mainEntries = entries.filter((entry) => !(entry.kind === 'markdown' && entry.path === HELP_BROWSER_DOC_PATH));
-  const footerEntry = entries.find(
-    (entry): entry is MarkdownHelpEntry => entry.kind === 'markdown' && entry.path === HELP_BROWSER_DOC_PATH,
-  );
+  const mainEntries = entries;
   const availableDocPaths = useMemo(() => new Set(markdownEntries.map((entry) => entry.path)), [markdownEntries]);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const lastScrollContextKeyRef = useRef<string | null>(null);
@@ -224,7 +221,7 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                   <nav className="editor-scrollbar max-h-full space-y-1 overflow-y-auto pr-1">
                     {mainEntries.map((entry) =>
                       entry.kind === 'divider' ? (
-                        <hr key={entry.id} className="editor-border-subtle my-1 border-t" />
+                        <hr key={entry.id} data-help-divider={entry.id} className="editor-border-subtle my-1 border-t" />
                       ) : (
                         renderEntryButton({
                           entry,
@@ -235,17 +232,6 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                     )}
                   </nav>
                 </div>
-
-                {footerEntry ? (
-                  <div className="editor-border-subtle mt-4 border-t pt-4">
-                    {renderEntryButton({
-                      entry: footerEntry,
-                      active: footerEntry.id === activeEntry.id,
-                      onSelect: handleEntrySelect,
-                      compact: true,
-                    })}
-                  </div>
-                ) : null}
               </>
             )}
           </aside>
@@ -261,6 +247,8 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
             <div ref={contentRef} className="editor-scrollbar min-h-0 overflow-y-auto p-6">
               {activeEntry.kind === 'shortcuts' ? (
                 <ShortcutHelpContent />
+              ) : activeEntry.kind === 'about' ? (
+                <AboutContent />
               ) : activeEntry.kind === 'markdown' ? (
                 <Suspense fallback={<HelpMarkdownFallback fileName={activeEntry.fileName} />}>
                   <LazyHelpMarkdownDocument
@@ -283,15 +271,13 @@ function renderEntryButton({
   entry,
   active,
   onSelect,
-  compact = false,
 }: {
   entry: Exclude<HelpEntry, { kind: 'divider' }>;
   active: boolean;
   onSelect: (entryId: HelpEntry['id']) => void;
-  compact?: boolean;
 }) {
   const Icon =
-    entry.kind === 'shortcuts' ? Keyboard : compact ? FilePlus2 : FileText;
+    entry.kind === 'shortcuts' ? Keyboard : entry.kind === 'about' ? CircleQuestionMark : FileText;
 
   return (
     <button
@@ -301,16 +287,16 @@ function renderEntryButton({
       data-active={active ? 'true' : 'false'}
       onClick={() => onSelect(entry.id)}
       className={`settings-nav-link flex w-full items-start gap-3 rounded-lg text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-inset ${
-        compact ? 'px-3 py-2' : 'px-3 py-2.5'
+        'px-3 py-2.5'
       } ${
         active ? 'shadow-sm' : ''
       }`}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="min-w-0">
-        <div className={compact ? 'text-[13px] font-medium leading-4' : 'text-sm font-medium'}>{entry.title}</div>
+        <div className="text-sm font-medium">{entry.title}</div>
         {entry.subtitle ? (
-          <div className={`settings-nav-link-copy mt-0.5 ${compact ? 'text-[11px] leading-4' : 'text-xs leading-5'}`}>
+          <div className="settings-nav-link-copy mt-0.5 text-xs leading-5">
             {entry.subtitle}
           </div>
         ) : null}

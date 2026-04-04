@@ -7,6 +7,13 @@ export type ShortcutHelpEntry = {
   subtitle?: string;
 };
 
+export type AboutHelpEntry = {
+  id: 'about';
+  kind: 'about';
+  title: string;
+  subtitle?: string;
+};
+
 export type DividerHelpEntry = {
   id: string;
   kind: 'divider';
@@ -29,7 +36,7 @@ export type MarkdownHelpEntry = {
   assetUrl: string;
 };
 
-export type HelpEntry = ShortcutHelpEntry | MarkdownHelpEntry | DividerHelpEntry;
+export type HelpEntry = ShortcutHelpEntry | AboutHelpEntry | MarkdownHelpEntry | DividerHelpEntry;
 
 export type HelpLinkTarget =
   | { kind: 'anchor'; anchor: string }
@@ -63,8 +70,14 @@ export const SHORTCUTS_HELP_ENTRY: ShortcutHelpEntry = {
   title: 'Keyboard shortcuts',
 };
 
+export const ABOUT_HELP_ENTRY: AboutHelpEntry = {
+  id: 'about',
+  kind: 'about',
+  title: 'About',
+};
+
 export function getHelpEntries() {
-  return [SHORTCUTS_HELP_ENTRY, ...getMarkdownHelpEntries()];
+  return [...getMarkdownHelpEntries(), { id: 'divider-special', kind: 'divider' }, SHORTCUTS_HELP_ENTRY, ABOUT_HELP_ENTRY];
 }
 
 export function getMarkdownHelpEntries(
@@ -198,4 +211,3 @@ function resolveRelativeHelpDocPath(currentPath: string, relativePath: string) {
 
   return currentSegments.join('/');
 }
-
