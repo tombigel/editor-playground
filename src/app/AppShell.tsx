@@ -10,7 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type Ref,
 } from 'react';
-import { ChevronDown, CircleQuestionMark, Eye, EyeOff, FilePlus2, LayoutGrid, Magnet, Play, Redo2, Settings, Type, Undo2 } from 'lucide-react';
+import { ChevronDown, CircleQuestionMark, Eye, FilePlus2, Magnet, Play, Redo2, ScanEye, Settings, Type, Undo2 } from 'lucide-react';
 import type {
   DocumentNode,
   EditorState,
@@ -48,7 +48,6 @@ const EditorSidebar = lazy(() =>
 );
 import { FocusedModePanel } from '../panels/FocusedModePanel';
 import { BackToEditorButton } from '../panels/BackToEditorButton';
-import { FollowLinkPopup } from '../panels/FollowLinkPopup';
 import { SiteRenderer } from '../site/SiteRenderer';
 import type { ActionResult } from '../panels/settingsTransfer';
 import { Stage } from '../api/editorViewApi';
@@ -162,7 +161,10 @@ export function AppShell({
   const [showStorageWarning, setShowStorageWarning] = useState(false);
   const [linkPopupVisible, setLinkPopupVisible] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
+  const [requestedPageSettingsId, setRequestedPageSettingsId] = useState<string | null>(null);
   const [pageSwitcherOpen, setPageSwitcherOpen] = useState(false);
+  const pageSwitcherTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [pageSwitcherStyle, setPageSwitcherStyle] = useState<CSSProperties>({ top: 0, left: 0, visibility: 'hidden' });
 
   const focusedPanelRef = useRef<HTMLDivElement | null>(null);
   const focusedPanelDragRef = useRef<{
@@ -289,6 +291,42 @@ export function AppShell({
     }
   }, [state.selectedId, state.document.nodes]);
 
+  useEffect(() => {
+    if (!pageSwitcherOpen || !pageSwitcherTriggerRef.current) {
+      return;
+    }
+
+    const updatePosition = () => {
+      const rect = pageSwitcherTriggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = 240;
+      const margin = 12;
+      setPageSwitcherStyle({
+        top: Math.max(margin, rect.bottom + 8),
+        left: Math.max(margin, Math.min(window.innerWidth - width - margin, rect.left)),
+        visibility: 'visible',
+      });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [pageSwitcherOpen]);
+
+  function handleStageSelect(id: string, mode: 'replace' | 'toggle' = 'replace') {
+    if (mode !== 'toggle') {
+      const node = state.document.nodes[id];
+      if (node?.type === 'leaf' && node.role === 'link' && id === state.selectedId) {
+        setLinkPopupVisible((v) => !v);
+      }
+    }
+    dispatch(mode === 'toggle' ? { type: 'toggleSelect', id } : { type: 'select', id });
+  }
+
   function handleFocusedPanelDragStart(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.button !== 0) {
       return;
@@ -336,17 +374,30 @@ export function AppShell({
     dispatch({ type: 'importDocument', document: purgeUnusedDocumentFonts(state.document) });
   }
 
+  function handleOpenPagesPanel() {
+    setRequestedPageSettingsId(null);
+    setPagesOpen(true);
+  }
+
+  function handleOpenCurrentPageSettings() {
+    if (!state.activePageId) return;
+    setRequestedPageSettingsId(state.activePageId);
+    setPagesOpen(true);
+  }
+
   async function handleExportSite() {
-    const { renderSiteExportBundles, buildRouteManifest } = await import('../api/siteApi');
+    const { renderSiteExportBundles, buildRouteManifest, buildHostingConfigs } = await import('../api/siteApi');
     const { saveExportSiteZip } = await import('../panels/settingsTransfer');
-    const bundles = renderSiteExportBundles(state.document);
-    const manifest = buildRouteManifest(state.document);
+    const exportOptions = { outputStructure: state.document.siteSettings?.outputStructure };
+    const bundles = renderSiteExportBundles(state.document, exportOptions);
+    const manifest = buildRouteManifest(state.document, exportOptions);
+    const hostingConfigs = buildHostingConfigs(state.document, exportOptions);
     const files: Record<string, string> = {
       'route-manifest.json': JSON.stringify(manifest, null, 2),
+      ...hostingConfigs,
     };
     for (const bundle of bundles) {
-      files[bundle.htmlFileName] = bundle.htmlDocument;
-      files[bundle.cssFileName] = bundle.css;
+      files[bundle.path] = bundle.htmlDocument;
     }
     await saveExportSiteZip(files, { fileName: 'sticky-playground-site.zip' });
   }
@@ -358,15 +409,6 @@ export function AppShell({
     return null;
   })();
 
-  const selectedNodeRect = (() => {
-    if (!state.selectedId || typeof window === 'undefined') return null;
-    const element =
-      window.document.querySelector(`[data-node-id="${state.selectedId}"]`) ??
-      window.document.getElementById(`stage-node-${state.selectedId}`);
-    if (!element) return null;
-    return element.getBoundingClientRect();
-  })();
-
   if (isPreview) {
     return (
       <>
@@ -374,6 +416,7 @@ export function AppShell({
           <SiteRenderer
             document={state.document}
             includeAnimations
+            pageId={state.activePageId ?? undefined}
           />
         </div>
         <BackToEditorButton />
@@ -417,30 +460,30 @@ export function AppShell({
               </div>
             </div>
             {(state.document.pages?.length ?? 0) > 0 && (
-              <div className="relative">
-                <button
+              <>
+                <Button
+                  ref={pageSwitcherTriggerRef}
                   type="button"
-                  className="editor-text-strong flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08]"
+                  variant="ghost"
+                  size="sm"
+                  className="editor-topbar-page-switcher"
                   aria-haspopup="listbox"
                   aria-expanded={pageSwitcherOpen}
                   onClick={() => setPageSwitcherOpen((v) => !v)}
-                  onBlur={(e) => {
-                    if (!e.currentTarget.parentElement?.contains(e.relatedTarget)) {
-                      setPageSwitcherOpen(false);
-                    }
-                  }}
                 >
-                  <span className="max-w-[160px] truncate">
+                  <span className="editor-topbar-page-switcher-indicator" aria-hidden="true" />
+                  <span className="editor-topbar-page-switcher-label">
                     {state.document.pages?.find((p) => p.id === state.activePageId)?.displayName ?? 'Untitled'}
                   </span>
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                </button>
-                {pageSwitcherOpen && (
-                  <div
-                    className="editor-bg-surface editor-border-subtle absolute left-0 top-full z-[400] mt-1 min-w-[180px] rounded-lg border py-1 shadow-lg"
-                    role="listbox"
-                    aria-label="Switch page"
-                  >
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                </Button>
+                <PopoverSurface
+                  open={pageSwitcherOpen}
+                  onOpenChange={setPageSwitcherOpen}
+                  className="editor-topbar-page-switcher-menu fixed z-[400] w-[240px] rounded-lg border p-1 shadow-lg"
+                  style={pageSwitcherStyle}
+                >
+                  <div role="listbox" aria-label="Switch page" className="flex flex-col gap-0.5">
                     {(state.document.pages ?? []).map((page) => {
                       const depth = (() => {
                         let d = 0;
@@ -454,27 +497,32 @@ export function AppShell({
                       })();
                       const isActive = page.id === state.activePageId;
                       return (
-                        <button
+                        <Button
                           key={page.id}
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           role="option"
                           aria-selected={isActive}
-                          className="editor-text-strong flex w-full items-center gap-2 py-1.5 pr-3 text-sm transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.07]"
-                          style={{ paddingLeft: `${8 + depth * 12}px` }}
+                          data-active={isActive ? 'true' : 'false'}
+                          className="editor-topbar-page-switcher-row"
+                          style={{ paddingLeft: `${10 + depth * 14}px` }}
                           onClick={() => {
                             dispatch({ type: 'setActivePage', pageId: page.id });
                             setPageSwitcherOpen(false);
                           }}
                         >
-                          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${isActive ? 'bg-current opacity-80' : 'opacity-0'}`} />
+                          <span className="editor-topbar-page-switcher-row-indicator" aria-hidden="true" />
                           <span className="min-w-0 truncate">{page.displayName || 'Untitled'}</span>
-                        </button>
+                        </Button>
                       );
                     })}
-                    <div className="editor-border-subtle mx-2 my-1 border-t" />
-                    <button
+                    <div className="editor-border-subtle my-1 border-t" />
+                    <Button
                       type="button"
-                      className="editor-text-muted flex w-full items-center gap-2 px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.07]"
+                      variant="ghost"
+                      size="sm"
+                      className="editor-topbar-page-switcher-create"
                       onClick={() => {
                         dispatch({ type: 'addPage' });
                         setPageSwitcherOpen(false);
@@ -482,10 +530,10 @@ export function AppShell({
                     >
                       <FilePlus2 className="h-3.5 w-3.5 shrink-0" />
                       <span>New page</span>
-                    </button>
+                    </Button>
                   </div>
-                )}
-              </div>
+                </PopoverSurface>
+              </>
             )}
             <div className="ml-auto flex items-center gap-2">
               <TopbarIconAction
@@ -550,11 +598,14 @@ export function AppShell({
                 layersOpen={layersOpen}
                 onOpenLayers={onOpenLayers}
                 onCloseLayers={onCloseLayers}
+                pagesOpen={pagesOpen}
+                onOpenPages={() => handleOpenPagesPanel()}
+                onClosePages={() => setPagesOpen(false)}
               />
               <div className="mt-auto flex justify-center pt-3">
                 <div className="flex flex-col gap-2">
                   <RailToggleButton
-                    icon={EyeOff}
+                    icon={ScanEye}
                     pressed={state.ui.previewSticky}
                     label={state.ui.previewSticky ? 'Sticky preview on' : 'Sticky preview off'}
                     shortcut={getShortcutLabel('togglePreviewSticky', shortcutPlatform)}
@@ -597,12 +648,6 @@ export function AppShell({
                       })
                     }
                   />
-                  <RailToggleButton
-                    icon={LayoutGrid}
-                    pressed={pagesOpen}
-                    label={pagesOpen ? 'Pages panel open' : 'Open pages panel'}
-                    onClick={() => setPagesOpen((v) => !v)}
-                  />
                 </div>
               </div>
             </div>
@@ -632,6 +677,7 @@ export function AppShell({
               document={state.document}
               selectedId={state.selectedId}
               selectedIds={state.selectedIds}
+              activePageId={state.activePageId}
               previewSticky={state.ui.previewSticky}
               animationPreview={state.ui.animationPreview}
               spacerVisibility={state.ui.spacerVisibility}
@@ -642,12 +688,13 @@ export function AppShell({
                   dispatch({ type: 'select', id: stageSelectableIds[0] });
                 }
               }}
-              onSelect={(id, mode = 'replace') =>
-                dispatch(mode === 'toggle' ? { type: 'toggleSelect', id } : { type: 'select', id })
-              }
+              onSelect={handleStageSelect}
               onSelectMany={(ids, mode) => dispatch({ type: 'selectMany', ids, mode })}
               onClearSelection={() => dispatch({ type: 'clearSelection' })}
-              onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
+              onMove={(id, x, y) => {
+                setLinkPopupVisible(false);
+                dispatch({ type: 'move', id, x, y });
+              }}
               onMoveSelection={(moves) => dispatch({ type: 'moveSelection', moves })}
               onReparent={(id, parentId, x, y) => dispatch({ type: 'reparent', id, parentId, x, y })}
               onReparentSelection={(parentId, moves) => dispatch({ type: 'reparentSelection', parentId, moves })}
@@ -655,6 +702,19 @@ export function AppShell({
               onResizeStart={(id) => dispatch({ type: 'beginResize', id })}
               onResizeEnd={(id) => dispatch({ type: 'endResize', id })}
               onStickyGeometryChange={onStickyGeometryChange}
+              followLinkPopup={linkPopupVisible && selectedLinkNode ? {
+                node: selectedLinkNode,
+                document: state.document,
+                onNavigateToPage: (pageId) => {
+                  dispatch({ type: 'setActivePage', pageId });
+                  setLinkPopupVisible(false);
+                },
+                onScrollToAnchor: (nodeId) => {
+                  const el = window.document.querySelector(`[data-node-id="${nodeId}"]`);
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  setLinkPopupVisible(false);
+                },
+              } : null}
             />
           </main>
 
@@ -715,9 +775,9 @@ export function AppShell({
             onSetPageDisplayName={(pageId, displayName) => dispatch({ type: 'setPageDisplayName', pageId, displayName })}
             onSetPageSlug={(pageId, slug) => dispatch({ type: 'setPageSlug', pageId, slug })}
             onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
-            onSetPageViewTransition={(_pageId, _transition) => undefined}
-            onOpenPageSettings={() => undefined}
-            onOpenPagesPanel={() => setPagesOpen(true)}
+            onSetPageViewTransition={(pageId, transition) => dispatch({ type: 'setPageViewTransition', pageId, transition })}
+            onOpenPageSettings={handleOpenCurrentPageSettings}
+            onOpenPagesPanel={handleOpenPagesPanel}
           />
           </Suspense>
         </div>
@@ -820,7 +880,10 @@ export function AppShell({
             onSetActivePage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
             onAddPage={() => dispatch({ type: 'addPage' })}
             onDeletePage={(pageId) => dispatch({ type: 'deletePage', pageId })}
-            onOpenPageSettings={() => undefined}
+            onOpenPageSettings={(pageId) => {
+              setRequestedPageSettingsId(pageId);
+              setPagesOpen(true);
+            }}
             onSetPageParent={(pageId, parentPageId) => dispatch({ type: 'setPageParent', pageId, parentPageId })}
             onReorderPage={(pageId, direction) => dispatch({ type: 'reorderPage', pageId, direction })}
             onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
@@ -833,7 +896,11 @@ export function AppShell({
           <PagesPanel
             document={state.document}
             activePageId={state.activePageId}
-            onClose={() => setPagesOpen(false)}
+            openSettingsPageId={requestedPageSettingsId}
+            onClose={() => {
+              setPagesOpen(false);
+              setRequestedPageSettingsId(null);
+            }}
             onSetSiteSettings={(patch) => dispatch({ type: 'setSiteSettings', patch })}
             onSetActivePage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
             onAddPage={() => dispatch({ type: 'addPage' })}
@@ -842,7 +909,9 @@ export function AppShell({
             onSetPageSlug={(pageId, slug) => dispatch({ type: 'setPageSlug', pageId, slug })}
             onAddPageAlias={(pageId, alias) => dispatch({ type: 'addPageSlugAlias', pageId, alias })}
             onRemovePageAlias={(pageId, alias) => dispatch({ type: 'removePageSlugAlias', pageId, alias })}
+            onSyncPageLinks={(oldUrl, newUrl) => dispatch({ type: 'syncPageLinks', oldUrl, newUrl })}
             onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
+            onSetPageViewTransition={(pageId, transition) => dispatch({ type: 'setPageViewTransition', pageId, transition })}
             onSetPageParent={(pageId, parentPageId) => dispatch({ type: 'setPageParent', pageId, parentPageId })}
             onReorderPage={(pageId, direction) => dispatch({ type: 'reorderPage', pageId, direction })}
             onExport={handleExportSite}
@@ -966,15 +1035,6 @@ export function AppShell({
 
       <HelpDialog open={helpOpen} onOpenChange={onHelpOpenChange} />
 
-      {linkPopupVisible && selectedLinkNode && selectedNodeRect ? (
-        <FollowLinkPopup
-          node={selectedLinkNode}
-          document={state.document}
-          stageRect={selectedNodeRect}
-          onNavigateToPage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
-          onScrollToAnchor={() => undefined}
-        />
-      ) : null}
     </div>
   );
 }

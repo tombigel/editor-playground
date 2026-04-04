@@ -7,6 +7,7 @@ export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStick
 
 import { renderWrapper } from './stageRenderers/wrapperRenderer';
 import { MultiSelectionOutline, SingleSelectionOverlay } from './stageRenderers/selectionVisuals';
+import { FollowLinkPopup } from '../panels/FollowLinkPopup';
 
 export const StageScene = memo(function StageScene({
   document,
@@ -27,6 +28,7 @@ export const StageScene = memo(function StageScene({
   measuredNodeSizes,
   viewport,
   onSelectionOverlayHandleMouseDown,
+  followLinkPopup = null,
 }: StageSceneProps) {
   const plan = useMemo(
     () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport, activePageId ?? undefined),
@@ -116,6 +118,15 @@ export const StageScene = memo(function StageScene({
             onHandleMouseDown={onSelectionOverlayHandleMouseDown}
           />
         ) : null}
+        {followLinkPopup && singleSelectionOverlay ? (
+          <FollowLinkPopup
+            node={followLinkPopup.node}
+            document={followLinkPopup.document}
+            bounds={singleSelectionOverlay.bounds}
+            onNavigateToPage={followLinkPopup.onNavigateToPage}
+            onScrollToAnchor={followLinkPopup.onScrollToAnchor}
+          />
+        ) : null}
         {multiSelectionBounds ? <MultiSelectionOutline bounds={multiSelectionBounds} /> : null}
       </div>
   );
@@ -137,7 +148,8 @@ export const StageScene = memo(function StageScene({
   prev.resizeState === next.resizeState &&
   prev.measuredNodeSizes === next.measuredNodeSizes &&
   prev.viewport === next.viewport &&
-  prev.onSelectionOverlayHandleMouseDown === next.onSelectionOverlayHandleMouseDown,
+  prev.onSelectionOverlayHandleMouseDown === next.onSelectionOverlayHandleMouseDown &&
+  prev.followLinkPopup === next.followLinkPopup,
 );
 
 function EmptySlot({ label }: { label: string }) {

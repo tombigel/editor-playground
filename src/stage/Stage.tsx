@@ -62,6 +62,7 @@ export function Stage({
 	document,
 	selectedId,
 	selectedIds = selectedId ? [selectedId] : [],
+	activePageId,
 	previewSticky,
 	animationPreview,
 	spacerVisibility,
@@ -79,6 +80,7 @@ export function Stage({
 	onResizeStart,
 	onResizeEnd,
 	onStickyGeometryChange,
+	followLinkPopup,
 }: StageProps) {
 	const stageRef = useRef<HTMLDivElement | null>(null);
 	const [stageElement, setStageElement] = useState<HTMLDivElement | null>(null);
@@ -420,6 +422,7 @@ export function Stage({
 				document={document}
 				selectedId={selectedId}
 				selectedIds={selectedIds}
+				activePageId={activePageId}
 				singleSelectionOverlay={singleSelectionOverlay}
 				multiSelectionBounds={multiSelectionBounds}
 				previewSticky={previewSticky}
@@ -475,6 +478,7 @@ export function Stage({
 				}}
 				measuredNodeSizes={measuredNodeSizes}
 				viewport={viewport}
+				followLinkPopup={followLinkPopup}
 			/>
 			{dragDrop.dragPresentation ? (
 				<SnapGuideOverlay

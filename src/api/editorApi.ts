@@ -94,11 +94,14 @@ export {
   setPageDisplayName,
   setPageSlug,
   setPageParent,
+  setPageVisibility,
+  setPageViewTransition,
   setSiteSettings,
   moveSectionToPage,
   getPageForSection,
   getActiveSections,
   resolvePageUrl,
+  syncPageHrefLinks,
   validatePageSlug,
 } from './pageApi';
 export type { DocumentPage, PageId, SiteSettings } from '../model/types/site';

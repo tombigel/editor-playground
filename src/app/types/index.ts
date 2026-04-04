@@ -137,8 +137,10 @@ export type EditorAction =
   | { type: 'setPageSlug'; pageId: PageId; slug: string }
   | { type: 'setPageParent'; pageId: PageId; parentPageId: PageId | null }
   | { type: 'setPageVisibility'; pageId: PageId; visible: boolean }
+  | { type: 'setPageViewTransition'; pageId: PageId; transition: DocumentPage['viewTransition'] }
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
+  | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
   | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
 
 export type HistoryAction =

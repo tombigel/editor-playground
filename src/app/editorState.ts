@@ -44,7 +44,9 @@ import {
   setPageSlug,
   setPageParent,
   setPageVisibility,
+  setPageViewTransition,
   removePageSlugAlias,
+  syncPageHrefLinks,
   setSiteSettings,
 } from '../api/pageApi';
 import { setActivePage } from '../editor/editorMutations';
@@ -348,10 +350,14 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setPageParent(state.document, action.pageId, action.parentPageId) };
     case 'setPageVisibility':
       return { ...state, document: setPageVisibility(state.document, action.pageId, action.visible) };
+    case 'setPageViewTransition':
+      return { ...state, document: setPageViewTransition(state.document, action.pageId, action.transition) };
     case 'addPageSlugAlias':
       return { ...state, document: addPageSlugAlias(state.document, action.pageId, action.alias) };
     case 'removePageSlugAlias':
       return { ...state, document: removePageSlugAlias(state.document, action.pageId, action.alias) };
+    case 'syncPageLinks':
+      return { ...state, document: syncPageHrefLinks(state.document, action.oldUrl, action.newUrl) };
     case 'setSiteSettings':
       return { ...state, document: setSiteSettings(state.document, action.patch) };
     default:

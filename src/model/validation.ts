@@ -86,6 +86,26 @@ export function validateDocument(document: DocumentModel): string[] {
       }
     }
 
+    // slugOrAliasMap tracks every claimed slug/alias → pageId so alias conflicts can be detected
+    const slugOrAliasMap = new Map<string, string>(slugsSeen);
+    for (const page of pages) {
+      if (!page.slugAliases?.length) continue;
+      for (const alias of page.slugAliases) {
+        const existing = slugOrAliasMap.get(alias);
+        if (existing !== undefined) {
+          if (existing === page.id) {
+            errors.push(`Page ${page.id} alias "${alias}" duplicates its own slug.`);
+          } else {
+            errors.push(`Alias "${alias}" on page ${page.id} conflicts with page ${existing}.`);
+          }
+        } else {
+          slugOrAliasMap.set(alias, page.id);
+        }
+      }
+    }
+
+    validatePageParentCycles(pages, errors);
+
     const sectionIdsSeen = new Map<string, string>();
     for (const page of pages) {
       for (const sectionId of page.sectionIds) {
@@ -122,6 +142,28 @@ export function validateDocument(document: DocumentModel): string[] {
   }
 
   return errors;
+}
+
+function validatePageParentCycles(pages: DocumentPage[], errors: string[]): void {
+  const pageMap = new Map(pages.map((p) => [p.id, p]));
+  const reportedCycles = new Set<string>();
+
+  for (const page of pages) {
+    const visited = new Set<string>();
+    let current: DocumentPage | undefined = page;
+
+    while (current?.parentPageId) {
+      if (visited.has(current.id)) {
+        if (!reportedCycles.has(current.id)) {
+          reportedCycles.add(current.id);
+          errors.push(`Page parent cycle detected involving page ${current.id}.`);
+        }
+        break;
+      }
+      visited.add(current.id);
+      current = pageMap.get(current.parentPageId);
+    }
+  }
 }
 
 function collectReachableNodes(

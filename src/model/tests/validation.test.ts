@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { addPage, setPageParent } from '../../api/pageApi';
 import { createInitialDocument, createLeaf, createWrapper } from '../defaults';
 import { getMainWrappers } from '../selectors';
 import { validateDocument } from '../validation';
@@ -151,6 +152,106 @@ describe('model/validation', () => {
     const errors = validateDocument(document);
     expect(errors).toContain(`Node ${root.id} references child ${duplicateId} more than once.`);
     expect(errors).toContain(`Node ${orphan.id} is unreachable from root ${document.rootId}.`);
+  });
+
+  describe('page alias conflict validation', () => {
+    it('accepts pages with non-conflicting aliases', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((p) =>
+          p.slug === 'about' ? { ...p, slugAliases: ['about-us'] } : p,
+        ),
+      };
+      expect(validateDocument(doc)).toEqual([]);
+    });
+
+    it('rejects alias that duplicates own slug', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((p) =>
+          p.slug === 'about' ? { ...p, slugAliases: ['about'] } : p,
+        ),
+      };
+      const errors = validateDocument(doc);
+      expect(errors.some((e) => e.includes('duplicates its own slug'))).toBe(true);
+    });
+
+    it('rejects alias that conflicts with another page slug', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = addPage(doc, { displayName: 'Contact', slug: 'contact' });
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((p) =>
+          p.slug === 'contact' ? { ...p, slugAliases: ['about'] } : p,
+        ),
+      };
+      const errors = validateDocument(doc);
+      expect(errors.some((e) => e.includes('conflicts with page'))).toBe(true);
+    });
+
+    it('rejects alias that conflicts with another page alias', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = addPage(doc, { displayName: 'Contact', slug: 'contact' });
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((p) => {
+          if (p.slug === 'about') return { ...p, slugAliases: ['shared-alias'] };
+          if (p.slug === 'contact') return { ...p, slugAliases: ['shared-alias'] };
+          return p;
+        }),
+      };
+      const errors = validateDocument(doc);
+      expect(errors.some((e) => e.includes('conflicts with page'))).toBe(true);
+    });
+  });
+
+  describe('page parent cycle validation', () => {
+    it('accepts a valid parent–child hierarchy', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'Parent', slug: 'parent' });
+      const parentPage = doc.pages![1];
+      doc = addPage(doc, { displayName: 'Child', slug: 'child' });
+      const childPage = doc.pages![2];
+      doc = setPageParent(doc, childPage.id, parentPage.id);
+      expect(validateDocument(doc)).toEqual([]);
+    });
+
+    it('rejects a direct self-parent cycle', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'Looping', slug: 'loop' });
+      const loopPage = doc.pages![1];
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((p) =>
+          p.id === loopPage.id ? { ...p, parentPageId: loopPage.id } : p,
+        ),
+      };
+      const errors = validateDocument(doc);
+      expect(errors.some((e) => e.includes('Page parent cycle detected'))).toBe(true);
+    });
+
+    it('rejects a two-page parent cycle', () => {
+      let doc = createInitialDocument();
+      doc = addPage(doc, { displayName: 'A', slug: 'a' });
+      doc = addPage(doc, { displayName: 'B', slug: 'b' });
+      const [pageA, pageB] = [doc.pages![1], doc.pages![2]];
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((p) => {
+          if (p.id === pageA.id) return { ...p, parentPageId: pageB.id };
+          if (p.id === pageB.id) return { ...p, parentPageId: pageA.id };
+          return p;
+        }),
+      };
+      const errors = validateDocument(doc);
+      expect(errors.some((e) => e.includes('Page parent cycle detected'))).toBe(true);
+    });
   });
 
   it('rejects cycles in the node graph', () => {

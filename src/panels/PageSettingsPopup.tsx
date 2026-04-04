@@ -29,6 +29,7 @@ export type PageSettingsPopupProps = {
   onSetVisibility: (pageId: PageId, visible: boolean) => void;
   onSetViewTransition: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
   onSetParent: (pageId: PageId, parentPageId: PageId | null) => void;
+  onSyncPageLinks: (oldUrl: string, newUrl: string) => void;
 };
 
 type PendingSlugChange = {
@@ -48,6 +49,7 @@ export function PageSettingsPopup({
   onSetVisibility,
   onSetViewTransition,
   onSetParent,
+  onSyncPageLinks,
 }: PageSettingsPopupProps) {
   const [pendingSlugChange, setPendingSlugChange] = useState<PendingSlugChange | null>(null);
   const [pendingDisplayName, setPendingDisplayName] = useState<string | null>(null);
@@ -66,13 +68,20 @@ export function PageSettingsPopup({
   }, [page.slug]);
 
   useEffect(() => {
-    if (!anchorEl || !popoverRef.current) return;
-    const rect = anchorEl.getBoundingClientRect();
     const popover = popoverRef.current;
+    if (!popover) return;
+    if (!anchorEl) {
+      popover.style.top = '50vh';
+      popover.style.left = '50vw';
+      popover.style.transform = 'translate(-50%, -50%)';
+      return;
+    }
+    const rect = anchorEl.getBoundingClientRect();
     const top = rect.bottom + 8;
     const left = Math.min(rect.left, window.innerWidth - 320 - 16);
     popover.style.top = `${Math.max(8, top)}px`;
     popover.style.left = `${Math.max(8, left)}px`;
+    popover.style.transform = 'none';
   }, [anchorEl]);
 
   function handleDisplayNameCommit(value: string) {
@@ -114,8 +123,14 @@ export function PageSettingsPopup({
   function handlePendingSlugYes() {
     if (!pendingSlugChange || !pendingDisplayName) return;
     const isPublished = siteSettings?.status === 'published';
+    const oldUrl = resolvePageUrl(document, page.id);
+    const parentUrl = page.parentPageId ? resolvePageUrl(document, page.parentPageId) : '/';
+    const newUrl = parentUrl === '/'
+      ? `/${pendingSlugChange.to}/`
+      : `${parentUrl}${pendingSlugChange.to}/`;
     onSetDisplayName(page.id, pendingDisplayName);
     onSetSlug(page.id, pendingSlugChange.to);
+    onSyncPageLinks(oldUrl, newUrl);
     if (isPublished) {
       onAddAlias(page.id, pendingSlugChange.from);
     }

@@ -1,5 +1,5 @@
 import { LayoutGrid } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DocumentModel } from '../model/types';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { PageTreeContent } from './PageTreeContent';
 export type PagesPanelProps = {
   document: DocumentModel;
   activePageId: PageId | null;
+  openSettingsPageId?: PageId | null;
   onClose: () => void;
   onSetSiteSettings: (patch: Partial<SiteSettings>) => void;
   onSetActivePage: (pageId: PageId) => void;
@@ -31,14 +32,17 @@ export type PagesPanelProps = {
   onAddPageAlias: (pageId: PageId, alias: string) => void;
   onRemovePageAlias: (pageId: PageId, alias: string) => void;
   onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
+  onSetPageViewTransition: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
   onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
   onReorderPage: (pageId: PageId, direction: 'back' | 'forward') => void;
+  onSyncPageLinks: (oldUrl: string, newUrl: string) => void;
   onExport: () => void;
 };
 
 export function PagesPanel({
   document,
   activePageId,
+  openSettingsPageId = null,
   onClose,
   onSetSiteSettings,
   onSetActivePage,
@@ -49,8 +53,10 @@ export function PagesPanel({
   onAddPageAlias,
   onRemovePageAlias,
   onSetPageVisibility,
+  onSetPageViewTransition,
   onSetPageParent,
   onReorderPage,
+  onSyncPageLinks,
   onExport,
 }: PagesPanelProps) {
   const [settingsPageId, setSettingsPageId] = useState<PageId | null>(null);
@@ -59,6 +65,12 @@ export function PagesPanel({
 
   const siteSettings = document.siteSettings;
   const pages = document.pages ?? [];
+
+  useEffect(() => {
+    if (!openSettingsPageId) return;
+    setSettingsAnchorEl(null);
+    setSettingsPageId(openSettingsPageId);
+  }, [openSettingsPageId]);
 
   function handleOpenSettings(pageId: PageId) {
     const el = gearButtonRefs.current.get(pageId) ?? null;
@@ -74,14 +86,7 @@ export function PagesPanel({
   const settingsPage = settingsPageId != null ? pages.find((p) => p.id === settingsPageId) ?? null : null;
 
   function handleSetPageViewTransition(pageId: PageId, transition: DocumentPage['viewTransition']) {
-    const page = pages.find((p) => p.id === pageId);
-    if (!page) return;
-    // Store viewTransition on the page via setPageSlug-equivalent (use importDocument workaround via setSiteSettings is not right)
-    // Since there's no setPageViewTransition action in the reducer yet, we call onSetSiteSettings as a no-op placeholder.
-    // TODO: Wire a dedicated setPageViewTransition action when added to the reducer.
-    // For now we silently ignore since it's not in the action types.
-    void pageId;
-    void transition;
+    onSetPageViewTransition(pageId, transition);
   }
 
   return (
@@ -274,6 +279,7 @@ export function PagesPanel({
           onSetVisibility={onSetPageVisibility}
           onSetViewTransition={handleSetPageViewTransition}
           onSetParent={onSetPageParent}
+          onSyncPageLinks={onSyncPageLinks}
         />
       )}
     </>

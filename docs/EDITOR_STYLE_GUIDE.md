@@ -642,6 +642,41 @@ Rules:
 - token values are resolved by `resolveStickyGuideColors` and `resolveAccentSurfaceColors` in `src/lib/theme.ts` and injected as CSS custom properties on the root shell element
 - the elevation inspector controls (Elevation toggle, Elevate this node toggle) follow the same Switch styling as all other boolean inspector controls — no custom accent or one-off color treatment
 
+### Follow-link Popup
+
+Implementation reference:
+
+- [src/panels/FollowLinkPopup.tsx](../src/panels/FollowLinkPopup.tsx)
+
+A compact action popup that appears directly below the selected link node's edit box. It is rendered with `position: absolute` inside the `stage-frame` container and anchored using `singleSelectionOverlay.bounds` — the same coordinate system as the selection overlay.
+
+Spec:
+
+- height: `40px`
+- offset below node bottom edge: `8px`
+- radius: `rounded-md`
+- background: `editor-bg-surface`
+- border: `editor-border-subtle`
+- shadow: `shadow-md`
+- button text: `editor-text-strong`, `12px`, `500`, `hover:underline`
+- `pointer-events: auto` — required because the parent overlay layer disables pointer events
+
+Label variants by link type:
+
+| Link type | Label |
+| --- | --- |
+| Page link (resolved) | `→ Go to {page display name}` |
+| Page link (broken) | `→ Broken page link` |
+| External link | `↗ {href, truncated to 40 chars}` |
+| Anchor / section | `↓ Jump to section` |
+
+Behavior rules:
+
+- visible only when a link node is selected and the popup is toggled on
+- re-clicking the already-selected link node toggles the popup off
+- hidden on drag start (`onMove`) to avoid stale positioning
+- rendered inside `StageScene` alongside `SingleSelectionOverlay`; do not render it in the app shell
+
 ## 15. Z-Index
 
 Rules:

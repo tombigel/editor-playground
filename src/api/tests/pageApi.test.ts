@@ -13,7 +13,9 @@ import {
   resolvePageUrl,
   setPageParent,
   setPageSlug,
+  setPageViewTransition,
   setSiteSettings,
+  syncPageHrefLinks,
   validatePageSlug,
 } from '../pageApi';
 
@@ -264,6 +266,35 @@ describe('validatePageSlug', () => {
   });
 });
 
+describe('setPageViewTransition', () => {
+  it('sets viewTransition on the target page', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About' });
+    const pageId = (doc.pages ?? [])[1].id;
+    const result = setPageViewTransition(doc, pageId, 'crossfade');
+    const updated = (result.pages ?? []).find((p) => p.id === pageId);
+    expect(updated?.viewTransition).toBe('crossfade');
+  });
+
+  it('can clear viewTransition by setting undefined', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', viewTransition: 'slide' });
+    const pageId = (doc.pages ?? [])[1].id;
+    const result = setPageViewTransition(doc, pageId, undefined);
+    const updated = (result.pages ?? []).find((p) => p.id === pageId);
+    expect(updated?.viewTransition).toBeUndefined();
+  });
+
+  it('returns document unchanged for unknown pageId', () => {
+    const doc = makeDoc();
+    const pages = doc.pages ?? [];
+    // Use an ID that cannot exist in a fresh document
+    const fakeId = (pages[0].id + '-nonexistent') as typeof pages[0]['id'];
+    const result = setPageViewTransition(doc, fakeId, 'slide');
+    expect(result).toBe(doc);
+  });
+});
+
 describe('setSiteSettings', () => {
   it('merges patch into existing siteSettings', () => {
     const doc = makeDoc();
@@ -279,5 +310,62 @@ describe('validateDocument', () => {
     const doc = createInitialDocument();
     const errors = validateDocument(doc);
     expect(errors).toHaveLength(0);
+  });
+});
+
+describe('syncPageHrefLinks', () => {
+  function makeDocWithLinkNode(href: string): DocumentModel {
+    const doc = makeDoc();
+    const root = doc.nodes[doc.rootId];
+    const sectionId = root.children[0];
+    const section = doc.nodes[sectionId];
+    const linkNode = {
+      id: 'link-node-1',
+      type: 'leaf' as const,
+      role: 'link' as const,
+      parentId: sectionId,
+      children: [] as string[],
+      rect: { x: 0, y: 0, width: 100, height: 30 },
+      label: 'Click me',
+      href,
+    };
+    return {
+      ...doc,
+      nodes: {
+        ...doc.nodes,
+        [linkNode.id]: linkNode,
+        [sectionId]: { ...section, children: [...section.children, linkNode.id] },
+      },
+    };
+  }
+
+  it('updates href on link nodes matching oldUrl', () => {
+    const doc = makeDocWithLinkNode('/about/');
+    const result = syncPageHrefLinks(doc, '/about/', '/about-us/');
+    expect((result.nodes['link-node-1'] as { href?: string }).href).toBe('/about-us/');
+  });
+
+  it('does not update href on link nodes not matching oldUrl', () => {
+    const doc = makeDocWithLinkNode('/contact/');
+    const result = syncPageHrefLinks(doc, '/about/', '/about-us/');
+    expect((result.nodes['link-node-1'] as { href?: string }).href).toBe('/contact/');
+  });
+
+  it('returns original document reference when nothing matches', () => {
+    const doc = makeDocWithLinkNode('/contact/');
+    const result = syncPageHrefLinks(doc, '/about/', '/about-us/');
+    expect(result).toBe(doc);
+  });
+
+  it('does nothing when oldUrl is "/"', () => {
+    const doc = makeDocWithLinkNode('/');
+    const result = syncPageHrefLinks(doc, '/', '/home/');
+    expect((result.nodes['link-node-1'] as { href?: string }).href).toBe('/');
+  });
+
+  it('does nothing when oldUrl equals newUrl', () => {
+    const doc = makeDocWithLinkNode('/about/');
+    const result = syncPageHrefLinks(doc, '/about/', '/about/');
+    expect(result).toBe(doc);
   });
 });

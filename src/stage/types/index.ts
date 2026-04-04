@@ -1,5 +1,6 @@
 import type {
 	DocumentModel,
+	LinkLeaf,
 	NodeId,
 	ViewportMeasurement,
 } from "../../model/types";
@@ -16,10 +17,18 @@ import type {
 	StickyMeasuredNodeSizes,
 } from "../../sticky/types";
 
+export type FollowLinkPopupData = {
+	node: LinkLeaf;
+	document: DocumentModel;
+	onNavigateToPage: (pageId: PageId) => void;
+	onScrollToAnchor: (nodeId: NodeId) => void;
+};
+
 export type StageProps = {
 	document: DocumentModel;
 	selectedId: NodeId | null;
 	selectedIds?: NodeId[];
+	activePageId?: PageId | null;
 	previewSticky: boolean;
 	animationPreview?: AnimationPreviewState;
 	spacerVisibility: "selected" | "all";
@@ -42,6 +51,7 @@ export type StageProps = {
 	onResizeStart: (id: NodeId) => void;
 	onResizeEnd: (id: NodeId) => void;
 	onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
+	followLinkPopup?: FollowLinkPopupData | null;
 };
 
 export type DragPreviewItem = {
@@ -189,6 +199,7 @@ export type StageSceneProps = {
 	onSelectionOverlayHandleMouseDown: (handle: ResizeHandle, event: import('react').MouseEvent<HTMLDivElement>) => void;
 	measuredNodeSizes: RenderMeasuredNodeSizes;
 	viewport: ViewportMeasurement;
+	followLinkPopup?: FollowLinkPopupData | null;
 };
 
 export type RenderWrapperArgs = {

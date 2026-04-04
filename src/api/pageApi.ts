@@ -132,6 +132,18 @@ export function setPageVisibility(
   return { ...document, pages };
 }
 
+export function setPageViewTransition(
+  document: DocumentModel,
+  pageId: PageId,
+  transition: DocumentPage['viewTransition'],
+): DocumentModel {
+  const pages = structuredClone(document.pages ?? []);
+  const page = pages.find((p) => p.id === pageId);
+  if (!page) return document;
+  page.viewTransition = transition;
+  return { ...document, pages };
+}
+
 export function setPageParent(
   document: DocumentModel,
   pageId: PageId,
@@ -242,6 +254,25 @@ export function resolvePageUrl(document: DocumentModel, pageId: PageId): string 
 
   if (slugs.length === 0) return '/';
   return '/' + slugs.join('/') + '/';
+}
+
+export function syncPageHrefLinks(
+  document: DocumentModel,
+  oldUrl: string,
+  newUrl: string,
+): DocumentModel {
+  if (!oldUrl || oldUrl === '/' || oldUrl === newUrl) return document;
+  const nodes = { ...document.nodes };
+  let changed = false;
+  for (const [id, node] of Object.entries(nodes)) {
+    if (node.type !== 'leaf') continue;
+    if (node.role !== 'link' && node.role !== 'button') continue;
+    if ((node as { href?: string }).href === oldUrl) {
+      nodes[id] = { ...node, href: newUrl };
+      changed = true;
+    }
+  }
+  return changed ? { ...document, nodes } : document;
 }
 
 export function validatePageSlug(slug: string): string[] {

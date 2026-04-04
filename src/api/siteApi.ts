@@ -19,6 +19,7 @@ import {
   renderPageHtmlDocument,
   renderSiteExportBundles,
   buildRouteManifest,
+  buildHostingConfigs,
   type SiteExportBundle,
   type SiteExportOptions,
   type SitePageExportBundle,
@@ -41,4 +42,5 @@ export {
   renderPageHtmlDocument,
   renderSiteExportBundles,
   buildRouteManifest,
+  buildHostingConfigs,
 };

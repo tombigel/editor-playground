@@ -200,12 +200,94 @@ export function renderSiteExportBundles(
   });
 }
 
-export function buildRouteManifest(document: DocumentModel): RouteManifest {
+export function buildHostingConfigs(document: DocumentModel, options: SiteExportOptions = {}): Record<string, string> {
+  const { outputStructure = 'directory' } = options;
+  const manifest = buildRouteManifest(document, options);
+  const nonHomeRoutes = manifest.routes.filter((r) => r.url !== '/');
+
+  return {
+    'hosting/netlify/_redirects': buildNetlifyRedirects(nonHomeRoutes, outputStructure),
+    'hosting/vercel/vercel.json': buildVercelConfig(nonHomeRoutes, outputStructure),
+    'hosting/nginx/nginx.conf': buildNginxConfig(outputStructure),
+    'hosting/README.txt': HOSTING_README,
+  };
+}
+
+const HOSTING_README = `Deploy configs for common hosting environments.
+
+netlify/
+  _redirects — place at the root of your Netlify site deployment.
+
+vercel/
+  vercel.json — place at the root of your Vercel project.
+
+nginx/
+  nginx.conf — use as your server block configuration.
+
+GitHub Pages:
+  No config required. The directory-structure output (about/index.html)
+  is served correctly by GitHub Pages natively.
+`;
+
+function buildNetlifyRedirects(
+  nonHomeRoutes: RouteManifest['routes'],
+  outputStructure: 'directory' | 'flat',
+): string {
+  if (outputStructure === 'directory') {
+    return [
+      '# Directory-structure output.',
+      '# Netlify serves index.html from subdirectories natively — no redirects required.',
+      '',
+    ].join('\n');
+  }
+  return [
+    '# Flat-structure output — rewrite clean URLs to .html files.',
+    ...nonHomeRoutes.map((r) => `${r.url.replace(/\/$/, '')}  /${r.filePath}  200`),
+    '',
+  ].join('\n');
+}
+
+function buildVercelConfig(
+  nonHomeRoutes: RouteManifest['routes'],
+  outputStructure: 'directory' | 'flat',
+): string {
+  if (outputStructure === 'directory') {
+    return '{}\n';
+  }
+  const rewrites = nonHomeRoutes.map((r) => ({
+    source: r.url.replace(/\/$/, ''),
+    destination: `/${r.filePath}`,
+  }));
+  return JSON.stringify({ rewrites }, null, 2) + '\n';
+}
+
+function buildNginxConfig(outputStructure: 'directory' | 'flat'): string {
+  const tryFiles =
+    outputStructure === 'flat'
+      ? 'try_files $uri $uri.html $uri/ =404;'
+      : 'try_files $uri $uri/ =404;';
+  return [
+    'server {',
+    '    listen 80;',
+    '    server_name example.com;',
+    '    root /var/www/html;',
+    '    index index.html;',
+    '',
+    '    location / {',
+    `        ${tryFiles}`,
+    '    }',
+    '}',
+    '',
+  ].join('\n');
+}
+
+export function buildRouteManifest(document: DocumentModel, options: SiteExportOptions = {}): RouteManifest {
+  const { outputStructure = 'directory' } = options;
   const pages = document.pages ?? [];
   return {
     routes: pages.map((page) => {
       const url = resolvePageUrl(document, page.id);
-      const filePath = resolveFilePath(url, 'directory');
+      const filePath = resolveFilePath(url, outputStructure);
       return {
         pageId: page.id,
         slug: page.slug,

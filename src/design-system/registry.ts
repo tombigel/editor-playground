@@ -60,6 +60,7 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "composite-layers-panel", label: "Layers Panel" },
 			{ id: "composite-shortcuts", label: "Shortcuts" },
 			{ id: "composite-focused-panel", label: "Focused Panel" },
+			{ id: "composite-follow-link-popup", label: "Follow-link Popup" },
 			{ id: "composite-debug-info", label: "Debug Info Card" },
 		],
 	},
