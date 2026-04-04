@@ -40,6 +40,14 @@ import {
   getTrackSpacerClassName,
 } from './siteShared';
 
+export function buildSiteViewTransitionCss(document: DocumentModel): string | null {
+  const viewTransition = document.siteSettings?.viewTransition;
+  if (viewTransition === 'crossfade' || viewTransition === 'slide') {
+    return '@media (prefers-reduced-motion: no-preference) {\n  @view-transition {\n    navigation: auto;\n  }\n}';
+  }
+  return null;
+}
+
 export function buildSiteCssRules(document: DocumentModel, previewSticky = true): SharedCssRule[] {
   const rules = [
     ...getBaseSiteCssRules(document),

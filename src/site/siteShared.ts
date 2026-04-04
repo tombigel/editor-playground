@@ -1,6 +1,7 @@
 import type { AnimationDefinition } from '../animations/types';
 import { getChildren } from '../model/selectors';
 import type { DocumentModel, NodeId, StickyDefinition, WrapperNode } from '../model/types';
+import type { PageId } from '../model/types/site';
 import { formatValue } from '../model/units';
 import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
 import type { RenderExportableNode as ExportableNode } from '../render/types';
@@ -29,6 +30,26 @@ export function getRootWrappers(document: DocumentModel) {
     return [];
   }
   return getChildren(document, root.id).filter((node): node is WrapperNode => node.type === 'wrapper' && node.visible);
+}
+
+export function getRootWrappersForPage(document: DocumentModel, pageId: PageId) {
+  const page = document.pages?.find((p) => p.id === pageId);
+  if (!page) return getRootWrappers(document);
+
+  const sharedWrappers = (document.sharedRegionIds ?? [])
+    .map((id) => document.nodes[id])
+    .filter((node): node is WrapperNode => !!node && node.type === 'wrapper' && node.visible);
+  const { header, footer } = splitRootWrappers(sharedWrappers);
+
+  const sectionWrappers = page.sectionIds
+    .map((id) => document.nodes[id])
+    .filter((node): node is WrapperNode => !!node && node.type === 'wrapper' && node.visible);
+
+  return [
+    ...(header ? [header] : []),
+    ...sectionWrappers,
+    ...(footer ? [footer] : []),
+  ];
 }
 
 export function getWrapperChildren(document: DocumentModel, wrapperId: string) {
