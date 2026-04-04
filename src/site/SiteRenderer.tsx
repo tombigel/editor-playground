@@ -6,12 +6,14 @@ import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
 import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
 import { collectInteractKeys, SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
+import type { DocumentModel } from '../model/types';
 import type { SiteRendererProps } from './types';
 
 export type { SiteRendererProps } from './types';
 
-// Module-level set populated per render pass — avoids threading through every function
+// Module-level variables populated per render pass — avoids threading through every function
 let activeInteractKeys: Set<NodeId> = new Set();
+let renderDocument: DocumentModel | undefined;
 
 /** Wraps a rendered element in <interact-element> if the node has animations. */
 function wrapInteract(nodeId: NodeId, element: ReactElement): ReactElement {
@@ -28,6 +30,7 @@ function wrapInteract(nodeId: NodeId, element: ReactElement): ReactElement {
 export function SiteRenderer({ document, previewSticky = true, includeAnimations = true, pageId }: SiteRendererProps) {
   const plan = buildRenderRootPlan(document, previewSticky, {}, undefined, pageId);
   activeInteractKeys = includeAnimations ? collectInteractKeys(document) : new Set();
+  renderDocument = document;
 
   return (
     <div className={SITE_ROOT_CLASS}>
@@ -131,19 +134,19 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
         key={plan.node.id}
         className={plan.nodeClassName}
         data-node-id={plan.node.id}
-        href={getLinkHref(plan.node)}
+        href={getLinkHref(plan.node, renderDocument)}
         {...getExternalNavigationProps(plan.node)}
       >
         {getNodeTextContent(plan.node)}
       </a>
     );
   } else {
-    leaf = getLinkHref(plan.node) ? (
+    leaf = getLinkHref(plan.node, renderDocument) ? (
       <a
         key={plan.node.id}
         className={plan.nodeClassName}
         data-node-id={plan.node.id}
-        href={getLinkHref(plan.node)}
+        href={getLinkHref(plan.node, renderDocument)}
         {...getExternalNavigationProps(plan.node)}
       >
         {getNodeTextContent(plan.node)}

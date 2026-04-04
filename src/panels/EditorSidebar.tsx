@@ -182,7 +182,7 @@ export function EditorSidebar({
               style={{ width: `${INSPECTOR_EXPANDED_WIDTH_PX}px` }}
             >
               {activePage ? (
-                <div className="editor-scrollbar min-h-0 w-full overflow-y-auto">
+                <div className="editor-scrollbar min-h-0 w-full overflow-y-auto pt-3">
                   <PageInspectorSection
                     page={activePage}
                     document={inspectorProps.document ?? { rootId: '', nodes: {}, fontLibrary: { defaults: [], favorites: [], usedFamilies: [] } }}

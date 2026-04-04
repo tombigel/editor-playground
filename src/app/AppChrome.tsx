@@ -1,7 +1,8 @@
-import type { ComponentType, Ref } from 'react';
+import type { ComponentType, ReactNode, Ref } from 'react';
 import { Rows3 } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
 import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
 
@@ -30,16 +31,20 @@ export function TopbarIconAction({
   hasPopup,
   panelTrigger,
   onClick,
+  className,
+  children,
 }: {
   icon: ComponentType<{ className?: string }>;
   label: string;
-  shortcut: string;
+  shortcut?: string;
   disabled?: boolean;
   active?: boolean;
   expanded?: boolean;
   hasPopup?: 'dialog';
   panelTrigger?: string;
   onClick: () => void;
+  className?: string;
+  children?: ReactNode;
 }) {
   return (
     <PopoverTooltip
@@ -47,10 +52,14 @@ export function TopbarIconAction({
       align="end"
       className={TOPBAR_TOOLTIP_CLASS}
       content={
-        <>
+        shortcut ? (
+          <>
+            <div className="leading-3.5 font-medium">{label}</div>
+            <div className="editor-tooltip-shortcut mt-0.5 font-mono text-[10px] font-light leading-3">{shortcut}</div>
+          </>
+        ) : (
           <div className="leading-3.5 font-medium">{label}</div>
-          <div className="editor-tooltip-shortcut mt-0.5 font-mono text-[10px] font-light leading-3">{shortcut}</div>
-        </>
+        )
       }
     >
       <Button
@@ -64,9 +73,10 @@ export function TopbarIconAction({
         data-active={active ? 'true' : 'false'}
         disabled={disabled}
         onClick={onClick}
-        className="editor-topbar-icon-button"
+        className={cn('editor-topbar-icon-button', className)}
       >
         <Icon className="h-4 w-4" />
+        {children}
       </Button>
     </PopoverTooltip>
   );

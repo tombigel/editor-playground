@@ -8,7 +8,9 @@ function createHandlers() {
     undo: vi.fn(),
     redo: vi.fn(),
     toggleSettings: vi.fn(),
-    openHelp: vi.fn(),
+    openShortcuts: vi.fn(),
+    toggleLayersPanel: vi.fn(),
+    togglePagesPanel: vi.fn(),
     setPreviewSticky: vi.fn(),
     setAnimationPreview: vi.fn(),
     setSpacerVisibility: vi.fn(),
@@ -75,6 +77,8 @@ describe('app/shortcutController', () => {
     executeEditorShortcut('dismissPanels', baseState, false, handlers);
     executeEditorShortcut('openSettings', baseState, false, handlers);
     executeEditorShortcut('showShortcutHelp', baseState, false, handlers);
+    executeEditorShortcut('toggleLayersPanel', baseState, false, handlers);
+    executeEditorShortcut('togglePagesPanel', baseState, false, handlers);
     executeEditorShortcut('toggleBoldSelection', baseState, false, handlers);
     executeEditorShortcut('toggleUnderlineSelection', baseState, false, handlers);
     executeEditorShortcut('alignSelectionLeft', baseState, false, handlers);
@@ -83,7 +87,9 @@ describe('app/shortcutController', () => {
 
     expect(handlers.closePanels).toHaveBeenCalledOnce();
     expect(handlers.toggleSettings).toHaveBeenCalledOnce();
-    expect(handlers.openHelp).toHaveBeenCalledOnce();
+    expect(handlers.openShortcuts).toHaveBeenCalledOnce();
+    expect(handlers.toggleLayersPanel).toHaveBeenCalledOnce();
+    expect(handlers.togglePagesPanel).toHaveBeenCalledOnce();
     expect(handlers.toggleBoldSelection).toHaveBeenCalledOnce();
     expect(handlers.toggleUnderlineSelection).toHaveBeenCalledOnce();
     expect(handlers.alignSelection).toHaveBeenCalledWith('left');

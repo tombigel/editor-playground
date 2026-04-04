@@ -17,7 +17,9 @@ type UseEditorKeyboardShortcutsArgs = {
   onUndo: () => void;
   onRedo: () => void;
   onToggleSettings: () => void;
-  onOpenHelp: () => void;
+  onOpenShortcuts: () => void;
+  onToggleLayersPanel: () => void;
+  onTogglePagesPanel: () => void;
   onSetPreviewSticky: (value: boolean) => void;
   onSetAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
   onSetSpacerVisibility: (value: 'selected' | 'all') => void;
@@ -48,7 +50,9 @@ export function useEditorKeyboardShortcuts({
   onUndo,
   onRedo,
   onToggleSettings,
-  onOpenHelp,
+  onOpenShortcuts,
+  onToggleLayersPanel,
+  onTogglePagesPanel,
   onSetPreviewSticky,
   onSetAnimationPreview,
   onSetSpacerVisibility,
@@ -106,7 +110,9 @@ export function useEditorKeyboardShortcuts({
         undo: onUndo,
         redo: onRedo,
         toggleSettings: onToggleSettings,
-        openHelp: onOpenHelp,
+        openShortcuts: onOpenShortcuts,
+        toggleLayersPanel: onToggleLayersPanel,
+        togglePagesPanel: onTogglePagesPanel,
         setPreviewSticky: onSetPreviewSticky,
         setAnimationPreview: onSetAnimationPreview,
         setSpacerVisibility: onSetSpacerVisibility,
@@ -135,7 +141,9 @@ export function useEditorKeyboardShortcuts({
     onDeleteSelection,
     onDistributeSelection,
     onNudgeSelection,
-    onOpenHelp,
+    onOpenShortcuts,
+    onToggleLayersPanel,
+    onTogglePagesPanel,
     onAlignSelection,
     onOrderBack,
     onOrderBringToFront,

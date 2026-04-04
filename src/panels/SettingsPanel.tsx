@@ -1,5 +1,5 @@
 import { Settings } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DocumentModel,
   FocusedMode,
@@ -74,6 +74,7 @@ type Props = {
   onResetData: () => void;
   onResetAll: () => void;
   onSiteSettingsChange?: (patch: Partial<import('../model/types/site').SiteSettings>) => void;
+  activeSection?: SettingsSectionId;
 };
 
 export function SettingsPanel({
@@ -118,9 +119,10 @@ export function SettingsPanel({
   onResetData,
   onResetAll,
   onSiteSettingsChange,
+  activeSection: activeSectionProp,
 }: Props) {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(
-    DEFAULT_SETTINGS_SECTION_ID,
+    activeSectionProp ?? DEFAULT_SETTINGS_SECTION_ID,
   );
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const displayRef = useRef<HTMLElement | null>(null);
@@ -146,6 +148,17 @@ export function SettingsPanel({
     }),
     [],
   );
+
+  useEffect(() => {
+    if (!activeSectionProp) {
+      return;
+    }
+    setActiveSection(activeSectionProp);
+    const element = sectionRefs[activeSectionProp].current;
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeSectionProp, sectionRefs]);
 
   function scrollToSection(sectionId: SettingsSectionId) {
     const element = sectionRefs[sectionId].current;

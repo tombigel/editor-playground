@@ -30,6 +30,17 @@ describe('panels/HelpDialog', () => {
     expect(markup).not.toContain('settings-nav-link-copy mt-0.5 text-xs leading-5">CONSOLE_TEST_GUIDE.md<');
   });
 
+  it('supports opening directly to documentation mode', () => {
+    const markup = renderToStaticMarkup(
+      <HelpDialog open onOpenChange={() => {}} initialEntryId="doc:docs/PLAYGROUND_SPEC.md" />,
+    );
+
+    expect(markup).toContain('data-help-entry="doc:docs/PLAYGROUND_SPEC.md"');
+    expect(markup).toContain('data-active="true"');
+    expect(markup).toContain('PLAYGROUND_SPEC.md');
+    expect(markup).not.toContain('data-help-entry="shortcuts" data-active="true"');
+  });
+
   it('uses the expected nav widths and toggle labels for expanded and collapsed states', () => {
     expect(HELP_NAV_EXPANDED_WIDTH_PX).toBe(240);
     expect(HELP_NAV_COLLAPSED_WIDTH_PX).toBe(56);

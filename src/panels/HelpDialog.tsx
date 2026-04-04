@@ -23,6 +23,7 @@ const LazyHelpMarkdownDocument = lazy(async () => {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialEntryId?: HelpEntry['id'];
 };
 
 type HelpDialogState = {
@@ -48,7 +49,7 @@ export function closeHelpDialogState(state: HelpDialogState): HelpDialogState {
   };
 }
 
-export function HelpDialog({ open, onOpenChange }: Props) {
+export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
   const entries = useMemo(() => getHelpEntries(), []);
   const markdownEntries = entries.filter((entry): entry is MarkdownHelpEntry => entry.kind === 'markdown');
   const mainEntries = entries.filter((entry) => !(entry.kind === 'markdown' && entry.path === HELP_BROWSER_DOC_PATH));
@@ -60,7 +61,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
   const lastScrollContextKeyRef = useRef<string | null>(null);
   const [contentReadyVersion, setContentReadyVersion] = useState(0);
   const [state, setState] = useState<HelpDialogState>({
-    activeEntryId: 'shortcuts',
+    activeEntryId: initialEntryId ?? 'shortcuts',
     pendingAnchor: null,
     navCollapsed: false,
   });
@@ -75,6 +76,21 @@ export function HelpDialog({ open, onOpenChange }: Props) {
     }
     setState((current) => closeHelpDialogState(current));
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !initialEntryId) {
+      return;
+    }
+    setState((current) =>
+      current.activeEntryId === initialEntryId
+        ? current
+        : {
+            ...current,
+            activeEntryId: initialEntryId,
+            pendingAnchor: null,
+          },
+    );
+  }, [initialEntryId, open]);
 
   useEffect(() => {
     if (!open || !contentRef.current) {

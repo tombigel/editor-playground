@@ -88,8 +88,34 @@ describe('app/AppShell', () => {
     expect(markup).toContain('editor-insert-button h-8 w-8 rounded-md p-0');
     expect(markup).not.toContain('editor-insert-button-inner');
     expect(markup).toContain('data-panel-trigger="layers"');
+    expect(markup).toContain('data-panel-trigger="pages"');
     expect(markup).toContain('editor-rail-entry-button');
     expect(markup).toContain('editor-rail-toggle-button');
+  });
+
+  it('renders the top bar as a single-row menubar with a centered pages switcher', () => {
+    const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+
+    expect(markup).toContain('Settings');
+    expect(markup).toContain('Edit');
+    expect(markup).toContain('View');
+    expect(markup).toContain('Help');
+    expect(markup).toContain('editor-topbar-menubar-row');
+    expect(markup).toContain('editor-topbar-page-switcher');
+    expect(markup).toContain('editor-topbar-page-switcher-centered');
+    expect(markup).toContain('editor-topbar-page-switcher-label');
+    expect(markup).toContain('data-ui="select-trigger"');
+    expect(markup).toContain('Home');
+    expect(markup).not.toContain('editor-topbar-pages-row');
+    expect(markup).toContain('Layers panel');
+    expect(markup).toContain('Pages panel');
+    expect(markup).toContain('Duplicate');
+    expect(markup).toContain('Documentation');
+    expect(markup).toContain('Design system showcase');
+    expect(markup).toContain('About');
+    expect(markup).toContain('Import JSON');
+    expect(markup).not.toContain('Import JSON…');
+    expect(markup).not.toContain('Customize…');
   });
 
   it('renders the layers panel surface when the rail entry is active', () => {
@@ -124,10 +150,9 @@ describe('app/AppShell', () => {
     expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto p-5 pt-4');
   });
 
-  it('renders the unified help dialog and top-bar help action', () => {
-    const markup = renderToStaticMarkup(<AppShell {...createProps()} helpOpen />);
+  it('renders the docs browser, detached shortcuts, and about dialogs', () => {
+    const markup = renderToStaticMarkup(<AppShell {...createProps()} helpOpen shortcutsOpen aboutOpen />);
 
-    expect(markup).toContain('aria-label="Help"');
     expect(markup).toContain('data-help-entry="shortcuts"');
     expect(markup).toContain('Browse help');
     expect(markup).toContain('Keyboard shortcuts');
@@ -135,6 +160,9 @@ describe('app/AppShell', () => {
     expect(markup).toContain('Animation API');
     expect(markup).toContain('Console Testing Guide');
     expect(markup).toContain('How to add docs?');
+    expect(markup).toContain('Close shortcuts');
+    expect(markup).toContain('Close about');
+    expect(markup).toContain('Sticky Playground');
   });
 
   it('renders the focused panel at its stored viewport offset from the workspace-aligned default', () => {

@@ -491,7 +491,7 @@ export function AppShell({
         } as CSSProperties
       }
     >
-      <div className="grid h-full grid-rows-[88px_minmax(0,1fr)]">
+      <div className="grid h-full grid-rows-[52px_minmax(0,1fr)]">
         <EditorTopbar
           topbarClass={topbarClass}
           shortcutPlatform={shortcutPlatform}
@@ -504,6 +504,7 @@ export function AppShell({
           snapEnabled={state.ui.snapSettings.guideSnap.enabled}
           showDebugInfo={state.ui.showDebugInfo}
           focusedMode={state.ui.focusedMode}
+          resolvedTheme={resolvedTheme}
           lightTheme={state.ui.lightTheme}
           darkTheme={state.ui.darkTheme}
           historyState={historyState}

@@ -1,4 +1,4 @@
-import { ImageIcon, Layers3, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
+import { BookOpenText, ImageIcon, Layers3, Link2, RectangleEllipsis, Rows3, SquareStack, Type } from 'lucide-react';
 import type { LeafRole } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { PopoverTooltip } from '@/components/ui/popover';
@@ -10,6 +10,9 @@ type Props = {
   layersOpen?: boolean;
   onOpenLayers?: (trigger: HTMLElement) => void;
   onCloseLayers?: () => void;
+  pagesOpen?: boolean;
+  onOpenPages?: (trigger: HTMLElement) => void;
+  onClosePages?: () => void;
 };
 
 const INSERT_ITEMS = [
@@ -64,6 +67,9 @@ export function InsertPanel({
   layersOpen = false,
   onOpenLayers = () => undefined,
   onCloseLayers = () => undefined,
+  pagesOpen = false,
+  onOpenPages = () => undefined,
+  onClosePages = () => undefined,
 }: Props) {
   return (
     <div className="flex flex-col items-center gap-2 overflow-visible">
@@ -135,6 +141,33 @@ export function InsertPanel({
           }}
         >
           <Layers3 className="h-4 w-4" strokeWidth={1.9} />
+        </button>
+      </PopoverTooltip>
+      <PopoverTooltip
+        side="right"
+        align="center"
+        className="min-w-[148px] text-left font-normal"
+        content={
+          <>
+            <span className="editor-text-strong block text-sm font-medium">Pages</span>
+            <span className="editor-text-muted mt-0.5 block text-xs">Manage and switch site pages</span>
+          </>
+        }
+      >
+        <button
+          type="button"
+          data-panel-trigger="pages"
+          aria-pressed={pagesOpen}
+          className="editor-rail-entry-button"
+          onClick={(event) => {
+            if (pagesOpen) {
+              onClosePages();
+              return;
+            }
+            onOpenPages(event.currentTarget);
+          }}
+        >
+          <BookOpenText className="h-4 w-4" strokeWidth={1.9} />
         </button>
       </PopoverTooltip>
     </div>

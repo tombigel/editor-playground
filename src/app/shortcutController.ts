@@ -22,7 +22,13 @@ export function executeEditorShortcut(
       handlers.toggleSettings();
       return;
     case 'showShortcutHelp':
-      handlers.openHelp();
+      handlers.openShortcuts();
+      return;
+    case 'toggleLayersPanel':
+      handlers.toggleLayersPanel();
+      return;
+    case 'togglePagesPanel':
+      handlers.togglePagesPanel();
       return;
     case 'togglePreviewSticky':
       handlers.setPreviewSticky(!state.previewSticky);

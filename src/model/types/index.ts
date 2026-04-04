@@ -23,7 +23,9 @@ export type NodeTextField =
   | 'href'
   | 'openInNewTab'
   | 'src'
-  | 'alt';
+  | 'alt'
+  | 'targetPageId'
+  | 'pageAnchorId';
 export type BorderColorField =
   | 'borderColor'
   | 'borderTopColor'

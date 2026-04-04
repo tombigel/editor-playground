@@ -1,4 +1,3 @@
-import { Settings2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -21,24 +20,21 @@ export type PageInspectorSectionProps = {
 
 export function PageInspectorSection({
   page,
+  document,
   onSetDisplayName,
-  onSetSlug,
+  onSetSlug: _onSetSlug,
   onSetVisibility,
   onSetViewTransition,
   onOpenPageSettings,
   onOpenPagesPanel,
 }: PageInspectorSectionProps) {
-  const viewTransition = page.viewTransition ?? 'none';
+  const viewTransition = page.viewTransition ?? '__inherit__';
+  const inheritedTransition = document.siteSettings?.viewTransition ?? 'none';
 
   return (
     <InspectorSectionCard
       title="Page"
-      contentClassName="space-y-2.5 px-3 pt-1.5 pb-3"
-      headerAction={{
-        ariaLabel: 'Manage page settings',
-        icon: <Settings2 className="h-3.5 w-3.5" />,
-        onClick: onOpenPageSettings,
-      }}
+      contentClassName="space-y-3 px-3 pt-2 pb-3"
     >
       <FormField label="Display name">
         <Input
@@ -49,16 +45,18 @@ export function PageInspectorSection({
       </FormField>
 
       <InspectorInlineRow label="Slug">
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="editor-bg-subtle editor-border-subtle flex min-w-0 items-center justify-between gap-2 rounded-md border px-2 py-1.5">
           <span className="editor-text-muted min-w-0 truncate font-mono text-[11px]">{page.slug || '/'}</span>
-          <button
+          <Button
             type="button"
-            className="editor-text-accent shrink-0 text-[11px] underline hover:no-underline"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-[11px]"
             onClick={onOpenPageSettings}
-            aria-label="Edit slug"
+            aria-label="Open page settings"
           >
-            edit
-          </button>
+            Edit
+          </Button>
         </div>
       </InspectorInlineRow>
 
@@ -72,9 +70,13 @@ export function PageInspectorSection({
       <InspectorInlineRow label="Transition">
         <Select
           value={viewTransition}
-          onValueChange={(value) =>
-            onSetViewTransition(page.id, value as DocumentPage['viewTransition'])
-          }
+          onValueChange={(value) => {
+            const nextTransition =
+              value === '__inherit__'
+                ? undefined
+                : (value as DocumentPage['viewTransition']);
+            onSetViewTransition(page.id, nextTransition);
+          }}
         >
           <SelectTrigger className="h-7 text-[11px]">
             <span className="truncate text-left">
@@ -82,6 +84,9 @@ export function PageInspectorSection({
             </span>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="__inherit__">
+              {`Inherit from site (${VIEW_TRANSITION_LABELS[inheritedTransition] ?? inheritedTransition})`}
+            </SelectItem>
             <SelectItem value="none">None</SelectItem>
             <SelectItem value="crossfade">Cross-fade</SelectItem>
             <SelectItem value="slide">Slide</SelectItem>
@@ -89,12 +94,21 @@ export function PageInspectorSection({
         </Select>
       </InspectorInlineRow>
 
-      <div className="editor-border-subtle border-t pt-2">
+      <div className="editor-border-subtle flex items-center gap-2 border-t pt-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 flex-1 text-xs"
+          onClick={onOpenPageSettings}
+        >
+          Page settings&hellip;
+        </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 w-full text-xs"
+          className="h-7 flex-1 text-xs"
           onClick={onOpenPagesPanel}
         >
           All pages&hellip;
@@ -104,7 +118,8 @@ export function PageInspectorSection({
   );
 }
 
-const VIEW_TRANSITION_LABELS: Record<NonNullable<DocumentPage['viewTransition']>, string> = {
+const VIEW_TRANSITION_LABELS: Record<'__inherit__' | NonNullable<DocumentPage['viewTransition']>, string> = {
+  __inherit__: 'Inherit from site',
   none: 'None',
   crossfade: 'Cross-fade',
   slide: 'Slide',

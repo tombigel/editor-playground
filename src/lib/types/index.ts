@@ -11,6 +11,8 @@ export type ShortcutId =
   | 'redo'
   | 'openSettings'
   | 'showShortcutHelp'
+  | 'toggleLayersPanel'
+  | 'togglePagesPanel'
   | 'togglePreviewSticky'
   | 'toggleAnimationPreview'
   | 'toggleSpacerVisibility'

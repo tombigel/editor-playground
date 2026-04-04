@@ -90,4 +90,53 @@ describe('panels/SettingsPanel', () => {
     expect(navOrder).toEqual(expectedOrder);
     expect(sectionOrder).toEqual(expectedOrder);
   });
+
+  it('supports opening directly to a targeted settings section', () => {
+    const document = createInitialDocument();
+    const markup = renderToStaticMarkup(
+      <SettingsPanel
+        document={document}
+        documentJson='{"rootId":"site_1"}'
+        globalStickyElevation={true}
+        onStickyElevationChange={() => undefined}
+        previewSticky={true}
+        animationPreview={{ enabled: false, mode: 'passive', triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true } }}
+        onAnimationPreviewChange={() => {}}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        showDebugInfo={false}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
+        themeMode="auto"
+        accentColor="#1668ff"
+        lightTheme="air"
+        darkTheme="monokai"
+        resolvedTheme="light"
+        startupFocusedMode={null}
+        undoDepth={0}
+        redoDepth={0}
+        historyLimit={100}
+        onClose={() => {}}
+        onPreviewStickyChange={() => {}}
+        onSpacerVisibilityChange={() => {}}
+        onShowGridLanesChange={() => {}}
+        onShowDebugInfoChange={() => {}}
+        onSnapSettingsChange={() => {}}
+        onThemeModeChange={() => {}}
+        onAccentColorChange={() => {}}
+        onLightThemeChange={() => {}}
+        onDarkThemeChange={() => {}}
+        onStartupFocusedModeChange={() => {}}
+        onClearHistory={() => {}}
+        onHistoryLimitChange={() => {}}
+        onImport={() => ({ ok: true, message: 'ok' })}
+        onResetData={() => {}}
+        onResetAll={() => {}}
+        activeSection="fonts"
+      />,
+    );
+
+    expect(markup).toContain('data-settings-nav="fonts"');
+    expect(markup).toContain('data-settings-nav="fonts"');
+    expect(markup).toContain('data-settings-section="fonts"');
+  });
 });

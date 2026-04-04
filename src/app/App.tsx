@@ -128,7 +128,9 @@ export function App() {
     onUndo: () => dispatch({ type: 'undo' }),
     onRedo: () => dispatch({ type: 'redo' }),
     onToggleSettings: () => panels.setSettingsOpen((open) => !open),
-    onOpenHelp: () => panels.setHelpOpen(true),
+    onOpenShortcuts: () => panels.setShortcutsOpen(true),
+    onToggleLayersPanel: () => panels.toggleLayersPanel(),
+    onTogglePagesPanel: () => panels.togglePagesPanel(),
     onSetPreviewSticky: (value) => dispatch({ type: 'setPreviewSticky', value }),
     onSetAnimationPreview: (value) => dispatch({ type: 'setAnimationPreview', value }),
     onSetSpacerVisibility: (value) => dispatch({ type: 'setSpacerVisibility', value }),
@@ -197,7 +199,10 @@ export function App() {
       settingsOpen={panels.settingsOpen}
       manageFontsOpen={panels.manageFontsOpen}
       helpOpen={panels.helpOpen}
+      shortcutsOpen={panels.shortcutsOpen}
+      aboutOpen={panels.aboutOpen}
       layersOpen={panels.layersOpen}
+      pagesOpen={panels.pagesOpen}
       layersPosition={panels.layersPosition}
       layersPanelRef={panels.layersPanelRef}
       sectionTemplateOpen={panels.sectionTemplateOpen}
@@ -217,6 +222,9 @@ export function App() {
       onSettingsOpenChange={panels.setSettingsOpen}
       onManageFontsOpenChange={panels.setManageFontsOpen}
       onHelpOpenChange={panels.setHelpOpen}
+      onShortcutsOpenChange={panels.setShortcutsOpen}
+      onAboutOpenChange={panels.setAboutOpen}
+      onPagesOpenChange={panels.setPagesOpen}
       onImportDocument={handleImportDocument}
       onResetData={handleResetData}
       onResetAll={handleResetAll}

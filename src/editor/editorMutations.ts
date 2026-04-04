@@ -264,13 +264,21 @@ export function updateTextField(
   } else if (field === 'label' && node.type === 'leaf' && 'label' in node) {
     node.label = value;
   } else if (field === 'linkType' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.linkType = value === 'anchor' ? 'anchor' : 'external';
+    node.linkType = value === 'anchor' ? 'anchor' : value === 'page' ? 'page' : 'external';
+    if (node.linkType !== 'page') {
+      node.targetPageId = undefined;
+      node.pageAnchorId = undefined;
+    }
   } else if (field === 'anchorTargetId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
     node.anchorTargetId = value || undefined;
   } else if (field === 'href' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
     node.href = value;
   } else if (field === 'openInNewTab' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
     node.openInNewTab = value === 'true' ? true : undefined;
+  } else if (field === 'targetPageId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.targetPageId = (value as PageId) || undefined;
+  } else if (field === 'pageAnchorId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+    node.pageAnchorId = (value as NodeId) || undefined;
   } else if (field === 'src' && node.type === 'leaf' && node.role === 'image') {
     node.src = value;
   } else if (field === 'alt' && node.type === 'leaf' && node.role === 'image') {

@@ -15,7 +15,10 @@ export function useAppPanels() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manageFontsOpen, setManageFontsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [pagesOpen, setPagesOpen] = useState(false);
   const [layersPosition, setLayersPosition] = useState(getDefaultLeftFloatingPanelPosition);
   const [layersPositionCustomized, setLayersPositionCustomized] = useState(false);
   const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
@@ -28,6 +31,14 @@ export function useAppPanels() {
     setLayersOpen(false);
   }
 
+  function toggleLayersPanel() {
+    setLayersOpen((open) => !open);
+  }
+
+  function togglePagesPanel() {
+    setPagesOpen((open) => !open);
+  }
+
   function closeSectionTemplatePopover() {
     setSectionTemplateOpen(false);
   }
@@ -38,6 +49,9 @@ export function useAppPanels() {
     setSettingsOpen(false);
     setManageFontsOpen(false);
     setHelpOpen(false);
+    setShortcutsOpen(false);
+    setAboutOpen(false);
+    setPagesOpen(false);
   }
 
   function openLayers(_trigger: HTMLElement) {
@@ -81,10 +95,18 @@ export function useAppPanels() {
     setManageFontsOpen,
     helpOpen,
     setHelpOpen,
+    shortcutsOpen,
+    setShortcutsOpen,
+    aboutOpen,
+    setAboutOpen,
     layersOpen,
+    pagesOpen,
+    setPagesOpen,
     layersPosition,
     layersPanelRef,
     openLayers,
+    toggleLayersPanel,
+    togglePagesPanel,
     handleLayersOpenChange,
     handleLayersPositionChange,
     closeLayersPanel,
@@ -97,6 +119,6 @@ export function useAppPanels() {
     closeSectionTemplatePopover,
     closeTransientPanels,
     hasDismissiblePanels:
-      settingsOpen || manageFontsOpen || helpOpen || layersOpen || sectionTemplateOpen,
+      settingsOpen || manageFontsOpen || helpOpen || shortcutsOpen || aboutOpen || layersOpen || pagesOpen || sectionTemplateOpen,
   };
 }

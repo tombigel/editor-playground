@@ -53,6 +53,18 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     combos: [{ code: 'Slash', keyLabel: '?', shift: true, omitShiftInDisplay: true }],
   },
   {
+    id: 'toggleLayersPanel',
+    category: 'View',
+    description: 'Layers panel',
+    combos: [{ code: 'KeyL', keyLabel: 'L', shift: true }],
+  },
+  {
+    id: 'togglePagesPanel',
+    category: 'View',
+    description: 'Pages panel',
+    combos: [{ code: 'KeyO', keyLabel: 'O', shift: true }],
+  },
+  {
     id: 'togglePreviewSticky',
     category: 'View',
     description: 'Sticky preview',

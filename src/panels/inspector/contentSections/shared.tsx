@@ -427,7 +427,7 @@ export function NavigationFields({
       onTextChange('openInNewTab', node.openInNewTab ? 'true' : '');
     }
     if (value === 'page' && !targetPageId && pages[0]) {
-      onTextChange('targetPageId' as EditorTextField, pages[0].id);
+      onTextChange('targetPageId', pages[0].id);
     }
   }
 
@@ -515,7 +515,7 @@ export function NavigationFields({
             <Label className="text-[11px] font-medium">Page</Label>
             <Select
               value={targetPageId}
-              onValueChange={(value) => onTextChange('targetPageId' as EditorTextField, value)}
+              onValueChange={(value) => onTextChange('targetPageId', value)}
               disabled={pages.length === 0}
             >
               <SelectTrigger>
@@ -543,7 +543,7 @@ export function NavigationFields({
               <Select
                 value={pageAnchorId ?? ''}
                 onValueChange={(value) =>
-                  onTextChange('pageAnchorId' as EditorTextField, value === '__none__' ? '' : value)
+                  onTextChange('pageAnchorId', value === '__none__' ? '' : value)
                 }
               >
                 <SelectTrigger>

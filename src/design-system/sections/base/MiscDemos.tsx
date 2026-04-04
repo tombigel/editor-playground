@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { Rocket, Layers2, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
 import { Input } from "@/components/ui/input";
+import {
+	Menubar,
+	MenubarCheckboxItem,
+	MenubarContent,
+	MenubarGroupLabel,
+	MenubarItem,
+	MenubarMenu,
+	MenubarPanelLinkItem,
+	MenubarSeparator,
+	MenubarSubmenu,
+	MenubarToggleWithMoreItem,
+	MenubarTrigger,
+} from "@/components/ui/menubar";
 import { PopoverTooltip } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -299,7 +313,76 @@ function PagerDemo() {
 export function MiscDemos() {
 	return (
 		<>
+			{/* Menubar */}
+			<ComponentPreview
+				id="base-menubar"
+				name="Menubar"
+				description="Reusable top-bar menu primitives for actions, toggles, submenus, panel links, and shortcut hints."
+				sourceFile="src/components/ui/menubar.tsx"
+				props={[]}
+			>
+				<div className="editor-topbar rounded-xl border p-3">
+					<Menubar>
+						<MenubarMenu id="settings">
+							<MenubarTrigger>Settings</MenubarTrigger>
+							<MenubarContent>
+								<MenubarItem shortcut="Cmd + ,">UI</MenubarItem>
+								<MenubarItem>Fonts</MenubarItem>
+							</MenubarContent>
+						</MenubarMenu>
+						<MenubarMenu id="view">
+							<MenubarTrigger>View</MenubarTrigger>
+							<MenubarContent>
+								<MenubarSubmenu label="Theme">
+									<MenubarItem>Customize</MenubarItem>
+									<MenubarSeparator />
+									<MenubarGroupLabel>Light</MenubarGroupLabel>
+									<MenubarItem selected>Air</MenubarItem>
+									<MenubarGroupLabel>Dark</MenubarGroupLabel>
+									<MenubarItem>Ink</MenubarItem>
+								</MenubarSubmenu>
+								<MenubarCheckboxItem checked onCheckedChange={() => {}} shortcut="Shift + P">
+									Sticky preview
+								</MenubarCheckboxItem>
+								<MenubarToggleWithMoreItem
+									checked={false}
+									onCheckedChange={() => {}}
+									onMore={() => {}}
+									shortcut="Shift + G"
+								>
+									Snap
+								</MenubarToggleWithMoreItem>
+								<MenubarPanelLinkItem shortcut="Shift + L">Layers panel</MenubarPanelLinkItem>
+							</MenubarContent>
+						</MenubarMenu>
+					</Menubar>
+				</div>
+			</ComponentPreview>
+
 			{/* Text Input */}
+			<ComponentPreview
+				id="base-page-switcher-select"
+				name="Page Switcher Select"
+				description="Shared page-switcher select built on top of the design-system Select primitives."
+				sourceFile="src/components/ui/page-switcher-select.tsx"
+				props={[]}
+			>
+				<div className="editor-topbar rounded-xl border p-3">
+					<div className="editor-topbar-menubar-row">
+						<PageSwitcherSelect
+							value="home"
+							options={[
+								{ id: "home", label: "Home", depth: 0 },
+								{ id: "about", label: "About", depth: 0 },
+								{ id: "team", label: "Team", depth: 1 },
+							]}
+							onValueChange={() => {}}
+							onCreatePage={() => {}}
+						/>
+					</div>
+				</div>
+			</ComponentPreview>
+
 			<ComponentPreview
 				id="base-input"
 				name="Text Input"
