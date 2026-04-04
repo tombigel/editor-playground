@@ -1,4 +1,5 @@
 import type { DocumentModel, DocumentNode, WrapperNode } from './types';
+import type { DocumentPage } from './types/site';
 
 function isSiteSectionRole(role: WrapperNode['role']) {
   return role === 'section' || role === 'header' || role === 'footer';
@@ -69,6 +70,54 @@ export function validateDocument(document: DocumentModel): string[] {
   for (const node of nodes) {
     if (!reachable.has(node.id)) {
       errors.push(`Node ${node.id} is unreachable from root ${document.rootId}.`);
+    }
+  }
+
+  if (document.pages && document.pages.length > 0) {
+    const pages: DocumentPage[] = document.pages;
+    const pageIds = new Set(pages.map((p) => p.id));
+
+    const slugsSeen = new Map<string, string>();
+    for (const page of pages) {
+      if (slugsSeen.has(page.slug)) {
+        errors.push(`Duplicate page slug "${page.slug}" on pages ${slugsSeen.get(page.slug)} and ${page.id}.`);
+      } else {
+        slugsSeen.set(page.slug, page.id);
+      }
+    }
+
+    const sectionIdsSeen = new Map<string, string>();
+    for (const page of pages) {
+      for (const sectionId of page.sectionIds) {
+        const node = document.nodes[sectionId];
+        if (!node) {
+          errors.push(`Page ${page.id} references missing section node ${sectionId}.`);
+        } else if (node.type !== 'wrapper' || node.role !== 'section') {
+          errors.push(`Page ${page.id} section ${sectionId} must be a wrapper with role "section".`);
+        }
+        if (sectionIdsSeen.has(sectionId)) {
+          errors.push(`Section ${sectionId} appears in more than one page (${sectionIdsSeen.get(sectionId)} and ${page.id}).`);
+        } else {
+          sectionIdsSeen.set(sectionId, page.id);
+        }
+      }
+    }
+
+    if (document.sharedRegionIds) {
+      for (const regionId of document.sharedRegionIds) {
+        const node = document.nodes[regionId];
+        if (!node) {
+          errors.push(`sharedRegionIds references missing node ${regionId}.`);
+        } else if (node.type !== 'wrapper') {
+          errors.push(`sharedRegionIds node ${regionId} must be a wrapper.`);
+        }
+      }
+    }
+
+    for (const page of pages) {
+      if (page.parentPageId !== undefined && !pageIds.has(page.parentPageId)) {
+        errors.push(`Page ${page.id} references missing parentPageId ${page.parentPageId}.`);
+      }
     }
   }
 

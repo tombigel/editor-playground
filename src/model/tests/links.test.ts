@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createLeaf } from '../defaults';
-import { getSectionAnchorOptions, isBrokenAnchorLink } from '../links';
+import { getSectionAnchorOptions, isBrokenAnchorLink, getLinkHref } from '../links';
+import { addPage } from '../../api/pageApi';
 
 describe('model/links', () => {
   it('lists top-level sections as anchor options with human-readable labels', () => {
@@ -101,5 +102,62 @@ describe('model/links', () => {
     button.anchorTargetId = 'missing-section';
 
     expect(isBrokenAnchorLink(document, button)).toBe(true);
+  });
+
+  it('returns page URL for page links with linkType "page"', () => {
+    let document = createInitialDocument();
+    document = addPage(document, { displayName: 'About', slug: 'about' });
+    const aboutPage = (document.pages ?? []).find((p) => p.slug === 'about')!;
+
+    const link = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected link node');
+    }
+
+    link.linkType = 'page';
+    link.targetPageId = aboutPage.id;
+
+    const url = getLinkHref(link, document);
+    expect(url).toBe('/about/');
+  });
+
+  it('appends anchor to page URL for page links with pageAnchorId', () => {
+    let document = createInitialDocument();
+    document = addPage(document, { displayName: 'About', slug: 'about' });
+    const aboutPage = (document.pages ?? []).find((p) => p.slug === 'about')!;
+
+    const link = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected link node');
+    }
+
+    link.linkType = 'page';
+    link.targetPageId = aboutPage.id;
+    link.pageAnchorId = 'section-1';
+
+    const url = getLinkHref(link, document);
+    expect(url).toBe('/about/#section-1');
+  });
+
+  it('flags page links whose target page does not exist', () => {
+    const document = createInitialDocument();
+    const link = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+      throw new Error('Expected link node');
+    }
+
+    link.linkType = 'page';
+    link.targetPageId = 'missing-page';
+
+    expect(isBrokenAnchorLink(document, link)).toBe(true);
   });
 });

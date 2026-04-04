@@ -3,6 +3,7 @@ import { nextId } from './defaultFactories';
 import { createDefaultFooter, createDefaultHeader } from './defaultChrome';
 import { createSectionFromTemplate } from './sectionTemplates';
 import { createDefaultFontLibrary } from '../fonts/defaults';
+import { createPage, createInitialSiteSettings } from './pageDefaults';
 
 export function createInitialDocument(): DocumentModel {
   const siteId = nextId('site');
@@ -13,6 +14,9 @@ export function createInitialDocument(): DocumentModel {
   return {
     rootId: siteId,
     fontLibrary: createDefaultFontLibrary(),
+    pages: [createPage({ displayName: 'Home', slug: '', sectionIds: [starterSection.id] })],
+    siteSettings: createInitialSiteSettings(),
+    sharedRegionIds: [header.id, footer.id],
     nodes: {
       [siteId]: {
         id: siteId,
