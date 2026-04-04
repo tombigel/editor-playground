@@ -367,6 +367,21 @@ export function OpenInNewTabField({
   );
 }
 
+function computePageDepth(pages: Array<{ id: string; parentPageId?: string }>, pageId: string): number {
+  const visited = new Set<string>();
+  let depth = 0;
+  let current: string | undefined = pageId;
+  while (current) {
+    if (visited.has(current)) break;
+    visited.add(current);
+    const page = pages.find((p) => p.id === current);
+    if (!page || !page.parentPageId) break;
+    current = page.parentPageId;
+    depth++;
+  }
+  return depth;
+}
+
 export function NavigationFields({
   document,
   node,
@@ -381,8 +396,27 @@ export function NavigationFields({
   const anchorValue = isValidSectionAnchorTarget(document, node.anchorTargetId) ? node.anchorTargetId : undefined;
   const selectedAnchorOption = sectionOptions.find((option) => option.id === anchorValue);
   const hasBrokenAnchorTarget = Boolean(node.anchorTargetId && !anchorValue);
+  const pages = document.pages ?? [];
+  const hasPages = pages.length > 0;
 
-  function handleLinkTypeChange(value: 'anchor' | 'external') {
+  // Page link fields
+  const targetPageId = (node as { targetPageId?: string }).targetPageId;
+  const pageAnchorId = (node as { pageAnchorId?: string }).pageAnchorId;
+  const targetPage = targetPageId ? pages.find((p) => p.id === targetPageId) : undefined;
+
+  // Build section options for the target page
+  const targetPageSectionOptions = useMemo(() => {
+    if (!targetPage) return [];
+    return targetPage.sectionIds
+      .map((sectionId) => {
+        const sectionNode = document.nodes[sectionId];
+        if (!sectionNode) return null;
+        return { id: sectionId, name: sectionNode.name || sectionId };
+      })
+      .filter((opt): opt is { id: string; name: string } => opt !== null);
+  }, [targetPage, document.nodes]);
+
+  function handleLinkTypeChange(value: 'anchor' | 'external' | 'page') {
     onTextChange('linkType', value);
     if (value === 'anchor' && !node.anchorTargetId && sectionOptions[0]) {
       onTextChange('anchorTargetId', sectionOptions[0].id);
@@ -391,6 +425,9 @@ export function NavigationFields({
     }
     if (value === 'external') {
       onTextChange('openInNewTab', node.openInNewTab ? 'true' : '');
+    }
+    if (value === 'page' && !targetPageId && pages[0]) {
+      onTextChange('targetPageId' as EditorTextField, pages[0].id);
     }
   }
 
@@ -416,6 +453,17 @@ export function NavigationFields({
           >
             External
           </Button>
+          {hasPages ? (
+            <Button
+              type="button"
+              variant={linkType === 'page' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2.5 text-[11px]"
+              onClick={() => handleLinkTypeChange('page')}
+            >
+              Page
+            </Button>
+          ) : null}
         </div>
       </InspectorInlineRow>
       {linkType === 'anchor' ? (
@@ -460,6 +508,62 @@ export function NavigationFields({
               ))}
             </SelectContent>
           </Select>
+        </div>
+      ) : linkType === 'page' ? (
+        <div className="space-y-2">
+          <div className="space-y-0.5">
+            <Label className="text-[11px] font-medium">Page</Label>
+            <Select
+              value={targetPageId}
+              onValueChange={(value) => onTextChange('targetPageId' as EditorTextField, value)}
+              disabled={pages.length === 0}
+            >
+              <SelectTrigger>
+                <span className="truncate text-left">
+                  {targetPage?.displayName ?? (pages.length > 0 ? 'Select a page' : 'No pages available')}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {pages.map((page) => {
+                  const depth = computePageDepth(pages, page.id);
+                  return (
+                    <SelectItem key={page.id} value={page.id}>
+                      <span style={{ paddingLeft: `${depth * 12}px` }}>
+                        {page.displayName || page.slug || page.id}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          {targetPage && targetPageSectionOptions.length > 0 ? (
+            <div className="space-y-0.5">
+              <Label className="text-[11px] font-medium">Jump to section (optional)</Label>
+              <Select
+                value={pageAnchorId ?? ''}
+                onValueChange={(value) =>
+                  onTextChange('pageAnchorId' as EditorTextField, value === '__none__' ? '' : value)
+                }
+              >
+                <SelectTrigger>
+                  <span className="truncate text-left">
+                    {pageAnchorId
+                      ? (targetPageSectionOptions.find((o) => o.id === pageAnchorId)?.name ?? pageAnchorId)
+                      : 'None'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">None</SelectItem>
+                  {targetPageSectionOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
         </div>
       ) : (
         <>

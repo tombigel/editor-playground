@@ -2,13 +2,23 @@ import { useEffect, useRef } from 'react';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EditableNodeTitle } from './inspector/CommonSections';
+import { PageInspectorSection } from './inspector/contentSections/PageInspectorSection';
 import { InspectorPanel, type InspectorPanelProps } from './InspectorPanel';
 export { INSPECTOR_COLLAPSED_WIDTH_PX, INSPECTOR_EXPANDED_WIDTH_PX, INSPECTOR_TRANSITION_MS } from './inspectorLayout';
 import { INSPECTOR_EXPANDED_WIDTH_PX } from './inspectorLayout';
+import type { PageId } from '../model/types/site';
+import type { DocumentPage } from '../model/types/site';
 
 type Props = InspectorPanelProps & {
   inspectorCollapsed: boolean;
   temporaryInspectorOpen: boolean;
+  activePageId?: PageId | null;
+  onSetPageDisplayName?: (pageId: PageId, name: string) => void;
+  onSetPageSlug?: (pageId: PageId, slug: string) => void;
+  onSetPageVisibility?: (pageId: PageId, visible: boolean) => void;
+  onSetPageViewTransition?: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
+  onOpenPageSettings?: () => void;
+  onOpenPagesPanel?: () => void;
   onInspectorCollapsedChange: (value: boolean) => void;
   onTemporaryInspectorOpenChange: (value: boolean) => void;
 };
@@ -21,6 +31,13 @@ export function resolveSidebarTitleCommit(value: string, fallbackValue: string) 
 export function EditorSidebar({
   inspectorCollapsed,
   temporaryInspectorOpen,
+  activePageId,
+  onSetPageDisplayName,
+  onSetPageSlug,
+  onSetPageVisibility,
+  onSetPageViewTransition,
+  onOpenPageSettings,
+  onOpenPagesPanel,
   onInspectorCollapsedChange,
   onTemporaryInspectorOpenChange,
   ...inspectorProps
@@ -32,16 +49,24 @@ export function EditorSidebar({
   const isMultiSelect = selectedNodes.length > 1;
   const singleEditableNode =
     !isMultiSelect && inspectorProps.node && inspectorProps.node.type !== 'site' ? inspectorProps.node : null;
+  const isNoSelection = !isMultiSelect && inspectorProps.node === null && selectedNodes.length === 0;
+  const activePage = isNoSelection && activePageId != null
+    ? (inspectorProps.document?.pages ?? []).find((p) => p.id === activePageId) ?? null
+    : null;
   const title = isMultiSelect
     ? `${selectedNodes.length} selected`
-    : inspectorProps.node?.type === 'site'
-      ? 'No selection'
-      : singleEditableNode?.name?.trim() || singleEditableNode?.role || 'No selection';
+    : activePage
+      ? activePage.displayName || 'Page'
+      : inspectorProps.node?.type === 'site'
+        ? 'No selection'
+        : singleEditableNode?.name?.trim() || singleEditableNode?.role || 'No selection';
   const roleLabel = isMultiSelect
     ? null
-    : singleEditableNode
-      ? singleEditableNode.role
-      : null;
+    : activePage
+      ? 'page'
+      : singleEditableNode
+        ? singleEditableNode.role
+        : null;
   const collapsedLayerClass = showCollapsedHandle ? 'opacity-100' : 'pointer-events-none opacity-0';
   const expandedLayerClass = showCollapsedHandle ? 'pointer-events-none opacity-0' : 'opacity-100';
 
@@ -156,7 +181,22 @@ export function EditorSidebar({
               className="editor-bg-surface ml-auto flex h-full min-h-0 overflow-hidden"
               style={{ width: `${INSPECTOR_EXPANDED_WIDTH_PX}px` }}
             >
-              <InspectorPanel {...inspectorProps} />
+              {activePage ? (
+                <div className="editor-scrollbar min-h-0 w-full overflow-y-auto">
+                  <PageInspectorSection
+                    page={activePage}
+                    document={inspectorProps.document ?? { rootId: '', nodes: {}, fontLibrary: { defaults: [], favorites: [], usedFamilies: [] } }}
+                    onSetDisplayName={(pageId, name) => onSetPageDisplayName?.(pageId, name)}
+                    onSetSlug={(pageId, slug) => onSetPageSlug?.(pageId, slug)}
+                    onSetVisibility={(pageId, visible) => onSetPageVisibility?.(pageId, visible)}
+                    onSetViewTransition={(pageId, transition) => onSetPageViewTransition?.(pageId, transition)}
+                    onOpenPageSettings={() => onOpenPageSettings?.()}
+                    onOpenPagesPanel={() => onOpenPagesPanel?.()}
+                  />
+                </div>
+              ) : (
+                <InspectorPanel {...inspectorProps} />
+              )}
             </div>
           </div>
         </div>

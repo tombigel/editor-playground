@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import {
   ActionRow,
   PlainGroup,
@@ -17,14 +18,23 @@ import {
   TransferSubsection,
 } from '../SettingsShared';
 import type { SettingsTransferState } from '../useSettingsTransferState';
+import type { SiteSettings } from '../../../model/types/site';
+import { InspectorInlineRow } from '../../controls/FormLayout';
 
 type TransferSettingsSectionProps = {
   transfer: SettingsTransferState;
+  siteSettings?: SiteSettings;
+  onSiteSettingsChange?: (patch: Partial<SiteSettings>) => void;
 };
 
 export function TransferSettingsSection({
   transfer,
+  siteSettings,
+  onSiteSettingsChange,
 }: TransferSettingsSectionProps) {
+  const status = siteSettings?.status ?? 'draft';
+  const outputStructure = siteSettings?.outputStructure ?? 'directory';
+
   return (
     <>
       <SectionHeading
@@ -32,6 +42,52 @@ export function TransferSettingsSection({
         title="Document transfer"
         description="Import JSON or export the current document as JSON or a rendered site ZIP."
       />
+
+      <PlainGroup title="Site">
+        <div className="space-y-2">
+          <InspectorInlineRow label="Status">
+            <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+              <Button
+                type="button"
+                variant={status === 'draft' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2.5 text-[11px]"
+                onClick={() => onSiteSettingsChange?.({ status: 'draft' })}
+              >
+                Draft
+              </Button>
+              <Button
+                type="button"
+                variant={status === 'published' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2.5 text-[11px]"
+                onClick={() => onSiteSettingsChange?.({ status: 'published' })}
+              >
+                Published
+              </Button>
+            </div>
+          </InspectorInlineRow>
+
+          <InspectorInlineRow label="Output structure">
+            <Select
+              value={outputStructure}
+              onValueChange={(value) =>
+                onSiteSettingsChange?.({ outputStructure: value as SiteSettings['outputStructure'] })
+              }
+            >
+              <SelectTrigger className="h-7 text-[11px]">
+                <span className="truncate text-left">
+                  {outputStructure === 'directory' ? 'Directory (about/index.html)' : 'Flat (about.html)'}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="directory">Directory (about/index.html)</SelectItem>
+                <SelectItem value="flat">Flat (about.html)</SelectItem>
+              </SelectContent>
+            </Select>
+          </InspectorInlineRow>
+        </div>
+      </PlainGroup>
       <PlainGroup title="Export">
         <div className="space-y-4">
           <TransferSubsection

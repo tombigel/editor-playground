@@ -73,6 +73,7 @@ type Props = {
   onImport: (raw: string) => Promise<ActionResult> | ActionResult;
   onResetData: () => void;
   onResetAll: () => void;
+  onSiteSettingsChange?: (patch: Partial<import('../model/types/site').SiteSettings>) => void;
 };
 
 export function SettingsPanel({
@@ -116,6 +117,7 @@ export function SettingsPanel({
   onImport,
   onResetData,
   onResetAll,
+  onSiteSettingsChange,
 }: Props) {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(
     DEFAULT_SETTINGS_SECTION_ID,
@@ -251,6 +253,7 @@ export function SettingsPanel({
                     onHistoryLimitChange,
                     onResetData,
                     onResetAll,
+                    onSiteSettingsChange,
                   })}
                 </section>
               ))}
@@ -311,6 +314,7 @@ function renderSectionContent(
     onHistoryLimitChange: (value: number) => void;
     onResetData: () => void;
     onResetAll: () => void;
+    onSiteSettingsChange?: (patch: Partial<import('../model/types/site').SiteSettings>) => void;
   },
 ) {
   switch (sectionId) {
@@ -360,7 +364,13 @@ function renderSectionContent(
         />
       );
     case 'transfer':
-      return <TransferSettingsSection transfer={props.transfer} />;
+      return (
+        <TransferSettingsSection
+          transfer={props.transfer}
+          siteSettings={props.document.siteSettings}
+          onSiteSettingsChange={props.onSiteSettingsChange}
+        />
+      );
     case 'advanced':
       return (
         <AdvancedSettingsSection

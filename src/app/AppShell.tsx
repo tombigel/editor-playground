@@ -2,6 +2,7 @@ import {
   lazy,
   Suspense,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -9,7 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type Ref,
 } from 'react';
-import { CircleQuestionMark, Eye, Magnet, Play, Redo2, Settings, Type, Undo2 } from 'lucide-react';
+import { ChevronDown, CircleQuestionMark, Eye, EyeOff, FilePlus2, LayoutGrid, Magnet, Play, Redo2, Settings, Type, Undo2 } from 'lucide-react';
 import type {
   DocumentNode,
   EditorState,
@@ -39,10 +40,16 @@ const SettingsPanel = lazy(() =>
 const ManageFontsPanel = lazy(() =>
   import('../panels/fontManagement/ManageFontsPanel').then((m) => ({ default: m.ManageFontsPanel }))
 );
+const PagesPanel = lazy(() =>
+  import('../panels/PagesPanel').then((m) => ({ default: m.PagesPanel }))
+);
 const EditorSidebar = lazy(() =>
   import('../panels/EditorSidebar').then((m) => ({ default: m.EditorSidebar }))
 );
 import { FocusedModePanel } from '../panels/FocusedModePanel';
+import { BackToEditorButton } from '../panels/BackToEditorButton';
+import { FollowLinkPopup } from '../panels/FollowLinkPopup';
+import { SiteRenderer } from '../site/SiteRenderer';
 import type { ActionResult } from '../panels/settingsTransfer';
 import { Stage } from '../api/editorViewApi';
 import { Button } from '@/components/ui/button';
@@ -145,6 +152,18 @@ export function AppShell({
   onResetData,
   onResetAll,
 }: Props) {
+  const isPreview = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('mode') === 'preview',
+    [],
+  );
+
+  const [showStorageWarning, setShowStorageWarning] = useState(false);
+  const [linkPopupVisible, setLinkPopupVisible] = useState(false);
+  const [pagesOpen, setPagesOpen] = useState(false);
+  const [pageSwitcherOpen, setPageSwitcherOpen] = useState(false);
+
   const focusedPanelRef = useRef<HTMLDivElement | null>(null);
   const focusedPanelDragRef = useRef<{
     pointerId: number;
@@ -153,6 +172,7 @@ export function AppShell({
     originOffset: EditorState['ui']['focusedPanelOffset'];
   } | null>(null);
   const focusedPanelOffsetDraftRef = useRef(state.ui.focusedPanelOffset);
+  const storageWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [focusedPanelOffsetDraft, setFocusedPanelOffsetDraft] = useState(state.ui.focusedPanelOffset);
   const [focusedPanelDragging, setFocusedPanelDragging] = useState(false);
   const siteNode = state.document.nodes[state.document.rootId];
@@ -249,6 +269,26 @@ export function AppShell({
 
   useDebugLogger(state.ui.showDebugInfo, state.document, state.selectedId);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const size = JSON.stringify(state.document).length * 2;
+      if (size > 4 * 1024 * 1024) {
+        setShowStorageWarning(true);
+      }
+    }, 2000);
+    storageWarningTimerRef.current = timer;
+    return () => clearTimeout(timer);
+  }, [state.document]);
+
+  useEffect(() => {
+    const node = state.selectedId ? state.document.nodes[state.selectedId] : null;
+    if (node?.type === 'leaf' && node.role === 'link') {
+      setLinkPopupVisible(true);
+    } else {
+      setLinkPopupVisible(false);
+    }
+  }, [state.selectedId, state.document.nodes]);
+
   function handleFocusedPanelDragStart(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.button !== 0) {
       return;
@@ -296,6 +336,51 @@ export function AppShell({
     dispatch({ type: 'importDocument', document: purgeUnusedDocumentFonts(state.document) });
   }
 
+  async function handleExportSite() {
+    const { renderSiteExportBundles, buildRouteManifest } = await import('../api/siteApi');
+    const { saveExportSiteZip } = await import('../panels/settingsTransfer');
+    const bundles = renderSiteExportBundles(state.document);
+    const manifest = buildRouteManifest(state.document);
+    const files: Record<string, string> = {
+      'route-manifest.json': JSON.stringify(manifest, null, 2),
+    };
+    for (const bundle of bundles) {
+      files[bundle.htmlFileName] = bundle.htmlDocument;
+      files[bundle.cssFileName] = bundle.css;
+    }
+    await saveExportSiteZip(files, { fileName: 'sticky-playground-site.zip' });
+  }
+
+  const selectedLinkNode = (() => {
+    if (!state.selectedId) return null;
+    const node = state.document.nodes[state.selectedId];
+    if (node?.type === 'leaf' && node.role === 'link') return node;
+    return null;
+  })();
+
+  const selectedNodeRect = (() => {
+    if (!state.selectedId || typeof window === 'undefined') return null;
+    const element =
+      window.document.querySelector(`[data-node-id="${state.selectedId}"]`) ??
+      window.document.getElementById(`stage-node-${state.selectedId}`);
+    if (!element) return null;
+    return element.getBoundingClientRect();
+  })();
+
+  if (isPreview) {
+    return (
+      <>
+        <div style={{ position: 'fixed', inset: 0, overflow: 'auto' }}>
+          <SiteRenderer
+            document={state.document}
+            includeAnimations
+          />
+        </div>
+        <BackToEditorButton />
+      </>
+    );
+  }
+
   return (
     <div
       className="editor-shell h-screen w-screen overflow-hidden"
@@ -331,6 +416,77 @@ export function AppShell({
                 </div>
               </div>
             </div>
+            {(state.document.pages?.length ?? 0) > 0 && (
+              <div className="relative">
+                <button
+                  type="button"
+                  className="editor-text-strong flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08]"
+                  aria-haspopup="listbox"
+                  aria-expanded={pageSwitcherOpen}
+                  onClick={() => setPageSwitcherOpen((v) => !v)}
+                  onBlur={(e) => {
+                    if (!e.currentTarget.parentElement?.contains(e.relatedTarget)) {
+                      setPageSwitcherOpen(false);
+                    }
+                  }}
+                >
+                  <span className="max-w-[160px] truncate">
+                    {state.document.pages?.find((p) => p.id === state.activePageId)?.displayName ?? 'Untitled'}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                </button>
+                {pageSwitcherOpen && (
+                  <div
+                    className="editor-bg-surface editor-border-subtle absolute left-0 top-full z-[400] mt-1 min-w-[180px] rounded-lg border py-1 shadow-lg"
+                    role="listbox"
+                    aria-label="Switch page"
+                  >
+                    {(state.document.pages ?? []).map((page) => {
+                      const depth = (() => {
+                        let d = 0;
+                        let cur = page;
+                        while (cur.parentPageId) {
+                          d++;
+                          cur = state.document.pages?.find((p) => p.id === cur.parentPageId) ?? cur;
+                          if (d > 8) break;
+                        }
+                        return d;
+                      })();
+                      const isActive = page.id === state.activePageId;
+                      return (
+                        <button
+                          key={page.id}
+                          type="button"
+                          role="option"
+                          aria-selected={isActive}
+                          className="editor-text-strong flex w-full items-center gap-2 py-1.5 pr-3 text-sm transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.07]"
+                          style={{ paddingLeft: `${8 + depth * 12}px` }}
+                          onClick={() => {
+                            dispatch({ type: 'setActivePage', pageId: page.id });
+                            setPageSwitcherOpen(false);
+                          }}
+                        >
+                          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${isActive ? 'bg-current opacity-80' : 'opacity-0'}`} />
+                          <span className="min-w-0 truncate">{page.displayName || 'Untitled'}</span>
+                        </button>
+                      );
+                    })}
+                    <div className="editor-border-subtle mx-2 my-1 border-t" />
+                    <button
+                      type="button"
+                      className="editor-text-muted flex w-full items-center gap-2 px-2 py-1.5 text-sm transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.07]"
+                      onClick={() => {
+                        dispatch({ type: 'addPage' });
+                        setPageSwitcherOpen(false);
+                      }}
+                    >
+                      <FilePlus2 className="h-3.5 w-3.5 shrink-0" />
+                      <span>New page</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="ml-auto flex items-center gap-2">
               <TopbarIconAction
                 icon={Undo2}
@@ -345,6 +501,14 @@ export function AppShell({
                 shortcut={getShortcutLabel('redo', shortcutPlatform)}
                 disabled={historyState.future.length === 0}
                 onClick={() => dispatch({ type: 'redo' })}
+              />
+              <TopbarIconAction
+                icon={Eye}
+                label="Preview site"
+                onClick={() => {
+                  const previewUrl = `${window.location.origin}${window.location.pathname}?mode=preview`;
+                  window.open(previewUrl, 'sticky-preview');
+                }}
               />
               <TopbarIconAction
                 icon={CircleQuestionMark}
@@ -390,7 +554,7 @@ export function AppShell({
               <div className="mt-auto flex justify-center pt-3">
                 <div className="flex flex-col gap-2">
                   <RailToggleButton
-                    icon={Eye}
+                    icon={EyeOff}
                     pressed={state.ui.previewSticky}
                     label={state.ui.previewSticky ? 'Sticky preview on' : 'Sticky preview off'}
                     shortcut={getShortcutLabel('togglePreviewSticky', shortcutPlatform)}
@@ -433,12 +597,37 @@ export function AppShell({
                       })
                     }
                   />
+                  <RailToggleButton
+                    icon={LayoutGrid}
+                    pressed={pagesOpen}
+                    label={pagesOpen ? 'Pages panel open' : 'Open pages panel'}
+                    onClick={() => setPagesOpen((v) => !v)}
+                  />
                 </div>
               </div>
             </div>
           </nav>
 
           <main className="editor-workspace-shell relative min-h-0 overflow-hidden">
+            {showStorageWarning && (
+              <div
+                className="editor-bg-subtle editor-border-subtle flex items-center justify-between border-b px-4 py-2 text-xs"
+                style={{ position: 'relative', zIndex: 10 }}
+                role="alert"
+              >
+                <span className="editor-text-strong">
+                  Document is large (&gt;4 MB). Consider exporting and clearing unused data to avoid localStorage limits.
+                </span>
+                <button
+                  type="button"
+                  className="editor-text-muted ml-4 shrink-0 font-medium hover:opacity-70"
+                  aria-label="Dismiss storage warning"
+                  onClick={() => setShowStorageWarning(false)}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <Stage
               document={state.document}
               selectedId={state.selectedId}
@@ -522,6 +711,13 @@ export function AppShell({
             onOpenManageFonts={() => onManageFontsOpenChange(true)}
             onInspectorCollapsedChange={(value) => dispatch({ type: 'setInspectorCollapsed', value })}
             onTemporaryInspectorOpenChange={(value) => dispatch({ type: 'setTemporaryInspectorOpen', value })}
+            activePageId={state.activePageId}
+            onSetPageDisplayName={(pageId, displayName) => dispatch({ type: 'setPageDisplayName', pageId, displayName })}
+            onSetPageSlug={(pageId, slug) => dispatch({ type: 'setPageSlug', pageId, slug })}
+            onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
+            onSetPageViewTransition={(_pageId, _transition) => undefined}
+            onOpenPageSettings={() => undefined}
+            onOpenPagesPanel={() => setPagesOpen(true)}
           />
           </Suspense>
         </div>
@@ -607,6 +803,7 @@ export function AppShell({
             open={layersOpen}
             position={layersPosition}
             document={state.document}
+            activePageId={state.activePageId}
             selectedIds={state.selectedIds}
             onOpenChange={onLayersOpenChange}
             onPositionChange={onLayersPositionChange}
@@ -620,6 +817,35 @@ export function AppShell({
             onMoveNodeInTree={(id, targetParentId, targetIndex) =>
               dispatch({ type: 'moveNodeInTree', id, targetParentId, targetIndex })
             }
+            onSetActivePage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
+            onAddPage={() => dispatch({ type: 'addPage' })}
+            onDeletePage={(pageId) => dispatch({ type: 'deletePage', pageId })}
+            onOpenPageSettings={() => undefined}
+            onSetPageParent={(pageId, parentPageId) => dispatch({ type: 'setPageParent', pageId, parentPageId })}
+            onReorderPage={(pageId, direction) => dispatch({ type: 'reorderPage', pageId, direction })}
+            onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
+          />
+        </Suspense>
+      ) : null}
+
+      {pagesOpen ? (
+        <Suspense fallback={null}>
+          <PagesPanel
+            document={state.document}
+            activePageId={state.activePageId}
+            onClose={() => setPagesOpen(false)}
+            onSetSiteSettings={(patch) => dispatch({ type: 'setSiteSettings', patch })}
+            onSetActivePage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
+            onAddPage={() => dispatch({ type: 'addPage' })}
+            onDeletePage={(pageId) => dispatch({ type: 'deletePage', pageId })}
+            onSetPageDisplayName={(pageId, displayName) => dispatch({ type: 'setPageDisplayName', pageId, displayName })}
+            onSetPageSlug={(pageId, slug) => dispatch({ type: 'setPageSlug', pageId, slug })}
+            onAddPageAlias={(pageId, alias) => dispatch({ type: 'addPageSlugAlias', pageId, alias })}
+            onRemovePageAlias={(pageId, alias) => dispatch({ type: 'removePageSlugAlias', pageId, alias })}
+            onSetPageVisibility={(pageId, visible) => dispatch({ type: 'setPageVisibility', pageId, visible })}
+            onSetPageParent={(pageId, parentPageId) => dispatch({ type: 'setPageParent', pageId, parentPageId })}
+            onReorderPage={(pageId, direction) => dispatch({ type: 'reorderPage', pageId, direction })}
+            onExport={handleExportSite}
           />
         </Suspense>
       ) : null}
@@ -684,6 +910,7 @@ export function AppShell({
             onImport={onImportDocument}
             onResetData={onResetData}
             onResetAll={onResetAll}
+            onSiteSettingsChange={(patch) => dispatch({ type: 'setSiteSettings', patch })}
           />
           </Suspense>
         </PopoverSurface>
@@ -738,6 +965,16 @@ export function AppShell({
       </Dialog>
 
       <HelpDialog open={helpOpen} onOpenChange={onHelpOpenChange} />
+
+      {linkPopupVisible && selectedLinkNode && selectedNodeRect ? (
+        <FollowLinkPopup
+          node={selectedLinkNode}
+          document={state.document}
+          stageRect={selectedNodeRect}
+          onNavigateToPage={(pageId) => dispatch({ type: 'setActivePage', pageId })}
+          onScrollToAnchor={() => undefined}
+        />
+      ) : null}
     </div>
   );
 }

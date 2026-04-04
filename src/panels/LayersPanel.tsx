@@ -23,7 +23,9 @@ import {
   type Ref,
 } from 'react';
 import type { DocumentModel, NodeId } from '../model/types';
+import type { PageId } from '../model/types/site';
 import { Button } from '@/components/ui/button';
+import { PageTreeContent } from './PageTreeContent';
 import { Input } from '@/components/ui/input';
 import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
 import { EditorPanelHeader } from './EditorPanelHeader';
@@ -51,6 +53,7 @@ type LayersPanelProps = {
   panelRef?: Ref<HTMLDivElement>;
   document: DocumentModel;
   selectedIds: NodeId[];
+  activePageId: PageId | null;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
   onSelectNode: (id: NodeId, mode: 'replace' | 'toggle') => void;
@@ -58,6 +61,13 @@ type LayersPanelProps = {
   onDeleteNode: (id: NodeId) => void;
   onSetNodeVisibility: (id: NodeId, value: boolean) => void;
   onMoveNodeInTree: (id: NodeId, targetParentId: NodeId, targetIndex: number) => void;
+  onSetActivePage: (pageId: PageId) => void;
+  onAddPage: () => void;
+  onDeletePage: (pageId: PageId) => void;
+  onOpenPageSettings: (pageId: PageId) => void;
+  onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
+  onReorderPage: (pageId: PageId, direction: 'back' | 'forward') => void;
+  onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
 };
 
 type LayersPanelContentProps = Omit<
@@ -231,12 +241,21 @@ export function LayersPanel({
 export function LayersPanelContent({
   document,
   selectedIds,
+  activePageId,
   onSelectNode,
   onRenameNode,
   onDeleteNode,
   onSetNodeVisibility,
   onMoveNodeInTree,
+  onSetActivePage,
+  onAddPage,
+  onDeletePage,
+  onOpenPageSettings,
+  onSetPageParent,
+  onReorderPage,
+  onSetPageVisibility,
 }: LayersPanelContentProps) {
+  const [activeTab, setActiveTab] = useState<'layers' | 'pages'>('layers');
   const [expandedIds, setExpandedIds] = useState<Set<NodeId>>(
     () => new Set(getDefaultExpandedLayerIds(document)),
   );
@@ -503,54 +522,98 @@ export function LayersPanelContent({
 
   return (
     <>
-      <div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
-        {rows.length === 0 ? (
-          <div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
-            Nothing on stage yet.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {rows.map((row) => (
-              <LayersTreeRowItem
-                key={row.id}
-                row={row}
-                dragging={dragState?.nodeId === row.id && dragState.active}
-                dropTarget={dragState?.dropTarget?.rowId === row.id ? dragState.dropTarget : null}
-                invalidDrop={
-                  dragState?.active &&
-                  dragState.invalidDrop &&
-                  dragState.hoverRowId === row.id
-                    ? dragState.hoverPosition
-                    : null
-                }
-                onToggleExpanded={handleToggleExpanded}
-                onPointerDown={handleRowPointerDown}
-                onClick={handleRowClick}
-                onRenameNode={onRenameNode}
-                onDeleteNode={onDeleteNode}
-                onSetNodeVisibility={onSetNodeVisibility}
-                onRefChange={setRowRef}
-                editing={editingId === row.id}
-                projectedTypeLabel={
-                  dragState?.active && dragState.nodeId === row.id && projectedRoleLabel !== row.typeLabel
-                    ? projectedRoleLabel
-                    : null
-                }
-                onStartEditing={(id) => setEditingId(id)}
-                onStopEditing={() => setEditingId(null)}
-              />
-            ))}
-          </div>
-        )}
+      <div className="flex border-b px-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={`rounded-none border-b-2 px-2 py-1.5 text-xs font-medium transition-none ${
+            activeTab === 'layers'
+              ? 'editor-text-primary border-current'
+              : 'editor-text-muted border-transparent'
+          }`}
+          onClick={() => setActiveTab('layers')}
+        >
+          Layers
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={`rounded-none border-b-2 px-2 py-1.5 text-xs font-medium transition-none ${
+            activeTab === 'pages'
+              ? 'editor-text-primary border-current'
+              : 'editor-text-muted border-transparent'
+          }`}
+          onClick={() => setActiveTab('pages')}
+        >
+          Pages
+        </Button>
       </div>
-      {dragState?.active && draggedRow ? (
-        <LayersDragGhost
-          row={draggedRow}
-          clientX={dragState.currentX}
-          clientY={dragState.currentY}
-          projectedTypeLabel={projectedRoleLabel !== draggedRow.typeLabel ? projectedRoleLabel : null}
+      {activeTab === 'pages' ? (
+        <PageTreeContent
+          document={document}
+          activePageId={activePageId}
+          onSetActivePage={onSetActivePage}
+          onAddPage={onAddPage}
+          onDeletePage={onDeletePage}
+          onOpenSettings={onOpenPageSettings}
+          onSetPageParent={onSetPageParent}
+          onReorderPage={onReorderPage}
+          onSetPageVisibility={onSetPageVisibility}
         />
-      ) : null}
+      ) : (
+        <>
+          <div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
+            {rows.length === 0 ? (
+              <div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
+                Nothing on stage yet.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {rows.map((row) => (
+                  <LayersTreeRowItem
+                    key={row.id}
+                    row={row}
+                    dragging={dragState?.nodeId === row.id && dragState.active}
+                    dropTarget={dragState?.dropTarget?.rowId === row.id ? dragState.dropTarget : null}
+                    invalidDrop={
+                      dragState?.active &&
+                      dragState.invalidDrop &&
+                      dragState.hoverRowId === row.id
+                        ? dragState.hoverPosition
+                        : null
+                    }
+                    onToggleExpanded={handleToggleExpanded}
+                    onPointerDown={handleRowPointerDown}
+                    onClick={handleRowClick}
+                    onRenameNode={onRenameNode}
+                    onDeleteNode={onDeleteNode}
+                    onSetNodeVisibility={onSetNodeVisibility}
+                    onRefChange={setRowRef}
+                    editing={editingId === row.id}
+                    projectedTypeLabel={
+                      dragState?.active && dragState.nodeId === row.id && projectedRoleLabel !== row.typeLabel
+                        ? projectedRoleLabel
+                        : null
+                    }
+                    onStartEditing={(id) => setEditingId(id)}
+                    onStopEditing={() => setEditingId(null)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          {dragState?.active && draggedRow ? (
+            <LayersDragGhost
+              row={draggedRow}
+              clientX={dragState.currentX}
+              clientY={dragState.currentY}
+              projectedTypeLabel={projectedRoleLabel !== draggedRow.typeLabel ? projectedRoleLabel : null}
+            />
+          ) : null}
+        </>
+      )}
     </>
   );
 }
