@@ -560,6 +560,41 @@ Spec:
 - icon size stays `16px`
 - use border separation and shared surface tokens instead of wrapping the add-button cluster in an extra framed card
 
+### 11.10 Menubar
+
+Implementation references:
+
+- [src/components/ui/menubar.tsx](../src/components/ui/menubar.tsx)
+- [src/components/ui/page-switcher-select.tsx](../src/components/ui/page-switcher-select.tsx)
+- [src/app/EditorTopbar.tsx](../src/app/EditorTopbar.tsx)
+
+Spec:
+
+- menubar triggers use the top-bar token set, not generic surface tokens
+- trigger height: `28px`
+- trigger radius: `rounded-sm`
+- trigger label: `12px`, semibold
+- trigger hover/open state reuses the same border/background language as other top-bar controls without extra glow
+- menu surfaces use editor surface tokens with `rounded-md` geometry and compact `4px`-scale internal padding
+- menu rows are compact, text-first rows sized for dense application menus rather than panel forms
+- row labels are `12px`; shortcut hints are monospace `9-10px` and right-aligned
+- optional row icons and selection checks share one tight leading marker slot so the text gutter stays close to the left edge
+- submenu rows end with a right chevron affordance; panel-link rows use a distinct `ChevronsRight` affordance
+- optgroup labels use muted uppercase helper text and visually separate light/dark theme groups
+- combo rows such as toggle-plus-more split the primary toggle and the trailing “more” affordance into adjacent hit targets that still read as one row
+- the centered page switcher should reuse the shared page-switcher select component rather than custom top-bar popover wiring
+- the centered page switcher uses a brighter filled surface and dark text so it reads as the current-page control rather than another passive menu trigger
+- the page-switcher trigger does not show the page-status dot; status dots stay inside the option list where they help scanning without duplicating the selected-state checkmark
+
+Rules:
+
+- if a top-bar menu pattern is needed elsewhere, reuse the shared menubar primitives before adding app-specific menu markup
+- all visible shortcut hints must map to real registered shortcuts
+- top-level menu triggers should stay text-led; icons are optional and should be rare
+- menu rows should avoid one-off color utilities and instead inherit editor-surface and accent tokens
+- top-level menus open on click first, then switch on hover while the menubar is active
+- submenu surfaces should overlap their parent menu slightly to avoid hover gaps
+
 ## 12. Settings Navigation
 
 Implementation reference:

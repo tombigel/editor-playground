@@ -1,6 +1,6 @@
 # Multiple Pages Audit Report
 
-Date: 2026-04-04
+Date: 2026-04-05
 
 ## Scope
 
@@ -19,7 +19,7 @@ It focuses on:
 
 ## Summary
 
-The multiple-pages foundation is materially better than in the initial audit. Several core correctness blockers have been fixed:
+The multiple-pages foundation is materially better than in the initial audit. Several core correctness blockers and most of the page-entry chrome issues have now been fixed:
 
 - the stage now receives `activePageId`
 - preview now renders with `pageId`
@@ -30,17 +30,20 @@ The multiple-pages foundation is materially better than in the initial audit. Se
 - `SiteRenderer` now resolves page links with document context
 - route manifest now respects `outputStructure` (directory vs flat mode)
 - export ZIP now includes Netlify, Vercel, and Nginx hosting configs under `hosting/`
+- the left rail now exposes Pages beside Layers with the intended iconography
+- sticky preview now uses the corrected `ScanEye` icon
+- the top bar now uses a traditional menubar with a centered in-row page switcher
+- the no-selection inspector state now behaves like a stronger current-page editor
+- page transition controls in the inspector now support `Inherit from site`
+- Help is now split into detached `Shortcuts`, documentation browsing, and detached `About`
+- new page creation now auto-increments duplicate page names and slugs, including alias-aware slug collisions
 
-The feature is still only partially complete. The remaining issues are now mostly in product completeness, UX quality, and routing/export scope rather than basic stage/render correctness.
+The feature is still only partially complete. The remaining issues are now concentrated in the dedicated Pages panel, page-tree interaction depth, the still-missing link-validation workflow, and documentation accuracy rather than basic stage/render correctness or top-level chrome alignment.
 
 The main open gaps are:
 
 - pages panel and pages tree UX are still simpler than the plan
-- top-bar and left-rail pages entry points are still not aligned with the intended design system and layout
 - link validation workflow is still missing
-- server-side routing support from the brief is still missing
-- follow-link behavior is still partial
-- validation and slug-sync behavior are still not as complete as planned
 - roadmap/spec language still overstates current completion in some areas
 
 ## Addressed Since Initial Audit
@@ -103,6 +106,48 @@ Relevant subsystems:
 
 - `src/site/SiteRenderer.tsx`
 
+### Page UI chrome alignment
+
+- the left rail now exposes Pages immediately after Layers using the same rail-entry pattern
+- the Pages rail entry uses `BookOpenText`
+- sticky preview uses `ScanEye`
+- the no-selection inspector page editor now has dedicated `Page settings…` and `All pages…` actions, stronger spacing/grouping, and an inherited page-transition state
+- the redundant page-settings icon in the inspector was removed
+
+Relevant subsystems:
+
+- `src/panels/InsertPanel.tsx`
+- `src/panels/inspector/contentSections/PageInspectorSection.tsx`
+- `src/panels/EditorSidebar.tsx`
+- `src/app/AppShell.tsx`
+
+### Menubar top bar and help split
+
+- the old icon-heavy top bar has been replaced with a traditional menubar: `Settings`, `Edit`, `View`, and `Help`
+- `Undo`, `Redo`, and `Preview` remain as standalone right-side actions
+- the pages switcher now lives centered in the same top bar row and uses the shared page-switcher select component
+- `Help` now routes to detached `Shortcuts`, documentation browsing, and detached `About`
+- the menu system is implemented as reusable primitives and surfaced in the design-system showcase
+
+Relevant subsystems:
+
+- `src/components/ui/menubar.tsx`
+- `src/components/ui/page-switcher-select.tsx`
+- `src/app/EditorTopbar.tsx`
+- `src/panels/ShortcutsDialog.tsx`
+- `src/panels/AboutDialog.tsx`
+
+### New page uniqueness checks
+
+- `addPage()` now resolves a unique page display name before creation by appending ` 2`, ` 3`, and so on when needed
+- new-page slug creation now resolves against both existing page slugs and `slugAliases`, appending `-2`, `-3`, and so on for collisions
+- this closes a real authoring bug where `New page` could create a duplicate slug and defer the problem to later validation instead of preventing it at creation time
+
+Relevant subsystems:
+
+- `src/api/pageApi.ts`
+- `src/api/tests/pageApi.test.ts`
+
 ### Hosting config generation
 
 - `buildHostingConfigs()` generates Netlify `_redirects`, Vercel `vercel.json`, Nginx `nginx.conf`, and a README bundled under `hosting/` in the export ZIP
@@ -134,41 +179,13 @@ Relevant subsystems:
 - `buildHostingConfigs` directory and flat mode behavior tested for all three hosting targets
 - alias conflict and page-parent cycle validation tested in `src/model/tests/validation.test.ts`
 - `syncPageHrefLinks` tested in `src/api/tests/pageApi.test.ts`
+- unique new-page name/slug generation tested in `src/api/tests/pageApi.test.ts`
 
 ## Remaining Findings
 
-### P0
-
-### ~~1. Server-side routing support from the brief is still missing~~ Fixed
-
-- `buildHostingConfigs()` now generates Netlify `_redirects`, Vercel `vercel.json`, and Nginx `nginx.conf` bundled under `hosting/` in the export ZIP
-- config content adapts to `outputStructure`: flat mode produces per-page rewrite rules; directory mode produces minimal/no-op configs with explanatory comments
-- a `hosting/README.txt` explains what to do with each file
-- GitHub Pages needs no config — directory structure (`about/index.html`) is served natively
-- `AppShell` wires `buildHostingConfigs` into the ZIP assembly alongside bundles and the route manifest
-
-Relevant subsystems:
-
-- `src/site/siteExport.tsx`
-- `src/api/siteApi.ts`
-- `src/app/AppShell.tsx`
-- `src/site/tests/siteExport.mpa.test.ts`
-
-### ~~2. Route-manifest behavior is still incomplete relative to configurable output structure~~ Fixed
-
-- `buildRouteManifest()` now accepts `SiteExportOptions` and respects `outputStructure` ('directory' or 'flat')
-- `AppShell` now passes `outputStructure` from `siteSettings` when building the manifest
-- flat-mode and directory-mode manifest tests both pass
-
-Relevant subsystems:
-
-- `src/site/siteExport.tsx`
-- `src/app/AppShell.tsx`
-- `src/site/tests/siteExport.mpa.test.ts`
-
 ### P1
 
-### 3. Pages tree interactions are still much simpler than planned
+### 1. Pages tree interactions are still much simpler than planned
 
 Planned:
 
@@ -196,7 +213,7 @@ Impact:
 
 - page hierarchy authoring remains below the intended UX baseline
 
-### 4. Dedicated Pages panel UX is still below the planned quality bar
+### 2. Dedicated Pages panel UX is still below the planned quality bar
 
 Planned:
 
@@ -216,28 +233,7 @@ Impact:
 
 - the main pages-management surface still feels unfinished
 
-### 5. Layers-panel Pages tab is still incomplete
-
-Planned:
-
-- quick switch plus basic page management from the layers panel
-
-Current state:
-
-- Pages tab exists
-- basic switching is wired
-- page-settings affordance from the layers entry point still does not appear to be completed end-to-end
-
-Evidence:
-
-- `src/panels/LayersPanel.tsx`
-- `src/app/AppShell.tsx`
-
-Impact:
-
-- one of the four planned entry points still appears incomplete
-
-### ~~6. Follow-link popup is still partial~~ Fixed
+### ~~3. Follow-link popup is still partial~~ Fixed
 
 - anchor scrolling: `onScrollToAnchor` now scrolls the target node's DOM element into view using `data-node-id` lookup; popup is dismissed after scrolling
 - toggle-on-repeat-click: `handleStageSelect` in `AppShell` detects re-click of an already-selected link node and toggles `linkPopupVisible`
@@ -250,7 +246,7 @@ Relevant subsystems:
 - `src/panels/FollowLinkPopup.tsx`
 - `src/app/AppShell.tsx`
 
-### ~~7. Validation is still missing important page constraints~~ Fixed
+### ~~4. Validation is still missing important page constraints~~ Fixed
 
 - alias conflict validation added: `slugAliases` entries are checked against all page slugs and all other aliases; alias-equals-own-slug is also caught
 - page-parent cycle validation added: `validatePageParentCycles` walks the `parentPageId` chain for every page and reports cycles, deduplicating reports per cycle entry point
@@ -261,7 +257,7 @@ Relevant subsystems:
 - `src/model/validation.ts`
 - `src/model/tests/validation.test.ts`
 
-### ~~8. Slug-sync workflow is still partial~~ Fixed
+### ~~5. Slug-sync workflow is still partial~~ Fixed
 
 - `syncPageHrefLinks(document, oldUrl, newUrl)` added to `pageApi.ts`: walks all link/button nodes and updates `href` fields matching the old page URL
 - wired as `syncPageLinks` reducer action through `EditorAction`, `editorState.ts`, `PagesPanel`, and `AppShell`
@@ -281,7 +277,7 @@ Relevant subsystems:
 - `src/app/AppShell.tsx`
 - `src/api/tests/pageApi.test.ts`
 
-### 9. Link validation workflow is still missing
+### 3. Link validation workflow is still missing
 
 Planned:
 
@@ -303,7 +299,7 @@ Impact:
 
 - authors do not yet have the planned safety net for internal routing and link integrity
 
-### 10. Documentation still overstates completion
+### 4. Documentation still overstates completion
 
 Current state:
 
@@ -320,51 +316,12 @@ Impact:
 
 ### P2
 
-### 11. Top-bar page switcher is still custom and not design-system aligned
-
-Planned:
-
-- compact switcher using shared design-system primitives
+### 5. General visual polish of the dedicated Pages surface is still below the rest of the editor
 
 Current state:
 
-- switcher exists in the intended area
-- implementation is still custom rather than built from shared dropdown/select/popover patterns
-- visual language still feels less integrated than the rest of the chrome
-
-Evidence:
-
-- `src/app/AppShell.tsx`
-
-Impact:
-
-- consistency and reuse are weaker than planned
-
-### 12. Left-rail Pages trigger is still in the wrong place
-
-Planned:
-
-- pages trigger should sit next to the layers entry in the left rail
-
-Current state:
-
-- layers trigger lives in `InsertPanel`
-- pages trigger remains grouped with the lower utility toggles instead of next to layers
-
-Evidence:
-
-- `src/panels/InsertPanel.tsx`
-- `src/app/AppShell.tsx`
-
-Impact:
-
-- rail structure does not match the intended information architecture
-
-### 13. General visual polish of pages surfaces is still below the rest of the editor
-
-Current state:
-
-- pages surfaces are functional in parts, but still look simpler and less considered than adjacent editor UI
+- the top bar, left rail, and inspector current-page surface now feel materially more integrated
+- the dedicated Pages panel and page tree still look simpler and less considered than adjacent editor UI
 
 Impact:
 
@@ -388,7 +345,9 @@ Impact:
 | Layers Pages tab | Partial |
 | Dedicated Pages panel | Partial |
 | Inspector no-selection page editor | Partial |
-| Top-bar page switcher | Partial |
+| Top-bar page switcher | Implemented |
+| Menubar top bar | Implemented |
+| Left-rail Pages entry placement | Implemented |
 | Page settings popup | Partial |
 | Slug sync flow | Implemented |
 | Follow-link popup | Implemented |
@@ -397,43 +356,26 @@ Impact:
 
 ## Recommended Fix Plan
 
-### Phase 1: Close routing/export scope gaps
-
-1. Make route-manifest output consistent with `outputStructure`
-2. Add the missing server-side routing artifact:
-   - generated config files, or
-   - generated host-specific setup docs bundled in export
-3. Document supported export/routing environments explicitly
-
-### Phase 2: Finish page authoring behavior
+### Phase 1: Finish page authoring behavior
 
 1. Implement real page-tree interactions:
    - reorder
    - reparent
    - drag handle
    - expand/collapse if hierarchy visualization depends on it
-2. Complete any remaining incomplete layers-panel page-management behavior
-3. Add a real link-validation workflow instead of the disabled placeholder
+2. Add a real link-validation workflow instead of the disabled placeholder
+3. Recheck the Layers-panel Pages tab against the original page-management brief and close any remaining parity gaps
 
-### Phase 3: Harden validation and slug flows
+### Phase 2: Raise the dedicated Pages panel to product quality
 
-1. Add alias conflict validation
-2. Add page-parent cycle validation
-3. Implement the planned internal-link sync behavior after slug changes
-4. Reconcile rename flow behavior with the UX plan
+1. Bring the Pages panel visual language up to the same bar as the top bar, inspector, and rails
+2. Revisit page-row affordances, grouping, and hierarchy readability
+3. Keep the dedicated panel as the main authoring surface rather than overloading the top bar further
 
-### Phase 4: Finish navigation UX
+### Phase 3: Keep documentation aligned with shipped behavior
 
-1. Implement anchor scrolling from follow-link popup
-2. Add repeated-click toggle behavior
-3. Add drag suppression behavior
-4. Recheck preview navigation behavior against the UX plan
-
-### Phase 5: Bring pages UI to product quality
-
-1. Rebuild the top-bar switcher with shared design-system primitives
-2. Move the Pages trigger next to Layers in the left rail
-3. Raise the visual quality of pages surfaces to match the rest of the editor chrome
+1. Continue correcting spec/roadmap language when implementation status changes
+2. Keep the audit report, spec, style guide, and showcase aligned in the same change set when page chrome changes land
 
 ### Recommended test additions
 
@@ -446,13 +388,12 @@ Impact:
 
 ## Conclusion
 
-The current state is meaningfully better than the initial audit suggested. The most important stage/render/page-link correctness blockers have been addressed.
+The current state is meaningfully better than the initial audit suggested. The core stage/render/page-link correctness blockers are addressed, and the top-level page chrome now matches the intended product direction much more closely.
 
-The remaining work is now concentrated in four areas:
+The remaining work is now concentrated in three areas:
 
-- export/routing scope
 - page-management UX depth
-- validation and slug workflow hardening
 - final product polish and documentation accuracy
+- the still-missing link-validation workflow
 
-This should now be treated as a partially completed product feature with solid core plumbing, rather than a fundamentally broken implementation.
+This should now be treated as a partially completed product feature with solid core plumbing and much stronger editor integration, rather than a fundamentally broken implementation.

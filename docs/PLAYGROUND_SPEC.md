@@ -141,6 +141,7 @@ Each page has:
 - Non-root pages resolve to `/slug/` (single level) or `/parent-slug/child-slug/` (nested)
 - Parent-child relationships prevent cycles and allow multiple child pages per parent
 - `resolvePageUrl(document, pageId)` computes the full page path including all ancestor slugs
+- New page creation auto-increments duplicate page names and slugs, and it avoids collisions with existing slug aliases as well as primary slugs
 
 ### Page linking
 
@@ -354,6 +355,8 @@ Alignment and distribution:
 Preview and stage controls:
 
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
+- `Shift + L`: toggle the Layers panel when no input field is focused
+- `Shift + O`: toggle the Pages panel when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
 - `Left` / `Right` / `Up` / `Down`: move the focused stage selection by `1px`
@@ -362,7 +365,7 @@ Preview and stage controls:
 Global controls:
 
 - `Mod + ,`: open settings
-- `?`: open the Help browser when no input field is focused
+- `?`: open the detached Shortcuts dialog when no input field is focused
 - `Esc`: close open panels and dialogs
 
 ## History Model
@@ -388,7 +391,7 @@ Undo/redo uses an in-memory history stack.
 
 | Surface | Control |
 |---|---|
-| Top bar | undo / redo / help / settings |
+| Top bar | menubar (`Settings`, `Edit`, `View`, `Help`) plus standalone `undo`, `redo`, and `preview` actions |
 | Keyboard | `Mod + Z`, `Mod + Shift + Z`, and `Ctrl + Y` on non-mac platforms |
 | Settings | clear undo history, configurable max retained undo steps |
 
@@ -997,7 +1000,7 @@ The editor supports multi-page management with four UI entry points:
 1. **Layers panel Pages tab**: collapsible multi-level tree showing page hierarchy with add, delete, and settings buttons
 2. **Dedicated Pages panel**: full-screen page management accessible from a left-rail Pages entry next to Layers
 3. **Inspector no-selection state**: when no node is selected, inspector shows the current page editor with direct actions for page settings and the full pages panel
-4. **Top-bar pages dropdown**: quick switcher to jump between pages and create a new page
+4. **Top-bar pages dropdown**: a centered page switcher in the main top bar for quick page switching and `New page`
 
 Page switching behavior:
 
@@ -1012,6 +1015,7 @@ Page settings:
 - `autoSyncSlugs` site setting controls automatic slug generation during renames
 - Slug conflicts are validated; pending slug changes show a warning banner
 - Pages support slug aliases for redirect support
+- Creating a page with an existing name or slug auto-increments both values; alias collisions are treated as slug collisions too
 
 Follow-link popups:
 
@@ -1021,17 +1025,8 @@ Follow-link popups:
 
 Link validation:
 
-- The Pages panel Export section includes a **Validate links** button
-- Clicking it runs `validateLinks(document)` and shows results inline below the button
-- `validateLinks` checks all link and button nodes in the document for:
-  - `linkType: 'page'` with no `targetPageId` set
-  - `linkType: 'page'` with a `targetPageId` pointing to a page that no longer exists
-  - `linkType: 'page'` with a `pageAnchorId` pointing to a node that does not exist
-  - `linkType: 'anchor'` with an `anchorTargetId` set to a node that does not exist (unconfigured anchor links with no `anchorTargetId` are not flagged)
-- External links (`linkType: 'external'`) and unlinked nodes are not checked
-- Results show the node name, role, and a human-readable description of each error
-- A copy-to-clipboard button copies the full results as plain text
-- Validation is purely read-only and does not modify the document
+- The Pages panel Export section currently shows a disabled **Validate links** button
+- A full manual link-validation workflow is planned but not yet implemented
 
 ### Workspace model
 
@@ -1048,7 +1043,19 @@ Link validation:
 - The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`.
 - Left-rail primary entries expose Layers and Pages directly below the insert tools.
 - Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
-- Top-bar utility actions expose the pages switcher, help, settings, and preview mode button.
+- The top bar uses a single-row application layout:
+  - the left side uses a traditional menubar with `Settings`, `Edit`, `View`, and `Help`
+  - the current-page switcher sits centered in the same row and uses the shared page-switcher select component
+  - the right side keeps standalone `Undo`, `Redo`, and `Preview` actions
+- Menubar behavior follows desktop application conventions:
+  - the first top-level menu opens on click
+  - once one top-level menu is open, hovering a sibling trigger switches to that menu
+  - the open menu chain stays active until an item is chosen, `Esc` is pressed, or an outside click occurs
+  - nested submenus open on hover/focus and overlap their parent menu slightly so there is no dead hover gap
+- `Settings` menu routes to `Import JSON`, `Export JSON`, `Export site`, and deep-links into `UI`, `Defaults`, `Fonts`, and `Advanced`
+- `Edit` menu exposes undo/redo plus placeholder copy/duplicate/paste entries and contextual delete
+- `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Layers and Pages
+- `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
 - Pages panel entry toggles a dedicated panel for multi-page management.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
@@ -1077,20 +1084,21 @@ Additional rules:
 - Dark palettes keep neutral shells and use the accent on active chrome instead of tinting the full shell.
 - Startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it.
 
-### Help browser
+### Help surfaces
 
 Navigation model:
 
-- `?` opens a unified Help browser dialog with a collapsible left nav.
-- `Keyboard shortcuts` appears first, followed by markdown documents from `docs/`.
+- `?` opens the detached `Shortcuts` dialog.
+- `Help → Documentation` opens the documentation browser dialog with a collapsible left nav.
+- `Help → About` opens a detached about dialog.
+- The documentation browser lists markdown documents from `docs/`; shortcuts are no longer the default top-level entry there.
 - Help-doc ordering is configurable in the help-doc registry; unlisted `docs/*.md` files still appear automatically after explicitly ordered entries.
 - Nav buttons do not show filenames. If a title contains a spaced dash separator (`-`, `–`, `—`), the text after the separator becomes the subtitle and the separator is hidden.
 - The left nav reserves a dedicated bottom entry for `How to add docs?`.
 - The left nav can collapse into a slim rail with a single reopen control to widen the reading pane without leaving the current document.
 
-Document sourcing and rendering:
+Documentation browser sourcing and rendering:
 
-- The `Keyboard shortcuts` entry renders the shared shortcut registry and pointer-modifier gesture list.
 - Markdown help entries render the source filename in a compact status bar above the document pane rather than in the nav button.
 - Markdown bodies are loaded from copied static files under `assets/help-docs/` instead of being embedded inline in the main app bundle.
 - Help entries support in-panel `#anchor` jumps and relative `.md` navigation.
@@ -1100,8 +1108,8 @@ Document sourcing and rendering:
 
 State persistence:
 
-- Closing the Help browser preserves the last selected document.
-- Reopening resets transient view state such as nav collapse and in-document anchor position.
+- Closing the documentation browser preserves the last selected document.
+- Reopening the documentation browser resets transient view state such as nav collapse and in-document anchor position.
 
 ### Stage interaction
 
@@ -1138,7 +1146,7 @@ No-selection state:
 - When no node is selected (stage is idle), the inspector shows the page inspector
 - Page inspector allows creating new pages and switching between existing pages
 - Current page is highlighted; clicking a page updates `activePageId`
-- Page settings button opens a popup for slug, displayName, and parent-page management
+- Page settings action opens a popup for slug, displayName, and parent-page management
 
 Single-node inspector:
 
