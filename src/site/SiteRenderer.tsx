@@ -25,8 +25,8 @@ function wrapInteract(nodeId: NodeId, element: ReactElement): ReactElement {
   return element;
 }
 
-export function SiteRenderer({ document, previewSticky = true, includeAnimations = true }: SiteRendererProps) {
-  const plan = buildRenderRootPlan(document, previewSticky);
+export function SiteRenderer({ document, previewSticky = true, includeAnimations = true, pageId }: SiteRendererProps) {
+  const plan = buildRenderRootPlan(document, previewSticky, {}, undefined, pageId);
   activeInteractKeys = includeAnimations ? collectInteractKeys(document) : new Set();
 
   return (
