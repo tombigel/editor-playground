@@ -8,7 +8,6 @@ import {
   Settings,
   Undo2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { PageSwitcherSelect } from '@/components/ui/page-switcher-select';
 import {
   Menubar,
@@ -31,7 +30,7 @@ import {
   type EditorDarkTheme,
   type EditorLightTheme,
 } from '@/lib/theme';
-import type { DocumentPage, PageId } from '@/model/types/site';
+import type { DocumentPage, PageId } from '@/api/editorApi';
 import type { FocusedMode } from '@/editor/types';
 
 const DOCUMENTATION_ENTRY_ID = 'doc:docs/PLAYGROUND_SPEC.md';

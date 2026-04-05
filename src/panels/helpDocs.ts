@@ -77,7 +77,8 @@ export const ABOUT_HELP_ENTRY: AboutHelpEntry = {
 };
 
 export function getHelpEntries() {
-  return [...getMarkdownHelpEntries(), { id: 'divider-special', kind: 'divider' }, SHORTCUTS_HELP_ENTRY, ABOUT_HELP_ENTRY];
+  const specialDivider: DividerHelpEntry = { id: 'divider-special', kind: 'divider' };
+  return [...getMarkdownHelpEntries(), specialDivider, SHORTCUTS_HELP_ENTRY, ABOUT_HELP_ENTRY];
 }
 
 export function getMarkdownHelpEntries(

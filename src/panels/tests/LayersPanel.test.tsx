@@ -10,11 +10,19 @@ function makeContentProps(document: DocumentModel, selectedIds: string[] = []) {
   return {
     document,
     selectedIds,
+    activePageId: null,
     onSelectNode: NO_OP,
     onRenameNode: NO_OP,
     onDeleteNode: NO_OP,
     onSetNodeVisibility: NO_OP,
     onMoveNodeInTree: NO_OP,
+    onSetActivePage: NO_OP,
+    onAddPage: NO_OP,
+    onDeletePage: NO_OP,
+    onOpenPageSettings: NO_OP,
+    onSetPageParent: NO_OP,
+    onReorderPage: NO_OP,
+    onSetPageVisibility: NO_OP,
   };
 }
 
@@ -26,11 +34,19 @@ describe('panels/LayersPanel', () => {
       <LayersPanelContent
         document={document}
         selectedIds={[]}
+        activePageId={null}
         onSelectNode={() => undefined}
         onRenameNode={() => undefined}
         onDeleteNode={() => undefined}
         onSetNodeVisibility={() => undefined}
         onMoveNodeInTree={() => undefined}
+        onSetActivePage={() => undefined}
+        onAddPage={() => undefined}
+        onDeletePage={() => undefined}
+        onOpenPageSettings={() => undefined}
+        onSetPageParent={() => undefined}
+        onReorderPage={() => undefined}
+        onSetPageVisibility={() => undefined}
       />,
     );
 

@@ -126,6 +126,7 @@ describe('app/AppShell', () => {
         position={{ top: 112, left: 102 }}
         document={document}
         selectedIds={[]}
+        activePageId={null}
         onOpenChange={() => undefined}
         onPositionChange={() => undefined}
         onClose={() => undefined}
@@ -134,6 +135,13 @@ describe('app/AppShell', () => {
         onDeleteNode={() => undefined}
         onSetNodeVisibility={() => undefined}
         onMoveNodeInTree={() => undefined}
+        onSetActivePage={() => undefined}
+        onAddPage={() => undefined}
+        onDeletePage={() => undefined}
+        onOpenPageSettings={() => undefined}
+        onSetPageParent={() => undefined}
+        onReorderPage={() => undefined}
+        onSetPageVisibility={() => undefined}
       />,
     );
 

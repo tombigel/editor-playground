@@ -1,16 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/initialDocument';
-import { addPage, resolvePageUrl, setPageParent } from '../../api/pageApi';
+import { createPage } from '../../model/pageDefaults';
 import { buildRenderRootPlan } from '../../render/renderPlan';
-import { buildHostingConfigs, buildRouteManifest, renderPageHtmlDocument, renderSiteExportBundles } from '../siteExport';
+import { buildHostingConfigs, buildRouteManifest, renderPageHtmlDocument, renderSiteExportBundles, resolvePageUrl } from '../siteExport';
+
+function appendPage(document: ReturnType<typeof createInitialDocument>, displayName: string, slug: string) {
+  const page = createPage({ displayName, slug });
+  document.pages = [...(document.pages ?? []), page];
+  return { document, page };
+}
 
 describe('site/siteExport MPA', () => {
   it('buildRenderRootPlan with pageId returns only that page sections plus shared header/footer', () => {
     let doc = createInitialDocument();
     const homePage = doc.pages![0];
 
-    doc = addPage(doc, { displayName: 'About', slug: 'about' });
-    const aboutPage = doc.pages![1];
+    const aboutResult = appendPage(doc, 'About', 'about');
+    doc = aboutResult.document;
+    const aboutPage = aboutResult.page;
 
     const plan = buildRenderRootPlan(doc, true, {}, undefined, homePage.id);
     const aboutPlan = buildRenderRootPlan(doc, true, {}, undefined, aboutPage.id);
@@ -24,7 +31,7 @@ describe('site/siteExport MPA', () => {
     for (const id of homePage.sectionIds) {
       expect(homeMainIds).toContain(id);
     }
-    for (const id of aboutPage.sectionIds) {
+    for (const _id of aboutPage.sectionIds) {
       expect(aboutMainIds).not.toContain(undefined);
     }
 
@@ -35,7 +42,7 @@ describe('site/siteExport MPA', () => {
 
   it('renderSiteExportBundles directory mode produces correct paths for 2-page doc', () => {
     let doc = createInitialDocument();
-    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    doc = appendPage(doc, 'About', 'about').document;
 
     const bundles = renderSiteExportBundles(doc, { outputStructure: 'directory' });
 
@@ -46,7 +53,7 @@ describe('site/siteExport MPA', () => {
 
   it('renderSiteExportBundles flat mode produces correct paths for 2-page doc', () => {
     let doc = createInitialDocument();
-    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    doc = appendPage(doc, 'About', 'about').document;
 
     const bundles = renderSiteExportBundles(doc, { outputStructure: 'flat' });
 
@@ -57,7 +64,7 @@ describe('site/siteExport MPA', () => {
 
   it('buildRouteManifest directory mode maps slugs to correct file paths', () => {
     let doc = createInitialDocument();
-    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    doc = appendPage(doc, 'About', 'about').document;
 
     const manifest = buildRouteManifest(doc, { outputStructure: 'directory' });
 
@@ -72,7 +79,7 @@ describe('site/siteExport MPA', () => {
 
   it('buildRouteManifest flat mode maps slugs to flat file paths', () => {
     let doc = createInitialDocument();
-    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    doc = appendPage(doc, 'About', 'about').document;
 
     const manifest = buildRouteManifest(doc, { outputStructure: 'flat' });
 
@@ -91,8 +98,9 @@ describe('site/siteExport MPA', () => {
       ...doc,
       siteSettings: { ...doc.siteSettings!, lang: 'fr', status: 'draft', viewTransition: 'none' },
     };
-    doc = addPage(doc, { displayName: 'About', slug: 'about' });
-    const aboutPage = doc.pages![1];
+    const aboutResult = appendPage(doc, 'About', 'about');
+    doc = aboutResult.document;
+    const aboutPage = aboutResult.page;
 
     const html = renderPageHtmlDocument(doc, aboutPage.id);
 
@@ -103,11 +111,16 @@ describe('site/siteExport MPA', () => {
 
   it('resolvePageUrl for nested page returns /parent-slug/child-slug/', () => {
     let doc = createInitialDocument();
-    doc = addPage(doc, { displayName: 'Parent', slug: 'parent' });
-    const parentPage = doc.pages![1];
-    doc = addPage(doc, { displayName: 'Child', slug: 'child' });
-    const childPage = doc.pages![2];
-    doc = setPageParent(doc, childPage.id, parentPage.id);
+    const parentResult = appendPage(doc, 'Parent', 'parent');
+    doc = parentResult.document;
+    const childResult = appendPage(doc, 'Child', 'child');
+    doc = {
+      ...childResult.document,
+      pages: childResult.document.pages!.map((page) =>
+        page.id === childResult.page.id ? { ...page, parentPageId: parentResult.page.id } : page,
+      ),
+    };
+    const childPage = childResult.page;
 
     const url = resolvePageUrl(doc, childPage.id);
 
@@ -150,7 +163,7 @@ describe('site/siteExport MPA', () => {
 
     it('flat mode netlify redirects contains per-page rewrite rules', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appendPage(doc, 'About', 'about').document;
       const configs = buildHostingConfigs(doc, { outputStructure: 'flat' });
 
       expect(configs['hosting/netlify/_redirects']).toContain('/about  /about.html  200');
@@ -158,7 +171,7 @@ describe('site/siteExport MPA', () => {
 
     it('flat mode vercel config contains rewrites array', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appendPage(doc, 'About', 'about').document;
       const configs = buildHostingConfigs(doc, { outputStructure: 'flat' });
       const vercel = JSON.parse(configs['hosting/vercel/vercel.json']);
 

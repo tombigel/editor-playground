@@ -13,6 +13,7 @@ import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 function createState(): EditorState {
   return {
     document: createInitialDocument(),
+    activePageId: null,
     selectedId: null,
     selectedIds: [],
     pendingRoleSwap: null,

@@ -1,5 +1,5 @@
 import { nextId } from './defaultFactories';
-import type { DocumentPage, PageId, SiteSettings } from './types/site';
+import type { DocumentPage, SiteSettings } from './types/site';
 
 export function createInitialSiteSettings(): SiteSettings {
   return {

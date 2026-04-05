@@ -24,9 +24,9 @@ describe('model/pageDefaults', () => {
     });
 
     it('handles special characters', () => {
-      expect(normalizeSlug('hello!world')).toMatch(/^[a-z0-9\-]+$/);
-      expect(normalizeSlug('test@page#123')).toMatch(/^[a-z0-9\-]+$/);
-      expect(normalizeSlug('hello&world')).toMatch(/^[a-z0-9\-]+$/);
+      expect(normalizeSlug('hello!world')).toMatch(/^[a-z0-9-]+$/);
+      expect(normalizeSlug('test@page#123')).toMatch(/^[a-z0-9-]+$/);
+      expect(normalizeSlug('hello&world')).toMatch(/^[a-z0-9-]+$/);
     });
 
     it('handles combined edge cases', () => {
@@ -43,7 +43,7 @@ describe('model/pageDefaults', () => {
 
     it('produces valid slugs from display names with special characters', () => {
       expect(generateSlug('My Blog Post!')).toBe('my-blog-post');
-      expect(generateSlug('FAQ & Support')).toMatch(/^[a-z0-9\-]+$/);
+      expect(generateSlug('FAQ & Support')).toMatch(/^[a-z0-9-]+$/);
     });
 
     it('produces valid slugs from display names with multiple spaces', () => {
@@ -84,7 +84,7 @@ describe('model/pageDefaults', () => {
       const page = createPage();
       expect(page.slug).toBeDefined();
       expect(typeof page.slug).toBe('string');
-      expect(page.slug).toMatch(/^[a-z0-9\-]+$/);
+      expect(page.slug).toMatch(/^[a-z0-9-]+$/);
     });
 
     it('creates a page with custom displayName and matching slug', () => {

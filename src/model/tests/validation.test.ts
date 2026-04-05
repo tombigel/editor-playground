@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { addPage, setPageParent } from '../../api/pageApi';
 import { createInitialDocument, createLeaf, createWrapper } from '../defaults';
+import { createPage } from '../pageDefaults';
+import type { ButtonLeaf, LinkLeaf } from '../types';
 import { getMainWrappers } from '../selectors';
 import { validateDocument, validateLinks } from '../validation';
+
+function appendPage(document: ReturnType<typeof createInitialDocument>, options: Parameters<typeof createPage>[0]) {
+  const page = createPage(options);
+  document.pages = [...(document.pages ?? []), page];
+  return { document, page };
+}
 
 describe('model/validation', () => {
   it('accepts the default document', () => {
@@ -157,7 +164,7 @@ describe('model/validation', () => {
   describe('page alias conflict validation', () => {
     it('accepts pages with non-conflicting aliases', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appendPage(doc, { displayName: 'About', slug: 'about' }).document;
       doc = {
         ...doc,
         pages: doc.pages!.map((p) =>
@@ -169,7 +176,7 @@ describe('model/validation', () => {
 
     it('rejects alias that duplicates own slug', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appendPage(doc, { displayName: 'About', slug: 'about' }).document;
       doc = {
         ...doc,
         pages: doc.pages!.map((p) =>
@@ -182,8 +189,8 @@ describe('model/validation', () => {
 
     it('rejects alias that conflicts with another page slug', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
-      doc = addPage(doc, { displayName: 'Contact', slug: 'contact' });
+      doc = appendPage(doc, { displayName: 'About', slug: 'about' }).document;
+      doc = appendPage(doc, { displayName: 'Contact', slug: 'contact' }).document;
       doc = {
         ...doc,
         pages: doc.pages!.map((p) =>
@@ -196,8 +203,8 @@ describe('model/validation', () => {
 
     it('rejects alias that conflicts with another page alias', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
-      doc = addPage(doc, { displayName: 'Contact', slug: 'contact' });
+      doc = appendPage(doc, { displayName: 'About', slug: 'about' }).document;
+      doc = appendPage(doc, { displayName: 'Contact', slug: 'contact' }).document;
       doc = {
         ...doc,
         pages: doc.pages!.map((p) => {
@@ -214,18 +221,23 @@ describe('model/validation', () => {
   describe('page parent cycle validation', () => {
     it('accepts a valid parent–child hierarchy', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'Parent', slug: 'parent' });
-      const parentPage = doc.pages![1];
-      doc = addPage(doc, { displayName: 'Child', slug: 'child' });
-      const childPage = doc.pages![2];
-      doc = setPageParent(doc, childPage.id, parentPage.id);
+      const parentResult = appendPage(doc, { displayName: 'Parent', slug: 'parent' });
+      doc = parentResult.document;
+      const childResult = appendPage(doc, { displayName: 'Child', slug: 'child' });
+      doc = {
+        ...childResult.document,
+        pages: childResult.document.pages!.map((p) =>
+          p.id === childResult.page.id ? { ...p, parentPageId: parentResult.page.id } : p,
+        ),
+      };
       expect(validateDocument(doc)).toEqual([]);
     });
 
     it('rejects a direct self-parent cycle', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'Looping', slug: 'loop' });
-      const loopPage = doc.pages![1];
+      const loopResult = appendPage(doc, { displayName: 'Looping', slug: 'loop' });
+      doc = loopResult.document;
+      const loopPage = loopResult.page;
       doc = {
         ...doc,
         pages: doc.pages!.map((p) =>
@@ -238,9 +250,11 @@ describe('model/validation', () => {
 
     it('rejects a two-page parent cycle', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'A', slug: 'a' });
-      doc = addPage(doc, { displayName: 'B', slug: 'b' });
-      const [pageA, pageB] = [doc.pages![1], doc.pages![2]];
+      const aResult = appendPage(doc, { displayName: 'A', slug: 'a' });
+      doc = aResult.document;
+      const bResult = appendPage(doc, { displayName: 'B', slug: 'b' });
+      doc = bResult.document;
+      const [pageA, pageB] = [aResult.page, bResult.page];
       doc = {
         ...doc,
         pages: doc.pages!.map((p) => {
@@ -264,10 +278,11 @@ describe('model/validation', () => {
 
     it('reports no errors for a valid page link', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
-      const pageId = doc.pages![1].id;
+      const appended = appendPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appended.document;
+      const pageId = appended.page.id;
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'page';
       (link as any).targetPageId = pageId;
       doc.nodes[link.id] = link;
@@ -279,7 +294,7 @@ describe('model/validation', () => {
     it('reports error for a page link pointing to a nonexistent page', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'page';
       (link as any).targetPageId = 'nonexistent_page_id';
       doc.nodes[link.id] = link;
@@ -292,7 +307,7 @@ describe('model/validation', () => {
     it('reports error for a page link with no targetPageId set', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'page';
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -305,7 +320,7 @@ describe('model/validation', () => {
     it('reports error for a button with a broken page link', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const button = createLeaf('button', section.id);
+      const button = createLeaf('button', section.id) as ButtonLeaf;
       button.linkType = 'page';
       (button as any).targetPageId = 'gone_page_id';
       doc.nodes[button.id] = button;
@@ -322,7 +337,7 @@ describe('model/validation', () => {
       const target = createLeaf('text', section.id);
       doc.nodes[target.id] = target;
       section.children.push(target.id);
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'anchor';
       (link as any).anchorTargetId = target.id;
       doc.nodes[link.id] = link;
@@ -334,7 +349,7 @@ describe('model/validation', () => {
     it('reports error for an anchor link pointing to a nonexistent node', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'anchor';
       (link as any).anchorTargetId = 'nonexistent_node_id';
       doc.nodes[link.id] = link;
@@ -347,7 +362,7 @@ describe('model/validation', () => {
     it('does not report an error for an anchor link with no anchorTargetId set', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'anchor';
       (link as any).anchorTargetId = undefined;
       doc.nodes[link.id] = link;
@@ -359,10 +374,11 @@ describe('model/validation', () => {
 
     it('reports error for a page link with a missing pageAnchorId', () => {
       let doc = createInitialDocument();
-      doc = addPage(doc, { displayName: 'About', slug: 'about' });
-      const pageId = doc.pages![1].id;
+      const appended = appendPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appended.document;
+      const pageId = appended.page.id;
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'page';
       (link as any).targetPageId = pageId;
       (link as any).pageAnchorId = 'nonexistent_anchor_id';
@@ -376,7 +392,7 @@ describe('model/validation', () => {
     it('ignores external links and text/image nodes', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id);
+      const link = createLeaf('link', section.id) as LinkLeaf;
       link.linkType = 'external';
       (link as any).href = 'https://example.com';
       doc.nodes[link.id] = link;
@@ -388,12 +404,12 @@ describe('model/validation', () => {
     it('reports multiple errors across multiple broken links', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link1 = createLeaf('link', section.id);
+      const link1 = createLeaf('link', section.id) as LinkLeaf;
       link1.linkType = 'page';
       (link1 as any).targetPageId = 'missing_page_1';
       doc.nodes[link1.id] = link1;
       section.children.push(link1.id);
-      const link2 = createLeaf('button', section.id);
+      const link2 = createLeaf('button', section.id) as ButtonLeaf;
       link2.linkType = 'page';
       (link2 as any).targetPageId = 'missing_page_2';
       doc.nodes[link2.id] = link2;

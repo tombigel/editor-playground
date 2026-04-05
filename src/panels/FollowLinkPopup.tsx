@@ -33,7 +33,7 @@ export function FollowLinkPopup({
     }
     if (linkType === 'external') {
       const href = node.href ?? '';
-      const truncated = href.length > 40 ? href.slice(0, 40) + '…' : href;
+      const truncated = href.length > 40 ? `${href.slice(0, 40)}…` : href;
       return `↗ ${truncated}`;
     }
     return '↓ Jump to section';

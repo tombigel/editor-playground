@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument } from '../../model/initialDocument';
-import type { DocumentModel } from '../../model/types';
+import { createInitialDocument, createLeaf } from '../../model/defaults';
+import type { DocumentModel, LinkLeaf } from '../../model/types';
 import { validateDocument } from '../../model/validation';
 import {
   addPage,
@@ -323,7 +323,7 @@ describe('setPageViewTransition', () => {
     const doc = makeDoc();
     const pages = doc.pages ?? [];
     // Use an ID that cannot exist in a fresh document
-    const fakeId = (pages[0].id + '-nonexistent') as typeof pages[0]['id'];
+    const fakeId = (`${pages[0].id}-nonexistent`) as typeof pages[0]['id'];
     const result = setPageViewTransition(doc, fakeId, 'slide');
     expect(result).toBe(doc);
   });
@@ -353,16 +353,10 @@ describe('syncPageHrefLinks', () => {
     const root = doc.nodes[doc.rootId];
     const sectionId = root.children[0];
     const section = doc.nodes[sectionId];
-    const linkNode = {
-      id: 'link-node-1',
-      type: 'leaf' as const,
-      role: 'link' as const,
-      parentId: sectionId,
-      children: [] as string[],
-      rect: { x: 0, y: 0, width: 100, height: 30 },
-      label: 'Click me',
-      href,
-    };
+    const linkNode = createLeaf('link', sectionId) as LinkLeaf;
+    linkNode.id = 'link-node-1';
+    linkNode.label = 'Click me';
+    linkNode.href = href;
     return {
       ...doc,
       nodes: {

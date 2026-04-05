@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createLeaf } from '../defaults';
+import { createPage } from '../pageDefaults';
 import { getSectionAnchorOptions, isBrokenAnchorLink, getLinkHref } from '../links';
-import { addPage } from '../../api/pageApi';
+
+function appendPage(document: ReturnType<typeof createInitialDocument>, displayName: string, slug: string) {
+  const page = createPage({ displayName, slug });
+  document.pages = [...(document.pages ?? []), page];
+  return { document, page };
+}
 
 describe('model/links', () => {
   it('lists top-level sections as anchor options with human-readable labels', () => {
@@ -105,9 +111,7 @@ describe('model/links', () => {
   });
 
   it('returns page URL for page links with linkType "page"', () => {
-    let document = createInitialDocument();
-    document = addPage(document, { displayName: 'About', slug: 'about' });
-    const aboutPage = (document.pages ?? []).find((p) => p.slug === 'about')!;
+    const { document, page: aboutPage } = appendPage(createInitialDocument(), 'About', 'about');
 
     const link = Object.values(document.nodes).find(
       (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
@@ -125,9 +129,7 @@ describe('model/links', () => {
   });
 
   it('appends anchor to page URL for page links with pageAnchorId', () => {
-    let document = createInitialDocument();
-    document = addPage(document, { displayName: 'About', slug: 'about' });
-    const aboutPage = (document.pages ?? []).find((p) => p.slug === 'about')!;
+    const { document, page: aboutPage } = appendPage(createInitialDocument(), 'About', 'about');
 
     const link = Object.values(document.nodes).find(
       (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',

@@ -309,7 +309,7 @@ export function resolvePageUrl(document: DocumentModel, pageId: PageId): string 
   }
 
   if (slugs.length === 0) return '/';
-  return '/' + slugs.join('/') + '/';
+  return `/${slugs.join('/')}/`;
 }
 
 export function syncPageHrefLinks(

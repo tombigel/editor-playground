@@ -83,7 +83,7 @@ export function getLinkHref(
     }
     // Resolve page URL using the algorithm from pageApi
     const pageUrl = resolvePageUrlInModel(document, node.targetPageId);
-    return pageUrl + (node.pageAnchorId ? '#' + node.pageAnchorId : '');
+    return pageUrl + (node.pageAnchorId ? `#${node.pageAnchorId}` : '');
   }
   return node.href;
 }
@@ -107,7 +107,7 @@ function resolvePageUrlInModel(document: DocumentModel, pageId: PageId): string 
   }
 
   if (slugs.length === 0) return '/';
-  return '/' + slugs.join('/') + '/';
+  return `/${slugs.join('/')}/`;
 }
 
 export function shouldOpenNavigationInNewTab(

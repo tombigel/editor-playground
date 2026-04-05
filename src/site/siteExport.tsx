@@ -3,7 +3,6 @@ import { buildDocumentInteractConfig } from '../animations/animationApi';
 import { buildDocumentGoogleFontsStylesheetHref } from '../fonts';
 import type { DocumentModel } from '../model/types';
 import type { PageId } from '../model/types/site';
-import { resolvePageUrl } from '../api/pageApi';
 import { styleRecordToCssDeclarations } from '../render/leafPresentation';
 import { SiteRenderer } from './SiteRenderer';
 import { buildSiteCssRules, buildSiteViewTransitionCss } from './siteStylePlan';
@@ -258,7 +257,7 @@ function buildVercelConfig(
     source: r.url.replace(/\/$/, ''),
     destination: `/${r.filePath}`,
   }));
-  return JSON.stringify({ rewrites }, null, 2) + '\n';
+  return `${JSON.stringify({ rewrites }, null, 2)}\n`;
 }
 
 function buildNginxConfig(outputStructure: 'directory' | 'flat'): string {
@@ -296,6 +295,28 @@ export function buildRouteManifest(document: DocumentModel, options: SiteExportO
       };
     }),
   };
+}
+
+export function resolvePageUrl(document: DocumentModel, pageId: PageId): string {
+  const pages = document.pages ?? [];
+  const slugs: string[] = [];
+
+  let currentId: PageId | undefined = pageId;
+  const visited = new Set<PageId>();
+  while (currentId && !visited.has(currentId)) {
+    visited.add(currentId);
+    const page = pages.find((candidate) => candidate.id === currentId);
+    if (!page) {
+      break;
+    }
+    if (page.slug) {
+      slugs.unshift(page.slug);
+    }
+    currentId = page.parentPageId;
+  }
+
+  if (slugs.length === 0) return '/';
+  return `/${slugs.join('/')}/`;
 }
 
 function resolveFilePath(url: string, outputStructure: 'directory' | 'flat'): string {
