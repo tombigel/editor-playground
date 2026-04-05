@@ -55,6 +55,7 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Accent');
     expect(markup).toContain('Startup mode');
     expect(markup).toContain('Animation preview');
+    expect(markup).toContain('Pages');
     expect(markup).toContain('Fonts');
     expect(markup).toContain('Chooses which focused mode the editor opens with.');
     expect(markup).toContain('aria-label="Startup mode"');
@@ -62,6 +63,10 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('JSON exports use `.json`; rendered site exports use `.zip`.');
     expect(markup).toContain('Document JSON');
     expect(markup).toContain('Rendered Site');
+    expect(markup).toContain('Output structure');
+    expect(markup).toContain('Validate links');
+    expect(markup).toContain('Title');
+    expect(markup).toContain('Language');
     expect(markup).toContain('Keyboard and pointer reference');
     expect(markup).toContain('Model export for re-importing into the editor.');
     expect(markup).toContain('Generated site structure export for hosting or SSR.');

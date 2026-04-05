@@ -134,6 +134,7 @@ export type EditorAction =
   | { type: 'deletePage'; pageId: PageId }
   | { type: 'reorderPage'; pageId: PageId; direction: 'back' | 'forward' }
   | { type: 'setPageDisplayName'; pageId: PageId; displayName: string }
+  | { type: 'setPageLang'; pageId: PageId; lang?: string }
   | { type: 'setPageSlug'; pageId: PageId; slug: string }
   | { type: 'setPageParent'; pageId: PageId; parentPageId: PageId | null }
   | { type: 'setPageVisibility'; pageId: PageId; visible: boolean }

@@ -198,15 +198,17 @@ export function AppShell({
 
 	const [showStorageWarning, setShowStorageWarning] = useState(false);
 	const [linkPopupVisible, setLinkPopupVisible] = useState(false);
-	const [requestedPageSettingsId, setRequestedPageSettingsId] = useState<
-		string | null
-	>(null);
+	const [requestedPageSettingsId, setRequestedPageSettingsId] = useState<string | null>(null);
+	const [pagesPanelTabTarget, setPagesPanelTabTarget] = useState<"page" | "settings">("page");
 	const [settingsSectionTarget, setSettingsSectionTarget] = useState<
 		SettingsSectionId | undefined
 	>(undefined);
 	const [helpEntryTarget, setHelpEntryTarget] = useState<
 		HelpEntry["id"] | undefined
 	>(undefined);
+	const [linkValidationErrors, setLinkValidationErrors] = useState(
+		null as ReturnType<typeof validateLinks> | null,
+	);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
 
 	const focusedPanelRef = useRef<HTMLDivElement | null>(null);
@@ -463,13 +465,27 @@ export function AppShell({
 
 	function handleOpenPagesPanel() {
 		setRequestedPageSettingsId(null);
+		setPagesPanelTabTarget("page");
 		onOpenPages();
 	}
 
 	function handleOpenCurrentPageSettings() {
 		if (!state.activePageId) return;
 		setRequestedPageSettingsId(state.activePageId);
+		setPagesPanelTabTarget("page");
 		onOpenPages();
+	}
+
+	function handleValidateLinks() {
+		const errors = validateLinks(state.document);
+		setLinkValidationErrors(errors);
+		return errors;
+	}
+
+	function handleOpenLinkValidation() {
+		handleValidateLinks();
+		setSettingsSectionTarget("transfer");
+		onSettingsOpenChange(true);
 	}
 
 	function handleOpenSettingsSection(section: SettingsSectionId) {
@@ -1017,6 +1033,9 @@ export function AppShell({
 							onSetPageDisplayName={(pageId, displayName) =>
 								dispatch({ type: "setPageDisplayName", pageId, displayName })
 							}
+							onSetPageLang={(pageId, lang) =>
+								dispatch({ type: "setPageLang", pageId, lang })
+							}
 							onSetPageSlug={(pageId, slug) =>
 								dispatch({ type: "setPageSlug", pageId, slug })
 							}
@@ -1031,6 +1050,7 @@ export function AppShell({
 							onSetPageParent={(pageId, parentPageId) =>
 								dispatch({ type: "setPageParent", pageId, parentPageId })
 							}
+							onValidateLinks={handleOpenLinkValidation}
 						/>
 					</Suspense>
 				</div>
@@ -1157,7 +1177,6 @@ export function AppShell({
 						open={layersOpen}
 						position={layersPosition}
 						document={state.document}
-						activePageId={state.activePageId}
 						selectedIds={state.selectedIds}
 						onOpenChange={onLayersOpenChange}
 						onPositionChange={onLayersPositionChange}
@@ -1184,24 +1203,6 @@ export function AppShell({
 								targetIndex,
 							})
 						}
-						onSetActivePage={(pageId) =>
-							dispatch({ type: "setActivePage", pageId })
-						}
-						onAddPage={() => dispatch({ type: "addPage" })}
-						onDeletePage={(pageId) => dispatch({ type: "deletePage", pageId })}
-						onOpenPageSettings={(pageId) => {
-							setRequestedPageSettingsId(pageId);
-							onOpenPages();
-						}}
-						onSetPageParent={(pageId, parentPageId) =>
-							dispatch({ type: "setPageParent", pageId, parentPageId })
-						}
-						onReorderPage={(pageId, direction) =>
-							dispatch({ type: "reorderPage", pageId, direction })
-						}
-						onSetPageVisibility={(pageId, visible) =>
-							dispatch({ type: "setPageVisibility", pageId, visible })
-						}
 					/>
 				</Suspense>
 			) : null}
@@ -1213,7 +1214,8 @@ export function AppShell({
 						position={pagesPosition}
 						document={state.document}
 						activePageId={state.activePageId}
-						openSettingsPageId={requestedPageSettingsId}
+						selectedPageId={requestedPageSettingsId}
+						initialTab={pagesPanelTabTarget}
 						onClose={() => {
 							onPagesOpenChange(false);
 							setRequestedPageSettingsId(null);
@@ -1229,6 +1231,9 @@ export function AppShell({
 						onSetPageDisplayName={(pageId, displayName) =>
 							dispatch({ type: "setPageDisplayName", pageId, displayName })
 						}
+						onSetPageLang={(pageId, lang) =>
+							dispatch({ type: "setPageLang", pageId, lang })
+						}
 						onSetPageSlug={(pageId, slug) =>
 							dispatch({ type: "setPageSlug", pageId, slug })
 						}
@@ -1241,7 +1246,7 @@ export function AppShell({
 						onSyncPageLinks={(oldUrl, newUrl) =>
 							dispatch({ type: "syncPageLinks", oldUrl, newUrl })
 						}
-						onValidateLinks={() => validateLinks(state.document)}
+						onValidateLinks={handleOpenLinkValidation}
 						onSetPageVisibility={(pageId, visible) =>
 							dispatch({ type: "setPageVisibility", pageId, visible })
 						}
@@ -1255,7 +1260,6 @@ export function AppShell({
 							dispatch({ type: "reorderPage", pageId, direction })
 						}
 						onPositionChange={onPagesPositionChange}
-						onExport={handleExportSite}
 					/>
 				</Suspense>
 			) : null}
@@ -1355,6 +1359,8 @@ export function AppShell({
 							onSiteSettingsChange={(patch) =>
 								dispatch({ type: "setSiteSettings", patch })
 							}
+							linkErrors={linkValidationErrors}
+							onValidateLinks={handleValidateLinks}
 							activeSection={settingsSectionTarget}
 						/>
 					</Suspense>

@@ -41,6 +41,7 @@ import {
   deletePage,
   reorderPage,
   setPageDisplayName,
+  setPageLang,
   setPageSlug,
   setPageParent,
   setPageVisibility,
@@ -344,6 +345,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: reorderPage(state.document, action.pageId, action.direction) };
     case 'setPageDisplayName':
       return { ...state, document: setPageDisplayName(state.document, action.pageId, action.displayName) };
+    case 'setPageLang':
+      return { ...state, document: setPageLang(state.document, action.pageId, action.lang) };
     case 'setPageSlug':
       return { ...state, document: setPageSlug(state.document, action.pageId, action.slug) };
     case 'setPageParent':

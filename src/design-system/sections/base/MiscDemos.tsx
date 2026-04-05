@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Rocket, Layers2, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import {
 	Menubar,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/menubar";
 import { PopoverTooltip } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusMessage } from "@/panels/settings/SettingsShared";
 import { ResizeHandleView } from "../../../stage/stageRenderers/resizeHandles";
@@ -380,6 +382,52 @@ export function MiscDemos() {
 							onCreatePage={() => {}}
 						/>
 					</div>
+				</div>
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="base-tabs"
+				name="Tabs"
+				description="Compact reusable tabs for embedded editor panels such as the Pages panel."
+				sourceFile="src/components/ui/tabs.tsx"
+				props={[]}
+			>
+				<div className="max-w-[360px] space-y-3">
+					<Tabs value="page">
+						<TabsList>
+							<TabsTrigger value="page">Page</TabsTrigger>
+							<TabsTrigger value="settings">Settings</TabsTrigger>
+						</TabsList>
+						<TabsContent value="page" className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm">
+							Embedded page editor content
+						</TabsContent>
+						<TabsContent value="settings" className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm">
+							Site page settings
+						</TabsContent>
+					</Tabs>
+				</div>
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="base-searchable-select"
+				name="Searchable Select"
+				description="Searchable fixed-option selector for site, page, and text language overrides."
+				sourceFile="src/components/ui/searchable-select.tsx"
+				props={[]}
+			>
+				<div className="max-w-[320px] space-y-3">
+					<SearchableSelect
+						value="en-US"
+						options={[
+							{ value: "__site__", label: "Site language" },
+							{ value: "en-US", label: "English (United States)", description: "en-US" },
+							{ value: "fr", label: "French", description: "fr" },
+							{ value: "he", label: "Hebrew", description: "he" },
+						]}
+						placeholder="Site language"
+						searchPlaceholder="Search languages"
+						onValueChange={() => {}}
+					/>
 				</div>
 			</ComponentPreview>
 

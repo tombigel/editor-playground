@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { parseUnitValue } from '../api/documentApi';
 import type { DocumentModel, DocumentNode } from '../api/editorApi';
 import {
@@ -76,6 +77,7 @@ import { MultiStickySection } from './MultiStickySection';
 import { resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
 import { DebugInfoSection } from './inspector/DebugInfoSection';
 import type { NodeDebugInfo } from '../editor/types';
+import { createLanguageSelectOptions } from '../i18n/languages';
 
 type Props = {
   document: DocumentModel;
@@ -103,6 +105,10 @@ export function MultiSelectInspector({
   onBulkEdit,
 }: Props) {
   const textNodes = selectedNodes.filter(isTypographyNode);
+  const textLeafNodes = selectedNodes.filter(
+    (node): node is Extract<DocumentNode, { type: 'leaf'; role: 'text' }> =>
+      node.type === 'leaf' && node.role === 'text',
+  );
   const filterShadowNodes = selectedNodes.filter((node): node is Extract<DocumentNode, { type: 'leaf'; role: 'text' | 'link' }> =>
     node.type === 'leaf' && (node.role === 'text' || node.role === 'link'),
   );
@@ -132,6 +138,7 @@ export function MultiSelectInspector({
   const decorationState = resolveSharedString(textNodes.map((node) => node.style?.textDecorationLine ?? 'none'));
   const textAlignState = resolveSharedString(textNodes.map((node) => node.style?.textAlign ?? 'left'));
   const directionState = resolveSharedString(textNodes.map((node) => node.style?.direction ?? 'ltr'));
+  const textLanguageState = resolveSharedString(textLeafNodes.map((node) => node.lang ?? '__site__'));
   const foregroundState = resolveSharedString(textNodes.map((node) => node.style?.color ?? ''));
   const filterShadowState = resolveSharedShadow(filterShadowNodes.map((node) => node.style));
   const backgroundState = resolveSharedString(
@@ -190,6 +197,10 @@ export function MultiSelectInspector({
     setRecentFamilyNames(families);
     writeRecentFontFamilies(families);
   };
+  const languageOptions = createLanguageSelectOptions({
+    includeSiteLanguage: true,
+    siteLanguageTag: document.siteSettings?.lang,
+  });
 
   return (
     <div className="editor-scrollbar h-full overflow-auto">
@@ -392,6 +403,28 @@ export function MultiSelectInspector({
                     {directionState.value === 'rtl' && !directionState.mixed ? <PilcrowLeft className="h-4 w-4" /> : <PilcrowRight className="h-4 w-4" />}
                   </TextStyleIconButton>
               </InspectorInlineRow>
+              {textLeafNodes.length >= 2 ? (
+                <div className="space-y-1">
+                <Label className="text-[11px] font-medium">Language</Label>
+                <SearchableSelect
+                  value={textLanguageState.mixed ? undefined : textLanguageState.value}
+                  options={languageOptions}
+                  placeholder={textLanguageState.mixed ? 'Mixed values' : 'Site language'}
+                  searchPlaceholder="Search languages"
+                  triggerClassName="h-8 text-[11px]"
+                  onValueChange={(value) =>
+                    onBulkEdit([
+                      {
+                        kind: 'text',
+                        targetIds: textLeafNodes.map((node) => node.id),
+                        field: 'lang',
+                        value: value === '__site__' ? '' : value,
+                      },
+                    ])
+                  }
+                />
+              </div>
+              ) : null}
             </CardContent>
           </Card>
         ) : null}

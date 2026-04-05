@@ -22,6 +22,7 @@ import { AdvancedSettingsSection } from './settings/sections/AdvancedSettingsSec
 import { DefaultsSettingsSection } from './settings/sections/DefaultsSettingsSection';
 import { DisplaySettingsSection } from './settings/sections/DisplaySettingsSection';
 import { FontsSettingsSection } from './settings/sections/FontsSettingsSection';
+import { PagesSiteSettingsContent } from './PagesSiteSettingsContent';
 import { SettingsSectionNav } from './settings/sections/SettingsSectionNav';
 import { ShortcutsSettingsSection } from './settings/sections/ShortcutsSettingsSection';
 import { TransferSettingsSection } from './settings/sections/TransferSettingsSection';
@@ -31,6 +32,7 @@ import type {
   ResolvedTheme,
   ThemeMode,
 } from '@/lib/theme';
+import type { LinkValidationError } from '@/api/editorApi';
 
 type Props = {
   document: DocumentModel;
@@ -74,6 +76,8 @@ type Props = {
   onResetData: () => void;
   onResetAll: () => void;
   onSiteSettingsChange?: (patch: Partial<import('../model/types/site').SiteSettings>) => void;
+  linkErrors?: LinkValidationError[] | null;
+  onValidateLinks?: () => LinkValidationError[];
   activeSection?: SettingsSectionId;
 };
 
@@ -119,6 +123,8 @@ export function SettingsPanel({
   onResetData,
   onResetAll,
   onSiteSettingsChange,
+  linkErrors = null,
+  onValidateLinks = () => [],
   activeSection: activeSectionProp,
 }: Props) {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>(
@@ -126,6 +132,7 @@ export function SettingsPanel({
   );
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const displayRef = useRef<HTMLElement | null>(null);
+  const pagesRef = useRef<HTMLElement | null>(null);
   const defaultsRef = useRef<HTMLElement | null>(null);
   const fontsRef = useRef<HTMLElement | null>(null);
   const transferRef = useRef<HTMLElement | null>(null);
@@ -136,10 +143,10 @@ export function SettingsPanel({
     documentJson,
     onImport,
   });
-
   const sectionRefs = useMemo(
     () => ({
       display: displayRef,
+      pages: pagesRef,
       defaults: defaultsRef,
       fonts: fontsRef,
       transfer: transferRef,
@@ -267,6 +274,8 @@ export function SettingsPanel({
                     onResetData,
                     onResetAll,
                     onSiteSettingsChange,
+                    linkErrors,
+                    onValidateLinks,
                   })}
                 </section>
               ))}
@@ -328,6 +337,8 @@ function renderSectionContent(
     onResetData: () => void;
     onResetAll: () => void;
     onSiteSettingsChange?: (patch: Partial<import('../model/types/site').SiteSettings>) => void;
+    linkErrors: LinkValidationError[] | null;
+    onValidateLinks: () => LinkValidationError[];
   },
 ) {
   switch (sectionId) {
@@ -366,6 +377,13 @@ function renderSectionContent(
           onStickyElevationChange={props.onStickyElevationChange}
         />
       );
+    case 'pages':
+      return (
+        <PagesSiteSettingsContent
+          siteSettings={props.document.siteSettings}
+          onSetSiteSettings={(patch) => props.onSiteSettingsChange?.(patch)}
+        />
+      );
     case 'fonts':
       return (
         <FontsSettingsSection
@@ -382,6 +400,8 @@ function renderSectionContent(
           transfer={props.transfer}
           siteSettings={props.document.siteSettings}
           onSiteSettingsChange={props.onSiteSettingsChange}
+          linkErrors={props.linkErrors}
+          onValidateLinks={props.onValidateLinks}
         />
       );
     case 'advanced':

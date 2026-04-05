@@ -1,6 +1,6 @@
-import type { DocumentModel, NodeId, WrapperNode } from '../model/types';
+import type { DocumentModel, NodeId, TextLeaf, WrapperNode } from '../model/types';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
-import { createPage, generateSlug } from '../model/pageDefaults';
+import { createPage, generateSlug, normalizeSlug } from '../model/pageDefaults';
 
 export function addPage(
   document: DocumentModel,
@@ -17,6 +17,8 @@ export function addPage(
   pages.push(newPage);
   return { ...document, pages };
 }
+
+export { normalizeSlug };
 
 function shouldRegenerateSlugFromDisplayName(
   options: Partial<Omit<DocumentPage, 'type' | 'id'>> | undefined,
@@ -152,6 +154,18 @@ export function setPageSlug(
   return { ...document, pages };
 }
 
+export function setPageLang(
+  document: DocumentModel,
+  pageId: PageId,
+  lang: string | undefined,
+): DocumentModel {
+  const pages = structuredClone(document.pages ?? []);
+  const page = pages.find((p) => p.id === pageId);
+  if (!page) return document;
+  page.lang = lang;
+  return { ...document, pages };
+}
+
 export function addPageSlugAlias(
   document: DocumentModel,
   pageId: PageId,
@@ -235,8 +249,25 @@ export function setSiteSettings(
 ): DocumentModel {
   return {
     ...document,
-    siteSettings: { ...(document.siteSettings ?? { lang: 'en', status: 'draft', viewTransition: 'none' }), ...patch },
+    siteSettings: { ...(document.siteSettings ?? { lang: 'en-US', status: 'draft', viewTransition: 'none' }), ...patch },
   };
+}
+
+export function resolveSiteLanguage(document: DocumentModel) {
+  return document.siteSettings?.lang ?? 'en-US';
+}
+
+export function resolvePageLanguage(document: DocumentModel, pageId: PageId) {
+  const page = (document.pages ?? []).find((entry) => entry.id === pageId);
+  return page?.lang ?? resolveSiteLanguage(document);
+}
+
+export function resolveTextLeafLanguage(document: DocumentModel, nodeId: NodeId) {
+  const node = document.nodes[nodeId];
+  if (!node || node.type !== 'leaf' || node.role !== 'text') {
+    return resolveSiteLanguage(document);
+  }
+  return (node as TextLeaf).lang ?? resolveSiteLanguage(document);
 }
 
 export function moveSectionToPage(

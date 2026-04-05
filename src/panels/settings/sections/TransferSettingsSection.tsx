@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import {
   ActionRow,
   PlainGroup,
@@ -19,21 +18,26 @@ import {
 } from '../SettingsShared';
 import type { SettingsTransferState } from '../useSettingsTransferState';
 import type { SiteSettings } from '../../../model/types/site';
+import type { LinkValidationError } from '../../../model/validation';
+import { PagesExportSettingsContent } from '../../PagesExportSettingsContent';
 import { InspectorInlineRow } from '../../controls/FormLayout';
 
 type TransferSettingsSectionProps = {
   transfer: SettingsTransferState;
   siteSettings?: SiteSettings;
   onSiteSettingsChange?: (patch: Partial<SiteSettings>) => void;
+  linkErrors: LinkValidationError[] | null;
+  onValidateLinks: () => LinkValidationError[];
 };
 
 export function TransferSettingsSection({
   transfer,
   siteSettings,
   onSiteSettingsChange,
+  linkErrors,
+  onValidateLinks,
 }: TransferSettingsSectionProps) {
   const status = siteSettings?.status ?? 'draft';
-  const outputStructure = siteSettings?.outputStructure ?? 'directory';
 
   return (
     <>
@@ -66,25 +70,6 @@ export function TransferSettingsSection({
                 Published
               </Button>
             </div>
-          </InspectorInlineRow>
-
-          <InspectorInlineRow label="Output structure">
-            <Select
-              value={outputStructure}
-              onValueChange={(value) =>
-                onSiteSettingsChange?.({ outputStructure: value as SiteSettings['outputStructure'] })
-              }
-            >
-              <SelectTrigger className="h-7 text-[11px]">
-                <span className="truncate text-left">
-                  {outputStructure === 'directory' ? 'Directory (about/index.html)' : 'Flat (about.html)'}
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="directory">Directory (about/index.html)</SelectItem>
-                <SelectItem value="flat">Flat (about.html)</SelectItem>
-              </SelectContent>
-            </Select>
           </InspectorInlineRow>
         </div>
       </PlainGroup>
@@ -144,6 +129,12 @@ export function TransferSettingsSection({
             title="Rendered Site"
             description="Generated site structure export for hosting or SSR."
           >
+            <PagesExportSettingsContent
+              siteSettings={siteSettings}
+              linkErrors={linkErrors}
+              onSetSiteSettings={(patch) => onSiteSettingsChange?.(patch)}
+              onValidateLinks={onValidateLinks}
+            />
             <ActionRow
               icon={FileDown}
               title="Save site ZIP"

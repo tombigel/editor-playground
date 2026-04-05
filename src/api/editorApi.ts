@@ -23,6 +23,7 @@ import {
   resolveWrapperStickyState,
   serializeDocumentJson,
   setNodeVisibilityDoc,
+  validateLinks,
   type DocumentModel,
   type DocumentNode,
   type EditorTextField,
@@ -92,6 +93,7 @@ export {
   deletePage,
   reorderPage,
   setPageDisplayName,
+  setPageLang,
   setPageSlug,
   setPageParent,
   setPageVisibility,
@@ -101,10 +103,14 @@ export {
   getPageForSection,
   getActiveSections,
   resolvePageUrl,
+  resolvePageLanguage,
+  resolveSiteLanguage,
+  resolveTextLeafLanguage,
   syncPageHrefLinks,
   validatePageSlug,
 } from './pageApi';
 export type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
+export type { LinkValidationError } from '../model/validation';
 
 /** Stage keyboard navigation: enumerate selectable nodes and move between them. */
 export const getAdjacentStageSelection = stageNavigation.getAdjacentStageSelection;
@@ -126,4 +132,5 @@ export {
   resolveWrapperStickyState,
   serializeDocumentJson,
   setNodeVisibilityDoc,
+  validateLinks,
 };

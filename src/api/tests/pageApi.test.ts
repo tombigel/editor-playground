@@ -335,7 +335,7 @@ describe('setSiteSettings', () => {
     const result = setSiteSettings(doc, { status: 'published', title: 'My Site' });
     expect(result.siteSettings?.status).toBe('published');
     expect(result.siteSettings?.title).toBe('My Site');
-    expect(result.siteSettings?.lang).toBe('en');
+    expect(result.siteSettings?.lang).toBe('en-US');
   });
 });
 

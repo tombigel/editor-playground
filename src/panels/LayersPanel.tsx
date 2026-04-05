@@ -23,9 +23,7 @@ import {
 	type Ref,
 } from "react";
 import type { DocumentModel, NodeId } from "../model/types";
-import type { PageId } from "../model/types/site";
 import { Button } from "@/components/ui/button";
-import { PageTreeContent } from "./PageTreeContent";
 import { Input } from "@/components/ui/input";
 import { PopoverSurface, PopoverTooltip } from "@/components/ui/popover";
 import { EditorPanelHeader } from "./EditorPanelHeader";
@@ -54,7 +52,6 @@ type LayersPanelProps = {
 	panelRef?: Ref<HTMLDivElement>;
 	document: DocumentModel;
 	selectedIds: NodeId[];
-	activePageId: PageId | null;
 	onOpenChange: (open: boolean) => void;
 	onClose: () => void;
 	onSelectNode: (id: NodeId, mode: "replace" | "toggle") => void;
@@ -66,13 +63,6 @@ type LayersPanelProps = {
 		targetParentId: NodeId,
 		targetIndex: number,
 	) => void;
-	onSetActivePage: (pageId: PageId) => void;
-	onAddPage: () => void;
-	onDeletePage: (pageId: PageId) => void;
-	onOpenPageSettings: (pageId: PageId) => void;
-	onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
-	onReorderPage: (pageId: PageId, direction: "back" | "forward") => void;
-	onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
 };
 
 type LayersPanelContentProps = Omit<
@@ -258,23 +248,12 @@ export function LayersPanel({
 export function LayersPanelContent({
 	document,
 	selectedIds,
-	activePageId,
 	onSelectNode,
 	onRenameNode,
 	onDeleteNode,
 	onSetNodeVisibility,
 	onMoveNodeInTree,
-	onSetActivePage,
-	onAddPage,
-	onDeletePage,
-	onOpenPageSettings,
-	onSetPageParent,
-	onReorderPage,
-	onSetPageVisibility,
 }: LayersPanelContentProps) {
-	const [activeTab, setActiveTab] = useState<"components" | "pages">(
-		"components",
-	);
 	const [expandedIds, setExpandedIds] = useState<Set<NodeId>>(
 		() => new Set(getDefaultExpandedLayerIds(document)),
 	);
@@ -561,49 +540,7 @@ export function LayersPanelContent({
 
 	return (
 		<>
-			<div className="flex border-b px-3">
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					className={`rounded-none border-b-2 px-2 py-1.5 text-xs font-medium transition-none ${
-						activeTab === "components"
-							? "editor-text-primary border-current"
-							: "editor-text-muted border-transparent"
-					}`}
-					onClick={() => setActiveTab("components")}
-				>
-					Components
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					className={`rounded-none border-b-2 px-2 py-1.5 text-xs font-medium transition-none ${
-						activeTab === "pages"
-							? "editor-text-primary border-current"
-							: "editor-text-muted border-transparent"
-					}`}
-					onClick={() => setActiveTab("pages")}
-				>
-					Pages
-				</Button>
-			</div>
-			{activeTab === "pages" ? (
-				<PageTreeContent
-					document={document}
-					activePageId={activePageId}
-					onSetActivePage={onSetActivePage}
-					onAddPage={onAddPage}
-					onDeletePage={onDeletePage}
-					onOpenSettings={onOpenPageSettings}
-					onSetPageParent={onSetPageParent}
-					onReorderPage={onReorderPage}
-					onSetPageVisibility={onSetPageVisibility}
-				/>
-			) : (
-				<>
-					<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
+			<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
 						{rows.length === 0 ? (
 							<div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
 								Nothing on stage yet.
@@ -649,20 +586,18 @@ export function LayersPanelContent({
 							</div>
 						)}
 					</div>
-					{dragState?.active && draggedRow ? (
-						<LayersDragGhost
-							row={draggedRow}
-							clientX={dragState.currentX}
-							clientY={dragState.currentY}
-							projectedTypeLabel={
-								projectedRoleLabel !== draggedRow.typeLabel
-									? projectedRoleLabel
-									: null
-							}
-						/>
-					) : null}
-				</>
-			)}
+			{dragState?.active && draggedRow ? (
+				<LayersDragGhost
+					row={draggedRow}
+					clientX={dragState.currentX}
+					clientY={dragState.currentY}
+					projectedTypeLabel={
+						projectedRoleLabel !== draggedRow.typeLabel
+							? projectedRoleLabel
+							: null
+					}
+				/>
+			) : null}
 		</>
 	);
 }

@@ -74,6 +74,7 @@ export function resolveFocusedModeBlocks(
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <TextContentSection
+            document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}
             focusedMode={context.focusedMode}

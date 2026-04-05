@@ -187,7 +187,7 @@ Relevant subsystems:
 
 - `PageTreeContent` now uses shared pure helpers for depth, descendants, visible rows, and drop-target resolution
 - the tree now has real expand/collapse state, row-surface dragging, pointer-drag drop intent, and same-surface reorder/reparent behavior
-- both the Components-panel Pages tab and the dedicated Pages panel now use the same upgraded tree surface
+- the dedicated Pages panel now owns the page tree and uses the upgraded tree surface with shared drag visuals and row-surface dragging
 
 Relevant subsystems:
 
@@ -198,13 +198,17 @@ Relevant subsystems:
 ### ~~2. Dedicated Pages panel UX is still below the planned quality bar~~ Fixed
 
 - the Pages panel now uses the same draggable floating-panel pattern as the Components panel instead of a centered static modal
-- page settings popup now uses `EditorPanelHeader`, grouped sections, and inspector-style inline rows
-- the no-selection inspector page editor now has inline slug editing and direct parent-page selection, bringing it much closer to popup parity
+- the panel now has `Page` and `Settings` tabs:
+  - `Page` uses a two-column embedded editor layout
+  - `Settings` contains only site-wide page settings
+- the floating page settings popup was removed; per-page editing is now embedded in the Pages panel and mirrored in the no-selection inspector
+- the no-selection inspector page editor now has inline slug editing, direct parent-page selection, page language, and contextual link validation
 
 Relevant subsystems:
 
 - `src/panels/PagesPanel.tsx`
-- `src/panels/PageSettingsPopup.tsx`
+- `src/panels/PageEditorContent.tsx`
+- `src/panels/PagesSiteSettingsContent.tsx`
 - `src/panels/inspector/contentSections/PageInspectorSection.tsx`
 
 ### ~~3. Follow-link popup is still partial~~ Fixed
@@ -235,7 +239,7 @@ Relevant subsystems:
 
 - `syncPageHrefLinks(document, oldUrl, newUrl)` added to `pageApi.ts`: walks all link/button nodes and updates `href` fields matching the old page URL
 - wired as `syncPageLinks` reducer action through `EditorAction`, `editorState.ts`, `PagesPanel`, and `AppShell`
-- `handlePendingSlugYes` in `PageSettingsPopup` now computes old and new URLs and calls `onSyncPageLinks`; published alias behavior retained
+- the embedded page editor now computes old and new URLs and calls `onSyncPageLinks`; published alias behavior retained
 - `handlePendingSlugNo` correctly skips link sync (just changes slug)
 - 5 tests for `syncPageHrefLinks` in `src/api/tests/pageApi.test.ts`
 
@@ -246,7 +250,7 @@ Relevant subsystems:
 - `src/api/pageApi.ts`
 - `src/app/types/index.ts`
 - `src/app/editorState.ts`
-- `src/panels/PageSettingsPopup.tsx`
+- `src/panels/PageEditorContent.tsx`
 - `src/panels/PagesPanel.tsx`
 - `src/app/AppShell.tsx`
 - `src/api/tests/pageApi.test.ts`
@@ -254,7 +258,8 @@ Relevant subsystems:
 ### ~~3. Link validation workflow is still missing~~ Fixed
 
 - `validateLinks(document)` added to `src/model/validation.ts`: checks all link/button nodes for broken page references (no `targetPageId`, nonexistent page), broken `pageAnchorId`, and broken `anchorTargetId`; external links and unconfigured anchors are not flagged
-- `PagesPanel` now exposes a live "Validate links" button with a copyable per-error results list (node name, role, description)
+- the canonical validation UI now lives in `Import / Export`, alongside output structure and export actions
+- slug-editing surfaces expose contextual "Validate links" actions that open `Import / Export` and run validation
 - `AppShell` wires `onValidateLinks` as a read-only callback calling `validateLinks(state.document)` directly (no reducer action needed)
 - 11 tests added in `src/model/tests/validation.test.ts` covering all error and non-error cases
 
@@ -287,7 +292,7 @@ Impact:
 Current state:
 
 - the top bar, left rail, and inspector current-page surface now feel materially more integrated
-- the dedicated Pages panel and page tree still look simpler and less considered than adjacent editor UI
+- the dedicated Pages panel is functionally stronger, but its two-column layout and embedded editor still have less visual refinement than the strongest editor surfaces
 
 Impact:
 
@@ -308,13 +313,17 @@ Impact:
 | ZIP assembly fix | Implemented |
 | Site renderer page-link resolution | Implemented |
 | Route manifest | Implemented |
-| Components Pages tab | Implemented |
+| Components panel | Implemented |
 | Dedicated Pages panel | Implemented |
 | Inspector no-selection page editor | Implemented |
 | Top-bar page switcher | Implemented |
 | Menubar top bar | Implemented |
 | Left-rail Pages entry placement | Implemented |
-| Page settings popup | Implemented |
+| Embedded page editor | Implemented |
+| Pages settings tab | Implemented |
+| Main Settings Pages section | Implemented |
+| Import / Export link validation and output structure | Implemented |
+| Site/page/text language model | Implemented |
 | Slug sync flow | Implemented |
 | Follow-link popup | Implemented |
 | Link validation workflow | Implemented |

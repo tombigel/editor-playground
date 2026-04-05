@@ -41,7 +41,7 @@ import type {
 import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolve';
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
-import { validateDocument } from '../model/validation';
+import { validateDocument, validateLinks } from '../model/validation';
 import type { DocumentCommand } from './types/index';
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
@@ -89,6 +89,7 @@ export {
   shouldOpenNavigationInNewTab,
   toggleDocumentFontFavorite,
   validateDocument,
+  validateLinks,
 };
 
 export function cloneDocument(document: DocumentModel): DocumentModel {
@@ -212,6 +213,11 @@ export function setNodeTextField(
       value === 'div'
         ? value
         : 'p';
+    return next;
+  }
+
+  if (field === 'lang' && node.type === 'leaf' && node.role === 'text') {
+    node.lang = value.trim() || undefined;
     return next;
   }
 

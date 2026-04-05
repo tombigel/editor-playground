@@ -18,6 +18,7 @@ type Props = InspectorPanelProps & {
 	temporaryInspectorOpen: boolean;
 	activePageId?: PageId | null;
 	onSetPageDisplayName?: (pageId: PageId, name: string) => void;
+	onSetPageLang?: (pageId: PageId, lang?: string) => void;
 	onSetPageSlug?: (pageId: PageId, slug: string) => void;
 	onSetPageVisibility?: (pageId: PageId, visible: boolean) => void;
 	onSetPageViewTransition?: (
@@ -25,6 +26,7 @@ type Props = InspectorPanelProps & {
 		transition: DocumentPage["viewTransition"],
 	) => void;
 	onSetPageParent?: (pageId: PageId, parentPageId: PageId | null) => void;
+	onValidateLinks?: () => void;
 	onOpenPageSettings?: () => void;
 	onOpenPagesPanel?: () => void;
 	onInspectorCollapsedChange: (value: boolean) => void;
@@ -44,10 +46,12 @@ export function EditorSidebar({
 	temporaryInspectorOpen,
 	activePageId,
 	onSetPageDisplayName,
+	onSetPageLang,
 	onSetPageSlug,
 	onSetPageVisibility,
 	onSetPageViewTransition,
 	onSetPageParent,
+	onValidateLinks,
 	onOpenPageSettings,
 	onOpenPagesPanel,
 	onInspectorCollapsedChange,
@@ -228,6 +232,9 @@ export function EditorSidebar({
 										onSetDisplayName={(pageId, name) =>
 											onSetPageDisplayName?.(pageId, name)
 										}
+										onSetLang={(pageId, lang) =>
+											onSetPageLang?.(pageId, lang)
+										}
 										onSetSlug={(pageId, slug) => onSetPageSlug?.(pageId, slug)}
 										onSetVisibility={(pageId, visible) =>
 											onSetPageVisibility?.(pageId, visible)
@@ -238,6 +245,7 @@ export function EditorSidebar({
 										onSetPageParent={(pageId, parentPageId) =>
 											onSetPageParent?.(pageId, parentPageId)
 										}
+										onValidateLinks={() => onValidateLinks?.()}
 										onOpenPageSettings={() => onOpenPageSettings?.()}
 										onOpenPagesPanel={() => onOpenPagesPanel?.()}
 									/>

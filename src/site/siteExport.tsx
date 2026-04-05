@@ -49,7 +49,7 @@ export function renderSiteHtmlDocument(
   const interactConfig = includeAnimations ? buildDocumentInteractConfig(document) : null;
   const hasAnimations = interactConfig && interactConfig.interactions.length > 0;
 
-  const lang = document.siteSettings?.lang ?? 'en';
+  const lang = document.siteSettings?.lang ?? 'en-US';
 
   return [
     '<!doctype html>',
@@ -115,7 +115,7 @@ export function renderPageHtmlDocument(
   const hasAnimations = interactConfig && interactConfig.interactions.length > 0;
 
   const page = document.pages?.find((p) => p.id === pageId);
-  const lang = page?.lang ?? document.siteSettings?.lang ?? 'en';
+  const lang = page?.lang ?? document.siteSettings?.lang ?? 'en-US';
 
   const siteViewTransition = document.siteSettings?.viewTransition;
   const pageViewTransition = page?.viewTransition;

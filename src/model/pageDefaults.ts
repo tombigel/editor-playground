@@ -3,7 +3,7 @@ import type { DocumentPage, SiteSettings } from './types/site';
 
 export function createInitialSiteSettings(): SiteSettings {
   return {
-    lang: 'en',
+    lang: 'en-US',
     status: 'draft',
     viewTransition: 'none',
     autoSyncSlugs: true,

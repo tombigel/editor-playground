@@ -3,6 +3,7 @@ import {
   ArrowDownToLine,
   Eye,
   Keyboard,
+  LayoutGrid,
   SlidersHorizontal,
   ToggleRight,
   Type,
@@ -10,6 +11,7 @@ import {
 
 export type SettingsSectionId =
   | 'display'
+  | 'pages'
   | 'defaults'
   | 'fonts'
   | 'transfer'
@@ -31,6 +33,12 @@ export const SETTINGS_SECTION_META: SettingsSectionMeta[] = [
     label: 'UI',
     icon: Eye,
     description: 'Theme, preview, and guides.',
+  },
+  {
+    id: 'pages',
+    label: 'Pages',
+    icon: LayoutGrid,
+    description: 'Site page defaults and language.',
   },
   {
     id: 'defaults',

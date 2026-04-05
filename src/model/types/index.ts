@@ -17,6 +17,7 @@ export type NodeTextField =
   | 'name'
   | 'content'
   | 'htmlTag'
+  | 'lang'
   | 'label'
   | 'linkType'
   | 'anchorTargetId'
@@ -263,6 +264,7 @@ export type TextLeaf = BaseNode & {
   rect: RectModel;
   content: string;
   htmlTag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'blockquote' | 'div';
+  lang?: string;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   style?: ShadowStyle & TypographyStyle;

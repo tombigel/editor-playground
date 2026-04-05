@@ -284,6 +284,10 @@
   color: var(--editor-accent);
 }
 
+:is(.editor-shell, body) [data-ui='searchable-select-item']:is(:hover, :focus, [aria-selected='true']) {
+  background: var(--editor-select-highlight-background);
+}
+
 :is(.editor-shell, body) :is(
   .editor-rail-shell,
   .editor-inspector-shell,

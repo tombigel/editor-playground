@@ -5,9 +5,10 @@ import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinitio
 
 const textContentSection: InspectorSectionDefinition = {
   id: 'text-content',
-  render: ({ node, actions, focusedMode }) =>
+  render: ({ document, node, actions, focusedMode }) =>
     isTextNode(node) ? (
       <TextContentSection
+        document={document}
         node={node}
         onTextChange={actions.onTextChange}
         focusedMode={focusedMode}
