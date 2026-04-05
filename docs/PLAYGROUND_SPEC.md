@@ -355,7 +355,7 @@ Alignment and distribution:
 Preview and stage controls:
 
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
-- `Shift + L`: toggle the Layers panel when no input field is focused
+- `Shift + L`: toggle the Components panel when no input field is focused
 - `Shift + O`: toggle the Pages panel when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
@@ -997,8 +997,8 @@ The editor surface is organized around one stage, a small set of persistent rail
 
 The editor supports multi-page management with four UI entry points:
 
-1. **Layers panel Pages tab**: collapsible multi-level tree showing page hierarchy with add, delete, and settings buttons
-2. **Dedicated Pages panel**: full-screen page management accessible from a left-rail Pages entry next to Layers
+1. **Components panel Pages tab**: a hierarchy-aware tree with expand/collapse, row-surface pointer-drag reparenting, reorder intent, and page settings/delete actions
+2. **Dedicated Pages panel**: a draggable floating page-management panel that opens to the right of the Components panel and uses the same floating-panel drag pattern
 3. **Inspector no-selection state**: when no node is selected, inspector shows the current page editor with direct actions for page settings and the full pages panel
 4. **Top-bar pages dropdown**: a centered page switcher in the main top bar for quick page switching and `New page`
 
@@ -1011,11 +1011,12 @@ Page switching behavior:
 
 Page settings:
 
-- Each page has a popup for displayName, slug, and parent-page selection
+- Each page has a popup for displayName, slug, slug aliases, visibility, transition, and parent-page selection
 - `autoSyncSlugs` site setting controls automatic slug generation during renames
 - Slug conflicts are validated; pending slug changes show a warning banner
 - Pages support slug aliases for redirect support
 - Creating a page with an existing name or slug auto-increments both values; alias collisions are treated as slug collisions too
+- The no-selection inspector page editor supports inline slug editing and direct parent-page selection
 
 Follow-link popups:
 
@@ -1025,8 +1026,8 @@ Follow-link popups:
 
 Link validation:
 
-- The Pages panel Export section currently shows a disabled **Validate links** button
-- A full manual link-validation workflow is planned but not yet implemented
+- The Pages panel Export section includes a manual **Validate links** action
+- Validation results render inline with a broken-link count, per-node detail rows, and clipboard copy support
 
 ### Workspace model
 
@@ -1041,7 +1042,7 @@ Link validation:
 ### Settings and global panels
 
 - The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`.
-- Left-rail primary entries expose Layers and Pages directly below the insert tools.
+- Left-rail primary entries expose Components and Pages directly below the insert tools.
 - Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
 - The top bar uses a single-row application layout:
   - the left side uses a traditional menubar with `Settings`, `Edit`, `View`, and `Help`
@@ -1054,14 +1055,14 @@ Link validation:
   - nested submenus open on hover/focus and overlap their parent menu slightly so there is no dead hover gap
 - `Settings` menu routes to `Import JSON`, `Export JSON`, `Export site`, and deep-links into `UI`, `Defaults`, `Fonts`, and `Advanced`
 - `Edit` menu exposes undo/redo plus placeholder copy/duplicate/paste entries and contextual delete
-- `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Layers and Pages
+- `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Components and Pages
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
 - Pages panel entry toggles a dedicated panel for multi-page management.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
 - Left-rail pop panels open from a shared resting position near the top-left workspace edge below the top bar rather than vertically following the trigger button.
 - Section templates keep outside-click and `Esc` dismissal and stay above stage selection overlays.
-- The Layers panel stays open on outside click and closes only through its own close affordance, toggle action, or keyboard dismissal.
+- The Components panel stays open on outside click and closes only through its own close affordance, toggle action, or keyboard dismissal.
 
 ### Theme, palette, and accent controls
 

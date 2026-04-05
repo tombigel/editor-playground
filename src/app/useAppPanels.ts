@@ -1,124 +1,173 @@
-import { useRef, useState } from 'react';
-import { useDismissFloatingPanels } from './useEditorEnvironment';
+import { useRef, useState } from "react";
+import { useDismissFloatingPanels } from "./useEditorEnvironment";
 
 const LEFT_FLOATING_PANEL_DEFAULT_TOP_PX = 76;
 const LEFT_FLOATING_PANEL_DEFAULT_LEFT_PX = 80;
+const RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX = 416;
 
 function getDefaultLeftFloatingPanelPosition() {
-  return {
-    top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
-    left: LEFT_FLOATING_PANEL_DEFAULT_LEFT_PX,
-  };
+	return {
+		top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
+		left: LEFT_FLOATING_PANEL_DEFAULT_LEFT_PX,
+	};
 }
 
 export function useAppPanels() {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [manageFontsOpen, setManageFontsOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const [layersOpen, setLayersOpen] = useState(false);
-  const [pagesOpen, setPagesOpen] = useState(false);
-  const [layersPosition, setLayersPosition] = useState(getDefaultLeftFloatingPanelPosition);
-  const [layersPositionCustomized, setLayersPositionCustomized] = useState(false);
-  const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
-  const [sectionTemplatePosition, setSectionTemplatePosition] = useState(getDefaultLeftFloatingPanelPosition);
-  const settingsPanelRef = useRef<HTMLDivElement | null>(null);
-  const layersPanelRef = useRef<HTMLDivElement | null>(null);
-  const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
+	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [manageFontsOpen, setManageFontsOpen] = useState(false);
+	const [helpOpen, setHelpOpen] = useState(false);
+	const [shortcutsOpen, setShortcutsOpen] = useState(false);
+	const [aboutOpen, setAboutOpen] = useState(false);
+	const [layersOpen, setLayersOpen] = useState(false);
+	const [pagesOpen, setPagesOpen] = useState(false);
+	const [layersPosition, setLayersPosition] = useState(
+		getDefaultLeftFloatingPanelPosition,
+	);
+	const [layersPositionCustomized, setLayersPositionCustomized] =
+		useState(false);
+	const [pagesPosition, setPagesPosition] = useState(() => ({
+		top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
+		left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
+	}));
+	const [pagesPositionCustomized, setPagesPositionCustomized] = useState(false);
+	const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
+	const [sectionTemplatePosition, setSectionTemplatePosition] = useState(
+		getDefaultLeftFloatingPanelPosition,
+	);
+	const settingsPanelRef = useRef<HTMLDivElement | null>(null);
+	const layersPanelRef = useRef<HTMLDivElement | null>(null);
+	const pagesPanelRef = useRef<HTMLDivElement | null>(null);
+	const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
 
-  function closeLayersPanel() {
-    setLayersOpen(false);
-  }
+	function closeLayersPanel() {
+		setLayersOpen(false);
+	}
 
-  function toggleLayersPanel() {
-    setLayersOpen((open) => !open);
-  }
+	function toggleLayersPanel() {
+		setLayersOpen((open) => !open);
+	}
 
-  function togglePagesPanel() {
-    setPagesOpen((open) => !open);
-  }
+	function togglePagesPanel() {
+		setPagesOpen((open) => {
+			if (open) {
+				return false;
+			}
+			if (!pagesPositionCustomized) {
+				setPagesPosition({
+					top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
+					left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
+				});
+			}
+			return true;
+		});
+	}
 
-  function closeSectionTemplatePopover() {
-    setSectionTemplateOpen(false);
-  }
+	function openPages() {
+		if (!pagesPositionCustomized) {
+			setPagesPosition({
+				top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
+				left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
+			});
+		}
+		setPagesOpen(true);
+	}
 
-  function closeTransientPanels() {
-    closeLayersPanel();
-    closeSectionTemplatePopover();
-    setSettingsOpen(false);
-    setManageFontsOpen(false);
-    setHelpOpen(false);
-    setShortcutsOpen(false);
-    setAboutOpen(false);
-    setPagesOpen(false);
-  }
+	function closeSectionTemplatePopover() {
+		setSectionTemplateOpen(false);
+	}
 
-  function openLayers(_trigger: HTMLElement) {
-    if (!layersPositionCustomized) {
-      setLayersPosition(getDefaultLeftFloatingPanelPosition());
-    }
-    setLayersOpen(true);
-  }
+	function closeTransientPanels() {
+		closeLayersPanel();
+		closeSectionTemplatePopover();
+		setSettingsOpen(false);
+		setManageFontsOpen(false);
+		setHelpOpen(false);
+		setShortcutsOpen(false);
+		setAboutOpen(false);
+		setPagesOpen(false);
+	}
 
-  function handleLayersOpenChange(open: boolean) {
-    setLayersOpen(open);
-  }
+	function openLayers(_trigger: HTMLElement) {
+		if (!layersPositionCustomized) {
+			setLayersPosition(getDefaultLeftFloatingPanelPosition());
+		}
+		setLayersOpen(true);
+	}
 
-  function handleLayersPositionChange(position: { top: number; left: number }) {
-    setLayersPosition(position);
-    setLayersPositionCustomized(true);
-  }
+	function handleLayersOpenChange(open: boolean) {
+		setLayersOpen(open);
+	}
 
-  function openSectionTemplates(_trigger: HTMLElement) {
-    setSectionTemplatePosition(getDefaultLeftFloatingPanelPosition());
-    setSectionTemplateOpen(true);
-  }
+	function handleLayersPositionChange(position: { top: number; left: number }) {
+		setLayersPosition(position);
+		setLayersPositionCustomized(true);
+	}
 
-  function handleSectionTemplateOpenChange(open: boolean) {
-    setSectionTemplateOpen(open);
-  }
+	function handlePagesPositionChange(position: { top: number; left: number }) {
+		setPagesPosition(position);
+		setPagesPositionCustomized(true);
+	}
 
-  useDismissFloatingPanels({
-    settingsOpen,
-    settingsPanelRef,
-    onCloseSettings: () => setSettingsOpen(false),
-    sectionTemplateOpen,
-    sectionTemplatePanelRef,
-    onCloseSectionTemplates: closeSectionTemplatePopover,
-  });
+	function openSectionTemplates(_trigger: HTMLElement) {
+		setSectionTemplatePosition(getDefaultLeftFloatingPanelPosition());
+		setSectionTemplateOpen(true);
+	}
 
-  return {
-    settingsOpen,
-    setSettingsOpen,
-    manageFontsOpen,
-    setManageFontsOpen,
-    helpOpen,
-    setHelpOpen,
-    shortcutsOpen,
-    setShortcutsOpen,
-    aboutOpen,
-    setAboutOpen,
-    layersOpen,
-    pagesOpen,
-    setPagesOpen,
-    layersPosition,
-    layersPanelRef,
-    openLayers,
-    toggleLayersPanel,
-    togglePagesPanel,
-    handleLayersOpenChange,
-    handleLayersPositionChange,
-    closeLayersPanel,
-    sectionTemplateOpen,
-    sectionTemplatePosition,
-    settingsPanelRef,
-    sectionTemplatePanelRef,
-    openSectionTemplates,
-    handleSectionTemplateOpenChange,
-    closeSectionTemplatePopover,
-    closeTransientPanels,
-    hasDismissiblePanels:
-      settingsOpen || manageFontsOpen || helpOpen || shortcutsOpen || aboutOpen || layersOpen || pagesOpen || sectionTemplateOpen,
-  };
+	function handleSectionTemplateOpenChange(open: boolean) {
+		setSectionTemplateOpen(open);
+	}
+
+	useDismissFloatingPanels({
+		settingsOpen,
+		settingsPanelRef,
+		onCloseSettings: () => setSettingsOpen(false),
+		sectionTemplateOpen,
+		sectionTemplatePanelRef,
+		onCloseSectionTemplates: closeSectionTemplatePopover,
+	});
+
+	return {
+		settingsOpen,
+		setSettingsOpen,
+		manageFontsOpen,
+		setManageFontsOpen,
+		helpOpen,
+		setHelpOpen,
+		shortcutsOpen,
+		setShortcutsOpen,
+		aboutOpen,
+		setAboutOpen,
+		layersOpen,
+		pagesOpen,
+		setPagesOpen,
+		layersPosition,
+		pagesPosition,
+		layersPanelRef,
+		pagesPanelRef,
+		openLayers,
+		openPages,
+		toggleLayersPanel,
+		togglePagesPanel,
+		handleLayersOpenChange,
+		handleLayersPositionChange,
+		handlePagesPositionChange,
+		closeLayersPanel,
+		sectionTemplateOpen,
+		sectionTemplatePosition,
+		settingsPanelRef,
+		sectionTemplatePanelRef,
+		openSectionTemplates,
+		handleSectionTemplateOpenChange,
+		closeSectionTemplatePopover,
+		closeTransientPanels,
+		hasDismissiblePanels:
+			settingsOpen ||
+			manageFontsOpen ||
+			helpOpen ||
+			shortcutsOpen ||
+			aboutOpen ||
+			layersOpen ||
+			pagesOpen ||
+			sectionTemplateOpen,
+	};
 }

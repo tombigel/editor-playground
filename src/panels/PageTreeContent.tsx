@@ -1,156 +1,425 @@
-import { File, Settings, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { TreeRowItem, VisibilityToggle } from '@/components/ui/tree-row';
-import type { DocumentModel } from '../model/types';
-import type { PageId, DocumentPage } from '../model/types/site';
+import { Ban, File, Settings, Trash2 } from "lucide-react";
+import {
+	useEffect,
+	useRef,
+	useState,
+	type KeyboardEvent as ReactKeyboardEvent,
+	type MouseEvent as ReactMouseEvent,
+	type PointerEvent as ReactPointerEvent,
+} from "react";
+import { Button } from "@/components/ui/button";
+import { PopoverTooltip } from "@/components/ui/popover";
+import { TreeRowItem, VisibilityToggle } from "@/components/ui/tree-row";
+import type { DocumentModel } from "../model/types";
+import type { PageId } from "../model/types/site";
+import { TreeDragGhost } from "./TreeDragGhost";
+import {
+	buildPageTreeRows,
+	resolvePageDropPosition,
+	resolvePageDropTarget,
+	type PageDropTarget,
+} from "./pageTree";
 
 export type PageTreeContentProps = {
-  document: DocumentModel;
-  activePageId: PageId | null;
-  onSetActivePage: (pageId: PageId) => void;
-  onAddPage: () => void;
-  onDeletePage: (pageId: PageId) => void;
-  onOpenSettings: (pageId: PageId) => void;
-  onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
-  onReorderPage: (pageId: PageId, direction: 'back' | 'forward') => void;
-  onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
+	document: DocumentModel;
+	activePageId: PageId | null;
+	onSetActivePage: (pageId: PageId) => void;
+	onAddPage: () => void;
+	onDeletePage: (pageId: PageId) => void;
+	onOpenSettings: (pageId: PageId, anchorEl?: HTMLElement | null) => void;
+	onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
+	onReorderPage: (pageId: PageId, direction: "back" | "forward") => void;
+	onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
 };
 
-function computePageDepth(page: DocumentPage, pages: DocumentPage[]): number {
-  let depth = 0;
-  let current = page;
-  const visited = new Set<PageId>();
-  while (current.parentPageId) {
-    if (visited.has(current.id)) break;
-    visited.add(current.id);
-    const parent = pages.find((p) => p.id === current.parentPageId);
-    if (!parent) break;
-    depth += 1;
-    current = parent;
-  }
-  return depth;
-}
+type DragState = {
+	pointerId: number;
+	pageId: PageId;
+	originX: number;
+	originY: number;
+	currentX: number;
+	currentY: number;
+	active: boolean;
+	dropTarget: PageDropTarget | null;
+	hoveredPageId: PageId | null;
+	invalidDrop: boolean;
+};
+
+const INSPECTOR_TOOLTIP_CLASS_NAME =
+	"editor-tooltip-panel max-w-[16rem] rounded-lg border px-3 py-2 text-xs font-normal leading-5";
 
 export function PageTreeContent({
-  document,
-  activePageId,
-  onSetActivePage,
-  onAddPage,
-  onDeletePage,
-  onOpenSettings,
-  onSetPageVisibility,
+	document,
+	activePageId,
+	onSetActivePage,
+	onAddPage,
+	onDeletePage,
+	onOpenSettings,
+	onSetPageParent,
+	onReorderPage,
+	onSetPageVisibility,
 }: PageTreeContentProps) {
-  const pages = document.pages ?? [];
+	const [expandedIds, setExpandedIds] = useState<Set<PageId>>(new Set());
+	const [dragState, setDragState] = useState<DragState | null>(null);
+	const dragStateRef = useRef<DragState | null>(null);
+	const rowRefs = useRef(new Map<PageId, HTMLDivElement>());
+	const dragJustEndedRef = useRef(false);
 
-  return (
-    <div className="flex flex-col">
-      <div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
-        {pages.length === 0 ? (
-          <div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
-            No pages yet.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {pages.map((page) => {
-              const depth = computePageDepth(page, pages);
-              const hasChildren = pages.some((p) => p.parentPageId === page.id);
-              const isSelected = page.id === activePageId;
+	const pages = document.pages ?? [];
+	const rows = buildPageTreeRows(pages, activePageId, expandedIds);
+	const draggedPage = dragState
+		? (pages.find((page) => page.id === dragState.pageId) ?? null)
+		: null;
 
-              const label = (
-                <span className="min-w-0 flex-1">
-                  <span className="flex min-w-0 items-center gap-1">
-                    <span className="editor-layers-row-title truncate text-sm font-medium">
-                      {page.displayName}
-                    </span>
-                  </span>
-                  <span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
-                    /{page.slug}
-                  </span>
-                </span>
-              );
+	useEffect(() => {
+		dragStateRef.current = dragState;
+	}, [dragState]);
 
-              const actions = (
-                <>
-                  <VisibilityToggle
-                    isHidden={!page.visible}
-                    onToggle={() => onSetPageVisibility(page.id, !page.visible)}
-                    nodeId={page.id}
-                    label={page.visible ? 'Hide' : 'Show'}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="editor-layers-action h-7 w-7 rounded-md border"
-                    data-layers-control="true"
-                    aria-label={`Page settings for ${page.displayName}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onOpenSettings(page.id);
-                    }}
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="editor-layers-action h-7 w-7 rounded-md border"
-                    data-layers-control="true"
-                    aria-label={`Delete ${page.displayName}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDeletePage(page.id);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </>
-              );
+	useEffect(() => {
+		if (!dragState?.active) {
+			return;
+		}
 
-              return (
-                <TreeRowItem
-                  key={page.id}
-                  depth={depth}
-                  hasChildren={hasChildren}
-                  isExpanded={false}
-                  isSelected={isSelected}
-                  isHidden={!page.visible}
-                  icon={<File className="h-3.5 w-3.5" />}
-                  label={label}
-                  actions={actions}
-                  role="option"
-                  aria-selected={isSelected}
-                  tabIndex={0}
-                  onClick={(event) => {
-                    const target = event.target as HTMLElement | null;
-                    if (target?.closest('[data-layers-control="true"]')) {
-                      return;
-                    }
-                    onSetActivePage(page.id);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      onSetActivePage(page.id);
-                    }
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-      <div className="border-t px-3 py-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-sm"
-          onClick={onAddPage}
-        >
-          + Add page
-        </Button>
-      </div>
-    </div>
-  );
+		const { cursor, userSelect } = window.document.body.style;
+		window.document.body.style.cursor = "grabbing";
+		window.document.body.style.userSelect = "none";
+
+		return () => {
+			window.document.body.style.cursor = cursor;
+			window.document.body.style.userSelect = userSelect;
+		};
+	}, [dragState?.active]);
+
+	useEffect(() => {
+		if (!dragState) {
+			return;
+		}
+
+		const pointerId = dragState.pointerId;
+
+		function finishDrag(didDrag: boolean) {
+			setDragState(null);
+			if (!didDrag) {
+				return;
+			}
+			dragJustEndedRef.current = true;
+			window.setTimeout(() => {
+				dragJustEndedRef.current = false;
+			}, 0);
+		}
+
+		function handlePointerMove(event: PointerEvent) {
+			if (event.pointerId !== pointerId) {
+				return;
+			}
+
+			const currentDrag = dragStateRef.current;
+			if (!currentDrag) {
+				return;
+			}
+
+			const deltaX = event.clientX - currentDrag.originX;
+			const deltaY = event.clientY - currentDrag.originY;
+			const shouldActivate =
+				currentDrag.active || Math.hypot(deltaX, deltaY) >= 5;
+			if (!shouldActivate) {
+				return;
+			}
+
+			event.preventDefault();
+
+			let hoveredPageId: PageId | null = null;
+			let nextDropTarget: PageDropTarget | null = null;
+			let invalidDrop = false;
+
+			for (const row of rows) {
+				const element = rowRefs.current.get(row.page.id);
+				if (!element) {
+					continue;
+				}
+				const rect = element.getBoundingClientRect();
+				if (event.clientY < rect.top || event.clientY > rect.bottom) {
+					continue;
+				}
+
+				hoveredPageId = row.page.id;
+				const position = resolvePageDropPosition(
+					rect.height,
+					event.clientY - rect.top,
+				);
+				nextDropTarget = resolvePageDropTarget(
+					pages,
+					currentDrag.pageId,
+					row.page.id,
+					position,
+				);
+				invalidDrop = nextDropTarget == null;
+				break;
+			}
+
+			setDragState((current) =>
+				current == null
+					? null
+					: {
+							...current,
+							currentX: event.clientX,
+							currentY: event.clientY,
+							active: true,
+							hoveredPageId,
+							invalidDrop,
+							dropTarget: nextDropTarget,
+						},
+			);
+		}
+
+		function handlePointerEnd(event: PointerEvent) {
+			if (event.pointerId !== pointerId) {
+				return;
+			}
+
+			const currentDrag = dragStateRef.current;
+			const currentPage = currentDrag
+				? (pages.find((page) => page.id === currentDrag.pageId) ?? null)
+				: null;
+			const dropTarget = currentDrag?.dropTarget ?? null;
+
+			if (currentDrag?.active && currentPage && dropTarget) {
+				if (dropTarget.newParentId !== (currentPage.parentPageId ?? null)) {
+					onSetPageParent(currentPage.id, dropTarget.newParentId);
+					if (dropTarget.newParentId !== null) {
+						setExpandedIds((current) => {
+							const next = new Set(current);
+							next.add(dropTarget.newParentId as PageId);
+							return next;
+						});
+					}
+				} else if (dropTarget.orderChange) {
+					onReorderPage(currentPage.id, dropTarget.orderChange);
+				}
+			}
+
+			finishDrag(Boolean(currentDrag?.active));
+		}
+
+		window.addEventListener("pointermove", handlePointerMove, {
+			passive: false,
+		});
+		window.addEventListener("pointerup", handlePointerEnd);
+		window.addEventListener("pointercancel", handlePointerEnd);
+
+		return () => {
+			window.removeEventListener("pointermove", handlePointerMove);
+			window.removeEventListener("pointerup", handlePointerEnd);
+			window.removeEventListener("pointercancel", handlePointerEnd);
+		};
+	}, [dragState, onReorderPage, onSetPageParent, pages, rows]);
+
+	function toggleExpand(pageId: PageId) {
+		setExpandedIds((current) => {
+			const next = new Set(current);
+			if (next.has(pageId)) {
+				next.delete(pageId);
+			} else {
+				next.add(pageId);
+			}
+			return next;
+		});
+	}
+
+	function handleDragStart(
+		event: ReactPointerEvent<HTMLDivElement>,
+		pageId: PageId,
+	) {
+		if (event.button !== 0) {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		setDragState({
+			pointerId: event.pointerId,
+			pageId,
+			originX: event.clientX,
+			originY: event.clientY,
+			currentX: event.clientX,
+			currentY: event.clientY,
+			active: false,
+			dropTarget: null,
+			hoveredPageId: null,
+			invalidDrop: false,
+		});
+	}
+
+	function handleRowClick(
+		event: ReactMouseEvent<HTMLDivElement>,
+		pageId: PageId,
+	) {
+		if (dragJustEndedRef.current) {
+			event.preventDefault();
+			return;
+		}
+		onSetActivePage(pageId);
+	}
+
+	function handleRowKeyDown(
+		event: ReactKeyboardEvent<HTMLDivElement>,
+		pageId: PageId,
+	) {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			onSetActivePage(pageId);
+		}
+	}
+
+	return (
+		<div className="flex flex-col">
+			<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
+				{rows.length === 0 ? (
+					<div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
+						No pages yet.
+					</div>
+				) : (
+					<div className="flex flex-col gap-1">
+						{rows.map((row) => {
+							const page = row.page;
+							const isDraggedRow =
+								dragState?.pageId === page.id && dragState.active;
+							const isInvalidDrop =
+								dragState?.active &&
+								dragState.invalidDrop &&
+								dragState.hoveredPageId === page.id;
+
+							const label = (
+								<span className="min-w-0 flex-1">
+									<span className="flex min-w-0 items-center gap-1">
+										<span className="editor-layers-row-title truncate text-sm font-medium">
+											{page.displayName}
+										</span>
+									</span>
+									<span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
+										/{page.slug}
+									</span>
+								</span>
+							);
+
+							const actions = (
+								<>
+									{isInvalidDrop ? (
+										<PopoverTooltip
+											side="top"
+											align="end"
+											className={INSPECTOR_TOOLTIP_CLASS_NAME}
+											content="Cannot move a page into one of its descendants."
+										>
+											<span
+												className="editor-layers-invalid-drop-indicator"
+												aria-hidden="true"
+											>
+												<Ban className="h-3.5 w-3.5" />
+											</span>
+										</PopoverTooltip>
+									) : null}
+									<VisibilityToggle
+										isHidden={!page.visible}
+										onToggle={() => onSetPageVisibility(page.id, !page.visible)}
+										nodeId={page.id}
+										label={page.visible ? "Hide" : "Show"}
+									/>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="editor-layers-action h-7 w-7 rounded-md border"
+										data-layers-control="true"
+										aria-label={`Page settings for ${page.displayName}`}
+										onClick={(event) => {
+											event.stopPropagation();
+											onOpenSettings(page.id, event.currentTarget);
+										}}
+									>
+										<Settings className="h-3.5 w-3.5" />
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="editor-layers-action h-7 w-7 rounded-md border"
+										data-layers-control="true"
+										aria-label={`Delete ${page.displayName}`}
+										onClick={(event) => {
+											event.stopPropagation();
+											onDeletePage(page.id);
+										}}
+									>
+										<Trash2 className="h-3.5 w-3.5" />
+									</Button>
+								</>
+							);
+
+							return (
+								<TreeRowItem
+									key={page.id}
+									ref={(element) => {
+										if (element) {
+											rowRefs.current.set(page.id, element);
+										} else {
+											rowRefs.current.delete(page.id);
+										}
+									}}
+									data-page-row-id={page.id}
+									data-drop-intent={
+										dragState?.dropTarget?.pageId === page.id
+											? dragState.dropTarget.position
+											: undefined
+									}
+									data-invalid-drop={isInvalidDrop ? "true" : undefined}
+									depth={row.depth}
+									hasChildren={row.hasChildren}
+									isExpanded={row.isExpanded}
+									isSelected={row.isSelected}
+									isHidden={!page.visible}
+									isDragging={isDraggedRow}
+									onToggle={() => toggleExpand(page.id)}
+									onToggleAriaLabel={
+										row.isExpanded
+											? `Collapse ${page.displayName}`
+											: `Expand ${page.displayName}`
+									}
+									icon={<File className="h-3.5 w-3.5" />}
+									label={label}
+									actions={actions}
+									role="option"
+									aria-selected={row.isSelected}
+									tabIndex={0}
+									onPointerDown={(event) => handleDragStart(event, page.id)}
+									onClick={(event) => handleRowClick(event, page.id)}
+									onKeyDown={(event) => handleRowKeyDown(event, page.id)}
+								/>
+							);
+						})}
+					</div>
+				)}
+			</div>
+			<div className="border-t px-3 py-2">
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="w-full justify-start text-sm"
+					onClick={onAddPage}
+				>
+					+ Add page
+				</Button>
+			</div>
+
+			{dragState?.active && draggedPage ? (
+				<TreeDragGhost
+					clientX={dragState.currentX}
+					clientY={dragState.currentY}
+					icon={<File className="h-3.5 w-3.5" />}
+					title={draggedPage.displayName}
+					subtitle={`/${draggedPage.slug}`}
+				/>
+			) : null}
+		</div>
+	);
 }

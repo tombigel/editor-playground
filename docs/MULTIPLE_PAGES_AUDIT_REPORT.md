@@ -30,7 +30,7 @@ The multiple-pages foundation is materially better than in the initial audit. Se
 - `SiteRenderer` now resolves page links with document context
 - route manifest now respects `outputStructure` (directory vs flat mode)
 - export ZIP now includes Netlify, Vercel, and Nginx hosting configs under `hosting/`
-- the left rail now exposes Pages beside Layers with the intended iconography
+- the left rail now exposes Pages beside Components with the intended iconography
 - sticky preview now uses the corrected `ScanEye` icon
 - the top bar now uses a traditional menubar with a centered in-row page switcher
 - the no-selection inspector state now behaves like a stronger current-page editor
@@ -38,11 +38,10 @@ The multiple-pages foundation is materially better than in the initial audit. Se
 - Help is now split into detached `Shortcuts`, documentation browsing, and detached `About`
 - new page creation now auto-increments duplicate page names and slugs, including alias-aware slug collisions
 
-The feature is still only partially complete. The remaining issues are now concentrated in the dedicated Pages panel, page-tree interaction depth, and documentation accuracy rather than basic stage/render correctness or top-level chrome alignment.
+The feature is still not fully complete, but the remaining issues are now mostly about follow-up polish and documentation accuracy rather than missing core page-authoring behavior.
 
 The main open gaps are:
 
-- pages panel and pages tree UX are still simpler than the plan
 - roadmap/spec language still overstates current completion in some areas
 
 ## Addressed Since Initial Audit
@@ -107,7 +106,7 @@ Relevant subsystems:
 
 ### Page UI chrome alignment
 
-- the left rail now exposes Pages immediately after Layers using the same rail-entry pattern
+- the left rail now exposes Pages immediately after Components using the same rail-entry pattern
 - the Pages rail entry uses `BookOpenText`
 - sticky preview uses `ScanEye`
 - the no-selection inspector page editor now has dedicated `Page settings…` and `All pages…` actions, stronger spacing/grouping, and an inherited page-transition state
@@ -184,52 +183,29 @@ Relevant subsystems:
 
 ### P1
 
-### 1. Pages tree interactions are still much simpler than planned
+### ~~1. Pages tree interactions are still much simpler than planned~~ Fixed
 
-Planned:
+- `PageTreeContent` now uses shared pure helpers for depth, descendants, visible rows, and drop-target resolution
+- the tree now has real expand/collapse state, row-surface dragging, pointer-drag drop intent, and same-surface reorder/reparent behavior
+- both the Components-panel Pages tab and the dedicated Pages panel now use the same upgraded tree surface
 
-- hierarchy-aware tree
-- expand/collapse
-- drag reorder
-- drag-to-indent / reparent
-- drag handle
+Relevant subsystems:
 
-Current state:
-
-- rows use shared row primitives
-- hierarchy is represented by indentation only
-- no expand/collapse state
-- no drag handle
-- no page reorder interaction
-- no page reparent interaction
-- related props exist but are still unused in `PageTreeContent`
-
-Evidence:
-
+- `src/panels/pageTree.ts`
 - `src/panels/PageTreeContent.tsx`
+- `src/panels/tests/PageTreeContent.test.tsx`
 
-Impact:
+### ~~2. Dedicated Pages panel UX is still below the planned quality bar~~ Fixed
 
-- page hierarchy authoring remains below the intended UX baseline
+- the Pages panel now uses the same draggable floating-panel pattern as the Components panel instead of a centered static modal
+- page settings popup now uses `EditorPanelHeader`, grouped sections, and inspector-style inline rows
+- the no-selection inspector page editor now has inline slug editing and direct parent-page selection, bringing it much closer to popup parity
 
-### 2. Dedicated Pages panel UX is still below the planned quality bar
-
-Planned:
-
-- a strong page-management surface using shared design-system primitives and layers-like page management behavior
-
-Current state:
-
-- panel exists and is functional for basic settings and link validation
-- visual treatment and interaction depth are still simpler than the rest of the editor
-
-Evidence:
+Relevant subsystems:
 
 - `src/panels/PagesPanel.tsx`
-
-Impact:
-
-- the main pages-management surface still feels unfinished
+- `src/panels/PageSettingsPopup.tsx`
+- `src/panels/inspector/contentSections/PageInspectorSection.tsx`
 
 ### ~~3. Follow-link popup is still partial~~ Fixed
 
@@ -332,13 +308,13 @@ Impact:
 | ZIP assembly fix | Implemented |
 | Site renderer page-link resolution | Implemented |
 | Route manifest | Implemented |
-| Layers Pages tab | Partial |
-| Dedicated Pages panel | Partial |
-| Inspector no-selection page editor | Partial |
+| Components Pages tab | Implemented |
+| Dedicated Pages panel | Implemented |
+| Inspector no-selection page editor | Implemented |
 | Top-bar page switcher | Implemented |
 | Menubar top bar | Implemented |
 | Left-rail Pages entry placement | Implemented |
-| Page settings popup | Partial |
+| Page settings popup | Implemented |
 | Slug sync flow | Implemented |
 | Follow-link popup | Implemented |
 | Link validation workflow | Implemented |
@@ -346,23 +322,7 @@ Impact:
 
 ## Recommended Fix Plan
 
-### Phase 1: Finish page authoring behavior
-
-1. Implement real page-tree interactions:
-   - reorder
-   - reparent
-   - drag handle
-   - expand/collapse if hierarchy visualization depends on it
-2. Add a real link-validation workflow instead of the disabled placeholder
-3. Recheck the Layers-panel Pages tab against the original page-management brief and close any remaining parity gaps
-
-### Phase 2: Raise the dedicated Pages panel to product quality
-
-1. Bring the Pages panel visual language up to the same bar as the top bar, inspector, and rails
-2. Revisit page-row affordances, grouping, and hierarchy readability
-3. Keep the dedicated panel as the main authoring surface rather than overloading the top bar further
-
-### Phase 3: Keep documentation aligned with shipped behavior
+### Phase 1: Keep documentation aligned with shipped behavior
 
 1. Continue correcting spec/roadmap language when implementation status changes
 2. Keep the audit report, spec, style guide, and showcase aligned in the same change set when page chrome changes land

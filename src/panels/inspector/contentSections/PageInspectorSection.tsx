@@ -1,126 +1,205 @@
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormField, InspectorInlineRow } from '../../controls/FormLayout';
-import { InspectorSectionCard } from '../CommonSections';
-import type { DocumentModel } from '../../../model/types';
-import type { DocumentPage, PageId } from '../../../model/types/site';
+import { useEffect, useState } from "react";
+import { validatePageSlug } from "../../../api/pageApi";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormField, InspectorInlineRow } from "../../controls/FormLayout";
+import { InspectorSectionCard } from "../CommonSections";
+import type { DocumentModel } from "../../../model/types";
+import type { DocumentPage, PageId } from "../../../model/types/site";
+import { isDescendant } from "../../pageTree";
 
 export type PageInspectorSectionProps = {
-  page: DocumentPage;
-  document: DocumentModel;
-  onSetDisplayName: (pageId: PageId, name: string) => void;
-  onSetSlug: (pageId: PageId, slug: string) => void;
-  onSetVisibility: (pageId: PageId, visible: boolean) => void;
-  onSetViewTransition: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
-  onOpenPageSettings: () => void;
-  onOpenPagesPanel: () => void;
+	page: DocumentPage;
+	document: DocumentModel;
+	onSetDisplayName: (pageId: PageId, name: string) => void;
+	onSetSlug: (pageId: PageId, slug: string) => void;
+	onSetVisibility: (pageId: PageId, visible: boolean) => void;
+	onSetViewTransition: (
+		pageId: PageId,
+		transition: DocumentPage["viewTransition"],
+	) => void;
+	onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
+	onOpenPageSettings: () => void;
+	onOpenPagesPanel: () => void;
 };
 
 export function PageInspectorSection({
-  page,
-  document,
-  onSetDisplayName,
-  onSetSlug: _onSetSlug,
-  onSetVisibility,
-  onSetViewTransition,
-  onOpenPageSettings,
-  onOpenPagesPanel,
+	page,
+	document,
+	onSetDisplayName,
+	onSetSlug,
+	onSetVisibility,
+	onSetViewTransition,
+	onSetPageParent,
+	onOpenPageSettings,
+	onOpenPagesPanel,
 }: PageInspectorSectionProps) {
-  const viewTransition = page.viewTransition ?? '__inherit__';
-  const inheritedTransition = document.siteSettings?.viewTransition ?? 'none';
+	const [slugDraft, setSlugDraft] = useState(page.slug);
+	const [slugErrors, setSlugErrors] = useState<string[]>([]);
+	const viewTransition = page.viewTransition ?? "__inherit__";
+	const inheritedTransition = document.siteSettings?.viewTransition ?? "none";
+	const pages = document.pages ?? [];
+	const eligibleParents = pages.filter(
+		(candidate) =>
+			candidate.id !== page.id && !isDescendant(candidate.id, page.id, pages),
+	);
 
-  return (
-    <InspectorSectionCard
-      title="Page"
-      contentClassName="space-y-3 px-3 pt-2 pb-3"
-    >
-      <FormField label="Display name">
-        <Input
-          value={page.displayName}
-          onChange={(e) => onSetDisplayName(page.id, e.target.value)}
-          placeholder="Page name"
-        />
-      </FormField>
+	useEffect(() => {
+		setSlugDraft(page.slug);
+		setSlugErrors([]);
+	}, [page.slug]);
 
-      <InspectorInlineRow label="Slug">
-        <div className="editor-bg-subtle editor-border-subtle flex min-w-0 items-center justify-between gap-2 rounded-md border px-2 py-1.5">
-          <span className="editor-text-muted min-w-0 truncate font-mono text-[11px]">{page.slug || '/'}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-[11px]"
-            onClick={onOpenPageSettings}
-            aria-label="Open page settings"
-          >
-            Edit
-          </Button>
-        </div>
-      </InspectorInlineRow>
+	function handleSlugBlur() {
+		const errors = validatePageSlug(slugDraft);
+		if (errors.length > 0) {
+			setSlugErrors(errors);
+			setSlugDraft(page.slug);
+			return;
+		}
+		setSlugErrors([]);
+		if (slugDraft !== page.slug) {
+			onSetSlug(page.id, slugDraft);
+		}
+	}
 
-      <InspectorInlineRow label="Visible">
-        <Switch
-          checked={page.visible}
-          onCheckedChange={(value) => onSetVisibility(page.id, value)}
-        />
-      </InspectorInlineRow>
+	return (
+		<InspectorSectionCard
+			title="Page"
+			contentClassName="space-y-3 px-3 pt-2 pb-3"
+		>
+			<FormField label="Display name">
+				<Input
+					value={page.displayName}
+					onChange={(e) => onSetDisplayName(page.id, e.target.value)}
+					placeholder="Page name"
+				/>
+			</FormField>
 
-      <InspectorInlineRow label="Transition">
-        <Select
-          value={viewTransition}
-          onValueChange={(value) => {
-            const nextTransition =
-              value === '__inherit__'
-                ? undefined
-                : (value as DocumentPage['viewTransition']);
-            onSetViewTransition(page.id, nextTransition);
-          }}
-        >
-          <SelectTrigger className="h-7 text-[11px]">
-            <span className="truncate text-left">
-              {VIEW_TRANSITION_LABELS[viewTransition] ?? viewTransition}
-            </span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__inherit__">
-              {`Inherit from site (${VIEW_TRANSITION_LABELS[inheritedTransition] ?? inheritedTransition})`}
-            </SelectItem>
-            <SelectItem value="none">None</SelectItem>
-            <SelectItem value="crossfade">Cross-fade</SelectItem>
-            <SelectItem value="slide">Slide</SelectItem>
-          </SelectContent>
-        </Select>
-      </InspectorInlineRow>
+			<div className="space-y-1">
+				<InspectorInlineRow label="Slug">
+					<div className="flex items-center gap-1">
+						<span className="editor-text-muted text-[11px]">/</span>
+						<Input
+							value={slugDraft}
+							onChange={(event) => {
+								setSlugDraft(event.target.value);
+								setSlugErrors(validatePageSlug(event.target.value));
+							}}
+							onBlur={handleSlugBlur}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") {
+									event.currentTarget.blur();
+								}
+								if (event.key === "Escape") {
+									setSlugDraft(page.slug);
+									setSlugErrors([]);
+									event.currentTarget.blur();
+								}
+							}}
+							className="editor-bg-surface editor-border-subtle h-7 text-[11px] font-mono"
+						/>
+					</div>
+				</InspectorInlineRow>
+				{slugErrors.length > 0 ? (
+					<p className="px-[76px] text-[11px] text-red-500">{slugErrors[0]}</p>
+				) : null}
+			</div>
 
-      <div className="editor-border-subtle flex items-center gap-2 border-t pt-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 flex-1 text-xs"
-          onClick={onOpenPageSettings}
-        >
-          Page settings&hellip;
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 flex-1 text-xs"
-          onClick={onOpenPagesPanel}
-        >
-          All pages&hellip;
-        </Button>
-      </div>
-    </InspectorSectionCard>
-  );
+			<InspectorInlineRow label="Visible">
+				<Switch
+					checked={page.visible}
+					onCheckedChange={(value) => onSetVisibility(page.id, value)}
+				/>
+			</InspectorInlineRow>
+
+			<InspectorInlineRow label="Transition">
+				<Select
+					value={viewTransition}
+					onValueChange={(value) => {
+						const nextTransition =
+							value === "__inherit__"
+								? undefined
+								: (value as DocumentPage["viewTransition"]);
+						onSetViewTransition(page.id, nextTransition);
+					}}
+				>
+					<SelectTrigger className="h-7 text-[11px]">
+						<SelectValue>
+							<span className="truncate text-left">
+								{VIEW_TRANSITION_LABELS[viewTransition] ?? viewTransition}
+							</span>
+						</SelectValue>
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__inherit__">
+							{`Inherit from site (${VIEW_TRANSITION_LABELS[inheritedTransition] ?? inheritedTransition})`}
+						</SelectItem>
+						<SelectItem value="none">None</SelectItem>
+						<SelectItem value="crossfade">Cross-fade</SelectItem>
+						<SelectItem value="slide">Slide</SelectItem>
+					</SelectContent>
+				</Select>
+			</InspectorInlineRow>
+
+			<InspectorInlineRow label="Parent">
+				<Select
+					value={page.parentPageId ?? "__top__"}
+					onValueChange={(value) =>
+						onSetPageParent(page.id, value === "__top__" ? null : value)
+					}
+				>
+					<SelectTrigger className="h-7 text-[11px]">
+						<SelectValue placeholder="Top level" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="__top__">Top level</SelectItem>
+						{eligibleParents.map((candidate) => (
+							<SelectItem key={candidate.id} value={candidate.id}>
+								{candidate.displayName}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</InspectorInlineRow>
+
+			<div className="editor-border-subtle flex items-center gap-2 border-t pt-3">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					className="h-7 flex-1 text-xs"
+					onClick={onOpenPageSettings}
+				>
+					Page settings&hellip;
+				</Button>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="h-7 flex-1 text-xs"
+					onClick={onOpenPagesPanel}
+				>
+					All pages&hellip;
+				</Button>
+			</div>
+		</InspectorSectionCard>
+	);
 }
 
-const VIEW_TRANSITION_LABELS: Record<'__inherit__' | NonNullable<DocumentPage['viewTransition']>, string> = {
-  __inherit__: 'Inherit from site',
-  none: 'None',
-  crossfade: 'Cross-fade',
-  slide: 'Slide',
+const VIEW_TRANSITION_LABELS: Record<
+	"__inherit__" | NonNullable<DocumentPage["viewTransition"]>,
+	string
+> = {
+	__inherit__: "Inherit from site",
+	none: "None",
+	crossfade: "Cross-fade",
+	slide: "Slide",
 };
