@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { TriangleAlert } from "lucide-react";
 import { validatePageSlug } from "../../../api/pageApi";
+import { createLanguageSelectOptions } from "../../../i18n/languages";
 import {
 	Select,
 	SelectContent,
@@ -10,7 +12,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField, InspectorInlineRow } from "../../controls/FormLayout";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import {
+	FormField,
+	InspectorFieldGroup,
+	InspectorInlineRow,
+} from "../../controls/FormLayout";
 import { InspectorSectionCard } from "../CommonSections";
 import type { DocumentModel } from "../../../model/types";
 import type { DocumentPage, PageId } from "../../../model/types/site";
@@ -20,6 +27,7 @@ export type PageInspectorSectionProps = {
 	page: DocumentPage;
 	document: DocumentModel;
 	onSetDisplayName: (pageId: PageId, name: string) => void;
+	onSetLang: (pageId: PageId, lang?: string) => void;
 	onSetSlug: (pageId: PageId, slug: string) => void;
 	onSetVisibility: (pageId: PageId, visible: boolean) => void;
 	onSetViewTransition: (
@@ -27,6 +35,7 @@ export type PageInspectorSectionProps = {
 		transition: DocumentPage["viewTransition"],
 	) => void;
 	onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
+	onValidateLinks: () => void;
 	onOpenPageSettings: () => void;
 	onOpenPagesPanel: () => void;
 };
@@ -39,8 +48,10 @@ export function PageInspectorSection({
 	onSetVisibility,
 	onSetViewTransition,
 	onSetPageParent,
+	onValidateLinks,
 	onOpenPageSettings,
 	onOpenPagesPanel,
+	onSetLang,
 }: PageInspectorSectionProps) {
 	const [slugDraft, setSlugDraft] = useState(page.slug);
 	const [slugErrors, setSlugErrors] = useState<string[]>([]);
@@ -51,6 +62,10 @@ export function PageInspectorSection({
 		(candidate) =>
 			candidate.id !== page.id && !isDescendant(candidate.id, page.id, pages),
 	);
+	const languageOptions = createLanguageSelectOptions({
+		includeSiteLanguage: true,
+		siteLanguageTag: document.siteSettings?.lang,
+	});
 
 	useEffect(() => {
 		setSlugDraft(page.slug);
@@ -83,92 +98,121 @@ export function PageInspectorSection({
 				/>
 			</FormField>
 
-			<div className="space-y-1">
-				<InspectorInlineRow label="Slug">
-					<div className="flex items-center gap-1">
-						<span className="editor-text-muted text-[11px]">/</span>
-						<Input
-							value={slugDraft}
-							onChange={(event) => {
-								setSlugDraft(event.target.value);
-								setSlugErrors(validatePageSlug(event.target.value));
-							}}
-							onBlur={handleSlugBlur}
-							onKeyDown={(event) => {
-								if (event.key === "Enter") {
-									event.currentTarget.blur();
-								}
-								if (event.key === "Escape") {
-									setSlugDraft(page.slug);
-									setSlugErrors([]);
-									event.currentTarget.blur();
-								}
-							}}
-							className="editor-bg-surface editor-border-subtle h-7 text-[11px] font-mono"
-						/>
-					</div>
+			<InspectorFieldGroup>
+				<div className="space-y-1">
+					<InspectorInlineRow label="Slug">
+						<div className="flex items-center gap-1">
+							<span className="editor-text-muted text-[11px]">/</span>
+							<Input
+								value={slugDraft}
+								onChange={(event) => {
+									setSlugDraft(event.target.value);
+									setSlugErrors(validatePageSlug(event.target.value));
+								}}
+								onBlur={handleSlugBlur}
+								onKeyDown={(event) => {
+									if (event.key === "Enter") {
+										event.currentTarget.blur();
+									}
+									if (event.key === "Escape") {
+										setSlugDraft(page.slug);
+										setSlugErrors([]);
+										event.currentTarget.blur();
+									}
+								}}
+								className="editor-bg-surface editor-border-subtle h-7 text-[11px] font-mono"
+							/>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="h-7 px-2 text-[11px]"
+								onClick={onValidateLinks}
+							>
+								Validate links
+							</Button>
+						</div>
+					</InspectorInlineRow>
+					{slugErrors.length > 0 ? (
+						<div className="editor-warning-text flex items-center gap-1 px-[76px] text-[11px]">
+							<TriangleAlert className="h-3 w-3 shrink-0" />
+							<span>{slugErrors[0]}</span>
+						</div>
+					) : null}
+				</div>
+			</InspectorFieldGroup>
+
+			<InspectorFieldGroup separated>
+				<InspectorInlineRow label="Language">
+					<SearchableSelect
+						value={page.lang ?? "__site__"}
+						options={languageOptions}
+						placeholder="Site language"
+						searchPlaceholder="Search languages"
+						triggerClassName="h-7 text-[11px]"
+						onValueChange={(value) =>
+							onSetLang(page.id, value === "__site__" ? undefined : value)
+						}
+					/>
 				</InspectorInlineRow>
-				{slugErrors.length > 0 ? (
-					<p className="px-[76px] text-[11px] text-red-500">{slugErrors[0]}</p>
-				) : null}
-			</div>
 
-			<InspectorInlineRow label="Visible">
-				<Switch
-					checked={page.visible}
-					onCheckedChange={(value) => onSetVisibility(page.id, value)}
-				/>
-			</InspectorInlineRow>
+				<InspectorInlineRow label="Visible">
+					<Switch
+						checked={page.visible}
+						onCheckedChange={(value) => onSetVisibility(page.id, value)}
+					/>
+				</InspectorInlineRow>
 
-			<InspectorInlineRow label="Transition">
-				<Select
-					value={viewTransition}
-					onValueChange={(value) => {
-						const nextTransition =
-							value === "__inherit__"
-								? undefined
-								: (value as DocumentPage["viewTransition"]);
-						onSetViewTransition(page.id, nextTransition);
-					}}
-				>
-					<SelectTrigger className="h-7 text-[11px]">
-						<SelectValue>
-							<span className="truncate text-left">
-								{VIEW_TRANSITION_LABELS[viewTransition] ?? viewTransition}
-							</span>
-						</SelectValue>
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="__inherit__">
-							{`Inherit from site (${VIEW_TRANSITION_LABELS[inheritedTransition] ?? inheritedTransition})`}
-						</SelectItem>
-						<SelectItem value="none">None</SelectItem>
-						<SelectItem value="crossfade">Cross-fade</SelectItem>
-						<SelectItem value="slide">Slide</SelectItem>
-					</SelectContent>
-				</Select>
-			</InspectorInlineRow>
-
-			<InspectorInlineRow label="Parent">
-				<Select
-					value={page.parentPageId ?? "__top__"}
-					onValueChange={(value) =>
-						onSetPageParent(page.id, value === "__top__" ? null : value)
-					}
-				>
-					<SelectTrigger className="h-7 text-[11px]">
-						<SelectValue placeholder="Top level" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="__top__">Top level</SelectItem>
-						{eligibleParents.map((candidate) => (
-							<SelectItem key={candidate.id} value={candidate.id}>
-								{candidate.displayName}
+				<InspectorInlineRow label="Transition">
+					<Select
+						value={viewTransition}
+						onValueChange={(value) => {
+							const nextTransition =
+								value === "__inherit__"
+									? undefined
+									: (value as DocumentPage["viewTransition"]);
+							onSetViewTransition(page.id, nextTransition);
+						}}
+					>
+						<SelectTrigger className="h-7 text-[11px]">
+							<SelectValue>
+								<span className="truncate text-left">
+									{VIEW_TRANSITION_LABELS[viewTransition] ?? viewTransition}
+								</span>
+							</SelectValue>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="__inherit__">
+								{`Inherit from site (${VIEW_TRANSITION_LABELS[inheritedTransition] ?? inheritedTransition})`}
 							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			</InspectorInlineRow>
+							<SelectItem value="none">None</SelectItem>
+							<SelectItem value="crossfade">Cross-fade</SelectItem>
+							<SelectItem value="slide">Slide</SelectItem>
+						</SelectContent>
+					</Select>
+				</InspectorInlineRow>
+
+				<InspectorInlineRow label="Parent">
+					<Select
+						value={page.parentPageId ?? "__top__"}
+						onValueChange={(value) =>
+							onSetPageParent(page.id, value === "__top__" ? null : value)
+						}
+					>
+						<SelectTrigger className="h-7 text-[11px]">
+							<SelectValue placeholder="Top level" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="__top__">Top level</SelectItem>
+							{eligibleParents.map((candidate) => (
+								<SelectItem key={candidate.id} value={candidate.id}>
+									{candidate.displayName}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</InspectorInlineRow>
+			</InspectorFieldGroup>
 
 			<div className="editor-border-subtle flex items-center gap-2 border-t pt-3">
 				<Button

@@ -407,6 +407,7 @@ The playground imports and exports document JSON and exports a rendered site bun
 
 - Import and export live in the settings panel under `Import / Export`.
 - Export UI is grouped into `Document JSON` and `Rendered Site`.
+- `Import / Export` is also the canonical surface for output-structure selection and full link-validation results.
 
 ### Document JSON import
 
@@ -428,6 +429,11 @@ The playground imports and exports document JSON and exports a rendered site bun
 |---|---|
 | HTML body | structural site markup |
 | CSS | generated site stylesheet |
+
+Additional export controls:
+
+- `Output structure` switches between directory and flat export layouts.
+- `Validate links` runs global page/anchor validation and renders copyable results inline in `Import / Export`.
 | Full HTML document | links the generated CSS file |
 | ZIP bundle | HTML + CSS export bundle |
 
@@ -995,12 +1001,11 @@ The editor surface is organized around one stage, a small set of persistent rail
 
 ### Page switching and management
 
-The editor supports multi-page management with four UI entry points:
+The editor supports multi-page management with three UI entry points:
 
-1. **Components panel Pages tab**: a hierarchy-aware tree with expand/collapse, row-surface pointer-drag reparenting, reorder intent, and page settings/delete actions
-2. **Dedicated Pages panel**: a draggable floating page-management panel that opens to the right of the Components panel and uses the same floating-panel drag pattern
-3. **Inspector no-selection state**: when no node is selected, inspector shows the current page editor with direct actions for page settings and the full pages panel
-4. **Top-bar pages dropdown**: a centered page switcher in the main top bar for quick page switching and `New page`
+1. **Dedicated Pages panel**: a draggable floating page-management panel with `Page` and `Settings` tabs
+2. **Inspector no-selection state**: when no node is selected, inspector shows the current page editor with direct actions for page settings and the full pages panel
+3. **Top-bar pages dropdown**: a centered page switcher in the main top bar for quick page switching and `New page`
 
 Page switching behavior:
 
@@ -1011,12 +1016,18 @@ Page switching behavior:
 
 Page settings:
 
-- Each page has a popup for displayName, slug, slug aliases, visibility, transition, and parent-page selection
+- The Pages panel `Page` tab uses a two-column layout:
+  - left column: page tree with expand/collapse and reorder/reparent drag behavior
+  - right column: embedded page editor content for the selected page
+  - the panel is narrower than the general settings dialog and keeps the site-settings tab content in a constrained form column instead of stretching rows across the full panel width
+- The embedded page editor handles displayName, slug, slug aliases, page language, visibility, transition, and parent-page selection
 - `autoSyncSlugs` site setting controls automatic slug generation during renames
 - Slug conflicts are validated; pending slug changes show a warning banner
 - Pages support slug aliases for redirect support
 - Creating a page with an existing name or slug auto-increments both values; alias collisions are treated as slug collisions too
-- The no-selection inspector page editor supports inline slug editing and direct parent-page selection
+- The no-selection inspector page editor supports inline slug editing, direct parent-page selection, and page language
+- Inspector `Page settings` deep-links to the Pages panel `Page` tab with the current page selected
+- The Pages panel `Settings` tab contains only site-wide page settings; export controls are not duplicated there
 
 Follow-link popups:
 
@@ -1026,8 +1037,17 @@ Follow-link popups:
 
 Link validation:
 
-- The Pages panel Export section includes a manual **Validate links** action
-- Validation results render inline with a broken-link count, per-node detail rows, and clipboard copy support
+- `Import / Export` contains the canonical **Validate links** action, broken-link count, per-node detail rows, and clipboard copy support
+- Slug-editing surfaces also expose a contextual `Validate links` action that opens `Import / Export` and runs validation
+
+Language behavior:
+
+- Site settings store the default document language in `siteSettings.lang`; the default is `en-US`
+- Pages may set `page.lang`, or leave it `undefined` to mean `Site language`
+- Text leaves may set `lang`, or leave it `undefined` to mean `Site language`
+- Text leaves do not inherit page language in this model; an unset text-leaf language always resolves to the site language
+- Site, page, and text language selectors all use the standard searchable language list from `src/i18n/languages.json`
+- Searchable language dropdowns clamp within the viewport and flip above their trigger when there is not enough room below
 
 ### Workspace model
 
@@ -1041,7 +1061,7 @@ Link validation:
 
 ### Settings and global panels
 
-- The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Fonts`, `Import / Export`, `Advanced`, `Shortcuts`, and `Debug Info`.
+- The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Pages`, `Defaults`, `Fonts`, `Import / Export`, `Advanced`, and `Shortcuts`.
 - Left-rail primary entries expose Components and Pages directly below the insert tools.
 - Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
 - The top bar uses a single-row application layout:
@@ -1059,6 +1079,7 @@ Link validation:
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
 - Pages panel entry toggles a dedicated panel for multi-page management.
+- The main Settings panel `Pages` section reuses the same site-wide page settings content as the Pages panel `Settings` tab.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
 - Left-rail pop panels open from a shared resting position near the top-left workspace edge below the top bar rather than vertically following the trigger button.
 - Section templates keep outside-click and `Esc` dismissal and stay above stage selection overlays.
@@ -1148,7 +1169,7 @@ No-selection state:
 - When no node is selected (stage is idle), the inspector shows the page inspector
 - Page inspector allows creating new pages and switching between existing pages
 - Current page is highlighted; clicking a page updates `activePageId`
-- Page settings action opens a popup for slug, displayName, and parent-page management
+- Page settings action opens the Pages panel on the `Page` tab with the current page selected
 
 Single-node inspector:
 

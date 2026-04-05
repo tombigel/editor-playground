@@ -1,4 +1,5 @@
 import { X, type LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
   closeLabel: string;
   onClose: () => void;
   className?: string;
+  actions?: ReactNode;
 };
 
 export function EditorPanelHeader({
@@ -17,6 +19,7 @@ export function EditorPanelHeader({
   closeLabel,
   onClose,
   className,
+  actions,
 }: Props) {
   return (
     <div className={`editor-panel-header editor-border-subtle flex items-center justify-between gap-4 border-b px-4 py-3 ${className ?? ''}`}>
@@ -29,16 +32,19 @@ export function EditorPanelHeader({
           {description ? <div className="editor-panel-header-description editor-text-muted text-xs">{description}</div> : null}
         </div>
       </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="editor-panel-header-close editor-icon-button-subtle rounded-lg border"
-        onClick={onClose}
-        aria-label={closeLabel}
-      >
-        <X className="h-4 w-4" />
-      </Button>
+      <div className="flex shrink-0 items-center gap-2">
+        {actions ? <div className="editor-panel-header-actions flex items-center gap-2">{actions}</div> : null}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="editor-panel-header-close editor-icon-button-subtle rounded-lg border"
+          onClick={onClose}
+          aria-label={closeLabel}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

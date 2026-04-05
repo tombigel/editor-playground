@@ -11,6 +11,7 @@ export {
   FontSizeField,
   FormField,
   HoverColorField,
+  InspectorFieldGroup,
   InspectorInlineRow,
   LabeledImplicitUnitField,
   LabeledNumberField,

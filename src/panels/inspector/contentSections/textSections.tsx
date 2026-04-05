@@ -1,8 +1,10 @@
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import type { DocumentModel } from '../../../api/editorApi';
 import {
   FormField,
+  InspectorFieldGroup,
   InspectorInlineRow,
   readShadowFieldValues,
 } from '../../InspectorControls';
@@ -27,8 +29,10 @@ import {
   TypographyTextStyleFields,
   TypographyDesignFields,
 } from './shared';
+import { createLanguageSelectOptions } from '../../../i18n/languages';
 
 export function TextContentSection({
+  document,
   node,
   onTextChange,
   focusedMode,
@@ -37,9 +41,15 @@ export function TextContentSection({
   headerAction,
   contentClassName = 'px-3 pt-1.5 pb-3',
 }: {
+  document: DocumentModel;
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
 } & FocusModeCardProps) {
+  const languageOptions = createLanguageSelectOptions({
+    includeSiteLanguage: true,
+    siteLanguageTag: document.siteSettings?.lang,
+  });
+
   return (
     <InspectorSectionCard
       title="Content"
@@ -48,9 +58,23 @@ export function TextContentSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
+      <InspectorFieldGroup>
         <FormField label="Text">
           <Textarea value={node.content} onChange={(e) => onTextChange('content', e.target.value)} />
         </FormField>
+      </InspectorFieldGroup>
+      <InspectorFieldGroup separated>
+        <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <SearchableSelect
+            value={node.lang ?? '__site__'}
+            options={languageOptions}
+            placeholder="Site language"
+            searchPlaceholder="Search languages"
+            triggerClassName="h-8 text-[11px]"
+            onValueChange={(value) => onTextChange('lang', value === '__site__' ? '' : value)}
+          />
+        </InspectorInlineRow>
+      </InspectorFieldGroup>
     </InspectorSectionCard>
   );
 }

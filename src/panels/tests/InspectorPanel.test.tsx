@@ -307,6 +307,7 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup.indexOf('>Text style<')).toBeLessThan(textMarkup.indexOf('>Design<'));
     expect(textMarkup).toContain('aria-label="Manage fonts"');
     expect(textMarkup).toContain('>Manage fonts<');
+    expect(textMarkup).toContain('class="space-y-2.5 editor-border-subtle border-t pt-2.5"');
     expect(textMarkup).toContain('class="ml-auto flex min-w-0 items-center justify-end gap-1" style="width:172px"');
     expect(textMarkup).toContain('class="shrink-0" style="width:136px"');
     expect(textMarkup).toContain('class="relative w-full"');

@@ -37,6 +37,28 @@ export function InspectorInlineRow({
   );
 }
 
+export function InspectorFieldGroup({
+  children,
+  className,
+  separated = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  separated?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'space-y-2.5',
+        separated && 'editor-border-subtle border-t pt-2.5',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function SwitchBlock({
   icon,
   title,

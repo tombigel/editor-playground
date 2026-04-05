@@ -52,9 +52,11 @@ Implementation baseline:
 - [src/components/ui/input.tsx](../src/components/ui/input.tsx)
 - [src/components/ui/textarea.tsx](../src/components/ui/textarea.tsx)
 - [src/components/ui/select.tsx](../src/components/ui/select.tsx)
+- [src/components/ui/searchable-select.tsx](../src/components/ui/searchable-select.tsx)
 - [src/components/ui/switch.tsx](../src/components/ui/switch.tsx)
 - [src/components/ui/card.tsx](../src/components/ui/card.tsx)
 - [src/components/ui/dialog.tsx](../src/components/ui/dialog.tsx)
+- [src/components/ui/tabs.tsx](../src/components/ui/tabs.tsx)
 
 ## Design System Correspondence
 
@@ -594,6 +596,53 @@ Rules:
 - menu rows should avoid one-off color utilities and instead inherit editor-surface and accent tokens
 - top-level menus open on click first, then switch on hover while the menubar is active
 - submenu surfaces should overlap their parent menu slightly to avoid hover gaps
+
+### 11.11 Searchable Select
+
+Implementation references:
+
+- [src/components/ui/searchable-select.tsx](../src/components/ui/searchable-select.tsx)
+- [src/i18n/languages.ts](../src/i18n/languages.ts)
+
+Spec:
+
+- trigger height: `32px`
+- trigger radius: `rounded-sm`
+- trigger typography: `12-14px` depending on host surface
+- content surface uses editor surface tokens with compact list density
+- popup width tracks the trigger but clamps to the viewport and flips above when needed
+- option rows reserve one tight leading slot for the selected-state check
+- search input sits in a bordered header row above the options list
+- option rows may show a secondary muted description line for codes or native names
+
+Rules:
+
+- use for fixed option sets that benefit from free-text filtering
+- do not use for arbitrary value entry
+- page and text language selectors prepend a `Site language` option that stores `undefined`
+- language options are sourced from `src/i18n/languages.json`, sorted by `order` first and then alphabetically
+
+### 11.12 Tabs
+
+Implementation references:
+
+- [src/components/ui/tabs.tsx](../src/components/ui/tabs.tsx)
+- [src/panels/PagesPanel.tsx](../src/panels/PagesPanel.tsx)
+
+Spec:
+
+- tabs list uses a subtle token-backed background with a `rounded-md` shell
+- floating panel tab shells may reuse the subtle pill surface with the same radius and token set
+- when a floating panel has only 2 short tabs, place the tab shell in the header actions area before introducing a second row
+- triggers use compact `12px` medium text with `rounded-[6px]`
+- active trigger swaps to the surface background and strong text with a small surface shadow
+- tab content spacing should come from the host panel, not from the primitive itself
+
+Rules:
+
+- use shared tabs for embedded editor panel views before adding panel-specific segmented controls
+- keep tab count low and labels short
+- Pages panel uses this primitive for `Page` and `Settings`
 
 ## 12. Settings Navigation
 
