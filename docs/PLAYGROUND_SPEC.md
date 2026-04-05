@@ -172,7 +172,7 @@ Their authored visibility modes are:
 - `All pages`: render the wrapper on every page through the shared-region path
 - `Custom pages`: render the wrapper only on the selected page IDs
 
-The Components panel exposes this control for eligible top-level wrappers, including custom page selection. The Pages panel no longer owns this control.
+The Components panel and Inspector both expose this control for eligible top-level wrappers, including custom page selection. The Pages panel no longer owns this control.
 
 ### Editor page switching
 
@@ -181,8 +181,8 @@ The Components panel exposes this control for eligible top-level wrappers, inclu
 - Page switching is immediate; undo/redo preserves page selection
 - No-selection state shows page inspector allowing creation and settings
 - The floating Pages panel is always available, including for single-page sites; it is the inline surface for page aliases, home assignment, transition, and parent settings
-- The Components panel exposes per-component visibility for eligible top-level wrappers, including `Hidden`, `Current page`, `All pages`, and `Custom pages`
-- The Inspector will expose the same control in a later stage; regular node visibility remains a separate `visible` / `hidden` concern
+- The Components panel and Inspector expose per-component visibility for eligible top-level wrappers, including `Hidden`, `Current page`, `All pages`, and `Custom pages`
+- Regular node visibility remains a separate `visible` / `hidden` concern in the Inspector and does not support page targeting
 
 ### Preview mode and export
 

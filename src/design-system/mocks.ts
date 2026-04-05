@@ -13,6 +13,8 @@ export const noopActions: InspectorActionHandlers = {
 	onTextChange: noop,
 	onWrapperStyleChange: noop,
 	onRectChange: noop,
+	onSetNodeVisibility: noop,
+	onSetTopLevelWrapperVisibility: noop,
 	onPromote: noop,
 	onDemote: noop,
 	onStickyEnabled: noop,

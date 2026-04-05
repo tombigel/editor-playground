@@ -1,7 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { createInitialDocument, createWrapper } from '../../../model/defaults';
+import { createInitialDocument, createLeaf, createWrapper } from '../../../model/defaults';
 import { InspectorSectionCard, InspectorSummary, NodeBasicsSection } from '../CommonSections';
 
 describe('panels/inspector/CommonSections', () => {
@@ -40,6 +40,8 @@ describe('panels/inspector/CommonSections', () => {
 
     const markup = renderToStaticMarkup(
       <NodeBasicsSection
+        document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
         node={headerNode}
         orderState={{
           showOrderControls: false,
@@ -65,6 +67,8 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onWrapperStyleChange: () => {},
+          onSetNodeVisibility: () => {},
+          onSetTopLevelWrapperVisibility: () => {},
         }}
       />,
     );
@@ -80,10 +84,13 @@ describe('panels/inspector/CommonSections', () => {
   });
 
   it('shows the same padding control surface for container wrappers', () => {
+    const document = createInitialDocument();
     const containerNode = createWrapper('container', 'root');
 
     const markup = renderToStaticMarkup(
       <NodeBasicsSection
+        document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
         node={containerNode}
         orderState={{
           showOrderControls: false,
@@ -109,6 +116,8 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onWrapperStyleChange: () => {},
+          onSetNodeVisibility: () => {},
+          onSetTopLevelWrapperVisibility: () => {},
         }}
       />,
     );
@@ -117,6 +126,107 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('>Y<');
     expect(markup).toContain('>Padding<');
     expect(markup).toContain('value="16"');
+  });
+
+  it('renders a top-level wrapper visibility control for eligible wrappers', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const markup = renderToStaticMarkup(
+      <NodeBasicsSection
+        document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
+        node={sectionNode}
+        orderState={{
+          showOrderControls: false,
+          canOrderBack: false,
+          canOrderForward: false,
+          canSendToBack: false,
+          canBringToFront: false,
+          orderBackShortcut: '',
+          orderForwardShortcut: '',
+          sendToBackShortcut: '',
+          bringToFrontShortcut: '',
+          canSectionBack: false,
+          canSectionForward: false,
+          onOrderBack: () => {},
+          onOrderForward: () => {},
+          onSendToBack: () => {},
+          onBringToFront: () => {},
+          onSectionBack: () => {},
+          onSectionForward: () => {},
+        }}
+        actions={{
+          onRectChange: () => {},
+          onPromote: () => {},
+          onDemote: () => {},
+          onWrapperStyleChange: () => {},
+          onSetNodeVisibility: () => {},
+          onSetTopLevelWrapperVisibility: () => {},
+        }}
+      />,
+    );
+
+    expect(markup).toContain('Visibility: Current page');
+    expect(markup).toContain('Choose where this top-level component appears.');
+  });
+
+  it('renders a visible/hidden switch for non-top-level nodes', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const textNode = createLeaf('text', sectionNode.id);
+    textNode.name = 'Hero Copy';
+
+    const markup = renderToStaticMarkup(
+      <NodeBasicsSection
+        document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
+        node={textNode}
+        orderState={{
+          showOrderControls: false,
+          canOrderBack: false,
+          canOrderForward: false,
+          canSendToBack: false,
+          canBringToFront: false,
+          orderBackShortcut: '',
+          orderForwardShortcut: '',
+          sendToBackShortcut: '',
+          bringToFrontShortcut: '',
+          canSectionBack: false,
+          canSectionForward: false,
+          onOrderBack: () => {},
+          onOrderForward: () => {},
+          onSendToBack: () => {},
+          onBringToFront: () => {},
+          onSectionBack: () => {},
+          onSectionForward: () => {},
+        }}
+        actions={{
+          onRectChange: () => {},
+          onPromote: () => {},
+          onDemote: () => {},
+          onWrapperStyleChange: () => {},
+          onSetNodeVisibility: () => {},
+          onSetTopLevelWrapperVisibility: () => {},
+        }}
+      />,
+    );
+
+    expect(markup).toContain('Visibility');
+    expect(markup).toContain('data-ui="switch"');
+    expect(markup).toContain('aria-label="Hide Hero Copy"');
   });
 
   it('renders custom header content and action without affecting the shared card structure', () => {

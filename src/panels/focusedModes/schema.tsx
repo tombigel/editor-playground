@@ -58,6 +58,8 @@ export function resolveFocusedModeBlocks(
     return [
       createFocusedModeBlock('layout', 'primary', () => (
         <NodeBasicsSection
+          document={context.document}
+          activePageId={context.activePageId}
           node={node}
           orderState={context.orderState}
           actions={context.actions}

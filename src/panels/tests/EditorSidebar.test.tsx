@@ -38,6 +38,8 @@ function createSidebarProps() {
 		onTextChange: () => {},
 		onWrapperStyleChange: () => {},
 		onRectChange: () => {},
+		onSetNodeVisibility: () => {},
+		onSetTopLevelWrapperVisibility: () => {},
 		onPromote: () => {},
 		onDemote: () => {},
 		onStickyEnabled: () => {},

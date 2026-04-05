@@ -18,8 +18,11 @@ import {
 
 describe('panels/InspectorPanel', () => {
   function makeBaseInspectorProps(overrides?: Partial<InspectorPanelProps>): InspectorPanelProps {
+    const document = overrides?.document ?? createInitialDocument();
     return {
       node: null,
+      document,
+      activePageId: document.pages?.[0]?.id ?? null,
       showOrderControls: false,
       canOrderBack: false,
       canOrderForward: false,
@@ -40,6 +43,8 @@ describe('panels/InspectorPanel', () => {
       onTextChange: () => {},
       onWrapperStyleChange: () => {},
       onRectChange: () => {},
+      onSetNodeVisibility: () => {},
+      onSetTopLevelWrapperVisibility: () => {},
       onPromote: () => {},
       onDemote: () => {},
       onStickyEnabled: () => {},
@@ -79,7 +84,7 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Set type to Section');
     expect(markup).toContain('Set type to Header');
     expect(markup).toContain('Set type to Footer');
-    expect(markup).not.toContain('Playground Header');
+    expect(markup).toContain('Visibility');
     expect(markup).not.toContain('aria-label="Edit title"');
     expect(markup).not.toContain('>Properties<');
     expect(markup.match(/aria-pressed="true"/g)?.length).toBe(1);
@@ -131,6 +136,56 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('data-allow-alpha="true"');
     expect(markup.indexOf('>Layout<')).toBeLessThan(markup.indexOf('>Sticky<'));
     expect(markup.indexOf('>Sticky<')).toBeLessThan(markup.indexOf('>Design<'));
+  });
+
+  it('renders top-level wrapper visibility controls in the layout section', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        {...makeBaseInspectorProps({
+          document,
+          node: sectionNode,
+        })}
+      />,
+    );
+
+    expect(markup).toContain('Visibility: Current page');
+    expect(markup).toContain('Choose where this top-level component appears.');
+  });
+
+  it('renders a visible/hidden switch for regular nodes', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+
+    if (!sectionNode || sectionNode.type !== 'wrapper') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const textNode = createLeaf('text', sectionNode.id);
+    textNode.name = 'Hero Copy';
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        {...makeBaseInspectorProps({
+          document,
+          node: textNode,
+        })}
+      />,
+    );
+
+    expect(markup).toContain('Visibility');
+    expect(markup).toContain('data-ui="switch"');
+    expect(markup).toContain('aria-label="Hide Hero Copy"');
   });
 
   it('renders the dedicated multi-select inspector for multiple selected nodes', () => {

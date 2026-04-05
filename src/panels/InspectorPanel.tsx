@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode } from '../api/editorApi';
+import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../model/defaults';
+import type { PageId } from '../model/types/site';
 import { buildNodeDebugInfo } from '../editor/debugInfo';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiSelectInspector } from './MultiSelectInspector';
@@ -44,12 +45,20 @@ export type InspectorPanelProps = {
   onBringToFront: () => void;
   onSectionBack: () => void;
   onSectionForward: () => void;
+  activePageId?: PageId | null;
   onAlignSelection?: (mode: AlignmentAction) => void;
   onDistributeSelection?: (mode: DistributionMode) => void;
   onBulkEdit?: (operations: BulkEditOperation[]) => void;
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
+  onSetNodeVisibility: (id: string, value: boolean) => void;
+  onSetTopLevelWrapperVisibility: (
+    pageId: PageId,
+    nodeId: string,
+    visibility: TopLevelWrapperVisibility,
+    pageIds?: PageId[],
+  ) => void;
   onPromote: (role: 'header' | 'footer') => void;
   onDemote: () => void;
   onStickyEnabled: (enabled: boolean) => void;
@@ -92,12 +101,15 @@ export function InspectorPanel({
   onBringToFront,
   onSectionBack,
   onSectionForward,
+  activePageId = null,
   onAlignSelection = () => undefined,
   onDistributeSelection = () => undefined,
   onBulkEdit = () => undefined,
   onTextChange,
   onWrapperStyleChange,
   onRectChange,
+  onSetNodeVisibility,
+  onSetTopLevelWrapperVisibility,
   onPromote,
   onDemote,
   onStickyEnabled,
@@ -121,11 +133,18 @@ export function InspectorPanel({
     () => document ?? createInitialDocument(),
     [document],
   );
+  const resolvedActivePageId = activePageId ?? resolvedDocument.pages?.[0]?.id ?? null;
   const actions = useMemo<InspectorActionHandlers>(
     () => ({
       onTextChange,
       onWrapperStyleChange,
       onRectChange,
+      onSetNodeVisibility,
+      onSetTopLevelWrapperVisibility: (nodeId, visibility, pageIds) => {
+        if (resolvedActivePageId) {
+          onSetTopLevelWrapperVisibility(resolvedActivePageId, nodeId, visibility, pageIds);
+        }
+      },
       onPromote,
       onDemote,
       onStickyEnabled,
@@ -145,6 +164,7 @@ export function InspectorPanel({
     }),
     [
       onTextChange, onWrapperStyleChange, onRectChange, onPromote, onDemote,
+      onSetNodeVisibility, onSetTopLevelWrapperVisibility, resolvedActivePageId,
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,

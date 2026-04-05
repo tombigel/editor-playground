@@ -11,7 +11,7 @@ import {
   SquareArrowOutUpRight,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { FocusedMode } from '../../api/editorApi';
+import type { DocumentModel, FocusedMode } from '../../api/editorApi';
 import type { WrapperStyleField } from '../../api/documentApi';
 import {
   getFocusedModeButtonAriaLabel,
@@ -25,11 +25,14 @@ import {
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
 } from '../../model/styleDefaults';
+import { getTopLevelWrapperVisibilityState, isEligibleTopLevelWrapper } from '../../model/topLevelWrapperVisibility';
+import type { PageId } from '../../model/types/site';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
 import {
@@ -47,6 +50,7 @@ import {
   readUnifiedBorderRadius,
   readUnifiedBorderWidth,
 } from '../InspectorControls';
+import { TopLevelWrapperVisibilityControl } from '../controls/TopLevelWrapperVisibilityControl';
 import {
   applyUnifiedWrapperBorderColor,
   applyUnifiedWrapperBorderRadius,
@@ -212,6 +216,8 @@ export function EditableNodeTitle({
 
 export function NodeBasicsSection({
   node,
+  document,
+  activePageId,
   orderState,
   actions,
   focusedMode,
@@ -219,8 +225,18 @@ export function NodeBasicsSection({
   headerAction,
 }: {
   node: InspectorNode;
+  document: DocumentModel;
+  activePageId?: PageId | null;
   orderState: InspectorOrderState;
-  actions: Pick<InspectorActionHandlers, 'onRectChange' | 'onPromote' | 'onDemote' | 'onWrapperStyleChange'> & {
+  actions: Pick<
+    InspectorActionHandlers,
+    | 'onRectChange'
+    | 'onPromote'
+    | 'onDemote'
+    | 'onWrapperStyleChange'
+    | 'onSetNodeVisibility'
+    | 'onSetTopLevelWrapperVisibility'
+  > & {
     onEnterFocusedMode?: InspectorActionHandlers['onEnterFocusedMode'];
   };
   focusedMode?: FocusedMode;
@@ -240,6 +256,8 @@ export function NodeBasicsSection({
     (node.role === 'section' || node.role === 'header' || node.role === 'footer' || node.role === 'container')
       ? node
       : null;
+  const isTopLevelVisibilityWrapper =
+    node.type === 'wrapper' && isEligibleTopLevelWrapper(node) && node.parentId === document.rootId;
 
   return (
     <InspectorSectionCard
@@ -286,6 +304,27 @@ export function NodeBasicsSection({
             isSectionHeight={isSectionHeight}
           />
         </div>
+      ) : null}
+      {node.type !== 'site' ? (
+        <InspectorInlineRow label="Visibility" controlClassName="gap-2">
+          {isTopLevelVisibilityWrapper ? (
+            <TopLevelWrapperVisibilityControl
+              document={document}
+              activePageId={activePageId ?? null}
+              value={getTopLevelWrapperVisibilityState(document, node.id)}
+              onChange={(visibility, pageIds) => actions.onSetTopLevelWrapperVisibility(node.id, visibility, pageIds)}
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="editor-text-muted text-xs">{node.visible ? 'Visible' : 'Hidden'}</span>
+              <Switch
+                checked={node.visible}
+                aria-label={`${node.visible ? 'Hide' : 'Show'} ${node.name?.trim() || node.role}`}
+                onCheckedChange={(checked) => actions.onSetNodeVisibility(node.id, checked)}
+              />
+            </div>
+          )}
+        </InspectorInlineRow>
       ) : null}
       {wrapperPaddingNode ? (
         <div className="space-y-1.5">

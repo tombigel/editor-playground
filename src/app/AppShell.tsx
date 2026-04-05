@@ -1018,6 +1018,23 @@ export function AppShell({
 								dispatch({ type: "stickyElevated", value })
 							}
 							globalStickyElevation={globalStickyElevation}
+							onSetNodeVisibility={(id, value) =>
+								dispatch({ type: "setNodeVisibility", id, value })
+							}
+							onSetTopLevelWrapperVisibility={(
+								pageId,
+								nodeId,
+								visibility,
+								pageIds,
+							) =>
+								dispatch({
+									type: "setTopLevelWrapperVisibility",
+									pageId,
+									nodeId,
+									visibility,
+									pageIds,
+								})
+							}
 							showDebugInfo={state.ui.showDebugInfo}
 							onEnterFocusedMode={(value) =>
 								dispatch({ type: "setFocusedMode", value })
@@ -1145,6 +1162,24 @@ export function AppShell({
 							dispatch({ type: "stickyElevated", value })
 						}
 						globalStickyElevation={globalStickyElevation}
+						activePageId={state.activePageId}
+						onSetNodeVisibility={(id, value) =>
+							dispatch({ type: "setNodeVisibility", id, value })
+						}
+						onSetTopLevelWrapperVisibility={(
+							pageId,
+							nodeId,
+							visibility,
+							pageIds,
+						) =>
+							dispatch({
+								type: "setTopLevelWrapperVisibility",
+								pageId,
+								nodeId,
+								visibility,
+								pageIds,
+							})
+						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })
 						}

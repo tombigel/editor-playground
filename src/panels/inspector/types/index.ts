@@ -1,7 +1,8 @@
-import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode } from '../../../api/editorApi';
+import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../../../api/editorApi';
 import type { WrapperStyleField } from '../../../api/documentApi';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
+import type { PageId } from '../../../model/types/site';
 
 export type InspectorNode = DocumentNode;
 export type NonSiteInspectorNode = Exclude<DocumentNode, { type: 'site' }>;
@@ -15,6 +16,8 @@ export type InspectorActionHandlers = {
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
+  onSetNodeVisibility: (id: string, value: boolean) => void;
+  onSetTopLevelWrapperVisibility: (nodeId: string, visibility: TopLevelWrapperVisibility, pageIds?: PageId[]) => void;
   onPromote: (role: 'header' | 'footer') => void;
   onDemote: () => void;
   onStickyEnabled: (enabled: boolean) => void;
@@ -55,6 +58,7 @@ export type InspectorOrderState = {
 
 export type InspectorSectionContext = {
   document: DocumentModel;
+  activePageId?: PageId | null;
   node: InspectorNode | null;
   actions: InspectorActionHandlers;
   orderState: InspectorOrderState;

@@ -18,7 +18,7 @@ const VISIBILITY_MENU_TRIGGER_GAP_PX = 8;
 
 type TopLevelWrapperVisibilityControlProps = {
   document: DocumentModel;
-  activePageId: PageId;
+  activePageId: PageId | null;
   value: TopLevelWrapperVisibilityState;
   onChange: (mode: TopLevelWrapperVisibilityMode, pageIds?: PageId[]) => void;
   className?: string;

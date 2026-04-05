@@ -34,9 +34,12 @@ type Props = Pick<
   | 'onBringToFront'
   | 'onSectionBack'
   | 'onSectionForward'
+  | 'activePageId'
   | 'onTextChange'
   | 'onWrapperStyleChange'
   | 'onRectChange'
+  | 'onSetNodeVisibility'
+  | 'onSetTopLevelWrapperVisibility'
   | 'onPromote'
   | 'onDemote'
   | 'onStickyEnabled'
@@ -83,9 +86,12 @@ export function FocusedModePanel({
   onBringToFront,
   onSectionBack,
   onSectionForward,
+  activePageId,
   onTextChange,
   onWrapperStyleChange,
   onRectChange,
+  onSetNodeVisibility,
+  onSetTopLevelWrapperVisibility,
   onPromote,
   onDemote,
   onStickyEnabled,
@@ -109,10 +115,17 @@ export function FocusedModePanel({
   dragging = false,
 }: Props) {
   const resolvedDocument = document ?? createInitialDocument();
+  const resolvedActivePageId = activePageId ?? resolvedDocument.pages?.[0]?.id ?? null;
   const actions: InspectorActionHandlers = {
     onTextChange,
     onWrapperStyleChange,
     onRectChange,
+    onSetNodeVisibility,
+    onSetTopLevelWrapperVisibility: (nodeId, visibility, pageIds) => {
+      if (resolvedActivePageId) {
+        onSetTopLevelWrapperVisibility(resolvedActivePageId, nodeId, visibility, pageIds);
+      }
+    },
     onPromote,
     onDemote,
     onStickyEnabled,
@@ -227,6 +240,7 @@ export function FocusedModePanel({
     mode,
     {
       document: resolvedDocument,
+      activePageId,
       node,
       actions,
       orderState,

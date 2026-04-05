@@ -53,6 +53,8 @@ function createInspectorProps() {
     onTextChange: () => {},
     onWrapperStyleChange: () => {},
     onRectChange: () => {},
+    onSetNodeVisibility: () => {},
+    onSetTopLevelWrapperVisibility: () => {},
     onPromote: () => {},
     onDemote: () => {},
     onStickyEnabled: () => {},
