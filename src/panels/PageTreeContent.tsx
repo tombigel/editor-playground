@@ -1,4 +1,4 @@
-import { Ban, File, Settings, Trash2 } from "lucide-react";
+import { Ban, File, Trash2 } from "lucide-react";
 import {
 	useEffect,
 	useRef,
@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
 import { TreeRowItem, VisibilityToggle } from "@/components/ui/tree-row";
+import { getPageRole } from "../model/pageRoutes";
 import type { DocumentModel } from "../model/types";
 import type { PageId } from "../model/types/site";
 import { TreeDragGhost } from "./TreeDragGhost";
@@ -26,7 +27,6 @@ export type PageTreeContentProps = {
 	onSetActivePage: (pageId: PageId) => void;
 	onAddPage: () => void;
 	onDeletePage: (pageId: PageId) => void;
-	onOpenSettings: (pageId: PageId, anchorEl?: HTMLElement | null) => void;
 	onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
 	onReorderPage: (pageId: PageId, direction: "back" | "forward") => void;
 	onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
@@ -54,7 +54,6 @@ export function PageTreeContent({
 	onSetActivePage,
 	onAddPage,
 	onDeletePage,
-	onOpenSettings,
 	onSetPageParent,
 	onReorderPage,
 	onSetPageVisibility,
@@ -281,6 +280,8 @@ export function PageTreeContent({
 					<div className="flex flex-col gap-1">
 						{rows.map((row) => {
 							const page = row.page;
+							const isHomePage = getPageRole(page) === "home";
+							const isOnlyPage = pages.length === 1;
 							const isDraggedRow =
 								dragState?.pageId === page.id && dragState.active;
 							const isInvalidDrop =
@@ -294,6 +295,11 @@ export function PageTreeContent({
 										<span className="editor-layers-row-title truncate text-sm font-medium">
 											{page.displayName}
 										</span>
+										{isHomePage ? (
+											<span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
+												Home
+											</span>
+										) : null}
 									</span>
 									<span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
 										/{page.slug}
@@ -318,40 +324,31 @@ export function PageTreeContent({
 											</span>
 										</PopoverTooltip>
 									) : null}
-									<VisibilityToggle
-										isHidden={!page.visible}
-										onToggle={() => onSetPageVisibility(page.id, !page.visible)}
-										nodeId={page.id}
-										label={page.visible ? "Hide" : "Show"}
-									/>
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										className="editor-layers-action h-7 w-7 rounded-md border"
-										data-layers-control="true"
-										aria-label={`Page settings for ${page.displayName}`}
-										onClick={(event) => {
-											event.stopPropagation();
-											onOpenSettings(page.id, event.currentTarget);
-										}}
-									>
-										<Settings className="h-3.5 w-3.5" />
-									</Button>
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										className="editor-layers-action h-7 w-7 rounded-md border"
-										data-layers-control="true"
-										aria-label={`Delete ${page.displayName}`}
-										onClick={(event) => {
-											event.stopPropagation();
-											onDeletePage(page.id);
-										}}
-									>
-										<Trash2 className="h-3.5 w-3.5" />
-									</Button>
+									{isHomePage ? null : (
+										<VisibilityToggle
+											isHidden={!page.visible}
+											onToggle={() => onSetPageVisibility(page.id, !page.visible)}
+											nodeId={page.id}
+											label={page.visible ? "Hide" : "Show"}
+										/>
+									)}
+									{isHomePage ? null : (
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon"
+											className="editor-layers-action h-7 w-7 rounded-md border"
+											data-layers-control="true"
+											aria-label={`Delete ${page.displayName}`}
+											disabled={isOnlyPage}
+											onClick={(event) => {
+												event.stopPropagation();
+												onDeletePage(page.id);
+											}}
+										>
+											<Trash2 className="h-3.5 w-3.5" />
+										</Button>
+									)}
 								</>
 							);
 

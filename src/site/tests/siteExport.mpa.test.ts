@@ -10,6 +10,14 @@ function appendPage(document: ReturnType<typeof createInitialDocument>, displayN
   return { document, page };
 }
 
+function promoteHome(document: ReturnType<typeof createInitialDocument>, pageId: string) {
+  document.pages = (document.pages ?? []).map((page) => ({
+    ...page,
+    pageRole: page.id === pageId ? 'home' : 'default',
+  }));
+  return document;
+}
+
 describe('site/siteExport MPA', () => {
   it('buildRenderRootPlan with pageId returns only that page sections plus shared header/footer', () => {
     let doc = createInitialDocument();
@@ -46,9 +54,10 @@ describe('site/siteExport MPA', () => {
 
     const bundles = renderSiteExportBundles(doc, { outputStructure: 'directory' });
 
-    expect(bundles).toHaveLength(2);
-    expect(bundles[0].path).toBe('index.html');
-    expect(bundles[1].path).toBe('about/index.html');
+    expect(bundles).toHaveLength(3);
+    expect(bundles.map((bundle) => bundle.path)).toEqual(
+      expect.arrayContaining(['index.html', 'home/index.html', 'about/index.html']),
+    );
   });
 
   it('renderSiteExportBundles flat mode produces correct paths for 2-page doc', () => {
@@ -57,9 +66,10 @@ describe('site/siteExport MPA', () => {
 
     const bundles = renderSiteExportBundles(doc, { outputStructure: 'flat' });
 
-    expect(bundles).toHaveLength(2);
-    expect(bundles[0].path).toBe('index.html');
-    expect(bundles[1].path).toBe('about.html');
+    expect(bundles).toHaveLength(3);
+    expect(bundles.map((bundle) => bundle.path)).toEqual(
+      expect.arrayContaining(['index.html', 'home.html', 'about.html']),
+    );
   });
 
   it('buildRouteManifest directory mode maps slugs to correct file paths', () => {
@@ -68,13 +78,14 @@ describe('site/siteExport MPA', () => {
 
     const manifest = buildRouteManifest(doc, { outputStructure: 'directory' });
 
-    expect(manifest.routes).toHaveLength(2);
-    expect(manifest.routes[0].slug).toBe('');
-    expect(manifest.routes[0].url).toBe('/');
-    expect(manifest.routes[0].filePath).toBe('index.html');
-    expect(manifest.routes[1].slug).toBe('about');
-    expect(manifest.routes[1].url).toBe('/about/');
-    expect(manifest.routes[1].filePath).toBe('about/index.html');
+    expect(manifest.routes).toHaveLength(3);
+    expect(manifest.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: 'home', url: '/', filePath: 'index.html', kind: 'canonical' }),
+        expect.objectContaining({ slug: 'home', url: '/home/', filePath: 'home/index.html', kind: 'system-alias', redirectTo: '/' }),
+        expect.objectContaining({ slug: 'about', url: '/about/', filePath: 'about/index.html', kind: 'canonical' }),
+      ]),
+    );
   });
 
   it('buildRouteManifest flat mode maps slugs to flat file paths', () => {
@@ -83,13 +94,14 @@ describe('site/siteExport MPA', () => {
 
     const manifest = buildRouteManifest(doc, { outputStructure: 'flat' });
 
-    expect(manifest.routes).toHaveLength(2);
-    expect(manifest.routes[0].slug).toBe('');
-    expect(manifest.routes[0].url).toBe('/');
-    expect(manifest.routes[0].filePath).toBe('index.html');
-    expect(manifest.routes[1].slug).toBe('about');
-    expect(manifest.routes[1].url).toBe('/about/');
-    expect(manifest.routes[1].filePath).toBe('about.html');
+    expect(manifest.routes).toHaveLength(3);
+    expect(manifest.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: 'home', url: '/', filePath: 'index.html', kind: 'canonical' }),
+        expect.objectContaining({ slug: 'home', url: '/home/', filePath: 'home.html', kind: 'system-alias', redirectTo: '/' }),
+        expect.objectContaining({ slug: 'about', url: '/about/', filePath: 'about.html', kind: 'canonical' }),
+      ]),
+    );
   });
 
   it('renderPageHtmlDocument for about page has lang from siteSettings and contains sp-site', () => {
@@ -140,18 +152,23 @@ describe('site/siteExport MPA', () => {
       ]);
     });
 
-    it('directory mode netlify redirects file says no redirects required', () => {
+    it('directory mode netlify redirects file includes the default home alias redirect', () => {
       const doc = createInitialDocument();
       const configs = buildHostingConfigs(doc, { outputStructure: 'directory' });
 
-      expect(configs['hosting/netlify/_redirects']).toContain('no redirects required');
+      expect(configs['hosting/netlify/_redirects']).toContain('/home  /  301!');
     });
 
-    it('directory mode vercel config is empty object', () => {
+    it('directory mode vercel config includes the default home alias redirect', () => {
       const doc = createInitialDocument();
       const configs = buildHostingConfigs(doc, { outputStructure: 'directory' });
 
-      expect(JSON.parse(configs['hosting/vercel/vercel.json'])).toEqual({});
+      expect(JSON.parse(configs['hosting/vercel/vercel.json'])).toEqual({
+        redirects: [
+          { source: '/home', destination: '/', permanent: true },
+          { source: '/home/', destination: '/', permanent: true },
+        ],
+      });
     });
 
     it('directory mode nginx config uses $uri/ try_files', () => {
@@ -166,7 +183,8 @@ describe('site/siteExport MPA', () => {
       doc = appendPage(doc, 'About', 'about').document;
       const configs = buildHostingConfigs(doc, { outputStructure: 'flat' });
 
-      expect(configs['hosting/netlify/_redirects']).toContain('/about  /about.html  200');
+      expect(configs['hosting/netlify/_redirects']).toContain('/home  /  301!');
+      expect(configs['hosting/netlify/_redirects']).toContain('/about /about.html  200');
     });
 
     it('flat mode vercel config contains rewrites array', () => {
@@ -184,5 +202,43 @@ describe('site/siteExport MPA', () => {
 
       expect(configs['hosting/nginx/nginx.conf']).toContain('try_files $uri $uri.html $uri/ =404');
     });
+  });
+
+  it('exports redirect stubs and redirect metadata for a promoted home page', () => {
+    let doc = createInitialDocument();
+    doc = appendPage(doc, 'About', 'about').document;
+    const aboutPage = doc.pages?.find((page) => page.slug === 'about');
+    doc = promoteHome(doc, aboutPage!.id);
+
+    const bundles = renderSiteExportBundles(doc, { outputStructure: 'directory' });
+    const aliasBundle = bundles.find((bundle) => bundle.path === 'about/index.html');
+    const manifest = buildRouteManifest(doc, { outputStructure: 'directory' });
+
+    expect(aliasBundle).toMatchObject({ kind: 'redirect', redirectTo: '/' });
+    expect(aliasBundle?.htmlDocument).toContain('<link rel="canonical" href="/" />');
+    expect(manifest.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ pageId: aboutPage!.id, kind: 'canonical', url: '/', filePath: 'index.html' }),
+        expect.objectContaining({ pageId: aboutPage!.id, kind: 'system-alias', url: '/about/', redirectTo: '/', filePath: 'about/index.html' }),
+      ]),
+    );
+  });
+
+  it('generates host redirects for promoted home aliases', () => {
+    let doc = createInitialDocument();
+    doc = appendPage(doc, 'About', 'about').document;
+    const aboutPage = doc.pages?.find((page) => page.slug === 'about');
+    doc = promoteHome(doc, aboutPage!.id);
+
+    const configs = buildHostingConfigs(doc, { outputStructure: 'directory' });
+    const vercel = JSON.parse(configs['hosting/vercel/vercel.json']);
+
+    expect(configs['hosting/netlify/_redirects']).toContain('/about  /  301!');
+    expect(configs['hosting/nginx/nginx.conf']).toContain('return 308 /;');
+    expect(vercel.redirects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: '/about', destination: '/', permanent: true }),
+      ]),
+    );
   });
 });

@@ -40,6 +40,7 @@ import {
   addPageSlugAlias,
   deletePage,
   reorderPage,
+  setPageAsHome,
   setPageDisplayName,
   setPageLang,
   setPageSlug,
@@ -345,6 +346,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: reorderPage(state.document, action.pageId, action.direction) };
     case 'setPageDisplayName':
       return { ...state, document: setPageDisplayName(state.document, action.pageId, action.displayName) };
+    case 'setPageAsHome':
+      return { ...state, document: setPageAsHome(state.document, action.pageId) };
     case 'setPageLang':
       return { ...state, document: setPageLang(state.document, action.pageId, action.lang) };
     case 'setPageSlug':

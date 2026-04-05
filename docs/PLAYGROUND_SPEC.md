@@ -131,16 +131,23 @@ Each page has:
 - `id`: unique page identifier
 - `displayName`: human-readable page title
 - `slug`: URL-safe identifier (auto-generated from displayName, manually editable)
+- `pageRole`: `default` or `home`
 - `sectionIds`: ordered list of section node IDs belonging to this page
 - `slugAliases`: array of alternative slugs for redirect/alias support
 - `parentPageId`: optional ID of parent page for nested URL hierarchies
 
 ### Page hierarchy and URL resolution
 
-- Root/home page has `slug: ''` and resolves to `/`
+- Exactly one page is marked `pageRole: 'home'` when pages exist
+- Home page canonical URL always resolves to `/`
+- Home page keeps its normal hierarchy-derived URL as a system alias while it is Home
+- Home pages cannot be hidden
+- A single-page site always keeps that lone page as Home and it cannot be deleted until another page exists
+- Deleting the current Home page is only allowed implicitly by promoting another page to Home first
 - Non-root pages resolve to `/slug/` (single level) or `/parent-slug/child-slug/` (nested)
 - Parent-child relationships prevent cycles and allow multiple child pages per parent
-- `resolvePageUrl(document, pageId)` computes the full page path including all ancestor slugs
+- `resolvePageUrl(document, pageId)` returns the canonical page URL
+- `resolvePageHierarchyUrl(document, pageId)` returns the hierarchy-derived path from slug and parent chain
 - New page creation auto-increments duplicate page names and slugs, and it avoids collisions with existing slug aliases as well as primary slugs
 
 ### Page linking
@@ -159,6 +166,7 @@ Links support `linkType: 'page'` in addition to `'anchor'` and `'external'`:
 - Stage displays only the active page's main sections plus shared header/footer
 - Page switching is immediate; undo/redo preserves page selection
 - No-selection state shows page inspector allowing creation and settings
+- The floating Pages panel is always available, including for single-page sites; it is the inline surface for page aliases, home assignment, visibility, transition, and parent settings
 
 ### Preview mode and export
 
@@ -850,11 +858,12 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 
 ### Multi-page export
 
-- `renderSiteExportBundles(document, options)` generates an export bundle for each page in the document.
+- `renderSiteExportBundles(document, options)` generates canonical page bundles plus alias redirect stubs where needed.
 - `outputStructure` option determines file naming:
   - `'directory'`: each page gets its own directory with `index.html` (e.g., `about/index.html`)
   - `'flat'`: all pages are HTML files in the root (e.g., `about.html`)
 - Home page always exports as `index.html`
+- Home system/manual aliases export as redirect routes to the canonical URL, with generated host configs for Netlify, Vercel, and Nginx and HTML redirect stubs as static fallback
 - Nested pages include their full URL path in the filename (e.g., `parent/child/index.html`)
 
 ### Programmatic export surface

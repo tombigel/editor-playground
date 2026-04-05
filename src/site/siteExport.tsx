@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildDocumentInteractConfig } from '../animations/animationApi';
 import { buildDocumentGoogleFontsStylesheetHref } from '../fonts';
+import { getAllPageRoutes } from '../model/pageRoutes';
 import type { DocumentModel } from '../model/types';
 import type { PageId } from '../model/types/site';
 import { styleRecordToCssDeclarations } from '../render/leafPresentation';
@@ -9,6 +10,7 @@ import { buildSiteCssRules, buildSiteViewTransitionCss } from './siteStylePlan';
 import type { SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteManifest } from './types';
 
 export type { SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteManifest } from './types';
+export { resolvePageUrl } from '../model/pageRoutes';
 
 const DEFAULT_SITE_TITLE = 'Sticky Playground Site';
 export const DEFAULT_SITE_HTML_FILE_NAME = 'sticky-playground-site.html';
@@ -187,27 +189,58 @@ export function renderSiteExportBundles(
     ];
   }
 
-  return pages.map((page) => {
-    const url = resolvePageUrl(document, page.id);
-    const path = resolveFilePath(url, outputStructure);
-    const bodyHtml = renderToStaticMarkup(
-      <SiteRenderer document={document} previewSticky={options.previewSticky ?? true} includeAnimations={options.includeAnimations ?? true} pageId={page.id} />,
-    );
-    const css = renderSiteCss(document, options);
-    const htmlDocument = renderPageHtmlDocument(document, page.id, options);
-    return { path, bodyHtml, css, htmlDocument };
-  });
+  const css = renderSiteCss(document, options);
+  const bundles: SitePageExportBundle[] = [];
+  const canonicalPageIds = new Set<string>();
+
+  for (const route of getAllPageRoutes(document)) {
+    const path = resolveFilePath(route.url, outputStructure);
+    if (route.kind === 'canonical') {
+      if (canonicalPageIds.has(route.pageId)) {
+        continue;
+      }
+      canonicalPageIds.add(route.pageId);
+      const bodyHtml = renderToStaticMarkup(
+        <SiteRenderer
+          document={document}
+          previewSticky={options.previewSticky ?? true}
+          includeAnimations={options.includeAnimations ?? true}
+          pageId={route.pageId}
+        />,
+      );
+      bundles.push({
+        path,
+        bodyHtml,
+        css,
+        htmlDocument: renderPageHtmlDocument(document, route.pageId, options),
+        kind: 'page',
+      });
+      continue;
+    }
+
+    bundles.push({
+      path,
+      bodyHtml: '',
+      css: '',
+      htmlDocument: renderRedirectHtmlDocument(route.url, route.redirectTo ?? '/'),
+      kind: 'redirect',
+      redirectTo: route.redirectTo,
+    });
+  }
+
+  return bundles;
 }
 
 export function buildHostingConfigs(document: DocumentModel, options: SiteExportOptions = {}): Record<string, string> {
   const { outputStructure = 'directory' } = options;
   const manifest = buildRouteManifest(document, options);
-  const nonHomeRoutes = manifest.routes.filter((r) => r.url !== '/');
+  const aliasRoutes = manifest.routes.filter((route) => route.kind !== 'canonical' && route.redirectTo);
+  const canonicalRoutes = manifest.routes.filter((route) => route.kind === 'canonical');
 
   return {
-    'hosting/netlify/_redirects': buildNetlifyRedirects(nonHomeRoutes, outputStructure),
-    'hosting/vercel/vercel.json': buildVercelConfig(nonHomeRoutes, outputStructure),
-    'hosting/nginx/nginx.conf': buildNginxConfig(outputStructure),
+    'hosting/netlify/_redirects': buildNetlifyRedirects(aliasRoutes, canonicalRoutes, outputStructure),
+    'hosting/vercel/vercel.json': buildVercelConfig(aliasRoutes, canonicalRoutes, outputStructure),
+    'hosting/nginx/nginx.conf': buildNginxConfig(aliasRoutes, outputStructure),
     'hosting/README.txt': HOSTING_README,
   };
 }
@@ -229,10 +262,11 @@ GitHub Pages:
 `;
 
 function buildNetlifyRedirects(
-  nonHomeRoutes: RouteManifest['routes'],
+  aliasRoutes: RouteManifest['routes'],
+  canonicalRoutes: RouteManifest['routes'],
   outputStructure: 'directory' | 'flat',
 ): string {
-  if (outputStructure === 'directory') {
+  if (aliasRoutes.length === 0 && outputStructure === 'directory') {
     return [
       '# Directory-structure output.',
       '# Netlify serves index.html from subdirectories natively — no redirects required.',
@@ -240,27 +274,49 @@ function buildNetlifyRedirects(
     ].join('\n');
   }
   return [
-    '# Flat-structure output — rewrite clean URLs to .html files.',
-    ...nonHomeRoutes.map((r) => `${r.url.replace(/\/$/, '')}  /${r.filePath}  200`),
+    '# Redirect alias routes to canonical routes.',
+    ...aliasRoutes.flatMap((route) => buildRedirectSourceVariants(route.url).map((source) => `${source}  ${route.redirectTo}  301!`)),
+    ...(outputStructure === 'flat'
+      ? [
+          '',
+          '# Flat-structure output — rewrite clean canonical URLs to .html files.',
+          ...buildCanonicalRewriteRules(canonicalRoutes).map((entry) => `${entry}  200`),
+        ]
+      : []),
     '',
   ].join('\n');
 }
 
 function buildVercelConfig(
-  nonHomeRoutes: RouteManifest['routes'],
+  aliasRoutes: RouteManifest['routes'],
+  canonicalRoutes: RouteManifest['routes'],
   outputStructure: 'directory' | 'flat',
 ): string {
-  if (outputStructure === 'directory') {
+  const redirects = aliasRoutes.flatMap((route) =>
+    buildRedirectSourceVariants(route.url).map((source) => ({
+      source,
+      destination: route.redirectTo,
+      permanent: true,
+    })),
+  );
+
+  if (outputStructure === 'directory' && redirects.length === 0) {
     return '{}\n';
   }
-  const rewrites = nonHomeRoutes.map((r) => ({
-    source: r.url.replace(/\/$/, ''),
-    destination: `/${r.filePath}`,
-  }));
-  return `${JSON.stringify({ rewrites }, null, 2)}\n`;
+  const rewrites =
+    outputStructure === 'flat'
+      ? buildCanonicalRewriteRules(canonicalRoutes).map((entry) => {
+          const [source, destination] = entry.split(/\s+/);
+          return { source, destination };
+        })
+      : undefined;
+  return `${JSON.stringify({ ...(redirects.length > 0 ? { redirects } : {}), ...(rewrites?.length ? { rewrites } : {}) }, null, 2)}\n`;
 }
 
-function buildNginxConfig(outputStructure: 'directory' | 'flat'): string {
+function buildNginxConfig(
+  aliasRoutes: RouteManifest['routes'],
+  outputStructure: 'directory' | 'flat',
+): string {
   const tryFiles =
     outputStructure === 'flat'
       ? 'try_files $uri $uri.html $uri/ =404;'
@@ -272,6 +328,17 @@ function buildNginxConfig(outputStructure: 'directory' | 'flat'): string {
     '    root /var/www/html;',
     '    index index.html;',
     '',
+    ...aliasRoutes.flatMap((route) =>
+      buildRedirectSourceVariants(route.url).map((source) => {
+        const normalizedSource = source === '/' ? source : `${source}`;
+        return [
+          `    location = ${normalizedSource} {`,
+          `        return 308 ${route.redirectTo};`,
+          '    }',
+          '',
+        ].join('\n');
+      }),
+    ),
     '    location / {',
     `        ${tryFiles}`,
     '    }',
@@ -282,41 +349,20 @@ function buildNginxConfig(outputStructure: 'directory' | 'flat'): string {
 
 export function buildRouteManifest(document: DocumentModel, options: SiteExportOptions = {}): RouteManifest {
   const { outputStructure = 'directory' } = options;
-  const pages = document.pages ?? [];
   return {
-    routes: pages.map((page) => {
-      const url = resolvePageUrl(document, page.id);
-      const filePath = resolveFilePath(url, outputStructure);
+    routes: getAllPageRoutes(document).map((route) => {
+      const page = (document.pages ?? []).find((entry) => entry.id === route.pageId);
+      const filePath = resolveFilePath(route.url, outputStructure);
       return {
-        pageId: page.id,
-        slug: page.slug,
-        url,
+        pageId: route.pageId,
+        slug: page?.slug ?? '',
+        url: route.url,
         filePath,
+        kind: route.kind,
+        redirectTo: route.redirectTo,
       };
     }),
   };
-}
-
-export function resolvePageUrl(document: DocumentModel, pageId: PageId): string {
-  const pages = document.pages ?? [];
-  const slugs: string[] = [];
-
-  let currentId: PageId | undefined = pageId;
-  const visited = new Set<PageId>();
-  while (currentId && !visited.has(currentId)) {
-    visited.add(currentId);
-    const page = pages.find((candidate) => candidate.id === currentId);
-    if (!page) {
-      break;
-    }
-    if (page.slug) {
-      slugs.unshift(page.slug);
-    }
-    currentId = page.parentPageId;
-  }
-
-  if (slugs.length === 0) return '/';
-  return `/${slugs.join('/')}/`;
 }
 
 function resolveFilePath(url: string, outputStructure: 'directory' | 'flat'): string {
@@ -371,4 +417,47 @@ function escapeHtml(input: string) {
     .split('<').join('&lt;')
     .split('>').join('&gt;')
     .split('"').join('&quot;');
+}
+
+function renderRedirectHtmlDocument(sourceUrl: string, redirectTo: string) {
+  const safeTarget = escapeHtml(redirectTo);
+  return [
+    '<!doctype html>',
+    '<html lang="en">',
+    '<head>',
+    '  <meta charset="utf-8" />',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+    `  <title>Redirecting to ${safeTarget}</title>`,
+    `  <link rel="canonical" href="${safeTarget}" />`,
+    `  <meta http-equiv="refresh" content="0;url=${safeTarget}" />`,
+    '  <script>',
+    `    const target = ${JSON.stringify(redirectTo)} + window.location.hash;`,
+    '    window.location.replace(target);',
+    '  </script>',
+    '</head>',
+    '<body>',
+    `  <p>Redirecting from ${escapeHtml(sourceUrl)} to <a href="${safeTarget}">${safeTarget}</a>.</p>`,
+    '</body>',
+    '</html>',
+  ].join('\n');
+}
+
+function buildRedirectSourceVariants(url: string): string[] {
+  if (url === '/') {
+    return ['/'];
+  }
+
+  const stripped = url.replace(/\/$/, '');
+  return stripped === url ? [url] : [stripped, url];
+}
+
+function buildCanonicalRewriteRules(canonicalRoutes: RouteManifest['routes']): string[] {
+  return canonicalRoutes
+    .map((route) => route.url)
+    .filter((url) => url !== '/')
+    .map((url) => {
+      const stripped = url.replace(/\/$/, '');
+      const destination = resolveFilePath(url, 'flat');
+      return `${stripped} /${destination}`;
+    });
 }

@@ -1,5 +1,5 @@
 import type { ButtonLeaf, DocumentModel, DocumentNode, LinkLeaf, LinkKind, NodeId, WrapperNode } from './types';
-import type { PageId } from './types/site';
+import { resolvePageUrl } from './pageRoutes';
 
 export type SectionAnchorOption = {
   id: NodeId;
@@ -81,33 +81,10 @@ export function getLinkHref(
     if (!targetPage) {
       return '';
     }
-    // Resolve page URL using the algorithm from pageApi
-    const pageUrl = resolvePageUrlInModel(document, node.targetPageId);
+    const pageUrl = resolvePageUrl(document, node.targetPageId);
     return pageUrl + (node.pageAnchorId ? `#${node.pageAnchorId}` : '');
   }
   return node.href;
-}
-
-function resolvePageUrlInModel(document: DocumentModel, pageId: PageId): string {
-  const pages = document.pages ?? [];
-  const slugs: string[] = [];
-
-  let currentId: PageId | undefined = pageId;
-  const visited = new Set<PageId>();
-
-  while (currentId) {
-    if (visited.has(currentId)) break;
-    visited.add(currentId);
-    const page = pages.find((p) => p.id === currentId);
-    if (!page) break;
-    if (page.slug !== '') {
-      slugs.unshift(page.slug);
-    }
-    currentId = page.parentPageId;
-  }
-
-  if (slugs.length === 0) return '/';
-  return `/${slugs.join('/')}/`;
 }
 
 export function shouldOpenNavigationInNewTab(

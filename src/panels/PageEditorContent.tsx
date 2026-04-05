@@ -1,6 +1,12 @@
 import { TriangleAlert, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { normalizeSlug, resolvePageUrl, validatePageSlug } from '@/api/pageApi';
+import {
+  getPageRole,
+  normalizeSlug,
+  resolvePageSystemAliasUrl,
+  resolvePageUrl,
+  validatePageSlug,
+} from '@/api/pageApi';
 import type { DocumentModel, DocumentPage, PageId } from '@/api/editorApi';
 import { createLanguageSelectOptions } from '@/i18n/languages';
 import { Button } from '@/components/ui/button';
@@ -18,10 +24,17 @@ type PendingSlugChange = {
   to: string;
 };
 
+const VIEW_TRANSITION_LABELS: Record<NonNullable<DocumentPage['viewTransition']>, string> = {
+  none: 'None',
+  crossfade: 'Cross-fade',
+  slide: 'Slide',
+};
+
 export function PageEditorContent({
   page,
   document,
   onSetDisplayName,
+  onSetHomePage,
   onSetSlug,
   onSetLang,
   onAddAlias,
@@ -36,6 +49,7 @@ export function PageEditorContent({
   page: DocumentPage;
   document: DocumentModel;
   onSetDisplayName: (pageId: PageId, name: string) => void;
+  onSetHomePage: (pageId: PageId) => void;
   onSetSlug: (pageId: PageId, slug: string) => void;
   onSetLang: (pageId: PageId, lang?: string) => void;
   onAddAlias: (pageId: PageId, alias: string) => void;
@@ -61,6 +75,8 @@ export function PageEditorContent({
   const siteSettings = document.siteSettings;
   const autoSyncSlugs = siteSettings?.autoSyncSlugs ?? true;
   const isAutoSlug = page.slug === normalizeSlug(page.displayName);
+  const isHomePage = getPageRole(page) === 'home';
+  const systemAliasUrl = resolvePageSystemAliasUrl(document, page.id);
   const parentOptions = useMemo(() => {
     const pages = document.pages ?? [];
     return pages.filter(
@@ -146,6 +162,25 @@ export function PageEditorContent({
   return (
     <div className={`flex flex-col gap-4 ${className}`.trim()}>
       <PlainGroup title="Page details">
+        <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between rounded-lg border px-3 py-2.5">
+          <div className="min-w-0">
+            <p className="editor-text-strong text-xs font-medium">Home page</p>
+            <p className="editor-text-muted text-xs">
+              {isHomePage ? 'Canonical URL is / for this page.' : 'Promote this page to canonical /.'}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant={isHomePage ? 'secondary' : 'outline'}
+            size="sm"
+            className="h-8 px-2 text-xs"
+            disabled={isHomePage}
+            onClick={() => onSetHomePage(page.id)}
+          >
+            {isHomePage ? 'Home page' : 'Set as home'}
+          </Button>
+        </div>
+
         <div className="flex flex-col gap-1.5">
           <Label className="editor-text-muted text-xs">Display name</Label>
           <Input
@@ -237,8 +272,38 @@ export function PageEditorContent({
 
         <div className="flex flex-col gap-1.5">
           <Label className="editor-text-muted text-xs">Slug aliases</Label>
-          {(page.slugAliases ?? []).length > 0 ? (
+          {isHomePage || (page.slugAliases ?? []).length > 0 ? (
             <div className="flex flex-wrap gap-1">
+              {isHomePage ? (
+                <span className="editor-pill-subtle editor-text-strong inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs">
+                  / <span className="editor-text-muted">system canonical</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 rounded-sm border-0 p-0 shadow-none"
+                    aria-label="System canonical alias cannot be removed"
+                    disabled
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </span>
+              ) : null}
+              {isHomePage && systemAliasUrl ? (
+                <span className="editor-pill-subtle editor-text-strong inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs">
+                  {systemAliasUrl} <span className="editor-text-muted">system alias</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 rounded-sm border-0 p-0 shadow-none"
+                    aria-label={`${systemAliasUrl} alias cannot be removed`}
+                    disabled
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </span>
+              ) : null}
               {(page.slugAliases ?? []).map((alias) => (
                 <span
                   key={alias}
@@ -295,7 +360,11 @@ export function PageEditorContent({
         </div>
 
         <InspectorInlineRow label="Visible">
-          <Switch checked={page.visible} onCheckedChange={(checked) => onSetVisibility(page.id, checked)} />
+          <Switch
+            checked={page.visible}
+            disabled={isHomePage}
+            onCheckedChange={(checked) => onSetVisibility(page.id, checked)}
+          />
         </InspectorInlineRow>
 
         <InspectorInlineRow label="Transition">
@@ -309,7 +378,7 @@ export function PageEditorContent({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__inherit__">{`Inherit from site (${inheritedTransition})`}</SelectItem>
+              <SelectItem value="__inherit__">{`Site transition (${VIEW_TRANSITION_LABELS[inheritedTransition]})`}</SelectItem>
               <SelectItem value="none">None</SelectItem>
               <SelectItem value="crossfade">Cross-fade</SelectItem>
               <SelectItem value="slide">Slide</SelectItem>

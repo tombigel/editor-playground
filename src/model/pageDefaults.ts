@@ -1,5 +1,5 @@
 import { nextId } from './defaultFactories';
-import type { DocumentPage, SiteSettings } from './types/site';
+import type { DocumentPage, PageRole, SiteSettings } from './types/site';
 
 export function createInitialSiteSettings(): SiteSettings {
   return {
@@ -25,11 +25,16 @@ export function generateSlug(displayName: string): string {
 export function createPage(options?: Partial<Omit<DocumentPage, 'type' | 'id'>>): DocumentPage {
   const id = nextId('page');
   const displayName = options?.displayName ?? 'New Page';
+  const requestedRole = options?.pageRole;
+  const requestedSlug = options?.slug ?? generateSlug(displayName);
+  const pageRole: PageRole | undefined =
+    requestedRole ?? (requestedSlug === '' ? 'home' : undefined);
   return {
     type: 'page',
     id,
-    slug: options?.slug ?? generateSlug(displayName),
+    slug: requestedSlug,
     displayName,
+    pageRole,
     sectionIds: options?.sectionIds ?? [],
     parentPageId: options?.parentPageId,
     slugAliases: options?.slugAliases,

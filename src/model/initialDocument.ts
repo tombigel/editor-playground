@@ -14,7 +14,7 @@ export function createInitialDocument(): DocumentModel {
   return {
     rootId: siteId,
     fontLibrary: createDefaultFontLibrary(),
-    pages: [createPage({ displayName: 'Home', slug: '', sectionIds: [starterSection.id] })],
+    pages: [createPage({ displayName: 'Home', slug: 'home', pageRole: 'home', sectionIds: [starterSection.id] })],
     siteSettings: createInitialSiteSettings(),
     sharedRegionIds: [header.id, footer.id],
     nodes: {

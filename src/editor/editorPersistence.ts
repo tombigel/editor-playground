@@ -146,7 +146,7 @@ function migrateV1ToV2(v1State: EditorState): EditorState {
     }
   }
 
-  const homePage = createPage({ displayName: 'Home', slug: '', sectionIds });
+  const homePage = createPage({ displayName: 'Home', slug: 'home', pageRole: 'home', sectionIds });
 
   return {
     ...v1State,

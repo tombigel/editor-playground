@@ -46,6 +46,7 @@ describe('app/pageActions', () => {
       expect(next.document.pages?.length).toBe(beforeCount + 1);
       const newPage = next.document.pages?.[next.document.pages.length - 1];
       expect(next.activePageId).toBe(newPage?.id);
+      expect(next.document.pages?.[0]?.pageRole).toBe('home');
     });
 
     it('passes options through to the new page', () => {
@@ -73,15 +74,14 @@ describe('app/pageActions', () => {
   });
 
   describe('editorReducer/deletePage', () => {
-    it('removes the page from the document', () => {
+    it('does not remove the only page from the document', () => {
       const initial = createInitialState();
-      const withExtra = editorReducer(initial, { type: 'addPage', options: { displayName: 'About', slug: 'about' } });
-      const pageToDelete = withExtra.document.pages?.[withExtra.document.pages.length - 1];
-      if (!pageToDelete) throw new Error('Expected new page');
+      const pageToDelete = initial.document.pages?.[0];
+      if (!pageToDelete) throw new Error('Expected page');
 
-      const next = editorReducer(withExtra, { type: 'deletePage', pageId: pageToDelete.id });
+      const next = editorReducer(initial, { type: 'deletePage', pageId: pageToDelete.id });
 
-      expect(next.document.pages?.find((p) => p.id === pageToDelete.id)).toBeUndefined();
+      expect(next.document.pages?.find((p) => p.id === pageToDelete.id)).toBeDefined();
     });
 
     it('falls back to first page if deleted page was active', () => {
@@ -94,6 +94,17 @@ describe('app/pageActions', () => {
       const next = editorReducer(onNewPage, { type: 'deletePage', pageId: newPage.id });
 
       expect(next.activePageId).toBe(next.document.pages?.[0]?.id);
+    });
+
+    it('promotes the next remaining page to home when deleting the home page', () => {
+      const initial = createInitialState();
+      const withExtra = editorReducer(initial, { type: 'addPage', options: { displayName: 'About', slug: 'about' } });
+      const homePage = withExtra.document.pages?.find((page) => page.pageRole === 'home');
+      if (!homePage) throw new Error('Expected home page');
+
+      const next = editorReducer(withExtra, { type: 'deletePage', pageId: homePage.id });
+
+      expect(next.document.pages?.[0]?.pageRole).toBe('home');
     });
 
     it('preserves activePageId if deleted page was not active', () => {
@@ -197,6 +208,21 @@ describe('app/pageActions', () => {
       const next = editorReducer(withAlias, { type: 'removePageSlugAlias', pageId: page.id, alias: 'nonexistent' });
       const updatedPage = next.document.pages?.find((p) => p.id === page.id);
       expect(updatedPage?.slugAliases ?? []).not.toContain('nonexistent');
+    });
+  });
+
+  describe('editorReducer/setPageAsHome', () => {
+    it('promotes a page to home without changing page order', () => {
+      const initial = createInitialState();
+      const withExtra = editorReducer(initial, { type: 'addPage', options: { displayName: 'About', slug: 'about' } });
+      const aboutPage = withExtra.document.pages?.find((page) => page.slug === 'about');
+      if (!aboutPage) throw new Error('Expected about page');
+
+      const beforeOrder = withExtra.document.pages?.map((page) => page.id);
+      const next = editorReducer(withExtra, { type: 'setPageAsHome', pageId: aboutPage.id });
+
+      expect(next.document.pages?.map((page) => page.id)).toEqual(beforeOrder);
+      expect(next.document.pages?.find((page) => page.id === aboutPage.id)?.pageRole).toBe('home');
     });
   });
 });

@@ -98,6 +98,11 @@ describe('model/pageDefaults', () => {
       expect(page.slug).toBe('custom');
     });
 
+    it('marks empty-slug pages as home for legacy compatibility', () => {
+      const page = createPage({ slug: '' });
+      expect(page.pageRole).toBe('home');
+    });
+
     it('uses provided slug even when displayName is also provided', () => {
       const page = createPage({ displayName: 'About Us', slug: 'custom-slug' });
       expect(page.slug).toBe('custom-slug');

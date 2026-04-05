@@ -106,6 +106,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Settings");
 		expect(markup).toContain("Edit");
 		expect(markup).toContain("View");
+		expect(markup).toContain("Pages");
 		expect(markup).toContain("Help");
 		expect(markup).toContain("editor-topbar-menubar-row");
 		expect(markup).toContain("editor-topbar-page-switcher");
@@ -116,6 +117,7 @@ describe("app/AppShell", () => {
 		expect(markup).not.toContain("editor-topbar-pages-row");
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
+		expect(markup).toContain("New page");
 		expect(markup).toContain("Duplicate");
 		expect(markup).toContain("Documentation");
 		expect(markup).toContain("Design system showcase");

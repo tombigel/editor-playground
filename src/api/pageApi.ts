@@ -1,5 +1,15 @@
 import type { DocumentModel, NodeId, TextLeaf, WrapperNode } from '../model/types';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
+import {
+  getAllPageRoutes,
+  getHomePage,
+  getPageRole,
+  getPageRoutes,
+  resolvePageHierarchyUrl,
+  resolvePageManualAliasUrls,
+  resolvePageSystemAliasUrl,
+  resolvePageUrl,
+} from '../model/pageRoutes';
 import { createPage, generateSlug, normalizeSlug } from '../model/pageDefaults';
 
 export function addPage(
@@ -13,7 +23,18 @@ export function addPage(
     ? generateSlug(displayName)
     : (options?.slug ?? generateSlug(displayName));
   const slug = ensureUniquePageSlug(document, requestedSlug);
-  const newPage = createPage({ ...options, displayName, slug });
+  const isFirstPage = pages.length === 0;
+  const newPage = createPage({
+    ...options,
+    displayName,
+    slug,
+    pageRole: isFirstPage || options?.pageRole === 'home' ? 'home' : options?.pageRole,
+  });
+  if (newPage.pageRole === 'home') {
+    for (const page of pages) {
+      page.pageRole = 'default';
+    }
+  }
   pages.push(newPage);
   return { ...document, pages };
 }
@@ -45,8 +66,12 @@ function ensureUniquePageDisplayName(
   return `${baseName} ${counter}`;
 }
 
-function ensureUniquePageSlug(document: DocumentModel, requestedSlug: string): string {
-  const claimedSlugs = getClaimedPageSlugs(document);
+function ensureUniquePageSlug(
+  document: DocumentModel,
+  requestedSlug: string,
+  excludePageId?: PageId,
+): string {
+  const claimedSlugs = getClaimedPageSlugs(document, excludePageId);
   const baseSlug = requestedSlug.trim() || 'page';
   if (!claimedSlugs.has(baseSlug)) return baseSlug;
 
@@ -59,9 +84,12 @@ function ensureUniquePageSlug(document: DocumentModel, requestedSlug: string): s
   return `${slugStem}-${counter}`;
 }
 
-function getClaimedPageSlugs(document: DocumentModel): Set<string> {
+function getClaimedPageSlugs(document: DocumentModel, excludePageId?: PageId): Set<string> {
   const claimedSlugs = new Set<string>();
   for (const page of document.pages ?? []) {
+    if (page.id === excludePageId) {
+      continue;
+    }
     claimedSlugs.add(page.slug);
     for (const alias of page.slugAliases ?? []) {
       claimedSlugs.add(alias);
@@ -72,10 +100,14 @@ function getClaimedPageSlugs(document: DocumentModel): Set<string> {
 
 export function deletePage(document: DocumentModel, pageId: PageId): DocumentModel {
   const pages = structuredClone(document.pages ?? []);
+  if (pages.length <= 1) {
+    return document;
+  }
   const pageIndex = pages.findIndex((p) => p.id === pageId);
   if (pageIndex === -1) return document;
 
   const page = pages[pageIndex];
+  const deletedWasHome = getPageRole(page) === 'home';
   const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
 
   const ownedSectionIds = page.sectionIds.filter((id) => !sharedRegionIds.has(id));
@@ -106,6 +138,9 @@ export function deletePage(document: DocumentModel, pageId: PageId): DocumentMod
   }
 
   pages.splice(pageIndex, 1);
+  if (deletedWasHome && pages.length > 0) {
+    pages[0].pageRole = 'home';
+  }
 
   return { ...document, pages, nodes: newNodes };
 }
@@ -154,6 +189,43 @@ export function setPageSlug(
   return { ...document, pages };
 }
 
+export function setPageAsHome(
+  document: DocumentModel,
+  pageId: PageId,
+): DocumentModel {
+  const pages = structuredClone(document.pages ?? []);
+  const targetPage = pages.find((page) => page.id === pageId);
+  if (!targetPage) {
+    return document;
+  }
+
+  for (const page of pages) {
+    if (page.id === pageId) {
+      continue;
+    }
+    if (getPageRole(page) === 'home') {
+      page.pageRole = 'default';
+      if (!page.slug) {
+        page.slug = ensureUniquePageSlug(
+          { ...document, pages },
+          generateSlug(page.displayName),
+          page.id,
+        );
+      }
+    }
+  }
+
+  if (!targetPage.slug) {
+    targetPage.slug = ensureUniquePageSlug(
+      { ...document, pages },
+      generateSlug(targetPage.displayName),
+      targetPage.id,
+    );
+  }
+  targetPage.pageRole = 'home';
+  return { ...document, pages };
+}
+
 export function setPageLang(
   document: DocumentModel,
   pageId: PageId,
@@ -198,6 +270,9 @@ export function setPageVisibility(
   const pages = structuredClone(document.pages ?? []);
   const page = pages.find((p) => p.id === pageId);
   if (!page) return document;
+  if (getPageRole(page) === 'home' && !visible) {
+    return document;
+  }
   page.visible = visible;
   return { ...document, pages };
 }
@@ -321,27 +396,16 @@ export function getActiveSections(
   return result;
 }
 
-export function resolvePageUrl(document: DocumentModel, pageId: PageId): string {
-  const pages = document.pages ?? [];
-  const slugs: string[] = [];
-
-  let currentId: PageId | undefined = pageId;
-  const visited = new Set<PageId>();
-
-  while (currentId) {
-    if (visited.has(currentId)) break;
-    visited.add(currentId);
-    const page = pages.find((p) => p.id === currentId);
-    if (!page) break;
-    if (page.slug !== '') {
-      slugs.unshift(page.slug);
-    }
-    currentId = page.parentPageId;
-  }
-
-  if (slugs.length === 0) return '/';
-  return `/${slugs.join('/')}/`;
-}
+export {
+  getAllPageRoutes,
+  getHomePage,
+  getPageRole,
+  getPageRoutes,
+  resolvePageHierarchyUrl,
+  resolvePageManualAliasUrls,
+  resolvePageSystemAliasUrl,
+  resolvePageUrl,
+};
 
 export function syncPageHrefLinks(
   document: DocumentModel,

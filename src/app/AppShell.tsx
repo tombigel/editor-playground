@@ -1231,6 +1231,9 @@ export function AppShell({
 						onSetPageDisplayName={(pageId, displayName) =>
 							dispatch({ type: "setPageDisplayName", pageId, displayName })
 						}
+						onSetPageAsHome={(pageId) =>
+							dispatch({ type: "setPageAsHome", pageId })
+						}
 						onSetPageLang={(pageId, lang) =>
 							dispatch({ type: "setPageLang", pageId, lang })
 						}

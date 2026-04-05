@@ -216,6 +216,39 @@ describe('model/validation', () => {
       const errors = validateDocument(doc);
       expect(errors.some((e) => e.includes('conflicts with page'))).toBe(true);
     });
+
+    it('rejects duplicate derived routes across home aliases and other pages', () => {
+      let doc = createInitialDocument();
+      doc = appendPage(doc, { displayName: 'About', slug: 'about', pageRole: 'home' }).document;
+      doc = {
+        ...doc,
+        pages: doc.pages!.map((page) => {
+          if (page.displayName === 'Home') {
+            return { ...page, pageRole: 'default', slug: 'about' };
+          }
+          if (page.displayName === 'About') {
+            return { ...page, pageRole: 'home' };
+          }
+          return page;
+        }),
+      };
+      const errors = validateDocument(doc);
+      expect(errors.some((e) => e.includes('Route "/about/" conflicts'))).toBe(true);
+    });
+  });
+
+  it('rejects documents with no home page', () => {
+    const document = createInitialDocument();
+    document.pages = document.pages?.map((page) => ({ ...page, pageRole: 'default' }));
+
+    expect(validateDocument(document)).toContain('Exactly one home page is required; found 0.');
+  });
+
+  it('rejects documents with multiple home pages', () => {
+    let document = createInitialDocument();
+    document = appendPage(document, { displayName: 'About', slug: 'about', pageRole: 'home' }).document;
+
+    expect(validateDocument(document)).toContain('Exactly one home page is required; found 2.');
   });
 
   describe('page parent cycle validation', () => {

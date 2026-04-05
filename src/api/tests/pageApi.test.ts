@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createLeaf } from '../../model/defaults';
+import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
 import type { DocumentModel, LinkLeaf } from '../../model/types';
 import { validateDocument } from '../../model/validation';
 import {
   addPage,
   addPageSlugAlias,
   deletePage,
+  getAllPageRoutes,
   getPageForSection,
   moveSectionToPage,
   removePageSlugAlias,
   reorderPage,
+  resolvePageHierarchyUrl,
+  resolvePageSystemAliasUrl,
   resolvePageUrl,
+  setPageAsHome,
   setPageParent,
+  setPageVisibility,
   setPageSlug,
   setPageViewTransition,
   setSiteSettings,
@@ -48,6 +53,7 @@ describe('addPage', () => {
     const doc = { ...makeDoc(), pages: undefined };
     const result = addPage(doc, { displayName: 'First' });
     expect(result.pages).toHaveLength(1);
+    expect(result.pages?.[0].pageRole).toBe('home');
   });
 
   it('increments duplicate page names and slugs for new pages', () => {
@@ -86,29 +92,47 @@ describe('addPage', () => {
 });
 
 describe('deletePage', () => {
-  it('removes the page', () => {
+  it('does not delete the only page', () => {
     const doc = makeDoc();
     const pageId = (doc.pages ?? [])[0].id;
     const result = deletePage(doc, pageId);
-    expect((result.pages ?? []).find((p) => p.id === pageId)).toBeUndefined();
+    expect(result).toBe(doc);
+    expect((result.pages ?? []).find((p) => p.id === pageId)).toBeDefined();
   });
 
-  it("removes the page's section nodes from nodes", () => {
-    const doc = makeDoc();
-    const page = (doc.pages ?? [])[0];
-    const sectionId = page.sectionIds[0];
+  it("removes the page's section nodes from nodes when another page remains", () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    const page = (doc.pages ?? [])[1];
+    const root = doc.nodes[doc.rootId];
+    if (!root || root.type !== 'site') {
+      throw new Error('Expected site root');
+    }
+    const section = createWrapper('section', doc.rootId);
+    doc.nodes[section.id] = section;
+    root.children.splice(root.children.length - 1, 0, section.id);
+    page.sectionIds.push(section.id);
     const result = deletePage(doc, page.id);
-    expect(result.nodes[sectionId]).toBeUndefined();
+    expect(result.nodes[section.id]).toBeUndefined();
   });
 
   it('shared regions (header/footer) remain in nodes', () => {
-    const doc = makeDoc();
-    const page = (doc.pages ?? [])[0];
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    const page = (doc.pages ?? [])[1];
     const sharedIds = doc.sharedRegionIds ?? [];
     const result = deletePage(doc, page.id);
     for (const id of sharedIds) {
       expect(result.nodes[id]).toBeDefined();
     }
+  });
+
+  it('promotes the first remaining page to home when deleting the home page', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    const homePage = doc.pages?.find((page) => page.pageRole === 'home');
+    const result = deletePage(doc, homePage!.id);
+    expect(result.pages?.[0].pageRole).toBe('home');
   });
 });
 
@@ -182,6 +206,18 @@ describe('addPageSlugAlias / removePageSlugAlias', () => {
   });
 });
 
+describe('setPageVisibility', () => {
+  it('does not allow hiding the home page', () => {
+    const doc = makeDoc();
+    const homePage = doc.pages?.find((page) => page.pageRole === 'home');
+
+    const result = setPageVisibility(doc, homePage!.id, false);
+
+    expect(result).toBe(doc);
+    expect(result.pages?.find((page) => page.id === homePage!.id)?.visible).toBe(true);
+  });
+});
+
 describe('setPageParent', () => {
   it('sets parentPageId', () => {
     let doc = makeDoc();
@@ -212,6 +248,21 @@ describe('setPageParent', () => {
     const result = setPageParent(doc, parentId, childId);
     const parent = (result.pages ?? []).find((p) => p.id === parentId);
     expect(parent?.parentPageId).toBeUndefined();
+  });
+});
+
+describe('setPageAsHome', () => {
+  it('promotes any page to home without changing page order', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    const beforeOrder = doc.pages?.map((page) => page.id);
+    const aboutPage = doc.pages?.find((page) => page.slug === 'about');
+
+    const result = setPageAsHome(doc, aboutPage!.id);
+
+    expect(result.pages?.map((page) => page.id)).toEqual(beforeOrder);
+    expect(result.pages?.find((page) => page.id === aboutPage!.id)?.pageRole).toBe('home');
+    expect(result.pages?.filter((page) => page.pageRole === 'home')).toHaveLength(1);
   });
 });
 
@@ -250,9 +301,9 @@ describe('getPageForSection', () => {
 });
 
 describe('resolvePageUrl', () => {
-  it('home page with slug "" resolves to "/"', () => {
+  it('home page resolves to "/"', () => {
     const doc = makeDoc();
-    const homePage = (doc.pages ?? []).find((p) => p.slug === '');
+    const homePage = (doc.pages ?? []).find((p) => p.pageRole === 'home');
     expect(homePage).toBeDefined();
     const url = resolvePageUrl(doc, homePage!.id);
     expect(url).toBe('/');
@@ -275,6 +326,34 @@ describe('resolvePageUrl', () => {
     const teamPage = (doc.pages ?? []).find((p) => p.slug === 'team')!;
     const url = resolvePageUrl(doc, teamPage.id);
     expect(url).toBe('/about/team/');
+  });
+
+  it('keeps the hierarchy url as a system alias for the home page', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    const aboutPage = (doc.pages ?? []).find((p) => p.slug === 'about')!;
+    doc = setPageAsHome(doc, aboutPage.id);
+
+    expect(resolvePageUrl(doc, aboutPage.id)).toBe('/');
+    expect(resolvePageHierarchyUrl(doc, aboutPage.id)).toBe('/about/');
+    expect(resolvePageSystemAliasUrl(doc, aboutPage.id)).toBe('/about/');
+  });
+});
+
+describe('getAllPageRoutes', () => {
+  it('returns canonical and alias routes for the home page', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about', slugAliases: ['about-us'] });
+    const aboutPage = (doc.pages ?? []).find((p) => p.slug === 'about')!;
+    doc = setPageAsHome(doc, aboutPage.id);
+
+    expect(getAllPageRoutes(doc)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ pageId: aboutPage.id, kind: 'canonical', url: '/' }),
+        expect.objectContaining({ pageId: aboutPage.id, kind: 'system-alias', url: '/about/', redirectTo: '/' }),
+        expect.objectContaining({ pageId: aboutPage.id, kind: 'manual-alias', url: '/about-us/', redirectTo: '/' }),
+      ]),
+    );
   });
 });
 

@@ -21,6 +21,7 @@ import {
 } from '../fonts';
 import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } from '../model/links';
 import { getChildren, getNode } from '../model/selectors';
+import { setPageAsHome as setPageAsHomeDoc } from './pageApi';
 import type {
   BorderColorField,
   BorderRadiusField,
@@ -86,6 +87,7 @@ export {
   resolveStickyLayout,
   resolveWrapperStickyState,
   resolveUnitValuePx,
+  setPageAsHomeDoc,
   shouldOpenNavigationInNewTab,
   toggleDocumentFontFavorite,
   validateDocument,

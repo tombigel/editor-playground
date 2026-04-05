@@ -365,6 +365,23 @@ export function EditorTopbar({
 						</MenubarContent>
 					</MenubarMenu>
 
+					<MenubarMenu id="pages">
+						<MenubarTrigger>Pages</MenubarTrigger>
+						<MenubarContent>
+							<MenubarItem onClick={onAddPage}>New page</MenubarItem>
+							<MenubarCheckboxItem
+								checked={pagesOpen}
+								shortcut={getShortcutLabel(
+									"togglePagesPanel",
+									shortcutPlatform,
+								)}
+								onCheckedChange={onTogglePagesPanel}
+							>
+								Pages panel
+							</MenubarCheckboxItem>
+						</MenubarContent>
+					</MenubarMenu>
+
 					<MenubarMenu id="help">
 						<MenubarTrigger>Help</MenubarTrigger>
 						<MenubarContent>

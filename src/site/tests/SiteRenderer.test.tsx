@@ -147,4 +147,24 @@ describe('site/SiteRenderer', () => {
     expect(markup).not.toContain(`id="${hiddenSection.id}"`);
     expect(markup).not.toContain(`data-node-id="${hiddenChildId}"`);
   });
+
+  it('marks current-page links with aria-current', () => {
+    const document = structuredClone(createInitialDocument());
+    const homePage = document.pages?.find((page) => page.pageRole === 'home');
+    const pageLink = Object.values(document.nodes).find(
+      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+    );
+
+    if (!homePage || !pageLink || pageLink.type !== 'leaf' || pageLink.role !== 'link') {
+      throw new Error('Expected home page and link node');
+    }
+
+    pageLink.linkType = 'page';
+    pageLink.targetPageId = homePage.id;
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} pageId={homePage.id} />);
+
+    expect(markup).toContain(`data-node-id="${pageLink.id}"`);
+    expect(markup).toContain('aria-current="page"');
+  });
 });

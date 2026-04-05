@@ -23,4 +23,19 @@ describe('components/ui/page-switcher-select', () => {
     expect(markup).toContain('editor-topbar-page-switcher-row');
     expect(markup).toContain('New page');
   });
+
+  it('still exposes page creation when only one page exists', () => {
+    const markup = renderToStaticMarkup(
+      <PageSwitcherSelect
+        value="home"
+        defaultOpen
+        options={[{ id: 'home', label: 'Home', depth: 0 }]}
+        onValueChange={() => {}}
+        onCreatePage={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Home');
+    expect(markup).toContain('New page');
+  });
 });

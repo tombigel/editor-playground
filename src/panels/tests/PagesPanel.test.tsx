@@ -22,6 +22,7 @@ describe('panels/PagesPanel', () => {
         onAddPage={() => {}}
         onDeletePage={() => {}}
         onSetPageDisplayName={() => {}}
+        onSetPageAsHome={() => {}}
         onSetPageLang={() => {}}
         onSetPageSlug={() => {}}
         onAddPageAlias={() => {}}
@@ -46,6 +47,9 @@ describe('panels/PagesPanel', () => {
     expect(markup).toContain('Language');
     expect(markup).toContain('Validate links');
     expect(markup).toContain('Parent');
+    expect(markup).toContain('Home page');
+    expect(markup).toContain('system canonical');
+    expect(markup).not.toContain('Canonical route:');
   });
 
   it('renders site-wide page settings in the settings tab without export controls', () => {
@@ -64,6 +68,7 @@ describe('panels/PagesPanel', () => {
         onAddPage={() => {}}
         onDeletePage={() => {}}
         onSetPageDisplayName={() => {}}
+        onSetPageAsHome={() => {}}
         onSetPageLang={() => {}}
         onSetPageSlug={() => {}}
         onAddPageAlias={() => {}}

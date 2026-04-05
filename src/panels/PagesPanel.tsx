@@ -29,6 +29,7 @@ export type PagesPanelProps = {
   onAddPage: () => void;
   onDeletePage: (pageId: PageId) => void;
   onSetPageDisplayName: (pageId: PageId, name: string) => void;
+  onSetPageAsHome: (pageId: PageId) => void;
   onSetPageLang: (pageId: PageId, lang?: string) => void;
   onSetPageSlug: (pageId: PageId, slug: string) => void;
   onAddPageAlias: (pageId: PageId, alias: string) => void;
@@ -65,6 +66,7 @@ export function PagesPanel({
   onAddPage,
   onDeletePage,
   onSetPageDisplayName,
+  onSetPageAsHome,
   onSetPageLang,
   onSetPageSlug,
   onAddPageAlias,
@@ -241,10 +243,6 @@ export function PagesPanel({
                     }
                   }}
                   onDeletePage={onDeletePage}
-                  onOpenSettings={(pageId) => {
-                    setFocusedPageId(pageId);
-                    setActiveTab('page');
-                  }}
                   onSetPageParent={onSetPageParent}
                   onReorderPage={onReorderPage}
                   onSetPageVisibility={onSetPageVisibility}
@@ -254,11 +252,12 @@ export function PagesPanel({
                 <div className="max-w-[420px]">
                   {selectedPage ? (
                     <PageEditorContent
-                      page={selectedPage}
-                      document={document}
-                      onSetDisplayName={onSetPageDisplayName}
-                      onSetLang={onSetPageLang}
-                      onSetSlug={onSetPageSlug}
+                    page={selectedPage}
+                    document={document}
+                    onSetDisplayName={onSetPageDisplayName}
+                    onSetHomePage={onSetPageAsHome}
+                    onSetLang={onSetPageLang}
+                    onSetSlug={onSetPageSlug}
                       onAddAlias={onAddPageAlias}
                       onRemoveAlias={onRemovePageAlias}
                       onSetVisibility={onSetPageVisibility}

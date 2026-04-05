@@ -105,9 +105,10 @@ export interface VisibilityToggleProps {
   onToggle: () => void;
   nodeId: string;
   label?: string;
+  disabled?: boolean;
 }
 
-export function VisibilityToggle({ isHidden, onToggle, nodeId, label }: VisibilityToggleProps) {
+export function VisibilityToggle({ isHidden, onToggle, nodeId, label, disabled = false }: VisibilityToggleProps) {
   const defaultLabel = isHidden ? 'Show' : 'Hide';
 
   return (
@@ -118,8 +119,12 @@ export function VisibilityToggle({ isHidden, onToggle, nodeId, label }: Visibili
       className="editor-layers-action editor-layers-action-visibility h-7 w-7 rounded-md border"
       data-layers-control="true"
       aria-label={`${label ?? defaultLabel} ${nodeId}`}
+      disabled={disabled}
       onClick={(event) => {
         event.stopPropagation();
+        if (disabled) {
+          return;
+        }
         onToggle();
       }}
     >

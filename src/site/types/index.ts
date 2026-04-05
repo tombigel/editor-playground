@@ -1,5 +1,6 @@
 import type { DocumentModel } from '../../model/types';
 import type { PageId } from '../../model/types/site';
+import type { PageRouteKind } from '../../model/pageRoutes';
 
 export type SiteRendererProps = {
   document: DocumentModel;
@@ -31,6 +32,8 @@ export type SitePageExportBundle = {
   bodyHtml: string;
   css: string;
   htmlDocument: string;
+  kind?: 'page' | 'redirect';
+  redirectTo?: string;
 };
 
 export type RouteManifest = {
@@ -39,5 +42,7 @@ export type RouteManifest = {
     slug: string;
     url: string;
     filePath: string;
+    kind: PageRouteKind;
+    redirectTo?: string;
   }>;
 };

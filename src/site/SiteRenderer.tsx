@@ -14,6 +14,7 @@ export type { SiteRendererProps } from './types';
 // Module-level variables populated per render pass — avoids threading through every function
 let activeInteractKeys: Set<NodeId> = new Set();
 let renderDocument: DocumentModel | undefined;
+let renderPageId: NodeId | undefined;
 
 /** Wraps a rendered element in <interact-element> if the node has animations. */
 function wrapInteract(nodeId: NodeId, element: ReactElement): ReactElement {
@@ -31,6 +32,7 @@ export function SiteRenderer({ document, previewSticky = true, includeAnimations
   const plan = buildRenderRootPlan(document, previewSticky, {}, undefined, pageId);
   activeInteractKeys = includeAnimations ? collectInteractKeys(document) : new Set();
   renderDocument = document;
+  renderPageId = pageId;
 
   return (
     <div className={SITE_ROOT_CLASS}>
@@ -49,6 +51,12 @@ function getExternalNavigationProps(node: Extract<RenderLeafPlanNode['node'], { 
         target: '_blank',
         rel: 'noopener noreferrer',
       }
+    : {};
+}
+
+function getPageCurrentProps(node: Extract<RenderLeafPlanNode['node'], { role: 'link' | 'button' }>) {
+  return node.linkType === 'page' && node.targetPageId && node.targetPageId === renderPageId && !node.pageAnchorId
+    ? { 'aria-current': 'page' as const }
     : {};
 }
 
@@ -136,6 +144,7 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
         data-node-id={plan.node.id}
         href={getLinkHref(plan.node, renderDocument)}
         {...getExternalNavigationProps(plan.node)}
+        {...getPageCurrentProps(plan.node)}
       >
         {getNodeTextContent(plan.node)}
       </a>
@@ -148,6 +157,7 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
         data-node-id={plan.node.id}
         href={getLinkHref(plan.node, renderDocument)}
         {...getExternalNavigationProps(plan.node)}
+        {...getPageCurrentProps(plan.node)}
       >
         {getNodeTextContent(plan.node)}
       </a>

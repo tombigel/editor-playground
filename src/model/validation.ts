@@ -1,5 +1,6 @@
 import type { ButtonLeaf, DocumentModel, DocumentNode, LinkLeaf, NodeId, WrapperNode } from './types';
 import type { DocumentPage } from './types/site';
+import { getAllPageRoutes, getPageRole } from './pageRoutes';
 
 export type LinkValidationError = {
   nodeId: NodeId;
@@ -140,9 +141,17 @@ export function validateDocument(document: DocumentModel): string[] {
   if (document.pages && document.pages.length > 0) {
     const pages: DocumentPage[] = document.pages;
     const pageIds = new Set(pages.map((p) => p.id));
+    const homePages = pages.filter((page) => getPageRole(page) === 'home');
+
+    if (homePages.length !== 1) {
+      errors.push(`Exactly one home page is required; found ${homePages.length}.`);
+    }
 
     const slugsSeen = new Map<string, string>();
     for (const page of pages) {
+      if (page.slug === '') {
+        errors.push(`Page ${page.id} slug cannot be empty.`);
+      }
       if (slugsSeen.has(page.slug)) {
         errors.push(`Duplicate page slug "${page.slug}" on pages ${slugsSeen.get(page.slug)} and ${page.id}.`);
       } else {
@@ -165,6 +174,16 @@ export function validateDocument(document: DocumentModel): string[] {
         } else {
           slugOrAliasMap.set(alias, page.id);
         }
+      }
+    }
+
+    const routeOwners = new Map<string, string>();
+    for (const route of getAllPageRoutes(document)) {
+      const existing = routeOwners.get(route.url);
+      if (existing && existing !== route.pageId) {
+        errors.push(`Route "${route.url}" conflicts between pages ${existing} and ${route.pageId}.`);
+      } else {
+        routeOwners.set(route.url, route.pageId);
       }
     }
 
