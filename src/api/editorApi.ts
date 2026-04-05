@@ -23,6 +23,7 @@ import {
   resolveWrapperStickyState,
   serializeDocumentJson,
   setNodeVisibilityDoc,
+  setPageTopLevelWrapperPlacement,
   validateLinks,
   type DocumentModel,
   type DocumentNode,
@@ -31,6 +32,7 @@ import {
   type NodeOrderAction,
   type StickyGeometrySnapshot,
   type StickyLayoutState,
+  type TopLevelWrapperPlacement,
 } from './documentApi';
 
 /** Types shared between documentApi and editorApi, plus editor-specific types. */
@@ -43,6 +45,7 @@ export type {
   StickyGeometrySnapshot,
   StickyLayoutState,
   SectionTemplateId,
+  TopLevelWrapperPlacement,
 };
 export type { EditorState, FocusedMode } from '../editor/editorStore';
 
@@ -140,5 +143,6 @@ export {
   resolveWrapperStickyState,
   serializeDocumentJson,
   setNodeVisibilityDoc,
+  setPageTopLevelWrapperPlacement,
   validateLinks,
 };

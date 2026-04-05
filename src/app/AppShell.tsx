@@ -1246,6 +1246,9 @@ export function AppShell({
 						onRemovePageAlias={(pageId, alias) =>
 							dispatch({ type: "removePageSlugAlias", pageId, alias })
 						}
+						onSetTopLevelWrapperPlacement={(pageId, nodeId, placement) =>
+							dispatch({ type: "setPageTopLevelWrapperPlacement", pageId, nodeId, placement })
+						}
 						onSyncPageLinks={(oldUrl, newUrl) =>
 							dispatch({ type: "syncPageLinks", oldUrl, newUrl })
 						}

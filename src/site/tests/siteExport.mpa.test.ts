@@ -19,7 +19,7 @@ function promoteHome(document: ReturnType<typeof createInitialDocument>, pageId:
 }
 
 describe('site/siteExport MPA', () => {
-  it('buildRenderRootPlan with pageId returns only that page sections plus shared header/footer', () => {
+  it('buildRenderRootPlan with pageId returns only that page wrappers plus shared top-level wrappers', () => {
     let doc = createInitialDocument();
     const homePage = doc.pages![0];
 

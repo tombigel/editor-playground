@@ -37,6 +37,8 @@ export type HistoryEntry = {
   pagesAfter: DocumentPage[] | undefined;
   siteSettingsBefore: SiteSettings | undefined;
   siteSettingsAfter: SiteSettings | undefined;
+  sharedRegionIdsBefore: NodeId[] | undefined;
+  sharedRegionIdsAfter: NodeId[] | undefined;
   activePageIdBefore: PageId | null;
   activePageIdAfter: PageId | null;
 };
@@ -138,6 +140,7 @@ export type EditorAction =
   | { type: 'setPageLang'; pageId: PageId; lang?: string }
   | { type: 'setPageSlug'; pageId: PageId; slug: string }
   | { type: 'setPageParent'; pageId: PageId; parentPageId: PageId | null }
+  | { type: 'setPageTopLevelWrapperPlacement'; pageId: PageId; nodeId: NodeId; placement: 'currentPage' | 'global' }
   | { type: 'setPageVisibility'; pageId: PageId; visible: boolean }
   | { type: 'setPageViewTransition'; pageId: PageId; transition: DocumentPage['viewTransition'] }
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }

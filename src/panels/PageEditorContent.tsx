@@ -7,7 +7,8 @@ import {
   resolvePageUrl,
   validatePageSlug,
 } from '@/api/pageApi';
-import type { DocumentModel, DocumentPage, PageId } from '@/api/editorApi';
+import type { DocumentModel, DocumentPage, PageId, TopLevelWrapperPlacement } from '@/api/editorApi';
+import type { WrapperNode } from '../model/types';
 import { createLanguageSelectOptions } from '@/i18n/languages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +43,7 @@ export function PageEditorContent({
   onSetVisibility,
   onSetViewTransition,
   onSetParent,
+  onSetTopLevelWrapperPlacement,
   onSyncPageLinks,
   onValidateLinks,
   className = '',
@@ -57,6 +59,7 @@ export function PageEditorContent({
   onSetVisibility: (pageId: PageId, visible: boolean) => void;
   onSetViewTransition: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
   onSetParent: (pageId: PageId, parentPageId: PageId | null) => void;
+  onSetTopLevelWrapperPlacement: (pageId: PageId, nodeId: string, placement: TopLevelWrapperPlacement) => void;
   onSyncPageLinks: (oldUrl: string, newUrl: string) => void;
   onValidateLinks: () => void;
   className?: string;
@@ -83,6 +86,31 @@ export function PageEditorContent({
       (candidate) => candidate.id !== page.id && !isDescendant(candidate.id, page.id, pages),
     );
   }, [document.pages, page.id]);
+  const pagePlacementWrappers = useMemo(() => {
+    const root = document.nodes[document.rootId];
+    if (!root || root.type !== 'site') {
+      return [] as Array<{ id: string; name: string; role: WrapperNode['role']; placement: TopLevelWrapperPlacement }>;
+    }
+
+    const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
+    const pageSectionIds = new Set(page.sectionIds);
+
+    return root.children
+      .map((id) => document.nodes[id])
+      .filter(
+        (node): node is WrapperNode =>
+          !!node &&
+          node.type === 'wrapper' &&
+          node.visible &&
+          (sharedRegionIds.has(node.id) || pageSectionIds.has(node.id)),
+      )
+      .map((node) => ({
+        id: node.id,
+        name: node.name,
+        role: node.role,
+        placement: sharedRegionIds.has(node.id) ? 'global' : 'currentPage',
+      }));
+  }, [document.nodes, document.rootId, document.sharedRegionIds, page.sectionIds]);
 
   function handleDisplayNameCommit(value: string) {
     const trimmed = value.trim();
@@ -344,6 +372,33 @@ export function PageEditorContent({
             </Button>
           </div>
         </div>
+      </PlainGroup>
+
+      <PlainGroup title="Page placement">
+        {pagePlacementWrappers.length > 0 ? (
+          <div className="space-y-2">
+            {pagePlacementWrappers.map((wrapper) => (
+              <InspectorInlineRow key={wrapper.id} label={wrapper.name}>
+                <Select
+                  value={wrapper.placement}
+                  onValueChange={(value) =>
+                    onSetTopLevelWrapperPlacement(page.id, wrapper.id, value as TopLevelWrapperPlacement)
+                  }
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="currentPage">Current page</SelectItem>
+                    <SelectItem value="global">Global</SelectItem>
+                  </SelectContent>
+                </Select>
+              </InspectorInlineRow>
+            ))}
+          </div>
+        ) : (
+          <p className="editor-text-muted text-xs">No eligible top-level wrappers on this page.</p>
+        )}
       </PlainGroup>
 
       <PlainGroup title="Page behavior">

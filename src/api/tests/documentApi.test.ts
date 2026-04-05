@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledGoogleFontsCatalog } from '../../fonts';
 import { createLeaf, createSectionFromTemplate, createWrapper } from '../../model/defaults';
+import { createPage } from '../../model/pageDefaults';
 import {
   applyDocumentCommands,
   createInitialDocument,
@@ -12,6 +13,7 @@ import {
   setNodeRect,
   setNodeSticky,
   setNodeTextField,
+  setPageTopLevelWrapperPlacement,
 } from '../documentApi';
 
 function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>) {
@@ -232,6 +234,32 @@ describe('api/documentApi', () => {
     expect(next).not.toBe(document);
     expect(next.nodes[nodeId]?.visible).toBe(false);
     expect(document.nodes[nodeId]?.visible).toBe(true);
+  });
+
+  it('moves a top-level wrapper between current page ownership and global placement', () => {
+    const document = createInitialDocument();
+    const homePage = document.pages?.[0];
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const withAbout = {
+      ...document,
+      pages: [...(document.pages ?? []), aboutPage],
+    };
+
+    const global = setPageTopLevelWrapperPlacement(withAbout, homePage.id, section.id, 'global');
+    expect(global.sharedRegionIds).toContain(section.id);
+    expect(global.pages?.find((page) => page.id === homePage.id)?.sectionIds).not.toContain(section.id);
+
+    const current = setPageTopLevelWrapperPlacement(global, aboutPage.id, section.id, 'currentPage');
+    expect(current.sharedRegionIds ?? []).not.toContain(section.id);
+    expect(current.pages?.find((page) => page.id === aboutPage.id)?.sectionIds).toContain(section.id);
+    expect(current.pages?.find((page) => page.id === homePage.id)?.sectionIds ?? []).not.toContain(section.id);
   });
 
   it('moves nodes to an exact tree index', () => {

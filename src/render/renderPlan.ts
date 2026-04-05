@@ -13,6 +13,7 @@ import {
   getContentSpacerClassName,
   getNodeClassName,
   getRootWrappers,
+  getRootWrappersForPage,
   getTrackClassName,
   getTrackSpacerClassName,
   getWrapperTag,
@@ -39,25 +40,7 @@ export function buildRenderRootPlan(
   let wrappers: WrapperNode[];
 
   if (pageId && document.pages) {
-    const page = document.pages.find((p) => p.id === pageId);
-    if (page) {
-      const sharedWrappers = (document.sharedRegionIds ?? [])
-        .map((id) => document.nodes[id])
-        .filter((node): node is WrapperNode => !!node && node.type === 'wrapper' && node.visible);
-      const { header, footer } = splitRootWrappers(sharedWrappers);
-
-      const sectionWrappers = page.sectionIds
-        .map((id) => document.nodes[id])
-        .filter((node): node is WrapperNode => !!node && node.type === 'wrapper' && node.visible);
-
-      wrappers = [
-        ...(header ? [header] : []),
-        ...sectionWrappers,
-        ...(footer ? [footer] : []),
-      ];
-    } else {
-      wrappers = getRootWrappers(document);
-    }
+    wrappers = getRootWrappersForPage(document, pageId);
   } else {
     wrappers = getRootWrappers(document);
   }

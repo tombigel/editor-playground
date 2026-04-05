@@ -34,6 +34,7 @@ export type PagesPanelProps = {
   onSetPageSlug: (pageId: PageId, slug: string) => void;
   onAddPageAlias: (pageId: PageId, alias: string) => void;
   onRemovePageAlias: (pageId: PageId, alias: string) => void;
+  onSetTopLevelWrapperPlacement: (pageId: PageId, nodeId: string, placement: 'currentPage' | 'global') => void;
   onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
   onSetPageViewTransition: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
   onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
@@ -71,6 +72,7 @@ export function PagesPanel({
   onSetPageSlug,
   onAddPageAlias,
   onRemovePageAlias,
+  onSetTopLevelWrapperPlacement,
   onSetPageVisibility,
   onSetPageViewTransition,
   onSetPageParent,
@@ -263,6 +265,7 @@ export function PagesPanel({
                       onSetVisibility={onSetPageVisibility}
                       onSetViewTransition={onSetPageViewTransition}
                       onSetParent={onSetPageParent}
+                      onSetTopLevelWrapperPlacement={onSetTopLevelWrapperPlacement}
                       onSyncPageLinks={onSyncPageLinks}
                       onValidateLinks={onValidateLinks}
                     />

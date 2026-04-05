@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
+import { createPage } from '../../model/pageDefaults';
 import { parseUnitValue } from '../../model/units';
+import { setPageTopLevelWrapperPlacement } from '../../api/documentApi';
 import { buildRenderRootPlan, getTrackSpacerDescriptor } from '../renderPlan';
+import { renderPageHtmlDocument } from '../../site/siteExport';
 
 describe('render/renderPlan', () => {
   it('builds a root plan with header, main sections, and footer', () => {
@@ -12,6 +15,49 @@ describe('render/renderPlan', () => {
     expect(plan.main).toHaveLength(1);
     expect(plan.main[0]?.isTopLevel).toBe(true);
     expect(plan.footer?.kind).toBe('wrapper');
+  });
+
+  it('includes global top-level wrappers in every page render plan', () => {
+    const document = createInitialDocument();
+    const homePage = document.pages?.[0];
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const withAbout = {
+      ...document,
+      pages: [...(document.pages ?? []), aboutPage],
+    };
+    const global = setPageTopLevelWrapperPlacement(withAbout, homePage.id, section.id, 'global');
+
+    const homePlan = buildRenderRootPlan(global, true, {}, undefined, homePage.id);
+    const aboutPlan = buildRenderRootPlan(global, true, {}, undefined, aboutPage.id);
+
+    expect(homePlan.main.map((node) => node.node.id)).toContain(section.id);
+    expect(aboutPlan.main.map((node) => node.node.id)).toContain(section.id);
+  });
+
+  it('renderPageHtmlDocument includes global top-level wrappers on every page', () => {
+    const document = createInitialDocument();
+    const homePage = document.pages?.[0];
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const withAbout = {
+      ...document,
+      pages: [...(document.pages ?? []), aboutPage],
+    };
+    const global = setPageTopLevelWrapperPlacement(withAbout, homePage.id, section.id, 'global');
+    const homeHtml = renderPageHtmlDocument(global, homePage.id);
+    const aboutHtml = renderPageHtmlDocument(global, aboutPage.id);
+
+    expect(homeHtml).toContain(`data-node-id="${section.id}"`);
+    expect(aboutHtml).toContain(`data-node-id="${section.id}"`);
   });
 
   it('propagates measured geometry into wrapper mesh placement', () => {

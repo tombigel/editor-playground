@@ -195,8 +195,8 @@ export function validateDocument(document: DocumentModel): string[] {
         const node = document.nodes[sectionId];
         if (!node) {
           errors.push(`Page ${page.id} references missing section node ${sectionId}.`);
-        } else if (node.type !== 'wrapper' || node.role !== 'section') {
-          errors.push(`Page ${page.id} section ${sectionId} must be a wrapper with role "section".`);
+        } else if (node.type !== 'wrapper' || node.parentId !== document.rootId || node.role !== 'section') {
+          errors.push(`Page ${page.id} section ${sectionId} must be a top-level wrapper with role "section".`);
         }
         if (sectionIdsSeen.has(sectionId)) {
           errors.push(`Section ${sectionId} appears in more than one page (${sectionIdsSeen.get(sectionId)} and ${page.id}).`);
@@ -206,13 +206,22 @@ export function validateDocument(document: DocumentModel): string[] {
       }
     }
 
+    const sharedRegionIdsSeen = new Set<string>();
     if (document.sharedRegionIds) {
       for (const regionId of document.sharedRegionIds) {
         const node = document.nodes[regionId];
         if (!node) {
           errors.push(`sharedRegionIds references missing node ${regionId}.`);
-        } else if (node.type !== 'wrapper') {
-          errors.push(`sharedRegionIds node ${regionId} must be a wrapper.`);
+        } else if (node.type !== 'wrapper' || node.parentId !== document.rootId) {
+          errors.push(`sharedRegionIds node ${regionId} must be a top-level wrapper.`);
+        }
+        if (sectionIdsSeen.has(regionId)) {
+          errors.push(`sharedRegionIds node ${regionId} cannot also belong to page ${sectionIdsSeen.get(regionId)}.`);
+        }
+        if (sharedRegionIdsSeen.has(regionId)) {
+          errors.push(`sharedRegionIds node ${regionId} appears more than once.`);
+        } else {
+          sharedRegionIdsSeen.add(regionId);
         }
       }
     }

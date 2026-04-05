@@ -87,6 +87,7 @@ Node ids are monotonic per session and are synchronized against the loaded docum
 | `nodes` | Full document node graph |
 | `fontLibrary` | Document-scoped font manifest |
 | `pages` | Array of page definitions (each with `id`, `displayName`, `slug`, `sectionIds`, `slugAliases`, `parentPageId`) |
+| `sharedRegionIds` | Root-level wrapper ids shared across all pages |
 | `siteSettings` | Site-level settings including `outputStructure` ('directory' or 'flat') |
 
 ### Font library fields
@@ -163,17 +164,18 @@ Links support `linkType: 'page'` in addition to `'anchor'` and `'external'`:
 ### Editor page switching
 
 - `activePageId` in editor state determines which page's sections render on stage
-- Stage displays only the active page's main sections plus shared header/footer
+- Stage displays the active page's current-page top-level wrappers plus shared top-level wrappers
 - Page switching is immediate; undo/redo preserves page selection
 - No-selection state shows page inspector allowing creation and settings
 - The floating Pages panel is always available, including for single-page sites; it is the inline surface for page aliases, home assignment, visibility, transition, and parent settings
+- The Pages panel also exposes `Current page` and `Global` placement for eligible top-level wrappers, using `sharedRegionIds` for page-agnostic wrappers
 
 ### Preview mode and export
 
 - Pages are rendered as static HTML files during export
 - `outputStructure` in `siteSettings` determines file layout: `'directory'` (index.html per directory) or `'flat'` (one .html per page)
 - `renderSiteExportBundles` returns bundles with paths and content for all pages
-- Each page gets its own full HTML document with shared header/footer
+- Each page gets its own full HTML document with shared top-level wrappers plus its own current-page wrappers
 
 ## Wrapper Model
 

@@ -24,6 +24,7 @@ import {
   resizeNode,
   reorderNodes,
   setNodeVisibility,
+  setPageTopLevelWrapperPlacement,
   selectNode,
   selectManyNodes,
   toggleNodeSelection,
@@ -354,6 +355,11 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setPageSlug(state.document, action.pageId, action.slug) };
     case 'setPageParent':
       return { ...state, document: setPageParent(state.document, action.pageId, action.parentPageId) };
+    case 'setPageTopLevelWrapperPlacement':
+      return {
+        ...state,
+        document: setPageTopLevelWrapperPlacement(state.document, action.pageId, action.nodeId, action.placement),
+      };
     case 'setPageVisibility':
       return { ...state, document: setPageVisibility(state.document, action.pageId, action.visible) };
     case 'setPageViewTransition':

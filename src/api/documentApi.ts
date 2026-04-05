@@ -22,6 +22,7 @@ import {
 import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } from '../model/links';
 import { getChildren, getNode } from '../model/selectors';
 import { setPageAsHome as setPageAsHomeDoc } from './pageApi';
+import type { DocumentPage, PageId } from '../model/types/site';
 import type {
   BorderColorField,
   BorderRadiusField,
@@ -46,6 +47,7 @@ import { validateDocument, validateLinks } from '../model/validation';
 import type { DocumentCommand } from './types/index';
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
+export type TopLevelWrapperPlacement = 'currentPage' | 'global';
 
 export type {
   ComputedWrapperStickyState,
@@ -99,6 +101,10 @@ export function cloneDocument(document: DocumentModel): DocumentModel {
     rootId: document.rootId,
     nodes: structuredClone(document.nodes),
     fontLibrary: structuredClone(document.fontLibrary),
+    ...(document.animationSettings !== undefined ? { animationSettings: structuredClone(document.animationSettings) } : {}),
+    ...(document.pages !== undefined ? { pages: structuredClone(document.pages) } : {}),
+    ...(document.siteSettings !== undefined ? { siteSettings: structuredClone(document.siteSettings) } : {}),
+    ...(document.sharedRegionIds !== undefined ? { sharedRegionIds: [...document.sharedRegionIds] } : {}),
   };
 }
 
@@ -409,6 +415,61 @@ export function setNodeVisibilityDoc(
   return next;
 }
 
+export function setPageTopLevelWrapperPlacement(
+  document: DocumentModel,
+  pageId: PageId,
+  nodeId: NodeId,
+  placement: TopLevelWrapperPlacement,
+): DocumentModel {
+  const root = document.nodes[document.rootId];
+  const page = document.pages?.find((entry) => entry.id === pageId);
+  const node = document.nodes[nodeId];
+  if (!root || root.type !== 'site' || !page || !node || node.type !== 'wrapper') {
+    return document;
+  }
+  if (node.parentId !== document.rootId || !isEligibleTopLevelWrapper(node.role)) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const pages = structuredClone(document.pages ?? []);
+  const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
+  const targetPage = pages.find((entry) => entry.id === pageId);
+  if (!targetPage) {
+    return document;
+  }
+
+  let changed = false;
+
+  for (const candidate of pages) {
+    const originalLength = candidate.sectionIds.length;
+    candidate.sectionIds = candidate.sectionIds.filter((sectionId) => sectionId !== nodeId);
+    if (candidate.sectionIds.length !== originalLength) {
+      changed = true;
+    }
+  }
+
+  if (sharedRegionIds.delete(nodeId)) {
+    changed = true;
+  }
+
+  if (placement === 'global') {
+    sharedRegionIds.add(nodeId);
+    changed = true;
+  } else if (!targetPage.sectionIds.includes(nodeId)) {
+    targetPage.sectionIds.push(nodeId);
+    changed = true;
+  }
+
+  if (!changed || !hasTopLevelPlacementChange(document, pages, sharedRegionIds)) {
+    return document;
+  }
+
+  next.pages = pages;
+  next.sharedRegionIds = Array.from(sharedRegionIds);
+  return next;
+}
+
 function normalizeTextDecorationLine(
   value: string,
 ): 'none' | 'underline' | 'line-through' | 'underline line-through' {
@@ -464,6 +525,26 @@ function isShadowStyleField(field: EditorTextField): field is ShadowStyleField {
     field === 'shadowSpread' ||
     field === 'shadowOffsetX' ||
     field === 'shadowOffsetY'
+  );
+}
+
+function isEligibleTopLevelWrapper(role: WrapperNode['role']) {
+  return role === 'section' || role === 'header' || role === 'footer';
+}
+
+function hasTopLevelPlacementChange(
+  before: DocumentModel,
+  pages: DocumentPage[],
+  sharedRegionIds: Set<NodeId>,
+) {
+  const beforePages = (before.pages ?? []).map((page) => ({ id: page.id, sectionIds: page.sectionIds }));
+  const afterPages = pages.map((page) => ({ id: page.id, sectionIds: page.sectionIds }));
+  const beforeShared = before.sharedRegionIds ?? [];
+  const afterShared = Array.from(sharedRegionIds);
+
+  return (
+    JSON.stringify(beforePages) !== JSON.stringify(afterPages) ||
+    JSON.stringify(beforeShared) !== JSON.stringify(afterShared)
   );
 }
 

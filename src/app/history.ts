@@ -65,9 +65,10 @@ export function buildHistoryEntry(
   const fontLibraryChanged = !deepEqual(before.document.fontLibrary, after.document.fontLibrary);
   const pagesChanged = !deepEqual(before.document.pages, after.document.pages);
   const siteSettingsChanged = !deepEqual(before.document.siteSettings, after.document.siteSettings);
+  const sharedRegionIdsChanged = !deepEqual(before.document.sharedRegionIds, after.document.sharedRegionIds);
   const activePageIdChanged = before.activePageId !== after.activePageId;
 
-  if (!selectedChanged && !pendingChanged && !rootChanged && !fontLibraryChanged && !pagesChanged && !siteSettingsChanged && !activePageIdChanged && patches.length === 0) {
+  if (!selectedChanged && !pendingChanged && !rootChanged && !fontLibraryChanged && !pagesChanged && !siteSettingsChanged && !sharedRegionIdsChanged && !activePageIdChanged && patches.length === 0) {
     return null;
   }
 
@@ -89,6 +90,8 @@ export function buildHistoryEntry(
     pagesAfter: structuredClone(after.document.pages),
     siteSettingsBefore: structuredClone(before.document.siteSettings),
     siteSettingsAfter: structuredClone(after.document.siteSettings),
+    sharedRegionIdsBefore: structuredClone(before.document.sharedRegionIds),
+    sharedRegionIdsAfter: structuredClone(after.document.sharedRegionIds),
     activePageIdBefore: before.activePageId,
     activePageIdAfter: after.activePageId,
   };
@@ -142,6 +145,8 @@ export function composeHistoryEntries(previous: HistoryEntry, next: HistoryEntry
     pagesAfter: next.pagesAfter,
     siteSettingsBefore: previous.siteSettingsBefore,
     siteSettingsAfter: next.siteSettingsAfter,
+    sharedRegionIdsBefore: previous.sharedRegionIdsBefore,
+    sharedRegionIdsAfter: next.sharedRegionIdsAfter,
     activePageIdBefore: previous.activePageIdBefore,
     activePageIdAfter: next.activePageIdAfter,
   };
@@ -170,6 +175,7 @@ export function applyHistoryEntry(
     selectedIds[0] ?? (selectedCandidate && nodes[selectedCandidate] ? selectedCandidate : null);
   const pages = direction === 'undo' ? entry.pagesBefore : entry.pagesAfter;
   const siteSettings = direction === 'undo' ? entry.siteSettingsBefore : entry.siteSettingsAfter;
+  const sharedRegionIds = direction === 'undo' ? entry.sharedRegionIdsBefore : entry.sharedRegionIdsAfter;
   const activePageId = direction === 'undo' ? entry.activePageIdBefore : entry.activePageIdAfter;
 
   return {
@@ -181,7 +187,7 @@ export function applyHistoryEntry(
       ...(present.document.animationSettings ? { animationSettings: present.document.animationSettings } : {}),
       ...(pages !== undefined ? { pages: structuredClone(pages) } : {}),
       ...(siteSettings !== undefined ? { siteSettings: structuredClone(siteSettings) } : {}),
-      ...(present.document.sharedRegionIds ? { sharedRegionIds: present.document.sharedRegionIds } : {}),
+      ...(sharedRegionIds !== undefined ? { sharedRegionIds: structuredClone(sharedRegionIds) } : {}),
     },
     activePageId: activePageId ?? present.activePageId,
     selectedId,

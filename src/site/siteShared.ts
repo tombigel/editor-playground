@@ -36,20 +36,22 @@ export function getRootWrappersForPage(document: DocumentModel, pageId: PageId) 
   const page = document.pages?.find((p) => p.id === pageId);
   if (!page) return getRootWrappers(document);
 
-  const sharedWrappers = (document.sharedRegionIds ?? [])
-    .map((id) => document.nodes[id])
-    .filter((node): node is WrapperNode => !!node && node.type === 'wrapper' && node.visible);
-  const { header, footer } = splitRootWrappers(sharedWrappers);
+  const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
+  const pageSectionIds = new Set(page.sectionIds);
+  const root = document.nodes[document.rootId];
+  if (!root || root.type !== 'site') {
+    return [];
+  }
 
-  const sectionWrappers = page.sectionIds
+  return root.children
     .map((id) => document.nodes[id])
-    .filter((node): node is WrapperNode => !!node && node.type === 'wrapper' && node.visible);
-
-  return [
-    ...(header ? [header] : []),
-    ...sectionWrappers,
-    ...(footer ? [footer] : []),
-  ];
+    .filter(
+      (node): node is WrapperNode =>
+        !!node &&
+        node.type === 'wrapper' &&
+        node.visible &&
+        (sharedRegionIds.has(node.id) || pageSectionIds.has(node.id)),
+    );
 }
 
 export function getWrapperChildren(document: DocumentModel, wrapperId: string) {

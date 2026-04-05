@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, insertLeaf, updateTextField } from '../../editor/editorStore';
+import { setPageTopLevelWrapperPlacement } from '../../api/documentApi';
+import { createPage } from '../../model/pageDefaults';
 import { buildHistoryEntry, clampHistoryLimit, deepEqual } from '../history';
 
 describe('app/history', () => {
@@ -71,6 +73,35 @@ describe('app/history', () => {
     expect(entry?.selectedAfter).toBe(ids[1]);
     expect(entry?.selectedIdsBefore).toEqual(ids);
     expect(entry?.selectedIdsAfter).toEqual([...ids].reverse());
+  });
+
+  it('tracks shared region placement changes in history entries', () => {
+    const state = createInitialState();
+    const homePage = state.document.pages?.[0];
+    const section = Object.values(state.document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const before = {
+      ...state,
+      document: {
+        ...state.document,
+        pages: [...(state.document.pages ?? []), aboutPage],
+      },
+    };
+    const after = {
+      ...before,
+      document: setPageTopLevelWrapperPlacement(before.document, homePage.id, section.id, 'global'),
+    };
+
+    const entry = buildHistoryEntry(before, after, null, Date.now());
+
+    expect(entry?.sharedRegionIdsBefore).toEqual(before.document.sharedRegionIds);
+    expect(entry?.sharedRegionIdsAfter).toContain(section.id);
   });
 
   it('clamps history limits to the configured bounds', () => {
