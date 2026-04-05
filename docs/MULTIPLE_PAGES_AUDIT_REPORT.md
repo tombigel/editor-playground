@@ -48,6 +48,28 @@ The main open gaps are:
 
 The following blockers from the initial audit are now resolved in the current repo state.
 
+### Top-level wrapper page visibility targeting
+
+- eligible top-level wrappers now support authored visibility targeting with `Hidden`, `Current page`, `All pages`, and `Custom pages`
+- the canonical editing surfaces are now the Components panel and the Inspector, not the Pages panel
+- stage, preview, and export all resolve top-level wrappers through the same per-page visibility rules
+- custom page targeting is validated and cleaned up when pages are removed
+- regular node visibility remains a separate `visible` / `hidden` inspector concern and is not treated as page targeting
+
+Relevant subsystems:
+
+- `src/model/topLevelWrapperVisibility.ts`
+- `src/api/documentApi.ts`
+- `src/api/pageApi.ts`
+- `src/panels/LayersPanel.tsx`
+- `src/panels/controls/TopLevelWrapperVisibilityControl.tsx`
+- `src/panels/inspector/CommonSections.tsx`
+- `src/site/siteShared.ts`
+- `src/render/renderPlan.ts`
+- `src/api/tests/documentApi.test.ts`
+- `src/panels/tests/LayersPanel.test.tsx`
+- `src/panels/tests/InspectorPanel.test.tsx`
+
 ### Stage and preview page wiring
 
 - `activePageId` now flows from `AppShell` into `Stage`, and from `Stage` into `StageScene`
@@ -270,20 +292,22 @@ Relevant subsystems:
 - `src/panels/PagesPanel.tsx`
 - `src/app/AppShell.tsx`
 
-### 4. Documentation still overstates completion
+### ~~4. Documentation still overstates completion~~ Mostly fixed
 
 Current state:
 
-- roadmap/spec text still describe parts of the feature set as more complete than the repo currently demonstrates, especially around export/routing and preview/navigation quality
+- the roadmap, spec, and this audit now reflect shipped page visibility behavior more accurately, including the move from the Pages panel to the Components panel and Inspector
+- the remaining documentation follow-up is narrower: keep future page-chrome changes and visibility-menu polish updates aligned across the docs set
 
 Evidence:
 
 - `docs/PLAYGROUND_ROADMAP.md`
 - `docs/PLAYGROUND_SPEC.md`
+- `docs/MULTIPLE_PAGES_AUDIT_REPORT.md`
 
 Impact:
 
-- product and implementation status are not communicated accurately
+- product and implementation status are materially clearer than in the initial audit, but visual-polish follow-ups still need to be reflected when they land
 
 ### P2
 
@@ -293,6 +317,7 @@ Current state:
 
 - the top bar, left rail, and inspector current-page surface now feel materially more integrated
 - the dedicated Pages panel is functionally stronger, but its two-column layout and embedded editor still have less visual refinement than the strongest editor surfaces
+- the new top-level wrapper visibility menu is functionally complete, but its visual treatment should still be refined in the Components panel and Inspector
 
 Impact:
 
@@ -327,6 +352,7 @@ Impact:
 | Slug sync flow | Implemented |
 | Follow-link popup | Implemented |
 | Link validation workflow | Implemented |
+| Top-level wrapper page visibility targeting | Implemented |
 | Server-side routing export support | Implemented |
 
 ## Recommended Fix Plan
@@ -351,7 +377,7 @@ The current state is meaningfully better than the initial audit suggested. The c
 
 The remaining work is now concentrated in two areas:
 
-- page-management UX depth (page tree interactions, dedicated panel visual polish)
-- documentation accuracy
+- page-management and visibility-surface visual polish
+- keeping documentation aligned as those polish passes land
 
 This should now be treated as a partially completed product feature with solid core plumbing and much stronger editor integration, rather than a fundamentally broken implementation.
