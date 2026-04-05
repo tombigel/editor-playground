@@ -3,7 +3,7 @@ import {
   ArrowDownToLine,
   Eye,
   Keyboard,
-  LayoutGrid,
+  BookOpenText,
   SlidersHorizontal,
   ToggleRight,
   Type,
@@ -37,7 +37,7 @@ export const SETTINGS_SECTION_META: SettingsSectionMeta[] = [
   {
     id: 'pages',
     label: 'Pages',
-    icon: LayoutGrid,
+    icon: BookOpenText,
     description: 'Site page defaults and language.',
   },
   {

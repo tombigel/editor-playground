@@ -1,11 +1,22 @@
 import { useMemo } from "react";
 import {
+	BookOpen,
+	BookOpenText,
+	ClipboardPaste,
+	Copy,
+	CopyPlus,
 	Eye,
 	FileDown,
 	FileJson,
 	FileUp,
+	Info,
+	Keyboard,
+	Layers2,
+	Palette,
 	Redo2,
 	Settings,
+	SwatchBook,
+	Trash2,
 	Undo2,
 } from "lucide-react";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
@@ -168,7 +179,7 @@ export function EditorTopbar({
 
 				<Menubar className="min-w-0 flex-1">
 					<MenubarMenu id="settings">
-						<MenubarTrigger icon={Settings}>Settings</MenubarTrigger>
+						<MenubarTrigger>Settings</MenubarTrigger>
 						<MenubarContent>
 							<MenubarItem icon={FileUp} onClick={onImportJson}>
 								Import JSON
@@ -180,26 +191,13 @@ export function EditorTopbar({
 								Export site
 							</MenubarItem>
 							<MenubarSeparator />
-							<MenubarPanelLinkItem
+							<MenubarItem
+								icon={Settings}
+								shortcut={getShortcutLabel("openSettings", shortcutPlatform)}
 								onClick={() => onOpenSettingsSection("display")}
 							>
-								UI
-							</MenubarPanelLinkItem>
-							<MenubarPanelLinkItem
-								onClick={() => onOpenSettingsSection("defaults")}
-							>
-								Defaults
-							</MenubarPanelLinkItem>
-							<MenubarPanelLinkItem
-								onClick={() => onOpenSettingsSection("fonts")}
-							>
-								Fonts
-							</MenubarPanelLinkItem>
-							<MenubarPanelLinkItem
-								onClick={() => onOpenSettingsSection("advanced")}
-							>
-								Advanced
-							</MenubarPanelLinkItem>
+								Open Settings
+							</MenubarItem>
 						</MenubarContent>
 					</MenubarMenu>
 
@@ -207,6 +205,7 @@ export function EditorTopbar({
 						<MenubarTrigger>Edit</MenubarTrigger>
 						<MenubarContent>
 							<MenubarItem
+								icon={Undo2}
 								shortcut={getShortcutLabel("undo", shortcutPlatform)}
 								disabled={historyState.past.length === 0}
 								onClick={onUndo}
@@ -214,6 +213,7 @@ export function EditorTopbar({
 								Undo
 							</MenubarItem>
 							<MenubarItem
+								icon={Redo2}
 								shortcut={getShortcutLabel("redo", shortcutPlatform)}
 								disabled={historyState.future.length === 0}
 								onClick={onRedo}
@@ -221,10 +221,11 @@ export function EditorTopbar({
 								Redo
 							</MenubarItem>
 							<MenubarSeparator />
-							<MenubarItem disabled>Copy</MenubarItem>
-							<MenubarItem disabled>Duplicate</MenubarItem>
-							<MenubarItem disabled>Paste</MenubarItem>
+							<MenubarItem icon={Copy} disabled>Copy</MenubarItem>
+							<MenubarItem icon={CopyPlus} disabled>Duplicate</MenubarItem>
+							<MenubarItem icon={ClipboardPaste} disabled>Paste</MenubarItem>
 							<MenubarItem
+								icon={Trash2}
 								shortcut={getShortcutLabel("deleteSelection", shortcutPlatform)}
 								disabled={!canDeleteSelection}
 								onClick={onDeleteSelection}
@@ -237,8 +238,9 @@ export function EditorTopbar({
 					<MenubarMenu id="view">
 						<MenubarTrigger>View</MenubarTrigger>
 						<MenubarContent>
-							<MenubarSubmenu label="Theme">
+							<MenubarSubmenu label="Theme" icon={Palette}>
 								<MenubarPanelLinkItem
+									icon={Settings}
 									onClick={() => onOpenSettingsSection("display")}
 								>
 									Customize
@@ -343,6 +345,7 @@ export function EditorTopbar({
 							</MenubarSubmenu>
 							<MenubarSeparator />
 							<MenubarCheckboxItem
+								icon={Layers2}
 								checked={layersOpen}
 								shortcut={getShortcutLabel(
 									"toggleLayersPanel",
@@ -353,6 +356,7 @@ export function EditorTopbar({
 								Components panel
 							</MenubarCheckboxItem>
 							<MenubarCheckboxItem
+								icon={BookOpenText}
 								checked={pagesOpen}
 								shortcut={getShortcutLabel(
 									"togglePagesPanel",
@@ -365,27 +369,11 @@ export function EditorTopbar({
 						</MenubarContent>
 					</MenubarMenu>
 
-					<MenubarMenu id="pages">
-						<MenubarTrigger>Pages</MenubarTrigger>
-						<MenubarContent>
-							<MenubarItem onClick={onAddPage}>New page</MenubarItem>
-							<MenubarCheckboxItem
-								checked={pagesOpen}
-								shortcut={getShortcutLabel(
-									"togglePagesPanel",
-									shortcutPlatform,
-								)}
-								onCheckedChange={onTogglePagesPanel}
-							>
-								Pages panel
-							</MenubarCheckboxItem>
-						</MenubarContent>
-					</MenubarMenu>
-
-					<MenubarMenu id="help">
+<MenubarMenu id="help">
 						<MenubarTrigger>Help</MenubarTrigger>
 						<MenubarContent>
 							<MenubarItem
+								icon={Keyboard}
 								shortcut={getShortcutLabel(
 									"showShortcutHelp",
 									shortcutPlatform,
@@ -395,18 +383,20 @@ export function EditorTopbar({
 								Shortcuts
 							</MenubarItem>
 							<MenubarPanelLinkItem
+								icon={BookOpen}
 								onClick={() => onOpenDocumentation(DOCUMENTATION_ENTRY_ID)}
 							>
 								Documentation
 							</MenubarPanelLinkItem>
 							<MenubarPanelLinkItem
+								icon={SwatchBook}
 								onClick={() => {
 									window.location.hash = "/design-system";
 								}}
 							>
 								Design system showcase
 							</MenubarPanelLinkItem>
-							<MenubarPanelLinkItem onClick={onOpenAbout}>
+							<MenubarPanelLinkItem icon={Info} onClick={onOpenAbout}>
 								About
 							</MenubarPanelLinkItem>
 						</MenubarContent>
