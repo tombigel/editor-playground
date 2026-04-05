@@ -5,9 +5,28 @@ export type { DocumentPage, PageId, SiteSettings };
 
 export type NodeId = string;
 
+// ---------------------------------------------------------------------------
+// Legacy discriminators — kept for migration compatibility only.
+// New code should use contentType / subtype.
+// ---------------------------------------------------------------------------
+/** @deprecated Use contentType / subtype instead */
 export type NodeType = 'site' | 'wrapper' | 'leaf';
+/** @deprecated Use ContainerSubtype instead */
 export type WrapperRole = 'section' | 'header' | 'footer' | 'container';
+/** @deprecated Use TextSubtype / MediaSubtype instead */
 export type LeafRole = 'text' | 'image' | 'link' | 'button';
+
+// ---------------------------------------------------------------------------
+// Content-type discriminators (new model)
+// ---------------------------------------------------------------------------
+export type ContainerSubtype = 'section' | 'header' | 'footer' | 'container' | 'group';
+export type TextSubtype = 'block' | 'rich' | 'code';
+export type MediaSubtype = 'image' | 'video' | 'svg' | 'embed';
+export type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
+// ---------------------------------------------------------------------------
+// Shared scalar types
+// ---------------------------------------------------------------------------
 export type LinkKind = 'anchor' | 'external' | 'page';
 export type BreakpointId = 'base' | 'tablet' | 'mobile';
 export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
@@ -91,6 +110,9 @@ export type WrapperStyleField =
   | 'sectionBorderBottomColor'
   | 'sectionBorderBottomWidth';
 
+// ---------------------------------------------------------------------------
+// Value types
+// ---------------------------------------------------------------------------
 export type UnitValue = {
   value: number;
   unit: Unit;
@@ -123,6 +145,9 @@ export type ParsedValue<T> = {
   parsed: T;
 };
 
+// ---------------------------------------------------------------------------
+// Style types
+// ---------------------------------------------------------------------------
 export type BorderStyle = {
   borderColor?: string;
   borderTopColor?: string;
@@ -147,6 +172,17 @@ export type ShadowStyle = {
   shadowSpread?: number;
   shadowOffsetX?: number;
   shadowOffsetY?: number;
+};
+
+export type BackgroundStyle = {
+  background?: string;
+};
+
+export type PaddingStyle = {
+  paddingTop?: ParsedValue<SpacingValue>;
+  paddingRight?: ParsedValue<SpacingValue>;
+  paddingBottom?: ParsedValue<SpacingValue>;
+  paddingLeft?: ParsedValue<SpacingValue>;
 };
 
 export type FontSource = 'google-fonts';
@@ -225,9 +261,39 @@ export type StickyDefinition = {
   elevated?: boolean; // only meaningful when siteNode.stickyElevation === false
 };
 
+// ---------------------------------------------------------------------------
+// Link extension — shared by MediaNode and TextNode
+// ---------------------------------------------------------------------------
+export type LinkExtension = {
+  linkType: 'external' | 'page' | 'anchor';
+  href?: string;
+  openInNewTab?: boolean;
+  targetPageId?: PageId;
+  pageAnchorId?: NodeId;
+  anchorTargetId?: NodeId;
+};
+
+// ---------------------------------------------------------------------------
+// TopLevelWrapperVisibilityState — defined here to avoid a circular import
+// (topLevelWrapperVisibility.ts imports from this file).
+// The canonical export lives here; topLevelWrapperVisibility.ts references it.
+// ---------------------------------------------------------------------------
+export type TopLevelWrapperVisibilityMode =
+  | 'hidden'
+  | 'currentPage'
+  | 'allPages'
+  | 'customPages';
+
+export type TopLevelWrapperVisibilityState = {
+  mode: TopLevelWrapperVisibilityMode;
+  pageIds: PageId[];
+};
+
+// ---------------------------------------------------------------------------
+// Base node
+// ---------------------------------------------------------------------------
 export type BaseNode = {
   id: NodeId;
-  type: NodeType;
   parentId: NodeId | null;
   children: NodeId[];
   name: string;
@@ -235,22 +301,33 @@ export type BaseNode = {
   locked: boolean;
 };
 
+// ---------------------------------------------------------------------------
+// Site node (unchanged, only `type` field kept for backward compat during migration)
+// ---------------------------------------------------------------------------
 export type SiteNode = BaseNode & {
+  contentType: 'site';
+  /** @deprecated internal compat shim — will be removed after Phase 2 rename */
   type: 'site';
   stickyElevation?: boolean; // undefined/true = all stickies elevated (default); false = per-sticky control
 };
 
-export type WrapperNode = BaseNode & {
-  type: 'wrapper';
-  role: WrapperRole;
+// ---------------------------------------------------------------------------
+// Container family
+// ---------------------------------------------------------------------------
+export type ContainerNode = BaseNode & {
+  contentType: 'container';
+  subtype: ContainerSubtype;
+  children: NodeId[];
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   pageTargetIds?: PageId[];
-  style: BorderStyle &
-    ShadowStyle & {
+  topLevelWrapperVisibility?: TopLevelWrapperVisibilityState;
+  style?: BorderStyle & ShadowStyle & {
     background?: string;
+    /** Section-only decorative bottom border color */
     sectionBorderBottomColor?: string;
+    /** Section-only decorative bottom border width */
     sectionBorderBottomWidth?: ParsedValue<UnitValue>;
     paddingTop?: ParsedValue<SpacingValue>;
     paddingRight?: ParsedValue<SpacingValue>;
@@ -259,79 +336,81 @@ export type WrapperNode = BaseNode & {
   };
 };
 
-export type TextLeaf = BaseNode & {
-  type: 'leaf';
-  role: 'text';
-  rect: RectModel;
+// ---------------------------------------------------------------------------
+// Text family
+// ---------------------------------------------------------------------------
+export type TextNode = BaseNode & {
+  contentType: 'text';
+  subtype: TextSubtype;
   content: string;
-  htmlTag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'blockquote' | 'div';
-  lang?: string;
+  lang?: string;              // BCP-47 locale
+  htmlTag?: HeadingTag | 'p' | 'blockquote'; // block only
+  link?: LinkExtension;       // block only
+  code?: { language: string }; // code only
+  rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
-  style?: ShadowStyle & TypographyStyle;
+  style?: ShadowStyle & TypographyStyle & {
+    textWrap?: TextWrapMode;
+    background?: string;
+    paddingBlock?: ParsedValue<SpacingValue>;
+    paddingInline?: ParsedValue<SpacingValue>;
+  } & BorderStyle;
 };
 
-export type ImageLeaf = BaseNode & {
-  type: 'leaf';
-  role: 'image';
-  rect: RectModel;
+// ---------------------------------------------------------------------------
+// Media family
+// ---------------------------------------------------------------------------
+export type MediaNode = BaseNode & {
+  contentType: 'media';
+  subtype: MediaSubtype;
   src?: string;
   alt?: string;
+  link?: LinkExtension;
+  video?: { autoplay?: boolean; loop?: boolean; muted?: boolean };
+  svg?: { renderMode: 'img' | 'inline' };
+  rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   style?: BorderStyle & ShadowStyle;
 };
 
-export type LinkLeaf = BaseNode & {
-  type: 'leaf';
-  role: 'link';
-  rect: RectModel;
-  label: string;
-  linkType?: LinkKind;
-  anchorTargetId?: NodeId;
-  href?: string;
-  openInNewTab?: boolean;
-  targetPageId?: PageId;
-  pageAnchorId?: NodeId;
-  sticky?: StickyDefinition;
-  animation?: AnimationDefinition;
-  style?: TypographyStyle &
-    ShadowStyle & {
-      textWrap?: TextWrapMode;
-    };
-};
+// ---------------------------------------------------------------------------
+// Union types
+// ---------------------------------------------------------------------------
 
-export type ButtonLeaf = BaseNode & {
-  type: 'leaf';
-  role: 'button';
-  rect: RectModel;
-  label: string;
-  linkType?: LinkKind;
-  anchorTargetId?: NodeId;
-  href?: string;
-  openInNewTab?: boolean;
-  targetPageId?: PageId;
-  pageAnchorId?: NodeId;
-  sticky?: StickyDefinition;
-  animation?: AnimationDefinition;
-  style?: TypographyStyle &
-    BorderStyle &
-    ShadowStyle & {
-      background?: string;
-      textWrap?: TextWrapMode;
-      paddingBlock?: ParsedValue<SpacingValue>;
-      paddingInline?: ParsedValue<SpacingValue>;
-    };
-};
+/** Leaf nodes (non-container, non-site) */
+export type LeafNode = MediaNode | TextNode;
 
-export type DocumentNode =
-  | SiteNode
-  | WrapperNode
-  | TextLeaf
-  | ImageLeaf
-  | LinkLeaf
-  | ButtonLeaf;
+export type DocumentNode = SiteNode | ContainerNode | MediaNode | TextNode;
 
+// ---------------------------------------------------------------------------
+// Type guards
+// ---------------------------------------------------------------------------
+
+export function isSiteNode(node: DocumentNode): node is SiteNode {
+  return node.contentType === 'site';
+}
+
+export function isContainerNode(node: DocumentNode): node is ContainerNode {
+  return node.contentType === 'container';
+}
+
+export function isTextNode(node: DocumentNode): node is TextNode {
+  return node.contentType === 'text';
+}
+
+export function isMediaNode(node: DocumentNode): node is MediaNode {
+  return node.contentType === 'media';
+}
+
+export function isLeafNode(node: DocumentNode): node is LeafNode {
+  return node.contentType === 'text' || node.contentType === 'media';
+}
+
+// ---------------------------------------------------------------------------
+// Document model
+// ---------------------------------------------------------------------------
 export type DocumentModel = {
   rootId: NodeId;
   nodes: Record<NodeId, DocumentNode>;
@@ -342,6 +421,9 @@ export type DocumentModel = {
   sharedRegionIds?: NodeId[];
 };
 
+// ---------------------------------------------------------------------------
+// Computed sticky types
+// ---------------------------------------------------------------------------
 export type ComputedStickyRegistration = {
   ownerId: NodeId;
   parentWrapperId: NodeId;
@@ -361,8 +443,16 @@ export type ComputedWrapperStickyState = {
   registrations: ComputedStickyRegistration[];
 };
 
+// ---------------------------------------------------------------------------
+// Template / config helper types
+// ---------------------------------------------------------------------------
+
+/**
+ * A TemplateBuild pairs a root ContainerNode with all its descendant nodes.
+ * (Replaces the old WrapperNode-based TemplateBuild.)
+ */
 export type TemplateBuild = {
-  wrapper: WrapperNode;
+  wrapper: ContainerNode;
   nodes: Record<NodeId, DocumentNode>;
 };
 
@@ -373,7 +463,7 @@ export type BoxPadding = {
   left?: string;
 };
 
-export type TemplateNode = DocumentNode | WrapperNode;
+export type TemplateNode = DocumentNode | ContainerNode;
 
 export type TextStyleOptions = {
   color?: string;
@@ -381,7 +471,7 @@ export type TextStyleOptions = {
   fontSize?: string;
   fontWeight?: number;
   lineHeight?: number;
-  htmlTag?: TextLeaf['htmlTag'];
+  htmlTag?: HeadingTag | 'p' | 'blockquote';
 };
 
 export type RectConfig = {
@@ -426,3 +516,24 @@ export type SectionTemplateSummary = {
   description: string;
   category: 'basic' | 'sticky';
 };
+
+// ---------------------------------------------------------------------------
+// Legacy node types — kept as type aliases so that existing call sites that
+// reference them still compile during Phase 1. They will be removed in
+// Phase 2 once all references are updated to the new names.
+// ---------------------------------------------------------------------------
+
+/** @deprecated Use ContainerNode instead */
+export type WrapperNode = ContainerNode;
+
+/** @deprecated Use TextNode instead */
+export type TextLeaf = TextNode;
+
+/** @deprecated Use MediaNode instead */
+export type ImageLeaf = MediaNode;
+
+/** @deprecated Use TextNode (with link field) instead */
+export type LinkLeaf = TextNode;
+
+/** @deprecated Use TextNode (with link field) instead */
+export type ButtonLeaf = TextNode;

@@ -1,13 +1,13 @@
 import type {
-  ButtonLeaf,
+  ContainerNode,
+  ContainerSubtype,
   DocumentModel,
-  ImageLeaf,
-  LinkLeaf,
+  MediaNode,
+  MediaSubtype,
   NodeId,
   StickyDefinition,
-  TextLeaf,
-  WrapperNode,
-  WrapperRole,
+  TextNode,
+  TextSubtype,
 } from './types';
 import {
   DEFAULT_BUTTON_BACKGROUND,
@@ -66,7 +66,7 @@ export function syncIdCountersWithDocument(document: DocumentModel) {
         maxIdCounter = Math.max(maxIdCounter, value);
       }
     }
-    if (node.type === 'leaf' && node.role === 'image') {
+    if (node.contentType === 'media' && node.subtype === 'image') {
       imageCount += 1;
     }
   }
@@ -95,19 +95,27 @@ export function createDefaultRect(x = '24px', y = '24px', width = '240px', heigh
   };
 }
 
-export function createWrapper(role: WrapperRole, parentId: NodeId): WrapperNode {
-  const name = role[0].toUpperCase() + role.slice(1);
+// ---------------------------------------------------------------------------
+// New factory functions (Phase 1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a ContainerNode with sensible defaults for the given subtype.
+ * Replaces the old `createWrapper(role, parentId)`.
+ */
+export function createContainerNode(subtype: ContainerSubtype, parentId: NodeId): ContainerNode {
+  const name = subtype[0].toUpperCase() + subtype.slice(1);
   return {
-    id: nextId(role),
-    type: 'wrapper',
-    role,
+    id: nextId(subtype),
+    contentType: 'container',
+    subtype,
     parentId,
     children: [],
     name,
     visible: true,
     locked: false,
     rect:
-      role === 'container'
+      subtype === 'container' || subtype === 'group'
         ? createDefaultRect('48px', '48px', '360px', '240px')
         : createDefaultRect('0px', '0px', '100%', '480px'),
     style: {
@@ -116,7 +124,7 @@ export function createWrapper(role: WrapperRole, parentId: NodeId): WrapperNode 
       paddingRight: parseSpacingValue('16px'),
       paddingBottom: parseSpacingValue('16px'),
       paddingLeft: parseSpacingValue('16px'),
-      ...(role === 'container'
+      ...(subtype === 'container' || subtype === 'group'
         ? {
             borderColor: DEFAULT_IMAGE_BORDER_COLOR,
             borderWidth: parseUnitValue(DEFAULT_IMAGE_BORDER_WIDTH),
@@ -127,34 +135,61 @@ export function createWrapper(role: WrapperRole, parentId: NodeId): WrapperNode 
   };
 }
 
-export function createLeaf(
-  role: 'text' | 'image' | 'link' | 'button',
-  parentId: NodeId,
-): TextLeaf | ImageLeaf | LinkLeaf | ButtonLeaf {
-  const id = nextId(role);
-  const base = {
-    id,
-    type: 'leaf' as const,
-    parentId,
-    children: [],
-    visible: true,
-    locked: false,
-  };
+/**
+ * Create a TextNode with sensible defaults for the given subtype.
+ *
+ * - 'block' → plain paragraph text (was `role: 'text'`)
+ * - 'rich'  → rich text block
+ * - 'code'  → code block
+ *
+ * To create the old `link` role, call `createTextNode('block', parentId)` and
+ * set the returned node's `link` field.
+ * To create the old `button` role, call `createTextNode('block', parentId)` and
+ * set `link` plus button style presets (see `createButtonTextNode`).
+ */
+export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode {
+  const id = nextId(subtype === 'block' ? 'text' : subtype);
 
-  if (role === 'text') {
+  if (subtype === 'code') {
     return {
-      ...base,
-      role: 'text',
-      name: 'Text',
-      rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-      content: 'Edit text',
-      htmlTag: 'p',
-      sticky: undefined,
+      id,
+      contentType: 'text',
+      subtype: 'code',
+      parentId,
+      children: [],
+      name: 'Code',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '320px', 'auto'),
+      content: '// your code here',
+      code: { language: 'plaintext' },
+      style: {
+        color: DEFAULT_TEXT_COLOR,
+        fontFamily: 'monospace',
+        fontSize: parseFontSizeValue('14px'),
+        lineHeight: 1.6,
+        direction: 'ltr',
+        textAlign: 'left',
+      },
+    };
+  }
+
+  if (subtype === 'rich') {
+    return {
+      id,
+      contentType: 'text',
+      subtype: 'rich',
+      parentId,
+      children: [],
+      name: 'Rich Text',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '320px', 'auto'),
+      content: '<p>Edit rich text</p>',
       style: {
         color: DEFAULT_TEXT_COLOR,
         fontFamily: 'Inter',
         fontSize: parseFontSizeValue('18px'),
-        textDecorationLine: 'none',
         lineHeight: 1.45,
         direction: 'ltr',
         textAlign: 'left',
@@ -162,62 +197,74 @@ export function createLeaf(
     };
   }
 
-  if (role === 'image') {
-    const image = IMAGE_SOURCES[imageCounter % IMAGE_SOURCES.length];
-    imageCounter += 1;
-    return {
-      ...base,
-      role: 'image',
-      name: 'Image',
-      rect: createDefaultRect('32px', '32px', '320px', 'aspect-ratio(4/3)'),
-      src: image.src,
-      alt: image.alt,
-      sticky: undefined,
-      style: {
-        borderWidth: parseUnitValue(DEFAULT_IMAGE_BORDER_WIDTH),
-        borderColor: DEFAULT_IMAGE_BORDER_COLOR,
-        borderRadius: parseUnitValue(DEFAULT_IMAGE_BORDER_RADIUS),
-        shadowColor: DEFAULT_IMAGE_SHADOW_COLOR,
-        shadowBlur: DEFAULT_IMAGE_SHADOW_BLUR_PX,
-        shadowOffsetX: DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
-        shadowOffsetY: DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
-      },
-    };
-  }
+  // Default: block
+  return {
+    id,
+    contentType: 'text',
+    subtype: 'block',
+    parentId,
+    children: [],
+    name: 'Text',
+    visible: true,
+    locked: false,
+    rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
+    content: 'Edit text',
+    htmlTag: 'p',
+    sticky: undefined,
+    style: {
+      color: DEFAULT_TEXT_COLOR,
+      fontFamily: 'Inter',
+      fontSize: parseFontSizeValue('18px'),
+      textDecorationLine: 'none',
+      lineHeight: 1.45,
+      direction: 'ltr',
+      textAlign: 'left',
+    },
+  };
+}
 
-  if (role === 'link') {
-    return {
-      ...base,
-      role: 'link',
-      name: 'Link',
-      rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-      label: 'Read more',
-      linkType: 'anchor',
-      href: '#',
-      sticky: undefined,
-      style: {
-        color: DEFAULT_LINK_COLOR,
-        fontFamily: 'Inter',
-        fontSize: parseFontSizeValue('16px'),
-        fontWeight: 600,
-        textDecorationLine: 'underline',
-        lineHeight: 1.35,
-        direction: 'ltr',
-        textAlign: 'left',
-        textWrap: 'single-line',
-      },
-    };
-  }
-
+/**
+ * Create a TextNode pre-configured as a link (equivalent to old `role: 'link'`).
+ */
+export function createLinkTextNode(parentId: NodeId): TextNode {
+  const base = createTextNode('block', parentId);
   return {
     ...base,
-    role: 'button',
+    name: 'Link',
+    rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
+    content: 'Read more',
+    link: {
+      linkType: 'anchor',
+      href: '#',
+    },
+    style: {
+      color: DEFAULT_LINK_COLOR,
+      fontFamily: 'Inter',
+      fontSize: parseFontSizeValue('16px'),
+      fontWeight: 600,
+      textDecorationLine: 'underline',
+      lineHeight: 1.35,
+      direction: 'ltr',
+      textAlign: 'left',
+      textWrap: 'single-line',
+    },
+  };
+}
+
+/**
+ * Create a TextNode pre-configured as a button (equivalent to old `role: 'button'`).
+ */
+export function createButtonTextNode(parentId: NodeId): TextNode {
+  const base = createTextNode('block', parentId);
+  return {
+    ...base,
     name: 'Button',
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-    label: 'Button',
-    linkType: 'external',
-    href: '#',
-    sticky: undefined,
+    content: 'Button',
+    link: {
+      linkType: 'external',
+      href: '#',
+    },
     style: {
       color: DEFAULT_BUTTON_TEXT_COLOR,
       background: DEFAULT_BUTTON_BACKGROUND,
@@ -238,4 +285,112 @@ export function createLeaf(
       shadowOffsetY: DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
     },
   };
+}
+
+/**
+ * Create a MediaNode with sensible defaults for the given subtype.
+ * Replaces the old `createLeaf('image', parentId)` for image nodes.
+ */
+export function createMediaNode(subtype: MediaSubtype, parentId: NodeId): MediaNode {
+  if (subtype === 'image') {
+    const image = IMAGE_SOURCES[imageCounter % IMAGE_SOURCES.length];
+    imageCounter += 1;
+    return {
+      id: nextId('image'),
+      contentType: 'media',
+      subtype: 'image',
+      parentId,
+      children: [],
+      name: 'Image',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '320px', 'aspect-ratio(4/3)'),
+      src: image.src,
+      alt: image.alt,
+      sticky: undefined,
+      style: {
+        borderWidth: parseUnitValue(DEFAULT_IMAGE_BORDER_WIDTH),
+        borderColor: DEFAULT_IMAGE_BORDER_COLOR,
+        borderRadius: parseUnitValue(DEFAULT_IMAGE_BORDER_RADIUS),
+        shadowColor: DEFAULT_IMAGE_SHADOW_COLOR,
+        shadowBlur: DEFAULT_IMAGE_SHADOW_BLUR_PX,
+        shadowOffsetX: DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
+        shadowOffsetY: DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
+      },
+    };
+  }
+
+  if (subtype === 'video') {
+    return {
+      id: nextId('video'),
+      contentType: 'media',
+      subtype: 'video',
+      parentId,
+      children: [],
+      name: 'Video',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '320px', 'aspect-ratio(4/3)' as string),
+      video: { autoplay: false, loop: false, muted: true },
+      style: {},
+    };
+  }
+
+  if (subtype === 'svg') {
+    return {
+      id: nextId('svg'),
+      contentType: 'media',
+      subtype: 'svg',
+      parentId,
+      children: [],
+      name: 'SVG',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '120px', '120px'),
+      svg: { renderMode: 'img' },
+      style: {},
+    };
+  }
+
+  // embed
+  return {
+    id: nextId('embed'),
+    contentType: 'media',
+    subtype: 'embed',
+    parentId,
+    children: [],
+    name: 'Embed',
+    visible: true,
+    locked: false,
+    rect: createDefaultRect('32px', '32px', '320px', '200px'),
+    style: {},
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Legacy factory shims — preserved so existing call sites that import
+// `createWrapper` / `createLeaf` still compile during Phase 1.
+// These will be removed in Phase 2.
+// ---------------------------------------------------------------------------
+
+import type { WrapperRole, LeafRole } from './types';
+
+/**
+ * @deprecated Use createContainerNode() instead.
+ */
+export function createWrapper(role: WrapperRole, parentId: NodeId): ContainerNode {
+  return createContainerNode(role as ContainerSubtype, parentId);
+}
+
+/**
+ * @deprecated Use createTextNode(), createMediaNode(), createLinkTextNode(), or createButtonTextNode() instead.
+ */
+export function createLeaf(
+  role: LeafRole,
+  parentId: NodeId,
+): TextNode | MediaNode {
+  if (role === 'text') return createTextNode('block', parentId);
+  if (role === 'image') return createMediaNode('image', parentId);
+  if (role === 'link') return createLinkTextNode(parentId);
+  return createButtonTextNode(parentId);
 }

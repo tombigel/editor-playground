@@ -1,12 +1,13 @@
-import type { DocumentModel, NodeId, WrapperNode } from './types';
+import type {
+  DocumentModel,
+  NodeId,
+  TopLevelWrapperVisibilityMode,
+  TopLevelWrapperVisibilityState,
+  WrapperNode,
+} from './types';
 import type { PageId } from './types/site';
 
-export type TopLevelWrapperVisibilityMode = 'hidden' | 'currentPage' | 'allPages' | 'customPages';
-
-export type TopLevelWrapperVisibilityState = {
-  mode: TopLevelWrapperVisibilityMode;
-  pageIds: PageId[];
-};
+export type { TopLevelWrapperVisibilityMode, TopLevelWrapperVisibilityState };
 
 export function isEligibleTopLevelWrapper(node: WrapperNode | undefined): node is WrapperNode {
   return Boolean(

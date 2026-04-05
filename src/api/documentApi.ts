@@ -2,7 +2,9 @@ import {
   SECTION_TEMPLATES,
   createInitialDocument,
   createLeaf,
+  createMediaNode,
   createSectionFromTemplate,
+  createTextNode,
   createWrapper,
   syncIdCountersWithDocument,
   type SectionTemplateId,
@@ -38,10 +40,12 @@ import type {
   DocumentNode,
   EditorTextField,
   LeafRole,
+  MediaSubtype,
   ShadowStyleField,
   NodeTextField,
   NodeId,
   StickyDefinition,
+  TextSubtype,
   WrapperNode,
   WrapperStyleField,
   WrapperRole,
@@ -64,11 +68,13 @@ export type {
   DocumentNode,
   EditorTextField,
   LeafRole,
+  MediaSubtype,
   NodeTextField,
   NodeId,
   StickyGeometrySnapshot,
   StickyLayoutState,
   StickyDefinition,
+  TextSubtype,
   WrapperNode,
   WrapperStyleField,
   WrapperRole,
@@ -902,6 +908,132 @@ export function moveNodeInTreeDoc(
     normalizeRootStructuralRoles(next);
   }
 
+  return next;
+}
+
+/**
+ * Switch the subtype of a MediaNode or TextNode within the same content-type family.
+ *
+ * Rules:
+ * - Source and target must be in the same contentType family (both 'media' or both 'text').
+ *   Throws an Error if they differ.
+ * - Container subtype switching is handled by the existing promote/demote logic; this
+ *   function intentionally does NOT support contentType: 'container'.
+ * - Transferred fields (always): id, parentId, children, name, visible, locked, rect,
+ *   sticky, animation.
+ * - For media→media: transfers src, alt; drops video/svg/embed props that don't apply.
+ * - For text→text: transfers content, lang, link; drops htmlTag/code if not applicable.
+ * - Uses createMediaNode / createTextNode as the base to ensure correct defaults, then
+ *   overlays the transferred fields.
+ */
+export function switchSubtypeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  targetSubtype: MediaSubtype | TextSubtype,
+): DocumentModel {
+  const node = document.nodes[nodeId];
+  if (!node) {
+    return document;
+  }
+
+  const contentType = (node as { contentType?: string }).contentType;
+
+  // Determine the target family from the targetSubtype value.
+  const mediaSubtypes: MediaSubtype[] = ['image', 'video', 'svg', 'embed'];
+  const textSubtypes: TextSubtype[] = ['block', 'rich', 'code'];
+  const targetIsMedia = (mediaSubtypes as string[]).includes(targetSubtype);
+  const targetIsText = (textSubtypes as string[]).includes(targetSubtype);
+
+  if (!targetIsMedia && !targetIsText) {
+    throw new Error(`switchSubtypeDoc: unrecognised targetSubtype "${targetSubtype}"`);
+  }
+
+  if (contentType === 'container' || contentType === 'site') {
+    throw new Error(
+      `switchSubtypeDoc: cannot switch subtype of a "${contentType}" node — use promote/demote logic instead`,
+    );
+  }
+
+  if (contentType === 'media' && !targetIsMedia) {
+    throw new Error(
+      `switchSubtypeDoc: source node is "media" but targetSubtype "${targetSubtype}" belongs to the "text" family`,
+    );
+  }
+
+  if (contentType === 'text' && !targetIsText) {
+    throw new Error(
+      `switchSubtypeDoc: source node is "text" but targetSubtype "${targetSubtype}" belongs to the "media" family`,
+    );
+  }
+
+  // If there's nothing to change, bail early.
+  const currentSubtype = (node as { subtype?: string }).subtype;
+  if (currentSubtype === targetSubtype) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const sourceNode = next.nodes[nodeId];
+
+  if (targetIsMedia) {
+    // media → media
+    const mediaSource = sourceNode as import('../model/types').MediaNode;
+    const base = createMediaNode(targetSubtype as MediaSubtype, mediaSource.parentId ?? '');
+    const switched: import('../model/types').MediaNode = {
+      ...base,
+      // Identity / tree fields
+      id: mediaSource.id,
+      parentId: mediaSource.parentId,
+      children: [...mediaSource.children],
+      name: mediaSource.name,
+      visible: mediaSource.visible,
+      locked: mediaSource.locked,
+      // Position
+      rect: mediaSource.rect,
+      // Behaviour
+      ...(mediaSource.sticky !== undefined ? { sticky: mediaSource.sticky } : {}),
+      ...(mediaSource.animation !== undefined ? { animation: mediaSource.animation } : {}),
+      // Media content — transfer src/alt; type-specific props come from the base
+      ...(mediaSource.src !== undefined ? { src: mediaSource.src } : {}),
+      ...(mediaSource.alt !== undefined ? { alt: mediaSource.alt } : {}),
+    };
+    next.nodes[nodeId] = switched;
+    return next;
+  }
+
+  // text → text
+  const textSource = sourceNode as import('../model/types').TextNode;
+  const base = createTextNode(targetSubtype as TextSubtype, textSource.parentId ?? '');
+  const switched: import('../model/types').TextNode = {
+    ...base,
+    // Identity / tree fields
+    id: textSource.id,
+    parentId: textSource.parentId,
+    children: [...textSource.children],
+    name: textSource.name,
+    visible: textSource.visible,
+    locked: textSource.locked,
+    // Position
+    rect: textSource.rect,
+    // Behaviour
+    ...(textSource.sticky !== undefined ? { sticky: textSource.sticky } : {}),
+    ...(textSource.animation !== undefined ? { animation: textSource.animation } : {}),
+    // Text content
+    content: textSource.content,
+    ...(textSource.lang !== undefined ? { lang: textSource.lang } : {}),
+    // Link extension — only meaningful for block; carry it over regardless
+    // (it will be ignored at render time for non-block subtypes)
+    ...(textSource.link !== undefined ? { link: textSource.link } : {}),
+    // htmlTag: carry over if targetSubtype is block; discard for rich/code
+    ...(targetSubtype === 'block' && textSource.htmlTag !== undefined
+      ? { htmlTag: textSource.htmlTag }
+      : {}),
+    // code: carry over if targetSubtype is code; discard otherwise
+    ...(targetSubtype === 'code' && textSource.code !== undefined
+      ? { code: textSource.code }
+      : {}),
+  };
+  next.nodes[nodeId] = switched;
   return next;
 }
 
