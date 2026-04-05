@@ -173,6 +173,7 @@ Their authored visibility modes are:
 - `Custom pages`: render the wrapper only on the selected page IDs
 
 The Components panel and Inspector both expose this control for eligible top-level wrappers, including custom page selection. The Pages panel no longer owns this control.
+Behavior is complete; remaining follow-up is visual polish of the visibility menu surfaces.
 
 ### Editor page switching
 

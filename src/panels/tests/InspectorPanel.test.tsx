@@ -159,6 +159,7 @@ describe('panels/InspectorPanel', () => {
 
     expect(markup).toContain('Visibility: Current page');
     expect(markup).toContain('Choose where this top-level component appears.');
+    expect(markup.indexOf('Padding')).toBeLessThan(markup.indexOf('Visibility'));
   });
 
   it('renders a visible/hidden switch for regular nodes', () => {
@@ -186,6 +187,7 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Visibility');
     expect(markup).toContain('data-ui="switch"');
     expect(markup).toContain('aria-label="Hide Hero Copy"');
+    expect(markup.indexOf('>W<')).toBeLessThan(markup.indexOf('Visibility'));
   });
 
   it('renders the dedicated multi-select inspector for multiple selected nodes', () => {

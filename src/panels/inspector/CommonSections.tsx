@@ -305,27 +305,6 @@ export function NodeBasicsSection({
           />
         </div>
       ) : null}
-      {node.type !== 'site' ? (
-        <InspectorInlineRow label="Visibility" controlClassName="gap-2">
-          {isTopLevelVisibilityWrapper ? (
-            <TopLevelWrapperVisibilityControl
-              document={document}
-              activePageId={activePageId ?? null}
-              value={getTopLevelWrapperVisibilityState(document, node.id)}
-              onChange={(visibility, pageIds) => actions.onSetTopLevelWrapperVisibility(node.id, visibility, pageIds)}
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="editor-text-muted text-xs">{node.visible ? 'Visible' : 'Hidden'}</span>
-              <Switch
-                checked={node.visible}
-                aria-label={`${node.visible ? 'Hide' : 'Show'} ${node.name?.trim() || node.role}`}
-                onCheckedChange={(checked) => actions.onSetNodeVisibility(node.id, checked)}
-              />
-            </div>
-          )}
-        </InspectorInlineRow>
-      ) : null}
       {wrapperPaddingNode ? (
         <div className="space-y-1.5">
           <Label className="text-[11px] font-medium">Padding</Label>
@@ -416,6 +395,27 @@ export function NodeBasicsSection({
           onPromote={actions.onPromote}
           onDemote={actions.onDemote}
         />
+      ) : null}
+      {node.type !== 'site' ? (
+        <InspectorInlineRow label="Visibility" controlClassName="gap-2">
+          {isTopLevelVisibilityWrapper ? (
+            <TopLevelWrapperVisibilityControl
+              document={document}
+              activePageId={activePageId ?? null}
+              value={getTopLevelWrapperVisibilityState(document, node.id)}
+              onChange={(visibility, pageIds) => actions.onSetTopLevelWrapperVisibility(node.id, visibility, pageIds)}
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="editor-text-muted text-xs">{node.visible ? 'Visible' : 'Hidden'}</span>
+              <Switch
+                checked={node.visible}
+                aria-label={`${node.visible ? 'Hide' : 'Show'} ${node.name?.trim() || node.role}`}
+                onCheckedChange={(checked) => actions.onSetNodeVisibility(node.id, checked)}
+              />
+            </div>
+          )}
+        </InspectorInlineRow>
       ) : null}
     </InspectorSectionCard>
   );
