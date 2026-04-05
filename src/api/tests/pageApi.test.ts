@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
 import type { DocumentModel, LinkLeaf } from '../../model/types';
 import { validateDocument } from '../../model/validation';
+import { setTopLevelWrapperVisibility } from '../documentApi';
 import {
   addPage,
   addPageSlugAlias,
@@ -125,6 +126,33 @@ describe('deletePage', () => {
     for (const id of sharedIds) {
       expect(result.nodes[id]).toBeDefined();
     }
+  });
+
+  it('removes deleted pages from custom top-level wrapper targets', () => {
+    let doc = makeDoc();
+    const aboutResult = addPage(doc, { displayName: 'About', slug: 'about' });
+    doc = aboutResult;
+    const aboutPage = (doc.pages ?? []).find((page) => page.slug === 'about');
+    const homePage = (doc.pages ?? [])[0];
+    const section = Object.values(doc.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!aboutPage || !homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page, about page, and section wrapper');
+    }
+
+    const custom = setTopLevelWrapperVisibility(doc, homePage.id, section.id, 'customPages', [
+      homePage.id,
+      aboutPage.id,
+    ]);
+    const result = deletePage(custom, aboutPage.id);
+    const updatedSection = result.nodes[section.id];
+
+    if (updatedSection.type !== 'wrapper') {
+      throw new Error('Expected wrapper node');
+    }
+
+    expect(updatedSection.pageTargetIds).toEqual([homePage.id]);
   });
 
   it('promotes the first remaining page to home when deleting the home page', () => {

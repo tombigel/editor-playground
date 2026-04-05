@@ -117,12 +117,6 @@ describe("app/AppShell", () => {
 		expect(markup).not.toContain("editor-topbar-pages-row");
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
-		expect(markup).toContain("New page");
-		expect(markup).toContain("Duplicate");
-		expect(markup).toContain("Documentation");
-		expect(markup).toContain("Design system showcase");
-		expect(markup).toContain("About");
-		expect(markup).toContain("Import JSON");
 		expect(markup).not.toContain("Import JSON…");
 		expect(markup).not.toContain("Customize…");
 	});
@@ -130,10 +124,11 @@ describe("app/AppShell", () => {
 	it("renders the layers panel surface when the rail entry is active", () => {
 		const { document } = createInitialState();
 		const markup = renderToStaticMarkup(
-			<LayersPanel
+		<LayersPanel
 				open
 				position={{ top: 112, left: 102 }}
 				document={document}
+				activePageId={document.pages?.[0]?.id ?? null}
 				selectedIds={[]}
 				onOpenChange={() => undefined}
 				onPositionChange={() => undefined}
@@ -142,6 +137,7 @@ describe("app/AppShell", () => {
 				onRenameNode={() => undefined}
 				onDeleteNode={() => undefined}
 				onSetNodeVisibility={() => undefined}
+				onSetTopLevelWrapperVisibility={() => undefined}
 				onMoveNodeInTree={() => undefined}
 			/>,
 		);

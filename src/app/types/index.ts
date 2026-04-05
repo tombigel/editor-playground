@@ -10,6 +10,7 @@ import type {
 } from '../../model/types';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
 import type { PageId, DocumentPage, SiteSettings } from '../../model/types/site';
+import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -140,6 +141,7 @@ export type EditorAction =
   | { type: 'setPageLang'; pageId: PageId; lang?: string }
   | { type: 'setPageSlug'; pageId: PageId; slug: string }
   | { type: 'setPageParent'; pageId: PageId; parentPageId: PageId | null }
+  | { type: 'setTopLevelWrapperVisibility'; pageId: PageId; nodeId: NodeId; visibility: TopLevelWrapperVisibility; pageIds?: PageId[] }
   | { type: 'setPageTopLevelWrapperPlacement'; pageId: PageId; nodeId: NodeId; placement: 'currentPage' | 'global' }
   | { type: 'setPageVisibility'; pageId: PageId; visible: boolean }
   | { type: 'setPageViewTransition'; pageId: PageId; transition: DocumentPage['viewTransition'] }

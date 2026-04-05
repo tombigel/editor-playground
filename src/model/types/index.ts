@@ -246,6 +246,7 @@ export type WrapperNode = BaseNode & {
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
+  pageTargetIds?: PageId[];
   style: BorderStyle &
     ShadowStyle & {
     background?: string;

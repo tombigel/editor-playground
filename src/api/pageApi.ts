@@ -137,6 +137,26 @@ export function deletePage(document: DocumentModel, pageId: PageId): DocumentMod
     newNodes[document.rootId] = { ...siteNode, children: updatedChildren };
   }
 
+  for (const node of Object.values(newNodes)) {
+    if (node.type !== 'wrapper' || !node.pageTargetIds?.length) {
+      continue;
+    }
+
+    const filteredPageTargetIds = node.pageTargetIds.filter((targetPageId) => targetPageId !== pageId);
+    if (filteredPageTargetIds.length === node.pageTargetIds.length) {
+      continue;
+    }
+
+    if (filteredPageTargetIds.length === 0) {
+      const nextNode = { ...node, visible: false };
+      delete nextNode.pageTargetIds;
+      newNodes[node.id] = nextNode;
+      continue;
+    }
+
+    newNodes[node.id] = { ...node, pageTargetIds: filteredPageTargetIds };
+  }
+
   pages.splice(pageIndex, 1);
   if (deletedWasHome && pages.length > 0) {
     pages[0].pageRole = 'home';

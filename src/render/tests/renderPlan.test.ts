@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
 import { createPage } from '../../model/pageDefaults';
 import { parseUnitValue } from '../../model/units';
-import { setPageTopLevelWrapperPlacement } from '../../api/documentApi';
+import { setPageTopLevelWrapperPlacement, setTopLevelWrapperVisibility } from '../../api/documentApi';
 import { buildRenderRootPlan, getTrackSpacerDescriptor } from '../renderPlan';
 import { renderPageHtmlDocument } from '../../site/siteExport';
 
@@ -58,6 +58,38 @@ describe('render/renderPlan', () => {
 
     expect(homeHtml).toContain(`data-node-id="${section.id}"`);
     expect(aboutHtml).toContain(`data-node-id="${section.id}"`);
+  });
+
+  it('renders custom and hidden top-level wrappers on the selected pages only', () => {
+    const document = createInitialDocument();
+    const homePage = document.pages?.[0];
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const contactPage = createPage({ displayName: 'Contact', slug: 'contact' });
+    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const withPages = {
+      ...document,
+      pages: [...(document.pages ?? []), aboutPage, contactPage],
+    };
+    const custom = setTopLevelWrapperVisibility(withPages, homePage.id, section.id, 'customPages', [
+      homePage.id,
+      contactPage.id,
+    ]);
+    const hidden = setTopLevelWrapperVisibility(custom, homePage.id, section.id, 'hidden');
+
+    const homePlan = buildRenderRootPlan(custom, true, {}, undefined, homePage.id);
+    const aboutPlan = buildRenderRootPlan(custom, true, {}, undefined, aboutPage.id);
+    const contactPlan = buildRenderRootPlan(custom, true, {}, undefined, contactPage.id);
+
+    expect(homePlan.main.map((node) => node.node.id)).toContain(section.id);
+    expect(aboutPlan.main.map((node) => node.node.id)).not.toContain(section.id);
+    expect(contactPlan.main.map((node) => node.node.id)).toContain(section.id);
+    expect(renderPageHtmlDocument(custom, aboutPage.id)).not.toContain(`data-node-id="${section.id}"`);
+    expect(renderPageHtmlDocument(custom, contactPage.id)).toContain(`data-node-id="${section.id}"`);
+    expect(renderPageHtmlDocument(hidden, homePage.id)).not.toContain(`data-node-id="${section.id}"`);
   });
 
   it('propagates measured geometry into wrapper mesh placement', () => {

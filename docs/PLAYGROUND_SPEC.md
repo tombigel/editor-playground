@@ -161,14 +161,28 @@ Links support `linkType: 'page'` in addition to `'anchor'` and `'external'`:
 - Editor follow-link popups allow clicking links to navigate between pages
 - Broken page links (missing target page) are flagged by validation
 
+### Top-level wrapper visibility
+
+Eligible top-level wrappers are the site-root children with role `section`, `header`, or `footer`.
+
+Their authored visibility modes are:
+
+- `Hidden`: do not render the wrapper on any page
+- `Current page`: keep the wrapper attached to the active page
+- `All pages`: render the wrapper on every page through the shared-region path
+- `Custom pages`: render the wrapper only on the selected page IDs
+
+The Components panel exposes this control for eligible top-level wrappers, including custom page selection. The Pages panel no longer owns this control.
+
 ### Editor page switching
 
 - `activePageId` in editor state determines which page's sections render on stage
 - Stage displays the active page's current-page top-level wrappers plus shared top-level wrappers
 - Page switching is immediate; undo/redo preserves page selection
 - No-selection state shows page inspector allowing creation and settings
-- The floating Pages panel is always available, including for single-page sites; it is the inline surface for page aliases, home assignment, visibility, transition, and parent settings
-- The Pages panel also exposes `Current page` and `Global` placement for eligible top-level wrappers, using `sharedRegionIds` for page-agnostic wrappers
+- The floating Pages panel is always available, including for single-page sites; it is the inline surface for page aliases, home assignment, transition, and parent settings
+- The Components panel exposes per-component visibility for eligible top-level wrappers, including `Hidden`, `Current page`, `All pages`, and `Custom pages`
+- The Inspector will expose the same control in a later stage; regular node visibility remains a separate `visible` / `hidden` concern
 
 ### Preview mode and export
 

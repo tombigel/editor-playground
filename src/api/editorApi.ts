@@ -14,6 +14,7 @@ import { parseUnitValue } from '../model/units';
 import {
   deleteNodeDoc,
   deleteNodesDoc,
+  getTopLevelWrapperVisibilityState,
   insertLeafDoc,
   insertWrapperDoc,
   moveNodeInTreeDoc,
@@ -23,6 +24,7 @@ import {
   resolveWrapperStickyState,
   serializeDocumentJson,
   setNodeVisibilityDoc,
+  setTopLevelWrapperVisibility,
   setPageTopLevelWrapperPlacement,
   validateLinks,
   type DocumentModel,
@@ -32,6 +34,9 @@ import {
   type NodeOrderAction,
   type StickyGeometrySnapshot,
   type StickyLayoutState,
+  type TopLevelWrapperVisibility,
+  type TopLevelWrapperVisibilityMode,
+  type TopLevelWrapperVisibilityState,
   type TopLevelWrapperPlacement,
 } from './documentApi';
 
@@ -45,6 +50,9 @@ export type {
   StickyGeometrySnapshot,
   StickyLayoutState,
   SectionTemplateId,
+  TopLevelWrapperVisibility,
+  TopLevelWrapperVisibilityMode,
+  TopLevelWrapperVisibilityState,
   TopLevelWrapperPlacement,
 };
 export type { EditorState, FocusedMode } from '../editor/editorStore';
@@ -143,6 +151,8 @@ export {
   resolveWrapperStickyState,
   serializeDocumentJson,
   setNodeVisibilityDoc,
+  setTopLevelWrapperVisibility,
   setPageTopLevelWrapperPlacement,
+  getTopLevelWrapperVisibilityState,
   validateLinks,
 };

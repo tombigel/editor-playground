@@ -27,7 +27,6 @@ describe('panels/PagesPanel', () => {
         onSetPageSlug={() => {}}
         onAddPageAlias={() => {}}
         onRemovePageAlias={() => {}}
-        onSetTopLevelWrapperPlacement={() => {}}
         onSetPageVisibility={() => {}}
         onSetPageViewTransition={() => {}}
         onSetPageParent={() => {}}
@@ -46,13 +45,11 @@ describe('panels/PagesPanel', () => {
     expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto px-5 py-4');
     expect(markup).toContain('max-w-[420px]');
     expect(markup).toContain('Language');
-    expect(markup).toContain('Page placement');
-    expect(markup).toContain('Playground Header');
-    expect(markup).toContain('Post Layout');
-    expect(markup).toContain('Playground Footer');
+    expect(markup).toContain('Home page');
+    expect(markup).toContain('Slug');
+    expect(markup).toContain('Transition');
     expect(markup).toContain('Validate links');
     expect(markup).toContain('Parent');
-    expect(markup).toContain('Home page');
     expect(markup).toContain('system canonical');
     expect(markup).not.toContain('Canonical route:');
   });
@@ -78,7 +75,6 @@ describe('panels/PagesPanel', () => {
         onSetPageSlug={() => {}}
         onAddPageAlias={() => {}}
         onRemovePageAlias={() => {}}
-        onSetTopLevelWrapperPlacement={() => {}}
         onSetPageVisibility={() => {}}
         onSetPageViewTransition={() => {}}
         onSetPageParent={() => {}}

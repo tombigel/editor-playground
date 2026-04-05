@@ -22,7 +22,13 @@ import {
 import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } from '../model/links';
 import { getChildren, getNode } from '../model/selectors';
 import { setPageAsHome as setPageAsHomeDoc } from './pageApi';
-import type { DocumentPage, PageId } from '../model/types/site';
+import {
+  getTopLevelWrapperVisibilityState,
+  normalizeTopLevelWrapperTargetPageIds,
+  type TopLevelWrapperVisibilityMode as TopLevelWrapperVisibilityModeModel,
+  type TopLevelWrapperVisibilityState as TopLevelWrapperVisibilityStateModel,
+} from '../model/topLevelWrapperVisibility';
+import type { PageId } from '../model/types/site';
 import type {
   BorderColorField,
   BorderRadiusField,
@@ -48,6 +54,9 @@ import type { DocumentCommand } from './types/index';
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
 export type TopLevelWrapperPlacement = 'currentPage' | 'global';
+export type TopLevelWrapperVisibilityMode = TopLevelWrapperVisibilityModeModel;
+export type TopLevelWrapperVisibilityState = TopLevelWrapperVisibilityStateModel;
+export type TopLevelWrapperVisibility = TopLevelWrapperVisibilityModeModel;
 
 export type {
   ComputedWrapperStickyState,
@@ -94,6 +103,7 @@ export {
   toggleDocumentFontFavorite,
   validateDocument,
   validateLinks,
+  getTopLevelWrapperVisibilityState,
 };
 
 export function cloneDocument(document: DocumentModel): DocumentModel {
@@ -421,6 +431,21 @@ export function setPageTopLevelWrapperPlacement(
   nodeId: NodeId,
   placement: TopLevelWrapperPlacement,
 ): DocumentModel {
+  return setTopLevelWrapperVisibility(
+    document,
+    pageId,
+    nodeId,
+    placement === 'global' ? 'allPages' : 'currentPage',
+  );
+}
+
+export function setTopLevelWrapperVisibility(
+  document: DocumentModel,
+  pageId: PageId,
+  nodeId: NodeId,
+  visibility: TopLevelWrapperVisibility,
+  pageIds: PageId[] = [],
+): DocumentModel {
   const root = document.nodes[document.rootId];
   const page = document.pages?.find((entry) => entry.id === pageId);
   const node = document.nodes[nodeId];
@@ -435,33 +460,76 @@ export function setPageTopLevelWrapperPlacement(
   const pages = structuredClone(document.pages ?? []);
   const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
   const targetPage = pages.find((entry) => entry.id === pageId);
-  if (!targetPage) {
+  const nextNode = next.nodes[nodeId];
+
+  if (!targetPage || nextNode.type !== 'wrapper') {
     return document;
   }
 
   let changed = false;
+  const hadPageTargets = nextNode.pageTargetIds !== undefined;
+  const removeFromAllPages = () => {
+    for (const candidate of pages) {
+      const originalLength = candidate.sectionIds.length;
+      candidate.sectionIds = candidate.sectionIds.filter((sectionId) => sectionId !== nodeId);
+      if (candidate.sectionIds.length !== originalLength) {
+        changed = true;
+      }
+    }
+  };
 
-  for (const candidate of pages) {
-    const originalLength = candidate.sectionIds.length;
-    candidate.sectionIds = candidate.sectionIds.filter((sectionId) => sectionId !== nodeId);
-    if (candidate.sectionIds.length !== originalLength) {
+  if (visibility === 'hidden') {
+    if (nextNode.visible !== false) {
+      nextNode.visible = false;
       changed = true;
+    }
+  } else {
+    if (nextNode.visible !== true) {
+      nextNode.visible = true;
+      changed = true;
+    }
+
+    if (visibility === 'currentPage') {
+      removeFromAllPages();
+      if (sharedRegionIds.delete(nodeId)) {
+        changed = true;
+      }
+      if (hadPageTargets) {
+        delete nextNode.pageTargetIds;
+        changed = true;
+      }
+      if (!targetPage.sectionIds.includes(nodeId)) {
+        targetPage.sectionIds.push(nodeId);
+        changed = true;
+      }
+    } else if (visibility === 'allPages') {
+      removeFromAllPages();
+      if (hadPageTargets) {
+        delete nextNode.pageTargetIds;
+        changed = true;
+      }
+      if (!sharedRegionIds.has(nodeId)) {
+        sharedRegionIds.add(nodeId);
+        changed = true;
+      }
+    } else {
+      const normalizedPageIds = normalizeTopLevelWrapperTargetPageIds(document, pageIds);
+      if (normalizedPageIds.length === 0) {
+        return document;
+      }
+      removeFromAllPages();
+      if (sharedRegionIds.delete(nodeId)) {
+        changed = true;
+      }
+      const nextTargets = nextNode.pageTargetIds ?? [];
+      if (nextTargets.length !== normalizedPageIds.length || nextTargets.some((id, index) => id !== normalizedPageIds[index])) {
+        nextNode.pageTargetIds = normalizedPageIds;
+        changed = true;
+      }
     }
   }
 
-  if (sharedRegionIds.delete(nodeId)) {
-    changed = true;
-  }
-
-  if (placement === 'global') {
-    sharedRegionIds.add(nodeId);
-    changed = true;
-  } else if (!targetPage.sectionIds.includes(nodeId)) {
-    targetPage.sectionIds.push(nodeId);
-    changed = true;
-  }
-
-  if (!changed || !hasTopLevelPlacementChange(document, pages, sharedRegionIds)) {
+  if (!changed) {
     return document;
   }
 
@@ -530,22 +598,6 @@ function isShadowStyleField(field: EditorTextField): field is ShadowStyleField {
 
 function isEligibleTopLevelWrapper(role: WrapperNode['role']) {
   return role === 'section' || role === 'header' || role === 'footer';
-}
-
-function hasTopLevelPlacementChange(
-  before: DocumentModel,
-  pages: DocumentPage[],
-  sharedRegionIds: Set<NodeId>,
-) {
-  const beforePages = (before.pages ?? []).map((page) => ({ id: page.id, sectionIds: page.sectionIds }));
-  const afterPages = pages.map((page) => ({ id: page.id, sectionIds: page.sectionIds }));
-  const beforeShared = before.sharedRegionIds ?? [];
-  const afterShared = Array.from(sharedRegionIds);
-
-  return (
-    JSON.stringify(beforePages) !== JSON.stringify(afterPages) ||
-    JSON.stringify(beforeShared) !== JSON.stringify(afterShared)
-  );
 }
 
 export function parseDocumentJson(raw: string): DocumentModel {

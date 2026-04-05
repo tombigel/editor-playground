@@ -9,11 +9,13 @@ const NO_OP = () => undefined;
 function makeContentProps(document: DocumentModel, selectedIds: string[] = []) {
   return {
     document,
+    activePageId: document.pages?.[0]?.id ?? null,
     selectedIds,
     onSelectNode: NO_OP,
     onRenameNode: NO_OP,
     onDeleteNode: NO_OP,
     onSetNodeVisibility: NO_OP,
+    onSetTopLevelWrapperVisibility: NO_OP,
     onMoveNodeInTree: NO_OP,
   };
 }
@@ -25,11 +27,13 @@ describe('panels/LayersPanel', () => {
     const markup = renderToStaticMarkup(
       <LayersPanelContent
         document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
         selectedIds={[]}
         onSelectNode={() => undefined}
         onRenameNode={() => undefined}
         onDeleteNode={() => undefined}
         onSetNodeVisibility={() => undefined}
+        onSetTopLevelWrapperVisibility={() => undefined}
         onMoveNodeInTree={() => undefined}
       />,
     );
@@ -37,14 +41,15 @@ describe('panels/LayersPanel', () => {
     expect(markup).toContain('editor-layers-row-type');
     expect(markup).toContain('editor-layers-divider');
     expect(markup).toContain('aria-label="Edit Playground Header"');
-    expect(markup).toContain('aria-label="Hide Playground Header"');
     expect(markup).toContain('editor-layers-action editor-layers-action-edit h-7 w-7');
     expect(markup).toContain('editor-layers-action editor-layers-action-visibility h-7 w-7');
+    expect(markup).toContain('Visibility: All pages');
+    expect(markup).toContain('Visibility: Current page');
     expect(markup).toContain('Edit title');
     expect(markup).toContain('Hide');
     expect(markup).not.toContain('aria-label="Delete Playground Header"');
     expect(markup.indexOf('aria-label="Edit Playground Header"')).toBeLessThan(
-      markup.indexOf('aria-label="Hide Playground Header"'),
+      markup.indexOf('aria-label="Visibility: All pages"'),
     );
     expect(markup).not.toContain('editor-pill-contrast');
   });

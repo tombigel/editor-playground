@@ -1177,6 +1177,7 @@ export function AppShell({
 						open={layersOpen}
 						position={layersPosition}
 						document={state.document}
+						activePageId={state.activePageId}
 						selectedIds={state.selectedIds}
 						onOpenChange={onLayersOpenChange}
 						onPositionChange={onLayersPositionChange}
@@ -1194,6 +1195,15 @@ export function AppShell({
 						onDeleteNode={(id) => dispatch({ type: "deleteNode", id })}
 						onSetNodeVisibility={(id, value) =>
 							dispatch({ type: "setNodeVisibility", id, value })
+						}
+						onSetTopLevelWrapperVisibility={(pageId, nodeId, visibility, pageIds) =>
+							dispatch({
+								type: "setTopLevelWrapperVisibility",
+								pageId,
+								nodeId,
+								visibility,
+								pageIds,
+							})
 						}
 						onMoveNodeInTree={(id, targetParentId, targetIndex) =>
 							dispatch({
@@ -1245,9 +1255,6 @@ export function AppShell({
 						}
 						onRemovePageAlias={(pageId, alias) =>
 							dispatch({ type: "removePageSlugAlias", pageId, alias })
-						}
-						onSetTopLevelWrapperPlacement={(pageId, nodeId, placement) =>
-							dispatch({ type: "setPageTopLevelWrapperPlacement", pageId, nodeId, placement })
 						}
 						onSyncPageLinks={(oldUrl, newUrl) =>
 							dispatch({ type: "syncPageLinks", oldUrl, newUrl })

@@ -48,6 +48,33 @@ describe('site/siteExport MPA', () => {
     }
   });
 
+  it('renderPageHtmlDocument only includes custom top-level wrappers on targeted pages', () => {
+    let doc = createInitialDocument();
+    const homePage = doc.pages?.[0];
+    const aboutResult = appendPage(doc, 'About', 'about');
+    doc = aboutResult.document;
+    const aboutPage = aboutResult.page;
+    const section = Object.values(doc.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const custom = structuredClone(doc);
+    custom.pages = (custom.pages ?? []).map((page) => ({
+      ...page,
+      sectionIds: page.sectionIds.filter((sectionId) => sectionId !== section.id),
+    }));
+    custom.sharedRegionIds = (custom.sharedRegionIds ?? []).filter((id) => id !== section.id);
+    const customSection = custom.nodes[section.id];
+    if (!customSection || customSection.type !== 'wrapper') {
+      throw new Error('Expected wrapper node');
+    }
+    customSection.pageTargetIds = [homePage.id];
+
+    expect(renderPageHtmlDocument(custom, homePage.id)).toContain(`data-node-id="${section.id}"`);
+    expect(renderPageHtmlDocument(custom, aboutPage.id)).not.toContain(`data-node-id="${section.id}"`);
+  });
+
   it('renderSiteExportBundles directory mode produces correct paths for 2-page doc', () => {
     let doc = createInitialDocument();
     doc = appendPage(doc, 'About', 'about').document;

@@ -8,6 +8,7 @@ import {
   getNodeClassName,
   getNodeTextContent,
   getRootWrappers,
+  getRootWrappersForPage,
   getStickyCssDeclarations,
   getStickyDurationCss,
   getStickyEdgeMode,
@@ -32,6 +33,19 @@ describe('site/siteShared', () => {
     expect(split.footer?.role).toBe('footer');
     expect(split.main).toHaveLength(1);
     expect(split.main[0]?.role).toBe('section');
+  });
+
+  it('returns only wrappers visible on a specific page', () => {
+    const document = createInitialDocument();
+    const page = document.pages?.[0];
+    if (!page) {
+      throw new Error('Expected page');
+    }
+
+    const wrappers = getRootWrappersForPage(document, page.id);
+
+    expect(wrappers).toHaveLength(3);
+    expect(wrappers.every((wrapper) => wrapper.parentId === document.rootId)).toBe(true);
   });
 
   it('returns wrapper children and deterministic class names', () => {

@@ -237,6 +237,34 @@ describe('model/validation', () => {
     });
   });
 
+  it('accepts custom page targets on eligible top-level wrappers', () => {
+    const document = createInitialDocument();
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    document.pages = [...(document.pages ?? []), aboutPage];
+
+    const section = getMainWrappers(document)[0];
+    const homePageId = document.pages?.[0]?.id;
+    if (!homePageId) {
+      throw new Error('Expected home page');
+    }
+
+    const custom = structuredClone(document);
+    const customSection = custom.nodes[section.id];
+    if (!customSection || customSection.type !== 'wrapper') {
+      throw new Error('Expected wrapper node');
+    }
+
+    custom.pages = (custom.pages ?? []).map((page) => ({
+      ...page,
+      sectionIds: page.sectionIds.filter((sectionId) => sectionId !== section.id),
+    }));
+    custom.sharedRegionIds = (custom.sharedRegionIds ?? []).filter((id) => id !== section.id);
+    customSection.visible = true;
+    customSection.pageTargetIds = [homePageId, aboutPage.id];
+
+    expect(validateDocument(custom)).toEqual([]);
+  });
+
   it('rejects documents with no home page', () => {
     const document = createInitialDocument();
     document.pages = document.pages?.map((page) => ({ ...page, pageRole: 'default' }));

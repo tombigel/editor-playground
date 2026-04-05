@@ -3,6 +3,7 @@ import { getChildren } from '../model/selectors';
 import type { DocumentModel, NodeId, StickyDefinition, WrapperNode } from '../model/types';
 import type { PageId } from '../model/types/site';
 import { formatValue } from '../model/units';
+import { isTopLevelWrapperVisibleOnPage } from '../model/topLevelWrapperVisibility';
 import { getStickyCssProperties, getStickyEdgeMode } from '../render/sticky';
 import type { RenderExportableNode as ExportableNode } from '../render/types';
 
@@ -33,11 +34,6 @@ export function getRootWrappers(document: DocumentModel) {
 }
 
 export function getRootWrappersForPage(document: DocumentModel, pageId: PageId) {
-  const page = document.pages?.find((p) => p.id === pageId);
-  if (!page) return getRootWrappers(document);
-
-  const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
-  const pageSectionIds = new Set(page.sectionIds);
   const root = document.nodes[document.rootId];
   if (!root || root.type !== 'site') {
     return [];
@@ -49,8 +45,7 @@ export function getRootWrappersForPage(document: DocumentModel, pageId: PageId) 
       (node): node is WrapperNode =>
         !!node &&
         node.type === 'wrapper' &&
-        node.visible &&
-        (sharedRegionIds.has(node.id) || pageSectionIds.has(node.id)),
+        isTopLevelWrapperVisibleOnPage(document, node.id, pageId),
     );
 }
 

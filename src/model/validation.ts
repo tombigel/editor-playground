@@ -1,6 +1,7 @@
 import type { ButtonLeaf, DocumentModel, DocumentNode, LinkLeaf, NodeId, WrapperNode } from './types';
 import type { DocumentPage } from './types/site';
 import { getAllPageRoutes, getPageRole } from './pageRoutes';
+import { normalizeTopLevelWrapperTargetPageIds } from './topLevelWrapperVisibility';
 
 export type LinkValidationError = {
   nodeId: NodeId;
@@ -223,6 +224,31 @@ export function validateDocument(document: DocumentModel): string[] {
         } else {
           sharedRegionIdsSeen.add(regionId);
         }
+      }
+    }
+
+    for (const node of nodes) {
+      if (node.type !== 'wrapper' || !isSiteSectionRole(node.role) || node.parentId !== document.rootId) {
+        continue;
+      }
+
+      const targetPageIds = normalizeTopLevelWrapperTargetPageIds(document, node.pageTargetIds);
+      if (node.pageTargetIds?.length && targetPageIds.length !== node.pageTargetIds.length) {
+        errors.push(`Top-level wrapper ${node.id} references missing pageTargetIds.`);
+      }
+
+      if (!node.visible) {
+        continue;
+      }
+
+      const isCurrentPageTarget = sectionIdsSeen.has(node.id);
+      const isSharedTarget = sharedRegionIdsSeen.has(node.id) || document.sharedRegionIds?.includes(node.id);
+      const isCustomTarget = targetPageIds.length > 0;
+
+      if (isCustomTarget && (isCurrentPageTarget || isSharedTarget)) {
+        errors.push(`Top-level wrapper ${node.id} cannot be both custom-targeted and shared/current-page.`);
+      } else if (!isCustomTarget && !isCurrentPageTarget && !isSharedTarget) {
+        errors.push(`Top-level wrapper ${node.id} must belong to a page, shared region, or custom page targets.`);
       }
     }
 

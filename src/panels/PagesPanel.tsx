@@ -1,4 +1,4 @@
-import { LayoutGrid } from 'lucide-react';
+import { BookOpenText } from 'lucide-react';
 import {
   useEffect,
   useMemo,
@@ -34,7 +34,6 @@ export type PagesPanelProps = {
   onSetPageSlug: (pageId: PageId, slug: string) => void;
   onAddPageAlias: (pageId: PageId, alias: string) => void;
   onRemovePageAlias: (pageId: PageId, alias: string) => void;
-  onSetTopLevelWrapperPlacement: (pageId: PageId, nodeId: string, placement: 'currentPage' | 'global') => void;
   onSetPageVisibility: (pageId: PageId, visible: boolean) => void;
   onSetPageViewTransition: (pageId: PageId, transition: DocumentPage['viewTransition']) => void;
   onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
@@ -72,7 +71,6 @@ export function PagesPanel({
   onSetPageSlug,
   onAddPageAlias,
   onRemovePageAlias,
-  onSetTopLevelWrapperPlacement,
   onSetPageVisibility,
   onSetPageViewTransition,
   onSetPageParent,
@@ -203,7 +201,7 @@ export function PagesPanel({
     >
       <div className="editor-panel-drag-zone" onPointerDown={handleHeaderPointerDown}>
         <EditorPanelHeader
-          icon={LayoutGrid}
+          icon={BookOpenText}
           title="Pages"
           description="Manage pages and site page settings."
           closeLabel="Close pages panel"
@@ -254,18 +252,17 @@ export function PagesPanel({
                 <div className="max-w-[420px]">
                   {selectedPage ? (
                     <PageEditorContent
-                    page={selectedPage}
-                    document={document}
-                    onSetDisplayName={onSetPageDisplayName}
-                    onSetHomePage={onSetPageAsHome}
-                    onSetLang={onSetPageLang}
-                    onSetSlug={onSetPageSlug}
+                      page={selectedPage}
+                      document={document}
+                      onSetDisplayName={onSetPageDisplayName}
+                      onSetHomePage={onSetPageAsHome}
+                      onSetLang={onSetPageLang}
+                      onSetSlug={onSetPageSlug}
                       onAddAlias={onAddPageAlias}
                       onRemoveAlias={onRemovePageAlias}
                       onSetVisibility={onSetPageVisibility}
                       onSetViewTransition={onSetPageViewTransition}
                       onSetParent={onSetPageParent}
-                      onSetTopLevelWrapperPlacement={onSetTopLevelWrapperPlacement}
                       onSyncPageLinks={onSyncPageLinks}
                       onValidateLinks={onValidateLinks}
                     />

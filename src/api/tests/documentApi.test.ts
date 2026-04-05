@@ -14,6 +14,8 @@ import {
   setNodeSticky,
   setNodeTextField,
   setPageTopLevelWrapperPlacement,
+  setTopLevelWrapperVisibility,
+  getTopLevelWrapperVisibilityState,
 } from '../documentApi';
 
 function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>) {
@@ -260,6 +262,56 @@ describe('api/documentApi', () => {
     expect(current.sharedRegionIds ?? []).not.toContain(section.id);
     expect(current.pages?.find((page) => page.id === aboutPage.id)?.sectionIds).toContain(section.id);
     expect(current.pages?.find((page) => page.id === homePage.id)?.sectionIds ?? []).not.toContain(section.id);
+    expect(getTopLevelWrapperVisibilityState(current, section.id)).toEqual({
+      mode: 'currentPage',
+      pageIds: [],
+    });
+  });
+
+  it('supports hidden and custom page visibility for top-level wrappers', () => {
+    const document = createInitialDocument();
+    const homePage = document.pages?.[0];
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const contactPage = createPage({ displayName: 'Contact', slug: 'contact' });
+    const section = Object.values(document.nodes).find(
+      (node) => node.type === 'wrapper' && node.role === 'section',
+    );
+    if (!homePage || !section || section.type !== 'wrapper') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const withPages = {
+      ...document,
+      pages: [...(document.pages ?? []), aboutPage, contactPage],
+    };
+
+    const hidden = setTopLevelWrapperVisibility(withPages, homePage.id, section.id, 'hidden');
+    expect(hidden.nodes[section.id].visible).toBe(false);
+    expect(getTopLevelWrapperVisibilityState(hidden, section.id)).toEqual({
+      mode: 'hidden',
+      pageIds: [],
+    });
+
+    const custom = setTopLevelWrapperVisibility(hidden, homePage.id, section.id, 'customPages', [
+      homePage.id,
+      aboutPage.id,
+      contactPage.id,
+      aboutPage.id,
+    ]);
+
+    const customNode = custom.nodes[section.id];
+    if (customNode.type !== 'wrapper') {
+      throw new Error('Expected wrapper node');
+    }
+
+    expect(customNode.visible).toBe(true);
+    expect(customNode.pageTargetIds).toEqual([homePage.id, aboutPage.id, contactPage.id]);
+    expect(custom.sharedRegionIds ?? []).not.toContain(section.id);
+    expect(custom.pages?.every((page) => !page.sectionIds.includes(section.id))).toBe(true);
+    expect(getTopLevelWrapperVisibilityState(custom, section.id)).toEqual({
+      mode: 'customPages',
+      pageIds: [homePage.id, aboutPage.id, contactPage.id],
+    });
   });
 
   it('moves nodes to an exact tree index', () => {

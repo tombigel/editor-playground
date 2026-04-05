@@ -31,6 +31,12 @@ import { resolveSidebarTitleCommit } from "./EditorSidebar";
 import { TreeDragGhost } from "./TreeDragGhost";
 import { getLayersNodeIcon } from "./layersIcons";
 import {
+	getTopLevelWrapperVisibilityState,
+	type PageId,
+	type TopLevelWrapperVisibilityMode,
+} from "@/api/editorApi";
+import { TopLevelWrapperVisibilityControl } from "./controls/TopLevelWrapperVisibilityControl";
+import {
 	buildLayersTreeRows,
 	getAutoExpandedLayerIds,
 	getDefaultExpandedLayerIds,
@@ -51,6 +57,7 @@ type LayersPanelProps = {
 	onPositionChange: (position: { top: number; left: number }) => void;
 	panelRef?: Ref<HTMLDivElement>;
 	document: DocumentModel;
+	activePageId: PageId | null;
 	selectedIds: NodeId[];
 	onOpenChange: (open: boolean) => void;
 	onClose: () => void;
@@ -58,6 +65,12 @@ type LayersPanelProps = {
 	onRenameNode: (id: NodeId, value: string) => void;
 	onDeleteNode: (id: NodeId) => void;
 	onSetNodeVisibility: (id: NodeId, value: boolean) => void;
+	onSetTopLevelWrapperVisibility: (
+		pageId: PageId,
+		nodeId: NodeId,
+		visibility: TopLevelWrapperVisibilityMode,
+		pageIds?: PageId[],
+	) => void;
 	onMoveNodeInTree: (
 		id: NodeId,
 		targetParentId: NodeId,
@@ -247,11 +260,13 @@ export function LayersPanel({
 
 export function LayersPanelContent({
 	document,
+	activePageId,
 	selectedIds,
 	onSelectNode,
 	onRenameNode,
 	onDeleteNode,
 	onSetNodeVisibility,
+	onSetTopLevelWrapperVisibility,
 	onMoveNodeInTree,
 }: LayersPanelContentProps) {
 	const [expandedIds, setExpandedIds] = useState<Set<NodeId>>(
@@ -570,7 +585,10 @@ export function LayersPanelContent({
 										onRenameNode={onRenameNode}
 										onDeleteNode={onDeleteNode}
 										onSetNodeVisibility={onSetNodeVisibility}
+										onSetTopLevelWrapperVisibility={onSetTopLevelWrapperVisibility}
 										onRefChange={setRowRef}
+										document={document}
+										activePageId={activePageId}
 										editing={editingId === row.id}
 										projectedTypeLabel={
 											dragState?.active &&
@@ -612,7 +630,10 @@ function LayersTreeRowItem({
 	onClick,
 	onRenameNode,
 	onSetNodeVisibility,
+	onSetTopLevelWrapperVisibility,
 	onRefChange,
+	document,
+	activePageId,
 	editing,
 	projectedTypeLabel,
 	onStartEditing,
@@ -631,7 +652,15 @@ function LayersTreeRowItem({
 	onRenameNode: (nodeId: NodeId, value: string) => void;
 	onDeleteNode: (nodeId: NodeId) => void;
 	onSetNodeVisibility: (nodeId: NodeId, value: boolean) => void;
+	onSetTopLevelWrapperVisibility: (
+		pageId: PageId,
+		nodeId: NodeId,
+		visibility: TopLevelWrapperVisibilityMode,
+		pageIds?: PageId[],
+	) => void;
 	onRefChange: (nodeId: NodeId, element: HTMLDivElement | null) => void;
+	document: DocumentModel;
+	activePageId: PageId | null;
 	editing: boolean;
 	projectedTypeLabel: string | null;
 	onStartEditing: (nodeId: NodeId) => void;
@@ -808,35 +837,49 @@ function LayersTreeRowItem({
 							<PencilLine className="h-3.5 w-3.5" />
 						</Button>
 					</PopoverTooltip>
-					<PopoverTooltip
-						side="top"
-						align="end"
-						className={INSPECTOR_TOOLTIP_CLASS_NAME}
-						content={row.node.visible ? "Hide" : "Show"}
-					>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							className="editor-layers-action editor-layers-action-visibility h-7 w-7 rounded-md border"
-							data-layers-control="true"
-							aria-label={
-								row.node.visible
-									? `Hide ${row.displayName}`
-									: `Show ${row.displayName}`
+					{activePageId &&
+					row.node.type === 'wrapper' &&
+					row.node.parentId === document.rootId &&
+					(row.node.role === 'section' || row.node.role === 'header' || row.node.role === 'footer') ? (
+						<TopLevelWrapperVisibilityControl
+							document={document}
+							activePageId={activePageId}
+							value={getTopLevelWrapperVisibilityState(document, row.id)}
+							onChange={(visibility, pageIds) =>
+								onSetTopLevelWrapperVisibility(activePageId, row.id, visibility, pageIds)
 							}
-							onClick={(event) => {
-								event.stopPropagation();
-								onSetNodeVisibility(row.id, !row.node.visible);
-							}}
+						/>
+					) : (
+						<PopoverTooltip
+							side="top"
+							align="end"
+							className={INSPECTOR_TOOLTIP_CLASS_NAME}
+							content={row.node.visible ? "Hide" : "Show"}
 						>
-							{row.node.visible ? (
-								<Eye className="h-3.5 w-3.5" />
-							) : (
-								<EyeOff className="h-3.5 w-3.5" />
-							)}
-						</Button>
-					</PopoverTooltip>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="editor-layers-action editor-layers-action-visibility h-7 w-7 rounded-md border"
+								data-layers-control="true"
+								aria-label={
+									row.node.visible
+										? `Hide ${row.displayName}`
+										: `Show ${row.displayName}`
+								}
+								onClick={(event) => {
+									event.stopPropagation();
+									onSetNodeVisibility(row.id, !row.node.visible);
+								}}
+							>
+								{row.node.visible ? (
+									<Eye className="h-3.5 w-3.5" />
+								) : (
+									<EyeOff className="h-3.5 w-3.5" />
+								)}
+							</Button>
+						</PopoverTooltip>
+					)}
 				</div>
 			</div>
 		</>
