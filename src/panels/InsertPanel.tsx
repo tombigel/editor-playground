@@ -8,14 +8,14 @@ import {
 	SquareStack,
 	Type,
 } from "lucide-react";
-type LeafRole = 'text' | 'image' | 'link' | 'button';
+type LeafItemKind = 'text' | 'image' | 'link' | 'button';
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
 
 type Props = {
 	onInsertWrapper: (role: "container") => void;
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
-	onInsertLeaf: (role: LeafRole) => void;
+	onInsertLeaf: (role: LeafItemKind) => void;
 	layersOpen?: boolean;
 	onOpenLayers?: (trigger: HTMLElement) => void;
 	onCloseLayers?: () => void;
