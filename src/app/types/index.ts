@@ -187,6 +187,7 @@ export type ShortcutExecutionHandlers = {
   redo: () => void;
   toggleSettings: () => void;
   openShortcuts: () => void;
+  toggleFontsPanel: () => void;
   toggleLayersPanel: () => void;
   togglePagesPanel: () => void;
   setPreviewSticky: (value: boolean) => void;

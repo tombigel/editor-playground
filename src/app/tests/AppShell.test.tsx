@@ -115,6 +115,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain('data-ui="select-trigger"');
 		expect(markup).toContain("Home");
 		expect(markup).not.toContain("editor-topbar-pages-row");
+		expect(markup).toContain("Fonts Panel");
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
 		expect(markup).not.toContain("Import JSON…");

@@ -9,6 +9,7 @@ function createHandlers() {
     redo: vi.fn(),
     toggleSettings: vi.fn(),
     openShortcuts: vi.fn(),
+    toggleFontsPanel: vi.fn(),
     toggleLayersPanel: vi.fn(),
     togglePagesPanel: vi.fn(),
     setPreviewSticky: vi.fn(),
@@ -77,6 +78,7 @@ describe('app/shortcutController', () => {
     executeEditorShortcut('dismissPanels', baseState, false, handlers);
     executeEditorShortcut('openSettings', baseState, false, handlers);
     executeEditorShortcut('showShortcutHelp', baseState, false, handlers);
+    executeEditorShortcut('toggleFontsPanel', baseState, false, handlers);
     executeEditorShortcut('toggleLayersPanel', baseState, false, handlers);
     executeEditorShortcut('togglePagesPanel', baseState, false, handlers);
     executeEditorShortcut('toggleBoldSelection', baseState, false, handlers);
@@ -88,6 +90,7 @@ describe('app/shortcutController', () => {
     expect(handlers.closePanels).toHaveBeenCalledOnce();
     expect(handlers.toggleSettings).toHaveBeenCalledOnce();
     expect(handlers.openShortcuts).toHaveBeenCalledOnce();
+    expect(handlers.toggleFontsPanel).toHaveBeenCalledOnce();
     expect(handlers.toggleLayersPanel).toHaveBeenCalledOnce();
     expect(handlers.togglePagesPanel).toHaveBeenCalledOnce();
     expect(handlers.toggleBoldSelection).toHaveBeenCalledOnce();

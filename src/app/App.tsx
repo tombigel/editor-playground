@@ -174,6 +174,7 @@ export function App() {
 		onRedo: () => dispatch({ type: "redo" }),
 		onToggleSettings: () => panels.setSettingsOpen((open) => !open),
 		onOpenShortcuts: () => panels.setShortcutsOpen(true),
+		onToggleFontsPanel: () => panels.toggleManageFontsPanel(),
 		onToggleLayersPanel: () => panels.toggleLayersPanel(),
 		onTogglePagesPanel: () => panels.togglePagesPanel(),
 		onSetPreviewSticky: (value) =>

@@ -691,6 +691,7 @@ export function AppShell({
 					}
 					onToggleLayersPanel={() => onLayersOpenChange(!layersOpen)}
 					onTogglePagesPanel={() => onPagesOpenChange(!pagesOpen)}
+					onOpenManageFonts={() => onManageFontsOpenChange(true)}
 					onOpenShortcuts={() => onShortcutsOpenChange(true)}
 					onOpenDocumentation={(entryId) => {
 						setHelpEntryTarget(entryId);

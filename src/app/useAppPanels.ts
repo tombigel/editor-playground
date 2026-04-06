@@ -47,6 +47,10 @@ export function useAppPanels() {
 		setLayersOpen((open) => !open);
 	}
 
+	function toggleManageFontsPanel() {
+		setManageFontsOpen((open) => !open);
+	}
+
 	function togglePagesPanel() {
 		setPagesOpen((open) => {
 			if (open) {
@@ -146,6 +150,7 @@ export function useAppPanels() {
 		pagesPanelRef,
 		openLayers,
 		openPages,
+		toggleManageFontsPanel,
 		toggleLayersPanel,
 		togglePagesPanel,
 		handleLayersOpenChange,

@@ -18,6 +18,7 @@ type UseEditorKeyboardShortcutsArgs = {
   onRedo: () => void;
   onToggleSettings: () => void;
   onOpenShortcuts: () => void;
+  onToggleFontsPanel: () => void;
   onToggleLayersPanel: () => void;
   onTogglePagesPanel: () => void;
   onSetPreviewSticky: (value: boolean) => void;
@@ -51,6 +52,7 @@ export function useEditorKeyboardShortcuts({
   onRedo,
   onToggleSettings,
   onOpenShortcuts,
+  onToggleFontsPanel,
   onToggleLayersPanel,
   onTogglePagesPanel,
   onSetPreviewSticky,
@@ -111,6 +113,7 @@ export function useEditorKeyboardShortcuts({
         redo: onRedo,
         toggleSettings: onToggleSettings,
         openShortcuts: onOpenShortcuts,
+        toggleFontsPanel: onToggleFontsPanel,
         toggleLayersPanel: onToggleLayersPanel,
         togglePagesPanel: onTogglePagesPanel,
         setPreviewSticky: onSetPreviewSticky,
@@ -142,6 +145,7 @@ export function useEditorKeyboardShortcuts({
     onDistributeSelection,
     onNudgeSelection,
     onOpenShortcuts,
+    onToggleFontsPanel,
     onToggleLayersPanel,
     onTogglePagesPanel,
     onAlignSelection,

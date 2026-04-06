@@ -53,6 +53,12 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     combos: [{ code: 'Slash', keyLabel: '?', shift: true, omitShiftInDisplay: true }],
   },
   {
+    id: 'toggleFontsPanel',
+    category: 'View',
+    description: 'Fonts panel',
+    combos: [{ code: 'KeyF', keyLabel: 'F', shift: true }],
+  },
+  {
     id: 'toggleLayersPanel',
     category: 'View',
     description: 'Layers panel',

@@ -17,6 +17,7 @@ import {
 	Settings,
 	SwatchBook,
 	Trash2,
+	Type,
 	Undo2,
 } from "lucide-react";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
@@ -106,6 +107,7 @@ export function EditorTopbar({
 	onSetFocusedMode,
 	onToggleLayersPanel,
 	onTogglePagesPanel,
+	onOpenManageFonts,
 	onOpenShortcuts,
 	onOpenDocumentation,
 	onOpenAbout,
@@ -152,6 +154,7 @@ export function EditorTopbar({
 	onSetFocusedMode: (mode: FocusedMode) => void;
 	onToggleLayersPanel: () => void;
 	onTogglePagesPanel: () => void;
+	onOpenManageFonts: () => void;
 	onOpenShortcuts: () => void;
 	onOpenDocumentation: (entryId: string) => void;
 	onOpenAbout: () => void;
@@ -344,6 +347,16 @@ export function EditorTopbar({
 								))}
 							</MenubarSubmenu>
 							<MenubarSeparator />
+							<MenubarItem
+								icon={Type}
+								shortcut={getShortcutLabel(
+									"toggleFontsPanel",
+									shortcutPlatform,
+								)}
+								onClick={onOpenManageFonts}
+							>
+								Fonts Panel
+							</MenubarItem>
 							<MenubarCheckboxItem
 								icon={Layers2}
 								checked={layersOpen}

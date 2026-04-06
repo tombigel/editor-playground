@@ -90,7 +90,24 @@ describe('shortcut registry', () => {
     expect(getShortcutLabel('toggleSnapEnabled', 'other')).toBe('Shift + G');
   });
 
-  it('matches the layers and pages panel shortcuts', () => {
+  it('matches the fonts, layers, and pages panel shortcuts', () => {
+    const fonts = findMatchingShortcut(
+      {
+        code: 'KeyF',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
     const layers = findMatchingShortcut(
       {
         code: 'KeyL',
@@ -125,8 +142,10 @@ describe('shortcut registry', () => {
       'other',
     );
 
+    expect(fonts?.id).toBe('toggleFontsPanel');
     expect(layers?.id).toBe('toggleLayersPanel');
     expect(pages?.id).toBe('togglePagesPanel');
+    expect(getShortcutLabel('toggleFontsPanel', 'other')).toBe('Shift + F');
     expect(getShortcutLabel('toggleLayersPanel', 'other')).toBe('Shift + L');
     expect(getShortcutLabel('togglePagesPanel', 'other')).toBe('Shift + O');
   });

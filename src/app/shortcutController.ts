@@ -24,6 +24,9 @@ export function executeEditorShortcut(
     case 'showShortcutHelp':
       handlers.openShortcuts();
       return;
+    case 'toggleFontsPanel':
+      handlers.toggleFontsPanel();
+      return;
     case 'toggleLayersPanel':
       handlers.toggleLayersPanel();
       return;
