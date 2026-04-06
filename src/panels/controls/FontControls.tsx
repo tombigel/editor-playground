@@ -27,6 +27,38 @@ import {
 } from '../inspector/stageConversions';
 import { COMPACT_UNIT_SUFFIX_WIDTH } from './NumberFields';
 
+export function resolveFontSizeMeasurementInput({
+  nodeId,
+  mode,
+  resolveMeasurementInput,
+}: {
+  nodeId: string;
+  mode: FontSizeMode;
+  resolveMeasurementInput?: (mode: FontSizeMode) => string | null;
+}) {
+  if (resolveMeasurementInput) {
+    return resolveMeasurementInput(mode);
+  }
+  return convertStageFontSizeToInput(nodeId, mode);
+}
+
+export function resolveSpacingMeasurementInput({
+  nodeId,
+  axis,
+  mode,
+  resolveMeasurementInput,
+}: {
+  nodeId: string;
+  axis: SpacingAxis;
+  mode: SpacingMode;
+  resolveMeasurementInput?: (mode: SpacingMode) => string | null;
+}) {
+  if (resolveMeasurementInput) {
+    return resolveMeasurementInput(mode);
+  }
+  return convertStageSpacingToInput(nodeId, axis, mode);
+}
+
 // ---------------------------------------------------------------------------
 // Font picker constants
 // ---------------------------------------------------------------------------
@@ -563,6 +595,7 @@ export function FontSizeField({
   mixed = false,
   mixedUnit = mixed,
   defaultSuggestionsOpen = false,
+  resolveMeasurementInput,
 }: {
   nodeId: string;
   value: string;
@@ -570,6 +603,7 @@ export function FontSizeField({
   mixed?: boolean;
   mixedUnit?: boolean;
   defaultSuggestionsOpen?: boolean;
+  resolveMeasurementInput?: (mode: FontSizeMode) => string | null;
 }) {
   const parsed = parseFontSizeValue(value);
   const [draft, setDraft] = useState(mixed ? '' : String(parsed.parsed.value));
@@ -619,7 +653,11 @@ export function FontSizeField({
         }
       }}
       onResolveOptionValue={(nextUnit) => {
-        const converted = convertStageFontSizeToInput(nodeId, nextUnit as FontSizeMode);
+        const converted = resolveFontSizeMeasurementInput({
+          nodeId,
+          mode: nextUnit as FontSizeMode,
+          resolveMeasurementInput,
+        });
         if (converted == null) {
           return null;
         }
@@ -638,11 +676,13 @@ export function SpacingField({
   axis,
   value,
   onChange,
+  resolveMeasurementInput,
 }: {
   nodeId: string;
   axis: SpacingAxis;
   value: string;
   onChange: (value: string) => void;
+  resolveMeasurementInput?: (mode: SpacingMode) => string | null;
 }) {
   const parsed = parseSpacingValue(value);
   const options: ValueWithUnitOption[] = FONT_SIZE_UNIT_OPTIONS.map((option) => ({
@@ -664,7 +704,12 @@ export function SpacingField({
       step="any"
       segmentWidth={COMPACT_UNIT_SUFFIX_WIDTH}
       onResolveOptionValue={(nextUnit) => {
-        const converted = convertStageSpacingToInput(nodeId, axis, nextUnit as SpacingMode);
+        const converted = resolveSpacingMeasurementInput({
+          nodeId,
+          axis,
+          mode: nextUnit as SpacingMode,
+          resolveMeasurementInput,
+        });
         if (converted == null) {
           return null;
         }

@@ -1326,6 +1326,34 @@ Naming and title behavior:
 - Focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only and does not affect document semantics, sticky math, stage rendering, or site export behavior.
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal` / `none` for no focused mode.
 
+## Text Type Picker
+
+Adding a text node opens a text-type picker instead of inserting immediately.
+
+### Insertion flow
+
+- The picker opens from the left-rail `Text` add button.
+- It renders as a compact left-side pop panel at the shared top-left resting position below the top bar.
+- It shows four options in a vertical list: **Heading**, **Paragraph**, **Code**, **Rich text**.
+- Clicking an option inserts the corresponding node and closes the picker.
+- **Known gap**: the picker does not yet close on outside-click (no `useDismissFloatingPanels` integration for this panel).
+
+### Text type options
+
+| Option    | Inserted node | Default `htmlTag` | `subtype` |
+| --------- | ------------- | ----------------- | --------- |
+| Heading   | block text    | `h2`              | `block`   |
+| Paragraph | block text    | `p` (default)     | `block`   |
+| Code      | code text     | —                 | `code`    |
+| Rich text | rich text     | —                 | `rich`    |
+
+### Inspector subtype switcher
+
+- The Content block in the text inspector shows a **Text / Rich / Code** segmented control above the content fields.
+- Switching subtype calls `switchSubtypeDoc` — transferring position, sticky config, and style fields while replacing content with the target type's default.
+- The control is visible for all text nodes with `subtype` in `['block', 'rich', 'code']`.
+- Uses the shared `Tabs`/`TabsList`/`TabsTrigger` DS primitive.
+
 ## Section Templates
 
 Adding a section opens a section-template picker instead of inserting immediately.

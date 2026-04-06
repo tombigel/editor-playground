@@ -27,10 +27,34 @@ import {
 	TextStyleIconButton,
 	WrapperActions,
 } from "@/panels/InspectorControls";
+import { convertRenderedPxToUnitValue, formatFieldNumber } from "@/panels/inspector/stageConversions";
 import type { WrapperInspectorNode } from "@/panels/inspector/types";
 import { mockSection } from "../../mocks";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
+
+function resolveDemoSizeMeasurement(
+	px: number,
+	axis: "x" | "y" | "width" | "height",
+	mode: "px" | "%" | "vw" | "vh" | "vmin" | "vmax",
+) {
+	const converted = convertRenderedPxToUnitValue(
+		px,
+		axis,
+		mode,
+		axis === "width" ? 960 : axis === "height" ? 640 : undefined,
+		mode === "vw" || mode === "vh" || mode === "vmin" || mode === "vmax"
+			? mode === "vw"
+				? 1440
+				: mode === "vh"
+					? 900
+					: mode === "vmin"
+						? Math.min(1440, 900)
+						: Math.max(1440, 900)
+			: undefined,
+	);
+	return converted == null ? null : formatFieldNumber(converted);
+}
 
 const LAYOUT_CONTROLS_PROPS: PropDefinition[] = [
 	{ name: "node", type: "InspectorNode", description: "Current node supplying XYWH values and layout capabilities." },
@@ -84,6 +108,9 @@ export function LayoutDemos() {
 								value="320px"
 								onChange={() => {}}
 								axis="width"
+								resolveMeasurementInput={(mode) =>
+									resolveDemoSizeMeasurement(320, "width", mode)
+								}
 							/>
 							<SizeInlineField
 								label="H"
@@ -91,6 +118,9 @@ export function LayoutDemos() {
 								value="auto"
 								onChange={() => {}}
 								axis="height"
+								resolveMeasurementInput={(mode) =>
+									resolveDemoSizeMeasurement(240, "height", mode)
+								}
 							/>
 						</div>
 					</div>

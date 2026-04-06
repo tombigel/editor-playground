@@ -430,8 +430,14 @@ export function isStructuralWrapper(subtype: ContainerSubtype) {
   return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
-export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'image' | 'link' | 'button', parentId: NodeId) {
+export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button', parentId: NodeId) {
   const make = () => {
+    if (role === 'heading') {
+      const node = createTextNode('block', parentId);
+      return { ...node, htmlTag: 'h2' as const };
+    }
+    if (role === 'richtext') return createTextNode('rich', parentId);
+    if (role === 'code') return createTextNode('code', parentId);
     if (role === 'text') return createTextNode('block', parentId);
     if (role === 'image') return createMediaNode('image', parentId);
     if (role === 'link') return createLinkTextNode(parentId);

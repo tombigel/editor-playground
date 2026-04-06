@@ -14,11 +14,11 @@ For the broader editor convergence effort, use [`docs/DESIGN_SYSTEM_CONVERGENCE_
 ## Icon Cleanup
 
 - ~~**Deduplicate AlertTriangle / TriangleAlert**~~: DONE — migrated to `TriangleAlert` everywhere, removed `AlertTriangle` from showcase icon list.
-- **Audit icon list**: Verify every icon in the showcase is still actively imported somewhere in `src/` outside of the design system. Remove any that were added speculatively.
+- ~~**Audit icon list**~~: DONE — audited the design-token icon showcase against active editor-facing usage, including the design-system showcase chrome itself. Removed speculative icons that are still unused across the current editor/showcase surfaces (`Component`, `FilePlus`, `Paintbrush`) while keeping icons used by the design-system shell such as `Blocks` and `Cuboid`.
 
 ## Component Standalone Enhancements
 
-- **SizeInlineField / SpacingField / FontSizeField**: Unit conversion (px↔%↔vh etc.) calls `convertStageMeasurementToInput()` which reads computed pixel values from DOM elements by node ID. In the showcase, these elements don't exist on the stage, so unit switching silently returns null. The fields still work for direct numeric input. Fix: mock the DOM measurement functions or provide a showcase-mode bypass.
+- ~~**SizeInlineField / SpacingField / FontSizeField**~~: DONE — the shared controls now accept explicit measurement resolvers, so showcase contexts can provide stable conversion values without relying on live stage DOM nodes. The layout and typography demos use that bypass for unit switching, and `SpacingField` can use the same resolver contract when showcased in embedded contexts.
 
 - **FontFamilySelect / FontPickerPopover**: Showcase uses a small mock font library. The full document font loading pipeline (Google Fonts catalog, preview stylesheets, favorites, recent tracking) is not exercised. Consider a dedicated font picker demo page.
 
@@ -26,17 +26,17 @@ For the broader editor convergence effort, use [`docs/DESIGN_SYSTEM_CONVERGENCE_
 
 - ~~**FontPickerPopover side effects**~~: DONE — Stylesheet injection extracted to `useFontPreviewStylesheet` hook. Recent-fonts persistence lifted to callers via `recentFamilyNames` / `onRecentFamiliesChange` props. Showcase demos pass explicit no-op props. ManageFontsPanel also migrated to the shared hook.
 
-- **StickySection**: The mock node may not include all sticky sub-fields. Some controls may show default/disabled states rather than fully populated states. Consider creating richer mock sticky data.
+- ~~**StickySection**~~: DONE — the showcase now includes both an auto-distance wrapper example and a richer custom two-edge container example, so the sticky surface demonstrates authored offsets, custom duration, and local elevation states instead of mostly defaults.
 
-- **Content sections (Text/Link/Button)**: NavigationFields requires a real DocumentModel with sections for the anchor target selector. In the showcase, the internal link section selector shows an empty list.
+- ~~**Content sections (Text/Link/Button)**~~: DONE — `ContentDemos` now passes `mockDocument`, and the showcase seed document includes a real starter page/section so `NavigationFields` has section anchor options instead of an empty internal-link selector.
 
 ## Missing Components
 
-- **Template items**: SectionTemplatePopover and template card variants are not yet showcased. These depend on template insertion logic and positioning.
+- ~~**Template items**~~: DONE — the showcase now renders the live `SectionTemplatePopover`, including the real template-card variants and floating placement shell used by the editor.
 
-- **Font management panel items**: Document font row, catalog font row, filter toggles, and the full browse experience are not included in the showcase.
+- ~~**Font management panel items**~~: DONE — the showcase now includes a representative font-management surface covering site-library rows, catalog rows, filter controls, result meta, and shared pagination anatomy.
 
-- **Pager**: Currently using a simple prev/next pattern. The actual font management pager (CatalogPaginationControls) is internal to ManageFontsPanel and not exported. Consider extracting it.
+- ~~**Pager**~~: DONE — the pager was extracted to the shared [`src/components/ui/pager.tsx`](./src/components/ui/pager.tsx) primitive, is used by `ManageFontsPanel`, and is already showcased under the base components section.
 
 ## Refactoring
 

@@ -1,5 +1,5 @@
-import type { ComponentType, ReactNode, Ref } from 'react';
-import { Rows3 } from 'lucide-react';
+import type { CSSProperties, ComponentType, ReactNode, Ref } from 'react';
+import { AlignLeft, Code2, Heading2, FileText, Rows3, Type } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
 import { Button } from '@/components/ui/button';
 import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
@@ -21,7 +21,6 @@ const UPCOMING_SCROLL_TEMPLATES = [
 ] as const;
 
 const TOPBAR_TOOLTIP_CLASS = 'editor-topbar-tooltip';
-
 export function TopbarIconAction({
   icon: Icon,
   label,
@@ -86,17 +85,19 @@ export function TopbarIconAction({
 export function SectionTemplatePopover({
   panelRef,
   open,
-  position,
   onOpenChange,
   onClose,
   onInsertTemplate,
+  suppressPopover = false,
+  style,
 }: {
   panelRef?: Ref<HTMLDivElement>;
   open: boolean;
-  position: { top: number; left: number };
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
   onInsertTemplate: (templateId: SectionTemplateId) => void;
+  suppressPopover?: boolean;
+  style?: CSSProperties;
 }) {
   if (!open) {
     return null;
@@ -107,11 +108,10 @@ export function SectionTemplatePopover({
       ref={panelRef}
       open={open}
       onOpenChange={onOpenChange}
+      positionMode="absolute"
+      suppressPopover={suppressPopover}
       className="editor-section-templates w-[440px]"
-      style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-      }}
+      style={style}
       header={(
         <EditorPanelHeader
           icon={Rows3}
@@ -160,6 +160,86 @@ export function SectionTemplatePopover({
     </FloatingPanelShell>
   );
 }
+
+type TextTypeRole = 'heading' | 'text' | 'code' | 'richtext';
+
+const TEXT_TYPE_OPTIONS: {
+  role: TextTypeRole;
+  label: string;
+  description: string;
+  icon: ComponentType<{ className?: string; size?: number }>;
+}[] = [
+  { role: 'heading', label: 'Heading', description: 'Section title (h2)', icon: Heading2 },
+  { role: 'text', label: 'Paragraph', description: 'Plain text block', icon: AlignLeft },
+  { role: 'code', label: 'Code', description: 'Monospace code snippet', icon: Code2 },
+  { role: 'richtext', label: 'Rich text', description: 'Formatted inline content', icon: FileText },
+];
+
+export function TextTypePopover({
+  panelRef,
+  open,
+  onOpenChange,
+  onClose,
+  onInsert,
+  suppressPopover = false,
+  style,
+}: {
+  panelRef?: Ref<HTMLDivElement>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
+  onInsert: (role: TextTypeRole) => void;
+  suppressPopover?: boolean;
+  style?: CSSProperties;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <FloatingPanelShell
+      ref={panelRef}
+      open={open}
+      onOpenChange={onOpenChange}
+      positionMode="absolute"
+      suppressPopover={suppressPopover}
+      className="w-[220px]"
+      style={style}
+      header={(
+        <EditorPanelHeader
+          icon={Type}
+          title="Insert text"
+          description="Choose a text type."
+          closeLabel="Close text type panel"
+          onClose={onClose}
+        />
+      )}
+      bodyClassName="p-2"
+    >
+      <div className="flex flex-col gap-1">
+        {TEXT_TYPE_OPTIONS.map(({ role, label, description, icon: Icon }) => (
+          <button
+            key={role}
+            type="button"
+            className="editor-template-card flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--editor-focus-ring-offset)]"
+            onClick={() => {
+              onInsert(role);
+              onClose();
+            }}
+          >
+            <Icon size={16} className="editor-text-muted shrink-0" />
+            <div>
+              <span className="editor-text-strong block text-xs font-semibold">{label}</span>
+              <span className="editor-text-muted mt-0.5 block text-[10px]">{description}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </FloatingPanelShell>
+  );
+}
+
+export type { TextTypeRole };
 
 export function RailToggleButton({
   icon: Icon,

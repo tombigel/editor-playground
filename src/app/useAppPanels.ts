@@ -31,13 +31,12 @@ export function useAppPanels() {
 	}));
 	const [pagesPositionCustomized, setPagesPositionCustomized] = useState(false);
 	const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
-	const [sectionTemplatePosition, setSectionTemplatePosition] = useState(
-		getDefaultLeftFloatingPanelPosition,
-	);
+	const [textTypeOpen, setTextTypeOpen] = useState(false);
 	const settingsPanelRef = useRef<HTMLDivElement | null>(null);
 	const layersPanelRef = useRef<HTMLDivElement | null>(null);
 	const pagesPanelRef = useRef<HTMLDivElement | null>(null);
 	const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
+	const textTypePanelRef = useRef<HTMLDivElement | null>(null);
 
 	function closeLayersPanel() {
 		setLayersOpen(false);
@@ -113,12 +112,23 @@ export function useAppPanels() {
 	}
 
 	function openSectionTemplates(_trigger: HTMLElement) {
-		setSectionTemplatePosition(getDefaultLeftFloatingPanelPosition());
 		setSectionTemplateOpen(true);
 	}
 
 	function handleSectionTemplateOpenChange(open: boolean) {
 		setSectionTemplateOpen(open);
+	}
+
+	function openTextTypePopover(_trigger: HTMLElement) {
+		setTextTypeOpen(true);
+	}
+
+	function closeTextTypePopover() {
+		setTextTypeOpen(false);
+	}
+
+	function handleTextTypeOpenChange(open: boolean) {
+		setTextTypeOpen(open);
 	}
 
 	useDismissFloatingPanels({
@@ -158,12 +168,16 @@ export function useAppPanels() {
 		handlePagesPositionChange,
 		closeLayersPanel,
 		sectionTemplateOpen,
-		sectionTemplatePosition,
 		settingsPanelRef,
 		sectionTemplatePanelRef,
 		openSectionTemplates,
 		handleSectionTemplateOpenChange,
 		closeSectionTemplatePopover,
+		textTypeOpen,
+		textTypePanelRef,
+		openTextTypePopover,
+		closeTextTypePopover,
+		handleTextTypeOpenChange,
 		closeTransientPanels,
 		hasDismissiblePanels:
 			settingsOpen ||
@@ -173,6 +187,7 @@ export function useAppPanels() {
 			aboutOpen ||
 			layersOpen ||
 			pagesOpen ||
-			sectionTemplateOpen,
+			sectionTemplateOpen ||
+			textTypeOpen,
 	};
 }

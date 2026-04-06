@@ -21,6 +21,25 @@ import {
 } from '../inspector/stageConversions';
 import { COMPACT_UNIT_SUFFIX_WIDTH, COMPACT_UNIT_ICON_SUFFIX_WIDTH } from './NumberFields';
 
+type NumericSizeFieldMode = Extract<SizeFieldMode, 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax'>;
+
+export function resolveSizeMeasurementInput({
+  nodeId,
+  axis,
+  mode,
+  resolveMeasurementInput,
+}: {
+  nodeId: string;
+  axis: SizeFieldAxis;
+  mode: NumericSizeFieldMode;
+  resolveMeasurementInput?: (mode: NumericSizeFieldMode) => string | null;
+}) {
+  if (resolveMeasurementInput) {
+    return resolveMeasurementInput(mode);
+  }
+  return convertStageMeasurementToInput(nodeId, axis, mode);
+}
+
 // ---------------------------------------------------------------------------
 // size mode options (internal)
 // ---------------------------------------------------------------------------
@@ -101,6 +120,7 @@ export const SizeInlineField = memo(function SizeInlineField({
   onChange,
   isSectionHeight = false,
   disabled = false,
+  resolveMeasurementInput,
 }: {
   label: string;
   nodeId: string;
@@ -109,6 +129,7 @@ export const SizeInlineField = memo(function SizeInlineField({
   onChange: (value: string) => void;
   isSectionHeight?: boolean;
   disabled?: boolean;
+  resolveMeasurementInput?: (mode: NumericSizeFieldMode) => string | null;
 }) {
   const fieldId = useId();
   const modeOptions = getSizeModeOptions(axis, { isSectionHeight });
@@ -178,7 +199,12 @@ export const SizeInlineField = memo(function SizeInlineField({
       return;
     }
 
-    const convertedNumeric = convertStageMeasurementToInput(nodeId, axis, resolvedMode);
+    const convertedNumeric = resolveSizeMeasurementInput({
+      nodeId,
+      axis,
+      mode: resolvedMode,
+      resolveMeasurementInput,
+    });
     if (convertedNumeric == null) {
       return;
     }
@@ -220,7 +246,12 @@ export const SizeInlineField = memo(function SizeInlineField({
       return nextRaw;
     }
 
-    const convertedNumeric = convertStageMeasurementToInput(nodeId, axis, resolvedMode);
+    const convertedNumeric = resolveSizeMeasurementInput({
+      nodeId,
+      axis,
+      mode: resolvedMode,
+      resolveMeasurementInput,
+    });
     if (convertedNumeric == null) {
       return null;
     }

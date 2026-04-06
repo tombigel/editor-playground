@@ -24,6 +24,7 @@ const actions: InspectorActionHandlers = {
   onStickyDurationBottom: () => {},
   onStickyElevation: () => {},
   onStickyElevated: () => {},
+  onSwitchTextSubtype: () => {},
   onEnterFocusedMode: () => {},
   onOpenManageFonts: () => {},
 };

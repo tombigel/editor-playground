@@ -8,13 +8,14 @@ import {
 	SquareStack,
 	Type,
 } from "lucide-react";
-type LeafItemKind = 'text' | 'image' | 'link' | 'button';
+type LeafItemKind = 'image' | 'link' | 'button';
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
 
 type Props = {
 	onInsertWrapper: (role: "container") => void;
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
+	onOpenTextTypes: (trigger: HTMLElement) => void;
 	onInsertLeaf: (role: LeafItemKind) => void;
 	layersOpen?: boolean;
 	onOpenLayers?: (trigger: HTMLElement) => void;
@@ -40,11 +41,10 @@ const INSERT_ITEMS = [
 		hint: "Nestable wrapper",
 	},
 	{
-		kind: "leaf" as const,
-		role: "text" as const,
+		kind: "textType" as const,
 		icon: Type,
 		label: "Text",
-		hint: "Headline or copy",
+		hint: "Paragraph, heading, rich text…",
 	},
 	{
 		kind: "leaf" as const,
@@ -72,6 +72,7 @@ const INSERT_ITEMS = [
 export function InsertPanel({
 	onInsertWrapper,
 	onOpenSectionTemplates,
+	onOpenTextTypes,
 	onInsertLeaf,
 	layersOpen = false,
 	onOpenLayers = () => undefined,
@@ -109,7 +110,9 @@ export function InsertPanel({
 							data-panel-trigger={
 								item.kind === "wrapper" && item.role === "section"
 									? "section-templates"
-									: undefined
+									: item.kind === "textType"
+										? "text-types"
+										: undefined
 							}
 							variant="outline"
 							size="icon"
@@ -122,6 +125,10 @@ export function InsertPanel({
 									} else {
 										onInsertWrapper(item.role);
 									}
+									return;
+								}
+								if (item.kind === "textType") {
+									onOpenTextTypes(event.currentTarget);
 									return;
 								}
 								onInsertLeaf(item.role);

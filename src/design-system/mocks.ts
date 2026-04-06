@@ -27,6 +27,7 @@ export const noopActions: InspectorActionHandlers = {
 	onStickyDuration: noop,
 	onStickyDurationTop: noop,
 	onStickyDurationBottom: noop,
+	onSwitchTextSubtype: noop,
 	onEnterFocusedMode: noop,
 	onOpenManageFonts: noop,
 	onStickyElevation: () => undefined,

@@ -7,7 +7,7 @@ describe('app/AppChrome', () => {
     const markup = renderToStaticMarkup(
       <SectionTemplatePopover
         open
-        position={{ top: 12, left: 24 }}
+        style={{ top: 76, left: 80 }}
         onOpenChange={() => {}}
         onClose={() => {}}
         onInsertTemplate={() => {}}
@@ -17,5 +17,21 @@ describe('app/AppChrome', () => {
     expect(markup).toContain('editor-scrollbar');
     expect(markup).toContain('Choose a layout to insert.');
     expect(markup).toContain('editor-panel-header-close');
+  });
+
+  it('supports suppressing the live popover wrapper for static showcase rendering', () => {
+    const markup = renderToStaticMarkup(
+      <SectionTemplatePopover
+        open
+        suppressPopover
+        style={{ top: 12, left: 24 }}
+        onOpenChange={() => {}}
+        onClose={() => {}}
+        onInsertTemplate={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('data-ui="floating-panel-shell"');
+    expect(markup).not.toContain('popover="manual"');
   });
 });

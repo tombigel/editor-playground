@@ -34,7 +34,6 @@ function renderEditElement(
     const link = el as RichTextLink;
     const href = getLinkHref(link, document);
     return (
-      // biome-ignore lint/a11y/useValidAnchor: edit-mode inline link — not navigable
       <a href={href} style={{ textDecoration: 'underline', cursor: 'text' }} {...attributes}>
         {children}
       </a>
@@ -130,7 +129,6 @@ export function RichTextEditOverlay({
     <Slate editor={editor} initialValue={initialValue}>
       <Tag
         style={contentStyle}
-        // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: contenteditable is interactive by definition
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}

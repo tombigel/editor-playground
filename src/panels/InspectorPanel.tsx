@@ -74,6 +74,7 @@ export type InspectorPanelProps = {
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
   globalStickyElevation: boolean;
+  onSwitchTextSubtype: (nodeId: string, subtype: 'block' | 'rich' | 'code') => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onOpenManageFonts?: () => void;
   showDebugInfo?: boolean;
@@ -125,6 +126,7 @@ export function InspectorPanel({
   onStickyElevation,
   onStickyElevated,
   globalStickyElevation,
+  onSwitchTextSubtype,
   onEnterFocusedMode,
   onOpenManageFonts = () => undefined,
   showDebugInfo = false,
@@ -159,6 +161,7 @@ export function InspectorPanel({
       onStickyDurationBottom,
       onStickyElevation,
       onStickyElevated,
+      onSwitchTextSubtype,
       onEnterFocusedMode,
       onOpenManageFonts,
     }),
@@ -168,7 +171,7 @@ export function InspectorPanel({
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
-      onStickyElevation, onStickyElevated, onEnterFocusedMode, onOpenManageFonts,
+      onStickyElevation, onStickyElevated, onSwitchTextSubtype, onEnterFocusedMode, onOpenManageFonts,
     ],
   );
   const orderState = useMemo<InspectorOrderState>(

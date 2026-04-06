@@ -2,6 +2,8 @@ import { TextAppearanceSection, TextContentSection, RichTextContentSection, Text
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import { isTextNode as isTextNodeGuard } from '../../model/types';
+import type { TextSubtype } from '../../model/types';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
 
 const textContentSection: InspectorSectionDefinition = {
@@ -67,6 +69,33 @@ export const textAppearanceSection: InspectorSectionDefinition = {
     ) : null,
 };
 
+const TEXT_SUBTYPES: { value: TextSubtype; label: string }[] = [
+  { value: 'block', label: 'Text' },
+  { value: 'rich', label: 'Rich' },
+  { value: 'code', label: 'Code' },
+];
+
+const textSubtypeSwitcherSection: InspectorSectionDefinition = {
+  id: 'text-subtype-switcher',
+  render: ({ node, actions }) => {
+    if (!node || !isTextNodeGuard(node) || !['block', 'rich', 'code'].includes(node.subtype)) return null;
+    const current = node.subtype as TextSubtype;
+    return (
+      <div className="px-3 pb-2 pt-1.5">
+        <Tabs value={current} onValueChange={(v) => actions.onSwitchTextSubtype(node.id, v as TextSubtype)}>
+          <TabsList className="w-full">
+            {TEXT_SUBTYPES.map(({ value, label }) => (
+              <TabsTrigger key={value} value={value} size="small" className="flex-1">
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+    );
+  },
+};
+
 const textStickySection: InspectorSectionDefinition = {
   id: 'sticky',
   render: ({ node, actions, focusedMode, globalStickyElevation }) =>
@@ -94,7 +123,7 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     bucket: 'primary',
     title: 'Content',
     description: 'Copy fields for text nodes.',
-    sections: [textContentSection, richTextContentSection],
+    sections: [textSubtypeSwitcherSection, textContentSection, richTextContentSection],
   }),
   createSectionBlock({
     id: 'text-style',

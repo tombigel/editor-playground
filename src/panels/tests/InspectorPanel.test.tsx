@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
+import { resolveSizeMeasurementInput } from '../controls/SizeFields';
 import {
   buildSizeFieldValue,
   convertRenderedPxToFontSizeValue,
@@ -58,6 +59,7 @@ describe('panels/InspectorPanel', () => {
       onStickyDurationTop: () => {},
       onStickyDurationBottom: () => {},
       focusedMode: null,
+      onSwitchTextSubtype: () => {},
       onEnterFocusedMode: () => {},
       globalStickyElevation: true,
       onStickyElevation: () => undefined,
@@ -629,6 +631,17 @@ describe('panels/InspectorPanel', () => {
     expect(convertRenderedPxToUnitValue(250, 'width', '%', 1000)).toBe(25);
     expect(convertRenderedPxToUnitValue(48, 'x', '%', 1000)).toBeNull();
     expect(convertRenderedPxToUnitValue(428, 'width', 'vw', undefined, 1600)).toBe(26.75);
+  });
+
+  it('prefers an explicit size measurement resolver over stage DOM lookup', () => {
+    expect(
+      resolveSizeMeasurementInput({
+        nodeId: 'demo',
+        axis: 'width',
+        mode: 'vw',
+        resolveMeasurementInput: (mode) => (mode === 'vw' ? '22.22' : null),
+      }),
+    ).toBe('22.22');
   });
 
   it('converts live rendered font size into target font size units', () => {

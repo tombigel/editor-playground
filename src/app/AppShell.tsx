@@ -88,8 +88,10 @@ import { useDebugLogger } from "../editor/useDebugLogger";
 import {
 	RailToggleButton,
 	SectionTemplatePopover,
+	TextTypePopover,
 	SpacerIcon,
 } from "./AppChrome";
+import type { TextTypeRole } from "./AppChrome";
 import type { HistoryAction, HistoryState } from "./editorState";
 import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { HelpEntry } from "../panels/helpDocs";
@@ -116,11 +118,12 @@ type Props = {
 	layersPosition?: { top: number; left: number };
 	pagesPosition?: { top: number; left: number };
 	sectionTemplateOpen: boolean;
-	sectionTemplatePosition: { top: number; left: number };
+	textTypeOpen: boolean;
 	settingsPanelRef: Ref<HTMLDivElement>;
 	layersPanelRef?: Ref<HTMLDivElement>;
 	pagesPanelRef?: Ref<HTMLDivElement>;
 	sectionTemplatePanelRef: Ref<HTMLDivElement>;
+	textTypePanelRef: Ref<HTMLDivElement>;
 	documentJson: string;
 	dispatch: Dispatch<HistoryAction>;
 	onStickyGeometryChange: (geometry: StickyGeometrySnapshot) => void;
@@ -133,6 +136,10 @@ type Props = {
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
 	onSectionTemplateOpenChange: (open: boolean) => void;
 	onCloseSectionTemplates: () => void;
+	onOpenTextTypes: (trigger: HTMLElement) => void;
+	onTextTypeOpenChange: (open: boolean) => void;
+	onCloseTextTypes: () => void;
+	onInsertTextType: (role: TextTypeRole) => void;
 	onSettingsOpenChange: (open: boolean) => void;
 	onManageFontsOpenChange?: (open: boolean) => void;
 	onHelpOpenChange: (open: boolean) => void;
@@ -185,11 +192,12 @@ export function AppShell({
 	layersPosition = { top: 112, left: 102 },
 	pagesPosition = { top: 76, left: 416 },
 	sectionTemplateOpen,
-	sectionTemplatePosition,
+	textTypeOpen,
 	settingsPanelRef,
 	layersPanelRef,
 	pagesPanelRef,
 	sectionTemplatePanelRef,
+	textTypePanelRef,
 	documentJson,
 	dispatch,
 	onStickyGeometryChange,
@@ -202,6 +210,10 @@ export function AppShell({
 	onOpenSectionTemplates,
 	onSectionTemplateOpenChange,
 	onCloseSectionTemplates,
+	onOpenTextTypes,
+	onTextTypeOpenChange,
+	onCloseTextTypes,
+	onInsertTextType,
 	onSettingsOpenChange,
 	onManageFontsOpenChange = () => undefined,
 	onHelpOpenChange,
@@ -788,6 +800,7 @@ export function AppShell({
 						<div className="flex h-full flex-col overflow-visible p-3">
 							<InsertPanel
 								onOpenSectionTemplates={onOpenSectionTemplates}
+								onOpenTextTypes={onOpenTextTypes}
 								onInsertWrapper={(role) =>
 									dispatch({ type: "insertWrapper", role })
 								}
@@ -1107,6 +1120,9 @@ export function AppShell({
 								})
 							}
 							showDebugInfo={state.ui.showDebugInfo}
+							onSwitchTextSubtype={(nodeId, subtype) =>
+								dispatch({ type: "switchTextSubtype", nodeId, subtype })
+							}
 							onEnterFocusedMode={(value) =>
 								dispatch({ type: "setFocusedMode", value })
 							}
@@ -1251,6 +1267,9 @@ export function AppShell({
 								pageIds,
 							})
 						}
+						onSwitchTextSubtype={(nodeId, subtype) =>
+							dispatch({ type: "switchTextSubtype", nodeId, subtype })
+						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })
 						}
@@ -1267,12 +1286,24 @@ export function AppShell({
 			<SectionTemplatePopover
 				panelRef={sectionTemplatePanelRef}
 				open={sectionTemplateOpen}
-				position={sectionTemplatePosition}
+				style={{ top: "76px", left: "80px" }}
 				onOpenChange={onSectionTemplateOpenChange}
 				onClose={onCloseSectionTemplates}
 				onInsertTemplate={(templateId) => {
 					dispatch({ type: "insertSectionTemplate", templateId });
 					onCloseSectionTemplates();
+				}}
+			/>
+
+			<TextTypePopover
+				panelRef={textTypePanelRef}
+				open={textTypeOpen}
+				style={{ top: "76px", left: "80px" }}
+				onOpenChange={onTextTypeOpenChange}
+				onClose={onCloseTextTypes}
+				onInsert={(role) => {
+					onInsertTextType(role);
+					onCloseTextTypes();
 				}}
 			/>
 

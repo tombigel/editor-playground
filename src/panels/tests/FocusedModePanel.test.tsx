@@ -67,6 +67,7 @@ function createInspectorProps() {
     onStickyDuration: () => {},
     onStickyDurationTop: () => {},
     onStickyDurationBottom: () => {},
+    onSwitchTextSubtype: () => {},
     onEnterFocusedMode: () => {},
     onOpenManageFonts: () => {},
     globalStickyElevation: true,

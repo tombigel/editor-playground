@@ -23,9 +23,18 @@ import {
 	TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX,
 	TYPOGRAPHY_SIZE_ROW_WIDTH_PX,
 } from "@/panels/inspector/contentSections/shared";
+import { convertRenderedPxToFontSizeValue, formatFieldNumber } from "@/panels/inspector/stageConversions";
 import { mockFontFamilies } from "../../mocks";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
+
+function resolveDemoFontSizeMeasurement(mode: "px" | "em" | "rem") {
+	const converted = convertRenderedPxToFontSizeValue(18, mode, {
+		rootFontSizePx: 16,
+		inheritedFontSizePx: 18,
+	});
+	return converted == null ? null : formatFieldNumber(converted);
+}
 
 const TEXT_STYLE_PROPS: PropDefinition[] = [
 	{ name: "node", type: "TextInspectorNode", description: "Current text node supplying typography values." },
@@ -96,7 +105,12 @@ function TextStyleFieldsDemo() {
 						className="shrink-0"
 						style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}
 					>
-						<FontSizeField nodeId="demo" value="18px" onChange={() => {}} />
+						<FontSizeField
+							nodeId="demo"
+							value="18px"
+							onChange={() => {}}
+							resolveMeasurementInput={resolveDemoFontSizeMeasurement}
+						/>
 					</div>
 					<div
 						className="shrink-0"
@@ -253,7 +267,13 @@ function TextStyleMixedDemo() {
 						className="shrink-0"
 						style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}
 					>
-						<FontSizeField nodeId="demo" value="18px" onChange={() => {}} mixed />
+						<FontSizeField
+							nodeId="demo"
+							value="18px"
+							onChange={() => {}}
+							mixed
+							resolveMeasurementInput={resolveDemoFontSizeMeasurement}
+						/>
 					</div>
 					<div
 						className="shrink-0"

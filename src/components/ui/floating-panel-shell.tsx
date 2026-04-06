@@ -9,12 +9,26 @@ type FloatingPanelShellProps = Omit<React.ComponentPropsWithoutRef<typeof Popove
   bodyClassName?: string;
   bodyStyle?: CSSProperties;
   suppressPopover?: boolean;
+  positionMode?: 'fixed' | 'absolute';
 };
 
 export const FloatingPanelShell = React.forwardRef<HTMLDivElement, FloatingPanelShellProps>(
-  ({ header, children, className, bodyClassName, bodyStyle, suppressPopover = false, open, onOpenChange, popoverMode, ...props }, ref) => {
+  ({
+    header,
+    children,
+    className,
+    bodyClassName,
+    bodyStyle,
+    suppressPopover = false,
+    positionMode = 'fixed',
+    open,
+    onOpenChange,
+    popoverMode,
+    ...props
+  }, ref) => {
     const shellClassName = cn(
-      'editor-floating-panel editor-bg-surface editor-border-subtle fixed rounded-xl border shadow-[0_16px_34px_rgba(18,32,51,0.18)]',
+      'editor-floating-panel editor-bg-surface editor-border-subtle rounded-xl border shadow-[0_16px_34px_rgba(18,32,51,0.18)]',
+      positionMode === 'fixed' ? 'fixed' : 'absolute',
       className,
     );
 

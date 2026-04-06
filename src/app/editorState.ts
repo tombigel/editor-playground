@@ -36,7 +36,7 @@ import {
   type EditorState,
   type NodeId,
 } from '../api/editorApi';
-import { setSiteNodeStickyElevation, setNodeRichContent } from '../api/documentApi';
+import { setSiteNodeStickyElevation, setNodeRichContent, switchSubtypeDoc } from '../api/documentApi';
 import {
   addPage,
   addPageSlugAlias,
@@ -127,6 +127,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return deleteNode(state, action.id);
     case 'setRichContent':
       return { ...state, document: setNodeRichContent(state.document, action.id, action.content) };
+    case 'switchTextSubtype':
+      return { ...state, document: switchSubtypeDoc(state.document, action.nodeId, action.subtype) };
     case 'setNodeVisibility':
       return setNodeVisibility(state, action.id, action.value);
     case 'stickyEnabled':

@@ -284,9 +284,10 @@ export function App() {
 			layersPanelRef={panels.layersPanelRef}
 			pagesPanelRef={panels.pagesPanelRef}
 			sectionTemplateOpen={panels.sectionTemplateOpen}
-			sectionTemplatePosition={panels.sectionTemplatePosition}
+			textTypeOpen={panels.textTypeOpen}
 			settingsPanelRef={panels.settingsPanelRef}
 			sectionTemplatePanelRef={panels.sectionTemplatePanelRef}
+			textTypePanelRef={panels.textTypePanelRef}
 			documentJson={viewModel.documentJson}
 			dispatch={dispatch}
 			onStickyGeometryChange={setStickyGeometry}
@@ -299,6 +300,10 @@ export function App() {
 			onOpenSectionTemplates={panels.openSectionTemplates}
 			onSectionTemplateOpenChange={panels.handleSectionTemplateOpenChange}
 			onCloseSectionTemplates={panels.closeSectionTemplatePopover}
+			onOpenTextTypes={panels.openTextTypePopover}
+			onTextTypeOpenChange={panels.handleTextTypeOpenChange}
+			onCloseTextTypes={panels.closeTextTypePopover}
+			onInsertTextType={(role) => dispatch({ type: "insertLeaf", role })}
 			onSettingsOpenChange={panels.setSettingsOpen}
 			onManageFontsOpenChange={panels.setManageFontsOpen}
 			onHelpOpenChange={panels.setHelpOpen}

@@ -55,9 +55,10 @@ describe('components/ui/panel-shell', () => {
     const markup = renderToStaticMarkup(
       <FloatingPanelShell
         suppressPopover
+        positionMode="absolute"
         open
         onOpenChange={() => {}}
-        className="absolute w-[320px]"
+        className="w-[320px]"
         style={{ top: '0px', left: '0px' }}
         header={
           <PanelHeader
@@ -74,5 +75,7 @@ describe('components/ui/panel-shell', () => {
     expect(markup).toContain('data-ui="floating-panel-shell"');
     expect(markup).toContain('Static body');
     expect(markup).not.toContain('popover="manual"');
+    expect(markup).toContain('absolute');
+    expect(markup).not.toContain(' fixed ');
   });
 });

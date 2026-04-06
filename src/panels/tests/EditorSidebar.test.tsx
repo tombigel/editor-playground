@@ -52,6 +52,7 @@ function createSidebarProps() {
 		onStickyDuration: () => {},
 		onStickyDurationTop: () => {},
 		onStickyDurationBottom: () => {},
+		onSwitchTextSubtype: () => {},
 		onEnterFocusedMode: () => {},
 		globalStickyElevation: true,
 		onStickyElevation: () => undefined,

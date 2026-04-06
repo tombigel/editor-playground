@@ -33,6 +33,7 @@ export type InspectorActionHandlers = {
   onStickyDurationBottom: (value: number) => void;
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
+  onSwitchTextSubtype: (nodeId: string, subtype: 'block' | 'rich' | 'code') => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onOpenManageFonts?: () => void;
 };

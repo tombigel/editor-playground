@@ -80,7 +80,8 @@ export type EditorAction =
   | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
-  | { type: 'insertLeaf'; role: 'text' | 'image' | 'link' | 'button' }
+  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
+  | { type: 'switchTextSubtype'; nodeId: string; subtype: 'block' | 'rich' | 'code' }
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
