@@ -1,11 +1,13 @@
-import { useLayoutEffect, useRef, useState } from "react";
-import { isSiteNode } from "../model/types";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { isSiteNode, isTextNode, type RichContent } from "../model/types";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
 import { resolveStickyIsElevated } from "../render/sticky";
 import { useStageDragDrop } from "./dragDrop/useStageDragDrop";
 import { useStageAnimations } from "./useStageAnimations";
 import { StageScene } from "./StageScene";
+import { RichEditContext } from "./richEditContext";
+import { useRichTextEditMode } from "./useRichTextEditMode";
 import {
 	areMeasuredNodeSizesEqual,
 	computeResizeFrame,
@@ -81,6 +83,7 @@ export function Stage({
 	onResizeStart,
 	onResizeEnd,
 	onStickyGeometryChange,
+	onUpdateRichContent,
 	followLinkPopup,
 }: StageProps) {
 	const stageRef = useRef<HTMLDivElement | null>(null);
@@ -103,6 +106,16 @@ export function Stage({
 
 	const defaultAnimationPreview = { enabled: false, mode: 'passive' as const, triggers: { entrance: true, ongoing: true, scroll: true, mouse: true, click: true, hover: true } };
 	useStageAnimations(document, animationPreview ?? defaultAnimationPreview);
+
+	const handleRichCommit = useCallback(
+		(id: string, content: RichContent) => {
+			onUpdateRichContent?.(id, content);
+		},
+		[onUpdateRichContent],
+	);
+	const { editingId, activateEdit, commitEdit, discardEdit } = useRichTextEditMode({
+		onCommit: handleRichCommit,
+	});
 
 	function handleStageRef(node: HTMLDivElement | null) {
 		stageRef.current = node;
@@ -276,6 +289,16 @@ export function Stage({
 			}
 			data-stage-focus-scope="true"
 			onFocus={onStageFocus}
+			onDoubleClick={(event) => {
+				const target = event.target as HTMLElement;
+				const nodeElement = target.closest<HTMLElement>("[data-node-id]");
+				const nodeId = nodeElement?.dataset.nodeId;
+				const node = nodeId ? document.nodes[nodeId] : null;
+				if (node && isTextNode(node) && node.subtype === 'rich') {
+					event.stopPropagation();
+					activateEdit(node.id);
+				}
+			}}
 			onDragStartCapture={(event) => {
 				event.preventDefault();
 			}}
@@ -419,6 +442,7 @@ export function Stage({
 				Tab selects components in stage order. Arrow keys move the selected
 				component by 1 pixel. Shift plus arrow keys move by 10 pixels.
 			</p>
+			<RichEditContext.Provider value={{ editingId, commitEdit, discardEdit }}>
 			<StageScene
 				document={document}
 				selectedId={selectedId}
@@ -501,6 +525,7 @@ export function Stage({
 					marqueeState={marqueeState}
 				/>
 			) : null}
+			</RichEditContext.Provider>
 		</section>
 	);
 }

@@ -4,6 +4,7 @@ import type {
   EditorTextField,
   FontLibrary,
   NodeId,
+  RichContent,
   SectionTemplateId,
   StickyDefinition,
   WrapperStyleField,
@@ -147,6 +148,7 @@ export type EditorAction =
   | { type: 'setPageViewTransition'; pageId: PageId; transition: DocumentPage['viewTransition'] }
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
+  | { type: 'setRichContent'; id: NodeId; content: RichContent }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
   | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
 

@@ -41,6 +41,7 @@ import type {
   DocumentNode,
   EditorTextField,
   MediaSubtype,
+  RichContent,
   ShadowStyleField,
   NodeTextField,
   NodeId,
@@ -395,6 +396,20 @@ export function setNodeTextField(
   }
 
   return document;
+}
+
+export function setNodeRichContent(
+  document: DocumentModel,
+  nodeId: NodeId,
+  content: RichContent,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'rich') {
+    return document;
+  }
+  node.content = content;
+  return next;
 }
 
 export function setNodeVisibilityDoc(

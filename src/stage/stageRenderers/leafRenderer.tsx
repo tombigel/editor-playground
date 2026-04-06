@@ -3,6 +3,7 @@ import type {
   ContainerNode,
   DocumentModel,
   NodeId,
+  RichContent,
   ViewportMeasurement,
 } from '../../model/types';
 import { formatValue } from '../../model/units';
@@ -13,6 +14,8 @@ import {
   isBrandMark,
   renderLeafContent,
 } from '../../render/nodePresentation';
+import { useRichEditContext } from '../richEditContext';
+import { RichTextEditOverlay } from './RichTextEditOverlay';
 import {
   getLeafCssHeight,
   getNodeHeight,
@@ -79,6 +82,7 @@ export function renderLeaf({
   const intrinsicHeightLeaf = usesIntrinsicHeight(child);
   const trackWidth = getTrackCssWidth(child);
   const isImageNode = child.contentType === 'media' && child.subtype === 'image';
+  const isRichTextNode = child.contentType === 'text' && child.subtype === 'rich';
   const leafBody = (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor canvas node, not web content
     <div
@@ -118,13 +122,21 @@ export function renderLeaf({
         className="stage-leaf-body"
         style={isImageNode ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined}
       >
-        {renderLeafContent(child, {
-          contentStyle: isImageNode ? undefined : styleRecordToReactStyle(getLeafInlineStyle(child)),
-          imageClassName: 'stage-image',
-          imagePlaceholderClassName: 'image-placeholder',
-          imageDraggable: false,
-          disableTabNavigation: true,
-        })}
+        {isRichTextNode
+          ? (
+            <LeafRichBody
+              child={child}
+              contentStyle={styleRecordToReactStyle(getLeafInlineStyle(child))}
+              document={document}
+            />
+          )
+          : renderLeafContent(child, {
+            contentStyle: isImageNode ? undefined : styleRecordToReactStyle(getLeafInlineStyle(child)),
+            imageClassName: 'stage-image',
+            imagePlaceholderClassName: 'image-placeholder',
+            imageDraggable: false,
+            disableTabNavigation: true,
+          })}
       </div>
     </div>
   );
@@ -152,6 +164,35 @@ export function renderLeaf({
     bottomDistancePx,
     body: leafBody,
   });
+}
+
+function LeafRichBody({
+  child,
+  contentStyle,
+  document,
+}: {
+  child: { id: NodeId; contentType: string; subtype: string; content: unknown; htmlTag?: string };
+  contentStyle?: CSSProperties;
+  document: DocumentModel;
+}) {
+  const { editingId, commitEdit, discardEdit } = useRichEditContext();
+  if (editingId === child.id) {
+    return (
+      <RichTextEditOverlay
+        nodeId={child.id}
+        content={child.content as RichContent}
+        contentStyle={contentStyle}
+        htmlTag={child.htmlTag}
+        document={document}
+        onCommit={commitEdit}
+        onDiscard={discardEdit}
+      />
+    );
+  }
+  return renderLeafContent(
+    child as Parameters<typeof renderLeafContent>[0],
+    { contentStyle, disableTabNavigation: true },
+  );
 }
 
 export function renderLeafSpacerOverlay({

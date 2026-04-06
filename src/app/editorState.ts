@@ -36,7 +36,7 @@ import {
   type EditorState,
   type NodeId,
 } from '../api/editorApi';
-import { setSiteNodeStickyElevation } from '../api/documentApi';
+import { setSiteNodeStickyElevation, setNodeRichContent } from '../api/documentApi';
 import {
   addPage,
   addPageSlugAlias,
@@ -125,6 +125,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return selectedIds.length > 0 ? deleteNodes(state, selectedIds) : state;
     case 'deleteNode':
       return deleteNode(state, action.id);
+    case 'setRichContent':
+      return { ...state, document: setNodeRichContent(state.document, action.id, action.content) };
     case 'setNodeVisibility':
       return setNodeVisibility(state, action.id, action.value);
     case 'stickyEnabled':

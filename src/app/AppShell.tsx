@@ -958,6 +958,9 @@ export function AppShell({
 							}
 							onResizeStart={(id) => dispatch({ type: "beginResize", id })}
 							onResizeEnd={(id) => dispatch({ type: "endResize", id })}
+							onUpdateRichContent={(id, content) =>
+								dispatch({ type: 'setRichContent', id, content })
+							}
 							onStickyGeometryChange={onStickyGeometryChange}
 							followLinkPopup={
 								linkPopupVisible && selectedLinkNode

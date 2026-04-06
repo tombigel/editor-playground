@@ -1,6 +1,7 @@
 import type {
 	DocumentModel,
 	NodeId,
+	RichContent,
 	TextNode,
 	ViewportMeasurement,
 } from "../../model/types";
@@ -51,6 +52,7 @@ export type StageProps = {
 	onResizeStart: (id: NodeId) => void;
 	onResizeEnd: (id: NodeId) => void;
 	onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
+	onUpdateRichContent?: (id: NodeId, content: RichContent) => void;
 	followLinkPopup?: FollowLinkPopupData | null;
 };
 

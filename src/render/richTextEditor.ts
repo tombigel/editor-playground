@@ -1,13 +1,13 @@
 import { createEditor, Editor, Element, Transforms, type BaseEditor, type Descendant } from 'slate';
 import { withHistory } from 'slate-history';
-import { withReact } from 'slate-react';
+import { type ReactEditor, withReact } from 'slate-react';
 import type { RichContent, RichTextLink } from '../model/types';
 
-export function createRichEditor() {
+export function createRichEditor(): ReactEditor {
   return withInlines(withHistory(withReact(createEditor())));
 }
 
-function withInlines(editor: BaseEditor) {
+function withInlines(editor: ReactEditor): ReactEditor {
   const { isInline } = editor;
   editor.isInline = (element) =>
     (element as { type?: string }).type === 'link' ? true : isInline(element);

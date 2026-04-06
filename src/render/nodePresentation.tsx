@@ -42,7 +42,7 @@ export function getNodeTextContent(node: LeafNode): string {
   return '';
 }
 
-function richLeafStyle(leaf: RichTextLeaf): CSSProperties {
+export function richLeafStyle(leaf: RichTextLeaf): CSSProperties {
   const style: CSSProperties = {};
   if (leaf.bold) style.fontWeight = 'bold';
   if (leaf.italic) style.fontStyle = 'italic';

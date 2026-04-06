@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { forceOpaqueColorValue } from '../../model/colors';
 import type { DocumentFontFamily } from '../../model/types';
+import { resolveFontSizeMeasurementInput, resolveSpacingMeasurementInput } from '../controls/FontControls';
 import {
   applyPersistentSelectValueChange,
   BorderControlGroup,
@@ -155,6 +156,25 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('max-h-[220px]');
     expect(markup).toContain('editor-scrollbar');
     expect(markup).toContain('overflow-y-auto');
+  });
+
+  it('prefers explicit font-size and spacing measurement resolvers over stage DOM lookup', () => {
+    expect(
+      resolveFontSizeMeasurementInput({
+        nodeId: 'demo',
+        mode: 'rem',
+        resolveMeasurementInput: (mode) => (mode === 'rem' ? '1.125' : null),
+      }),
+    ).toBe('1.125');
+
+    expect(
+      resolveSpacingMeasurementInput({
+        nodeId: 'demo',
+        axis: 'inline',
+        mode: 'em',
+        resolveMeasurementInput: (mode) => (mode === 'em' ? '1.5' : null),
+      }),
+    ).toBe('1.5');
   });
 
   it('orders picker fonts by recents first and then by language', () => {
