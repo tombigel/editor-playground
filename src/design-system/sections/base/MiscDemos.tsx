@@ -18,10 +18,10 @@ import {
 	MenubarTrigger,
 } from "@/components/ui/menubar";
 import { PopoverTooltip } from "@/components/ui/popover";
+import { InlineNotice, NoticeSurface } from "@/components/ui/settings-panel";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { StatusMessage } from "@/panels/settings/SettingsShared";
 import { ResizeHandleView } from "../../../stage/stageRenderers/resizeHandles";
 import { MultiSelectionOutline } from "../../../stage/stageRenderers/selectionVisuals";
 import { ComponentPreview } from "../../previews/ComponentPreview";
@@ -98,14 +98,14 @@ const SELECTION_CHROME_PROPS: PropDefinition[] = [
 
 const WARNING_INFO_PROPS: PropDefinition[] = [
 	{
-		name: "result",
-		type: "ActionResult | null",
-		description: "Result object with ok flag and message.",
+		name: "tone",
+		type: "'muted' | 'info' | 'success' | 'danger' | 'warning'",
+		description: "Visual state for a shared notice surface.",
 	},
 	{
-		name: "fallback",
-		type: "string",
-		description: "Fallback text when no result.",
+		name: "children",
+		type: "ReactNode",
+		description: "Notice content.",
 	},
 ];
 
@@ -567,31 +567,32 @@ export function MiscDemos() {
 			<ComponentPreview
 				id="base-warning-info"
 				name="Warning / Info Message"
-				description="StatusMessage component for displaying action result feedback (success and error states)."
-				sourceFile="src/panels/settings/SettingsShared.tsx"
+				description="Shared notice surfaces for inspector and settings feedback, including compact inline warnings."
+				sourceFile="src/components/ui/settings-panel.tsx"
 				props={WARNING_INFO_PROPS}
 			>
 				<div className="max-w-[400px] space-y-4">
 					<div>
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
-							StatusMessage (success)
+							NoticeSurface (success)
 						</div>
-						<StatusMessage
-							result={{ ok: true, message: "Settings saved successfully." }}
-							fallback="No status"
-						/>
+						<NoticeSurface tone="success">
+							Settings saved successfully.
+						</NoticeSurface>
 					</div>
 					<div>
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
-							StatusMessage (error)
+							NoticeSurface (danger)
 						</div>
-						<StatusMessage
-							result={{
-								ok: false,
-								message: "Failed to export document. File may be locked.",
-							}}
-							fallback="No status"
-						/>
+						<NoticeSurface tone="danger">
+							Failed to export document. File may be locked.
+						</NoticeSurface>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1 text-[11px] font-medium">
+							InlineNotice (warning)
+						</div>
+						<InlineNotice>Broken anchor</InlineNotice>
 					</div>
 				</div>
 			</ComponentPreview>

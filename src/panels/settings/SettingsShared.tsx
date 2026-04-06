@@ -5,6 +5,7 @@ import { FOCUSED_MODE_VALUES, getFocusedModeLabel } from '../../editor/focusedMo
 import { ColorPicker } from '@/components/ui/color-picker';
 import {
   CompactSelectRow,
+  NoticeSurface,
   type CompactSelectOption,
 } from '@/components/ui/settings-panel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +25,8 @@ export {
   ActionRow,
   CompactSelectRow,
   InfoTooltip,
+  InlineNotice,
+  NoticeSurface,
   NumericRow,
   PlainGroup,
   SectionHeading,
@@ -59,20 +62,21 @@ export function StatusMessage({
   fallback: string;
 }) {
   if (!result) {
-    return <div className="editor-text-muted px-4 py-3 text-xs">{fallback}</div>;
+    return (
+      <NoticeSurface tone="muted" className="px-4 py-3">
+        {fallback}
+      </NoticeSurface>
+    );
   }
 
   return (
-    <div
-      className={`mx-4 my-4 rounded-lg px-3 py-2 text-xs leading-5 ${
-        result.ok
-          ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-          : 'border border-red-200 bg-red-50 text-red-700'
-      }`}
+    <NoticeSurface
+      tone={result.ok ? 'success' : 'danger'}
+      className="mx-4 my-4"
+      icon={result.ok ? null : <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />}
     >
-      {result.ok ? null : <TriangleAlert className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />}
       {result.message}
-    </div>
+    </NoticeSurface>
   );
 }
 

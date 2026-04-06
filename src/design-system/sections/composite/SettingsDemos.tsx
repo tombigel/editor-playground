@@ -9,6 +9,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	ActionRow,
+	ControlGroup,
+	LabeledControlRow,
 	NumericRow,
 	SettingRow,
 } from "@/components/ui/settings-panel";
@@ -71,6 +73,26 @@ function SettingsPrimitivesDemo() {
 
 	return (
 		<div className="space-y-8">
+			<div>
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
+					Inspector/settings row groups
+				</div>
+				<div className="editor-bg-surface editor-border-subtle rounded-xl border p-3">
+					<ControlGroup>
+						<LabeledControlRow label="Language">
+							<div className="editor-text-muted rounded-md border px-2 py-1 text-[11px]">
+								Site language
+							</div>
+						</LabeledControlRow>
+					</ControlGroup>
+					<ControlGroup separated className="mt-2.5">
+						<LabeledControlRow label="Visible">
+							<div className="editor-text-muted text-[11px]">On</div>
+						</LabeledControlRow>
+					</ControlGroup>
+				</div>
+			</div>
+
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Toggle item (SettingRow)

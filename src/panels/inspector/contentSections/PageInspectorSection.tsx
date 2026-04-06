@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { TriangleAlert } from "lucide-react";
 import { validatePageSlug } from "../../../api/pageApi";
 import { createLanguageSelectOptions } from "../../../i18n/languages";
 import {
@@ -9,6 +8,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { InlineNotice } from "@/components/ui/settings-panel";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,10 +134,9 @@ export function PageInspectorSection({
 						</div>
 					</InspectorInlineRow>
 					{slugErrors.length > 0 ? (
-						<div className="editor-warning-text flex items-center gap-1 px-[76px] text-[11px]">
-							<TriangleAlert className="h-3 w-3 shrink-0" />
-							<span>{slugErrors[0]}</span>
-						</div>
+						<InlineNotice className="px-[76px]">
+							{slugErrors[0]}
+						</InlineNotice>
 					) : null}
 				</div>
 			</InspectorFieldGroup>

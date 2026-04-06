@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
+import {
+  ControlGroup,
+  LabeledControlRow,
+} from '@/components/ui/settings-panel';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
 
 export function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -28,12 +31,15 @@ export function InspectorInlineRow({
   controlWidth?: string;
 }) {
   return (
-    <div className={cn('flex items-center gap-1', className)}>
-      <Label className={cn('min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
-      <div className={cn('ml-auto flex min-w-0 items-center justify-end', controlClassName)} style={controlWidth ? { width: controlWidth } : undefined}>
-        {children}
-      </div>
-    </div>
+    <LabeledControlRow
+      label={label}
+      className={className}
+      labelClassName={labelClassName}
+      controlClassName={controlClassName}
+      controlWidth={controlWidth}
+    >
+      {children}
+    </LabeledControlRow>
   );
 }
 
@@ -46,17 +52,7 @@ export function InspectorFieldGroup({
   className?: string;
   separated?: boolean;
 }) {
-  return (
-    <div
-      className={cn(
-        'space-y-2.5',
-        separated && 'editor-border-subtle border-t pt-2.5',
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
+  return <ControlGroup className={className} separated={separated}>{children}</ControlGroup>;
 }
 
 export function SwitchBlock({

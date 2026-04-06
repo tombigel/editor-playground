@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Info } from 'lucide-react';
+import { Info, TriangleAlert } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
+import { Label } from './label';
 import { PopoverTooltip } from './popover';
 import {
   Select,
@@ -11,12 +12,124 @@ import {
   SelectTrigger,
 } from './select';
 import { Switch } from './switch';
+import { cn } from '@/lib/utils';
 
 export type CompactSelectOption = {
   value: string;
   label: string;
   description?: string;
 };
+
+export function LabeledControlRow({
+  label,
+  children,
+  className,
+  labelClassName,
+  controlClassName,
+  controlWidth,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+  labelClassName?: string;
+  controlClassName?: string;
+  controlWidth?: string;
+}) {
+  return (
+    <div className={cn('flex items-center gap-1', className)} data-ui="labeled-control-row">
+      <Label className={cn('min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
+      <div
+        className={cn('ml-auto flex min-w-0 items-center justify-end', controlClassName)}
+        style={controlWidth ? { width: controlWidth } : undefined}
+        data-ui="labeled-control-row-control"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function ControlGroup({
+  children,
+  className,
+  separated = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  separated?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'space-y-2.5',
+        separated && 'editor-border-subtle border-t pt-2.5',
+        className,
+      )}
+      data-ui="control-group"
+      data-separated={separated ? 'true' : 'false'}
+    >
+      {children}
+    </div>
+  );
+}
+
+const NOTICE_TONE_CLASSES = {
+  muted: 'editor-text-muted',
+  info: 'editor-bg-subtle editor-border-subtle editor-text-muted rounded-lg border',
+  success: 'rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700',
+  danger: 'rounded-lg border border-red-200 bg-red-50 text-red-700',
+  warning: 'editor-warning-surface editor-border-subtle editor-warning-text rounded-lg border',
+} as const;
+
+export function NoticeSurface({
+  children,
+  tone = 'info',
+  className,
+  icon,
+}: {
+  children: ReactNode;
+  tone?: keyof typeof NOTICE_TONE_CLASSES;
+  className?: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <div
+      className={cn('flex items-start gap-2 px-3 py-2 text-xs leading-5', NOTICE_TONE_CLASSES[tone], className)}
+      data-ui="notice-surface"
+      data-tone={tone}
+    >
+      {icon}
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
+export function InlineNotice({
+  children,
+  tone = 'warning',
+  className,
+  icon = <TriangleAlert className="h-3 w-3 shrink-0" />,
+}: {
+  children: ReactNode;
+  tone?: 'muted' | 'warning' | 'danger';
+  className?: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-1 text-[11px]',
+        tone === 'muted' ? 'editor-text-muted' : tone === 'danger' ? 'text-red-700' : 'editor-warning-text',
+        className,
+      )}
+      data-ui="inline-notice"
+      data-tone={tone}
+    >
+      {icon}
+      <span>{children}</span>
+    </div>
+  );
+}
 
 export function SectionHeading({
   eyebrow,
@@ -205,7 +318,7 @@ export function CompactSelectRow({
       {description ? <div className="editor-text-muted mt-1 text-xs leading-5">{description}</div> : null}
       <div className={description ? 'mt-2' : 'mt-1.5'}>
         <Select value={value} onValueChange={onChange}>
-          <SelectTrigger aria-label={ariaLabel} className="h-8 text-xs">
+          <SelectTrigger aria-label={ariaLabel} size="compact" className="text-xs">
             <span className="truncate">{selectedOption?.label ?? value}</span>
           </SelectTrigger>
           <SelectContent>

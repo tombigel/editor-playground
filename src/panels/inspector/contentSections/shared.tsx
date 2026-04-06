@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { InlineNotice } from '@/components/ui/settings-panel';
 import {
   BOLD_FONT_WEIGHT,
   DEFAULT_FONT_WEIGHT,
@@ -471,10 +472,12 @@ export function NavigationFields({
           <div className="flex items-center justify-between gap-2">
             <Label className="text-[11px] font-medium">Section</Label>
             {hasBrokenAnchorTarget ? (
-              <div className="editor-warning-text inline-flex shrink-0 items-center gap-1 text-[10px] font-medium leading-4">
-                <TriangleAlert className="h-3 w-3 shrink-0" />
-                <span>Broken anchor</span>
-              </div>
+              <InlineNotice
+                className="shrink-0 text-[10px] font-medium leading-4"
+                icon={<TriangleAlert className="h-3 w-3 shrink-0" />}
+              >
+                Broken anchor
+              </InlineNotice>
             ) : null}
           </div>
           <Select
