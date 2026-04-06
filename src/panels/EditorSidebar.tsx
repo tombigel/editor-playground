@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PanelHeader } from "@/components/ui/panel-header";
 import { EditableNodeTitle } from "./inspector/CommonSections";
 import { PageInspectorSection } from "./inspector/contentSections/PageInspectorSection";
 import { InspectorPanel, type InspectorPanelProps } from "./InspectorPanel";
@@ -158,51 +159,56 @@ export function EditorSidebar({
 						aria-hidden={showCollapsedHandle}
 						className={`absolute inset-0 flex items-center justify-between gap-3 px-3 py-3 transition-opacity duration-150 ease-out ${expandedLayerClass}`}
 					>
-						<div className="min-w-0">
-							<div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 pl-1 text-left">
-								{singleEditableNode ? (
-									<div className="min-w-0 flex-1">
-										<EditableNodeTitle
-											name={singleEditableNode.name}
-											onCommit={(value) => {
-												const nextValue = resolveSidebarTitleCommit(
-													value,
-													singleEditableNode.subtype,
-												);
-												if (nextValue !== singleEditableNode.name) {
-													inspectorProps.onTextChange("name", nextValue);
-												}
-											}}
-											className="editor-text-strong min-w-0 self-start truncate rounded-sm text-sm leading-tight font-medium outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)]"
-											inputClassName="h-7 w-auto min-w-[8ch] max-w-full self-start rounded-sm px-1 py-0 text-sm leading-tight font-medium [field-sizing:content]"
-										/>
-									</div>
-								) : (
-									<div className="editor-text-strong self-start truncate text-sm leading-tight font-medium">
-										{title}
-									</div>
-								)}
-								{roleLabel ? (
-									<span className="editor-pill-contrast inline-flex shrink-0 self-start rounded-md px-1.5 py-0 text-[10px] font-medium">
-										{roleLabel}
-									</span>
-								) : null}
-							</div>
-						</div>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							className="editor-icon-button-subtle rounded-lg border"
-							aria-label="Collapse inspector"
-							onClick={() =>
-								temporaryInspectorOpen && isFocusedModeActive
-									? onTemporaryInspectorOpenChange(false)
-									: onInspectorCollapsedChange(true)
+						<PanelHeader
+							title={
+								<div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 pl-1 text-left">
+									{singleEditableNode ? (
+										<div className="min-w-0 flex-1">
+											<EditableNodeTitle
+												name={singleEditableNode.name}
+												onCommit={(value) => {
+													const nextValue = resolveSidebarTitleCommit(
+														value,
+														singleEditableNode.subtype,
+													);
+													if (nextValue !== singleEditableNode.name) {
+														inspectorProps.onTextChange("name", nextValue);
+													}
+												}}
+												className="editor-text-strong min-w-0 self-start truncate rounded-sm text-sm leading-tight font-medium outline-none transition-colors hover:text-[color:var(--editor-accent)] focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)]"
+												inputClassName="h-7 w-auto min-w-[8ch] max-w-full self-start rounded-sm px-1 py-0 text-sm leading-tight font-medium [field-sizing:content]"
+											/>
+										</div>
+									) : (
+										<div className="editor-text-strong self-start truncate text-sm leading-tight font-medium">
+											{title}
+										</div>
+									)}
+									{roleLabel ? (
+										<span className="editor-pill-contrast inline-flex shrink-0 self-start rounded-md px-1.5 py-0 text-[10px] font-medium">
+											{roleLabel}
+										</span>
+									) : null}
+								</div>
 							}
-						>
-							<PanelRightClose className="h-4 w-4" />
-						</Button>
+							className="h-full border-b-0 px-0 py-0"
+							actions={
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									className="editor-icon-button-subtle rounded-lg border"
+									aria-label="Collapse inspector"
+									onClick={() =>
+										temporaryInspectorOpen && isFocusedModeActive
+											? onTemporaryInspectorOpenChange(false)
+											: onInspectorCollapsedChange(true)
+									}
+								>
+									<PanelRightClose className="h-4 w-4" />
+								</Button>
+							}
+						/>
 					</div>
 				</div>
 				<div className="editor-bg-surface relative min-h-0 flex-1 overflow-hidden">

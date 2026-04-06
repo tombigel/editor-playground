@@ -151,8 +151,10 @@ export function InsertPanel({
 					</>
 				}
 			>
-				<button
+				<Button
 					type="button"
+					variant="ghost"
+					size="icon"
 					data-panel-trigger="layers"
 					aria-pressed={layersOpen}
 					className="editor-rail-entry-button mt-2"
@@ -165,7 +167,7 @@ export function InsertPanel({
 					}}
 				>
 					<Layers3 className="h-4 w-4" strokeWidth={1.9} />
-				</button>
+				</Button>
 			</PopoverTooltip>
 			<PopoverTooltip
 				side="right"
@@ -182,8 +184,10 @@ export function InsertPanel({
 					</>
 				}
 			>
-				<button
+				<Button
 					type="button"
+					variant="ghost"
+					size="icon"
 					data-panel-trigger="pages"
 					aria-pressed={pagesOpen}
 					className="editor-rail-entry-button"
@@ -196,7 +200,7 @@ export function InsertPanel({
 					}}
 				>
 					<BookOpenText className="h-4 w-4" strokeWidth={1.9} />
-				</button>
+				</Button>
 			</PopoverTooltip>
 		</div>
 	);
