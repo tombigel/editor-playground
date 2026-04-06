@@ -691,6 +691,8 @@ export function AppShell({
 					snapEnabled={state.ui.snapSettings.guideSnap.enabled}
 					showDebugInfo={state.ui.showDebugInfo}
 					focusedMode={state.ui.focusedMode}
+					themeMode={state.ui.themeMode}
+					accentColor={state.ui.accentColor}
 					resolvedTheme={resolvedTheme}
 					lightTheme={state.ui.lightTheme}
 					darkTheme={state.ui.darkTheme}

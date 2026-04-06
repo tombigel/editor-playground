@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Info, TriangleAlert } from 'lucide-react';
 import { Button } from './button';
@@ -189,6 +189,73 @@ export function SectionHeading({
       <div className="editor-text-strong mt-1 text-lg font-medium">{title}</div>
       <div className="editor-text-muted mt-1 text-sm">{description}</div>
     </div>
+  );
+}
+
+export function SettingsNavItem({
+  icon,
+  title,
+  description,
+  active = false,
+  compact = false,
+  variant = 'default',
+  className,
+  titleClassName,
+  descriptionClassName,
+  ...buttonProps
+}: {
+  icon?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  active?: boolean;
+  compact?: boolean;
+  variant?: 'default' | 'accent-hover';
+  className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      data-active={active ? 'true' : 'false'}
+      className={cn(
+        'w-full text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-inset',
+        variant === 'default'
+          ? 'settings-nav-link'
+          : 'bg-transparent text-[color:var(--editor-settings-nav-text)] hover:bg-[var(--editor-settings-nav-active-background)] hover:text-[color:var(--editor-settings-nav-active-text)] data-[active=true]:bg-[var(--editor-settings-nav-active-background)] data-[active=true]:text-[color:var(--editor-settings-nav-active-text)] data-[active=true]:shadow-[var(--editor-settings-nav-active-shadow)]',
+        compact
+          ? 'rounded-lg px-3 py-2'
+          : 'flex items-start gap-3 rounded-lg px-3 py-2.5',
+        active && variant === 'default' && 'shadow-sm',
+        className,
+      )}
+      data-ui="settings-nav-item"
+      data-variant={variant}
+      {...buttonProps}
+    >
+      {compact ? (
+        <div className="min-w-0">
+          <div className={cn('text-sm font-medium', titleClassName)}>{title}</div>
+          {description ? (
+            <div className={cn('settings-nav-link-copy mt-0.5 text-xs leading-5', descriptionClassName)}>
+              {description}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          {icon ? <div className="mt-0.5 h-4 w-4 shrink-0">{icon}</div> : null}
+          <div className="min-w-0">
+            <div className={cn('text-sm font-medium', titleClassName)}>{title}</div>
+            {description ? (
+              <div className={cn('settings-nav-link-copy mt-0.5 text-xs leading-5', descriptionClassName)}>
+                {description}
+              </div>
+            ) : null}
+          </div>
+        </>
+      )}
+    </button>
   );
 }
 

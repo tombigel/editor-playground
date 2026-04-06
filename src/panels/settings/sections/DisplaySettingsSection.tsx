@@ -19,6 +19,7 @@ import type {
   ResolvedTheme,
   ThemeMode,
 } from '@/lib/theme';
+import { openDesignSystemShowcase } from '@/lib/designSystem';
 import { SnapSettingsGroup } from '../SnapSettingsGroup';
 import {
   AccentSwatchRow,
@@ -92,7 +93,12 @@ export function DisplaySettingsSection({
           size="sm"
           className="mt-3 shrink-0 gap-1.5"
           onClick={() => {
-            window.location.hash = '#/design-system';
+            openDesignSystemShowcase({
+              themeMode,
+              accentColor,
+              lightTheme,
+              darkTheme,
+            });
           }}
         >
           <SwatchBook className="h-3.5 w-3.5" />

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useCallback, useState } from "react";
 import { DesignSystemHeader } from "./DesignSystemHeader";
 import { DesignSystemNav } from "./DesignSystemNav";
@@ -30,7 +31,18 @@ export default function DesignSystemApp() {
 	}, []);
 
 	return (
-		<div className="editor-shell editor-settings-panel flex h-screen w-screen flex-col overflow-hidden">
+		<div
+			className="editor-shell editor-settings-panel flex h-screen w-screen flex-col overflow-hidden"
+			data-editor-theme={config.resolved}
+			data-theme-mode={config.themeMode}
+			data-editor-light-theme={config.lightTheme}
+			data-editor-dark-theme={config.darkTheme}
+			style={
+				{
+					"--editor-accent": config.resolvedAccent,
+				} as CSSProperties
+			}
+		>
 			<DesignSystemHeader
 				themePanelOpen={themePanelOpen}
 				onToggleThemePanel={() => setThemePanelOpen((v) => !v)}

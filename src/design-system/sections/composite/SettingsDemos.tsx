@@ -13,6 +13,7 @@ import {
 	LabeledControlRow,
 	NumericRow,
 	SettingRow,
+	SettingsNavItem,
 } from "@/components/ui/settings-panel";
 import {
 	getAccentColorForDarkThemeSelection,
@@ -47,6 +48,7 @@ const SETTINGS_NAV_PROPS: PropDefinition[] = [
 	{ name: "title", type: "string", description: "Primary settings section label." },
 	{ name: "description", type: "string", description: "Secondary navigation copy." },
 	{ name: "active", type: "boolean", description: "Selected nav item state." },
+	{ name: "variant", type: "'default' | 'accent-hover'", description: "Visual variant for settings-style rows or transparent idle rows with accent hover/active states." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -231,56 +233,39 @@ export function SettingsDemos() {
 			>
 				<div className="flex gap-3">
 					{/* Idle */}
-					<button
-						type="button"
-						data-active="false"
-						className="settings-nav-link flex w-[170px] items-start gap-3 rounded-lg px-3 py-2.5 text-left"
-					>
-						<Eye className="mt-0.5 h-4 w-4 shrink-0" />
-						<div className="min-w-0">
-							<div className="text-sm font-medium">UI</div>
-							<div className="settings-nav-link-copy mt-0.5 text-xs leading-5">
-								Idle
-							</div>
-						</div>
-					</button>
+					<SettingsNavItem
+						icon={<Eye className="h-4 w-4" />}
+						title="UI"
+						description="Idle"
+						className="w-[170px]"
+					/>
 					{/* Hover */}
-					<button
-						type="button"
-						data-active="false"
-						className="settings-nav-link flex w-[170px] items-start gap-3 rounded-lg px-3 py-2.5 text-left"
+					<SettingsNavItem
+						icon={<Type className="h-4 w-4" />}
+						title="Fonts"
+						description="Hover"
+						className="w-[170px]"
 						style={{
 							background: "var(--editor-settings-nav-hover-background)",
 							color: "var(--editor-settings-nav-hover-text)",
 						}}
-					>
-						<Type className="mt-0.5 h-4 w-4 shrink-0" />
-						<div className="min-w-0">
-							<div className="text-sm font-medium">Fonts</div>
-							<div
-								className="mt-0.5 text-xs leading-5"
-								style={{
-									color: "var(--editor-settings-nav-active-muted)",
-								}}
-							>
-								Hover
-							</div>
-						</div>
-					</button>
+						descriptionClassName="text-[color:var(--editor-settings-nav-active-muted)]"
+					/>
 					{/* Selected */}
-					<button
-						type="button"
-						data-active="true"
-						className="settings-nav-link flex w-[170px] items-start gap-3 rounded-lg px-3 py-2.5 text-left shadow-sm"
-					>
-						<Keyboard className="mt-0.5 h-4 w-4 shrink-0" />
-						<div className="min-w-0">
-							<div className="text-sm font-medium">Shortcuts</div>
-							<div className="settings-nav-link-copy mt-0.5 text-xs leading-5">
-								Selected
-							</div>
-						</div>
-					</button>
+					<SettingsNavItem
+						icon={<Keyboard className="h-4 w-4" />}
+						title="Shortcuts"
+						description="Selected"
+						active
+						className="w-[170px]"
+					/>
+					<SettingsNavItem
+						title="Typography"
+						description="Accent hover"
+						compact
+						variant="accent-hover"
+						className="w-[170px]"
+					/>
 				</div>
 			</ComponentPreview>
 		</>

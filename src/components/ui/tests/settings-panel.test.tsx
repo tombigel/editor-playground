@@ -6,6 +6,7 @@ import {
   LabeledFieldStack,
   LabeledControlRow,
   NoticeSurface,
+  SettingsNavItem,
   ValuePill,
 } from '../settings-panel';
 
@@ -59,5 +60,26 @@ describe('components/ui/settings-panel', () => {
     expect(pillMarkup).toContain('data-ui="value-pill"');
     expect(pillMarkup).toContain('data-mixed="true"');
     expect(pillMarkup).toContain('>-<');
+  });
+
+  it('renders shared settings nav items for full and compact variants', () => {
+    const fullMarkup = renderToStaticMarkup(
+      <SettingsNavItem title="Fonts" description="Manage typography" />,
+    );
+    const compactMarkup = renderToStaticMarkup(
+      <SettingsNavItem title="Typography" active compact />,
+    );
+    const accentHoverMarkup = renderToStaticMarkup(
+      <SettingsNavItem title="Design System" compact variant="accent-hover" />,
+    );
+
+    expect(fullMarkup).toContain('data-ui="settings-nav-item"');
+    expect(fullMarkup).toContain('settings-nav-link');
+    expect(fullMarkup).toContain('Manage typography');
+    expect(compactMarkup).toContain('data-active="true"');
+    expect(compactMarkup).toContain('shadow-sm');
+    expect(compactMarkup).toContain('Typography');
+    expect(accentHoverMarkup).toContain('data-variant="accent-hover"');
+    expect(accentHoverMarkup).toContain('bg-transparent');
   });
 });

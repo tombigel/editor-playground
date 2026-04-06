@@ -1,0 +1,98 @@
+import {
+  DEFAULT_EDITOR_ACCENT_COLOR,
+  DEFAULT_EDITOR_DARK_THEME,
+  DEFAULT_EDITOR_LIGHT_THEME,
+  normalizeEditorAccentColor,
+  normalizeEditorDarkTheme,
+  normalizeEditorLightTheme,
+  normalizeThemeMode,
+  type ThemeMode,
+  type EditorLightTheme,
+  type EditorDarkTheme,
+} from './theme';
+
+export type DesignSystemThemeConfig = {
+  themeMode: ThemeMode;
+  lightTheme: EditorLightTheme;
+  darkTheme: EditorDarkTheme;
+  accentColor: string;
+};
+
+export const DESIGN_SYSTEM_THEME_STORAGE_KEY = 'sticky-playground.design-system-theme.v1';
+export const DESIGN_SYSTEM_THEME_HANDOFF_KEY = 'sticky-playground.design-system-theme.handoff.v1';
+export const DESIGN_SYSTEM_ROUTE_HASH = '#/design-system';
+
+export function normalizeDesignSystemThemeConfig(
+  value: Partial<DesignSystemThemeConfig> | null | undefined,
+): DesignSystemThemeConfig | null {
+  if (!value) {
+    return null;
+  }
+
+  return {
+    themeMode: normalizeThemeMode(value.themeMode),
+    lightTheme: normalizeEditorLightTheme(value.lightTheme),
+    darkTheme: normalizeEditorDarkTheme(value.darkTheme),
+    accentColor: normalizeEditorAccentColor(value.accentColor, DEFAULT_EDITOR_ACCENT_COLOR),
+  };
+}
+
+export function parseStoredDesignSystemThemeConfig(raw: string | null): DesignSystemThemeConfig | null {
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return normalizeDesignSystemThemeConfig(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+export function readPersistedDesignSystemThemeConfig(): DesignSystemThemeConfig | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return parseStoredDesignSystemThemeConfig(window.localStorage.getItem(DESIGN_SYSTEM_THEME_STORAGE_KEY));
+}
+
+export function persistDesignSystemThemeConfig(config: DesignSystemThemeConfig) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(DESIGN_SYSTEM_THEME_STORAGE_KEY, JSON.stringify(config));
+}
+
+export function storeDesignSystemThemeHandoff(config: DesignSystemThemeConfig) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.setItem(DESIGN_SYSTEM_THEME_HANDOFF_KEY, JSON.stringify(config));
+}
+
+export function consumeDesignSystemThemeHandoff(): DesignSystemThemeConfig | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(DESIGN_SYSTEM_THEME_HANDOFF_KEY);
+  window.sessionStorage.removeItem(DESIGN_SYSTEM_THEME_HANDOFF_KEY);
+  return parseStoredDesignSystemThemeConfig(raw);
+}
+
+export function openDesignSystemShowcase(config: DesignSystemThemeConfig) {
+  storeDesignSystemThemeHandoff(config);
+  window.location.hash = DESIGN_SYSTEM_ROUTE_HASH;
+}
+
+export function createDefaultDesignSystemThemeConfig(): DesignSystemThemeConfig {
+  return {
+    themeMode: 'auto',
+    lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
+    darkTheme: DEFAULT_EDITOR_DARK_THEME,
+    accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
+  };
+}

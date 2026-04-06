@@ -252,36 +252,42 @@ const TYPE_SCALE = [
 		label: "Micro",
 		size: "10px",
 		weight: "500",
+		sampleWeight: 500,
 		usage: "Eyebrow labels, compact badges",
 	},
 	{
 		label: "Label",
 		size: "11px",
 		weight: "500 / 600",
+		sampleWeight: 500,
 		usage: "Inspector labels, tab items",
 	},
 	{
 		label: "Small",
 		size: "12px",
 		weight: "400 / 500",
+		sampleWeight: 400,
 		usage: "Secondary text, table cells",
 	},
 	{
 		label: "Body",
 		size: "14px",
 		weight: "400",
+		sampleWeight: 400,
 		usage: "Default body text, descriptions",
 	},
 	{
 		label: "Section Title",
 		size: "15px",
 		weight: "600",
+		sampleWeight: 600,
 		usage: "Panel section headings",
 	},
 	{
 		label: "Dialog Title",
 		size: "18px",
 		weight: "600",
+		sampleWeight: 600,
 		usage: "Modal and dialog headings",
 	},
 ];
@@ -507,7 +513,13 @@ export function DesignTokensSection({ themeKey }: { themeKey: string }) {
 									<td className="editor-text-muted px-3 py-2 font-mono text-xs">
 										{row.weight}
 									</td>
-									<td className="px-3 py-2" style={{ fontSize: row.size }}>
+									<td
+										className="px-3 py-2"
+										style={{
+											fontSize: row.size,
+											fontWeight: row.sampleWeight,
+										}}
+									>
 										The quick brown fox
 									</td>
 								</tr>

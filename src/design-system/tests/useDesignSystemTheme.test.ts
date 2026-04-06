@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parsePersistedThemeConfig } from "../useDesignSystemTheme";
+import { parseStoredDesignSystemThemeConfig } from "@/lib/designSystem";
 
 describe("design-system/useDesignSystemTheme", () => {
 	it("parses the current editor theme fields from persisted state", () => {
@@ -26,5 +27,23 @@ describe("design-system/useDesignSystemTheme", () => {
 		expect(parsePersistedThemeConfig(null)).toBeNull();
 		expect(parsePersistedThemeConfig("{invalid}")).toBeNull();
 		expect(parsePersistedThemeConfig(JSON.stringify({ nope: true }))).toBeNull();
+	});
+
+	it("parses design system owned theme storage", () => {
+		const parsed = parseStoredDesignSystemThemeConfig(
+			JSON.stringify({
+				themeMode: "dark",
+				lightTheme: "clarity",
+				darkTheme: "ink",
+				accentColor: "#0f766e",
+			}),
+		);
+
+		expect(parsed).toEqual({
+			themeMode: "dark",
+			lightTheme: "clarity",
+			darkTheme: "ink",
+			accentColor: "#0f766e",
+		});
 	});
 });

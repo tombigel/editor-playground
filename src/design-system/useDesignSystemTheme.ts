@@ -1,10 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApplyEditorTheme } from "@/app/useEditorEnvironment";
 import { STORAGE_KEY } from "@/editor/editorPersistence";
 import {
-	DEFAULT_EDITOR_ACCENT_COLOR,
-	DEFAULT_EDITOR_DARK_THEME,
-	DEFAULT_EDITOR_LIGHT_THEME,
 	type EditorDarkTheme,
 	type EditorLightTheme,
 	getAccentColorForDarkThemeSelection,
@@ -17,6 +14,12 @@ import {
 	resolveThemeMode,
 } from "@/lib/theme";
 import { useSystemThemePreference } from "@/lib/useSystemThemePreference";
+import {
+	consumeDesignSystemThemeHandoff,
+	createDefaultDesignSystemThemeConfig,
+	persistDesignSystemThemeConfig,
+	readPersistedDesignSystemThemeConfig,
+} from "@/lib/designSystem";
 import type { ResolvedThemeConfig, ThemeConfig } from "./types";
 
 function resolveConfig(
@@ -35,6 +38,7 @@ export function parsePersistedThemeConfig(raw: string | null): ThemeConfig | nul
 
 	try {
 		const ui = JSON.parse(raw)?.ui;
+		const defaults = createDefaultDesignSystemThemeConfig();
 		if (!ui) {
 			return null;
 		}
@@ -44,9 +48,9 @@ export function parsePersistedThemeConfig(raw: string | null): ThemeConfig | nul
 				ui.themeMode === "light" || ui.themeMode === "dark"
 					? ui.themeMode
 					: "auto",
-			lightTheme: ui.lightTheme ?? DEFAULT_EDITOR_LIGHT_THEME,
-			darkTheme: ui.darkTheme ?? DEFAULT_EDITOR_DARK_THEME,
-			accentColor: ui.accentColor ?? DEFAULT_EDITOR_ACCENT_COLOR,
+			lightTheme: ui.lightTheme ?? defaults.lightTheme,
+			darkTheme: ui.darkTheme ?? defaults.darkTheme,
+			accentColor: ui.accentColor ?? defaults.accentColor,
 		};
 	} catch {
 		return null;
@@ -58,6 +62,7 @@ function readCurrentDocumentThemeConfig(): ThemeConfig | null {
 		return null;
 	}
 
+	const defaults = createDefaultDesignSystemThemeConfig();
 	const root = document.documentElement;
 	const body = document.body;
 	const resolvedTheme = root.dataset.editorTheme ?? body?.dataset.editorTheme;
@@ -75,9 +80,9 @@ function readCurrentDocumentThemeConfig(): ThemeConfig | null {
 
 	return {
 		themeMode: resolvedTheme === "light" || resolvedTheme === "dark" ? resolvedTheme : "auto",
-		lightTheme: normalizeEditorLightTheme(lightTheme ?? DEFAULT_EDITOR_LIGHT_THEME),
-		darkTheme: normalizeEditorDarkTheme(darkTheme ?? DEFAULT_EDITOR_DARK_THEME),
-		accentColor: normalizeEditorAccentColor(accentColor || DEFAULT_EDITOR_ACCENT_COLOR),
+		lightTheme: normalizeEditorLightTheme(lightTheme ?? defaults.lightTheme),
+		darkTheme: normalizeEditorDarkTheme(darkTheme ?? defaults.darkTheme),
+		accentColor: normalizeEditorAccentColor(accentColor || defaults.accentColor),
 	};
 }
 
@@ -91,16 +96,16 @@ function readPersistedThemeConfig(): ThemeConfig {
 		return parsed;
 	}
 
-	return {
-		themeMode: "auto",
-		lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
-		darkTheme: DEFAULT_EDITOR_DARK_THEME,
-		accentColor: DEFAULT_EDITOR_ACCENT_COLOR,
-	};
+	return createDefaultDesignSystemThemeConfig();
 }
 
 function readInitialThemeConfig(): ThemeConfig {
-	return readCurrentDocumentThemeConfig() ?? readPersistedThemeConfig();
+	return (
+		consumeDesignSystemThemeHandoff() ??
+		readPersistedDesignSystemThemeConfig() ??
+		readCurrentDocumentThemeConfig() ??
+		readPersistedThemeConfig()
+	);
 }
 
 /**
@@ -114,6 +119,10 @@ export function useDesignSystemTheme() {
 	const systemPrefersDark = useSystemThemePreference();
 
 	const [config, setConfig] = useState<ThemeConfig>(readInitialThemeConfig);
+
+	useEffect(() => {
+		persistDesignSystemThemeConfig(config);
+	}, [config]);
 
 	const resolved = useMemo(
 		() => resolveConfig(config, systemPrefersDark),

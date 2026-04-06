@@ -44,6 +44,8 @@ import {
 } from "@/lib/theme";
 import type { DocumentPage, PageId } from "@/api/editorApi";
 import type { FocusedMode } from "@/editor/types";
+import { openDesignSystemShowcase } from "@/lib/designSystem";
+import type { ThemeMode } from "@/lib/theme";
 
 const DOCUMENTATION_ENTRY_ID = "doc:docs/PLAYGROUND_SPEC.md";
 
@@ -78,6 +80,8 @@ export function EditorTopbar({
 	snapEnabled,
 	showDebugInfo,
 	focusedMode,
+	themeMode,
+	accentColor,
 	resolvedTheme,
 	lightTheme,
 	darkTheme,
@@ -123,6 +127,8 @@ export function EditorTopbar({
 	snapEnabled: boolean;
 	showDebugInfo: boolean;
 	focusedMode: FocusedMode;
+	themeMode: ThemeMode;
+	accentColor: string;
 	resolvedTheme: "light" | "dark";
 	lightTheme: EditorLightTheme;
 	darkTheme: EditorDarkTheme;
@@ -404,7 +410,12 @@ export function EditorTopbar({
 							<MenubarPanelLinkItem
 								icon={SwatchBook}
 								onClick={() => {
-									window.location.hash = "/design-system";
+									openDesignSystemShowcase({
+										themeMode,
+										accentColor,
+										lightTheme,
+										darkTheme,
+									});
 								}}
 							>
 								Design system showcase
