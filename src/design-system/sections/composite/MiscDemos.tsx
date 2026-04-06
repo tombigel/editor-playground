@@ -1,5 +1,7 @@
 import { SquareArrowRightEnter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
+import { PanelHeader } from "@/components/ui/panel-header";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 
 // ---------------------------------------------------------------------------
@@ -34,6 +36,70 @@ function FollowLinkChip({ label, aria }: { label: string; aria: string }) {
 export function MiscDemos() {
 	return (
 		<>
+			<ComponentPreview
+				id="composite-panel-header"
+				name="Panel Header"
+				description="Shared header contract for floating panels and dialog-like editor surfaces with icon, title, description, actions, and close button."
+				sourceFile="src/components/ui/panel-header.tsx"
+				props={[]}
+			>
+				<div className="w-[320px]">
+					<PanelHeader
+						icon={<SquareArrowRightEnter className="h-4 w-4" />}
+						title="Section Templates"
+						description="Choose a layout to insert."
+						closeLabel="Close section templates panel"
+						onClose={() => undefined}
+						actions={
+							<span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
+								Beta
+							</span>
+						}
+					/>
+				</div>
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="composite-floating-panel-shell"
+				name="Floating Panel Shell"
+				description="Shared floating popover shell with DS-owned header slot and scrollable body wrapper."
+				sourceFile="src/components/ui/floating-panel-shell.tsx"
+				props={[]}
+			>
+				<div className="relative h-[260px] w-[360px]">
+					<FloatingPanelShell
+						open
+						onOpenChange={() => {}}
+						className="absolute left-0 top-0 w-[320px]"
+						style={{ top: 0, left: 0 }}
+						header={
+							<PanelHeader
+								icon={<SquareArrowRightEnter className="h-4 w-4" />}
+								title="Section Templates"
+								description="Choose a layout to insert."
+								closeLabel="Close section templates panel"
+								onClose={() => undefined}
+							/>
+						}
+						bodyClassName="editor-scrollbar max-h-[180px] overflow-y-auto p-3"
+					>
+						<div className="grid grid-cols-2 gap-2.5">
+							{["Hero", "Feature", "CTA", "Gallery"].map((label) => (
+								<div
+									key={label}
+									className="editor-border-subtle rounded-lg border p-2.5"
+								>
+									<div className="editor-text-strong text-xs font-semibold">{label}</div>
+									<div className="editor-text-muted mt-1.5 text-[11px] leading-4">
+										Shared shell body content.
+									</div>
+								</div>
+							))}
+						</div>
+					</FloatingPanelShell>
+				</div>
+			</ComponentPreview>
+
 			{/* Shortcuts */}
 			<ComponentPreview
 				id="composite-shortcuts"

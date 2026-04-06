@@ -12,6 +12,12 @@
     "assetUrl": "/assets/help-docs/CONSOLE_TEST_GUIDE.md"
   },
   {
+    "path": "docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md",
+    "fileName": "DESIGN_SYSTEM_CONVERGENCE_AUDIT.md",
+    "fullTitle": "Design System Convergence Audit",
+    "assetUrl": "/assets/help-docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md"
+  },
+  {
     "path": "docs/EDITOR_STYLE_GUIDE.md",
     "fileName": "EDITOR_STYLE_GUIDE.md",
     "fullTitle": "Editor Style Guide",

@@ -47,6 +47,8 @@ export const DS_SECTIONS: DSSection[] = [
 		label: "Composites",
 		icon: Blocks,
 		subsections: [
+			{ id: "composite-panel-header", label: "Panel Header" },
+			{ id: "composite-floating-panel-shell", label: "Floating Panel Shell" },
 			{ id: "composite-inspector-title", label: "Inspector Title" },
 			{ id: "composite-section-card", label: "Section Card" },
 			{ id: "composite-shadow-control", label: "Shadow Control" },

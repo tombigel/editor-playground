@@ -2,9 +2,10 @@ import type { ComponentType, ReactNode, Ref } from 'react';
 import { Rows3 } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
 import { Button } from '@/components/ui/button';
+import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
 import { cn } from '@/lib/utils';
 import { EditorPanelHeader } from '../panels/EditorPanelHeader';
-import { PopoverSurface, PopoverTooltip } from '@/components/ui/popover';
+import { PopoverTooltip } from '@/components/ui/popover';
 
 const UPCOMING_SCROLL_TEMPLATES = [
   {
@@ -102,24 +103,26 @@ export function SectionTemplatePopover({
   }
 
   return (
-    <PopoverSurface
+    <FloatingPanelShell
       ref={panelRef}
       open={open}
       onOpenChange={onOpenChange}
-      className="editor-floating-panel editor-section-templates editor-bg-surface editor-border-subtle fixed w-[440px] rounded-xl border shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+      className="editor-section-templates w-[440px]"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
       }}
+      header={(
+        <EditorPanelHeader
+          icon={Rows3}
+          title="Section Templates"
+          description="Choose a layout to insert."
+          closeLabel="Close section templates panel"
+          onClose={onClose}
+        />
+      )}
+      bodyClassName="editor-scrollbar max-h-[62vh] overflow-y-auto p-3"
     >
-      <EditorPanelHeader
-        icon={Rows3}
-        title="Section Templates"
-        description="Choose a layout to insert."
-        closeLabel="Close section templates panel"
-        onClose={onClose}
-      />
-      <div className="editor-scrollbar max-h-[62vh] overflow-y-auto p-3">
         <div className="grid grid-cols-2 gap-2.5">
           {SECTION_TEMPLATES.map((template) => (
             <button
@@ -154,8 +157,7 @@ export function SectionTemplatePopover({
             </div>
           ))}
         </div>
-      </div>
-    </PopoverSurface>
+    </FloatingPanelShell>
   );
 }
 
