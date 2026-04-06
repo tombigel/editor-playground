@@ -16,6 +16,12 @@ const COLOR_PICKER_PROPS: PropDefinition[] = [
 		default: "false",
 		description: "Allow alpha channel.",
 	},
+	{
+		name: "variant",
+		type: '"default" | "swatch"',
+		default: '"default"',
+		description: "Host sizing and trigger chrome contract owned by the local wrapper.",
+	},
 	{ name: "ariaLabel", type: "string", description: "Accessible label." },
 	{
 		name: "onChange",

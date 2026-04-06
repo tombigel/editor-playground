@@ -179,7 +179,8 @@ export function AccentSwatchRow({
             allowAlpha={false}
             ariaLabel="Custom accent color"
             onChange={onChange}
-            className={`editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm ${isCustom ? 'editor-accent-swatch-custom-active' : ''}`}
+            variant="swatch"
+            className={isCustom ? 'editor-accent-swatch-custom-active' : undefined}
           />
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <SlidersHorizontal className="h-3.5 w-3.5 text-white/92 mix-blend-plus-lighter drop-shadow-[0_1px_2px_rgba(15,23,42,0.35)]" />

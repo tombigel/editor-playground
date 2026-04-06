@@ -45,7 +45,7 @@ export function HoverColorField({
           fallback={resolvedFallback}
           allowAlpha={showOpacity}
           ariaLabel={ariaLabel}
-          className="editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm"
+          variant="swatch"
           onChange={stableOnChange}
         />
         {mixed ? (

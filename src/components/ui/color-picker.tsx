@@ -4,6 +4,7 @@ import type { ChangeDetail, ColorInput as HdrColorInputElement } from 'hdr-color
 import { cn } from '@/lib/utils';
 
 type EditorTheme = 'auto' | 'light' | 'dark';
+export type ColorPickerVariant = 'default' | 'swatch';
 
 function readEditorTheme(): EditorTheme {
   if (typeof document === 'undefined') {
@@ -216,6 +217,7 @@ function ColorPickerImpl({
   fallback = '#ffffff',
   allowAlpha = true,
   ariaLabel,
+  variant = 'default',
   className,
   onChange,
 }: {
@@ -223,6 +225,7 @@ function ColorPickerImpl({
   fallback?: string;
   allowAlpha?: boolean;
   ariaLabel: string;
+  variant?: ColorPickerVariant;
   className?: string;
   onChange: (value: string) => void;
 }) {
@@ -478,8 +481,14 @@ function ColorPickerImpl({
   return (
     <color-input
       ref={elementRef}
-      class={cn('block min-w-0 w-full', className)}
+      class={cn(
+        'block min-w-0',
+        variant === 'default' ? 'w-full' : null,
+        variant === 'swatch' ? 'editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm' : null,
+        className,
+      )}
       data-ui="color-picker"
+      data-variant={variant}
       data-allow-alpha={allowAlpha ? 'true' : 'false'}
       aria-label={ariaLabel}
       title={ariaLabel}
@@ -498,5 +507,6 @@ export const ColorPicker = React.memo(
     prev.fallback === next.fallback &&
     prev.allowAlpha === next.allowAlpha &&
     prev.ariaLabel === next.ariaLabel &&
+    prev.variant === next.variant &&
     prev.className === next.className,
 );
