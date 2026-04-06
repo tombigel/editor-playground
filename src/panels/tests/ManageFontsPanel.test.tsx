@@ -76,5 +76,7 @@ describe('panels/ManageFontsPanel', () => {
 
     expect(markup).toContain('Browse Google Fonts');
     expect(markup).toContain(`Catalog updated ${expectedTimestamp}`);
+    expect(markup).toContain('data-ui="list-card"');
+    expect(markup).toContain('data-ui="pager"');
   });
 });

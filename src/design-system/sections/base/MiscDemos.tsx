@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
+import { ListCard } from "@/components/ui/list-card";
 import {
 	Menubar,
 	MenubarCheckboxItem,
@@ -18,6 +19,7 @@ import {
 	MenubarTrigger,
 } from "@/components/ui/menubar";
 import { PopoverTooltip } from "@/components/ui/popover";
+import { Pager } from "@/components/ui/pager";
 import { InlineNotice, NoticeSurface } from "@/components/ui/settings-panel";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -85,6 +87,19 @@ const TEXTAREA_PROPS: PropDefinition[] = [
 		type: "boolean",
 		default: "false",
 		description: "Disabled state.",
+	},
+];
+
+const LIST_CARD_PROPS: PropDefinition[] = [
+	{ name: "title", type: "ReactNode", description: "Primary list-card title." },
+	{ name: "description", type: "ReactNode", description: "Secondary supporting copy." },
+	{ name: "meta", type: "ReactNode", description: "Compact right-aligned metadata slot." },
+	{ name: "actions", type: "ReactNode", description: "Trailing action cluster." },
+	{
+		name: "tone",
+		type: "'default' | 'subtle'",
+		default: "'default'",
+		description: "Surface emphasis variant.",
 	},
 ];
 
@@ -284,27 +299,34 @@ function PagerDemo() {
 	const [page, setPage] = useState(1);
 	const totalPages = 5;
 	return (
-		<div className="flex items-center gap-3">
-			<Button
-				variant="outline"
-				size="sm"
-				disabled={page <= 1}
-				onClick={() => setPage((p) => Math.max(1, p - 1))}
-			>
-				Prev
-			</Button>
-			<span className="editor-text-muted text-[12px]">
-				Page {page} / {totalPages}
-			</span>
-			<Button
-				variant="outline"
-				size="sm"
-				disabled={page >= totalPages}
-				onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-			>
-				Next
-			</Button>
-		</div>
+		<Pager
+			currentPage={page}
+			totalPages={totalPages}
+			onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+			onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+			hideWhenSinglePage={false}
+		/>
+	);
+}
+
+function ListCardDemo() {
+	return (
+		<ListCard
+			title="Inter"
+			description="Hamburgefonstiv 123"
+			meta="sans-serif · Western · 12 used"
+			tone="subtle"
+			actions={
+				<>
+					<Button variant="outline" size="sm" className="h-8 w-8 p-0">
+						F
+					</Button>
+					<Button variant="outline" size="sm" className="h-8 w-8 p-0">
+						+
+					</Button>
+				</>
+			}
+		/>
 	);
 }
 
@@ -706,10 +728,20 @@ export function MiscDemos() {
 
 			{/* Pager */}
 			<ComponentPreview
+				id="base-list-card"
+				name="List Card"
+				description="Reusable card row with title, preview copy, meta slot, and trailing actions."
+				sourceFile="src/components/ui/list-card.tsx"
+				props={LIST_CARD_PROPS}
+			>
+				<ListCardDemo />
+			</ComponentPreview>
+
+			<ComponentPreview
 				id="base-pager"
 				name="Pager"
 				description="Simple prev/next pagination pattern with page indicator, using outline buttons."
-				sourceFile="(pattern using src/components/ui/button.tsx)"
+				sourceFile="src/components/ui/pager.tsx"
 				props={PAGER_PROPS}
 			>
 				<PagerDemo />

@@ -39,6 +39,7 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "base-warning-info", label: "Warning / Info" },
 			{ id: "base-tooltip", label: "Tooltip" },
 			{ id: "base-shortcut-key", label: "Shortcut Key" },
+			{ id: "base-list-card", label: "List Card" },
 			{ id: "base-pager", label: "Pager" },
 		],
 	},

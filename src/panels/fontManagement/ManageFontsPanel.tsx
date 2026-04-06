@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useFontPreviewStylesheet } from '../inspector/useFontPreviewStylesheet';
-import { ChevronLeft, ChevronRight, Plus, RotateCcw, Star, Trash2 } from 'lucide-react';
+import { Plus, RotateCcw, Star, Trash2 } from 'lucide-react';
 import type { DocumentFontFamily, DocumentModel } from '../../model/types';
 import {
   buildFontFamilyStack,
@@ -14,10 +14,11 @@ import {
 } from '../../api/fontApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ListCard } from '@/components/ui/list-card';
 import { PopoverTooltip } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
+import { Pager } from '@/components/ui/pager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NoticeSurface } from '@/components/ui/settings-panel';
+import { LabeledControlRow, LabeledFieldStack, NoticeSurface } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { FONT_CATALOG_PAGE_SIZE, FONT_CATALOG_PAGE_SIZE_OPTIONS, paginateCatalogFamilies } from './pagination';
 
@@ -253,12 +254,14 @@ export function ManageFontsPanel({
             const usageCount = usageMap[family.family] ?? 0;
             const removable = usageCount === 0;
             return (
-              <FontFamilyCard
+              <ListCard
                 key={family.family}
-                family={family}
-                usageCount={usageCount}
-                previewText={getFontPreviewText(family, subset)}
+                title={family.family}
+                description={getFontPreviewText(family, subset)}
+                meta={formatFontMeta(family, usageCount)}
                 tone="subtle"
+                titleStyle={buildPreviewStyle(family)}
+                descriptionStyle={buildPreviewStyle(family)}
                 actions={
                   <>
                     <FontButtonTooltip label={family.favorite ? 'Unfavorite' : 'Favorite'}>
@@ -301,16 +304,14 @@ export function ManageFontsPanel({
         </div>
 
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px_140px]">
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium">Search</Label>
+          <LabeledFieldStack label="Search" className="space-y-1" labelClassName="text-[11px] font-medium">
             <Input
               value={search}
               onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
               placeholder="Search families, languages, tags"
             />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium">Language</Label>
+          </LabeledFieldStack>
+          <LabeledFieldStack label="Language" className="space-y-1" labelClassName="text-[11px] font-medium">
             <Select value={subset} onValueChange={(value) => setFilters((current) => ({ ...current, subset: value }))}>
               <SelectTrigger className="text-[11px]">
                 <SelectValue />
@@ -323,9 +324,8 @@ export function ManageFontsPanel({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium">Category</Label>
+          </LabeledFieldStack>
+          <LabeledFieldStack label="Category" className="space-y-1" labelClassName="text-[11px] font-medium">
             <Select value={category} onValueChange={(value) => setFilters((current) => ({ ...current, category: value }))}>
               <SelectTrigger className="text-[11px]">
                 <SelectValue />
@@ -338,7 +338,7 @@ export function ManageFontsPanel({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </LabeledFieldStack>
         </div>
 
         <div className="flex flex-wrap gap-4">
@@ -385,32 +385,37 @@ export function ManageFontsPanel({
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
-                  <Label className="editor-text-muted text-[11px] font-medium">Show</Label>
-                  <Select
-                    value={String(pageSize)}
-                    onValueChange={(value) =>
-                      setFilters((current) => ({ ...current, pageSize: normalizeCatalogPageSize(Number.parseInt(value, 10)) }))
-                    }
+                  <LabeledControlRow
+                    label="Show"
+                    className="gap-2"
+                    labelClassName="editor-text-muted flex-none text-[11px] font-medium"
+                    controlClassName="ml-0"
                   >
-                    <SelectTrigger className="h-8 w-[72px] text-[11px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_CATALOG_PAGE_SIZE_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={String(option)}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={String(pageSize)}
+                      onValueChange={(value) =>
+                        setFilters((current) => ({ ...current, pageSize: normalizeCatalogPageSize(Number.parseInt(value, 10)) }))
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-[72px] text-[11px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FONT_CATALOG_PAGE_SIZE_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={String(option)}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </LabeledControlRow>
                 </div>
-                <CatalogPaginationControls
-                  totalFamilies={catalogFamilies.length}
-                  activePage={activeCatalogPage}
+                <Pager
+                  currentPage={activeCatalogPage}
                   totalPages={totalCatalogPages}
-                  pageSize={pageSize}
                   onPrevious={() => setCatalogPage((page) => Math.max(1, page - 1))}
                   onNext={() => setCatalogPage((page) => Math.min(totalCatalogPages, page + 1))}
+                  hideWhenSinglePage={catalogFamilies.length <= pageSize}
                 />
               </div>
             </div>
@@ -418,11 +423,13 @@ export function ManageFontsPanel({
               const existing = getDocumentFontFamily(document, family.family);
               const usageCount = usageMap[family.family] ?? 0;
               return (
-                <FontFamilyCard
+                <ListCard
                   key={family.family}
-                  family={family}
-                  usageCount={usageCount}
-                  previewText={getFontPreviewText(family, subset)}
+                  title={family.family}
+                  description={getFontPreviewText(family, subset)}
+                  meta={formatFontMeta(family, usageCount)}
+                  titleStyle={buildPreviewStyle(family)}
+                  descriptionStyle={buildPreviewStyle(family)}
                   actions={
                     <>
                       <FontButtonTooltip label={existing?.favorite ? 'Unfavorite' : 'Favorite'}>
@@ -461,13 +468,12 @@ export function ManageFontsPanel({
               );
             })}
             <div className="flex justify-end">
-              <CatalogPaginationControls
-                totalFamilies={catalogFamilies.length}
-                activePage={activeCatalogPage}
+              <Pager
+                currentPage={activeCatalogPage}
                 totalPages={totalCatalogPages}
-                pageSize={pageSize}
                 onPrevious={() => setCatalogPage((page) => Math.max(1, page - 1))}
                 onNext={() => setCatalogPage((page) => Math.min(totalCatalogPages, page + 1))}
+                hideWhenSinglePage={catalogFamilies.length <= pageSize}
               />
             </div>
           </div>
@@ -578,39 +584,6 @@ function buildPreviewStyle(family: DocumentFontFamily) {
 function getFontPreviewText(family: DocumentFontFamily, activeSubset: string) {
   const previewSubset = resolvePreviewSubset(family, activeSubset);
   return LANGUAGE_GROUP_DEFINITIONS.find((group) => group.subsets.includes(previewSubset))?.previewText ?? 'Hamburgefonstiv 123';
-}
-
-function FontFamilyCard({
-  family,
-  usageCount,
-  previewText,
-  actions,
-  tone = 'default',
-}: {
-  family: DocumentFontFamily;
-  usageCount: number;
-  previewText: string;
-  actions: React.ReactNode;
-  tone?: 'default' | 'subtle';
-}) {
-  return (
-    <div
-      className={`${tone === 'subtle' ? 'editor-bg-subtle' : ''} editor-border-subtle flex items-start gap-3 rounded-lg border px-3 py-2`}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="editor-text-strong truncate text-[16px] font-medium leading-5" style={buildPreviewStyle(family)}>
-          {family.family}
-        </div>
-        <div className="editor-text-muted mt-1 truncate text-[14px] leading-5" style={buildPreviewStyle(family)}>
-          {previewText}
-        </div>
-      </div>
-      <div className="editor-text-muted shrink-0 pt-0.5 text-right text-[11px] leading-5">
-        {formatFontMeta(family, usageCount)}
-      </div>
-      {actions}
-    </div>
-  );
 }
 
 function formatFontMeta(family: DocumentFontFamily, usageCount: number) {
@@ -744,55 +717,5 @@ function FilterToggle({
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
       <span>{label}</span>
     </label>
-  );
-}
-
-function CatalogPaginationControls({
-  totalFamilies,
-  activePage,
-  totalPages,
-  pageSize,
-  onPrevious,
-  onNext,
-}: {
-  totalFamilies: number;
-  activePage: number;
-  totalPages: number;
-  pageSize: number;
-  onPrevious: () => void;
-  onNext: () => void;
-}) {
-  if (totalFamilies <= pageSize) {
-    return null;
-  }
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="h-8 px-2"
-        onClick={onPrevious}
-        disabled={activePage === 1}
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Prev
-      </Button>
-      <div className="editor-text-muted min-w-[72px] text-center text-[11px]">
-        Page {activePage} / {totalPages}
-      </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="h-8 px-2"
-        onClick={onNext}
-        disabled={activePage === totalPages}
-      >
-        Next
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
   );
 }
