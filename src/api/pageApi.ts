@@ -321,7 +321,7 @@ export function setPageParent(
     const isAncestor = (checkId: PageId, targetId: PageId): boolean => {
       if (checkId === targetId) return true;
       const page = pages.find((p) => p.id === checkId);
-      if (!page || !page.parentPageId) return false;
+      if (!page?.parentPageId) return false;
       return isAncestor(page.parentPageId, targetId);
     };
     if (isAncestor(newParentId, pageId)) return document;

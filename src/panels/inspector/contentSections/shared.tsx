@@ -376,7 +376,7 @@ function computePageDepth(pages: Array<{ id: string; parentPageId?: string }>, p
     if (visited.has(current)) break;
     visited.add(current);
     const page = pages.find((p) => p.id === current);
-    if (!page || !page.parentPageId) break;
+    if (!page?.parentPageId) break;
     current = page.parentPageId;
     depth++;
   }

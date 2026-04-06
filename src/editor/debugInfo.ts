@@ -47,7 +47,7 @@ export function buildNodeDebugInfo(
 
   // Build sticky info
   let sticky: NodeDebugInfo['sticky'];
-  if (!node.sticky || !node.sticky.enabled) {
+  if (!node.sticky?.enabled) {
     sticky = {
       enabled: false,
       target: null,
