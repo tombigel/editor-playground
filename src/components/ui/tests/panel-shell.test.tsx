@@ -22,6 +22,7 @@ describe('components/ui/panel-shell', () => {
     expect(markup).toContain('data-ui="panel-header-actions"');
     expect(markup).toContain('editor-panel-header-close');
     expect(markup).toContain('Close components panel');
+    expect(markup).toContain('class="editor-panel-header editor-border-subtle flex w-full');
   });
 
   it('renders a shared floating panel shell with header and body slots', () => {
