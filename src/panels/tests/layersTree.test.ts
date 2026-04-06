@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
 import {
   buildLayersTreeRows,
   isLayersNodeDraggable,
@@ -17,11 +17,11 @@ describe('panels/layersTree', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     document.nodes[container.id] = container;
     section.children.push(container.id);
 
-    const hiddenLeaf = createLeaf('text', container.id);
+    const hiddenLeaf = createTextNode('block', container.id);
     hiddenLeaf.visible = false;
     document.nodes[hiddenLeaf.id] = hiddenLeaf;
     container.children.push(hiddenLeaf.id);
@@ -94,11 +94,11 @@ describe('panels/layersTree', () => {
       throw new Error('Expected section and footer wrappers');
     }
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     document.nodes[container.id] = container;
     section.children.push(container.id);
 
-    const leaf = createLeaf('button', section.id);
+    const leaf = createButtonTextNode(section.id);
     document.nodes[leaf.id] = leaf;
     section.children.push(leaf.id);
 

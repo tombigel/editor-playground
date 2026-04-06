@@ -1,7 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { createInitialDocument, createLeaf, createWrapper } from '../../../model/defaults';
+import { createInitialDocument, createTextNode, createContainerNode } from '../../../model/defaults';
 import { InspectorSectionCard, InspectorSummary, NodeBasicsSection } from '../CommonSections';
 
 describe('panels/inspector/CommonSections', () => {
@@ -85,7 +85,7 @@ describe('panels/inspector/CommonSections', () => {
 
   it('shows the same padding control surface for container wrappers', () => {
     const document = createInitialDocument();
-    const containerNode = createWrapper('container', 'root');
+    const containerNode = createContainerNode('container', 'root');
 
     const markup = renderToStaticMarkup(
       <NodeBasicsSection
@@ -186,7 +186,7 @@ describe('panels/inspector/CommonSections', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const textNode = createLeaf('text', sectionNode.id);
+    const textNode = createTextNode('block', sectionNode.id);
     textNode.name = 'Hero Copy';
 
     const markup = renderToStaticMarkup(

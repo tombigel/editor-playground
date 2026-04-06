@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createLeaf } from '../defaults';
+import { createInitialDocument, createButtonTextNode } from '../defaults';
 import { createPage } from '../pageDefaults';
 import { getSectionAnchorOptions, isBrokenAnchorLink, getLinkHref } from '../links';
 
@@ -93,7 +93,7 @@ describe('model/links', () => {
       throw new Error('Expected section node');
     }
 
-    const button = createLeaf('button', section.id);
+    const button = createButtonTextNode(section.id);
     document.nodes[button.id] = button;
     section.children.push(button.id);
 

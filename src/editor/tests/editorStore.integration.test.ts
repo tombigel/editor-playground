@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveStickyLayout } from '../../sticky/resolve';
-import { createInitialDocument, createWrapper } from '../../model/defaults';
+import { createInitialDocument, createContainerNode } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
 import { DEFAULT_SNAP_SETTINGS } from '../types';
 import {
@@ -221,7 +221,7 @@ describe('editor/editorStore integration', () => {
     }
 
     const withContainer = structuredClone(state);
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     withContainer.document.nodes[container.id] = container;
     const mutableSection = withContainer.document.nodes[section.id];
     if (!mutableSection || mutableSection.contentType !== 'container') {

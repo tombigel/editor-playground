@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createLeaf } from '../../../model/defaults';
+import { createInitialDocument, createButtonTextNode } from '../../../model/defaults';
 import { resolveInspectorBlocks, resolveInspectorConfigKey } from '../schema';
 import type { InspectorActionHandlers, InspectorOrderState } from '../types';
 
@@ -123,7 +123,7 @@ describe('panels/inspector/schema', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const buttonNode = createLeaf('button', section.id);
+    const buttonNode = createButtonTextNode(section.id);
 
     expect(resolveInspectorConfigKey(buttonNode)).toBe('button');
     expect(resolveInspectorConfigKey(linkNode ?? null)).toBe('link');
@@ -139,7 +139,7 @@ describe('panels/inspector/schema', () => {
     }
     const linkNode = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
     const imageNode = Object.values(document.nodes).find((node) => node.contentType === 'media');
-    const buttonNode = createLeaf('button', section.id);
+    const buttonNode = createButtonTextNode(section.id);
 
     if (!linkNode || linkNode.contentType !== 'text' || !imageNode || imageNode.contentType !== 'media' || !buttonNode || buttonNode.contentType !== 'text') {
       throw new Error('Expected link, image, and button leaves');

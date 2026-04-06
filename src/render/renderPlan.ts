@@ -3,8 +3,6 @@ import type { ContainerNode, DocumentModel, DocumentNode, ViewportMeasurement } 
 import { isContainerNode } from '../model/types';
 import type { PageId } from '../model/types/site';
 
-// Keep WrapperNode alias for local use
-type WrapperNode = ContainerNode;
 import { resolveWrapperRenderPlan, type RenderMeasuredNodeSizes } from './layout';
 import type {
   RenderLeafPlanNode,
@@ -41,12 +39,12 @@ export function buildRenderRootPlan(
   viewport?: ViewportMeasurement,
   pageId?: PageId,
 ): RenderRootPlan {
-  let wrappers: WrapperNode[];
+  let wrappers: ContainerNode[];
 
   if (pageId && document.pages) {
-    wrappers = getRootWrappersForPage(document, pageId) as WrapperNode[];
+    wrappers = getRootWrappersForPage(document, pageId) as ContainerNode[];
   } else {
-    wrappers = getRootWrappers(document) as WrapperNode[];
+    wrappers = getRootWrappers(document) as ContainerNode[];
   }
 
   const { header, footer, main } = splitRootWrappers(wrappers);
@@ -60,7 +58,7 @@ export function buildRenderRootPlan(
 
 function buildWrapperPlan(
   document: DocumentModel,
-  node: WrapperNode,
+  node: ContainerNode,
   isTopLevel: boolean,
   previewSticky: boolean,
   measuredNodeSizes: RenderMeasuredNodeSizes,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultSticky, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createDefaultSticky, createInitialDocument, createTextNode, createContainerNode } from '../../model/defaults';
 import type { EditorState } from '../../api/editorApi';
 import {
   getNodeOrderState,
@@ -74,7 +74,7 @@ describe('app/appSelectors', () => {
       throw new Error('Expected site root');
     }
 
-    const extraSection = createWrapper('section', root.id);
+    const extraSection = createContainerNode('section', root.id);
     extraSection.name = 'Extra Section';
     state.document.nodes[extraSection.id] = extraSection;
     root.children.splice(root.children.length - 1, 0, extraSection.id);
@@ -102,12 +102,12 @@ describe('app/appSelectors', () => {
       throw new Error('Expected section');
     }
 
-    const stickyLeaf = createLeaf('text', section.id);
+    const stickyLeaf = createTextNode('block', section.id);
     stickyLeaf.sticky = createDefaultSticky();
     state.document.nodes[stickyLeaf.id] = stickyLeaf;
     section.children.push(stickyLeaf.id);
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     state.document.nodes[container.id] = container;
 
     expect(selectedNodeHasTopEdge(state, stickyLeaf.id)).toBe(true);

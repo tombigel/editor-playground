@@ -682,7 +682,7 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
   sourceContainer.name = 'Source Container';
   sourceContainer.rect = createDefaultRect('80px', '110px', '300px', '260px');
 
-  const nestedContainer = createWrapper('container', sourceContainer.id);
+  const nestedContainer = createContainerNode('container', sourceContainer.id);
   nestedContainer.name = 'Nested Invalid Target';
   nestedContainer.rect = createDefaultRect('36px', '108px', '150px', '96px');
 

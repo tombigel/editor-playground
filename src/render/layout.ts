@@ -19,8 +19,6 @@ import type {
   WrapperRenderPlan,
 } from './types';
 
-// Keep WrapperNode alias for callers not yet renamed
-type WrapperNode = ContainerNode;
 export type {
   MeshLayout,
   RenderExportableNode,
@@ -37,7 +35,7 @@ export const AUTO_WRAPPER_MIN_HEIGHT_PX = 120;
 
 export function resolveWrapperRenderPlan(
   document: DocumentModel,
-  node: WrapperNode,
+  node: ContainerNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): WrapperRenderPlan {
@@ -77,22 +75,22 @@ export function resolveWrapperRenderPlan(
   };
 }
 
-export function buildWrapperStyle(node: WrapperNode, isTopLevel: boolean): CSSProperties {
+export function buildWrapperStyle(node: ContainerNode, isTopLevel: boolean): CSSProperties {
   return {
     width: formatValue(node.rect.width.base.parsed),
     ...(isTopLevel ? {} : { position: 'relative' }),
   };
 }
 
-export function getWrapperBorderStyle(_node: WrapperNode): CSSProperties {
+export function getWrapperBorderStyle(_node: ContainerNode): CSSProperties {
   return {};
 }
 
-export function getWrapperBorderDeclarations(node: WrapperNode): string[] {
+export function getWrapperBorderDeclarations(node: ContainerNode): string[] {
   return cssPropertiesToDeclarations(getWrapperBorderStyle(node));
 }
 
-export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties {
+export function getContentWrapperSurfaceStyle(node: ContainerNode): CSSProperties {
   const style: CSSProperties = {
     boxSizing: 'border-box',
     background: node.style?.background,
@@ -108,7 +106,7 @@ export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties 
   return style;
 }
 
-function getSectionDividerStyle(node: WrapperNode): CSSProperties {
+function getSectionDividerStyle(node: ContainerNode): CSSProperties {
   if (node.subtype !== 'section' || (!node.style?.sectionBorderBottomColor && !node.style?.sectionBorderBottomWidth)) {
     return {};
   }
@@ -122,7 +120,7 @@ function getSectionDividerStyle(node: WrapperNode): CSSProperties {
   };
 }
 
-export function getContentWrapperPaddingStyle(node: WrapperNode): CSSProperties {
+export function getContentWrapperPaddingStyle(node: ContainerNode): CSSProperties {
   return {
     paddingTop: node.style?.paddingTop ? formatValue(node.style.paddingTop.parsed) : undefined,
     paddingRight: node.style?.paddingRight ? formatValue(node.style.paddingRight.parsed) : undefined,
@@ -131,7 +129,7 @@ export function getContentWrapperPaddingStyle(node: WrapperNode): CSSProperties 
   };
 }
 
-export function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
+export function getContentWrapperBaseStyle(node: ContainerNode): CSSProperties {
   const height = node.rect.height.base.parsed;
   const base: CSSProperties = {
     width: '100%',
@@ -307,7 +305,7 @@ function estimateAutoLeafHeight(
 
 function computeMeshLayout(
   children: ExportableNode[],
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   registrations: Map<string, ComputedWrapperStickyState['registrations'][number]>,
   childWrapperExtraExtents: Map<string, number>,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
@@ -399,7 +397,7 @@ function getMeshNodeHeight(
 }
 
 function getWrapperMeshBaseHeight(
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
@@ -414,7 +412,7 @@ function getWrapperMeshBaseHeight(
 }
 
 function resolveCoordinatePx(
-  value: WrapperNode['rect']['x']['base']['parsed'],
+  value: ContainerNode['rect']['x']['base']['parsed'],
   width: number,
   height: number,
   axis: 'x' | 'y',

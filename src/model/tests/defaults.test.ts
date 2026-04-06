@@ -3,7 +3,8 @@ import type { TextNode } from '../types';
 import {
   createDefaultFooter,
   createDefaultHeader,
-  createLeaf,
+  createLinkTextNode,
+  createButtonTextNode,
   createInitialDocument,
   createSectionFromTemplate,
   SECTION_TEMPLATES,
@@ -27,8 +28,8 @@ describe('model/defaults', () => {
   });
 
   it('defaults links to internal navigation and buttons to external navigation', () => {
-    const link = createLeaf('link', 'section_1');
-    const button = createLeaf('button', 'section_1');
+    const link = createLinkTextNode('section_1');
+    const button = createButtonTextNode('section_1');
 
     if (link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link leaf');

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createLeaf } from '../../model/defaults';
+import { createInitialDocument, createButtonTextNode } from '../../model/defaults';
 import { FocusedModePanel } from '../FocusedModePanel';
 import { EditorSidebar } from '../EditorSidebar';
 
@@ -27,7 +27,7 @@ function createInspectorProps() {
     throw new Error('Expected section node');
   }
 
-  const buttonNode = createLeaf('button', sectionNode.id);
+  const buttonNode = createButtonTextNode(sectionNode.id);
   document.nodes[buttonNode.id] = buttonNode;
   sectionNode.children.push(buttonNode.id);
 

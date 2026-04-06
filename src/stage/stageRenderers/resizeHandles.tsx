@@ -1,9 +1,9 @@
 import type { MouseEvent } from 'react';
 import type {
+  ContainerNode,
   DocumentNode,
   StickyDefinition,
   ViewportMeasurement,
-  WrapperNode,
 } from '../../model/types';
 import {
   resolveOffsetPx,
@@ -45,7 +45,7 @@ export function renderOffsetVisual(
   node: Exclude<DocumentNode, { type: 'site' }>,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
-  ownerWrapper?: WrapperNode,
+  ownerWrapper?: ContainerNode,
 ) {
   if (!sticky?.enabled) {
     return null;
@@ -154,7 +154,7 @@ function renderOffsetVisualForEdge(
 }
 
 export function resolveWrapperPaddingPx(
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   edge: 'top' | 'right' | 'bottom' | 'left',
   _measuredNodeSizes: RenderMeasuredNodeSizes = {},
   _viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
