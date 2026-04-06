@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createContainerNode, createTextNode, createLinkTextNode, createButtonTextNode } from '../defaults';
 import { createPage } from '../pageDefaults';
-import type { TextNode } from '../types';
+import type { RichContent, TextNode } from '../types';
 import { getMainWrappers } from '../selectors';
 import { validateDocument, validateLinks } from '../validation';
 
@@ -468,6 +468,51 @@ describe('model/validation', () => {
         (e) => e.nodeId === link1.id || e.nodeId === link2.id,
       );
       expect(errors).toHaveLength(2);
+    });
+
+    it('reports no errors for a rich text node with valid inline links', () => {
+      let doc = createInitialDocument();
+      const appended = appendPage(doc, { displayName: 'About', slug: 'about' });
+      doc = appended.document;
+      const section = getMainWrappers(doc)[0];
+      const rich = createTextNode('rich', section.id) as TextNode;
+      rich.content = [
+        { text: 'Visit ' },
+        { type: 'link', linkType: 'page', targetPageId: appended.page.id, children: [{ text: 'About' }] },
+      ] as RichContent;
+      doc.nodes[rich.id] = rich;
+      section.children.push(rich.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === rich.id);
+      expect(errors).toEqual([]);
+    });
+
+    it('reports broken-page-link for a rich text node with an inline link to a missing page', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const rich = createTextNode('rich', section.id) as TextNode;
+      rich.content = [
+        { type: 'link', linkType: 'page', targetPageId: 'nonexistent-page', children: [{ text: 'Gone' }] },
+      ] as RichContent;
+      doc.nodes[rich.id] = rich;
+      section.children.push(rich.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === rich.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-page-link');
+      expect(errors[0].nodeRole).toBe('link');
+    });
+
+    it('reports broken-anchor-link for a rich text node with an inline anchor to a missing node', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const rich = createTextNode('rich', section.id) as TextNode;
+      rich.content = [
+        { type: 'link', linkType: 'anchor', anchorTargetId: 'nonexistent-node', children: [{ text: 'Anchor' }] },
+      ] as RichContent;
+      doc.nodes[rich.id] = rich;
+      section.children.push(rich.id);
+      const errors = validateLinks(doc).filter((e) => e.nodeId === rich.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-anchor-link');
     });
   });
 

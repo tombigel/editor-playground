@@ -67,11 +67,12 @@ The playground exists to test:
 
 ### Node families
 
-| Category | Allowed values | Notes |
+| `contentType` | `subtype` values | Notes |
 |---|---|---|
-| Node family | `site`, `wrapper`, `leaf` | Top-level taxonomy for all nodes. |
-| Wrapper role | `section`, `header`, `footer`, `container` | Structural and layout-oriented nodes. |
-| Leaf role | `text`, `image`, `link`, `button` | Content-oriented nodes. |
+| `site` | — | Document root; exactly one per document. |
+| `container` | `section`, `header`, `footer`, `container`, `group` | Structural layout nodes. |
+| `text` | `block`, `rich`, `code` | Text content nodes. |
+| `media` | `image`, `video`, `svg`, `embed` | Media content nodes. |
 
 ### Node identity
 
@@ -1428,6 +1429,70 @@ When enabled, a compact "Debug" inspector card appears above the Layout section 
 - `[debug:change]` (amber) — when the selected node's data changes, showing only the diff
 
 **Persistence:** The `showDebugInfo` preference is persisted as a UI setting and survives page reload.
+
+## Rich Text Content
+
+Text nodes with `subtype: 'rich'` store their content as `RichContent` — a flat array of inline
+nodes — rather than a plain string.
+
+### RichContent format
+
+```typescript
+type RichContent = RichInlineNode[]
+
+// Plain text leaf — text plus optional mark flags
+type RichTextLeaf = {
+  text: string
+  bold?: boolean
+  italic?: boolean
+  color?: string
+  fontFamily?: string
+  fontSize?: string
+}
+
+// Inline link — wraps a list of leaves
+type RichTextLink = {
+  type: 'link'
+  children: RichTextLeaf[]
+  linkType: 'external' | 'page' | 'anchor'
+  href?: string
+  targetPageId?: string
+  pageAnchorId?: string
+  anchorTargetId?: string
+  openInNewTab?: boolean
+}
+```
+
+`block` and `code` subtypes continue to use a plain `string` for `content`. The
+`subtype === 'rich'` narrowing is the canonical way to distinguish.
+
+### Rendering contract
+
+- **Site renderer** (`SiteRenderer.tsx`): rich nodes render before the link/button/plain branches.
+  Each `RichTextLeaf` becomes a `<span>` with inline mark styles; each `RichTextLink` becomes
+  an `<a>` resolved via `getLinkHref()`.
+- **Stage renderer** (`renderLeafContent` in `nodePresentation.tsx`): same via the shared
+  `renderRichContent()` helper. The `document` option must be passed when page-link hrefs need
+  to be resolved.
+- `getNodeTextContent()` flattens `RichContent` to a plain string for aria labels and layer names.
+
+### Link validation and sync
+
+Inline links inside `RichContent` follow the same rules as node-level links:
+
+- `validateLinks()` in `src/model/validation.ts` walks `RichTextLink` entries and reports
+  `broken-page-link` / `broken-anchor-link` errors for invalid targets.
+- `syncPageHrefLinks()` in `src/api/pageApi.ts` patches matching `href` values inside
+  `RichContent` when a page URL changes, returning the original document reference if nothing changed.
+
+### Helpers (`src/model/richContent.ts`)
+
+| Function | Purpose |
+|---|---|
+| `isEmpty(content)` | Returns `true` if all leaf text strings are empty. |
+| `walkLinks(content, visitor)` | Calls visitor for every `RichTextLink`. |
+| `mapLinks(content, mapper)` | Returns new array with each link replaced; identity-safe. |
+| `getTextContent(content)` | Flattens `string \| RichContent` to a plain string. |
 
 ## Running the Playground
 

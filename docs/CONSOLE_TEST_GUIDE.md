@@ -83,6 +83,83 @@ doc = playgroundAnimationApi.clearAnimation(nodeId)
 playgroundAnimationApi.applyDocument(doc)
 ```
 
+## Rich Text Nodes
+
+`playgroundDocApi` (DEV only) exposes `getDocument()`, `getNode(id)`, and `applyDocument(doc)`
+for general document manipulation.
+
+### Insert a rich text node
+
+```js
+// 1. Pick a section to attach the node to
+const sectionId = document.querySelector('[data-node-type="section"]')
+  ?.id.replace('stage-node-', '')
+  ?? Object.values(playgroundDocApi.getDocument().nodes)
+       .find(n => n.contentType === 'container' && n.subtype === 'section')?.id
+
+// 2. Build a rich text node with marks
+const richNode = {
+  id: 'rich_test_1',
+  contentType: 'text',
+  subtype: 'rich',
+  parentId: sectionId,
+  children: [],
+  name: 'Rich Test',
+  visible: true,
+  locked: false,
+  rect: {
+    x: { base: { raw: '40px', parsed: { value: 40, unit: 'px' } } },
+    y: { base: { raw: '40px', parsed: { value: 40, unit: 'px' } } },
+    width: { base: { raw: 'fit-content', parsed: { keyword: 'fit-content' } } },
+    height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
+  },
+  content: [
+    { text: 'Hello ' },
+    { text: 'bold', bold: true },
+    { text: ' and ' },
+    { text: 'red', color: '#e53e3e' },
+    { text: ' world.' },
+  ],
+}
+
+let doc = playgroundDocApi.getDocument()
+const section = doc.nodes[sectionId]
+doc = {
+  ...doc,
+  nodes: {
+    ...doc.nodes,
+    [richNode.id]: richNode,
+    [sectionId]: { ...section, children: [...section.children, richNode.id] },
+  },
+}
+playgroundDocApi.applyDocument(doc)
+```
+
+### Add an inline link
+
+```js
+// Mutate the existing node's content (get fresh doc reference first)
+doc = playgroundDocApi.getDocument()
+const node = { ...doc.nodes['rich_test_1'] }
+node.content = [
+  { text: 'Visit ' },
+  {
+    type: 'link',
+    linkType: 'external',
+    href: 'https://example.com',
+    openInNewTab: true,
+    children: [{ text: 'example.com' }],
+  },
+  { text: ' for more.' },
+]
+playgroundDocApi.applyDocument({ ...doc, nodes: { ...doc.nodes, [node.id]: node } })
+```
+
+### Inspect the rendered output
+
+After inserting, the node renders inline in the site view. Switch to **Preview** tab to see
+the final HTML with `<span>` marks and `<a>` links applied.
+
 ## Notes
 
 - Every mutation (`setPresetAnimation`, `setKeyframeAnimation`, `clearAnimation`, etc.) returns a **new document model**. You must call `applyDocument(doc)` to push it into the editor state.

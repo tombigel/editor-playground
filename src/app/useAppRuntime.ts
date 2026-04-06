@@ -81,6 +81,22 @@ export function useAppRuntime(
   }, [state.document, dispatch]);
 
   useEffect(() => {
+    if (!import.meta.env.DEV || !dispatch) return;
+
+    const w = window as unknown as Record<string, unknown>;
+    w.playgroundDocApi = {
+      getDocument: () => state.document,
+      getNode: (id: string) => state.document.nodes[id],
+      applyDocument: (doc: Parameters<typeof setNodeAnimation>[0]) =>
+        dispatch({ type: 'importDocument', document: doc }),
+    };
+
+    return () => {
+      delete w.playgroundDocApi;
+    };
+  }, [state.document, dispatch]);
+
+  useEffect(() => {
     if (typeof document === 'undefined') {
       return;
     }
