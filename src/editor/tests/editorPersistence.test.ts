@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createInitialDocument, createLeaf } from '../../model/defaults';
+import { createInitialDocument, createTextNode } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
-import type { DocumentModel, TextLeaf, WrapperNode } from '../../model/types';
+import type { DocumentModel, TextNode, ContainerNode } from '../../model/types';
 import {
   DEFAULT_EDITOR_ACCENT_COLOR,
   DEFAULT_EDITOR_DARK_THEME,
@@ -90,9 +90,9 @@ describe('editor/editorPersistence', () => {
     });
 
     it('falls back to p for unknown tags', () => {
-      expect(normalizeTextHtmlTag('span' as TextLeaf['htmlTag'])).toBe('p');
-      expect(normalizeTextHtmlTag('section' as TextLeaf['htmlTag'])).toBe('p');
-      expect(normalizeTextHtmlTag('' as TextLeaf['htmlTag'])).toBe('p');
+      expect(normalizeTextHtmlTag('span' as TextNode['htmlTag'])).toBe('p');
+      expect(normalizeTextHtmlTag('section' as TextNode['htmlTag'])).toBe('p');
+      expect(normalizeTextHtmlTag('' as TextNode['htmlTag'])).toBe('p');
     });
   });
 
@@ -153,7 +153,7 @@ describe('editor/editorPersistence', () => {
       const normalizedRoot = getRoot(normalized);
       const wrappers = normalizedRoot.children
         .map((id) => normalized.nodes[id])
-        .filter((n): n is WrapperNode => n?.contentType === 'container');
+        .filter((n): n is ContainerNode => n?.contentType === 'container');
 
       expect(wrappers.some((w) => w.subtype === 'header')).toBe(true);
       expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
@@ -163,19 +163,19 @@ describe('editor/editorPersistence', () => {
       const doc = buildMinimalDocument();
       // Find a text leaf that is NOT a starter shell title (those get overridden by normalizeStarterShellTextTags)
       const textNode = Object.values(doc.nodes).find(
-        (n): n is TextLeaf =>
+        (n): n is TextNode =>
           n.contentType !== 'container' && n.contentType !== 'site' &&
           n.subtype === 'block' &&
           n.name !== 'Product Title' &&
           n.name !== 'Footer Title',
       );
       if (textNode) {
-        textNode.htmlTag = 'span' as TextLeaf['htmlTag'];
+        textNode.htmlTag = 'span' as TextNode['htmlTag'];
       }
 
       const normalized = normalizeDocument(doc);
       if (textNode) {
-        const normalizedText = normalized.nodes[textNode.id] as TextLeaf;
+        const normalizedText = normalized.nodes[textNode.id] as TextNode;
         expect(normalizedText.htmlTag).toBe('p');
       }
     });
@@ -191,10 +191,10 @@ describe('editor/editorPersistence', () => {
       if (!sectionId) {
         return;
       }
-      const section = doc.nodes[sectionId] as WrapperNode;
+      const section = doc.nodes[sectionId] as ContainerNode;
 
       // Create a container child manually
-      const _container = createLeaf('text', sectionId) as unknown as WrapperNode;
+      const _container = createTextNode('block', sectionId) as unknown as ContainerNode;
       // Simulate a wrapper node manually for the purpose of this test
       const containerId = `container_test_${Date.now()}`;
       doc.nodes[containerId] = {
@@ -217,7 +217,7 @@ describe('editor/editorPersistence', () => {
           durationBottom: parseUnitValue('50vh'),
           edges: { top: true, bottom: false },
         },
-      } as unknown as WrapperNode;
+      } as unknown as ContainerNode;
       section.children.push(containerId);
 
       const normalized = normalizeDocument(doc);
@@ -230,7 +230,7 @@ describe('editor/editorPersistence', () => {
     it('forces opaque background on structural wrappers', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (section) {
         section.style!.background = '#33669980';
@@ -238,7 +238,7 @@ describe('editor/editorPersistence', () => {
 
       const normalized = normalizeDocument(doc);
       if (section) {
-        const normalizedSection = normalized.nodes[section.id] as WrapperNode;
+        const normalizedSection = normalized.nodes[section.id] as ContainerNode;
         // Should not contain alpha channel
         expect(normalizedSection.style!.background).not.toContain('80');
       }
@@ -247,15 +247,15 @@ describe('editor/editorPersistence', () => {
     it('normalizes sticky definition defaults when sticky is partially defined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (section) {
-        section.sticky = { enabled: true } as unknown as WrapperNode['sticky'];
+        section.sticky = { enabled: true } as unknown as ContainerNode['sticky'];
       }
 
       const normalized = normalizeDocument(doc);
       if (section) {
-        const normalizedSection = normalized.nodes[section.id] as WrapperNode;
+        const normalizedSection = normalized.nodes[section.id] as ContainerNode;
         expect(normalizedSection.sticky?.enabled).toBe(true);
         expect(normalizedSection.sticky?.target).toBe('self');
         expect(normalizedSection.sticky?.durationMode).toBe('auto');
@@ -266,7 +266,7 @@ describe('editor/editorPersistence', () => {
     it('migrates legacy dual-edge sticky to single edge using offset heuristic', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (section) {
         section.sticky = {
@@ -279,12 +279,12 @@ describe('editor/editorPersistence', () => {
           edges: { top: true, bottom: true },
           offsetTop: undefined,
           offsetBottom: parseUnitValue('20px'),
-        } as unknown as WrapperNode['sticky'];
+        } as unknown as ContainerNode['sticky'];
       }
 
       const normalized = normalizeDocument(doc);
       if (section) {
-        const s = normalized.nodes[section.id] as WrapperNode;
+        const s = normalized.nodes[section.id] as ContainerNode;
         // With offsetBottom but no offsetTop, should keep bottom and disable top
         expect(s.sticky?.edges?.top).toBe(false);
         expect(s.sticky?.edges?.bottom).toBe(true);
@@ -370,7 +370,7 @@ describe('editor/editorPersistence', () => {
       const root = getRoot(state.document);
       const wrappers = root.children
         .map((id) => state.document.nodes[id])
-        .filter((n): n is WrapperNode => n?.contentType === 'container');
+        .filter((n): n is ContainerNode => n?.contentType === 'container');
 
       expect(wrappers.some((w) => w.subtype === 'header')).toBe(true);
       expect(wrappers.some((w) => w.subtype === 'section')).toBe(true);
@@ -728,7 +728,7 @@ describe('editor/editorPersistence', () => {
       const parsedRoot = getRoot(parsed);
       const wrappers = parsedRoot.children
         .map((id) => parsed.nodes[id])
-        .filter((n): n is WrapperNode => n?.contentType === 'container');
+        .filter((n): n is ContainerNode => n?.contentType === 'container');
 
       expect(wrappers.some((w) => w.subtype === 'header')).toBe(true);
       expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
@@ -896,17 +896,17 @@ describe('editor/editorPersistence', () => {
     it('defaults sticky edges.top to true when bottom is false and top is undefined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
       section.sticky = {
         enabled: true,
         edges: { bottom: false },
-      } as unknown as WrapperNode['sticky'];
+      } as unknown as ContainerNode['sticky'];
 
       const normalized = normalizeDocument(doc);
-      const s = normalized.nodes[section.id] as WrapperNode;
+      const s = normalized.nodes[section.id] as ContainerNode;
       expect(s.sticky?.edges?.top).toBe(true);
       expect(s.sticky?.edges?.bottom).toBe(false);
     });
@@ -914,17 +914,17 @@ describe('editor/editorPersistence', () => {
     it('defaults sticky edges.top to false when bottom is true and top is undefined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
       section.sticky = {
         enabled: true,
         edges: { bottom: true },
-      } as unknown as WrapperNode['sticky'];
+      } as unknown as ContainerNode['sticky'];
 
       const normalized = normalizeDocument(doc);
-      const s = normalized.nodes[section.id] as WrapperNode;
+      const s = normalized.nodes[section.id] as ContainerNode;
       expect(s.sticky?.edges?.top).toBe(false);
       expect(s.sticky?.edges?.bottom).toBe(true);
     });
@@ -932,7 +932,7 @@ describe('editor/editorPersistence', () => {
     it('resolves dual-edge conflict using offsetTop heuristic', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
@@ -941,10 +941,10 @@ describe('editor/editorPersistence', () => {
         edges: { top: true, bottom: true },
         offsetTop: parseUnitValue('10px'),
         offsetBottom: undefined,
-      } as unknown as WrapperNode['sticky'];
+      } as unknown as ContainerNode['sticky'];
 
       const normalized = normalizeDocument(doc);
-      const s = normalized.nodes[section.id] as WrapperNode;
+      const s = normalized.nodes[section.id] as ContainerNode;
       // With offsetTop but no offsetBottom, should keep top and disable bottom
       expect(s.sticky?.edges?.top).toBe(true);
       expect(s.sticky?.edges?.bottom).toBe(false);
@@ -953,14 +953,14 @@ describe('editor/editorPersistence', () => {
     it('leaves undefined sticky as undefined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
+        (n): n is ContainerNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
       section.sticky = undefined;
 
       const normalized = normalizeDocument(doc);
-      const s = normalized.nodes[section.id] as WrapperNode;
+      const s = normalized.nodes[section.id] as ContainerNode;
       expect(s.sticky).toBeUndefined();
     });
   });

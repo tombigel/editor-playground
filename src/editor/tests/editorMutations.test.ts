@@ -28,7 +28,7 @@ import {
   updateWrapperStyleField,
 } from '../editorMutations';
 import type { EditorState } from '../types';
-import type { ContainerNode, DocumentNode, NodeId, WrapperNode } from '../../model/types';
+import type { ContainerNode, DocumentNode, NodeId } from '../../model/types';
 
 function getRoot(document: EditorState['document']) {
   const root = document.nodes[document.rootId];
@@ -836,7 +836,7 @@ describe('editor/editorMutations', () => {
 
     it('updates sectionBorderBottomWidth', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const next = updateWrapperStyleField(state, section.id, 'sectionBorderBottomWidth', '3px');
       const node = next.document.nodes[section.id];
@@ -847,7 +847,7 @@ describe('editor/editorMutations', () => {
 
     it('clears sectionBorderBottomWidth with empty value', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const withWidth = updateWrapperStyleField(state, section.id, 'sectionBorderBottomWidth', '3px');
       const next = updateWrapperStyleField(withWidth, section.id, 'sectionBorderBottomWidth', '');
@@ -859,7 +859,7 @@ describe('editor/editorMutations', () => {
 
     it('updates wrapper padding fields', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const next = updateWrapperStyleField(state, section.id, 'paddingLeft', '16px');
       const node = next.document.nodes[section.id];
@@ -870,7 +870,7 @@ describe('editor/editorMutations', () => {
 
     it('clears wrapper padding with empty value', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const withPad = updateWrapperStyleField(state, section.id, 'paddingTop', '10px');
       const next = updateWrapperStyleField(withPad, section.id, 'paddingTop', '');
@@ -882,7 +882,7 @@ describe('editor/editorMutations', () => {
 
     it('updates wrapper border width and radius', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const withBW = updateWrapperStyleField(state, section.id, 'borderWidth', '2px');
       const withBR = updateWrapperStyleField(withBW, section.id, 'borderRadius', '12px');
@@ -895,7 +895,7 @@ describe('editor/editorMutations', () => {
 
     it('updates wrapper shadow fields', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const withColor = updateWrapperStyleField(state, section.id, 'shadowColor', '#000');
       const withBlur = updateWrapperStyleField(withColor, section.id, 'shadowBlur', '10');
@@ -908,7 +908,7 @@ describe('editor/editorMutations', () => {
 
     it('ignores non-finite shadow length for wrapper', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const next = updateWrapperStyleField(state, section.id, 'shadowBlur', 'not-a-number');
       const node = next.document.nodes[section.id];
@@ -919,7 +919,7 @@ describe('editor/editorMutations', () => {
 
     it('sets a generic wrapper style field as a string', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const next = updateWrapperStyleField(state, section.id, 'sectionBorderBottomColor', '#abc');
       const node = next.document.nodes[section.id];
@@ -930,7 +930,7 @@ describe('editor/editorMutations', () => {
 
     it('clears generic wrapper style field with empty value', () => {
       const state = createInitialState();
-      const section = findNodeByRole(state, 'wrapper', 'section') as WrapperNode;
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
 
       const withVal = updateWrapperStyleField(state, section.id, 'sectionBorderBottomColor', '#abc');
       const next = updateWrapperStyleField(withVal, section.id, 'sectionBorderBottomColor', '');

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { buildNodeDebugInfo } from '../debugInfo';
-import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
-import type { WrapperNode } from '../../model/types';
+import { createInitialDocument, createTextNode, createContainerNode } from '../../model/defaults';
+import type { ContainerNode } from '../../model/types';
 
 describe('editor/debugInfo', () => {
   it('authoredRect derives from node.rect base raw values', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
       (n) => n.contentType === 'container' && n.subtype === 'section',
-    ) as WrapperNode;
+    ) as ContainerNode;
 
     if (!section) {
       throw new Error('Expected section wrapper');
@@ -40,7 +40,7 @@ describe('editor/debugInfo', () => {
       throw new Error('Expected section at root level');
     }
 
-    const section = document.nodes[sectionId] as WrapperNode;
+    const section = document.nodes[sectionId] as ContainerNode;
     const debugInfo = buildNodeDebugInfo(document, section);
 
     expect(debugInfo.htmlId).toBe(section.id);
@@ -76,8 +76,8 @@ describe('editor/debugInfo', () => {
       throw new Error('Expected section at root level');
     }
 
-    const section = document.nodes[sectionId] as WrapperNode;
-    const container = createWrapper('container', section.id);
+    const section = document.nodes[sectionId] as ContainerNode;
+    const container = createContainerNode('container',section.id);
     document.nodes[container.id] = container;
     section.children.push(container.id);
 
@@ -90,7 +90,7 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
       (n) => n.contentType === 'container' && n.subtype === 'section',
-    ) as WrapperNode;
+    ) as ContainerNode;
 
     if (!section) {
       throw new Error('Expected section wrapper');
@@ -103,7 +103,7 @@ describe('editor/debugInfo', () => {
     };
 
     // Create a leaf node with animation that triggers the section
-    const triggerLeaf = createLeaf('text', section.id);
+    const triggerLeaf = createTextNode('block',section.id);
     triggerLeaf.animation = {
       trigger: 'click',
       effect: { kind: 'named', type: 'fade' },
@@ -121,7 +121,7 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
       (n) => n.contentType === 'container' && n.subtype === 'section',
-    ) as WrapperNode;
+    ) as ContainerNode;
 
     if (!section) {
       throw new Error('Expected section wrapper');
@@ -136,14 +136,14 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
       (n) => n.contentType === 'container' && n.subtype === 'section',
-    ) as WrapperNode;
+    ) as ContainerNode;
 
     if (!section) {
       throw new Error('Expected section wrapper');
     }
 
     // Create a section without sticky definition
-    const newSection = createWrapper('section', document.rootId);
+    const newSection = createContainerNode('section',document.rootId);
     document.nodes[newSection.id] = newSection;
 
     const debugInfo = buildNodeDebugInfo(document, newSection);
@@ -158,7 +158,7 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
       (n) => n.contentType === 'container' && n.subtype === 'section',
-    ) as WrapperNode;
+    ) as ContainerNode;
 
     if (!section) {
       throw new Error('Expected section wrapper');
@@ -173,7 +173,7 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
       (n) => n.contentType === 'container' && n.subtype === 'section',
-    ) as WrapperNode;
+    ) as ContainerNode;
 
     if (!section) {
       throw new Error('Expected section wrapper');
