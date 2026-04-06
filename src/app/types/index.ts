@@ -182,28 +182,36 @@ export type ShortcutUiState = {
 };
 
 export type ShortcutExecutionHandlers = {
-  closePanels: () => void;
-  undo: () => void;
-  redo: () => void;
-  toggleSettings: () => void;
-  openShortcuts: () => void;
-  toggleFontsPanel: () => void;
-  toggleLayersPanel: () => void;
-  togglePagesPanel: () => void;
-  setPreviewSticky: (value: boolean) => void;
-  setAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
-  setSpacerVisibility: (value: 'selected' | 'all') => void;
-  setSnapSettings: (value: Partial<SnapSettings>) => void;
-  nudgeSelection: (deltaX: number, deltaY: number) => void;
-  deleteSelection: () => void;
-  toggleBoldSelection: () => void;
-  toggleItalicSelection: () => void;
-  toggleUnderlineSelection: () => void;
-  toggleStrikethroughSelection: () => void;
-  alignSelection: (mode: AlignmentAction) => void;
-  distributeSelection: (mode: DistributionMode) => void;
-  orderBack: () => void;
-  orderForward: () => void;
-  orderSendToBack: () => void;
-  orderBringToFront: () => void;
+  history: {
+    undo: () => void;
+    redo: () => void;
+  };
+  panels: {
+    closePanels: () => void;
+    toggleSettings: () => void;
+    openShortcuts: () => void;
+    toggleFontsPanel: () => void;
+    toggleLayersPanel: () => void;
+    togglePagesPanel: () => void;
+  };
+  viewState: {
+    setPreviewSticky: (value: boolean) => void;
+    setAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
+    setSpacerVisibility: (value: 'selected' | 'all') => void;
+    setSnapSettings: (value: Partial<SnapSettings>) => void;
+  };
+  selection: {
+    nudgeSelection: (deltaX: number, deltaY: number) => void;
+    deleteSelection: () => void;
+    toggleBoldSelection: () => void;
+    toggleItalicSelection: () => void;
+    toggleUnderlineSelection: () => void;
+    toggleStrikethroughSelection: () => void;
+    alignSelection: (mode: AlignmentAction) => void;
+    distributeSelection: (mode: DistributionMode) => void;
+    orderBack: () => void;
+    orderForward: () => void;
+    orderSendToBack: () => void;
+    orderBringToFront: () => void;
+  };
 };

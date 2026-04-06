@@ -1,137 +1,144 @@
-import type { ShortcutId } from '@/lib/shortcuts';
+import type { ShortcutDefinition } from '@/lib/shortcuts';
 import type { ShortcutExecutionHandlers, ShortcutUiState } from './types';
 export type { ShortcutExecutionHandlers, ShortcutUiState } from './types';
 
+type ShortcutExecutionHandler = (
+  state: ShortcutUiState,
+  shiftKey: boolean,
+  handlers: ShortcutExecutionHandlers,
+) => void;
+
+const SHORTCUT_EXECUTION_REGISTRY: Record<
+  ShortcutDefinition['execution']['actionId'],
+  ShortcutExecutionHandler
+> = {
+  dismissPanels: (_state, _shiftKey, handlers) => {
+    handlers.panels.closePanels();
+  },
+  undo: (_state, _shiftKey, handlers) => {
+    handlers.history.undo();
+  },
+  redo: (_state, _shiftKey, handlers) => {
+    handlers.history.redo();
+  },
+  openSettings: (_state, _shiftKey, handlers) => {
+    handlers.panels.toggleSettings();
+  },
+  showShortcutHelp: (_state, _shiftKey, handlers) => {
+    handlers.panels.openShortcuts();
+  },
+  toggleFontsPanel: (_state, _shiftKey, handlers) => {
+    handlers.panels.toggleFontsPanel();
+  },
+  toggleLayersPanel: (_state, _shiftKey, handlers) => {
+    handlers.panels.toggleLayersPanel();
+  },
+  togglePagesPanel: (_state, _shiftKey, handlers) => {
+    handlers.panels.togglePagesPanel();
+  },
+  togglePreviewSticky: (state, _shiftKey, handlers) => {
+    handlers.viewState.setPreviewSticky(!state.previewSticky);
+  },
+  toggleAnimationPreview: (state, _shiftKey, handlers) => {
+    handlers.viewState.setAnimationPreview({ enabled: !state.animationPreview.enabled });
+  },
+  toggleSpacerVisibility: (state, _shiftKey, handlers) => {
+    handlers.viewState.setSpacerVisibility(
+      state.spacerVisibility === 'all' ? 'selected' : 'all',
+    );
+  },
+  toggleSnapEnabled: (state, _shiftKey, handlers) => {
+    handlers.viewState.setSnapSettings({
+      guideSnap: {
+        enabled: !state.snapSettings.guideSnap.enabled,
+        threshold: state.snapSettings.guideSnap.threshold,
+        power: state.snapSettings.guideSnap.power,
+        maxSpeedPxPerSecond: state.snapSettings.guideSnap.maxSpeedPxPerSecond,
+      },
+    });
+  },
+  nudgeSelectionLeft: (_state, shiftKey, handlers) => {
+    handlers.selection.nudgeSelection(shiftKey ? -10 : -1, 0);
+  },
+  nudgeSelectionRight: (_state, shiftKey, handlers) => {
+    handlers.selection.nudgeSelection(shiftKey ? 10 : 1, 0);
+  },
+  nudgeSelectionUp: (_state, shiftKey, handlers) => {
+    handlers.selection.nudgeSelection(0, shiftKey ? -10 : -1);
+  },
+  nudgeSelectionDown: (_state, shiftKey, handlers) => {
+    handlers.selection.nudgeSelection(0, shiftKey ? 10 : 1);
+  },
+  deleteSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.deleteSelection();
+  },
+  toggleBoldSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.toggleBoldSelection();
+  },
+  toggleItalicSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.toggleItalicSelection();
+  },
+  toggleUnderlineSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.toggleUnderlineSelection();
+  },
+  toggleStrikethroughSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.toggleStrikethroughSelection();
+  },
+  alignSelectionLeft: (_state, _shiftKey, handlers) => {
+    handlers.selection.alignSelection('left');
+  },
+  alignSelectionCenterX: (_state, _shiftKey, handlers) => {
+    handlers.selection.alignSelection('center-x');
+  },
+  alignSelectionRight: (_state, _shiftKey, handlers) => {
+    handlers.selection.alignSelection('right');
+  },
+  alignSelectionTop: (_state, _shiftKey, handlers) => {
+    handlers.selection.alignSelection('top');
+  },
+  alignSelectionCenterY: (_state, _shiftKey, handlers) => {
+    handlers.selection.alignSelection('center-y');
+  },
+  alignSelectionBottom: (_state, _shiftKey, handlers) => {
+    handlers.selection.alignSelection('bottom');
+  },
+  distributeSelectionHorizontal: (_state, _shiftKey, handlers) => {
+    handlers.selection.distributeSelection('horizontal');
+  },
+  distributeSelectionVertical: (_state, _shiftKey, handlers) => {
+    handlers.selection.distributeSelection('vertical');
+  },
+  distributeSelectionLeft: (_state, _shiftKey, handlers) => {
+    handlers.selection.distributeSelection('left');
+  },
+  distributeSelectionRight: (_state, _shiftKey, handlers) => {
+    handlers.selection.distributeSelection('right');
+  },
+  distributeSelectionTop: (_state, _shiftKey, handlers) => {
+    handlers.selection.distributeSelection('top');
+  },
+  distributeSelectionBottom: (_state, _shiftKey, handlers) => {
+    handlers.selection.distributeSelection('bottom');
+  },
+  orderBack: (_state, _shiftKey, handlers) => {
+    handlers.selection.orderBack();
+  },
+  orderForward: (_state, _shiftKey, handlers) => {
+    handlers.selection.orderForward();
+  },
+  orderSendToBack: (_state, _shiftKey, handlers) => {
+    handlers.selection.orderSendToBack();
+  },
+  orderBringToFront: (_state, _shiftKey, handlers) => {
+    handlers.selection.orderBringToFront();
+  },
+};
+
 export function executeEditorShortcut(
-  shortcutId: ShortcutId,
+  shortcut: ShortcutDefinition,
   state: ShortcutUiState,
   shiftKey: boolean,
   handlers: ShortcutExecutionHandlers,
 ) {
-  switch (shortcutId) {
-    case 'dismissPanels':
-      handlers.closePanels();
-      return;
-    case 'undo':
-      handlers.undo();
-      return;
-    case 'redo':
-      handlers.redo();
-      return;
-    case 'openSettings':
-      handlers.toggleSettings();
-      return;
-    case 'showShortcutHelp':
-      handlers.openShortcuts();
-      return;
-    case 'toggleFontsPanel':
-      handlers.toggleFontsPanel();
-      return;
-    case 'toggleLayersPanel':
-      handlers.toggleLayersPanel();
-      return;
-    case 'togglePagesPanel':
-      handlers.togglePagesPanel();
-      return;
-    case 'togglePreviewSticky':
-      handlers.setPreviewSticky(!state.previewSticky);
-      return;
-    case 'toggleAnimationPreview':
-      handlers.setAnimationPreview({ enabled: !state.animationPreview.enabled });
-      return;
-    case 'toggleSpacerVisibility':
-      handlers.setSpacerVisibility(state.spacerVisibility === 'all' ? 'selected' : 'all');
-      return;
-    case 'toggleSnapEnabled':
-      handlers.setSnapSettings({
-        guideSnap: {
-          enabled: !state.snapSettings.guideSnap.enabled,
-          threshold: state.snapSettings.guideSnap.threshold,
-          power: state.snapSettings.guideSnap.power,
-          maxSpeedPxPerSecond: state.snapSettings.guideSnap.maxSpeedPxPerSecond,
-        },
-      });
-      return;
-    case 'nudgeSelectionLeft':
-      handlers.nudgeSelection(shiftKey ? -10 : -1, 0);
-      return;
-    case 'nudgeSelectionRight':
-      handlers.nudgeSelection(shiftKey ? 10 : 1, 0);
-      return;
-    case 'nudgeSelectionUp':
-      handlers.nudgeSelection(0, shiftKey ? -10 : -1);
-      return;
-    case 'nudgeSelectionDown':
-      handlers.nudgeSelection(0, shiftKey ? 10 : 1);
-      return;
-    case 'deleteSelection':
-      handlers.deleteSelection();
-      return;
-    case 'toggleBoldSelection':
-      handlers.toggleBoldSelection();
-      return;
-    case 'toggleItalicSelection':
-      handlers.toggleItalicSelection();
-      return;
-    case 'toggleUnderlineSelection':
-      handlers.toggleUnderlineSelection();
-      return;
-    case 'toggleStrikethroughSelection':
-      handlers.toggleStrikethroughSelection();
-      return;
-    case 'alignSelectionLeft':
-      handlers.alignSelection('left');
-      return;
-    case 'alignSelectionCenterX':
-      handlers.alignSelection('center-x');
-      return;
-    case 'alignSelectionRight':
-      handlers.alignSelection('right');
-      return;
-    case 'alignSelectionTop':
-      handlers.alignSelection('top');
-      return;
-    case 'alignSelectionCenterY':
-      handlers.alignSelection('center-y');
-      return;
-    case 'alignSelectionBottom':
-      handlers.alignSelection('bottom');
-      return;
-    case 'distributeSelectionHorizontal':
-      handlers.distributeSelection('horizontal');
-      return;
-    case 'distributeSelectionVertical':
-      handlers.distributeSelection('vertical');
-      return;
-    case 'distributeSelectionLeft':
-      handlers.distributeSelection('left');
-      return;
-    case 'distributeSelectionRight':
-      handlers.distributeSelection('right');
-      return;
-    case 'distributeSelectionTop':
-      handlers.distributeSelection('top');
-      return;
-    case 'distributeSelectionBottom':
-      handlers.distributeSelection('bottom');
-      return;
-    case 'orderBack':
-      handlers.orderBack();
-      return;
-    case 'orderForward':
-      handlers.orderForward();
-      return;
-    case 'orderSendToBack':
-      handlers.orderSendToBack();
-      return;
-    case 'orderBringToFront':
-      handlers.orderBringToFront();
-      return;
-    default:
-      assertNever(shortcutId);
-  }
-}
-
-function assertNever(value: never) {
-  throw new Error(`Unhandled shortcut: ${String(value)}`);
+  SHORTCUT_EXECUTION_REGISTRY[shortcut.execution.actionId](state, shiftKey, handlers);
 }

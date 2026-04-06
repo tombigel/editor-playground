@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
-import type { AlignmentAction, DistributionMode, SnapSettings, AnimationPreviewState } from './types';
-import { hasStageKeyboardFocus, isInteractiveFocus } from './useEditorEnvironment';
+import { getShortcutFocusContext } from './useEditorEnvironment';
+import type { ShortcutExecutionHandlers } from './types';
 
 type UseEditorKeyboardShortcutsArgs = {
   document: DocumentModel;
@@ -12,31 +12,8 @@ type UseEditorKeyboardShortcutsArgs = {
   ui: ShortcutUiState;
   hasDismissiblePanels: boolean;
   shortcutPlatform: ShortcutPlatform;
+  handlers: ShortcutExecutionHandlers;
   onSelect: (id: string) => void;
-  onClosePanels: () => void;
-  onUndo: () => void;
-  onRedo: () => void;
-  onToggleSettings: () => void;
-  onOpenShortcuts: () => void;
-  onToggleFontsPanel: () => void;
-  onToggleLayersPanel: () => void;
-  onTogglePagesPanel: () => void;
-  onSetPreviewSticky: (value: boolean) => void;
-  onSetAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
-  onSetSpacerVisibility: (value: 'selected' | 'all') => void;
-  onSetSnapSettings: (value: Partial<SnapSettings>) => void;
-  onNudgeSelection: (deltaX: number, deltaY: number) => void;
-  onDeleteSelection: () => void;
-  onToggleBoldSelection: () => void;
-  onToggleItalicSelection: () => void;
-  onToggleUnderlineSelection: () => void;
-  onToggleStrikethroughSelection: () => void;
-  onAlignSelection: (mode: AlignmentAction) => void;
-  onDistributeSelection: (mode: DistributionMode) => void;
-  onOrderBack: () => void;
-  onOrderForward: () => void;
-  onOrderSendToBack: () => void;
-  onOrderBringToFront: () => void;
 };
 
 export function useEditorKeyboardShortcuts({
@@ -46,39 +23,15 @@ export function useEditorKeyboardShortcuts({
   ui,
   hasDismissiblePanels,
   shortcutPlatform,
+  handlers,
   onSelect,
-  onClosePanels,
-  onUndo,
-  onRedo,
-  onToggleSettings,
-  onOpenShortcuts,
-  onToggleFontsPanel,
-  onToggleLayersPanel,
-  onTogglePagesPanel,
-  onSetPreviewSticky,
-  onSetAnimationPreview,
-  onSetSpacerVisibility,
-  onSetSnapSettings,
-  onNudgeSelection,
-  onDeleteSelection,
-  onToggleBoldSelection,
-  onToggleItalicSelection,
-  onToggleUnderlineSelection,
-  onToggleStrikethroughSelection,
-  onAlignSelection,
-  onDistributeSelection,
-  onOrderBack,
-  onOrderForward,
-  onOrderSendToBack,
-  onOrderBringToFront,
 }: UseEditorKeyboardShortcutsArgs) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       const activeElement = window.document.activeElement as HTMLElement | null;
-      const interactiveFocus = isInteractiveFocus(activeElement);
-      const stageFocus = hasStageKeyboardFocus(activeElement);
+      const focusContext = getShortcutFocusContext(activeElement);
 
-      if (stageFocus && event.key === 'Tab') {
+      if (focusContext.hasStageFocus && event.key === 'Tab') {
         const nextSelection = getAdjacentStageSelection(
           document,
           selectedId,
@@ -94,10 +47,9 @@ export function useEditorKeyboardShortcuts({
       const shortcut = findMatchingShortcut(
         event,
         {
-          interactiveFocus,
+          ...focusContext,
           hasSelection: selectedIds.length > 0,
           hasDismissiblePanels,
-          hasStageFocus: stageFocus,
         },
         shortcutPlatform,
       );
@@ -107,32 +59,7 @@ export function useEditorKeyboardShortcuts({
       }
 
       event.preventDefault();
-      executeEditorShortcut(shortcut.id, ui, event.shiftKey, {
-        closePanels: onClosePanels,
-        undo: onUndo,
-        redo: onRedo,
-        toggleSettings: onToggleSettings,
-        openShortcuts: onOpenShortcuts,
-        toggleFontsPanel: onToggleFontsPanel,
-        toggleLayersPanel: onToggleLayersPanel,
-        togglePagesPanel: onTogglePagesPanel,
-        setPreviewSticky: onSetPreviewSticky,
-        setAnimationPreview: onSetAnimationPreview,
-        setSpacerVisibility: onSetSpacerVisibility,
-        setSnapSettings: onSetSnapSettings,
-        nudgeSelection: onNudgeSelection,
-        deleteSelection: onDeleteSelection,
-        toggleBoldSelection: onToggleBoldSelection,
-        toggleItalicSelection: onToggleItalicSelection,
-        toggleUnderlineSelection: onToggleUnderlineSelection,
-        toggleStrikethroughSelection: onToggleStrikethroughSelection,
-        alignSelection: onAlignSelection,
-        distributeSelection: onDistributeSelection,
-        orderBack: onOrderBack,
-        orderForward: onOrderForward,
-        orderSendToBack: onOrderSendToBack,
-        orderBringToFront: onOrderBringToFront,
-      });
+      executeEditorShortcut(shortcut, ui, event.shiftKey, handlers);
     }
 
     window.addEventListener('keydown', handleKeyDown);
@@ -140,34 +67,11 @@ export function useEditorKeyboardShortcuts({
   }, [
     document,
     hasDismissiblePanels,
-    onClosePanels,
-    onDeleteSelection,
-    onDistributeSelection,
-    onNudgeSelection,
-    onOpenShortcuts,
-    onToggleFontsPanel,
-    onToggleLayersPanel,
-    onTogglePagesPanel,
-    onAlignSelection,
-    onOrderBack,
-    onOrderBringToFront,
-    onOrderForward,
-    onOrderSendToBack,
-    onRedo,
     onSelect,
-    onSetPreviewSticky,
-    onSetAnimationPreview,
-    onSetSnapSettings,
-    onSetSpacerVisibility,
-    onToggleBoldSelection,
-    onToggleItalicSelection,
-    onToggleSettings,
-    onToggleStrikethroughSelection,
-    onToggleUnderlineSelection,
-    onUndo,
     selectedId,
     selectedIds,
     shortcutPlatform,
+    handlers,
     ui,
   ]);
 }

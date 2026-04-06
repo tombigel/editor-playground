@@ -1,34 +1,51 @@
 import { describe, expect, it, vi } from 'vitest';
+import { SHORTCUT_DEFINITIONS } from '../../lib/shortcuts';
 import { executeEditorShortcut, type ShortcutExecutionHandlers, type ShortcutUiState } from '../shortcutController';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 function createHandlers() {
   return {
-    closePanels: vi.fn(),
-    undo: vi.fn(),
-    redo: vi.fn(),
-    toggleSettings: vi.fn(),
-    openShortcuts: vi.fn(),
-    toggleFontsPanel: vi.fn(),
-    toggleLayersPanel: vi.fn(),
-    togglePagesPanel: vi.fn(),
-    setPreviewSticky: vi.fn(),
-    setAnimationPreview: vi.fn(),
-    setSpacerVisibility: vi.fn(),
-    setSnapSettings: vi.fn(),
-    nudgeSelection: vi.fn(),
-    deleteSelection: vi.fn(),
-    toggleBoldSelection: vi.fn(),
-    toggleItalicSelection: vi.fn(),
-    toggleUnderlineSelection: vi.fn(),
-    toggleStrikethroughSelection: vi.fn(),
-    alignSelection: vi.fn(),
-    distributeSelection: vi.fn(),
-    orderBack: vi.fn(),
-    orderForward: vi.fn(),
-    orderSendToBack: vi.fn(),
-    orderBringToFront: vi.fn(),
+    history: {
+      undo: vi.fn(),
+      redo: vi.fn(),
+    },
+    panels: {
+      closePanels: vi.fn(),
+      toggleSettings: vi.fn(),
+      openShortcuts: vi.fn(),
+      toggleFontsPanel: vi.fn(),
+      toggleLayersPanel: vi.fn(),
+      togglePagesPanel: vi.fn(),
+    },
+    viewState: {
+      setPreviewSticky: vi.fn(),
+      setAnimationPreview: vi.fn(),
+      setSpacerVisibility: vi.fn(),
+      setSnapSettings: vi.fn(),
+    },
+    selection: {
+      nudgeSelection: vi.fn(),
+      deleteSelection: vi.fn(),
+      toggleBoldSelection: vi.fn(),
+      toggleItalicSelection: vi.fn(),
+      toggleUnderlineSelection: vi.fn(),
+      toggleStrikethroughSelection: vi.fn(),
+      alignSelection: vi.fn(),
+      distributeSelection: vi.fn(),
+      orderBack: vi.fn(),
+      orderForward: vi.fn(),
+      orderSendToBack: vi.fn(),
+      orderBringToFront: vi.fn(),
+    },
   } satisfies ShortcutExecutionHandlers;
+}
+
+function getShortcut(shortcutId: (typeof SHORTCUT_DEFINITIONS)[number]['id']) {
+  const shortcut = SHORTCUT_DEFINITIONS.find((item) => item.id === shortcutId);
+  if (!shortcut) {
+    throw new Error(`Missing shortcut ${shortcutId}`);
+  }
+  return shortcut;
 }
 
 const baseState: ShortcutUiState = {
@@ -46,13 +63,13 @@ describe('app/shortcutController', () => {
   it('toggles view-state shortcuts against current UI state', () => {
     const handlers = createHandlers();
 
-    executeEditorShortcut('togglePreviewSticky', baseState, false, handlers);
-    executeEditorShortcut('toggleSpacerVisibility', baseState, false, handlers);
-    executeEditorShortcut('toggleSnapEnabled', baseState, false, handlers);
+    executeEditorShortcut(getShortcut('togglePreviewSticky'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleSpacerVisibility'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleSnapEnabled'), baseState, false, handlers);
 
-    expect(handlers.setPreviewSticky).toHaveBeenCalledWith(false);
-    expect(handlers.setSpacerVisibility).toHaveBeenCalledWith('all');
-    expect(handlers.setSnapSettings).toHaveBeenCalledWith({
+    expect(handlers.viewState.setPreviewSticky).toHaveBeenCalledWith(false);
+    expect(handlers.viewState.setSpacerVisibility).toHaveBeenCalledWith('all');
+    expect(handlers.viewState.setSnapSettings).toHaveBeenCalledWith({
       guideSnap: {
         enabled: false,
         threshold: 8,
@@ -65,38 +82,38 @@ describe('app/shortcutController', () => {
   it('maps shift-modified nudge shortcuts to larger movement deltas', () => {
     const handlers = createHandlers();
 
-    executeEditorShortcut('nudgeSelectionLeft', baseState, true, handlers);
-    executeEditorShortcut('nudgeSelectionDown', baseState, false, handlers);
+    executeEditorShortcut(getShortcut('nudgeSelectionLeft'), baseState, true, handlers);
+    executeEditorShortcut(getShortcut('nudgeSelectionDown'), baseState, false, handlers);
 
-    expect(handlers.nudgeSelection).toHaveBeenNthCalledWith(1, -10, 0);
-    expect(handlers.nudgeSelection).toHaveBeenNthCalledWith(2, 0, 1);
+    expect(handlers.selection.nudgeSelection).toHaveBeenNthCalledWith(1, -10, 0);
+    expect(handlers.selection.nudgeSelection).toHaveBeenNthCalledWith(2, 0, 1);
   });
 
   it('routes panel and arrange shortcuts to the matching handlers', () => {
     const handlers = createHandlers();
 
-    executeEditorShortcut('dismissPanels', baseState, false, handlers);
-    executeEditorShortcut('openSettings', baseState, false, handlers);
-    executeEditorShortcut('showShortcutHelp', baseState, false, handlers);
-    executeEditorShortcut('toggleFontsPanel', baseState, false, handlers);
-    executeEditorShortcut('toggleLayersPanel', baseState, false, handlers);
-    executeEditorShortcut('togglePagesPanel', baseState, false, handlers);
-    executeEditorShortcut('toggleBoldSelection', baseState, false, handlers);
-    executeEditorShortcut('toggleUnderlineSelection', baseState, false, handlers);
-    executeEditorShortcut('alignSelectionLeft', baseState, false, handlers);
-    executeEditorShortcut('distributeSelectionBottom', baseState, false, handlers);
-    executeEditorShortcut('orderBringToFront', baseState, false, handlers);
+    executeEditorShortcut(getShortcut('dismissPanels'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('openSettings'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('showShortcutHelp'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleFontsPanel'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleLayersPanel'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('togglePagesPanel'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleBoldSelection'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleUnderlineSelection'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('alignSelectionLeft'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('distributeSelectionBottom'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('orderBringToFront'), baseState, false, handlers);
 
-    expect(handlers.closePanels).toHaveBeenCalledOnce();
-    expect(handlers.toggleSettings).toHaveBeenCalledOnce();
-    expect(handlers.openShortcuts).toHaveBeenCalledOnce();
-    expect(handlers.toggleFontsPanel).toHaveBeenCalledOnce();
-    expect(handlers.toggleLayersPanel).toHaveBeenCalledOnce();
-    expect(handlers.togglePagesPanel).toHaveBeenCalledOnce();
-    expect(handlers.toggleBoldSelection).toHaveBeenCalledOnce();
-    expect(handlers.toggleUnderlineSelection).toHaveBeenCalledOnce();
-    expect(handlers.alignSelection).toHaveBeenCalledWith('left');
-    expect(handlers.distributeSelection).toHaveBeenCalledWith('bottom');
-    expect(handlers.orderBringToFront).toHaveBeenCalledOnce();
+    expect(handlers.panels.closePanels).toHaveBeenCalledOnce();
+    expect(handlers.panels.toggleSettings).toHaveBeenCalledOnce();
+    expect(handlers.panels.openShortcuts).toHaveBeenCalledOnce();
+    expect(handlers.panels.toggleFontsPanel).toHaveBeenCalledOnce();
+    expect(handlers.panels.toggleLayersPanel).toHaveBeenCalledOnce();
+    expect(handlers.panels.togglePagesPanel).toHaveBeenCalledOnce();
+    expect(handlers.selection.toggleBoldSelection).toHaveBeenCalledOnce();
+    expect(handlers.selection.toggleUnderlineSelection).toHaveBeenCalledOnce();
+    expect(handlers.selection.alignSelection).toHaveBeenCalledWith('left');
+    expect(handlers.selection.distributeSelection).toHaveBeenCalledWith('bottom');
+    expect(handlers.selection.orderBringToFront).toHaveBeenCalledOnce();
   });
 });

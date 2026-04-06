@@ -18,15 +18,12 @@ import {
 	toActionResult,
 } from "./appSettingsActions";
 import { createHistoryState, historyReducer } from "./editorState";
-import type {
-	AlignmentAction,
-	BulkEditOperation,
-	DistributionMode,
-} from "./types";
+import type { BulkEditOperation } from "./types";
 import { useAppPanels } from "./useAppPanels";
 import { useAppRuntime } from "./useAppRuntime";
 import { useAppViewModel } from "./useAppViewModel";
 import { useEditorKeyboardShortcuts } from "./useEditorKeyboardShortcuts";
+import type { ShortcutExecutionHandlers } from "./types";
 
 export function App() {
 	const [historyState, dispatch] = useReducer(
@@ -129,9 +126,9 @@ export function App() {
 		dispatch({ type: "bulkEdit", operations });
 	}
 
-	function toggleTextDecoration(
-		value: string,
-		target: "underline" | "line-through",
+  function toggleTextDecoration(
+    value: string,
+    target: "underline" | "line-through",
 	) {
 		const hasUnderline = value.includes("underline");
 		const hasLineThrough = value.includes("line-through");
@@ -148,93 +145,102 @@ export function App() {
 			return "line-through";
 		}
 		return "none";
-	}
+  }
 
-	useAppRuntime(state, viewModel.resolvedTheme, dispatch);
+  useAppRuntime(state, viewModel.resolvedTheme, dispatch);
 
-	useEditorKeyboardShortcuts({
-		document: state.document,
+  const shortcutHandlers: ShortcutExecutionHandlers = {
+    history: {
+      undo: () => dispatch({ type: "undo" }),
+      redo: () => dispatch({ type: "redo" }),
+    },
+    panels: {
+      closePanels: () => {
+        panels.closeTransientPanels();
+        dispatch({ type: "setTemporaryInspectorOpen", value: false });
+      },
+      toggleSettings: () => panels.setSettingsOpen((open) => !open),
+      openShortcuts: () => panels.setShortcutsOpen(true),
+      toggleFontsPanel: () => panels.toggleManageFontsPanel(),
+      toggleLayersPanel: () => panels.toggleLayersPanel(),
+      togglePagesPanel: () => panels.togglePagesPanel(),
+    },
+    viewState: {
+      setPreviewSticky: (value) => dispatch({ type: "setPreviewSticky", value }),
+      setAnimationPreview: (value) =>
+        dispatch({ type: "setAnimationPreview", value }),
+      setSpacerVisibility: (value) =>
+        dispatch({ type: "setSpacerVisibility", value }),
+      setSnapSettings: (value) => dispatch({ type: "setSnapSettings", value }),
+    },
+    selection: {
+      nudgeSelection: (deltaX, deltaY) =>
+        dispatch({ type: "nudgeSelection", deltaX, deltaY }),
+      deleteSelection: () => dispatch({ type: "delete" }),
+      toggleBoldSelection: () => dispatchBoldToggleSelection(),
+      toggleItalicSelection: () =>
+        dispatchSelectedTextEdit("fontStyle", (nodes) =>
+          nodes.every((node) => (node.style?.fontStyle ?? "normal") === "italic")
+            ? "normal"
+            : "italic",
+        ),
+      toggleUnderlineSelection: () =>
+        dispatchSelectedTextEdit("textDecorationLine", (nodes) => {
+          const shared =
+            nodes
+              .map((node) => node.style?.textDecorationLine ?? "none")
+              .reduce<string | null>(
+                (current, value) => (current == null || current === value ? value : ""),
+                null,
+              ) ?? "none";
+          return toggleTextDecoration(shared, "underline");
+        }),
+      toggleStrikethroughSelection: () =>
+        dispatchSelectedTextEdit("textDecorationLine", (nodes) => {
+          const shared =
+            nodes
+              .map((node) => node.style?.textDecorationLine ?? "none")
+              .reduce<string | null>(
+                (current, value) => (current == null || current === value ? value : ""),
+                null,
+              ) ?? "none";
+          return toggleTextDecoration(shared, "line-through");
+        }),
+      alignSelection: (mode) =>
+        dispatch({
+          type: "alignSelection",
+          mode,
+          rects: collectSelectionRects(),
+        }),
+      distributeSelection: (mode) =>
+        dispatch({
+          type: "distributeSelection",
+          mode,
+          rects: collectSelectionRects(),
+        }),
+      orderBack: () => dispatch({ type: "orderBack" }),
+      orderForward: () => dispatch({ type: "orderForward" }),
+      orderSendToBack: () => dispatch({ type: "orderSendToBack" }),
+      orderBringToFront: () => dispatch({ type: "orderBringToFront" }),
+    },
+  };
+
+  useEditorKeyboardShortcuts({
+    document: state.document,
 		selectedId: state.selectedId,
 		selectedIds: state.selectedIds,
-		ui: {
-			previewSticky: state.ui.previewSticky,
-			animationPreview: state.ui.animationPreview,
-			spacerVisibility: state.ui.spacerVisibility,
-			snapSettings: state.ui.snapSettings,
-		},
-		hasDismissiblePanels:
-			panels.hasDismissiblePanels || state.ui.temporaryInspectorOpen,
-		shortcutPlatform,
-		onSelect: (id) => dispatch({ type: "select", id }),
-		onClosePanels: () => {
-			panels.closeTransientPanels();
-			dispatch({ type: "setTemporaryInspectorOpen", value: false });
-		},
-		onUndo: () => dispatch({ type: "undo" }),
-		onRedo: () => dispatch({ type: "redo" }),
-		onToggleSettings: () => panels.setSettingsOpen((open) => !open),
-		onOpenShortcuts: () => panels.setShortcutsOpen(true),
-		onToggleFontsPanel: () => panels.toggleManageFontsPanel(),
-		onToggleLayersPanel: () => panels.toggleLayersPanel(),
-		onTogglePagesPanel: () => panels.togglePagesPanel(),
-		onSetPreviewSticky: (value) =>
-			dispatch({ type: "setPreviewSticky", value }),
-		onSetAnimationPreview: (value) =>
-			dispatch({ type: "setAnimationPreview", value }),
-		onSetSpacerVisibility: (value) =>
-			dispatch({ type: "setSpacerVisibility", value }),
-		onSetSnapSettings: (value) => dispatch({ type: "setSnapSettings", value }),
-		onNudgeSelection: (deltaX, deltaY) =>
-			dispatch({ type: "nudgeSelection", deltaX, deltaY }),
-		onDeleteSelection: () => dispatch({ type: "delete" }),
-		onToggleBoldSelection: () => dispatchBoldToggleSelection(),
-		onToggleItalicSelection: () =>
-			dispatchSelectedTextEdit("fontStyle", (nodes) =>
-				nodes.every((node) => (node.style?.fontStyle ?? "normal") === "italic")
-					? "normal"
-					: "italic",
-			),
-		onToggleUnderlineSelection: () =>
-			dispatchSelectedTextEdit("textDecorationLine", (nodes) => {
-				const shared =
-					nodes
-						.map((node) => node.style?.textDecorationLine ?? "none")
-						.reduce<string | null>(
-							(current, value) =>
-								current == null || current === value ? value : "",
-							null,
-						) ?? "none";
-				return toggleTextDecoration(shared, "underline");
-			}),
-		onToggleStrikethroughSelection: () =>
-			dispatchSelectedTextEdit("textDecorationLine", (nodes) => {
-				const shared =
-					nodes
-						.map((node) => node.style?.textDecorationLine ?? "none")
-						.reduce<string | null>(
-							(current, value) =>
-								current == null || current === value ? value : "",
-							null,
-						) ?? "none";
-				return toggleTextDecoration(shared, "line-through");
-			}),
-		onAlignSelection: (mode: AlignmentAction) =>
-			dispatch({
-				type: "alignSelection",
-				mode,
-				rects: collectSelectionRects(),
-			}),
-		onDistributeSelection: (mode: DistributionMode) =>
-			dispatch({
-				type: "distributeSelection",
-				mode,
-				rects: collectSelectionRects(),
-			}),
-		onOrderBack: () => dispatch({ type: "orderBack" }),
-		onOrderForward: () => dispatch({ type: "orderForward" }),
-		onOrderSendToBack: () => dispatch({ type: "orderSendToBack" }),
-		onOrderBringToFront: () => dispatch({ type: "orderBringToFront" }),
-	});
+    ui: {
+      previewSticky: state.ui.previewSticky,
+      animationPreview: state.ui.animationPreview,
+      spacerVisibility: state.ui.spacerVisibility,
+      snapSettings: state.ui.snapSettings,
+    },
+    hasDismissiblePanels:
+      panels.hasDismissiblePanels || state.ui.temporaryInspectorOpen,
+    shortcutPlatform,
+    handlers: shortcutHandlers,
+    onSelect: (id) => dispatch({ type: "select", id }),
+  });
 
 	async function handleImportDocument(raw: string) {
 		const result = importSettingsDocument(raw);
