@@ -49,4 +49,29 @@ describe('components/ui/panel-shell', () => {
     expect(markup).toContain('data-ui="panel-header"');
     expect(markup).toContain('Body content');
   });
+
+  it('can render the shared shell without native popover attributes for static demos', () => {
+    const markup = renderToStaticMarkup(
+      <FloatingPanelShell
+        suppressPopover
+        open
+        onOpenChange={() => {}}
+        className="absolute w-[320px]"
+        style={{ top: '0px', left: '0px' }}
+        header={
+          <PanelHeader
+            title="Section Templates"
+            closeLabel="Close section templates panel"
+            onClose={() => {}}
+          />
+        }
+      >
+        <div>Static body</div>
+      </FloatingPanelShell>,
+    );
+
+    expect(markup).toContain('data-ui="floating-panel-shell"');
+    expect(markup).toContain('Static body');
+    expect(markup).not.toContain('popover="manual"');
+  });
 });
