@@ -367,30 +367,3 @@ export function createMediaNode(subtype: MediaSubtype, parentId: NodeId): MediaN
   };
 }
 
-// ---------------------------------------------------------------------------
-// Legacy factory shims — preserved so existing call sites that import
-// `createWrapper` / `createLeaf` still compile during Phase 1.
-// These will be removed in Phase 2.
-// ---------------------------------------------------------------------------
-
-import type { WrapperRole, LeafRole } from './types';
-
-/**
- * @deprecated Use createContainerNode() instead.
- */
-export function createWrapper(role: WrapperRole, parentId: NodeId): ContainerNode {
-  return createContainerNode(role as ContainerSubtype, parentId);
-}
-
-/**
- * @deprecated Use createTextNode(), createMediaNode(), createLinkTextNode(), or createButtonTextNode() instead.
- */
-export function createLeaf(
-  role: LeafRole,
-  parentId: NodeId,
-): TextNode | MediaNode {
-  if (role === 'text') return createTextNode('block', parentId);
-  if (role === 'image') return createMediaNode('image', parentId);
-  if (role === 'link') return createLinkTextNode(parentId);
-  return createButtonTextNode(parentId);
-}

@@ -6,11 +6,9 @@ export {
   createContainerNode,
   createDefaultRect,
   createDefaultSticky,
-  createLeaf,
   createLinkTextNode,
   createMediaNode,
   createTextNode,
-  createWrapper,
   nextId,
   syncIdCountersWithDocument,
 } from './defaultFactories';
