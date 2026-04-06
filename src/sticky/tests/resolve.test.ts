@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode, createMediaNode } from '../../model/defaults';
 import { getMainWrappers } from '../../model/selectors';
 import { parseUnitValue } from '../../model/units';
-import type { TextLeaf, WrapperNode } from '../../model/types';
+import type { TextNode, ContainerNode } from '../../model/types';
 import { resolveStickyLayout, resolveWrapperStickyState } from '../resolve';
 
 function createBaseDocument() {
@@ -13,8 +13,8 @@ function createBaseDocument() {
   return { document, section };
 }
 
-function addStickyLeaf(section: WrapperNode, document: ReturnType<typeof createBaseDocument>['document']) {
-  const leaf = createLeaf('text', section.id) as TextLeaf;
+function addStickyLeaf(section: ContainerNode, document: ReturnType<typeof createBaseDocument>['document']) {
+  const leaf = createTextNode('block', section.id) as TextNode;
   leaf.rect = createDefaultRect('20px', '100px', '200px', '100px');
   document.nodes[leaf.id] = leaf;
   section.children.push(leaf.id);
@@ -154,7 +154,7 @@ describe('sticky/resolve', () => {
 
   it('computes nested content-wrapper sticky extent from measured container geometry', () => {
     const { document, section } = createBaseDocument();
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     container.rect = createDefaultRect('20px', '120px', '600px', '400px');
     container.sticky = {
       enabled: true,
@@ -206,7 +206,7 @@ describe('sticky/resolve', () => {
 
   it('derives aspect-ratio leaf height when computing sticky start positions', () => {
     const { document, section } = createBaseDocument();
-    const image = createLeaf('image', section.id);
+    const image = createMediaNode('image', section.id);
     image.rect = createDefaultRect('20px', '50px', '400px', 'aspect-ratio(4/3)');
     image.sticky = {
       enabled: true,

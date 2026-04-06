@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createLeaf, createWrapper } from '../defaults';
+import { createInitialDocument, createContainerNode, createTextNode, createLinkTextNode, createButtonTextNode } from '../defaults';
 import { createPage } from '../pageDefaults';
-import type { ButtonLeaf, LinkLeaf } from '../types';
+import type { TextNode } from '../types';
 import { getMainWrappers } from '../selectors';
 import { validateDocument, validateLinks } from '../validation';
 
@@ -47,7 +47,7 @@ describe('model/validation', () => {
       throw new Error('Expected site root');
     }
 
-    const container = createWrapper('container', root.id);
+    const container = createContainerNode('container', root.id);
     document.nodes[container.id] = container;
     root.children.push(container.id);
 
@@ -58,7 +58,7 @@ describe('model/validation', () => {
   it('rejects nested site-section wrappers', () => {
     const document = createInitialDocument();
     const section = getMainWrappers(document)[0];
-    const nestedSection = createWrapper('section', section.id);
+    const nestedSection = createContainerNode('section', section.id);
     document.nodes[nestedSection.id] = nestedSection;
     section.children.push(nestedSection.id);
 
@@ -72,7 +72,7 @@ describe('model/validation', () => {
     if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
-    const rogueLeaf = createLeaf('text', root.id);
+    const rogueLeaf = createTextNode('block', root.id);
     document.nodes[rogueLeaf.id] = rogueLeaf;
     root.children.push(rogueLeaf.id);
 
@@ -153,7 +153,7 @@ describe('model/validation', () => {
     const duplicateId = root.children[0];
     root.children.push(duplicateId);
 
-    const orphan = createWrapper('container', root.id);
+    const orphan = createContainerNode('container', root.id);
     document.nodes[orphan.id] = orphan;
 
     const errors = validateDocument(document);
@@ -343,7 +343,7 @@ describe('model/validation', () => {
       doc = appended.document;
       const pageId = appended.page.id;
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: pageId };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -354,7 +354,7 @@ describe('model/validation', () => {
     it('reports error for a page link pointing to a nonexistent page', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'nonexistent_page_id' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -366,7 +366,7 @@ describe('model/validation', () => {
     it('reports error for a page link with no targetPageId set', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -379,7 +379,7 @@ describe('model/validation', () => {
     it('reports error for a button with a broken page link', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const button = createLeaf('button', section.id) as ButtonLeaf;
+      const button = createButtonTextNode(section.id) as TextNode;
       button.link = { ...(button.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'gone_page_id' };
       doc.nodes[button.id] = button;
       section.children.push(button.id);
@@ -392,10 +392,10 @@ describe('model/validation', () => {
     it('reports no errors for a valid anchor link', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const target = createLeaf('text', section.id);
+      const target = createTextNode('block', section.id);
       doc.nodes[target.id] = target;
       section.children.push(target.id);
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: target.id };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -406,7 +406,7 @@ describe('model/validation', () => {
     it('reports error for an anchor link pointing to a nonexistent node', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: 'nonexistent_node_id' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -418,7 +418,7 @@ describe('model/validation', () => {
     it('does not report an error for an anchor link with no anchorTargetId set', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: undefined };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -433,7 +433,7 @@ describe('model/validation', () => {
       doc = appended.document;
       const pageId = appended.page.id;
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: pageId, pageAnchorId: 'nonexistent_anchor_id' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -445,7 +445,7 @@ describe('model/validation', () => {
     it('ignores external links and text/image nodes', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link = createLeaf('link', section.id) as LinkLeaf;
+      const link = createLinkTextNode(section.id) as TextNode;
       link.link = { ...(link.link ?? { linkType: 'external' }), linkType: 'external', href: 'https://example.com' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
@@ -456,11 +456,11 @@ describe('model/validation', () => {
     it('reports multiple errors across multiple broken links', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
-      const link1 = createLeaf('link', section.id) as LinkLeaf;
+      const link1 = createLinkTextNode(section.id) as TextNode;
       link1.link = { ...(link1.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'missing_page_1' };
       doc.nodes[link1.id] = link1;
       section.children.push(link1.id);
-      const link2 = createLeaf('button', section.id) as ButtonLeaf;
+      const link2 = createButtonTextNode(section.id) as TextNode;
       link2.link = { ...(link2.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'missing_page_2' };
       doc.nodes[link2.id] = link2;
       section.children.push(link2.id);
@@ -474,7 +474,7 @@ describe('model/validation', () => {
   it('rejects cycles in the node graph', () => {
     const document = createInitialDocument();
     const section = getMainWrappers(document)[0];
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     document.nodes[container.id] = container;
     section.children.push(container.id);
 
