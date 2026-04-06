@@ -101,7 +101,7 @@ export function DebugInfoSection({ items }: { items: NodeDebugInfo[] }) {
           }
         >
           <DebugDetail label="name" value={debugInfo.name} />
-          <DebugDetail label="type" value={`${debugInfo.family} · ${debugInfo.role}`} />
+          <DebugDetail label="type" value={`${debugInfo.family} · ${debugInfo.subtype}`} />
         </DebugRow>
 
         {/* ID row */}

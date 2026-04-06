@@ -1,6 +1,7 @@
 import { TextAppearanceSection, TextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { isTextNode as isTextNodeGuard } from '@/model/types';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
 
 const textContentSection: InspectorSectionDefinition = {
@@ -106,5 +107,5 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
 ];
 
 function isTextNode(node: InspectorNode | null): node is TextInspectorNode {
-  return Boolean(node && node.type === 'leaf' && node.role === 'text');
+  return Boolean(node && isTextNodeGuard(node) && node.subtype === 'block' && node.link === undefined);
 }

@@ -1,19 +1,20 @@
 import type {
+  ContainerNode,
   DocumentModel,
   NodeId,
   TopLevelWrapperVisibilityMode,
   TopLevelWrapperVisibilityState,
-  WrapperNode,
 } from './types';
+import { isContainerNode } from './types';
 import type { PageId } from './types/site';
 
 export type { TopLevelWrapperVisibilityMode, TopLevelWrapperVisibilityState };
 
-export function isEligibleTopLevelWrapper(node: WrapperNode | undefined): node is WrapperNode {
+export function isEligibleTopLevelWrapper(node: ContainerNode | undefined): node is ContainerNode {
   return Boolean(
     node &&
-      node.type === 'wrapper' &&
-      (node.role === 'section' || node.role === 'header' || node.role === 'footer') &&
+      isContainerNode(node) &&
+      (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer') &&
       node.parentId !== null,
   );
 }
@@ -42,7 +43,7 @@ export function getTopLevelWrapperVisibilityState(
   nodeId: NodeId,
 ): TopLevelWrapperVisibilityState {
   const node = document.nodes[nodeId];
-  const wrapper = node as WrapperNode | undefined;
+  const wrapper = node as ContainerNode | undefined;
   if (!isEligibleTopLevelWrapper(wrapper) || wrapper.parentId !== document.rootId) {
     return { mode: 'hidden', pageIds: [] };
   }
@@ -66,7 +67,7 @@ export function isTopLevelWrapperVisibleOnPage(
   pageId: PageId,
 ): boolean {
   const node = document.nodes[nodeId];
-  const wrapper = node as WrapperNode | undefined;
+  const wrapper = node as ContainerNode | undefined;
   if (
     !isEligibleTopLevelWrapper(wrapper) ||
     wrapper.parentId !== document.rootId ||

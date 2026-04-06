@@ -71,10 +71,10 @@ describe('site parity against shared render plan', () => {
   it('keeps content-wrapper sticky structure aligned between plan, markup, and css', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 

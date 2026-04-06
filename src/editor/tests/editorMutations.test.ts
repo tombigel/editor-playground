@@ -28,30 +28,28 @@ import {
   updateWrapperStyleField,
 } from '../editorMutations';
 import type { EditorState } from '../types';
-import type { DocumentNode, NodeId, WrapperNode } from '../../model/types';
+import type { ContainerNode, DocumentNode, NodeId, WrapperNode } from '../../model/types';
 
 function getRoot(document: EditorState['document']) {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     throw new Error('Expected site root');
   }
   return root;
 }
 
 function findNodeByRole(state: EditorState, type: string, role: string) {
+  const contentType = type === 'wrapper' ? 'container' : 'text';
   return Object.values(state.document.nodes).find(
-    (node) => node.type === type && (node as { role?: string }).role === role,
+    (node) => node.contentType === contentType && (node as any).subtype === role,
   );
 }
 
-function findAllByRole(state: EditorState, type: string, role: string) {
+
+function findSections(state: EditorState): ContainerNode[] {
   return Object.values(state.document.nodes).filter(
-    (node) => node.type === type && (node as { role?: string }).role === role,
+    (node): node is ContainerNode => node.contentType === 'container' && node.subtype === 'section',
   );
-}
-
-function findSections(state: EditorState) {
-  return findAllByRole(state, 'wrapper', 'section') as WrapperNode[];
 }
 
 describe('editor/editorMutations', () => {
@@ -70,9 +68,9 @@ describe('editor/editorMutations', () => {
       expect(rootAfter.children.length).toBe(childCountBefore + 1);
       expect(next.selectedId).toBeTruthy();
       const inserted = next.document.nodes[next.selectedId!];
-      expect(inserted.type).toBe('wrapper');
-      if (inserted.type === 'wrapper') {
-        expect(inserted.role).toBe('section');
+      expect(inserted.contentType).toBe('container');
+      if (inserted.contentType === 'container') {
+        expect(inserted.subtype).toBe('section');
       }
     });
 
@@ -81,12 +79,12 @@ describe('editor/editorMutations', () => {
       const next = insertWrapper(state, 'container');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('wrapper');
-      if (inserted.type === 'wrapper') {
-        expect(inserted.role).toBe('container');
+      expect(inserted.contentType).toBe('container');
+      if (inserted.contentType === 'container') {
+        expect(inserted.subtype).toBe('container');
         expect(inserted.parentId).toBeTruthy();
         const parent = next.document.nodes[inserted.parentId!];
-        expect(parent.type).toBe('wrapper');
+        expect(parent.contentType).toBe('container');
       }
     });
 
@@ -99,9 +97,9 @@ describe('editor/editorMutations', () => {
       const next = insertWrapper(withSelection, 'container');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('wrapper');
-      if (inserted.type === 'wrapper') {
-        expect(inserted.role).toBe('container');
+      expect(inserted.contentType).toBe('container');
+      if (inserted.contentType === 'container') {
+        expect(inserted.subtype).toBe('container');
         expect(inserted.parentId).toBe(section.id);
       }
     });
@@ -111,9 +109,9 @@ describe('editor/editorMutations', () => {
       const next = insertWrapper(state, 'header');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('wrapper');
-      if (inserted.type === 'wrapper') {
-        expect(inserted.role).toBe('header');
+      expect(inserted.contentType).toBe('container');
+      if (inserted.contentType === 'container') {
+        expect(inserted.subtype).toBe('header');
       }
     });
 
@@ -122,9 +120,9 @@ describe('editor/editorMutations', () => {
       const next = insertWrapper(state, 'footer');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('wrapper');
-      if (inserted.type === 'wrapper') {
-        expect(inserted.role).toBe('footer');
+      expect(inserted.contentType).toBe('container');
+      if (inserted.contentType === 'container') {
+        expect(inserted.subtype).toBe('footer');
       }
     });
 
@@ -146,9 +144,9 @@ describe('editor/editorMutations', () => {
       const next = insertLeaf(state, 'text');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('leaf');
-      if (inserted.type === 'leaf') {
-        expect(inserted.role).toBe('text');
+      expect(inserted.contentType).not.toBe('container');
+      if (inserted.contentType !== 'container' && inserted.contentType !== 'site') {
+        expect(inserted.subtype).toBe('block');
       }
     });
 
@@ -157,9 +155,9 @@ describe('editor/editorMutations', () => {
       const next = insertLeaf(state, 'image');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('leaf');
-      if (inserted.type === 'leaf') {
-        expect(inserted.role).toBe('image');
+      expect(inserted.contentType).not.toBe('container');
+      if (inserted.contentType !== 'container' && inserted.contentType !== 'site') {
+        expect(inserted.subtype).toBe('image');
       }
     });
 
@@ -168,9 +166,9 @@ describe('editor/editorMutations', () => {
       const next = insertLeaf(state, 'link');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('leaf');
-      if (inserted.type === 'leaf') {
-        expect(inserted.role).toBe('link');
+      expect(inserted.contentType).not.toBe('container');
+      if (inserted.contentType !== 'container' && inserted.contentType !== 'site') {
+        expect(inserted.subtype).toBe('block');
       }
     });
 
@@ -179,9 +177,9 @@ describe('editor/editorMutations', () => {
       const next = insertLeaf(state, 'button');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('leaf');
-      if (inserted.type === 'leaf') {
-        expect(inserted.role).toBe('button');
+      expect(inserted.contentType).not.toBe('container');
+      if (inserted.contentType !== 'container' && inserted.contentType !== 'site') {
+        expect(inserted.subtype).toBe('block');
       }
     });
 
@@ -230,9 +228,9 @@ describe('editor/editorMutations', () => {
       const next = insertSectionTemplate(state, 'post');
       const inserted = next.document.nodes[next.selectedId!];
 
-      expect(inserted.type).toBe('wrapper');
-      if (inserted.type === 'wrapper') {
-        expect(inserted.role).toBe('section');
+      expect(inserted.contentType).toBe('container');
+      if (inserted.contentType === 'container') {
+        expect(inserted.subtype).toBe('section');
       }
     });
 
@@ -265,7 +263,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'content', 'Hello world');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.content).toBe('Hello world');
       }
     });
@@ -277,7 +275,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'htmlTag', 'h3');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.htmlTag).toBe('h3');
       }
     });
@@ -289,7 +287,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'htmlTag', 'span' as never);
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.htmlTag).toBe('p');
       }
     });
@@ -307,7 +305,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'color', '#ff0000');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.color).toBe('#ff0000');
       }
     });
@@ -320,7 +318,7 @@ describe('editor/editorMutations', () => {
       const withColor = updateTextField(withLeaf, leafId, 'color', '#ff0000');
       const next = updateTextField(withColor, leafId, 'color', '');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.color).toBeUndefined();
       }
     });
@@ -332,7 +330,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'fontSize', '24px');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.fontSize?.raw).toBe('24px');
       }
     });
@@ -344,7 +342,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'fontWeight', '1200');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.fontWeight).toBe(900);
       }
     });
@@ -365,7 +363,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'fontStyle', 'italic');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.fontStyle).toBe('italic');
       }
     });
@@ -377,7 +375,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'fontStyle', 'oblique');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.fontStyle).toBe('normal');
       }
     });
@@ -389,7 +387,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'textDecorationLine', 'underline');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.textDecorationLine).toBe('underline');
       }
     });
@@ -401,7 +399,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'textDecorationLine', 'dotted');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.textDecorationLine).toBe('none');
       }
     });
@@ -413,7 +411,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'lineHeight', '1.5');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.lineHeight).toBe(1.5);
       }
     });
@@ -426,7 +424,7 @@ describe('editor/editorMutations', () => {
       const withLH = updateTextField(withLeaf, leafId, 'lineHeight', '1.5');
       const next = updateTextField(withLH, leafId, 'lineHeight', '-2');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.lineHeight).toBe(1.5);
       }
     });
@@ -438,7 +436,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'direction', 'rtl');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.direction).toBe('rtl');
       }
     });
@@ -450,7 +448,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'direction', 'bidi');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.direction).toBe('ltr');
       }
     });
@@ -462,13 +460,13 @@ describe('editor/editorMutations', () => {
 
       const withCenter = updateTextField(withLeaf, leafId, 'textAlign', 'center');
       const node1 = withCenter.document.nodes[leafId];
-      if (node1.type === 'leaf' && node1.role === 'text') {
+      if (node1.contentType === 'text') {
         expect(node1.style?.textAlign).toBe('center');
       }
 
       const withRight = updateTextField(withCenter, leafId, 'textAlign', 'right');
       const node2 = withRight.document.nodes[leafId];
-      if (node2.type === 'leaf' && node2.role === 'text') {
+      if (node2.contentType === 'text') {
         expect(node2.style?.textAlign).toBe('right');
       }
     });
@@ -480,7 +478,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'textAlign', 'justify');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.textAlign).toBe('left');
       }
     });
@@ -492,7 +490,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'label', 'Click me');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && 'label' in node) {
+      if (node.contentType !== 'container' && node.contentType !== 'site' && 'label' in node) {
         expect(node.label).toBe('Click me');
       }
     });
@@ -504,8 +502,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'href', 'https://example.com');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.href).toBe('https://example.com');
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.href).toBe('https://example.com');
       }
     });
 
@@ -516,8 +514,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'linkType', 'anchor');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.linkType).toBe('anchor');
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.linkType).toBe('anchor');
       }
     });
 
@@ -528,8 +526,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'linkType', 'internal');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.linkType).toBe('external');
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.linkType).toBe('external');
       }
     });
 
@@ -540,8 +538,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'openInNewTab', 'true');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.openInNewTab).toBe(true);
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.openInNewTab).toBe(true);
       }
     });
 
@@ -553,8 +551,8 @@ describe('editor/editorMutations', () => {
       const withOpen = updateTextField(withLeaf, leafId, 'openInNewTab', 'true');
       const next = updateTextField(withOpen, leafId, 'openInNewTab', 'false');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.openInNewTab).toBeUndefined();
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.openInNewTab).toBeUndefined();
       }
     });
 
@@ -566,7 +564,7 @@ describe('editor/editorMutations', () => {
       const withSrc = updateTextField(withLeaf, leafId, 'src', 'https://example.com/image.png');
       const withAlt = updateTextField(withSrc, leafId, 'alt', 'An example image');
       const node = withAlt.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'image') {
+      if (node.contentType === 'media') {
         expect(node.src).toBe('https://example.com/image.png');
         expect(node.alt).toBe('An example image');
       }
@@ -579,7 +577,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'background', '#0066ff');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'button') {
+      if (node.contentType === 'text' && node.link != null) {
         expect(node.style?.background).toBe('#0066ff');
       }
     });
@@ -592,7 +590,7 @@ describe('editor/editorMutations', () => {
       const withPB = updateTextField(withLeaf, leafId, 'paddingBlock', '12px');
       const withPI = updateTextField(withPB, leafId, 'paddingInline', '24px');
       const node = withPI.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'button') {
+      if (node.contentType === 'text' && node.link != null) {
         expect(node.style?.paddingBlock?.raw).toBe('12px');
         expect(node.style?.paddingInline?.raw).toBe('24px');
       }
@@ -605,7 +603,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'textWrap', 'wrap');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
+      if (node.contentType === 'text' && node.link != null) {
         expect(node.style?.textWrap).toBe('wrap');
       }
     });
@@ -617,7 +615,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'textWrap', 'auto');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
+      if (node.contentType === 'text' && node.link != null) {
         expect(node.style?.textWrap).toBe('single-line');
       }
     });
@@ -631,7 +629,7 @@ describe('editor/editorMutations', () => {
       const withWidth = updateTextField(withColor, leafId, 'borderWidth', '2px');
       const withRadius = updateTextField(withWidth, leafId, 'borderRadius', '8px');
       const node = withRadius.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'image') {
+      if (node.contentType === 'media') {
         expect(node.style?.borderColor).toBe('#000');
         expect(node.style?.borderWidth?.raw).toBe('2px');
         expect(node.style?.borderRadius?.raw).toBe('8px');
@@ -647,7 +645,7 @@ describe('editor/editorMutations', () => {
       const withBlur = updateTextField(withColor, leafId, 'shadowBlur', '4');
       const withOffsetX = updateTextField(withBlur, leafId, 'shadowOffsetX', '2');
       const node = withOffsetX.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.shadowColor).toBe('#333');
         expect(node.style?.shadowBlur).toBe(4);
         expect(node.style?.shadowOffsetX).toBe(2);
@@ -661,7 +659,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'shadowBlur', 'abc');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'text') {
+      if (node.contentType === 'text') {
         expect(node.style?.shadowBlur).toBeUndefined();
       }
     });
@@ -673,8 +671,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateTextField(withLeaf, leafId, 'anchorTargetId', 'section_5');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.anchorTargetId).toBe('section_5');
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.anchorTargetId).toBe('section_5');
       }
     });
 
@@ -686,8 +684,8 @@ describe('editor/editorMutations', () => {
       const withTarget = updateTextField(withLeaf, leafId, 'anchorTargetId', 'section_5');
       const next = updateTextField(withTarget, leafId, 'anchorTargetId', '');
       const node = next.document.nodes[leafId];
-      if (node.type === 'leaf' && node.role === 'link') {
-        expect(node.anchorTargetId).toBeUndefined();
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link?.anchorTargetId).toBeUndefined();
       }
     });
   });
@@ -703,7 +701,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateRectField(withLeaf, leafId, 'x', '100px');
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('100px');
       }
     });
@@ -715,7 +713,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateRectField(withLeaf, leafId, 'y', '200px');
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.y.base.raw).toBe('200px');
       }
     });
@@ -727,7 +725,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateRectField(withLeaf, leafId, 'width', '300px');
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.width.base.raw).toBe('300px');
       }
     });
@@ -739,7 +737,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateRectField(withLeaf, leafId, 'height', '400px');
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.height.base.raw).toBe('400px');
       }
     });
@@ -762,7 +760,7 @@ describe('editor/editorMutations', () => {
 
       const next = updateStickyField(withLeaf, leafId, { enabled: true });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.sticky).toBeTruthy();
         expect(node.sticky?.enabled).toBe(true);
         expect(node.sticky?.target).toBe('self');
@@ -780,7 +778,7 @@ describe('editor/editorMutations', () => {
       const withSticky = updateStickyField(withLeaf, leafId, { enabled: true, target: 'self' });
       const next = updateStickyField(withSticky, leafId, { durationMode: 'custom' });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.sticky?.enabled).toBe(true);
         expect(node.sticky?.durationMode).toBe('custom');
       }
@@ -802,7 +800,7 @@ describe('editor/editorMutations', () => {
         target: 'contentWrapper',
       });
       const node = next.document.nodes[containerId];
-      if (node.type === 'wrapper') {
+      if (node.contentType === 'container') {
         expect(node.sticky?.target).toBe('self');
       }
     });
@@ -817,7 +815,7 @@ describe('editor/editorMutations', () => {
         target: 'contentWrapper',
       });
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
+      if (node.contentType === 'container') {
         expect(node.sticky?.target).toBe('contentWrapper');
       }
     });
@@ -842,8 +840,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateWrapperStyleField(state, section.id, 'sectionBorderBottomWidth', '3px');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.sectionBorderBottomWidth?.raw).toBe('3px');
+      if (node.contentType === 'container') {
+        expect(node.style!.sectionBorderBottomWidth?.raw).toBe('3px');
       }
     });
 
@@ -854,8 +852,8 @@ describe('editor/editorMutations', () => {
       const withWidth = updateWrapperStyleField(state, section.id, 'sectionBorderBottomWidth', '3px');
       const next = updateWrapperStyleField(withWidth, section.id, 'sectionBorderBottomWidth', '');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.sectionBorderBottomWidth).toBeUndefined();
+      if (node.contentType === 'container') {
+        expect(node.style!.sectionBorderBottomWidth).toBeUndefined();
       }
     });
 
@@ -865,8 +863,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateWrapperStyleField(state, section.id, 'paddingLeft', '16px');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.paddingLeft?.raw).toBe('16px');
+      if (node.contentType === 'container') {
+        expect(node.style!.paddingLeft?.raw).toBe('16px');
       }
     });
 
@@ -877,8 +875,8 @@ describe('editor/editorMutations', () => {
       const withPad = updateWrapperStyleField(state, section.id, 'paddingTop', '10px');
       const next = updateWrapperStyleField(withPad, section.id, 'paddingTop', '');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.paddingTop).toBeUndefined();
+      if (node.contentType === 'container') {
+        expect(node.style!.paddingTop).toBeUndefined();
       }
     });
 
@@ -889,9 +887,9 @@ describe('editor/editorMutations', () => {
       const withBW = updateWrapperStyleField(state, section.id, 'borderWidth', '2px');
       const withBR = updateWrapperStyleField(withBW, section.id, 'borderRadius', '12px');
       const node = withBR.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.borderWidth?.raw).toBe('2px');
-        expect(node.style.borderRadius?.raw).toBe('12px');
+      if (node.contentType === 'container') {
+        expect(node.style!.borderWidth?.raw).toBe('2px');
+        expect(node.style!.borderRadius?.raw).toBe('12px');
       }
     });
 
@@ -902,9 +900,9 @@ describe('editor/editorMutations', () => {
       const withColor = updateWrapperStyleField(state, section.id, 'shadowColor', '#000');
       const withBlur = updateWrapperStyleField(withColor, section.id, 'shadowBlur', '10');
       const node = withBlur.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.shadowColor).toBe('#000');
-        expect(node.style.shadowBlur).toBe(10);
+      if (node.contentType === 'container') {
+        expect(node.style!.shadowColor).toBe('#000');
+        expect(node.style!.shadowBlur).toBe(10);
       }
     });
 
@@ -914,8 +912,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateWrapperStyleField(state, section.id, 'shadowBlur', 'not-a-number');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.shadowBlur).toBeUndefined();
+      if (node.contentType === 'container') {
+        expect(node.style!.shadowBlur).toBeUndefined();
       }
     });
 
@@ -925,8 +923,8 @@ describe('editor/editorMutations', () => {
 
       const next = updateWrapperStyleField(state, section.id, 'sectionBorderBottomColor', '#abc');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.sectionBorderBottomColor).toBe('#abc');
+      if (node.contentType === 'container') {
+        expect(node.style!.sectionBorderBottomColor).toBe('#abc');
       }
     });
 
@@ -937,8 +935,8 @@ describe('editor/editorMutations', () => {
       const withVal = updateWrapperStyleField(state, section.id, 'sectionBorderBottomColor', '#abc');
       const next = updateWrapperStyleField(withVal, section.id, 'sectionBorderBottomColor', '');
       const node = next.document.nodes[section.id];
-      if (node.type === 'wrapper') {
-        expect(node.style.sectionBorderBottomColor).toBeUndefined();
+      if (node.contentType === 'container') {
+        expect(node.style!.sectionBorderBottomColor).toBeUndefined();
       }
     });
   });
@@ -954,7 +952,7 @@ describe('editor/editorMutations', () => {
 
       const next = moveNode(withLeaf, leafId, { x: '50px', y: '75px' });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('50px');
         expect(node.rect.y.base.raw).toBe('75px');
       }
@@ -966,11 +964,11 @@ describe('editor/editorMutations', () => {
       const leafId = withLeaf.selectedId!;
 
       const before = withLeaf.document.nodes[leafId];
-      const beforeY = before.type !== 'site' ? before.rect.y.base.raw : '';
+      const beforeY = before.contentType !== 'site' ? before.rect.y.base.raw : '';
 
       const next = moveNode(withLeaf, leafId, { x: '100px' });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('100px');
         expect(node.rect.y.base.raw).toBe(beforeY);
       }
@@ -1007,7 +1005,7 @@ describe('editor/editorMutations', () => {
 
       const node1 = next.document.nodes[leaf1Id];
       const node2 = next.document.nodes[leaf2Id];
-      if (node1.type !== 'site' && node2.type !== 'site') {
+      if (node1.contentType !== 'site' && node2.contentType !== 'site') {
         expect(node1.rect.x.base.raw).toBe('10px');
         expect(node1.rect.y.base.raw).toBe('20px');
         expect(node2.rect.x.base.raw).toBe('30px');
@@ -1020,7 +1018,7 @@ describe('editor/editorMutations', () => {
       const withLeaf = insertLeaf(state, 'text');
       const leafId = withLeaf.selectedId!;
       const node = withLeaf.document.nodes[leafId];
-      if (node.type === 'site') throw new Error('Expected non-site');
+      if (node.contentType === 'site') throw new Error('Expected non-site');
 
       const next = moveNodes(withLeaf, [
         { id: leafId, x: node.rect.x.base.raw, y: node.rect.y.base.raw },
@@ -1039,7 +1037,7 @@ describe('editor/editorMutations', () => {
       ]);
 
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('50px');
       }
     });
@@ -1055,13 +1053,13 @@ describe('editor/editorMutations', () => {
       const leafId = withLeaf.selectedId!;
 
       const before = withLeaf.document.nodes[leafId];
-      if (before.type === 'site') throw new Error('Expected non-site');
+      if (before.contentType === 'site') throw new Error('Expected non-site');
       const beforeX = Number.parseFloat(before.rect.x.base.raw);
       const beforeY = Number.parseFloat(before.rect.y.base.raw);
 
       const next = nudgeNode(withLeaf, leafId, { x: 5, y: 10 });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe(`${beforeX + 5}px`);
         expect(node.rect.y.base.raw).toBe(`${beforeY + 10}px`);
       }
@@ -1074,7 +1072,7 @@ describe('editor/editorMutations', () => {
 
       const next = nudgeNode(withLeaf, leafId, { x: 0, y: -99999 });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.y.base.raw).toBe('0px');
       }
     });
@@ -1086,7 +1084,7 @@ describe('editor/editorMutations', () => {
 
       const next = nudgeNode(withLeaf, leafId, { x: -99999, y: 0 });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('0px');
       }
     });
@@ -1096,7 +1094,7 @@ describe('editor/editorMutations', () => {
       const root = getRoot(state.document);
       const sectionId = root.children.find((id) => {
         const node = state.document.nodes[id];
-        return node?.type === 'wrapper' && node.role === 'section';
+        return node?.contentType === 'container' && node.subtype === 'section';
       });
       if (!sectionId) throw new Error('Expected section');
 
@@ -1125,7 +1123,7 @@ describe('editor/editorMutations', () => {
 
       const next = resizeNode(withLeaf, leafId, { width: '200px' });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.width.base.raw).toBe('200px');
       }
     });
@@ -1137,7 +1135,7 @@ describe('editor/editorMutations', () => {
 
       const next = resizeNode(withLeaf, leafId, { height: '150px' });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.height.base.raw).toBe('150px');
       }
     });
@@ -1149,7 +1147,7 @@ describe('editor/editorMutations', () => {
 
       const next = resizeNode(withLeaf, leafId, { width: '300px', height: '250px' });
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.width.base.raw).toBe('300px');
         expect(node.rect.height.base.raw).toBe('250px');
       }
@@ -1436,7 +1434,7 @@ describe('editor/editorMutations', () => {
 
       const next = alignNodes(s2, [l1, l2], 'left', rects);
       const node2 = next.document.nodes[l2];
-      if (node2.type !== 'site') {
+      if (node2.contentType !== 'site') {
         // l2 should have moved left towards l1
         const newX = Number.parseFloat(node2.rect.x.base.raw);
         expect(newX).toBeLessThan(200);
@@ -1457,7 +1455,7 @@ describe('editor/editorMutations', () => {
 
       const next = alignNodes(s2, [l1, l2], 'right', rects);
       const node2 = next.document.nodes[l2];
-      if (node2.type !== 'site') {
+      if (node2.contentType !== 'site') {
         // l2 right edge should align with l1 right edge (300)
         const newX = Number.parseFloat(node2.rect.x.base.raw);
         expect(newX).toBeGreaterThan(50);
@@ -1478,7 +1476,7 @@ describe('editor/editorMutations', () => {
 
       const next = alignNodes(s2, [l1, l2], 'top', rects);
       const node2 = next.document.nodes[l2];
-      if (node2.type !== 'site') {
+      if (node2.contentType !== 'site') {
         const newY = Number.parseFloat(node2.rect.y.base.raw);
         expect(newY).toBeLessThan(200);
       }
@@ -1615,7 +1613,7 @@ describe('editor/editorMutations', () => {
       const next = reparentNode(withContainer2, leafId, container2Id, '10px', '20px');
       const node = next.document.nodes[leafId];
       expect(node.parentId).toBe(container2Id);
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('10px');
         expect(node.rect.y.base.raw).toBe('20px');
       }
@@ -1633,7 +1631,7 @@ describe('editor/editorMutations', () => {
 
       const next = reparentNode(withLeaf, leafId, parentId, '50px', '60px');
       const node = next.document.nodes[leafId];
-      if (node.type !== 'site') {
+      if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('50px');
         expect(node.rect.y.base.raw).toBe('60px');
       }
@@ -1721,7 +1719,7 @@ describe('editor/editorMutations', () => {
       expect(next.document.nodes[leafBId].parentId).toBe(containerBId);
       const leafA = next.document.nodes[leafAId];
       const leafB = next.document.nodes[leafBId];
-      if (leafA.type !== 'site' && leafB.type !== 'site') {
+      if (leafA.contentType !== 'site' && leafB.contentType !== 'site') {
         expect(leafA.rect.x.base.raw).toBe('20px');
         expect(leafB.rect.x.base.raw).toBe('140px');
       }
@@ -1767,8 +1765,8 @@ describe('editor/editorMutations', () => {
       // No pending swap needed since there's no existing header
       expect(next.pendingRoleSwap).toBeNull();
       const promoted = next.document.nodes[section.id];
-      if (promoted.type === 'wrapper') {
-        expect(promoted.role).toBe('header');
+      if (promoted.contentType === 'container') {
+        expect(promoted.subtype).toBe('header');
       }
     });
 
@@ -1795,11 +1793,11 @@ describe('editor/editorMutations', () => {
       const promotedSection = confirmed.document.nodes[section.id];
       const demotedHeader = confirmed.document.nodes[header.id];
 
-      if (promotedSection.type === 'wrapper') {
-        expect(promotedSection.role).toBe('header');
+      if (promotedSection.contentType === 'container') {
+        expect(promotedSection.subtype).toBe('header');
       }
-      if (demotedHeader.type === 'wrapper') {
-        expect(demotedHeader.role).toBe('section');
+      if (demotedHeader.contentType === 'container') {
+        expect(demotedHeader.subtype).toBe('section');
       }
       expect(confirmed.pendingRoleSwap).toBeNull();
     });
@@ -1862,8 +1860,8 @@ describe('editor/editorMutations', () => {
 
       const next = demoteWrapperRole(state, header.id);
       const demoted = next.document.nodes[header.id];
-      if (demoted.type === 'wrapper') {
-        expect(demoted.role).toBe('section');
+      if (demoted.contentType === 'container') {
+        expect(demoted.subtype).toBe('section');
       }
     });
 
@@ -1874,8 +1872,8 @@ describe('editor/editorMutations', () => {
 
       const next = demoteWrapperRole(state, footer.id);
       const demoted = next.document.nodes[footer.id];
-      if (demoted.type === 'wrapper') {
-        expect(demoted.role).toBe('section');
+      if (demoted.contentType === 'container') {
+        expect(demoted.subtype).toBe('section');
       }
     });
   });

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { ComputedWrapperStickyState, DocumentNode, WrapperNode } from '../../model/types';
+import type { ComputedWrapperStickyState, ContainerNode, DocumentNode, MediaNode, TextNode } from '../../model/types';
 import type { StickyMeasuredNodeSizes } from '../../sticky/types';
 
 export type StyleValue = string | number;
@@ -10,8 +10,8 @@ export type SharedCssRule = {
   style: StyleRecord;
 };
 
-export type StageOrSiteNode = Extract<DocumentNode, { type: 'wrapper' | 'leaf' }>;
-export type PresentationLeafNode = Extract<DocumentNode, { type: 'leaf' }>;
+export type StageOrSiteNode = ContainerNode | TextNode | MediaNode;
+export type PresentationLeafNode = TextNode | MediaNode;
 
 export type RenderLeafContentOptions = {
   contentStyle?: CSSProperties;
@@ -21,8 +21,8 @@ export type RenderLeafContentOptions = {
   disableTabNavigation?: boolean;
 };
 
-export type RenderLeafNode = Extract<DocumentNode, { type: 'leaf' }>;
-export type RenderExportableNode = Exclude<DocumentNode, { type: 'site' }>;
+export type RenderLeafNode = TextNode | MediaNode;
+export type RenderExportableNode = Exclude<DocumentNode, { contentType: 'site' }>;
 export type RenderMeasuredNodeSizes = StickyMeasuredNodeSizes;
 
 export type MeshLayout = {
@@ -61,7 +61,7 @@ export type RenderLeafPlanNode = {
 
 export type RenderWrapperPlanNode = {
   kind: 'wrapper';
-  node: WrapperNode;
+  node: ContainerNode;
   isTopLevel: boolean;
   tag: RenderWrapperTag;
   nodeClassName: string;
@@ -88,3 +88,4 @@ export type RenderRootPlan = {
   footer: RenderWrapperPlanNode | null;
   main: RenderWrapperPlanNode[];
 };
+

@@ -161,12 +161,12 @@ export function resolveWrapperPaddingPx(
 ) {
   const padding =
     edge === 'top'
-      ? wrapper.style.paddingTop
+      ? wrapper.style?.paddingTop
       : edge === 'right'
-        ? wrapper.style.paddingRight
+        ? wrapper.style?.paddingRight
         : edge === 'bottom'
-          ? wrapper.style.paddingBottom
-          : wrapper.style.paddingLeft;
+          ? wrapper.style?.paddingBottom
+          : wrapper.style?.paddingLeft;
   if (!padding) {
     return 0;
   }

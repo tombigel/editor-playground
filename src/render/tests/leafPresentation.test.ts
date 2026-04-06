@@ -6,7 +6,7 @@ import { getButtonLeafStyle, getImageLeafStyle } from '../leafPresentation';
 describe('render/leafPresentation', () => {
   it('uses shared default button presentation even without authored border or shadow overrides', () => {
     const button = createLeaf('button', 'root');
-    if (button.role !== 'button') {
+    if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
     const style = getButtonLeafStyle(button);
@@ -26,13 +26,13 @@ describe('render/leafPresentation', () => {
 
   it('does not add filter shadows to buttons when box shadow is present', () => {
     const button = createLeaf('button', 'root');
-    if (button.role !== 'button') {
+    if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
     button.style ??= {};
-    button.style.shadowColor = 'rgba(15, 23, 42, 0.15)';
-    button.style.shadowBlur = 14;
-    button.style.shadowOffsetY = 8;
+    button.style!.shadowColor = 'rgba(15, 23, 42, 0.15)';
+    button.style!.shadowBlur = 14;
+    button.style!.shadowOffsetY = 8;
 
     const style = getButtonLeafStyle(button);
 
@@ -42,7 +42,7 @@ describe('render/leafPresentation', () => {
 
   it('uses shared default image presentation even without authored border or shadow overrides', () => {
     const image = createLeaf('image', 'root');
-    if (image.role !== 'image') {
+    if (image.subtype !== 'image') {
       throw new Error('Expected image leaf');
     }
     const style = getImageLeafStyle(image);
@@ -57,14 +57,14 @@ describe('render/leafPresentation', () => {
 
   it('keeps authored image overrides on the shared presentation path', () => {
     const image = createLeaf('image', 'root');
-    if (image.role !== 'image') {
+    if (image.subtype !== 'image') {
       throw new Error('Expected image leaf');
     }
     image.style ??= {};
-    image.style.borderRadius = parseUnitValue('28px');
-    image.style.shadowBlur = 18;
-    image.style.shadowOffsetY = 12;
-    image.style.shadowColor = 'rgba(37, 99, 235, 0.2)';
+    image.style!.borderRadius = parseUnitValue('28px');
+    image.style!.shadowBlur = 18;
+    image.style!.shadowOffsetY = 12;
+    image.style!.shadowColor = 'rgba(37, 99, 235, 0.2)';
 
     const style = getImageLeafStyle(image);
 
@@ -75,18 +75,18 @@ describe('render/leafPresentation', () => {
   it('lets zero-valued border fields and fully transparent shadows suppress rendered defaults', () => {
     const image = createLeaf('image', 'root');
     const button = createLeaf('button', 'root');
-    if (image.role !== 'image' || button.role !== 'button') {
+    if (image.subtype !== 'image' || button.subtype !== 'block') {
       throw new Error('Expected image and button leaves');
     }
 
     image.style ??= {};
-    image.style.borderWidth = parseUnitValue('0px');
-    image.style.borderRadius = parseUnitValue('0px');
-    image.style.shadowColor = 'rgba(18, 32, 51, 0)';
+    image.style!.borderWidth = parseUnitValue('0px');
+    image.style!.borderRadius = parseUnitValue('0px');
+    image.style!.shadowColor = 'rgba(18, 32, 51, 0)';
 
     button.style ??= {};
-    button.style.borderRadius = parseUnitValue('0px');
-    button.style.shadowColor = 'rgba(5, 7, 10, 0)';
+    button.style!.borderRadius = parseUnitValue('0px');
+    button.style!.shadowColor = 'rgba(5, 7, 10, 0)';
 
     const imageStyle = getImageLeafStyle(image);
     const buttonStyle = getButtonLeafStyle(button);

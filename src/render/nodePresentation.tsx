@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
+import { isMediaNode, isTextNode } from '../model/types';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -8,7 +9,16 @@ import type {
 export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
-  return `${node.role.charAt(0).toUpperCase()}${node.role.slice(1)}`;
+  if (node.contentType === 'container') {
+    const label = node.subtype;
+    return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+  }
+  if (isTextNode(node)) {
+    if (node.style?.background) return 'Button';
+    if (node.link != null) return 'Link';
+    return 'Text';
+  }
+  return 'Image';
 }
 
 export function getNodeAriaLabel(node: StageOrSiteNode) {
@@ -17,21 +27,24 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
 }
 
 export function getNodeTextContent(node: LeafNode) {
-  if (node.role === 'text') {
+  if (isTextNode(node)) {
     return node.content;
   }
-  if (node.role === 'image') {
+  if (isMediaNode(node)) {
     return node.alt ?? 'Image';
   }
-  return node.label;
+  return '';
 }
 
 export function isBrandMark(node: LeafNode) {
-  return node.role === 'image' && node.name === 'Brand Mark';
+  return isMediaNode(node) && node.subtype === 'image' && node.name === 'Brand Mark';
 }
 
-function getExternalNavigationProps(node: Extract<LeafNode, { role: 'link' | 'button' }>) {
-  return shouldOpenNavigationInNewTab(node)
+function getExternalNavigationProps(node: LeafNode) {
+  if (!isTextNode(node) || !node.link) {
+    return {};
+  }
+  return shouldOpenNavigationInNewTab({ linkType: node.link.linkType, openInNewTab: node.link.openInNewTab })
     ? {
         target: '_blank',
         rel: 'noopener noreferrer',
@@ -49,38 +62,50 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
   } = options;
   const tabIndex = disableTabNavigation ? -1 : undefined;
 
-  switch (node.role) {
-    case 'text': {
-      const Tag = node.htmlTag;
-      return <Tag style={contentStyle}>{node.content}</Tag>;
-    }
-    case 'image':
-      return node.src ? (
-        <img
-          className={imageClassName}
-          style={contentStyle}
-          src={node.src}
-          alt={node.alt || 'Image'}
-          draggable={imageDraggable}
-        />
-      ) : (
-        <div className={imagePlaceholderClassName} style={contentStyle}>{getNodeTextContent(node)}</div>
-      );
-    case 'link':
-      return (
-        <a href={getLinkHref(node)} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
-          {getNodeTextContent(node)}
-        </a>
-      );
-    case 'button':
-      return getLinkHref(node) ? (
-        <a href={getLinkHref(node)} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
-          {getNodeTextContent(node)}
+  if (isMediaNode(node)) {
+    return node.src ? (
+      <img
+        className={imageClassName}
+        style={contentStyle}
+        src={node.src}
+        alt={node.alt || 'Image'}
+        draggable={imageDraggable}
+      />
+    ) : (
+      <div className={imagePlaceholderClassName} style={contentStyle}>{getNodeTextContent(node)}</div>
+    );
+  }
+
+  if (isTextNode(node)) {
+    const { link } = node;
+    const isButton = link !== undefined && node.style?.background !== undefined;
+    const isLink = link !== undefined;
+
+    if (isButton) {
+      const href = getLinkHref({ linkType: link.linkType, anchorTargetId: link.anchorTargetId, href: link.href, targetPageId: link.targetPageId, pageAnchorId: link.pageAnchorId });
+      return href ? (
+        <a href={href} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
+          {node.content}
         </a>
       ) : (
         <button type="button" tabIndex={tabIndex} style={contentStyle}>
-          {getNodeTextContent(node)}
+          {node.content}
         </button>
       );
+    }
+
+    if (isLink) {
+      const href = getLinkHref({ linkType: link.linkType, anchorTargetId: link.anchorTargetId, href: link.href, targetPageId: link.targetPageId, pageAnchorId: link.pageAnchorId });
+      return (
+        <a href={href} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
+          {node.content}
+        </a>
+      );
+    }
+
+    const Tag = node.htmlTag ?? 'p';
+    return <Tag style={contentStyle}>{node.content}</Tag>;
   }
+
+  return null;
 }

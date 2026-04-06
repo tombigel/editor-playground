@@ -3,14 +3,15 @@ import type { WrapperStyleField } from '../../../api/documentApi';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId } from '../../../model/types/site';
+import type { ContainerNode, TextNode, MediaNode } from '../../../model/types';
 
 export type InspectorNode = DocumentNode;
-export type NonSiteInspectorNode = Exclude<DocumentNode, { type: 'site' }>;
-export type TextInspectorNode = Extract<DocumentNode, { type: 'leaf'; role: 'text' }>;
-export type ButtonInspectorNode = Extract<DocumentNode, { type: 'leaf'; role: 'button' }>;
-export type LinkInspectorNode = Extract<DocumentNode, { type: 'leaf'; role: 'link' }>;
-export type ImageInspectorNode = Extract<DocumentNode, { type: 'leaf'; role: 'image' }>;
-export type WrapperInspectorNode = Extract<DocumentNode, { type: 'wrapper' }>;
+export type NonSiteInspectorNode = Exclude<DocumentNode, { contentType: 'site' }>;
+export type TextInspectorNode = TextNode;
+export type ButtonInspectorNode = TextNode;
+export type LinkInspectorNode = TextNode;
+export type ImageInspectorNode = MediaNode;
+export type WrapperInspectorNode = ContainerNode;
 
 export type InspectorActionHandlers = {
   onTextChange: (field: EditorTextField, value: string) => void;

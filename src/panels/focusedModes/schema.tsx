@@ -1,6 +1,7 @@
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { FocusedMode } from '../../api/editorApi';
+import { isContainerNode, isTextNode, isMediaNode } from '../../model/types';
 import { getFocusedModeLabel } from '../../editor/focusedModes';
 import {
   ButtonAppearanceSection,
@@ -35,7 +36,7 @@ export function resolveFocusedModeBlocks(
     return [];
   }
 
-  const node = context.node && context.node.type !== 'site' ? context.node : null;
+  const node = context.node && context.node.contentType !== 'site' ? context.node : null;
   const headerAction = createHeaderAction(mode, options.onExitFocusedMode);
 
   if (mode === 'sticky' && node) {
@@ -72,7 +73,7 @@ export function resolveFocusedModeBlocks(
   }
 
   if (mode === 'content' && node) {
-    if (node.type === 'leaf' && node.role === 'text') {
+    if (isTextNode(node) && !node.link) {
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <TextContentSection
@@ -88,7 +89,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'link') {
+    if (isTextNode(node) && node.link !== undefined && !node.style?.background) {
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <LinkContentSection
@@ -104,7 +105,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'button') {
+    if (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <ButtonContentSection
@@ -120,7 +121,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'image') {
+    if (isMediaNode(node)) {
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <ImageContentSection
@@ -138,7 +139,7 @@ export function resolveFocusedModeBlocks(
   }
 
   if (mode === 'design' && node) {
-    if (node.type === 'wrapper') {
+    if (isContainerNode(node)) {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <WrapperDesignSection
@@ -153,7 +154,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'text') {
+    if (isTextNode(node) && !node.link) {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <TextAppearanceSection
@@ -170,7 +171,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'link') {
+    if (isTextNode(node) && node.link !== undefined && !node.style?.background) {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <LinkAppearanceSection
@@ -187,7 +188,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'button') {
+    if (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <ButtonAppearanceSection
@@ -204,7 +205,7 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (node.type === 'leaf' && node.role === 'image') {
+    if (isMediaNode(node)) {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <ImageDesignSection

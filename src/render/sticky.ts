@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DocumentNode, StickyDefinition } from '../model/types';
+import { isContainerNode } from '../model/types';
 import { STICKY_LAYER_Z_INDEX } from './layers';
 
 export function getStickyEdgeMode(sticky: StickyDefinition | undefined): 'top' | 'bottom' | 'both' {
@@ -58,14 +59,14 @@ export function resolveStickyIsElevated(
 }
 
 export function usesSyntheticStickyTrack(
-  node: Exclude<DocumentNode, { type: 'site' }>,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
   { isTopLevel = false }: { isTopLevel?: boolean } = {},
 ) {
   if (!node.sticky?.enabled || node.sticky.target !== 'self' || node.sticky.durationMode === 'auto') {
     return false;
   }
 
-  if (node.type === 'wrapper' && isTopLevel && node.role !== 'container') {
+  if (isContainerNode(node) && isTopLevel && node.subtype !== 'container') {
     return false;
   }
 

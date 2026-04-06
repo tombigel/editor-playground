@@ -60,10 +60,10 @@ describe('panels/inspector/schema', () => {
   it('resolves section wrapper blocks with titles and descriptions', () => {
     const document = createInitialDocument();
     const wrapper = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!wrapper || wrapper.type !== 'wrapper') {
+    if (!wrapper || wrapper.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -79,10 +79,10 @@ describe('panels/inspector/schema', () => {
   it('resolves text leaf sticky behavior immediately after layout', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text',
+      (node) => node.contentType === 'text',
     );
 
-    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text node');
     }
 
@@ -114,12 +114,12 @@ describe('panels/inspector/schema', () => {
 
   it('assigns dedicated config keys to button, link, image, and site nodes', () => {
     const document = createInitialDocument();
-    const linkNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link');
-    const imageNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
+    const linkNode = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
+    const imageNode = Object.values(document.nodes).find((node) => node.contentType === 'media');
     const siteNode = document.nodes[document.rootId];
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -133,15 +133,15 @@ describe('panels/inspector/schema', () => {
 
   it('resolves design blocks for link, image, and button leaves', () => {
     const document = createInitialDocument();
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
-    const linkNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link');
-    const imageNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
+    const linkNode = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
+    const imageNode = Object.values(document.nodes).find((node) => node.contentType === 'media');
     const buttonNode = createLeaf('button', section.id);
 
-    if (!linkNode || linkNode.type !== 'leaf' || !imageNode || imageNode.type !== 'leaf' || !buttonNode || buttonNode.type !== 'leaf') {
+    if (!linkNode || linkNode.contentType !== 'text' || !imageNode || imageNode.contentType !== 'media' || !buttonNode || buttonNode.contentType !== 'text') {
       throw new Error('Expected link, image, and button leaves');
     }
 
@@ -169,18 +169,18 @@ describe('panels/inspector/schema', () => {
 
   it('assigns dedicated config keys to each wrapper role', () => {
     const document = createInitialDocument();
-    const headerNode = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'header');
-    const footerNode = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'footer');
-    const sectionNode = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
+    const headerNode = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'header');
+    const footerNode = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'footer');
+    const sectionNode = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
 
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
     const containerWrapper = {
       ...sectionNode,
       id: 'container_test',
-      role: 'container' as const,
+      subtype: 'container' as const,
     };
 
     expect(resolveInspectorConfigKey(sectionNode)).toBe('section');
@@ -192,10 +192,10 @@ describe('panels/inspector/schema', () => {
   it('renders a go-to-mode button in sticky inspector sections outside focused mode', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text',
+      (node) => node.contentType === 'text',
     );
 
-    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text node');
     }
 
@@ -212,10 +212,10 @@ describe('panels/inspector/schema', () => {
   it('debug-info block appears first when showDebugInfo=true and non-site node selected', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text',
+      (node) => node.contentType === 'text',
     );
 
-    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text node');
     }
 
@@ -225,7 +225,7 @@ describe('panels/inspector/schema', () => {
       stageId: 'stage-node-test-id',
       name: 'Test Node',
       family: 'leaf' as const,
-      role: 'text',
+      subtype: 'block',
       parentId: null,
       authoredRect: { x: '0px', y: '0px', width: '100%', height: '400px' },
       measuredBounds: null,
@@ -252,10 +252,10 @@ describe('panels/inspector/schema', () => {
   it('debug-info block absent when showDebugInfo is false or undefined', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text',
+      (node) => node.contentType === 'text',
     );
 
-    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text node');
     }
 

@@ -2,11 +2,12 @@ import type { CSSProperties } from 'react';
 import { getChildren } from '../model/selectors';
 import type {
   ComputedWrapperStickyState,
+  ContainerNode,
   DocumentModel,
   StickyDefinition,
   ViewportMeasurement,
-  WrapperNode,
 } from '../model/types';
+import { isContainerNode, isTextNode } from '../model/types';
 import { formatValue, resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import { buildBorderStyle, buildBoxShadow } from './styleHelpers';
 import { resolveWrapperStickyState } from '../sticky/resolve';
@@ -17,6 +18,9 @@ import type {
   RenderMeasuredNodeSizes,
   WrapperRenderPlan,
 } from './types';
+
+// Keep WrapperNode alias for callers not yet renamed
+type WrapperNode = ContainerNode;
 export type {
   MeshLayout,
   RenderExportableNode,
@@ -38,7 +42,7 @@ export function resolveWrapperRenderPlan(
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): WrapperRenderPlan {
   const children = getChildren(document, node.id).filter(
-    (child): child is ExportableNode => child.type !== 'site' && child.visible,
+    (child): child is ExportableNode => child.contentType !== 'site' && child.visible,
   );
   const stickyGeometry = {
     nodeSizes: measuredNodeSizes,
@@ -52,11 +56,11 @@ export function resolveWrapperRenderPlan(
   const childWrapperExtraExtentMap = new Map<string, number>();
 
   for (const child of children) {
-    if (child.type !== 'wrapper') {
+    if (!isContainerNode(child)) {
       continue;
     }
     const childChildren = getChildren(document, child.id).filter(
-      (candidate): candidate is ExportableNode => candidate.type !== 'site' && candidate.visible,
+      (candidate): candidate is ExportableNode => candidate.contentType !== 'site' && candidate.visible,
     );
     childWrapperExtraExtentMap.set(
       child.id,
@@ -91,7 +95,7 @@ export function getWrapperBorderDeclarations(node: WrapperNode): string[] {
 export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties {
   const style: CSSProperties = {
     boxSizing: 'border-box',
-    background: node.style.background,
+    background: node.style?.background,
   };
 
   Object.assign(style, buildBorderStyle(node.style));
@@ -105,7 +109,7 @@ export function getContentWrapperSurfaceStyle(node: WrapperNode): CSSProperties 
 }
 
 function getSectionDividerStyle(node: WrapperNode): CSSProperties {
-  if (node.role !== 'section' || (!node.style.sectionBorderBottomColor && !node.style.sectionBorderBottomWidth)) {
+  if (node.subtype !== 'section' || (!node.style?.sectionBorderBottomColor && !node.style?.sectionBorderBottomWidth)) {
     return {};
   }
 
@@ -120,10 +124,10 @@ function getSectionDividerStyle(node: WrapperNode): CSSProperties {
 
 export function getContentWrapperPaddingStyle(node: WrapperNode): CSSProperties {
   return {
-    paddingTop: node.style.paddingTop ? formatValue(node.style.paddingTop.parsed) : undefined,
-    paddingRight: node.style.paddingRight ? formatValue(node.style.paddingRight.parsed) : undefined,
-    paddingBottom: node.style.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : undefined,
-    paddingLeft: node.style.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : undefined,
+    paddingTop: node.style?.paddingTop ? formatValue(node.style.paddingTop.parsed) : undefined,
+    paddingRight: node.style?.paddingRight ? formatValue(node.style.paddingRight.parsed) : undefined,
+    paddingBottom: node.style?.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : undefined,
+    paddingLeft: node.style?.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : undefined,
   };
 }
 
@@ -134,7 +138,7 @@ export function getContentWrapperBaseStyle(node: WrapperNode): CSSProperties {
   };
 
   if ('unit' in height) {
-    if (node.role === 'container') {
+    if (node.subtype === 'container') {
       base.height = formatValue(height);
     } else {
       base.minHeight = formatValue(height);
@@ -226,10 +230,10 @@ export function getNodeHeight(
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node, measuredNodeSizes, viewport) / height.ratio;
   }
-  if (node.type === 'wrapper') {
-    return node.role === 'header' || node.role === 'footer' ? 0 : 480;
+  if (isContainerNode(node)) {
+    return node.subtype === 'header' || node.subtype === 'footer' ? 0 : 480;
   }
-  return estimateAutoLeafHeight(node, measuredNodeSizes, viewport);
+  return estimateAutoLeafHeight(node as LeafNode, measuredNodeSizes, viewport);
 }
 
 export function resolveOffsetPx(
@@ -268,7 +272,13 @@ function estimateAutoLeafHeight(
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
-  if (node.role === 'text') {
+  if (isTextNode(node)) {
+    if (node.link !== undefined && node.style?.background !== undefined) {
+      return 50;
+    }
+    if (node.link !== undefined) {
+      return 24;
+    }
     const fontSize =
       node.style?.fontSize && 'unit' in node.style.fontSize.parsed
         ? resolveFontSizePx(
@@ -290,14 +300,6 @@ function estimateAutoLeafHeight(
       ),
     );
     return Math.ceil(lineCount * fontSize * 1.24);
-  }
-
-  if (node.role === 'link') {
-    return 24;
-  }
-
-  if (node.role === 'button') {
-    return 50;
   }
 
   return 56;
@@ -381,7 +383,7 @@ function getMeshNodeHeight(
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   let baseHeight = getNodeHeight(node, measuredNodeSizes, viewport);
-  if (node.type === 'wrapper' && childWrapperExtraExtentPx > 0) {
+  if (isContainerNode(node) && childWrapperExtraExtentPx > 0) {
     baseHeight += childWrapperExtraExtentPx;
   }
   if (
@@ -405,7 +407,7 @@ function getWrapperMeshBaseHeight(
   if ('unit' in height || height.keyword === 'aspect-ratio') {
     return getNodeHeight(wrapper, measuredNodeSizes, viewport);
   }
-  if (wrapper.role === 'header' || wrapper.role === 'footer') {
+  if (wrapper.subtype === 'header' || wrapper.subtype === 'footer') {
     return 0;
   }
   return AUTO_WRAPPER_MIN_HEIGHT_PX;

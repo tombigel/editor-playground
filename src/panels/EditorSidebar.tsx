@@ -64,7 +64,7 @@ export function EditorSidebar({
 	const selectedNodes = inspectorProps.selectedNodes ?? [];
 	const isMultiSelect = selectedNodes.length > 1;
 	const singleEditableNode =
-		!isMultiSelect && inspectorProps.node && inspectorProps.node.type !== "site"
+		!isMultiSelect && inspectorProps.node && inspectorProps.node.contentType !== "site"
 			? inspectorProps.node
 			: null;
 	const isNoSelection =
@@ -81,17 +81,17 @@ export function EditorSidebar({
 		? `${selectedNodes.length} selected`
 		: activePage
 			? activePage.displayName || "Page"
-			: inspectorProps.node?.type === "site"
+			: inspectorProps.node?.contentType === "site"
 				? "No selection"
 				: singleEditableNode?.name?.trim() ||
-					singleEditableNode?.role ||
+					singleEditableNode?.subtype ||
 					"No selection";
 	const roleLabel = isMultiSelect
 		? null
 		: activePage
 			? "page"
 			: singleEditableNode
-				? singleEditableNode.role
+				? singleEditableNode.subtype
 				: null;
 	const collapsedLayerClass = showCollapsedHandle
 		? "opacity-100"
@@ -167,7 +167,7 @@ export function EditorSidebar({
 											onCommit={(value) => {
 												const nextValue = resolveSidebarTitleCommit(
 													value,
-													singleEditableNode.role,
+													singleEditableNode.subtype,
 												);
 												if (nextValue !== singleEditableNode.name) {
 													inspectorProps.onTextChange("name", nextValue);

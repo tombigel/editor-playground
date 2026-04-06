@@ -35,29 +35,29 @@ describe('site/siteExport', () => {
   it('exports link and button navigation targets including new-tab behavior', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!section || section.contentType !== 'container' || !link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected section wrapper and post link node');
     }
 
     const button = createLeaf('button', section.id);
-    if (button.role !== 'button') {
+    if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
-    button.label = 'Start testing';
-    button.href = 'https://example.com/start';
-    button.openInNewTab = true;
+    button.content = 'Start testing';
+    button.link = { ...(button.link ?? { linkType: 'external' }), href: 'https://example.com/start' };
+    button.link = { ...(button.link ?? { linkType: 'external' }), openInNewTab: true };
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
-    link.linkType = 'external';
-    link.href = 'https://example.com/spec';
-    link.openInNewTab = true;
+    link.link = { ...(link.link ?? { linkType: 'external' }), linkType: 'external' };
+    link.link = { ...(link.link ?? { linkType: 'external' }), href: 'https://example.com/spec' };
+    link.link = { ...(link.link ?? { linkType: 'external' }), openInNewTab: true };
 
     const html = renderSiteHtmlDocument(document);
 
@@ -77,20 +77,17 @@ describe('site/siteExport', () => {
   it('exports same-page anchor links against section ids', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!section || section.contentType !== 'container' || !link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected post section and link node');
     }
 
-    link.linkType = 'anchor';
-    link.anchorTargetId = section.id;
-    link.href = `#${section.id}`;
-    link.openInNewTab = true;
+    link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: section.id, href: `#${section.id}`, openInNewTab: true };
 
     const html = renderSiteHtmlDocument(document);
 
@@ -102,24 +99,21 @@ describe('site/siteExport', () => {
   it('exports same-page anchor buttons against section ids', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected post section');
     }
 
     const button = createLeaf('button', section.id);
-    if (button.type !== 'leaf' || button.role !== 'button') {
+    if (button.contentType !== 'text' || button.subtype !== 'block') {
       throw new Error('Expected button node');
     }
     document.nodes[button.id] = button;
     section.children.push(button.id);
 
-    button.linkType = 'anchor';
-    button.anchorTargetId = section.id;
-    button.href = `#${section.id}`;
-    button.openInNewTab = true;
+    button.link = { ...(button.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: section.id, href: `#${section.id}`, openInNewTab: true };
 
     const html = renderSiteHtmlDocument(document);
 
@@ -130,18 +124,18 @@ describe('site/siteExport', () => {
   it('generates text styling in css instead of inline styles', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
     target.style ??= {};
-    target.style.fontSize = parseFontSizeValue('31px');
-    target.style.fontWeight = 700;
-    target.style.lineHeight = 1.4;
-    target.style.textDecorationLine = 'underline';
+    target.style!.fontSize = parseFontSizeValue('31px');
+    target.style!.fontWeight = 700;
+    target.style!.lineHeight = 1.4;
+    target.style!.textDecorationLine = 'underline';
 
     const css = renderSiteCss(document);
 
@@ -155,10 +149,10 @@ describe('site/siteExport', () => {
   it('omits un-authored text design styles when the model does not override them', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -176,30 +170,30 @@ describe('site/siteExport', () => {
   it('exports custom text and link design styles including filter shadows', () => {
     const document = structuredClone(createInitialDocument());
     const text = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
-    if (!text || text.type !== 'leaf' || text.role !== 'text' || !link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!text || text.contentType !== 'text' || !link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected text and link leaves');
     }
 
     text.style ??= {};
-    text.style.color = '#0f172a';
-    text.style.shadowColor = 'rgba(15, 23, 42, 0.18)';
-    text.style.shadowBlur = 16;
-    text.style.shadowOffsetX = 4;
-    text.style.shadowOffsetY = 8;
+    text.style!.color = '#0f172a';
+    text.style!.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    text.style!.shadowBlur = 16;
+    text.style!.shadowOffsetX = 4;
+    text.style!.shadowOffsetY = 8;
     link.style ??= {};
-    link.style.color = '#1d4ed8';
-    link.style.fontWeight = 700;
-    link.style.textAlign = 'center';
-    link.style.textWrap = 'wrap';
-    link.style.shadowColor = 'rgba(29, 78, 216, 0.28)';
-    link.style.shadowBlur = 10;
-    link.style.shadowOffsetX = 2;
-    link.style.shadowOffsetY = 6;
+    link.style!.color = '#1d4ed8';
+    link.style!.fontWeight = 700;
+    link.style!.textAlign = 'center';
+    link.style!.textWrap = 'wrap';
+    link.style!.shadowColor = 'rgba(29, 78, 216, 0.28)';
+    link.style!.shadowBlur = 10;
+    link.style!.shadowOffsetX = 2;
+    link.style!.shadowOffsetY = 6;
 
     const css = renderSiteCss(document);
 
@@ -218,27 +212,27 @@ describe('site/siteExport', () => {
   it('preserves authored extended color space strings in exported css', () => {
     const document = structuredClone(createInitialDocument());
     const text = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!text || text.type !== 'leaf' || text.role !== 'text' || !section || section.type !== 'wrapper') {
+    if (!text || text.contentType !== 'text' || !section || section.contentType !== 'container') {
       throw new Error('Expected text leaf and section wrapper');
     }
 
     const button = createLeaf('button', section.id);
-    if (button.role !== 'button') {
+    if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
     text.style ??= {};
-    text.style.color = 'oklch(70% 0.2 250 / 0.7)';
+    text.style!.color = 'oklch(70% 0.2 250 / 0.7)';
     button.style ??= {};
-    button.style.background = 'color(display-p3 0.24 0.52 0.88 / 0.9)';
+    button.style!.background = 'color(display-p3 0.24 0.52 0.88 / 0.9)';
 
     const css = renderSiteCss(document);
 
@@ -249,20 +243,20 @@ describe('site/siteExport', () => {
   it('exports button typography and wrap settings', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
     const button = createLeaf('button', section.id);
-    if (button.role !== 'button') {
+    if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
     button.style ??= {};
-    button.style.fontSize = parseFontSizeValue('22px');
-    button.style.fontStyle = 'italic';
-    button.style.textAlign = 'center';
-    button.style.textWrap = 'wrap';
+    button.style!.fontSize = parseFontSizeValue('22px');
+    button.style!.fontStyle = 'italic';
+    button.style!.textAlign = 'center';
+    button.style!.textWrap = 'wrap';
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
@@ -292,13 +286,13 @@ describe('site/siteExport', () => {
     const document = createInitialDocument();
     const css = renderSiteCss(document);
     const heroSection = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
     const postTitle = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!heroSection || heroSection.type !== 'wrapper' || !postTitle || postTitle.type !== 'leaf') {
+    if (!heroSection || heroSection.contentType !== 'container' || !postTitle || (postTitle.contentType !== 'text' && postTitle.contentType !== 'media')) {
       throw new Error('Expected hero section and post title nodes');
     }
 
@@ -314,10 +308,10 @@ describe('site/siteExport', () => {
   it('serializes authored section height into exported wrapper content css', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -332,17 +326,17 @@ describe('site/siteExport', () => {
   it('serializes section bottom divider styles without adding implicit wrapper borders', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
-    section.style.borderColor = undefined;
-    section.style.borderWidth = undefined;
-    section.style.sectionBorderBottomColor = '#cbd5e1';
-    section.style.sectionBorderBottomWidth = parseUnitValue('2px');
+    section.style!.borderColor = undefined;
+    section.style!.borderWidth = undefined;
+    section.style!.sectionBorderBottomColor = '#cbd5e1';
+    section.style!.sectionBorderBottomWidth = parseUnitValue('2px');
 
     const css = renderSiteCss(document);
     const sectionRule = css.match(new RegExp(`\\.sp-node-${section.id}-content[^}]+\\}`, 'm'))?.[0] ?? '';
@@ -356,12 +350,12 @@ describe('site/siteExport', () => {
   it('exports container, image, and button design surfaces', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const image = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'image',
+      (node) => node.contentType === 'media',
     );
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
     const container = createWrapper('container', section.id);
@@ -369,42 +363,42 @@ describe('site/siteExport', () => {
     document.nodes[container.id] = container;
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(container.id, button.id);
-    if (!container || container.type !== 'wrapper' || !image || image.type !== 'leaf' || image.role !== 'image' || !button || button.type !== 'leaf' || button.role !== 'button') {
+    if (!container || container.contentType !== 'container' || !image || image.contentType !== 'media' || image.subtype !== 'image' || !button || button.contentType !== 'text' || button.subtype !== 'block') {
       throw new Error('Expected container, image, and button nodes');
     }
 
-    container.style.background = '#ffffff';
-    container.style.borderWidth = parseUnitValue('2px');
-    container.style.borderColor = '#cbd5e1';
-    container.style.borderRadius = parseUnitValue('18px');
-    container.style.shadowColor = 'rgba(18, 32, 51, 0.16)';
-    container.style.shadowBlur = 22;
-    container.style.shadowSpread = 6;
-    container.style.shadowOffsetX = 0;
-    container.style.shadowOffsetY = 14;
+    container.style!.background = '#ffffff';
+    container.style!.borderWidth = parseUnitValue('2px');
+    container.style!.borderColor = '#cbd5e1';
+    container.style!.borderRadius = parseUnitValue('18px');
+    container.style!.shadowColor = 'rgba(18, 32, 51, 0.16)';
+    container.style!.shadowBlur = 22;
+    container.style!.shadowSpread = 6;
+    container.style!.shadowOffsetX = 0;
+    container.style!.shadowOffsetY = 14;
 
     image.style ??= {};
-    image.style.borderWidth = parseUnitValue('3px');
-    image.style.borderColor = '#2563eb';
-    image.style.borderRadius = parseUnitValue('28px');
-    image.style.shadowColor = 'rgba(37, 99, 235, 0.2)';
-    image.style.shadowBlur = 18;
-    image.style.shadowSpread = 4;
-    image.style.shadowOffsetX = 0;
-    image.style.shadowOffsetY = 12;
+    image.style!.borderWidth = parseUnitValue('3px');
+    image.style!.borderColor = '#2563eb';
+    image.style!.borderRadius = parseUnitValue('28px');
+    image.style!.shadowColor = 'rgba(37, 99, 235, 0.2)';
+    image.style!.shadowBlur = 18;
+    image.style!.shadowSpread = 4;
+    image.style!.shadowOffsetX = 0;
+    image.style!.shadowOffsetY = 12;
 
     button.style ??= {};
-    button.style.color = '#0f172a';
-    button.style.background = '#f8fafc';
-    button.style.paddingBlock = parseSpacingValue('0.75em');
-    button.style.paddingInline = parseSpacingValue('1.5rem');
-    button.style.borderWidth = parseUnitValue('1px');
-    button.style.borderColor = '#0f172a';
-    button.style.shadowColor = 'rgba(15, 23, 42, 0.15)';
-    button.style.shadowBlur = 14;
-    button.style.shadowSpread = 3;
-    button.style.shadowOffsetX = 0;
-    button.style.shadowOffsetY = 8;
+    button.style!.color = '#0f172a';
+    button.style!.background = '#f8fafc';
+    button.style!.paddingBlock = parseSpacingValue('0.75em');
+    button.style!.paddingInline = parseSpacingValue('1.5rem');
+    button.style!.borderWidth = parseUnitValue('1px');
+    button.style!.borderColor = '#0f172a';
+    button.style!.shadowColor = 'rgba(15, 23, 42, 0.15)';
+    button.style!.shadowBlur = 14;
+    button.style!.shadowSpread = 3;
+    button.style!.shadowOffsetX = 0;
+    button.style!.shadowOffsetY = 8;
 
     const css = renderSiteCss(document);
 
@@ -429,13 +423,13 @@ describe('site/siteExport', () => {
   it('does not serialize zero-width borders, zero radius, or fully transparent shadows into export css', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const image = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'image',
+      (node) => node.contentType === 'media',
     );
 
-    if (!section || section.type !== 'wrapper' || !image || image.type !== 'leaf' || image.role !== 'image') {
+    if (!section || section.contentType !== 'container' || !image || image.contentType !== 'media' || image.subtype !== 'image') {
       throw new Error('Expected section wrapper and image leaf');
     }
 
@@ -443,19 +437,19 @@ describe('site/siteExport', () => {
     document.nodes[container.id] = container;
     document.nodes[section.id].children.push(container.id);
 
-    container.style.background = '#ffffff';
-    container.style.borderWidth = parseUnitValue('0px');
-    container.style.borderColor = '#cbd5e1';
-    container.style.borderRadius = parseUnitValue('0px');
-    container.style.shadowColor = 'rgba(18, 32, 51, 0)';
-    container.style.shadowBlur = 22;
-    container.style.shadowSpread = 6;
-    container.style.shadowOffsetY = 14;
+    container.style!.background = '#ffffff';
+    container.style!.borderWidth = parseUnitValue('0px');
+    container.style!.borderColor = '#cbd5e1';
+    container.style!.borderRadius = parseUnitValue('0px');
+    container.style!.shadowColor = 'rgba(18, 32, 51, 0)';
+    container.style!.shadowBlur = 22;
+    container.style!.shadowSpread = 6;
+    container.style!.shadowOffsetY = 14;
 
     image.style ??= {};
-    image.style.borderWidth = parseUnitValue('0px');
-    image.style.borderRadius = parseUnitValue('0px');
-    image.style.shadowColor = 'rgba(18, 32, 51, 0)';
+    image.style!.borderWidth = parseUnitValue('0px');
+    image.style!.borderRadius = parseUnitValue('0px');
+    image.style!.shadowColor = 'rgba(18, 32, 51, 0)';
 
     const css = renderSiteCss(document);
     const containerRule = css.match(new RegExp(`\\.sp-node-${container.id}-content \\{[^}]+\\}`, 'm'))?.[0] ?? '';
@@ -485,13 +479,13 @@ describe('site/siteExport', () => {
     };
     document.nodes[document.rootId].children.push(stickySteps.wrapper.id);
     const topCard = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'container' && node.name === 'Top Edge Card Container',
+      (node) => node.contentType === 'container' && node.subtype === 'container' && node.name === 'Top Edge Card Container',
     );
     const bottomCard = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'container' && node.name === 'Bottom Edge Card Container',
+      (node) => node.contentType === 'container' && node.subtype === 'container' && node.name === 'Bottom Edge Card Container',
     );
 
-    if (!topCard || topCard.type !== 'wrapper' || !bottomCard || bottomCard.type !== 'wrapper') {
+    if (!topCard || topCard.contentType !== 'container' || !bottomCard || bottomCard.contentType !== 'container') {
       throw new Error('Expected sticky edge lab card containers');
     }
 
@@ -520,10 +514,10 @@ describe('site/siteExport', () => {
   it('emits sticky spacer rules for self sticky exports', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -556,10 +550,10 @@ describe('site/siteExport', () => {
     document.nodes[document.rootId].children.push(stickyPinnedCards.wrapper.id);
 
     const pinnedLead = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+      (node) => node.contentType === 'text' && node.name === 'Pinned Lead',
     );
 
-    if (!pinnedLead || pinnedLead.type !== 'leaf' || pinnedLead.role !== 'text') {
+    if (!pinnedLead || pinnedLead.contentType !== 'text') {
       throw new Error('Expected pinned lead text node');
     }
 

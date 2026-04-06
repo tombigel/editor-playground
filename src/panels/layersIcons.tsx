@@ -10,29 +10,30 @@ import {
   Type,
 } from 'lucide-react';
 import type { DocumentNode } from '../model/types';
+import { isContainerNode, isTextNode, isMediaNode } from '../model/types';
 
-export function getLayersNodeIcon(node: Exclude<DocumentNode, { type: 'site' }>): LucideIcon {
-  if (node.type === 'wrapper') {
-    if (node.role === 'header') {
+export function getLayersNodeIcon(node: Exclude<DocumentNode, { contentType: 'site' }>): LucideIcon {
+  if (isContainerNode(node)) {
+    if (node.subtype === 'header') {
       return PanelTop;
     }
-    if (node.role === 'footer') {
+    if (node.subtype === 'footer') {
       return PanelBottom;
     }
-    if (node.role === 'section') {
+    if (node.subtype === 'section') {
       return Rows3;
     }
     return SquareStack;
   }
 
-  if (node.role === 'text') {
+  if (isTextNode(node)) {
+    if (node.link !== undefined) {
+      return Link2;
+    }
     return Type;
   }
-  if (node.role === 'image') {
+  if (isMediaNode(node)) {
     return ImageIcon;
-  }
-  if (node.role === 'link') {
-    return Link2;
   }
   return RectangleEllipsis;
 }

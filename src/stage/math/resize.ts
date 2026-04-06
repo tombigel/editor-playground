@@ -85,7 +85,7 @@ export function px(value: number) {
 }
 
 export function getResizeCommitSize(
-  node: Exclude<DocumentNode, { type: 'site' }>,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
   resizeState: Exclude<ResizeState, null>,
   nextWidth: number,
   nextHeight: number,
@@ -109,7 +109,7 @@ export function getResizeCommitSize(
 
 function serializeResizedDimension(
   axis: 'width' | 'height',
-  parsed: Exclude<DocumentNode, { type: 'site' }>['rect']['width' | 'height']['base']['parsed'],
+  parsed: Exclude<DocumentNode, { contentType: 'site' }>['rect']['width' | 'height']['base']['parsed'],
   _raw: string,
   pxValue: number,
   reference: { width: number; height: number; viewportWidth: number; viewportHeight: number } | null,
@@ -144,13 +144,13 @@ function convertPxToAuthorUnit(
 }
 
 function getResizeParentReference(
-  node: Exclude<DocumentNode, { type: 'site' }>,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
   documentModel: DocumentModel,
   measuredNodeSizes: MeasuredNodeSizes,
   viewport: ViewportMeasurement,
 ) {
   const parent = node.parentId ? documentModel.nodes[node.parentId] : null;
-  if (!parent || parent.type === 'site') {
+  if (!parent || parent.contentType === 'site') {
     return {
       width: viewport.width,
       height: viewport.height,

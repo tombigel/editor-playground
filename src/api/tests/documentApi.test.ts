@@ -19,7 +19,7 @@ import {
 } from '../documentApi';
 
 function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>) {
-  const id = Object.keys(document.nodes).find((nodeId) => document.nodes[nodeId]?.type !== 'site');
+  const id = Object.keys(document.nodes).find((nodeId) => document.nodes[nodeId]?.contentType !== 'site');
   if (!id) {
     throw new Error('Expected editable node');
   }
@@ -30,9 +30,9 @@ describe('api/documentApi', () => {
   it('updates rect fields immutably', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
     const image = createLeaf('image', section.id);
@@ -42,14 +42,14 @@ describe('api/documentApi', () => {
     document.nodes[section.id].children.push(image.id, button.id);
     const nodeId = firstEditableNodeId(document);
     const before = document.nodes[nodeId];
-    if (before.type === 'site') {
+    if (before.contentType === 'site') {
       throw new Error('Expected non-site node');
     }
 
     const next = setNodeRect(document, nodeId, 'x', '123px');
     expect(next).not.toBe(document);
-    expect(next.nodes[nodeId].type).not.toBe('site');
-    if (next.nodes[nodeId].type !== 'site') {
+    expect(next.nodes[nodeId].contentType).not.toBe('site');
+    if (next.nodes[nodeId].contentType !== 'site') {
       expect(next.nodes[nodeId].rect.x.base.raw).toBe('123px');
     }
     expect(before.rect.x.base.raw).not.toBe('123px');
@@ -60,7 +60,7 @@ describe('api/documentApi', () => {
     const nodeId = firstEditableNodeId(document);
     const next = setNodeSticky(document, nodeId, { enabled: true, durationMode: 'custom' });
     const node = next.nodes[nodeId];
-    if (node.type === 'site') {
+    if (node.contentType === 'site') {
       throw new Error('Expected non-site node');
     }
     expect(node.sticky?.enabled).toBe(true);
@@ -70,7 +70,7 @@ describe('api/documentApi', () => {
   it('updates text html tag through API helpers', () => {
     const document = createInitialDocument();
     const textId = Object.keys(document.nodes).find(
-      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+      (nodeId) => document.nodes[nodeId]?.contentType !== 'container' && document.nodes[nodeId]?.contentType !== 'site' && document.nodes[nodeId]?.subtype === 'block',
     );
     if (!textId) {
       throw new Error('Expected text node');
@@ -78,7 +78,7 @@ describe('api/documentApi', () => {
 
     const next = setNodeTextField(document, textId, 'htmlTag', 'blockquote');
     const node = next.nodes[textId];
-    if (node.type !== 'leaf' || node.role !== 'text') {
+    if (node.contentType !== 'text') {
       throw new Error('Expected text node');
     }
 
@@ -88,9 +88,9 @@ describe('api/documentApi', () => {
   it('updates design fields for leaves through API helpers', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
     const image = createLeaf('image', section.id);
@@ -99,7 +99,7 @@ describe('api/documentApi', () => {
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(image.id, button.id);
     const textId = Object.keys(document.nodes).find(
-      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+      (nodeId) => document.nodes[nodeId]?.contentType !== 'container' && document.nodes[nodeId]?.contentType !== 'site' && document.nodes[nodeId]?.subtype === 'block',
     );
     const imageId = image.id;
     const buttonId = button.id;
@@ -124,13 +124,13 @@ describe('api/documentApi', () => {
     const imageNode = withButtonWrap.nodes[imageId];
     const buttonNode = withButtonWrap.nodes[buttonId];
 
-    if (textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (textNode.contentType !== 'text') {
       throw new Error('Expected text node');
     }
-    if (imageNode.type !== 'leaf' || imageNode.role !== 'image') {
+    if (imageNode.contentType !== 'media' || imageNode.subtype !== 'image') {
       throw new Error('Expected image node');
     }
-    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+    if (buttonNode.contentType !== 'text' || buttonNode.subtype !== 'block') {
       throw new Error('Expected button node');
     }
 
@@ -146,12 +146,12 @@ describe('api/documentApi', () => {
   it('updates navigation fields for links and buttons through API helpers', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const linkId = Object.keys(document.nodes).find(
-      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'link',
+      (nodeId) => document.nodes[nodeId]?.contentType === 'text' && (document.nodes[nodeId] as { link?: unknown }).link != null,
     );
-    if (!section || section.type !== 'wrapper' || !linkId) {
+    if (!section || section.contentType !== 'container' || !linkId) {
       throw new Error('Expected section wrapper and link node');
     }
 
@@ -171,21 +171,21 @@ describe('api/documentApi', () => {
     const linkNode = withButtonTarget.nodes[linkId];
     const buttonNode = withButtonTarget.nodes[button.id];
 
-    if (linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+    if (linkNode.contentType !== 'text' || linkNode.link == null) {
       throw new Error('Expected link node');
     }
-    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+    if (buttonNode.contentType !== 'text' || buttonNode.subtype !== 'block') {
       throw new Error('Expected button node');
     }
 
-    expect(linkNode.linkType).toBe('anchor');
-    expect(linkNode.anchorTargetId).toBe(section.id);
-    expect(linkNode.href).toBe('https://example.com/docs');
-    expect(linkNode.openInNewTab).toBe(true);
-    expect(buttonNode.linkType).toBe('anchor');
-    expect(buttonNode.anchorTargetId).toBe(section.id);
-    expect(buttonNode.href).toBe('https://example.com/start');
-    expect(buttonNode.openInNewTab).toBe(true);
+    expect(linkNode.link?.linkType).toBe('anchor');
+    expect(linkNode.link?.anchorTargetId).toBe(section.id);
+    expect(linkNode.link?.href).toBe('https://example.com/docs');
+    expect(linkNode.link?.openInNewTab).toBe(true);
+    expect(buttonNode.link?.linkType).toBe('anchor');
+    expect(buttonNode.link?.anchorTargetId).toBe(section.id);
+    expect(buttonNode.link?.href).toBe('https://example.com/start');
+    expect(buttonNode.link?.openInNewTab).toBe(true);
   });
 
   it('preserves catalog metadata when applying an existing document font family', async () => {
@@ -193,7 +193,7 @@ describe('api/documentApi', () => {
     const catalog = await getBundledGoogleFontsCatalog();
     const assistantFamily = catalog.families.find((family) => family.family === 'Assistant');
     const textId = Object.keys(document.nodes).find(
-      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+      (nodeId) => document.nodes[nodeId]?.contentType !== 'container' && document.nodes[nodeId]?.contentType !== 'site' && document.nodes[nodeId]?.subtype === 'block',
     );
     if (!assistantFamily || !textId) {
       throw new Error('Expected bundled Assistant metadata and a text node');
@@ -201,7 +201,7 @@ describe('api/documentApi', () => {
 
     const next = setNodeTextField(document, textId, 'fontFamily', 'Assistant');
     const node = next.nodes[textId];
-    if (node.type !== 'leaf' || node.role !== 'text') {
+    if (node.contentType !== 'text') {
       throw new Error('Expected text node');
     }
 
@@ -217,7 +217,7 @@ describe('api/documentApi', () => {
   it('returns original document when text field does not apply to node type', () => {
     const document = createInitialDocument();
     const wrapperId = Object.keys(document.nodes).find(
-      (nodeId) => document.nodes[nodeId]?.type === 'wrapper',
+      (nodeId) => document.nodes[nodeId]?.contentType === 'container',
     );
     if (!wrapperId) {
       throw new Error('Expected wrapper node');
@@ -242,9 +242,9 @@ describe('api/documentApi', () => {
     const document = createInitialDocument();
     const homePage = document.pages?.[0];
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!homePage || !section || section.type !== 'wrapper') {
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -274,9 +274,9 @@ describe('api/documentApi', () => {
     const aboutPage = createPage({ displayName: 'About', slug: 'about' });
     const contactPage = createPage({ displayName: 'Contact', slug: 'contact' });
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!homePage || !section || section.type !== 'wrapper') {
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -300,7 +300,7 @@ describe('api/documentApi', () => {
     ]);
 
     const customNode = custom.nodes[section.id];
-    if (customNode.type !== 'wrapper') {
+    if (customNode.contentType !== 'container') {
       throw new Error('Expected wrapper node');
     }
 
@@ -317,9 +317,9 @@ describe('api/documentApi', () => {
   it('moves nodes to an exact tree index', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -339,13 +339,13 @@ describe('api/documentApi', () => {
   it('promotes the first root structural wrapper to header during tree moves', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
     const sectionId = root.children.find((childId) => {
       const node = document.nodes[childId];
-      return node?.type === 'wrapper' && node.role === 'section';
+      return node?.contentType === 'container' && node.subtype === 'section';
     });
     if (!sectionId) {
       throw new Error('Expected section wrapper');
@@ -356,26 +356,26 @@ describe('api/documentApi', () => {
     const movedSection = next.nodes[sectionId];
     const previousHeader = next.nodes[previousHeaderId];
 
-    if (movedSection?.type !== 'wrapper' || previousHeader?.type !== 'wrapper') {
+    if (movedSection?.contentType !== 'container' || previousHeader?.contentType !== 'container') {
       throw new Error('Expected structural wrappers');
     }
 
-    expect(next.nodes[next.rootId]?.type).toBe('site');
-    expect((next.nodes[next.rootId]?.type === 'site' && next.nodes[next.rootId].children[0]) || null).toBe(sectionId);
-    expect(movedSection.role).toBe('header');
-    expect(previousHeader.role).toBe('section');
+    expect(next.nodes[next.rootId]?.contentType).toBe('site');
+    expect((next.nodes[next.rootId]?.contentType === 'site' && next.nodes[next.rootId].children[0]) || null).toBe(sectionId);
+    expect(movedSection.subtype).toBe('header');
+    expect(previousHeader.subtype).toBe('section');
   });
 
   it('promotes the last root structural wrapper to footer during tree moves', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
     const sectionId = root.children.find((childId) => {
       const node = document.nodes[childId];
-      return node?.type === 'wrapper' && node.role === 'section';
+      return node?.contentType === 'container' && node.subtype === 'section';
     });
     const previousFooterId = root.children[root.children.length - 1];
     if (!sectionId) {
@@ -386,30 +386,30 @@ describe('api/documentApi', () => {
     const movedSection = next.nodes[sectionId];
     const previousFooter = next.nodes[previousFooterId];
 
-    if (movedSection?.type !== 'wrapper' || previousFooter?.type !== 'wrapper') {
+    if (movedSection?.contentType !== 'container' || previousFooter?.contentType !== 'container') {
       throw new Error('Expected structural wrappers');
     }
 
-    expect(next.nodes[next.rootId]?.type).toBe('site');
+    expect(next.nodes[next.rootId]?.contentType).toBe('site');
     expect(
-      (next.nodes[next.rootId]?.type === 'site' &&
+      (next.nodes[next.rootId]?.contentType === 'site' &&
         next.nodes[next.rootId].children[next.nodes[next.rootId].children.length - 1]) ||
         null,
     ).toBe(sectionId);
-    expect(movedSection.role).toBe('footer');
-    expect(previousFooter.role).toBe('section');
+    expect(movedSection.subtype).toBe('footer');
+    expect(previousFooter.subtype).toBe('section');
   });
 
   it('demotes a dragged header to section when moved into a middle root slot', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
     const headerId = root.children.find((childId) => {
       const node = document.nodes[childId];
-      return node?.type === 'wrapper' && node.role === 'header';
+      return node?.contentType === 'container' && node.subtype === 'header';
     });
     if (!headerId) {
       throw new Error('Expected header wrapper');
@@ -421,26 +421,26 @@ describe('api/documentApi', () => {
 
     const next = moveNodeInTreeDoc(document, headerId, document.rootId, 2);
     const movedHeader = next.nodes[headerId];
-    const promotedFirst = next.nodes[next.nodes[next.rootId]?.type === 'site' ? next.nodes[next.rootId].children[0] : ''];
+    const promotedFirst = next.nodes[next.nodes[next.rootId]?.contentType === 'site' ? next.nodes[next.rootId].children[0] : ''];
 
-    if (movedHeader?.type !== 'wrapper' || promotedFirst?.type !== 'wrapper') {
+    if (movedHeader?.contentType !== 'container' || promotedFirst?.contentType !== 'container') {
       throw new Error('Expected structural wrappers');
     }
 
-    expect(movedHeader.role).toBe('section');
-    expect(promotedFirst.role).toBe('header');
+    expect(movedHeader.subtype).toBe('section');
+    expect(promotedFirst.subtype).toBe('header');
   });
 
   it('rejects invalid structural drops into section children', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const header = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
 
-    if (!section || section.type !== 'wrapper' || !header || header.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container' || !header || header.contentType !== 'container') {
       throw new Error('Expected section and header wrappers');
     }
 
@@ -450,7 +450,7 @@ describe('api/documentApi', () => {
   it('chains commands and serializes/parses valid documents', () => {
     const document = createInitialDocument();
     const textId = Object.keys(document.nodes).find(
-      (nodeId) => document.nodes[nodeId]?.type === 'leaf' && document.nodes[nodeId]?.role === 'text',
+      (nodeId) => document.nodes[nodeId]?.contentType !== 'container' && document.nodes[nodeId]?.contentType !== 'site' && document.nodes[nodeId]?.subtype === 'block',
     );
     if (!textId) {
       throw new Error('Expected text node');
@@ -463,7 +463,7 @@ describe('api/documentApi', () => {
     ]);
 
     const updatedText = next.nodes[textId];
-    if (updatedText.type !== 'leaf' || updatedText.role !== 'text') {
+    if (updatedText.contentType !== 'text') {
       throw new Error('Expected text node');
     }
     expect(updatedText.rect.y.base.raw).toBe('777px');
@@ -491,7 +491,7 @@ describe('api/documentApi', () => {
       nodes: {
         site_1: {
           id: 'site_1',
-          type: 'site',
+          contentType: 'site', type: 'site',
           parentId: null,
           children: ['leaf_1'],
           name: 'Site',
@@ -500,8 +500,8 @@ describe('api/documentApi', () => {
         },
         leaf_1: {
           id: 'leaf_1',
-          type: 'leaf',
-          role: 'text',
+          contentType: 'text',
+          subtype: 'block',
           parentId: 'site_1',
           children: [],
           name: 'Bad leaf',
@@ -524,14 +524,14 @@ describe('api/documentApi', () => {
   it('inserts section templates before footer', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
     const footerId = root.children[root.children.length - 1];
 
     const next = insertSectionTemplateBeforeFooter(document, 'blank');
     const nextRoot = next.nodes[next.rootId];
-    if (!nextRoot || nextRoot.type !== 'site') {
+    if (!nextRoot || nextRoot.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
@@ -542,24 +542,24 @@ describe('api/documentApi', () => {
   it('seeds the default post link with product documentation copy', () => {
     const document = createInitialDocument();
     const postLink = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!postLink || postLink.type !== 'leaf' || postLink.role !== 'link') {
+    if (!postLink || postLink.contentType !== 'text' || postLink.link == null) {
       throw new Error('Expected post link node');
     }
 
-    expect(postLink.label).toBe('Open playground spec');
-    expect(postLink.label.toLowerCase()).not.toContain('maintenance');
+    expect(postLink.content).toBe('Open playground spec');
+    expect(postLink.content.toLowerCase()).not.toContain('maintenance');
   });
 
   it('seeds the initial post section with a 50vh height', () => {
     const document = createInitialDocument();
     const postSection = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!postSection || postSection.type !== 'wrapper') {
+    if (!postSection || postSection.contentType !== 'container') {
       throw new Error('Expected post section wrapper');
     }
 
@@ -569,28 +569,28 @@ describe('api/documentApi', () => {
   it('seeds semantic heading tags for template titles', () => {
     const initialDocument = createInitialDocument();
     const headerTitle = Object.values(initialDocument.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title',
+      (node) => node.contentType === 'text' && node.name === 'Product Title',
     );
     const footerTitle = Object.values(initialDocument.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Title',
+      (node) => node.contentType === 'text' && node.name === 'Footer Title',
     );
     const postTitle = Object.values(initialDocument.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!headerTitle || headerTitle.type !== 'leaf' || headerTitle.role !== 'text') {
+    if (!headerTitle || headerTitle.contentType !== 'text') {
       throw new Error('Expected header title text node');
     }
 
     expect(headerTitle.htmlTag).toBe('h1');
 
-    if (!footerTitle || footerTitle.type !== 'leaf' || footerTitle.role !== 'text') {
+    if (!footerTitle || footerTitle.contentType !== 'text') {
       throw new Error('Expected footer title text node');
     }
 
     expect(footerTitle.htmlTag).toBe('h2');
 
-    if (!postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
+    if (!postTitle || postTitle.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -598,32 +598,32 @@ describe('api/documentApi', () => {
 
     const staggered = createSectionFromTemplate('stickyStaggeredImages', 'site_test');
     const staggeredHeading = Object.values(staggered.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading',
+      (node) => node.contentType === 'text' && node.name === 'Section Heading',
     );
-    expect(staggeredHeading && staggeredHeading.type === 'leaf' && staggeredHeading.role === 'text' ? staggeredHeading.htmlTag : null).toBe('h2');
+    expect(staggeredHeading && staggeredHeading.contentType === 'text' ? staggeredHeading.htmlTag : null).toBe('h2');
 
     const pinnedCards = createSectionFromTemplate('stickyPinnedCards', 'site_test');
     const pinnedLead = Object.values(pinnedCards.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+      (node) => node.contentType === 'text' && node.name === 'Pinned Lead',
     );
-    expect(pinnedLead && pinnedLead.type === 'leaf' && pinnedLead.role === 'text' ? pinnedLead.htmlTag : null).toBe('h2');
+    expect(pinnedLead && pinnedLead.contentType === 'text' ? pinnedLead.htmlTag : null).toBe('h2');
 
     const mediaReveal = createSectionFromTemplate('stickyMediaReveal', 'site_test');
     const mediaRevealHeading = Object.values(mediaReveal.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading',
+      (node) => node.contentType === 'text' && node.name === 'Section Heading',
     );
     expect(
-      mediaRevealHeading && mediaRevealHeading.type === 'leaf' && mediaRevealHeading.role === 'text'
+      mediaRevealHeading && mediaRevealHeading.contentType === 'text'
         ? mediaRevealHeading.htmlTag
         : null,
     ).toBe('h2');
 
     const stickySteps = createSectionFromTemplate('stickySteps', 'site_test');
     const stickyStepsHeading = Object.values(stickySteps.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading',
+      (node) => node.contentType === 'text' && node.name === 'Section Heading',
     );
     expect(
-      stickyStepsHeading && stickyStepsHeading.type === 'leaf' && stickyStepsHeading.role === 'text'
+      stickyStepsHeading && stickyStepsHeading.contentType === 'text'
         ? stickyStepsHeading.htmlTag
         : null,
     ).toBe('h2');
@@ -632,14 +632,14 @@ describe('api/documentApi', () => {
   it('seeds the default footer repository link with the sticky-playground repo url', () => {
     const document = createInitialDocument();
     const repoLink = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Repository Link',
     );
 
-    if (!repoLink || repoLink.type !== 'leaf' || repoLink.role !== 'link') {
+    if (!repoLink || repoLink.contentType !== 'text' || repoLink.link == null) {
       throw new Error('Expected repository link node');
     }
 
-    expect(repoLink.label).toBe('github.com/tombigel/sticky-playground');
-    expect(repoLink.href).toBe('https://github.com/tombigel/sticky-playground');
+    expect(repoLink.content).toBe('github.com/tombigel/sticky-playground');
+    expect(repoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
   });
 });

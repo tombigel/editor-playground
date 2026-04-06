@@ -1,4 +1,5 @@
 import type { DocumentModel, DocumentFontFamily } from '../model/types';
+import { isTextNode } from '../model/types';
 import { getDocumentFontFamily } from './documentFonts';
 import { DEFAULT_FONT_WEIGHT, resolveNearestSupportedFontWeight } from './weights';
 
@@ -37,7 +38,7 @@ export function collectDocumentFontRequests(document: DocumentModel) {
   const requests = new Map<string, FontRequest>();
 
   for (const node of Object.values(document.nodes)) {
-    if (node.type !== 'leaf' || (node.role !== 'text' && node.role !== 'link' && node.role !== 'button')) {
+    if (!isTextNode(node)) {
       continue;
     }
 

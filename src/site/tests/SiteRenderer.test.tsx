@@ -8,10 +8,10 @@ describe('site/SiteRenderer', () => {
   it('renders text leaves using their configured html tag', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -26,10 +26,10 @@ describe('site/SiteRenderer', () => {
   it('renders self sticky nodes inside a sticky track with a spacer', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -53,10 +53,10 @@ describe('site/SiteRenderer', () => {
   it('renders content-wrapper sticky wrappers with a flow spacer', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!target || target.type !== 'wrapper') {
+    if (!target || target.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -80,10 +80,10 @@ describe('site/SiteRenderer', () => {
   it('renders bottom-edge sticky nodes with the spacer before the node content', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!target || target.type !== 'leaf') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected link leaf');
     }
 
@@ -116,10 +116,10 @@ describe('site/SiteRenderer', () => {
     document.nodes[document.rootId].children.push(stickyPinnedCards.wrapper.id);
 
     const pinnedLead = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+      (node) => node.contentType === 'text' && node.name === 'Pinned Lead',
     );
 
-    if (!pinnedLead || pinnedLead.type !== 'leaf' || pinnedLead.role !== 'text') {
+    if (!pinnedLead || pinnedLead.contentType !== 'text') {
       throw new Error('Expected pinned lead text node');
     }
 
@@ -132,10 +132,10 @@ describe('site/SiteRenderer', () => {
   it('omits hidden wrappers and their descendants from site output', () => {
     const document = structuredClone(createInitialDocument());
     const hiddenSection = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!hiddenSection || hiddenSection.type !== 'wrapper') {
+    if (!hiddenSection || hiddenSection.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -152,15 +152,15 @@ describe('site/SiteRenderer', () => {
     const document = structuredClone(createInitialDocument());
     const homePage = document.pages?.find((page) => page.pageRole === 'home');
     const pageLink = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!homePage || !pageLink || pageLink.type !== 'leaf' || pageLink.role !== 'link') {
+    if (!homePage || !pageLink || pageLink.contentType !== 'text' || pageLink.link == null) {
       throw new Error('Expected home page and link node');
     }
 
-    pageLink.linkType = 'page';
-    pageLink.targetPageId = homePage.id;
+    pageLink.link = { ...(pageLink.link ?? { linkType: 'page' }), linkType: 'page' };
+    pageLink.link = { ...(pageLink.link ?? { linkType: 'page' }), targetPageId: homePage.id };
 
     const markup = renderToStaticMarkup(<SiteRenderer document={document} pageId={homePage.id} />);
 

@@ -5,7 +5,7 @@ import { collectInteractKeys } from '../site/siteShared';
 import type { StageSceneProps } from './types';
 export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
 
-import { renderWrapper } from './stageRenderers/wrapperRenderer';
+import { renderContainer as renderWrapper } from './stageRenderers/containerRenderer';
 import { MultiSelectionOutline, SingleSelectionOverlay } from './stageRenderers/selectionVisuals';
 import { FollowLinkPopup } from '../panels/FollowLinkPopup';
 

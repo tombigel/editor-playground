@@ -16,6 +16,7 @@ import type {
 } from '../../api/types';
 import { getTopLevelSelectedIds } from '../../editor/selection';
 import type { DocumentModel, NodeId } from '../../model/types';
+import { isSiteNode, isContainerNode } from '../../model/types';
 import type { SnapSettings } from '../../editor/types';
 import type { StageProps } from '../types';
 
@@ -224,7 +225,7 @@ export function useStageDragDrop({
     }
 
     const node = document.nodes[nodeId];
-    if (!node || node.type === 'site') {
+    if (!node || isSiteNode(node)) {
       return;
     }
 
@@ -410,7 +411,7 @@ function buildGeometrySnapshot({
   startClientY: number;
 }): DragGeometrySnapshot {
   const anchorNode = document.nodes[anchorId];
-  if (!anchorNode || anchorNode.type === 'site') {
+  if (!anchorNode || isSiteNode(anchorNode)) {
     throw new Error(`Expected drag anchor node for ${anchorId}`);
   }
   const previewItems = collectPreviewItems(anchorElement, dragIds, dragElements);
@@ -438,7 +439,7 @@ function buildGeometrySnapshot({
     previewHeight,
     nodes: dragIds.flatMap((id) => {
       const node = document.nodes[id];
-      if (!node || node.type === 'site') {
+      if (!node || isSiteNode(node)) {
         return [];
       }
       return [
@@ -513,13 +514,13 @@ function resolveNodeSnapSource(
   id: NodeId,
 ): DragSnapSource {
   const node = document.nodes[id];
-  if (!node || node.type === 'site') {
+  if (!node || isSiteNode(node)) {
     return 'component';
   }
-  if (node.type === 'wrapper') {
-    const role = node.role;
-    if (role === 'section' || role === 'header' || role === 'footer' || role === 'container') {
-      return role;
+  if (isContainerNode(node)) {
+    const subtype = node.subtype;
+    if (subtype === 'section' || subtype === 'header' || subtype === 'footer' || subtype === 'container') {
+      return subtype;
     }
   }
   return 'component';

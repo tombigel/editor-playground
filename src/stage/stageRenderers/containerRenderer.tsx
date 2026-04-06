@@ -1,12 +1,13 @@
 import type { CSSProperties, ReactElement } from 'react';
 import type {
+  ContainerNode,
   DocumentModel,
   DocumentNode,
   NodeId,
   StickyDefinition,
   ViewportMeasurement,
-  WrapperNode,
 } from '../../model/types';
+import { isContainerNode } from '../../model/types';
 import { formatValue } from '../../model/units';
 import {
   formatNodeLabel,
@@ -40,7 +41,7 @@ import { renderLeaf, renderLeafSpacerOverlay } from './leafRenderer';
 const STAGE_STICKY_VIEWPORT_INSET_TOP_PX = 22;
 const STAGE_STICKY_VIEWPORT_INSET_BOTTOM_PX = 48;
 
-export function renderWrapper({
+export function renderContainer({
   document,
   plan,
   selectedId,
@@ -71,7 +72,7 @@ export function renderWrapper({
     usesSyntheticStickyTrack(node, { isTopLevel: plan.isTopLevel }),
   );
   const siteNode = document.nodes[document.rootId];
-  const globalStickyElevation = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const globalStickyElevation = siteNode.contentType === 'site' ? (siteNode.stickyElevation ?? true) : true;
   const isElevated = node.sticky?.enabled
     ? resolveStickyIsElevated(node.sticky, globalStickyElevation)
     : true;
@@ -111,7 +112,7 @@ export function renderWrapper({
       data-node-id={node.id}
       data-node-label={formatNodeLabel(node)}
       {...(interactKeys?.has(node.id) ? { 'data-interact-key': node.id } : {})}
-      className={`stage-wrapper role-${node.role} ${selectedIds.includes(node.id) ? 'selected' : ''} ${
+      className={`stage-wrapper subtype-${node.subtype} ${selectedIds.includes(node.id) ? 'selected' : ''} ${
         selectedIds.length > 1 && selectedIds.includes(node.id) ? 'selected-multi' : ''
       } ${
         selectedIds.length === 1 && selectedId === node.id ? 'selected-primary' : ''
@@ -189,7 +190,7 @@ export function renderWrapper({
         ) : null}
         {plan.children.map((child) =>
           child.kind === 'wrapper'
-            ? renderWrapper({
+            ? renderContainer({
                 document,
                 plan: child,
                 selectedId,
@@ -255,6 +256,9 @@ export function renderWrapper({
   });
 }
 
+// Keep renderWrapper as alias for backward compat during the transition
+export const renderWrapper = renderContainer;
+
 export function getStageStickyCssProperties(
   sticky: StickyDefinition | undefined,
   options?: { includePosition?: boolean; includeZIndex?: boolean },
@@ -282,7 +286,7 @@ function toStageStickyInset(offset: string, stageInsetPx: number) {
 
 export function getStickyTrackDistances(
   registration: StageStickyRegistration | undefined,
-  sticky: WrapperNode['sticky'] | import('../types').StageSceneLeafNode['sticky'] | undefined,
+  sticky: ContainerNode['sticky'] | import('../types').StageSceneLeafNode['sticky'] | undefined,
 ) {
   const edgeMode = sticky ? getStickyEdgeMode(sticky) : 'top';
   if (!registration || !sticky?.enabled || sticky.target !== 'self' || sticky.durationMode === 'auto') {
@@ -316,7 +320,7 @@ export function getStickyTrackDistances(
 }
 
 export function getPreviewWrapperBottomLanePx(
-  _wrapper: WrapperNode,
+  _wrapper: ContainerNode,
   bottomLanePx: number,
   _measuredNodeSizes: RenderMeasuredNodeSizes = {},
   _viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
@@ -403,11 +407,11 @@ export function renderStickyTrackShell({
   );
 }
 
-export function isStructuralTopLevelWrapper(node: WrapperNode, isTopLevel: boolean) {
-  return isTopLevel && (node.role === 'section' || node.role === 'header' || node.role === 'footer');
+export function isStructuralTopLevelWrapper(node: ContainerNode, isTopLevel: boolean) {
+  return isTopLevel && (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer');
 }
 
-export function getWrapperResizeHandles(node: WrapperNode, isTopLevel: boolean): ResizeHandle[] {
+export function getContainerResizeHandles(node: ContainerNode, isTopLevel: boolean): ResizeHandle[] {
   if (isStructuralTopLevelWrapper(node, isTopLevel)) {
     return usesAspectRatioHeight(node) ? [] : ['s'];
   }
@@ -415,7 +419,10 @@ export function getWrapperResizeHandles(node: WrapperNode, isTopLevel: boolean):
   return isTopLevel ? [] : ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
 }
 
-function usesAspectRatioHeight(node: WrapperNode) {
+// Keep old name as alias for backward compat during transition
+export const getWrapperResizeHandles = getContainerResizeHandles;
+
+function usesAspectRatioHeight(node: ContainerNode) {
   return !('unit' in node.rect.height.base.parsed) && node.rect.height.base.parsed.keyword === 'aspect-ratio';
 }
 
@@ -428,7 +435,7 @@ function shouldShowSpacerVisuals(
 }
 
 function renderWrapperSelfDistanceVisual(
-  node: WrapperNode,
+  node: ContainerNode,
   registration?: StageStickyRegistration,
   ownerBottomLanePx?: number,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
@@ -442,7 +449,7 @@ function renderWrapperSelfDistanceVisual(
   const edgeMode = getStickyEdgeMode(node.sticky);
   const isBottomOnlySticky = edgeMode === 'bottom';
   const isBothSticky = edgeMode === 'both';
-  const isTopLevelAutoOnly = node.role !== 'container' && node.sticky.target === 'self';
+  const isTopLevelAutoOnly = node.subtype !== 'container' && node.sticky.target === 'self';
   const isAuto = isTopLevelAutoOnly || (node.sticky.durationMode ?? 'auto') === 'auto';
   const nodeHeightPx = getNodeHeight(node, measuredNodeSizes, viewport);
   const elevationClass = isElevated ? 'sticky-spacer-label-elevated' : 'sticky-spacer-label-grounded';
@@ -552,7 +559,7 @@ function renderWrapperSelfDistanceVisual(
 
 function renderSpacerRanges(
   document: DocumentModel,
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   registrations: StageStickyRegistration[],
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
@@ -565,13 +572,13 @@ function renderSpacerRanges(
     .filter((registration) => registration.target === 'contentWrapper')
     .map((registration) => {
       const owner = document.nodes[registration.ownerId];
-      if (!owner || owner.type === 'site') {
+      if (!owner || owner.contentType === 'site') {
         return null;
       }
 
       const style = getSpacerRangeStyle(owner, registration, wrapper, measuredNodeSizes, viewport);
       const siteNode = document.nodes[document.rootId];
-      const globalElev = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+      const globalElev = siteNode.contentType === 'site' ? (siteNode.stickyElevation ?? true) : true;
       const ownerIsElevated = owner.sticky?.enabled
         ? resolveStickyIsElevated(owner.sticky, globalElev)
         : true;
@@ -597,13 +604,13 @@ function renderSpacerRanges(
 }
 
 function getSpacerRangeStyle(
-  owner: Exclude<DocumentNode, { type: 'site' }>,
+  owner: Exclude<DocumentNode, { contentType: 'site' }>,
   registration: StageStickyRegistration,
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): CSSProperties {
-  if (owner.type === 'wrapper' && owner.id === wrapper.id) {
+  if (isContainerNode(owner) && owner.id === wrapper.id) {
     return {
       left: 0,
       top: `${registration.startPx}px`,
@@ -626,7 +633,7 @@ function getSpacerRangeStyle(
 
 function renderGridLaneOverlay(
   meshLayout: MeshLayout,
-  node: WrapperNode,
+  node: ContainerNode,
   _measuredNodeSizes: RenderMeasuredNodeSizes = {},
   _viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
@@ -664,7 +671,7 @@ function renderGridLaneOverlay(
   );
 }
 
-function renderWrapperPaddingOverlay(node: WrapperNode) {
+function renderWrapperPaddingOverlay(node: ContainerNode) {
   return (
     <div className="wrapper-padding-overlay" aria-hidden="true">
       <div
@@ -675,24 +682,24 @@ function renderWrapperPaddingOverlay(node: WrapperNode) {
   );
 }
 
-function getWrapperPaddingInsetStyle(node: WrapperNode): CSSProperties {
+function getWrapperPaddingInsetStyle(node: ContainerNode): CSSProperties {
   return {
-    top: node.style.paddingTop ? formatValue(node.style.paddingTop.parsed) : '0px',
-    right: node.style.paddingRight ? formatValue(node.style.paddingRight.parsed) : '0px',
-    bottom: node.style.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : '0px',
-    left: node.style.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : '0px',
+    top: node.style?.paddingTop ? formatValue(node.style.paddingTop.parsed) : '0px',
+    right: node.style?.paddingRight ? formatValue(node.style.paddingRight.parsed) : '0px',
+    bottom: node.style?.paddingBottom ? formatValue(node.style.paddingBottom.parsed) : '0px',
+    left: node.style?.paddingLeft ? formatValue(node.style.paddingLeft.parsed) : '0px',
   };
 }
 
 function shouldShowWrapperPaddingVisual(
   document: DocumentModel,
-  node: WrapperNode,
+  node: ContainerNode,
   selectedIds: NodeId[],
 ) {
   if (selectedIds.length === 0) {
     return false;
   }
-  if (node.role !== 'section' && node.role !== 'header' && node.role !== 'footer' && node.role !== 'container') {
+  if (node.subtype !== 'section' && node.subtype !== 'header' && node.subtype !== 'footer' && node.subtype !== 'container') {
     return false;
   }
   if (!hasNonZeroWrapperPadding(node)) {
@@ -701,8 +708,8 @@ function shouldShowWrapperPaddingVisual(
   return selectedIds.includes(node.id) || selectedIds.some((selectedId) => isNodeDescendantOf(document, selectedId, node.id));
 }
 
-function hasNonZeroWrapperPadding(node: WrapperNode) {
-  return [node.style.paddingTop, node.style.paddingRight, node.style.paddingBottom, node.style.paddingLeft].some((value) => {
+function hasNonZeroWrapperPadding(node: ContainerNode) {
+  return [node.style?.paddingTop, node.style?.paddingRight, node.style?.paddingBottom, node.style?.paddingLeft].some((value) => {
     if (!value) {
       return false;
     }
@@ -711,13 +718,13 @@ function hasNonZeroWrapperPadding(node: WrapperNode) {
 }
 
 function shouldShowDropTargetPaddingVisual(
-  node: WrapperNode,
+  node: ContainerNode,
   isHighlightedDropTarget: boolean,
 ) {
   if (!isHighlightedDropTarget) {
     return false;
   }
-  if (node.role !== 'section' && node.role !== 'header' && node.role !== 'footer' && node.role !== 'container') {
+  if (node.subtype !== 'section' && node.subtype !== 'header' && node.subtype !== 'footer' && node.subtype !== 'container') {
     return false;
   }
   return hasNonZeroWrapperPadding(node);

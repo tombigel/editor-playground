@@ -1,8 +1,9 @@
 import { getNode, type EditorState, type NodeId } from '../api/editorApi';
+import { isContainerNode, isLeafNode, isSiteNode } from '../model/types';
 
 export function selectedNodeHasTopEdge(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
-  if (!node || node.type === 'site') {
+  if (!node || isSiteNode(node)) {
     return false;
   }
   return node.sticky?.edges.top ?? !node.sticky?.edges.bottom;
@@ -10,7 +11,7 @@ export function selectedNodeHasTopEdge(state: EditorState, selectedId: string) {
 
 export function selectedNodeHasBottomEdge(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
-  if (!node || node.type === 'site') {
+  if (!node || isSiteNode(node)) {
     return false;
   }
   return node.sticky?.edges.bottom ?? false;
@@ -18,7 +19,7 @@ export function selectedNodeHasBottomEdge(state: EditorState, selectedId: string
 
 export function selectedNodeDisallowsContentWrapperTarget(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
-  return Boolean(node && node.type === 'wrapper' && node.role === 'container');
+  return Boolean(node && isContainerNode(node) && node.subtype === 'container');
 }
 
 export function getNodeOrderState(
@@ -33,7 +34,7 @@ export function getNodeOrderState(
       .filter(Boolean);
     if (
       selectedNodes.length !== selectedIds.length ||
-      selectedNodes.some((selectedNode) => selectedNode.type === 'wrapper' && selectedNode.role === 'section')
+      selectedNodes.some((selectedNode) => isContainerNode(selectedNode) && selectedNode.subtype === 'section')
     ) {
       return { show: false, canBack: false, canForward: false };
     }
@@ -43,9 +44,9 @@ export function getNodeOrderState(
       !parentId ||
       selectedNodes.some(
         (selectedNode) =>
-          selectedNode.type === 'site' ||
+          isSiteNode(selectedNode) ||
           selectedNode.parentId !== parentId ||
-          (selectedNode.type === 'wrapper' && selectedNode.role !== 'container'),
+          (isContainerNode(selectedNode) && selectedNode.subtype !== 'container'),
       )
     ) {
       return { show: false, canBack: false, canForward: false };
@@ -74,11 +75,11 @@ export function getNodeOrderState(
     };
   }
 
-  if (!node || node.type === 'site' || node.parentId === null) {
+  if (!node || isSiteNode(node) || node.parentId === null) {
     return { show: false, canBack: false, canForward: false };
   }
 
-  const isReorderable = node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
+  const isReorderable = isLeafNode(node) || (isContainerNode(node) && node.subtype === 'container');
   if (!isReorderable) {
     return { show: false, canBack: false, canForward: false };
   }
@@ -110,12 +111,12 @@ export function getSectionOrderState(
     return { canBack: false, canForward: false };
   }
 
-  if (!node || node.type !== 'wrapper' || node.role !== 'section' || node.parentId !== state.document.rootId) {
+  if (!node || !isContainerNode(node) || node.subtype !== 'section' || node.parentId !== state.document.rootId) {
     return { canBack: false, canForward: false };
   }
 
   const root = state.document.nodes[state.document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return { canBack: false, canForward: false };
   }
 
@@ -139,7 +140,7 @@ function findSectionSiblingIndex(
   let index = fromIndex + direction;
   while (index >= 0 && index < siblingIds.length) {
     const candidate = state.document.nodes[siblingIds[index]];
-    if (candidate?.type === 'wrapper' && candidate.role === 'section') {
+    if (candidate && isContainerNode(candidate) && candidate.subtype === 'section') {
       return index;
     }
     index += direction;

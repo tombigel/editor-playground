@@ -31,10 +31,10 @@ describe('panels/inspector/CommonSections', () => {
   it('shows the top-level width field as disabled when the wrapper is locked to 100%', () => {
     const document = createInitialDocument();
     const headerNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
 
-    if (!headerNode || headerNode.type !== 'wrapper') {
+    if (!headerNode || headerNode.contentType !== 'container') {
       throw new Error('Expected header wrapper');
     }
 
@@ -131,10 +131,10 @@ describe('panels/inspector/CommonSections', () => {
   it('renders a top-level wrapper visibility control for eligible wrappers', () => {
     const document = createInitialDocument();
     const sectionNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -180,9 +180,9 @@ describe('panels/inspector/CommonSections', () => {
   it('renders a visible/hidden switch for non-top-level nodes', () => {
     const document = createInitialDocument();
     const sectionNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -260,10 +260,10 @@ describe('panels/inspector/CommonSections', () => {
   it('renders the summary title itself as the editable surface for non-site nodes', () => {
     const document = createInitialDocument();
     const headerNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
 
-    if (!headerNode || headerNode.type !== 'wrapper') {
+    if (!headerNode || headerNode.contentType !== 'container') {
       throw new Error('Expected header wrapper');
     }
 

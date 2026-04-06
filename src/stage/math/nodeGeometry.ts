@@ -1,4 +1,5 @@
 import type { DocumentNode, StickyDefinition, ViewportMeasurement } from '../../model/types';
+import { isContainerNode, isTextNode } from '../../model/types';
 import { resolveFontSizePx, resolveUnitValuePx } from '../../model/units';
 import type {
   MeasuredNodeSizes,
@@ -74,10 +75,10 @@ export function getNodeHeight(
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node, measuredNodeSizes, viewport) / height.ratio;
   }
-  if (node.type === 'wrapper') {
-    return node.role === 'header' || node.role === 'footer' ? 0 : 0;
+  if (isContainerNode(node)) {
+    return node.subtype === 'header' || node.subtype === 'footer' ? 0 : 0;
   }
-  return estimateAutoLeafHeight(node, measuredNodeSizes, viewport);
+  return estimateAutoLeafHeight(node as LeafNode, measuredNodeSizes, viewport);
 }
 
 function estimateAutoLeafHeight(
@@ -85,7 +86,13 @@ function estimateAutoLeafHeight(
   measuredNodeSizes: MeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_STAGE_VIEWPORT,
 ) {
-  if (node.role === 'text') {
+  if (isTextNode(node)) {
+    if (node.link !== undefined && node.style?.background !== undefined) {
+      return 50;
+    }
+    if (node.link !== undefined) {
+      return 24;
+    }
     const fontSize =
       node.style?.fontSize && 'unit' in node.style.fontSize.parsed
         ? resolveFontSizePx(
@@ -107,14 +114,6 @@ function estimateAutoLeafHeight(
       ),
     );
     return Math.ceil(lineCount * fontSize * 1.24);
-  }
-
-  if (node.role === 'link') {
-    return 24;
-  }
-
-  if (node.role === 'button') {
-    return 50;
   }
 
   return 56;

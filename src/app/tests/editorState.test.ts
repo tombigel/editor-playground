@@ -131,8 +131,8 @@ describe('app/editorState', () => {
     const next = editorReducer(state, { type: 'stickyTarget', value: 'contentWrapper' });
     const sticky = next.document.nodes[state.selectedId];
 
-    expect(sticky?.type).toBe('wrapper');
-    if (sticky?.type !== 'wrapper') {
+    expect(sticky?.contentType).toBe('container');
+    if (sticky?.contentType !== 'container') {
       throw new Error('Expected wrapper node');
     }
     expect(sticky.sticky?.target).toBe('self');
@@ -158,16 +158,16 @@ describe('app/editorState', () => {
   it('keeps structural wrappers single-selected when the user tries to add them to a multi-selection', () => {
     const initialState = createInitialState();
     const section = Object.values(initialState.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const header = Object.values(initialState.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
     const footer = Object.values(initialState.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'footer',
+      (node) => node.contentType === 'container' && node.subtype === 'footer',
     );
 
-    if (!section || section.type !== 'wrapper' || !header || header.type !== 'wrapper' || !footer || footer.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container' || !header || header.contentType !== 'container' || !footer || footer.contentType !== 'container') {
       throw new Error('Expected structural wrappers');
     }
 
@@ -297,11 +297,11 @@ describe('app/editorState', () => {
     const thirdNode = nextDocument.nodes[thirdId];
     if (
       !firstNode ||
-      firstNode.type === 'site' ||
+      firstNode.contentType === 'site' ||
       !secondNode ||
-      secondNode.type === 'site' ||
+      secondNode.contentType === 'site' ||
       !thirdNode ||
-      thirdNode.type === 'site'
+      thirdNode.contentType === 'site'
     ) {
       throw new Error('Expected movable nodes');
     }
@@ -358,11 +358,11 @@ describe('app/editorState', () => {
     const thirdNode = nextDocument.nodes[thirdId];
     if (
       !firstNode ||
-      firstNode.type === 'site' ||
+      firstNode.contentType === 'site' ||
       !secondNode ||
-      secondNode.type === 'site' ||
+      secondNode.contentType === 'site' ||
       !thirdNode ||
-      thirdNode.type === 'site'
+      thirdNode.contentType === 'site'
     ) {
       throw new Error('Expected movable nodes');
     }

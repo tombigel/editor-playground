@@ -1,14 +1,14 @@
 // Rendered inside the stage frame, positioned below the selected node's edit box.
 // Uses the same frame-relative coordinate system as SingleSelectionOverlay.
 
-import type { DocumentModel, LinkLeaf, NodeId } from '../model/types';
+import type { DocumentModel, TextNode, NodeId } from '../model/types';
 import type { PageId } from '../model/types/site';
 
 const POPUP_HEIGHT = 40;
 const POPUP_OFFSET = 8;
 
 export type FollowLinkPopupProps = {
-  node: LinkLeaf;
+  node: TextNode;
   document: DocumentModel;
   bounds: { left: number; top: number; width: number; height: number };
   onNavigateToPage: (pageId: PageId) => void;
@@ -23,16 +23,16 @@ export function FollowLinkPopup({
   onScrollToAnchor,
 }: FollowLinkPopupProps) {
   function buildLabel(): string {
-    const { linkType } = node;
+    const linkType = node.link?.linkType;
     if (linkType === 'page') {
-      const { targetPageId } = node;
+      const targetPageId = node.link?.targetPageId;
       if (!targetPageId) return '→ Broken page link';
       const pages = document.pages ?? [];
       const page = pages.find((p) => p.id === targetPageId);
       return page ? `→ Go to ${page.displayName}` : '→ Broken page link';
     }
     if (linkType === 'external') {
-      const href = node.href ?? '';
+      const href = node.link?.href ?? '';
       const truncated = href.length > 40 ? `${href.slice(0, 40)}…` : href;
       return `↗ ${truncated}`;
     }
@@ -40,16 +40,16 @@ export function FollowLinkPopup({
   }
 
   function handleClick() {
-    const { linkType } = node;
+    const linkType = node.link?.linkType;
     if (linkType === 'page') {
-      if (node.targetPageId) onNavigateToPage(node.targetPageId);
+      if (node.link?.targetPageId) onNavigateToPage(node.link.targetPageId);
       return;
     }
     if (linkType === 'external') {
-      if (node.href) window.open(node.href, '_blank');
+      if (node.link?.href) window.open(node.link.href, '_blank');
       return;
     }
-    if (node.anchorTargetId) onScrollToAnchor(node.anchorTargetId);
+    if (node.link?.anchorTargetId) onScrollToAnchor(node.link.anchorTargetId);
   }
 
   return (

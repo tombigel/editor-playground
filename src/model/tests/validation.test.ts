@@ -20,7 +20,7 @@ describe('model/validation', () => {
   it('rejects multiple headers', () => {
     const document = createInitialDocument();
     const firstSection = getMainWrappers(document)[0];
-    firstSection.role = 'header';
+    firstSection.subtype = 'header';
 
     const errors = validateDocument(document);
     expect(errors).toContain('Only one header is allowed.');
@@ -29,7 +29,7 @@ describe('model/validation', () => {
   it('rejects leaf nodes with children', () => {
     const document = createInitialDocument();
     const firstSection = getMainWrappers(document)[0];
-    const leafId = firstSection.children.find((id) => document.nodes[id]?.type === 'leaf');
+    const leafId = firstSection.children.find((id) => document.nodes[id]?.contentType !== 'container' && document.nodes[id]?.contentType !== 'site');
     expect(leafId).toBeTruthy();
     if (!leafId) {
       return;
@@ -43,7 +43,7 @@ describe('model/validation', () => {
   it('rejects container as direct site child', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
@@ -63,13 +63,13 @@ describe('model/validation', () => {
     section.children.push(nestedSection.id);
 
     const errors = validateDocument(document);
-    expect(errors.some((error) => error.includes(`${section.role} ${section.id} cannot contain section ${nestedSection.id}.`))).toBe(true);
+    expect(errors.some((error) => error.includes(`${section.subtype} ${section.id} cannot contain section ${nestedSection.id}.`))).toBe(true);
   });
 
   it('rejects site containing leaves', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
     const rogueLeaf = createLeaf('text', root.id);
@@ -77,7 +77,7 @@ describe('model/validation', () => {
     root.children.push(rogueLeaf.id);
 
     const errors = validateDocument(document);
-    expect(errors.some((error) => error.includes(`Site can only contain wrappers, found ${rogueLeaf.id}.`))).toBe(true);
+    expect(errors.some((error) => error.includes(`Site can only contain containers, found ${rogueLeaf.id}.`))).toBe(true);
   });
 
   it('rejects documents with a missing root node', () => {
@@ -102,7 +102,7 @@ describe('model/validation', () => {
   it('rejects parents that reference missing child ids', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
@@ -117,7 +117,7 @@ describe('model/validation', () => {
     const section = getMainWrappers(document)[0];
     const childId = section.children[0];
     const child = document.nodes[childId];
-    if (!child || child.type === 'site') {
+    if (!child || child.contentType === 'site') {
       throw new Error('Expected section child');
     }
 
@@ -132,7 +132,7 @@ describe('model/validation', () => {
     const section = getMainWrappers(document)[0];
     const childId = section.children[0];
     const child = document.nodes[childId];
-    if (!child || child.type === 'site') {
+    if (!child || child.contentType === 'site') {
       throw new Error('Expected section child');
     }
 
@@ -146,7 +146,7 @@ describe('model/validation', () => {
   it('rejects duplicate child ids and unreachable orphan nodes', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
@@ -250,7 +250,7 @@ describe('model/validation', () => {
 
     const custom = structuredClone(document);
     const customSection = custom.nodes[section.id];
-    if (!customSection || customSection.type !== 'wrapper') {
+    if (!customSection || customSection.contentType !== 'container') {
       throw new Error('Expected wrapper node');
     }
 
@@ -344,8 +344,7 @@ describe('model/validation', () => {
       const pageId = appended.page.id;
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'page';
-      (link as any).targetPageId = pageId;
+      link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: pageId };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -356,8 +355,7 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'page';
-      (link as any).targetPageId = 'nonexistent_page_id';
+      link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'nonexistent_page_id' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -369,7 +367,7 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'page';
+      link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -382,8 +380,7 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const button = createLeaf('button', section.id) as ButtonLeaf;
-      button.linkType = 'page';
-      (button as any).targetPageId = 'gone_page_id';
+      button.link = { ...(button.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'gone_page_id' };
       doc.nodes[button.id] = button;
       section.children.push(button.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === button.id);
@@ -399,8 +396,7 @@ describe('model/validation', () => {
       doc.nodes[target.id] = target;
       section.children.push(target.id);
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'anchor';
-      (link as any).anchorTargetId = target.id;
+      link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: target.id };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -411,8 +407,7 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'anchor';
-      (link as any).anchorTargetId = 'nonexistent_node_id';
+      link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: 'nonexistent_node_id' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -424,8 +419,7 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'anchor';
-      (link as any).anchorTargetId = undefined;
+      link.link = { ...(link.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: undefined };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       // unconfigured anchor links are not flagged — only explicitly broken ones are
@@ -440,9 +434,7 @@ describe('model/validation', () => {
       const pageId = appended.page.id;
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'page';
-      (link as any).targetPageId = pageId;
-      (link as any).pageAnchorId = 'nonexistent_anchor_id';
+      link.link = { ...(link.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: pageId, pageAnchorId: 'nonexistent_anchor_id' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -454,8 +446,7 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const link = createLeaf('link', section.id) as LinkLeaf;
-      link.linkType = 'external';
-      (link as any).href = 'https://example.com';
+      link.link = { ...(link.link ?? { linkType: 'external' }), linkType: 'external', href: 'https://example.com' };
       doc.nodes[link.id] = link;
       section.children.push(link.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === link.id);
@@ -466,13 +457,11 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const link1 = createLeaf('link', section.id) as LinkLeaf;
-      link1.linkType = 'page';
-      (link1 as any).targetPageId = 'missing_page_1';
+      link1.link = { ...(link1.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'missing_page_1' };
       doc.nodes[link1.id] = link1;
       section.children.push(link1.id);
       const link2 = createLeaf('button', section.id) as ButtonLeaf;
-      link2.linkType = 'page';
-      (link2 as any).targetPageId = 'missing_page_2';
+      link2.link = { ...(link2.link ?? { linkType: 'page' }), linkType: 'page', targetPageId: 'missing_page_2' };
       doc.nodes[link2.id] = link2;
       section.children.push(link2.id);
       const errors = validateLinks(doc).filter(

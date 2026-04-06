@@ -191,7 +191,7 @@ function assertNode(doc: DocumentModel, nodeId: NodeId): void {
 }
 
 function assertNotSiteRoot(doc: DocumentModel, nodeId: NodeId): void {
-  if (doc.nodes[nodeId]?.type === 'site') {
+  if (doc.nodes[nodeId]?.contentType === 'site') {
     throw new Error('Cannot set animation on site root node');
   }
 }
@@ -206,7 +206,7 @@ function cloneDocWithNode(doc: DocumentModel, nodeId: NodeId): { doc: DocumentMo
 }
 
 function hasAnimationField(node: Record<string, unknown>): node is Record<string, unknown> & { animation?: AnimationDefinition } {
-  return node.type !== 'site';
+  return node.contentType !== 'site';
 }
 
 // ── Low-level API ────────────────────────────────────────────────────────────
@@ -235,14 +235,14 @@ export function getNodeAnimation(
   nodeId: NodeId,
 ): AnimationDefinition | undefined {
   const node = doc.nodes[nodeId];
-  if (!node || node.type === 'site') return undefined;
+  if (!node || node.contentType === 'site') return undefined;
   return (node as unknown as { animation?: AnimationDefinition }).animation;
 }
 
 export function getAnimatedNodes(doc: DocumentModel): NodeId[] {
   return Object.keys(doc.nodes).filter((id) => {
     const node = doc.nodes[id];
-    if (!node || node.type === 'site') return false;
+    if (!node || node.contentType === 'site') return false;
     return (node as unknown as { animation?: AnimationDefinition }).animation !== undefined;
   });
 }

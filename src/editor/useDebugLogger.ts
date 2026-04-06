@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { DocumentModel } from '../model/types';
+import { isSiteNode, isLeafNode, isContainerNode } from '../model/types';
 
 type NodeSnapshot = {
   rect: string | null;
@@ -9,7 +10,7 @@ type NodeSnapshot = {
 };
 
 function snapshotNode(
-  node: Exclude<DocumentModel['nodes'][string], { type: 'site' }>,
+  node: Exclude<DocumentModel['nodes'][string], { contentType: 'site' }>,
 ): NodeSnapshot {
   return {
     rect: 'rect' in node ? JSON.stringify(node.rect) : null,
@@ -41,9 +42,10 @@ export function useDebugLogger(
     for (const id of currentIds) {
       if (!prevNodeIds.has(id)) {
         const node = document.nodes[id];
-        if (node && node.type !== 'site') {
-          const { name, role } = node;
-          console.log('%c[debug:add]', 'color:#22c55e;font-weight:bold', `+ ${role} "${name}" (${id})`);
+        if (node && !isSiteNode(node)) {
+          const name = node.name;
+          const subtype = isContainerNode(node) || isLeafNode(node) ? node.subtype : 'unknown';
+          console.log('%c[debug:add]', 'color:#22c55e;font-weight:bold', `+ ${subtype} "${name}" (${id})`);
         }
       }
     }
@@ -65,9 +67,10 @@ export function useDebugLogger(
     }
 
     const node = document.nodes[selectedId];
-    if (!node || node.type === 'site') return;
+    if (!node || isSiteNode(node)) return;
 
-    const { name, role } = node;
+    const name = node.name;
+    const subtype = isContainerNode(node) || isLeafNode(node) ? node.subtype : 'unknown';
     const snapshot = snapshotNode(node);
     const prev = prevSelectedRef.current;
 
@@ -76,7 +79,7 @@ export function useDebugLogger(
       console.groupCollapsed(
         '%c[debug:select]',
         'color:#60a5fa;font-weight:bold',
-        `→ "${name}" ${role} · ${selectedId}`,
+        `→ "${name}" ${subtype} · ${selectedId}`,
       );
       if (snapshot.rect) console.log('rect', JSON.parse(snapshot.rect));
       if (snapshot.sticky !== 'null') console.log('sticky', JSON.parse(snapshot.sticky));

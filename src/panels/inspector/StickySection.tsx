@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { isContainerNode } from '../../model/types';
 import type { FocusedMode } from '../../api/editorApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,8 @@ export function StickySection({
   contentClassName?: string;
 }) {
   const forceAutoDuration =
-    node.type === 'wrapper' &&
-    node.role !== 'container' &&
+    isContainerNode(node) &&
+    node.subtype !== 'container' &&
     (node.sticky?.target ?? 'self') === 'self';
   return (
     <InspectorSectionCard

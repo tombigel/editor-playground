@@ -29,10 +29,10 @@ describe('site/siteShared', () => {
     const split = splitRootWrappers(wrappers);
 
     expect(wrappers).toHaveLength(3);
-    expect(split.header?.role).toBe('header');
-    expect(split.footer?.role).toBe('footer');
+    expect(split.header?.subtype).toBe('header');
+    expect(split.footer?.subtype).toBe('footer');
     expect(split.main).toHaveLength(1);
-    expect(split.main[0]?.role).toBe('section');
+    expect(split.main[0]?.subtype).toBe('section');
   });
 
   it('returns only wrappers visible on a specific page', () => {
@@ -50,15 +50,15 @@ describe('site/siteShared', () => {
 
   it('returns wrapper children and deterministic class names', () => {
     const document = createInitialDocument();
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
     const children = getWrapperChildren(document, section.id);
 
     expect(children).toHaveLength(4);
-    expect(getWrapperTag(section.role)).toBe('section');
+    expect(getWrapperTag(section.subtype)).toBe('section');
     expect(getNodeClassName(section)).toContain(`sp-node-${section.id}`);
     expect(getTrackClassName(section.id)).toBe(`sp-sticky-track sp-node-${section.id}-track`);
     expect(getTrackSpacerClassName(section.id, 'top')).toBe(
@@ -118,10 +118,10 @@ describe('site/siteShared', () => {
 
   it('resolves text content, brand mark state, and node height formatting', () => {
     const document = createInitialDocument();
-    const text = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'text');
-    const image = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!text || text.type !== 'leaf' || text.role !== 'text' || !image || image.type !== 'leaf' || image.role !== 'image' || !section || section.type !== 'wrapper') {
+    const text = Object.values(document.nodes).find((node) => node.contentType === 'text');
+    const image = Object.values(document.nodes).find((node) => node.contentType === 'media');
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!text || text.contentType !== 'text' || !image || image.contentType !== 'media' || image.subtype !== 'image' || !section || section.contentType !== 'container') {
       throw new Error('Expected text, image, and section nodes');
     }
 

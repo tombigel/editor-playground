@@ -13,19 +13,19 @@ describe('model/links', () => {
   it('lists top-level sections as anchor options with human-readable labels', () => {
     const document = createInitialDocument();
     const header = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
     const footer = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'footer',
+      (node) => node.contentType === 'container' && node.subtype === 'footer',
     );
 
     if (
-      !header || header.type !== 'wrapper' ||
-      !section || section.type !== 'wrapper' ||
-      !footer || footer.type !== 'wrapper'
+      !header || header.contentType !== 'container' ||
+      !section || section.contentType !== 'container' ||
+      !footer || footer.contentType !== 'container'
     ) {
       throw new Error('Expected top-level header, section, and footer');
     }
@@ -56,15 +56,14 @@ describe('model/links', () => {
   it('flags anchor links whose section targets no longer exist', () => {
     const document = createInitialDocument();
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link node');
     }
 
-    link.linkType = 'anchor';
-    link.anchorTargetId = 'missing-section';
+    link.link = { ...link.link, linkType: 'anchor', anchorTargetId: 'missing-section' };
 
     expect(isBrokenAnchorLink(document, link)).toBe(true);
   });
@@ -72,16 +71,14 @@ describe('model/links', () => {
   it('does not flag default internal links without an explicit target as broken', () => {
     const document = createInitialDocument();
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link node');
     }
 
-    link.linkType = 'anchor';
-    link.anchorTargetId = undefined;
-    link.href = '#';
+    link.link = { ...link.link, linkType: 'anchor', anchorTargetId: undefined, href: '#' };
 
     expect(isBrokenAnchorLink(document, link)).toBe(false);
   });
@@ -89,10 +86,10 @@ describe('model/links', () => {
   it('flags anchor buttons whose section targets no longer exist', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section node');
     }
 
@@ -100,12 +97,11 @@ describe('model/links', () => {
     document.nodes[button.id] = button;
     section.children.push(button.id);
 
-    if (button.type !== 'leaf' || button.role !== 'button') {
+    if (button.contentType !== 'text' || button.link == null) {
       throw new Error('Expected button node');
     }
 
-    button.linkType = 'anchor';
-    button.anchorTargetId = 'missing-section';
+    button.link = { ...button.link, linkType: 'anchor', anchorTargetId: 'missing-section' };
 
     expect(isBrokenAnchorLink(document, button)).toBe(true);
   });
@@ -114,17 +110,16 @@ describe('model/links', () => {
     const { document, page: aboutPage } = appendPage(createInitialDocument(), 'About', 'about');
 
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link node');
     }
 
-    link.linkType = 'page';
-    link.targetPageId = aboutPage.id;
+    link.link = { ...link.link, linkType: 'page', targetPageId: aboutPage.id };
 
-    const url = getLinkHref(link, document);
+    const url = getLinkHref(link.link, document);
     expect(url).toBe('/about/');
   });
 
@@ -132,33 +127,30 @@ describe('model/links', () => {
     const { document, page: aboutPage } = appendPage(createInitialDocument(), 'About', 'about');
 
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link node');
     }
 
-    link.linkType = 'page';
-    link.targetPageId = aboutPage.id;
-    link.pageAnchorId = 'section-1';
+    link.link = { ...link.link, linkType: 'page', targetPageId: aboutPage.id, pageAnchorId: 'section-1' };
 
-    const url = getLinkHref(link, document);
+    const url = getLinkHref(link.link, document);
     expect(url).toBe('/about/#section-1');
   });
 
   it('flags page links whose target page does not exist', () => {
     const document = createInitialDocument();
     const link = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link node');
     }
 
-    link.linkType = 'page';
-    link.targetPageId = 'missing-page';
+    link.link = { ...link.link, linkType: 'page', targetPageId: 'missing-page' };
 
     expect(isBrokenAnchorLink(document, link)).toBe(true);
   });

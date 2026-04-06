@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
+import type { TextNode } from '../../model/types';
 import {
   addDocumentFontFamily,
   getDocumentFontFamily,
@@ -30,15 +31,15 @@ describe('fonts/documentFonts', () => {
   it('tracks favorites, usage, and purge/remove rules at the document level', () => {
     const document = createInitialDocument();
     const postTitle = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
+    if (!postTitle || postTitle.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
     postTitle.style ??= {};
-    postTitle.style.fontFamily = 'IBM Plex Sans Hebrew';
+    postTitle.style!.fontFamily = 'IBM Plex Sans Hebrew';
 
     const withAddedFont = addDocumentFontFamily(document, {
       family: 'IBM Plex Sans Hebrew',
@@ -60,7 +61,7 @@ describe('fonts/documentFonts', () => {
     const unusedFavorite = structuredClone(withFavorite);
     if (postTitle.id in unusedFavorite.nodes) {
       const node = unusedFavorite.nodes[postTitle.id];
-      if (node?.type === 'leaf' && node.role === 'text') {
+      if (node?.contentType !== 'container' && node.contentType !== 'site' && node.subtype === 'block') {
         node.style = { ...node.style, fontFamily: undefined };
       }
     }
@@ -72,21 +73,21 @@ describe('fonts/documentFonts', () => {
   it('normalizes legacy font weights and auto-registers authored font families', () => {
     const document = createInitialDocument();
     const postTitle = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
+    if (!postTitle || postTitle.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
     postTitle.style ??= {};
     (postTitle.style as { fontWeight?: number | string }).fontWeight = 'bold';
-    postTitle.style.fontFamily = 'Custom Sans';
+    postTitle.style!.fontFamily = 'Custom Sans';
 
     const normalized = normalizeDocumentFontState(document);
     const normalizedNode = normalized.nodes[postTitle.id];
 
-    if (!normalizedNode || normalizedNode.type !== 'leaf' || normalizedNode.role !== 'text') {
+    if (!normalizedNode || normalizedNode.contentType !== 'text') {
       throw new Error('Expected normalized text node');
     }
 
@@ -102,15 +103,15 @@ describe('fonts/documentFonts', () => {
     const catalog = await getBundledGoogleFontsCatalog();
     const bundledFamily = catalog.families.find((family) => family.family === 'Open Sans');
     const postTitle = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!bundledFamily || !postTitle || postTitle.type !== 'leaf' || postTitle.role !== 'text') {
+    if (!bundledFamily || !postTitle || postTitle.contentType !== 'text') {
       throw new Error('Expected bundled Open Sans metadata and a text node');
     }
 
     postTitle.style ??= {};
-    postTitle.style.fontFamily = bundledFamily.family;
+    postTitle.style!.fontFamily = bundledFamily.family;
     document.fontLibrary.usedFamilies = document.fontLibrary.usedFamilies.filter((family) => family.family !== bundledFamily.family);
     document.fontLibrary.usedFamilies.push({
       family: bundledFamily.family,
@@ -194,14 +195,13 @@ describe('fonts/documentFonts', () => {
   it('collects deduplicated Google CSS2 requests for authored document fonts', () => {
     const document = createInitialDocument();
     const textNodes = Object.values(document.nodes).filter(
-      (node): node is Extract<typeof node, { type: 'leaf'; role: 'text' }> =>
-        node.type === 'leaf' && node.role === 'text',
+      (node): node is TextNode => node.contentType === 'text',
     );
 
     for (const [index, node] of textNodes.entries()) {
       node.style ??= {};
-      node.style.fontFamily = index === 0 ? 'Inter' : 'Roboto';
-      node.style.fontWeight = index === 0 ? 500 : 700;
+      node.style!.fontFamily = index === 0 ? 'Inter' : 'Roboto';
+      node.style!.fontWeight = index === 0 ? 500 : 700;
     }
 
     const requests = collectDocumentFontRequests(document);
@@ -228,7 +228,7 @@ describe('fonts/documentFonts', () => {
   it('encodes multi-word CSS2 family names without double-encoding the Google family separator', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(
-      (node): node is Extract<typeof node, { type: 'leaf'; role: 'text' }> => node.type === 'leaf' && node.role === 'text',
+      (node): node is TextNode => node.contentType === 'text',
     );
 
     if (!textNode) {
@@ -236,7 +236,7 @@ describe('fonts/documentFonts', () => {
     }
 
     textNode.style ??= {};
-    textNode.style.fontFamily = 'Playfair Display';
+    textNode.style!.fontFamily = 'Playfair Display';
 
     const href = buildDocumentGoogleFontsStylesheetHref(document);
 

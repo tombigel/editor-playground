@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import type { NodeId } from '../model/types';
-import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
+import { isMediaNode, isTextNode } from '../model/types';
+import { getLinkHref } from '../model/links';
 import { getNodeTextContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
@@ -45,17 +46,13 @@ export function SiteRenderer({ document, previewSticky = true, includeAnimations
   );
 }
 
-function getExternalNavigationProps(node: Extract<RenderLeafPlanNode['node'], { role: 'link' | 'button' }>) {
-  return shouldOpenNavigationInNewTab(node)
-    ? {
-        target: '_blank',
-        rel: 'noopener noreferrer',
-      }
-    : {};
+function externalNavProps(linkType: string, openInNewTab?: boolean) {
+  if (linkType === 'anchor' || linkType === 'page') return {};
+  return openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 }
 
-function getPageCurrentProps(node: Extract<RenderLeafPlanNode['node'], { role: 'link' | 'button' }>) {
-  return node.linkType === 'page' && node.targetPageId && node.targetPageId === renderPageId && !node.pageAnchorId
+function pageCurrentProps(linkType: string, targetPageId?: string, pageAnchorId?: string) {
+  return linkType === 'page' && targetPageId && targetPageId === renderPageId && !pageAnchorId
     ? { 'aria-current': 'page' as const }
     : {};
 }
@@ -75,7 +72,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
       data-node-id={plan.node.id}
       data-top-level={plan.isTopLevel ? 'true' : 'false'}
       {...(
-        plan.node.role === 'header' || plan.node.role === 'section' || plan.node.role === 'footer'
+        plan.node.subtype === 'header' || plan.node.subtype === 'section' || plan.node.subtype === 'footer'
           ? { id: plan.node.id }
           : {}
       )}
@@ -114,57 +111,51 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
 
 function renderLeafPlan(plan: RenderLeafPlanNode) {
   const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
-  let leaf: ReactElement;
-  if (plan.node.role === 'text') {
-    const Tag = plan.node.htmlTag;
-    leaf = (
-      <Tag key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id}>
-        {getNodeTextContent(plan.node)}
-      </Tag>
-    );
-  } else if (plan.node.role === 'image') {
-    leaf = plan.node.src ? (
+  const node = plan.node;
+  let leaf: ReactElement = <div key={node.id} className={plan.nodeClassName} data-node-id={node.id} />;
+
+  if (isMediaNode(node)) {
+    leaf = node.src ? (
       <img
-        key={plan.node.id}
+        key={node.id}
         className={plan.imageClassName}
-        data-node-id={plan.node.id}
-        src={plan.node.src}
-        alt={plan.node.alt ?? ''}
+        data-node-id={node.id}
+        src={node.src}
+        alt={node.alt ?? ''}
       />
     ) : (
-      <div key={plan.node.id} className={plan.imagePlaceholderClassName} data-node-id={plan.node.id}>
-        {getNodeTextContent(plan.node)}
+      <div key={node.id} className={plan.imagePlaceholderClassName} data-node-id={node.id}>
+        {getNodeTextContent(node)}
       </div>
     );
-  } else if (plan.node.role === 'link') {
+  } else if (isTextNode(node) && node.link) {
+    const link = node.link;
+    const href = getLinkHref(link, renderDocument);
     leaf = (
       <a
-        key={plan.node.id}
+        key={node.id}
         className={plan.nodeClassName}
-        data-node-id={plan.node.id}
-        href={getLinkHref(plan.node, renderDocument)}
-        {...getExternalNavigationProps(plan.node)}
-        {...getPageCurrentProps(plan.node)}
+        data-node-id={node.id}
+        href={href}
+        {...externalNavProps(link.linkType, link.openInNewTab)}
+        {...pageCurrentProps(link.linkType, link.targetPageId, link.pageAnchorId)}
       >
-        {getNodeTextContent(plan.node)}
+        {getNodeTextContent(node)}
       </a>
     );
-  } else {
-    leaf = getLinkHref(plan.node, renderDocument) ? (
-      <a
-        key={plan.node.id}
-        className={plan.nodeClassName}
-        data-node-id={plan.node.id}
-        href={getLinkHref(plan.node, renderDocument)}
-        {...getExternalNavigationProps(plan.node)}
-        {...getPageCurrentProps(plan.node)}
-      >
-        {getNodeTextContent(plan.node)}
-      </a>
-    ) : (
-      <button key={plan.node.id} className={plan.nodeClassName} data-node-id={plan.node.id} type="button">
-        {getNodeTextContent(plan.node)}
+  } else if (isTextNode(node) && node.style?.background) {
+    // button variant (no link — render as <button>)
+    leaf = (
+      <button key={node.id} className={plan.nodeClassName} data-node-id={node.id} type="button">
+        {getNodeTextContent(node)}
       </button>
+    );
+  } else if (isTextNode(node)) {
+    const Tag = node.htmlTag ?? 'p';
+    leaf = (
+      <Tag key={node.id} className={plan.nodeClassName} data-node-id={node.id}>
+        {getNodeTextContent(node)}
+      </Tag>
     );
   }
 

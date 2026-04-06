@@ -57,7 +57,7 @@ describe('panels/LayersPanel', () => {
   it('shows empty state message when the document has no top-level nodes', () => {
     const document = createInitialDocument();
     const siteNode = document.nodes[document.rootId];
-    if (!siteNode || siteNode.type !== 'site') throw new Error('Expected site node');
+    if (!siteNode || siteNode.contentType !== 'site') throw new Error('Expected site node');
 
     const emptyDoc: DocumentModel = {
       ...document,
@@ -75,7 +75,7 @@ describe('panels/LayersPanel', () => {
   it('marks selected rows with aria-selected="true" and data-selected="true"', () => {
     const document = createInitialDocument();
     const header = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
     if (!header) throw new Error('Expected header node');
 
@@ -90,9 +90,9 @@ describe('panels/LayersPanel', () => {
   it('marks hidden nodes with data-hidden="true"', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const leaf = createLeaf('text', section.id);
     leaf.visible = false;
@@ -112,9 +112,9 @@ describe('panels/LayersPanel', () => {
   it('renders child rows nested inside expanded wrapper nodes', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const leaf = createLeaf('button', section.id);
     leaf.name = 'My Button';
@@ -131,9 +131,9 @@ describe('panels/LayersPanel', () => {
   it('applies deeper padding to child rows than their parent wrapper', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const leaf = createLeaf('text', section.id);
     leaf.name = 'Deep Leaf';
@@ -159,9 +159,9 @@ describe('panels/LayersPanel', () => {
   it('renders a disclosure button for wrapper rows with children', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const markup = renderToStaticMarkup(<LayersPanelContent {...makeContentProps(document)} />);
 
@@ -173,9 +173,9 @@ describe('panels/LayersPanel', () => {
   it('does not render a disclosure button for leaf rows', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     // Clear children then add a single leaf so we can identify it
     section.children = [];
@@ -195,9 +195,9 @@ describe('panels/LayersPanel', () => {
   it('falls back to the typeLabel as displayName when the node name is blank', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const leaf = createLeaf('link', section.id);
     leaf.name = '   '; // whitespace-only name
@@ -213,9 +213,9 @@ describe('panels/LayersPanel', () => {
   it('renders the Show button label for a hidden node', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const leaf = createLeaf('text', section.id);
     leaf.name = 'Hidden Text';
@@ -232,9 +232,9 @@ describe('panels/LayersPanel', () => {
   it('renders a container wrapper nested inside a section', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') throw new Error('Expected section');
+    if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
     const container = createWrapper('container', section.id);
     container.name = 'Card';

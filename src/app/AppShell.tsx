@@ -18,6 +18,7 @@ import type {
 	StickyGeometrySnapshot,
 } from "../api/editorApi";
 import type { DocumentFontFamily } from "../model/types";
+import { isTextNode } from "../model/types";
 import {
 	addDocumentFontFamily,
 	purgeUnusedDocumentFonts,
@@ -228,7 +229,7 @@ export function AppShell({
 	const [focusedPanelDragging, setFocusedPanelDragging] = useState(false);
 	const siteNode = state.document.nodes[state.document.rootId];
 	const globalStickyElevation =
-		siteNode?.type === "site" ? (siteNode.stickyElevation ?? true) : true;
+		siteNode?.contentType === "site" ? (siteNode.stickyElevation ?? true) : true;
 	const isSidebarCollapsed =
 		state.ui.inspectorCollapsed && !state.ui.temporaryInspectorOpen;
 	const leftRailWidth = `${INSPECTOR_COLLAPSED_WIDTH_PX}px`;
@@ -354,7 +355,7 @@ export function AppShell({
 		const node = state.selectedId
 			? state.document.nodes[state.selectedId]
 			: null;
-		if (node?.type === "leaf" && node.role === "link") {
+		if (node && isTextNode(node) && node.link !== undefined) {
 			setLinkPopupVisible(true);
 		} else {
 			setLinkPopupVisible(false);
@@ -380,8 +381,8 @@ export function AppShell({
 		if (mode !== "toggle") {
 			const node = state.document.nodes[id];
 			if (
-				node?.type === "leaf" &&
-				node.role === "link" &&
+				node && isTextNode(node) &&
+				node.link !== undefined &&
 				id === state.selectedId
 			) {
 				setLinkPopupVisible((v) => !v);
@@ -553,7 +554,7 @@ export function AppShell({
 	const selectedLinkNode = (() => {
 		if (!state.selectedId) return null;
 		const node = state.document.nodes[state.selectedId];
-		if (node?.type === "leaf" && node.role === "link") return node;
+		if (node && isTextNode(node) && node.link !== undefined) return node;
 		return null;
 	})();
 

@@ -1,6 +1,7 @@
 import type { AnimationDefinition } from '../animations/types';
 import { getChildren } from '../model/selectors';
-import type { DocumentModel, NodeId, StickyDefinition, WrapperNode } from '../model/types';
+import type { ContainerNode, ContainerSubtype, DocumentModel, NodeId, StickyDefinition } from '../model/types';
+import { isContainerNode } from '../model/types';
 import type { PageId } from '../model/types/site';
 import { formatValue } from '../model/units';
 import { isTopLevelWrapperVisibleOnPage } from '../model/topLevelWrapperVisibility';
@@ -27,57 +28,69 @@ export const SITE_BRAND_MARK_CLASS = 'is-brand-mark';
 
 export function getRootWrappers(document: DocumentModel) {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return [];
   }
-  return getChildren(document, root.id).filter((node): node is WrapperNode => node.type === 'wrapper' && node.visible);
+  return getChildren(document, root.id).filter((node): node is ContainerNode => isContainerNode(node) && node.visible);
 }
 
 export function getRootWrappersForPage(document: DocumentModel, pageId: PageId) {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return [];
   }
 
   return root.children
     .map((id) => document.nodes[id])
     .filter(
-      (node): node is WrapperNode =>
+      (node): node is ContainerNode =>
         !!node &&
-        node.type === 'wrapper' &&
+        isContainerNode(node) &&
         isTopLevelWrapperVisibleOnPage(document, node.id, pageId),
     );
 }
 
 export function getWrapperChildren(document: DocumentModel, wrapperId: string) {
   return getChildren(document, wrapperId).filter(
-    (child): child is ExportableNode => child.type !== 'site' && child.visible,
+    (child): child is ExportableNode => child.contentType !== 'site' && child.visible,
   );
 }
 
-export function splitRootWrappers(wrappers: WrapperNode[]) {
-  const header = wrappers.find((node) => node.role === 'header') ?? null;
-  const footer = wrappers.find((node) => node.role === 'footer') ?? null;
-  const main = wrappers.filter((node) => node.role !== 'header' && node.role !== 'footer');
+export function splitRootWrappers(wrappers: ContainerNode[]) {
+  const header = wrappers.find((node) => node.subtype === 'header') ?? null;
+  const footer = wrappers.find((node) => node.subtype === 'footer') ?? null;
+  const main = wrappers.filter((node) => node.subtype !== 'header' && node.subtype !== 'footer');
 
   return { header, footer, main };
 }
 
-export function getWrapperTag(role: WrapperNode['role']): 'section' | 'header' | 'footer' | 'div' {
-  if (role === 'header') {
+export function getWrapperTag(subtype: ContainerSubtype): 'section' | 'header' | 'footer' | 'div' {
+  if (subtype === 'header') {
     return 'header';
   }
-  if (role === 'footer') {
+  if (subtype === 'footer') {
     return 'footer';
   }
-  if (role === 'section') {
+  if (subtype === 'section') {
     return 'section';
   }
   return 'div';
 }
 
+function getCssRole(node: ExportableNode): string {
+  if (isContainerNode(node)) return node.subtype;
+  if (node.contentType === 'media') return node.subtype;
+  if (node.contentType === 'text') {
+    if (node.style?.background) return 'button';
+    if (node.link != null) return 'link';
+    return 'text';
+  }
+  return 'site';
+}
+
 export function getNodeClassName(node: ExportableNode) {
-  return `${SITE_NODE_CLASS} sp-node-${node.id} sp-role-${node.role} ${node.type === 'wrapper' ? SITE_WRAPPER_CLASS : SITE_LEAF_CLASS}`;
+  const cssRole = getCssRole(node);
+  return `${SITE_NODE_CLASS} sp-node-${node.id} sp-role-${cssRole} ${isContainerNode(node) ? SITE_WRAPPER_CLASS : SITE_LEAF_CLASS}`;
 }
 
 export function getTrackClassName(nodeId: string) {
@@ -182,7 +195,7 @@ function toCssPropertyName(property: string) {
 export function collectInteractKeys(document: DocumentModel): Set<NodeId> {
   const keys = new Set<NodeId>();
   for (const node of Object.values(document.nodes)) {
-    if (node.type === 'site') continue;
+    if (node.contentType === 'site') continue;
     const anim = (node as unknown as { animation?: AnimationDefinition }).animation;
     if (anim) {
       keys.add(node.id);

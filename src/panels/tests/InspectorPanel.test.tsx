@@ -69,10 +69,10 @@ describe('panels/InspectorPanel', () => {
   it('renders the shared 3-button section type selector with the current type selected', () => {
     const document = createInitialDocument();
     const headerNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
 
-    if (!headerNode || headerNode.type !== 'wrapper') {
+    if (!headerNode || headerNode.contentType !== 'container') {
       throw new Error('Expected header wrapper');
     }
 
@@ -93,10 +93,10 @@ describe('panels/InspectorPanel', () => {
   it('renders section-only bottom divider controls in wrapper design', () => {
     const document = createInitialDocument();
     const sectionNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -141,10 +141,10 @@ describe('panels/InspectorPanel', () => {
   it('renders top-level wrapper visibility controls in the layout section', () => {
     const document = createInitialDocument();
     const sectionNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -165,10 +165,10 @@ describe('panels/InspectorPanel', () => {
   it('renders a visible/hidden switch for regular nodes', () => {
     const document = createInitialDocument();
     const sectionNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -235,10 +235,10 @@ describe('panels/InspectorPanel', () => {
 
     for (const role of wrapperRoles) {
       const wrapperNode = Object.values(document.nodes).find(
-        (node) => node.type === 'wrapper' && node.role === role,
+        (node) => node.contentType === 'container' && node.subtype === role,
       );
 
-      if (!wrapperNode || wrapperNode.type !== 'wrapper') {
+      if (!wrapperNode || wrapperNode.contentType !== 'container') {
         throw new Error(`Expected ${role} wrapper`);
       }
 
@@ -255,10 +255,10 @@ describe('panels/InspectorPanel', () => {
   it('shows fixed auto duration state for top-level self sticky wrappers', () => {
     const document = createInitialDocument();
     const sectionNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -285,10 +285,10 @@ describe('panels/InspectorPanel', () => {
   it('hides the sticky target field for wrapper nodes', () => {
     const document = createInitialDocument();
     const containerNode = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!containerNode || containerNode.type !== 'wrapper') {
+    if (!containerNode || containerNode.contentType !== 'container') {
       throw new Error('Expected wrapper node');
     }
 
@@ -314,25 +314,25 @@ describe('panels/InspectorPanel', () => {
 
   it('renders content and design sections for leaf inspectors', () => {
     const document = createInitialDocument();
-    const sectionNode = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!sectionNode || sectionNode.type !== 'wrapper') {
+    const sectionNode = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section node');
     }
     const buttonNode = createLeaf('button', sectionNode.id);
-    const textNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'text');
-    const linkNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link');
-    const imageNode = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
+    const textNode = Object.values(document.nodes).find((node) => node.contentType === 'text');
+    const linkNode = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
+    const imageNode = Object.values(document.nodes).find((node) => node.contentType === 'media');
 
-    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text node');
     }
-    if (!linkNode || linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+    if (!linkNode || linkNode.contentType !== 'text' || linkNode.link == null) {
       throw new Error('Expected link node');
     }
-    if (!imageNode || imageNode.type !== 'leaf' || imageNode.role !== 'image') {
+    if (!imageNode || imageNode.contentType !== 'media' || imageNode.subtype !== 'image') {
       throw new Error('Expected image node');
     }
-    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+    if (buttonNode.contentType !== 'text' || buttonNode.subtype !== 'block') {
       throw new Error('Expected button node');
     }
 
@@ -430,18 +430,17 @@ describe('panels/InspectorPanel', () => {
   it('renders anchor link controls with section choices and a broken-link warning', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
     const linkNode = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
 
-    if (!section || section.type !== 'wrapper' || !linkNode || linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+    if (!section || section.contentType !== 'container' || !linkNode || linkNode.contentType !== 'text' || linkNode.link == null) {
       throw new Error('Expected section and link node');
     }
 
-    linkNode.linkType = 'anchor';
-    linkNode.anchorTargetId = section.id;
+    linkNode.link = { ...linkNode.link, linkType: 'anchor', anchorTargetId: section.id };
 
     const anchorMarkup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ document, node: linkNode })} />,
@@ -453,7 +452,7 @@ describe('panels/InspectorPanel', () => {
     expect(anchorMarkup).toContain('>External<');
     expect(anchorMarkup).not.toContain('Open in a new tab');
 
-    linkNode.anchorTargetId = 'missing-section';
+    linkNode.link = { ...linkNode.link, anchorTargetId: 'missing-section' };
 
     const brokenMarkup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ document, node: linkNode })} />,
@@ -465,22 +464,21 @@ describe('panels/InspectorPanel', () => {
   it('renders anchor button controls with section choices and a broken-link warning', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section node');
     }
 
     const buttonNode = createLeaf('button', section.id);
-    if (buttonNode.type !== 'leaf' || buttonNode.role !== 'button') {
+    if (buttonNode.contentType !== 'text' || buttonNode.link == null) {
       throw new Error('Expected button node');
     }
     document.nodes[buttonNode.id] = buttonNode;
     section.children.push(buttonNode.id);
 
-    buttonNode.linkType = 'anchor';
-    buttonNode.anchorTargetId = section.id;
+    buttonNode.link = { ...buttonNode.link, linkType: 'anchor', anchorTargetId: section.id };
 
     const anchorMarkup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ document, node: buttonNode })} />,
@@ -492,7 +490,7 @@ describe('panels/InspectorPanel', () => {
     expect(anchorMarkup).toContain('>External<');
     expect(anchorMarkup).not.toContain('Open in a new tab');
 
-    buttonNode.anchorTargetId = 'missing-section';
+    buttonNode.link = { ...buttonNode.link, anchorTargetId: 'missing-section' };
 
     const brokenMarkup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ document, node: buttonNode })} />,

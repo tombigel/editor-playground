@@ -7,7 +7,7 @@ describe('editor/debugInfo', () => {
   it('authoredRect derives from node.rect base raw values', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (n) => n.type === 'wrapper' && n.role === 'section',
+      (n) => n.contentType === 'container' && n.subtype === 'section',
     ) as WrapperNode;
 
     if (!section) {
@@ -26,14 +26,14 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
 
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
     // Find section at root level
     const sectionId = root.children.find((id) => {
       const node = document.nodes[id];
-      return node?.type === 'wrapper' && node.role === 'section';
+      return node?.contentType === 'container' && node.subtype === 'section';
     });
 
     if (!sectionId) {
@@ -48,9 +48,9 @@ describe('editor/debugInfo', () => {
 
   it('htmlId is null for all leaf nodes', () => {
     const document = createInitialDocument();
-    const textNode = Object.values(document.nodes).find((n) => n.type === 'leaf' && n.role === 'text');
+    const textNode = Object.values(document.nodes).find((n) => n.contentType === 'text');
 
-    if (!textNode || textNode.type !== 'leaf') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text leaf node');
     }
 
@@ -63,13 +63,13 @@ describe('editor/debugInfo', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
 
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
     const sectionId = root.children.find((id) => {
       const node = document.nodes[id];
-      return node?.type === 'wrapper' && node.role === 'section';
+      return node?.contentType === 'container' && node.subtype === 'section';
     });
 
     if (!sectionId) {
@@ -89,7 +89,7 @@ describe('editor/debugInfo', () => {
   it('isTriggerTarget is true when another node has triggerId === this node id', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (n) => n.type === 'wrapper' && n.role === 'section',
+      (n) => n.contentType === 'container' && n.subtype === 'section',
     ) as WrapperNode;
 
     if (!section) {
@@ -120,7 +120,7 @@ describe('editor/debugInfo', () => {
   it('isTriggerTarget is false when no other node has triggerId === this node id', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (n) => n.type === 'wrapper' && n.role === 'section',
+      (n) => n.contentType === 'container' && n.subtype === 'section',
     ) as WrapperNode;
 
     if (!section) {
@@ -135,7 +135,7 @@ describe('editor/debugInfo', () => {
   it('sticky is disabled by default', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (n) => n.type === 'wrapper' && n.role === 'section',
+      (n) => n.contentType === 'container' && n.subtype === 'section',
     ) as WrapperNode;
 
     if (!section) {
@@ -157,7 +157,7 @@ describe('editor/debugInfo', () => {
   it('measuredBounds is null when document reference is not provided', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (n) => n.type === 'wrapper' && n.role === 'section',
+      (n) => n.contentType === 'container' && n.subtype === 'section',
     ) as WrapperNode;
 
     if (!section) {
@@ -172,7 +172,7 @@ describe('editor/debugInfo', () => {
   it('measuredBounds is computed when document reference is provided', () => {
     const document = createInitialDocument();
     const section = Object.values(document.nodes).find(
-      (n) => n.type === 'wrapper' && n.role === 'section',
+      (n) => n.contentType === 'container' && n.subtype === 'section',
     ) as WrapperNode;
 
     if (!section) {

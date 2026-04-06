@@ -51,7 +51,7 @@ describe('app/history', () => {
   it('tracks multi-selection changes in history entries', () => {
     const before = insertLeaf(insertLeaf(createInitialState(), 'text'), 'text');
     const firstId = Object.keys(before.document.nodes).find(
-      (nodeId) => before.document.nodes[nodeId]?.type === 'leaf' && nodeId !== before.selectedId,
+      (nodeId) => before.document.nodes[nodeId]?.contentType !== 'container' && before.document.nodes[nodeId]?.contentType !== 'site' && nodeId !== before.selectedId,
     );
     if (!firstId || !before.selectedId) {
       throw new Error('Expected multiple selected candidates');
@@ -79,9 +79,9 @@ describe('app/history', () => {
     const state = createInitialState();
     const homePage = state.document.pages?.[0];
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!homePage || !section || section.type !== 'wrapper') {
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -108,9 +108,9 @@ describe('app/history', () => {
     const state = createInitialState();
     const homePage = state.document.pages?.[0];
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!homePage || !section || section.type !== 'wrapper') {
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 

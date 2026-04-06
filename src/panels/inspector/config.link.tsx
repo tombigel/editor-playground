@@ -1,6 +1,7 @@
 import { LinkAppearanceSection, LinkContentSection, LinkDesignSection, LinkTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { isTextNode } from '@/model/types';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, LinkInspectorNode } from './types';
 
 const linkContentSection: InspectorSectionDefinition = {
@@ -106,5 +107,5 @@ export const LINK_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
 ];
 
 function isLinkNode(node: InspectorNode | null): node is LinkInspectorNode {
-  return Boolean(node && node.type === 'leaf' && node.role === 'link');
+  return Boolean(node && isTextNode(node) && node.link !== undefined);
 }

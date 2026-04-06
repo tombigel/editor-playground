@@ -6,13 +6,13 @@ describe('editor/stageNavigation', () => {
   it('returns stage-selectable nodes in pre-order DOM traversal', () => {
     const document = createInitialDocument();
     const root = document.nodes[document.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
     const firstTopLevelId = root.children[0];
     const firstTopLevel = document.nodes[firstTopLevelId];
-    if (!firstTopLevel || firstTopLevel.type === 'site') {
+    if (!firstTopLevel || firstTopLevel.contentType === 'site') {
       throw new Error('Expected top-level wrapper');
     }
 
@@ -38,9 +38,9 @@ describe('editor/stageNavigation', () => {
   it('skips hidden nodes and their descendants', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 

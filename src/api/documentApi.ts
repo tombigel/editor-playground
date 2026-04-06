@@ -1,11 +1,10 @@
 import {
   SECTION_TEMPLATES,
+  createContainerNode,
   createInitialDocument,
-  createLeaf,
   createMediaNode,
   createSectionFromTemplate,
   createTextNode,
-  createWrapper,
   syncIdCountersWithDocument,
   type SectionTemplateId,
 } from '../model/defaults';
@@ -36,20 +35,20 @@ import type {
   BorderRadiusField,
   BorderWidthField,
   ComputedWrapperStickyState,
+  ContainerNode,
+  ContainerSubtype,
   DocumentModel,
   DocumentNode,
   EditorTextField,
-  LeafRole,
   MediaSubtype,
   ShadowStyleField,
   NodeTextField,
   NodeId,
   StickyDefinition,
   TextSubtype,
-  WrapperNode,
   WrapperStyleField,
-  WrapperRole,
 } from '../model/types';
+import { isContainerNode, isLeafNode, isMediaNode, isTextNode } from '../model/types';
 import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolve';
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
@@ -64,10 +63,11 @@ export type TopLevelWrapperVisibility = TopLevelWrapperVisibilityModeModel;
 
 export type {
   ComputedWrapperStickyState,
+  ContainerNode,
+  ContainerSubtype,
   DocumentModel,
   DocumentNode,
   EditorTextField,
-  LeafRole,
   MediaSubtype,
   NodeTextField,
   NodeId,
@@ -75,9 +75,7 @@ export type {
   StickyLayoutState,
   StickyDefinition,
   TextSubtype,
-  WrapperNode,
   WrapperStyleField,
-  WrapperRole,
 };
 export type { DocumentCommand } from './types/index';
 
@@ -147,7 +145,7 @@ export function setNodeRect(
 ): DocumentModel {
   const next = cloneDocument(document);
   const node = next.nodes[nodeId];
-  if (!node || node.type === 'site') {
+  if (!node || node.contentType === 'site') {
     return document;
   }
 
@@ -171,7 +169,7 @@ export function setNodeSticky(
 ): DocumentModel {
   const next = cloneDocument(document);
   const node = next.nodes[nodeId];
-  if (!node || node.type === 'site') {
+  if (!node || node.contentType === 'site') {
     return document;
   }
 
@@ -196,7 +194,7 @@ export function setSiteNodeStickyElevation(
 ): DocumentModel {
   const next = cloneDocument(document);
   const site = next.nodes[next.rootId];
-  if (site.type !== 'site') {
+  if (site.contentType !== 'site') {
     return document;
   }
   site.stickyElevation = enabled;
@@ -211,7 +209,7 @@ export function setNodeTextField(
 ): DocumentModel {
   let next = cloneDocument(document);
   const node = next.nodes[nodeId];
-  if (!node || node.type === 'site') {
+  if (!node || node.contentType === 'site') {
     return document;
   }
 
@@ -220,12 +218,12 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'content' && node.type === 'leaf' && node.role === 'text') {
+  if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
     node.content = value;
     return next;
   }
 
-  if (field === 'htmlTag' && node.type === 'leaf' && node.role === 'text') {
+  if (field === 'htmlTag' && isTextNode(node) && node.subtype === 'block') {
     node.htmlTag =
       value === 'h1' ||
       value === 'h2' ||
@@ -233,60 +231,54 @@ export function setNodeTextField(
       value === 'h4' ||
       value === 'h5' ||
       value === 'h6' ||
-      value === 'blockquote' ||
-      value === 'div'
+      value === 'blockquote'
         ? value
         : 'p';
     return next;
   }
 
-  if (field === 'lang' && node.type === 'leaf' && node.role === 'text') {
+  if (field === 'lang' && isTextNode(node) && node.subtype === 'block') {
     node.lang = value.trim() || undefined;
     return next;
   }
 
-  if (field === 'label' && node.type === 'leaf' && 'label' in node) {
-    node.label = value;
+  if (field === 'linkType' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, linkType: normalizeNavigationKind(value) };
     return next;
   }
 
-  if (field === 'linkType' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.linkType = normalizeNavigationKind(value);
+  if (field === 'anchorTargetId' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, anchorTargetId: value || undefined };
     return next;
   }
 
-  if (field === 'anchorTargetId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.anchorTargetId = value || undefined;
+  if (field === 'href' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, href: value };
     return next;
   }
 
-  if (field === 'href' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.href = value;
+  if (field === 'openInNewTab' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
     return next;
   }
 
-  if (field === 'openInNewTab' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.openInNewTab = value === 'true' ? true : undefined;
-    return next;
-  }
-
-  if (field === 'src' && node.type === 'leaf' && node.role === 'image') {
+  if (field === 'src' && isMediaNode(node) && node.subtype === 'image') {
     node.src = value;
     return next;
   }
 
-  if (field === 'alt' && node.type === 'leaf' && node.role === 'image') {
+  if (field === 'alt' && isMediaNode(node) && node.subtype === 'image') {
     node.alt = value;
     return next;
   }
 
-  if (field === 'color' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  if (field === 'color' && isTextNode(node)) {
     node.style ??= {};
     node.style.color = value || undefined;
     return next;
   }
 
-  if (field === 'fontFamily' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  if (field === 'fontFamily' && isTextNode(node)) {
     node.style ??= {};
     const trimmedValue = value.trim();
     node.style.fontFamily = trimmedValue || undefined;
@@ -296,31 +288,25 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'background' && node.type === 'leaf' && node.role === 'button') {
+  if (field === 'background' && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style.background = value || undefined;
     return next;
   }
 
-  if ((field === 'paddingBlock' || field === 'paddingInline') && node.type === 'leaf' && node.role === 'button') {
+  if ((field === 'paddingBlock' || field === 'paddingInline') && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style[field] = value ? parseSpacingValue(value) : undefined;
     return next;
   }
 
-  if (field === 'fontSize' && node.type === 'leaf' && node.role === 'text') {
+  if (field === 'fontSize' && isTextNode(node)) {
     node.style ??= {};
     node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
     return next;
   }
 
-  if (field === 'fontSize' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.style ??= {};
-    node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
-    return next;
-  }
-
-  if (field === 'fontWeight' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  if (field === 'fontWeight' && isTextNode(node)) {
     const parsed = Number.parseInt(value, 10);
     if (!Number.isFinite(parsed)) {
       return document;
@@ -330,7 +316,7 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'fontStyle' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  if (field === 'fontStyle' && isTextNode(node)) {
     node.style ??= {};
     node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
     return next;
@@ -338,8 +324,7 @@ export function setNodeTextField(
 
   if (
     field === 'textDecorationLine' &&
-    node.type === 'leaf' &&
-    (node.role === 'text' || node.role === 'link' || node.role === 'button')
+    isTextNode(node)
   ) {
     node.style ??= {};
     node.style.textDecorationLine = normalizeTextDecorationLine(value);
@@ -348,8 +333,7 @@ export function setNodeTextField(
 
   if (
     field === 'lineHeight' &&
-    node.type === 'leaf' &&
-    (node.role === 'text' || node.role === 'link' || node.role === 'button')
+    isTextNode(node)
   ) {
     const parsed = Number.parseFloat(value);
     if (Number.isFinite(parsed) && parsed > 0) {
@@ -360,46 +344,43 @@ export function setNodeTextField(
     return document;
   }
 
-  if (field === 'direction' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  if (field === 'direction' && isTextNode(node)) {
     node.style ??= {};
     node.style.direction = value === 'rtl' ? 'rtl' : 'ltr';
     return next;
   }
 
-  if (field === 'textAlign' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  if (field === 'textAlign' && isTextNode(node)) {
     node.style ??= {};
     node.style.textAlign = value === 'center' || value === 'right' ? value : 'left';
     return next;
   }
 
-  if (field === 'textWrap' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+  if (field === 'textWrap' && isTextNode(node) && node.link !== undefined) {
     node.style ??= {};
     node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
     return next;
   }
 
-  if (isBorderColorField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+  if (isBorderColorField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value || undefined;
     return next;
   }
 
-  if (isBorderWidthField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+  if (isBorderWidthField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
     return next;
   }
 
-  if (isBorderRadiusField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+  if (isBorderRadiusField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
     return next;
   }
 
-  if (isShadowStyleField(field) && node.type === 'leaf') {
-    if (node.role !== 'text' && node.role !== 'link' && node.role !== 'image' && node.role !== 'button') {
-      return document;
-    }
+  if (isShadowStyleField(field) && isLeafNode(node)) {
     node.style ??= {};
     if (field === 'shadowColor') {
       node.style.shadowColor = value || undefined;
@@ -423,7 +404,7 @@ export function setNodeVisibilityDoc(
 ): DocumentModel {
   const next = cloneDocument(document);
   const node = next.nodes[nodeId];
-  if (!node || node.type === 'site' || node.visible === visible) {
+  if (!node || node.contentType === 'site' || node.visible === visible) {
     return document;
   }
 
@@ -455,10 +436,10 @@ export function setTopLevelWrapperVisibility(
   const root = document.nodes[document.rootId];
   const page = document.pages?.find((entry) => entry.id === pageId);
   const node = document.nodes[nodeId];
-  if (!root || root.type !== 'site' || !page || !node || node.type !== 'wrapper') {
+  if (!root || root.contentType !== 'site' || !page || !node || !isContainerNode(node)) {
     return document;
   }
-  if (node.parentId !== document.rootId || !isEligibleTopLevelWrapper(node.role)) {
+  if (node.parentId !== document.rootId || !isEligibleTopLevelWrapper(node.subtype)) {
     return document;
   }
 
@@ -468,7 +449,7 @@ export function setTopLevelWrapperVisibility(
   const targetPage = pages.find((entry) => entry.id === pageId);
   const nextNode = next.nodes[nodeId];
 
-  if (!targetPage || nextNode.type !== 'wrapper') {
+  if (!targetPage || !isContainerNode(nextNode)) {
     return document;
   }
 
@@ -602,8 +583,8 @@ function isShadowStyleField(field: EditorTextField): field is ShadowStyleField {
   );
 }
 
-function isEligibleTopLevelWrapper(role: WrapperNode['role']) {
-  return role === 'section' || role === 'header' || role === 'footer';
+function isEligibleTopLevelWrapper(subtype: ContainerNode['subtype']) {
+  return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
 export function parseDocumentJson(raw: string): DocumentModel {
@@ -624,12 +605,12 @@ export function serializeDocumentJson(document: DocumentModel): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Insert a wrapper node into the document without requiring EditorState.
- * The wrapper is appended as the last child of `parentId`.
+ * Insert a container node into the document without requiring EditorState.
+ * The container is appended as the last child of `parentId`.
  */
-export function insertWrapperDoc(
+export function insertContainerDoc(
   document: DocumentModel,
-  role: WrapperRole,
+  subtype: ContainerSubtype,
   parentId: NodeId,
 ): DocumentModel {
   const next = cloneDocument(document);
@@ -640,9 +621,9 @@ export function insertWrapperDoc(
     return document;
   }
 
-  let node = createWrapper(role, parentId);
+  let node = createContainerNode(subtype, parentId);
   while (next.nodes[node.id]) {
-    node = createWrapper(role, parentId);
+    node = createContainerNode(subtype, parentId);
   }
 
   next.nodes[node.id] = node;
@@ -651,12 +632,23 @@ export function insertWrapperDoc(
 }
 
 /**
- * Insert a leaf node into the document without requiring EditorState.
- * The leaf is appended as the last child of `parentId`.
+ * @deprecated Use insertContainerDoc instead.
+ * Legacy alias kept for Phase 2 compatibility.
  */
-export function insertLeafDoc(
+export function insertWrapperDoc(
   document: DocumentModel,
-  role: LeafRole,
+  subtype: ContainerSubtype,
+  parentId: NodeId,
+): DocumentModel {
+  return insertContainerDoc(document, subtype, parentId);
+}
+
+/**
+ * Insert a text node into the document without requiring EditorState.
+ * The text node is appended as the last child of `parentId`.
+ */
+export function insertTextDoc(
+  document: DocumentModel,
   parentId: NodeId,
 ): DocumentModel {
   const next = cloneDocument(document);
@@ -667,14 +659,55 @@ export function insertLeafDoc(
     return document;
   }
 
-  let node = createLeaf(role, parentId);
+  let node = createTextNode('block', parentId);
   while (next.nodes[node.id]) {
-    node = createLeaf(role, parentId);
+    node = createTextNode('block', parentId);
   }
 
   next.nodes[node.id] = node;
   parent.children.push(node.id);
   return next;
+}
+
+/**
+ * Insert a media node into the document without requiring EditorState.
+ * The media node is appended as the last child of `parentId`.
+ */
+export function insertMediaDoc(
+  document: DocumentModel,
+  parentId: NodeId,
+): DocumentModel {
+  const next = cloneDocument(document);
+  syncIdCountersWithDocument(next);
+
+  const parent = next.nodes[parentId];
+  if (!parent) {
+    return document;
+  }
+
+  let node = createMediaNode('image', parentId);
+  while (next.nodes[node.id]) {
+    node = createMediaNode('image', parentId);
+  }
+
+  next.nodes[node.id] = node;
+  parent.children.push(node.id);
+  return next;
+}
+
+/**
+ * @deprecated Use insertTextDoc / insertMediaDoc instead.
+ * Legacy alias kept for Phase 2 compatibility.
+ */
+export function insertLeafDoc(
+  document: DocumentModel,
+  role: 'text' | 'image' | 'link' | 'button',
+  parentId: NodeId,
+): DocumentModel {
+  if (role === 'image') {
+    return insertMediaDoc(document, parentId);
+  }
+  return insertTextDoc(document, parentId);
 }
 
 /**
@@ -730,7 +763,7 @@ export function reorderNodeDoc(
 ): DocumentModel {
   const next = cloneDocument(document);
   const node = next.nodes[nodeId];
-  if (!node || node.type === 'site' || !node.parentId) {
+  if (!node || node.contentType === 'site' || !node.parentId) {
     return document;
   }
 
@@ -745,8 +778,8 @@ export function reorderNodeDoc(
   }
 
   // Sections are reordered only among sibling sections at root level.
-  if (node.type === 'wrapper' && node.role === 'section') {
-    if (parent.type !== 'site') {
+  if (isContainerNode(node) && node.subtype === 'section') {
+    if (parent.contentType !== 'site') {
       return document;
     }
     if (action === 'sendToBack' || action === 'bringToFront') {
@@ -801,7 +834,7 @@ export function reparentNodeDoc(
   const node = next.nodes[nodeId];
   const newParent = next.nodes[newParentId];
 
-  if (!node || !newParent || node.type === 'site' || newParent.type !== 'wrapper') {
+  if (!node || !newParent || node.contentType === 'site' || !isContainerNode(newParent)) {
     return document;
   }
 
@@ -843,17 +876,17 @@ export function moveNodeInTreeDoc(
   const node = next.nodes[nodeId];
   const targetParent = next.nodes[targetParentId];
 
-  if (!node || node.type === 'site' || !targetParent || targetIndex < 0) {
+  if (!node || node.contentType === 'site' || !targetParent || targetIndex < 0) {
     return document;
   }
 
   const movingStructuralRootNode =
-    node.type === 'wrapper' &&
-    isSiteSectionRole(node.role) &&
-    targetParent.type === 'site' &&
+    isContainerNode(node) &&
+    isSiteSectionRole(node.subtype) &&
+    targetParent.contentType === 'site' &&
     targetParentId === next.rootId;
 
-  if (targetParent.type === 'site') {
+  if (targetParent.contentType === 'site') {
     if (!movingStructuralRootNode) {
       return document;
     }
@@ -1062,22 +1095,22 @@ function isDescendantOf(document: DocumentModel, candidateId: NodeId, ancestorId
 }
 
 function isReorderableNode(node: DocumentNode): boolean {
-  if (node.type === 'site') return false;
-  if (node.type === 'leaf') return true;
-  return node.role === 'container';
+  if (node.contentType === 'site') return false;
+  if (isLeafNode(node)) return true;
+  return isContainerNode(node) && node.subtype === 'container';
 }
 
-function isSiteSectionRole(role: WrapperRole): boolean {
-  return role === 'section' || role === 'header' || role === 'footer';
+function isSiteSectionRole(subtype: ContainerSubtype): boolean {
+  return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
 function canAcceptChild(parent: DocumentNode, child: DocumentNode): boolean {
-  if (parent.type !== 'wrapper') return false;
-  if (child.type === 'leaf') return true;
-  if (child.type !== 'wrapper') return false;
-  if (child.role !== 'container') return false;
-  if (parent.role === 'container') return true;
-  return isSiteSectionRole(parent.role);
+  if (!isContainerNode(parent)) return false;
+  if (isLeafNode(child)) return true;
+  if (!isContainerNode(child)) return false;
+  if (child.subtype !== 'container') return false;
+  if (parent.subtype === 'container') return true;
+  return isSiteSectionRole(parent.subtype);
 }
 
 function findSiblingSectionIndex(
@@ -1089,7 +1122,7 @@ function findSiblingSectionIndex(
   let index = fromIndex + direction;
   while (index >= 0 && index < siblingIds.length) {
     const candidate = document.nodes[siblingIds[index]];
-    if (candidate?.type === 'wrapper' && candidate.role === 'section') {
+    if (candidate && isContainerNode(candidate) && candidate.subtype === 'section') {
       return index;
     }
     index += direction;
@@ -1099,28 +1132,28 @@ function findSiblingSectionIndex(
 
 function normalizeRootStructuralRoles(document: DocumentModel) {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return;
   }
 
-  const structuralWrappers = root.children
+  const structuralContainers = root.children
     .map((childId) => document.nodes[childId])
     .filter(
-      (node): node is WrapperNode =>
-        node?.type === 'wrapper' && isSiteSectionRole(node.role),
+      (node): node is ContainerNode =>
+        Boolean(node && isContainerNode(node) && isSiteSectionRole(node.subtype)),
     );
 
-  if (structuralWrappers.length === 0) {
+  if (structuralContainers.length === 0) {
     return;
   }
 
-  for (const wrapper of structuralWrappers) {
-    wrapper.role = 'section';
+  for (const container of structuralContainers) {
+    container.subtype = 'section';
   }
 
-  structuralWrappers[0].role = 'header';
-  if (structuralWrappers.length > 1) {
-    structuralWrappers[structuralWrappers.length - 1].role = 'footer';
+  structuralContainers[0].subtype = 'header';
+  if (structuralContainers.length > 1) {
+    structuralContainers[structuralContainers.length - 1].subtype = 'footer';
   }
 }
 
@@ -1130,14 +1163,14 @@ export function insertSectionTemplateBeforeFooter(
 ): DocumentModel {
   const next = cloneDocument(document);
   const root = next.nodes[next.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return document;
   }
 
   const build = createSectionFromTemplate(templateId, root.id);
   const footerIndex = root.children.findIndex((id) => {
     const node = next.nodes[id];
-    return node?.type === 'wrapper' && node.role === 'footer';
+    return node && isContainerNode(node) && node.subtype === 'footer';
   });
 
   const insertionIndex = footerIndex >= 0 ? footerIndex : root.children.length;

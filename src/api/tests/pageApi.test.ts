@@ -106,7 +106,7 @@ describe('deletePage', () => {
     doc = addPage(doc, { displayName: 'About', slug: 'about' });
     const page = (doc.pages ?? [])[1];
     const root = doc.nodes[doc.rootId];
-    if (!root || root.type !== 'site') {
+    if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
     const section = createWrapper('section', doc.rootId);
@@ -135,9 +135,9 @@ describe('deletePage', () => {
     const aboutPage = (doc.pages ?? []).find((page) => page.slug === 'about');
     const homePage = (doc.pages ?? [])[0];
     const section = Object.values(doc.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
-    if (!aboutPage || !homePage || !section || section.type !== 'wrapper') {
+    if (!aboutPage || !homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page, about page, and section wrapper');
     }
 
@@ -148,7 +148,7 @@ describe('deletePage', () => {
     const result = deletePage(custom, aboutPage.id);
     const updatedSection = result.nodes[section.id];
 
-    if (updatedSection.type !== 'wrapper') {
+    if (updatedSection.contentType !== 'container') {
       throw new Error('Expected wrapper node');
     }
 
@@ -462,8 +462,8 @@ describe('syncPageHrefLinks', () => {
     const section = doc.nodes[sectionId];
     const linkNode = createLeaf('link', sectionId) as LinkLeaf;
     linkNode.id = 'link-node-1';
-    linkNode.label = 'Click me';
-    linkNode.href = href;
+    linkNode.content = 'Click me';
+    linkNode.link = { ...(linkNode.link ?? { linkType: 'external' }), href };
     return {
       ...doc,
       nodes: {
@@ -477,13 +477,13 @@ describe('syncPageHrefLinks', () => {
   it('updates href on link nodes matching oldUrl', () => {
     const doc = makeDocWithLinkNode('/about/');
     const result = syncPageHrefLinks(doc, '/about/', '/about-us/');
-    expect((result.nodes['link-node-1'] as { href?: string }).href).toBe('/about-us/');
+    expect((result.nodes['link-node-1'] as { link?: { href?: string } }).link?.href).toBe('/about-us/');
   });
 
   it('does not update href on link nodes not matching oldUrl', () => {
     const doc = makeDocWithLinkNode('/contact/');
     const result = syncPageHrefLinks(doc, '/about/', '/about-us/');
-    expect((result.nodes['link-node-1'] as { href?: string }).href).toBe('/contact/');
+    expect((result.nodes['link-node-1'] as { link?: { href?: string } }).link?.href).toBe('/contact/');
   });
 
   it('returns original document reference when nothing matches', () => {
@@ -495,7 +495,7 @@ describe('syncPageHrefLinks', () => {
   it('does nothing when oldUrl is "/"', () => {
     const doc = makeDocWithLinkNode('/');
     const result = syncPageHrefLinks(doc, '/', '/home/');
-    expect((result.nodes['link-node-1'] as { href?: string }).href).toBe('/');
+    expect((result.nodes['link-node-1'] as { link?: { href?: string } }).link?.href).toBe('/');
   });
 
   it('does nothing when oldUrl equals newUrl', () => {

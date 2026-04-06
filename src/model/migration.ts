@@ -306,7 +306,7 @@ function migrateNode(raw: RawNode): DocumentNode | null {
  */
 export function migrateDocumentModel(raw: unknown): DocumentModel {
   if (!isObject(raw)) {
-    throw new Error('migrateDocumentModel: expected an object, got ' + typeof raw);
+    throw new Error(`migrateDocumentModel: expected an object, got ${typeof raw}`);
   }
 
   const rawDoc = raw as RawDocument;

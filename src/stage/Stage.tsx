@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { isSiteNode } from "../model/types";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
 import { resolveStickyIsElevated } from "../render/sticky";
@@ -25,9 +26,9 @@ import {
 	SnapGuideOverlay,
 } from "./stageRenderers/dragOverlay";
 import {
-	getWrapperResizeHandles,
+	getContainerResizeHandles,
 	isStructuralTopLevelWrapper,
-} from "./stageRenderers/wrapperRenderer";
+} from "./stageRenderers/containerRenderer";
 import type {
 	MeasuredNodeSizes,
 	ResizeHandle,
@@ -175,7 +176,7 @@ export function Stage({
 		const frameElement = root.querySelector<HTMLElement>(".stage-frame");
 		const nodeElement = root.querySelector<HTMLElement>(`#stage-node-${selectedId}`);
 		const node = document.nodes[selectedId];
-		if (!frameElement || !nodeElement || !node || node.type === "site") {
+		if (!frameElement || !nodeElement || !node || node.contentType === "site") {
 			setSingleSelectionOverlay(null);
 			return;
 		}
@@ -186,12 +187,12 @@ export function Stage({
 		const nodeRect = nodeElement.getBoundingClientRect();
 		const isTopLevel = node.parentId === document.rootId;
 		const handles =
-			node.type === "wrapper"
-				? getWrapperResizeHandles(node, isTopLevel)
+			node.contentType === "container"
+				? getContainerResizeHandles(node, isTopLevel)
 				: (["n", "ne", "e", "se", "s", "sw", "w", "nw"] as ResizeHandle[]);
 
 		const siteNode = document.nodes[document.rootId];
-		const globalStickyElevation = siteNode?.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+		const globalStickyElevation = siteNode?.contentType === 'site' ? (siteNode.stickyElevation ?? true) : true;
 		const isSticky = Boolean(node.sticky?.enabled);
 		setSingleSelectionOverlay({
 			nodeId: node.id,
@@ -207,7 +208,7 @@ export function Stage({
 			},
 			handles,
 			wideSouthHandle:
-				node.type === "wrapper" && isStructuralTopLevelWrapper(node, isTopLevel),
+				node.contentType === "container" && isStructuralTopLevelWrapper(node, isTopLevel),
 		});
 	}, [document, dragDrop.isDragging, selectedId, selectedIds]);
 
@@ -300,11 +301,11 @@ export function Stage({
 
 				if (
 					node &&
-					node.type === "wrapper" &&
+					node.contentType === "container" &&
 					node.parentId === document.rootId &&
-					(node.role === "section" ||
-						node.role === "header" ||
-						node.role === "footer")
+					(node.subtype === "section" ||
+						node.subtype === "header" ||
+						node.subtype === "footer")
 				) {
 					setMarqueeState({
 						clickedId: node.id,
@@ -318,7 +319,7 @@ export function Stage({
 					return;
 				}
 
-				if (nodeElement && nodeId && node && node.type !== "site") {
+				if (nodeElement && nodeId && node && node.contentType !== "site") {
 					setMarqueeState(null);
 					dragDrop.handleNodePointerDown(event);
 					return;
@@ -361,7 +362,7 @@ export function Stage({
 					const originX = Math.round(resizeState.originX);
 					const originY = Math.round(resizeState.originY);
 					const resizedNode = document.nodes[resizeState.nodeId];
-					if (resizedNode && resizedNode.type !== "site") {
+					if (resizedNode && !isSiteNode(resizedNode)) {
 						const cssViewport = measureCssViewport(stageRef.current, viewport);
 						const commit = getResizeCommitSize(
 							resizedNode,
@@ -449,7 +450,7 @@ export function Stage({
 					const nodeElement = stageRef.current?.querySelector<HTMLElement>(
 						`#stage-node-${overlay.nodeId}`,
 					) ?? null;
-					if (!node || node.type === "site") {
+					if (!node || node.contentType === "site") {
 						return;
 					}
 
@@ -470,7 +471,7 @@ export function Stage({
 						originX: parseFloat(node.rect.x.base.raw) || 0,
 						originY: parseFloat(node.rect.y.base.raw) || 0,
 						minHeight:
-							node.type === "wrapper" &&
+							node.contentType === "container" &&
 							isStructuralTopLevelWrapper(node, node.parentId === document.rootId)
 								? getStructuralResizeMinHeightForNode(nodeElement, startSize.height)
 								: undefined,
@@ -527,7 +528,7 @@ function collectMarqueeSelectionIds(
 				return null;
 			}
 			const node = documentModel.nodes[nodeId];
-			if (!node || node.type === "site") {
+			if (!node || node.contentType === "site") {
 				return null;
 			}
 			if (marqueeParentId && node.parentId !== marqueeParentId) {

@@ -1,34 +1,33 @@
 import type { CSSProperties } from 'react';
-import type { DocumentNode, ImageLeaf, LinkLeaf, TextLeaf, ButtonLeaf, TypographyStyle } from '../model/types';
+import type { MediaNode, TextNode, TypographyStyle } from '../model/types';
+import { isMediaNode, isTextNode } from '../model/types';
 import { buildFontFamilyStack, DEFAULT_FONT_FALLBACK_STACK } from '../fonts';
 import { formatValue } from '../model/units';
 import { buildBorderStyle, buildBoxShadow, buildFilterShadow } from './styleHelpers';
 import type { SharedCssRule, StyleRecord } from './types';
 export type { SharedCssRule, StyleRecord, StyleValue } from './types';
 
-type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
+type LeafNode = TextNode | MediaNode;
 
 export function getLeafInlineStyle(node: LeafNode): StyleRecord {
-  if (node.role === 'text') {
+  if (isTextNode(node)) {
+    if (node.link !== undefined && node.style?.background !== undefined) {
+      return getButtonLeafStyle(node);
+    }
+    if (node.link !== undefined) {
+      return getLinkLeafStyle(node);
+    }
     return getTextLeafStyle(node);
   }
 
-  if (node.role === 'link') {
-    return getLinkLeafStyle(node);
-  }
-
-  if (node.role === 'image') {
+  if (isMediaNode(node) && node.subtype === 'image') {
     return getImageLeafStyle(node);
-  }
-
-  if (node.role === 'button') {
-    return getButtonLeafStyle(node);
   }
 
   return {};
 }
 
-export function getTextLeafStyle(node: TextLeaf): StyleRecord {
+export function getTextLeafStyle(node: TextNode): StyleRecord {
   return getTypographyStyle(node.style, {
     whiteSpace: 'pre-wrap',
     maxWidth: '100%',
@@ -37,7 +36,7 @@ export function getTextLeafStyle(node: TextLeaf): StyleRecord {
   });
 }
 
-export function getLinkLeafStyle(node: LinkLeaf): StyleRecord {
+export function getLinkLeafStyle(node: TextNode): StyleRecord {
   return {
     display: 'block',
     width: '100%',
@@ -49,7 +48,7 @@ export function getLinkLeafStyle(node: LinkLeaf): StyleRecord {
   };
 }
 
-export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
+export function getImageLeafStyle(node: MediaNode): StyleRecord {
   const style: StyleRecord =
     node.name === 'Brand Mark'
       ? {
@@ -68,7 +67,7 @@ export function getImageLeafStyle(node: ImageLeaf): StyleRecord {
   return style;
 }
 
-export function getButtonLeafStyle(node: ButtonLeaf): StyleRecord {
+export function getButtonLeafStyle(node: TextNode): StyleRecord {
   const style: StyleRecord = {
     display: 'block',
     width: '100%',

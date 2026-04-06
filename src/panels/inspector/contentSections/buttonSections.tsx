@@ -71,7 +71,7 @@ export function ButtonContentSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
         <FormField label="Label">
-          <Input value={node.label} onChange={(e) => onTextChange('label', e.target.value)} />
+          <Input value={node.content} onChange={(e) => onTextChange('content', e.target.value)} />
         </FormField>
         <NavigationFields document={document} node={node} onTextChange={onTextChange} />
     </InspectorSectionCard>

@@ -50,5 +50,5 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
 }
 
 function isWrapperNode(node: InspectorNode | null): node is WrapperInspectorNode {
-  return Boolean(node && node.type === 'wrapper');
+  return Boolean(node && node.contentType === 'container');
 }

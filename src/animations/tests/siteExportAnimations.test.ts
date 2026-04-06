@@ -18,7 +18,7 @@ describe('site export — animations', () => {
   it('one animated node → interact scripts injected', () => {
     const doc = createInitialDocument();
     const textNode = Object.values(doc.nodes).find(
-      (n) => n.type === 'leaf' && n.role === 'text',
+      (n) => n.contentType === 'text',
     );
 
     if (!textNode) {
@@ -44,7 +44,7 @@ describe('site export — animations', () => {
   it('config round-trip — inline body script matches buildDocumentInteractConfig', () => {
     const doc = createInitialDocument();
     const textNode = Object.values(doc.nodes).find(
-      (n) => n.type === 'leaf' && n.role === 'text',
+      (n) => n.contentType === 'text',
     );
 
     if (!textNode) {
@@ -76,7 +76,7 @@ describe('site export — animations', () => {
   it('data-interact-key on animated node', () => {
     const doc = createInitialDocument();
     const textNode = Object.values(doc.nodes).find(
-      (n) => n.type === 'leaf' && n.role === 'text',
+      (n) => n.contentType === 'text',
     );
 
     if (!textNode) {
@@ -95,11 +95,11 @@ describe('site export — animations', () => {
 
   it('source triggerId → both trigger node and target node have data-interact-key', () => {
     const doc = createInitialDocument();
-    const nonSiteNodes = Object.values(doc.nodes).filter((n) => n.type !== 'site');
+    const nonSiteNodes = Object.values(doc.nodes).filter((n) => n.contentType !== 'site');
 
-    const targetNode = nonSiteNodes.find((n) => n.type === 'leaf' && n.role === 'text');
+    const targetNode = nonSiteNodes.find((n) => n.contentType === 'text');
     const triggerNode = nonSiteNodes.find(
-      (n) => n.type === 'leaf' && n.role === 'image',
+      (n) => n.contentType === 'media',
     ) ?? nonSiteNodes.find((n) => n !== targetNode);
 
     if (!targetNode || !triggerNode) {
@@ -123,7 +123,7 @@ describe('site export — animations', () => {
   it('includeAnimations: false suppresses interact script injection and data-interact-key attributes', () => {
     const doc = createInitialDocument();
     const textNode = Object.values(doc.nodes).find(
-      (n) => n.type === 'leaf' && n.role === 'text',
+      (n) => n.contentType === 'text',
     );
 
     if (!textNode) {

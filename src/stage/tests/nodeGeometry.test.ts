@@ -25,7 +25,7 @@ type HeightParsed =
 
 function makeLeafNode(opts: {
   id?: string;
-  role?: 'text' | 'image' | 'link' | 'button';
+  subtype?: 'block' | 'image' | 'video';
   widthRaw?: string;
   widthParsed?: WidthParsed;
   heightRaw?: string;
@@ -38,8 +38,8 @@ function makeLeafNode(opts: {
   const heightParsed: HeightParsed = opts.heightParsed ?? { value: 50, unit: 'px' };
   return {
     id: opts.id ?? 'leaf-1',
-    type: 'leaf' as const,
-    role: opts.role ?? 'text',
+    contentType: 'text' as const,
+    subtype: opts.subtype ?? 'block',
     parentId: opts.parentId ?? null,
     children: [],
     name: 'Test',
@@ -59,7 +59,7 @@ function makeLeafNode(opts: {
 
 function makeWrapperNode(opts: {
   id?: string;
-  role?: 'section' | 'header' | 'footer' | 'container';
+  subtype?: 'section' | 'header' | 'footer' | 'container';
   widthParsed?: WidthParsed;
   heightParsed?: HeightParsed;
 }) {
@@ -67,8 +67,8 @@ function makeWrapperNode(opts: {
   const heightParsed: HeightParsed = opts.heightParsed ?? { value: 400, unit: 'px' };
   return {
     id: opts.id ?? 'wrapper-1',
-    type: 'wrapper' as const,
-    role: opts.role ?? 'section',
+    contentType: 'container' as const,
+    subtype: opts.subtype ?? 'section',
     parentId: null,
     children: [],
     name: 'Wrapper',
@@ -257,7 +257,7 @@ describe('stage/nodeGeometry', () => {
     it('estimates auto height for text role when no measurement', () => {
       const node = makeLeafNode({
         heightParsed: { keyword: 'auto' },
-        role: 'text',
+        subtype: 'block',
         widthParsed: { value: 200, unit: 'px' },
         content: 'Hello world',
       });
@@ -268,11 +268,10 @@ describe('stage/nodeGeometry', () => {
     it('returns 24 for link role with auto height', () => {
       const node = makeLeafNode({
         heightParsed: { keyword: 'auto' },
-        role: 'link',
-        content: '',
+        subtype: 'block',
+        content: 'Click',
       });
-      // Force it to be a link leaf structure
-      (node as Record<string, unknown>).label = 'Click';
+      (node as Record<string, unknown>).link = { linkType: 'external', href: '#' };
       const result = getNodeHeight(node);
       expect(result).toBe(24);
     });
@@ -280,10 +279,11 @@ describe('stage/nodeGeometry', () => {
     it('returns 50 for button role with auto height', () => {
       const node = makeLeafNode({
         heightParsed: { keyword: 'auto' },
-        role: 'button',
-        content: '',
+        subtype: 'block',
+        content: 'Submit',
       });
-      (node as Record<string, unknown>).label = 'Submit';
+      (node as Record<string, unknown>).link = { linkType: 'external', href: '#' };
+      (node as Record<string, unknown>).style = { background: '#1e40af' };
       const result = getNodeHeight(node);
       expect(result).toBe(50);
     });
@@ -308,7 +308,7 @@ describe('stage/nodeGeometry', () => {
 
     it('returns 0 for wrapper header with auto-like height', () => {
       const node = makeWrapperNode({
-        role: 'header',
+        subtype: 'header',
         heightParsed: { keyword: 'auto' },
       });
       expect(getNodeHeight(node)).toBe(0);
@@ -316,7 +316,7 @@ describe('stage/nodeGeometry', () => {
 
     it('returns 0 for wrapper footer with auto-like height', () => {
       const node = makeWrapperNode({
-        role: 'footer',
+        subtype: 'footer',
         heightParsed: { keyword: 'auto' },
       });
       expect(getNodeHeight(node)).toBe(0);

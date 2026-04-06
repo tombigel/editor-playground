@@ -10,10 +10,10 @@ describe('panels/layersTree', () => {
   it('keeps hidden nodes in the layers tree when their ancestors are expanded', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -39,22 +39,22 @@ describe('panels/layersTree', () => {
   it('marks structural wrappers as draggable in the layers tree', () => {
     const document = createInitialDocument();
     const header = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
     const footer = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'footer',
+      (node) => node.contentType === 'container' && node.subtype === 'footer',
     );
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
     if (
       !header ||
-      header.type !== 'wrapper' ||
+      header.contentType !== 'container' ||
       !footer ||
-      footer.type !== 'wrapper' ||
+      footer.contentType !== 'container' ||
       !section ||
-      section.type !== 'wrapper'
+      section.contentType !== 'container'
     ) {
       throw new Error('Expected structural wrappers');
     }
@@ -68,9 +68,9 @@ describe('panels/layersTree', () => {
     const document = createInitialDocument();
     const rows = buildLayersTreeRows(document, [], new Set());
 
-    const headerRow = rows.find((row) => row.node.type === 'wrapper' && row.node.role === 'header');
-    const sectionRow = rows.find((row) => row.node.type === 'wrapper' && row.node.role === 'section');
-    const footerRow = rows.find((row) => row.node.type === 'wrapper' && row.node.role === 'footer');
+    const headerRow = rows.find((row) => row.node.contentType === 'container' && row.node.subtype === 'header');
+    const sectionRow = rows.find((row) => row.node.contentType === 'container' && row.node.subtype === 'section');
+    const footerRow = rows.find((row) => row.node.contentType === 'container' && row.node.subtype === 'footer');
 
     if (!headerRow || !sectionRow || !footerRow) {
       throw new Error('Expected top-level structural rows');
@@ -84,13 +84,13 @@ describe('panels/layersTree', () => {
   it('resolves inside wrapper drops and root structural reordering targets', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const footer = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'footer',
+      (node) => node.contentType === 'container' && node.subtype === 'footer',
     );
 
-    if (!section || section.type !== 'wrapper' || !footer || footer.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container' || !footer || footer.contentType !== 'container') {
       throw new Error('Expected section and footer wrappers');
     }
 

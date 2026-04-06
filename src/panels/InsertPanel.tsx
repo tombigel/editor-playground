@@ -8,7 +8,7 @@ import {
 	SquareStack,
 	Type,
 } from "lucide-react";
-import type { LeafRole } from "../api/documentApi";
+type LeafRole = 'text' | 'image' | 'link' | 'button';
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
 

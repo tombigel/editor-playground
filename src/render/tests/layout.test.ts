@@ -24,10 +24,10 @@ describe('render/layout', () => {
   it('uses measured sizes for intrinsic geometry and preserves authored explicit wrapper height', () => {
     const document = createInitialDocument();
     const title = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!title || title.type !== 'leaf' || title.role !== 'text' || !section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!title || title.contentType !== 'text' || !section || section.contentType !== 'container') {
       throw new Error('Expected text leaf and section wrapper');
     }
 
@@ -41,8 +41,8 @@ describe('render/layout', () => {
 
   it('keeps explicit section height driven by authored size instead of wrapper remeasurement', () => {
     const document = createInitialDocument();
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -55,10 +55,10 @@ describe('render/layout', () => {
 
   it('derives fallback width and height from authored units and aspect ratio', () => {
     const document = createInitialDocument();
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    const image = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
-    const text = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'text');
-    if (!section || section.type !== 'wrapper' || !image || image.type !== 'leaf' || image.role !== 'image' || !text || text.type !== 'leaf' || text.role !== 'text') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    const image = Object.values(document.nodes).find((node) => node.contentType === 'media');
+    const text = Object.values(document.nodes).find((node) => node.contentType === 'text');
+    if (!section || section.contentType !== 'container' || !image || image.contentType !== 'media' || image.subtype !== 'image' || !text || text.contentType !== 'text') {
       throw new Error('Expected section, image, and text nodes');
     }
 
@@ -74,8 +74,8 @@ describe('render/layout', () => {
 
   it('resolves offsets, wrapper styles, content wrapper styles, and css declarations', () => {
     const document = createInitialDocument();
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -104,10 +104,10 @@ describe('render/layout', () => {
 
   it('keeps section bottom dividers on the inner surface instead of the wrapper box', () => {
     const section = createWrapper('section', 'root');
-    section.style.borderColor = undefined;
-    section.style.borderWidth = undefined;
-    section.style.sectionBorderBottomColor = '#cbd5e1';
-    section.style.sectionBorderBottomWidth = parseUnitValue('2px');
+    section.style!.borderColor = undefined;
+    section.style!.borderWidth = undefined;
+    section.style!.sectionBorderBottomColor = '#cbd5e1';
+    section.style!.sectionBorderBottomWidth = parseUnitValue('2px');
 
     expect(getWrapperBorderStyle(section)).toEqual({});
     expect(getWrapperBorderDeclarations(section)).toEqual([]);
@@ -118,23 +118,23 @@ describe('render/layout', () => {
     });
 
     const container = createWrapper('container', 'root');
-    container.style.borderColor = undefined;
-    container.style.borderWidth = undefined;
+    container.style!.borderColor = undefined;
+    container.style!.borderWidth = undefined;
     expect(getWrapperBorderStyle(container)).toEqual({});
     expect(getWrapperBorderDeclarations(container)).toEqual([]);
   });
 
   it('applies wrapper surface background, border, radius, and shadow on the content wrapper', () => {
     const container = createWrapper('container', 'root');
-    container.style.background = '#ffffff';
-    container.style.borderWidth = parseUnitValue('2px');
-    container.style.borderColor = '#dbe3ee';
-    container.style.borderRadius = parseUnitValue('20px');
-    container.style.shadowColor = 'rgba(18, 32, 51, 0.18)';
-    container.style.shadowBlur = 24;
-    container.style.shadowSpread = 8;
-    container.style.shadowOffsetX = 0;
-    container.style.shadowOffsetY = 12;
+    container.style!.background = '#ffffff';
+    container.style!.borderWidth = parseUnitValue('2px');
+    container.style!.borderColor = '#dbe3ee';
+    container.style!.borderRadius = parseUnitValue('20px');
+    container.style!.shadowColor = 'rgba(18, 32, 51, 0.18)';
+    container.style!.shadowBlur = 24;
+    container.style!.shadowSpread = 8;
+    container.style!.shadowOffsetX = 0;
+    container.style!.shadowOffsetY = 12;
 
     expect(getContentWrapperSurfaceStyle(container)).toEqual({
       boxSizing: 'border-box',
@@ -151,15 +151,15 @@ describe('render/layout', () => {
 
   it('omits zero-width borders, zero radius, and fully transparent shadows from wrapper surfaces', () => {
     const container = createWrapper('container', 'root');
-    container.style.background = '#ffffff';
-    container.style.borderWidth = parseUnitValue('0px');
-    container.style.borderColor = '#dbe3ee';
-    container.style.borderRadius = parseUnitValue('0px');
-    container.style.shadowColor = 'rgba(18, 32, 51, 0)';
-    container.style.shadowBlur = 24;
-    container.style.shadowSpread = 8;
-    container.style.shadowOffsetX = 0;
-    container.style.shadowOffsetY = 12;
+    container.style!.background = '#ffffff';
+    container.style!.borderWidth = parseUnitValue('0px');
+    container.style!.borderColor = '#dbe3ee';
+    container.style!.borderRadius = parseUnitValue('0px');
+    container.style!.shadowColor = 'rgba(18, 32, 51, 0)';
+    container.style!.shadowBlur = 24;
+    container.style!.shadowSpread = 8;
+    container.style!.shadowOffsetX = 0;
+    container.style!.shadowOffsetY = 12;
 
     expect(getContentWrapperSurfaceStyle(container)).toEqual({
       boxSizing: 'border-box',
@@ -169,10 +169,10 @@ describe('render/layout', () => {
 
   it('exposes content wrapper padding separately for overlay alignment', () => {
     const section = createWrapper('section', 'root');
-    section.style.paddingTop = parseSpacingValue('1.5em');
-    section.style.paddingRight = parseSpacingValue('2rem');
-    section.style.paddingBottom = parseSpacingValue('12px');
-    section.style.paddingLeft = parseSpacingValue('0.5em');
+    section.style!.paddingTop = parseSpacingValue('1.5em');
+    section.style!.paddingRight = parseSpacingValue('2rem');
+    section.style!.paddingBottom = parseSpacingValue('12px');
+    section.style!.paddingLeft = parseSpacingValue('0.5em');
 
     expect(getContentWrapperPaddingStyle(section)).toEqual({
       paddingTop: '1.5em',
@@ -184,9 +184,9 @@ describe('render/layout', () => {
 
   it('builds mesh layout and sticky extra extent for content-wrapper sticky sections', () => {
     const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    const title = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title');
-    if (!section || section.type !== 'wrapper' || !title || title.type !== 'leaf') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    const title = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.name === 'Post Title');
+    if (!section || section.contentType !== 'container' || !title || title.contentType !== 'text') {
       throw new Error('Expected section and title nodes');
     }
 

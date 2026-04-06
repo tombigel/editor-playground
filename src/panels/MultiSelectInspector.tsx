@@ -69,7 +69,8 @@ import {
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_SHADOW_SPREAD_PX,
 } from '../model/styleDefaults';
-import type { ShadowStyle } from '../model/types';
+import type { ShadowStyle, TextNode } from '../model/types';
+import { isTextNode, isContainerNode, isLeafNode, isSiteNode, isMediaNode } from '../model/types';
 import { offsetsFromDistanceAndAngle } from './InspectorControls';
 import { readRecentFontFamilies, writeRecentFontFamilies } from './inspector/fontPickerHelpers';
 import { useFontPreviewStylesheet } from './inspector/useFontPreviewStylesheet';
@@ -106,25 +107,24 @@ export function MultiSelectInspector({
 }: Props) {
   const textNodes = selectedNodes.filter(isTypographyNode);
   const textLeafNodes = selectedNodes.filter(
-    (node): node is Extract<DocumentNode, { type: 'leaf'; role: 'text' }> =>
-      node.type === 'leaf' && node.role === 'text',
+    (node): node is TextNode => isTextNode(node) && !node.link,
   );
-  const filterShadowNodes = selectedNodes.filter((node): node is Extract<DocumentNode, { type: 'leaf'; role: 'text' | 'link' }> =>
-    node.type === 'leaf' && (node.role === 'text' || node.role === 'link'),
+  const filterShadowNodes = selectedNodes.filter((node): node is TextNode =>
+    isTextNode(node) && !node.style?.background,
   );
   const backgroundWrapperIds = selectedNodes.flatMap((node) =>
-    node.type === 'wrapper' && node.role === 'container' ? [node.id] : [],
+    isContainerNode(node) && node.subtype === 'container' ? [node.id] : [],
   );
   const backgroundLeafIds = selectedNodes.flatMap((node) =>
-    node.type === 'leaf' && node.role === 'button' ? [node.id] : [],
+    isTextNode(node) && node.link !== undefined && node.style?.background !== undefined ? [node.id] : [],
   );
   const radiusWrapperIds = backgroundWrapperIds;
   const radiusLeafIds = selectedNodes.flatMap((node) =>
-    node.type === 'leaf' && (node.role === 'button' || node.role === 'image') ? [node.id] : [],
+    (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) || (isMediaNode(node) && node.subtype === 'image') ? [node.id] : [],
   );
   const boxShadowWrapperIds = backgroundWrapperIds;
   const boxShadowLeafIds = radiusLeafIds;
-  const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { type: 'site' }> => node.type !== 'site');
+  const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { contentType: 'site' }> => !isSiteNode(node));
   const canAlign = canAlignSelection(selectedNodes);
   const canDistribute = canAlign && selectedNodes.length >= 3;
 
@@ -143,20 +143,20 @@ export function MultiSelectInspector({
   const filterShadowState = resolveSharedShadow(filterShadowNodes.map((node) => node.style));
   const backgroundState = resolveSharedString(
     selectedNodes.flatMap((node) => {
-      if (node.type === 'wrapper' && node.role === 'container') {
-        return [node.style.background ?? ''];
+      if (isContainerNode(node) && node.subtype === 'container') {
+        return [node.style?.background ?? ''];
       }
-      if (node.type === 'leaf' && node.role === 'button') {
+      if (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
         return [node.style?.background ?? ''];
       }
       return [];
     }),
   );
   const radiusValues = selectedNodes.flatMap((node) => {
-    if (node.type === 'wrapper' && node.role === 'container') {
-      return [node.style.borderRadius?.raw ?? ''];
+    if (isContainerNode(node) && node.subtype === 'container') {
+      return [node.style?.borderRadius?.raw ?? ''];
     }
-    if (node.type === 'leaf' && (node.role === 'button' || node.role === 'image')) {
+    if ((isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) || (isMediaNode(node) && node.subtype === 'image')) {
       return [node.style?.borderRadius?.raw ?? ''];
     }
     return [];
@@ -165,10 +165,10 @@ export function MultiSelectInspector({
   const radiusUnitState = resolveSharedParsedUnit(radiusValues);
   const boxShadowState = resolveSharedShadow(
     selectedNodes.flatMap((node) => {
-      if (node.type === 'wrapper' && node.role === 'container') {
+      if (isContainerNode(node) && node.subtype === 'container') {
         return [node.style];
       }
-      if (node.type === 'leaf' && (node.role === 'button' || node.role === 'image')) {
+      if ((isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) || (isMediaNode(node) && node.subtype === 'image')) {
         return [node.style];
       }
       return [];
@@ -537,8 +537,8 @@ export function MultiSelectInspector({
   );
 }
 
-function isTypographyNode(node: DocumentNode): node is Extract<DocumentNode, { type: 'leaf'; role: 'text' | 'link' | 'button' }> {
-  return node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button');
+function isTypographyNode(node: DocumentNode): node is TextNode {
+  return isTextNode(node);
 }
 
 function canAlignSelection(selectedNodes: DocumentNode[]) {
@@ -548,14 +548,14 @@ function canAlignSelection(selectedNodes: DocumentNode[]) {
 
   const [firstNode, ...restNodes] = selectedNodes;
   return (
-    firstNode.type !== 'site' &&
+    !isSiteNode(firstNode) &&
     isMovableAlignmentNode(firstNode) &&
-    restNodes.every((node) => node.type !== 'site' && isMovableAlignmentNode(node) && node.parentId === firstNode.parentId)
+    restNodes.every((node) => !isSiteNode(node) && isMovableAlignmentNode(node) && node.parentId === firstNode.parentId)
   );
 }
 
 function isMovableAlignmentNode(node: DocumentNode) {
-  return node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
+  return isLeafNode(node) || (isContainerNode(node) && node.subtype === 'container');
 }
 
 function resolveSharedParsedUnit(values: string[]) {

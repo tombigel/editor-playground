@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
-import type { DocumentModel } from '../../model/types';
+import type { DocumentModel, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { resolveWrapperStickyState } from '../../sticky/resolve';
@@ -27,7 +27,7 @@ import {
 import { StageScene } from '../StageScene';
 import { DragPreviewOverlay } from '../stageRenderers/dragOverlay';
 import { SingleSelectionOverlay } from '../stageRenderers/selectionVisuals';
-import { getWrapperResizeHandles } from '../stageRenderers/wrapperRenderer';
+import { getWrapperResizeHandles } from '../stageRenderers/containerRenderer';
 
 function withDocumentFontLibrary(document: Omit<DocumentModel, 'fontLibrary'>): DocumentModel {
   return {
@@ -64,10 +64,10 @@ describe('stage/Stage', () => {
     (widthKeyword) => {
       const document = structuredClone(createInitialDocument());
       const target = Object.values(document.nodes).find(
-        (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+        (node) => node.contentType === 'text' && node.name === 'Post Title',
       );
 
-      if (!target || target.type !== 'leaf' || target.role !== 'text') {
+      if (!target || target.contentType !== 'text') {
         throw new Error('Expected post title text node');
       }
 
@@ -101,10 +101,10 @@ describe('stage/Stage', () => {
   it('renders text leaves using their configured html tag in the stage', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -134,10 +134,10 @@ describe('stage/Stage', () => {
   it('renders authored section height as a content-wrapper minimum height', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -168,15 +168,15 @@ describe('stage/Stage', () => {
   it('renders section dividers on the inner surface so divider width does not change wrapper box metrics', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
-    section.style.sectionBorderBottomColor = '#cbd5e1';
-    section.style.sectionBorderBottomWidth = parseUnitValue('5px');
+    section.style!.sectionBorderBottomColor = '#cbd5e1';
+    section.style!.sectionBorderBottomWidth = parseUnitValue('5px');
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -208,13 +208,13 @@ describe('stage/Stage', () => {
   it('shows the section padding boundary when the section or one of its children is selected', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const title = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!section || section.type !== 'wrapper' || !title || title.type !== 'leaf') {
+    if (!section || section.contentType !== 'container' || !title || title.contentType !== 'text') {
       throw new Error('Expected section wrapper and child leaf');
     }
 
@@ -264,10 +264,10 @@ describe('stage/Stage', () => {
   it('shows the container padding boundary when the container or one of its children is selected', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -323,10 +323,10 @@ describe('stage/Stage', () => {
   it('shows the padding boundary line on a highlighted drop target wrapper', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -363,8 +363,7 @@ describe('stage/Stage', () => {
   it('renders selection outlines for all selected nodes without primary label chrome during multi-select', () => {
     const document = structuredClone(createInitialDocument());
     const textLeaves = Object.values(document.nodes).filter(
-      (node): node is Extract<typeof document.nodes[string], { type: 'leaf'; role: 'text' }> =>
-        node.type === 'leaf' && node.role === 'text',
+      (node): node is TextNode => node.contentType === 'text',
     );
 
     const primary = textLeaves[0];
@@ -403,8 +402,7 @@ describe('stage/Stage', () => {
   it('does not render resize handles while multiple nodes are selected', () => {
     const document = structuredClone(createInitialDocument());
     const textLeaves = Object.values(document.nodes).filter(
-      (node): node is Extract<typeof document.nodes[string], { type: 'leaf'; role: 'text' }> =>
-        node.type === 'leaf' && node.role === 'text',
+      (node): node is TextNode => node.contentType === 'text',
     );
 
     const primary = textLeaves[0];
@@ -441,10 +439,10 @@ describe('stage/Stage', () => {
   it('does not lift selected stage nodes with selection z-index chrome', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'image',
+      (node) => node.contentType === 'media',
     );
 
-    if (!target || target.type !== 'leaf') {
+    if (!target || target.contentType !== 'media') {
       throw new Error('Expected image leaf');
     }
 
@@ -473,23 +471,23 @@ describe('stage/Stage', () => {
   it('retains container surface styling in the drag preview', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
     const container = createWrapper('container', section.id);
-    container.style.background = '#f6d7c8';
-    container.style.borderWidth = parseUnitValue('3px');
-    container.style.borderColor = '#4c2a1b';
-    container.style.borderRadius = parseUnitValue('24px');
-    container.style.shadowColor = 'rgba(40, 20, 10, 0.2)';
-    container.style.shadowBlur = 18;
-    container.style.shadowSpread = 6;
-    container.style.shadowOffsetX = 0;
-    container.style.shadowOffsetY = 12;
+    container.style!.background = '#f6d7c8';
+    container.style!.borderWidth = parseUnitValue('3px');
+    container.style!.borderColor = '#4c2a1b';
+    container.style!.borderRadius = parseUnitValue('24px');
+    container.style!.shadowColor = 'rgba(40, 20, 10, 0.2)';
+    container.style!.shadowBlur = 18;
+    container.style!.shadowSpread = 6;
+    container.style!.shadowOffsetX = 0;
+    container.style!.shadowOffsetY = 12;
     section.children = [...section.children, container.id];
     document.nodes[container.id] = container;
 
@@ -528,10 +526,10 @@ describe('stage/Stage', () => {
   it('compensates editor sticky offsets against the stage shell padding', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -584,15 +582,15 @@ describe('stage/Stage', () => {
   it('renders text decoration styles for text leaves in the stage', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
     target.style ??= {};
-    target.style.textDecorationLine = 'underline line-through';
+    target.style!.textDecorationLine = 'underline line-through';
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -618,13 +616,13 @@ describe('stage/Stage', () => {
   it('renders bottom sticky offset padding guides with the same additive segment treatment', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!section || section.type !== 'wrapper' || !target || target.type !== 'leaf') {
+    if (!section || section.contentType !== 'container' || !target || target.contentType !== 'text') {
       throw new Error('Expected section wrapper and target leaf');
     }
 
@@ -668,15 +666,15 @@ describe('stage/Stage', () => {
   it('renders text direction styles for text leaves in the stage', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
     target.style ??= {};
-    target.style.direction = 'rtl';
+    target.style!.direction = 'rtl';
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -702,18 +700,18 @@ describe('stage/Stage', () => {
   it('keeps text styling stable when the html tag changes in the stage', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
     target.htmlTag = 'blockquote';
     target.style ??= {};
-    target.style.fontSize = parseFontSizeValue('31px');
-    target.style.fontWeight = 700;
-    target.style.lineHeight = 1.4;
+    target.style!.fontSize = parseFontSizeValue('31px');
+    target.style!.fontWeight = 700;
+    target.style!.lineHeight = 1.4;
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -745,10 +743,10 @@ describe('stage/Stage', () => {
   it('uses measured runtime geometry for intrinsic text sizing', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -769,10 +767,10 @@ describe('stage/Stage', () => {
   it('derives aspect-ratio height from measured runtime width', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Post Image',
+      (node) => node.contentType === 'media' && node.name === 'Post Image',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'image') {
+    if (!target || target.contentType !== 'media') {
       throw new Error('Expected post image node');
     }
 
@@ -790,10 +788,10 @@ describe('stage/Stage', () => {
   it('does not let measured wrapper height override explicit section height in stage math', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -810,10 +808,10 @@ describe('stage/Stage', () => {
   it('keeps auto height when resizing width from a horizontal handle', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -841,10 +839,10 @@ describe('stage/Stage', () => {
   it('keeps aspect-ratio height authored when resizing width from a horizontal handle', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Post Image',
+      (node) => node.contentType === 'media' && node.name === 'Post Image',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'image') {
+    if (!target || target.contentType !== 'media') {
       throw new Error('Expected post image node');
     }
 
@@ -872,10 +870,10 @@ describe('stage/Stage', () => {
   it('keeps keyword width authored when resizing height from a vertical handle', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -936,10 +934,10 @@ describe('stage/Stage', () => {
   it('anchors intrinsic-height text leaves to the top of their mesh area', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
 
-    if (!target || target.type !== 'leaf' || target.role !== 'text') {
+    if (!target || target.contentType !== 'text') {
       throw new Error('Expected post title text node');
     }
 
@@ -1108,10 +1106,10 @@ describe('stage/Stage', () => {
     (role) => {
       const document = structuredClone(createInitialDocument());
       const wrapper = Object.values(document.nodes).find(
-        (node) => node.type === 'wrapper' && node.role === role,
+        (node) => node.contentType === 'container' && node.subtype === role,
       );
 
-      if (!wrapper || wrapper.type !== 'wrapper') {
+      if (!wrapper || wrapper.contentType !== 'container') {
         throw new Error(`Expected ${role} wrapper`);
       }
 
@@ -1178,8 +1176,8 @@ describe('stage/Stage', () => {
 
   it('suppresses the top-level structural resize knob for aspect-ratio heights', () => {
     const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -1196,8 +1194,8 @@ describe('stage/Stage', () => {
     'serializes %s structural wrapper height correctly when resizing from the bottom handle',
     (_label, authoredHeight, nextHeight, expectedHeight) => {
       const document = structuredClone(createInitialDocument());
-      const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-      if (!section || section.type !== 'wrapper') {
+      const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+      if (!section || section.contentType !== 'container') {
         throw new Error('Expected section wrapper');
       }
 
@@ -1228,8 +1226,8 @@ describe('stage/Stage', () => {
 
   it('converts structural auto height to px when resizing from the bottom handle', () => {
     const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -1286,10 +1284,10 @@ describe('stage/Stage', () => {
   it('derives content-wrapper sticky extent locally from measured wrapper geometry', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -1324,10 +1322,10 @@ describe('stage/Stage', () => {
   it('derives child sticky start positions from child coordinates and measured height', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -1368,10 +1366,10 @@ describe('stage/Stage', () => {
   it('renders self-sticky indicators for top-level sections', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -1417,13 +1415,13 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Top Auto Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '600px');
-    section.style.paddingTop = parseSpacingValue('0px');
-    section.style.paddingRight = parseSpacingValue('0px');
-    section.style.paddingBottom = parseSpacingValue('0px');
-    section.style.paddingLeft = parseSpacingValue('0px');
+    section.style!.paddingTop = parseSpacingValue('0px');
+    section.style!.paddingRight = parseSpacingValue('0px');
+    section.style!.paddingBottom = parseSpacingValue('0px');
+    section.style!.paddingLeft = parseSpacingValue('0px');
 
     const target = createLeaf('text', section.id);
-    if (target.type !== 'leaf' || target.role !== 'text') {
+    if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -1448,7 +1446,7 @@ describe('stage/Stage', () => {
       nodes: {
         [siteId]: {
           id: siteId,
-          type: 'site' as const,
+          contentType: 'site' as const, type: 'site' as const,
           parentId: null,
           children: [section.id],
           name: 'Site',
@@ -1488,13 +1486,13 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Top Auto Padded Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
-    section.style.paddingTop = parseSpacingValue('20px');
-    section.style.paddingRight = parseSpacingValue('0px');
-    section.style.paddingBottom = parseSpacingValue('30px');
-    section.style.paddingLeft = parseSpacingValue('0px');
+    section.style!.paddingTop = parseSpacingValue('20px');
+    section.style!.paddingRight = parseSpacingValue('0px');
+    section.style!.paddingBottom = parseSpacingValue('30px');
+    section.style!.paddingLeft = parseSpacingValue('0px');
 
     const target = createLeaf('text', section.id);
-    if (target.type !== 'leaf' || target.role !== 'text') {
+    if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -1519,7 +1517,7 @@ describe('stage/Stage', () => {
       nodes: {
         [siteId]: {
           id: siteId,
-          type: 'site' as const,
+          contentType: 'site' as const, type: 'site' as const,
           parentId: null,
           children: [section.id],
           name: 'Site',
@@ -1557,13 +1555,13 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Bottom Auto Padded Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
-    section.style.paddingTop = parseSpacingValue('20px');
-    section.style.paddingRight = parseSpacingValue('0px');
-    section.style.paddingBottom = parseSpacingValue('30px');
-    section.style.paddingLeft = parseSpacingValue('0px');
+    section.style!.paddingTop = parseSpacingValue('20px');
+    section.style!.paddingRight = parseSpacingValue('0px');
+    section.style!.paddingBottom = parseSpacingValue('30px');
+    section.style!.paddingLeft = parseSpacingValue('0px');
 
     const target = createLeaf('text', section.id);
-    if (target.type !== 'leaf' || target.role !== 'text') {
+    if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -1588,7 +1586,7 @@ describe('stage/Stage', () => {
       nodes: {
         [siteId]: {
           id: siteId,
-          type: 'site' as const,
+          contentType: 'site' as const, type: 'site' as const,
           parentId: null,
           children: [section.id],
           name: 'Site',
@@ -1626,13 +1624,13 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Auto Sticky Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '600px');
-    section.style.paddingTop = parseSpacingValue('0px');
-    section.style.paddingRight = parseSpacingValue('0px');
-    section.style.paddingBottom = parseSpacingValue('0px');
-    section.style.paddingLeft = parseSpacingValue('0px');
+    section.style!.paddingTop = parseSpacingValue('0px');
+    section.style!.paddingRight = parseSpacingValue('0px');
+    section.style!.paddingBottom = parseSpacingValue('0px');
+    section.style!.paddingLeft = parseSpacingValue('0px');
 
     const stickyLeaf = createLeaf('text', section.id);
-    if (stickyLeaf.type !== 'leaf' || stickyLeaf.role !== 'text') {
+    if (stickyLeaf.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -1657,7 +1655,7 @@ describe('stage/Stage', () => {
       nodes: {
         [siteId]: {
           id: siteId,
-          type: 'site' as const,
+          contentType: 'site' as const, type: 'site' as const,
           parentId: null,
           children: [section.id],
           name: 'Site',
@@ -1698,23 +1696,23 @@ describe('stage/Stage', () => {
     const section = createWrapper('section', siteId);
     section.name = 'Container Border Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
-    section.style.paddingTop = parseSpacingValue('0px');
-    section.style.paddingRight = parseSpacingValue('0px');
-    section.style.paddingBottom = parseSpacingValue('0px');
-    section.style.paddingLeft = parseSpacingValue('0px');
+    section.style!.paddingTop = parseSpacingValue('0px');
+    section.style!.paddingRight = parseSpacingValue('0px');
+    section.style!.paddingBottom = parseSpacingValue('0px');
+    section.style!.paddingLeft = parseSpacingValue('0px');
 
     const container = createWrapper('container', section.id);
     container.name = 'Bordered Container';
     container.rect = createDefaultRect('40px', '40px', '320px', '220px');
-    container.style.paddingTop = parseSpacingValue('16px');
-    container.style.paddingRight = parseSpacingValue('16px');
-    container.style.paddingBottom = parseSpacingValue('16px');
-    container.style.paddingLeft = parseSpacingValue('16px');
-    container.style.borderWidth = parseUnitValue('2px');
-    container.style.borderColor = '#dbe3ee';
+    container.style!.paddingTop = parseSpacingValue('16px');
+    container.style!.paddingRight = parseSpacingValue('16px');
+    container.style!.paddingBottom = parseSpacingValue('16px');
+    container.style!.paddingLeft = parseSpacingValue('16px');
+    container.style!.borderWidth = parseUnitValue('2px');
+    container.style!.borderColor = '#dbe3ee';
 
     const target = createLeaf('text', container.id);
-    if (target.type !== 'leaf' || target.role !== 'text') {
+    if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
@@ -1740,7 +1738,7 @@ describe('stage/Stage', () => {
       nodes: {
         [siteId]: {
           id: siteId,
-          type: 'site' as const,
+          contentType: 'site' as const, type: 'site' as const,
           parentId: null,
           children: [section.id],
           name: 'Site',
@@ -1882,10 +1880,10 @@ describe('stage/Stage', () => {
   it('falls back to the current parent wrapper when the hovered drop target is invalid', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 

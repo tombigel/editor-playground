@@ -21,8 +21,8 @@ describe('render/renderPlan', () => {
     const document = createInitialDocument();
     const homePage = document.pages?.[0];
     const aboutPage = createPage({ displayName: 'About', slug: 'about' });
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!homePage || !section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -43,8 +43,8 @@ describe('render/renderPlan', () => {
     const document = createInitialDocument();
     const homePage = document.pages?.[0];
     const aboutPage = createPage({ displayName: 'About', slug: 'about' });
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!homePage || !section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -65,8 +65,8 @@ describe('render/renderPlan', () => {
     const homePage = document.pages?.[0];
     const aboutPage = createPage({ displayName: 'About', slug: 'about' });
     const contactPage = createPage({ displayName: 'Contact', slug: 'contact' });
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!homePage || !section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -94,8 +94,8 @@ describe('render/renderPlan', () => {
 
   it('propagates measured geometry into wrapper mesh placement', () => {
     const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -115,9 +115,9 @@ describe('render/renderPlan', () => {
 
   it('marks sticky wrappers and leaves with track/spacer metadata', () => {
     const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    const link = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link');
-    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    const link = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link');
+    if (!section || section.contentType !== 'container' || !link || link.contentType !== 'text') {
       throw new Error('Expected section and link nodes');
     }
 
@@ -159,8 +159,8 @@ describe('render/renderPlan', () => {
 
   it('adds brand mark image classes when the planned leaf is a brand mark', () => {
     const document = structuredClone(createInitialDocument());
-    const image = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
-    if (!image || image.type !== 'leaf' || image.role !== 'image') {
+    const image = Object.values(document.nodes).find((node) => node.contentType === 'media');
+    if (!image || image.contentType !== 'media' || image.subtype !== 'image') {
       throw new Error('Expected image leaf');
     }
 
@@ -179,8 +179,8 @@ describe('render/renderPlan', () => {
 
   it('does not build synthetic self-sticky tracks for top-level sections', () => {
     const document = structuredClone(createInitialDocument());
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!section || section.type !== 'wrapper') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 

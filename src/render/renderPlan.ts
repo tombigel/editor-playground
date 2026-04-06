@@ -1,6 +1,10 @@
 import type { CSSProperties } from 'react';
-import type { DocumentModel, DocumentNode, ViewportMeasurement, WrapperNode } from '../model/types';
+import type { ContainerNode, DocumentModel, DocumentNode, ViewportMeasurement } from '../model/types';
+import { isContainerNode } from '../model/types';
 import type { PageId } from '../model/types/site';
+
+// Keep WrapperNode alias for local use
+type WrapperNode = ContainerNode;
 import { resolveWrapperRenderPlan, type RenderMeasuredNodeSizes } from './layout';
 import type {
   RenderLeafPlanNode,
@@ -28,7 +32,7 @@ import {
 } from '../site/siteShared';
 import { usesSyntheticStickyTrack } from './sticky';
 
-type LeafNode = Extract<DocumentNode, { type: 'leaf' }>;
+type LeafNode = Extract<DocumentNode, { contentType: 'text' | 'media' }>;
 
 export function buildRenderRootPlan(
   document: DocumentModel,
@@ -40,9 +44,9 @@ export function buildRenderRootPlan(
   let wrappers: WrapperNode[];
 
   if (pageId && document.pages) {
-    wrappers = getRootWrappersForPage(document, pageId);
+    wrappers = getRootWrappersForPage(document, pageId) as WrapperNode[];
   } else {
-    wrappers = getRootWrappers(document);
+    wrappers = getRootWrappers(document) as WrapperNode[];
   }
 
   const { header, footer, main } = splitRootWrappers(wrappers);
@@ -66,7 +70,7 @@ function buildWrapperPlan(
   const renderPlan = resolveWrapperRenderPlan(document, node, measuredNodeSizes, viewport);
   const spacerSequence = getStickyTrackSpacerSequence(node.sticky);
   const children = renderPlan.children.map((child) =>
-    child.type === 'wrapper'
+    isContainerNode(child)
       ? buildWrapperPlan(
           document,
           child,
@@ -76,14 +80,14 @@ function buildWrapperPlan(
           viewport,
           renderPlan.meshLayout.childPlacements[child.id],
         )
-      : buildLeafPlan(child, previewSticky, renderPlan.meshLayout.childPlacements[child.id]),
+      : buildLeafPlan(child as LeafNode, previewSticky, renderPlan.meshLayout.childPlacements[child.id]),
   );
 
   return {
     kind: 'wrapper',
     node,
     isTopLevel,
-    tag: getWrapperTag(node.role),
+    tag: getWrapperTag(node.subtype),
     nodeClassName: getNodeClassName(node),
     meshPlacement,
     selfSticky: isSelfSticky(node.sticky, previewSticky),

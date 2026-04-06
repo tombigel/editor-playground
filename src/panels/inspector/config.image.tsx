@@ -1,6 +1,7 @@
 import { ImageContentSection, ImageDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { isMediaNode } from '@/model/types';
 import type { ImageInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const imageContentSection: InspectorSectionDefinition = {
@@ -68,5 +69,5 @@ export const IMAGE_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
 ];
 
 function isImageNode(node: InspectorNode | null): node is ImageInspectorNode {
-  return Boolean(node && node.type === 'leaf' && node.role === 'image');
+  return Boolean(node && isMediaNode(node) && node.subtype === 'image');
 }

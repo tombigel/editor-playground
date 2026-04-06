@@ -1,8 +1,9 @@
 import type { DocumentModel, NodeId } from '../model/types';
+import { isSiteNode } from '../model/types';
 
 export function getStageSelectableNodeIds(document: DocumentModel): NodeId[] {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || !isSiteNode(root)) {
     return [];
   }
 
@@ -40,7 +41,7 @@ export function getAdjacentStageSelection(
 
 function visitStageNode(document: DocumentModel, nodeId: NodeId, ids: NodeId[]) {
   const node = document.nodes[nodeId];
-  if (!node || node.type === 'site' || !node.visible) {
+  if (!node || isSiteNode(node) || !node.visible) {
     return;
   }
 

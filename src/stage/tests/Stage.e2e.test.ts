@@ -145,7 +145,7 @@ describe('stage/Stage e2e', () => {
     const title = page.locator('.stage-leaf', {
       hasText: 'Plan sticky behavior before building scroll-driven animations',
     }).first();
-    const image = page.locator('.stage-leaf.role-image').first();
+    const image = page.locator('.stage-leaf.subtype-image').first();
 
     await title.click();
     await image.click({ modifiers: ['Shift'] });
@@ -174,7 +174,7 @@ describe('stage/Stage e2e', () => {
 
   it('resizes a selected image node from the south-east handle', async () => {
     await openEditor();
-    const image = page.locator('.stage-leaf.role-image').first();
+    const image = page.locator('.stage-leaf.subtype-image').first();
 
     await image.click();
     expect(await image.getAttribute('class')).toMatch(/\bselected\b/);
@@ -203,7 +203,7 @@ describe('stage/Stage e2e', () => {
 
   it('preserves image aspect ratio when resizing from a corner with Shift', async () => {
     await openEditor();
-    const image = page.locator('.stage-leaf.role-image').first();
+    const image = page.locator('.stage-leaf.subtype-image').first();
 
     await image.click();
     const before = await image.boundingBox();
@@ -237,7 +237,7 @@ describe('stage/Stage e2e', () => {
   it('pushes following root sections when a top-level section is resized from the bottom knob', async () => {
     await openEditor({ document: createStructuralResizeE2EDocument() });
 
-    const sections = page.locator('.stage-wrapper.role-section');
+    const sections = page.locator('.stage-wrapper.subtype-section');
     const firstSection = sections.nth(0);
     const secondSection = sections.nth(1);
 
@@ -318,14 +318,14 @@ describe('stage/Stage e2e', () => {
       const overlay = window.document.createElement('div');
       overlay.id = 'invalid-drop-overlay';
       overlay.dataset.dropWrapperId = 'missing_wrapper';
-      overlay.style.position = 'absolute';
-      overlay.style.left = '980px';
-      overlay.style.top = '320px';
-      overlay.style.width = '120px';
-      overlay.style.height = '120px';
-      overlay.style.zIndex = '9999';
-      overlay.style.pointerEvents = 'auto';
-      overlay.style.background = 'transparent';
+      overlay.style!.position = 'absolute';
+      overlay.style!.left = '980px';
+      overlay.style!.top = '320px';
+      overlay.style!.width = '120px';
+      overlay.style!.height = '120px';
+      overlay.style!.zIndex = '9999';
+      overlay.style!.pointerEvents = 'auto';
+      overlay.style!.background = 'transparent';
       stageShell.appendChild(overlay);
     });
 
@@ -493,8 +493,8 @@ describe('stage/Stage e2e', () => {
 
     const result = await page.evaluate(() => {
       const stage = window.document.querySelector<HTMLElement>('.stage-shell');
-      const image = window.document.querySelector<HTMLElement>('.stage-leaf.role-image img, .stage-leaf.role-image');
-      const text = Array.from(window.document.querySelectorAll<HTMLElement>('.stage-leaf.role-text')).find((node) =>
+      const image = window.document.querySelector<HTMLElement>('.stage-leaf.subtype-image img, .stage-leaf.subtype-image');
+      const text = Array.from(window.document.querySelectorAll<HTMLElement>('.stage-leaf.subtype-text')).find((node) =>
         node.textContent?.includes('Plan sticky behavior before building scroll-driven animations'),
       );
 
@@ -725,7 +725,7 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
     nodes: {
       [siteId]: {
         id: siteId,
-        type: 'site',
+        contentType: 'site', type: 'site',
         parentId: null,
         children: [section.id],
         name: 'Site',
@@ -798,7 +798,7 @@ function createStructuralResizeE2EDocument(): DocumentModel {
     nodes: {
       [siteId]: {
         id: siteId,
-        type: 'site',
+        contentType: 'site', type: 'site',
         parentId: null,
         children: [header.id, sectionA.id, sectionB.id, footer.id],
         name: 'Site',

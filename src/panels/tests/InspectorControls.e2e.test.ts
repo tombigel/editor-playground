@@ -15,10 +15,10 @@ type SeededColorDocument = {
 function createColorSpaceDocument(): SeededColorDocument {
   const document = createInitialDocument();
   const title = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Title',
   );
   const body = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Body',
+    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Body',
   );
 
   if (!title || !body) {
@@ -27,8 +27,8 @@ function createColorSpaceDocument(): SeededColorDocument {
 
   title.style ??= {};
   body.style ??= {};
-  title.style.color = 'color(display-p3 0.31 0.42 0.56 / 0.72)';
-  body.style.color = 'oklch(62% 0.18 252 / 0.8)';
+  title.style!.color = 'color(display-p3 0.31 0.42 0.56 / 0.72)';
+  body.style!.color = 'oklch(62% 0.18 252 / 0.8)';
 
   return {
     document,
@@ -40,10 +40,10 @@ function createColorSpaceDocument(): SeededColorDocument {
 function createShadowColorSpaceDocument(): SeededColorDocument {
   const document = createInitialDocument();
   const title = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Title',
   );
   const body = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Body',
+    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Body',
   );
 
   if (!title || !body) {
@@ -52,14 +52,14 @@ function createShadowColorSpaceDocument(): SeededColorDocument {
 
   title.style ??= {};
   body.style ??= {};
-  title.style.shadowColor = 'color(display-p3 0.31 0.42 0.56 / 0.72)';
-  title.style.shadowBlur = 18;
-  title.style.shadowOffsetX = 0;
-  title.style.shadowOffsetY = 12;
-  body.style.shadowColor = 'rgba(15, 23, 42, 0.18)';
-  body.style.shadowBlur = 12;
-  body.style.shadowOffsetX = 0;
-  body.style.shadowOffsetY = 8;
+  title.style!.shadowColor = 'color(display-p3 0.31 0.42 0.56 / 0.72)';
+  title.style!.shadowBlur = 18;
+  title.style!.shadowOffsetX = 0;
+  title.style!.shadowOffsetY = 12;
+  body.style!.shadowColor = 'rgba(15, 23, 42, 0.18)';
+  body.style!.shadowBlur = 12;
+  body.style!.shadowOffsetX = 0;
+  body.style!.shadowOffsetY = 8;
 
   return {
     document,
@@ -280,13 +280,13 @@ describe('panels/InspectorControls e2e', () => {
     const seeded = createShadowColorSpaceDocument();
     const title = seeded.document.nodes[seeded.titleId];
 
-    if (title.type !== 'leaf' || title.role !== 'text') {
+    if (title.contentType !== 'text') {
       throw new Error('Expected seeded title text node');
     }
 
     title.style ??= {};
-    title.style.color = 'color(display-p3 0.31 0.42 0.56 / 0.72)';
-    title.style.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    title.style!.color = 'color(display-p3 0.31 0.42 0.56 / 0.72)';
+    title.style!.shadowColor = 'rgba(15, 23, 42, 0.18)';
 
     page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
     await page.addInitScript(
@@ -352,12 +352,12 @@ describe('panels/InspectorControls e2e', () => {
     const seeded = createShadowColorSpaceDocument();
     const body = seeded.document.nodes[seeded.bodyId];
 
-    if (body.type !== 'leaf' || body.role !== 'text') {
+    if (body.contentType !== 'text') {
       throw new Error('Expected seeded body text node');
     }
 
     body.style ??= {};
-    body.style.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    body.style!.shadowColor = 'rgba(15, 23, 42, 0.18)';
 
     page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
     await page.addInitScript(
@@ -408,7 +408,7 @@ describe('panels/InspectorControls e2e', () => {
 
       spaceSelect.value = 'display-p3';
       if (alphaRange) {
-        alphaRange.style.background = 'linear-gradient(to right, color(display-p3 0.2 0.4 0.6 / 0%), color(display-p3 0.2 0.4 0.6 / 100%)), var(--checker)';
+        alphaRange.style!.background = 'linear-gradient(to right, color(display-p3 0.2 0.4 0.6 / 0%), color(display-p3 0.2 0.4 0.6 / 100%)), var(--checker)';
       }
     });
 
@@ -421,7 +421,7 @@ describe('panels/InspectorControls e2e', () => {
         value: element?.value ?? null,
         colorspace: element?.colorspace ?? null,
         selectValue: spaceSelect?.value ?? null,
-        alphaBackground: alphaRange?.style.background ?? null,
+        alphaBackground: (alphaRange?.style ?? null)?.background ?? null,
       };
     })).toMatchObject({
       value: 'rgba(15, 23, 42, 0.18)',
@@ -432,7 +432,7 @@ describe('panels/InspectorControls e2e', () => {
     const alphaBackground = await page.evaluate(() => {
       const element = document.querySelector('color-input[aria-label="Shadow color"]');
       const alphaRange = element?.shadowRoot?.querySelector<HTMLInputElement>('input[type="range"].ch-alp');
-      return alphaRange?.style.background ?? '';
+      return (alphaRange?.style ?? null)?.background ?? '';
     });
 
     expect(alphaBackground).toContain('rgb(');

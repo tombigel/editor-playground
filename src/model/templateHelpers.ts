@@ -1,25 +1,25 @@
 import type {
   BoxPadding,
+  ContainerNode,
   DocumentNode,
-  ImageLeaf,
   ImageNodeConfig,
-  LinkLeaf,
   LinkNodeConfig,
+  MediaNode,
   NodeId,
   StickyDefinition,
   TemplateBuild,
   TemplateNode,
-  TextLeaf,
+  TextNode,
   TextNodeConfig,
-  WrapperNode,
 } from './types';
-import { createDefaultRect, createLeaf, createWrapper } from './defaultFactories';
+import { createContainerNode, createDefaultRect, createLinkTextNode, createMediaNode, createTextNode as createTextNodeFactory } from './defaultFactories';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from './units';
 
 export function applyPadding(
-  node: Pick<WrapperNode, 'style'>,
+  node: Pick<ContainerNode, 'style'>,
   { top, right, bottom, left = right }: BoxPadding,
 ) {
+  node.style ??= {};
   node.style.paddingTop = parseSpacingValue(top);
   node.style.paddingRight = parseSpacingValue(right);
   node.style.paddingBottom = parseSpacingValue(bottom);
@@ -32,14 +32,14 @@ export function createTemplateSection(
   height: string,
   padding: BoxPadding,
 ) {
-  const section = createWrapper('section', parentId);
+  const section = createContainerNode('section', parentId);
   section.name = name;
   section.rect = createDefaultRect('0px', '0px', '100%', height);
   applyPadding(section, padding);
   return section;
 }
 
-export function setChildren(parent: Pick<WrapperNode, 'children'>, children: TemplateNode[]) {
+export function setChildren(parent: Pick<ContainerNode, 'children'>, children: TemplateNode[]) {
   parent.children = children.map((child) => child.id);
 }
 
@@ -54,7 +54,7 @@ export function addTemplateNodes(nodeMap: Record<NodeId, DocumentNode>, ...nodes
 }
 
 export function buildTemplate(
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   children: TemplateNode[] = [],
   extraNodes: TemplateNode[] = [],
 ): TemplateBuild {
@@ -68,8 +68,8 @@ export function buildTemplate(
   };
 }
 
-export function createTextNode(parentId: NodeId, config: TextNodeConfig) {
-  const text = createLeaf('text', parentId) as TextLeaf;
+export function createTextNode(parentId: NodeId, config: TextNodeConfig): TextNode {
+  const text = createTextNodeFactory('block', parentId);
   text.name = config.name;
   text.content = config.content;
   text.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
@@ -79,19 +79,22 @@ export function createTextNode(parentId: NodeId, config: TextNodeConfig) {
   return text;
 }
 
-export function createLinkNode(parentId: NodeId, config: LinkNodeConfig) {
-  const link = createLeaf('link', parentId) as LinkLeaf;
+export function createLinkNode(parentId: NodeId, config: LinkNodeConfig): TextNode {
+  const link = createLinkTextNode(parentId);
   link.name = config.name;
-  link.label = config.label;
-  link.linkType = config.linkType ?? link.linkType;
-  link.anchorTargetId = config.anchorTargetId ?? link.anchorTargetId;
-  link.href = config.href ?? link.href;
+  link.content = config.label;
+  link.link = {
+    ...link.link,
+    linkType: config.linkType ?? link.link?.linkType ?? 'anchor',
+    anchorTargetId: config.anchorTargetId ?? link.link?.anchorTargetId,
+    href: config.href ?? link.link?.href ?? '#',
+  };
   link.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
   return link;
 }
 
-export function createImageNode(parentId: NodeId, config: ImageNodeConfig) {
-  const image = createLeaf('image', parentId) as ImageLeaf;
+export function createImageNode(parentId: NodeId, config: ImageNodeConfig): MediaNode {
+  const image = createMediaNode('image', parentId);
   image.name = config.name;
   image.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
   if (config.src) {
@@ -107,14 +110,14 @@ export function createImageNode(parentId: NodeId, config: ImageNodeConfig) {
 }
 
 export function styleText(
-  leaf: TextLeaf,
+  leaf: TextNode,
   options: {
     color?: string;
     fontFamily?: string;
     fontSize?: string;
     fontWeight?: number;
     lineHeight?: number;
-    htmlTag?: TextLeaf['htmlTag'];
+    htmlTag?: TextNode['htmlTag'];
   },
 ) {
   leaf.style ??= {};

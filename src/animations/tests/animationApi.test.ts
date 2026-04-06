@@ -22,7 +22,7 @@ import {
 
 function getSectionId(doc: DocumentModel): string {
   const node = Object.values(doc.nodes).find(
-    (n) => n.type === 'wrapper' && n.role === 'section',
+    (n) => n.contentType === 'container' && n.subtype === 'section',
   );
   if (!node) throw new Error('Expected section wrapper in document');
   return node.id;
@@ -30,7 +30,7 @@ function getSectionId(doc: DocumentModel): string {
 
 function getTextLeafId(doc: DocumentModel): string {
   const node = Object.values(doc.nodes).find(
-    (n) => n.type === 'leaf' && n.role === 'text',
+    (n) => n.contentType === 'text',
   );
   if (!node) throw new Error('Expected text leaf in document');
   return node.id;

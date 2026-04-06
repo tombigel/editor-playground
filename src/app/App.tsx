@@ -1,5 +1,6 @@
 import { useReducer, useState } from "react";
 import type { StickyGeometrySnapshot } from "../api/editorApi";
+import { isTextNode } from "../model/types";
 import {
 	BOLD_FONT_WEIGHT,
 	DEFAULT_FONT_WEIGHT,
@@ -74,12 +75,9 @@ export function App() {
 				node,
 			): node is Extract<
 				(typeof viewModel.selectedNodes)[number],
-				{ type: "leaf"; role: "text" | "link" | "button" }
+				{ contentType: "text" }
 			> =>
-				node.type === "leaf" &&
-				(node.role === "text" ||
-					node.role === "link" ||
-					node.role === "button"),
+				isTextNode(node),
 		);
 	}
 

@@ -8,7 +8,7 @@ describe('render/renderPlanHelpers', () => {
     const plan = buildRenderRootPlan(createInitialDocument(), true);
     const wrappers = getRootPlanWrappers(plan);
 
-    expect(wrappers.map((wrapper) => wrapper.node.role)).toEqual(['header', 'section', 'footer']);
+    expect(wrappers.map((wrapper) => wrapper.node.subtype)).toEqual(['header', 'section', 'footer']);
   });
 
   it('walks the full site render tree once', () => {
@@ -18,7 +18,7 @@ describe('render/renderPlanHelpers', () => {
 
     walkRootPlan(plan, (node) => visited.push(node.node.id));
 
-    const exportableCount = Object.values(document.nodes).filter((node) => node.type !== 'site').length;
+    const exportableCount = Object.values(document.nodes).filter((node) => node.contentType !== 'site').length;
     expect(visited).toHaveLength(exportableCount);
     expect(new Set(visited).size).toBe(exportableCount);
   });

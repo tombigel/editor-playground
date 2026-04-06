@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react';
 import type {
+  ContainerNode,
   DocumentModel,
   NodeId,
   ViewportMeasurement,
-  WrapperNode,
 } from '../../model/types';
 import { formatValue } from '../../model/units';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
@@ -35,7 +35,7 @@ import {
   renderStickyTrackShell,
   getAutoStickySpacerDistances,
   getPreviewWrapperBottomLanePx,
-} from './wrapperRenderer';
+} from './containerRenderer';
 
 export function renderLeaf({
   document,
@@ -68,7 +68,7 @@ export function renderLeaf({
     child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
   const isSelfStickyTrack = usesSyntheticStickyTrack(child) && registration;
   const siteNode = document.nodes[document.rootId];
-  const globalStickyElevation = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const globalStickyElevation = siteNode.contentType === 'site' ? (siteNode.stickyElevation ?? true) : true;
   const isElevated = child.sticky?.enabled
     ? resolveStickyIsElevated(child.sticky, globalStickyElevation)
     : true;
@@ -78,6 +78,7 @@ export function renderLeaf({
   const leafBaseHeight = getLeafCssHeight(child);
   const intrinsicHeightLeaf = usesIntrinsicHeight(child);
   const trackWidth = getTrackCssWidth(child);
+  const isImageNode = child.contentType === 'media' && child.subtype === 'image';
   const leafBody = (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor canvas node, not web content
     <div
@@ -87,7 +88,7 @@ export function renderLeaf({
       data-node-id={child.id}
       data-node-label={formatNodeLabel(child)}
       {...(interactKeys?.has(child.id) ? { 'data-interact-key': child.id } : {})}
-      className={`stage-leaf role-${child.role} ${brandMark ? 'is-brand-mark' : ''} ${
+      className={`stage-leaf subtype-${child.subtype} ${brandMark ? 'is-brand-mark' : ''} ${
         selectedIds.includes(child.id) ? 'selected' : ''
       } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${dragSourceIds.includes(child.id) ? 'drag-source' : ''}`}
       aria-label={getNodeAriaLabel(child)}
@@ -115,10 +116,10 @@ export function renderLeaf({
     >
       <div
         className="stage-leaf-body"
-        style={child.role === 'image' ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined}
+        style={isImageNode ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined}
       >
         {renderLeafContent(child, {
-          contentStyle: child.role === 'image' ? undefined : styleRecordToReactStyle(getLeafInlineStyle(child)),
+          contentStyle: isImageNode ? undefined : styleRecordToReactStyle(getLeafInlineStyle(child)),
           imageClassName: 'stage-image',
           imagePlaceholderClassName: 'image-placeholder',
           imageDraggable: false,
@@ -169,7 +170,7 @@ export function renderLeafSpacerOverlay({
 }: {
   document: DocumentModel;
   child: LeafNode;
-  owner: WrapperNode;
+  owner: ContainerNode;
   registration?: StageStickyRegistration;
   meshPlacement?: CSSProperties;
   wrapperBottomLanePx: number;
@@ -190,7 +191,7 @@ export function renderLeafSpacerOverlay({
   }
 
   const siteNode = document.nodes[document.rootId];
-  const globalStickyElevation = siteNode.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const globalStickyElevation = siteNode.contentType === 'site' ? (siteNode.stickyElevation ?? true) : true;
   const isElevated = resolveStickyIsElevated(child.sticky, globalStickyElevation);
   const elevationClass = isElevated ? 'sticky-spacer-label-elevated' : 'sticky-spacer-label-grounded';
   const edgeMode = getStickyEdgeMode(child.sticky);

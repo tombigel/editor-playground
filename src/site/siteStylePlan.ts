@@ -1,4 +1,4 @@
-import type { DocumentModel, DocumentNode } from '../model/types';
+import type { DocumentModel, LeafNode } from '../model/types';
 import { formatValue } from '../model/units';
 import { buildDocumentDefaultFontStack } from '../fonts/defaults';
 import { buildRenderRootPlan } from '../render/renderPlan';
@@ -288,7 +288,7 @@ function appendLeafPlanCss(plan: Extract<RenderPlanNode, { kind: 'leaf' }>, rule
   }
 }
 
-function leafSizeDeclarations(node: Extract<DocumentNode, { type: 'leaf' }>) {
+function leafSizeDeclarations(node: LeafNode) {
   const declarations = [`height: ${getLeafCssHeight(node)}`];
   if (!('unit' in node.rect.height.base.parsed) && node.rect.height.base.parsed.keyword === 'aspect-ratio') {
     declarations.push(`aspect-ratio: ${node.rect.height.base.parsed.ratio}`);
@@ -296,7 +296,7 @@ function leafSizeDeclarations(node: Extract<DocumentNode, { type: 'leaf' }>) {
   return declarations;
 }
 
-function leafVisualDeclarations(node: Extract<DocumentNode, { type: 'leaf' }>) {
+function leafVisualDeclarations(node: LeafNode) {
   return styleRecordToCssDeclarations(getLeafInlineStyle(node));
 }
 

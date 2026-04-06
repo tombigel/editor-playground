@@ -1,4 +1,5 @@
 import type { DocumentModel, NodeId } from '../../model/types';
+import { isSiteNode, isContainerNode, isLeafNode } from '../../model/types';
 import type {
   CachedSnapTargets,
   SnapTarget,
@@ -74,7 +75,7 @@ export function findDropWrapper(
 ) {
   const target = documentRef.elementFromPoint(clientX, clientY) as HTMLElement | null;
   const draggedNode = model.nodes[draggedId];
-  if (!target || !draggedNode || draggedNode.type === 'site' || !draggedNode.parentId) {
+  if (!target || !draggedNode || isSiteNode(draggedNode) || !draggedNode.parentId) {
     return null;
   }
 
@@ -87,7 +88,7 @@ export function findDropWrapper(
       const candidate = model.nodes[wrapperId];
       if (
         candidate &&
-        candidate.type === 'wrapper' &&
+        isContainerNode(candidate) &&
         isValidDropParent(model, draggedNode, candidate)
       ) {
         return {
@@ -127,7 +128,7 @@ export function findDropWrapperElement(
 
 function isValidDropParent(
   model: DocumentModel,
-  draggedNode: Exclude<import('../../model/types').DocumentNode, { type: 'site' }>,
+  draggedNode: Exclude<import('../../model/types').DocumentNode, { contentType: 'site' }>,
   candidate: WrapperNode,
 ) {
   if (candidate.id === draggedNode.id) {
@@ -138,19 +139,19 @@ function isValidDropParent(
     return false;
   }
 
-  if (draggedNode.type === 'leaf') {
+  if (isLeafNode(draggedNode)) {
     return true;
   }
 
-  if (draggedNode.role !== 'container') {
+  if (!isContainerNode(draggedNode) || draggedNode.subtype !== 'container') {
     return false;
   }
 
-  if (candidate.role === 'container') {
+  if (candidate.subtype === 'container') {
     return true;
   }
 
-  return candidate.role === 'section' || candidate.role === 'header' || candidate.role === 'footer';
+  return candidate.subtype === 'section' || candidate.subtype === 'header' || candidate.subtype === 'footer';
 }
 
 function isDescendant(model: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {

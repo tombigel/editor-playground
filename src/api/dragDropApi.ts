@@ -17,6 +17,7 @@ import type {
   NodeId,
   Rect,
 } from './types';
+import { isContainerNode, isLeafNode } from '../model/types';
 import { DRAG_COMMIT_THRESHOLD_PX } from '../lib/dragConstants';
 
 export type {
@@ -278,7 +279,7 @@ function resolveDragSelection(
     topLevelSelectedIds.find((selectedId) => isNodeDescendantOf(document, anchorId, selectedId)) ??
     anchorId;
   const anchorNode = document.nodes[resolvedAnchorId];
-  if (!anchorNode || anchorNode.type === 'site') {
+  if (!anchorNode || anchorNode.contentType === 'site') {
     return {
       anchorId,
       dragIds: [anchorId],
@@ -320,7 +321,7 @@ function normalizeSelectedIds(document: DocumentModel, selectedIds: NodeId[]) {
     }
 
     const node = document.nodes[id];
-    if (!node || node.type === 'site') {
+    if (!node || node.contentType === 'site') {
       continue;
     }
 
@@ -334,11 +335,11 @@ function normalizeSelectedIds(document: DocumentModel, selectedIds: NodeId[]) {
 
   return normalized.filter((id) => {
     const node = document.nodes[id];
-    if (!node || node.type !== 'wrapper') {
+    if (!node || !isContainerNode(node)) {
       return true;
     }
 
-    return !(node.role === 'section' || node.role === 'header' || node.role === 'footer');
+    return !(node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer');
   });
 }
 
@@ -699,7 +700,7 @@ function isValidDropParent(
 ) {
   const draggedNode = document.nodes[draggedId];
   const candidate = document.nodes[candidateId];
-  if (!draggedNode || !candidate || draggedNode.type === 'site' || candidate.type !== 'wrapper') {
+  if (!draggedNode || !candidate || draggedNode.contentType === 'site' || !isContainerNode(candidate)) {
     return false;
   }
   if (candidate.id === draggedNode.id) {
@@ -708,16 +709,16 @@ function isValidDropParent(
   if (isNodeDescendantOf(document, candidate.id, draggedNode.id)) {
     return false;
   }
-  if (draggedNode.type === 'leaf') {
+  if (isLeafNode(draggedNode)) {
     return true;
   }
-  if (draggedNode.role !== 'container') {
+  if (!isContainerNode(draggedNode) || draggedNode.subtype !== 'container') {
     return false;
   }
-  if (candidate.role === 'container') {
+  if (candidate.subtype === 'container') {
     return true;
   }
-  return candidate.role === 'section' || candidate.role === 'header' || candidate.role === 'footer';
+  return candidate.subtype === 'section' || candidate.subtype === 'header' || candidate.subtype === 'footer';
 }
 
 function isValidDropParentSelection(
@@ -742,13 +743,13 @@ function shouldAllowSourceParentHighlight(
 
   const draggedNode = document.nodes[draggedId];
   const sourceParent = document.nodes[sourceParentId];
-  if (!draggedNode || !sourceParent || sourceParent.type !== 'wrapper') {
+  if (!draggedNode || !sourceParent || !isContainerNode(sourceParent)) {
     return false;
   }
 
   return (
-    draggedNode.type === 'wrapper' &&
-    draggedNode.role === 'container' &&
-    (sourceParent.role === 'section' || sourceParent.role === 'header' || sourceParent.role === 'footer')
+    isContainerNode(draggedNode) &&
+    draggedNode.subtype === 'container' &&
+    (sourceParent.subtype === 'section' || sourceParent.subtype === 'header' || sourceParent.subtype === 'footer')
   );
 }

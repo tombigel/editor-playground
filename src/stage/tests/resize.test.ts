@@ -321,8 +321,8 @@ function makeNodeForCommit(widthRaw: string, heightRaw: string) {
   const heightParsed = parseTestDimension(heightRaw);
   return {
     id: 'node-1',
-    type: 'leaf' as const,
-    role: 'text' as const,
+    contentType: 'text' as const,
+    subtype: 'block' as const,
     parentId: null,
     children: [],
     name: 'Test',

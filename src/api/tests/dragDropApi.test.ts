@@ -23,7 +23,7 @@ type TestNodes = {
 function createDragDocument(): TestNodes {
   const document = structuredClone(createInitialDocument());
   const section = Object.values(document.nodes).find(
-    (node): node is WrapperNode => node.type === 'wrapper' && node.role === 'section',
+    (node): node is WrapperNode => node.contentType === 'container' && node.subtype === 'section',
   );
   if (!section) {
     throw new Error('Expected section wrapper');

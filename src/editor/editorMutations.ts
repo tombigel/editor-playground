@@ -1,6 +1,6 @@
 import {
+  createContainerNode,
   createSectionFromTemplate,
-  createWrapper,
   syncIdCountersWithDocument,
   type SectionTemplateId,
 } from '../model/defaults';
@@ -11,18 +11,18 @@ import type {
   BorderColorField,
   BorderRadiusField,
   BorderWidthField,
+  ContainerNode,
+  ContainerSubtype,
   DocumentModel,
   DocumentNode,
   EditorTextField,
-  LeafRole,
   NodeId,
   ShadowStyleField,
   StickyDefinition,
-  TextLeaf,
-  WrapperRole,
-  WrapperNode,
+  TextNode,
   WrapperStyleField,
 } from '../model/types';
+import { isContainerNode, isLeafNode, isMediaNode, isTextNode } from '../model/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
 import { moveNodeInTreeDoc, setNodeVisibilityDoc } from '../api/documentApi';
@@ -37,9 +37,9 @@ type SelectionRect = {
   height: number;
 };
 
-function assertWrapper(node: DocumentNode): WrapperNode {
-  if (node.type !== 'wrapper') {
-    throw new Error(`Expected wrapper, got ${node.type}`);
+function assertWrapper(node: DocumentNode): ContainerNode {
+  if (!isContainerNode(node)) {
+    throw new Error(`Expected container, got ${node.contentType}`);
   }
   return node;
 }
@@ -82,7 +82,7 @@ export function setActivePage(state: EditorState, pageId: PageId): EditorState {
   };
 }
 
-export function insertWrapper(state: EditorState, role: WrapperRole): EditorState {
+export function insertWrapper(state: EditorState, role: ContainerSubtype): EditorState {
   const document = cloneDocument(state.document);
   syncIdCountersWithDocument(document);
   const parentId = state.selectedId
@@ -108,7 +108,7 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   const document = cloneDocument(state.document);
   syncIdCountersWithDocument(document);
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return state;
   }
 
@@ -116,7 +116,7 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   Object.assign(document.nodes, nodes);
   const footerIndex = root.children.findIndex((childId) => {
     const child = document.nodes[childId];
-    return child?.type === 'wrapper' && child.role === 'footer';
+    return child && isContainerNode(child) && child.subtype === 'footer';
   });
   const insertAt = footerIndex >= 0 ? footerIndex : root.children.length;
   root.children.splice(insertAt, 0, wrapper.id);
@@ -133,7 +133,7 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   return applySelectionToDocument(state, normalizeDocumentFontState(document), [wrapper.id]);
 }
 
-export function insertLeaf(state: EditorState, role: LeafRole): EditorState {
+export function insertLeaf(state: EditorState, role: 'text' | 'image' | 'link' | 'button'): EditorState {
   const document = cloneDocument(state.document);
   syncIdCountersWithDocument(document);
   const parentId = state.selectedId
@@ -147,7 +147,7 @@ export function insertLeaf(state: EditorState, role: LeafRole): EditorState {
 
 function findFirstSection(document: DocumentModel): NodeId | null {
   for (const node of Object.values(document.nodes)) {
-    if (node.type === 'wrapper' && (node.role === 'section' || node.role === 'container')) {
+    if (isContainerNode(node) && (node.subtype === 'section' || node.subtype === 'container')) {
       return node.id;
     }
   }
@@ -160,30 +160,30 @@ function getInsertionParent(
   insertType: 'siteWrapper' | 'containerWrapper' | 'leaf',
 ): NodeId {
   const selected = document.nodes[selectedId];
-  if (selected.type === 'site') {
+  if (selected.contentType === 'site') {
     return insertType === 'containerWrapper'
       ? findFirstSection(document) ?? selected.id
       : selected.id;
   }
   if (insertType === 'leaf') {
-    return selected.type === 'wrapper' ? selected.id : (selected.parentId ?? document.rootId);
+    return isContainerNode(selected) ? selected.id : (selected.parentId ?? document.rootId);
   }
   if (insertType === 'containerWrapper') {
-    if (selected.type === 'wrapper') {
+    if (isContainerNode(selected)) {
       return selected.id;
     }
     return selected.parentId ?? document.rootId;
   }
-  if (selected.type === 'wrapper') {
+  if (isContainerNode(selected)) {
     return document.rootId;
   }
   return document.rootId;
 }
 
-function createUniqueWrapper(document: DocumentModel, role: WrapperRole, parentId: NodeId) {
-  let node = createWrapper(role, parentId);
+function createUniqueWrapper(document: DocumentModel, subtype: ContainerSubtype, parentId: NodeId) {
+  let node = createContainerNode(subtype, parentId);
   while (document.nodes[node.id]) {
-    node = createWrapper(role, parentId);
+    node = createContainerNode(subtype, parentId);
   }
   return node;
 }
@@ -196,103 +196,99 @@ export function updateTextField(
 ): EditorState {
   let document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.type === 'site') {
+  if (node.contentType === 'site') {
     return state;
   }
 
   if (field === 'name') {
     node.name = value;
-  } else if (field === 'content' && node.type === 'leaf' && node.role === 'text') {
+  } else if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
     node.content = value;
-  } else if (field === 'htmlTag' && node.type === 'leaf' && node.role === 'text') {
-    node.htmlTag = normalizeTextHtmlTag(value as TextLeaf['htmlTag']);
-  } else if (field === 'color' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'htmlTag' && isTextNode(node) && node.subtype === 'block') {
+    node.htmlTag = normalizeTextHtmlTag(value as TextNode['htmlTag']);
+  } else if (field === 'color' && isTextNode(node)) {
     node.style ??= {};
     node.style.color = value || undefined;
-  } else if (field === 'fontFamily' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'fontFamily' && isTextNode(node)) {
     node.style ??= {};
     const trimmedValue = value.trim();
     node.style.fontFamily = trimmedValue || undefined;
     if (trimmedValue) {
       document = ensureDocumentFontFamilyByName(document, trimmedValue);
     }
-  } else if (field === 'background' && node.type === 'leaf' && node.role === 'button') {
+  } else if (field === 'background' && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style.background = value || undefined;
-  } else if ((field === 'paddingBlock' || field === 'paddingInline') && node.type === 'leaf' && node.role === 'button') {
+  } else if ((field === 'paddingBlock' || field === 'paddingInline') && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style[field] = value ? parseSpacingValue(value) : undefined;
-  } else if (field === 'fontSize' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'fontSize' && isTextNode(node)) {
     node.style ??= {};
     node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
-  } else if (field === 'fontWeight' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'fontWeight' && isTextNode(node)) {
     const parsed = Number.parseInt(value, 10);
     if (!Number.isFinite(parsed)) {
       return state;
     }
     node.style ??= {};
     node.style.fontWeight = Math.min(900, Math.max(100, Math.round(parsed)));
-  } else if (field === 'fontStyle' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'fontStyle' && isTextNode(node)) {
     node.style ??= {};
     node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
   } else if (
     field === 'textDecorationLine' &&
-    node.type === 'leaf' &&
-    (node.role === 'text' || node.role === 'link' || node.role === 'button')
+    isTextNode(node)
   ) {
     node.style ??= {};
     node.style.textDecorationLine = normalizeTextDecorationLine(value);
   } else if (
     field === 'lineHeight' &&
-    node.type === 'leaf' &&
-    (node.role === 'text' || node.role === 'link' || node.role === 'button')
+    isTextNode(node)
   ) {
     const parsed = Number.parseFloat(value);
     if (Number.isFinite(parsed) && parsed > 0) {
       node.style ??= {};
       node.style.lineHeight = parsed;
     }
-  } else if (field === 'direction' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'direction' && isTextNode(node)) {
     node.style ??= {};
     node.style.direction = value === 'rtl' ? 'rtl' : 'ltr';
-  } else if (field === 'textAlign' && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'textAlign' && isTextNode(node)) {
     node.style ??= {};
     node.style.textAlign = value === 'center' || value === 'right' ? value : 'left';
-  } else if (field === 'textWrap' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
+  } else if (field === 'textWrap' && isTextNode(node) && node.link !== undefined) {
     node.style ??= {};
     node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
-  } else if (field === 'label' && node.type === 'leaf' && 'label' in node) {
-    node.label = value;
-  } else if (field === 'linkType' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.linkType = value === 'anchor' ? 'anchor' : value === 'page' ? 'page' : 'external';
-    if (node.linkType !== 'page') {
-      node.targetPageId = undefined;
-      node.pageAnchorId = undefined;
+  } else if (field === 'linkType' && isTextNode(node) && node.link !== undefined) {
+    const linkType = value === 'anchor' ? 'anchor' : value === 'page' ? 'page' : 'external';
+    node.link = { ...node.link, linkType };
+    if (linkType !== 'page') {
+      node.link = { ...node.link, targetPageId: undefined, pageAnchorId: undefined };
     }
-  } else if (field === 'anchorTargetId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.anchorTargetId = value || undefined;
-  } else if (field === 'href' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.href = value;
-  } else if (field === 'openInNewTab' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.openInNewTab = value === 'true' ? true : undefined;
-  } else if (field === 'targetPageId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.targetPageId = (value as PageId) || undefined;
-  } else if (field === 'pageAnchorId' && node.type === 'leaf' && (node.role === 'link' || node.role === 'button')) {
-    node.pageAnchorId = (value as NodeId) || undefined;
-  } else if (field === 'src' && node.type === 'leaf' && node.role === 'image') {
+  } else if (field === 'anchorTargetId' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, anchorTargetId: value || undefined };
+  } else if (field === 'href' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, href: value };
+  } else if (field === 'openInNewTab' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
+  } else if (field === 'targetPageId' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
+  } else if (field === 'pageAnchorId' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, pageAnchorId: (value as NodeId) || undefined };
+  } else if (field === 'src' && isMediaNode(node) && node.subtype === 'image') {
     node.src = value;
-  } else if (field === 'alt' && node.type === 'leaf' && node.role === 'image') {
+  } else if (field === 'alt' && isMediaNode(node) && node.subtype === 'image') {
     node.alt = value;
-  } else if (isBorderColorField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+  } else if (isBorderColorField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value || undefined;
-  } else if (isBorderWidthField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+  } else if (isBorderWidthField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
-  } else if (isBorderRadiusField(field) && node.type === 'leaf' && (node.role === 'image' || node.role === 'button')) {
+  } else if (isBorderRadiusField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
-  } else if (isShadowStyleField(field) && node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'image' || node.role === 'button')) {
+  } else if (isShadowStyleField(field) && (isTextNode(node) || isMediaNode(node))) {
     node.style ??= {};
     if (field === 'shadowColor') {
       node.style.shadowColor = value || undefined;
@@ -315,7 +311,7 @@ export function updateRectField(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.type === 'site') {
+  if (node.contentType === 'site') {
     return state;
   }
   const rect = node.rect;
@@ -333,7 +329,7 @@ export function updateRectField(
 
 function normalizeTextDecorationLine(
   value: string,
-): NonNullable<TextLeaf['style']>['textDecorationLine'] {
+): NonNullable<TextNode['style']>['textDecorationLine'] {
   switch (value) {
     case 'underline':
     case 'line-through':
@@ -351,7 +347,7 @@ export function updateStickyField(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.type === 'site') {
+  if (node.contentType === 'site') {
     return state;
   }
   node.sticky = {
@@ -365,7 +361,7 @@ export function updateStickyField(
     ...node.sticky,
     ...patch,
   };
-  if (node.type === 'wrapper' && node.role === 'container' && node.sticky.target === 'contentWrapper') {
+  if (isContainerNode(node) && node.subtype === 'container' && node.sticky.target === 'contentWrapper') {
     node.sticky.target = 'self';
   }
   return { ...state, document };
@@ -388,16 +384,18 @@ export function updateWrapperStyleField(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.type !== 'wrapper') {
+  if (!isContainerNode(node)) {
     return state;
   }
+
+  node.style = node.style ?? {};
 
   if (field === 'sectionBorderBottomWidth') {
     node.style.sectionBorderBottomWidth = value ? parseUnitValue(value) : undefined;
     return { ...state, document };
   }
 
-  if (field === 'background' && isStructuralWrapper(node.role)) {
+  if (field === 'background' && isStructuralWrapper(node.subtype)) {
     node.style.background = value ? forceOpaqueColorValue(value) : undefined;
     return { ...state, document };
   }
@@ -486,7 +484,7 @@ export function moveNode(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.type === 'site') {
+  if (node.contentType === 'site') {
     return state;
   }
   if (patch.x) {
@@ -511,7 +509,7 @@ export function moveNodes(
 
   for (const move of moves) {
     const node = document.nodes[move.id];
-    if (!node || node.type === 'site') {
+    if (!node || node.contentType === 'site') {
       continue;
     }
 
@@ -536,7 +534,7 @@ export function nudgeNode(
   delta: { x: number; y: number },
 ): EditorState {
   const node = state.document.nodes[nodeId];
-  if (!node || node.type === 'site' || !node.parentId || node.parentId === state.document.rootId) {
+  if (!node || node.contentType === 'site' || !node.parentId || node.parentId === state.document.rootId) {
     return state;
   }
 
@@ -553,7 +551,7 @@ export function resizeNode(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.type === 'site') {
+  if (node.contentType === 'site') {
     return state;
   }
   if (patch.width) {
@@ -572,7 +570,7 @@ export function reorderNode(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (!node || node.type === 'site' || !node.parentId) {
+  if (!node || node.contentType === 'site' || !node.parentId) {
     return state;
   }
 
@@ -587,8 +585,8 @@ export function reorderNode(
   }
 
   // Sections are reordered only among sibling sections at root level.
-  if (node.type === 'wrapper' && node.role === 'section') {
-    if (parent.type !== 'site') {
+  if (isContainerNode(node) && node.subtype === 'section') {
+    if (parent.contentType !== 'site') {
       return state;
     }
     if (action === 'sendToBack' || action === 'bringToFront') {
@@ -650,7 +648,7 @@ export function reorderNodes(
   if (
     selectedIds.some((nodeId) => {
       const node = state.document.nodes[nodeId];
-      return node?.type === 'wrapper' && node.role === 'section';
+      return node && isContainerNode(node) && node.subtype === 'section';
     })
   ) {
     return state;
@@ -724,7 +722,7 @@ export function alignNodes(
   for (const nodeId of context.targetIds) {
     const node = document.nodes[nodeId];
     const rect = rects[nodeId];
-    if (!node || node.type === 'site' || !rect) {
+    if (!node || node.contentType === 'site' || !rect) {
       continue;
     }
 
@@ -818,7 +816,7 @@ export function distributeNodes(
 
   for (const item of items.slice(1, -1)) {
     const node = document.nodes[item.nodeId];
-    if (!node || node.type === 'site') {
+    if (!node || node.contentType === 'site') {
       continue;
     }
 
@@ -854,11 +852,11 @@ export function distributeNodes(
   return changed ? { ...state, document } : state;
 }
 
-function isReorderableComponent(node: Exclude<DocumentNode, { type: 'site' }>) {
-  if (node.type === 'leaf') {
+function isReorderableComponent(node: Exclude<DocumentNode, { contentType: 'site' }>) {
+  if (isLeafNode(node)) {
     return true;
   }
-  return node.role === 'container';
+  return isContainerNode(node) && node.subtype === 'container';
 }
 
 function findSiblingSectionIndex(
@@ -870,7 +868,7 @@ function findSiblingSectionIndex(
   let index = fromIndex + direction;
   while (index >= 0 && index < siblingIds.length) {
     const candidate = document.nodes[siblingIds[index]];
-    if (candidate?.type === 'wrapper' && candidate.role === 'section') {
+    if (candidate && isContainerNode(candidate) && candidate.subtype === 'section') {
       return index;
     }
     index += direction;
@@ -878,12 +876,12 @@ function findSiblingSectionIndex(
   return -1;
 }
 
-function isSiteSectionRole(role: WrapperRole) {
-  return role === 'section' || role === 'header' || role === 'footer';
+function isSiteSectionRole(subtype: ContainerSubtype) {
+  return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
-function isMovableAlignmentNode(node: Exclude<DocumentNode, { type: 'site' }>) {
-  return node.type === 'leaf' || (node.type === 'wrapper' && node.role === 'container');
+function isMovableAlignmentNode(node: Exclude<DocumentNode, { contentType: 'site' }>) {
+  return isLeafNode(node) || (isContainerNode(node) && node.subtype === 'container');
 }
 
 function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {
@@ -894,14 +892,14 @@ function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {
 
   const anchorId = selectedIds[0];
   const anchorNode = document.nodes[anchorId];
-  if (!anchorNode || anchorNode.type === 'site' || !isMovableAlignmentNode(anchorNode) || !anchorNode.parentId) {
+  if (!anchorNode || anchorNode.contentType === 'site' || !isMovableAlignmentNode(anchorNode) || !anchorNode.parentId) {
     return null;
   }
 
   if (
     selectedIds.some((nodeId) => {
       const node = document.nodes[nodeId];
-      return !node || node.type === 'site' || !isMovableAlignmentNode(node) || node.parentId !== anchorNode.parentId;
+      return !node || node.contentType === 'site' || !isMovableAlignmentNode(node) || node.parentId !== anchorNode.parentId;
     })
   ) {
     return null;
@@ -915,27 +913,27 @@ function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {
 }
 
 function canParentNode(parent: DocumentNode, child: DocumentNode): boolean {
-  if (parent.type !== 'wrapper') {
+  if (!isContainerNode(parent)) {
     return false;
   }
 
-  if (child.type === 'leaf') {
+  if (isLeafNode(child)) {
     return true;
   }
 
-  if (child.type !== 'wrapper') {
+  if (!isContainerNode(child)) {
     return false;
   }
 
-  if (child.role !== 'container') {
+  if (child.subtype !== 'container') {
     return false;
   }
 
-  if (parent.role === 'container') {
+  if (parent.subtype === 'container') {
     return true;
   }
 
-  return isSiteSectionRole(parent.role);
+  return isSiteSectionRole(parent.subtype);
 }
 
 function isDescendant(document: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {
@@ -964,7 +962,7 @@ export function reparentNode(
   const node = document.nodes[nodeId];
   const nextParent = document.nodes[parentId];
 
-  if (!node || !nextParent || node.type === 'site' || nextParent.type !== 'wrapper') {
+  if (!node || !nextParent || node.contentType === 'site' || !isContainerNode(nextParent)) {
     return state;
   }
 
@@ -1005,13 +1003,13 @@ export function reparentNodes(
 
   const document = cloneDocument(state.document);
   const nextParent = document.nodes[parentId];
-  if (!nextParent || nextParent.type !== 'wrapper') {
+  if (!nextParent || !isContainerNode(nextParent)) {
     return state;
   }
 
   const moveMap = new Map(moves.map((move) => [move.id, move]));
   const nodes = moves.map((move) => document.nodes[move.id]);
-  if (nodes.some((node) => !node || node.type === 'site')) {
+  if (nodes.some((node) => !node || node.contentType === 'site')) {
     return state;
   }
 
@@ -1044,7 +1042,7 @@ export function reparentNodes(
   for (const nodeId of movedIds) {
     const node = document.nodes[nodeId];
     const move = moveMap.get(nodeId);
-    if (!node || !move || node.type === 'site') {
+    if (!node || !move || node.contentType === 'site') {
       continue;
     }
     node.parentId = parentId;
@@ -1079,7 +1077,7 @@ export function requestPromoteWrapperRole(
 ): EditorState {
   const document = state.document;
   for (const node of Object.values(document.nodes)) {
-    if (node.type === 'wrapper' && node.role === targetRole && node.id !== wrapperId) {
+    if (isContainerNode(node) && node.subtype === targetRole && node.id !== wrapperId) {
       return {
         ...state,
         pendingRoleSwap: {
@@ -1121,15 +1119,15 @@ function applyPromoteWrapperRole(
   const wrapper = assertWrapper(document.nodes[wrapperId]);
   for (const node of Object.values(document.nodes)) {
     if (
-      node.type === 'wrapper' &&
-      node.role === targetRole &&
+      isContainerNode(node) &&
+      node.subtype === targetRole &&
       node.id !== wrapperId &&
       replaceExisting
     ) {
-      node.role = 'section';
+      node.subtype = 'section';
     }
   }
-  wrapper.role = targetRole;
+  wrapper.subtype = targetRole;
   moveWrapperToRoot(document, wrapper.id, targetRole);
   return { ...state, document };
 }
@@ -1141,7 +1139,7 @@ function moveWrapperToRoot(
 ) {
   const wrapper = document.nodes[wrapperId];
   const root = document.nodes[document.rootId];
-  if (!wrapper || wrapper.type !== 'wrapper' || root.type !== 'site') {
+  if (!wrapper || !isContainerNode(wrapper) || root.contentType !== 'site') {
     return;
   }
 
@@ -1164,7 +1162,7 @@ function moveWrapperToRoot(
 export function demoteWrapperRole(state: EditorState, wrapperId: NodeId): EditorState {
   const document = cloneDocument(state.document);
   const wrapper = assertWrapper(document.nodes[wrapperId]);
-  wrapper.role = 'section';
+  wrapper.subtype = 'section';
   return { ...state, document };
 }
 

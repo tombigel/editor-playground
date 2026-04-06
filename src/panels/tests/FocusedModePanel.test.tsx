@@ -7,23 +7,23 @@ import { EditorSidebar } from '../EditorSidebar';
 function createInspectorProps() {
   const document = createInitialDocument();
   const textNode = Object.values(document.nodes).find(
-    (node) => node.type === 'leaf' && node.role === 'text',
+    (node) => node.contentType === 'text',
   );
   const linkNode = Object.values(document.nodes).find(
-    (node) => node.type === 'leaf' && node.role === 'link',
+    (node) => node.contentType === 'text' && node.link != null,
   );
   const sectionNode = Object.values(document.nodes).find(
-    (node) => node.type === 'wrapper' && node.role === 'section',
+    (node) => node.contentType === 'container' && node.subtype === 'section',
   );
   const siteNode = document.nodes[document.rootId];
 
-  if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+  if (!textNode || textNode.contentType !== 'text') {
     throw new Error('Expected text node');
   }
-  if (!linkNode || linkNode.type !== 'leaf' || linkNode.role !== 'link') {
+  if (!linkNode || linkNode.contentType !== 'text' || linkNode.link == null) {
     throw new Error('Expected link node');
   }
-  if (!sectionNode || sectionNode.type !== 'wrapper') {
+  if (!sectionNode || sectionNode.contentType !== 'container') {
     throw new Error('Expected section node');
   }
 
@@ -95,7 +95,7 @@ describe('panels/FocusedModePanel', () => {
 
     expect(markup).toContain('Sticky');
     expect(markup).toContain(textNode.name);
-    expect(markup).toContain(textNode.role);
+    expect(markup).toContain(textNode.subtype);
     expect(markup).toContain('Pin this node inside its structural range.');
     expect(markup).toContain('editor-focused-panel');
     expect(markup).toContain('aria-label="Drag focused panel"');
@@ -195,10 +195,10 @@ describe('panels/FocusedModePanel', () => {
   it('renders sticky-focused controls for multiple selected nodes', () => {
     const { document, textNode, baseProps } = createInspectorProps();
     const secondTextNode = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.id !== textNode.id,
+      (node) => node.contentType === 'text' && node.id !== textNode.id,
     );
 
-    if (!secondTextNode || secondTextNode.type !== 'leaf' || secondTextNode.role !== 'text') {
+    if (!secondTextNode || secondTextNode.contentType !== 'text') {
       throw new Error('Expected second text node');
     }
 
@@ -266,8 +266,7 @@ describe('panels/FocusedModePanel', () => {
 
   it('renders broken-anchor warnings in focused mode headers for selected links', () => {
     const { document, linkNode, baseProps } = createInspectorProps();
-    linkNode.linkType = 'anchor';
-    linkNode.anchorTargetId = 'missing-section';
+    linkNode.link = { ...(linkNode.link ?? { linkType: 'anchor' }), linkType: 'anchor', anchorTargetId: 'missing-section' };
 
     const markup = renderToStaticMarkup(
       <FocusedModePanel

@@ -8,7 +8,7 @@ import type {
   TemplateBuild,
   TextStyleOptions,
 } from './types';
-import { createDefaultRect, createWrapper } from './defaultFactories';
+import { createContainerNode, createDefaultRect } from './defaultFactories';
 import {
   addTemplateNodes,
   buildTemplate,
@@ -632,9 +632,10 @@ function createStickyCardContainer(
     sticky: StickyDefinition;
   },
 ) {
-  const container = createWrapper('container', parentId);
+  const container = createContainerNode('container', parentId);
   container.name = options.containerName;
   container.rect = createDefaultRect(options.x, options.y, options.width, options.height);
+  container.style ??= {};
   container.style.background = options.background;
   container.style.borderColor = '#d6e2f2';
   container.style.borderWidth = parseUnitValue('1px');

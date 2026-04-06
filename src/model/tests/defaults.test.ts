@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { TextNode } from '../types';
 import {
   createDefaultFooter,
   createDefaultHeader,
@@ -14,44 +15,44 @@ describe('model/defaults', () => {
 
     for (const template of SECTION_TEMPLATES) {
       const build = createSectionFromTemplate(template.id, document.rootId);
-      expect(build.wrapper.role).toBe('section');
+      expect(build.wrapper.subtype).toBe('section');
       expect(build.nodes[build.wrapper.id]).toBeDefined();
     }
 
     const header = createDefaultHeader(document.rootId);
     const footer = createDefaultFooter(document.rootId);
 
-    expect(header.wrapper.role).toBe('header');
-    expect(footer.wrapper.role).toBe('footer');
+    expect(header.wrapper.subtype).toBe('header');
+    expect(footer.wrapper.subtype).toBe('footer');
   });
 
   it('defaults links to internal navigation and buttons to external navigation', () => {
     const link = createLeaf('link', 'section_1');
     const button = createLeaf('button', 'section_1');
 
-    if (link.type !== 'leaf' || link.role !== 'link') {
+    if (link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected link leaf');
     }
-    if (button.type !== 'leaf' || button.role !== 'button') {
+    if (button.contentType !== 'text' || button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
 
-    expect(link.linkType).toBe('anchor');
-    expect(link.href).toBe('#');
-    expect(button.linkType).toBe('external');
-    expect(button.href).toBe('#');
+    expect(link.link?.linkType).toBe('anchor');
+    expect(link.link?.href).toBe('#');
+    expect(button.link?.linkType).toBe('external');
+    expect(button.link?.href).toBe('#');
   });
 
   it('seeds pinned cards with auto lead sticky and top-edge narrative cards', () => {
     const document = createInitialDocument();
     const { nodes } = createSectionFromTemplate('stickyPinnedCards', document.rootId);
-    const lead = Object.values(nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead');
+    const lead = Object.values(nodes).find((node) => node.contentType === 'text' && node.name === 'Pinned Lead');
     const cards = Object.values(nodes).filter(
-      (node): node is Extract<typeof node, { type: 'leaf'; role: 'text' }> =>
-        node.type === 'leaf' && node.role === 'text' && node.name.startsWith('Narrative Card'),
+      (node): node is TextNode =>
+        node.contentType === 'text' && node.name.startsWith('Narrative Card'),
     );
 
-    if (!lead || lead.type !== 'leaf' || lead.role !== 'text') {
+    if (!lead || lead.contentType !== 'text') {
       throw new Error('Expected pinned lead text node');
     }
 
@@ -77,14 +78,14 @@ describe('model/defaults', () => {
   it('seeds sticky edge lab card containers with top, both, and bottom sticky variants', () => {
     const document = createInitialDocument();
     const { nodes } = createSectionFromTemplate('stickySteps', document.rootId);
-    const topCard = Object.values(nodes).find((node) => node.type === 'wrapper' && node.name === 'Top Edge Card Container');
-    const bothCard = Object.values(nodes).find((node) => node.type === 'wrapper' && node.name === 'Both Edges Card Container');
-    const bottomCard = Object.values(nodes).find((node) => node.type === 'wrapper' && node.name === 'Bottom Edge Card Container');
+    const topCard = Object.values(nodes).find((node) => node.contentType === 'container' && node.name === 'Top Edge Card Container');
+    const bothCard = Object.values(nodes).find((node) => node.contentType === 'container' && node.name === 'Both Edges Card Container');
+    const bottomCard = Object.values(nodes).find((node) => node.contentType === 'container' && node.name === 'Bottom Edge Card Container');
 
     if (
-      !topCard || topCard.type !== 'wrapper' ||
-      !bothCard || bothCard.type !== 'wrapper' ||
-      !bottomCard || bottomCard.type !== 'wrapper'
+      !topCard || topCard.contentType !== 'container' ||
+      !bothCard || bothCard.contentType !== 'container' ||
+      !bottomCard || bottomCard.contentType !== 'container'
     ) {
       throw new Error('Expected sticky edge lab card containers');
     }
@@ -116,21 +117,21 @@ describe('model/defaults', () => {
   it('seeds curated typography pairings across starter chrome and section templates', () => {
     const document = createInitialDocument();
     const initialNodes = Object.values(document.nodes);
-    const headerTitle = initialNodes.find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title');
-    const postTitle = initialNodes.find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title');
-    const postBody = initialNodes.find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Body');
+    const headerTitle = initialNodes.find((node) => node.contentType === 'text' && node.name === 'Product Title');
+    const postTitle = initialNodes.find((node) => node.contentType === 'text' && node.name === 'Post Title');
+    const postBody = initialNodes.find((node) => node.contentType === 'text' && node.name === 'Post Body');
 
     const staggered = createSectionFromTemplate('stickyStaggeredImages', document.rootId);
     const pinned = createSectionFromTemplate('stickyPinnedCards', document.rootId);
     const mediaReveal = createSectionFromTemplate('stickyMediaReveal', document.rootId);
     const stickySteps = createSectionFromTemplate('stickySteps', document.rootId);
 
-    const staggeredHeading = Object.values(staggered.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading');
-    const pinnedLead = Object.values(pinned.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead');
-    const mediaHeading = Object.values(mediaReveal.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Heading');
-    const mediaBlock = Object.values(mediaReveal.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Narrative Block A');
-    const labIntro = Object.values(stickySteps.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Section Intro');
-    const labCard = Object.values(stickySteps.nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Top Edge Card');
+    const staggeredHeading = Object.values(staggered.nodes).find((node) => node.contentType === 'text' && node.name === 'Section Heading');
+    const pinnedLead = Object.values(pinned.nodes).find((node) => node.contentType === 'text' && node.name === 'Pinned Lead');
+    const mediaHeading = Object.values(mediaReveal.nodes).find((node) => node.contentType === 'text' && node.name === 'Section Heading');
+    const mediaBlock = Object.values(mediaReveal.nodes).find((node) => node.contentType === 'text' && node.name === 'Narrative Block A');
+    const labIntro = Object.values(stickySteps.nodes).find((node) => node.contentType === 'text' && node.name === 'Section Intro');
+    const labCard = Object.values(stickySteps.nodes).find((node) => node.contentType === 'text' && node.name === 'Top Edge Card');
 
     expect(headerTitle).toMatchObject({ style: { fontFamily: 'Playfair Display' } });
     expect(postTitle).toMatchObject({ style: { fontFamily: 'Playfair Display' } });
@@ -146,23 +147,23 @@ describe('model/defaults', () => {
   it('keeps post and pinned-card copy stacks clear after the typography refresh', () => {
     const document = createInitialDocument();
     const postTitle = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Title',
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
     );
     const postBody = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Post Body',
+      (node) => node.contentType === 'text' && node.name === 'Post Body',
     );
     const postLink = Object.values(document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Post Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Post Link',
     );
     const pinned = createSectionFromTemplate('stickyPinnedCards', document.rootId);
     const pinnedLead = Object.values(pinned.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead',
+      (node) => node.contentType === 'text' && node.name === 'Pinned Lead',
     );
     const pinnedLeadCopy = Object.values(pinned.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Pinned Lead Copy',
+      (node) => node.contentType === 'text' && node.name === 'Pinned Lead Copy',
     );
     const pinnedCard = Object.values(pinned.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Narrative Card 1',
+      (node) => node.contentType === 'text' && node.name === 'Narrative Card 1',
     );
 
     expect(postTitle).toMatchObject({
@@ -196,10 +197,10 @@ describe('model/defaults', () => {
   it('keeps sticky edge lab cards and notes inside the section padding bounds', () => {
     const document = createInitialDocument();
     const { nodes } = createSectionFromTemplate('stickySteps', document.rootId);
-    const bothNotes = Object.values(nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Both Column Notes');
-    const bottomNotes = Object.values(nodes).find((node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Bottom Column Notes');
-    const bothCard = Object.values(nodes).find((node) => node.type === 'wrapper' && node.name === 'Both Edges Card Container');
-    const bottomCard = Object.values(nodes).find((node) => node.type === 'wrapper' && node.name === 'Bottom Edge Card Container');
+    const bothNotes = Object.values(nodes).find((node) => node.contentType === 'text' && node.name === 'Both Column Notes');
+    const bottomNotes = Object.values(nodes).find((node) => node.contentType === 'text' && node.name === 'Bottom Column Notes');
+    const bothCard = Object.values(nodes).find((node) => node.contentType === 'container' && node.name === 'Both Edges Card Container');
+    const bottomCard = Object.values(nodes).find((node) => node.contentType === 'container' && node.name === 'Bottom Edge Card Container');
 
     expect(bothNotes).toMatchObject({ rect: { x: { base: { raw: '420px' } } } });
     expect(bottomNotes).toMatchObject({
@@ -215,9 +216,9 @@ describe('model/defaults', () => {
   it('keeps the staggered gallery images inside the section padding bounds', () => {
     const document = createInitialDocument();
     const { nodes } = createSectionFromTemplate('stickyStaggeredImages', document.rootId);
-    const imageB = Object.values(nodes).find((node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Sticky Image B');
-    const imageC = Object.values(nodes).find((node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Sticky Image C');
-    const imageD = Object.values(nodes).find((node) => node.type === 'leaf' && node.role === 'image' && node.name === 'Sticky Image D');
+    const imageB = Object.values(nodes).find((node) => node.contentType === 'media' && node.name === 'Sticky Image B');
+    const imageC = Object.values(nodes).find((node) => node.contentType === 'media' && node.name === 'Sticky Image C');
+    const imageD = Object.values(nodes).find((node) => node.contentType === 'media' && node.name === 'Sticky Image D');
 
     expect(imageB).toMatchObject({
       rect: {

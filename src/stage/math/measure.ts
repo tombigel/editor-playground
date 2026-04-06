@@ -12,7 +12,7 @@ export function measureStageNodeSizes(root: HTMLElement, document: DocumentModel
       continue;
     }
     const node = document.nodes[nodeId];
-    if (!node || node.type === 'site') {
+    if (!node || node.contentType === 'site') {
       continue;
     }
 
@@ -121,12 +121,12 @@ export function areMeasuredNodeSizesEqual(current: MeasuredNodeSizes, next: Meas
   return true;
 }
 
-function shouldMeasureNodeWidth(node: Exclude<import('../../model/types').DocumentNode, { type: 'site' }>) {
+function shouldMeasureNodeWidth(node: Exclude<import('../../model/types').DocumentNode, { contentType: 'site' }>) {
   const width = node.rect.width.base.parsed;
   return !('unit' in width) || width.unit === '%';
 }
 
-function shouldMeasureNodeHeight(node: Exclude<import('../../model/types').DocumentNode, { type: 'site' }>) {
+function shouldMeasureNodeHeight(node: Exclude<import('../../model/types').DocumentNode, { contentType: 'site' }>) {
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
     return height.unit === '%';

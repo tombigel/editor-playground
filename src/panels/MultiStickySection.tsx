@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { DocumentNode, FocusedMode } from '../api/editorApi';
+import { isContainerNode } from '../model/types';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -45,7 +46,7 @@ export function MultiStickySection({
   headerAction,
   contentClassName,
 }: Props) {
-  const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { type: 'site' }> => node.type !== 'site');
+  const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { contentType: 'site' }> => node.contentType !== 'site');
   if (stickyNodes.length < 2) {
     return null;
   }
@@ -259,8 +260,8 @@ export function MultiStickySection({
   );
 }
 
-function isAutoDurationLocked(node: Exclude<DocumentNode, { type: 'site' }>) {
-  return node.type === 'wrapper' && node.role !== 'container' && (node.sticky?.target ?? 'self') === 'self';
+function isAutoDurationLocked(node: Exclude<DocumentNode, { contentType: 'site' }>) {
+  return isContainerNode(node) && node.subtype !== 'container' && (node.sticky?.target ?? 'self') === 'self';
 }
 
 function readStickyEdgeValue(node: Exclude<DocumentNode, { type: 'site' }>) {

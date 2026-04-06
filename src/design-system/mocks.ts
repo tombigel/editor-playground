@@ -1,6 +1,6 @@
-import { createLeaf, createWrapper } from "../model/defaultFactories";
+import { createButtonTextNode, createContainerNode, createLinkTextNode, createMediaNode, createTextNode } from "../model/defaultFactories";
 import { createInitialDocument } from "../model/initialDocument";
-import type { DocumentFontFamily, WrapperNode } from "../model/types";
+import type { ContainerNode, DocumentFontFamily } from "../model/types";
 import { parseUnitValue } from "../model/units";
 import type {
 	InspectorActionHandlers,
@@ -57,11 +57,11 @@ export const mockDocument = createInitialDocument();
 
 const MOCK_SITE_ID = "mock-site";
 
-export const mockSection = createWrapper("section", MOCK_SITE_ID);
+export const mockSection = createContainerNode("section", MOCK_SITE_ID);
 
 /** Section with sticky enabled — shows edge/offset/duration controls. */
-export const mockStickySection: WrapperNode = {
-	...createWrapper("section", MOCK_SITE_ID),
+export const mockStickySection: ContainerNode = {
+	...createContainerNode("section", MOCK_SITE_ID),
 	name: "Sticky Section",
 	sticky: {
 		enabled: true,
@@ -73,11 +73,11 @@ export const mockStickySection: WrapperNode = {
 	},
 };
 
-export const mockContainer = createWrapper("container", mockSection.id);
-export const mockTextLeaf = createLeaf("text", mockContainer.id);
-export const mockButtonLeaf = createLeaf("button", mockContainer.id);
-export const mockLinkLeaf = createLeaf("link", mockContainer.id);
-export const mockImageLeaf = createLeaf("image", mockContainer.id);
+export const mockContainer = createContainerNode("container", mockSection.id);
+export const mockTextLeaf = createTextNode("block", mockContainer.id);
+export const mockButtonLeaf = createButtonTextNode(mockContainer.id);
+export const mockLinkLeaf = createLinkTextNode(mockContainer.id);
+export const mockImageLeaf = createMediaNode("image", mockContainer.id);
 
 export const mockFontFamilies: DocumentFontFamily[] = [
 	{

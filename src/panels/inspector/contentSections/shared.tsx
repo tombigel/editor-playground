@@ -121,7 +121,7 @@ export function fontSizeFieldValueFromNode(node: TypographyInspectorNode) {
 }
 
 export function readTextWrapMode(node: TypographyInspectorNode) {
-  return node.type === 'leaf' && (node.role === 'link' || node.role === 'button') ? node.style?.textWrap : undefined;
+  return node.link !== undefined ? node.style?.textWrap : undefined;
 }
 
 export function TypographyTextStyleFields({
@@ -391,17 +391,17 @@ export function NavigationFields({
   node: NavigationInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
 }) {
-  const linkType = node.linkType ?? 'external';
+  const linkType = node.link?.linkType ?? 'external';
   const sectionOptions = getSectionAnchorOptions(document);
-  const anchorValue = isValidSectionAnchorTarget(document, node.anchorTargetId) ? node.anchorTargetId : undefined;
+  const anchorValue = isValidSectionAnchorTarget(document, node.link?.anchorTargetId) ? node.link?.anchorTargetId : undefined;
   const selectedAnchorOption = sectionOptions.find((option) => option.id === anchorValue);
-  const hasBrokenAnchorTarget = Boolean(node.anchorTargetId && !anchorValue);
+  const hasBrokenAnchorTarget = Boolean(node.link?.anchorTargetId && !anchorValue);
   const pages = document.pages ?? [];
   const hasPages = pages.length > 0;
 
   // Page link fields
-  const targetPageId = (node as { targetPageId?: string }).targetPageId;
-  const pageAnchorId = (node as { pageAnchorId?: string }).pageAnchorId;
+  const targetPageId = node.link?.targetPageId;
+  const pageAnchorId = node.link?.pageAnchorId;
   const targetPage = targetPageId ? pages.find((p) => p.id === targetPageId) : undefined;
 
   // Build section options for the target page
@@ -418,13 +418,13 @@ export function NavigationFields({
 
   function handleLinkTypeChange(value: 'anchor' | 'external' | 'page') {
     onTextChange('linkType', value);
-    if (value === 'anchor' && !node.anchorTargetId && sectionOptions[0]) {
+    if (value === 'anchor' && !node.link?.anchorTargetId && sectionOptions[0]) {
       onTextChange('anchorTargetId', sectionOptions[0].id);
       onTextChange('href', sectionOptions[0].href);
       return;
     }
     if (value === 'external') {
-      onTextChange('openInNewTab', node.openInNewTab ? 'true' : '');
+      onTextChange('openInNewTab', node.link?.openInNewTab ? 'true' : '');
     }
     if (value === 'page' && !targetPageId && pages[0]) {
       onTextChange('targetPageId', pages[0].id);
@@ -568,10 +568,10 @@ export function NavigationFields({
       ) : (
         <>
           <FormField label="Href">
-            <Input value={node.href ?? ''} onChange={(e) => onTextChange('href', e.target.value)} />
+            <Input value={node.link?.href ?? ''} onChange={(e) => onTextChange('href', e.target.value)} />
           </FormField>
           <OpenInNewTabField
-            checked={Boolean(node.openInNewTab)}
+            checked={Boolean(node.link?.openInNewTab)}
             onChange={(checked) => onTextChange('openInNewTab', checked ? 'true' : '')}
           />
         </>

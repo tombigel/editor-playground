@@ -1,9 +1,10 @@
 import { moveNodeInTreeDoc } from '../api/documentApi';
 import type { DocumentModel, DocumentNode, NodeId } from '../model/types';
+import { isSiteNode, isContainerNode, isLeafNode } from '../model/types';
 import { formatNodeLabel } from '../render/nodePresentation';
 import { resolveStickyIsElevated } from '../render/sticky';
 
-export type LayersTreeNode = Exclude<DocumentNode, { type: 'site' }>;
+export type LayersTreeNode = Exclude<DocumentNode, { contentType: 'site' }>;
 export type LayersDropPosition = 'before' | 'after' | 'inside';
 
 export type LayersTreeRow = {
@@ -32,7 +33,7 @@ export function buildLayersTreeRows(
   expandedIds: ReadonlySet<NodeId>,
 ): LayersTreeRow[] {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || !isSiteNode(root)) {
     return [];
   }
 
@@ -62,11 +63,14 @@ export function buildLayersTreeRows(
 
 export function getDefaultExpandedLayerIds(document: DocumentModel): NodeId[] {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || !isSiteNode(root)) {
     return [];
   }
 
-  return root.children.filter((childId) => document.nodes[childId]?.type === 'wrapper');
+  return root.children.filter((childId) => {
+    const n = document.nodes[childId];
+    return n && isContainerNode(n);
+  });
 }
 
 export function getAutoExpandedLayerIds(
@@ -79,7 +83,7 @@ export function getAutoExpandedLayerIds(
     let current = document.nodes[selectedId];
     while (current?.parentId) {
       const parent = document.nodes[current.parentId];
-      if (!parent || parent.type === 'site') {
+      if (!parent || isSiteNode(parent)) {
         break;
       }
       autoExpandedIds.add(parent.id);
@@ -97,12 +101,12 @@ export function resolveLayersDropTarget(
   position: LayersDropPosition,
 ): LayersMoveTarget | null {
   const target = document.nodes[targetRowId];
-  if (!target || target.type === 'site') {
+  if (!target || isSiteNode(target)) {
     return null;
   }
 
   if (position === 'inside') {
-    if (target.type !== 'wrapper') {
+    if (!isContainerNode(target)) {
       return null;
     }
 
@@ -152,8 +156,8 @@ export function resolveProjectedLayersRole(
   const movedNode = next.nodes[nodeId];
   if (
     !movedNode ||
-    movedNode.type !== 'wrapper' ||
-    (movedNode.role !== 'header' && movedNode.role !== 'section' && movedNode.role !== 'footer')
+    !isContainerNode(movedNode) ||
+    (movedNode.subtype !== 'header' && movedNode.subtype !== 'section' && movedNode.subtype !== 'footer')
   ) {
     return null;
   }
@@ -177,15 +181,17 @@ export function resolveLayersDropPosition(
 }
 
 export function isLayersNodeDraggable(node: LayersTreeNode) {
-  if (node.type === 'leaf') {
+  if (isLeafNode(node)) {
     return true;
   }
 
   return (
-    node.role === 'section' ||
-    node.role === 'header' ||
-    node.role === 'footer' ||
-    node.role === 'container'
+    isContainerNode(node) && (
+      node.subtype === 'section' ||
+      node.subtype === 'header' ||
+      node.subtype === 'footer' ||
+      node.subtype === 'container'
+    )
   );
 }
 
@@ -200,7 +206,7 @@ function appendLayersTreeRow(
   globalStickyElevation = true,
 ) {
   const node = document.nodes[nodeId];
-  if (!node || node.type === 'site') {
+  if (!node || isSiteNode(node)) {
     return;
   }
 
@@ -235,12 +241,12 @@ function appendLayersTreeRow(
 }
 
 function resolveRootRoleGroup(node: DocumentNode | undefined) {
-  if (!node || node.type !== 'wrapper') {
+  if (!node || !isContainerNode(node)) {
     return null;
   }
 
-  if (node.role === 'header' || node.role === 'section' || node.role === 'footer') {
-    return node.role;
+  if (node.subtype === 'header' || node.subtype === 'section' || node.subtype === 'footer') {
+    return node.subtype;
   }
 
   return null;

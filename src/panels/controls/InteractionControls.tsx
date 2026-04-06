@@ -200,9 +200,9 @@ export function WrapperActions({
   onDemote: () => void;
 }) {
   const currentType =
-    node.role === 'section' || node.role === 'header' || node.role === 'footer' ? node.role : null;
+    node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer' ? node.subtype : null;
 
-  if (node.role === 'section') {
+  if (node.subtype === 'section') {
     return (
       <div className="space-y-1.5">
         <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-1">

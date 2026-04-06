@@ -1,7 +1,7 @@
 import type {
 	DocumentModel,
-	LinkLeaf,
 	NodeId,
+	TextNode,
 	ViewportMeasurement,
 } from "../../model/types";
 import type { AnimationPreviewState, SnapSettings } from "../../editor/types";
@@ -18,7 +18,7 @@ import type {
 } from "../../sticky/types";
 
 export type FollowLinkPopupData = {
-	node: LinkLeaf;
+	node: TextNode;
 	document: DocumentModel;
 	onNavigateToPage: (pageId: PageId) => void;
 	onScrollToAnchor: (nodeId: NodeId) => void;
@@ -113,11 +113,11 @@ export type SnapGuides = {
 
 export type StageMathLeafNode = Extract<
 	DocumentModel["nodes"][string],
-	{ type: "leaf" }
+	{ contentType: "text" | "media" }
 >;
 export type StageMathWrapperNode = Extract<
 	DocumentModel["nodes"][string],
-	{ type: "wrapper" }
+	{ contentType: "container" }
 >;
 
 export type SnapTarget = {

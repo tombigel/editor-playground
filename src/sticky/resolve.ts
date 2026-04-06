@@ -1,12 +1,13 @@
 import { getChildren } from '../model/selectors';
 import type {
   ComputedWrapperStickyState,
+  ContainerNode,
   DocumentModel,
   DocumentNode,
   StickyDefinition,
-  TextLeaf,
-  WrapperNode,
+  TextNode,
 } from '../model/types';
+import { isContainerNode } from '../model/types';
 import { resolveFontSizePx, resolveUnitValuePx } from '../model/units';
 import type {
   ResolvedStickyGeometry,
@@ -30,12 +31,12 @@ export function resolveStickyLayout(
   const result: StickyLayoutState = {};
 
   for (const node of Object.values(document.nodes)) {
-    if (node.type !== 'wrapper') {
+    if (!isContainerNode(node)) {
       continue;
     }
 
     const children = getChildren(document, node.id).filter(
-      (child): child is Exclude<DocumentNode, { type: 'site' }> => child.type !== 'site',
+      (child): child is Exclude<DocumentNode, { contentType: 'site' }> => child.contentType !== 'site',
     );
     result[node.id] = resolveWrapperStickyState(node, children, resolvedGeometry);
   }
@@ -44,8 +45,8 @@ export function resolveStickyLayout(
 }
 
 export function resolveWrapperStickyState(
-  wrapper: WrapperNode,
-  children: Exclude<DocumentNode, { type: 'site' }>[],
+  wrapper: ContainerNode,
+  children: Exclude<DocumentNode, { contentType: 'site' }>[],
   geometry: StickyGeometrySnapshot = {},
 ): ComputedWrapperStickyState {
   const resolvedGeometry = withDefaultGeometry(geometry);
@@ -63,7 +64,7 @@ export function resolveWrapperStickyState(
     if (!child.sticky?.enabled) {
       continue;
     }
-    if (child.type === 'wrapper' && child.sticky.target === 'contentWrapper') {
+    if (isContainerNode(child) && child.sticky.target === 'contentWrapper') {
       continue;
     }
     registrations.push(buildStickyRegistration(child, wrapper, resolvedGeometry));
@@ -90,7 +91,7 @@ function withDefaultGeometry(geometry: StickyGeometrySnapshot): ResolvedStickyGe
 }
 
 function getOwnContentWrapperStickyRegistration(
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   geometry: ResolvedStickyGeometry,
 ) {
   if (!wrapper.sticky?.enabled || wrapper.sticky.target !== 'contentWrapper') {
@@ -100,7 +101,7 @@ function getOwnContentWrapperStickyRegistration(
 }
 
 function getOwnSelfStickyRegistration(
-  wrapper: WrapperNode,
+  wrapper: ContainerNode,
   geometry: ResolvedStickyGeometry,
 ) {
   if (!wrapper.sticky?.enabled || wrapper.sticky.target !== 'self') {
@@ -110,8 +111,8 @@ function getOwnSelfStickyRegistration(
 }
 
 function buildStickyRegistration(
-  owner: Exclude<DocumentNode, { type: 'site' }>,
-  parentWrapper: WrapperNode,
+  owner: Exclude<DocumentNode, { contentType: 'site' }>,
+  parentWrapper: ContainerNode,
   geometry: ResolvedStickyGeometry,
 ): StickyRegistration {
   const sticky = owner.sticky as StickyDefinition;
@@ -158,7 +159,7 @@ function buildStickyRegistration(
 
 function resolveStickyDurationPx(
   duration: StickyDefinition['duration'],
-  ownerWrapper: WrapperNode,
+  ownerWrapper: ContainerNode,
   geometry: ResolvedStickyGeometry,
 ) {
   return resolveUnitValuePx(
@@ -174,11 +175,11 @@ function resolveStickyDurationPx(
 }
 
 function getStickyStartPx(
-  owner: Exclude<DocumentNode, { type: 'site' }>,
-  parentWrapper: WrapperNode,
+  owner: Exclude<DocumentNode, { contentType: 'site' }>,
+  parentWrapper: ContainerNode,
   geometry: ResolvedStickyGeometry,
 ) {
-  if (owner.type === 'wrapper' && owner.id === parentWrapper.id) {
+  if (isContainerNode(owner) && owner.id === parentWrapper.id) {
     return getNodeHeight(parentWrapper, geometry);
   }
 
@@ -193,7 +194,7 @@ function getStickyStartPx(
 }
 
 function resolveCoordinatePx(
-  value: WrapperNode['rect']['x']['base']['parsed'],
+  value: ContainerNode['rect']['x']['base']['parsed'],
   width: number,
   height: number,
   axis: 'x' | 'y',
@@ -221,7 +222,7 @@ function getStickyEdgeMode(sticky: StickyDefinition): 'top' | 'bottom' | 'both' 
 }
 
 function getNodeWidth(
-  node: Exclude<DocumentNode, { type: 'site' }>,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
   geometry: ResolvedStickyGeometry,
 ) {
   const measured = geometry.nodeSizes[node.id];
@@ -248,7 +249,7 @@ function getNodeWidth(
 }
 
 function getNodeHeight(
-  node: Exclude<DocumentNode, { type: 'site' }>,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
   geometry: ResolvedStickyGeometry,
 ) {
   const measured = geometry.nodeSizes[node.id];
@@ -273,14 +274,14 @@ function getNodeHeight(
   if (height.keyword === 'aspect-ratio') {
     return getNodeWidth(node, geometry) / height.ratio;
   }
-  if (node.type === 'wrapper') {
+  if (isContainerNode(node)) {
     return 0;
   }
   return estimateAutoLeafHeight(node, geometry);
 }
 
-function estimateAutoLeafHeight(node: TextLeaf | Extract<DocumentNode, { type: 'leaf'; role: 'link' | 'button' | 'image' }>, geometry: ResolvedStickyGeometry) {
-  if (node.role === 'text') {
+function estimateAutoLeafHeight(node: TextNode | Exclude<DocumentNode, { contentType: 'site' | 'container' }>, geometry: ResolvedStickyGeometry) {
+  if (node.contentType === 'text' && node.subtype === 'block' && !node.link) {
     const fontSize =
       node.style?.fontSize && 'unit' in node.style.fontSize.parsed
         ? resolveFontSizePx(
@@ -304,11 +305,11 @@ function estimateAutoLeafHeight(node: TextLeaf | Extract<DocumentNode, { type: '
     return Math.ceil(lineCount * fontSize * 1.24);
   }
 
-  if (node.role === 'link') {
+  if (node.contentType === 'text' && node.link && !node.style?.background) {
     return 24;
   }
 
-  if (node.role === 'button') {
+  if (node.contentType === 'text' && node.link && node.style?.background) {
     return 50;
   }
 

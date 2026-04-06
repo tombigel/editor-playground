@@ -45,10 +45,10 @@ describe('app/appSelectors', () => {
   it('reports reorder availability for leaf nodes within their parent order', () => {
     const state = createState();
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected starter section');
     }
 
@@ -70,7 +70,7 @@ describe('app/appSelectors', () => {
   it('tracks section order only against sibling sections at the site root', () => {
     const state = createState();
     const root = state.document.nodes[state.document.rootId];
-    if (root.type !== 'site') {
+    if (root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
 
@@ -79,7 +79,7 @@ describe('app/appSelectors', () => {
     state.document.nodes[extraSection.id] = extraSection;
     root.children.splice(root.children.length - 1, 0, extraSection.id);
 
-    const firstSection = state.document.nodes[root.children.find((id) => state.document.nodes[id]?.type === 'wrapper' && state.document.nodes[id]?.role === 'section') ?? ''];
+    const firstSection = state.document.nodes[root.children.find((id) => state.document.nodes[id]?.contentType === 'container' && state.document.nodes[id]?.subtype === 'section') ?? ''];
     const secondSection = extraSection;
 
     expect(getSectionOrderState(state, firstSection)).toEqual({
@@ -95,10 +95,10 @@ describe('app/appSelectors', () => {
   it('derives sticky edge and target capabilities from the selected node', () => {
     const state = createState();
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section');
     }
 

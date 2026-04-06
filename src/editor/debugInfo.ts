@@ -1,18 +1,19 @@
 import type { DocumentModel, DocumentNode } from '../model/types';
+import { isSiteNode, isContainerNode, isLeafNode } from '../model/types';
 import type { NodeDebugInfo, MeasuredNodeBounds } from './types';
 import { getStickyEdgeMode, resolveStickyIsElevated } from '../render/sticky';
 
 export function buildNodeDebugInfo(
   document: DocumentModel,
-  node: Exclude<DocumentNode, { type: 'site' }>,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
   options?: { documentRef?: Pick<Document, 'getElementById'> },
 ): NodeDebugInfo {
   const stageId = `stage-node-${node.id}`;
 
   // Determine htmlId
   let htmlId: string | null = null;
-  if (node.type === 'wrapper' && node.parentId === document.rootId) {
-    if (node.role === 'section' || node.role === 'header' || node.role === 'footer') {
+  if (isContainerNode(node) && node.parentId === document.rootId) {
+    if (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer') {
       htmlId = node.id;
     }
   }
@@ -42,7 +43,7 @@ export function buildNodeDebugInfo(
 
   // Get global sticky elevation setting
   const siteNode = document.nodes[document.rootId];
-  const globalStickyElevation = siteNode?.type === 'site' ? (siteNode.stickyElevation ?? true) : true;
+  const globalStickyElevation = siteNode && isSiteNode(siteNode) ? (siteNode.stickyElevation ?? true) : true;
 
   // Build sticky info
   let sticky: NodeDebugInfo['sticky'];
@@ -91,7 +92,7 @@ export function buildNodeDebugInfo(
     };
   } else {
     const isTriggerTarget = Object.values(document.nodes).some(
-      n => n.type !== 'site' && n.animation?.triggerId === node.id,
+      n => !isSiteNode(n) && n.animation?.triggerId === node.id,
     );
     const effect =
       node.animation.effect.kind === 'keyframe' ? node.animation.effect.name : node.animation.effect.type;
@@ -112,8 +113,8 @@ export function buildNodeDebugInfo(
     htmlId,
     stageId,
     name: node.name,
-    family: node.type,
-    role: node.role,
+    family: node.contentType,
+    subtype: isContainerNode(node) || isLeafNode(node) ? node.subtype : 'unknown',
     parentId: node.parentId,
     authoredRect,
     measuredBounds,

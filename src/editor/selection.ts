@@ -1,4 +1,5 @@
 import type { DocumentModel, DocumentNode, NodeId } from '../model/types';
+import { isContainerNode } from '../model/types';
 
 export function normalizeSelectedIds(
   document: DocumentModel,
@@ -20,7 +21,7 @@ export function normalizeSelectedIds(
       continue;
     }
     const node = document.nodes[id];
-    if (!node || node.type === 'site') {
+    if (!node || node.contentType === 'site') {
       continue;
     }
     seen.add(id);
@@ -75,7 +76,7 @@ export function getTopLevelSelectedIds(document: DocumentModel, selectedIds: Nod
 function isStructuralWrapperNode(node: DocumentNode | undefined) {
   return Boolean(
     node &&
-    node.type === 'wrapper' &&
-    (node.role === 'section' || node.role === 'header' || node.role === 'footer'),
+    isContainerNode(node) &&
+    (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer'),
   );
 }

@@ -20,6 +20,7 @@ export function createInitialDocument(): DocumentModel {
     nodes: {
       [siteId]: {
         id: siteId,
+        contentType: 'site',
         type: 'site',
         parentId: null,
         children: [header.id, starterSection.id, footer.id],

@@ -6,10 +6,10 @@ import { EditorSidebar, resolveSidebarTitleCommit } from "../EditorSidebar";
 function createSidebarProps() {
 	const document = createInitialDocument();
 	const sectionNode = Object.values(document.nodes).find(
-		(node) => node.type === "wrapper" && node.role === "section",
+		(node) => node.contentType === "container" && node.subtype === "section",
 	);
 
-	if (!sectionNode || sectionNode.type !== "wrapper") {
+	if (!sectionNode || sectionNode.contentType !== "container") {
 		throw new Error("Expected section node");
 	}
 

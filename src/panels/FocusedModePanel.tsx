@@ -3,6 +3,7 @@ import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { PointerEventHandler } from 'react';
 import type { FocusedMode } from '../api/editorApi';
+import { isSiteNode, isContainerNode, isLeafNode } from '../model/types';
 import { getFocusedModeLabel } from '../editor/focusedModes';
 import { createInitialDocument } from '../model/defaults';
 import { InspectorBlockList } from './InspectorBlockList';
@@ -163,7 +164,7 @@ export function FocusedModePanel({
     onSectionForward,
   };
   const title = node?.name ?? 'No component selected';
-  const roleLabel = node ? (node.type === 'site' ? 'site' : node.role) : null;
+  const roleLabel = node ? (isSiteNode(node) ? 'site' : (isContainerNode(node) || isLeafNode(node) ? node.subtype : null)) : null;
   const isMultiSticky = mode === 'sticky' && selectedNodes.length > 1;
   const modeLabel = getFocusedModeLabel(mode);
   const dialogLabel = `${modeLabel} focus mode`;

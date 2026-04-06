@@ -1,6 +1,7 @@
 import { ButtonAppearanceSection, ButtonContentSection, ButtonDesignSection, ButtonTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { isTextNode } from '@/model/types';
 import type { ButtonInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const buttonContentSection: InspectorSectionDefinition = {
@@ -106,5 +107,5 @@ export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
 ];
 
 function isButtonNode(node: InspectorNode | null): node is ButtonInspectorNode {
-  return Boolean(node && node.type === 'leaf' && node.role === 'button');
+  return Boolean(node && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined);
 }

@@ -54,8 +54,8 @@ describe('site/siteExport MPA', () => {
     const aboutResult = appendPage(doc, 'About', 'about');
     doc = aboutResult.document;
     const aboutPage = aboutResult.page;
-    const section = Object.values(doc.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    if (!homePage || !section || section.type !== 'wrapper') {
+    const section = Object.values(doc.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    if (!homePage || !section || section.contentType !== 'container') {
       throw new Error('Expected home page and section wrapper');
     }
 
@@ -66,7 +66,7 @@ describe('site/siteExport MPA', () => {
     }));
     custom.sharedRegionIds = (custom.sharedRegionIds ?? []).filter((id) => id !== section.id);
     const customSection = custom.nodes[section.id];
-    if (!customSection || customSection.type !== 'wrapper') {
+    if (!customSection || customSection.contentType !== 'container') {
       throw new Error('Expected wrapper node');
     }
     customSection.pageTargetIds = [homePage.id];

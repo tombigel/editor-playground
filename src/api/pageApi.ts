@@ -1,4 +1,5 @@
-import type { DocumentModel, NodeId, TextLeaf, WrapperNode } from '../model/types';
+import type { ContainerNode, DocumentModel, NodeId, TextNode } from '../model/types';
+import { isContainerNode, isLeafNode, isTextNode } from '../model/types';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
 import {
   getAllPageRoutes,
@@ -138,7 +139,7 @@ export function deletePage(document: DocumentModel, pageId: PageId): DocumentMod
   }
 
   for (const node of Object.values(newNodes)) {
-    if (node.type !== 'wrapper' || !node.pageTargetIds?.length) {
+    if (!isContainerNode(node) || !node.pageTargetIds?.length) {
       continue;
     }
 
@@ -359,10 +360,10 @@ export function resolvePageLanguage(document: DocumentModel, pageId: PageId) {
 
 export function resolveTextLeafLanguage(document: DocumentModel, nodeId: NodeId) {
   const node = document.nodes[nodeId];
-  if (!node || node.type !== 'leaf' || node.role !== 'text') {
+  if (!node || !isTextNode(node) || node.subtype !== 'block') {
     return resolveSiteLanguage(document);
   }
-  return (node as TextLeaf).lang ?? resolveSiteLanguage(document);
+  return (node as TextNode).lang ?? resolveSiteLanguage(document);
 }
 
 export function moveSectionToPage(
@@ -401,16 +402,16 @@ export function getPageForSection(
 export function getActiveSections(
   document: DocumentModel,
   pageId: PageId,
-): WrapperNode[] {
+): ContainerNode[] {
   const pages = document.pages ?? [];
   const page = pages.find((p) => p.id === pageId);
   if (!page) return [];
 
-  const result: WrapperNode[] = [];
+  const result: ContainerNode[] = [];
   for (const sectionId of page.sectionIds) {
     const node = document.nodes[sectionId];
-    if (node && node.type === 'wrapper') {
-      result.push(node as WrapperNode);
+    if (node && isContainerNode(node)) {
+      result.push(node);
     }
   }
   return result;
@@ -436,10 +437,10 @@ export function syncPageHrefLinks(
   const nodes = { ...document.nodes };
   let changed = false;
   for (const [id, node] of Object.entries(nodes)) {
-    if (node.type !== 'leaf') continue;
-    if (node.role !== 'link' && node.role !== 'button') continue;
-    if ((node as { href?: string }).href === oldUrl) {
-      nodes[id] = { ...node, href: newUrl };
+    if (!isLeafNode(node)) continue;
+    if (!isTextNode(node) || !node.link) continue;
+    if (node.link.href === oldUrl) {
+      nodes[id] = { ...node, link: { ...node.link, href: newUrl } };
       changed = true;
     }
   }

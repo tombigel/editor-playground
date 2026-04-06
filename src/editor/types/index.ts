@@ -54,8 +54,8 @@ export type NodeDebugInfo = {
   htmlId: string | null;
   stageId: string;
   name: string;
-  family: 'wrapper' | 'leaf';
-  role: string;
+  family: string;
+  subtype: string;
   parentId: string | null;
   authoredRect: { x: string; y: string; width: string; height: string };
   measuredBounds: MeasuredNodeBounds | null;

@@ -27,6 +27,7 @@ import {
 } from '../../model/styleDefaults';
 import { getTopLevelWrapperVisibilityState, isEligibleTopLevelWrapper } from '../../model/topLevelWrapperVisibility';
 import type { PageId } from '../../model/types/site';
+import { isContainerNode } from '../../model/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -94,7 +95,7 @@ export function InspectorSummary({
     <div className="space-y-2 p-2.5">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {node.type === 'site' ? (
+          {node.contentType === 'site' ? (
             <div className="editor-text-strong text-[15px] font-medium leading-5">{node.name}</div>
           ) : (
             <EditableNodeTitle
@@ -106,10 +107,10 @@ export function InspectorSummary({
               }}
             />
           )}
-          {node.type !== 'site' ? (
+          {node.contentType !== 'site' ? (
             <div className="mt-1">
               <span className="editor-pill-subtle inline-flex shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
-                {node.role}
+                {node.subtype}
               </span>
             </div>
           ) : null}
@@ -244,20 +245,20 @@ export function NodeBasicsSection({
   headerAction?: InspectorSectionHeaderAction;
 }) {
   const topLevelWidthLocked =
-    node.type === 'wrapper' &&
-    (node.role === 'section' || node.role === 'header' || node.role === 'footer') &&
+    isContainerNode(node) &&
+    (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer') &&
     node.rect.width.base.raw === '100%';
   const hidesPositionFields =
-    node.type === 'wrapper' &&
-    (node.role === 'section' || node.role === 'header' || node.role === 'footer');
-  const isSectionHeight = node.type === 'wrapper' && node.role === 'section';
+    isContainerNode(node) &&
+    (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer');
+  const isSectionHeight = isContainerNode(node) && node.subtype === 'section';
   const wrapperPaddingNode: WrapperInspectorNode | null =
-    node.type === 'wrapper' &&
-    (node.role === 'section' || node.role === 'header' || node.role === 'footer' || node.role === 'container')
+    isContainerNode(node) &&
+    (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer' || node.subtype === 'container')
       ? node
       : null;
   const isTopLevelVisibilityWrapper =
-    node.type === 'wrapper' && isEligibleTopLevelWrapper(node) && node.parentId === document.rootId;
+    isContainerNode(node) && isEligibleTopLevelWrapper(node) && node.parentId === document.rootId;
 
   return (
     <InspectorSectionCard
@@ -267,7 +268,7 @@ export function NodeBasicsSection({
       contentClassName="space-y-2.5 px-3 py-3"
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'layout', actions.onEnterFocusedMode)}
     >
-      {node.type !== 'site' ? (
+      {node.contentType !== 'site' ? (
         <div className="grid grid-cols-2 gap-1.5">
           {!hidesPositionFields ? (
             <>
@@ -314,7 +315,7 @@ export function NodeBasicsSection({
               axis="top"
               icon={<ArrowUp className="h-3.5 w-3.5" role="presentation" />}
 
-              value={wrapperPaddingNode.style.paddingTop?.raw ?? ''}
+              value={wrapperPaddingNode.style?.paddingTop?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingTop', value)}
             />
             <LabeledPaddingField
@@ -322,7 +323,7 @@ export function NodeBasicsSection({
               axis="right"
               icon={<ArrowRight className="h-3.5 w-3.5" role="presentation" />}
 
-              value={wrapperPaddingNode.style.paddingRight?.raw ?? ''}
+              value={wrapperPaddingNode.style?.paddingRight?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingRight', value)}
             />
             <LabeledPaddingField
@@ -330,7 +331,7 @@ export function NodeBasicsSection({
               axis="bottom"
               icon={<ArrowDown className="h-3.5 w-3.5" role="presentation" />}
 
-              value={wrapperPaddingNode.style.paddingBottom?.raw ?? ''}
+              value={wrapperPaddingNode.style?.paddingBottom?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingBottom', value)}
             />
             <LabeledPaddingField
@@ -338,7 +339,7 @@ export function NodeBasicsSection({
               axis="left"
               icon={<ArrowLeft className="h-3.5 w-3.5" role="presentation" />}
 
-              value={wrapperPaddingNode.style.paddingLeft?.raw ?? ''}
+              value={wrapperPaddingNode.style?.paddingLeft?.raw ?? ''}
               onChange={(value) => actions.onWrapperStyleChange('paddingLeft', value)}
             />
           </div>
@@ -385,7 +386,7 @@ export function NodeBasicsSection({
         </div>
       ) : null}
 
-      {node.type === 'wrapper' ? (
+      {isContainerNode(node) ? (
         <WrapperActions
           node={node}
           canSectionBack={orderState.canSectionBack}
@@ -396,7 +397,7 @@ export function NodeBasicsSection({
           onDemote={actions.onDemote}
         />
       ) : null}
-      {node.type !== 'site' ? (
+      {node.contentType !== 'site' ? (
         <InspectorInlineRow label="Visibility" controlClassName="gap-2">
           {isTopLevelVisibilityWrapper ? (
             <TopLevelWrapperVisibilityControl
@@ -410,7 +411,7 @@ export function NodeBasicsSection({
               <span className="editor-text-muted text-xs">{node.visible ? 'Visible' : 'Hidden'}</span>
               <Switch
                 checked={node.visible}
-                aria-label={`${node.visible ? 'Hide' : 'Show'} ${node.name?.trim() || node.role}`}
+                aria-label={`${node.visible ? 'Hide' : 'Show'} ${node.name?.trim() || node.subtype}`}
                 onCheckedChange={(checked) => actions.onSetNodeVisibility(node.id, checked)}
               />
             </div>
@@ -461,8 +462,8 @@ export function WrapperDesignSection({
   headerAction?: InspectorSectionHeaderAction;
   contentClassName?: string;
 }) {
-  const supportsContainerSurfaceStyling = node.role === 'container';
-  const allowsBackgroundOpacity = node.role === 'container';
+  const supportsContainerSurfaceStyling = node.subtype === 'container';
+  const allowsBackgroundOpacity = node.subtype === 'container';
   const shadowFallback = createShadowFallback(
     DEFAULT_SHADOW_COLOR,
     DEFAULT_SHADOW_BLUR_PX,
@@ -482,7 +483,7 @@ export function WrapperDesignSection({
     >
         <InspectorInlineRow label="Background" controlClassName="gap-2">
           <HoverColorField
-            value={node.style.background}
+            value={node.style?.background}
             onChange={(value) => onWrapperStyleChange('background', value)}
             ariaLabel="Background color"
             showOpacity={allowsBackgroundOpacity}
@@ -521,10 +522,10 @@ export function WrapperDesignSection({
           </div>
         ) : null}
 
-        {node.role === 'section' ? (
+        {node.subtype === 'section' ? (
           <InspectorInlineRow label="Divider" controlClassName="gap-2">
             <NumericUnitInlineField
-              value={node.style.sectionBorderBottomWidth?.raw ?? ''}
+              value={node.style?.sectionBorderBottomWidth?.raw ?? ''}
               units={['px']}
               onChange={(value) => onWrapperStyleChange('sectionBorderBottomWidth', value)}
               placeholder="1"
@@ -532,7 +533,7 @@ export function WrapperDesignSection({
               className="w-[5.5rem]"
             />
             <HoverColorField
-              value={node.style.sectionBorderBottomColor}
+              value={node.style?.sectionBorderBottomColor}
               onChange={(value) => onWrapperStyleChange('sectionBorderBottomColor', value)}
               ariaLabel="Bottom border color"
               fallback="#dbe3ee"

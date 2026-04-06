@@ -1,4 +1,5 @@
-import type { ButtonLeaf, DocumentModel, DocumentNode, LinkLeaf, NodeId, WrapperNode } from './types';
+import type { ContainerSubtype, DocumentModel, DocumentNode, NodeId } from './types';
+import { isContainerNode, isLeafNode, isSiteNode } from './types';
 import type { DocumentPage } from './types/site';
 import { getAllPageRoutes, getPageRole } from './pageRoutes';
 import { normalizeTopLevelWrapperTargetPageIds } from './topLevelWrapperVisibility';
@@ -16,49 +17,49 @@ export function validateLinks(document: DocumentModel): LinkValidationError[] {
   const pageIds = new Set((document.pages ?? []).map((p) => p.id));
 
   for (const node of Object.values(document.nodes)) {
-    if (node.type !== 'leaf') continue;
-    if (node.role !== 'link' && node.role !== 'button') continue;
+    if (!isLeafNode(node)) continue;
+    if (!node.link) continue;
 
-    const leaf = node as LinkLeaf | ButtonLeaf;
+    const nodeRole: 'link' | 'button' = node.contentType === 'text' && node.link && node.style?.background ? 'button' : 'link';
 
-    if (leaf.linkType === 'page') {
-      if (!leaf.targetPageId) {
+    if (node.link.linkType === 'page') {
+      if (!node.link.targetPageId) {
         errors.push({
-          nodeId: leaf.id,
-          nodeName: leaf.name,
-          nodeRole: leaf.role,
+          nodeId: node.id,
+          nodeName: node.name,
+          nodeRole,
           errorType: 'broken-page-link',
           description: 'Link has no target page set.',
         });
-      } else if (!pageIds.has(leaf.targetPageId)) {
+      } else if (!pageIds.has(node.link.targetPageId)) {
         errors.push({
-          nodeId: leaf.id,
-          nodeName: leaf.name,
-          nodeRole: leaf.role,
+          nodeId: node.id,
+          nodeName: node.name,
+          nodeRole,
           errorType: 'broken-page-link',
-          description: `Target page "${leaf.targetPageId}" no longer exists.`,
+          description: `Target page "${node.link.targetPageId}" no longer exists.`,
         });
       }
 
-      if (leaf.pageAnchorId && !document.nodes[leaf.pageAnchorId]) {
+      if (node.link.pageAnchorId && !document.nodes[node.link.pageAnchorId]) {
         errors.push({
-          nodeId: leaf.id,
-          nodeName: leaf.name,
-          nodeRole: leaf.role,
+          nodeId: node.id,
+          nodeName: node.name,
+          nodeRole,
           errorType: 'broken-anchor-link',
-          description: `Page anchor target "${leaf.pageAnchorId}" does not exist.`,
+          description: `Page anchor target "${node.link.pageAnchorId}" does not exist.`,
         });
       }
     }
 
-    if (leaf.linkType === 'anchor' && leaf.anchorTargetId) {
-      if (!document.nodes[leaf.anchorTargetId]) {
+    if (node.link.linkType === 'anchor' && node.link.anchorTargetId) {
+      if (!document.nodes[node.link.anchorTargetId]) {
         errors.push({
-          nodeId: leaf.id,
-          nodeName: leaf.name,
-          nodeRole: leaf.role,
+          nodeId: node.id,
+          nodeName: node.name,
+          nodeRole,
           errorType: 'broken-anchor-link',
-          description: `Anchor target "${leaf.anchorTargetId}" does not exist.`,
+          description: `Anchor target "${node.link.anchorTargetId}" does not exist.`,
         });
       }
     }
@@ -67,8 +68,8 @@ export function validateLinks(document: DocumentModel): LinkValidationError[] {
   return errors;
 }
 
-function isSiteSectionRole(role: WrapperNode['role']) {
-  return role === 'section' || role === 'header' || role === 'footer';
+function isSiteSectionSubtype(subtype: ContainerSubtype) {
+  return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
 export function validateDocument(document: DocumentModel): string[] {
@@ -82,7 +83,7 @@ export function validateDocument(document: DocumentModel): string[] {
     return errors;
   }
 
-  if (root.type !== 'site') {
+  if (!isSiteNode(root)) {
     errors.push(`Root node ${document.rootId} must be a site.`);
   }
 
@@ -91,10 +92,10 @@ export function validateDocument(document: DocumentModel): string[] {
   }
 
   const headers = nodes.filter(
-    (node) => node.type === 'wrapper' && node.role === 'header',
+    (node) => isContainerNode(node) && node.subtype === 'header',
   );
   const footers = nodes.filter(
-    (node) => node.type === 'wrapper' && node.role === 'footer',
+    (node) => isContainerNode(node) && node.subtype === 'footer',
   );
 
   if (headers.length > 1) {
@@ -107,7 +108,7 @@ export function validateDocument(document: DocumentModel): string[] {
   collectReachableNodes(document, document.rootId, reachable, new Set(), errors);
 
   for (const node of nodes) {
-    if (node.type === 'leaf' && node.children.length > 0) {
+    if (isLeafNode(node) && node.children.length > 0) {
       errors.push(`Leaf ${node.id} cannot contain children.`);
     }
 
@@ -196,8 +197,8 @@ export function validateDocument(document: DocumentModel): string[] {
         const node = document.nodes[sectionId];
         if (!node) {
           errors.push(`Page ${page.id} references missing section node ${sectionId}.`);
-        } else if (node.type !== 'wrapper' || node.parentId !== document.rootId || node.role !== 'section') {
-          errors.push(`Page ${page.id} section ${sectionId} must be a top-level wrapper with role "section".`);
+        } else if (!isContainerNode(node) || node.parentId !== document.rootId || node.subtype !== 'section') {
+          errors.push(`Page ${page.id} section ${sectionId} must be a top-level container with subtype "section".`);
         }
         if (sectionIdsSeen.has(sectionId)) {
           errors.push(`Section ${sectionId} appears in more than one page (${sectionIdsSeen.get(sectionId)} and ${page.id}).`);
@@ -213,8 +214,8 @@ export function validateDocument(document: DocumentModel): string[] {
         const node = document.nodes[regionId];
         if (!node) {
           errors.push(`sharedRegionIds references missing node ${regionId}.`);
-        } else if (node.type !== 'wrapper' || node.parentId !== document.rootId) {
-          errors.push(`sharedRegionIds node ${regionId} must be a top-level wrapper.`);
+        } else if (!isContainerNode(node) || node.parentId !== document.rootId) {
+          errors.push(`sharedRegionIds node ${regionId} must be a top-level container.`);
         }
         if (sectionIdsSeen.has(regionId)) {
           errors.push(`sharedRegionIds node ${regionId} cannot also belong to page ${sectionIdsSeen.get(regionId)}.`);
@@ -228,7 +229,7 @@ export function validateDocument(document: DocumentModel): string[] {
     }
 
     for (const node of nodes) {
-      if (node.type !== 'wrapper' || !isSiteSectionRole(node.role) || node.parentId !== document.rootId) {
+      if (!isContainerNode(node) || !isSiteSectionSubtype(node.subtype) || node.parentId !== document.rootId) {
         continue;
       }
 
@@ -347,27 +348,27 @@ function validateRelationship(
   child: DocumentNode,
   errors: string[],
 ) {
-  if (parent.type === 'leaf') {
+  if (isLeafNode(parent)) {
     errors.push(`Leaf ${parent.id} cannot contain ${child.id}.`);
     return;
   }
-  if (parent.type === 'site') {
-    if (child.type !== 'wrapper') {
-      errors.push(`Site can only contain wrappers, found ${child.id}.`);
+  if (parent.contentType === 'site') {
+    if (!isContainerNode(child)) {
+      errors.push(`Site can only contain containers, found ${child.id}.`);
       return;
     }
-    if (child.role === 'container') {
+    if (child.subtype === 'container') {
       errors.push(`Site cannot directly contain container ${child.id}.`);
     }
     return;
   }
-  if (parent.type !== 'wrapper' || child.type !== 'wrapper') {
+  if (!isContainerNode(parent) || !isContainerNode(child)) {
     return;
   }
-  if (isSiteSectionRole(parent.role) && isSiteSectionRole(child.role)) {
-    errors.push(`${parent.role} ${parent.id} cannot contain ${child.role} ${child.id}.`);
+  if (isSiteSectionSubtype(parent.subtype) && isSiteSectionSubtype(child.subtype)) {
+    errors.push(`${parent.subtype} ${parent.id} cannot contain ${child.subtype} ${child.id}.`);
   }
-  if (parent.role === 'container' && child.role !== 'container') {
+  if (parent.subtype === 'container' && child.subtype !== 'container') {
     errors.push(`Container ${parent.id} cannot contain site section ${child.id}.`);
   }
 }

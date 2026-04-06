@@ -1,10 +1,11 @@
 import type {
   DocumentFontFamily,
   DocumentModel,
-  DocumentNode,
   FontLibrary,
+  TextNode,
   TypographyStyle,
 } from '../model/types';
+import { isTextNode } from '../model/types';
 import { createDefaultFontLibrary, getDefaultDocumentFontFamily } from './defaults';
 import { getCachedGoogleFontsCatalog } from './googleFontsCatalog';
 import { clampFontWeight } from './weights';
@@ -140,7 +141,7 @@ export function normalizeDocumentFontState(document: DocumentModel): DocumentMod
   };
 
   for (const node of Object.values(next.nodes)) {
-    if (node.type !== 'leaf' || (node.role !== 'text' && node.role !== 'link' && node.role !== 'button')) {
+    if (!isTextNode(node)) {
       continue;
     }
     normalizeTypographyStyle(node.style);
@@ -222,8 +223,7 @@ function syncFontLibraryFlags(fontLibrary: FontLibrary) {
 
 function getTypographyNodes(document: DocumentModel) {
   return Object.values(document.nodes).filter(
-    (node): node is Extract<DocumentNode, { type: 'leaf'; role: 'text' | 'link' | 'button' }> =>
-      node.type === 'leaf' && (node.role === 'text' || node.role === 'link' || node.role === 'button'),
+    (node): node is TextNode => isTextNode(node),
   );
 }
 

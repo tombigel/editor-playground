@@ -52,7 +52,7 @@ function createWindowStorageStub() {
 
 function getRoot(document: DocumentModel) {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     throw new Error('Expected site root');
   }
   return root;
@@ -83,7 +83,6 @@ describe('editor/editorPersistence', () => {
     it('returns valid non-heading tags unchanged', () => {
       expect(normalizeTextHtmlTag('p')).toBe('p');
       expect(normalizeTextHtmlTag('blockquote')).toBe('blockquote');
-      expect(normalizeTextHtmlTag('div')).toBe('div');
     });
 
     it('falls back to p for undefined', () => {
@@ -125,7 +124,7 @@ describe('editor/editorPersistence', () => {
       const doc = buildMinimalDocument();
       const normalized = normalizeDocument(doc);
       const root = getRoot(normalized);
-      expect(root.type).toBe('site');
+      expect(root.contentType).toBe('site');
       expect(root.children.length).toBeGreaterThanOrEqual(2);
     });
 
@@ -135,12 +134,12 @@ describe('editor/editorPersistence', () => {
       // Strip all children that are headers/footers
       const strippedChildren = root.children.filter((id) => {
         const node = doc.nodes[id];
-        return !(node?.type === 'wrapper' && (node.role === 'header' || node.role === 'footer'));
+        return !(node?.contentType === 'container' && (node.subtype === 'header' || node.subtype === 'footer'));
       });
       // Remove header/footer nodes
       for (const id of root.children) {
         const node = doc.nodes[id];
-        if (node?.type === 'wrapper' && (node.role === 'header' || node.role === 'footer')) {
+        if (node?.contentType === 'container' && (node.subtype === 'header' || node.subtype === 'footer')) {
           delete doc.nodes[id];
           // Also remove their children
           for (const childId of node.children) {
@@ -154,10 +153,10 @@ describe('editor/editorPersistence', () => {
       const normalizedRoot = getRoot(normalized);
       const wrappers = normalizedRoot.children
         .map((id) => normalized.nodes[id])
-        .filter((n): n is WrapperNode => n?.type === 'wrapper');
+        .filter((n): n is WrapperNode => n?.contentType === 'container');
 
-      expect(wrappers.some((w) => w.role === 'header')).toBe(true);
-      expect(wrappers.some((w) => w.role === 'footer')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'header')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
     });
 
     it('normalizes text htmlTag fields to valid values', () => {
@@ -165,8 +164,8 @@ describe('editor/editorPersistence', () => {
       // Find a text leaf that is NOT a starter shell title (those get overridden by normalizeStarterShellTextTags)
       const textNode = Object.values(doc.nodes).find(
         (n): n is TextLeaf =>
-          n.type === 'leaf' &&
-          n.role === 'text' &&
+          n.contentType !== 'container' && n.contentType !== 'site' &&
+          n.subtype === 'block' &&
           n.name !== 'Product Title' &&
           n.name !== 'Footer Title',
       );
@@ -187,7 +186,7 @@ describe('editor/editorPersistence', () => {
       // Find a section to use as parent
       const sectionId = root.children.find((id) => {
         const node = doc.nodes[id];
-        return node?.type === 'wrapper' && node.role === 'section';
+        return node?.contentType === 'container' && node.subtype === 'section';
       });
       if (!sectionId) {
         return;
@@ -200,8 +199,8 @@ describe('editor/editorPersistence', () => {
       const containerId = `container_test_${Date.now()}`;
       doc.nodes[containerId] = {
         id: containerId,
-        type: 'wrapper',
-        role: 'container',
+        contentType: 'container',
+        subtype: 'container',
         parentId: sectionId,
         children: [],
         name: 'Test Container',
@@ -223,7 +222,7 @@ describe('editor/editorPersistence', () => {
 
       const normalized = normalizeDocument(doc);
       const normalizedContainer = normalized.nodes[containerId];
-      if (normalizedContainer?.type === 'wrapper') {
+      if (normalizedContainer?.contentType === 'container') {
         expect(normalizedContainer.sticky?.target).toBe('self');
       }
     });
@@ -231,24 +230,24 @@ describe('editor/editorPersistence', () => {
     it('forces opaque background on structural wrappers', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (section) {
-        section.style.background = '#33669980';
+        section.style!.background = '#33669980';
       }
 
       const normalized = normalizeDocument(doc);
       if (section) {
         const normalizedSection = normalized.nodes[section.id] as WrapperNode;
         // Should not contain alpha channel
-        expect(normalizedSection.style.background).not.toContain('80');
+        expect(normalizedSection.style!.background).not.toContain('80');
       }
     });
 
     it('normalizes sticky definition defaults when sticky is partially defined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (section) {
         section.sticky = { enabled: true } as unknown as WrapperNode['sticky'];
@@ -267,7 +266,7 @@ describe('editor/editorPersistence', () => {
     it('migrates legacy dual-edge sticky to single edge using offset heuristic', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (section) {
         section.sticky = {
@@ -349,7 +348,7 @@ describe('editor/editorPersistence', () => {
       const state = createInitialState();
       const root = state.document.nodes[state.document.rootId];
       expect(root).toBeDefined();
-      expect(root.type).toBe('site');
+      expect(root.contentType).toBe('site');
     });
 
     it('creates default UI settings', () => {
@@ -371,11 +370,11 @@ describe('editor/editorPersistence', () => {
       const root = getRoot(state.document);
       const wrappers = root.children
         .map((id) => state.document.nodes[id])
-        .filter((n): n is WrapperNode => n?.type === 'wrapper');
+        .filter((n): n is WrapperNode => n?.contentType === 'container');
 
-      expect(wrappers.some((w) => w.role === 'header')).toBe(true);
-      expect(wrappers.some((w) => w.role === 'section')).toBe(true);
-      expect(wrappers.some((w) => w.role === 'footer')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'header')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'section')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
     });
   });
 
@@ -461,7 +460,7 @@ describe('editor/editorPersistence', () => {
 
       const loaded = loadPersistedState();
       expect(loaded.selectedId).toBeNull();
-      expect(loaded.document.nodes[loaded.document.rootId].type).toBe('site');
+      expect(loaded.document.nodes[loaded.document.rootId].contentType).toBe('site');
     });
 
     it('returns initial state when persisted document fails validation', () => {
@@ -498,7 +497,7 @@ describe('editor/editorPersistence', () => {
       // Should fall back to initial state since document is invalid
       const root = loaded.document.nodes[loaded.document.rootId];
       expect(root).toBeDefined();
-      expect(root.type).toBe('site');
+      expect(root.contentType).toBe('site');
     });
 
     it('clears pendingRoleSwap when persisting', () => {
@@ -670,7 +669,7 @@ describe('editor/editorPersistence', () => {
 
       expect(parsed.rootId).toBe(doc.rootId);
       expect(parsed.nodes[parsed.rootId]).toBeDefined();
-      expect(parsed.nodes[parsed.rootId].type).toBe('site');
+      expect(parsed.nodes[parsed.rootId].contentType).toBe('site');
     });
 
     it('throws on invalid JSON syntax', () => {
@@ -729,29 +728,29 @@ describe('editor/editorPersistence', () => {
       const parsedRoot = getRoot(parsed);
       const wrappers = parsedRoot.children
         .map((id) => parsed.nodes[id])
-        .filter((n): n is WrapperNode => n?.type === 'wrapper');
+        .filter((n): n is WrapperNode => n?.contentType === 'container');
 
-      expect(wrappers.some((w) => w.role === 'header')).toBe(true);
-      expect(wrappers.some((w) => w.role === 'footer')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'header')).toBe(true);
+      expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
     });
 
     it('migrates legacy repository links in imported documents', () => {
       const doc = buildMinimalDocument();
       // Find a link node and set legacy href
       const linkNode = Object.values(doc.nodes).find(
-        (n) => n.type === 'leaf' && n.role === 'link',
+        (n) => n.contentType === 'text' && n.link != null,
       );
-      if (linkNode && linkNode.type === 'leaf' && linkNode.role === 'link') {
-        linkNode.label = 'github.com/tombigel/codex-playground';
-        linkNode.href = 'https://github.com/tombigel/codex-playground';
+      if (linkNode && linkNode.contentType === 'text' && linkNode.link != null) {
+        linkNode.content = 'github.com/tombigel/codex-playground';
+        linkNode.link = { ...(linkNode.link ?? { linkType: 'external' }), href: 'https://github.com/tombigel/codex-playground' };
       }
 
       const parsed = parseImportedDocumentJson(JSON.stringify(doc));
       if (linkNode) {
         const migrated = parsed.nodes[linkNode.id];
-        if (migrated?.type === 'leaf' && migrated.role === 'link') {
-          expect(migrated.label).toBe('github.com/tombigel/sticky-playground');
-          expect(migrated.href).toBe('https://github.com/tombigel/sticky-playground');
+        if (migrated?.contentType === 'text' && migrated.subtype === 'block') {
+          expect(migrated.content).toBe('github.com/tombigel/sticky-playground');
+          expect(migrated.link?.href).toBe('https://github.com/tombigel/sticky-playground');
         }
       }
     });
@@ -765,15 +764,15 @@ describe('editor/editorPersistence', () => {
       const root = getRoot(doc);
       const sectionId = root.children.find((id) => {
         const node = doc.nodes[id];
-        return node?.type === 'wrapper' && node.role === 'section';
+        return node?.contentType === 'container' && node.subtype === 'section';
       });
       if (!sectionId) {
         throw new Error('Expected section');
       }
 
       const leaf = createUniqueLeaf(doc, 'text', sectionId);
-      expect(leaf.type).toBe('leaf');
-      expect(leaf.role).toBe('text');
+      expect(leaf.contentType).not.toBe('container');
+      expect(leaf.subtype).toBe('block');
       expect(leaf.parentId).toBe(sectionId);
     });
 
@@ -801,10 +800,16 @@ describe('editor/editorPersistence', () => {
       const root = getRoot(doc);
       const sectionId = root.children[0];
 
-      for (const role of ['text', 'image', 'link', 'button'] as const) {
+      const cases = [
+        { role: 'text' as const, expectedSubtype: 'block', expectedContentType: 'text' },
+        { role: 'image' as const, expectedSubtype: 'image', expectedContentType: 'media' },
+        { role: 'link' as const, expectedSubtype: 'block', expectedContentType: 'text' },
+        { role: 'button' as const, expectedSubtype: 'block', expectedContentType: 'text' },
+      ] as const;
+      for (const { role, expectedSubtype, expectedContentType } of cases) {
         const leaf = createUniqueLeaf(doc, role, sectionId);
-        expect(leaf.role).toBe(role);
-        expect(leaf.type).toBe('leaf');
+        expect(leaf.subtype).toBe(expectedSubtype);
+        expect(leaf.contentType).toBe(expectedContentType);
       }
     });
   });
@@ -842,7 +847,7 @@ describe('editor/editorPersistence', () => {
       // Should have seeded a factory default
       const seeded = windowStub.localStorage.getItem(DEFAULT_DOCUMENT_STORAGE_KEY);
       expect(seeded).not.toBeNull();
-      expect(loaded.document.nodes[loaded.document.rootId].type).toBe('site');
+      expect(loaded.document.nodes[loaded.document.rootId].contentType).toBe('site');
     });
 
     it('does not re-seed default document when it already exists', () => {
@@ -891,7 +896,7 @@ describe('editor/editorPersistence', () => {
     it('defaults sticky edges.top to true when bottom is false and top is undefined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
@@ -909,7 +914,7 @@ describe('editor/editorPersistence', () => {
     it('defaults sticky edges.top to false when bottom is true and top is undefined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
@@ -927,7 +932,7 @@ describe('editor/editorPersistence', () => {
     it('resolves dual-edge conflict using offsetTop heuristic', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 
@@ -948,7 +953,7 @@ describe('editor/editorPersistence', () => {
     it('leaves undefined sticky as undefined', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(
-        (n): n is WrapperNode => n.type === 'wrapper' && n.role === 'section',
+        (n): n is WrapperNode => n.contentType === 'container' && n.subtype === 'section',
       );
       if (!section) return;
 

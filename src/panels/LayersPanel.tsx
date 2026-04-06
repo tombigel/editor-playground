@@ -432,7 +432,7 @@ export function LayersPanelContent({
 			const position = resolveLayersDropPosition(
 				rect.height,
 				event.clientY - rect.top,
-				hoveredRow.node.type === "wrapper",
+				hoveredRow.node.contentType === "container",
 			);
 			const nextTarget = resolveLayersDropTarget(
 				document,
@@ -759,7 +759,7 @@ function LayersTreeRowItem({
 									onCommit={(value) => {
 										onRenameNode(
 											row.id,
-											resolveSidebarTitleCommit(value, row.node.role),
+											resolveSidebarTitleCommit(value, row.node.subtype),
 										);
 										onStopEditing();
 									}}
@@ -838,9 +838,9 @@ function LayersTreeRowItem({
 						</Button>
 					</PopoverTooltip>
 					{activePageId &&
-					row.node.type === 'wrapper' &&
+					row.node.contentType === 'container' &&
 					row.node.parentId === document.rootId &&
-					(row.node.role === 'section' || row.node.role === 'header' || row.node.role === 'footer') ? (
+					(row.node.subtype === 'section' || row.node.subtype === 'header' || row.node.subtype === 'footer') ? (
 						<TopLevelWrapperVisibilityControl
 							document={document}
 							activePageId={activePageId}

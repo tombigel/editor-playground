@@ -1,5 +1,5 @@
 import type { NodeId } from './types';
-import { createDefaultRect, createWrapper } from './defaultFactories';
+import { createContainerNode, createDefaultRect } from './defaultFactories';
 import { applyPadding, buildTemplate, createLinkNode, createTextNode } from './templateHelpers';
 import { parseFontSizeValue } from './units';
 
@@ -7,9 +7,10 @@ const EDITORIAL_HEADING_FONT = 'Playfair Display';
 const EDITORIAL_BODY_FONT = 'Inter';
 
 export function createDefaultHeader(parentId: NodeId) {
-  const header = createWrapper('header', parentId);
+  const header = createContainerNode('header', parentId);
   header.name = 'Playground Header';
   header.rect = createDefaultRect('0px', '0px', '100%', 'auto');
+  header.style ??= {};
   header.style.background = '#f8fbff';
   header.style.borderColor = '#d6e2f2';
   applyPadding(header, { top: '20px', right: '48px', bottom: '20px' });
@@ -80,9 +81,10 @@ export function createDefaultHeader(parentId: NodeId) {
 }
 
 export function createDefaultFooter(parentId: NodeId) {
-  const footer = createWrapper('footer', parentId);
+  const footer = createContainerNode('footer', parentId);
   footer.name = 'Playground Footer';
   footer.rect = createDefaultRect('0px', '0px', '100%', 'auto');
+  footer.style ??= {};
   footer.style.background = '#f8fbff';
   footer.style.borderColor = '#d6e2f2';
   applyPadding(footer, { top: '26px', right: '48px', bottom: '26px' });

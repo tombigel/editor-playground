@@ -12,9 +12,9 @@ import {
 describe('render/nodePresentation', () => {
   it('formats shared node labels and aria labels', () => {
     const document = createInitialDocument();
-    const section = Object.values(document.nodes).find((node) => node.type === 'wrapper' && node.role === 'section');
-    const title = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.name === 'Post Title');
-    if (!section || section.type !== 'wrapper' || !title || title.type !== 'leaf') {
+    const section = Object.values(document.nodes).find((node) => node.contentType === 'container' && node.subtype === 'section');
+    const title = Object.values(document.nodes).find((node) => node.contentType !== 'container' && node.contentType !== 'site' && node.name === 'Post Title');
+    if (!section || section.contentType !== 'container' || !title || (title.contentType !== 'text' && title.contentType !== 'media')) {
       throw new Error('Expected wrapper and leaf nodes');
     }
 
@@ -24,24 +24,24 @@ describe('render/nodePresentation', () => {
 
   it('shares leaf text content and brand-mark detection', () => {
     const document = createInitialDocument();
-    const image = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
-    const link = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link');
-    if (!image || image.type !== 'leaf' || image.role !== 'image' || !link || link.type !== 'leaf') {
+    const image = Object.values(document.nodes).find((node) => node.contentType === 'media');
+    const link = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
+    if (!image || image.contentType !== 'media' || image.subtype !== 'image' || !link || link.contentType !== 'text') {
       throw new Error('Expected image and link leaves');
     }
 
     image.name = 'Brand Mark';
 
     expect(getNodeTextContent(image)).toBe(image.alt);
-    expect(getNodeTextContent(link)).toBe(link.label);
+    expect(getNodeTextContent(link)).toBe(link.content);
     expect(isBrandMark(image)).toBe(true);
   });
 
   it('renders shared leaf content with stage-style options', () => {
     const document = createInitialDocument();
-    const image = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'image');
-    const link = Object.values(document.nodes).find((node) => node.type === 'leaf' && node.role === 'link');
-    if (!image || image.type !== 'leaf' || image.role !== 'image' || !link || link.type !== 'leaf') {
+    const image = Object.values(document.nodes).find((node) => node.contentType === 'media');
+    const link = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
+    if (!image || image.contentType !== 'media' || image.subtype !== 'image' || !link || link.contentType !== 'text') {
       throw new Error('Expected image and link leaves');
     }
 

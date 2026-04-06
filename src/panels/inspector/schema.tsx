@@ -9,6 +9,7 @@ import { SECTION_INSPECTOR_CONFIG } from './config.section';
 import { SITE_INSPECTOR_CONFIG } from './config.site';
 import { TEXT_INSPECTOR_CONFIG } from './config.text';
 import { DebugInfoSection } from './DebugInfoSection';
+import { isContainerNode, isTextNode, isMediaNode } from '@/model/types';
 import type {
   InspectorBlockDefinition,
   InspectorNode,
@@ -34,22 +35,25 @@ export function resolveInspectorConfigKey(node: InspectorNode | null): Inspector
   if (!node) {
     return 'empty';
   }
-  if (node.type === 'site') {
+  if (node.contentType === 'site') {
     return 'site';
   }
-  if (node.type === 'wrapper') {
-    return node.role;
+  if (isContainerNode(node)) {
+    return node.subtype as InspectorConfigKey;
   }
-  if (node.role === 'text') {
+  if (isTextNode(node)) {
+    if (node.link !== undefined && node.style?.background !== undefined) {
+      return 'button';
+    }
+    if (node.link !== undefined) {
+      return 'link';
+    }
     return 'text';
   }
-  if (node.role === 'button') {
-    return 'button';
+  if (isMediaNode(node)) {
+    return 'image';
   }
-  if (node.role === 'link') {
-    return 'link';
-  }
-  return 'image';
+  return 'text';
 }
 
 function getInspectorDefinitions(
@@ -57,7 +61,7 @@ function getInspectorDefinitions(
 ): readonly InspectorBlockDefinition[] {
   const definitions = getInspectorConfig(context.node);
 
-  if (!context.showDebugInfo || !context.node || context.node.type === 'site' || !context.debugInfo) {
+  if (!context.showDebugInfo || !context.node || context.node.contentType === 'site' || !context.debugInfo) {
     return definitions;
   }
 

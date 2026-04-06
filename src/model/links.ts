@@ -1,4 +1,5 @@
-import type { ButtonLeaf, DocumentModel, DocumentNode, LinkLeaf, LinkKind, NodeId, WrapperNode } from './types';
+import type { ContainerNode, DocumentModel, DocumentNode, LinkExtension, LinkKind, NodeId } from './types';
+import { isContainerNode, isLeafNode } from './types';
 import { resolvePageUrl } from './pageRoutes';
 
 export type SectionAnchorOption = {
@@ -11,26 +12,26 @@ export type SectionAnchorOption = {
 
 export function getSectionAnchorOptions(document: DocumentModel): SectionAnchorOption[] {
   const root = document.nodes[document.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     return [];
   }
 
   return root.children
     .map((nodeId) => document.nodes[nodeId])
-    .filter((node): node is WrapperNode => (
+    .filter((node): node is ContainerNode => (
       Boolean(node) &&
-      node.type === 'wrapper' &&
+      isContainerNode(node) &&
       node.parentId === document.rootId &&
-      (node.role === 'header' || node.role === 'section' || node.role === 'footer')
+      (node.subtype === 'header' || node.subtype === 'section' || node.subtype === 'footer')
     ))
     .map((section) => {
-      const name = section.role === 'header' ? 'Top' : section.role === 'footer' ? 'Bottom' : section.name;
+      const name = section.subtype === 'header' ? 'Top' : section.subtype === 'footer' ? 'Bottom' : section.name;
       return {
         id: section.id,
         name,
-        href: section.role === 'header' ? '#' : `#${section.id}`,
+        href: section.subtype === 'header' ? '#' : `#${section.id}`,
         label: name,
-        detail: section.role === 'section' ? `#${section.id}` : undefined,
+        detail: section.subtype === 'section' ? `#${section.id}` : undefined,
       };
     });
 }
@@ -42,31 +43,31 @@ export function isValidSectionAnchorTarget(document: DocumentModel, targetId: No
   const target = document.nodes[targetId];
   return Boolean(
     target &&
-    target.type === 'wrapper' &&
+    isContainerNode(target) &&
     target.parentId === document.rootId &&
-    (target.role === 'header' || target.role === 'section' || target.role === 'footer'),
+    (target.subtype === 'header' || target.subtype === 'section' || target.subtype === 'footer'),
   );
 }
 
 export function isBrokenAnchorLink(document: DocumentModel, node: DocumentNode | null | undefined): boolean {
-  if (!node || node.type !== 'leaf' || (node.role !== 'link' && node.role !== 'button')) {
+  if (!node || !isLeafNode(node) || !node.link) {
     return false;
   }
 
-  if (node.linkType === 'anchor') {
-    return Boolean(node.anchorTargetId && !isValidSectionAnchorTarget(document, node.anchorTargetId));
+  if (node.link.linkType === 'anchor') {
+    return Boolean(node.link.anchorTargetId && !isValidSectionAnchorTarget(document, node.link.anchorTargetId));
   }
 
-  if (node.linkType === 'page') {
+  if (node.link.linkType === 'page') {
     const pages = document.pages ?? [];
-    return !pages.find((p) => p.id === node.targetPageId);
+    return !pages.find((p) => p.id === node.link?.targetPageId);
   }
 
   return false;
 }
 
 export function getLinkHref(
-  node: Pick<LinkLeaf, 'linkType' | 'anchorTargetId' | 'href' | 'targetPageId' | 'pageAnchorId'> | Pick<ButtonLeaf, 'linkType' | 'anchorTargetId' | 'href' | 'targetPageId' | 'pageAnchorId'>,
+  node: Pick<LinkExtension, 'linkType' | 'anchorTargetId' | 'href' | 'targetPageId' | 'pageAnchorId'>,
   document?: DocumentModel,
 ): string | undefined {
   if (node.linkType === 'anchor') {
@@ -88,9 +89,7 @@ export function getLinkHref(
 }
 
 export function shouldOpenNavigationInNewTab(
-  node:
-    | Pick<ButtonLeaf, 'role' | 'linkType' | 'openInNewTab'>
-    | Pick<LinkLeaf, 'role' | 'linkType' | 'openInNewTab'>,
+  node: Pick<LinkExtension, 'linkType' | 'openInNewTab'>,
 ): boolean {
   if (node.linkType === 'anchor' || node.linkType === 'page') {
     return false;

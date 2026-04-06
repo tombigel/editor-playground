@@ -200,7 +200,7 @@ export function InspectorPanel({
   );
   const debugInfo = useMemo(
     () => {
-      if (!showDebugInfo || !node || node.type === 'site') return null;
+      if (!showDebugInfo || !node || node.contentType === 'site') return null;
       return buildNodeDebugInfo(resolvedDocument, node, {
         documentRef: typeof window !== 'undefined' ? window.document : undefined,
       });
@@ -212,7 +212,7 @@ export function InspectorPanel({
       if (!showDebugInfo) return [];
       const docRef = typeof window !== 'undefined' ? window.document : undefined;
       return selectedNodes
-        .filter((n): n is Exclude<typeof n, { type: 'site' }> => n.type !== 'site')
+        .filter((n): n is Exclude<typeof n, { contentType: 'site' }> => n.contentType !== 'site')
         .map((n) => buildNodeDebugInfo(resolvedDocument, n, { documentRef: docRef }));
     },
     [showDebugInfo, selectedNodes, resolvedDocument],

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { DragGuide, DragPreviewItem } from '../../api/types';
 import type { DocumentModel, DocumentNode } from '../../model/types';
+import { isSiteNode, isContainerNode, isLeafNode, isMediaNode } from '../../model/types';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
 import { isBrandMark, renderLeafContent } from '../../render/nodePresentation';
 import {
@@ -54,7 +55,7 @@ export function DragPreviewOverlay(props: DragPreviewOverlayProps) {
     >
       {previewItems.map((item) => {
         const node = document.nodes[item.nodeId];
-        if (!node || node.type === 'site') {
+        if (!node || isSiteNode(node)) {
           return null;
         }
 
@@ -110,11 +111,11 @@ export function SnapGuideOverlay(props: SnapGuideOverlayProps) {
   );
 }
 
-function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {
-  if (node.type === 'wrapper') {
+function renderDragPreviewNode(node: Exclude<DocumentNode, { contentType: 'site' }>) {
+  if (isContainerNode(node)) {
     return (
       <div
-        className={`drag-preview-inner drag-preview-wrapper role-${node.role}`}
+        className={`drag-preview-inner drag-preview-wrapper role-${node.subtype}`}
         style={{
           ...getWrapperBorderStyle(node),
         }}
@@ -133,10 +134,12 @@ function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {
     );
   }
 
+  if (!isLeafNode(node)) return null;
+
   return (
     <div
       data-node-id={node.id}
-      className={`drag-preview-inner stage-leaf role-${node.role} ${isBrandMark(node) ? 'is-brand-mark' : ''}`}
+      className={`drag-preview-inner stage-leaf role-${node.subtype} ${isBrandMark(node) ? 'is-brand-mark' : ''}`}
       style={{
         width: '100%',
         height: '100%',
@@ -144,10 +147,10 @@ function renderDragPreviewNode(node: Exclude<DocumentNode, { type: 'site' }>) {
     >
       <div
         className="stage-leaf-body"
-        style={node.role === 'image' ? styleRecordToReactStyle(getLeafInlineStyle(node)) : undefined}
+        style={isMediaNode(node) ? styleRecordToReactStyle(getLeafInlineStyle(node)) : undefined}
       >
         {renderLeafContent(node, {
-          contentStyle: node.role === 'image' ? undefined : styleRecordToReactStyle(getLeafInlineStyle(node)),
+          contentStyle: isMediaNode(node) ? undefined : styleRecordToReactStyle(getLeafInlineStyle(node)),
           imageClassName: 'stage-image',
           imagePlaceholderClassName: 'image-placeholder',
           imageDraggable: false,

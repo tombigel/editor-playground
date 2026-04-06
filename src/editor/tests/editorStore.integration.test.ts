@@ -31,7 +31,7 @@ import {
 
 function getRoot(state: ReturnType<typeof createInitialState>['document']) {
   const root = state.nodes[state.rootId];
-  if (!root || root.type !== 'site') {
+  if (!root || root.contentType !== 'site') {
     throw new Error('Expected site root');
   }
   return root;
@@ -98,10 +98,10 @@ describe('editor/editorStore integration', () => {
   it('stores section bottom divider styles as wrapper style fields', () => {
     const state = createInitialState();
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -109,24 +109,24 @@ describe('editor/editorStore integration', () => {
     const withWidth = updateWrapperStyleField(withColor, section.id, 'sectionBorderBottomWidth', '2px');
     const updated = withWidth.document.nodes[section.id];
 
-    if (!updated || updated.type !== 'wrapper') {
+    if (!updated || updated.contentType !== 'container') {
       throw new Error('Expected updated section wrapper');
     }
 
-    expect(updated.style.sectionBorderBottomColor).toBe('#cbd5e1');
-    expect(updated.style.sectionBorderBottomWidth?.raw).toBe('2px');
+    expect(updated.style!.sectionBorderBottomColor).toBe('#cbd5e1');
+    expect(updated.style!.sectionBorderBottomWidth?.raw).toBe('2px');
   });
 
   it('stores unified border and shadow edits for wrappers and leaves', () => {
     const state = createInitialState();
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
     const link = Object.values(state.document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link',
+      (node) => node.contentType === 'text' && node.link != null,
     );
 
-    if (!section || section.type !== 'wrapper' || !link || link.type !== 'leaf' || link.role !== 'link') {
+    if (!section || section.contentType !== 'container' || !link || link.contentType !== 'text' || link.link == null) {
       throw new Error('Expected section wrapper and link leaf');
     }
 
@@ -138,15 +138,15 @@ describe('editor/editorStore integration', () => {
     const updatedSection = withLinkShadow.document.nodes[section.id];
     const updatedLink = withLinkShadow.document.nodes[link.id];
 
-    if (!updatedSection || updatedSection.type !== 'wrapper') {
+    if (!updatedSection || updatedSection.contentType !== 'container') {
       throw new Error('Expected updated wrapper');
     }
-    if (!updatedLink || updatedLink.type !== 'leaf' || updatedLink.role !== 'link') {
+    if (!updatedLink || updatedLink.contentType !== 'text' || updatedLink.link == null) {
       throw new Error('Expected updated link');
     }
 
-    expect(updatedSection.style.borderRadius?.raw).toBe('24px');
-    expect(updatedSection.style.shadowSpread).toBe(18);
+    expect(updatedSection.style!.borderRadius?.raw).toBe('24px');
+    expect(updatedSection.style!.shadowSpread).toBe(18);
     expect(updatedLink.style?.color).toBe('#1d4ed8');
     expect(updatedLink.style?.shadowSpread).toBe(6);
   });
@@ -154,38 +154,38 @@ describe('editor/editorStore integration', () => {
   it('stores wrapper padding edits as parsed spacing values', () => {
     const state = createInitialState();
     const header = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'header',
+      (node) => node.contentType === 'container' && node.subtype === 'header',
     );
 
-    if (!header || header.type !== 'wrapper') {
+    if (!header || header.contentType !== 'container') {
       throw new Error('Expected header wrapper');
     }
 
     const next = updateWrapperStyleField(state, header.id, 'paddingTop', '2em');
     const updated = next.document.nodes[header.id];
 
-    if (!updated || updated.type !== 'wrapper') {
+    if (!updated || updated.contentType !== 'container') {
       throw new Error('Expected updated header wrapper');
     }
 
-    expect(updated.style.paddingTop?.raw).toBe('2em');
-    expect(updated.style.paddingTop?.parsed).toEqual({ value: 2, unit: 'em' });
+    expect(updated.style!.paddingTop?.raw).toBe('2em');
+    expect(updated.style!.paddingTop?.parsed).toEqual({ value: 2, unit: 'em' });
   });
 
   it('preserves font metadata when selecting an existing document font family', () => {
     const state = createInitialState();
     const textNode = Object.values(state.document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text',
+      (node) => node.contentType === 'text',
     );
 
-    if (!textNode || textNode.type !== 'leaf' || textNode.role !== 'text') {
+    if (!textNode || textNode.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
 
     const next = updateTextField(state, textNode.id, 'fontFamily', 'Inter');
     const updatedNode = next.document.nodes[textNode.id];
 
-    if (!updatedNode || updatedNode.type !== 'leaf' || updatedNode.role !== 'text') {
+    if (!updatedNode || updatedNode.contentType !== 'text') {
       throw new Error('Expected updated text leaf');
     }
 
@@ -213,10 +213,10 @@ describe('editor/editorStore integration', () => {
   it('strips alpha from structural wrapper background edits while keeping container alpha', () => {
     const state = createInitialState();
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
@@ -224,7 +224,7 @@ describe('editor/editorStore integration', () => {
     const container = createWrapper('container', section.id);
     withContainer.document.nodes[container.id] = container;
     const mutableSection = withContainer.document.nodes[section.id];
-    if (!mutableSection || mutableSection.type !== 'wrapper') {
+    if (!mutableSection || mutableSection.contentType !== 'container') {
       throw new Error('Expected mutable section wrapper');
     }
     mutableSection.children = [...mutableSection.children, container.id];
@@ -240,12 +240,12 @@ describe('editor/editorStore integration', () => {
     const updatedSection = withContainerBackground.document.nodes[section.id];
     const updatedContainer = withContainerBackground.document.nodes[container.id];
 
-    if (!updatedSection || updatedSection.type !== 'wrapper' || !updatedContainer || updatedContainer.type !== 'wrapper') {
+    if (!updatedSection || updatedSection.contentType !== 'container' || !updatedContainer || updatedContainer.contentType !== 'container') {
       throw new Error('Expected updated wrappers');
     }
 
-    expect(updatedSection.style.background).toBe('rgb(20 40 60)');
-    expect(updatedContainer.style.background).toBe('rgb(20 40 60 / 35%)');
+    expect(updatedSection.style!.background).toBe('rgb(20 40 60)');
+    expect(updatedContainer.style!.background).toBe('rgb(20 40 60 / 35%)');
   });
 
   it('normalizes persisted structural wrapper background alpha to opaque', () => {
@@ -254,29 +254,29 @@ describe('editor/editorStore integration', () => {
     const { localStorage } = windowStub;
     const state = createInitialState();
     const section = Object.values(state.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section',
+      (node) => node.contentType === 'container' && node.subtype === 'section',
     );
 
-    if (!section || section.type !== 'wrapper') {
+    if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
 
     const persisted = structuredClone(state);
     const persistedSection = persisted.document.nodes[section.id];
-    if (!persistedSection || persistedSection.type !== 'wrapper') {
+    if (!persistedSection || persistedSection.contentType !== 'container') {
       throw new Error('Expected persisted section wrapper');
     }
-    persistedSection.style.background = '#336699cc';
+    persistedSection.style!.background = '#336699cc';
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
 
     const restored = loadPersistedState();
     const restoredSection = restored.document.nodes[section.id];
-    if (!restoredSection || restoredSection.type !== 'wrapper') {
+    if (!restoredSection || restoredSection.contentType !== 'container') {
       throw new Error('Expected restored section wrapper');
     }
 
-    expect(restoredSection.style.background).toBe('#336699');
+    expect(restoredSection.style!.background).toBe('#336699');
   });
 
   it('normalizes persisted theme mode values', () => {
@@ -467,7 +467,7 @@ describe('editor/editorStore integration', () => {
 
     const nextDocument = structuredClone(state1.document);
     const nextText = nextDocument.nodes[textId];
-    if (!nextText || nextText.type !== 'leaf' || nextText.role !== 'text') {
+    if (!nextText || nextText.contentType !== 'text') {
       throw new Error('Expected inserted text leaf');
     }
     nextText.content = 'Persisted text value';
@@ -533,8 +533,8 @@ describe('editor/editorStore integration', () => {
       temporaryInspectorOpen: false,
       focusedPanelOffset: { x: -48, y: 96 },
     });
-    expect(loadedText.type).toBe('leaf');
-    if (loadedText.type === 'leaf' && loadedText.role === 'text') {
+    expect(loadedText.contentType).not.toBe('container');
+    if (loadedText.contentType === 'text') {
       expect(loadedText.content).toBe('Persisted text value');
     }
   });
@@ -547,14 +547,14 @@ describe('editor/editorStore integration', () => {
     const state = createInitialState();
     const nextDocument = structuredClone(state.document);
     const repoLink = Object.values(nextDocument.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Repository Link',
     );
-    if (!repoLink || repoLink.type !== 'leaf' || repoLink.role !== 'link') {
+    if (!repoLink || repoLink.contentType !== 'text' || repoLink.link == null) {
       throw new Error('Expected repository link');
     }
 
-    repoLink.label = 'github.com/tombigel/codex-playground';
-    repoLink.href = 'https://github.com/tombigel/codex-playground';
+    repoLink.content = 'github.com/tombigel/codex-playground';
+    repoLink.link = { ...(repoLink.link ?? { linkType: 'external' }), href: 'https://github.com/tombigel/codex-playground' };
 
     localStorage.setItem(
       STORAGE_KEY,
@@ -566,15 +566,15 @@ describe('editor/editorStore integration', () => {
 
     const loaded = loadPersistedState();
     const migratedRepoLink = Object.values(loaded.document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'link' && node.name === 'Repository Link',
+      (node) => node.contentType === 'text' && node.link != null && node.name === 'Repository Link',
     );
 
-    if (!migratedRepoLink || migratedRepoLink.type !== 'leaf' || migratedRepoLink.role !== 'link') {
+    if (!migratedRepoLink || migratedRepoLink.contentType !== 'text' || migratedRepoLink.link == null) {
       throw new Error('Expected migrated repository link node');
     }
 
-    expect(migratedRepoLink.label).toBe('github.com/tombigel/sticky-playground');
-    expect(migratedRepoLink.href).toBe('https://github.com/tombigel/sticky-playground');
+    expect(migratedRepoLink.content).toBe('github.com/tombigel/sticky-playground');
+    expect(migratedRepoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
   });
 
   it('migrates legacy header and footer text tags to semantic defaults', () => {
@@ -585,16 +585,16 @@ describe('editor/editorStore integration', () => {
     const state = createInitialState();
     const nextDocument = structuredClone(state.document);
     const headerTitle = Object.values(nextDocument.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title',
+      (node) => node.contentType === 'text' && node.name === 'Product Title',
     );
     const footerTitle = Object.values(nextDocument.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Title',
+      (node) => node.contentType === 'text' && node.name === 'Footer Title',
     );
 
-    if (!headerTitle || headerTitle.type !== 'leaf' || headerTitle.role !== 'text') {
+    if (!headerTitle || headerTitle.contentType !== 'text') {
       throw new Error('Expected header title');
     }
-    if (!footerTitle || footerTitle.type !== 'leaf' || footerTitle.role !== 'text') {
+    if (!footerTitle || footerTitle.contentType !== 'text') {
       throw new Error('Expected footer title');
     }
 
@@ -611,14 +611,14 @@ describe('editor/editorStore integration', () => {
 
     const loaded = loadPersistedState();
     const migratedHeaderTitle = Object.values(loaded.document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Product Title',
+      (node) => node.contentType === 'text' && node.name === 'Product Title',
     );
     const migratedFooterTitle = Object.values(loaded.document.nodes).find(
-      (node) => node.type === 'leaf' && node.role === 'text' && node.name === 'Footer Title',
+      (node) => node.contentType === 'text' && node.name === 'Footer Title',
     );
 
-    expect(migratedHeaderTitle && migratedHeaderTitle.type === 'leaf' && migratedHeaderTitle.role === 'text' ? migratedHeaderTitle.htmlTag : null).toBe('h1');
-    expect(migratedFooterTitle && migratedFooterTitle.type === 'leaf' && migratedFooterTitle.role === 'text' ? migratedFooterTitle.htmlTag : null).toBe('h2');
+    expect(migratedHeaderTitle && migratedHeaderTitle.contentType === 'text' ? migratedHeaderTitle.htmlTag : null).toBe('h1');
+    expect(migratedFooterTitle && migratedFooterTitle.contentType === 'text' ? migratedFooterTitle.htmlTag : null).toBe('h2');
   });
 
   it('migrates untouched legacy default starter sections to the post template', () => {
@@ -633,7 +633,7 @@ describe('editor/editorStore integration', () => {
         nodes: {
           site_1: {
             id: 'site_1',
-            type: 'site',
+            contentType: 'site', type: 'site',
             parentId: null,
             children: ['section_2'],
             name: 'Site',
@@ -642,8 +642,8 @@ describe('editor/editorStore integration', () => {
           },
           section_2: {
             id: 'section_2',
-            type: 'wrapper',
-            role: 'section',
+            contentType: 'container',
+            subtype: 'section',
             parentId: 'site_1',
             children: ['text_3', 'button_4'],
             name: 'Section',
@@ -667,8 +667,8 @@ describe('editor/editorStore integration', () => {
           },
           text_3: {
             id: 'text_3',
-            type: 'leaf',
-            role: 'text',
+            contentType: 'text',
+            subtype: 'block',
             parentId: 'section_2',
             children: [],
             name: 'Text',
@@ -688,8 +688,8 @@ describe('editor/editorStore integration', () => {
           },
           button_4: {
             id: 'button_4',
-            type: 'leaf',
-            role: 'button',
+            contentType: 'text',
+            subtype: 'block',
             parentId: 'section_2',
             children: [],
             name: 'Button',
@@ -701,7 +701,9 @@ describe('editor/editorStore integration', () => {
               width: { base: { raw: 'fit-content', parsed: { keyword: 'fit-content' } } },
               height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
             },
-            label: 'Button',
+            content: 'Button',
+            link: { linkType: 'external', href: '#' },
+            style: { background: '#1e40af' },
           },
         },
       }),
@@ -710,11 +712,11 @@ describe('editor/editorStore integration', () => {
     const loaded = loadPersistedState();
     const root = getRoot(loaded.document);
     const postSection = Object.values(loaded.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
     expect(root.children).toHaveLength(3);
-    if (!postSection || postSection.type !== 'wrapper') {
+    if (!postSection || postSection.contentType !== 'container') {
       throw new Error('Expected migrated post section wrapper');
     }
 
@@ -734,7 +736,7 @@ describe('editor/editorStore integration', () => {
         nodes: {
           site_1: {
             id: 'site_1',
-            type: 'site',
+            contentType: 'site', type: 'site',
             parentId: null,
             children: [],
             name: 'Site',
@@ -753,7 +755,7 @@ describe('editor/editorStore integration', () => {
 
     const reloaded = createInitialState();
     const postSection = Object.values(reloaded.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
     expect(postSection).toBeTruthy();
@@ -799,7 +801,7 @@ describe('editor/editorStore integration', () => {
     });
 
     const postSection = Object.values(reset.document.nodes).find(
-      (node) => node.type === 'wrapper' && node.role === 'section' && node.name === 'Post Layout',
+      (node) => node.contentType === 'container' && node.subtype === 'section' && node.name === 'Post Layout',
     );
 
     expect(reset.selectedId).toBeNull();
@@ -854,9 +856,9 @@ describe('editor/editorStore integration', () => {
       throw new Error('Expected inserted section to be selected');
     }
     const selected = next.document.nodes[next.selectedId];
-    expect(selected.type).toBe('wrapper');
-    if (selected.type === 'wrapper') {
-      expect(selected.role).toBe('section');
+    expect(selected.contentType).toBe('container');
+    if (selected.contentType === 'container') {
+      expect(selected.subtype).toBe('section');
       expect(selected.rect.height.base.raw).toBe('50vh');
     }
   });
@@ -894,8 +896,8 @@ describe('editor/editorStore integration', () => {
       target: 'contentWrapper',
     });
     const node = next.document.nodes[containerId];
-    expect(node.type).toBe('wrapper');
-    if (node.type === 'wrapper') {
+    expect(node.contentType).toBe('container');
+    if (node.contentType === 'container') {
       expect(node.sticky?.target).toBe('self');
     }
   });
@@ -941,7 +943,7 @@ describe('editor/editorStore integration', () => {
     const state0 = createInitialState();
     const firstSectionId = Object.keys(state0.document.nodes).find((id) => {
       const node = state0.document.nodes[id];
-      return node?.type === 'wrapper' && node.role === 'section' && node.parentId === state0.document.rootId;
+      return node?.contentType === 'container' && node.subtype === 'section' && node.parentId === state0.document.rootId;
     });
     if (!firstSectionId) {
       throw new Error('Expected section');
@@ -950,7 +952,7 @@ describe('editor/editorStore integration', () => {
     const beforeRoot = getRoot(state0.document);
     const existingHeaderId = beforeRoot.children.find((id) => {
       const node = state0.document.nodes[id];
-      return node?.type === 'wrapper' && node.role === 'header';
+      return node?.contentType === 'container' && node.subtype === 'header';
     });
     if (!existingHeaderId) {
       throw new Error('Expected existing header');
@@ -964,11 +966,11 @@ describe('editor/editorStore integration', () => {
     const oldHeader = confirmed.document.nodes[existingHeaderId];
     const rootAfter = getRoot(confirmed.document);
 
-    expect(promoted.type).toBe('wrapper');
-    expect(oldHeader.type).toBe('wrapper');
-    if (promoted.type === 'wrapper' && oldHeader.type === 'wrapper') {
-      expect(promoted.role).toBe('header');
-      expect(oldHeader.role).toBe('section');
+    expect(promoted.contentType).toBe('container');
+    expect(oldHeader.contentType).toBe('container');
+    if (promoted.contentType === 'container' && oldHeader.contentType === 'container') {
+      expect(promoted.subtype).toBe('header');
+      expect(oldHeader.subtype).toBe('section');
     }
     expect(rootAfter.children[0]).toBe(firstSectionId);
     expect(confirmed.pendingRoleSwap).toBeNull();
@@ -992,13 +994,13 @@ describe('editor/editorStore integration', () => {
     });
 
     const leaf = state2.document.nodes[leafId];
-    if (leaf.type === 'site' || !leaf.parentId) {
+    if (leaf.contentType === 'site' || !leaf.parentId) {
       throw new Error('Expected leaf with parent wrapper');
     }
 
     const stickyState = resolveStickyLayout(state2.document);
     const parent = state2.document.nodes[leaf.parentId];
-    if (!parent || parent.type !== 'wrapper') {
+    if (!parent || parent.contentType !== 'container') {
       throw new Error('Expected parent wrapper');
     }
 
@@ -1030,8 +1032,8 @@ describe('editor/editorStore integration', () => {
     const topLevelWrappers = nextRoot.children.map((id) => next.document.nodes[id]);
 
     expect(next.selectedId).toBeNull();
-    expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'header')).toBe(true);
-    expect(topLevelWrappers.some((node) => node.type === 'wrapper' && node.role === 'footer')).toBe(true);
+    expect(topLevelWrappers.some((node) => node.contentType === 'container' && node.subtype === 'header')).toBe(true);
+    expect(topLevelWrappers.some((node) => node.contentType === 'container' && node.subtype === 'footer')).toBe(true);
   });
 
   it('rejects editor session payloads as imported documents', () => {
@@ -1049,13 +1051,13 @@ describe('editor/editorStore integration', () => {
     }
 
     const before = state1.document.nodes[leafId];
-    if (before.type === 'site') {
+    if (before.contentType === 'site') {
       throw new Error('Expected non-site node');
     }
 
     const moved = nudgeNode(state1, leafId, { x: 10, y: -999 });
     const after = moved.document.nodes[leafId];
-    if (after.type === 'site') {
+    if (after.contentType === 'site') {
       throw new Error('Expected non-site node');
     }
 
@@ -1068,7 +1070,7 @@ describe('editor/editorStore integration', () => {
     const root = getRoot(state.document);
     const sectionId = root.children.find((id) => {
       const node = state.document.nodes[id];
-      return node?.type === 'wrapper' && node.role === 'section';
+      return node?.contentType === 'container' && node.subtype === 'section';
     });
 
     if (!sectionId) {
