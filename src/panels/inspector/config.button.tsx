@@ -1,7 +1,7 @@
 import { ButtonAppearanceSection, ButtonContentSection, ButtonDesignSection, ButtonTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
-import { isTextNode } from '@/model/types';
+import { isTextNode } from '../../model/types';
 import type { ButtonInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const buttonContentSection: InspectorSectionDefinition = {

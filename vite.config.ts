@@ -31,10 +31,12 @@ export default defineConfig({
     environment: 'node',
     clearMocks: true,
     restoreMocks: true,
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
       '**/cypress/**',
+      '**/.claude/**',
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
       'src/**/*.e2e.test.ts',

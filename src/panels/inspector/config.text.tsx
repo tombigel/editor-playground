@@ -1,7 +1,7 @@
 import { TextAppearanceSection, TextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
-import { isTextNode as isTextNodeGuard } from '@/model/types';
+import { isTextNode as isTextNodeGuard } from '../../model/types';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
 
 const textContentSection: InspectorSectionDefinition = {

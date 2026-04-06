@@ -9,7 +9,7 @@ import { SECTION_INSPECTOR_CONFIG } from './config.section';
 import { SITE_INSPECTOR_CONFIG } from './config.site';
 import { TEXT_INSPECTOR_CONFIG } from './config.text';
 import { DebugInfoSection } from './DebugInfoSection';
-import { isContainerNode, isTextNode, isMediaNode } from '@/model/types';
+import { isContainerNode, isTextNode, isMediaNode } from '../../model/types';
 import type {
   InspectorBlockDefinition,
   InspectorNode,
