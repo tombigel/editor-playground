@@ -2,6 +2,7 @@ import { memo, useEffect, useId, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, Proportions } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LabeledControlRow, ValuePill } from '@/components/ui/settings-panel';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
@@ -235,8 +236,12 @@ export const SizeInlineField = memo(function SizeInlineField({
   }
 
   return (
-    <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <Label htmlFor={fieldId} className="text-[12px] font-medium">{label}</Label>
+    <LabeledControlRow
+      label={label}
+      className="gap-1"
+      labelClassName="flex-none text-[12px] font-medium"
+      controlClassName="ml-0 flex-1"
+    >
       {showAspectInput ? (
         <div
           className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
@@ -304,7 +309,7 @@ export const SizeInlineField = memo(function SizeInlineField({
           onResolveOptionValue={resolveValueWithUnitModeChange}
         />
       )}
-    </div>
+    </LabeledControlRow>
   );
 });
 
@@ -336,15 +341,11 @@ export function RangeField({
       {label ? (
         <div className="flex items-center justify-between gap-2">
           <Label className="text-[11px] font-medium">{label}</Label>
-          <span className={`editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium ${mixed ? 'border border-dashed' : ''}`}>
-            {mixed ? '-' : `${value}${unit}`}
-          </span>
+          <ValuePill mixed={mixed} value={`${value}${unit}`} />
         </div>
       ) : (
         <div className="flex justify-end">
-          <span className={`editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium ${mixed ? 'border border-dashed' : ''}`}>
-            {mixed ? '-' : `${value}${unit}`}
-          </span>
+          <ValuePill mixed={mixed} value={`${value}${unit}`} />
         </div>
       )}
       <Slider aria-label={label ?? undefined} value={[value]} min={min} max={max} step={step} onValueChange={([next]) => onValueChange(next ?? value)} />
@@ -386,9 +387,7 @@ export function StickyOffsetBandField({
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
         <Label className="text-[11px] font-medium">Offset Range</Label>
-        <span className={`editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium ${mixed ? 'border border-dashed' : ''}`}>
-          {mixed ? '-' : `Span ${Math.round(rangeSpan)}${unit}`}
-        </span>
+        <ValuePill mixed={mixed} value={`Span ${Math.round(rangeSpan)}${unit}`} />
       </div>
       <div className="editor-text-muted grid grid-cols-2 gap-1 text-[10px]">
         <span className="editor-bg-subtle inline-flex items-center gap-1 rounded-md px-2 py-0.5">

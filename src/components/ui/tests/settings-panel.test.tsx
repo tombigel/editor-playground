@@ -3,8 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   ControlGroup,
   InlineNotice,
+  LabeledFieldStack,
   LabeledControlRow,
   NoticeSurface,
+  ValuePill,
 } from '../settings-panel';
 
 describe('components/ui/settings-panel', () => {
@@ -40,5 +42,22 @@ describe('components/ui/settings-panel', () => {
     expect(inlineMarkup).toContain('data-ui="inline-notice"');
     expect(inlineMarkup).toContain('data-tone="warning"');
     expect(inlineMarkup).toContain('Broken anchor');
+  });
+
+  it('renders stacked field and compact value pill contracts', () => {
+    const stackMarkup = renderToStaticMarkup(
+      <LabeledFieldStack label="Width">
+        <input value="120" readOnly />
+      </LabeledFieldStack>,
+    );
+    const pillMarkup = renderToStaticMarkup(
+      <ValuePill mixed value="120px" />,
+    );
+
+    expect(stackMarkup).toContain('data-ui="labeled-field-stack"');
+    expect(stackMarkup).toContain('Width');
+    expect(pillMarkup).toContain('data-ui="value-pill"');
+    expect(pillMarkup).toContain('data-mixed="true"');
+    expect(pillMarkup).toContain('>-<');
   });
 });

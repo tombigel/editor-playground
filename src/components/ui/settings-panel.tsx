@@ -49,6 +49,25 @@ export function LabeledControlRow({
   );
 }
 
+export function LabeledFieldStack({
+  label,
+  children,
+  className,
+  labelClassName,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+  labelClassName?: string;
+}) {
+  return (
+    <div className={cn('space-y-0.5', className)} data-ui="labeled-field-stack">
+      <Label className={cn('text-[12px] font-medium', labelClassName)}>{label}</Label>
+      {children}
+    </div>
+  );
+}
+
 export function ControlGroup({
   children,
   className,
@@ -70,6 +89,30 @@ export function ControlGroup({
     >
       {children}
     </div>
+  );
+}
+
+export function ValuePill({
+  value,
+  mixed = false,
+  className,
+}: {
+  value: ReactNode;
+  mixed?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        'editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium',
+        mixed && 'border border-dashed',
+        className,
+      )}
+      data-ui="value-pill"
+      data-mixed={mixed ? 'true' : 'false'}
+    >
+      {mixed ? '-' : value}
+    </span>
   );
 }
 

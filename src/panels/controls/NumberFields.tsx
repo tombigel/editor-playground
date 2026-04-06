@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { parseUnitValue } from '../../api/documentApi';
 import { formatDisplayValue } from '../../model/conversion';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { LabeledFieldStack } from '@/components/ui/settings-panel';
 import { NumberInput } from '@/components/ui/number-input';
 import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
 import {
@@ -163,10 +163,9 @@ export function LabeledNumberField({
 }) {
   const fieldId = useId();
   return (
-    <div className="min-w-0 w-full space-y-0.5">
-      <Label htmlFor={fieldId} className="text-[12px] font-medium">{label}</Label>
+    <LabeledFieldStack label={label} className="min-w-0 w-full">
       <NumberInput id={fieldId} value={value} mixed={mixed} min={min} max={max} step={step} onChange={onChange} unitLabel={unitLabel} />
-    </div>
+    </LabeledFieldStack>
   );
 }
 
@@ -202,8 +201,7 @@ export function LabeledImplicitUnitField({
   }, [value]);
 
   return (
-    <div className="space-y-0.5">
-      <Label htmlFor={fieldId} className="text-[12px] font-medium">{label}</Label>
+    <LabeledFieldStack label={label}>
       <Input
         id={fieldId}
         type="number"
@@ -225,7 +223,7 @@ export function LabeledImplicitUnitField({
         }}
         className="h-8 rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
-    </div>
+    </LabeledFieldStack>
   );
 }
 
@@ -251,8 +249,7 @@ export function LabeledUnitField({
   min?: number;
 }) {
   return (
-    <div className="space-y-0.5">
-      <Label className="text-[12px] font-medium">{label}</Label>
+    <LabeledFieldStack label={label}>
       <NumericUnitInlineField
         value={value}
         units={units}
@@ -266,6 +263,6 @@ export function LabeledUnitField({
             : undefined
         }
       />
-    </div>
+    </LabeledFieldStack>
   );
 }

@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import type { ContainerNode } from '../../model/types';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { LabeledControlRow } from '@/components/ui/settings-panel';
 
 // ---------------------------------------------------------------------------
 // OrderIconButton
@@ -205,8 +205,12 @@ export function WrapperActions({
   if (node.subtype === 'section') {
     return (
       <div className="space-y-1.5">
-        <div className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Order</Label>
+        <LabeledControlRow
+          label="Order"
+          className="gap-1"
+          labelClassName="flex-none text-[11px] font-medium"
+          controlClassName="ml-0 flex-1 flex-nowrap gap-1 justify-end"
+        >
           <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1">
             <OrderIconButton compact label="Move Section Up" onClick={onSectionBack} disabled={!canSectionBack}>
               <ListStart className="h-3.5 w-3.5" />
@@ -215,19 +219,27 @@ export function WrapperActions({
               <ListEnd className="h-3.5 w-3.5" />
             </OrderIconButton>
           </div>
-        </div>
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Section type</Label>
+        </LabeledControlRow>
+        <LabeledControlRow
+          label="Section type"
+          className="gap-1"
+          labelClassName="flex-none text-[11px] font-medium"
+          controlClassName="ml-0 flex-1"
+        >
           <SectionTypeSelector currentType={currentType} onPromote={onPromote} onDemote={onDemote} />
-        </div>
+        </LabeledControlRow>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-[74px_minmax(0,1fr)] items-center gap-1">
-      <Label className="text-[11px] font-medium">Section type</Label>
+    <LabeledControlRow
+      label="Section type"
+      className="gap-1"
+      labelClassName="flex-none text-[11px] font-medium"
+      controlClassName="ml-0 flex-1"
+    >
       <SectionTypeSelector currentType={currentType} onPromote={onPromote} onDemote={onDemote} />
-    </div>
+    </LabeledControlRow>
   );
 }
