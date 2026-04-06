@@ -381,6 +381,7 @@ Alignment and distribution:
 Preview and stage controls:
 
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
+- `Shift + F`: toggle the Fonts panel from the View menu when no input field is focused
 - `Shift + L`: toggle the Components panel when no input field is focused
 - `Shift + O`: toggle the Pages panel when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
@@ -393,6 +394,38 @@ Global controls:
 - `Mod + ,`: open settings
 - `?`: open the detached Shortcuts dialog when no input field is focused
 - `Esc`: close open panels and dialogs
+
+### Shortcut maintenance
+
+Shortcut behavior lives in a shared shortcut registry, not in the editor chrome.
+
+| Concern | Source of truth |
+|---|---|
+| Definitions, labels, and shortcut policy | `src/lib/shortcuts.ts` |
+| Shortcut ID and policy types | `src/lib/types/index.ts` |
+| Focus classification | `src/app/useEditorEnvironment.ts` |
+| Execution dispatch | `src/app/shortcutController.ts` |
+
+When adding a new shortcut:
+
+1. Add the definition to `SHORTCUT_DEFINITIONS`.
+2. Decide the context policy:
+   - `allowInInteractive` for chrome shortcuts that should work from buttons/menus
+   - `allowInTextInput: false` for browser-native text editing commands that should fall through in inputs
+   - `requiresSelection` for edit/arrange actions that need selected nodes
+   - `requiresStageFocus` for stage-only movement shortcuts
+   - `requiresDismissiblePanels` for panel-dismiss actions
+3. Add the execution action mapping if the shortcut performs an editor command.
+4. Update the shortcut tests that cover matching and labels.
+5. Update the controller test if the shortcut executes through the app action registry.
+6. Update render tests if the shortcut label is shown in a menu or top bar surface.
+
+Text-entry behavior:
+
+- The shortcut matcher distinguishes text-entry focus from generic interactive chrome.
+- `Cmd + Z` / `Cmd + Shift + Z` fall through to the browser in text fields and other editable content.
+- Settings stays available from non-text interactive chrome, while panel shortcuts stay blocked in text-entry contexts.
+- Stage-only nudges still require a stage-focused selection.
 
 ## History Model
 
@@ -423,7 +456,8 @@ Undo/redo uses an in-memory history stack.
 
 ### Browser undo behavior
 
-- `Cmd + Z` / `Cmd + Shift + Z` is handled by the app globally, including when text fields are focused, so native browser undo is intercepted.
+- `Cmd + Z` / `Cmd + Shift + Z` are handled by the app outside text-entry contexts.
+- In text fields and other editable content, native browser undo/redo is preserved.
 
 ## Import / Export
 

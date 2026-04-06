@@ -94,6 +94,27 @@ describe('shortcut registry', () => {
     expect(getShortcutLabel('redo', 'other')).toBe('Ctrl + Shift + Z / Ctrl + Y');
   });
 
+  it('matches settings from non-text interactive chrome', () => {
+    const settings = findMatchingShortcut(
+      {
+        code: 'Comma',
+        metaKey: true,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+      },
+      {
+        interactiveFocus: true,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'mac',
+    );
+
+    expect(settings?.id).toBe('openSettings');
+  });
+
   it('classifies text input focus separately from interactive chrome', () => {
     const textInput = createMockFocusTarget({ textInput: true });
     const interactive = createMockFocusTarget({ interactive: true });
