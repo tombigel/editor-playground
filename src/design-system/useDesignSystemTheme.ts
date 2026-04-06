@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useApplyEditorTheme } from "@/app/useEditorEnvironment";
+import { STORAGE_KEY } from "@/editor/editorPersistence";
 import {
 	DEFAULT_EDITOR_ACCENT_COLOR,
 	DEFAULT_EDITOR_DARK_THEME,
@@ -25,6 +26,31 @@ function resolveConfig(
 	const resolved = resolveThemeMode(config.themeMode, systemPrefersDark);
 	const resolvedAccent = resolveEditorAccentColor(config.accentColor);
 	return { ...config, resolved, resolvedAccent };
+}
+
+export function parsePersistedThemeConfig(raw: string | null): ThemeConfig | null {
+	if (!raw) {
+		return null;
+	}
+
+	try {
+		const ui = JSON.parse(raw)?.ui;
+		if (!ui) {
+			return null;
+		}
+
+		return {
+			themeMode:
+				ui.themeMode === "light" || ui.themeMode === "dark"
+					? ui.themeMode
+					: "auto",
+			lightTheme: ui.lightTheme ?? DEFAULT_EDITOR_LIGHT_THEME,
+			darkTheme: ui.darkTheme ?? DEFAULT_EDITOR_DARK_THEME,
+			accentColor: ui.accentColor ?? DEFAULT_EDITOR_ACCENT_COLOR,
+		};
+	} catch {
+		return null;
+	}
 }
 
 function readCurrentDocumentThemeConfig(): ThemeConfig | null {
@@ -60,25 +86,11 @@ function readCurrentDocumentThemeConfig(): ThemeConfig | null {
  * a full ThemeConfig (used as the initial state for the showcase).
  */
 function readPersistedThemeConfig(): ThemeConfig {
-	try {
-		const raw = localStorage.getItem("sticky-playground.editor-state.v1");
-		if (raw) {
-			const ui = JSON.parse(raw)?.ui;
-			if (ui) {
-				return {
-					themeMode:
-						ui.themeMode === "light" || ui.themeMode === "dark"
-							? ui.themeMode
-							: "auto",
-					lightTheme: ui.lightTheme ?? DEFAULT_EDITOR_LIGHT_THEME,
-					darkTheme: ui.darkTheme ?? DEFAULT_EDITOR_DARK_THEME,
-					accentColor: ui.accentColor ?? DEFAULT_EDITOR_ACCENT_COLOR,
-				};
-			}
-		}
-	} catch {
-		// ignore
+	const parsed = parsePersistedThemeConfig(localStorage.getItem(STORAGE_KEY));
+	if (parsed) {
+		return parsed;
 	}
+
 	return {
 		themeMode: "auto",
 		lightTheme: DEFAULT_EDITOR_LIGHT_THEME,
