@@ -6,7 +6,7 @@ import {
   PanelBottom,
   PanelTop,
 } from 'lucide-react';
-import type { WrapperNode } from '../../model/types';
+import type { ContainerNode } from '../../model/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
@@ -191,7 +191,7 @@ export function WrapperActions({
   onPromote,
   onDemote,
 }: {
-  node: WrapperNode;
+  node: ContainerNode;
   canSectionBack: boolean;
   canSectionForward: boolean;
   onSectionBack: () => void;

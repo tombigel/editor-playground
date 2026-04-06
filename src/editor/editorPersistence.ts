@@ -3,9 +3,10 @@ import {
   createDefaultFooter,
   createDefaultHeader,
   createInitialDocument,
-  createLeaf,
   createTextNode,
+  createMediaNode,
   createLinkTextNode,
+  createButtonTextNode,
   createSectionFromTemplate,
   syncIdCountersWithDocument,
 } from '../model/defaults';
@@ -17,7 +18,6 @@ import type {
   ContainerSubtype,
   DocumentModel,
   DocumentNode,
-  LeafRole,
   NodeId,
   StickyDefinition,
   TextNode,
@@ -483,10 +483,16 @@ export function isStructuralWrapper(subtype: ContainerSubtype) {
   return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
-export function createUniqueLeaf(document: DocumentModel, role: LeafRole, parentId: NodeId) {
-  let node = createLeaf(role, parentId);
+export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'image' | 'link' | 'button', parentId: NodeId) {
+  const make = () => {
+    if (role === 'text') return createTextNode('block', parentId);
+    if (role === 'image') return createMediaNode('image', parentId);
+    if (role === 'link') return createLinkTextNode(parentId);
+    return createButtonTextNode(parentId);
+  };
+  let node = make();
   while (document.nodes[node.id]) {
-    node = createLeaf(role, parentId);
+    node = make();
   }
   return node;
 }
