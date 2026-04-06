@@ -1,7 +1,7 @@
 import { BoxSelect, Magnet, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SettingRow } from '@/components/ui/settings-panel';
+import { ControlGroup, LabeledControlRow, SettingRow } from '@/components/ui/settings-panel';
 
 import type { SnapSettings } from '../../editor/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
@@ -27,8 +27,12 @@ function SnapSubRow({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2">
-      <span className="editor-text-muted text-xs">{label}</span>
+    <LabeledControlRow
+      label={label}
+      className="gap-3 px-3 py-2"
+      labelClassName="editor-text-muted text-xs font-normal"
+      controlClassName="shrink-0 gap-1.5"
+    >
       <div className="flex shrink-0 items-center gap-1.5">
         <div className="w-16">
           <Input
@@ -47,7 +51,7 @@ function SnapSubRow({
         </div>
         <span className="editor-text-muted w-8 text-right text-xs">{suffix}</span>
       </div>
-    </div>
+    </LabeledControlRow>
   );
 }
 
@@ -68,36 +72,38 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
       />
       {guideSnap.enabled && (
         <div className="editor-border-subtle editor-bg-subtle -mt-2 mb-2 ml-11 overflow-hidden rounded-lg border">
-          <SnapSubRow
-            label="Snap distance"
-            value={guideSnap.threshold}
-            min={1}
-            max={32}
-            suffix="px"
-            onChange={(threshold) =>
-              onSnapSettingsChange({ guideSnap: { ...guideSnap, threshold } })
-            }
-          />
-          <SnapSubRow
-            label="Snap strength"
-            value={Math.round(guideSnap.power * 100)}
-            min={0}
-            max={100}
-            suffix="%"
-            onChange={(pct) =>
-              onSnapSettingsChange({ guideSnap: { ...guideSnap, power: pct / 100 } })
-            }
-          />
-          <SnapSubRow
-            label="Max snap speed"
-            value={Math.round(guideSnap.maxSpeedPxPerSecond)}
-            min={0}
-            max={4000}
-            suffix="px/s"
-            onChange={(maxSpeedPxPerSecond) =>
-              onSnapSettingsChange({ guideSnap: { ...guideSnap, maxSpeedPxPerSecond } })
-            }
-          />
+          <ControlGroup className="space-y-0">
+            <SnapSubRow
+              label="Snap distance"
+              value={guideSnap.threshold}
+              min={1}
+              max={32}
+              suffix="px"
+              onChange={(threshold) =>
+                onSnapSettingsChange({ guideSnap: { ...guideSnap, threshold } })
+              }
+            />
+            <SnapSubRow
+              label="Snap strength"
+              value={Math.round(guideSnap.power * 100)}
+              min={0}
+              max={100}
+              suffix="%"
+              onChange={(pct) =>
+                onSnapSettingsChange({ guideSnap: { ...guideSnap, power: pct / 100 } })
+              }
+            />
+            <SnapSubRow
+              label="Max snap speed"
+              value={Math.round(guideSnap.maxSpeedPxPerSecond)}
+              min={0}
+              max={4000}
+              suffix="px/s"
+              onChange={(maxSpeedPxPerSecond) =>
+                onSnapSettingsChange({ guideSnap: { ...guideSnap, maxSpeedPxPerSecond } })
+              }
+            />
+          </ControlGroup>
         </div>
       )}
 
@@ -112,26 +118,28 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
       />
       {containerSnap.enabled && (
         <div className="editor-border-subtle editor-bg-subtle -mt-2 mb-2 ml-11 overflow-hidden rounded-lg border">
-          <SnapSubRow
-            label="Detection distance"
-            value={containerSnap.threshold}
-            min={0}
-            max={40}
-            suffix="px"
-            onChange={(threshold) =>
-              onSnapSettingsChange({ containerSnap: { ...containerSnap, threshold } })
-            }
-          />
-          <SnapSubRow
-            label="Snap-in strength"
-            value={Math.round(containerSnap.power * 100)}
-            min={0}
-            max={100}
-            suffix="%"
-            onChange={(pct) =>
-              onSnapSettingsChange({ containerSnap: { ...containerSnap, power: pct / 100 } })
-            }
-          />
+          <ControlGroup className="space-y-0">
+            <SnapSubRow
+              label="Detection distance"
+              value={containerSnap.threshold}
+              min={0}
+              max={40}
+              suffix="px"
+              onChange={(threshold) =>
+                onSnapSettingsChange({ containerSnap: { ...containerSnap, threshold } })
+              }
+            />
+            <SnapSubRow
+              label="Snap-in strength"
+              value={Math.round(containerSnap.power * 100)}
+              min={0}
+              max={100}
+              suffix="%"
+              onChange={(pct) =>
+                onSnapSettingsChange({ containerSnap: { ...containerSnap, power: pct / 100 } })
+              }
+            />
+          </ControlGroup>
         </div>
       )}
 

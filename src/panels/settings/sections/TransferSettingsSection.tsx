@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   ActionRow,
+  ControlGroup,
+  LabeledControlRow,
   PlainGroup,
   SectionHeading,
 } from '@/components/ui/settings-panel';
@@ -20,7 +22,6 @@ import type { SettingsTransferState } from '../useSettingsTransferState';
 import type { SiteSettings } from '../../../model/types/site';
 import type { LinkValidationError } from '../../../model/validation';
 import { PagesExportSettingsContent } from '../../PagesExportSettingsContent';
-import { InspectorInlineRow } from '../../controls/FormLayout';
 
 type TransferSettingsSectionProps = {
   transfer: SettingsTransferState;
@@ -48,8 +49,8 @@ export function TransferSettingsSection({
       />
 
       <PlainGroup title="Site">
-        <div className="space-y-2">
-          <InspectorInlineRow label="Status">
+        <ControlGroup className="space-y-2">
+          <LabeledControlRow label="Status">
             <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
               <Button
                 type="button"
@@ -70,8 +71,8 @@ export function TransferSettingsSection({
                 Published
               </Button>
             </div>
-          </InspectorInlineRow>
-        </div>
+          </LabeledControlRow>
+        </ControlGroup>
       </PlainGroup>
       <PlainGroup title="Export">
         <div className="space-y-4">

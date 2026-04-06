@@ -3,7 +3,7 @@ import { isContainerNode } from '../../model/types';
 import type { FocusedMode } from '../../api/editorApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { LabeledControlRow, NoticeSurface } from '@/components/ui/settings-panel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FormField, RangeField, StickyOffsetBandField, SwitchBlock } from '../InspectorControls';
@@ -105,8 +105,12 @@ export function StickySection({
             )}
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-3">
-                <Label className="text-[11px] font-medium">Duration</Label>
+              <LabeledControlRow
+                label="Duration"
+                className="gap-3"
+                labelClassName="text-[11px] font-medium"
+                controlClassName="shrink-0"
+              >
                 {forceAutoDuration ? (
                   <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
                     <Button
@@ -141,7 +145,7 @@ export function StickySection({
                     </Button>
                   </div>
                 )}
-              </div>
+              </LabeledControlRow>
               {!forceAutoDuration && (node.sticky?.durationMode ?? 'auto') === 'custom' ? (
                 edgeValue(node) === 'both' ? (
                   <div className="space-y-1.5">
@@ -176,11 +180,11 @@ export function StickySection({
                   />
                 )
               ) : (
-                <div className="editor-bg-subtle editor-border-subtle editor-text-muted rounded-md border px-2.5 py-1.5 text-[11px]">
+                <NoticeSurface tone="info" className="px-2.5 py-1.5 text-[11px] leading-4">
                   {forceAutoDuration
                     ? 'Uses the page height as the sticky distance.'
                     : 'Uses the owner section height as the sticky distance.'}
-                </div>
+                </NoticeSurface>
               )}
             </div>
 
