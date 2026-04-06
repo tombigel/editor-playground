@@ -24,7 +24,6 @@ import {
   parseImportedDocumentJson,
   persistState,
   STORAGE_KEY,
-  STORAGE_KEY_V2,
 } from '../editorPersistence';
 
 function createWindowStorageStub() {
@@ -515,7 +514,7 @@ describe('editor/editorPersistence', () => {
       };
       persistState(stateWithSwap);
 
-      const raw = JSON.parse(windowStub.localStorage.getItem(STORAGE_KEY_V2)!);
+      const raw = JSON.parse(windowStub.localStorage.getItem(STORAGE_KEY)!);
       expect(raw.pendingRoleSwap).toBeNull();
     });
 
@@ -992,7 +991,7 @@ describe('editor/editorPersistence', () => {
       const state = createInitialState();
       const { showDebugInfo, ...uiWithoutDebugInfo } = state.ui;
       const modifiedState = { ...state, ui: uiWithoutDebugInfo as typeof state.ui };
-      window.localStorage.setItem('sticky-playground.editor-state.v1', JSON.stringify(modifiedState));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(modifiedState));
 
       const loaded = loadPersistedState();
       expect(loaded.ui.showDebugInfo).toBe(false);

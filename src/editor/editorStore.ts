@@ -7,7 +7,6 @@ export type { ConfirmReplaceRole, EditorState, FocusedMode, NodeOrderAction } fr
 // --- Persistence, normalization, migration ---
 export {
   STORAGE_KEY,
-  STORAGE_KEY_V2,
   DEFAULT_DOCUMENT_STORAGE_KEY,
   createInitialState,
   loadPersistedState,

@@ -10,7 +10,6 @@ import {
   createSectionFromTemplate,
   syncIdCountersWithDocument,
 } from '../model/defaults';
-import { createPage, createInitialSiteSettings } from '../model/pageDefaults';
 import { normalizeDocumentFontState } from '../fonts';
 import { getLinkHref } from '../model/links';
 import { validateDocument } from '../model/validation';
@@ -41,8 +40,7 @@ import { DEFAULT_FOCUSED_PANEL_OFFSET, normalizeFocusedPanelOffset } from './foc
 import type { EditorState } from './types';
 import { normalizeSelectedIds } from './selection';
 
-export const STORAGE_KEY = 'sticky-playground.editor-state.v1';
-export const STORAGE_KEY_V2 = 'sticky-playground.editor-state.v2';
+export const STORAGE_KEY = 'sticky-playground.editor-state.v2';
 export const DEFAULT_DOCUMENT_STORAGE_KEY = 'sticky-playground.default-document.v1';
 
 export function createInitialState(): EditorState {
@@ -122,45 +120,6 @@ function normalizePersistedState(parsed: EditorState): EditorState | null {
   return candidate;
 }
 
-function migrateV1ToV2(v1State: EditorState): EditorState {
-  const doc = v1State.document;
-  if (doc.pages && doc.pages.length > 0) {
-    return {
-      ...v1State,
-      activePageId: v1State.activePageId ?? doc.pages[0]?.id ?? null,
-    };
-  }
-
-  const root = doc.nodes[doc.rootId];
-  const sectionIds: string[] = [];
-  const sharedRegionIds: string[] = [];
-
-  if (root && isSiteNode(root)) {
-    for (const childId of root.children) {
-      const child = doc.nodes[childId];
-      if (!child || !isContainerNode(child)) continue;
-      if (child.subtype === 'header' || child.subtype === 'footer') {
-        sharedRegionIds.push(childId);
-      } else if (child.subtype === 'section') {
-        sectionIds.push(childId);
-      }
-    }
-  }
-
-  const homePage = createPage({ displayName: 'Home', slug: 'home', pageRole: 'home', sectionIds });
-
-  return {
-    ...v1State,
-    activePageId: homePage.id,
-    document: {
-      ...doc,
-      pages: [homePage],
-      siteSettings: createInitialSiteSettings(),
-      sharedRegionIds,
-    },
-  };
-}
-
 export function loadPersistedState(): EditorState {
   if (typeof window === 'undefined') {
     return createInitialState();
@@ -169,25 +128,14 @@ export function loadPersistedState(): EditorState {
   try {
     ensureDefaultDocumentSeeded();
 
-    const rawV2 = window.localStorage.getItem(STORAGE_KEY_V2);
-    if (rawV2) {
-      const parsed = JSON.parse(rawV2) as EditorState;
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as EditorState;
       const normalized = normalizePersistedState(parsed);
       if (normalized) {
         return normalized;
       }
       return createInitialState();
-    }
-
-    const rawV1 = window.localStorage.getItem(STORAGE_KEY);
-    if (rawV1) {
-      const parsed = JSON.parse(rawV1) as EditorState;
-      const migrated = migrateV1ToV2({ ...parsed, activePageId: null });
-      const normalized = normalizePersistedState(migrated);
-      if (normalized) {
-        window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(normalized));
-        return normalized;
-      }
     }
 
     return createInitialState();
@@ -200,7 +148,7 @@ export function persistState(state: EditorState) {
   if (typeof window === 'undefined') {
     return;
   }
-  window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify({ ...state, pendingRoleSwap: null }));
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, pendingRoleSwap: null }));
 }
 
 export function persistDefaultDocument(document: DocumentModel) {
@@ -215,7 +163,6 @@ export function clearSessionState() {
     return;
   }
   window.localStorage.removeItem(STORAGE_KEY);
-  window.localStorage.removeItem(STORAGE_KEY_V2);
 }
 
 export function clearPersistedState() {

@@ -23,7 +23,6 @@ import {
   reorderNode,
   requestPromoteWrapperRole,
   STORAGE_KEY,
-  STORAGE_KEY_V2,
   updateStickyField,
   updateTextField,
   updateWrapperStyleField,
@@ -300,7 +299,7 @@ describe('editor/editorStore integration', () => {
     expect(loadPersistedState().ui.themeMode).toBe('auto');
 
     localStorage.setItem(
-      STORAGE_KEY_V2,
+      STORAGE_KEY,
       JSON.stringify({
         ...state,
         ui: {
@@ -338,7 +337,7 @@ describe('editor/editorStore integration', () => {
     expect(firstLoad.ui.darkTheme).toBe('monokai');
 
     localStorage.setItem(
-      STORAGE_KEY_V2,
+      STORAGE_KEY,
       JSON.stringify({
         ...state,
         ui: {
