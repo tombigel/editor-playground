@@ -1529,6 +1529,55 @@ Inline links inside `RichContent` follow the same rules as node-level links:
 | `mapLinks(content, mapper)` | Returns new array with each link replaced; identity-safe. |
 | `getTextContent(content)` | Flattens `string \| RichContent` to a plain string. |
 
+## On-Stage Rich Text Editing
+
+Text nodes with `subtype: 'rich'` support inline editing directly on the stage canvas.
+
+### Activation
+
+Double-clicking a rich text node enters edit mode. The static `renderLeafContent` output is
+replaced by a Slate `<Editable>` at the same position and with the same typography styles.
+
+### Edit mode lifecycle
+
+```text
+Idle ──dblclick──► Editing ──blur──► Commit ──► Idle
+                         └── Escape ──► Discard ──► Idle
+```
+
+- **Commit** (blur): serialises the Slate editor state back to `RichContent` and dispatches a
+  `setRichContent` action, which calls `setNodeRichContent()` in `documentApi.ts`.
+- **Discard** (Escape): restores the original content; the document model is not mutated.
+
+Slate manages its own micro-undo while editing. On commit, one entry is pushed to the document-level
+undo history. Keystrokes are not propagated to the document until the editor exits.
+
+### Keyboard shortcuts
+
+| Shortcut     | Effect                                                             |
+| ------------ | ------------------------------------------------------------------ |
+| `Cmd/Ctrl+B` | Toggle bold on the current selection                               |
+| `Cmd/Ctrl+I` | Toggle italic on the current selection                             |
+| `Cmd/Ctrl+K` | Insert an external link (or remove if selection is already a link) |
+| `Enter`      | Suppressed — rich text nodes are single-paragraph                  |
+| `Escape`     | Discard changes and exit edit mode                                 |
+
+### Inline link insertion (`Cmd+K`)
+
+Pressing `Cmd+K` on a selection with no existing link opens a small floating popover with a URL
+input. Submitting inserts an `external`-type `RichTextLink` wrapping the selection. Pressing
+`Cmd+K` on a selection that already contains a link removes it.
+
+### Implementation files
+
+| File                                               | Role                                                                              |
+| -------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `src/stage/stageRenderers/RichTextEditOverlay.tsx` | Slate editor component, keyboard handlers, link popover                           |
+| `src/stage/useRichTextEditMode.ts`                 | `editingId` state hook                                                            |
+| `src/stage/richEditContext.tsx`                    | React context threading edit state through the stage tree                         |
+| `src/render/richTextEditor.ts`                     | Adapter: `createRichEditor`, `toSlateValue`/`fromSlateValue`, mark/link utilities |
+| `src/api/documentApi.ts`                           | `setNodeRichContent()` — pure document mutation                                   |
+
 ## Running the Playground
 
 ### Development
