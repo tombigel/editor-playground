@@ -1,4 +1,11 @@
-import { type CSSProperties, useCallback, useMemo, type KeyboardEvent } from 'react';
+import {
+  type CSSProperties,
+  useCallback,
+  useMemo,
+  useState,
+  type KeyboardEvent,
+  type FormEvent,
+} from 'react';
 import { Editor } from 'slate';
 import { Editable, type ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
 import { getLinkHref } from '../../model/links';
@@ -7,6 +14,9 @@ import { richLeafStyle } from '../../render/nodePresentation';
 import {
   createRichEditor,
   fromSlateValue,
+  insertLink,
+  isLinkActive,
+  removeLink,
   toSlateValue,
 } from '../../render/richTextEditor';
 
@@ -33,6 +43,8 @@ function renderEditElement(
   return <span {...attributes}>{children}</span>;
 }
 
+type LinkPopoverState = { open: false } | { open: true; href: string };
+
 export function RichTextEditOverlay({
   nodeId,
   content,
@@ -53,10 +65,15 @@ export function RichTextEditOverlay({
   const editor = useMemo(() => createRichEditor(), []);
   const initialValue = useMemo(() => toSlateValue(content), [content]);
   const Tag = (htmlTag ?? 'p') as keyof JSX.IntrinsicElements;
+  const [linkPopover, setLinkPopover] = useState<LinkPopoverState>({ open: false });
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (linkPopover.open) {
+          setLinkPopover({ open: false });
+          return;
+        }
         event.preventDefault();
         onDiscard();
         return;
@@ -76,13 +93,38 @@ export function RichTextEditOverlay({
         toggleMark(editor, 'italic');
         return;
       }
+      if (isMod && event.key === 'k') {
+        event.preventDefault();
+        if (isLinkActive(editor)) {
+          removeLink(editor);
+        } else {
+          setLinkPopover({ open: true, href: '' });
+        }
+        return;
+      }
     },
-    [editor, onDiscard],
+    [editor, onDiscard, linkPopover.open],
   );
 
   const handleBlur = useCallback(() => {
+    if (linkPopover.open) return; // don't commit while popover is open
     onCommit(nodeId, fromSlateValue(editor.children));
-  }, [editor, nodeId, onCommit]);
+  }, [editor, nodeId, onCommit, linkPopover.open]);
+
+  const handleLinkSubmit = useCallback(
+    (href: string) => {
+      if (href.trim()) {
+        insertLink(editor, {
+          type: 'link',
+          linkType: 'external',
+          href: href.trim(),
+          openInNewTab: false,
+        });
+      }
+      setLinkPopover({ open: false });
+    },
+    [editor],
+  );
 
   return (
     <Slate editor={editor} initialValue={initialValue}>
@@ -101,8 +143,88 @@ export function RichTextEditOverlay({
           onBlur={handleBlur}
           style={{ outline: 'none', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
         />
+        {linkPopover.open && (
+          <LinkInsertPopover
+            initialHref={linkPopover.href}
+            onSubmit={handleLinkSubmit}
+            onCancel={() => setLinkPopover({ open: false })}
+          />
+        )}
       </Tag>
     </Slate>
+  );
+}
+
+function LinkInsertPopover({
+  initialHref,
+  onSubmit,
+  onCancel,
+}: {
+  initialHref: string;
+  onSubmit: (href: string) => void;
+  onCancel: () => void;
+}) {
+  const [href, setHref] = useState(initialHref);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    onSubmit(href);
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      onPointerDown={(e) => e.stopPropagation()}
+      style={{
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        zIndex: 100,
+        marginTop: 4,
+        display: 'flex',
+        gap: 4,
+        padding: '6px 8px',
+        borderRadius: 6,
+        background: 'var(--editor-bg, #fff)',
+        border: '1px solid var(--editor-border-subtle, #e2e8f0)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+        minWidth: 260,
+      }}
+    >
+      <input
+        // biome-ignore lint/a11y/noAutofocus: popover must grab focus immediately
+        autoFocus
+        type="url"
+        placeholder="https://example.com"
+        value={href}
+        onChange={(e) => setHref(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); onCancel(); } }}
+        style={{
+          flex: 1,
+          fontSize: 12,
+          padding: '3px 6px',
+          borderRadius: 4,
+          border: '1px solid var(--editor-border-subtle, #e2e8f0)',
+          outline: 'none',
+          background: 'var(--editor-input-bg, #f8fafc)',
+          color: 'var(--editor-text, inherit)',
+        }}
+      />
+      <button
+        type="submit"
+        style={{
+          fontSize: 12,
+          padding: '3px 10px',
+          borderRadius: 4,
+          background: 'var(--editor-accent, #3b82f6)',
+          color: '#fff',
+          border: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        Add
+      </button>
+    </form>
   );
 }
 
