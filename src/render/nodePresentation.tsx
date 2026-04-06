@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
 import { isRichTextLink } from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
-import type { DocumentModel, RichContent, RichTextLeaf } from '../model/types';
+import type { DocumentModel, RichContent, RichTextLeaf, RichTextLink } from '../model/types';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -52,17 +52,25 @@ function richLeafStyle(leaf: RichTextLeaf): CSSProperties {
   return style;
 }
 
+function richLeafKey(leaf: RichTextLeaf): string {
+  return `${leaf.text}|${leaf.bold ? 'b' : ''}${leaf.italic ? 'i' : ''}|${leaf.color ?? ''}|${leaf.fontFamily ?? ''}|${leaf.fontSize ?? ''}`;
+}
+
+function richLinkKey(node: RichTextLink): string {
+  return `link|${node.linkType}|${node.href ?? ''}|${node.children.map((l) => l.text).join('')}`;
+}
+
 export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
-  return content.map((node, i) => {
+  return content.map((node) => {
     if (isRichTextLink(node)) {
       const href = getLinkHref(node, document);
       const externalProps = node.linkType === 'external' && node.openInNewTab
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {};
       return (
-        <a key={i} href={href} {...externalProps}>
-          {node.children.map((leaf, j) => (
-            <span key={j} style={richLeafStyle(leaf)}>{leaf.text}</span>
+        <a key={richLinkKey(node)} href={href} {...externalProps}>
+          {node.children.map((leaf) => (
+            <span key={richLeafKey(leaf)} style={richLeafStyle(leaf)}>{leaf.text}</span>
           ))}
         </a>
       );
@@ -70,7 +78,7 @@ export function renderRichContent(content: RichContent, document?: DocumentModel
     const leaf = node as RichTextLeaf;
     const style = richLeafStyle(leaf);
     return Object.keys(style).length > 0
-      ? <span key={i} style={style}>{leaf.text}</span>
+      ? <span key={richLeafKey(leaf)} style={style}>{leaf.text}</span>
       : leaf.text;
   });
 }
