@@ -6,6 +6,7 @@ import type { FocusedMode } from '../api/editorApi';
 import { isSiteNode, isContainerNode, isLeafNode } from '../model/types';
 import { getFocusedModeLabel } from '../editor/focusedModes';
 import { createInitialDocument } from '../model/defaults';
+import { ValuePill } from '@/components/ui/settings-panel';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiStickySection } from './MultiStickySection';
 import { resolveFocusedModeBlocks } from './focusedModes/schema';
@@ -202,12 +203,10 @@ export function FocusedModePanel({
         onPointerDown={onHeaderDragPointerDown}
       >
         <div className="editor-text-strong text-sm font-medium">{modeLabel}</div>
-        <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
+          <div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
           <div className="truncate">{title}</div>
           {roleLabel ? (
-            <span className="editor-pill-subtle shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
-              {roleLabel}
-            </span>
+            <ValuePill value={roleLabel} className="shrink-0" />
           ) : null}
         </div>
       </div>

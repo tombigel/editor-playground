@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { FilePlus2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -45,9 +46,10 @@ export function PageSwitcherSelect({
     >
       <SelectTrigger
         aria-label="Switch page"
+        size="small"
         className={cn('editor-topbar-page-switcher', triggerClassName)}
       >
-        <span className="editor-topbar-page-switcher-label">{activeOption?.label || placeholder}</span>
+        <PageSwitcherRowContent label={activeOption?.label || placeholder} />
       </SelectTrigger>
       <SelectContent className={cn('editor-topbar-page-switcher-menu', contentClassName)}>
         {options.map((option) => {
@@ -59,20 +61,30 @@ export function PageSwitcherSelect({
               className="editor-topbar-page-switcher-row"
               style={{ paddingLeft: `${28 + depth * 14}px` }}
             >
-              <span className="editor-topbar-page-switcher-row-content">
-                <span className="min-w-0 truncate">{option.label}</span>
-              </span>
+              <PageSwitcherRowContent label={option.label} />
             </SelectItem>
           );
         })}
         <SelectSeparator />
         <SelectItem value={CREATE_PAGE_VALUE} className="editor-topbar-page-switcher-create">
-          <span className="editor-topbar-page-switcher-row-content">
-            <FilePlus2 className="h-3.5 w-3.5 shrink-0" />
-            <span>New page</span>
-          </span>
+          <PageSwitcherRowContent icon={<FilePlus2 className="h-3.5 w-3.5 shrink-0" />} label="New page" />
         </SelectItem>
       </SelectContent>
     </Select>
+  );
+}
+
+function PageSwitcherRowContent({
+  label,
+  icon,
+}: {
+  label: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <span className="editor-topbar-page-switcher-row-content">
+      {icon}
+      <span className="min-w-0 truncate">{label}</span>
+    </span>
   );
 }

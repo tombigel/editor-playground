@@ -20,6 +20,7 @@ describe('components/ui/page-switcher-select', () => {
     expect(markup).toContain('data-ui="select-trigger"');
     expect(markup).toContain('data-ui="select-content"');
     expect(markup).toContain('editor-topbar-page-switcher');
+    expect(markup).toContain('data-size="small"');
     expect(markup).toContain('editor-topbar-page-switcher-row');
     expect(markup).toContain('New page');
   });

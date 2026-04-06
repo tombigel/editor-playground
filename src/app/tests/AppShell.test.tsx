@@ -111,7 +111,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("editor-topbar-menubar-row");
 		expect(markup).toContain("editor-topbar-page-switcher");
 		expect(markup).toContain("editor-topbar-page-switcher-centered");
-		expect(markup).toContain("editor-topbar-page-switcher-label");
+		expect(markup).toContain("editor-topbar-page-switcher-row-content");
 		expect(markup).toContain('data-ui="select-trigger"');
 		expect(markup).toContain("Home");
 		expect(markup).not.toContain("editor-topbar-pages-row");

@@ -96,6 +96,7 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('Sticky');
     expect(markup).toContain(textNode.name);
     expect(markup).toContain(textNode.subtype);
+    expect(markup).toContain('data-ui="value-pill"');
     expect(markup).toContain('Pin this node inside its structural range.');
     expect(markup).toContain('editor-focused-panel');
     expect(markup).toContain('aria-label="Drag focused panel"');
