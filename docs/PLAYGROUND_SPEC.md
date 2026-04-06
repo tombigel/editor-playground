@@ -945,6 +945,7 @@ The preview surface allows viewing the rendered site at full width without edito
 ### Preview rendering
 
 - Sticky movement in preview is CSS-native.
+- `?mode=preview` injects the same generated site CSS and document font stylesheet that site export uses, so preview layout and typography match exported output.
 - Sticky layering uses one shared low z-index baseline across the editor stage and exported site rather than renderer-specific stacks.
 - Editor-only layering still prefers DOM order and local stacking contexts first; explicit layers are limited to a small named stack for selected nodes, sticky labels, and resize handles.
 

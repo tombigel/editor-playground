@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createInitialState, insertLeaf } from "../../api/editorApi";
 import { AppShell } from "../AppShell";
@@ -48,6 +48,22 @@ function createProps(): ComponentProps<typeof AppShell> {
 }
 
 describe("app/AppShell", () => {
+	it("injects exported site css into preview mode", () => {
+		vi.stubGlobal("window", {
+			location: { search: "?mode=preview" },
+		});
+
+		try {
+			const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+
+			expect(markup).toContain('data-preview-site-css="true"');
+			expect(markup).toContain(".sp-site");
+			expect(markup).toContain("Back to Editor");
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it("renders the editor accent and dark theme on the shell container", () => {
 		const props = createProps();
 		props.state.ui.accentColor = "#ff6b4a";

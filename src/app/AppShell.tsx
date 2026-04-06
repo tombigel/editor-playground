@@ -19,6 +19,7 @@ import type {
 } from "../api/editorApi";
 import type { DocumentFontFamily } from "../model/types";
 import { isTextNode } from "../model/types";
+import { buildDocumentGoogleFontsStylesheetHref } from "../fonts";
 import {
 	addDocumentFontFamily,
 	purgeUnusedDocumentFonts,
@@ -56,6 +57,7 @@ const EditorSidebar = lazy(() =>
 import { FocusedModePanel } from "../panels/FocusedModePanel";
 import { BackToEditorButton } from "../panels/BackToEditorButton";
 import { SiteRenderer } from "../site/SiteRenderer";
+import { renderSiteCss } from "../api/siteApi";
 import type { ActionResult } from "../panels/settingsTransfer";
 import { Stage } from "../api/editorViewApi";
 import { Button } from "@/components/ui/button";
@@ -142,6 +144,26 @@ type Props = {
 	onResetAll: () => void;
 };
 
+type PreviewSiteAssetsProps = {
+	css: string;
+	fontHref: string | null;
+};
+
+function PreviewSiteAssets({ css, fontHref }: PreviewSiteAssetsProps) {
+	return (
+		<>
+			{fontHref ? (
+				<>
+					<link rel="preconnect" href="https://fonts.googleapis.com" />
+					<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+					<link rel="stylesheet" href={fontHref} />
+				</>
+			) : null}
+			<style data-preview-site-css="true">{css}</style>
+		</>
+	);
+}
+
 export function AppShell({
 	state,
 	historyState,
@@ -190,12 +212,33 @@ export function AppShell({
 	onResetData,
 	onResetAll,
 }: Props) {
-	const isPreview = useMemo(
+	const searchParams = useMemo(
 		() =>
-			typeof window !== "undefined" &&
-			new URLSearchParams(window.location.search).get("mode") === "preview",
+			typeof window !== "undefined"
+				? new URLSearchParams(window.location.search)
+				: new URLSearchParams(),
 		[],
 	);
+	const isPreview = searchParams.get("mode") === "preview";
+	const editorWindowId = useMemo(() => {
+		if (typeof window === "undefined") {
+			return "server";
+		}
+
+		const storageKey = "sticky-window-group-id";
+		const storage = "localStorage" in window ? window.localStorage : undefined;
+		const existingId = storage?.getItem(storageKey);
+		if (existingId) {
+			return existingId;
+		}
+
+		const nextId =
+			typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+				? crypto.randomUUID()
+				: `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		storage?.setItem(storageKey, nextId);
+		return nextId;
+	}, []);
 
 	const [showStorageWarning, setShowStorageWarning] = useState(false);
 	const [linkPopupVisible, setLinkPopupVisible] = useState(false);
@@ -230,6 +273,14 @@ export function AppShell({
 	const siteNode = state.document.nodes[state.document.rootId];
 	const globalStickyElevation =
 		siteNode?.contentType === "site" ? (siteNode.stickyElevation ?? true) : true;
+	const previewCss = useMemo(
+		() => renderSiteCss(state.document, { previewSticky: state.ui.previewSticky }),
+		[state.document, state.ui.previewSticky],
+	);
+	const previewFontHref = useMemo(
+		() => buildDocumentGoogleFontsStylesheetHref(state.document),
+		[state.document],
+	);
 	const isSidebarCollapsed =
 		state.ui.inspectorCollapsed && !state.ui.temporaryInspectorOpen;
 	const leftRailWidth = `${INSPECTOR_COLLAPSED_WIDTH_PX}px`;
@@ -245,6 +296,15 @@ export function AppShell({
 		resolvedAccent,
 		stickyGuideColors,
 	);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+		window.name = isPreview
+			? `sticky-preview-${editorWindowId}`
+			: `sticky-editor-${editorWindowId}`;
+	}, [editorWindowId, isPreview]);
 
 	useEffect(() => {
 		focusedPanelOffsetDraftRef.current = focusedPanelOffsetDraft;
@@ -561,10 +621,12 @@ export function AppShell({
 	if (isPreview) {
 		return (
 			<>
+				<PreviewSiteAssets css={previewCss} fontHref={previewFontHref} />
 				<div style={{ position: "fixed", inset: 0, overflow: "auto" }}>
 					<SiteRenderer
 						document={state.document}
 						includeAnimations
+						previewSticky={state.ui.previewSticky}
 						pageId={state.activePageId ?? undefined}
 					/>
 				</div>
@@ -631,8 +693,12 @@ export function AppShell({
 					onUndo={() => dispatch({ type: "undo" })}
 					onRedo={() => dispatch({ type: "redo" })}
 					onPreview={() => {
-						const previewUrl = `${window.location.origin}${window.location.pathname}?mode=preview`;
-						window.open(previewUrl, "sticky-preview");
+						const previewUrl = new URL(
+							window.location.pathname,
+							window.location.origin,
+						);
+						previewUrl.searchParams.set("mode", "preview");
+						window.open(previewUrl.toString(), `sticky-preview-${editorWindowId}`);
 					}}
 					onImportJson={handleImportJson}
 					onExportJson={handleExportJson}

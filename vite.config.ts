@@ -3,8 +3,18 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
+const devHeaders = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    headers: devHeaders,
+  },
+  preview: {
+    headers: devHeaders,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
