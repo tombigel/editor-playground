@@ -8,8 +8,10 @@ import type {
 } from './types';
 export type {
   ShortcutContext,
+  ShortcutContextPolicy,
   ShortcutDefinition,
   ShortcutGesture,
+  ShortcutExecutionMetadata,
   ShortcutId,
   ShortcutPlatform,
 } from './types';
@@ -20,14 +22,22 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     category: 'General',
     description: 'Close panels/dialogs',
     combos: [{ code: 'Escape', keyLabel: 'Esc' }],
-    allowInInteractive: true,
+    context: {
+      allowInInteractive: true,
+      requiresDismissiblePanels: true,
+    },
+    execution: { actionId: 'dismissPanels' },
   },
   {
     id: 'undo',
     category: 'Edit',
     description: 'Undo',
     combos: [{ code: 'KeyZ', keyLabel: 'Z', mod: true }],
-    allowInInteractive: true,
+    context: {
+      allowInInteractive: true,
+      allowInTextInput: false,
+    },
+    execution: { actionId: 'undo' },
   },
   {
     id: 'redo',
@@ -37,62 +47,85 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
       { code: 'KeyZ', keyLabel: 'Z', mod: true, shift: true },
       { code: 'KeyY', keyLabel: 'Y', ctrl: true, platforms: ['other'] },
     ],
-    allowInInteractive: true,
+    context: {
+      allowInInteractive: true,
+      allowInTextInput: false,
+    },
+    execution: { actionId: 'redo' },
   },
   {
     id: 'openSettings',
     category: 'General',
     description: 'Open settings',
     combos: [{ code: 'Comma', keyLabel: ',', mod: true }],
-    allowInInteractive: true,
+    context: {
+      allowInInteractive: true,
+    },
+    execution: { actionId: 'openSettings' },
   },
   {
     id: 'showShortcutHelp',
     category: 'General',
     description: 'Show shortcuts',
     combos: [{ code: 'Slash', keyLabel: '?', shift: true, omitShiftInDisplay: true }],
+    context: {},
+    execution: { actionId: 'showShortcutHelp' },
   },
   {
     id: 'toggleFontsPanel',
     category: 'View',
     description: 'Fonts panel',
     combos: [{ code: 'KeyF', keyLabel: 'F', shift: true }],
+    context: {},
+    execution: { actionId: 'toggleFontsPanel' },
   },
   {
     id: 'toggleLayersPanel',
     category: 'View',
     description: 'Layers panel',
     combos: [{ code: 'KeyL', keyLabel: 'L', shift: true }],
+    context: {},
+    execution: { actionId: 'toggleLayersPanel' },
   },
   {
     id: 'togglePagesPanel',
     category: 'View',
     description: 'Pages panel',
     combos: [{ code: 'KeyO', keyLabel: 'O', shift: true }],
+    context: {},
+    execution: { actionId: 'togglePagesPanel' },
   },
   {
     id: 'togglePreviewSticky',
     category: 'View',
     description: 'Sticky preview',
     combos: [{ code: 'KeyP', keyLabel: 'P', shift: true }],
+    context: {},
+    execution: { actionId: 'togglePreviewSticky' },
   },
   {
     id: 'toggleAnimationPreview',
     category: 'View',
     description: 'Animation preview',
     combos: [{ code: 'KeyA', keyLabel: 'A', shift: true }],
+    context: {},
+    execution: { actionId: 'toggleAnimationPreview' },
   },
   {
     id: 'toggleSpacerVisibility',
     category: 'View',
     description: 'Spacer visibility',
     combos: [{ code: 'KeyS', keyLabel: 'S', shift: true }],
+    context: {},
+    execution: { actionId: 'toggleSpacerVisibility' },
   },
   {
     id: 'toggleSnapEnabled',
     category: 'View',
     description: 'Snap to guides',
     combos: [{ code: 'KeyG', keyLabel: 'G', shift: true }],
+    context: {},
+    execution: { actionId: 'toggleSnapEnabled' },
   },
   {
     id: 'nudgeSelectionLeft',
@@ -102,8 +135,11 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
       { code: 'ArrowLeft', keyLabel: 'Left' },
       { code: 'ArrowLeft', keyLabel: 'Left', shift: true },
     ],
-    requiresSelection: true,
-    requiresStageFocus: true,
+    context: {
+      requiresSelection: true,
+      requiresStageFocus: true,
+    },
+    execution: { actionId: 'nudgeSelectionLeft' },
   },
   {
     id: 'nudgeSelectionRight',
@@ -113,8 +149,11 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
       { code: 'ArrowRight', keyLabel: 'Right' },
       { code: 'ArrowRight', keyLabel: 'Right', shift: true },
     ],
-    requiresSelection: true,
-    requiresStageFocus: true,
+    context: {
+      requiresSelection: true,
+      requiresStageFocus: true,
+    },
+    execution: { actionId: 'nudgeSelectionRight' },
   },
   {
     id: 'nudgeSelectionUp',
@@ -124,8 +163,11 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
       { code: 'ArrowUp', keyLabel: 'Up' },
       { code: 'ArrowUp', keyLabel: 'Up', shift: true },
     ],
-    requiresSelection: true,
-    requiresStageFocus: true,
+    context: {
+      requiresSelection: true,
+      requiresStageFocus: true,
+    },
+    execution: { actionId: 'nudgeSelectionUp' },
   },
   {
     id: 'nudgeSelectionDown',
@@ -135,8 +177,11 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
       { code: 'ArrowDown', keyLabel: 'Down' },
       { code: 'ArrowDown', keyLabel: 'Down', shift: true },
     ],
-    requiresSelection: true,
-    requiresStageFocus: true,
+    context: {
+      requiresSelection: true,
+      requiresStageFocus: true,
+    },
+    execution: { actionId: 'nudgeSelectionDown' },
   },
   {
     id: 'deleteSelection',
@@ -146,147 +191,210 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
       { code: 'Delete', keyLabel: 'Delete' },
       { code: 'Backspace', keyLabel: 'Backspace' },
     ],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'deleteSelection' },
   },
   {
     id: 'toggleBoldSelection',
     category: 'Edit',
     description: 'Bold',
     combos: [{ code: 'KeyB', keyLabel: 'B', mod: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'toggleBoldSelection' },
   },
   {
     id: 'toggleItalicSelection',
     category: 'Edit',
     description: 'Italic',
     combos: [{ code: 'KeyI', keyLabel: 'I', mod: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'toggleItalicSelection' },
   },
   {
     id: 'toggleUnderlineSelection',
     category: 'Edit',
     description: 'Underline',
     combos: [{ code: 'KeyU', keyLabel: 'U', mod: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'toggleUnderlineSelection' },
   },
   {
     id: 'toggleStrikethroughSelection',
     category: 'Edit',
     description: 'Strikethrough',
     combos: [{ code: 'KeyX', keyLabel: 'X', mod: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'toggleStrikethroughSelection' },
   },
   {
     id: 'alignSelectionLeft',
     category: 'Arrange',
     description: 'Align left',
     combos: [{ code: 'ArrowLeft', keyLabel: 'Left', mod: true, alt: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'alignSelectionLeft' },
   },
   {
     id: 'alignSelectionCenterX',
     category: 'Arrange',
     description: 'Align h-center',
     combos: [{ code: 'KeyH', keyLabel: 'H', mod: true, alt: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'alignSelectionCenterX' },
   },
   {
     id: 'alignSelectionRight',
     category: 'Arrange',
     description: 'Align right',
     combos: [{ code: 'ArrowRight', keyLabel: 'Right', mod: true, alt: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'alignSelectionRight' },
   },
   {
     id: 'alignSelectionTop',
     category: 'Arrange',
     description: 'Align top',
     combos: [{ code: 'ArrowUp', keyLabel: 'Up', mod: true, alt: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'alignSelectionTop' },
   },
   {
     id: 'alignSelectionCenterY',
     category: 'Arrange',
     description: 'Align v-center',
     combos: [{ code: 'KeyV', keyLabel: 'V', mod: true, alt: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'alignSelectionCenterY' },
   },
   {
     id: 'alignSelectionBottom',
     category: 'Arrange',
     description: 'Align bottom',
     combos: [{ code: 'ArrowDown', keyLabel: 'Down', mod: true, alt: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'alignSelectionBottom' },
   },
   {
     id: 'distributeSelectionHorizontal',
     category: 'Arrange',
     description: 'Distribute h-gaps',
     combos: [{ code: 'KeyH', keyLabel: 'H', mod: true, alt: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'distributeSelectionHorizontal' },
   },
   {
     id: 'distributeSelectionVertical',
     category: 'Arrange',
     description: 'Distribute v-gaps',
     combos: [{ code: 'KeyV', keyLabel: 'V', mod: true, alt: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'distributeSelectionVertical' },
   },
   {
     id: 'distributeSelectionLeft',
     category: 'Arrange',
     description: 'Distribute left',
     combos: [{ code: 'ArrowLeft', keyLabel: 'Left', mod: true, alt: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'distributeSelectionLeft' },
   },
   {
     id: 'distributeSelectionRight',
     category: 'Arrange',
     description: 'Distribute right',
     combos: [{ code: 'ArrowRight', keyLabel: 'Right', mod: true, alt: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'distributeSelectionRight' },
   },
   {
     id: 'distributeSelectionTop',
     category: 'Arrange',
     description: 'Distribute top',
     combos: [{ code: 'ArrowUp', keyLabel: 'Up', mod: true, alt: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'distributeSelectionTop' },
   },
   {
     id: 'distributeSelectionBottom',
     category: 'Arrange',
     description: 'Distribute bottom',
     combos: [{ code: 'ArrowDown', keyLabel: 'Down', mod: true, alt: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'distributeSelectionBottom' },
   },
   {
     id: 'orderBack',
     category: 'Arrange',
     description: 'Send backward',
     combos: [{ code: 'BracketLeft', keyLabel: '[', mod: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'orderBack' },
   },
   {
     id: 'orderForward',
     category: 'Arrange',
     description: 'Bring forward',
     combos: [{ code: 'BracketRight', keyLabel: ']', mod: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'orderForward' },
   },
   {
     id: 'orderSendToBack',
     category: 'Arrange',
     description: 'Send to back',
     combos: [{ code: 'BracketLeft', keyLabel: '[', mod: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'orderSendToBack' },
   },
   {
     id: 'orderBringToFront',
     category: 'Arrange',
     description: 'Bring to front',
     combos: [{ code: 'BracketRight', keyLabel: ']', mod: true, shift: true }],
-    requiresSelection: true,
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'orderBringToFront' },
   },
 ];
 
@@ -304,21 +412,28 @@ export function getShortcutPlatform(): ShortcutPlatform {
 }
 
 export function findMatchingShortcut(
-  event: Pick<KeyboardEvent, 'code' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey'>,
+  event: Pick<KeyboardEvent, 'code' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey'> & {
+    target?: EventTarget | null;
+  },
   context: ShortcutContext,
   platform = getShortcutPlatform(),
 ): ShortcutDefinition | null {
+  const textInputFocus = resolveTextInputFocus(context, event.target ?? null);
+
   for (const definition of SHORTCUT_DEFINITIONS) {
-    if (!definition.allowInInteractive && context.interactiveFocus) {
+    if (!definition.context.allowInInteractive && context.interactiveFocus) {
       continue;
     }
-    if (definition.requiresSelection && !context.hasSelection) {
+    if (textInputFocus && definition.context.allowInTextInput === false) {
       continue;
     }
-    if (definition.requiresStageFocus && !context.hasStageFocus) {
+    if (definition.context.requiresSelection && !context.hasSelection) {
       continue;
     }
-    if (definition.id === 'dismissPanels' && !context.hasDismissiblePanels) {
+    if (definition.context.requiresStageFocus && !context.hasStageFocus) {
+      continue;
+    }
+    if (definition.context.requiresDismissiblePanels && !context.hasDismissiblePanels) {
       continue;
     }
 
@@ -398,6 +513,36 @@ function matchesShortcutCombo(
     event.ctrlKey === expectedCtrl &&
     event.shiftKey === expectedShift &&
     event.altKey === expectedAlt
+  );
+}
+
+function resolveTextInputFocus(
+  context: ShortcutContext,
+  target: EventTarget | null,
+): boolean {
+  if (typeof context.textInputFocus === 'boolean') {
+    return context.textInputFocus;
+  }
+
+  return isTextInputEventTarget(target);
+}
+
+function isTextInputEventTarget(target: EventTarget | null): boolean {
+  if (!target || typeof target !== 'object') {
+    return false;
+  }
+
+  const element = target as {
+    isContentEditable?: boolean;
+    closest?: (selector: string) => unknown;
+  };
+
+  if (element.isContentEditable) {
+    return true;
+  }
+
+  return Boolean(
+    element.closest?.('input, textarea, [role="textbox"], [contenteditable="true"]'),
   );
 }
 

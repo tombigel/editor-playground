@@ -44,6 +44,18 @@ export type ShortcutId =
   | 'orderSendToBack'
   | 'orderBringToFront';
 
+export type ShortcutContextPolicy = {
+  allowInInteractive?: boolean;
+  allowInTextInput?: boolean;
+  requiresSelection?: boolean;
+  requiresStageFocus?: boolean;
+  requiresDismissiblePanels?: boolean;
+};
+
+export type ShortcutExecutionMetadata = {
+  actionId: ShortcutId;
+};
+
 export type ShortcutCombo = {
   code: string;
   keyLabel: string;
@@ -61,12 +73,12 @@ export type ShortcutDefinition = {
   category: 'General' | 'View' | 'Edit' | 'Arrange';
   description: string;
   combos: ShortcutCombo[];
-  allowInInteractive?: boolean;
-  requiresSelection?: boolean;
-  requiresStageFocus?: boolean;
+  context: ShortcutContextPolicy;
+  execution: ShortcutExecutionMetadata;
 };
 
 export type ShortcutContext = {
+  textInputFocus?: boolean;
   interactiveFocus: boolean;
   hasSelection: boolean;
   hasDismissiblePanels: boolean;

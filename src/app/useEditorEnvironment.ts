@@ -353,6 +353,36 @@ export function isInteractiveFocus(element: HTMLElement | null) {
 	);
 }
 
+export function isTextInputFocus(element: HTMLElement | null) {
+	if (!element) {
+		return false;
+	}
+
+	if (element.isContentEditable) {
+		return true;
+	}
+
+	return Boolean(
+		element.closest('input, textarea, [role="textbox"], [contenteditable="true"]'),
+	);
+}
+
+export type ShortcutFocusContext = {
+	textInputFocus: boolean;
+	interactiveFocus: boolean;
+	hasStageFocus: boolean;
+};
+
+export function getShortcutFocusContext(
+	element: HTMLElement | null,
+): ShortcutFocusContext {
+	return {
+		textInputFocus: isTextInputFocus(element),
+		interactiveFocus: isInteractiveFocus(element),
+		hasStageFocus: hasStageKeyboardFocus(element),
+	};
+}
+
 export function hasStageKeyboardFocus(element: HTMLElement | null) {
 	return Boolean(element?.closest('[data-stage-focus-scope="true"]'));
 }
