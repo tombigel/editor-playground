@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createInitialDocument, createTextNode, createButtonTextNode, createMediaNode, createLinkTextNode, createContainerNode } from '../../model/defaults';
 import type { DocumentModel } from '../../model/types';
 import { LayersPanelContent } from '../LayersPanel';
 
@@ -94,7 +94,7 @@ describe('panels/LayersPanel', () => {
     );
     if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
-    const leaf = createLeaf('text', section.id);
+    const leaf = createTextNode('block', section.id);
     leaf.visible = false;
     document.nodes[leaf.id] = leaf;
     section.children.push(leaf.id);
@@ -116,7 +116,7 @@ describe('panels/LayersPanel', () => {
     );
     if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
-    const leaf = createLeaf('button', section.id);
+    const leaf = createButtonTextNode(section.id);
     leaf.name = 'My Button';
     document.nodes[leaf.id] = leaf;
     section.children.push(leaf.id);
@@ -135,7 +135,7 @@ describe('panels/LayersPanel', () => {
     );
     if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
-    const leaf = createLeaf('text', section.id);
+    const leaf = createTextNode('block', section.id);
     leaf.name = 'Deep Leaf';
     document.nodes[leaf.id] = leaf;
     section.children.push(leaf.id);
@@ -179,7 +179,7 @@ describe('panels/LayersPanel', () => {
 
     // Clear children then add a single leaf so we can identify it
     section.children = [];
-    const leaf = createLeaf('image', section.id);
+    const leaf = createMediaNode('image', section.id);
     leaf.name = 'Solo Image';
     document.nodes[leaf.id] = leaf;
     section.children.push(leaf.id);
@@ -199,7 +199,7 @@ describe('panels/LayersPanel', () => {
     );
     if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
-    const leaf = createLeaf('link', section.id);
+    const leaf = createLinkTextNode(section.id);
     leaf.name = '   '; // whitespace-only name
     document.nodes[leaf.id] = leaf;
     section.children.push(leaf.id);
@@ -217,7 +217,7 @@ describe('panels/LayersPanel', () => {
     );
     if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
-    const leaf = createLeaf('text', section.id);
+    const leaf = createTextNode('block', section.id);
     leaf.name = 'Hidden Text';
     leaf.visible = false;
     document.nodes[leaf.id] = leaf;
@@ -236,7 +236,7 @@ describe('panels/LayersPanel', () => {
     );
     if (!section || section.contentType !== 'container') throw new Error('Expected section');
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     container.name = 'Card';
     document.nodes[container.id] = container;
     section.children.push(container.id);

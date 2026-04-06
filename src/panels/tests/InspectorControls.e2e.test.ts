@@ -3,7 +3,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { STORAGE_KEY, DEFAULT_DOCUMENT_STORAGE_KEY } from '../../editor/editorStore';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { createInitialDocument } from '../../model/defaults';
-import type { DocumentModel, TextLeaf } from '../../model/types';
+import type { DocumentModel, TextNode } from '../../model/types';
 import { startViteE2EServer, type StartedServer } from '../../stage/tests/e2eServer';
 
 type SeededColorDocument = {
@@ -15,10 +15,10 @@ type SeededColorDocument = {
 function createColorSpaceDocument(): SeededColorDocument {
   const document = createInitialDocument();
   const title = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Title',
+    (node): node is TextNode => node.contentType === 'text' && node.name === 'Post Title',
   );
   const body = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Body',
+    (node): node is TextNode => node.contentType === 'text' && node.name === 'Post Body',
   );
 
   if (!title || !body) {
@@ -40,10 +40,10 @@ function createColorSpaceDocument(): SeededColorDocument {
 function createShadowColorSpaceDocument(): SeededColorDocument {
   const document = createInitialDocument();
   const title = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Title',
+    (node): node is TextNode => node.contentType === 'text' && node.name === 'Post Title',
   );
   const body = Object.values(document.nodes).find(
-    (node): node is TextLeaf => node.contentType === 'text' && node.name === 'Post Body',
+    (node): node is TextNode => node.contentType === 'text' && node.name === 'Post Body',
   );
 
   if (!title || !body) {

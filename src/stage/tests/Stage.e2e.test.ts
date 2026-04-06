@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { STORAGE_KEY, DEFAULT_DOCUMENT_STORAGE_KEY } from '../../editor/editorStore';
-import { createDefaultRect, createLeaf, createWrapper } from '../../model/defaultFactories';
-import type { DocumentModel, TextLeaf } from '../../model/types';
+import { createDefaultRect, createContainerNode, createTextNode } from '../../model/defaultFactories';
+import type { DocumentModel, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { startViteE2EServer, type StartedServer } from './e2eServer';
 
@@ -674,11 +674,11 @@ describe('stage/Stage e2e', () => {
 
 function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } {
   const siteId = 'site_e2e';
-  const section = createWrapper('section', siteId);
+  const section = createContainerNode('section', siteId);
   section.name = 'E2E Section';
   section.rect = createDefaultRect('0px', '0px', '100%', '900px');
 
-  const sourceContainer = createWrapper('container', section.id);
+  const sourceContainer = createContainerNode('container', section.id);
   sourceContainer.name = 'Source Container';
   sourceContainer.rect = createDefaultRect('80px', '110px', '300px', '260px');
 
@@ -686,31 +686,31 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
   nestedContainer.name = 'Nested Invalid Target';
   nestedContainer.rect = createDefaultRect('36px', '108px', '150px', '96px');
 
-  const targetContainer = createWrapper('container', section.id);
+  const targetContainer = createContainerNode('container', section.id);
   targetContainer.name = 'Target Container';
   targetContainer.rect = createDefaultRect('560px', '110px', '300px', '260px');
 
-  const reparentLeaf = createLeaf('text', sourceContainer.id) as TextLeaf;
+  const reparentLeaf = createTextNode('block',sourceContainer.id) as TextNode;
   reparentLeaf.name = 'Reparent Leaf';
   reparentLeaf.content = 'Reparent me';
   reparentLeaf.rect = createDefaultRect('188px', '36px', '160px', 'auto');
 
-  const siblingLeaf = createLeaf('text', sourceContainer.id) as TextLeaf;
+  const siblingLeaf = createTextNode('block',sourceContainer.id) as TextNode;
   siblingLeaf.name = 'Sibling Group Leaf';
   siblingLeaf.content = 'Group drag me too';
   siblingLeaf.rect = createDefaultRect('52px', '160px', '160px', 'auto');
 
-  const otherContainerLeaf = createLeaf('text', targetContainer.id) as TextLeaf;
+  const otherContainerLeaf = createTextNode('block',targetContainer.id) as TextNode;
   otherContainerLeaf.name = 'Other Container Leaf';
   otherContainerLeaf.content = 'Different parent';
   otherContainerLeaf.rect = createDefaultRect('36px', '44px', '160px', 'auto');
 
-  const axisLeaf = createLeaf('text', section.id) as TextLeaf;
+  const axisLeaf = createTextNode('block',section.id) as TextNode;
   axisLeaf.name = 'Axis Lock Leaf';
   axisLeaf.content = 'Shift drag me';
   axisLeaf.rect = createDefaultRect('120px', '470px', '180px', 'auto');
 
-  const snapLeaf = createLeaf('text', section.id) as TextLeaf;
+  const snapLeaf = createTextNode('block',section.id) as TextNode;
   snapLeaf.name = 'Snap Leaf';
   snapLeaf.content = 'Snap me';
   snapLeaf.rect = createDefaultRect('160px', '620px', '180px', 'auto');
@@ -762,28 +762,28 @@ function createE2EDocument(): { document: DocumentModel; ids: TestDocumentIds } 
 
 function createStructuralResizeE2EDocument(): DocumentModel {
   const siteId = 'site_resize_e2e';
-  const header = createWrapper('header', siteId);
+  const header = createContainerNode('header', siteId);
   header.name = 'Resize Header';
   header.rect = createDefaultRect('0px', '0px', '100%', '120px');
 
-  const sectionA = createWrapper('section', siteId);
+  const sectionA = createContainerNode('section', siteId);
   sectionA.name = 'Resize Section A';
   sectionA.rect = createDefaultRect('0px', '0px', '100%', '280px');
 
-  const sectionB = createWrapper('section', siteId);
+  const sectionB = createContainerNode('section', siteId);
   sectionB.name = 'Resize Section B';
   sectionB.rect = createDefaultRect('0px', '0px', '100%', '240px');
 
-  const footer = createWrapper('footer', siteId);
+  const footer = createContainerNode('footer', siteId);
   footer.name = 'Resize Footer';
   footer.rect = createDefaultRect('0px', '0px', '100%', '96px');
 
-  const sectionAText = createLeaf('text', sectionA.id) as TextLeaf;
+  const sectionAText = createTextNode('block',sectionA.id) as TextNode;
   sectionAText.name = 'Resize Section A Text';
   sectionAText.content = 'Section A';
   sectionAText.rect = createDefaultRect('32px', '32px', '240px', 'auto');
 
-  const sectionBText = createLeaf('text', sectionB.id) as TextLeaf;
+  const sectionBText = createTextNode('block',sectionB.id) as TextNode;
   sectionBText.name = 'Resize Section B Text';
   sectionBText.content = 'Section B';
   sectionBText.rect = createDefaultRect('32px', '32px', '240px', 'auto');

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
 import {
   buildSizeFieldValue,
   convertRenderedPxToFontSizeValue,
@@ -123,7 +123,7 @@ describe('panels/InspectorPanel', () => {
   });
 
   it('renders border and shadow controls for container wrapper design', () => {
-    const containerNode = createWrapper('container', 'root');
+    const containerNode = createContainerNode('container', 'root');
 
     const markup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ node: containerNode })} />,
@@ -172,7 +172,7 @@ describe('panels/InspectorPanel', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const textNode = createLeaf('text', sectionNode.id);
+    const textNode = createTextNode('block', sectionNode.id);
     textNode.name = 'Hero Copy';
 
     const markup = renderToStaticMarkup(
@@ -191,8 +191,8 @@ describe('panels/InspectorPanel', () => {
   });
 
   it('renders the dedicated multi-select inspector for multiple selected nodes', () => {
-    const textNode = createLeaf('text', 'section_1');
-    const buttonNode = createLeaf('button', 'section_1');
+    const textNode = createTextNode('block', 'section_1');
+    const buttonNode = createButtonTextNode('section_1');
 
     const markup = renderToStaticMarkup(
       <InspectorPanel
@@ -318,7 +318,7 @@ describe('panels/InspectorPanel', () => {
     if (!sectionNode || sectionNode.contentType !== 'container') {
       throw new Error('Expected section node');
     }
-    const buttonNode = createLeaf('button', sectionNode.id);
+    const buttonNode = createButtonTextNode(sectionNode.id);
     const textNode = Object.values(document.nodes).find((node) => node.contentType === 'text');
     const linkNode = Object.values(document.nodes).find((node) => node.contentType === 'text' && node.link != null);
     const imageNode = Object.values(document.nodes).find((node) => node.contentType === 'media');
@@ -471,7 +471,7 @@ describe('panels/InspectorPanel', () => {
       throw new Error('Expected section node');
     }
 
-    const buttonNode = createLeaf('button', section.id);
+    const buttonNode = createButtonTextNode(section.id);
     if (buttonNode.contentType !== 'text' || buttonNode.link == null) {
       throw new Error('Expected button node');
     }

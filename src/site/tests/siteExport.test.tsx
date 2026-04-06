@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createLeaf, createSectionFromTemplate, createWrapper } from '../../model/defaults';
+import { createInitialDocument, createButtonTextNode, createSectionFromTemplate, createContainerNode } from '../../model/defaults';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
@@ -45,7 +45,7 @@ describe('site/siteExport', () => {
       throw new Error('Expected section wrapper and post link node');
     }
 
-    const button = createLeaf('button', section.id);
+    const button = createButtonTextNode(section.id);
     if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
@@ -106,7 +106,7 @@ describe('site/siteExport', () => {
       throw new Error('Expected post section');
     }
 
-    const button = createLeaf('button', section.id);
+    const button = createButtonTextNode(section.id);
     if (button.contentType !== 'text' || button.subtype !== 'block') {
       throw new Error('Expected button node');
     }
@@ -222,7 +222,7 @@ describe('site/siteExport', () => {
       throw new Error('Expected text leaf and section wrapper');
     }
 
-    const button = createLeaf('button', section.id);
+    const button = createButtonTextNode(section.id);
     if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
@@ -248,7 +248,7 @@ describe('site/siteExport', () => {
     if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
-    const button = createLeaf('button', section.id);
+    const button = createButtonTextNode(section.id);
     if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
@@ -358,8 +358,8 @@ describe('site/siteExport', () => {
     if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
-    const container = createWrapper('container', section.id);
-    const button = createLeaf('button', section.id);
+    const container = createContainerNode('container', section.id);
+    const button = createButtonTextNode(section.id);
     document.nodes[container.id] = container;
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(container.id, button.id);
@@ -433,7 +433,7 @@ describe('site/siteExport', () => {
       throw new Error('Expected section wrapper and image leaf');
     }
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     document.nodes[container.id] = container;
     document.nodes[section.id].children.push(container.id);
 
