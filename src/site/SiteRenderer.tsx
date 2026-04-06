@@ -2,12 +2,12 @@ import type { ReactElement } from 'react';
 import type { NodeId } from '../model/types';
 import { isMediaNode, isTextNode } from '../model/types';
 import { getLinkHref } from '../model/links';
-import { getNodeTextContent } from '../render/nodePresentation';
+import { getNodeTextContent, renderRichContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
 import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
 import { collectInteractKeys, SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
-import type { DocumentModel } from '../model/types';
+import type { DocumentModel, RichContent } from '../model/types';
 import type { SiteRendererProps } from './types';
 
 export type { SiteRendererProps } from './types';
@@ -127,6 +127,13 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
       <div key={node.id} className={plan.imagePlaceholderClassName} data-node-id={node.id}>
         {getNodeTextContent(node)}
       </div>
+    );
+  } else if (isTextNode(node) && node.subtype === 'rich') {
+    const Tag = node.htmlTag ?? 'p';
+    leaf = (
+      <Tag key={node.id} className={plan.nodeClassName} data-node-id={node.id}>
+        {renderRichContent(node.content as RichContent, renderDocument)}
+      </Tag>
     );
   } else if (isTextNode(node) && node.link) {
     const link = node.link;

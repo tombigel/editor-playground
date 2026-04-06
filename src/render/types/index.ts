@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { ComputedWrapperStickyState, ContainerNode, DocumentNode, MediaNode, TextNode } from '../../model/types';
+import type { ComputedWrapperStickyState, ContainerNode, DocumentModel, DocumentNode, MediaNode, TextNode } from '../../model/types';
 import type { StickyMeasuredNodeSizes } from '../../sticky/types';
 
 export type StyleValue = string | number;
@@ -19,6 +19,7 @@ export type RenderLeafContentOptions = {
   imagePlaceholderClassName?: string;
   imageDraggable?: boolean;
   disableTabNavigation?: boolean;
+  document?: DocumentModel;
 };
 
 export type RenderLeafNode = TextNode | MediaNode;

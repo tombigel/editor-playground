@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
+import { isRichTextLink } from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
+import type { DocumentModel, RichContent, RichTextLeaf } from '../model/types';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -28,13 +30,49 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
 
 export function getNodeTextContent(node: LeafNode): string {
   if (isTextNode(node)) {
-    // RichContent rendering handled by renderRichContent; here return plain text for labels/aria
-    return typeof node.content === 'string' ? node.content : '';
+    if (typeof node.content === 'string') return node.content;
+    // RichContent: flatten all leaf text for labels/aria
+    return (node.content as RichContent)
+      .flatMap((n) => (isRichTextLink(n) ? n.children.map((l) => l.text) : [(n as RichTextLeaf).text]))
+      .join('');
   }
   if (isMediaNode(node)) {
     return node.alt ?? 'Image';
   }
   return '';
+}
+
+function richLeafStyle(leaf: RichTextLeaf): CSSProperties {
+  const style: CSSProperties = {};
+  if (leaf.bold) style.fontWeight = 'bold';
+  if (leaf.italic) style.fontStyle = 'italic';
+  if (leaf.color) style.color = leaf.color;
+  if (leaf.fontFamily) style.fontFamily = leaf.fontFamily;
+  if (leaf.fontSize) style.fontSize = leaf.fontSize;
+  return style;
+}
+
+export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
+  return content.map((node, i) => {
+    if (isRichTextLink(node)) {
+      const href = getLinkHref(node, document);
+      const externalProps = node.linkType === 'external' && node.openInNewTab
+        ? { target: '_blank', rel: 'noopener noreferrer' }
+        : {};
+      return (
+        <a key={i} href={href} {...externalProps}>
+          {node.children.map((leaf, j) => (
+            <span key={j} style={richLeafStyle(leaf)}>{leaf.text}</span>
+          ))}
+        </a>
+      );
+    }
+    const leaf = node as RichTextLeaf;
+    const style = richLeafStyle(leaf);
+    return Object.keys(style).length > 0
+      ? <span key={i} style={style}>{leaf.text}</span>
+      : leaf.text;
+  });
 }
 
 export function isBrandMark(node: LeafNode) {
@@ -60,8 +98,18 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     imagePlaceholderClassName,
     imageDraggable = true,
     disableTabNavigation = false,
+    document,
   } = options;
   const tabIndex = disableTabNavigation ? -1 : undefined;
+
+  if (isTextNode(node) && node.subtype === 'rich') {
+    const Tag = node.htmlTag ?? 'p';
+    return (
+      <Tag style={contentStyle}>
+        {renderRichContent(node.content as RichContent, document)}
+      </Tag>
+    );
+  }
 
   if (isMediaNode(node)) {
     return node.src ? (
