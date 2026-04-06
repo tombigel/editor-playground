@@ -71,7 +71,7 @@ export function MiscDemos() {
 						open
 						onOpenChange={() => {}}
 						className="absolute left-0 top-0 w-[320px]"
-						style={{ top: 0, left: 0 }}
+						style={{ position: "absolute", top: 0, left: 0 }}
 						header={
 							<PanelHeader
 								icon={<SquareArrowRightEnter className="h-4 w-4" />}
