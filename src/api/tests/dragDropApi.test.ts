@@ -6,8 +6,8 @@ import {
   updateDragSession,
 } from '../dragDropApi';
 import type { DragGeometrySnapshot, DragUpdateInput } from '../types';
-import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
-import type { DocumentModel, NodeId, TextLeaf, WrapperNode } from '../../model/types';
+import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
+import type { DocumentModel, NodeId, TextNode, ContainerNode } from '../../model/types';
 
 type TestNodes = {
   document: DocumentModel;
@@ -23,24 +23,24 @@ type TestNodes = {
 function createDragDocument(): TestNodes {
   const document = structuredClone(createInitialDocument());
   const section = Object.values(document.nodes).find(
-    (node): node is WrapperNode => node.contentType === 'container' && node.subtype === 'section',
+    (node): node is ContainerNode => node.contentType === 'container' && node.subtype === 'section',
   );
   if (!section) {
     throw new Error('Expected section wrapper');
   }
 
-  const containerA = createWrapper('container', section.id);
+  const containerA = createContainerNode('container',section.id);
   containerA.rect = createDefaultRect('40px', '40px', '300px', '240px');
-  const childContainer = createWrapper('container', containerA.id);
+  const childContainer = createContainerNode('container',containerA.id);
   childContainer.rect = createDefaultRect('24px', '24px', '180px', '120px');
-  const containerB = createWrapper('container', section.id);
+  const containerB = createContainerNode('container',section.id);
   containerB.rect = createDefaultRect('420px', '40px', '300px', '240px');
 
-  const leafA = createLeaf('text', containerA.id) as TextLeaf;
+  const leafA = createTextNode('block',containerA.id) as TextNode;
   leafA.rect = createDefaultRect('20px', '30px', '80px', '40px');
-  const leafB = createLeaf('text', containerA.id) as TextLeaf;
+  const leafB = createTextNode('block',containerA.id) as TextNode;
   leafB.rect = createDefaultRect('140px', '30px', '80px', '40px');
-  const leafOther = createLeaf('text', containerB.id) as TextLeaf;
+  const leafOther = createTextNode('block',containerB.id) as TextNode;
   leafOther.rect = createDefaultRect('20px', '30px', '80px', '40px');
 
   containerA.children = [childContainer.id, leafA.id, leafB.id];

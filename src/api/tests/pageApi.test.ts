@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
-import type { DocumentModel, LinkLeaf } from '../../model/types';
+import { createInitialDocument, createContainerNode, createLinkTextNode } from '../../model/defaults';
+import type { DocumentModel, TextNode } from '../../model/types';
 import { validateDocument } from '../../model/validation';
 import { setTopLevelWrapperVisibility } from '../documentApi';
 import {
@@ -109,7 +109,7 @@ describe('deletePage', () => {
     if (!root || root.contentType !== 'site') {
       throw new Error('Expected site root');
     }
-    const section = createWrapper('section', doc.rootId);
+    const section = createContainerNode('section', doc.rootId);
     doc.nodes[section.id] = section;
     root.children.splice(root.children.length - 1, 0, section.id);
     page.sectionIds.push(section.id);
@@ -460,7 +460,7 @@ describe('syncPageHrefLinks', () => {
     const root = doc.nodes[doc.rootId];
     const sectionId = root.children[0];
     const section = doc.nodes[sectionId];
-    const linkNode = createLeaf('link', sectionId) as LinkLeaf;
+    const linkNode = createLinkTextNode(sectionId) as TextNode;
     linkNode.id = 'link-node-1';
     linkNode.content = 'Click me';
     linkNode.link = { ...(linkNode.link ?? { linkType: 'external' }), href };

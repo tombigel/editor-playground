@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledGoogleFontsCatalog } from '../../fonts';
-import { createLeaf, createSectionFromTemplate, createWrapper } from '../../model/defaults';
+import { createMediaNode, createButtonTextNode, createTextNode, createLinkTextNode, createContainerNode, createSectionFromTemplate } from '../../model/defaults';
 import { createPage } from '../../model/pageDefaults';
 import {
   applyDocumentCommands,
@@ -35,8 +35,8 @@ describe('api/documentApi', () => {
     if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
-    const image = createLeaf('image', section.id);
-    const button = createLeaf('button', section.id);
+    const image = createMediaNode('image', section.id);
+    const button = createButtonTextNode(section.id);
     document.nodes[image.id] = image;
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(image.id, button.id);
@@ -93,8 +93,8 @@ describe('api/documentApi', () => {
     if (!section || section.contentType !== 'container') {
       throw new Error('Expected section wrapper');
     }
-    const image = createLeaf('image', section.id);
-    const button = createLeaf('button', section.id);
+    const image = createMediaNode('image', section.id);
+    const button = createButtonTextNode(section.id);
     document.nodes[image.id] = image;
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(image.id, button.id);
@@ -155,7 +155,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected section wrapper and link node');
     }
 
-    const button = createLeaf('button', section.id);
+    const button = createButtonTextNode(section.id);
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
@@ -323,9 +323,9 @@ describe('api/documentApi', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const first = createLeaf('text', section.id);
-    const second = createLeaf('button', section.id);
-    const third = createLeaf('link', section.id);
+    const first = createTextNode('block', section.id);
+    const second = createButtonTextNode(section.id);
+    const third = createLinkTextNode(section.id);
     document.nodes[first.id] = first;
     document.nodes[second.id] = second;
     document.nodes[third.id] = third;
@@ -415,7 +415,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected header wrapper');
     }
 
-    const extraSection = createWrapper('section', root.id);
+    const extraSection = createContainerNode('section', root.id);
     document.nodes[extraSection.id] = extraSection;
     root.children.splice(root.children.length - 1, 0, extraSection.id);
 
