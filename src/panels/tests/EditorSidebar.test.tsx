@@ -110,6 +110,7 @@ describe("panels/EditorSidebar", () => {
 		expect(markup).toContain("font-mono");
 		expect(markup).toContain("Inherit from site");
 		expect(markup).toContain("Parent");
+		expect(markup).toContain(">Slug</label><div class=\"flex items-center gap-1\">");
 		expect(markup).toContain("overflow-y-auto pt-3");
 	});
 });

@@ -100,7 +100,7 @@ export function PageInspectorSection({
 
 			<InspectorFieldGroup>
 				<div className="space-y-1">
-					<InspectorInlineRow label="Slug">
+					<FormField label="Slug">
 						<div className="flex items-center gap-1">
 							<span className="editor-text-muted text-[11px]">/</span>
 							<Input
@@ -132,9 +132,9 @@ export function PageInspectorSection({
 								Validate links
 							</Button>
 						</div>
-					</InspectorInlineRow>
+					</FormField>
 					{slugErrors.length > 0 ? (
-						<InlineNotice className="px-[76px]">
+						<InlineNotice>
 							{slugErrors[0]}
 						</InlineNotice>
 					) : null}
