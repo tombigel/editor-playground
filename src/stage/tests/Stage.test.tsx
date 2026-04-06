@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
 import type { DocumentModel, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
@@ -271,8 +271,8 @@ describe('stage/Stage', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const container = createWrapper('container', section.id);
-    const text = createLeaf('text', container.id);
+    const container = createContainerNode('container', section.id);
+    const text = createTextNode('block',container.id);
     container.children = [text.id];
     document.nodes[container.id] = container;
     document.nodes[text.id] = text;
@@ -478,7 +478,7 @@ describe('stage/Stage', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     container.style!.background = '#f6d7c8';
     container.style!.borderWidth = parseUnitValue('3px');
     container.style!.borderColor = '#4c2a1b';
@@ -1330,7 +1330,7 @@ describe('stage/Stage', () => {
     }
 
     section.children = [];
-    const stickyLeaf = createLeaf('text', section.id);
+    const stickyLeaf = createTextNode('block',section.id);
     stickyLeaf.rect = createDefaultRect('24px', '100px', '200px', 'auto');
     stickyLeaf.sticky = {
       enabled: true,
@@ -1412,7 +1412,7 @@ describe('stage/Stage', () => {
 
   it('renders a single auto distance guide for top-edge self sticky leaves', () => {
     const siteId = 'site_top_auto';
-    const section = createWrapper('section', siteId);
+    const section = createContainerNode('section', siteId);
     section.name = 'Top Auto Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '600px');
     section.style!.paddingTop = parseSpacingValue('0px');
@@ -1420,7 +1420,7 @@ describe('stage/Stage', () => {
     section.style!.paddingBottom = parseSpacingValue('0px');
     section.style!.paddingLeft = parseSpacingValue('0px');
 
-    const target = createLeaf('text', section.id);
+    const target = createTextNode('block',section.id);
     if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
@@ -1483,7 +1483,7 @@ describe('stage/Stage', () => {
 
   it('extends top-edge auto guides through wrapper bottom padding', () => {
     const siteId = 'site_top_auto_padding';
-    const section = createWrapper('section', siteId);
+    const section = createContainerNode('section', siteId);
     section.name = 'Top Auto Padded Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
     section.style!.paddingTop = parseSpacingValue('20px');
@@ -1491,7 +1491,7 @@ describe('stage/Stage', () => {
     section.style!.paddingBottom = parseSpacingValue('30px');
     section.style!.paddingLeft = parseSpacingValue('0px');
 
-    const target = createLeaf('text', section.id);
+    const target = createTextNode('block',section.id);
     if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
@@ -1552,7 +1552,7 @@ describe('stage/Stage', () => {
 
   it('extends bottom-edge auto guides through wrapper top padding', () => {
     const siteId = 'site_bottom_auto_padding';
-    const section = createWrapper('section', siteId);
+    const section = createContainerNode('section', siteId);
     section.name = 'Bottom Auto Padded Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
     section.style!.paddingTop = parseSpacingValue('20px');
@@ -1560,7 +1560,7 @@ describe('stage/Stage', () => {
     section.style!.paddingBottom = parseSpacingValue('30px');
     section.style!.paddingLeft = parseSpacingValue('0px');
 
-    const target = createLeaf('text', section.id);
+    const target = createTextNode('block',section.id);
     if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
@@ -1621,7 +1621,7 @@ describe('stage/Stage', () => {
 
   it('splits both-edge auto self sticky guides by free space above and below the leaf', () => {
     const siteId = 'site_test';
-    const section = createWrapper('section', siteId);
+    const section = createContainerNode('section', siteId);
     section.name = 'Auto Sticky Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '600px');
     section.style!.paddingTop = parseSpacingValue('0px');
@@ -1629,7 +1629,7 @@ describe('stage/Stage', () => {
     section.style!.paddingBottom = parseSpacingValue('0px');
     section.style!.paddingLeft = parseSpacingValue('0px');
 
-    const stickyLeaf = createLeaf('text', section.id);
+    const stickyLeaf = createTextNode('block',section.id);
     if (stickyLeaf.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
@@ -1693,7 +1693,7 @@ describe('stage/Stage', () => {
 
   it('includes container border width in sticky overlay insets', () => {
     const siteId = 'site_container_border';
-    const section = createWrapper('section', siteId);
+    const section = createContainerNode('section', siteId);
     section.name = 'Container Border Section';
     section.rect = createDefaultRect('0px', '0px', '100%', '400px');
     section.style!.paddingTop = parseSpacingValue('0px');
@@ -1701,7 +1701,7 @@ describe('stage/Stage', () => {
     section.style!.paddingBottom = parseSpacingValue('0px');
     section.style!.paddingLeft = parseSpacingValue('0px');
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     container.name = 'Bordered Container';
     container.rect = createDefaultRect('40px', '40px', '320px', '220px');
     container.style!.paddingTop = parseSpacingValue('16px');
@@ -1711,7 +1711,7 @@ describe('stage/Stage', () => {
     container.style!.borderWidth = parseUnitValue('2px');
     container.style!.borderColor = '#dbe3ee';
 
-    const target = createLeaf('text', container.id);
+    const target = createTextNode('block',container.id);
     if (target.contentType !== 'text') {
       throw new Error('Expected text leaf');
     }
@@ -1887,7 +1887,7 @@ describe('stage/Stage', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const container = createWrapper('container', section.id);
+    const container = createContainerNode('container', section.id);
     document.nodes[container.id] = container;
     section.children.push(container.id);
 

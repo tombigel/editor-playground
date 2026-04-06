@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultRect, createInitialDocument, createLeaf, createWrapper } from '../../model/defaults';
+import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
 import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import {
   AUTO_WRAPPER_MIN_HEIGHT_PX,
@@ -46,7 +46,7 @@ describe('render/layout', () => {
       throw new Error('Expected section wrapper');
     }
 
-    const container = createWrapper('container', 'root');
+    const container = createContainerNode('container', 'root');
     container.rect.height.base = parseHeightValue('180px');
 
     expect(getNodeHeight(section, { [section.id]: { width: 998, height: 700 } })).toBe(450);
@@ -93,8 +93,8 @@ describe('render/layout', () => {
   });
 
   it('uses fixed height for containers and minimum height for sections', () => {
-    const section = createWrapper('section', 'root');
-    const container = createWrapper('container', 'root');
+    const section = createContainerNode('section', 'root');
+    const container = createContainerNode('container', 'root');
     section.rect.height.base = parseHeightValue('240px');
     container.rect.height.base = parseHeightValue('180px');
 
@@ -103,7 +103,7 @@ describe('render/layout', () => {
   });
 
   it('keeps section bottom dividers on the inner surface instead of the wrapper box', () => {
-    const section = createWrapper('section', 'root');
+    const section = createContainerNode('section', 'root');
     section.style!.borderColor = undefined;
     section.style!.borderWidth = undefined;
     section.style!.sectionBorderBottomColor = '#cbd5e1';
@@ -117,7 +117,7 @@ describe('render/layout', () => {
       borderBottomWidth: '2px',
     });
 
-    const container = createWrapper('container', 'root');
+    const container = createContainerNode('container', 'root');
     container.style!.borderColor = undefined;
     container.style!.borderWidth = undefined;
     expect(getWrapperBorderStyle(container)).toEqual({});
@@ -125,7 +125,7 @@ describe('render/layout', () => {
   });
 
   it('applies wrapper surface background, border, radius, and shadow on the content wrapper', () => {
-    const container = createWrapper('container', 'root');
+    const container = createContainerNode('container', 'root');
     container.style!.background = '#ffffff';
     container.style!.borderWidth = parseUnitValue('2px');
     container.style!.borderColor = '#dbe3ee';
@@ -150,7 +150,7 @@ describe('render/layout', () => {
   });
 
   it('omits zero-width borders, zero radius, and fully transparent shadows from wrapper surfaces', () => {
-    const container = createWrapper('container', 'root');
+    const container = createContainerNode('container', 'root');
     container.style!.background = '#ffffff';
     container.style!.borderWidth = parseUnitValue('0px');
     container.style!.borderColor = '#dbe3ee';
@@ -168,7 +168,7 @@ describe('render/layout', () => {
   });
 
   it('exposes content wrapper padding separately for overlay alignment', () => {
-    const section = createWrapper('section', 'root');
+    const section = createContainerNode('section', 'root');
     section.style!.paddingTop = parseSpacingValue('1.5em');
     section.style!.paddingRight = parseSpacingValue('2rem');
     section.style!.paddingBottom = parseSpacingValue('12px');
@@ -217,9 +217,9 @@ describe('render/layout', () => {
   });
 
   it('does not keep stale measured auto wrapper height as a mesh row boundary', () => {
-    const section = createWrapper('section', 'root');
+    const section = createContainerNode('section', 'root');
     section.rect = createDefaultRect('0px', '0px', '100%', 'auto');
-    const text = createLeaf('text', section.id);
+    const text = createTextNode('block', section.id);
     text.name = 'Auto Height Child';
     text.rect = createDefaultRect('0px', '24px', '240px', '40px');
     section.children = [text.id];

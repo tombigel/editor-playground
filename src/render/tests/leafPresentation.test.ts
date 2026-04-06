@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createLeaf } from '../../model/defaults';
+import { createButtonTextNode, createMediaNode } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
 import { getButtonLeafStyle, getImageLeafStyle } from '../leafPresentation';
 
 describe('render/leafPresentation', () => {
   it('uses shared default button presentation even without authored border or shadow overrides', () => {
-    const button = createLeaf('button', 'root');
+    const button = createButtonTextNode('root');
     if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
@@ -25,7 +25,7 @@ describe('render/leafPresentation', () => {
   });
 
   it('does not add filter shadows to buttons when box shadow is present', () => {
-    const button = createLeaf('button', 'root');
+    const button = createButtonTextNode('root');
     if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
@@ -41,7 +41,7 @@ describe('render/leafPresentation', () => {
   });
 
   it('uses shared default image presentation even without authored border or shadow overrides', () => {
-    const image = createLeaf('image', 'root');
+    const image = createMediaNode('image', 'root');
     if (image.subtype !== 'image') {
       throw new Error('Expected image leaf');
     }
@@ -56,7 +56,7 @@ describe('render/leafPresentation', () => {
   });
 
   it('keeps authored image overrides on the shared presentation path', () => {
-    const image = createLeaf('image', 'root');
+    const image = createMediaNode('image', 'root');
     if (image.subtype !== 'image') {
       throw new Error('Expected image leaf');
     }
@@ -73,8 +73,8 @@ describe('render/leafPresentation', () => {
   });
 
   it('lets zero-valued border fields and fully transparent shadows suppress rendered defaults', () => {
-    const image = createLeaf('image', 'root');
-    const button = createLeaf('button', 'root');
+    const image = createMediaNode('image', 'root');
+    const button = createButtonTextNode('root');
     if (image.subtype !== 'image' || button.subtype !== 'block') {
       throw new Error('Expected image and button leaves');
     }
