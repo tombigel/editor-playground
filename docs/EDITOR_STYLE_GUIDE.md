@@ -57,6 +57,14 @@ Implementation baseline:
 - [src/components/ui/card.tsx](../src/components/ui/card.tsx)
 - [src/components/ui/dialog.tsx](../src/components/ui/dialog.tsx)
 - [src/components/ui/tabs.tsx](../src/components/ui/tabs.tsx)
+- [src/components/ui/panel-header.tsx](../src/components/ui/panel-header.tsx)
+- [src/components/ui/floating-panel-shell.tsx](../src/components/ui/floating-panel-shell.tsx)
+- [src/components/ui/settings-panel.tsx](../src/components/ui/settings-panel.tsx)
+- [src/components/ui/tree-row.tsx](../src/components/ui/tree-row.tsx)
+- [src/components/ui/page-switcher-select.tsx](../src/components/ui/page-switcher-select.tsx)
+- [src/components/ui/list-card.tsx](../src/components/ui/list-card.tsx)
+- [src/components/ui/pager.tsx](../src/components/ui/pager.tsx)
+- [src/components/ui/color-picker.tsx](../src/components/ui/color-picker.tsx)
 
 ## Design System Correspondence
 
@@ -644,6 +652,45 @@ Rules:
 - keep tab count low and labels short
 - Pages panel uses this primitive for `Page` and `Settings`
 
+### 11.13 Shared Editor Shells
+
+Implementation references:
+
+- [src/components/ui/panel-header.tsx](../src/components/ui/panel-header.tsx)
+- [src/components/ui/floating-panel-shell.tsx](../src/components/ui/floating-panel-shell.tsx)
+- [src/panels/EditorPanelHeader.tsx](../src/panels/EditorPanelHeader.tsx)
+
+Spec:
+
+- floating shells use the editor surface token set with panel-level radius and the standard surface shadow
+- panel headers share one icon/title/description/actions/close layout rather than panel-local header markup
+- header actions stay compact and align to the title row before introducing a second row
+- floating shells may render as native popovers in production or as static shells in showcase/demo contexts, but both paths must keep the same visual contract
+- scroll behavior belongs to the host body slot; the shell should provide framing, not panel-specific content spacing
+
+Rules:
+
+- use the shared shell/header contracts for detached editor panels and floating pop panels before introducing another local frame
+- keep drag behavior, viewport clamping, and other domain-specific interaction logic in the consumer rather than inside the shared shell
+
+### 11.14 Shared List Surfaces
+
+Implementation references:
+
+- [src/components/ui/list-card.tsx](../src/components/ui/list-card.tsx)
+- [src/components/ui/pager.tsx](../src/components/ui/pager.tsx)
+- [src/panels/fontManagement/ManageFontsPanel.tsx](../src/panels/fontManagement/ManageFontsPanel.tsx)
+
+Spec:
+
+- list cards use one token-backed bordered surface with compact title/metadata/action slots
+- pagers use compact inline button groups and value text that can live inside panel footers without adding a second framed container
+
+Rules:
+
+- use these shared list surfaces when more than one editor list or catalog wants the same card/pager anatomy
+- keep domain-specific preview content and item semantics in the consumer
+
 ## 12. Settings Navigation
 
 Implementation reference:
@@ -672,9 +719,10 @@ Dark active state:
 
 ## 13. Inspector Compact Controls
 
-Implementation reference:
+Implementation references:
 
 - [src/panels/InspectorControls.tsx](../src/panels/InspectorControls.tsx)
+- [src/components/ui/settings-panel.tsx](../src/components/ui/settings-panel.tsx)
 
 Spec:
 
@@ -683,11 +731,48 @@ Spec:
 - labels: `11px`, medium
 - inline unit triggers: `10px`
 - compact pills: `10px`, medium
+- notice and inline warning surfaces use the same token-backed border/background roles across inspector and settings
+- grouped inspector/settings rows share one composition layer for label slots, inline controls, and mixed-value summaries
 
 Rules:
 
-- compact controls may be tighter than shared primitives
+- compact controls may be tighter than general-purpose primitives
 - they must still use the same token-backed border/background/focus language
+- inspector and settings should share the same row, group, pill, and notice contracts before adding panel-local wrappers
+- `ValueWithUnit` owns the continuous outer border, focus-within treatment, and mixed-selection shell; callers should not recreate that structure locally
+
+### 13.1 Shared Inspector And Settings Contracts
+
+Implementation references:
+
+- [src/components/ui/settings-panel.tsx](../src/components/ui/settings-panel.tsx)
+- [src/panels/controls/FormLayout.tsx](../src/panels/controls/FormLayout.tsx)
+
+Shared contracts currently expected across inspector and settings:
+
+- `LabeledControlRow`
+- `ControlGroup`
+- `NoticeSurface`
+- `InlineNotice`
+- `LabeledFieldStack`
+- `ValuePill`
+
+Rules:
+
+- add new inspector/settings structure to this shared layer before introducing bespoke field wrappers
+- mixed-selection presentation belongs in the shared contract when more than one control uses it
+- warnings and informational notes should use the shared notice surfaces unless the content is truly stage-specific
+
+### 13.2 Color Picker Note
+
+Implementation reference:
+
+- [src/components/ui/color-picker.tsx](../src/components/ui/color-picker.tsx)
+
+Rules:
+
+- the local wrapper owns trigger variants and documented host styling only
+- deeper shadow-DOM styling constraints are limited by the upstream component interface; see [docs/COLOR_PICKER_UPSTREAM_CONTRIBUTIONS.md](./COLOR_PICKER_UPSTREAM_CONTRIBUTIONS.md) before adding more local override layers
 
 ## 14. Stage Chrome
 
