@@ -1,6 +1,4 @@
 import { SquareArrowRightEnter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { PanelHeader } from "@/components/ui/panel-header";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
@@ -13,33 +11,6 @@ const PANEL_HEADER_PROPS: PropDefinition[] = [
 	{ name: "closeLabel", type: "string", description: "Accessible label for the close button." },
 	{ name: "onClose", type: "() => void", description: "Optional close handler that renders the close button." },
 	{ name: "className", type: "string", description: "Optional wrapper class overrides." },
-];
-
-const FLOATING_PANEL_SHELL_PROPS: PropDefinition[] = [
-	{ name: "header", type: "ReactNode", description: "Optional shared header slot rendered above the body." },
-	{ name: "children", type: "ReactNode", description: "Panel body content." },
-	{ name: "bodyClassName", type: "string", description: "Optional body wrapper classes." },
-	{ name: "bodyStyle", type: "CSSProperties", description: "Optional inline styles for the body wrapper." },
-	{
-		name: "suppressPopover",
-		type: "boolean",
-		default: "false",
-		description: "Renders a static shell for showcase/test contexts instead of native popover markup.",
-	},
-	{ name: "open", type: "boolean", description: "Popover open state when using the live popover path." },
-	{ name: "onOpenChange", type: "(open: boolean) => void", description: "Popover state change handler." },
-];
-
-const SHORTCUTS_PROPS: PropDefinition[] = [
-	{ name: "title", type: "string", description: "Shortcut section title." },
-	{ name: "items", type: "Array<{ label: string; description: string }>", description: "Shortcut rows rendered inside the section." },
-];
-
-const FOCUSED_PANEL_PROPS: PropDefinition[] = [
-	{ name: "title", type: "string", description: "Focused-mode panel title." },
-	{ name: "nodeName", type: "string", description: "Current selected node name shown in the summary row." },
-	{ name: "roleBadge", type: "ReactNode", description: "Compact shared role/status pill in the header." },
-	{ name: "onExit", type: "() => void", description: "Exit focused-mode action." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -94,129 +65,6 @@ export function MiscDemos() {
 							</span>
 						}
 					/>
-				</div>
-			</ComponentPreview>
-
-			<ComponentPreview
-				id="composite-floating-panel-shell"
-				name="Floating Panel Shell"
-				description="Shared floating popover shell with DS-owned header slot and scrollable body wrapper."
-				sourceFile="src/components/ui/floating-panel-shell.tsx"
-				props={FLOATING_PANEL_SHELL_PROPS}
-			>
-				<div className="relative h-[260px] w-[360px]">
-					<FloatingPanelShell
-						suppressPopover
-						open
-						onOpenChange={() => {}}
-						className="absolute left-0 top-0 w-[320px]"
-						style={{ top: 0, left: 0 }}
-						header={
-							<PanelHeader
-								icon={<SquareArrowRightEnter className="h-4 w-4" />}
-								title="Section Templates"
-								description="Choose a layout to insert."
-								closeLabel="Close section templates panel"
-								onClose={() => undefined}
-							/>
-						}
-						bodyClassName="editor-scrollbar max-h-[180px] overflow-y-auto p-3"
-					>
-						<div className="grid grid-cols-2 gap-2.5">
-							{["Hero", "Feature", "CTA", "Gallery"].map((label) => (
-								<div
-									key={label}
-									className="editor-border-subtle rounded-lg border p-2.5"
-								>
-									<div className="editor-text-strong text-xs font-semibold">{label}</div>
-									<div className="editor-text-muted mt-1.5 text-[11px] leading-4">
-										Shared shell body content.
-									</div>
-								</div>
-							))}
-						</div>
-					</FloatingPanelShell>
-				</div>
-			</ComponentPreview>
-
-			{/* Shortcuts */}
-			<ComponentPreview
-				id="composite-shortcuts"
-				name="Shortcuts"
-				description="Shortcut section container with keyboard shortcut rows."
-				sourceFile="src/panels/ShortcutHelpContent.tsx"
-				props={SHORTCUTS_PROPS}
-			>
-				<div className="w-[300px]">
-					<div className="editor-bg-subtle editor-border-subtle rounded-lg border p-3.5">
-						<div className="editor-text-muted text-[11px] font-semibold uppercase tracking-wider">
-							Edit
-						</div>
-						<div className="mt-2.5 space-y-2.5">
-							{[
-								{ label: "Mod+Z", description: "Undo" },
-								{ label: "Mod+Shift+Z", description: "Redo" },
-								{ label: "Delete", description: "Delete selected" },
-							].map((item) => (
-								<div
-									key={item.label}
-									className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
-								>
-									<span className="editor-text-strong text-xs leading-4">
-										{item.description}
-									</span>
-									<kbd className="editor-kbd max-w-[14rem] whitespace-normal break-words rounded-md border px-1.5 py-0.5 text-right text-[11px] font-medium leading-4 shadow-sm">
-										{item.label}
-									</kbd>
-								</div>
-							))}
-						</div>
-					</div>
-				</div>
-			</ComponentPreview>
-
-			{/* Focused Panel */}
-			<ComponentPreview
-				id="composite-focused-panel"
-				name="Focused Panel"
-				description="Floating focused-mode panel with drag handle, title, role badge, and exit button. Shows empty state when no node is selected."
-				sourceFile="src/panels/FocusedModePanel.tsx"
-				props={FOCUSED_PANEL_PROPS}
-			>
-				<div className="w-[300px]">
-					<div className="editor-focused-panel editor-settings-panel overflow-hidden rounded-xl border shadow-lg">
-						<div className="flex cursor-grab items-center justify-between gap-2 px-3 pt-3 pb-2">
-							<div className="min-w-0 flex-1">
-								<div className="editor-text-strong text-sm font-medium">
-									Content
-								</div>
-								<div className="editor-text-muted mt-1 flex min-w-0 items-center gap-2 text-xs">
-									<div className="truncate">Sticky Edge Lab</div>
-									<span className="editor-pill-subtle shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
-										section
-									</span>
-								</div>
-							</div>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon"
-								className="editor-icon-button-subtle h-7 w-7 rounded-md border"
-								aria-label="Exit focused mode"
-							>
-								<SquareArrowRightEnter className="h-3.5 w-3.5" />
-							</Button>
-						</div>
-						<div className="px-3 py-6">
-							<div className="editor-text-strong text-sm font-medium">
-								Nothing to edit yet
-							</div>
-							<div className="editor-text-muted mt-1 text-xs">
-								Select a non-site node to edit its content controls from focused
-								mode.
-							</div>
-						</div>
-					</div>
 				</div>
 			</ComponentPreview>
 
@@ -281,6 +129,7 @@ export function MiscDemos() {
 					</div>
 				</div>
 			</ComponentPreview>
+
 		</>
 	);
 }

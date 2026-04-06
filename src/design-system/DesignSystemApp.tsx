@@ -7,6 +7,7 @@ import { DS_SECTIONS } from "./registry";
 import { BaseComponentsSection } from "./sections/base";
 import { CompositeSection } from "./sections/composite";
 import { DesignTokensSection } from "./sections/DesignTokensSection";
+import { PanelsSection } from "./sections/panels";
 import { useDesignSystemTheme } from "./useDesignSystemTheme";
 
 export default function DesignSystemApp() {
@@ -62,6 +63,13 @@ export default function DesignSystemApp() {
 							Composites
 						</h2>
 						<CompositeSection />
+					</section>
+
+					<section className="mb-16">
+						<h2 className="editor-text-strong mb-6 text-xl font-bold">
+							Panels
+						</h2>
+						<PanelsSection />
 					</section>
 				</DesignSystemStage>
 			</div>

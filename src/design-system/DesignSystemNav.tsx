@@ -11,48 +11,66 @@ export function DesignSystemNav({
 	const [activeId, setActiveId] = useState<string>(
 		() => sections[0]?.subsections[0]?.id ?? "",
 	);
-	const observerRef = useRef<IntersectionObserver | null>(null);
 	const isScrollingRef = useRef(false);
 
 	useEffect(() => {
 		if (!scrollContainer) {
 			return;
 		}
+		const container = scrollContainer;
 
-		const allIds = sections.flatMap((s) => s.subsections.map((sub) => sub.id));
-		const visibleIds = new Set<string>();
-
-		observerRef.current = new IntersectionObserver(
-			(entries) => {
-				if (isScrollingRef.current) {
-					return;
-				}
-				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						visibleIds.add(entry.target.id);
-					} else {
-						visibleIds.delete(entry.target.id);
-					}
-				}
-				for (const id of allIds) {
-					if (visibleIds.has(id)) {
-						setActiveId(id);
-						break;
-					}
-				}
-			},
-			{ root: scrollContainer, rootMargin: "-10% 0px -80% 0px", threshold: 0 },
+		const allIds = sections.flatMap((section) =>
+			section.subsections.map((subsection) => subsection.id),
 		);
 
-		for (const id of allIds) {
-			const el = scrollContainer.querySelector(`#${CSS.escape(id)}`);
-			if (el) {
-				observerRef.current.observe(el);
+		function updateActiveId() {
+			if (isScrollingRef.current) {
+				return;
 			}
+
+			const containerRect = container.getBoundingClientRect();
+			const subsectionElements = allIds
+				.map((id) => ({
+					id,
+					element: container.querySelector<HTMLElement>(
+						`#${CSS.escape(id)}`,
+					),
+				}))
+				.filter(
+					(
+						entry,
+					): entry is { id: string; element: HTMLElement } =>
+						entry.element !== null,
+				);
+
+			if (subsectionElements.length === 0) {
+				return;
+			}
+
+			const activationOffset = 120;
+			let nextActiveId = subsectionElements[0].id;
+
+			for (const { id, element } of subsectionElements) {
+				const top =
+					element.getBoundingClientRect().top - containerRect.top;
+				if (top <= activationOffset) {
+					nextActiveId = id;
+					continue;
+				}
+				break;
+			}
+
+			setActiveId(nextActiveId);
 		}
 
+		updateActiveId();
+		container.addEventListener("scroll", updateActiveId, {
+			passive: true,
+		});
+		window.addEventListener("resize", updateActiveId);
 		return () => {
-			observerRef.current?.disconnect();
+			container.removeEventListener("scroll", updateActiveId);
+			window.removeEventListener("resize", updateActiveId);
 		};
 	}, [scrollContainer, sections]);
 

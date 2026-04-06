@@ -1,4 +1,4 @@
-import { Blocks, Cuboid, Palette } from "lucide-react";
+import { AppWindow, Blocks, Cuboid, Palette } from "lucide-react";
 import type { DSSection } from "./types";
 
 export const DS_SECTIONS: DSSection[] = [
@@ -55,7 +55,6 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "composite-inspector-title", label: "Inspector Title" },
 			{ id: "composite-section-card", label: "Section Card" },
 			{ id: "composite-switch-block", label: "Switch Block" },
-			{ id: "composite-debug-info", label: "Debug Info Card" },
 			{ id: "composite-shadow-control", label: "Shadow Control" },
 			{ id: "composite-border-control", label: "Border Control" },
 			{ id: "composite-text-style", label: "Text Style" },
@@ -65,12 +64,23 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "composite-settings-theme", label: "Settings Theme Controls" },
 			{ id: "composite-settings-primitives", label: "Settings Panel Primitives" },
 			{ id: "composite-settings-nav", label: "Settings Nav Item" },
-			{ id: "composite-layers-panel", label: "Layers Panel" },
 			{ id: "composite-panel-header", label: "Panel Header" },
+			{ id: "composite-follow-link-popup", label: "Follow-link Popup" },
+		],
+	},
+	{
+		id: "panels",
+		label: "Panels",
+		icon: AppWindow,
+		subsections: [
+			{ id: "composite-debug-info", label: "Debug Info Card" },
+			{ id: "composite-sticky-section", label: "Sticky Section" },
+			{ id: "composite-layers-panel", label: "Layers Panel" },
 			{ id: "composite-floating-panel-shell", label: "Floating Panel Shell" },
 			{ id: "composite-shortcuts", label: "Shortcuts" },
 			{ id: "composite-focused-panel", label: "Focused Panel" },
-			{ id: "composite-follow-link-popup", label: "Follow-link Popup" },
+			{ id: "composite-section-templates", label: "Section Templates" },
+			{ id: "composite-font-management", label: "Font Management" },
 		],
 	},
 ];
