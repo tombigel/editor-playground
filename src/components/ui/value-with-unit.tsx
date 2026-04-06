@@ -300,11 +300,13 @@ export function ValueWithUnit({
     <div ref={rootRef} className={cn('relative', className)}>
       <div
         className={cn(
-          'value-with-unit group/valuewithunit relative flex h-8 min-w-0 rounded-sm border shadow-sm transition-[border-color,box-shadow]',
+          'value-with-unit group/valuewithunit relative flex h-8 min-w-0 rounded-sm border shadow-sm outline-none transition-[border-color,box-shadow,outline-color]',
           invalid ? 'value-with-unit-invalid focus-within:border-red-400' : 'focus-within:border-[color:var(--editor-accent)]',
+          'focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[color:var(--editor-focus-ring-strong)]',
           mixed ? 'value-with-unit-mixed' : null,
         )}
         data-mode={mode}
+        data-ui="value-with-unit"
       >
         {showsInput ? (
           <Input
@@ -352,7 +354,7 @@ export function ValueWithUnit({
               commitInputValue(event.target.value);
             }}
             className={cn(
-              'value-with-unit-value h-full min-w-0 flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-2.5 text-center text-[12px] [appearance:textfield] shadow-none [padding-inline-end:0] focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+              'value-with-unit-value h-full min-w-0 flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-2.5 text-center text-[12px] [appearance:textfield] shadow-none [padding-inline-end:0] focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
               hasSuggestions ? 'pr-5' : null,
             )}
           />
@@ -378,7 +380,7 @@ export function ValueWithUnit({
               <SelectTrigger
                 aria-label={ariaLabel}
                 className={cn(
-                  'value-with-unit-trigger value-with-unit-trigger-full peer/valuewithunittrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left !text-[11px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>span]:w-full [&>span]:justify-start [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60',
+                  'value-with-unit-trigger value-with-unit-trigger-full peer/valuewithunittrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left !text-[11px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>span]:w-full [&>span]:justify-start [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_1px_var(--editor-accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)] disabled:cursor-default disabled:opacity-60',
                   mixedSegment ? 'value-with-unit-segment-mixed' : null,
                 )}
               >
@@ -424,7 +426,7 @@ export function ValueWithUnit({
               <SelectTrigger
                 aria-label={ariaLabel ? `${ariaLabel} unit` : undefined}
                 className={cn(
-                  'value-with-unit-segment peer/valuewithunittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0 disabled:cursor-default disabled:opacity-60',
+                  'value-with-unit-segment peer/valuewithunittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_1px_var(--editor-accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)] disabled:cursor-default disabled:opacity-60',
                   mixedSegment ? 'value-with-unit-segment-mixed' : null,
                 )}
                 style={{ width: resolvedSegmentWidth }}

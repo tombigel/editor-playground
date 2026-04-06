@@ -278,6 +278,7 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('<button');
     expect(markup).toContain('Playground Header');
     expect(markup).toContain('>header<');
+    expect(markup).toContain('data-ui="value-pill"');
   });
 
   it('renders the site summary title without the editable button affordance', () => {

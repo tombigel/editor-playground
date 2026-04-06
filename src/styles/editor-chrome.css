@@ -828,20 +828,6 @@
   box-shadow: none;
 }
 
-.value-with-unit :is([data-ui='input'], [data-ui='select-trigger']):focus-visible {
-  outline: none !important;
-  outline-offset: 0 !important;
-  border-color: var(--editor-accent) !important;
-  box-shadow: inset 0 0 0 1px var(--editor-accent) !important;
-}
-
-.value-with-unit [data-ui='select-trigger'][data-state='open'] {
-  outline: none !important;
-  outline-offset: 0 !important;
-  border-color: var(--editor-accent) !important;
-  box-shadow: inset 0 0 0 1px var(--editor-accent) !important;
-}
-
 .editor-rail-toggle-button {
   display: flex;
   height: 2rem;
@@ -976,14 +962,14 @@
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit [data-ui='input'],
 :is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field [data-ui='input'],
 :is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit [data-ui='input'] {
-  font-size: 12px !important;
+  font-size: 12px;
 }
 
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static, [data-ui='select-trigger']),
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static, [data-ui='select-trigger']),
 :is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static, [data-ui='select-trigger']),
 :is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static, [data-ui='select-trigger']) {
-  font-size: 11px !important;
+  font-size: 11px;
 }
 
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] :is(

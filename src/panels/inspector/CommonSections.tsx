@@ -33,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { ValuePill } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
@@ -109,9 +110,7 @@ export function InspectorSummary({
           )}
           {node.contentType !== 'site' ? (
             <div className="mt-1">
-              <span className="editor-pill-subtle inline-flex shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
-                {node.subtype}
-              </span>
+              <ValuePill value={node.subtype} className="inline-flex shrink-0" />
             </div>
           ) : null}
         </div>
@@ -574,16 +573,12 @@ export function InspectorSectionCard({
             <CardTitle className="text-xs">{title}</CardTitle>
           )}
           {headerAction ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="editor-icon-button-subtle h-7 w-7 rounded-md border"
+            <InspectorSectionActionButton
               aria-label={headerAction.ariaLabel}
               onClick={headerAction.onClick}
             >
               {headerAction.icon}
-            </Button>
+            </InspectorSectionActionButton>
           ) : focusedModeEntry ? (
             <PopoverTooltip
               side="top"
@@ -595,22 +590,41 @@ export function InspectorSectionCard({
                 </div>
               }
             >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="editor-icon-button-subtle h-7 w-7 rounded-md border"
+              <InspectorSectionActionButton
                 aria-label={focusedModeEntry.ariaLabel ?? `Go to ${focusedModeEntry.label}`}
                 onClick={() => focusedModeEntry.onEnter(focusedModeEntry.mode)}
               >
                 <SquareArrowOutUpRight className="h-3.5 w-3.5" />
-              </Button>
+              </InspectorSectionActionButton>
             </PopoverTooltip>
           ) : null}
         </CardHeader>
       ) : null}
       <CardContent className={contentClassName}>{children}</CardContent>
     </Card>
+  );
+}
+
+function InspectorSectionActionButton({
+  'aria-label': ariaLabel,
+  onClick,
+  children,
+}: {
+  'aria-label': string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="editor-icon-button-subtle h-7 w-7 rounded-md border"
+      aria-label={ariaLabel}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
   );
 }
 

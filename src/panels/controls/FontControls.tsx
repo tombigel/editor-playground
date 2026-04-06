@@ -5,9 +5,7 @@ import { buildFontFamilyStack, buildFontPickerPreviewStylesheetHref, listFontWei
 import type { DocumentFontFamily } from '../../model/types';
 import { parseFontSizeValue, parseSpacingValue } from '../../api/documentApi';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { PopoverSurface } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ValueWithUnit, type ValueWithUnitOption, type ValueWithUnitSuggestion } from '@/components/ui/value-with-unit';
 import { cn } from '@/lib/utils';
 
@@ -647,53 +645,31 @@ export function SpacingField({
   onChange: (value: string) => void;
 }) {
   const parsed = parseSpacingValue(value);
-  const suffixWidth = `${COMPACT_UNIT_SUFFIX_WIDTH}px`;
+  const options: ValueWithUnitOption[] = FONT_SIZE_UNIT_OPTIONS.map((option) => ({
+    type: 'option',
+    value: option,
+    label: option,
+    inputMode: 'numeric',
+  }));
 
   return (
-    <div className="editor-inline-field group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] focus-within:border-[color:var(--editor-accent)]">
-      <Input
-        type="number"
-        min={0}
-        step="any"
-        value={String(parsed.parsed.value)}
-        onChange={(e) => {
-          const next = Number.parseFloat(e.target.value);
-          if (Number.isFinite(next) && next >= 0) {
-            onChange(`${next}${parsed.parsed.unit}`);
-          }
-        }}
-        className="editor-inline-field-value h-full overflow-visible rounded-l-sm border-0 bg-transparent text-[12px] [appearance:textfield] [padding-inline-end:0] shadow-none focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
-      <Select
-        value={parsed.parsed.unit}
-        onValueChange={(nextUnit) => {
-          const converted = convertStageSpacingToInput(nodeId, axis, nextUnit as SpacingMode);
-          if (converted == null) {
-            return;
-          }
-          onChange(`${converted}${nextUnit as SpacingMode}`);
-        }}
-      >
-        <SelectTrigger
-          className="editor-inline-field-trigger peer/unittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:ring-0"
-          style={{ width: suffixWidth }}
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {FONT_SIZE_UNIT_OPTIONS.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div
-        className="editor-inline-field-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/sizefield:opacity-100 peer-focus-visible/unittrigger:opacity-100 peer-data-[state=open]/unittrigger:opacity-100 peer-disabled/unittrigger:opacity-0"
-        style={{ width: suffixWidth }}
-      >
-        <ChevronDown className="editor-text-strong h-3 w-3" />
-      </div>
-    </div>
+    <ValueWithUnit
+      mode="number-select"
+      value={value}
+      onChange={onChange}
+      options={options}
+      inputValue={String(parsed.parsed.value)}
+      selectedOption={parsed.parsed.unit}
+      min={0}
+      step="any"
+      segmentWidth={COMPACT_UNIT_SUFFIX_WIDTH}
+      onResolveOptionValue={(nextUnit) => {
+        const converted = convertStageSpacingToInput(nodeId, axis, nextUnit as SpacingMode);
+        if (converted == null) {
+          return null;
+        }
+        return `${converted}${nextUnit as SpacingMode}`;
+      }}
+    />
   );
 }

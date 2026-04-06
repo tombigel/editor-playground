@@ -110,6 +110,23 @@ describe('components/ui/value-with-unit', () => {
     expect(markup).toContain('12px');
   });
 
+  it('renders component-owned focus and open state classes instead of relying on global rescue rules', () => {
+    const markup = renderToStaticMarkup(
+      <ValueWithUnit
+        mode="number-select"
+        value="16px"
+        onChange={() => {}}
+        options={[{ type: 'option', value: 'px', label: 'px', inputMode: 'numeric' }]}
+        inputValue="16"
+        selectedOption="px"
+      />,
+    );
+
+    expect(markup).toContain('data-ui="value-with-unit"');
+    expect(markup).toContain('focus-within:outline-2');
+    expect(markup).toContain('data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)]');
+  });
+
   it('uses the same value composition for typed and suggested numeric entries', () => {
     expect(
       composeValueWithUnitValue({

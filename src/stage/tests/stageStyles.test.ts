@@ -44,8 +44,8 @@ describe('stage/stage styles', () => {
     expect(styles).toContain("[data-ui='select-trigger']");
     expect(styles).toContain("[data-ui='switch']");
     expect(styles).toContain("border-width: 2px;");
-    expect(styles).toContain("font-size: 12px !important;");
-    expect(styles).toContain("font-size: 11px !important;");
+    expect(styles).toContain("font-size: 12px;");
+    expect(styles).toContain("font-size: 11px;");
   });
 
   it('keeps composite numeric fields on a single shell border with accent-colored inner segment focus', () => {
@@ -56,9 +56,7 @@ describe('stage/stage styles', () => {
     expect(styles).toContain('box-shadow: inset 1px 0 0 var(--editor-input-border);');
     expect(styles).toContain('.value-with-unit:focus-within');
     expect(styles).toContain('outline: 2px solid var(--editor-focus-ring-strong);');
-    expect(styles).toContain(".value-with-unit :is([data-ui='input'], [data-ui='select-trigger']):focus-visible");
-    expect(styles).toContain('border-color: var(--editor-accent);');
-    expect(styles).toContain('box-shadow: inset 0 0 0 1px var(--editor-accent) !important;');
-    expect(styles).toContain(".value-with-unit [data-ui='select-trigger'][data-state='open']");
+    expect(styles).not.toContain(".value-with-unit :is([data-ui='input'], [data-ui='select-trigger']):focus-visible");
+    expect(styles).not.toContain(".value-with-unit [data-ui='select-trigger'][data-state='open']");
   });
 });
