@@ -21,4 +21,24 @@ describe('components/ui/tabs', () => {
     expect(markup).toContain('Page content');
     expect(markup).not.toContain('Settings content');
   });
+
+  it('supports segmented compact tabs as a shared variant', () => {
+    const markup = renderToStaticMarkup(
+      <Tabs value="page">
+        <TabsList variant="segmented">
+          <TabsTrigger value="page" variant="segmented" size="compact">
+            Page
+          </TabsTrigger>
+          <TabsTrigger value="settings" variant="segmented" size="compact">
+            Settings
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+
+    expect(markup).toContain('data-ui="tabs-list"');
+    expect(markup).toContain('data-variant="segmented"');
+    expect(markup).toContain('data-size="compact"');
+    expect(markup).toContain('editor-pill-subtle');
+  });
 });

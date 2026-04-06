@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Info } from 'lucide-react';
+import { Button } from './button';
 import { Input } from './input';
 import { PopoverTooltip } from './popover';
 import {
@@ -168,13 +169,15 @@ export function InfoTooltip({ children }: { children: ReactNode }) {
       className="editor-tooltip-panel w-64 rounded-lg border px-3 py-2 text-xs font-normal leading-5"
       content={children}
     >
-      <button
+      <Button
         type="button"
-        className="editor-icon-button-subtle inline-flex h-5 w-5 items-center justify-center rounded-full border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+        variant="ghost"
+        size="icon"
+        className="editor-icon-button-subtle inline-flex h-5 w-5 rounded-full border"
         aria-label="More information"
       >
         <Info className="h-3.5 w-3.5" />
-      </button>
+      </Button>
     </PopoverTooltip>
   );
 }

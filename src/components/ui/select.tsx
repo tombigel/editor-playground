@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 import { PopoverSurface } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,22 @@ type SelectContextValue = {
 
 const SelectContext = React.createContext<SelectContextValue>({ open: false });
 const SelectValue = SelectPrimitive.Value;
+
+const selectTriggerVariants = cva(
+  'editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center justify-between rounded-sm border px-3 shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
+  {
+    variants: {
+      size: {
+        default: 'h-8 py-2 text-sm',
+        compact: 'h-8 py-2 text-xs',
+        small: 'h-7 py-1.5 text-[11px]',
+      },
+    },
+    defaultVariants: {
+      size: 'default',
+    },
+  },
+);
 
 function Select({
   children,
@@ -44,13 +61,15 @@ function Select({
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> &
+    VariantProps<typeof selectTriggerVariants>
+>(({ className, children, size, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     data-ui="select-trigger"
+    data-size={size ?? 'default'}
     className={cn(
-      'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full items-center justify-between rounded-sm border px-3 py-2 text-sm shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
+      selectTriggerVariants({ size }),
       className,
     )}
     {...props}

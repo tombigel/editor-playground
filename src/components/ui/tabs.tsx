@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 type TabsContextValue = {
@@ -7,6 +8,40 @@ type TabsContextValue = {
 };
 
 const TabsContext = React.createContext<TabsContextValue | null>(null);
+
+const tabsListVariants = cva('inline-flex border', {
+  variants: {
+    variant: {
+      default: 'editor-bg-subtle rounded-md p-0.5',
+      segmented: 'editor-pill-subtle editor-border-subtle rounded-lg p-1',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
+
+const tabsTriggerVariants = cva('font-medium', {
+  variants: {
+    variant: {
+      default: 'editor-text-muted',
+      segmented: 'editor-text-muted',
+    },
+    size: {
+      default: 'rounded-[6px] px-2.5 py-1 text-xs',
+      compact: 'rounded-md px-3 py-1.5 text-xs',
+      small: 'rounded-sm px-2 py-1 text-[11px]',
+    },
+    selected: {
+      true: 'editor-bg-surface editor-text-strong shadow-sm',
+      false: '',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'default',
+  },
+});
 
 export function Tabs({
   value,
@@ -44,13 +79,16 @@ export function Tabs({
 }
 
 export function TabsList({
+  variant,
   className,
   children,
-}: React.PropsWithChildren<{ className?: string }>) {
+}: React.PropsWithChildren<{ className?: string } & VariantProps<typeof tabsListVariants>>) {
   return (
     <div
       role="tablist"
-      className={cn('editor-bg-subtle inline-flex rounded-md border p-0.5', className)}
+      data-ui="tabs-list"
+      data-variant={variant ?? 'default'}
+      className={cn(tabsListVariants({ variant }), className)}
     >
       {children}
     </div>
@@ -59,9 +97,14 @@ export function TabsList({
 
 export function TabsTrigger({
   value,
+  variant,
+  size,
   className,
   children,
-}: React.PropsWithChildren<{ value: string; className?: string }>) {
+}: React.PropsWithChildren<{
+  value: string;
+  className?: string;
+} & VariantProps<typeof tabsTriggerVariants>>) {
   const context = React.useContext(TabsContext);
   if (!context) {
     throw new Error('TabsTrigger must be used within Tabs.');
@@ -74,10 +117,12 @@ export function TabsTrigger({
       type="button"
       role="tab"
       aria-selected={selected}
+      data-ui="tabs-trigger"
+      data-variant={variant ?? 'default'}
+      data-size={size ?? 'default'}
       data-state={selected ? 'active' : 'inactive'}
       className={cn(
-        'editor-text-muted rounded-[6px] px-2.5 py-1 text-xs font-medium',
-        selected && 'editor-bg-surface editor-text-strong shadow-sm',
+        tabsTriggerVariants({ variant, size, selected }),
         className,
       )}
       onClick={() => context.onValueChange(value)}

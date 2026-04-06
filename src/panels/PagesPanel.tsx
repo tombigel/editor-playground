@@ -209,11 +209,11 @@ export function PagesPanel({
           className="cursor-grab px-3 py-2.5 active:cursor-grabbing"
           actions={(
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'page' | 'settings')}>
-              <TabsList className="editor-pill-subtle editor-border-subtle rounded-lg border p-1">
-                <TabsTrigger value="page" className="min-w-[76px] rounded-md px-3 py-1.5 text-xs">
+              <TabsList variant="segmented">
+                <TabsTrigger value="page" variant="segmented" size="compact" className="min-w-[76px]">
                   Page
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="min-w-[76px] rounded-md px-3 py-1.5 text-xs">
+                <TabsTrigger value="settings" variant="segmented" size="compact" className="min-w-[76px]">
                   Settings
                 </TabsTrigger>
               </TabsList>

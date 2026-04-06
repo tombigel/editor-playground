@@ -394,9 +394,9 @@ export function MiscDemos() {
 			>
 				<div className="max-w-[360px] space-y-3">
 					<Tabs value="page">
-						<TabsList>
-							<TabsTrigger value="page">Page</TabsTrigger>
-							<TabsTrigger value="settings">Settings</TabsTrigger>
+						<TabsList variant="segmented">
+							<TabsTrigger value="page" variant="segmented" size="compact">Page</TabsTrigger>
+							<TabsTrigger value="settings" variant="segmented" size="compact">Settings</TabsTrigger>
 						</TabsList>
 						<TabsContent value="page" className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm">
 							Embedded page editor content
