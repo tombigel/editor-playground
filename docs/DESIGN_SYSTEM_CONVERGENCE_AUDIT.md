@@ -69,7 +69,7 @@ A surface is only `done` when all applicable items are true:
 ## Surface Inventory
 
 | Surface | Files | Existing DS usage | Bespoke markup / controls to audit | CSS dependencies to audit | Primary decision | Priority | Wave | Status | Done criteria / notes |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | App shell | `src/app/AppShell.tsx` | Uses shared button, dialog, popover in places | Grid shell, rail framing, workspace framing, local buttons and layout wrappers | `editor-chrome.css`, utility editor classes | `keep specialized` | `P3 specialized` | `Wave E` | `audited` | App-level grid/orchestration should stay local; consume shared shell pieces without turning the whole app shell into a DS component |
 | Topbar | `src/app/EditorTopbar.tsx` | Uses menubar and page switcher | Topbar framing, action cluster, preview button, local layout wrappers | `editor-chrome.css` | `keep specialized` | `P1 shell` | `Wave B` | `done` | Product-specific layout stays local; now consumes shared page-switcher and converged chrome contracts |
 | Insert rail | `src/panels/InsertPanel.tsx` | Uses shared button and tooltip | Rail entry rows, section separators, local icon/text wrappers | `editor-chrome.css` | `add DS composite` | `P1 shell` | `Wave B` | `audited` | Partial cleanup landed through shared buttons; rail entry/status composite is still open follow-up |

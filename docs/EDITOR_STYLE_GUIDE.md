@@ -20,25 +20,49 @@ Out of scope:
 
 Table of contents:
 
-- [Implementation Baseline](#implementation-baseline)
-- [Design System Correspondence](#design-system-correspondence)
-- [1. Required Conventions](#1-required-conventions)
-- [2. Font System](#2-font-system)
-- [3. Type Scale](#3-type-scale)
-- [4. Icon System](#4-icon-system)
-- [5. Radius System](#5-radius-system)
-- [6. Border System](#6-border-system)
-- [7. Shadow System](#7-shadow-system)
-- [8. Color Tokens](#8-color-tokens)
-- [9. Scrollbars](#9-scrollbars)
-- [10. Interaction Tokens](#10-interaction-tokens)
-- [11. Component Specs](#11-component-specs)
-- [12. Settings Navigation](#12-settings-navigation)
-- [13. Inspector Compact Controls](#13-inspector-compact-controls)
-- [14. Stage Chrome](#14-stage-chrome)
-- [15. Z-Index](#15-z-index)
-- [16. Token Authoring Rules](#16-token-authoring-rules)
-- [17. Source Of Truth](#17-source-of-truth)
+- [Editor Style Guide](#editor-style-guide)
+  - [Implementation Baseline](#implementation-baseline)
+  - [Design System Correspondence](#design-system-correspondence)
+  - [1. Required Conventions](#1-required-conventions)
+  - [2. Font System](#2-font-system)
+  - [3. Type Scale](#3-type-scale)
+  - [4. Icon System](#4-icon-system)
+  - [5. Radius System](#5-radius-system)
+  - [6. Border System](#6-border-system)
+  - [7. Shadow System](#7-shadow-system)
+  - [8. Color Tokens](#8-color-tokens)
+    - [8.1 Accent](#81-accent)
+    - [8.2 Light Theme Tokens](#82-light-theme-tokens)
+    - [8.3 Dark Theme Tokens](#83-dark-theme-tokens)
+    - [8.4 Utility Tokens](#84-utility-tokens)
+  - [9. Scrollbars](#9-scrollbars)
+  - [10. Interaction Tokens](#10-interaction-tokens)
+    - [Snap Guide Visual Language](#snap-guide-visual-language)
+  - [11. Component Specs](#11-component-specs)
+    - [11.1 Buttons](#111-buttons)
+    - [11.2 Inputs](#112-inputs)
+    - [11.3 Textareas](#113-textareas)
+    - [11.4 Selects](#114-selects)
+    - [11.5 Composite Value Fields](#115-composite-value-fields)
+    - [11.6 Switches](#116-switches)
+    - [11.7 Cards](#117-cards)
+    - [11.8 Dialogs](#118-dialogs)
+    - [11.9 Rail Controls](#119-rail-controls)
+    - [11.10 Menubar](#1110-menubar)
+    - [11.11 Searchable Select](#1111-searchable-select)
+    - [11.12 Tabs](#1112-tabs)
+    - [11.13 Shared Editor Shells](#1113-shared-editor-shells)
+    - [11.14 Shared List Surfaces](#1114-shared-list-surfaces)
+  - [12. Settings Navigation](#12-settings-navigation)
+  - [13. Inspector Compact Controls](#13-inspector-compact-controls)
+    - [13.1 Shared Inspector And Settings Contracts](#131-shared-inspector-and-settings-contracts)
+    - [13.2 Color Picker Note](#132-color-picker-note)
+  - [14. Stage Chrome](#14-stage-chrome)
+    - [Sticky Indicators](#sticky-indicators)
+    - [Follow-link Popup](#follow-link-popup)
+  - [15. Z-Index](#15-z-index)
+  - [16. Token Authoring Rules](#16-token-authoring-rules)
+  - [17. Source Of Truth](#17-source-of-truth)
 
 ## Implementation Baseline
 
@@ -71,7 +95,7 @@ Implementation baseline:
 The design system showcase is the visual verification surface for this guide. It is organized into three top-level sections, and this document should map cleanly onto them:
 
 | Showcase section | Showcase source | What this guide covers |
-|---|---|---|
+| --- | --- | --- |
 | `Design Tokens` | `src/design-system/registry.ts` → `tokens` | Sections `2` through `10`: typography, radii, borders, shadows, color tokens, scrollbars, and interaction tokens. |
 | `Base Components` | `src/design-system/registry.ts` → `base` | Section `11`: primitive controls such as buttons, inputs, selects, switches, dialogs, and value fields. |
 | `Composites` | `src/design-system/registry.ts` → `composite` | Sections `12` through `14`: settings nav, inspector controls, and stage/editor chrome patterns. |
@@ -108,7 +132,7 @@ Rules:
 Approved sizes:
 
 | Role | Size | Typical use |
-|---|---:|---|
+| --- | --- | --- |
 | Micro | `10px` | pills, suffixes, selected-node labels |
 | Label | `11px` | field labels, metadata, compact inputs |
 | Small | `12px` | supporting copy |
@@ -154,7 +178,7 @@ Rules:
 Approved radii:
 
 | Token level | Typical class | Use |
-|---|---|---|
+| --- | --- | --- |
 | Tight | `rounded-sm` | compact inline controls, inputs, selects, dropdown popups |
 | Default | `rounded-md` | buttons and general-purpose small surfaces |
 | Section | `rounded-lg` | nav items, sub-panels |
@@ -188,7 +212,7 @@ Rules:
 Approved shadow roles:
 
 | Role | Token / style |
-|---|---|
+| --- | --- |
 | Surface | `--editor-surface-shadow` |
 | Stage frame | `--editor-stage-frame-shadow` |
 | Tooltip | `--editor-tooltip-shadow` |
@@ -366,7 +390,7 @@ Snap guides are 1px overlay lines that appear during drag to indicate alignment.
 Snap guide color tokens:
 
 | Role | Token | Color |
-|---|---|---|
+| --- | --- | --- |
 | Component (leaf) | `--editor-snap-guide-component` | Teal |
 | Page bounds | `--editor-snap-guide-page` | Magenta |
 | Section | `--editor-snap-guide-section` | Amber |
@@ -423,7 +447,7 @@ Default geometry:
 Variants:
 
 | Variant | Background | Border | Text |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | default | accent color | none | white |
 | secondary | neutral subtle fill | none | strong text |
 | outline | surface | subtle border | muted/strong text |
@@ -795,7 +819,7 @@ Do not:
 Sticky guide overlays use dedicated CSS tokens so they stay readable across accent colors and both light/dark themes.
 
 | Token | Role |
-|---|---|
+| --- | --- |
 | `--editor-sticky-offset-guide-color` | border/line color for offset guide band |
 | `--editor-sticky-offset-label-background` | pill background for offset labels |
 | `--editor-sticky-offset-label-text` | text inside offset label pills |
