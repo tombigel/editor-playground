@@ -169,8 +169,8 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Browse help");
 		expect(markup).toContain("Keyboard shortcuts");
 		expect(markup).toContain("API Reference");
-		expect(markup).toContain("Animation API");
 		expect(markup).toContain("Console Testing Guide");
+		expect(markup).toContain("Animations and Rich Text");
 		expect(markup).toContain("How to add docs?");
 		expect(markup).toContain("Close shortcuts");
 		expect(markup).toContain("Close about");

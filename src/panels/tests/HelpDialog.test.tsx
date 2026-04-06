@@ -22,8 +22,8 @@ describe('panels/HelpDialog', () => {
     expect(markup).toContain('About');
     expect(markup).toContain('Pointer Modifiers');
     expect(markup).toContain('API Reference');
-    expect(markup).toContain('Animation API');
     expect(markup).toContain('Console Testing Guide');
+    expect(markup).toContain('Animations and Rich Text');
     expect(markup).toContain('How to add docs?');
     expect(markup).toContain('Collapse help navigation');
     expect(markup).toContain('data-help-nav-collapsed="false"');

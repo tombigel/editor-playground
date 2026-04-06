@@ -31,8 +31,8 @@ describe('panels/helpDocs', () => {
   it('splits dashed titles into button title and subtitle while keeping filename separate', () => {
     const guide = getMarkdownHelpEntries().find((entry): entry is MarkdownHelpEntry => entry.kind === 'markdown' && entry.path === 'docs/CONSOLE_TEST_GUIDE.md');
 
-    expect(guide?.title).toBe('Animation API');
-    expect(guide?.subtitle).toBe('Console Testing Guide');
+    expect(guide?.title).toBe('Console Testing Guide');
+    expect(guide?.subtitle).toBe('Animations and Rich Text');
     expect(guide?.fileName).toBe('CONSOLE_TEST_GUIDE.md');
 
     expect(splitHelpEntryTitle('API Reference')).toEqual({

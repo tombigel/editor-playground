@@ -1,4 +1,4 @@
-# Animation API – Console Testing Guide
+# Console Testing Guide - Animations and Rich Text
 
 In dev mode, the playground exposes `window.playgroundAnimationApi` with all animation API functions pre-bound to the current document model.
 
@@ -133,6 +133,35 @@ doc = {
   },
 }
 playgroundDocApi.applyDocument(doc)
+```
+
+### Convert an existing text node to rich text
+
+```js
+// 1. Find a block text node on the stage (or pick one by name)
+doc = playgroundDocApi.getDocument()
+const blockNode = Object.values(doc.nodes).find(
+  n => n.contentType === 'text' && n.subtype === 'block' && !n.link
+)
+
+// 2. Convert it in place — swap subtype and rewrite content as RichContent
+const richVersion = {
+  ...blockNode,
+  subtype: 'rich',
+  content: [
+    { text: blockNode.content },  // wrap the existing string as a plain leaf
+  ],
+}
+playgroundDocApi.applyDocument({ ...doc, nodes: { ...doc.nodes, [richVersion.id]: richVersion } })
+
+// 3. Now add marks to parts of the text
+doc = playgroundDocApi.getDocument()
+const updated = { ...doc.nodes[richVersion.id] }
+updated.content = [
+  { text: 'Hello ', color: '#718096' },
+  { text: blockNode.content, bold: true },
+]
+playgroundDocApi.applyDocument({ ...doc, nodes: { ...doc.nodes, [updated.id]: updated } })
 ```
 
 ### Add an inline link

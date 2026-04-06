@@ -81,7 +81,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
 | `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `⚪ Not started` | Shared | - |
 | `RI-31` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | `⚪ Not started` | Shared | Dep: `RI-07` |
-| `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `⚪ Not started` | Shared | Dep: `RI-11`, `RI-28` |
+| `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `🟡 In progress` | Shared | Dep: `RI-11`, `RI-28` |
 | `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
 | `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
 | `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
@@ -346,12 +346,12 @@ None yet.
 
 - `Type`: `Refactor`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `In progress`
 - `Source`: `RI-32`
 - `Dependencies`: `RI-11`, `RI-28`
 - `Why it matters`: As text, media, and container node families grow, each needs interchangeable subtypes (single-block vs rich text, image vs video vs inline SVG, container vs display-contents group). A shared type discriminator pattern lets the renderer pick the right component per node and lets the editor switch types by changing one property, with shared data (position, size, styles) transferring automatically.
-- `Current state`: Nodes currently use a `NodeType` (`wrapper` | `leaf`) and a role string. There is no discriminated subtype model within a family, so interchangeability requires ad-hoc logic.
-- `Next move`: Define the discriminator model for the media family first (image/video/SVG/embed) as it has the clearest interchangeability need, then apply the same pattern to text (single-block/rich-text) and container (container/display-contents group). Keep backward compatibility with existing role strings during migration.
+- `Current state`: Task 1 (model migration) complete — `ContainerNode`/`TextNode`/`MediaNode` with `contentType`/`subtype` discriminators are the canonical types; all deprecated aliases and shims removed. Tasks 2–3 (slate-subset rich text model, on-stage rich text editor) pending.
+- `Next move`: Task 2 — define the slate-subset rich text model for `TextNode` with `subtype: 'rich'`, then Task 3 — on-stage rich text editing.
 
 #### Infra
 
