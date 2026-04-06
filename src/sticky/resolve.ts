@@ -293,7 +293,7 @@ function estimateAutoLeafHeight(node: TextNode | Exclude<DocumentNode, { content
           )
         : 18;
     const widthPx = getNodeWidth(node, geometry);
-    const content = node.content || '';
+    const content = typeof node.content === 'string' ? node.content : '';
     const charsPerLine = Math.max(10, Math.floor(widthPx / Math.max(fontSize * 0.58, 1)));
     const lineCount = Math.max(
       1,

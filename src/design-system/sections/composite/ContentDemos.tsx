@@ -41,7 +41,7 @@ export function ContentDemos() {
 								Link
 							</div>
 							<FormField label="Label">
-								<Input value={mockLinkLeaf.content} onChange={() => {}} />
+								<Input value={mockLinkLeaf.content as string} onChange={() => {}} />
 							</FormField>
 							<NavigationFields
 								document={mockDocument}

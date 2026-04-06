@@ -6,17 +6,6 @@ export type { DocumentPage, PageId, SiteSettings };
 export type NodeId = string;
 
 // ---------------------------------------------------------------------------
-// Legacy discriminators — kept for migration compatibility only.
-// New code should use contentType / subtype.
-// ---------------------------------------------------------------------------
-/** @deprecated Use contentType / subtype instead */
-export type NodeType = 'site' | 'wrapper' | 'leaf';
-/** @deprecated Use ContainerSubtype instead */
-export type WrapperRole = 'section' | 'header' | 'footer' | 'container';
-/** @deprecated Use TextSubtype / MediaSubtype instead */
-export type LeafRole = 'text' | 'image' | 'link' | 'button';
-
-// ---------------------------------------------------------------------------
 // Content-type discriminators (new model)
 // ---------------------------------------------------------------------------
 export type ContainerSubtype = 'section' | 'header' | 'footer' | 'container' | 'group';
@@ -109,6 +98,33 @@ export type WrapperStyleField =
   | 'paddingLeft'
   | 'sectionBorderBottomColor'
   | 'sectionBorderBottomWidth';
+
+// ---------------------------------------------------------------------------
+// Rich text content types (used by TextNode with subtype 'rich')
+// ---------------------------------------------------------------------------
+import type { Text as SlateText, Element as SlateElement } from 'slate';
+
+export interface RichTextLeaf extends SlateText {
+  bold?: boolean;
+  italic?: boolean;
+  color?: string;
+  fontFamily?: string;
+  fontSize?: string;
+}
+
+export interface RichTextLink extends SlateElement {
+  type: 'link';
+  children: RichTextLeaf[];
+  linkType: 'external' | 'page' | 'anchor';
+  href?: string;
+  targetPageId?: PageId;
+  pageAnchorId?: NodeId;
+  anchorTargetId?: NodeId;
+  openInNewTab?: boolean;
+}
+
+export type RichInlineNode = RichTextLeaf | RichTextLink;
+export type RichContent = RichInlineNode[];
 
 // ---------------------------------------------------------------------------
 // Value types
@@ -342,7 +358,7 @@ export type ContainerNode = BaseNode & {
 export type TextNode = BaseNode & {
   contentType: 'text';
   subtype: TextSubtype;
-  content: string;
+  content: string | RichContent; // string for block/code; RichContent for rich
   lang?: string;              // BCP-47 locale
   htmlTag?: HeadingTag | 'p' | 'blockquote'; // block only
   link?: LinkExtension;       // block only
@@ -517,23 +533,3 @@ export type SectionTemplateSummary = {
   category: 'basic' | 'sticky';
 };
 
-// ---------------------------------------------------------------------------
-// Legacy node types — kept as type aliases so that existing call sites that
-// reference them still compile during Phase 1. They will be removed in
-// Phase 2 once all references are updated to the new names.
-// ---------------------------------------------------------------------------
-
-/** @deprecated Use ContainerNode instead */
-export type WrapperNode = ContainerNode;
-
-/** @deprecated Use TextNode instead */
-export type TextLeaf = TextNode;
-
-/** @deprecated Use MediaNode instead */
-export type ImageLeaf = MediaNode;
-
-/** @deprecated Use TextNode (with link field) instead */
-export type LinkLeaf = TextNode;
-
-/** @deprecated Use TextNode (with link field) instead */
-export type ButtonLeaf = TextNode;

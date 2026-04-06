@@ -60,7 +60,7 @@ export function TextContentSection({
     >
       <InspectorFieldGroup>
         <FormField label="Text">
-          <Textarea value={node.content} onChange={(e) => onTextChange('content', e.target.value)} />
+          <Textarea value={node.content as string} onChange={(e) => onTextChange('content', e.target.value)} />
         </FormField>
       </InspectorFieldGroup>
       <InspectorFieldGroup separated>

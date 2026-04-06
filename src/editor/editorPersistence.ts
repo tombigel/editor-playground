@@ -684,7 +684,7 @@ function isLegacyFooter(document: DocumentModel, footer: ContainerNode) {
     (node) =>
       isTextNode(node) &&
       !node.link &&
-      node.content.includes('Built for sticky exploration'),
+      typeof node.content === 'string' && node.content.includes('Built for sticky exploration'),
   );
   if (hasOldBusinessCopy) {
     return true;

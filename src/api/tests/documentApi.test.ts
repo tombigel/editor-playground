@@ -550,7 +550,7 @@ describe('api/documentApi', () => {
     }
 
     expect(postLink.content).toBe('Open playground spec');
-    expect(postLink.content.toLowerCase()).not.toContain('maintenance');
+    expect((postLink.content as string).toLowerCase()).not.toContain('maintenance');
   });
 
   it('seeds the initial post section with a 50vh height', () => {
