@@ -281,7 +281,7 @@ export function PageTreeContent({
 				{rows.length === 0 ? (
 					<NoticeSurface
 						tone="info"
-						className="editor-layers-empty border-dashed py-8 text-center text-sm"
+						className="border-dashed py-8 text-center text-sm"
 					>
 						No pages yet.
 					</NoticeSurface>

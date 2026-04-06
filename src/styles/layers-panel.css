@@ -219,11 +219,6 @@
   color: var(--editor-utility-text-strong);
 }
 
-.editor-layers-empty {
-  background: color-mix(in srgb, var(--editor-utility-bg-subtle) 88%, transparent);
-  border-color: var(--editor-utility-border);
-}
-
 .editor-accent-swatch {
   width: 2rem;
   height: 2rem;

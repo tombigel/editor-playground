@@ -440,10 +440,6 @@
   z-index: 2;
 }
 
-.editor-topbar-subtitle {
-  color: var(--editor-topbar-muted-text);
-}
-
 .editor-topbar-tooltip {
   background: var(--editor-topbar-tooltip-background);
   border: 1px solid var(--editor-topbar-tooltip-border);

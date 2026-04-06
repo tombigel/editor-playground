@@ -21,6 +21,7 @@ import type { DocumentModel, NodeId } from "../model/types";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
 import { PopoverTooltip } from "@/components/ui/popover";
+import { NoticeSurface } from "@/components/ui/settings-panel";
 import {
 	TreeRowActionButton,
 	TreeRowItem,
@@ -560,9 +561,12 @@ export function LayersPanelContent({
 		<>
 			<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
 						{rows.length === 0 ? (
-							<div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
+							<NoticeSurface
+								tone="info"
+								className="border-dashed py-8 text-center text-sm"
+							>
 								Nothing on stage yet.
-							</div>
+							</NoticeSurface>
 						) : (
 							<div className="flex flex-col gap-1">
 								{rows.map((row) => (
