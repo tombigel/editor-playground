@@ -25,6 +25,13 @@ import {
 } from "@/panels/inspector/contentSections/shared";
 import { mockFontFamilies } from "../../mocks";
 import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { PropDefinition } from "../../types";
+
+const TEXT_STYLE_PROPS: PropDefinition[] = [
+	{ name: "node", type: "TextInspectorNode", description: "Current text node supplying typography values." },
+	{ name: "actions", type: "InspectorActionHandlers", description: "Typography mutation handlers for text styles and color." },
+	{ name: "mixed", type: "boolean", description: "Mixed-selection state reflected by shared pills and controls." },
+];
 
 // ---------------------------------------------------------------------------
 // Interactive demo wrappers
@@ -366,7 +373,7 @@ export function TypographyDemos() {
 				name="Text Style"
 				description="Inspector typography control rail: font picker + manage button, size + line-height, style (B/I/U/S), alignment + direction, and text color. Each row uses InspectorInlineRow."
 				sourceFile="src/panels/inspector/contentSections/shared.tsx"
-				props={[]}
+				props={TEXT_STYLE_PROPS}
 			>
 				<div className="space-y-8">
 					<TextStyleFieldsDemo />

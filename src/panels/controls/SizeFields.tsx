@@ -298,6 +298,7 @@ export const SizeInlineField = memo(function SizeInlineField({
           disabled={disabled}
           invalid={invalid}
           segmentWidth={suffixWidth}
+          expandToFill
           onInputValueChange={(next) => {
             setNumericDraft(next);
             const nextRaw = buildSizeFieldValue(axis, mode, next, { isSectionHeight });

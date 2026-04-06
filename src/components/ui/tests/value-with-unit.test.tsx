@@ -127,6 +127,21 @@ describe('components/ui/value-with-unit', () => {
     expect(markup).toContain('data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)]');
   });
 
+  it('can fill the parent width for compact inspector controls', () => {
+    const markup = renderToStaticMarkup(
+      <ValueWithUnit
+        mode="keyword-select"
+        value="auto"
+        onChange={() => {}}
+        options={[{ type: 'option', value: 'auto', label: 'Auto', inputMode: 'keyword' }]}
+        selectedOption="auto"
+        expandToFill
+      />,
+    );
+
+    expect(markup).toContain('class="relative w-full"');
+  });
+
   it('uses the same value composition for typed and suggested numeric entries', () => {
     expect(
       composeValueWithUnitValue({

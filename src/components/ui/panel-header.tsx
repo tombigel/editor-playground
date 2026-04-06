@@ -27,7 +27,7 @@ export function PanelHeader({
       data-ui="panel-header"
       className={cn('editor-panel-header editor-border-subtle flex items-center justify-between gap-4 border-b px-4 py-3', className)}
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         {icon ? (
           <div
             data-ui="panel-header-icon"

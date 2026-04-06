@@ -3,6 +3,44 @@ import { Button } from "@/components/ui/button";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { PanelHeader } from "@/components/ui/panel-header";
 import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { PropDefinition } from "../../types";
+
+const PANEL_HEADER_PROPS: PropDefinition[] = [
+	{ name: "icon", type: "ReactNode", description: "Optional leading icon surface." },
+	{ name: "title", type: "ReactNode", description: "Primary title content." },
+	{ name: "description", type: "ReactNode", description: "Optional secondary copy below the title." },
+	{ name: "actions", type: "ReactNode", description: "Optional trailing actions shown before the close button." },
+	{ name: "closeLabel", type: "string", description: "Accessible label for the close button." },
+	{ name: "onClose", type: "() => void", description: "Optional close handler that renders the close button." },
+	{ name: "className", type: "string", description: "Optional wrapper class overrides." },
+];
+
+const FLOATING_PANEL_SHELL_PROPS: PropDefinition[] = [
+	{ name: "header", type: "ReactNode", description: "Optional shared header slot rendered above the body." },
+	{ name: "children", type: "ReactNode", description: "Panel body content." },
+	{ name: "bodyClassName", type: "string", description: "Optional body wrapper classes." },
+	{ name: "bodyStyle", type: "CSSProperties", description: "Optional inline styles for the body wrapper." },
+	{
+		name: "suppressPopover",
+		type: "boolean",
+		default: "false",
+		description: "Renders a static shell for showcase/test contexts instead of native popover markup.",
+	},
+	{ name: "open", type: "boolean", description: "Popover open state when using the live popover path." },
+	{ name: "onOpenChange", type: "(open: boolean) => void", description: "Popover state change handler." },
+];
+
+const SHORTCUTS_PROPS: PropDefinition[] = [
+	{ name: "title", type: "string", description: "Shortcut section title." },
+	{ name: "items", type: "Array<{ label: string; description: string }>", description: "Shortcut rows rendered inside the section." },
+];
+
+const FOCUSED_PANEL_PROPS: PropDefinition[] = [
+	{ name: "title", type: "string", description: "Focused-mode panel title." },
+	{ name: "nodeName", type: "string", description: "Current selected node name shown in the summary row." },
+	{ name: "roleBadge", type: "ReactNode", description: "Compact shared role/status pill in the header." },
+	{ name: "onExit", type: "() => void", description: "Exit focused-mode action." },
+];
 
 // ---------------------------------------------------------------------------
 // Follow-link popup variants
@@ -41,7 +79,7 @@ export function MiscDemos() {
 				name="Panel Header"
 				description="Shared header contract for floating panels and dialog-like editor surfaces with icon, title, description, actions, and close button."
 				sourceFile="src/components/ui/panel-header.tsx"
-				props={[]}
+				props={PANEL_HEADER_PROPS}
 			>
 				<div className="w-[320px]">
 					<PanelHeader
@@ -64,7 +102,7 @@ export function MiscDemos() {
 				name="Floating Panel Shell"
 				description="Shared floating popover shell with DS-owned header slot and scrollable body wrapper."
 				sourceFile="src/components/ui/floating-panel-shell.tsx"
-				props={[]}
+				props={FLOATING_PANEL_SHELL_PROPS}
 			>
 				<div className="relative h-[260px] w-[360px]">
 					<FloatingPanelShell
@@ -107,7 +145,7 @@ export function MiscDemos() {
 				name="Shortcuts"
 				description="Shortcut section container with keyboard shortcut rows."
 				sourceFile="src/panels/ShortcutHelpContent.tsx"
-				props={[]}
+				props={SHORTCUTS_PROPS}
 			>
 				<div className="w-[300px]">
 					<div className="editor-bg-subtle editor-border-subtle rounded-lg border p-3.5">
@@ -143,7 +181,7 @@ export function MiscDemos() {
 				name="Focused Panel"
 				description="Floating focused-mode panel with drag handle, title, role badge, and exit button. Shows empty state when no node is selected."
 				sourceFile="src/panels/FocusedModePanel.tsx"
-				props={[]}
+				props={FOCUSED_PANEL_PROPS}
 			>
 				<div className="w-[300px]">
 					<div className="editor-focused-panel editor-settings-panel overflow-hidden rounded-xl border shadow-lg">
@@ -226,7 +264,7 @@ export function MiscDemos() {
 					</div>
 
 					{/* In-context mock: selection box + popup below */}
-					<div className="relative h-[110px] w-[320px] overflow-hidden rounded-md border border-dashed border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-900">
+					<div className="editor-bg-subtle editor-border-subtle relative h-[110px] w-[320px] overflow-hidden rounded-md border border-dashed">
 						{/* mock stage node */}
 						<div
 							className="absolute border-2 border-[var(--editor-accent)] bg-[color-mix(in_srgb,var(--editor-accent)_6%,transparent)]"

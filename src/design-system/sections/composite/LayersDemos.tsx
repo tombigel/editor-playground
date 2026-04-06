@@ -20,6 +20,14 @@ import {
 import { EditorPanelHeader } from '@/panels/EditorPanelHeader';
 import { INSPECTOR_COLLAPSED_WIDTH_PX } from '@/panels/inspectorLayout';
 import { ComponentPreview } from '../../previews/ComponentPreview';
+import type { PropDefinition } from '../../types';
+
+const LAYERS_PANEL_PROPS: PropDefinition[] = [
+  { name: 'open', type: 'boolean', description: 'Whether the floating layers panel is visible.' },
+  { name: 'rows', type: 'LayersRowModel[]', description: 'Tree rows including depth, expansion, badges, and hidden state.' },
+  { name: 'selectedId', type: 'string | null', description: 'Currently selected node id in the layers tree.' },
+  { name: 'onToggleVisibility', type: '(nodeId: string) => void', description: 'Visibility action handler for a tree row.' },
+];
 
 const DEMO_ROWS: Array<{
   id: string;
@@ -128,7 +136,7 @@ export function LayersDemos() {
       name="Layers Panel"
       description="Left-rail entry and floating layers tree for structure, visibility, delete, and drag/drop ordering."
       sourceFile="src/panels/LayersPanel.tsx"
-      props={[]}
+      props={LAYERS_PANEL_PROPS}
     >
       <div className="flex items-start gap-4">
         <div

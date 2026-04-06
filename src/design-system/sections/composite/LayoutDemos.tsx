@@ -30,6 +30,19 @@ import {
 import type { WrapperInspectorNode } from "@/panels/inspector/types";
 import { mockSection } from "../../mocks";
 import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { PropDefinition } from "../../types";
+
+const LAYOUT_CONTROLS_PROPS: PropDefinition[] = [
+	{ name: "node", type: "InspectorNode", description: "Current node supplying XYWH values and layout capabilities." },
+	{ name: "orderState", type: "InspectorOrderState", description: "Availability and handlers for reorder actions." },
+	{ name: "actions", type: "InspectorActionHandlers", description: "Layout mutation handlers for rect and wrapper changes." },
+];
+
+const SECTION_LAYOUT_PROPS: PropDefinition[] = [
+	{ name: "node", type: "WrapperInspectorNode", description: "Section/header/footer wrapper node being edited." },
+	{ name: "orderState", type: "InspectorOrderState", description: "Section reorder availability and handlers." },
+	{ name: "actions", type: "InspectorActionHandlers", description: "Padding and wrapper role mutation handlers." },
+];
 
 // ---------------------------------------------------------------------------
 // Demos
@@ -44,7 +57,7 @@ export function LayoutDemos() {
 				name="Layout Controls"
 				description="Position/size fields, alignment, distribution, and reorder controls used in single- and multi-select inspectors."
 				sourceFile="src/panels/inspector/CommonSections.tsx, src/panels/MultiSelectInspector.tsx"
-				props={[]}
+				props={LAYOUT_CONTROLS_PROPS}
 			>
 				<div className="w-[300px] space-y-4">
 					{/* XYWH */}
@@ -227,7 +240,7 @@ export function LayoutDemos() {
 				name="Section Layout"
 				description="Section-specific layout controls: padding (4-directional), section reorder, and section type selector (section/header/footer)."
 				sourceFile="src/panels/inspector/CommonSections.tsx, src/panels/InspectorControls.tsx"
-				props={[]}
+				props={SECTION_LAYOUT_PROPS}
 			>
 				<div className="w-[300px] space-y-4">
 					{/* Padding */}

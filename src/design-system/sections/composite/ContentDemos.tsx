@@ -10,6 +10,13 @@ import {
 	mockTextLeaf,
 } from "../../mocks";
 import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { PropDefinition } from "../../types";
+
+const CONTENT_CONTROLS_PROPS: PropDefinition[] = [
+	{ name: "document", type: "DocumentModel", description: "Document context used for link/page resolution." },
+	{ name: "node", type: "InspectorNode", description: "Selected node whose content fields are being edited." },
+	{ name: "onTextChange", type: "(field, value) => void", description: "Mutation handler for text and link fields." },
+];
 
 // ---------------------------------------------------------------------------
 // Demos
@@ -24,7 +31,7 @@ export function ContentDemos() {
 				name="Content Controls"
 				description="Content editing panels for different node types: text (textarea), link (label + navigation), and image (src + alt)."
 				sourceFile="src/panels/inspector/contentSections/"
-				props={[]}
+				props={CONTENT_CONTROLS_PROPS}
 			>
 				<div className="space-y-6">
 					<div className="flex flex-wrap gap-6">

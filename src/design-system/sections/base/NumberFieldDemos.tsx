@@ -191,6 +191,12 @@ const VALUE_WITH_UNIT_PROPS: PropDefinition[] = [
 		default: "false",
 		description: "Demo and test helper for opening the unit or mode menu initially.",
 	},
+	{
+		name: "expandToFill",
+		type: "boolean",
+		default: "false",
+		description: "Makes the wrapper fill its parent width instead of shrinking to keyword/content width.",
+	},
 ];
 
 const FIXED_UNIT_OPTIONS: ValueWithUnitOption[] = [

@@ -109,6 +109,7 @@ export function ValueWithUnit({
   segmentWidth,
   defaultSuggestionsOpen = false,
   defaultMenuOpen = false,
+  expandToFill = false,
 }: {
   id?: string;
   mode: ValueWithUnitMode;
@@ -136,6 +137,7 @@ export function ValueWithUnit({
   segmentWidth?: number | string;
   defaultSuggestionsOpen?: boolean;
   defaultMenuOpen?: boolean;
+  expandToFill?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const generatedListId = useId().replace(/:/g, '');
@@ -297,7 +299,7 @@ export function ValueWithUnit({
   }
 
   return (
-    <div ref={rootRef} className={cn('relative', className)}>
+    <div ref={rootRef} className={cn('relative', expandToFill ? 'w-full' : null, className)}>
       <div
         className={cn(
           'value-with-unit group/valuewithunit relative flex h-8 min-w-0 rounded-sm border shadow-sm outline-none transition-[border-color,box-shadow,outline-color]',

@@ -8,6 +8,9 @@ import {
 	type EditorLightTheme,
 	getAccentColorForDarkThemeSelection,
 	getAccentColorForLightThemeSelection,
+	normalizeEditorAccentColor,
+	normalizeEditorDarkTheme,
+	normalizeEditorLightTheme,
 	type ThemeMode,
 	resolveEditorAccentColor,
 	resolveThemeMode,
@@ -22,6 +25,34 @@ function resolveConfig(
 	const resolved = resolveThemeMode(config.themeMode, systemPrefersDark);
 	const resolvedAccent = resolveEditorAccentColor(config.accentColor);
 	return { ...config, resolved, resolvedAccent };
+}
+
+function readCurrentDocumentThemeConfig(): ThemeConfig | null {
+	if (typeof document === "undefined") {
+		return null;
+	}
+
+	const root = document.documentElement;
+	const body = document.body;
+	const resolvedTheme = root.dataset.editorTheme ?? body?.dataset.editorTheme;
+	const lightTheme = root.dataset.editorLightTheme ?? body?.dataset.editorLightTheme;
+	const darkTheme = root.dataset.editorDarkTheme ?? body?.dataset.editorDarkTheme;
+	const accentColor =
+		root.style.getPropertyValue("--editor-accent").trim() ||
+		body?.style.getPropertyValue("--editor-accent").trim() ||
+		getComputedStyle(root).getPropertyValue("--editor-accent").trim() ||
+		getComputedStyle(body ?? root).getPropertyValue("--editor-accent").trim();
+
+	if (!resolvedTheme && !lightTheme && !darkTheme && !accentColor) {
+		return null;
+	}
+
+	return {
+		themeMode: resolvedTheme === "light" || resolvedTheme === "dark" ? resolvedTheme : "auto",
+		lightTheme: normalizeEditorLightTheme(lightTheme ?? DEFAULT_EDITOR_LIGHT_THEME),
+		darkTheme: normalizeEditorDarkTheme(darkTheme ?? DEFAULT_EDITOR_DARK_THEME),
+		accentColor: normalizeEditorAccentColor(accentColor || DEFAULT_EDITOR_ACCENT_COLOR),
+	};
 }
 
 /**
@@ -56,6 +87,10 @@ function readPersistedThemeConfig(): ThemeConfig {
 	};
 }
 
+function readInitialThemeConfig(): ThemeConfig {
+	return readCurrentDocumentThemeConfig() ?? readPersistedThemeConfig();
+}
+
 /**
  * Single unified theme for the design system showcase.
  *
@@ -66,7 +101,7 @@ function readPersistedThemeConfig(): ThemeConfig {
 export function useDesignSystemTheme() {
 	const systemPrefersDark = useSystemThemePreference();
 
-	const [config, setConfig] = useState<ThemeConfig>(readPersistedThemeConfig);
+	const [config, setConfig] = useState<ThemeConfig>(readInitialThemeConfig);
 
 	const resolved = useMemo(
 		() => resolveConfig(config, systemPrefersDark),

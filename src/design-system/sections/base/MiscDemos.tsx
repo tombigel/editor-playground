@@ -159,6 +159,37 @@ const PAGER_PROPS: PropDefinition[] = [
 	},
 ];
 
+const MENUBAR_PROPS: PropDefinition[] = [
+	{ name: "id", type: "string", description: "Stable menu id used for active/open state management." },
+	{ name: "children", type: "ReactNode", description: "Menu triggers, panels, and row primitives." },
+];
+
+const PAGE_SWITCHER_PROPS: PropDefinition[] = [
+	{ name: "value", type: "string | null", description: "Currently selected page id." },
+	{ name: "options", type: "PageSwitcherOption[]", description: "Ordered page options with optional nesting depth." },
+	{ name: "placeholder", type: "string", default: "'Untitled'", description: "Fallback label when no active page is selected." },
+	{ name: "onValueChange", type: "(value: string) => void", description: "Called when a page option is selected." },
+	{ name: "onCreatePage", type: "() => void", description: "Called when the create-page row is chosen." },
+	{ name: "triggerClassName", type: "string", description: "Optional trigger class overrides." },
+	{ name: "contentClassName", type: "string", description: "Optional menu content class overrides." },
+	{ name: "defaultOpen", type: "boolean", default: "false", description: "Demo/test helper for opening the menu initially." },
+];
+
+const TABS_PROPS: PropDefinition[] = [
+	{ name: "value", type: "string", description: "Controlled selected tab value." },
+	{ name: "variant", type: "'default' | 'segmented'", description: "List and trigger visual variant." },
+	{ name: "size", type: "'default' | 'compact'", description: "Trigger density variant." },
+];
+
+const SEARCHABLE_SELECT_PROPS: PropDefinition[] = [
+	{ name: "value", type: "string | undefined", description: "Currently selected option value." },
+	{ name: "options", type: "SearchableSelectOption[]", description: "Fixed option set with optional descriptions and keywords." },
+	{ name: "placeholder", type: "string", description: "Trigger placeholder text." },
+	{ name: "searchPlaceholder", type: "string", description: "Search input placeholder text." },
+	{ name: "onValueChange", type: "(value: string | undefined) => void", description: "Selection change handler." },
+	{ name: "disabled", type: "boolean", default: "false", description: "Disables the trigger and menu." },
+];
+
 // ---------------------------------------------------------------------------
 // Interactive preview wrappers
 // ---------------------------------------------------------------------------
@@ -343,7 +374,7 @@ export function MiscDemos() {
 				name="Menubar"
 				description="Reusable top-bar menu primitives for actions, toggles, submenus, panel links, and shortcut hints."
 				sourceFile="src/components/ui/menubar.tsx"
-				props={[]}
+				props={MENUBAR_PROPS}
 			>
 				<div className="editor-topbar rounded-xl border p-3">
 					<Menubar>
@@ -389,7 +420,7 @@ export function MiscDemos() {
 				name="Page Switcher Select"
 				description="Shared page-switcher select built on top of the design-system Select primitives."
 				sourceFile="src/components/ui/page-switcher-select.tsx"
-				props={[]}
+				props={PAGE_SWITCHER_PROPS}
 			>
 				<div className="editor-topbar rounded-xl border p-3">
 					<div className="editor-topbar-menubar-row">
@@ -412,7 +443,7 @@ export function MiscDemos() {
 				name="Tabs"
 				description="Compact reusable tabs for embedded editor panels such as the Pages panel."
 				sourceFile="src/components/ui/tabs.tsx"
-				props={[]}
+				props={TABS_PROPS}
 			>
 				<div className="max-w-[360px] space-y-3">
 					<Tabs value="page">
@@ -435,7 +466,7 @@ export function MiscDemos() {
 				name="Searchable Select"
 				description="Searchable fixed-option selector for site, page, and text language overrides."
 				sourceFile="src/components/ui/searchable-select.tsx"
-				props={[]}
+				props={SEARCHABLE_SELECT_PROPS}
 			>
 				<div className="max-w-[320px] space-y-3">
 					<SearchableSelect

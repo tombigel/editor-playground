@@ -24,6 +24,30 @@ import {
 	ThemePresetRow,
 } from "@/panels/settings/SettingsShared";
 import { ComponentPreview } from "../../previews/ComponentPreview";
+import type { PropDefinition } from "../../types";
+
+const SETTINGS_THEME_PROPS: PropDefinition[] = [
+	{ name: "themeMode", type: "'light' | 'dark' | 'auto'", description: "Theme mode selection." },
+	{ name: "resolvedTheme", type: "'light' | 'dark'", description: "Resolved mode used to choose the visible palette group." },
+	{ name: "lightTheme", type: "EditorLightTheme", description: "Selected light palette." },
+	{ name: "darkTheme", type: "EditorDarkTheme", description: "Selected dark palette." },
+	{ name: "accentColor", type: "string", description: "Current accent swatch or custom accent value." },
+];
+
+const SETTINGS_PRIMITIVES_PROPS: PropDefinition[] = [
+	{ name: "ControlGroup", type: "shared composite", description: "Groups related rows with optional separators." },
+	{ name: "LabeledControlRow", type: "shared composite", description: "Compact label/control row reused by inspector and settings." },
+	{ name: "SettingRow", type: "shared composite", description: "Icon + title + description + switch row." },
+	{ name: "ActionRow", type: "shared composite", description: "Action row with trailing button slot." },
+	{ name: "NumericRow", type: "shared composite", description: "Row variant with inline numeric control." },
+];
+
+const SETTINGS_NAV_PROPS: PropDefinition[] = [
+	{ name: "icon", type: "LucideIcon", description: "Leading nav icon." },
+	{ name: "title", type: "string", description: "Primary settings section label." },
+	{ name: "description", type: "string", description: "Secondary navigation copy." },
+	{ name: "active", type: "boolean", description: "Selected nav item state." },
+];
 
 // ---------------------------------------------------------------------------
 // Interactive demo wrappers
@@ -179,7 +203,7 @@ export function SettingsDemos() {
 				name="Settings Theme Controls"
 				description="Theme and accent controls shared between editor settings and the design system."
 				sourceFile="src/panels/settings/SettingsShared.tsx"
-				props={[]}
+				props={SETTINGS_THEME_PROPS}
 			>
 				<div className="w-[560px]">
 					<ThemeSettingsDemo />
@@ -191,7 +215,7 @@ export function SettingsDemos() {
 				name="Settings Panel Primitives"
 				description="Reusable settings panel rows and layout primitives promoted to the shared UI surface."
 				sourceFile="src/components/ui/settings-panel.tsx"
-				props={[]}
+				props={SETTINGS_PRIMITIVES_PROPS}
 			>
 				<div className="w-[560px]">
 					<SettingsPrimitivesDemo />
@@ -203,7 +227,7 @@ export function SettingsDemos() {
 				name="Settings Nav Item"
 				description="Settings sidebar navigation link in idle, hover, and active states."
 				sourceFile="src/panels/SettingsPanel.tsx"
-				props={[]}
+				props={SETTINGS_NAV_PROPS}
 			>
 				<div className="flex gap-3">
 					{/* Idle */}
