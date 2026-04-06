@@ -2,6 +2,7 @@ import { CircleQuestionMark, FileText, Keyboard, PanelLeftClose, PanelLeftOpen }
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { NoticeSurface } from '@/components/ui/settings-panel';
 import { AboutContent } from './AboutContent';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import {
@@ -308,7 +309,9 @@ function renderEntryButton({
 function HelpMarkdownFallback({ fileName }: { fileName: string }) {
   return (
     <div className="space-y-3">
-      <div className="editor-text-muted text-sm">Loading {fileName}…</div>
+      <NoticeSurface tone="muted" className="px-0 py-0 text-sm">
+        Loading {fileName}…
+      </NoticeSurface>
       <div className="editor-bg-subtle editor-border-subtle h-24 rounded-lg border" />
       <div className="editor-bg-subtle editor-border-subtle h-24 rounded-lg border" />
     </div>

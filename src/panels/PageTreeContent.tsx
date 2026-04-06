@@ -9,7 +9,13 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
-import { TreeRowItem, VisibilityToggle } from "@/components/ui/tree-row";
+import { NoticeSurface } from "@/components/ui/settings-panel";
+import {
+	TreeRowActionButton,
+	TreeRowItem,
+	TreeRowLabelContent,
+	VisibilityToggle,
+} from "@/components/ui/tree-row";
 import { getPageRole } from "../model/pageRoutes";
 import type { DocumentModel } from "../model/types";
 import type { PageId } from "../model/types/site";
@@ -273,9 +279,12 @@ export function PageTreeContent({
 		<div className="flex flex-col">
 			<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
 				{rows.length === 0 ? (
-					<div className="editor-layers-empty editor-text-muted rounded-lg border border-dashed px-3 py-8 text-center text-sm">
+					<NoticeSurface
+						tone="info"
+						className="editor-layers-empty border-dashed py-8 text-center text-sm"
+					>
 						No pages yet.
-					</div>
+					</NoticeSurface>
 				) : (
 					<div className="flex flex-col gap-1">
 						{rows.map((row) => {
@@ -290,21 +299,17 @@ export function PageTreeContent({
 								dragState.hoveredPageId === page.id;
 
 							const label = (
-								<span className="min-w-0 flex-1">
-									<span className="flex min-w-0 items-center gap-1">
-										<span className="editor-layers-row-title truncate text-sm font-medium">
-											{page.displayName}
-										</span>
-										{isHomePage ? (
+								<TreeRowLabelContent
+									title={page.displayName}
+									subtitle={`/${page.slug}`}
+									badges={
+										isHomePage ? (
 											<span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
 												Home
 											</span>
-										) : null}
-									</span>
-									<span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
-										/{page.slug}
-									</span>
-								</span>
+										) : undefined
+									}
+								/>
 							);
 
 							const actions = (
@@ -333,21 +338,14 @@ export function PageTreeContent({
 										/>
 									)}
 									{isHomePage ? null : (
-										<Button
-											type="button"
-											variant="ghost"
-											size="icon"
-											className="editor-layers-action h-7 w-7 rounded-md border"
-											data-layers-control="true"
-											aria-label={`Delete ${page.displayName}`}
+										<TreeRowActionButton
+											ariaLabel={`Delete ${page.displayName}`}
+											tooltip={isOnlyPage ? 'A site must always keep one page.' : 'Delete page'}
 											disabled={isOnlyPage}
-											onClick={(event) => {
-												event.stopPropagation();
-												onDeletePage(page.id);
-											}}
+											onClick={() => onDeletePage(page.id)}
 										>
 											<Trash2 className="h-3.5 w-3.5" />
-										</Button>
+										</TreeRowActionButton>
 									)}
 								</>
 							);

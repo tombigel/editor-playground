@@ -59,6 +59,7 @@ describe("panels/PageTreeContent", () => {
 		expect(markup).toContain("Home");
 		expect(markup).toContain("About");
 		expect(markup).toContain('data-page-row-id="page-home"');
+		expect(markup).toContain('data-ui="tree-row-label-content"');
 		expect(markup).toContain('aria-label="Delete About"');
 		expect(markup).toContain("editor-pill-subtle");
 	});
@@ -114,6 +115,7 @@ describe("panels/PageTreeContent", () => {
 		);
 
 		expect(markup).toContain("No pages yet.");
+		expect(markup).toContain('data-ui="notice-surface"');
 	});
 
 	it("disables delete for the only page", () => {

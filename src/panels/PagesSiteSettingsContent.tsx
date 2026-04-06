@@ -1,4 +1,3 @@
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -6,7 +5,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { InspectorInlineRow } from './controls/FormLayout';
 import type { SiteSettings } from '@/api/editorApi';
 import { createLanguageSelectOptions, getDefaultSiteLanguage } from '@/i18n/languages';
-import { PlainGroup, SectionHeading } from '@/components/ui/settings-panel';
+import { ControlGroup, LabeledFieldStack, PlainGroup, SectionHeading } from '@/components/ui/settings-panel';
 
 export function PagesSiteSettingsContent({
   siteSettings,
@@ -29,8 +28,7 @@ export function PagesSiteSettingsContent({
       />
 
       <PlainGroup title="Site defaults">
-        <div className="flex flex-col gap-1.5">
-          <Label className="editor-text-muted text-xs">Title</Label>
+        <LabeledFieldStack label="Title" labelClassName="editor-text-muted text-xs">
           <Input
             defaultValue={siteSettings?.title ?? ''}
             key={siteSettings?.title}
@@ -46,9 +44,9 @@ export function PagesSiteSettingsContent({
               }
             }}
           />
-        </div>
+        </LabeledFieldStack>
 
-        <div className="editor-border-subtle space-y-2.5 border-t pt-4">
+        <ControlGroup separated>
           <InspectorInlineRow label="Site transition">
             <Select
               value={siteSettings?.viewTransition ?? 'none'}
@@ -86,7 +84,7 @@ export function PagesSiteSettingsContent({
               onCheckedChange={(checked) => onSetSiteSettings({ autoSyncSlugs: checked })}
             />
           </InspectorInlineRow>
-        </div>
+        </ControlGroup>
       </PlainGroup>
     </div>
   );

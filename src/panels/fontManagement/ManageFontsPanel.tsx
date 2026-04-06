@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NoticeSurface } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { FONT_CATALOG_PAGE_SIZE, FONT_CATALOG_PAGE_SIZE_OPTIONS, paginateCatalogFamilies } from './pagination';
 
@@ -252,44 +253,42 @@ export function ManageFontsPanel({
             const usageCount = usageMap[family.family] ?? 0;
             const removable = usageCount === 0;
             return (
-              <div key={family.family} className="editor-bg-subtle editor-border-subtle flex items-start gap-3 rounded-lg border px-3 py-2">
-                <div className="min-w-0 flex-1">
-                  <div className="editor-text-strong truncate text-[16px] font-medium leading-5" style={buildPreviewStyle(family)}>
-                    {family.family}
-                  </div>
-                  <div className="editor-text-muted mt-1 truncate text-[14px] leading-5" style={buildPreviewStyle(family)}>
-                    {getFontPreviewText(family, subset)}
-                  </div>
-                </div>
-                <div className="editor-text-muted shrink-0 pt-0.5 text-right text-[11px] leading-5">
-                  {formatFontMeta(family, usageCount)}
-                </div>
-                <FontButtonTooltip label={family.favorite ? 'Unfavorite' : 'Favorite'}>
-                  <Button
-                    type="button"
-                    variant={family.favorite ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    aria-label={family.favorite ? `Unfavorite ${family.family}` : `Favorite ${family.family}`}
-                    onClick={() => onToggleFavorite(family.family)}
-                  >
-                    <Star className="h-4 w-4" />
-                  </Button>
-                </FontButtonTooltip>
-                <FontButtonTooltip label={removable ? 'Remove from site' : 'Used fonts cannot be deleted'}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    aria-label={`Remove ${family.family}`}
-                    onClick={() => onRemoveFont(family.family)}
-                    disabled={!removable}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </FontButtonTooltip>
-              </div>
+              <FontFamilyCard
+                key={family.family}
+                family={family}
+                usageCount={usageCount}
+                previewText={getFontPreviewText(family, subset)}
+                tone="subtle"
+                actions={
+                  <>
+                    <FontButtonTooltip label={family.favorite ? 'Unfavorite' : 'Favorite'}>
+                      <Button
+                        type="button"
+                        variant={family.favorite ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        aria-label={family.favorite ? `Unfavorite ${family.family}` : `Favorite ${family.family}`}
+                        onClick={() => onToggleFavorite(family.family)}
+                      >
+                        <Star className="h-4 w-4" />
+                      </Button>
+                    </FontButtonTooltip>
+                    <FontButtonTooltip label={removable ? 'Remove from site' : 'Used fonts cannot be deleted'}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        aria-label={`Remove ${family.family}`}
+                        onClick={() => onRemoveFont(family.family)}
+                        disabled={!removable}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </FontButtonTooltip>
+                  </>
+                }
+              />
             );
           })}
         </div>
@@ -360,17 +359,21 @@ export function ManageFontsPanel({
           />
         </div>
 
-        {status === 'loading' ? <div className="editor-text-muted text-sm">Loading Google Fonts catalog…</div> : null}
+        {status === 'loading' ? (
+          <NoticeSurface tone="muted" className="px-0 py-0 text-sm">
+            Loading Google Fonts catalog…
+          </NoticeSurface>
+        ) : null}
         {status === 'error' ? (
-          <div className="editor-border-subtle rounded-lg border px-3 py-3">
+          <NoticeSurface tone="danger" className="block px-3 py-3">
             <div className="editor-text-strong text-sm font-medium">Could not load Google Fonts</div>
-            <div className="editor-text-muted mt-1 text-xs">{error}</div>
+            <div className="mt-1 text-xs">{error}</div>
             <div className="mt-3">
               <Button type="button" variant="outline" size="sm" onClick={retry}>
                 Retry
               </Button>
             </div>
-          </div>
+          </NoticeSurface>
         ) : null}
         {status === 'ready' ? (
           <div className="space-y-2">
@@ -415,49 +418,46 @@ export function ManageFontsPanel({
               const existing = getDocumentFontFamily(document, family.family);
               const usageCount = usageMap[family.family] ?? 0;
               return (
-                <div key={family.family} className="editor-border-subtle flex items-start gap-3 rounded-lg border px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="editor-text-strong truncate text-[16px] font-medium leading-5" style={buildPreviewStyle(family)}>
-                      {family.family}
-                    </div>
-                    <div className="editor-text-muted mt-1 truncate text-[14px] leading-5" style={buildPreviewStyle(family)}>
-                      {getFontPreviewText(family, subset)}
-                    </div>
-                  </div>
-                  <div className="editor-text-muted shrink-0 pt-0.5 text-right text-[11px] leading-5">
-                    {formatFontMeta(family, usageCount)}
-                  </div>
-                  <FontButtonTooltip label={existing?.favorite ? 'Unfavorite' : 'Favorite'}>
-                    <Button
-                      type="button"
-                      variant={existing?.favorite ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      aria-label={existing?.favorite ? `Unfavorite ${family.family}` : `Favorite ${family.family}`}
-                      onClick={() =>
-                        existing
-                          ? onToggleFavorite(existing.family)
-                          : onAddFont({ ...family, favorite: true, origin: 'added' })
-                      }
-                    >
-                      <Star className="h-4 w-4" />
-                    </Button>
-                  </FontButtonTooltip>
-                  {!existing && (
-                    <FontButtonTooltip label="Add to site">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        aria-label={`Add ${family.family}`}
-                        onClick={() => onAddFont({ ...family, favorite: false, origin: 'added' })}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </FontButtonTooltip>
-                  )}
-                </div>
+                <FontFamilyCard
+                  key={family.family}
+                  family={family}
+                  usageCount={usageCount}
+                  previewText={getFontPreviewText(family, subset)}
+                  actions={
+                    <>
+                      <FontButtonTooltip label={existing?.favorite ? 'Unfavorite' : 'Favorite'}>
+                        <Button
+                          type="button"
+                          variant={existing?.favorite ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          aria-label={existing?.favorite ? `Unfavorite ${family.family}` : `Favorite ${family.family}`}
+                          onClick={() =>
+                            existing
+                              ? onToggleFavorite(existing.family)
+                              : onAddFont({ ...family, favorite: true, origin: 'added' })
+                          }
+                        >
+                          <Star className="h-4 w-4" />
+                        </Button>
+                      </FontButtonTooltip>
+                      {!existing ? (
+                        <FontButtonTooltip label="Add to site">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            aria-label={`Add ${family.family}`}
+                            onClick={() => onAddFont({ ...family, favorite: false, origin: 'added' })}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </FontButtonTooltip>
+                      ) : null}
+                    </>
+                  }
+                />
               );
             })}
             <div className="flex justify-end">
@@ -578,6 +578,39 @@ function buildPreviewStyle(family: DocumentFontFamily) {
 function getFontPreviewText(family: DocumentFontFamily, activeSubset: string) {
   const previewSubset = resolvePreviewSubset(family, activeSubset);
   return LANGUAGE_GROUP_DEFINITIONS.find((group) => group.subsets.includes(previewSubset))?.previewText ?? 'Hamburgefonstiv 123';
+}
+
+function FontFamilyCard({
+  family,
+  usageCount,
+  previewText,
+  actions,
+  tone = 'default',
+}: {
+  family: DocumentFontFamily;
+  usageCount: number;
+  previewText: string;
+  actions: React.ReactNode;
+  tone?: 'default' | 'subtle';
+}) {
+  return (
+    <div
+      className={`${tone === 'subtle' ? 'editor-bg-subtle' : ''} editor-border-subtle flex items-start gap-3 rounded-lg border px-3 py-2`}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="editor-text-strong truncate text-[16px] font-medium leading-5" style={buildPreviewStyle(family)}>
+          {family.family}
+        </div>
+        <div className="editor-text-muted mt-1 truncate text-[14px] leading-5" style={buildPreviewStyle(family)}>
+          {previewText}
+        </div>
+      </div>
+      <div className="editor-text-muted shrink-0 pt-0.5 text-right text-[11px] leading-5">
+        {formatFontMeta(family, usageCount)}
+      </div>
+      {actions}
+    </div>
+  );
 }
 
 function formatFontMeta(family: DocumentFontFamily, usageCount: number) {

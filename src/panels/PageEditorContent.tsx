@@ -11,13 +11,12 @@ import type { DocumentModel, DocumentPage, PageId } from '@/api/editorApi';
 import { createLanguageSelectOptions } from '@/i18n/languages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ControlGroup, InlineNotice, LabeledFieldStack, NoticeSurface, PlainGroup, ValuePill } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { InspectorInlineRow } from './controls/FormLayout';
 import { isDescendant } from './pageTree';
-import { PlainGroup } from '@/components/ui/settings-panel';
 
 type PendingSlugChange = {
   from: string;
@@ -162,7 +161,7 @@ export function PageEditorContent({
   return (
     <div className={`flex flex-col gap-4 ${className}`.trim()}>
       <PlainGroup title="Page details">
-        <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between rounded-lg border px-3 py-2.5">
+        <NoticeSurface tone="info" className="items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="editor-text-strong text-xs font-medium">Home page</p>
             <p className="editor-text-muted text-xs">
@@ -179,10 +178,9 @@ export function PageEditorContent({
           >
             {isHomePage ? 'Home page' : 'Set as home'}
           </Button>
-        </div>
+        </NoticeSurface>
 
-        <div className="flex flex-col gap-1.5">
-          <Label className="editor-text-muted text-xs">Display name</Label>
+        <LabeledFieldStack label="Display name" labelClassName="editor-text-muted text-xs">
           <Input
             defaultValue={page.displayName}
             key={`${page.id}:${page.displayName}`}
@@ -193,85 +191,74 @@ export function PageEditorContent({
               }
             }}
           />
-        </div>
+        </LabeledFieldStack>
 
         {pendingSlugChange ? (
-          <div className="editor-warning-surface editor-border-subtle rounded-lg border px-3 py-2.5">
-            <div className="editor-warning-text flex items-start gap-2 text-xs">
-              <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <div className="min-w-0">
-                <p className="font-medium">
-                  Slug will change to <span>/{pendingSlugChange.to}</span>. Sync internal links?
-                </p>
-                <div className="mt-2 flex items-center gap-1.5">
-                  <Button type="button" size="sm" className="h-7 px-2 text-xs" onClick={() => commitPendingSlug(true)}>
-                    Yes
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => commitPendingSlug(false)}>
-                    No
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => {
-                      setPendingDisplayName(null);
-                      setPendingSlugChange(null);
-                    }}
-                  >
-                    Revert
-                  </Button>
-                </div>
-              </div>
+          <NoticeSurface tone="warning" icon={<TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />}>
+            <p className="font-medium">
+              Slug will change to <span>/{pendingSlugChange.to}</span>. Sync internal links?
+            </p>
+            <div className="mt-2 flex items-center gap-1.5">
+              <Button type="button" size="sm" className="h-7 px-2 text-xs" onClick={() => commitPendingSlug(true)}>
+                Yes
+              </Button>
+              <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => commitPendingSlug(false)}>
+                No
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  setPendingDisplayName(null);
+                  setPendingSlugChange(null);
+                }}
+              >
+                Revert
+              </Button>
+            </div>
+          </NoticeSurface>
+        ) : null}
+
+        <LabeledFieldStack label="Slug" labelClassName="editor-text-muted text-xs">
+          <div className="flex items-center justify-between">
+            <div />
+            <div className="flex items-center gap-2">
+              <ValuePill value={isAutoSlug ? 'auto' : 'custom'} />
+              {!isAutoSlug ? (
+                <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px]" onClick={handleSlugReset}>
+                  Reset
+                </Button>
+              ) : null}
             </div>
           </div>
-        ) : null}
-
-        <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="editor-text-muted text-xs">Slug</Label>
-          <div className="flex items-center gap-2">
-            <span className="editor-pill-subtle rounded-md px-2 py-0.5 text-[10px] font-medium">
-              {isAutoSlug ? 'auto' : 'custom'}
-            </span>
-            {!isAutoSlug ? (
-              <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px]" onClick={handleSlugReset}>
-                Reset
-              </Button>
-            ) : null}
+          <div className="flex items-center gap-1.5">
+            <span className="editor-text-muted text-sm">/</span>
+            <Input
+              value={slugDraft}
+              className="flex-1 font-mono"
+              onChange={(event) => {
+                setSlugDraft(event.currentTarget.value);
+                setSlugErrors(validatePageSlug(event.currentTarget.value));
+              }}
+              onBlur={handleSlugCommit}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.currentTarget.blur();
+                }
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={onValidateLinks}>
+              Validate links
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="editor-text-muted text-sm">/</span>
-          <Input
-            value={slugDraft}
-            className="flex-1 font-mono"
-            onChange={(event) => {
-              setSlugDraft(event.currentTarget.value);
-              setSlugErrors(validatePageSlug(event.currentTarget.value));
-            }}
-            onBlur={handleSlugCommit}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.currentTarget.blur();
-              }
-            }}
-          />
-          <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={onValidateLinks}>
-            Validate links
-          </Button>
-        </div>
-        {slugErrors[0] ? (
-          <div className="editor-warning-text flex items-center gap-1 text-[11px]">
-            <TriangleAlert className="h-3 w-3 shrink-0" />
-            <span>{slugErrors[0]}</span>
-          </div>
-        ) : null}
-        </div>
+          {slugErrors[0] ? (
+            <InlineNotice>{slugErrors[0]}</InlineNotice>
+          ) : null}
+        </LabeledFieldStack>
 
-        <div className="flex flex-col gap-1.5">
-          <Label className="editor-text-muted text-xs">Slug aliases</Label>
+        <LabeledFieldStack label="Slug aliases" labelClassName="editor-text-muted text-xs">
           {isHomePage || (page.slugAliases ?? []).length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {isHomePage ? (
@@ -343,67 +330,68 @@ export function PageEditorContent({
               Add
             </Button>
           </div>
-        </div>
+        </LabeledFieldStack>
       </PlainGroup>
 
       <PlainGroup title="Page behavior">
-        <div className="flex flex-col gap-1.5">
-          <Label className="editor-text-muted text-xs">Language</Label>
-          <SearchableSelect
-            value={page.lang ?? '__site__'}
-            options={languageOptions}
-            placeholder="Site language"
-            searchPlaceholder="Search languages"
-            triggerClassName="h-8 text-xs"
-            onValueChange={(value) => onSetLang(page.id, value === '__site__' ? undefined : value)}
-          />
-        </div>
+        <ControlGroup className="space-y-4">
+          <LabeledFieldStack label="Language" labelClassName="editor-text-muted text-xs">
+            <SearchableSelect
+              value={page.lang ?? '__site__'}
+              options={languageOptions}
+              placeholder="Site language"
+              searchPlaceholder="Search languages"
+              triggerClassName="h-8 text-xs"
+              onValueChange={(value) => onSetLang(page.id, value === '__site__' ? undefined : value)}
+            />
+          </LabeledFieldStack>
 
-        <InspectorInlineRow label="Visible">
-          <Switch
-            checked={page.visible}
-            disabled={isHomePage}
-            onCheckedChange={(checked) => onSetVisibility(page.id, checked)}
-          />
-        </InspectorInlineRow>
+          <InspectorInlineRow label="Visible">
+            <Switch
+              checked={page.visible}
+              disabled={isHomePage}
+              onCheckedChange={(checked) => onSetVisibility(page.id, checked)}
+            />
+          </InspectorInlineRow>
 
-        <InspectorInlineRow label="Transition">
-          <Select
-            value={page.viewTransition ?? '__inherit__'}
-            onValueChange={(value) =>
-              onSetViewTransition(page.id, value === '__inherit__' ? undefined : (value as DocumentPage['viewTransition']))
-            }
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__inherit__">{`Site transition (${VIEW_TRANSITION_LABELS[inheritedTransition]})`}</SelectItem>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="crossfade">Cross-fade</SelectItem>
-              <SelectItem value="slide">Slide</SelectItem>
-            </SelectContent>
-          </Select>
-        </InspectorInlineRow>
-
-        <InspectorInlineRow label="Parent">
-          <Select
-            value={page.parentPageId ?? '__top__'}
-            onValueChange={(value) => onSetParent(page.id, value === '__top__' ? null : value)}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__top__">Top level</SelectItem>
-              {parentOptions.map((candidate) => (
-                <SelectItem key={candidate.id} value={candidate.id}>
-                  {candidate.displayName} — {resolvePageUrl(document, candidate.id)}
-                </SelectItem>
-              ))}
-            </SelectContent>
+          <InspectorInlineRow label="Transition">
+            <Select
+              value={page.viewTransition ?? '__inherit__'}
+              onValueChange={(value) =>
+                onSetViewTransition(page.id, value === '__inherit__' ? undefined : (value as DocumentPage['viewTransition']))
+              }
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__inherit__">{`Site transition (${VIEW_TRANSITION_LABELS[inheritedTransition]})`}</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="crossfade">Cross-fade</SelectItem>
+                <SelectItem value="slide">Slide</SelectItem>
+              </SelectContent>
             </Select>
           </InspectorInlineRow>
+
+          <InspectorInlineRow label="Parent">
+            <Select
+              value={page.parentPageId ?? '__top__'}
+              onValueChange={(value) => onSetParent(page.id, value === '__top__' ? null : value)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__top__">Top level</SelectItem>
+                {parentOptions.map((candidate) => (
+                  <SelectItem key={candidate.id} value={candidate.id}>
+                    {candidate.displayName} — {resolvePageUrl(document, candidate.id)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </InspectorInlineRow>
+        </ControlGroup>
       </PlainGroup>
     </div>
   );
