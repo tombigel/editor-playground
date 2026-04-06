@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -16,6 +17,7 @@ import {
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_TEXT_COLOR,
 } from '../../../model/styleDefaults';
+import { getNodeTextContent } from '../../../render/nodePresentation';
 import type { TextInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {
@@ -75,6 +77,42 @@ export function TextContentSection({
           />
         </InspectorInlineRow>
       </InspectorFieldGroup>
+    </InspectorSectionCard>
+  );
+}
+
+export function RichTextContentSection({
+  node,
+  headerContent,
+  headerAction,
+  contentClassName = 'px-3 pt-2 pb-3',
+}: {
+  node: TextInspectorNode;
+} & FocusModeCardProps) {
+  const preview = getNodeTextContent(node);
+  return (
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+    >
+      <div className="editor-text-muted flex items-start gap-2 rounded-md border border-dashed px-3 py-2.5 text-[11px]"
+        style={{ borderColor: 'var(--editor-border-subtle)' }}
+      >
+        <Pencil size={13} className="mt-px shrink-0 opacity-60" />
+        <span>Double-click on the canvas to edit rich text</span>
+      </div>
+      {preview && (
+        <p className="editor-text-muted mt-2 line-clamp-3 break-words px-0.5 text-[11px] leading-relaxed opacity-70">
+          {preview}
+        </p>
+      )}
+      <p className="editor-text-muted mt-2 px-0.5 text-[10px] opacity-50">
+        <kbd className="font-mono">⌘B</kbd> bold &nbsp;
+        <kbd className="font-mono">⌘I</kbd> italic &nbsp;
+        <kbd className="font-mono">⌘K</kbd> link
+      </p>
     </InspectorSectionCard>
   );
 }

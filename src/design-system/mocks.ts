@@ -73,6 +73,24 @@ export const mockStickySection: ContainerNode = {
 	},
 };
 
+/** Container with a fully authored sticky config — shows both-edge offsets, custom duration, and local elevation. */
+export const mockStickyContainer: ContainerNode = {
+	...createContainerNode("container", MOCK_SITE_ID),
+	name: "Pinned Card Stack",
+	sticky: {
+		enabled: true,
+		target: "self",
+		edges: { top: true, bottom: true },
+		offsetTop: parseUnitValue("12vh"),
+		offsetBottom: parseUnitValue("18vh"),
+		durationMode: "custom",
+		duration: parseUnitValue("140vh"),
+		durationTop: parseUnitValue("160vh"),
+		durationBottom: parseUnitValue("120vh"),
+		elevated: true,
+	},
+};
+
 export const mockContainer = createContainerNode("container", mockSection.id);
 export const mockTextLeaf = createTextNode("block", mockContainer.id);
 export const mockButtonLeaf = createButtonTextNode(mockContainer.id);

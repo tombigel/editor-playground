@@ -1,4 +1,4 @@
-import { TextAppearanceSection, TextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
+import { TextAppearanceSection, TextContentSection, RichTextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import { isTextNode as isTextNodeGuard } from '../../model/types';
@@ -16,6 +16,12 @@ const textContentSection: InspectorSectionDefinition = {
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />
     ) : null,
+};
+
+const richTextContentSection: InspectorSectionDefinition = {
+  id: 'rich-text-content',
+  render: ({ node }) =>
+    isRichTextNode(node) ? <RichTextContentSection node={node} /> : null,
 };
 
 const textDesignSection: InspectorSectionDefinition = {
@@ -88,7 +94,7 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     bucket: 'primary',
     title: 'Content',
     description: 'Copy fields for text nodes.',
-    sections: [textContentSection],
+    sections: [textContentSection, richTextContentSection],
   }),
   createSectionBlock({
     id: 'text-style',
@@ -108,4 +114,8 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
 
 function isTextNode(node: InspectorNode | null): node is TextInspectorNode {
   return Boolean(node && isTextNodeGuard(node) && node.subtype === 'block' && node.link === undefined);
+}
+
+function isRichTextNode(node: InspectorNode | null): node is TextInspectorNode {
+  return Boolean(node && isTextNodeGuard(node) && node.subtype === 'rich');
 }
