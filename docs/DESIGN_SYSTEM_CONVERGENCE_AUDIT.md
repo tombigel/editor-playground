@@ -68,56 +68,68 @@ A surface is only `done` when all applicable items are true:
 
 ## Surface Inventory
 
-| Surface | Files | Existing DS usage | Bespoke markup / controls to audit | CSS dependencies to audit | Primary decision | Priority | Status | Done criteria / notes |
-|---|---|---|---|---|---|---|---|---|
-| App shell | `src/app/AppShell.tsx` | Uses shared button, dialog, popover in places | Grid shell, rail framing, workspace framing, local buttons and layout wrappers | `editor-chrome.css`, utility editor classes | `not audited` | `P1 shell` | `not audited` | Classify shell framing versus global layout contracts |
-| Topbar | `src/app/EditorTopbar.tsx` | Uses menubar and page switcher | Topbar framing, action cluster, preview button, local layout wrappers | `editor-chrome.css` | `not audited` | `P1 shell` | `not audited` | Audit whether topbar shell becomes shared or remains a consumer of shared parts |
-| Insert rail | `src/panels/InsertPanel.tsx` | Uses shared button and tooltip | Rail entry rows, section separators, local icon/text wrappers | `editor-chrome.css` | `not audited` | `P1 shell` | `not audited` | Likely consumes shared shell/header/status surface pieces |
-| Editor sidebar | `src/panels/EditorSidebar.tsx` | Uses shared button | Sidebar shell, header framing, selection summary, local close/header actions | `editor-chrome.css`, `inspector.css` | `not audited` | `P1 shell` | `not audited` | Audit overlap with focused panel and general panel shell |
-| Focused panel | `src/panels/FocusedModePanel.tsx` | Limited shared surface use | Floating panel shell, header summary, badges, close affordance | `editor-chrome.css`, `inspector.css` | `not audited` | `P1 shell` | `not audited` | Candidate for shared floating shell and header |
-| Panel headers | `src/panels/EditorPanelHeader.tsx` and consumers | Shared button usage only | Header icon/title/description/actions/close pattern | `editor-chrome.css` | `not audited` | `P0 foundation` | `not audited` | Strong candidate for shared composite |
-| Settings helpers | `src/components/ui/settings-panel.tsx`, `src/panels/settings/**` | Already shared but narrow | Setting row, action row, compact select row, info tooltip contracts | `editor-chrome.css` | `not audited` | `P2 inspector/settings` | `not audited` | Audit whether settings helpers should expand into inspector/shared control roles |
-| Inspector common sections | `src/panels/inspector/CommonSections.tsx`, `src/panels/InspectorPanel.tsx`, `src/panels/InspectorControls.tsx` | Uses button, card, input, label, popover, switch | Summary blocks, cards, warnings, pills, inline editors, repeated groups | `inspector.css`, `editor-chrome.css` | `not audited` | `P2 inspector/settings` | `not audited` | High-volume consumer of repeated editor patterns |
-| Font controls | `src/panels/controls/FontControls.tsx` | Uses button, input, popover, select, value-with-unit | Custom font picker layout, weight list, size shell, custom inline field structure | `editor-chrome.css`, `inspector.css` | `not audited` | `P0 foundation` | `not audited` | Known hotspot with likely primitive and composite follow-up |
-| Size fields | `src/panels/controls/SizeFields.tsx` | Uses input, label, select, slider, value-with-unit | Custom inline field shell, suffix segment behavior, stats/pill rows | `editor-chrome.css`, `inspector.css` | `not audited` | `P0 foundation` | `not audited` | Known hotspot; likely depends on better shared compact field contracts |
-| Number fields | `src/panels/controls/NumberFields.tsx` | Uses input, label, number-input, value-with-unit | Mixed label/layout rows and field grouping | `editor-chrome.css`, `inspector.css` | `not audited` | `P2 inspector/settings` | `not audited` | Audit overlap with size and interaction controls |
-| Interaction controls | `src/panels/controls/InteractionControls.tsx` | Uses button, label, tooltip | Group wrappers, option rows, warning/info snippets | `editor-chrome.css`, `inspector.css` | `not audited` | `P2 inspector/settings` | `not audited` | Candidate for shared inspector row/group components |
-| Sticky controls | `src/panels/inspector/StickySection.tsx`, `src/panels/MultiStickySection.tsx` | Uses button, label, select, switch | Status surfaces, segmented controls, info copy, mixed-state presentation | `editor-chrome.css`, `inspector.css` | `not audited` | `P2 inspector/settings` | `not audited` | Multi-select parity matters here |
-| Layers panel | `src/panels/LayersPanel.tsx` | Uses button, input, popover tooltip | Floating shell, row structure, title editing, badges, actions, empty state | `layers-panel.css`, `editor-chrome.css` | `not audited` | `P3 specialized` | `not audited` | Known hotspot; likely mixed `tree-row` extension plus local drag logic |
-| Help dialog | `src/panels/HelpDialog.tsx`, `src/panels/HelpMarkdownDocument.tsx` | Uses button, dialog | Dialog shell, left nav, doc browser framing, local toolbar patterns | `editor-chrome.css`, `help-docs.css` | `not audited` | `P3 specialized` | `not audited` | Audit shared split-pane/list contracts versus local document browser behavior |
-| Page editor content | `src/panels/PageEditorContent.tsx` | Uses button, input, label, searchable-select, select, switch, settings helpers | Warning blocks, slug rows, alias chips, section group structure | `editor-chrome.css` | `not audited` | `P3 specialized` | `not audited` | Candidate for reuse of warning/info and compact rows |
-| Page tree content | `src/panels/PageTreeContent.tsx` | Uses button, tooltip, tree-row | Local tree framing, action patterns, page-specific row states | `editor-chrome.css` | `not audited` | `P3 specialized` | `not audited` | Audit overlap with layers tree row contracts |
-| Page/site/export settings | `src/panels/PagesSiteSettingsContent.tsx`, `src/panels/PagesExportSettingsContent.tsx`, `src/panels/PagesPanel.tsx` | Uses label, input, select, switch, tabs, settings helpers | Warning cards, validation list, local tabs framing, section shells | `editor-chrome.css` | `not audited` | `P3 specialized` | `not audited` | Likely consumers of shared shell/info/group surfaces |
-| Manage fonts panel | `src/panels/fontManagement/ManageFontsPanel.tsx` | Uses button, input, tooltip, label, select, switch | Catalog rows, filter toggles, status cards, pager, preview rows | `editor-chrome.css` | `not audited` | `P3 specialized` | `not audited` | Likely reveals pager/list-row shared contracts |
-| Dialogs / tooltips / pills / warnings | `src/components/ui/dialog.tsx`, `src/components/ui/popover.tsx`, editor consumers across `src/app` and `src/panels` | Shared primitives exist | Local warning cards, pills, tooltip styling, status surfaces repeated in consumers | `editor-chrome.css` | `not audited` | `P0 foundation` | `not audited` | Audit whether warning/info/pill surfaces belong in DS composite layer |
-| Tree row | `src/components/ui/tree-row.tsx` | Shared component exists | Layers/page consumers may still need local row structure and actions | `layers-panel.css`, `editor-chrome.css` | `not audited` | `P0 foundation` | `not audited` | Audit variant model for layers mode versus page-tree mode |
-| Page switcher | `src/components/ui/page-switcher-select.tsx` and topbar consumer | Shared component exists | Topbar-specific row layout and create-page affordance may still be specialized | `editor-chrome.css` | `not audited` | `P0 foundation` | `not audited` | Audit whether current specialization is acceptable or should become variant-driven |
-| Color picker | `src/components/ui/color-picker.tsx` | Shared primitive exists | Injected style handling, theme sync, third-party overrides | `editor-chrome.css`, internal injected CSS | `not audited` | `P0 foundation` | `not audited` | Known hotspot; audit `!important` and shadow DOM style ownership |
-| Tabs / select / searchable-select / value-with-unit | `src/components/ui/tabs.tsx`, `src/components/ui/select.tsx`, `src/components/ui/searchable-select.tsx`, `src/components/ui/value-with-unit.tsx` | Shared primitives exist | Consumer-side size/layout overrides, missing compact or embedded variants | `editor-chrome.css` | `not audited` | `P0 foundation` | `not audited` | Audit primitive API gaps before migrating dense consumers |
+| Surface | Files | Existing DS usage | Bespoke markup / controls to audit | CSS dependencies to audit | Primary decision | Priority | Wave | Status | Done criteria / notes |
+|---|---|---|---|---|---|---|---|---|---|
+| App shell | `src/app/AppShell.tsx` | Uses shared button, dialog, popover in places | Grid shell, rail framing, workspace framing, local buttons and layout wrappers | `editor-chrome.css`, utility editor classes | `keep specialized` | `P3 specialized` | `Wave E` | `audited` | App-level grid/orchestration should stay local; consume shared shell pieces without turning the whole app shell into a DS component |
+| Topbar | `src/app/EditorTopbar.tsx` | Uses menubar and page switcher | Topbar framing, action cluster, preview button, local layout wrappers | `editor-chrome.css` | `keep specialized` | `P1 shell` | `Wave B` | `audited` | Product-specific layout stays local; should consume improved shell/button/page-switcher contracts |
+| Insert rail | `src/panels/InsertPanel.tsx` | Uses shared button and tooltip | Rail entry rows, section separators, local icon/text wrappers | `editor-chrome.css` | `add DS composite` | `P1 shell` | `Wave B` | `audited` | Rail entry/toggle/status chrome is repeated enough to justify a shared composite layer |
+| Editor sidebar | `src/panels/EditorSidebar.tsx` | Uses shared button | Sidebar shell, header framing, selection summary, local close/header actions | `editor-chrome.css`, `inspector.css` | `reuse existing DS` | `P1 shell` | `Wave B` | `audited` | Becomes mostly a consumer once shared panel shell and header contracts exist |
+| Focused panel | `src/panels/FocusedModePanel.tsx` | Limited shared surface use | Floating panel shell, header summary, badges, close affordance | `editor-chrome.css`, `inspector.css` | `add DS composite` | `P0 foundation` | `Wave A` | `audited` | Strong anchor for shared floating shell with header, badges, and scrollable body |
+| Panel headers | `src/panels/EditorPanelHeader.tsx` and consumers | Shared button usage only | Header icon/title/description/actions/close pattern | `editor-chrome.css` | `add DS composite` | `P0 foundation` | `Wave A` | `audited` | Clearest existing local shared contract to move under DS ownership |
+| Settings helpers | `src/components/ui/settings-panel.tsx`, `src/panels/settings/**` | Already shared but narrow | Setting row, action row, compact select row, info tooltip contracts | `editor-chrome.css` | `extend DS primitive` | `P2 inspector/settings` | `Wave C` | `audited` | Expand toward inspector-compatible rows and group variants rather than replacing the helper layer |
+| Inspector common sections | `src/panels/inspector/CommonSections.tsx`, `src/panels/InspectorPanel.tsx`, `src/panels/InspectorControls.tsx` | Uses button, card, input, label, popover, switch | Summary blocks, cards, warnings, pills, inline editors, repeated groups | `inspector.css`, `editor-chrome.css` | `add DS composite` | `P2 inspector/settings` | `Wave C` | `audited` | High-volume source of repeated inspector cards, warnings, pills, and grouped rows |
+| Font controls | `src/panels/controls/FontControls.tsx` | Uses button, input, popover, select, value-with-unit | Custom font picker layout, weight list, size shell, custom inline field structure | `editor-chrome.css`, `inspector.css` | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | Most missing behavior belongs in shared primitive contracts: font picker, embedded popover lists, compact numeric shells |
+| Size fields | `src/panels/controls/SizeFields.tsx` | Uses input, label, select, slider, value-with-unit | Custom inline field shell, suffix segment behavior, stats/pill rows | `editor-chrome.css`, `inspector.css` | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | Shared compact-field and suffix-segment behavior should absorb the local shell |
+| Number fields | `src/panels/controls/NumberFields.tsx` | Uses input, label, number-input, value-with-unit | Mixed label/layout rows and field grouping | `editor-chrome.css`, `inspector.css` | `reuse existing DS` | `P2 inspector/settings` | `Wave D` | `audited` | Mostly a consumer migration after compact numeric primitives stabilize |
+| Interaction controls | `src/panels/controls/InteractionControls.tsx` | Uses button, label, tooltip | Group wrappers, option rows, warning/info snippets | `editor-chrome.css`, `inspector.css` | `add DS composite` | `P2 inspector/settings` | `Wave C` | `audited` | Missing inspector-level row/group/warning composition matters more than new base primitives |
+| Sticky controls | `src/panels/inspector/StickySection.tsx`, `src/panels/MultiStickySection.tsx` | Uses button, label, select, switch | Status surfaces, segmented controls, info copy, mixed-state presentation | `editor-chrome.css`, `inspector.css` | `add DS composite` | `P2 inspector/settings` | `Wave C` | `audited` | Multi-select status and grouped controls should become shared inspector composition patterns |
+| Layers panel | `src/panels/LayersPanel.tsx` | Uses button, input, popover tooltip | Floating shell, row structure, title editing, badges, actions, empty state | `layers-panel.css`, `editor-chrome.css` | `keep specialized` | `P3 specialized` | `Wave E` | `audited` | Drag/drop and hierarchy logic stay local; only row chrome and shell pieces should be shared |
+| Help dialog | `src/panels/HelpDialog.tsx`, `src/panels/HelpMarkdownDocument.tsx` | Uses button, dialog | Dialog shell, left nav, doc browser framing, local toolbar patterns | `editor-chrome.css`, `help-docs.css` | `keep specialized` | `P3 specialized` | `Wave E` | `audited` | Document browser split-pane behavior is local, though it should consume shared shell/nav/info contracts |
+| Page editor content | `src/panels/PageEditorContent.tsx` | Uses button, input, label, searchable-select, select, switch, settings helpers | Warning blocks, slug rows, alias chips, section group structure | `editor-chrome.css` | `reuse existing DS` | `P3 specialized` | `Wave E` | `audited` | Straightforward consumer once warning/info/group/pill/select contracts are formalized |
+| Page tree content | `src/panels/PageTreeContent.tsx` | Uses button, tooltip, tree-row | Local tree framing, action patterns, page-specific row states | `editor-chrome.css` | `reuse existing DS` | `P3 specialized` | `Wave E` | `audited` | Should consume improved tree-row and pill contracts while keeping page behavior local |
+| Page/site/export settings | `src/panels/PagesSiteSettingsContent.tsx`, `src/panels/PagesExportSettingsContent.tsx`, `src/panels/PagesPanel.tsx` | Uses label, input, select, switch, tabs, settings helpers | Warning cards, validation list, local tabs framing, section shells | `editor-chrome.css` | `reuse existing DS` | `P3 specialized` | `Wave E` | `audited` | Consumer cleanup after shell, tabs, warning/info, and settings contracts are ready |
+| Manage fonts panel | `src/panels/fontManagement/ManageFontsPanel.tsx` | Uses button, input, tooltip, label, select, switch | Catalog rows, filter toggles, status cards, pager, preview rows | `editor-chrome.css` | `keep specialized` | `P3 specialized` | `Wave E` | `audited` | Search/catalog domain remains local but may reveal reusable pager and list-row contracts |
+| Dialogs / tooltips / pills / warnings | `src/components/ui/dialog.tsx`, `src/components/ui/popover.tsx`, editor consumers across `src/app` and `src/panels` | Shared primitives exist | Local warning cards, pills, tooltip styling, status surfaces repeated in consumers | `editor-chrome.css` | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | Dialog/popover base is present; warning/info/pill/status roles still need formal runtime contracts |
+| Tree row | `src/components/ui/tree-row.tsx` | Shared component exists | Layers/page consumers may still need local row structure and actions | `layers-panel.css`, `editor-chrome.css` | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | Needs clearer variant model for layers mode, page-tree mode, title editing, badges, and actions |
+| Page switcher | `src/components/ui/page-switcher-select.tsx` and topbar consumer | Shared component exists | Topbar-specific row layout and create-page affordance may still be specialized | `editor-chrome.css` | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | Shared already, but current styling and affordances are still too topbar-specific |
+| Color picker | `src/components/ui/color-picker.tsx` | Shared primitive exists | Injected style handling, theme sync, third-party overrides | `editor-chrome.css`, internal injected CSS | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | DS should own third-party styling contract instead of relying on broad injected `!important` rules |
+| Tabs / select / searchable-select / value-with-unit | `src/components/ui/tabs.tsx`, `src/components/ui/select.tsx`, `src/components/ui/searchable-select.tsx`, `src/components/ui/value-with-unit.tsx` | Shared primitives exist | Consumer-side size/layout overrides, missing compact or embedded variants | `editor-chrome.css` | `extend DS primitive` | `P0 foundation` | `Wave A` | `audited` | These primitives are close but still force local overrides for compact, embedded, and mixed-state editor usage |
 
-## Cross-Cutting Audit Questions
+## Cross-Cutting Findings
 
-Answer these during classification and keep the findings attached to affected surfaces:
-
-- Which floating shells are duplicated and should become a shared shell contract?
-- Which header layouts and close-action patterns are duplicated?
-- Which warning, info, pill, and mixed-state surfaces are repeated often enough to become shared?
-- Which primitives force consumer-side class overrides because they do not expose the right variant?
-- Which selectors in `editor-chrome.css`, `inspector.css`, and `layers-panel.css` are true global contracts versus consumer-specific leftovers?
-- Which showcase entries do not yet represent a real editor consumer?
-- Which real editor consumers still have no corresponding shared design-system surface?
+- Duplicated floating shell pattern:
+  `PopoverSurface` or floating shell + `EditorPanelHeader` + scrollable body appears in the section template popover, layers panel, pages panel, focused panel, and dialog-like editor surfaces. This should be formalized as a shared shell composite in `Wave A`.
+- Duplicated header pattern:
+  `EditorPanelHeader` is already a local shared helper and is the clearest immediate candidate to become a DS-owned runtime composite in `Wave A`.
+- Warning, info, and pill surfaces:
+  warning blocks and pill-like status surfaces recur in page editing, export settings, focused panel headers, inspector content, and settings/help contexts. The showcase has visual examples, but runtime code still depends on local classes rather than a first-class shared contract.
+- Mixed-value patterns:
+  `ValueWithUnit` and `NumberInput` already cover part of the mixed-value problem well. Other mixed states are still expressed through local dashed borders, bespoke grouped shells, and consumer-specific status UI. Shared primitives are close, but inspector/settings composites are still missing.
+- Global versus consumer CSS:
+  `editor-scrollbar`, theme scopes, token-backed utility roles, and dialog/popover reset rules are legitimate global contracts. Many `editor-layers-*`, `editor-template-*`, `editor-insert-*`, and settings-nav selectors are consumer- or subsystem-specific and should either move behind shared component ownership or remain local only where specialization is real.
+- Showcase gaps:
+  the showcase demonstrates focused panel visuals, warning/info states, settings nav, and layers visuals, but it does not yet prove a reusable runtime shell/header contract used by real editor consumers. Template-card variants and font-management row/pager items are also still missing.
+- First execution implication:
+  the strongest first move is not broad consumer migration. `Wave A` should formalize shell, header, status, compact-field, and row contracts first so later panel work becomes mostly `reuse existing DS`.
 
 ## Known Hotspots To Classify Early
 
-These should be reviewed before broader consumer migration starts:
+These were classified as the highest-leverage or highest-risk hotspots:
 
 - `src/components/ui/color-picker.tsx`
+  `extend DS primitive`, `Wave A`
 - `src/panels/controls/FontControls.tsx`
+  `extend DS primitive`, `Wave A`
 - `src/panels/controls/SizeFields.tsx`
+  `extend DS primitive`, `Wave A`
 - `src/panels/LayersPanel.tsx`
+  `keep specialized`, `Wave E`
 - `src/app/AppChrome.tsx`
+  consumer work depends on missing shell and status composites; primary consumer migration sits in `Wave B`
 - `src/panels/EditorSidebar.tsx`
+  `reuse existing DS`, `Wave B`
 - `src/styles/editor-chrome.css`
+  cleanup deferred to `Wave F` after migrations land
 
 ## Wave Targets
 
@@ -129,3 +141,18 @@ These are the execution waves this backlog should eventually map to:
 - `Wave D`: dense control migrations
 - `Wave E`: specialized panels
 - `Wave F`: CSS deletion and AI workflow guardrails
+
+## Current Wave Mapping Summary
+
+- `Wave A`
+  focused panel, panel headers, font controls, size fields, dialogs/tooltips/pills/warnings, tree row, page switcher, color picker, tabs/select/searchable-select/value-with-unit
+- `Wave B`
+  topbar, insert rail, editor sidebar
+- `Wave C`
+  settings helpers, inspector common sections, interaction controls, sticky controls
+- `Wave D`
+  number fields
+- `Wave E`
+  app shell, layers panel, help dialog, page editor content, page tree content, page/site/export settings, manage fonts panel
+- `Wave F`
+  `editor-chrome.css` cleanup and remaining contract tightening after prior migrations
