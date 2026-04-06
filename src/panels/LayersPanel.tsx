@@ -1,15 +1,10 @@
 import {
 	Ban,
 	Rocket,
-	ChevronDown,
-	ChevronRight,
-	Eye,
-	EyeOff,
 	Layers2,
 	Layers3,
 	PencilLine,
 	Pin,
-	type LucideIcon,
 } from "lucide-react";
 import {
 	useCallback,
@@ -23,9 +18,15 @@ import {
 	type Ref,
 } from "react";
 import type { DocumentModel, NodeId } from "../model/types";
-import { Button } from "@/components/ui/button";
+import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
-import { PopoverSurface, PopoverTooltip } from "@/components/ui/popover";
+import { PopoverTooltip } from "@/components/ui/popover";
+import {
+	TreeRowActionButton,
+	TreeRowItem,
+	TreeRowLabelContent,
+	VisibilityToggle,
+} from "@/components/ui/tree-row";
 import { EditorPanelHeader } from "./EditorPanelHeader";
 import { resolveSidebarTitleCommit } from "./EditorSidebar";
 import { TreeDragGhost } from "./TreeDragGhost";
@@ -109,7 +110,6 @@ type DragState = {
 	dropTarget: ActiveDropTarget | null;
 };
 
-const ROW_INDENT_PX = 8;
 const PANEL_VIEWPORT_MARGIN_PX = 16;
 
 type PanelDragState = {
@@ -230,31 +230,34 @@ export function LayersPanel({
 	}
 
 	return (
-		<PopoverSurface
+		<FloatingPanelShell
 			ref={setCombinedRef}
 			open={open}
 			onOpenChange={onOpenChange}
-			className="editor-floating-panel editor-layers-panel editor-bg-surface editor-border-subtle fixed w-[320px] rounded-xl border shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
+			className="editor-layers-panel w-[320px]"
 			style={{
 				top: `${position.top}px`,
 				left: `${position.left}px`,
 			}}
+			header={
+				<div
+					className="editor-panel-drag-zone"
+					onPointerDown={handleHeaderPointerDown}
+				>
+					<EditorPanelHeader
+						icon={Layers3}
+						title="Components"
+						description="Structure, visibility, and order."
+						closeLabel="Close components panel"
+						onClose={onClose}
+						className="cursor-grab px-3 py-2.5 active:cursor-grabbing"
+					/>
+				</div>
+			}
+			bodyClassName="contents"
 		>
-			<div
-				className="editor-panel-drag-zone"
-				onPointerDown={handleHeaderPointerDown}
-			>
-				<EditorPanelHeader
-					icon={Layers3}
-					title="Components"
-					description="Structure, visibility, and order."
-					closeLabel="Close components panel"
-					onClose={onClose}
-					className="cursor-grab px-3 py-2.5 active:cursor-grabbing"
-				/>
-			</div>
 			<LayersPanelContent {...contentProps} />
-		</PopoverSurface>
+		</FloatingPanelShell>
 	);
 }
 
@@ -667,27 +670,112 @@ function LayersTreeRowItem({
 	onStopEditing: () => void;
 }) {
 	const NodeIcon = getLayersNodeIcon(row.node);
-	const DisclosureIcon: LucideIcon = row.isExpanded
-		? ChevronDown
-		: ChevronRight;
+	const label = editing ? (
+		<span className="block min-w-0" data-layers-title-editor="true">
+			<LayersRowTitleEditor
+				name={row.displayName}
+				onCommit={(value) => {
+					onRenameNode(
+						row.id,
+						resolveSidebarTitleCommit(value, row.node.subtype),
+					);
+					onStopEditing();
+				}}
+				onCancel={onStopEditing}
+			/>
+		</span>
+	) : (
+		<TreeRowLabelContent
+			title={row.displayName}
+			subtitle={row.typeLabel}
+			projectedSubtitle={projectedTypeLabel}
+			badges={
+				<>
+					{row.isSticky && <Pin className="h-3 w-3" />}
+					{row.hasAnimation && <Rocket className="h-3 w-3" />}
+					{row.isElevated && <Layers2 className="h-3 w-3" />}
+				</>
+			}
+		/>
+	);
+
+	const actions = (
+		<>
+			{invalidDrop ? (
+				<PopoverTooltip
+					side="top"
+					align="end"
+					className={INSPECTOR_TOOLTIP_CLASS_NAME}
+					content="Cannot drop a top-level structural layer onto this item."
+				>
+					<span
+						className="editor-layers-invalid-drop-indicator"
+						aria-hidden="true"
+					>
+						<Ban className="h-3.5 w-3.5" />
+					</span>
+				</PopoverTooltip>
+			) : null}
+			<TreeRowActionButton
+				ariaLabel={`Edit ${row.displayName}`}
+				tooltip="Edit title"
+				className="editor-layers-action-edit"
+				onClick={() => {
+					onStartEditing(row.id);
+				}}
+			>
+				<PencilLine className="h-3.5 w-3.5" />
+			</TreeRowActionButton>
+			{activePageId &&
+			row.node.contentType === 'container' &&
+			row.node.parentId === document.rootId &&
+			(row.node.subtype === 'section' || row.node.subtype === 'header' || row.node.subtype === 'footer') ? (
+				<TopLevelWrapperVisibilityControl
+					document={document}
+					activePageId={activePageId}
+					value={getTopLevelWrapperVisibilityState(document, row.id)}
+					onChange={(visibility, pageIds) =>
+						onSetTopLevelWrapperVisibility(activePageId, row.id, visibility, pageIds)
+					}
+				/>
+			) : (
+				<VisibilityToggle
+					isHidden={!row.node.visible}
+					onToggle={() => onSetNodeVisibility(row.id, !row.node.visible)}
+					nodeId={row.displayName}
+					label={row.node.visible ? "Hide" : "Show"}
+				/>
+			)}
+		</>
+	);
 
 	return (
 		<>
 			{row.dividerBefore ? (
 				<div aria-hidden="true" className="editor-layers-divider" />
 			) : null}
-			<div
+			<TreeRowItem
 				ref={(element) => onRefChange(row.id, element)}
-				className="editor-layers-row group"
-				data-selected={row.isSelected ? "true" : "false"}
-				data-hidden={row.node.visible ? "false" : "true"}
-				data-dragging={dragging ? "true" : "false"}
+				className="group"
 				data-drop-intent={dropTarget?.position}
 				data-invalid-drop={invalidDrop ? "true" : "false"}
 				data-layers-row-id={row.id}
-				style={{
-					paddingLeft: `${8 + row.depth * ROW_INDENT_PX}px`,
-				}}
+				depth={row.depth}
+				hasChildren={row.hasChildren}
+				isExpanded={row.isExpanded}
+				isSelected={row.isSelected}
+				isHidden={!row.node.visible}
+				isDragging={dragging}
+				onToggle={() => onToggleExpanded(row.id)}
+				onToggleAriaLabel={
+					row.isExpanded
+						? `Collapse ${row.displayName}`
+						: `Expand ${row.displayName}`
+				}
+				onPointerDown={(event) => onPointerDown(event, row)}
+				icon={<NodeIcon className="h-3.5 w-3.5" />}
+				label={label}
+				actions={actions}
 				role="option"
 				aria-selected={row.isSelected}
 				tabIndex={0}
@@ -710,178 +798,7 @@ function LayersTreeRowItem({
 						);
 					}
 				}}
-			>
-				{row.hasChildren ? (
-					<Button
-						type="button"
-						variant="ghost"
-						size="icon"
-						className="editor-layers-disclosure h-5 w-5 rounded-md"
-						data-layers-control="true"
-						aria-label={
-							row.isExpanded
-								? `Collapse ${row.displayName}`
-								: `Expand ${row.displayName}`
-						}
-						onClick={(event) => {
-							event.stopPropagation();
-							onToggleExpanded(row.id);
-						}}
-					>
-						<DisclosureIcon className="h-3.5 w-3.5" />
-					</Button>
-				) : (
-					<span aria-hidden="true" className="block h-5 w-5 shrink-0" />
-				)}
-
-				<div
-					className="editor-layers-row-main min-w-0 flex-1"
-					onPointerDown={(event) => {
-						const target = event.target as HTMLElement | null;
-						if (
-							target?.closest(
-								'[data-layers-control="true"], [data-layers-title-editor="true"]',
-							)
-						) {
-							return;
-						}
-						onPointerDown(event, row);
-					}}
-				>
-					<span className="editor-layers-row-icon">
-						<NodeIcon className="h-3.5 w-3.5" />
-					</span>
-					<span className="min-w-0 flex-1">
-						{editing ? (
-							<span className="block min-w-0" data-layers-title-editor="true">
-								<LayersRowTitleEditor
-									name={row.displayName}
-									onCommit={(value) => {
-										onRenameNode(
-											row.id,
-											resolveSidebarTitleCommit(value, row.node.subtype),
-										);
-										onStopEditing();
-									}}
-									onCancel={onStopEditing}
-								/>
-							</span>
-						) : (
-							<span className="flex min-w-0 items-center gap-1">
-								<span className="editor-layers-row-title truncate text-sm font-medium">
-									{row.displayName}
-								</span>
-								{(row.isSticky || row.hasAnimation || row.isElevated) && (
-									<span className="editor-layers-row-badges flex shrink-0 items-center gap-0.5">
-										{row.isSticky && <Pin className="h-3 w-3" />}
-										{row.hasAnimation && <Rocket className="h-3 w-3" />}
-										{row.isElevated && <Layers2 className="h-3 w-3" />}
-									</span>
-								)}
-							</span>
-						)}
-						{projectedTypeLabel ? (
-							<span className="editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4">
-								<span className="editor-layers-row-type truncate">
-									{row.typeLabel}
-								</span>
-								<span className="editor-layers-type-arrow" aria-hidden="true">
-									-&gt;
-								</span>
-								<span className="editor-layers-row-type truncate">
-									{projectedTypeLabel}
-								</span>
-							</span>
-						) : (
-							<span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
-								{row.typeLabel}
-							</span>
-						)}
-					</span>
-				</div>
-
-				<div className="editor-layers-row-actions flex shrink-0 items-center gap-1">
-					{invalidDrop ? (
-						<PopoverTooltip
-							side="top"
-							align="end"
-							className={INSPECTOR_TOOLTIP_CLASS_NAME}
-							content="Cannot drop a top-level structural layer onto this item."
-						>
-							<span
-								className="editor-layers-invalid-drop-indicator"
-								aria-hidden="true"
-							>
-								<Ban className="h-3.5 w-3.5" />
-							</span>
-						</PopoverTooltip>
-					) : null}
-					<PopoverTooltip
-						side="top"
-						align="end"
-						className={INSPECTOR_TOOLTIP_CLASS_NAME}
-						content="Edit title"
-					>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							className="editor-layers-action editor-layers-action-edit h-7 w-7 rounded-md border"
-							data-layers-control="true"
-							aria-label={`Edit ${row.displayName}`}
-							onClick={(event) => {
-								event.stopPropagation();
-								onStartEditing(row.id);
-							}}
-						>
-							<PencilLine className="h-3.5 w-3.5" />
-						</Button>
-					</PopoverTooltip>
-					{activePageId &&
-					row.node.contentType === 'container' &&
-					row.node.parentId === document.rootId &&
-					(row.node.subtype === 'section' || row.node.subtype === 'header' || row.node.subtype === 'footer') ? (
-						<TopLevelWrapperVisibilityControl
-							document={document}
-							activePageId={activePageId}
-							value={getTopLevelWrapperVisibilityState(document, row.id)}
-							onChange={(visibility, pageIds) =>
-								onSetTopLevelWrapperVisibility(activePageId, row.id, visibility, pageIds)
-							}
-						/>
-					) : (
-						<PopoverTooltip
-							side="top"
-							align="end"
-							className={INSPECTOR_TOOLTIP_CLASS_NAME}
-							content={row.node.visible ? "Hide" : "Show"}
-						>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon"
-								className="editor-layers-action editor-layers-action-visibility h-7 w-7 rounded-md border"
-								data-layers-control="true"
-								aria-label={
-									row.node.visible
-										? `Hide ${row.displayName}`
-										: `Show ${row.displayName}`
-								}
-								onClick={(event) => {
-									event.stopPropagation();
-									onSetNodeVisibility(row.id, !row.node.visible);
-								}}
-							>
-								{row.node.visible ? (
-									<Eye className="h-3.5 w-3.5" />
-								) : (
-									<EyeOff className="h-3.5 w-3.5" />
-								)}
-							</Button>
-						</PopoverTooltip>
-					)}
-				</div>
-			</div>
+			/>
 		</>
 	);
 }

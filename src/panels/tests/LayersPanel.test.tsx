@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument, createTextNode, createButtonTextNode, createMediaNode, createLinkTextNode, createContainerNode } from '../../model/defaults';
 import type { DocumentModel } from '../../model/types';
-import { LayersPanelContent } from '../LayersPanel';
+import { LayersPanel, LayersPanelContent } from '../LayersPanel';
 
 const NO_OP = () => undefined;
 
@@ -21,6 +21,33 @@ function makeContentProps(document: DocumentModel, selectedIds: string[] = []) {
 }
 
 describe('panels/LayersPanel', () => {
+  it('renders the full layers panel inside the shared floating shell contract', () => {
+    const document = createInitialDocument();
+
+    const markup = renderToStaticMarkup(
+      <LayersPanel
+        open
+        position={{ top: 24, left: 32 }}
+        onPositionChange={() => undefined}
+        document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
+        selectedIds={[]}
+        onOpenChange={() => undefined}
+        onClose={() => undefined}
+        onSelectNode={() => undefined}
+        onRenameNode={() => undefined}
+        onDeleteNode={() => undefined}
+        onSetNodeVisibility={() => undefined}
+        onSetTopLevelWrapperVisibility={() => undefined}
+        onMoveNodeInTree={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('data-ui="floating-panel-shell"');
+    expect(markup).toContain('data-ui="panel-header"');
+    expect(markup).toContain('Close components panel');
+  });
+
   it('renders compact rows with a type line and explicit edit action', () => {
     const document = createInitialDocument();
 
@@ -41,8 +68,8 @@ describe('panels/LayersPanel', () => {
     expect(markup).toContain('editor-layers-row-type');
     expect(markup).toContain('editor-layers-divider');
     expect(markup).toContain('aria-label="Edit Playground Header"');
-    expect(markup).toContain('editor-layers-action editor-layers-action-edit h-7 w-7');
-    expect(markup).toContain('editor-layers-action editor-layers-action-visibility h-7 w-7');
+    expect(markup).toContain('editor-layers-action-edit');
+    expect(markup).toContain('editor-layers-action-visibility');
     expect(markup).toContain('Visibility: All pages');
     expect(markup).toContain('Visibility: Current page');
     expect(markup).toContain('Edit title');

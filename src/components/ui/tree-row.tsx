@@ -1,6 +1,8 @@
 import { ChevronDown, ChevronRight, Eye, EyeOff, type LucideIcon } from 'lucide-react';
 import { forwardRef, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { PopoverTooltip } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 const ROW_INDENT_PX = 8;
 
@@ -99,6 +101,104 @@ export const TreeRowItem = forwardRef<HTMLDivElement, TreeRowItemProps>(
 );
 
 TreeRowItem.displayName = 'TreeRowItem';
+
+export function TreeRowLabelContent({
+  title,
+  subtitle,
+  badges,
+  editing = false,
+  projectedSubtitle,
+}: {
+  title: ReactNode;
+  subtitle?: ReactNode;
+  badges?: ReactNode;
+  editing?: boolean;
+  projectedSubtitle?: ReactNode;
+}) {
+  return (
+    <span className="min-w-0 flex-1" data-ui="tree-row-label-content">
+      <span className={cn('flex min-w-0 items-center gap-1', editing && 'block')}>
+        <span className="editor-layers-row-title truncate text-sm font-medium">
+          {title}
+        </span>
+        {badges ? (
+          <span className="editor-layers-row-badges flex shrink-0 items-center gap-0.5">
+            {badges}
+          </span>
+        ) : null}
+      </span>
+      {projectedSubtitle ? (
+        <span className="editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4">
+          {subtitle ? (
+            <span className="editor-layers-row-type truncate">{subtitle}</span>
+          ) : null}
+          <span className="editor-layers-type-arrow" aria-hidden="true">
+            -&gt;
+          </span>
+          <span className="editor-layers-row-type truncate">{projectedSubtitle}</span>
+        </span>
+      ) : subtitle ? (
+        <span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
+          {subtitle}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+type TreeRowActionButtonProps = {
+  ariaLabel: string;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  children: ReactNode;
+  tooltip?: ReactNode;
+  className?: string;
+  disabled?: boolean;
+};
+
+export function TreeRowActionButton({
+  ariaLabel,
+  onClick,
+  children,
+  tooltip,
+  className,
+  disabled = false,
+}: TreeRowActionButtonProps) {
+  const button = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className={cn('editor-layers-action h-7 w-7 rounded-md border', className)}
+      data-layers-control="true"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (disabled) {
+          return;
+        }
+        onClick(event);
+      }}
+    >
+      {children}
+    </Button>
+  );
+
+  if (!tooltip) {
+    return button;
+  }
+
+  return (
+    <PopoverTooltip
+      side="top"
+      align="end"
+      className="editor-tooltip-panel max-w-[16rem] rounded-lg border px-3 py-2 text-xs font-normal leading-5"
+      content={tooltip}
+    >
+      {button}
+    </PopoverTooltip>
+  );
+}
 
 export interface VisibilityToggleProps {
   isHidden: boolean;
