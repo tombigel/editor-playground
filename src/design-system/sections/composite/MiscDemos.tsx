@@ -1,6 +1,5 @@
 import { SquareArrowRightEnter } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { PanelHeader } from "@/components/ui/panel-header";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 
@@ -67,36 +66,36 @@ export function MiscDemos() {
 				props={[]}
 			>
 				<div className="relative h-[260px] w-[360px]">
-					<FloatingPanelShell
-						open
-						onOpenChange={() => {}}
-						className="absolute left-0 top-0 w-[320px]"
-						style={{ position: "absolute", top: 0, left: 0 }}
-						header={
-							<PanelHeader
-								icon={<SquareArrowRightEnter className="h-4 w-4" />}
-								title="Section Templates"
-								description="Choose a layout to insert."
-								closeLabel="Close section templates panel"
-								onClose={() => undefined}
-							/>
-						}
-						bodyClassName="editor-scrollbar max-h-[180px] overflow-y-auto p-3"
+					<div
+						data-ui="floating-panel-shell"
+						className="editor-floating-panel editor-bg-surface editor-border-subtle absolute left-0 top-0 w-[320px] rounded-xl border shadow-[0_16px_34px_rgba(18,32,51,0.18)]"
 					>
-						<div className="grid grid-cols-2 gap-2.5">
-							{["Hero", "Feature", "CTA", "Gallery"].map((label) => (
-								<div
-									key={label}
-									className="editor-border-subtle rounded-lg border p-2.5"
-								>
-									<div className="editor-text-strong text-xs font-semibold">{label}</div>
-									<div className="editor-text-muted mt-1.5 text-[11px] leading-4">
-										Shared shell body content.
+						<PanelHeader
+							icon={<SquareArrowRightEnter className="h-4 w-4" />}
+							title="Section Templates"
+							description="Choose a layout to insert."
+							closeLabel="Close section templates panel"
+							onClose={() => undefined}
+						/>
+						<div
+							data-ui="floating-panel-body"
+							className="editor-scrollbar max-h-[180px] overflow-y-auto p-3"
+						>
+							<div className="grid grid-cols-2 gap-2.5">
+								{["Hero", "Feature", "CTA", "Gallery"].map((label) => (
+									<div
+										key={label}
+										className="editor-border-subtle rounded-lg border p-2.5"
+									>
+										<div className="editor-text-strong text-xs font-semibold">{label}</div>
+										<div className="editor-text-muted mt-1.5 text-[11px] leading-4">
+											Shared shell body content.
+										</div>
 									</div>
-								</div>
-							))}
+								))}
+							</div>
 						</div>
-					</FloatingPanelShell>
+					</div>
 				</div>
 			</ComponentPreview>
 
