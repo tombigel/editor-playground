@@ -2,6 +2,8 @@
 
 Items noted during the showcase rewrite. Do not pursue during the current implementation — these are follow-up tasks.
 
+For the broader editor convergence effort, use [`docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`](./docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md) as the tracked backlog and migration source of truth.
+
 ## Section Status
 
 - **Design Tokens**: DONE — do not touch unless explicitly requested.
