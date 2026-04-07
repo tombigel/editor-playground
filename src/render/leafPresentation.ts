@@ -11,14 +11,14 @@ type LeafNode = TextNode | MediaNode;
 
 export function getLeafInlineStyle(node: LeafNode): StyleRecord {
   if (isTextNode(node)) {
-    if (node.link !== undefined && node.style?.background !== undefined) {
-      return getButtonLeafStyle(node);
-    }
-    if (node.link !== undefined) {
-      return getLinkLeafStyle(node);
-    }
     if (node.subtype === 'code') {
       return getCodeLeafStyle(node);
+    }
+    if (node.subtype === 'block' && node.link !== undefined && node.style?.background !== undefined) {
+      return getButtonLeafStyle(node);
+    }
+    if (node.subtype === 'block' && node.link !== undefined) {
+      return getLinkLeafStyle(node);
     }
     return getTextLeafStyle(node);
   }

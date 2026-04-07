@@ -16,8 +16,8 @@ export function formatNodeLabel(node: StageOrSiteNode) {
     return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
   }
   if (isTextNode(node)) {
-    if (node.style?.background) return 'Button';
-    if (node.link != null) return 'Link';
+    if (node.subtype === 'block' && node.style?.background) return 'Button';
+    if (node.subtype === 'block' && node.link != null) return 'Link';
     return 'Text';
   }
   return 'Image';
@@ -153,7 +153,7 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     );
   }
 
-  if (isTextNode(node)) {
+  if (isTextNode(node) && node.subtype === 'block') {
     const { link } = node;
     const isButton = link !== undefined && node.style?.background !== undefined;
     const isLink = link !== undefined;

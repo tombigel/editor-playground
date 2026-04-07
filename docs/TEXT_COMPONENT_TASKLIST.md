@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q3`
-- Last completed quantum: `Q2`
-- Next quantum after current: `Q4`
+- Current quantum: `Q4`
+- Last completed quantum: `Q3`
+- Next quantum after current: `Q5`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -130,7 +130,7 @@ Execution rules:
   - `npx vitest run src/api/tests/documentApi.test.ts`: passed, 1 file / 27 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `a150000`
 - Open follow-ups carried forward:
   - Q3 should keep block text simple while reusing the explicit conversion APIs instead of rebuilding subtype logic in render or inspector code.
 
@@ -138,7 +138,7 @@ Execution rules:
 
 - Objective:
   - Make simple text truly simple and stable.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/model/defaultFactories.ts`
   - `src/api/documentApi.ts`
@@ -149,7 +149,12 @@ Execution rules:
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/model/defaultFactories.ts:128-279`
+  - `src/api/documentApi.ts:214-444`
+  - `src/render/nodePresentation.tsx:111-184`
+  - `src/render/leafPresentation.ts:11-104`
+  - `src/render/tests/nodePresentation.test.tsx:1-56`
+  - `src/render/tests/leafPresentation.test.ts:1-97`
 - Implementation notes:
   - Ensure one wrapper, one font family, one styling set, one node-level link capability, one direction.
   - Remove accidental rich-like behavior from block text.
@@ -158,11 +163,13 @@ Execution rules:
   - Relevant render/API `vitest` commands
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/render/tests/nodePresentation.test.tsx src/render/tests/leafPresentation.test.ts`: passed, 2 files / 12 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:
-  - Pending
+  - Q4 should build on the block-only render guards so code nodes keep their own presentation and API invariants.
 
 ## Q4: Stabilize code block as a real subtype
 

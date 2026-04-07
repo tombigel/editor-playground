@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createButtonTextNode, createMediaNode } from '../../model/defaults';
+import { createButtonTextNode, createMediaNode, createTextNode } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
-import { getButtonLeafStyle, getImageLeafStyle } from '../leafPresentation';
+import { getButtonLeafStyle, getImageLeafStyle, getLeafInlineStyle } from '../leafPresentation';
 
 describe('render/leafPresentation', () => {
   it('uses shared default button presentation even without authored border or shadow overrides', () => {
@@ -98,5 +98,29 @@ describe('render/leafPresentation', () => {
     expect(imageStyle.boxShadow).toBeUndefined();
     expect(buttonStyle.borderRadius).toBeUndefined();
     expect(buttonStyle.boxShadow).toBeUndefined();
+  });
+
+  it('keeps code nodes on the code presentation path even when block-only link fields leak in', () => {
+    const code = createTextNode('code', 'root');
+    code.link = { linkType: 'external', href: 'https://example.com' };
+    code.style = { ...code.style, background: '#101418' };
+
+    const style = getLeafInlineStyle(code);
+
+    expect(style.fontFamily).toContain('monospace');
+    expect(style.background).toBe('#101418');
+    expect(style.display).toBeUndefined();
+    expect(style.width).toBeUndefined();
+  });
+
+  it('keeps rich text on the plain text presentation path even when block-only link fields leak in', () => {
+    const rich = createTextNode('rich', 'root');
+    rich.link = { linkType: 'external', href: 'https://example.com' };
+
+    const style = getLeafInlineStyle(rich);
+
+    expect(style.whiteSpace).toBe('pre-wrap');
+    expect(style.display).toBeUndefined();
+    expect(style.width).toBeUndefined();
   });
 });

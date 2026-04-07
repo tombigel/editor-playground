@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument } from '../../model/defaults';
+import { createInitialDocument, createLinkTextNode, createTextNode } from '../../model/defaults';
 import {
   formatNodeLabel,
   getNodeAriaLabel,
@@ -57,5 +57,29 @@ describe('render/nodePresentation', () => {
     expect(imageMarkup).toContain('class="image-placeholder"');
     expect(linkMarkup).toContain('tabindex="-1"');
     expect(linkMarkup).toContain('style="color:#1d4ed8"');
+  });
+
+  it('keeps block links on a single anchor wrapper', () => {
+    const link = createLinkTextNode('root');
+    link.htmlTag = 'h2';
+
+    const linkMarkup = renderToStaticMarkup(renderLeafContent(link));
+
+    expect(linkMarkup.startsWith('<a')).toBe(true);
+    expect(linkMarkup).toContain('Read more');
+    expect(linkMarkup).not.toContain('<h2');
+    expect(linkMarkup).not.toContain('<p');
+  });
+
+  it('does not classify code nodes by legacy block-only link styling', () => {
+    const code = createTextNode('code', 'root');
+    code.link = { linkType: 'external', href: 'https://example.com' };
+    code.style = { ...code.style, background: '#111827' };
+
+    expect(formatNodeLabel(code)).toBe('Text');
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+    expect(markup.startsWith('<pre')).toBe(true);
+    expect(markup).toContain('<code');
   });
 });

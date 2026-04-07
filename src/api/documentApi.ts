@@ -270,7 +270,7 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'linkType' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'linkType' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     const linkType = normalizeNavigationKind(value);
     node.link = { ...node.link, linkType };
     if (linkType !== 'page') {
@@ -279,27 +279,27 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'anchorTargetId' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'anchorTargetId' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.link = { ...node.link, anchorTargetId: value || undefined };
     return next;
   }
 
-  if (field === 'href' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'href' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.link = { ...node.link, href: value };
     return next;
   }
 
-  if (field === 'openInNewTab' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'openInNewTab' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
     return next;
   }
 
-  if (field === 'targetPageId' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'targetPageId' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
     return next;
   }
 
-  if (field === 'pageAnchorId' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'pageAnchorId' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.link = { ...node.link, pageAnchorId: value || undefined };
     return next;
   }
@@ -336,13 +336,13 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'background' && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
+  if (field === 'background' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style.background = value || undefined;
     return next;
   }
 
-  if ((field === 'paddingBlock' || field === 'paddingInline') && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
+  if ((field === 'paddingBlock' || field === 'paddingInline') && isTextNode(node) && node.subtype === 'block' && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style[field] = value ? parseSpacingValue(value) : undefined;
     return next;
@@ -404,7 +404,7 @@ export function setNodeTextField(
     return next;
   }
 
-  if (field === 'textWrap' && isTextNode(node) && node.link !== undefined) {
+  if (field === 'textWrap' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.style ??= {};
     node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
     return next;
@@ -415,7 +415,7 @@ export function setNodeTextField(
     (
       isMediaNode(node) ||
       (isTextNode(node) && node.subtype === 'code') ||
-      (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined)
+      (isTextNode(node) && node.subtype === 'block' && node.link !== undefined && node.style?.background !== undefined)
     )
   ) {
     node.style ??= {};
@@ -428,7 +428,7 @@ export function setNodeTextField(
     (
       isMediaNode(node) ||
       (isTextNode(node) && node.subtype === 'code') ||
-      (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined)
+      (isTextNode(node) && node.subtype === 'block' && node.link !== undefined && node.style?.background !== undefined)
     )
   ) {
     node.style ??= {};
@@ -441,7 +441,7 @@ export function setNodeTextField(
     (
       isMediaNode(node) ||
       (isTextNode(node) && node.subtype === 'code') ||
-      (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined)
+      (isTextNode(node) && node.subtype === 'block' && node.link !== undefined && node.style?.background !== undefined)
     )
   ) {
     node.style ??= {};
