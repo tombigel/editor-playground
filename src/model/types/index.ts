@@ -34,7 +34,9 @@ export type NodeTextField =
   | 'src'
   | 'alt'
   | 'targetPageId'
-  | 'pageAnchorId';
+  | 'pageAnchorId'
+  | 'codeLanguage'
+  | 'codeTheme';
 export type BorderColorField =
   | 'borderColor'
   | 'borderTopColor'

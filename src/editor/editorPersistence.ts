@@ -25,6 +25,7 @@ import type {
 import { isSiteNode, isContainerNode, isTextNode, isMediaNode } from '../model/types';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from '../model/units';
 import { TEXT_NODE_DEFAULTS } from '../model/textNodeDefaults';
+import { highlightCode } from '../render/codeHighlight';
 import { forceOpaqueColorValue } from '../model/colors';
 import {
   DEFAULT_EDITOR_ACCENT_COLOR,
@@ -439,7 +440,19 @@ export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'headin
       return { ...node, htmlTag: 'h2' as const, content: h.content, style: { ...node.style, ...h.style } };
     }
     if (role === 'richtext') return createTextNode('rich', parentId);
-    if (role === 'code') return createTextNode('code', parentId);
+    if (role === 'code') {
+      const node = createTextNode('code', parentId);
+      const { content, code } = node;
+      const language = code?.language ?? 'plaintext';
+      return {
+        ...node,
+        code: {
+          language,
+          ...(code?.theme !== undefined ? { theme: code.theme } : {}),
+          highlightedHtml: highlightCode(content as string, language),
+        },
+      };
+    }
     if (role === 'text') return createTextNode('block', parentId);
     if (role === 'image') return createMediaNode('image', parentId);
     if (role === 'link') return createLinkTextNode(parentId);

@@ -54,6 +54,7 @@ import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolv
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument, validateLinks } from '../model/validation';
+import { highlightCode } from '../render/codeHighlight';
 import type { DocumentCommand } from './types/index';
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
@@ -221,6 +222,26 @@ export function setNodeTextField(
 
   if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
     node.content = value;
+    return next;
+  }
+
+  if (field === 'content' && isTextNode(node) && node.subtype === 'code') {
+    const language = node.code?.language ?? 'plaintext';
+    const highlightedHtml = highlightCode(value, language);
+    node.content = value;
+    node.code = { ...(node.code ?? { language }), highlightedHtml };
+    return next;
+  }
+
+  if (field === 'codeLanguage' && isTextNode(node) && node.subtype === 'code') {
+    const language = value;
+    const highlightedHtml = highlightCode(node.content as string, language);
+    node.code = { ...(node.code ?? {}), language, highlightedHtml };
+    return next;
+  }
+
+  if (field === 'codeTheme' && isTextNode(node) && node.subtype === 'code') {
+    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: value as 'light' | 'dark' };
     return next;
   }
 
@@ -1066,8 +1087,11 @@ export function switchSubtypeDoc(
     // Behaviour
     ...(textSource.sticky !== undefined ? { sticky: textSource.sticky } : {}),
     ...(textSource.animation !== undefined ? { animation: textSource.animation } : {}),
-    // Text content
-    content: textSource.content,
+    // Text content — convert string→RichContent when switching to rich subtype
+    content:
+      targetSubtype === 'rich' && typeof textSource.content === 'string'
+        ? [{ text: textSource.content }]
+        : textSource.content,
     ...(textSource.lang !== undefined ? { lang: textSource.lang } : {}),
     // Link extension — only meaningful for block; carry it over regardless
     // (it will be ignored at render time for non-block subtypes)
