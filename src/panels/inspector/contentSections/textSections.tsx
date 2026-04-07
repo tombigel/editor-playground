@@ -1,5 +1,6 @@
 import { Pencil } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import type { DocumentModel } from '../../../api/editorApi';
@@ -113,6 +114,87 @@ export function RichTextContentSection({
         <kbd className="font-mono">⌘I</kbd> italic &nbsp;
         <kbd className="font-mono">⌘K</kbd> link
       </p>
+    </InspectorSectionCard>
+  );
+}
+
+const CODE_LANGUAGES = [
+  { value: 'plaintext', label: 'Plain text' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'css', label: 'CSS' },
+  { value: 'html', label: 'HTML' },
+  { value: 'json', label: 'JSON' },
+  { value: 'python', label: 'Python' },
+  { value: 'bash', label: 'Bash' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'java', label: 'Java' },
+  { value: 'go', label: 'Go' },
+  { value: 'csharp', label: 'C#' },
+];
+
+export function CodeContentSection({
+  node,
+  onTextChange,
+  headerContent,
+  headerAction,
+  contentClassName = 'px-3 pt-1.5 pb-3',
+}: {
+  node: TextInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+} & FocusModeCardProps) {
+  const language = node.code?.language ?? 'plaintext';
+  const theme = node.code?.theme ?? 'light';
+  return (
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+    >
+      <InspectorFieldGroup>
+        <FormField label="Code">
+          <Textarea
+            value={node.content as string}
+            rows={5}
+            style={{ fontFamily: 'monospace' }}
+            onChange={(e) => onTextChange('content', e.target.value)}
+          />
+        </FormField>
+      </InspectorFieldGroup>
+      <InspectorFieldGroup separated>
+        <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <Select value={language} onValueChange={(value) => onTextChange('codeLanguage', value)}>
+            <SelectTrigger className="h-8 text-[11px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CODE_LANGUAGES.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </InspectorInlineRow>
+      </InspectorFieldGroup>
+      <InspectorFieldGroup separated>
+        <InspectorInlineRow label="Theme" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+            {(['light', 'dark'] as const).map((t) => (
+              <Button
+                key={t}
+                type="button"
+                variant={theme === t ? 'default' : 'ghost'}
+                size="sm"
+                className="h-6 rounded-md px-2 text-[11px] capitalize"
+                onClick={() => onTextChange('codeTheme', t)}
+              >
+                {t}
+              </Button>
+            ))}
+          </div>
+        </InspectorInlineRow>
+      </InspectorFieldGroup>
     </InspectorSectionCard>
   );
 }
