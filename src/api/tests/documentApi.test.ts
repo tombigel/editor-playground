@@ -4,6 +4,7 @@ import { createMediaNode, createButtonTextNode, createTextNode, createLinkTextNo
 import { createPage } from '../../model/pageDefaults';
 import {
   applyDocumentCommands,
+  convertTextNodeDoc,
   createInitialDocument,
   insertSectionTemplateBeforeFooter,
   moveNodeInTreeDoc,
@@ -16,6 +17,7 @@ import {
   setPageTopLevelWrapperPlacement,
   setTopLevelWrapperVisibility,
   getTopLevelWrapperVisibilityState,
+  switchTextSubtypeDoc,
 } from '../documentApi';
 
 function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>) {
@@ -259,6 +261,65 @@ describe('api/documentApi', () => {
     expect(buttonNode.link.linkType).toBe('page');
     expect(buttonNode.link.targetPageId).toBe(aboutPage.id);
     expect(buttonNode.link.pageAnchorId).toBe(section.id);
+  });
+
+  it('converts block text to rich through the explicit text conversion API', () => {
+    const document = createInitialDocument();
+    const textId = Object.keys(document.nodes).find(
+      (nodeId) =>
+        document.nodes[nodeId]?.contentType === 'text' &&
+        document.nodes[nodeId]?.subtype === 'block' &&
+        document.nodes[nodeId]?.link == null,
+    );
+    if (!textId) {
+      throw new Error('Expected block text node');
+    }
+
+    const withContent = setNodeTextField(document, textId, 'content', 'Hello rich world');
+    const next = convertTextNodeDoc(withContent, textId, 'rich');
+    const node = next.nodes[textId];
+    if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
+      throw new Error('Expected rich text node');
+    }
+
+    expect(node.content).toEqual([{ text: 'Hello rich world' }]);
+    expect(node.code).toBeUndefined();
+    expect(node.htmlTag).toBeUndefined();
+  });
+
+  it('flattens rich text to code through the explicit text conversion API', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const rich = createTextNode('rich', section.id);
+    rich.content = [
+      { text: 'const ' },
+      {
+        type: 'link',
+        linkType: 'external',
+        href: 'https://example.com',
+        children: [{ text: 'answer' }],
+      },
+      { text: ' = 42;' },
+    ];
+    document.nodes[rich.id] = rich;
+    document.nodes[section.id].children.push(rich.id);
+
+    const next = switchTextSubtypeDoc(document, rich.id, 'code', { mode: 'flatten' });
+    const node = next.nodes[rich.id];
+    if (node.contentType !== 'text' || node.subtype !== 'code') {
+      throw new Error('Expected code node');
+    }
+
+    expect(node.content).toBe('const answer = 42;');
+    expect(node.code?.language).toBe('plaintext');
+    expect(node.code?.highlightedHtml).toContain('const');
+    expect(node.htmlTag).toBeUndefined();
   });
 
   it('preserves catalog metadata when applying an existing document font family', async () => {

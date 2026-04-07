@@ -7,11 +7,13 @@ import type {
   RichContent,
   SectionTemplateId,
   StickyDefinition,
+  TextSubtype,
   WrapperStyleField,
 } from '../../model/types';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
 import type { PageId, DocumentPage, SiteSettings } from '../../model/types/site';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
+import type { TextConversionMode } from '../../api/textConversion';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -81,7 +83,7 @@ export type EditorAction =
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
   | { type: 'insertLeaf'; role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
-  | { type: 'switchTextSubtype'; nodeId: string; subtype: 'block' | 'rich' | 'code' }
+  | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }

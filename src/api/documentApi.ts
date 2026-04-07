@@ -24,6 +24,11 @@ import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } fr
 import { getChildren, getNode } from '../model/selectors';
 import { setPageAsHome as setPageAsHomeDoc } from './pageApi';
 import {
+  convertTextNodeDoc as convertTextNodeDocHelper,
+  switchTextSubtypeDoc as switchTextSubtypeDocHelper,
+  type TextConversionOptions,
+} from './textConversion';
+import {
   getTopLevelWrapperVisibilityState,
   normalizeTopLevelWrapperTargetPageIds,
   type TopLevelWrapperVisibilityMode as TopLevelWrapperVisibilityModeModel,
@@ -42,7 +47,6 @@ import type {
   EditorTextField,
   MediaSubtype,
   RichContent,
-  RichTextLeaf,
   ShadowStyleField,
   NodeTextField,
   NodeId,
@@ -50,7 +54,6 @@ import type {
   TextSubtype,
   WrapperStyleField,
 } from '../model/types';
-import { isRichTextLink } from '../model/richContent';
 import { isContainerNode, isLeafNode, isMediaNode, isTextNode } from '../model/types';
 import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolve';
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
@@ -82,6 +85,7 @@ export type {
   WrapperStyleField,
 };
 export type { DocumentCommand } from './types/index';
+export type { TextConversionMode, TextConversionOptions } from './textConversion';
 
 export {
   SECTION_TEMPLATES,
@@ -1023,20 +1027,27 @@ export function moveNodeInTreeDoc(
   return next;
 }
 
+export function convertTextNodeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  targetSubtype: TextSubtype,
+  options?: TextConversionOptions,
+): DocumentModel {
+  return convertTextNodeDocHelper(document, nodeId, targetSubtype, options);
+}
+
+export function switchTextSubtypeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  targetSubtype: TextSubtype,
+  options?: TextConversionOptions,
+): DocumentModel {
+  return switchTextSubtypeDocHelper(document, nodeId, targetSubtype, options);
+}
+
 /**
- * Switch the subtype of a MediaNode or TextNode within the same content-type family.
- *
- * Rules:
- * - Source and target must be in the same contentType family (both 'media' or both 'text').
- *   Throws an Error if they differ.
- * - Container subtype switching is handled by the existing promote/demote logic; this
- *   function intentionally does NOT support contentType: 'container'.
- * - Transferred fields (always): id, parentId, children, name, visible, locked, rect,
- *   sticky, animation.
- * - For media→media: transfers src, alt; drops video/svg/embed props that don't apply.
- * - For text→text: transfers content, lang, link; drops htmlTag/code if not applicable.
- * - Uses createMediaNode / createTextNode as the base to ensure correct defaults, then
- *   overlays the transferred fields.
+ * Legacy subtype switcher. Media switching remains in-place here for backward compatibility,
+ * while text switching delegates to the explicit text conversion APIs.
  */
 export function switchSubtypeDoc(
   document: DocumentModel,
@@ -1084,6 +1095,10 @@ export function switchSubtypeDoc(
     return document;
   }
 
+  if (contentType === 'text') {
+    return switchTextSubtypeDoc(document, nodeId, targetSubtype as TextSubtype, { mode: 'auto' });
+  }
+
   const next = cloneDocument(document);
   const sourceNode = next.nodes[nodeId];
 
@@ -1112,65 +1127,7 @@ export function switchSubtypeDoc(
     next.nodes[nodeId] = switched;
     return next;
   }
-
-  // text → text
-  const textSource = sourceNode as import('../model/types').TextNode;
-  const base = createTextNode(targetSubtype as TextSubtype, textSource.parentId ?? '');
-  const switched: import('../model/types').TextNode = {
-    ...base,
-    // Identity / tree fields
-    id: textSource.id,
-    parentId: textSource.parentId,
-    children: [...textSource.children],
-    name: textSource.name,
-    visible: textSource.visible,
-    locked: textSource.locked,
-    // Position
-    rect: textSource.rect,
-    // Behaviour
-    ...(textSource.sticky !== undefined ? { sticky: textSource.sticky } : {}),
-    ...(textSource.animation !== undefined ? { animation: textSource.animation } : {}),
-    // Text content — convert between string and RichContent as needed
-    // rich→anything: convert RichContent array to plain string
-    // anything→rich: convert string to minimal RichContent
-    content: (() => {
-      if (targetSubtype === 'rich') {
-        return typeof textSource.content === 'string'
-          ? [{ text: textSource.content }]
-          : textSource.content;
-      }
-      if (Array.isArray(textSource.content)) {
-        // Flatten RichContent to plain text for block/code targets
-        return (textSource.content as RichContent)
-          .flatMap((n) => isRichTextLink(n) ? n.children.map((l) => l.text) : [(n as RichTextLeaf).text])
-          .join('');
-      }
-      return textSource.content;
-    })(),
-    ...(textSource.lang !== undefined ? { lang: textSource.lang } : {}),
-    // Link extension — only meaningful for block; carry it over regardless
-    // (it will be ignored at render time for non-block subtypes)
-    ...(textSource.link !== undefined ? { link: textSource.link } : {}),
-    // htmlTag: carry over if targetSubtype is block; discard for rich/code
-    ...(targetSubtype === 'block' && textSource.htmlTag !== undefined
-      ? { htmlTag: textSource.htmlTag }
-      : {}),
-    // code: when switching to code, ensure highlightedHtml is generated
-    ...(targetSubtype === 'code' ? (() => {
-      const sourceCode = textSource.code;
-      const lang = sourceCode?.language ?? 'plaintext';
-      const theme = sourceCode?.theme ?? 'light';
-      // content at this point will be a string (converted above if needed)
-      const rawContent = Array.isArray(textSource.content)
-        ? (textSource.content as RichContent)
-            .flatMap((n) => isRichTextLink(n) ? n.children.map((l) => l.text) : [(n as RichTextLeaf).text])
-            .join('')
-        : (textSource.content as string);
-      return { code: { language: lang, theme, highlightedHtml: highlightCode(rawContent, lang) } };
-    })() : {}),
-  };
-  next.nodes[nodeId] = switched;
-  return next;
+  return document;
 }
 
 // ---------------------------------------------------------------------------

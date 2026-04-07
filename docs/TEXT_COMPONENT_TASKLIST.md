@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q2`
-- Last completed quantum: `Q1`
-- Next quantum after current: `Q3`
+- Current quantum: `Q3`
+- Last completed quantum: `Q2`
+- Next quantum after current: `Q4`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -93,7 +93,7 @@ Execution rules:
   - `npx vitest run src/api/tests/documentApi.test.ts src/editor/tests/editorMutations.test.ts`: passed, 2 files / 174 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `273d629`
 - Open follow-ups carried forward:
   - Q2 should extract the richer subtype conversion matrix into pure APIs without reintroducing editor-owned branching.
 
@@ -102,7 +102,7 @@ Execution rules:
 - Objective:
   - Move subtype conversion policy into explicit pure APIs.
   - Make UI select a conversion mode instead of owning conversion logic.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/api/documentApi.ts`
   - `src/api/textConversion.ts`
@@ -113,7 +113,10 @@ Execution rules:
   - `docs/API.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/api/documentApi.ts:1027-1173`
+  - `src/app/types/index.ts:78-84`
+  - `src/app/editorState.ts:1-140`
+  - `src/api/tests/documentApi.test.ts:143-267`
 - Implementation notes:
   - Introduce `convertTextNodeDoc`.
   - Rework `switchTextSubtypeDoc` into a thin wrapper over explicit conversion helpers.
@@ -123,11 +126,13 @@ Execution rules:
   - `npx vitest run src/api/tests/documentApi.test.ts`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/api/tests/documentApi.test.ts`: passed, 1 file / 27 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:
-  - Pending
+  - Q3 should keep block text simple while reusing the explicit conversion APIs instead of rebuilding subtype logic in render or inspector code.
 
 ## Q3: Harden block text against the agreed spec
 

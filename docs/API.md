@@ -4,6 +4,7 @@
 
 - [Architecture Overview](#architecture-overview)
 - [`src/api/documentApi.ts`](#srcapidocumentapits)
+- [`src/api/textConversion.ts`](#srcapitextconversionts)
 - [`src/api/editorApi.ts`](#srcapieditorapits)
 - [`src/api/fontApi.ts`](#srcapifontapits)
 - [`src/api/siteApi.ts`](#srcapisiteapits)
@@ -17,6 +18,7 @@
 The API layer is structured as multiple modules:
 
 - **`documentApi`** — Pure `DocumentModel → DocumentModel` functions. No side effects, no editor state. Safe to use in scripts, tests, and server-side contexts.
+- **`textConversion`** — Pure text-subtype conversion helpers used by `documentApi` to keep conversion policy explicit and reusable.
 - **`editorApi`** — Wraps `documentApi` with editor state, selection management, and history concerns. The editor UI calls these variants.
 - **`dragDropApi`** — Pure headless drag-and-drop session lifecycle and drag resolution utilities for editor canvases.
 - **`fontApi` / `siteApi` / `editorViewApi`** — Subsystem pass-throughs that re-export public surface from the `fonts/`, `site/`, and `stage/` subsystems respectively.
@@ -52,6 +54,8 @@ Every feature is achievable through the API layer without the editor UI.
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
 | `setNodeTextField` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, and `code` text nodes. |
+| `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
 
 ### Node selectors
 
@@ -119,6 +123,7 @@ Every feature is achievable through the API layer without the editor UI.
 | `WrapperStyleField` | Union of style field names applicable to wrappers. |
 | `LeafRole` | Union of leaf role strings. |
 | `EditorTextField` | Union of text/style field names settable via `setNodeTextField`. |
+| `TextConversionMode` | `'auto' \| 'flatten'` | Explicit text conversion policy mode. `auto` currently resolves to flattening when converting rich content to simpler text subtypes. |
 | `NodeTextField` | Subset of text fields for plain text nodes. |
 | `StickyDefinition` | Sticky behaviour config shape. |
 | `StickyGeometrySnapshot` | Snapshot of node geometry used during sticky resolution. |
@@ -245,6 +250,21 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 | `EditorState.ui.spacerVisibility` | `'selected' \| 'all'` | Drives spacer debugging overlays. |
 | `EditorState.ui.animationPreview.mode` | `'passive' \| 'interactive'` | Passive previews autoplay supported triggers; interactive previews wait for user input. |
 | `EditorState.ui.animationPreview.triggers` | `entrance`, `ongoing`, `scroll`, `mouse`, `click`, `hover` keys mapped to `boolean` | Canonical editor preview trigger set. |
+
+---
+
+## `src/api/textConversion.ts`
+
+Pure helper module for text subtype conversion policy. `documentApi` re-exports the public conversion functions so consumers can stay on the main API surface while the conversion rules remain isolated and testable.
+
+### Text conversion
+
+| Function / type | Signature / values | Description |
+|---|---|---|
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, and `code`. |
+| `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
+| `TextConversionMode` | `'auto' \| 'flatten'` | `auto` applies the default conversion policy; `flatten` explicitly flattens richer structures into plain text when needed. |
+| `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
 
 ---
 
