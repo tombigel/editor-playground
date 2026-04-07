@@ -567,11 +567,10 @@ export function InspectorSectionCard({
     <Card className={borderless ? 'border-0 bg-transparent shadow-none' : 'editor-border-subtle rounded-lg shadow-none'}>
       {!hideHeader ? (
         <CardHeader className="flex flex-row items-start justify-between gap-2 px-3 pt-3 pb-1">
+          <CardTitle className="text-xs">{title}</CardTitle>
           {headerContent ? (
-            <div className="min-w-0 flex-1">{headerContent}</div>
-          ) : (
-            <CardTitle className="text-xs">{title}</CardTitle>
-          )}
+            <div className="min-w-0 flex-1 flex justify-end">{headerContent}</div>
+          ) : null}
           {headerAction ? (
             <InspectorSectionActionButton
               aria-label={headerAction.ariaLabel}

@@ -1,30 +1,10 @@
-import { TextAppearanceSection, TextContentSection, RichTextContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
+import { TextAppearanceSection, TextContentSection, RichTextContentSection, CodeContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import { isTextNode as isTextNodeGuard } from '../../model/types';
 import type { TextSubtype } from '../../model/types';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
-
-const textContentSection: InspectorSectionDefinition = {
-  id: 'text-content',
-  render: ({ document, node, actions, focusedMode }) =>
-    isTextNode(node) ? (
-      <TextContentSection
-        document={document}
-        node={node}
-        onTextChange={actions.onTextChange}
-        focusedMode={focusedMode}
-        onEnterFocusedMode={actions.onEnterFocusedMode}
-      />
-    ) : null,
-};
-
-const richTextContentSection: InspectorSectionDefinition = {
-  id: 'rich-text-content',
-  render: ({ node }) =>
-    isRichTextNode(node) ? <RichTextContentSection node={node} /> : null,
-};
+import { Button } from '@/components/ui/button';
+import type { InspectorActionHandlers, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
 
 const textDesignSection: InspectorSectionDefinition = {
   id: 'text-design',
@@ -75,24 +55,49 @@ const TEXT_SUBTYPES: { value: TextSubtype; label: string }[] = [
   { value: 'code', label: 'Code' },
 ];
 
-const textSubtypeSwitcherSection: InspectorSectionDefinition = {
-  id: 'text-subtype-switcher',
-  render: ({ node, actions }) => {
-    if (!node || !isTextNodeGuard(node) || !['block', 'rich', 'code'].includes(node.subtype)) return null;
-    const current = node.subtype as TextSubtype;
-    return (
-      <div className="px-3 pb-2 pt-1.5">
-        <Tabs value={current} onValueChange={(v) => actions.onSwitchTextSubtype(node.id, v as TextSubtype)}>
-          <TabsList className="w-full">
-            {TEXT_SUBTYPES.map(({ value, label }) => (
-              <TabsTrigger key={value} value={value} size="small" className="flex-1">
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
-    );
+function SubtypeSwitcher({ node, actions }: { node: InspectorNode | null; actions: InspectorActionHandlers }) {
+  if (!node || !isTextNodeGuard(node)) return null;
+  const current = node.subtype as TextSubtype;
+  return (
+    <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+      {TEXT_SUBTYPES.map(({ value, label }) => (
+        <Button
+          key={value}
+          type="button"
+          variant={current === value ? 'default' : 'ghost'}
+          size="sm"
+          className="h-6 rounded-md px-2 text-[11px]"
+          onClick={() => actions.onSwitchTextSubtype(node.id, value)}
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+const textContentSection: InspectorSectionDefinition = {
+  id: 'text-content',
+  render: ({ document, node, actions, focusedMode }) => {
+    if (!node || !isTextNodeGuard(node)) return null;
+    const switcher = <SubtypeSwitcher node={node} actions={actions} />;
+    if (node.subtype === 'block') {
+      return (
+        <TextContentSection
+          document={document}
+          node={node}
+          onTextChange={actions.onTextChange}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+          headerContent={switcher}
+        />
+      );
+    }
+    if (node.subtype === 'rich') return <RichTextContentSection node={node} headerContent={switcher} />;
+    if (node.subtype === 'code') {
+      return <CodeContentSection node={node} onTextChange={actions.onTextChange} headerContent={switcher} />;
+    }
+    return null;
   },
 };
 
@@ -123,7 +128,7 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     bucket: 'primary',
     title: 'Content',
     description: 'Copy fields for text nodes.',
-    sections: [textSubtypeSwitcherSection, textContentSection, richTextContentSection],
+    sections: [textContentSection],
   }),
   createSectionBlock({
     id: 'text-style',
@@ -145,6 +150,3 @@ function isTextNode(node: InspectorNode | null): node is TextInspectorNode {
   return Boolean(node && isTextNodeGuard(node) && node.subtype === 'block' && node.link === undefined);
 }
 
-function isRichTextNode(node: InspectorNode | null): node is TextInspectorNode {
-  return Boolean(node && isTextNodeGuard(node) && node.subtype === 'rich');
-}
