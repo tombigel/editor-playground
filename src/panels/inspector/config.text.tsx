@@ -1,4 +1,4 @@
-import { TextAppearanceSection, TextContentSection, RichTextContentSection, CodeContentSection, TextDesignSection, TextTextStyleSection } from './ContentSections';
+import { TextAppearanceSection, TextContentSection, RichTextContentSection, CodeContentSection, TextDesignSection, TextTextStyleSection, CodeTextStyleSection, CodeDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import { isTextNode as isTextNodeGuard } from '../../model/types';
@@ -8,21 +8,44 @@ import type { InspectorActionHandlers, InspectorBlockDefinition, InspectorNode, 
 
 const textDesignSection: InspectorSectionDefinition = {
   id: 'text-design',
-  render: ({ node, actions, focusedMode }) =>
-    isTextNode(node) ? (
+  render: ({ node, actions, focusedMode }) => {
+    if (!isAnyTextNode(node)) return null;
+    if (node.subtype === 'code') {
+      return (
+        <CodeDesignSection
+          node={node}
+          onTextChange={actions.onTextChange}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+        />
+      );
+    }
+    return (
       <TextDesignSection
         node={node}
         onTextChange={actions.onTextChange}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />
-    ) : null,
+    );
+  },
 };
 
 const textTextStyleSection: InspectorSectionDefinition = {
   id: 'text-text-style',
-  render: ({ document, node, actions, focusedMode }) =>
-    isTextNode(node) ? (
+  render: ({ document, node, actions, focusedMode }) => {
+    if (!isNonRichTextNode(node)) return null;
+    if (node.subtype === 'code') {
+      return (
+        <CodeTextStyleSection
+          node={node}
+          onTextChange={actions.onTextChange}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+        />
+      );
+    }
+    return (
       <TextTextStyleSection
         document={document}
         node={node}
@@ -31,13 +54,14 @@ const textTextStyleSection: InspectorSectionDefinition = {
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />
-    ) : null,
+    );
+  },
 };
 
 export const textAppearanceSection: InspectorSectionDefinition = {
   id: 'text-appearance',
   render: ({ document, node, actions, focusedMode }) =>
-    isTextNode(node) ? (
+    isNonRichTextNode(node) ? (
       <TextAppearanceSection
         document={document}
         node={node}
@@ -93,9 +117,27 @@ const textContentSection: InspectorSectionDefinition = {
         />
       );
     }
-    if (node.subtype === 'rich') return <RichTextContentSection node={node} headerContent={switcher} />;
+    if (node.subtype === 'rich') {
+      return (
+        <RichTextContentSection
+          node={node}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+          onActivateRichEdit={actions.onActivateRichEdit}
+          headerContent={switcher}
+        />
+      );
+    }
     if (node.subtype === 'code') {
-      return <CodeContentSection node={node} onTextChange={actions.onTextChange} headerContent={switcher} />;
+      return (
+        <CodeContentSection
+          node={node}
+          onTextChange={actions.onTextChange}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+          headerContent={switcher}
+        />
+      );
     }
     return null;
   },
@@ -104,7 +146,7 @@ const textContentSection: InspectorSectionDefinition = {
 const textStickySection: InspectorSectionDefinition = {
   id: 'sticky',
   render: ({ node, actions, focusedMode, globalStickyElevation }) =>
-    isTextNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
+    isAnyTextNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
 export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
@@ -146,7 +188,13 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
   }),
 ];
 
-function isTextNode(node: InspectorNode | null): node is TextInspectorNode {
-  return Boolean(node && isTextNodeGuard(node) && node.subtype === 'block' && node.link === undefined);
+// All text subtypes (block, rich, code) — used for sticky and design panels
+function isAnyTextNode(node: InspectorNode | null): node is TextInspectorNode {
+  return Boolean(node && isTextNodeGuard(node) && node.link === undefined);
+}
+
+// Block and code subtypes only — used for text style panel (rich text has its own styling)
+function isNonRichTextNode(node: InspectorNode | null): node is TextInspectorNode {
+  return Boolean(node && isTextNodeGuard(node) && node.subtype !== 'rich' && node.link === undefined);
 }
 

@@ -115,7 +115,8 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
   const tabIndex = disableTabNavigation ? -1 : undefined;
 
   if (isTextNode(node) && node.subtype === 'rich') {
-    const Tag = node.htmlTag ?? 'p';
+    // Semantic tag is an explicit choice on the node; default to div (no imposed semantics)
+    const Tag = (node.htmlTag ?? 'div') as keyof JSX.IntrinsicElements;
     return (
       <Tag style={contentStyle}>
         {renderRichContent(node.content as RichContent, document)}

@@ -72,6 +72,7 @@ export default defineConfig({
         'src/app/useAppRuntime.ts',
         'src/app/useAppViewModel.ts',
         'src/app/useEditorEnvironment.ts',
+        'src/stage/stageRenderers/RichTextEditOverlay.tsx',
         'src/design-system/**/*.{ts,tsx}',
       ],
       thresholds: {

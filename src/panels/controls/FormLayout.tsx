@@ -47,12 +47,14 @@ export function InspectorFieldGroup({
   children,
   className,
   separated = false,
+  gap = false,
 }: {
   children: ReactNode;
   className?: string;
   separated?: boolean;
+  gap?: boolean;
 }) {
-  return <ControlGroup className={className} separated={separated}>{children}</ControlGroup>;
+  return <ControlGroup className={className} separated={separated} gap={gap}>{children}</ControlGroup>;
 }
 
 export function SwitchBlock({

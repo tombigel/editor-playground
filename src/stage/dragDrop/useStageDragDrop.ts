@@ -201,6 +201,14 @@ export function useStageDragDrop({
       onSelect(session.anchorId);
     }
 
+    // Capture pointer now that we know this is a drag, not a click.
+    // Deferring capture to here ensures that dblclick and other mouse events
+    // from simple taps are never redirected to the stage element.
+    const pointerId = activePointerIdRef.current;
+    if (pointerId !== null) {
+      stageElement?.setPointerCapture(pointerId);
+    }
+
     sessionRef.current = updateDragSession(session, input);
     publishSession(sessionRef.current);
     return sessionRef.current;
@@ -261,8 +269,9 @@ export function useStageDragDrop({
       containerSnap: snapSettings.containerSnap,
     };
     activePointerIdRef.current = event.pointerId;
-    stageElement?.setPointerCapture(event.pointerId);
-  }, [document, onSelect, selectedIds, snapSettings, stageElement]);
+    // Pointer capture is deferred to beginSessionFromPending so that
+    // simple clicks (including dblclick) are never redirected to the stage.
+  }, [document, onSelect, selectedIds, snapSettings]);
 
   const handlePointerMove = useCallback((event: PointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) {

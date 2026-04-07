@@ -47,3 +47,67 @@ body {
   overflow: hidden;
   background: var(--app-background);
 }
+
+/* Code node dark theme — Okaidia by ocodia, scoped to data-code-theme="dark" */
+pre[data-code-theme="dark"],
+pre[data-code-theme="dark"] code[class*="language-"] {
+  color: #f8f8f2;
+  background: #272822;
+  text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+}
+
+pre[data-code-theme="dark"] .token.comment,
+pre[data-code-theme="dark"] .token.prolog,
+pre[data-code-theme="dark"] .token.doctype,
+pre[data-code-theme="dark"] .token.cdata {
+  color: #8292a2;
+}
+
+pre[data-code-theme="dark"] .token.punctuation {
+  color: #f8f8f2;
+}
+
+pre[data-code-theme="dark"] .token.property,
+pre[data-code-theme="dark"] .token.tag,
+pre[data-code-theme="dark"] .token.constant,
+pre[data-code-theme="dark"] .token.symbol,
+pre[data-code-theme="dark"] .token.deleted {
+  color: #f92672;
+}
+
+pre[data-code-theme="dark"] .token.boolean,
+pre[data-code-theme="dark"] .token.number {
+  color: #ae81ff;
+}
+
+pre[data-code-theme="dark"] .token.selector,
+pre[data-code-theme="dark"] .token.attr-name,
+pre[data-code-theme="dark"] .token.string,
+pre[data-code-theme="dark"] .token.char,
+pre[data-code-theme="dark"] .token.builtin,
+pre[data-code-theme="dark"] .token.inserted {
+  color: #a6e22e;
+}
+
+pre[data-code-theme="dark"] .token.operator,
+pre[data-code-theme="dark"] .token.entity,
+pre[data-code-theme="dark"] .token.url,
+pre[data-code-theme="dark"] .token.variable {
+  color: #f8f8f2;
+}
+
+pre[data-code-theme="dark"] .token.atrule,
+pre[data-code-theme="dark"] .token.attr-value,
+pre[data-code-theme="dark"] .token.function,
+pre[data-code-theme="dark"] .token.class-name {
+  color: #e6db74;
+}
+
+pre[data-code-theme="dark"] .token.keyword {
+  color: #66d9ef;
+}
+
+pre[data-code-theme="dark"] .token.regex,
+pre[data-code-theme="dark"] .token.important {
+  color: #fd971f;
+}

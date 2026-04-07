@@ -35,6 +35,7 @@ export type InspectorActionHandlers = {
   onStickyElevated: (value: boolean) => void;
   onSwitchTextSubtype: (nodeId: string, subtype: 'block' | 'rich' | 'code') => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
+  onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: () => void;
 };
 

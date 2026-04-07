@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isSiteNode, isTextNode, type RichContent } from "../model/types";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
@@ -84,6 +84,7 @@ export function Stage({
 	onResizeEnd,
 	onStickyGeometryChange,
 	onUpdateRichContent,
+	onRegisterActivateRichEdit,
 	followLinkPopup,
 }: StageProps) {
 	const stageRef = useRef<HTMLDivElement | null>(null);
@@ -116,6 +117,10 @@ export function Stage({
 	const { editingId, activateEdit, commitEdit, discardEdit } = useRichTextEditMode({
 		onCommit: handleRichCommit,
 	});
+
+	useEffect(() => {
+		onRegisterActivateRichEdit?.(activateEdit);
+	}, [activateEdit, onRegisterActivateRichEdit]);
 
 	function handleStageRef(node: HTMLDivElement | null) {
 		stageRef.current = node;
@@ -442,7 +447,7 @@ export function Stage({
 				Tab selects components in stage order. Arrow keys move the selected
 				component by 1 pixel. Shift plus arrow keys move by 10 pixels.
 			</p>
-			<RichEditContext.Provider value={{ editingId, commitEdit, discardEdit }}>
+			<RichEditContext.Provider value={{ editingId, activateEdit, commitEdit, discardEdit }}>
 			<StageScene
 				document={document}
 				selectedId={selectedId}

@@ -53,6 +53,7 @@ export type StageProps = {
 	onResizeEnd: (id: NodeId) => void;
 	onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
 	onUpdateRichContent?: (id: NodeId, content: RichContent) => void;
+	onRegisterActivateRichEdit?: (fn: (id: NodeId) => void) => void;
 	followLinkPopup?: FollowLinkPopupData | null;
 };
 
