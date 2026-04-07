@@ -362,7 +362,7 @@ export type TextNode = BaseNode & {
   lang?: string;              // BCP-47 locale
   htmlTag?: HeadingTag | 'p' | 'blockquote'; // block only
   link?: LinkExtension;       // block only
-  code?: { language: string }; // code only
+  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string }; // code only
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;

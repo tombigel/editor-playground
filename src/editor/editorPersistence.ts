@@ -24,6 +24,7 @@ import type {
 } from '../model/types';
 import { isSiteNode, isContainerNode, isTextNode, isMediaNode } from '../model/types';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from '../model/units';
+import { TEXT_NODE_DEFAULTS } from '../model/textNodeDefaults';
 import { forceOpaqueColorValue } from '../model/colors';
 import {
   DEFAULT_EDITOR_ACCENT_COLOR,
@@ -434,7 +435,8 @@ export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'headin
   const make = () => {
     if (role === 'heading') {
       const node = createTextNode('block', parentId);
-      return { ...node, htmlTag: 'h2' as const };
+      const h = TEXT_NODE_DEFAULTS.heading;
+      return { ...node, htmlTag: 'h2' as const, content: h.content, style: { ...node.style, ...h.style } };
     }
     if (role === 'richtext') return createTextNode('rich', parentId);
     if (role === 'code') return createTextNode('code', parentId);

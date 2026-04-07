@@ -30,6 +30,7 @@ import {
   DEFAULT_TEXT_COLOR,
 } from './styleDefaults';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from './units';
+import { TEXT_NODE_DEFAULTS } from './textNodeDefaults';
 
 let counter = 0;
 let imageCounter = 0;
@@ -161,13 +162,11 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
       visible: true,
       locked: false,
       rect: createDefaultRect('32px', '32px', '320px', 'auto'),
-      content: '// your code here',
-      code: { language: 'plaintext' },
+      content: TEXT_NODE_DEFAULTS.code.content,
+      code: { language: TEXT_NODE_DEFAULTS.code.language, theme: TEXT_NODE_DEFAULTS.code.theme },
       style: {
         color: DEFAULT_TEXT_COLOR,
-        fontFamily: 'monospace',
-        fontSize: parseFontSizeValue('14px'),
-        lineHeight: 1.6,
+        ...TEXT_NODE_DEFAULTS.code.style,
         direction: 'ltr',
         textAlign: 'left',
       },
@@ -185,12 +184,11 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
       visible: true,
       locked: false,
       rect: createDefaultRect('32px', '32px', '320px', 'auto'),
-      content: '<p>Edit rich text</p>',
+      content: TEXT_NODE_DEFAULTS.rich.content,
       style: {
         color: DEFAULT_TEXT_COLOR,
         fontFamily: 'Inter',
-        fontSize: parseFontSizeValue('18px'),
-        lineHeight: 1.45,
+        ...TEXT_NODE_DEFAULTS.rich.style,
         direction: 'ltr',
         textAlign: 'left',
       },
@@ -208,15 +206,14 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
     visible: true,
     locked: false,
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-    content: 'Edit text',
+    content: TEXT_NODE_DEFAULTS.paragraph.content,
     htmlTag: 'p',
     sticky: undefined,
     style: {
       color: DEFAULT_TEXT_COLOR,
       fontFamily: 'Inter',
-      fontSize: parseFontSizeValue('18px'),
+      ...TEXT_NODE_DEFAULTS.paragraph.style,
       textDecorationLine: 'none',
-      lineHeight: 1.45,
       direction: 'ltr',
       textAlign: 'left',
     },
