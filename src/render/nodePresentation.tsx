@@ -99,6 +99,10 @@ function getExternalNavigationProps(node: LeafNode) {
     : {};
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export function renderLeafContent(node: LeafNode, options: RenderLeafContentOptions = {}): ReactNode {
   const {
     contentStyle,
@@ -130,6 +134,21 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
       />
     ) : (
       <div className={imagePlaceholderClassName} style={contentStyle}>{getNodeTextContent(node)}</div>
+    );
+  }
+
+  if (isTextNode(node) && node.subtype === 'code') {
+    const lang = node.code?.language ?? 'plaintext';
+    const theme = node.code?.theme ?? 'light';
+    const html = node.code?.highlightedHtml ?? escapeHtml(node.content as string);
+    return (
+      <pre data-code-theme={theme} style={{ margin: 0, ...contentStyle }}>
+        <code
+          className={`language-${lang}`}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </pre>
     );
   }
 
