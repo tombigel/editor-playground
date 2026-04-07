@@ -182,7 +182,7 @@ function LeafRichBody({
         nodeId={child.id}
         content={child.content as RichContent}
         contentStyle={contentStyle}
-        htmlTag={child.htmlTag}
+
         document={document}
         onCommit={commitEdit}
         onDiscard={discardEdit}

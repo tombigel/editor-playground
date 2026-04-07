@@ -72,16 +72,19 @@ export function ControlGroup({
   children,
   className,
   separated = false,
+  gap = false,
 }: {
   children: ReactNode;
   className?: string;
   separated?: boolean;
+  gap?: boolean;
 }) {
   return (
     <div
       className={cn(
         'space-y-2.5',
         separated && 'editor-border-subtle border-t pt-2.5',
+        gap && 'mt-2.5',
         className,
       )}
       data-ui="control-group"

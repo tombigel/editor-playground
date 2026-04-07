@@ -267,6 +267,7 @@ export function AppShell({
 	);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
 
+	const activateRichEditRef = useRef<(id: string) => void>(() => {});
 	const focusedPanelRef = useRef<HTMLDivElement | null>(null);
 	const focusedPanelDragRef = useRef<{
 		pointerId: number;
@@ -976,6 +977,7 @@ export function AppShell({
 							onUpdateRichContent={(id, content) =>
 								dispatch({ type: 'setRichContent', id, content })
 							}
+							onRegisterActivateRichEdit={(fn) => { activateRichEditRef.current = fn; }}
 							onStickyGeometryChange={onStickyGeometryChange}
 							followLinkPopup={
 								linkPopupVisible && selectedLinkNode
@@ -1128,6 +1130,7 @@ export function AppShell({
 							onEnterFocusedMode={(value) =>
 								dispatch({ type: "setFocusedMode", value })
 							}
+							onActivateRichEdit={(nodeId) => activateRichEditRef.current(nodeId)}
 							onOpenManageFonts={() => onManageFontsOpenChange(true)}
 							onInspectorCollapsedChange={(value) =>
 								dispatch({ type: "setInspectorCollapsed", value })
@@ -1275,6 +1278,7 @@ export function AppShell({
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })
 						}
+						onActivateRichEdit={(nodeId) => activateRichEditRef.current(nodeId)}
 						onOpenManageFonts={() => onManageFontsOpenChange(true)}
 						onExitFocusedMode={() =>
 							dispatch({ type: "setFocusedMode", value: null })

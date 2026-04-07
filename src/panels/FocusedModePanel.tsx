@@ -59,6 +59,7 @@ type Props = Pick<
   | 'globalStickyElevation'
   | 'onSwitchTextSubtype'
   | 'onEnterFocusedMode'
+  | 'onActivateRichEdit'
   | 'onOpenManageFonts'
 > & {
   mode: Exclude<FocusedMode, null>;
@@ -112,6 +113,7 @@ export function FocusedModePanel({
   globalStickyElevation,
   onSwitchTextSubtype,
   onEnterFocusedMode,
+  onActivateRichEdit,
   onOpenManageFonts,
   mode,
   onExitFocusedMode,
@@ -146,6 +148,7 @@ export function FocusedModePanel({
     onStickyElevated,
     onSwitchTextSubtype,
     onEnterFocusedMode,
+    onActivateRichEdit,
     onOpenManageFonts,
   };
   const orderState: InspectorOrderState = {

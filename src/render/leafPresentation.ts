@@ -17,6 +17,9 @@ export function getLeafInlineStyle(node: LeafNode): StyleRecord {
     if (node.link !== undefined) {
       return getLinkLeafStyle(node);
     }
+    if (node.subtype === 'code') {
+      return getCodeLeafStyle(node);
+    }
     return getTextLeafStyle(node);
   }
 
@@ -34,6 +37,23 @@ export function getTextLeafStyle(node: TextNode): StyleRecord {
     margin: 0,
     fontFamily: DEFAULT_FONT_FALLBACK_STACK,
   });
+}
+
+export function getCodeLeafStyle(node: TextNode): StyleRecord {
+  const style: StyleRecord = getTypographyStyle(node.style, {
+    maxWidth: '100%',
+    margin: 0,
+    fontFamily: 'monospace',
+  });
+  if (node.style?.background) {
+    style.background = node.style.background;
+  }
+  Object.assign(style, buildBorderStyle(node.style));
+  const boxShadow = buildBoxShadow(node.style);
+  if (boxShadow) {
+    style.boxShadow = boxShadow;
+  }
+  return style;
 }
 
 export function getLinkLeafStyle(node: TextNode): StyleRecord {

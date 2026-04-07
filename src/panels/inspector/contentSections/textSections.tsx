@@ -5,11 +5,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import type { DocumentModel } from '../../../api/editorApi';
 import {
+  BorderControlGroup,
   FormField,
+  FontSizeField,
+  HoverColorField,
   InspectorFieldGroup,
   InspectorInlineRow,
+  NumberInput,
   readShadowFieldValues,
+  ShadowControlGroup,
+  TextStyleIconButton,
 } from '../../InspectorControls';
+import {
+  applyLeafShadowPatch,
+  applyUnifiedLeafBorderColor,
+  applyUnifiedLeafBorderRadius,
+  applyUnifiedLeafBorderWidth,
+} from '../styleFields';
+import {
+  readUnifiedBorderColor,
+  readUnifiedBorderRadius,
+  readUnifiedBorderWidth,
+} from '../stageConversions';
+import { BOLD_FONT_WEIGHT, DEFAULT_FONT_WEIGHT, isBoldFontWeight } from '../../../fonts/weights';
 import {
   DEFAULT_SHADOW_BLUR_PX,
   DEFAULT_SHADOW_COLOR,
@@ -28,7 +46,15 @@ import {
 import {
   type FocusModeCardProps,
   TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX,
+  TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX,
+  TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX,
+  TYPOGRAPHY_SIZE_ROW_WIDTH_PX,
   createShadowFallback,
+  fontSizeFieldValueFromNode,
+  lineHeightValue,
+  textDecorationHasLineThrough,
+  textDecorationHasUnderline,
+  toggleTextDecorationLine,
   TypographyTextStyleFields,
   TypographyDesignFields,
 } from './shared';
@@ -94,11 +120,15 @@ export function TextContentSection({
 
 export function RichTextContentSection({
   node,
+  focusedMode,
+  onEnterFocusedMode,
+  onActivateRichEdit,
   headerContent,
   headerAction,
   contentClassName = 'px-3 pt-2 pb-3',
 }: {
   node: TextInspectorNode;
+  onActivateRichEdit?: (nodeId: string) => void;
 } & FocusModeCardProps) {
   const preview = getNodeTextContent(node);
   return (
@@ -107,13 +137,18 @@ export function RichTextContentSection({
       headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      <div className="editor-text-muted flex items-start gap-2 rounded-md border border-dashed px-3 py-2.5 text-[11px]"
-        style={{ borderColor: 'var(--editor-border-subtle)' }}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 w-full gap-1.5 text-[11px]"
+        onClick={() => onActivateRichEdit?.(node.id)}
       >
-        <Pencil size={13} className="mt-px shrink-0 opacity-60" />
-        <span>Double-click on the canvas to edit rich text</span>
-      </div>
+        <Pencil size={12} />
+        Edit rich text
+      </Button>
       {preview && (
         <p className="editor-text-muted mt-2 line-clamp-3 break-words px-0.5 text-[11px] leading-relaxed opacity-70">
           {preview}
@@ -147,6 +182,8 @@ const CODE_LANGUAGES = [
 export function CodeContentSection({
   node,
   onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
   headerContent,
   headerAction,
   contentClassName = 'px-3 pt-1.5 pb-3',
@@ -155,13 +192,13 @@ export function CodeContentSection({
   onTextChange: (field: EditorTextField, value: string) => void;
 } & FocusModeCardProps) {
   const language = node.code?.language ?? 'plaintext';
-  const theme = node.code?.theme ?? 'light';
   return (
     <InspectorSectionCard
       title="Content"
       headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
       <InspectorFieldGroup>
         <FormField label="Code">
@@ -180,7 +217,7 @@ export function CodeContentSection({
           />
         </FormField>
       </InspectorFieldGroup>
-      <InspectorFieldGroup separated>
+      <InspectorFieldGroup gap>
         <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
           <Select value={language} onValueChange={(value) => onTextChange('codeLanguage', value)}>
             <SelectTrigger className="h-8 text-[11px]">
@@ -192,24 +229,6 @@ export function CodeContentSection({
               ))}
             </SelectContent>
           </Select>
-        </InspectorInlineRow>
-      </InspectorFieldGroup>
-      <InspectorFieldGroup separated>
-        <InspectorInlineRow label="Theme" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
-          <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-            {(['light', 'dark'] as const).map((t) => (
-              <Button
-                key={t}
-                type="button"
-                variant={theme === t ? 'default' : 'ghost'}
-                size="sm"
-                className="h-6 rounded-md px-2 text-[11px] capitalize"
-                onClick={() => onTextChange('codeTheme', t)}
-              >
-                {t}
-              </Button>
-            ))}
-          </div>
         </InspectorInlineRow>
       </InspectorFieldGroup>
     </InspectorSectionCard>
@@ -380,6 +399,159 @@ export function TextAppearanceSection({
           colorFallback={DEFAULT_TEXT_COLOR}
           shadow={shadow}
           shadowFallback={shadowFallback}
+        />
+      </div>
+    </InspectorSectionCard>
+  );
+}
+
+export function CodeTextStyleSection({
+  node,
+  onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
+}: {
+  node: TextInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+} & FocusModeCardProps) {
+  const theme = node.code?.theme ?? 'light';
+  return (
+    <InspectorSectionCard
+      title="Text style"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
+      <InspectorInlineRow label="Size" controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}>
+        <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
+          <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
+            <FontSizeField nodeId={node.id} value={fontSizeFieldValueFromNode(node)} onChange={(value) => onTextChange('fontSize', value)} />
+          </div>
+          <div className="shrink-0" style={{ width: `${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
+            <NumberInput
+              value={lineHeightValue(node)}
+              min={0.1}
+              max={4}
+              step={0.1}
+              onChange={(value) => onTextChange('lineHeight', String(value))}
+            />
+          </div>
+        </div>
+      </InspectorInlineRow>
+      <InspectorInlineRow label="Style" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
+        <TextStyleIconButton
+          label="Bold"
+          active={isBoldFontWeight(node.style?.fontWeight)}
+          onClick={() => onTextChange('fontWeight', String(isBoldFontWeight(node.style?.fontWeight) ? DEFAULT_FONT_WEIGHT : BOLD_FONT_WEIGHT))}
+        >
+          <span className="font-black tracking-[-0.02em]">B</span>
+        </TextStyleIconButton>
+        <TextStyleIconButton
+          label="Italic"
+          active={node.style?.fontStyle === 'italic'}
+          onClick={() => onTextChange('fontStyle', node.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
+        >
+          <span className="font-medium italic">I</span>
+        </TextStyleIconButton>
+        <TextStyleIconButton
+          label="Underline"
+          active={textDecorationHasUnderline(node)}
+          onClick={() => onTextChange('textDecorationLine', toggleTextDecorationLine(node.style?.textDecorationLine, 'underline'))}
+        >
+          <span className="underline">U</span>
+        </TextStyleIconButton>
+        <TextStyleIconButton
+          label="Strikethrough"
+          active={textDecorationHasLineThrough(node)}
+          onClick={() => onTextChange('textDecorationLine', toggleTextDecorationLine(node.style?.textDecorationLine, 'line-through'))}
+        >
+          <span className="line-through">S</span>
+        </TextStyleIconButton>
+      </InspectorInlineRow>
+      <InspectorInlineRow label="Theme" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+        <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+          {(['light', 'dark'] as const).map((t) => (
+            <Button
+              key={t}
+              type="button"
+              variant={theme === t ? 'default' : 'ghost'}
+              size="sm"
+              className="h-6 rounded-md px-2 text-[11px] capitalize"
+              onClick={() => onTextChange('codeTheme', t)}
+            >
+              {t}
+            </Button>
+          ))}
+        </div>
+      </InspectorInlineRow>
+    </InspectorSectionCard>
+  );
+}
+
+export function CodeDesignSection({
+  node,
+  onTextChange,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
+}: {
+  node: TextInspectorNode;
+  onTextChange: (field: EditorTextField, value: string) => void;
+} & FocusModeCardProps) {
+  const shadowFallback = createShadowFallback(
+    DEFAULT_SHADOW_COLOR,
+    DEFAULT_SHADOW_BLUR_PX,
+    DEFAULT_SHADOW_SPREAD_PX,
+    DEFAULT_SHADOW_OFFSET_X_PX,
+    DEFAULT_SHADOW_OFFSET_Y_PX,
+  );
+  const shadow = readShadowFieldValues(node.style, shadowFallback);
+
+  return (
+    <InspectorSectionCard
+      title="Design"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
+    >
+      <InspectorInlineRow label="Background" controlClassName="gap-2">
+        <HoverColorField
+          value={node.style?.background}
+          onChange={(value) => onTextChange('background', value)}
+          ariaLabel="Code block background"
+          fallback="transparent"
+        />
+      </InspectorInlineRow>
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
+        <span className="editor-text-strong pt-1 text-[11px] font-medium">Border</span>
+        <BorderControlGroup
+          nodeId={node.id}
+          colorValue={readUnifiedBorderColor(node.style)}
+          widthValue={readUnifiedBorderWidth(node.style)}
+          radiusValue={readUnifiedBorderRadius(node.style)}
+          onColorChange={(value) => applyUnifiedLeafBorderColor(onTextChange, value)}
+          onWidthChange={(value) => applyUnifiedLeafBorderWidth(onTextChange, value)}
+          onRadiusChange={(value) => applyUnifiedLeafBorderRadius(onTextChange, value)}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <ShadowControlGroup
+          color={shadow.color}
+          blur={shadow.blur}
+          distance={shadow.distance}
+          angle={shadow.angle}
+          colorFallback={shadowFallback.color}
+          onColorChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { color: value })}
+          onBlurChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { blur: value })}
+          onDistanceChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { distance: value })}
+          onAngleChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { angle: value })}
         />
       </div>
     </InspectorSectionCard>

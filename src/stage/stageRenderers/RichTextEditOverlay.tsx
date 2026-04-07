@@ -1,13 +1,14 @@
 import {
   type CSSProperties,
   useCallback,
+  useEffect,
   useMemo,
   useState,
   type KeyboardEvent,
   type FormEvent,
 } from 'react';
 import { Editor } from 'slate';
-import { Editable, type ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
+import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
 import { getLinkHref } from '../../model/links';
 import type { DocumentModel, NodeId, RichContent, RichTextLeaf, RichTextLink } from '../../model/types';
 import { richLeafStyle } from '../../render/nodePresentation';
@@ -48,7 +49,6 @@ export function RichTextEditOverlay({
   nodeId,
   content,
   contentStyle,
-  htmlTag,
   document,
   onCommit,
   onDiscard,
@@ -56,15 +56,24 @@ export function RichTextEditOverlay({
   nodeId: NodeId;
   content: RichContent;
   contentStyle?: CSSProperties;
-  htmlTag?: string;
   document?: DocumentModel;
   onCommit: (id: NodeId, content: RichContent) => void;
   onDiscard: () => void;
 }) {
   const editor = useMemo(() => createRichEditor(), []);
   const initialValue = useMemo(() => toSlateValue(content), [content]);
-  const Tag = (htmlTag ?? 'p') as keyof JSX.IntrinsicElements;
   const [linkPopover, setLinkPopover] = useState<LinkPopoverState>({ open: false });
+  const [blurEnabled, setBlurEnabled] = useState(false);
+
+  useEffect(() => {
+    // Focus the editor after mount. Use rAF to ensure the DOM is ready and
+    // any blur from the triggering click has already settled.
+    const id = requestAnimationFrame(() => {
+      try { ReactEditor.focus(editor); } catch {}
+      setBlurEnabled(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [editor]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -106,9 +115,10 @@ export function RichTextEditOverlay({
   );
 
   const handleBlur = useCallback(() => {
+    if (!blurEnabled) return; // ignore spurious blur before initial focus settles
     if (linkPopover.open) return; // don't commit while popover is open
     onCommit(nodeId, fromSlateValue(editor.children));
-  }, [editor, nodeId, onCommit, linkPopover.open]);
+  }, [blurEnabled, editor, nodeId, onCommit, linkPopover.open]);
 
   const handleLinkSubmit = useCallback(
     (href: string) => {
@@ -127,14 +137,14 @@ export function RichTextEditOverlay({
 
   return (
     <Slate editor={editor} initialValue={initialValue}>
-      <Tag
+      {/* div: Slate's Editable renders a div, so block tags like p/h2 would be invalid HTML */}
+      <div
         style={contentStyle}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
       >
         <Editable
-          autoFocus
           renderLeaf={renderEditLeaf}
           renderElement={(props) => renderEditElement(props, document)}
           onKeyDown={handleKeyDown}
@@ -148,7 +158,7 @@ export function RichTextEditOverlay({
             onCancel={() => setLinkPopover({ open: false })}
           />
         )}
-      </Tag>
+      </div>
     </Slate>
   );
 }

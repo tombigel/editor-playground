@@ -226,6 +226,9 @@ export function updateTextField(
     if (trimmedValue) {
       document = ensureDocumentFontFamilyByName(document, trimmedValue);
     }
+  } else if (field === 'background' && isTextNode(node) && node.subtype === 'code') {
+    node.style ??= {};
+    node.style.background = value || undefined;
   } else if (field === 'background' && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
     node.style ??= {};
     node.style.background = value || undefined;
@@ -289,13 +292,13 @@ export function updateTextField(
     node.src = value;
   } else if (field === 'alt' && isMediaNode(node) && node.subtype === 'image') {
     node.alt = value;
-  } else if (isBorderColorField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
+  } else if (isBorderColorField(field) && (isMediaNode(node) || (isTextNode(node) && node.subtype === 'code') || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value || undefined;
-  } else if (isBorderWidthField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
+  } else if (isBorderWidthField(field) && (isMediaNode(node) || (isTextNode(node) && node.subtype === 'code') || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
-  } else if (isBorderRadiusField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
+  } else if (isBorderRadiusField(field) && (isMediaNode(node) || (isTextNode(node) && node.subtype === 'code') || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
   } else if (isShadowStyleField(field) && (isTextNode(node) || isMediaNode(node))) {
