@@ -42,6 +42,7 @@ import type {
   EditorTextField,
   MediaSubtype,
   RichContent,
+  RichTextLeaf,
   ShadowStyleField,
   NodeTextField,
   NodeId,
@@ -49,6 +50,7 @@ import type {
   TextSubtype,
   WrapperStyleField,
 } from '../model/types';
+import { isRichTextLink } from '../model/richContent';
 import { isContainerNode, isLeafNode, isMediaNode, isTextNode } from '../model/types';
 import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolve';
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
@@ -1087,11 +1089,23 @@ export function switchSubtypeDoc(
     // Behaviour
     ...(textSource.sticky !== undefined ? { sticky: textSource.sticky } : {}),
     ...(textSource.animation !== undefined ? { animation: textSource.animation } : {}),
-    // Text content — convert string→RichContent when switching to rich subtype
-    content:
-      targetSubtype === 'rich' && typeof textSource.content === 'string'
-        ? [{ text: textSource.content }]
-        : textSource.content,
+    // Text content — convert between string and RichContent as needed
+    // rich→anything: convert RichContent array to plain string
+    // anything→rich: convert string to minimal RichContent
+    content: (() => {
+      if (targetSubtype === 'rich') {
+        return typeof textSource.content === 'string'
+          ? [{ text: textSource.content }]
+          : textSource.content;
+      }
+      if (Array.isArray(textSource.content)) {
+        // Flatten RichContent to plain text for block/code targets
+        return (textSource.content as RichContent)
+          .flatMap((n) => isRichTextLink(n) ? n.children.map((l) => l.text) : [(n as RichTextLeaf).text])
+          .join('');
+      }
+      return textSource.content;
+    })(),
     ...(textSource.lang !== undefined ? { lang: textSource.lang } : {}),
     // Link extension — only meaningful for block; carry it over regardless
     // (it will be ignored at render time for non-block subtypes)
@@ -1100,10 +1114,19 @@ export function switchSubtypeDoc(
     ...(targetSubtype === 'block' && textSource.htmlTag !== undefined
       ? { htmlTag: textSource.htmlTag }
       : {}),
-    // code: carry over if targetSubtype is code; discard otherwise
-    ...(targetSubtype === 'code' && textSource.code !== undefined
-      ? { code: textSource.code }
-      : {}),
+    // code: when switching to code, ensure highlightedHtml is generated
+    ...(targetSubtype === 'code' ? (() => {
+      const sourceCode = textSource.code;
+      const lang = sourceCode?.language ?? 'plaintext';
+      const theme = sourceCode?.theme ?? 'light';
+      // content at this point will be a string (converted above if needed)
+      const rawContent = Array.isArray(textSource.content)
+        ? (textSource.content as RichContent)
+            .flatMap((n) => isRichTextLink(n) ? n.children.map((l) => l.text) : [(n as RichTextLeaf).text])
+            .join('')
+        : (textSource.content as string);
+      return { code: { language: lang, theme, highlightedHtml: highlightCode(rawContent, lang) } };
+    })() : {}),
   };
   next.nodes[nodeId] = switched;
   return next;

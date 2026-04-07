@@ -63,7 +63,17 @@ export function TextContentSection({
     >
       <InspectorFieldGroup>
         <FormField label="Text">
-          <Textarea value={node.content as string} onChange={(e) => onTextChange('content', e.target.value)} />
+          <Textarea
+            value={node.content as string}
+            onChange={(e) => onTextChange('content', e.target.value)}
+            onPaste={(e) => {
+              const text = e.clipboardData.getData('text/plain');
+              if (text) {
+                e.preventDefault();
+                onTextChange('content', text);
+              }
+            }}
+          />
         </FormField>
       </InspectorFieldGroup>
       <InspectorFieldGroup separated>
@@ -160,6 +170,13 @@ export function CodeContentSection({
             rows={5}
             style={{ fontFamily: 'monospace' }}
             onChange={(e) => onTextChange('content', e.target.value)}
+            onPaste={(e) => {
+              const text = e.clipboardData.getData('text/plain');
+              if (text) {
+                e.preventDefault();
+                onTextChange('content', text);
+              }
+            }}
           />
         </FormField>
       </InspectorFieldGroup>

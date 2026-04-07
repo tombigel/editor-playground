@@ -27,6 +27,7 @@ export function SingleSelectionOverlay({
   return (
     <div
       className="stage-single-selection-overlay"
+      data-node-id={overlay.nodeId}
       style={{
         left: `${overlay.bounds.left - 2}px`,
         top: `${overlay.bounds.top - 2}px`,

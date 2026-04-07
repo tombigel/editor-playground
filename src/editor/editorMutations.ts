@@ -29,6 +29,7 @@ import { moveNodeInTreeDoc, setNodeVisibilityDoc } from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
 import { cloneDocument, normalizeDocument, normalizeTextHtmlTag, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
+import { highlightCode } from '../render/codeHighlight';
 
 type SelectionRect = {
   left: number;
@@ -202,6 +203,15 @@ export function updateTextField(
 
   if (field === 'name') {
     node.name = value;
+  } else if (field === 'content' && isTextNode(node) && node.subtype === 'code') {
+    const language = node.code?.language ?? 'plaintext';
+    node.content = value;
+    node.code = { ...(node.code ?? { language, theme: 'light' as const }), highlightedHtml: highlightCode(value, language) };
+  } else if (field === 'codeLanguage' && isTextNode(node) && node.subtype === 'code') {
+    const highlightedHtml = highlightCode(node.content as string, value);
+    node.code = { ...(node.code ?? { theme: 'light' as const }), language: value, highlightedHtml };
+  } else if (field === 'codeTheme' && isTextNode(node) && node.subtype === 'code') {
+    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: value as 'light' | 'dark' };
   } else if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
     node.content = value;
   } else if (field === 'htmlTag' && isTextNode(node) && node.subtype === 'block') {
