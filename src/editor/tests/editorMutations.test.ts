@@ -556,6 +556,26 @@ describe('editor/editorMutations', () => {
       }
     });
 
+    it('updates page-link target fields', () => {
+      const state = createInitialState();
+      const withLeaf = insertLeaf(state, 'link');
+      const leafId = withLeaf.selectedId!;
+      const targetPageId = state.document.pages?.[0]?.id;
+      if (!targetPageId) {
+        throw new Error('Expected page id');
+      }
+
+      const withType = updateTextField(withLeaf, leafId, 'linkType', 'page');
+      const withPage = updateTextField(withType, leafId, 'targetPageId', targetPageId);
+      const withAnchor = updateTextField(withPage, leafId, 'pageAnchorId', 'section_5');
+      const node = withAnchor.document.nodes[leafId];
+      if (node.contentType === 'text' && node.link != null) {
+        expect(node.link.linkType).toBe('page');
+        expect(node.link.targetPageId).toBe(targetPageId);
+        expect(node.link.pageAnchorId).toBe('section_5');
+      }
+    });
+
     it('updates image src and alt', () => {
       const state = createInitialState();
       const withLeaf = insertLeaf(state, 'image');
@@ -633,6 +653,24 @@ describe('editor/editorMutations', () => {
         expect(node.style?.borderColor).toBe('#000');
         expect(node.style?.borderWidth?.raw).toBe('2px');
         expect(node.style?.borderRadius?.raw).toBe('8px');
+      }
+    });
+
+    it('updates code design fields through the document API wrapper', () => {
+      const state = createInitialState();
+      const withLeaf = insertLeaf(state, 'code');
+      const leafId = withLeaf.selectedId!;
+
+      const withBackground = updateTextField(withLeaf, leafId, 'background', '#101418');
+      const withBorderColor = updateTextField(withBackground, leafId, 'borderColor', '#4c6ef5');
+      const withBorderWidth = updateTextField(withBorderColor, leafId, 'borderWidth', '2px');
+      const withBorderRadius = updateTextField(withBorderWidth, leafId, 'borderRadius', '14px');
+      const node = withBorderRadius.document.nodes[leafId];
+      if (node.contentType === 'text' && node.subtype === 'code') {
+        expect(node.style?.background).toBe('#101418');
+        expect(node.style?.borderColor).toBe('#4c6ef5');
+        expect(node.style?.borderWidth?.raw).toBe('2px');
+        expect(node.style?.borderRadius?.raw).toBe('14px');
       }
     });
 

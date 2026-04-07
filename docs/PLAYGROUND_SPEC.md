@@ -1301,6 +1301,7 @@ Naming and title behavior:
 ### API layer
 
 - `src/api/documentApi.ts` provides editor-agnostic document operations for non-editor contexts such as scripts.
+- Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setNodeTextField()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
 

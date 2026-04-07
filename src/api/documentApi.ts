@@ -267,7 +267,11 @@ export function setNodeTextField(
   }
 
   if (field === 'linkType' && isTextNode(node) && node.link !== undefined) {
-    node.link = { ...node.link, linkType: normalizeNavigationKind(value) };
+    const linkType = normalizeNavigationKind(value);
+    node.link = { ...node.link, linkType };
+    if (linkType !== 'page') {
+      node.link = { ...node.link, targetPageId: undefined, pageAnchorId: undefined };
+    }
     return next;
   }
 
@@ -283,6 +287,16 @@ export function setNodeTextField(
 
   if (field === 'openInNewTab' && isTextNode(node) && node.link !== undefined) {
     node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
+    return next;
+  }
+
+  if (field === 'targetPageId' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
+    return next;
+  }
+
+  if (field === 'pageAnchorId' && isTextNode(node) && node.link !== undefined) {
+    node.link = { ...node.link, pageAnchorId: value || undefined };
     return next;
   }
 
@@ -309,6 +323,12 @@ export function setNodeTextField(
     if (trimmedValue) {
       next = ensureDocumentFontFamilyByName(next, trimmedValue);
     }
+    return next;
+  }
+
+  if (field === 'background' && isTextNode(node) && node.subtype === 'code') {
+    node.style ??= {};
+    node.style.background = value || undefined;
     return next;
   }
 
@@ -386,19 +406,40 @@ export function setNodeTextField(
     return next;
   }
 
-  if (isBorderColorField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
+  if (
+    isBorderColorField(field) &&
+    (
+      isMediaNode(node) ||
+      (isTextNode(node) && node.subtype === 'code') ||
+      (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined)
+    )
+  ) {
     node.style ??= {};
     node.style[field] = value || undefined;
     return next;
   }
 
-  if (isBorderWidthField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
+  if (
+    isBorderWidthField(field) &&
+    (
+      isMediaNode(node) ||
+      (isTextNode(node) && node.subtype === 'code') ||
+      (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined)
+    )
+  ) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
     return next;
   }
 
-  if (isBorderRadiusField(field) && (isMediaNode(node) || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
+  if (
+    isBorderRadiusField(field) &&
+    (
+      isMediaNode(node) ||
+      (isTextNode(node) && node.subtype === 'code') ||
+      (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined)
+    )
+  ) {
     node.style ??= {};
     node.style[field] = value ? parseUnitValue(value) : undefined;
     return next;

@@ -143,6 +143,35 @@ describe('api/documentApi', () => {
     expect(buttonNode.style?.textWrap).toBe('wrap');
   });
 
+  it('updates code design fields through API helpers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    document.nodes[code.id] = code;
+    document.nodes[section.id].children.push(code.id);
+
+    const withBackground = setNodeTextField(document, code.id, 'background', '#101418');
+    const withBorderColor = setNodeTextField(withBackground, code.id, 'borderColor', '#4c6ef5');
+    const withBorderWidth = setNodeTextField(withBorderColor, code.id, 'borderWidth', '2px');
+    const withBorderRadius = setNodeTextField(withBorderWidth, code.id, 'borderRadius', '14px');
+
+    const codeNode = withBorderRadius.nodes[code.id];
+    if (codeNode.contentType !== 'text' || codeNode.subtype !== 'code') {
+      throw new Error('Expected code node');
+    }
+
+    expect(codeNode.style?.background).toBe('#101418');
+    expect(codeNode.style?.borderColor).toBe('#4c6ef5');
+    expect(codeNode.style?.borderWidth?.raw).toBe('2px');
+    expect(codeNode.style?.borderRadius?.raw).toBe('14px');
+  });
+
   it('updates navigation fields for links and buttons through API helpers', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -186,6 +215,50 @@ describe('api/documentApi', () => {
     expect(buttonNode.link?.anchorTargetId).toBe(section.id);
     expect(buttonNode.link?.href).toBe('https://example.com/start');
     expect(buttonNode.link?.openInNewTab).toBe(true);
+  });
+
+  it('updates page-link target fields for links and buttons through API helpers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    const linkId = Object.keys(document.nodes).find(
+      (nodeId) => document.nodes[nodeId]?.contentType === 'text' && (document.nodes[nodeId] as { link?: unknown }).link != null,
+    );
+    if (!section || section.contentType !== 'container' || !linkId) {
+      throw new Error('Expected section wrapper and link node');
+    }
+
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const button = createButtonTextNode(section.id);
+    document.pages = [...(document.pages ?? []), aboutPage];
+    document.nodes[button.id] = button;
+    document.nodes[section.id].children.push(button.id);
+
+    const withLinkType = setNodeTextField(document, linkId, 'linkType', 'page');
+    const withLinkTarget = setNodeTextField(withLinkType, linkId, 'targetPageId', aboutPage.id);
+    const withLinkAnchor = setNodeTextField(withLinkTarget, linkId, 'pageAnchorId', section.id);
+    const withButtonType = setNodeTextField(withLinkAnchor, button.id, 'linkType', 'page');
+    const withButtonTarget = setNodeTextField(withButtonType, button.id, 'targetPageId', aboutPage.id);
+    const withButtonAnchor = setNodeTextField(withButtonTarget, button.id, 'pageAnchorId', section.id);
+    const withLinkReset = setNodeTextField(withButtonAnchor, linkId, 'linkType', 'external');
+
+    const linkNode = withLinkReset.nodes[linkId];
+    const buttonNode = withLinkReset.nodes[button.id];
+
+    if (linkNode.contentType !== 'text' || linkNode.link == null) {
+      throw new Error('Expected link node');
+    }
+    if (buttonNode.contentType !== 'text' || buttonNode.subtype !== 'block' || buttonNode.link == null) {
+      throw new Error('Expected button node');
+    }
+
+    expect(linkNode.link.linkType).toBe('external');
+    expect(linkNode.link.targetPageId).toBeUndefined();
+    expect(linkNode.link.pageAnchorId).toBeUndefined();
+    expect(buttonNode.link.linkType).toBe('page');
+    expect(buttonNode.link.targetPageId).toBe(aboutPage.id);
+    expect(buttonNode.link.pageAnchorId).toBe(section.id);
   });
 
   it('preserves catalog metadata when applying an existing document font family', async () => {

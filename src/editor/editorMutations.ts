@@ -5,10 +5,9 @@ import {
   type SectionTemplateId,
 } from '../model/defaults';
 import type { PageId } from '../model/types/site';
-import { ensureDocumentFontFamilyByName, normalizeDocumentFontState } from '../fonts';
+import { normalizeDocumentFontState } from '../fonts';
 import { validateDocument } from '../model/validation';
 import type {
-  BorderColorField,
   BorderRadiusField,
   BorderWidthField,
   ContainerNode,
@@ -19,17 +18,15 @@ import type {
   NodeId,
   ShadowStyleField,
   StickyDefinition,
-  TextNode,
   WrapperStyleField,
 } from '../model/types';
-import { isContainerNode, isLeafNode, isMediaNode, isTextNode } from '../model/types';
-import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
+import { isContainerNode, isLeafNode } from '../model/types';
+import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
-import { moveNodeInTreeDoc, setNodeVisibilityDoc } from '../api/documentApi';
+import { moveNodeInTreeDoc, setNodeTextField, setNodeVisibilityDoc } from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
-import { cloneDocument, normalizeDocument, normalizeTextHtmlTag, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
-import { highlightCode } from '../render/codeHighlight';
+import { cloneDocument, normalizeDocument, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
 
 type SelectionRect = {
   left: number;
@@ -195,124 +192,10 @@ export function updateTextField(
   field: EditorTextField,
   value: string,
 ): EditorState {
-  let document = cloneDocument(state.document);
-  const node = document.nodes[nodeId];
-  if (node.contentType === 'site') {
+  const document = setNodeTextField(state.document, nodeId, field, value);
+  if (document === state.document) {
     return state;
   }
-
-  if (field === 'name') {
-    node.name = value;
-  } else if (field === 'content' && isTextNode(node) && node.subtype === 'code') {
-    const language = node.code?.language ?? 'plaintext';
-    node.content = value;
-    node.code = { ...(node.code ?? { language, theme: 'light' as const }), highlightedHtml: highlightCode(value, language) };
-  } else if (field === 'codeLanguage' && isTextNode(node) && node.subtype === 'code') {
-    const highlightedHtml = highlightCode(node.content as string, value);
-    node.code = { ...(node.code ?? { theme: 'light' as const }), language: value, highlightedHtml };
-  } else if (field === 'codeTheme' && isTextNode(node) && node.subtype === 'code') {
-    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: value as 'light' | 'dark' };
-  } else if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
-    node.content = value;
-  } else if (field === 'htmlTag' && isTextNode(node) && node.subtype === 'block') {
-    node.htmlTag = normalizeTextHtmlTag(value as TextNode['htmlTag']);
-  } else if (field === 'color' && isTextNode(node)) {
-    node.style ??= {};
-    node.style.color = value || undefined;
-  } else if (field === 'fontFamily' && isTextNode(node)) {
-    node.style ??= {};
-    const trimmedValue = value.trim();
-    node.style.fontFamily = trimmedValue || undefined;
-    if (trimmedValue) {
-      document = ensureDocumentFontFamilyByName(document, trimmedValue);
-    }
-  } else if (field === 'background' && isTextNode(node) && node.subtype === 'code') {
-    node.style ??= {};
-    node.style.background = value || undefined;
-  } else if (field === 'background' && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
-    node.style ??= {};
-    node.style.background = value || undefined;
-  } else if ((field === 'paddingBlock' || field === 'paddingInline') && isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
-    node.style ??= {};
-    node.style[field] = value ? parseSpacingValue(value) : undefined;
-  } else if (field === 'fontSize' && isTextNode(node)) {
-    node.style ??= {};
-    node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
-  } else if (field === 'fontWeight' && isTextNode(node)) {
-    const parsed = Number.parseInt(value, 10);
-    if (!Number.isFinite(parsed)) {
-      return state;
-    }
-    node.style ??= {};
-    node.style.fontWeight = Math.min(900, Math.max(100, Math.round(parsed)));
-  } else if (field === 'fontStyle' && isTextNode(node)) {
-    node.style ??= {};
-    node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
-  } else if (
-    field === 'textDecorationLine' &&
-    isTextNode(node)
-  ) {
-    node.style ??= {};
-    node.style.textDecorationLine = normalizeTextDecorationLine(value);
-  } else if (
-    field === 'lineHeight' &&
-    isTextNode(node)
-  ) {
-    const parsed = Number.parseFloat(value);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      node.style ??= {};
-      node.style.lineHeight = parsed;
-    }
-  } else if (field === 'direction' && isTextNode(node)) {
-    node.style ??= {};
-    node.style.direction = value === 'rtl' ? 'rtl' : 'ltr';
-  } else if (field === 'textAlign' && isTextNode(node)) {
-    node.style ??= {};
-    node.style.textAlign = value === 'center' || value === 'right' ? value : 'left';
-  } else if (field === 'textWrap' && isTextNode(node) && node.link !== undefined) {
-    node.style ??= {};
-    node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
-  } else if (field === 'linkType' && isTextNode(node) && node.link !== undefined) {
-    const linkType = value === 'anchor' ? 'anchor' : value === 'page' ? 'page' : 'external';
-    node.link = { ...node.link, linkType };
-    if (linkType !== 'page') {
-      node.link = { ...node.link, targetPageId: undefined, pageAnchorId: undefined };
-    }
-  } else if (field === 'anchorTargetId' && isTextNode(node) && node.link !== undefined) {
-    node.link = { ...node.link, anchorTargetId: value || undefined };
-  } else if (field === 'href' && isTextNode(node) && node.link !== undefined) {
-    node.link = { ...node.link, href: value };
-  } else if (field === 'openInNewTab' && isTextNode(node) && node.link !== undefined) {
-    node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
-  } else if (field === 'targetPageId' && isTextNode(node) && node.link !== undefined) {
-    node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
-  } else if (field === 'pageAnchorId' && isTextNode(node) && node.link !== undefined) {
-    node.link = { ...node.link, pageAnchorId: (value as NodeId) || undefined };
-  } else if (field === 'src' && isMediaNode(node) && node.subtype === 'image') {
-    node.src = value;
-  } else if (field === 'alt' && isMediaNode(node) && node.subtype === 'image') {
-    node.alt = value;
-  } else if (isBorderColorField(field) && (isMediaNode(node) || (isTextNode(node) && node.subtype === 'code') || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
-    node.style ??= {};
-    node.style[field] = value || undefined;
-  } else if (isBorderWidthField(field) && (isMediaNode(node) || (isTextNode(node) && node.subtype === 'code') || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
-    node.style ??= {};
-    node.style[field] = value ? parseUnitValue(value) : undefined;
-  } else if (isBorderRadiusField(field) && (isMediaNode(node) || (isTextNode(node) && node.subtype === 'code') || (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined))) {
-    node.style ??= {};
-    node.style[field] = value ? parseUnitValue(value) : undefined;
-  } else if (isShadowStyleField(field) && (isTextNode(node) || isMediaNode(node))) {
-    node.style ??= {};
-    if (field === 'shadowColor') {
-      node.style.shadowColor = value || undefined;
-    } else {
-      const parsed = parseShadowLength(value);
-      if (parsed != null) {
-        node.style[field] = parsed;
-      }
-    }
-  }
-
   return { ...state, document: normalizeDocumentFontState(document) };
 }
 
@@ -338,19 +221,6 @@ export function updateRectField(
     rect.y.base = parseUnitValue(raw);
   }
   return { ...state, document };
-}
-
-function normalizeTextDecorationLine(
-  value: string,
-): NonNullable<TextNode['style']>['textDecorationLine'] {
-  switch (value) {
-    case 'underline':
-    case 'line-through':
-    case 'underline line-through':
-      return value;
-    default:
-      return 'none';
-  }
 }
 
 export function updateStickyField(
@@ -442,16 +312,6 @@ export function updateWrapperStyleField(
 function parseShadowLength(value: string) {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function isBorderColorField(field: EditorTextField | WrapperStyleField): field is BorderColorField {
-  return (
-    field === 'borderColor' ||
-    field === 'borderTopColor' ||
-    field === 'borderRightColor' ||
-    field === 'borderBottomColor' ||
-    field === 'borderLeftColor'
-  );
 }
 
 function isBorderWidthField(field: EditorTextField | WrapperStyleField): field is BorderWidthField {

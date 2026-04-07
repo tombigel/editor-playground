@@ -51,7 +51,7 @@ Every feature is achievable through the API layer without the editor UI.
 | `reparentNodeDoc` | `(document, nodeId: NodeId, newParentId: NodeId) => DocumentModel` | Moves a node to a new parent; rejects invalid moves silently. |
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
-| `setNodeTextField` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Sets a text or style field on a leaf node. |
+| `setNodeTextField` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
 
 ### Node selectors
 
@@ -138,8 +138,8 @@ These unions show up repeatedly across `documentApi` signatures and returned dat
 | `setNodeRect.field` | `'x' \| 'y' \| 'width' \| 'height'` | `x`/`y` are position; `width`/`height` accept the same string formats the model stores. |
 | `StickyDefinition.target` | `'self' \| 'contentWrapper'` | `contentWrapper` is meaningful for wrappers only; leaves effectively use `self`. |
 | `StickyDefinition.durationMode` | `'auto' \| 'custom'` | `auto` derives distance from available space; `custom` uses authored duration values. |
-| `NodeTextField` | `'name' \| 'content' \| 'htmlTag' \| 'label' \| 'linkType' \| 'anchorTargetId' \| 'href' \| 'openInNewTab' \| 'src' \| 'alt'` | Content / metadata fields for text-capable leaves, links, buttons, and images. |
-| `LinkKind` | `'anchor' \| 'external'` | Used by `linkType` on links and buttons. |
+| `NodeTextField` | `'name' \| 'content' \| 'htmlTag' \| 'lang' \| 'label' \| 'linkType' \| 'anchorTargetId' \| 'href' \| 'openInNewTab' \| 'targetPageId' \| 'pageAnchorId' \| 'src' \| 'alt' \| 'codeLanguage' \| 'codeTheme'` | Content / metadata fields for text-capable leaves, links, buttons, code blocks, and images. |
+| `LinkKind` | `'anchor' \| 'external' \| 'page'` | Used by `linkType` on links and buttons. |
 | `TextLeaf.htmlTag` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p' \| 'blockquote' \| 'div'` | Semantics for text leaves. |
 | `TypographyStyle.fontStyle` | `'normal' \| 'italic'` | Text, link, and button typography. |
 | `TypographyStyle.textDecorationLine` | `'none' \| 'underline' \| 'line-through' \| 'underline line-through'` | Supports combined underline + strikethrough. |
@@ -216,7 +216,7 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 
 `editorApi` also re-exports these for convenience:
 
-`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`
+`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `setNodeTextField`
 
 ### Exported types
 
