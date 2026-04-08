@@ -1678,6 +1678,8 @@ While editing, the rich node gets visible stage chrome:
 - a localized edit outline around the text box
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it
+- toolbar and link-popover interactions stay inside edit mode instead of being treated as outside clicks
+- authored text remains directly mouse-selectable inside the stage edit surface
 
 ### Keyboard shortcuts
 

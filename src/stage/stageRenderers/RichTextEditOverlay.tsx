@@ -37,7 +37,19 @@ import {
 
 function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
   const style = richLeafStyle(leaf as RichTextLeaf);
-  return <span {...attributes} style={style}>{children}</span>;
+  return (
+    <span
+      {...attributes}
+      style={{
+        ...style,
+        pointerEvents: 'auto',
+        userSelect: 'text',
+        WebkitUserSelect: 'text',
+      }}
+    >
+      {children}
+    </span>
+  );
 }
 
 function renderEditElement(
@@ -49,13 +61,34 @@ function renderEditElement(
     const link = el as RichTextLink;
     const href = getLinkHref(link, documentModel);
     return (
-      <a href={href} style={{ textDecoration: 'underline', cursor: 'text' }} {...attributes}>
+      <a
+        href={href}
+        style={{
+          textDecoration: 'underline',
+          cursor: 'text',
+          pointerEvents: 'auto',
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+        }}
+        {...attributes}
+      >
         {children}
       </a>
     );
   }
   const Tag = getRichTextBlockTag((el as RichTextBlock).type ?? 'div');
-  return <Tag {...attributes}>{children}</Tag>;
+  return (
+    <Tag
+      {...attributes}
+      style={{
+        pointerEvents: 'auto',
+        userSelect: 'text',
+        WebkitUserSelect: 'text',
+      }}
+    >
+      {children}
+    </Tag>
+  );
 }
 
 type LinkPopoverState = { open: false } | { open: true; href: string };
@@ -214,7 +247,12 @@ export function RichTextEditOverlay({
       <div
         ref={rootRef}
         data-stage-rich-edit-root="true"
-        style={{ position: 'relative', pointerEvents: 'auto' }}
+        style={{
+          position: 'relative',
+          pointerEvents: 'auto',
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
@@ -230,8 +268,16 @@ export function RichTextEditOverlay({
             zIndex: 220,
             transform: 'translateY(calc(-100% - 10px))',
             maxWidth: 'min(100%, 480px)',
+            pointerEvents: 'auto',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
           }}
           bodyClassName="flex flex-wrap items-center gap-2 px-3 py-2"
+          bodyStyle={{
+            pointerEvents: 'auto',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+          }}
           onPointerDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -296,19 +342,24 @@ export function RichTextEditOverlay({
             boxShadow: '0 0 0 1px color-mix(in srgb, var(--editor-accent) 22%, transparent)',
             pointerEvents: 'auto',
             cursor: 'text',
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
           }}
         >
-        <Editable
-          renderLeaf={renderEditLeaf}
-          renderElement={(props) => renderEditElement(props, documentModel)}
-          onKeyDown={handleKeyDown}
-          style={{
-            outline: 'none',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            minHeight,
-          }}
-        />
+          <Editable
+            renderLeaf={renderEditLeaf}
+            renderElement={(props) => renderEditElement(props, documentModel)}
+            onKeyDown={handleKeyDown}
+            style={{
+              outline: 'none',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              minHeight,
+              pointerEvents: 'auto',
+              userSelect: 'text',
+              WebkitUserSelect: 'text',
+            }}
+          />
         </div>
         {linkPopover.open && (
           <LinkInsertPopover
@@ -339,6 +390,7 @@ function ToolbarButton({
       size="sm"
       variant={active ? 'default' : 'outline'}
       aria-label={label}
+      style={{ pointerEvents: 'auto' }}
       onPointerDown={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -378,8 +430,10 @@ function LinkInsertPopover({
         zIndex: 230,
         transform: 'translateY(calc(-100% - 58px))',
         minWidth: 300,
+        pointerEvents: 'auto',
       }}
       bodyClassName="flex items-center gap-2 px-3 py-2"
+      bodyStyle={{ pointerEvents: 'auto' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, width: '100%' }}>
@@ -395,11 +449,16 @@ function LinkInsertPopover({
               onCancel();
             }
           }}
+          style={{
+            pointerEvents: 'auto',
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
+          }}
         />
-        <Button type="button" size="sm" variant="outline" onClick={onCancel}>
+        <Button type="button" size="sm" variant="outline" style={{ pointerEvents: 'auto' }} onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" size="sm">
+        <Button type="submit" size="sm" style={{ pointerEvents: 'auto' }}>
           Apply
         </Button>
       </form>

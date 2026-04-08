@@ -250,7 +250,7 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
-  it.fails('keeps rich edit mode active when the floating toolbar is clicked', async () => {
+  it('keeps rich edit mode active when the floating toolbar is clicked', async () => {
     const { document, richTextId } = createRichTextEditE2EDocument();
     await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
 
@@ -269,7 +269,7 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
-  it.fails('allows mouse text selection inside the rich text edit box', async () => {
+  it('allows mouse text selection inside the rich text edit box', async () => {
     const { document, richTextId } = createRichTextEditE2EDocument();
     await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
 
