@@ -63,14 +63,21 @@ export function richLeafStyle(leaf: RichTextLeaf): CSSProperties {
   const style: CSSProperties = {};
   if (leaf.bold) style.fontWeight = 'bold';
   if (leaf.italic) style.fontStyle = 'italic';
+  if (leaf.underline || leaf.strikethrough) {
+    style.textDecorationLine = [
+      leaf.underline ? 'underline' : '',
+      leaf.strikethrough ? 'line-through' : '',
+    ].filter(Boolean).join(' ') as CSSProperties['textDecorationLine'];
+  }
   if (leaf.color) style.color = leaf.color;
+  if (leaf.backgroundColor) style.backgroundColor = leaf.backgroundColor;
   if (leaf.fontFamily) style.fontFamily = leaf.fontFamily;
   if (leaf.fontSize) style.fontSize = leaf.fontSize;
   return style;
 }
 
 function richLeafKey(leaf: RichTextLeaf): string {
-  return `${leaf.text}|${leaf.bold ? 'b' : ''}${leaf.italic ? 'i' : ''}|${leaf.color ?? ''}|${leaf.fontFamily ?? ''}|${leaf.fontSize ?? ''}`;
+  return `${leaf.text}|${leaf.bold ? 'b' : ''}${leaf.italic ? 'i' : ''}${leaf.underline ? 'u' : ''}${leaf.strikethrough ? 's' : ''}|${leaf.color ?? ''}|${leaf.backgroundColor ?? ''}|${leaf.fontFamily ?? ''}|${leaf.fontSize ?? ''}`;
 }
 
 function richLinkKey(node: RichTextLink): string {

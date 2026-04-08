@@ -84,6 +84,7 @@ export function Stage({
 	onResizeEnd,
 	onStickyGeometryChange,
 	onUpdateRichContent,
+	onUpdateTextField,
 	onRegisterActivateRichEdit,
 	followLinkPopup,
 }: StageProps) {
@@ -476,7 +477,13 @@ export function Stage({
 				Tab selects components in stage order. Arrow keys move the selected
 				component by 1 pixel. Shift plus arrow keys move by 10 pixels.
 			</p>
-			<RichEditContext.Provider value={{ editingId, activateEdit, commitEdit, discardEdit }}>
+			<RichEditContext.Provider value={{
+				editingId,
+				activateEdit,
+				commitEdit,
+				updateTextField: (id, field, value) => onUpdateTextField?.(id, field, value),
+				discardEdit,
+			}}>
 			<StageScene
 				document={document}
 				selectedId={selectedId}

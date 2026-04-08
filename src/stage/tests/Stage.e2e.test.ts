@@ -76,7 +76,12 @@ describe('stage/Stage e2e', () => {
     }
 
     await page.goto(server.url);
-    await page.waitForSelector('.stage-shell');
+    try {
+      await page.waitForSelector('.stage-shell', { timeout: 5_000 });
+    } catch {
+      await page.reload();
+      await page.waitForSelector('.stage-shell', { timeout: 10_000 });
+    }
   }
 
   async function closeEditor() {
@@ -258,7 +263,8 @@ describe('stage/Stage e2e', () => {
     await editable.click();
     await page.keyboard.press('ControlOrMeta+A');
 
-    await page.getByRole('button', { name: 'Bold' }).click();
+    const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+    await toolbar.getByRole('button', { name: 'Bold' }).click();
 
     expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
     const persistedState = await readPersistedState();

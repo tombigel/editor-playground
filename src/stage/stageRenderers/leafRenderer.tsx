@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import type {
   ContainerNode,
   DocumentModel,
+  EditorTextField,
   NodeId,
   RichContent,
   ViewportMeasurement,
@@ -107,7 +108,7 @@ function StageLeaf({
   viewport: ViewportMeasurement;
   interactKeys?: Set<NodeId>;
 }) {
-  const { editingId, commitEdit, discardEdit } = useRichEditContext();
+  const { editingId, commitEdit, updateTextField, discardEdit } = useRichEditContext();
   const child = plan.node;
   const meshPlacement = plan.meshPlacement;
   const isAutoSticky =
@@ -187,6 +188,7 @@ function StageLeaf({
               document={document}
               minHeight={leafBaseHeight}
               onCommit={commitEdit}
+              onUpdateTextField={updateTextField}
               onDiscard={discardEdit}
             />
           )
@@ -233,6 +235,7 @@ function LeafRichBody({
   document,
   minHeight,
   onCommit,
+  onUpdateTextField,
   onDiscard,
 }: {
   child: { id: NodeId; contentType: string; subtype: string; content: unknown; htmlTag?: string };
@@ -241,6 +244,7 @@ function LeafRichBody({
   document: DocumentModel;
   minHeight: string;
   onCommit: (id: NodeId, content: RichContent) => void;
+  onUpdateTextField: (id: NodeId, field: EditorTextField, value: string) => void;
   onDiscard: () => void;
 }) {
   if (isEditing) {
@@ -252,6 +256,7 @@ function LeafRichBody({
         minHeight={minHeight}
         document={document}
         onCommit={onCommit}
+        onUpdateTextField={onUpdateTextField}
         onDiscard={onDiscard}
       />
     );

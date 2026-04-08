@@ -13,14 +13,26 @@ describe('stage/RichTextEditOverlay', () => {
         content={CONTENT}
         minHeight="96px"
         onCommit={() => {}}
+        onUpdateTextField={() => {}}
         onDiscard={() => {}}
       />,
     );
 
     expect(markup).toContain('data-stage-rich-toolbar="true"');
+    expect(markup).toContain('aria-label="Font family"');
+    expect(markup).toContain('aria-label="Font size"');
     expect(markup).toContain('aria-label="Bold"');
     expect(markup).toContain('aria-label="Italic"');
+    expect(markup).toContain('aria-label="Underline"');
+    expect(markup).toContain('aria-label="Strikethrough"');
+    expect(markup).toContain('aria-label="Text color"');
+    expect(markup).toContain('aria-label="Highlight color"');
     expect(markup).toContain('aria-label="Link"');
+    expect(markup).toContain('aria-label="Convert to text block"');
+    expect(markup).toContain('aria-label="Ordered list marker"');
+    expect(markup).toContain('aria-label="Unordered list marker"');
+    expect(markup).toContain('aria-label="Line height"');
+    expect(markup).toContain('aria-label="Block spacing"');
     expect(markup).toContain('aria-label="Discard changes"');
     expect(markup).toContain('aria-label="Save changes"');
     expect(markup).not.toContain('Rich text edit');

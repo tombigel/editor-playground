@@ -63,6 +63,7 @@ export type ShadowStyleField =
   | 'shadowOffsetY';
 export type LeafTypographyField =
   | 'color'
+  | 'backgroundColor'
   | 'fontFamily'
   | 'fontSize'
   | 'fontWeight'
@@ -87,7 +88,7 @@ export type ButtonStyleField =
   | BorderWidthField
   | BorderRadiusField
   | ShadowStyleField;
-export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField;
+export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField | 'blockGap';
 export type WrapperStyleField =
   | 'background'
   | BorderColorField
@@ -109,7 +110,10 @@ import type { Text as SlateText, Element as SlateElement } from 'slate';
 export interface RichTextLeaf extends SlateText {
   bold?: boolean;
   italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
   color?: string;
+  backgroundColor?: string;
   fontFamily?: string;
   fontSize?: string;
 }

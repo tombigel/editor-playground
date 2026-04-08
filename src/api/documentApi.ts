@@ -350,6 +350,12 @@ export function setTextNodeContentDoc(
     return next;
   }
 
+  if (field === 'backgroundColor' && isTextNode(node)) {
+    node.style ??= {};
+    node.style.background = value || undefined;
+    return next;
+  }
+
   if (field === 'fontFamily' && isTextNode(node)) {
     node.style ??= {};
     const trimmedValue = value.trim();
@@ -420,6 +426,16 @@ export function setTextNodeContentDoc(
       return next;
     }
     return document;
+  }
+
+  if (field === 'blockGap' && isTextNode(node) && node.subtype === 'rich') {
+    const parsed = Number.parseFloat(value);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return document;
+    }
+    node.style ??= {};
+    node.style.blockGap = parsed;
+    return next;
   }
 
   if (field === 'direction' && isTextNode(node)) {

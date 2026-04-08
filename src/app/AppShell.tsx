@@ -977,6 +977,9 @@ export function AppShell({
 							onUpdateRichContent={(id, content) =>
 								dispatch({ type: 'setRichContent', id, content })
 							}
+							onUpdateTextField={(id, field, value) =>
+								dispatch({ type: "text", id, field, value })
+							}
 							onRegisterActivateRichEdit={(fn) => { activateRichEditRef.current = fn; }}
 							onStickyGeometryChange={onStickyGeometryChange}
 							followLinkPopup={

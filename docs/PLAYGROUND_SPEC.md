@@ -1748,13 +1748,17 @@ undo history. Keystrokes are not propagated to the document until the editor exi
 
 While editing, the rich node gets visible stage chrome:
 
-- a floating toolbar built from the shared floating panel shell and inspector-style icon buttons with tooltips
+- a floating toolbar built from the shared floating panel shell plus compact shared inputs/selects and inspector-style icon buttons
 - the stage selection outline is hidden while the rich node is actively being edited
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it
 - toolbar and link-popover interactions stay inside edit mode instead of being treated as outside clicks
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
+- the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, ordered-list controls, unordered-list controls, line height, and block spacing
+- block, `ol`, and `ul` controls are block-scoped rather than inline-scoped: they affect the containing block or touched blocks, never by splitting around the inline selection
+- multi-block block/list conversions collapse the touched blocks into one resulting block or list container
+- converting touched blocks to `ul` / `ol` treats original block boundaries as hard line breaks before item creation
 
 ### Keyboard shortcuts
 
@@ -1768,9 +1772,9 @@ While editing, the rich node gets visible stage chrome:
 
 ### Inline link insertion (`Cmd+K`)
 
-Pressing `Cmd+K` on a selection with no existing link opens a small floating popover with a URL
-input. Submitting inserts an `external`-type `RichTextLink` wrapping the selection. Pressing
-`Cmd+K` on a selection that already contains a link removes it.
+Pressing `Cmd+K` on a selection with no existing link opens a small floating link popover that can
+author `external`, `anchor`, or `page` links using the same link-type model as the rest of the
+text system. Pressing `Cmd+K` on a selection that already contains a link removes it.
 
 ### Implementation files
 

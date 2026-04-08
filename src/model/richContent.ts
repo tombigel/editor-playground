@@ -82,7 +82,10 @@ function normalizeLeaf(node: unknown): RichTextLeaf | null {
     text: node.text,
     ...(node.bold === true ? { bold: true } : {}),
     ...(node.italic === true ? { italic: true } : {}),
+    ...(node.underline === true ? { underline: true } : {}),
+    ...(node.strikethrough === true ? { strikethrough: true } : {}),
     ...(typeof node.color === 'string' ? { color: node.color } : {}),
+    ...(typeof node.backgroundColor === 'string' ? { backgroundColor: node.backgroundColor } : {}),
     ...(typeof node.fontFamily === 'string' ? { fontFamily: node.fontFamily } : {}),
     ...(typeof node.fontSize === 'string' ? { fontSize: node.fontSize } : {}),
   };
@@ -138,7 +141,10 @@ export function createRichTextLeaf(text: string, marks?: Partial<RichTextLeaf>):
     text,
     ...(marks?.bold ? { bold: true } : {}),
     ...(marks?.italic ? { italic: true } : {}),
+    ...(marks?.underline ? { underline: true } : {}),
+    ...(marks?.strikethrough ? { strikethrough: true } : {}),
     ...(typeof marks?.color === 'string' ? { color: marks.color } : {}),
+    ...(typeof marks?.backgroundColor === 'string' ? { backgroundColor: marks.backgroundColor } : {}),
     ...(typeof marks?.fontFamily === 'string' ? { fontFamily: marks.fontFamily } : {}),
     ...(typeof marks?.fontSize === 'string' ? { fontSize: marks.fontSize } : {}),
   };

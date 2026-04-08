@@ -6,8 +6,10 @@ export type StartedServer = {
 };
 
 export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
+  await warmViteOptimizeDeps();
+
   const url = `http://127.0.0.1:${port}`;
-  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
+  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port), '--strictPort', '--force'], {
     cwd: process.cwd(),
     stdio: 'pipe',
     detached: true,
@@ -30,6 +32,37 @@ export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
     url,
     close: () => stopServer(server),
   };
+}
+
+async function warmViteOptimizeDeps() {
+  const optimizer = spawn('npx', ['vite', 'optimize', '--force'], {
+    cwd: process.cwd(),
+    stdio: 'pipe',
+    env: {
+      ...process.env,
+      CI: '1',
+    },
+  });
+
+  let lastOutput = '';
+  const captureOutput = (chunk: Buffer) => {
+    lastOutput = `${lastOutput}${chunk.toString()}`.slice(-4000);
+  };
+
+  optimizer.stdout.on('data', captureOutput);
+  optimizer.stderr.on('data', captureOutput);
+
+  const exitCode = await new Promise<number | null>((resolve, reject) => {
+    optimizer.once('error', reject);
+    optimizer.once('exit', resolve);
+  });
+
+  optimizer.stdout.off('data', captureOutput);
+  optimizer.stderr.off('data', captureOutput);
+
+  if (exitCode !== 0) {
+    throw new Error(`Vite dependency optimization failed with code ${exitCode}\n${lastOutput}`);
+  }
 }
 
 async function waitForServer(url: string, server: ChildProcessWithoutNullStreams) {
