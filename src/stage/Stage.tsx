@@ -99,6 +99,7 @@ export function Stage({
 		useState<SingleSelectionOverlay | null>(null);
 	const [multiSelectionBounds, setMultiSelectionBounds] =
 		useState<MultiSelectionBounds | null>(null);
+	const pendingRichEditIdRef = useRef<string | null>(null);
 	const lastGeometryRef = useRef<{
 		nodeSizes: MeasuredNodeSizes;
 		viewportWidth: number;
@@ -283,6 +284,7 @@ export function Stage({
 
 	return (
 		// biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor stage needs aria-activedescendant for selection tracking
+		// biome-ignore lint/a11y/useKeyWithClickEvents: second-click rich edit activation mirrors pointer-driven stage selection
 		<section
 			ref={handleStageRef}
 			className="stage-shell editor-scrollbar"
@@ -294,15 +296,31 @@ export function Stage({
 			}
 			data-stage-focus-scope="true"
 			onFocus={onStageFocus}
-			onDoubleClick={(event) => {
+			onClick={(event) => {
 				const target = event.target as HTMLElement;
+				if (target.closest('[data-stage-resize-handle="true"]')) {
+					return;
+				}
 				const nodeElement = target.closest<HTMLElement>("[data-node-id]");
 				const nodeId = nodeElement?.dataset.nodeId;
 				const node = nodeId ? document.nodes[nodeId] : null;
-				if (node && isTextNode(node) && node.subtype === 'rich') {
+				if (
+					node &&
+					isTextNode(node) &&
+					node.subtype === 'rich' &&
+					pendingRichEditIdRef.current === node.id &&
+					!editingId &&
+					!event.metaKey &&
+					!event.ctrlKey &&
+					!event.shiftKey &&
+					!event.altKey
+				) {
+					pendingRichEditIdRef.current = null;
 					event.stopPropagation();
 					activateEdit(node.id);
+					return;
 				}
+				pendingRichEditIdRef.current = null;
 			}}
 			onDragStartCapture={(event) => {
 				event.preventDefault();
@@ -326,6 +344,16 @@ export function Stage({
 				const nodeElement = target.closest<HTMLElement>("[data-node-id]");
 				const nodeId = nodeElement?.dataset.nodeId;
 				const node = nodeId ? document.nodes[nodeId] : null;
+				pendingRichEditIdRef.current =
+					node &&
+					isTextNode(node) &&
+					node.subtype === 'rich' &&
+					selectedId === node.id &&
+					selectedIds.length === 1 &&
+					mode === 'replace' &&
+					!editingId
+						? node.id
+						: null;
 
 				if (
 					node &&
@@ -438,6 +466,7 @@ export function Stage({
 				if (resizeState) {
 					onResizeEnd(resizeState.nodeId);
 				}
+				pendingRichEditIdRef.current = null;
 				setMarqueeState(null);
 				setResizeState(null);
 			}}

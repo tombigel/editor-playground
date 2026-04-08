@@ -65,6 +65,49 @@ export function renderLeaf({
   viewport: ViewportMeasurement;
   interactKeys?: Set<NodeId>;
 }) {
+  return (
+    <StageLeaf
+      document={document}
+      plan={plan}
+      selectedId={selectedId}
+      selectedIds={selectedIds}
+      previewSticky={previewSticky}
+      dragSourceIds={dragSourceIds}
+      registerDraggableNode={registerDraggableNode}
+      registration={registration}
+      measuredNodeSizes={measuredNodeSizes}
+      viewport={viewport}
+      interactKeys={interactKeys}
+    />
+  );
+}
+
+function StageLeaf({
+  document,
+  plan,
+  selectedId,
+  selectedIds,
+  previewSticky,
+  dragSourceIds,
+  registerDraggableNode,
+  registration,
+  measuredNodeSizes,
+  viewport,
+  interactKeys,
+}: {
+  document: DocumentModel;
+  plan: RenderLeafPlanNode;
+  selectedId: NodeId | null;
+  selectedIds: NodeId[];
+  previewSticky: boolean;
+  dragSourceIds: NodeId[];
+  registerDraggableNode: StageNodeRegistration;
+  registration?: StageStickyRegistration;
+  measuredNodeSizes: RenderMeasuredNodeSizes;
+  viewport: ViewportMeasurement;
+  interactKeys?: Set<NodeId>;
+}) {
+  const { editingId, commitEdit, discardEdit } = useRichEditContext();
   const child = plan.node;
   const meshPlacement = plan.meshPlacement;
   const isAutoSticky =
@@ -83,6 +126,9 @@ export function renderLeaf({
   const trackWidth = getTrackCssWidth(child);
   const isImageNode = child.contentType === 'media' && child.subtype === 'image';
   const isRichTextNode = child.contentType === 'text' && child.subtype === 'rich';
+  const isEditingRichTextNode = isRichTextNode && editingId === child.id;
+  const contentPresentationStyle = styleRecordToReactStyle(getLeafInlineStyle(child));
+  const leafBodyStyle = isImageNode ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined;
   const leafBody = (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor canvas node, not web content
     <div
@@ -106,13 +152,15 @@ export function renderLeaf({
               alignSelf: intrinsicHeightLeaf ? 'start' : meshPlacement?.alignSelf,
               width: leafBaseWidth,
             }),
-        height: leafBaseHeight,
+        height: isEditingRichTextNode ? 'auto' : leafBaseHeight,
+        minHeight: isEditingRichTextNode ? leafBaseHeight : undefined,
         aspectRatio:
           !('unit' in child.rect.height.base.parsed) &&
           child.rect.height.base.parsed.keyword === 'aspect-ratio'
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
         position: previewSticky && (isSelfStickyTrack || isAutoSticky) ? 'sticky' : 'relative',
+        ...(isEditingRichTextNode ? { zIndex: STICKY_LAYER_Z_INDEX + 1 } : {}),
         ...(previewSticky && child.sticky?.enabled
           ? getStageStickyCssProperties(child.sticky, { includeZIndex: true })
           : {}),
@@ -120,18 +168,30 @@ export function renderLeaf({
     >
       <div
         className="stage-leaf-body"
-        style={isImageNode ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined}
+        style={{
+          ...(leafBodyStyle ?? {}),
+          ...(isEditingRichTextNode
+            ? {
+                height: 'auto',
+                minHeight: leafBaseHeight,
+              }
+            : {}),
+        }}
       >
         {isRichTextNode
           ? (
             <LeafRichBody
               child={child}
-              contentStyle={styleRecordToReactStyle(getLeafInlineStyle(child))}
+              contentStyle={contentPresentationStyle}
+              isEditing={isEditingRichTextNode}
               document={document}
+              minHeight={leafBaseHeight}
+              onCommit={commitEdit}
+              onDiscard={discardEdit}
             />
           )
           : renderLeafContent(child, {
-            contentStyle: isImageNode ? undefined : styleRecordToReactStyle(getLeafInlineStyle(child)),
+            contentStyle: isImageNode ? undefined : contentPresentationStyle,
             imageClassName: 'stage-image',
             imagePlaceholderClassName: 'image-placeholder',
             imageDraggable: false,
@@ -169,23 +229,30 @@ export function renderLeaf({
 function LeafRichBody({
   child,
   contentStyle,
+  isEditing,
   document,
+  minHeight,
+  onCommit,
+  onDiscard,
 }: {
   child: { id: NodeId; contentType: string; subtype: string; content: unknown; htmlTag?: string };
   contentStyle?: CSSProperties;
+  isEditing: boolean;
   document: DocumentModel;
+  minHeight: string;
+  onCommit: (id: NodeId, content: RichContent) => void;
+  onDiscard: () => void;
 }) {
-  const { editingId, commitEdit, discardEdit } = useRichEditContext();
-  if (editingId === child.id) {
+  if (isEditing) {
     return (
       <RichTextEditOverlay
         nodeId={child.id}
         content={child.content as RichContent}
         contentStyle={contentStyle}
-
+        minHeight={minHeight}
         document={document}
-        onCommit={commitEdit}
-        onDiscard={discardEdit}
+        onCommit={onCommit}
+        onDiscard={onDiscard}
       />
     );
   }

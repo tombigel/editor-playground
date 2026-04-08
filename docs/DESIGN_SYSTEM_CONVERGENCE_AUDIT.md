@@ -98,6 +98,9 @@ A surface is only `done` when all applicable items are true:
 
 ## Cross-Cutting Findings
 
+- Stage rich-text edit chrome:
+  The on-stage rich-text editing surface remains a specialized stage overlay, but it now consumes shared `FloatingPanelShell`, `Button`, and `Input` primitives instead of bespoke floating-shell markup. Reusing the richer link-type picker UI is still a follow-up; the current overlay keeps a localized URL-entry popover while staying on shared DS surfaces.
+
 - Duplicated floating shell pattern:
   `PopoverSurface` or floating shell + `EditorPanelHeader` + scrollable body appears in the section template popover, layers panel, pages panel, focused panel, and dialog-like editor surfaces. This should be formalized as a shared shell composite in `Wave A`.
 - Duplicated header pattern:

@@ -1652,24 +1652,32 @@ Text nodes with `subtype: 'rich'` support inline editing directly on the stage c
 
 ### Activation
 
-Double-clicking a rich text node enters edit mode. The static `renderLeafContent` output is
-replaced by a Slate `<Editable>` at the same position and with the same typography styles.
-The editor now round-trips block-rooted `RichContent`, so existing headings, blockquotes, and
-paragraph blocks are preserved during editing.
+The first plain click still selects the node. A second plain click on the already-selected rich
+text node enters edit mode. The static `renderLeafContent` output is replaced by a Slate
+`<Editable>` at the same position and with the same typography styles. The editor now round-trips
+block-rooted `RichContent`, so existing headings, blockquotes, and paragraph blocks are preserved
+during editing.
 
 ### Edit mode lifecycle
 
 ```text
-Idle ──dblclick──► Editing ──blur──► Commit ──► Idle
-                         └── Escape ──► Discard ──► Idle
+Idle ──select──► Selected ──second plain click──► Editing ──outside click / Cmd+Enter / Save──► Commit ──► Idle
+                                                            └── Escape / Cancel ──► Discard ──► Idle
 ```
 
-- **Commit** (blur): serialises the Slate editor state back to `RichContent` and dispatches a
+- **Commit**: serialises the Slate editor state back to `RichContent` and dispatches a
   `setRichContent` action, which calls `setNodeRichContent()` in `documentApi.ts`.
-- **Discard** (Escape): restores the original content; the document model is not mutated.
+- **Discard**: restores the original content; the document model is not mutated.
 
 Slate manages its own micro-undo while editing. On commit, one entry is pushed to the document-level
 undo history. Keystrokes are not propagated to the document until the editor exits.
+
+While editing, the rich node gets visible stage chrome:
+
+- a floating toolbar built from the shared floating panel shell and button/input primitives
+- a localized edit outline around the text box
+- the node height switches to auto with a minimum height equal to the authored stage height, so
+  vertical overflow grows the component instead of clipping it
 
 ### Keyboard shortcuts
 
@@ -1678,7 +1686,7 @@ undo history. Keystrokes are not propagated to the document until the editor exi
 | `Cmd/Ctrl+B` | Toggle bold on the current selection                               |
 | `Cmd/Ctrl+I` | Toggle italic on the current selection                             |
 | `Cmd/Ctrl+K` | Insert an external link (or remove if selection is already a link) |
-| `Enter`      | Currently suppressed — multi-block authoring UI is deferred        |
+| `Cmd/Ctrl+Enter` | Commit changes and exit edit mode                              |
 | `Escape`     | Discard changes and exit edit mode                                 |
 
 ### Inline link insertion (`Cmd+K`)
@@ -1691,7 +1699,7 @@ input. Submitting inserts an `external`-type `RichTextLink` wrapping the selecti
 
 | File                                               | Role                                                                              |
 | -------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `src/stage/stageRenderers/RichTextEditOverlay.tsx` | Slate editor component, keyboard handlers, link popover                           |
+| `src/stage/stageRenderers/RichTextEditOverlay.tsx` | Slate editor component, toolbar chrome, keyboard handlers, outside-click commit, link popover |
 | `src/stage/useRichTextEditMode.ts`                 | `editingId` state hook                                                            |
 | `src/stage/richEditContext.tsx`                    | React context threading edit state through the stage tree                         |
 | `src/render/richTextEditor.ts`                     | Adapter: `createRichEditor`, `toSlateValue`/`fromSlateValue`, mark/link utilities |

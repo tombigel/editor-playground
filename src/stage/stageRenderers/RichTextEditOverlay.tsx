@@ -1,14 +1,19 @@
 import {
   type CSSProperties,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type KeyboardEvent,
   type FormEvent,
 } from 'react';
-import { Editor } from 'slate';
+import { Bold, Check, Italic, Link2, X } from 'lucide-react';
 import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
+import { Button } from '@/components/ui/button';
+import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
+import { Input } from '@/components/ui/input';
 import { getLinkHref } from '../../model/links';
 import type {
   DocumentModel,
@@ -23,9 +28,11 @@ import {
   createRichEditor,
   fromSlateValue,
   insertLink,
+  isMarkActive,
   isLinkActive,
   removeLink,
   toSlateValue,
+  toggleMark,
 } from '../../render/richTextEditor';
 
 function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
@@ -35,12 +42,12 @@ function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
 
 function renderEditElement(
   { attributes, children, element }: RenderElementProps,
-  document: DocumentModel | undefined,
+  documentModel: DocumentModel | undefined,
 ) {
   const el = element as RichTextLink | RichTextBlock | { type?: string };
   if ('type' in el && el.type === 'link') {
     const link = el as RichTextLink;
-    const href = getLinkHref(link, document);
+    const href = getLinkHref(link, documentModel);
     return (
       <a href={href} style={{ textDecoration: 'underline', cursor: 'text' }} {...attributes}>
         {children}
@@ -57,31 +64,56 @@ export function RichTextEditOverlay({
   nodeId,
   content,
   contentStyle,
-  document,
+  minHeight,
+  document: documentModel,
   onCommit,
   onDiscard,
 }: {
   nodeId: NodeId;
   content: RichContent;
   contentStyle?: CSSProperties;
+  minHeight?: string;
   document?: DocumentModel;
   onCommit: (id: NodeId, content: RichContent) => void;
   onDiscard: () => void;
 }) {
   const editor = useMemo(() => createRichEditor(), []);
   const initialValue = useMemo(() => toSlateValue(content), [content]);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [linkPopover, setLinkPopover] = useState<LinkPopoverState>({ open: false });
-  const [blurEnabled, setBlurEnabled] = useState(false);
+  const [, setSelectionRevision] = useState(0);
 
   useEffect(() => {
     // Focus the editor after mount. Use rAF to ensure the DOM is ready and
-    // any blur from the triggering click has already settled.
+    // any selection click that entered edit mode has already settled.
     const id = requestAnimationFrame(() => {
       try { ReactEditor.focus(editor); } catch {}
-      setBlurEnabled(true);
     });
     return () => cancelAnimationFrame(id);
   }, [editor]);
+
+  const commitCurrentContent = useCallback(() => {
+    onCommit(nodeId, fromSlateValue(editor.children));
+  }, [editor, nodeId, onCommit]);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      const root = rootRef.current;
+      if (!root) {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof Node) || root.contains(target)) {
+        return;
+      }
+      commitCurrentContent();
+    }
+
+    globalThis.document?.addEventListener('pointerdown', handlePointerDown, true);
+    return () => {
+      globalThis.document?.removeEventListener('pointerdown', handlePointerDown, true);
+    };
+  }, [commitCurrentContent]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -94,39 +126,37 @@ export function RichTextEditOverlay({
         onDiscard();
         return;
       }
-      if (event.key === 'Enter') {
+      const isMod = event.metaKey || event.ctrlKey;
+      if (isMod && event.key === 'Enter') {
         event.preventDefault();
+        commitCurrentContent();
         return;
       }
-      const isMod = event.metaKey || event.ctrlKey;
       if (isMod && event.key === 'b') {
         event.preventDefault();
         toggleMark(editor, 'bold');
+        setSelectionRevision((revision) => revision + 1);
         return;
       }
       if (isMod && event.key === 'i') {
         event.preventDefault();
         toggleMark(editor, 'italic');
+        setSelectionRevision((revision) => revision + 1);
         return;
       }
       if (isMod && event.key === 'k') {
         event.preventDefault();
         if (isLinkActive(editor)) {
           removeLink(editor);
+          setSelectionRevision((revision) => revision + 1);
         } else {
           setLinkPopover({ open: true, href: '' });
         }
         return;
       }
     },
-    [editor, onDiscard, linkPopover.open],
+    [commitCurrentContent, editor, onDiscard, linkPopover.open],
   );
-
-  const handleBlur = useCallback(() => {
-    if (!blurEnabled) return; // ignore spurious blur before initial focus settles
-    if (linkPopover.open) return; // don't commit while popover is open
-    onCommit(nodeId, fromSlateValue(editor.children));
-  }, [blurEnabled, editor, nodeId, onCommit, linkPopover.open]);
 
   const handleLinkSubmit = useCallback(
     (href: string) => {
@@ -137,29 +167,149 @@ export function RichTextEditOverlay({
           href: href.trim(),
           openInNewTab: false,
         });
+        setSelectionRevision((revision) => revision + 1);
       }
       setLinkPopover({ open: false });
+      requestAnimationFrame(() => {
+        try { ReactEditor.focus(editor); } catch {}
+      });
     },
     [editor],
   );
 
+  const handleMarkAction = useCallback((mark: 'bold' | 'italic') => {
+    toggleMark(editor, mark);
+    setSelectionRevision((revision) => revision + 1);
+    requestAnimationFrame(() => {
+      try { ReactEditor.focus(editor); } catch {}
+    });
+  }, [editor]);
+
+  const handleLinkAction = useCallback(() => {
+    if (isLinkActive(editor)) {
+      removeLink(editor);
+      setSelectionRevision((revision) => revision + 1);
+      requestAnimationFrame(() => {
+        try { ReactEditor.focus(editor); } catch {}
+      });
+      return;
+    }
+    setLinkPopover({ open: true, href: '' });
+  }, [editor]);
+
+  const boldActive = isMarkActive(editor, 'bold');
+  const italicActive = isMarkActive(editor, 'italic');
+  const linkActive = isLinkActive(editor);
+
   return (
-    <Slate editor={editor} initialValue={initialValue}>
+    <Slate
+      editor={editor}
+      initialValue={initialValue}
+      onChange={() => {
+        setSelectionRevision((revision) => revision + 1);
+      }}
+    >
       {/* biome-ignore lint/a11y/noStaticElementInteractions: editor canvas overlay — stops propagation to drag layer */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: editor canvas overlay — stops propagation to drag layer */}
       <div
-        style={contentStyle}
+        ref={rootRef}
+        data-stage-rich-edit-root="true"
+        style={{ position: 'relative', pointerEvents: 'auto' }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
       >
+        <FloatingPanelShell
+          suppressPopover
+          open
+          positionMode="absolute"
+          data-stage-rich-toolbar="true"
+          style={{
+            top: 0,
+            left: 0,
+            zIndex: 220,
+            transform: 'translateY(calc(-100% - 10px))',
+            maxWidth: 'min(100%, 480px)',
+          }}
+          bodyClassName="flex flex-wrap items-center gap-2 px-3 py-2"
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+        >
+          <span
+            style={{
+              marginRight: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'var(--editor-utility-text-strong)',
+            }}
+          >
+            Rich text edit
+          </span>
+          <ToolbarButton
+            label="Bold"
+            icon={<Bold size={14} />}
+            active={boldActive}
+            onActivate={() => handleMarkAction('bold')}
+          />
+          <ToolbarButton
+            label="Italic"
+            icon={<Italic size={14} />}
+            active={italicActive}
+            onActivate={() => handleMarkAction('italic')}
+          />
+          <ToolbarButton
+            label={linkActive ? 'Unlink' : 'Link'}
+            icon={<Link2 size={14} />}
+            active={linkActive || linkPopover.open}
+            onActivate={handleLinkAction}
+          />
+          <span
+            style={{
+              marginLeft: 'auto',
+              fontSize: 10,
+              color: 'var(--editor-utility-text-muted)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Cmd/Ctrl+Enter saves
+          </span>
+          <Button type="button" size="sm" variant="outline" onClick={onDiscard}>
+            <X size={14} />
+            Cancel
+          </Button>
+          <Button type="button" size="sm" onClick={commitCurrentContent}>
+            <Check size={14} />
+            Save
+          </Button>
+        </FloatingPanelShell>
+        <div
+          data-stage-rich-edit-box="true"
+          style={{
+            ...contentStyle,
+            minHeight,
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: '1px solid var(--editor-accent)',
+            background: 'color-mix(in srgb, var(--editor-bg-surface, #ffffff) 96%, var(--editor-accent) 4%)',
+            boxShadow: '0 0 0 1px color-mix(in srgb, var(--editor-accent) 22%, transparent)',
+            pointerEvents: 'auto',
+            cursor: 'text',
+          }}
+        >
         <Editable
           renderLeaf={renderEditLeaf}
-          renderElement={(props) => renderEditElement(props, document)}
+          renderElement={(props) => renderEditElement(props, documentModel)}
           onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          style={{ outline: 'none', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+          style={{
+            outline: 'none',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            minHeight,
+          }}
         />
+        </div>
         {linkPopover.open && (
           <LinkInsertPopover
             initialHref={linkPopover.href}
@@ -169,6 +319,35 @@ export function RichTextEditOverlay({
         )}
       </div>
     </Slate>
+  );
+}
+
+function ToolbarButton({
+  label,
+  icon,
+  active,
+  onActivate,
+}: {
+  label: string;
+  icon: ReactNode;
+  active: boolean;
+  onActivate: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={active ? 'default' : 'outline'}
+      aria-label={label}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+      onClick={onActivate}
+    >
+      {icon}
+      {label}
+    </Button>
   );
 }
 
@@ -189,68 +368,41 @@ function LinkInsertPopover({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      onPointerDown={(e) => e.stopPropagation()}
+    <FloatingPanelShell
+      suppressPopover
+      open
+      positionMode="absolute"
       style={{
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        zIndex: 100,
-        marginTop: 4,
-        display: 'flex',
-        gap: 4,
-        padding: '6px 8px',
-        borderRadius: 6,
-        background: 'var(--editor-bg, #fff)',
-        border: '1px solid var(--editor-border-subtle, #e2e8f0)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-        minWidth: 260,
+        top: 0,
+        right: 0,
+        zIndex: 230,
+        transform: 'translateY(calc(-100% - 58px))',
+        minWidth: 300,
       }}
+      bodyClassName="flex items-center gap-2 px-3 py-2"
+      onPointerDown={(e) => e.stopPropagation()}
     >
-      <input
-        // biome-ignore lint/a11y/noAutofocus: popover must grab focus immediately
-        autoFocus
-        type="url"
-        placeholder="https://example.com"
-        value={href}
-        onChange={(e) => setHref(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); onCancel(); } }}
-        style={{
-          flex: 1,
-          fontSize: 12,
-          padding: '3px 6px',
-          borderRadius: 4,
-          border: '1px solid var(--editor-border-subtle, #e2e8f0)',
-          outline: 'none',
-          background: 'var(--editor-input-bg, #f8fafc)',
-          color: 'var(--editor-text, inherit)',
-        }}
-      />
-      <button
-        type="submit"
-        style={{
-          fontSize: 12,
-          padding: '3px 10px',
-          borderRadius: 4,
-          background: 'var(--editor-accent, #3b82f6)',
-          color: '#fff',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        Add
-      </button>
-    </form>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, width: '100%' }}>
+        <Input
+          autoFocus
+          type="url"
+          placeholder="https://example.com"
+          value={href}
+          onChange={(e) => setHref(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.stopPropagation();
+              onCancel();
+            }
+          }}
+        />
+        <Button type="button" size="sm" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" size="sm">
+          Apply
+        </Button>
+      </form>
+    </FloatingPanelShell>
   );
-}
-
-function toggleMark(editor: ReactEditor, mark: string) {
-  const marks = Editor.marks(editor);
-  const isActive = marks ? (marks as Record<string, unknown>)[mark] === true : false;
-  if (isActive) {
-    Editor.removeMark(editor, mark);
-  } else {
-    Editor.addMark(editor, mark, true);
-  }
 }
