@@ -20,9 +20,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P15-Q3`
-- Last completed quantum: `P15-Q2`
-- Next quantum after current: `P15-Q4`
+- Current quantum: `P15-Q4`
+- Last completed quantum: `P15-Q3`
+- Next quantum after current: `P15-Q5`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
   - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
@@ -184,7 +184,7 @@ Execution rules:
 
 - Objective:
   - Finish pure conversion behavior now that rich can represent code and lists.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/api/documentApi.ts`
   - `src/api/textConversion.ts`
@@ -193,9 +193,12 @@ Execution rules:
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
 - Read-first files and target lines:
-  - Current conversion helpers
-  - Current rich/list/code schemas
-  - Current conversion tests
+  - `src/api/textConversion.ts:1-203`
+  - `src/api/textMerge.ts:1-340`
+  - `src/api/tests/documentApi.test.ts:305-455`
+  - `src/api/tests/textMerge.test.ts:1-220`
+  - `docs/API.md:276-308`
+  - `docs/PLAYGROUND_SPEC.md:1306-1421`
 - Implementation notes:
   - Implement:
     - `text -> code`
@@ -224,10 +227,13 @@ Execution rules:
   - Focused conversion `vitest`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/api/tests/documentApi.test.ts src/api/tests/textMerge.test.ts`: passed, 2 files / 42 tests
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `15e79d0`
 - Open follow-ups carried forward:
+  - `P15-Q4` should add markdown import/export over the richer conversion matrix.
   - `P15-Q5` should consume these conversion rules through block-scoped rich editor controls.
 
 ## P15-Q4: GFM import/export and code language completion
