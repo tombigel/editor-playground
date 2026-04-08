@@ -5,9 +5,17 @@ import {
   getTextContent,
   normalizeRichContent,
 } from '../model/richContent';
+import {
+  createUnorderedListContentFromLines,
+  getListTextContent,
+  listContentToLines,
+  listContentToMarkdown,
+  normalizeListContent,
+} from '../model/listContent';
 import type {
   DocumentModel,
   HeadingTag,
+  ListContent,
   NodeId,
   RichContent,
   TextNode,
@@ -79,9 +87,12 @@ export function convertTextNodeDoc(
   return next;
 }
 
-export function flattenTextContent(content: string | RichContent): string {
+export function flattenTextContent(content: string | RichContent | ListContent): string {
   if (typeof content === 'string') {
     return content;
+  }
+  if ('type' in content && !Array.isArray(content)) {
+    return getListTextContent(content);
   }
   return getTextContent(content, { blockSeparator: '\n' });
 }
@@ -105,8 +116,16 @@ function convertTextContent(
   source: TextNode,
   targetSubtype: TextSubtype,
   mode: TextConversionMode,
-): string | RichContent {
+): string | RichContent | ListContent {
+  if (targetSubtype === 'list') {
+    return convertToListContent(source);
+  }
+
   if (targetSubtype === 'rich') {
+    if (source.subtype === 'list') {
+      return listContentToRichContent(normalizeListContent(source.content));
+    }
+
     if (typeof source.content !== 'string') {
       return normalizeRichContent(source.content);
     }
@@ -123,11 +142,41 @@ function convertTextContent(
     return source.content;
   }
 
+  if (source.subtype === 'list') {
+    const listContent = normalizeListContent(source.content);
+    if (targetSubtype === 'code') {
+      return listContentToMarkdown(listContent);
+    }
+    return getListTextContent(listContent);
+  }
+
   if (mode === 'auto' || mode === 'flatten') {
     return flattenTextContent(source.content);
   }
 
   return flattenTextContent(source.content);
+}
+
+function convertToListContent(source: TextNode): ListContent {
+  if (source.subtype === 'list') {
+    return normalizeListContent(source.content);
+  }
+
+  if (source.subtype === 'code') {
+    return createUnorderedListContentFromLines([source.content as string]);
+  }
+
+  const rawContent = typeof source.content === 'string'
+    ? source.content
+    : flattenTextContent(source.content);
+  const lines = rawContent.split(/\r?\n/);
+  return createUnorderedListContentFromLines(lines);
+}
+
+function listContentToRichContent(content: ListContent): RichContent {
+  return listContentToLines(content).map((line) =>
+    createRichTextBlock('paragraph', [createRichTextLeaf(line)]),
+  );
 }
 
 function getRichBlockTypeForTextNode(source: TextNode): 'paragraph' | 'blockquote' | 'div' | HeadingTag {
@@ -148,7 +197,7 @@ function getRichBlockTypeForTextNode(source: TextNode): 'paragraph' | 'blockquot
 
 function buildCodeMetadata(
   source: TextNode,
-  content: string | RichContent,
+  content: string | RichContent | ListContent,
 ): NonNullable<TextNode['code']> {
   const language = source.code?.language ?? 'plaintext';
   const theme = source.code?.theme ?? 'light';

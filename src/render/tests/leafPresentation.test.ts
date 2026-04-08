@@ -123,4 +123,15 @@ describe('render/leafPresentation', () => {
     expect(style.display).toBeUndefined();
     expect(style.width).toBeUndefined();
   });
+
+  it('keeps list text on the plain text presentation path even when block-only link fields leak in', () => {
+    const list = createTextNode('list', 'root');
+    list.link = { linkType: 'external', href: 'https://example.com' };
+
+    const style = getLeafInlineStyle(list);
+
+    expect(style.whiteSpace).toBe('pre-wrap');
+    expect(style.display).toBeUndefined();
+    expect(style.width).toBeUndefined();
+  });
 });

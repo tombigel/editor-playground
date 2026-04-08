@@ -74,7 +74,7 @@ export type InspectorPanelProps = {
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
   globalStickyElevation: boolean;
-  onSwitchTextSubtype: (nodeId: string, subtype: 'block' | 'rich' | 'code') => void;
+  onSwitchTextSubtype: (nodeId: string, subtype: import('../model/types').TextSubtype) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: () => void;

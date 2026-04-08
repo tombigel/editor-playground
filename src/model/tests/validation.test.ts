@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createContainerNode, createTextNode, createLinkTextNode, createButtonTextNode } from '../defaults';
 import { createPage } from '../pageDefaults';
-import type { RichContent, TextNode } from '../types';
+import type { ListContent, RichContent, TextNode } from '../types';
 import { getMainWrappers } from '../selectors';
 import { validateDocument, validateLinks } from '../validation';
 
@@ -529,6 +529,23 @@ describe('model/validation', () => {
       expect(errors).toHaveLength(1);
       expect(errors[0].errorType).toBe('broken-anchor-link');
     });
+
+    it('reports broken-page-link for a list item link to a missing page', () => {
+      const doc = createInitialDocument();
+      const section = getMainWrappers(doc)[0];
+      const list = createTextNode('list', section.id) as TextNode;
+      list.content = {
+        type: 'ul',
+        markerStyle: 'disc',
+        items: [{ text: 'Go', direction: 'ltr', link: { linkType: 'page', targetPageId: 'missing-page' } }],
+      } as ListContent;
+      doc.nodes[list.id] = list;
+      section.children.push(list.id);
+
+      const errors = validateLinks(doc).filter((e) => e.nodeId === list.id);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].errorType).toBe('broken-page-link');
+    });
   });
 
   it('rejects cycles in the node graph', () => {
@@ -555,5 +572,17 @@ describe('model/validation', () => {
 
     const errors = validateDocument(document);
     expect(errors).toContain(`Rich text node ${rich.id}: Rich content root item 0 must be a block.`);
+  });
+
+  it('rejects malformed list content', () => {
+    const document = createInitialDocument();
+    const section = getMainWrappers(document)[0];
+    const list = createTextNode('list', section.id) as TextNode;
+    list.content = { type: 'ol', items: [{ value: 'missing-text' }] } as unknown as ListContent;
+    document.nodes[list.id] = list;
+    section.children.push(list.id);
+
+    const errors = validateDocument(document);
+    expect(errors).toContain(`List node ${list.id}: List item 0 must define a string text value.`);
   });
 });

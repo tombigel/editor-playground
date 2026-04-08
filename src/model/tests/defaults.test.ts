@@ -3,6 +3,7 @@ import type { TextNode } from '../types';
 import {
   createDefaultFooter,
   createDefaultHeader,
+  createTextNode,
   createLinkTextNode,
   createButtonTextNode,
   createInitialDocument,
@@ -42,6 +43,21 @@ describe('model/defaults', () => {
     expect(link.link?.href).toBe('#');
     expect(button.link?.linkType).toBe('external');
     expect(button.link?.href).toBe('#');
+  });
+
+  it('creates list text nodes with unordered defaults', () => {
+    const list = createTextNode('list', 'section_1');
+
+    if (list.contentType !== 'text' || list.subtype !== 'list' || typeof list.content === 'string') {
+      throw new Error('Expected list text node');
+    }
+
+    expect(list.content).toEqual({
+      type: 'ul',
+      markerStyle: 'disc',
+      items: [{ text: 'List item', direction: 'ltr' }],
+    });
+    expect(list.style?.direction).toBe('ltr');
   });
 
   it('seeds pinned cards with auto lead sticky and top-edge narrative cards', () => {

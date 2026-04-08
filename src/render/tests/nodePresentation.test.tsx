@@ -96,4 +96,25 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('class="language-typescript"');
     expect(markup).toContain('data-code-theme="dark"');
   });
+
+  it('renders semantic ordered lists and flattens them for labels', () => {
+    const list = createTextNode('list', 'root');
+    list.content = {
+      type: 'ol',
+      start: 3,
+      markerStyle: 'upper-alpha',
+      items: [
+        { text: 'Third', direction: 'rtl' },
+        { text: 'Fourth', direction: 'ltr' },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(renderLeafContent(list, { contentStyle: { color: '#111827' } }));
+
+    expect(getNodeTextContent(list)).toBe('Third\nFourth');
+    expect(markup).toContain('<ol');
+    expect(markup).toContain('start="3"');
+    expect(markup).toContain('list-style-type:upper-alpha');
+    expect(markup).toContain('dir="rtl"');
+  });
 });

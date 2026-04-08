@@ -16,6 +16,8 @@ Execution rules:
 - Before starting implementation, save the original spec prompt together with the plan in the `docs` folder.
 - Q5 scope clarification: the rich-text model migration may update pure conversion helpers and compatibility tests when the new rich schema would otherwise break API-first conversions.
 - Q5 scope clarification: the rich-text model migration may also update rich defaults and the stage edit overlay when they still encode the legacy flat inline rich shape.
+- Q6 scope clarification: the standalone list subtype may update model validation so list invariants are enforced headlessly, not only by renderers or future editor UI.
+- Q6 scope clarification: the standalone list subtype may update inspector plumbing types when widening `TextSubtype` would otherwise break compile, without exposing new list UI behavior ahead of the dedicated inspector/editor quantum.
 
 ## Original Spec Prompt
 

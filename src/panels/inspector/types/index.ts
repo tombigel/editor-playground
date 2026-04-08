@@ -3,7 +3,7 @@ import type { WrapperStyleField } from '../../../api/documentApi';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId } from '../../../model/types/site';
-import type { ContainerNode, TextNode, MediaNode } from '../../../model/types';
+import type { ContainerNode, MediaNode, TextNode, TextSubtype } from '../../../model/types';
 
 export type InspectorNode = DocumentNode;
 export type NonSiteInspectorNode = Exclude<DocumentNode, { contentType: 'site' }>;
@@ -33,7 +33,7 @@ export type InspectorActionHandlers = {
   onStickyDurationBottom: (value: number) => void;
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
-  onSwitchTextSubtype: (nodeId: string, subtype: 'block' | 'rich' | 'code') => void;
+  onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: () => void;

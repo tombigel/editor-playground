@@ -194,6 +194,33 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
     };
   }
 
+  if (subtype === 'list') {
+    return {
+      id,
+      contentType: 'text',
+      subtype: 'list',
+      parentId,
+      children: [],
+      name: 'List',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '320px', 'auto'),
+      content: {
+        type: 'ul',
+        markerStyle: 'disc',
+        items: [{ text: 'List item', direction: 'ltr' }],
+      },
+      style: {
+        color: DEFAULT_TEXT_COLOR,
+        fontFamily: 'Inter',
+        ...TEXT_NODE_DEFAULTS.paragraph.style,
+        textDecorationLine: 'none',
+        direction: 'ltr',
+        textAlign: 'left',
+      },
+    };
+  }
+
   // Default: block
   return {
     id,

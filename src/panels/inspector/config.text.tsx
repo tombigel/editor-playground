@@ -197,4 +197,3 @@ function isAnyTextNode(node: InspectorNode | null): node is TextInspectorNode {
 function isNonRichTextNode(node: InspectorNode | null): node is TextInspectorNode {
   return Boolean(node && isTextNodeGuard(node) && node.subtype !== 'rich' && node.link === undefined);
 }
-

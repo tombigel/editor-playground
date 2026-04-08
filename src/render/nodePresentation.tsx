@@ -1,14 +1,19 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
+import { getListTextContent } from '../model/listContent';
 import { getTextContent, isRichTextLink } from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
 import type {
   DocumentModel,
+  DescriptionListItem,
+  ListContent,
+  LinkExtension,
   RichContent,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
+  ListTextItem,
 } from '../model/types';
 import type {
   PresentationLeafNode as LeafNode,
@@ -37,7 +42,13 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
 
 export function getNodeTextContent(node: LeafNode): string {
   if (isTextNode(node)) {
-    return getTextContent(node.content);
+    if (typeof node.content === 'string') {
+      return node.content;
+    }
+    if (node.subtype === 'list') {
+      return getListTextContent(node.content as ListContent);
+    }
+    return getTextContent(node.content as RichContent);
   }
   if (isMediaNode(node)) {
     return node.alt ?? 'Image';
@@ -108,6 +119,102 @@ export function renderRichContent(content: RichContent, document?: DocumentModel
   });
 }
 
+function listItemKey(item: ListTextItem | DescriptionListItem, index: number): string {
+  if ('text' in item) {
+    return `${index}|${item.text}|${item.direction ?? 'ltr'}|${item.link?.href ?? ''}`;
+  }
+  return `${index}|${item.term}|${item.description}|${item.direction ?? 'ltr'}|${item.link?.href ?? ''}`;
+}
+
+function getExternalLinkProps(link: LinkExtension | undefined) {
+  if (!link) {
+    return {};
+  }
+  return shouldOpenNavigationInNewTab({ linkType: link.linkType, openInNewTab: link.openInNewTab })
+    ? {
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      }
+    : {};
+}
+
+function renderListItemText(
+  text: string,
+  link: LinkExtension | undefined,
+  document: DocumentModel | undefined,
+) {
+  if (!link) {
+    return text;
+  }
+
+  return (
+    <a href={getLinkHref(link, document)} {...getExternalLinkProps(link)}>
+      {text}
+    </a>
+  );
+}
+
+export function renderListContent(
+  content: ListContent,
+  options: {
+    document?: DocumentModel;
+    style?: CSSProperties;
+    className?: string;
+    dataNodeId?: string;
+    tabIndex?: number;
+  } = {},
+): ReactNode {
+  const { document, style, className, dataNodeId, tabIndex } = options;
+
+  if (content.type === 'dl') {
+    return (
+      <dl className={className} data-node-id={dataNodeId} style={style}>
+        {content.items.map((item, index) => (
+          <Fragment key={listItemKey(item, index)}>
+            <dt dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+              {renderListItemText(item.term, item.link, document)}
+            </dt>
+            <dd dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+              {renderListItemText(item.description, item.link, document)}
+            </dd>
+          </Fragment>
+        ))}
+      </dl>
+    );
+  }
+
+  if (content.type === 'ol') {
+    return (
+      <ol
+        className={className}
+        data-node-id={dataNodeId}
+        start={content.start}
+        style={{ listStyleType: content.markerStyle, ...style }}
+      >
+        {content.items.map((item, index) => (
+          <li key={listItemKey(item, index)} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+            {renderListItemText(item.text, item.link, document)}
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
+  return (
+    <ul
+      className={className}
+      data-node-id={dataNodeId}
+      style={{ listStyleType: content.markerStyle, ...style }}
+    >
+      {content.items.map((item, index) => (
+        <li key={listItemKey(item, index)} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+          {renderListItemText(item.text, item.link, document)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function isBrandMark(node: LeafNode) {
   return isMediaNode(node) && node.subtype === 'image' && node.name === 'Brand Mark';
 }
@@ -174,6 +281,10 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
         />
       </pre>
     );
+  }
+
+  if (isTextNode(node) && node.subtype === 'list') {
+    return renderListContent(node.content as ListContent, { document, style: contentStyle, tabIndex });
   }
 
   if (isTextNode(node) && node.subtype === 'block') {

@@ -9,7 +9,7 @@ export type NodeId = string;
 // Content-type discriminators (new model)
 // ---------------------------------------------------------------------------
 export type ContainerSubtype = 'section' | 'header' | 'footer' | 'container' | 'group';
-export type TextSubtype = 'block' | 'rich' | 'code';
+export type TextSubtype = 'block' | 'rich' | 'code' | 'list';
 export type MediaSubtype = 'image' | 'video' | 'svg' | 'embed';
 export type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
@@ -298,6 +298,44 @@ export type LinkExtension = {
   anchorTargetId?: NodeId;
 };
 
+export type ListDirection = 'ltr' | 'rtl';
+export type UnorderedListMarkerStyle = 'disc' | 'circle' | 'square';
+export type OrderedListMarkerStyle = 'decimal' | 'lower-alpha' | 'upper-alpha' | 'lower-roman' | 'upper-roman';
+export type ListContentType = 'ul' | 'ol' | 'dl';
+
+export type ListTextItem = {
+  text: string;
+  direction?: ListDirection;
+  link?: LinkExtension;
+};
+
+export type DescriptionListItem = {
+  term: string;
+  description: string;
+  direction?: ListDirection;
+  link?: LinkExtension;
+};
+
+export type UnorderedListContent = {
+  type: 'ul';
+  markerStyle?: UnorderedListMarkerStyle;
+  items: ListTextItem[];
+};
+
+export type OrderedListContent = {
+  type: 'ol';
+  start?: number;
+  markerStyle?: OrderedListMarkerStyle;
+  items: ListTextItem[];
+};
+
+export type DescriptionListContent = {
+  type: 'dl';
+  items: DescriptionListItem[];
+};
+
+export type ListContent = UnorderedListContent | OrderedListContent | DescriptionListContent;
+
 // ---------------------------------------------------------------------------
 // TopLevelWrapperVisibilityState — defined here to avoid a circular import
 // (topLevelWrapperVisibility.ts imports from this file).
@@ -367,7 +405,7 @@ export type ContainerNode = BaseNode & {
 export type TextNode = BaseNode & {
   contentType: 'text';
   subtype: TextSubtype;
-  content: string | RichContent; // string for block/code; RichContent for rich
+  content: string | RichContent | ListContent; // string for block/code; RichContent for rich; ListContent for list
   lang?: string;              // BCP-47 locale
   htmlTag?: HeadingTag | 'p' | 'blockquote'; // block only
   link?: LinkExtension;       // block only

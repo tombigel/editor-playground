@@ -55,7 +55,8 @@ Every feature is achievable through the API layer without the editor UI.
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
 | `setNodeTextField` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
 | `setNodeRichContent` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into block-rooted `RichContent` before persisting. |
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, and `code` text nodes. |
+| `setNodeListContent` | `(document, nodeId, content: ListContent) => DocumentModel` | Canonical pure list-content mutation. Normalizes authored list payloads into the supported phase-1 `ul`, `ol`, or `dl` shapes before persisting. |
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, `code`, and `list` text nodes. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
 
 ### Node selectors
@@ -124,6 +125,7 @@ Every feature is achievable through the API layer without the editor UI.
 | `WrapperStyleField` | Union of style field names applicable to wrappers. |
 | `LeafRole` | Union of leaf role strings. |
 | `EditorTextField` | Union of text/style field names settable via `setNodeTextField`. |
+| `TextSubtype` | `'block' \| 'rich' \| 'code' \| 'list'` |
 | `TextConversionMode` | `'auto' \| 'flatten'` | Explicit text conversion policy mode. `auto` currently resolves to flattening when converting rich content to simpler text subtypes. |
 | `NodeTextField` | Subset of text fields for plain text nodes. |
 | `StickyDefinition` | Sticky behaviour config shape. |
@@ -262,11 +264,20 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 
 | Function / type | Signature / values | Description |
 |---|---|---|
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, and `code`, preserving semantic block tags when converting `block -> rich`. |
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` splits hard line breaks into unordered items, `list -> code` emits markdown-like list text, and `list -> rich` currently flattens into paragraph blocks to preserve the rich-text block invariants. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
 | `TextConversionMode` | `'auto' \| 'flatten'` | `auto` applies the default conversion policy; `flatten` explicitly flattens richer structures into plain text when needed. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
 | `normalizeCodeLanguage` | `(language: string) => string` | Normalizes unsupported code languages to `plaintext` for stable highlighting. |
+
+### List content semantics
+
+- `ListContent` is a first-class text payload used by `subtype: 'list'`.
+- Supported phase-1 wrappers are `ul`, `ol`, and `dl`.
+- `ul` and `ol` items persist as second-level list items with per-item `text`, `direction`, and optional `link`.
+- `ol` also persists a `start` value and a predefined marker style.
+- `dl` persists `term` / `description` pairs with optional shared link metadata for the pair.
+- Nested lists are rejected by normalization and validation in phase 1.
 
 ---
 

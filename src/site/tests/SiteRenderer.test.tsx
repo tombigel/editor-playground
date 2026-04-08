@@ -192,4 +192,34 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain('<h2>Heading</h2>');
     expect(markup).toContain('<p>Paragraph copy</p>');
   });
+
+  it('renders semantic list wrappers for standalone list nodes', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const list = createTextNode('list', section.id);
+    list.content = {
+      type: 'ul',
+      markerStyle: 'square',
+      items: [
+        { text: 'Alpha', direction: 'ltr' },
+        { text: 'Beta', direction: 'rtl' },
+      ],
+    };
+    document.nodes[list.id] = list;
+    section.children.push(list.id);
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).toContain(`data-node-id="${list.id}"`);
+    expect(markup).toContain('<ul');
+    expect(markup).toContain('list-style-type:square');
+    expect(markup).toContain('<li dir="rtl">Beta</li>');
+  });
 });

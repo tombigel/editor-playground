@@ -35,6 +35,7 @@ import {
   type TopLevelWrapperVisibilityMode as TopLevelWrapperVisibilityModeModel,
   type TopLevelWrapperVisibilityState as TopLevelWrapperVisibilityStateModel,
 } from '../model/topLevelWrapperVisibility';
+import { normalizeListContent } from '../model/listContent';
 import { normalizeRichContent } from '../model/richContent';
 import type { PageId } from '../model/types/site';
 import type {
@@ -47,6 +48,7 @@ import type {
   DocumentModel,
   DocumentNode,
   EditorTextField,
+  ListContent,
   MediaSubtype,
   RichContent,
   ShadowStyleField,
@@ -77,6 +79,7 @@ export type {
   DocumentModel,
   DocumentNode,
   EditorTextField,
+  ListContent,
   MediaSubtype,
   NodeTextField,
   NodeId,
@@ -493,6 +496,20 @@ export function setNodeRichContent(
     return document;
   }
   node.content = normalizeRichContent(content);
+  return next;
+}
+
+export function setNodeListContent(
+  document: DocumentModel,
+  nodeId: NodeId,
+  content: ListContent,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'list') {
+    return document;
+  }
+  node.content = normalizeListContent(content);
   return next;
 }
 

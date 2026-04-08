@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import type { NodeId } from '../model/types';
 import { isMediaNode, isTextNode } from '../model/types';
 import { getLinkHref } from '../model/links';
-import { getNodeTextContent, renderRichContent } from '../render/nodePresentation';
+import { getNodeTextContent, renderListContent, renderRichContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
 import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
@@ -134,6 +134,12 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
         {renderRichContent(node.content as RichContent, renderDocument)}
       </div>
     );
+  } else if (isTextNode(node) && node.subtype === 'list') {
+    leaf = renderListContent(node.content as import('../model/types').ListContent, {
+      document: renderDocument,
+      className: plan.nodeClassName,
+      dataNodeId: node.id,
+    }) as ReactElement;
   } else if (isTextNode(node) && node.link) {
     const link = node.link;
     const href = getLinkHref(link, renderDocument);

@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q6`
-- Last completed quantum: `Q5`
-- Next quantum after current: `Q7`
+- Current quantum: `Q7`
+- Last completed quantum: `Q6`
+- Next quantum after current: `Q8`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -276,40 +276,67 @@ Execution rules:
 
 - Objective:
   - Implement lists as first-class text nodes in the model/API.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
+  - `docs/TEXT_COMPONENT_MASTER_BRIEF.md`
   - `src/model/types/index.ts`
   - `src/model/listContent.ts`
   - `src/model/defaultFactories.ts`
+  - `src/model/validation.ts`
   - `src/api/documentApi.ts`
   - `src/api/textConversion.ts`
   - `src/render/nodePresentation.tsx`
   - `src/render/leafPresentation.ts`
   - `src/site/SiteRenderer.tsx`
+  - `src/panels/InspectorPanel.tsx`
+  - `src/panels/inspector/types/index.ts`
+  - `src/panels/inspector/config.text.tsx`
   - List tests
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/API.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/model/types/index.ts:11-19`
+  - `src/model/types/index.ts:292-299`
+  - `src/model/types/index.ts:367-384`
+  - `src/model/defaultFactories.ts:151-220`
+  - `src/model/validation.ts:123-176`
+  - `src/api/documentApi.ts:214-497`
+  - `src/api/documentApi.ts:1046-1061`
+  - `src/api/textConversion.ts:1-161`
+  - `src/render/nodePresentation.tsx:20-210`
+  - `src/render/leafPresentation.ts:12-40`
+  - `src/site/SiteRenderer.tsx:112-166`
+  - `src/panels/InspectorPanel.tsx:72-96`
+  - `src/panels/inspector/types/index.ts:15-37`
+  - `src/panels/inspector/config.text.tsx:69-132`
+  - `src/model/tests/defaults.test.ts:1-80`
+  - `src/api/tests/documentApi.test.ts:299-357`
+  - `src/render/tests/nodePresentation.test.tsx:1-95`
+  - `src/render/tests/leafPresentation.test.ts:1-122`
+  - `src/site/tests/SiteRenderer.test.tsx:1-208`
 - Implementation notes:
   - Add `ul | ol | dl`, proper second-level structure, ordered start, predefined marker styles, per-item direction, per-item links, and no nesting in phase 1.
+  - Keep list normalization and validation in model/API helpers so invalid list state does not depend on editor guards.
 - Verification commands:
   - `npm run typecheck`
   - Relevant `vitest` commands
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/model/tests/listContent.test.ts src/model/tests/defaults.test.ts src/model/tests/validation.test.ts src/api/tests/documentApi.test.ts src/render/tests/nodePresentation.test.tsx src/render/tests/leafPresentation.test.ts src/site/tests/SiteRenderer.test.tsx`: passed, 7 files / 110 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:
-  - Pending
+  - Inspector exposure for `list` remains intentionally deferred to Q9; Q6 only widened inspector types enough to keep the API-first subtype model compiling.
+  - Rich text still does not persist list blocks internally, so `list -> rich` remains a flattening conversion until a later rich-list phase is explicitly designed.
 
 ## Q7: Add headless split and merge
 
 - Objective:
   - Implement split and merge as pure document APIs.
-- Status: `pending`
+- Status: `in_progress`
 - Allowed files:
   - `src/api/documentApi.ts`
   - `src/api/textConversion.ts`
@@ -319,7 +346,17 @@ Execution rules:
   - `docs/API.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/api/documentApi.ts:1046-1090`
+  - `src/api/textConversion.ts:1-195`
+  - `src/app/editorState.ts:40-120`
+  - `src/app/types/index.ts:74-92`
+  - `src/panels/MultiSelectInspector.tsx:96-188`
+  - `src/panels/inspector/multiSelectHelpers.ts:1-40`
+  - `src/api/tests/documentApi.test.ts:299-420`
+  - `src/render/tests/nodePresentation.test.tsx:1-120`
+  - `src/site/tests/SiteRenderer.test.tsx:1-235`
+  - `docs/API.md:50-70`
+  - `docs/PLAYGROUND_SPEC.md:1300-1395`
 - Implementation notes:
   - Add `splitRichTextNodeDoc` and `mergeTextNodesToRichDoc`.
   - Same-parent sibling merge only.

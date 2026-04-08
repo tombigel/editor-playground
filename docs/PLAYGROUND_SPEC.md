@@ -71,7 +71,7 @@ The playground exists to test:
 |---|---|---|
 | `site` | — | Document root; exactly one per document. |
 | `container` | `section`, `header`, `footer`, `container`, `group` | Structural layout nodes. |
-| `text` | `block`, `rich`, `code` | Text content nodes. |
+| `text` | `block`, `rich`, `code`, `list` | Text content nodes. |
 | `media` | `image`, `video`, `svg`, `embed` | Media content nodes. |
 
 ### Node identity
@@ -1303,6 +1303,7 @@ Naming and title behavior:
 - `src/api/documentApi.ts` provides editor-agnostic document operations for non-editor contexts such as scripts.
 - Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setNodeTextField()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - Text subtype conversion is also API-first: `convertTextNodeDoc()` owns the conversion policy, `switchTextSubtypeDoc()` is the thin entrypoint, and editor actions only choose the target subtype plus an optional conversion mode.
+- Standalone lists are also API-first: `setNodeListContent()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
@@ -1354,9 +1355,41 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 ### Inspector subtype switcher
 
 - The Content block in the text inspector shows a **Text / Rich / Code** segmented control above the content fields.
-- Switching subtype calls `switchSubtypeDoc` — transferring position, sticky config, and style fields while replacing content with the target type's default.
+- Switching subtype calls `switchTextSubtypeDoc()` — transferring position, sticky config, and style fields while replacing content with the target type's default.
 - The control is visible for all text nodes with `subtype` in `['block', 'rich', 'code']`.
 - Uses the shared `Tabs`/`TabsList`/`TabsTrigger` DS primitive.
+- `list` already exists in the document model and conversion APIs, but inspector exposure is intentionally deferred until the later editor/inspector quantum so the headless contract stays ahead of UI affordances.
+
+## Standalone List Text Nodes
+
+Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text formatting state.
+
+### Phase-1 structure
+
+- Supported wrappers are `ul`, `ol`, and `dl`.
+- `ul` and `ol` persist second-level items only; nested lists are not part of phase 1.
+- `dl` persists ordered `term` / `description` pairs.
+- Per-item writing direction is supported via `direction: 'ltr' | 'rtl'`.
+- Per-item links are supported in phase 1.
+- Styling remains node-level in phase 1; inline mixed styling inside list items is deferred.
+
+### API and validation
+
+- `setNodeListContent()` is the canonical pure mutation for list content.
+- Model normalization repairs malformed or missing list payloads into a default unordered list item.
+- `validateDocument()` reports malformed list structures and broken per-item page / anchor links.
+- Text conversion is deterministic:
+  - `block -> list` splits hard line breaks into unordered items.
+  - `code -> list` becomes a single unordered item.
+  - `list -> code` emits markdown-like plain text.
+  - `list -> rich` currently flattens into rich paragraph blocks because rich list blocks are still deferred.
+
+### Rendering
+
+- Shared node presentation renders list nodes semantically as `<ul>`, `<ol>`, or `<dl>`.
+- Ordered lists honor persisted `start` and marker style values.
+- Description lists render semantic `<dt>` / `<dd>` pairs.
+- Site export uses the same shared list rendering helpers as the stage/site presentation path.
 
 ## Section Templates
 

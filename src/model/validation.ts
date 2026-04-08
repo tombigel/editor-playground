@@ -1,5 +1,6 @@
 import type { ContainerSubtype, DocumentModel, DocumentNode, NodeId, RichContent } from './types';
 import { isContainerNode, isLeafNode, isSiteNode, isTextNode } from './types';
+import { validateListContentStructure, walkListLinks } from './listContent';
 import { validateRichContentStructure, walkLinks } from './richContent';
 import type { DocumentPage } from './types/site';
 import { getAllPageRoutes, getPageRole } from './pageRoutes';
@@ -24,91 +25,34 @@ export function validateLinks(document: DocumentModel): LinkValidationError[] {
     if (node.link) {
       const nodeRole: 'link' | 'button' = node.contentType === 'text' && node.link && node.style?.background ? 'button' : 'link';
 
-      if (node.link.linkType === 'page') {
-        if (!node.link.targetPageId) {
-          errors.push({
-            nodeId: node.id,
-            nodeName: node.name,
-            nodeRole,
-            errorType: 'broken-page-link',
-            description: 'Link has no target page set.',
-          });
-        } else if (!pageIds.has(node.link.targetPageId)) {
-          errors.push({
-            nodeId: node.id,
-            nodeName: node.name,
-            nodeRole,
-            errorType: 'broken-page-link',
-            description: `Target page "${node.link.targetPageId}" no longer exists.`,
-          });
-        }
-
-        if (node.link.pageAnchorId && !document.nodes[node.link.pageAnchorId]) {
-          errors.push({
-            nodeId: node.id,
-            nodeName: node.name,
-            nodeRole,
-            errorType: 'broken-anchor-link',
-            description: `Page anchor target "${node.link.pageAnchorId}" does not exist.`,
-          });
-        }
-      }
-
-      if (node.link.linkType === 'anchor' && node.link.anchorTargetId) {
-        if (!document.nodes[node.link.anchorTargetId]) {
-          errors.push({
-            nodeId: node.id,
-            nodeName: node.name,
-            nodeRole,
-            errorType: 'broken-anchor-link',
-            description: `Anchor target "${node.link.anchorTargetId}" does not exist.`,
-          });
-        }
-      }
+      validateLinkTarget(node.link, node.id, node.name, nodeRole, pageIds, document, errors, {
+        missingPage: 'Link has no target page set.',
+        brokenPage: (targetPageId) => `Target page "${targetPageId}" no longer exists.`,
+        brokenPageAnchor: (pageAnchorId) => `Page anchor target "${pageAnchorId}" does not exist.`,
+        brokenAnchor: (anchorTargetId) => `Anchor target "${anchorTargetId}" does not exist.`,
+      });
     }
 
     // Validate inline links inside RichContent (rich subtype)
     if (isTextNode(node) && node.subtype === 'rich') {
       walkLinks(node.content as RichContent, (link) => {
-        if (link.linkType === 'page') {
-          if (!link.targetPageId) {
-            errors.push({
-              nodeId: node.id,
-              nodeName: node.name,
-              nodeRole: 'link',
-              errorType: 'broken-page-link',
-              description: 'Inline link has no target page set.',
-            });
-          } else if (!pageIds.has(link.targetPageId)) {
-            errors.push({
-              nodeId: node.id,
-              nodeName: node.name,
-              nodeRole: 'link',
-              errorType: 'broken-page-link',
-              description: `Inline link target page "${link.targetPageId}" no longer exists.`,
-            });
-          }
-          if (link.pageAnchorId && !document.nodes[link.pageAnchorId]) {
-            errors.push({
-              nodeId: node.id,
-              nodeName: node.name,
-              nodeRole: 'link',
-              errorType: 'broken-anchor-link',
-              description: `Inline link page anchor target "${link.pageAnchorId}" does not exist.`,
-            });
-          }
-        }
-        if (link.linkType === 'anchor' && link.anchorTargetId) {
-          if (!document.nodes[link.anchorTargetId]) {
-            errors.push({
-              nodeId: node.id,
-              nodeName: node.name,
-              nodeRole: 'link',
-              errorType: 'broken-anchor-link',
-              description: `Inline link anchor target "${link.anchorTargetId}" does not exist.`,
-            });
-          }
-        }
+        validateLinkTarget(link, node.id, node.name, 'link', pageIds, document, errors, {
+          missingPage: 'Inline link has no target page set.',
+          brokenPage: (targetPageId) => `Inline link target page "${targetPageId}" no longer exists.`,
+          brokenPageAnchor: (pageAnchorId) => `Inline link page anchor target "${pageAnchorId}" does not exist.`,
+          brokenAnchor: (anchorTargetId) => `Inline link anchor target "${anchorTargetId}" does not exist.`,
+        });
+      });
+    }
+
+    if (isTextNode(node) && node.subtype === 'list') {
+      walkListLinks(node.content as import('./types').ListContent, (link) => {
+        validateLinkTarget(link, node.id, node.name, 'link', pageIds, document, errors, {
+          missingPage: 'List item link has no target page set.',
+          brokenPage: (targetPageId) => `List item link target page "${targetPageId}" no longer exists.`,
+          brokenPageAnchor: (pageAnchorId) => `List item page anchor target "${pageAnchorId}" does not exist.`,
+          brokenAnchor: (anchorTargetId) => `List item anchor target "${anchorTargetId}" does not exist.`,
+        });
       });
     }
   }
@@ -163,6 +107,12 @@ export function validateDocument(document: DocumentModel): string[] {
     if (isTextNode(node) && node.subtype === 'rich') {
       for (const issue of validateRichContentStructure(node.content)) {
         errors.push(`Rich text node ${node.id}: ${issue}`);
+      }
+    }
+
+    if (isTextNode(node) && node.subtype === 'list') {
+      for (const issue of validateListContentStructure(node.content)) {
+        errors.push(`List node ${node.id}: ${issue}`);
       }
     }
 
@@ -315,6 +265,67 @@ export function validateDocument(document: DocumentModel): string[] {
   }
 
   return errors;
+}
+
+function validateLinkTarget(
+  link: {
+    linkType: 'page' | 'anchor' | 'external';
+    targetPageId?: string;
+    pageAnchorId?: string;
+    anchorTargetId?: string;
+  },
+  nodeId: NodeId,
+  nodeName: string,
+  nodeRole: 'link' | 'button',
+  pageIds: Set<string>,
+  document: DocumentModel,
+  errors: LinkValidationError[],
+  messages: {
+    missingPage: string;
+    brokenPage: (targetPageId: string) => string;
+    brokenPageAnchor: (pageAnchorId: string) => string;
+    brokenAnchor: (anchorTargetId: string) => string;
+  },
+) {
+  if (link.linkType === 'page') {
+    if (!link.targetPageId) {
+      errors.push({
+        nodeId,
+        nodeName,
+        nodeRole,
+        errorType: 'broken-page-link',
+        description: messages.missingPage,
+      });
+    } else if (!pageIds.has(link.targetPageId)) {
+      errors.push({
+        nodeId,
+        nodeName,
+        nodeRole,
+        errorType: 'broken-page-link',
+        description: messages.brokenPage(link.targetPageId),
+      });
+    }
+
+    if (link.pageAnchorId && !document.nodes[link.pageAnchorId]) {
+      errors.push({
+        nodeId,
+        nodeName,
+        nodeRole,
+        errorType: 'broken-anchor-link',
+        description: messages.brokenPageAnchor(link.pageAnchorId),
+      });
+    }
+  }
+
+  if (link.linkType === 'anchor' && link.anchorTargetId && !document.nodes[link.anchorTargetId]) {
+    errors.push({
+      nodeId,
+      nodeName,
+      nodeRole,
+      errorType: 'broken-anchor-link',
+      description: messages.brokenAnchor(link.anchorTargetId),
+    });
+  }
 }
 
 function validatePageParentCycles(pages: DocumentPage[], errors: string[]): void {
