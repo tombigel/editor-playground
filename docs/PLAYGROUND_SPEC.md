@@ -1372,6 +1372,42 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 - `flatten`: explicitly collapse unsupported structure into the simplest plain-text-compatible result.
 - `split`: when converting away from `rich`, split the rich node into sibling text nodes by block boundary instead of flattening all blocks into one node.
 
+## Markdown Import And Export
+
+Text markdown import/export is headless and API-first.
+
+### Baseline contract
+
+- GFM is the baseline markdown contract.
+- Parsing and serialization are still constrained to the supported text model subsets; the app does not persist arbitrary markdown AST shapes.
+- The canonical pure entry points are `serializeTextNodeMarkdownDoc()` and `applyMarkdownToTextNodeDoc()`.
+
+### Supported rich markdown subset
+
+- Rich markdown import supports:
+  - headings `#` through `######`
+  - paragraphs
+  - blockquotes
+  - fenced code blocks
+  - ordered lists
+  - unordered lists
+  - inline external links
+  - inline bold and italic
+- Unsupported markdown constructs degrade deterministically into paragraphs, flat lists, or raw code content rather than persisting unsupported structure.
+
+### Subtype-specific behavior
+
+- Rich nodes parse markdown into the validated rich Slate subset.
+- Standalone block nodes preserve a single heading or blockquote when the markdown resolves to one compatible text block; otherwise they flatten to plain text with block boundaries as hard line breaks.
+- Standalone list nodes preserve a single parsed `ul` / `ol`; mixed markdown flattens into unordered list items.
+- Standalone code nodes preserve a single fenced code block, including its language info string; any other markdown pasted into code becomes raw code content with language `markdown`.
+
+## Code Language Modes
+
+- Standalone and rich code blocks support `plaintext`, `auto`, and explicit languages including `markdown`.
+- `auto` stores the authored language mode and resolves highlighting with lightweight language detection at render/update time.
+- `markdown` means syntax-highlighted markdown source code, not parsed document markdown.
+
 ## Standalone List Text Nodes
 
 Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text formatting state.

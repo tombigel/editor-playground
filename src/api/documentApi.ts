@@ -30,6 +30,10 @@ import {
   type TextConversionOptions,
 } from './textConversion';
 import {
+  parseMarkdownForTextSubtype,
+  serializeTextNodeToMarkdown,
+} from './textMarkdown';
+import {
   mergeTextNodesToRichDoc as mergeTextNodesToRichDocHelper,
   splitRichTextNodeDoc as splitRichTextNodeDocHelper,
   type MergeTextNodesOptions,
@@ -542,6 +546,43 @@ export function setTextDirectionDoc(
   direction: 'ltr' | 'rtl',
 ): DocumentModel {
   return setTextNodeContentDoc(document, nodeId, 'direction', direction);
+}
+
+export function serializeTextNodeMarkdownDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+): string {
+  const node = document.nodes[nodeId];
+  if (!node || !isTextNode(node)) {
+    return '';
+  }
+
+  return serializeTextNodeToMarkdown(node, document);
+}
+
+export function applyMarkdownToTextNodeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  markdown: string,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node)) {
+    return document;
+  }
+
+  const parsed = parseMarkdownForTextSubtype(markdown, node.subtype);
+  node.content = parsed.content;
+
+  if (node.subtype === 'block') {
+    node.htmlTag = parsed.htmlTag ?? 'p';
+  }
+
+  if (node.subtype === 'code') {
+    node.code = parsed.code;
+  }
+
+  return normalizeTextNodeDoc(next, nodeId);
 }
 
 export function normalizeTextNodeDoc(

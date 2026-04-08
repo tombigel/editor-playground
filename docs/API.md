@@ -62,6 +62,8 @@ Every feature is achievable through the API layer without the editor UI.
 | `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) => DocumentModel` | Dedicated pure code-theme mutator layered over the canonical text mutation path. |
 | `setTextDirectionDoc` | `(document, nodeId, direction: 'ltr' \| 'rtl') => DocumentModel` | Dedicated pure text-direction mutator layered over the canonical text mutation path. |
 | `normalizeTextNodeDoc` | `(document, nodeId) => DocumentModel` | Normalizes one text node according to its subtype invariants in the pure API layer. |
+| `serializeTextNodeMarkdownDoc` | `(document, nodeId) => string` | Serializes one text node to supported-subset GFM. Rich nodes serialize semantically; standalone code preserves its info string; unsupported app-specific structures degrade deterministically. |
+| `applyMarkdownToTextNodeDoc` | `(document, nodeId, markdown: string) => DocumentModel` | Applies supported-subset GFM to one existing text node according to its current subtype. Rich nodes parse to rich blocks, block/list nodes preserve compatible single-shape inputs before flattening, and code nodes treat non-fenced markdown as `markdown` source code. |
 | `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, `code`, and `list` text nodes. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
 | `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits one rich text node into one or more sibling text nodes using rich block boundaries. |
@@ -233,7 +235,7 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 
 `editorApi` also re-exports these for convenience:
 
-`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `setTextNodeContentDoc`, `setRichTextContentDoc`, `setListContentDoc`, `setCodeBlockLanguageDoc`, `setCodeBlockThemeDoc`, `setTextDirectionDoc`, `normalizeTextNodeDoc`
+`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `serializeTextNodeMarkdownDoc`, `applyMarkdownToTextNodeDoc`, `setTextNodeContentDoc`, `setRichTextContentDoc`, `setListContentDoc`, `setCodeBlockLanguageDoc`, `setCodeBlockThemeDoc`, `setTextDirectionDoc`, `normalizeTextNodeDoc`
 
 ### Exported types
 
@@ -277,7 +279,30 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
 | `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | `auto` applies the default conversion policy, `flatten` explicitly degrades richer structures into plain text, and `split` delegates rich multi-block content to `splitRichTextNodeDoc()`. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
-| `normalizeCodeLanguage` | `(language: string) => string` | Normalizes unsupported code languages to `plaintext` for stable highlighting. |
+| `normalizeCodeLanguage` | `(language: string) => string` | Normalizes supported code languages, including `auto` and `markdown`, and degrades unsupported values to `plaintext`. |
+
+---
+
+## `src/api/textMarkdown.ts`
+
+Pure helper module for supported-subset markdown import/export. `documentApi` exposes the document-level wrappers, while this module keeps the block/inline parsing and serialization rules testable in isolation.
+
+### Markdown helpers
+
+| Function | Signature | Description |
+|---|---|---|
+| `serializeTextNodeToMarkdown` | `(node, document?) => string` | Serializes one text node to supported-subset GFM. Page / anchor links degrade when they cannot be expressed as portable markdown URLs. |
+| `serializeRichContentToMarkdown` | `(content, document?) => string` | Serializes rich content block-by-block as supported GFM headings, paragraphs, blockquotes, fenced code blocks, and `ul` / `ol` lists. |
+| `parseMarkdownToRichContent` | `(markdown: string) => RichContent` | Parses supported-subset GFM into validated rich blocks. Unsupported constructs degrade into paragraphs or flat lists instead of persisting arbitrary markdown AST nodes. |
+| `parseMarkdownForTextSubtype` | `(markdown, targetSubtype) => { ... }` | Converts supported-subset GFM into the content shape expected by the target text subtype. |
+
+### Deterministic markdown behavior
+
+- GFM is the baseline contract, but persistence still uses the validated rich/list/code subsets rather than arbitrary markdown AST shapes.
+- Rich parsing supports headings, paragraphs, blockquotes, fenced code blocks, ordered lists, unordered lists, inline links, bold, and italic.
+- Standalone code import preserves a single fenced block as code, including the info string; any other markdown imported into a code node becomes raw code content with language `markdown`.
+- Standalone list import preserves a single parsed `ul` / `ol`; mixed markdown flattens to unordered list items using block boundaries as hard line breaks.
+- `markdown` as a code language means markdown syntax highlighting for source code, not parsing that content as document markdown.
 
 ### List content semantics
 
