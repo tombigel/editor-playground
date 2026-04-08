@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q5`
-- Last completed quantum: `Q4`
-- Next quantum after current: `Q6`
+- Current quantum: `Q6`
+- Last completed quantum: `Q5`
+- Next quantum after current: `Q7`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -215,7 +215,7 @@ Execution rules:
 
 - Objective:
   - Replace the single-paragraph inline-only rich model with the intended block-based model.
-- Status: `in_progress`
+- Status: `done`
 - Allowed files:
   - `src/model/types/index.ts`
   - `src/model/richContent.ts`
@@ -267,7 +267,7 @@ Execution rules:
   - `npx vitest run src/model/tests/richContent.test.ts src/model/tests/migration.test.ts src/model/tests/validation.test.ts src/render/tests/richTextEditor.test.ts src/api/tests/documentApi.test.ts src/api/tests/pageApi.test.ts src/stage/tests/richTextEditMode.test.ts src/site/tests/SiteRenderer.test.tsx`: passed, 8 files / 153 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `0102dcf`
 - Open follow-ups carried forward:
   - Q6 should reuse the block-root rich helpers when introducing list blocks so list semantics do not get reimplemented in the editor only.
   - Stage rich editing still suppresses `Enter`; authoring new blocks remains deferred to the later stage-edit UX quantum.
