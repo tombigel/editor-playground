@@ -55,9 +55,13 @@ Every feature is achievable through the API layer without the editor UI.
 | `reparentNodeDoc` | `(document, nodeId: NodeId, newParentId: NodeId) => DocumentModel` | Moves a node to a new parent; rejects invalid moves silently. |
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
-| `setNodeTextField` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
-| `setNodeRichContent` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into block-rooted `RichContent` before persisting. |
-| `setNodeListContent` | `(document, nodeId, content: ListContent) => DocumentModel` | Canonical pure list-content mutation. Normalizes authored list payloads into the supported phase-1 `ul`, `ol`, or `dl` shapes before persisting. |
+| `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
+| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into block-rooted `RichContent` before persisting. |
+| `setListContentDoc` | `(document, nodeId, content: ListContent) => DocumentModel` | Canonical pure list-content mutation. Normalizes authored list payloads into the supported phase-1 `ul`, `ol`, or `dl` shapes before persisting. |
+| `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) => DocumentModel` | Dedicated pure code-language mutator layered over the canonical text mutation path. |
+| `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) => DocumentModel` | Dedicated pure code-theme mutator layered over the canonical text mutation path. |
+| `setTextDirectionDoc` | `(document, nodeId, direction: 'ltr' \| 'rtl') => DocumentModel` | Dedicated pure text-direction mutator layered over the canonical text mutation path. |
+| `normalizeTextNodeDoc` | `(document, nodeId) => DocumentModel` | Normalizes one text node according to its subtype invariants in the pure API layer. |
 | `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, `code`, and `list` text nodes. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
 | `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits one rich text node into one or more sibling text nodes using rich block boundaries. |
@@ -128,7 +132,7 @@ Every feature is achievable through the API layer without the editor UI.
 | `WrapperRole` | Union of wrapper role strings. |
 | `WrapperStyleField` | Union of style field names applicable to wrappers. |
 | `LeafRole` | Union of leaf role strings. |
-| `EditorTextField` | Union of text/style field names settable via `setNodeTextField`. |
+| `EditorTextField` | Union of text/style field names settable via `setTextNodeContentDoc`. |
 | `MergeTextNodesOptions` | Optional merge options including `survivorNodeId` for choosing which existing node keeps geometry and identity. |
 | `TextSubtype` | `'block' \| 'rich' \| 'code' \| 'list'` |
 | `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | Explicit text conversion policy mode. `split` delegates rich multi-block content to the pure rich splitter instead of flattening. |
@@ -229,7 +233,7 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 
 `editorApi` also re-exports these for convenience:
 
-`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `setNodeTextField`
+`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `setTextNodeContentDoc`, `setRichTextContentDoc`, `setListContentDoc`, `setCodeBlockLanguageDoc`, `setCodeBlockThemeDoc`, `setTextDirectionDoc`, `normalizeTextNodeDoc`
 
 ### Exported types
 

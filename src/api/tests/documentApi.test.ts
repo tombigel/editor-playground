@@ -10,12 +10,16 @@ import {
   moveNodeInTreeDoc,
   parseDocumentJson,
   serializeDocumentJson,
+  normalizeTextNodeDoc,
+  setCodeBlockLanguageDoc,
+  setCodeBlockThemeDoc,
+  setListContentDoc,
   setNodeVisibilityDoc,
   setNodeRect,
   setNodeSticky,
-  setNodeListContent,
-  setNodeTextField,
   setPageTopLevelWrapperPlacement,
+  setTextDirectionDoc,
+  setTextNodeContentDoc,
   setTopLevelWrapperVisibility,
   getTopLevelWrapperVisibilityState,
   switchTextSubtypeDoc,
@@ -79,7 +83,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected text node');
     }
 
-    const next = setNodeTextField(document, textId, 'htmlTag', 'blockquote');
+    const next = setTextNodeContentDoc(document, textId, 'htmlTag', 'blockquote');
     const node = next.nodes[textId];
     if (node.contentType !== 'text') {
       throw new Error('Expected text node');
@@ -110,18 +114,18 @@ describe('api/documentApi', () => {
       throw new Error('Expected text, image, and button nodes');
     }
 
-    const withTextColor = setNodeTextField(document, textId, 'color', 'oklch(70% 0.2 250 / 0.7)');
-    const withTextShadow = setNodeTextField(withTextColor, textId, 'shadowBlur', '14');
-    const withImageBorder = setNodeTextField(withTextShadow, imageId, 'borderRadius', '24px');
-    const withButtonBackground = setNodeTextField(
+    const withTextColor = setTextNodeContentDoc(document, textId, 'color', 'oklch(70% 0.2 250 / 0.7)');
+    const withTextShadow = setTextNodeContentDoc(withTextColor, textId, 'shadowBlur', '14');
+    const withImageBorder = setTextNodeContentDoc(withTextShadow, imageId, 'borderRadius', '24px');
+    const withButtonBackground = setTextNodeContentDoc(
       withImageBorder,
       buttonId,
       'background',
       'color(display-p3 0.24 0.52 0.88 / 0.9)',
     );
-    const withButtonShadow = setNodeTextField(withButtonBackground, buttonId, 'shadowSpread', '12');
-    const withButtonTypography = setNodeTextField(withButtonShadow, buttonId, 'fontWeight', '700');
-    const withButtonWrap = setNodeTextField(withButtonTypography, buttonId, 'textWrap', 'wrap');
+    const withButtonShadow = setTextNodeContentDoc(withButtonBackground, buttonId, 'shadowSpread', '12');
+    const withButtonTypography = setTextNodeContentDoc(withButtonShadow, buttonId, 'fontWeight', '700');
+    const withButtonWrap = setTextNodeContentDoc(withButtonTypography, buttonId, 'textWrap', 'wrap');
 
     const textNode = withButtonWrap.nodes[textId];
     const imageNode = withButtonWrap.nodes[imageId];
@@ -159,10 +163,10 @@ describe('api/documentApi', () => {
     document.nodes[code.id] = code;
     document.nodes[section.id].children.push(code.id);
 
-    const withBackground = setNodeTextField(document, code.id, 'background', '#101418');
-    const withBorderColor = setNodeTextField(withBackground, code.id, 'borderColor', '#4c6ef5');
-    const withBorderWidth = setNodeTextField(withBorderColor, code.id, 'borderWidth', '2px');
-    const withBorderRadius = setNodeTextField(withBorderWidth, code.id, 'borderRadius', '14px');
+    const withBackground = setTextNodeContentDoc(document, code.id, 'background', '#101418');
+    const withBorderColor = setTextNodeContentDoc(withBackground, code.id, 'borderColor', '#4c6ef5');
+    const withBorderWidth = setTextNodeContentDoc(withBorderColor, code.id, 'borderWidth', '2px');
+    const withBorderRadius = setTextNodeContentDoc(withBorderWidth, code.id, 'borderRadius', '14px');
 
     const codeNode = withBorderRadius.nodes[code.id];
     if (codeNode.contentType !== 'text' || codeNode.subtype !== 'code') {
@@ -188,10 +192,10 @@ describe('api/documentApi', () => {
     document.nodes[code.id] = code;
     document.nodes[section.id].children.push(code.id);
 
-    const withInvalidLanguage = setNodeTextField(document, code.id, 'codeLanguage', 'unsupported-language');
-    const withDarkTheme = setNodeTextField(withInvalidLanguage, code.id, 'codeTheme', 'dark');
-    const withCustomBackground = setNodeTextField(withDarkTheme, code.id, 'background', '#123456');
-    const withLightTheme = setNodeTextField(withCustomBackground, code.id, 'codeTheme', 'light');
+    const withInvalidLanguage = setCodeBlockLanguageDoc(document, code.id, 'unsupported-language');
+    const withDarkTheme = setCodeBlockThemeDoc(withInvalidLanguage, code.id, 'dark');
+    const withCustomBackground = setTextNodeContentDoc(withDarkTheme, code.id, 'background', '#123456');
+    const withLightTheme = setCodeBlockThemeDoc(withCustomBackground, code.id, 'light');
 
     const darkNode = withDarkTheme.nodes[code.id];
     const lightNode = withLightTheme.nodes[code.id];
@@ -225,14 +229,14 @@ describe('api/documentApi', () => {
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
-    const withLinkType = setNodeTextField(document, linkId, 'linkType', 'anchor');
-    const withLinkAnchor = setNodeTextField(withLinkType, linkId, 'anchorTargetId', section.id);
-    const withLinkHref = setNodeTextField(withLinkAnchor, linkId, 'href', 'https://example.com/docs');
-    const withLinkTarget = setNodeTextField(withLinkHref, linkId, 'openInNewTab', 'true');
-    const withButtonType = setNodeTextField(withLinkTarget, button.id, 'linkType', 'anchor');
-    const withButtonAnchor = setNodeTextField(withButtonType, button.id, 'anchorTargetId', section.id);
-    const withButtonHref = setNodeTextField(withButtonAnchor, button.id, 'href', 'https://example.com/start');
-    const withButtonTarget = setNodeTextField(withButtonHref, button.id, 'openInNewTab', 'true');
+    const withLinkType = setTextNodeContentDoc(document, linkId, 'linkType', 'anchor');
+    const withLinkAnchor = setTextNodeContentDoc(withLinkType, linkId, 'anchorTargetId', section.id);
+    const withLinkHref = setTextNodeContentDoc(withLinkAnchor, linkId, 'href', 'https://example.com/docs');
+    const withLinkTarget = setTextNodeContentDoc(withLinkHref, linkId, 'openInNewTab', 'true');
+    const withButtonType = setTextNodeContentDoc(withLinkTarget, button.id, 'linkType', 'anchor');
+    const withButtonAnchor = setTextNodeContentDoc(withButtonType, button.id, 'anchorTargetId', section.id);
+    const withButtonHref = setTextNodeContentDoc(withButtonAnchor, button.id, 'href', 'https://example.com/start');
+    const withButtonTarget = setTextNodeContentDoc(withButtonHref, button.id, 'openInNewTab', 'true');
 
     const linkNode = withButtonTarget.nodes[linkId];
     const buttonNode = withButtonTarget.nodes[button.id];
@@ -272,13 +276,13 @@ describe('api/documentApi', () => {
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
-    const withLinkType = setNodeTextField(document, linkId, 'linkType', 'page');
-    const withLinkTarget = setNodeTextField(withLinkType, linkId, 'targetPageId', aboutPage.id);
-    const withLinkAnchor = setNodeTextField(withLinkTarget, linkId, 'pageAnchorId', section.id);
-    const withButtonType = setNodeTextField(withLinkAnchor, button.id, 'linkType', 'page');
-    const withButtonTarget = setNodeTextField(withButtonType, button.id, 'targetPageId', aboutPage.id);
-    const withButtonAnchor = setNodeTextField(withButtonTarget, button.id, 'pageAnchorId', section.id);
-    const withLinkReset = setNodeTextField(withButtonAnchor, linkId, 'linkType', 'external');
+    const withLinkType = setTextNodeContentDoc(document, linkId, 'linkType', 'page');
+    const withLinkTarget = setTextNodeContentDoc(withLinkType, linkId, 'targetPageId', aboutPage.id);
+    const withLinkAnchor = setTextNodeContentDoc(withLinkTarget, linkId, 'pageAnchorId', section.id);
+    const withButtonType = setTextNodeContentDoc(withLinkAnchor, button.id, 'linkType', 'page');
+    const withButtonTarget = setTextNodeContentDoc(withButtonType, button.id, 'targetPageId', aboutPage.id);
+    const withButtonAnchor = setTextNodeContentDoc(withButtonTarget, button.id, 'pageAnchorId', section.id);
+    const withLinkReset = setTextNodeContentDoc(withButtonAnchor, linkId, 'linkType', 'external');
 
     const linkNode = withLinkReset.nodes[linkId];
     const buttonNode = withLinkReset.nodes[button.id];
@@ -310,7 +314,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected block text node');
     }
 
-    const withContent = setNodeTextField(document, textId, 'content', 'Hello rich world');
+    const withContent = setTextNodeContentDoc(document, textId, 'content', 'Hello rich world');
     const next = convertTextNodeDoc(withContent, textId, 'rich');
     const node = next.nodes[textId];
     if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
@@ -335,7 +339,7 @@ describe('api/documentApi', () => {
     document.nodes[list.id] = list;
     document.nodes[section.id].children.push(list.id);
 
-    const next = setNodeListContent(document, list.id, {
+    const next = setListContentDoc(document, list.id, {
       type: 'ol',
       start: 0,
       markerStyle: 'upper-alpha',
@@ -366,7 +370,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected block text node');
     }
 
-    const withContent = setNodeTextField(document, textId, 'content', 'First line\nSecond line');
+    const withContent = setTextNodeContentDoc(document, textId, 'content', 'First line\nSecond line');
     const next = convertTextNodeDoc(withContent, textId, 'list');
     const node = next.nodes[textId];
     if (node.contentType !== 'text' || node.subtype !== 'list' || typeof node.content === 'string') {
@@ -465,7 +469,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected bundled Assistant metadata and a text node');
     }
 
-    const next = setNodeTextField(document, textId, 'fontFamily', 'Assistant');
+    const next = setTextNodeContentDoc(document, textId, 'fontFamily', 'Assistant');
     const node = next.nodes[textId];
     if (node.contentType !== 'text') {
       throw new Error('Expected text node');
@@ -489,8 +493,33 @@ describe('api/documentApi', () => {
       throw new Error('Expected wrapper node');
     }
 
-    const unchanged = setNodeTextField(document, wrapperId, 'content', 'no-op');
+    const unchanged = setTextNodeContentDoc(document, wrapperId, 'content', 'no-op');
     expect(unchanged).toBe(document);
+  });
+
+  it('normalizes code and direction through dedicated API helpers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    document.nodes[code.id] = code;
+    document.nodes[section.id].children.push(code.id);
+
+    const withLanguage = setCodeBlockLanguageDoc(document, code.id, 'unsupported-language');
+    const withDirection = setTextDirectionDoc(withLanguage, code.id, 'rtl');
+    const normalized = normalizeTextNodeDoc(withDirection, code.id);
+    const codeNode = normalized.nodes[code.id];
+    if (codeNode.contentType !== 'text' || codeNode.subtype !== 'code') {
+      throw new Error('Expected code node');
+    }
+
+    expect(codeNode.code?.language).toBe('plaintext');
+    expect(codeNode.style?.direction).toBe('ltr');
   });
 
   it('updates node visibility immutably', () => {

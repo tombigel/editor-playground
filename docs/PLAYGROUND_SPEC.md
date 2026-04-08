@@ -1302,10 +1302,10 @@ Naming and title behavior:
 ### API layer
 
 - `src/api/documentApi.ts` provides editor-agnostic document operations for non-editor contexts such as scripts.
-- Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setNodeTextField()` implementation instead of maintaining separate code paths for code styling or page-link fields.
+- Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setTextNodeContentDoc()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - Text subtype conversion is also API-first: `convertTextNodeDoc()` owns the conversion policy, `switchTextSubtypeDoc()` is the thin entrypoint, and editor actions only choose the target subtype plus an optional conversion mode.
 - Rich split and multi-node merge are also API-first: `splitRichTextNodeDoc()` and `mergeTextNodesToRichDoc()` live in the pure API layer, so conversion and merge semantics do not depend on editor-only selection or stage-edit code.
-- Standalone lists are also API-first: `setNodeListContent()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
+- Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
@@ -1387,7 +1387,7 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 
 ### API and validation
 
-- `setNodeListContent()` is the canonical pure mutation for list content.
+- `setListContentDoc()` is the canonical pure mutation for list content.
 - Model normalization repairs malformed or missing list payloads into a default unordered list item.
 - `validateDocument()` reports malformed list structures and broken per-item page / anchor links.
 - Text conversion is deterministic:
@@ -1405,7 +1405,7 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 
 ### Inspector editing
 
-- List nodes are editable in the inspector through `setNodeListContent()`, not through editor-only transient formatting state.
+- List nodes are editable in the inspector through `setListContentDoc()`, not through editor-only transient formatting state.
 - The inspector exposes list type, marker style, ordered-list start, and a line-based items textarea.
 - Each line maps to one item. Description lists use the format `term: description`.
 
@@ -1610,7 +1610,7 @@ Rules:
 - Rich roots must be block arrays only; free inline root text is invalid.
 - Blocks cannot nest other blocks.
 - Inline links may contain only text leaves.
-- Legacy flat inline arrays are normalized to a single `paragraph` block by migration and `setNodeRichContent()`.
+- Legacy flat inline arrays are normalized to a single `paragraph` block by migration and `setRichTextContentDoc()`.
 
 `block` and `code` subtypes continue to use a plain `string` for `content`. The `subtype === 'rich'`
 narrowing is the canonical way to distinguish.
@@ -1666,7 +1666,7 @@ Idle ──select──► Selected ──second plain click──► Editing �
 ```
 
 - **Commit**: serialises the Slate editor state back to `RichContent` and dispatches a
-  `setRichContent` action, which calls `setNodeRichContent()` in `documentApi.ts`.
+  `setRichContent` action, which calls `setRichTextContentDoc()` in `documentApi.ts`.
 - **Discard**: restores the original content; the document model is not mutated.
 
 Slate manages its own micro-undo while editing. On commit, one entry is pushed to the document-level
@@ -1706,7 +1706,7 @@ input. Submitting inserts an `external`-type `RichTextLink` wrapping the selecti
 | `src/stage/useRichTextEditMode.ts`                 | `editingId` state hook                                                            |
 | `src/stage/richEditContext.tsx`                    | React context threading edit state through the stage tree                         |
 | `src/render/richTextEditor.ts`                     | Adapter: `createRichEditor`, `toSlateValue`/`fromSlateValue`, mark/link utilities |
-| `src/api/documentApi.ts`                           | `setNodeRichContent()` — pure document mutation                                   |
+| `src/api/documentApi.ts`                           | `setRichTextContentDoc()` — pure document mutation                                |
 
 ## Running the Playground
 

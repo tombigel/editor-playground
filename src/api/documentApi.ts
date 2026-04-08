@@ -56,6 +56,7 @@ import type {
   ListContent,
   MediaSubtype,
   RichContent,
+  RichTextBlockType,
   ShadowStyleField,
   NodeTextField,
   NodeId,
@@ -149,7 +150,7 @@ export function applyDocumentCommands(document: DocumentModel, commands: Documen
       case 'setSticky':
         return setNodeSticky(next, command.nodeId, command.patch);
       case 'setText':
-        return setNodeTextField(next, command.nodeId, command.field, command.value);
+        return setTextNodeContentDoc(next, command.nodeId, command.field, command.value);
       default:
         return next;
     }
@@ -220,7 +221,7 @@ export function setSiteNodeStickyElevation(
   return next;
 }
 
-export function setNodeTextField(
+export function setTextNodeContentDoc(
   document: DocumentModel,
   nodeId: NodeId,
   field: EditorTextField,
@@ -491,7 +492,7 @@ export function setNodeTextField(
   return document;
 }
 
-export function setNodeRichContent(
+export function setRichTextContentDoc(
   document: DocumentModel,
   nodeId: NodeId,
   content: RichContent,
@@ -505,7 +506,7 @@ export function setNodeRichContent(
   return next;
 }
 
-export function setNodeListContent(
+export function setListContentDoc(
   document: DocumentModel,
   nodeId: NodeId,
   content: ListContent,
@@ -517,6 +518,143 @@ export function setNodeListContent(
   }
   node.content = normalizeListContent(content);
   return next;
+}
+
+export function setCodeBlockLanguageDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  language: string,
+): DocumentModel {
+  return setTextNodeContentDoc(document, nodeId, 'codeLanguage', language);
+}
+
+export function setCodeBlockThemeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  theme: string,
+): DocumentModel {
+  return setTextNodeContentDoc(document, nodeId, 'codeTheme', theme);
+}
+
+export function setTextDirectionDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  direction: 'ltr' | 'rtl',
+): DocumentModel {
+  return setTextNodeContentDoc(document, nodeId, 'direction', direction);
+}
+
+export function normalizeTextNodeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node)) {
+    return document;
+  }
+
+  if (node.subtype === 'block') {
+    if (
+      node.htmlTag !== undefined &&
+      node.htmlTag !== 'p' &&
+      node.htmlTag !== 'blockquote' &&
+      node.htmlTag !== 'h1' &&
+      node.htmlTag !== 'h2' &&
+      node.htmlTag !== 'h3' &&
+      node.htmlTag !== 'h4' &&
+      node.htmlTag !== 'h5' &&
+      node.htmlTag !== 'h6'
+    ) {
+      node.htmlTag = 'p';
+    }
+    if (node.style?.direction !== undefined) {
+      node.style.direction = node.style.direction === 'rtl' ? 'rtl' : 'ltr';
+    }
+    return next;
+  }
+
+  if (node.subtype === 'code') {
+    const language = normalizeCodeLanguage(node.code?.language ?? 'plaintext');
+    const theme = node.code?.theme === 'dark' ? 'dark' : 'light';
+    const content = typeof node.content === 'string' ? node.content : '';
+    node.content = content;
+    node.code = {
+      ...(node.code ?? {}),
+      language,
+      theme,
+      highlightedHtml: highlightCode(content, language),
+    };
+    node.style ??= {};
+    node.style.direction = 'ltr';
+    return next;
+  }
+
+  if (node.subtype === 'rich') {
+    node.content = normalizeRichContent(node.content);
+    return next;
+  }
+
+  node.content = normalizeListContent(node.content as ListContent);
+  return next;
+}
+
+export function setRichBlockTypeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  blockIndex: number,
+  blockType: RichTextBlockType,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'rich') {
+    return document;
+  }
+
+  const content = normalizeRichContent(node.content);
+  const block = content[blockIndex];
+  if (!block) {
+    return document;
+  }
+
+  block.type = blockType;
+  node.content = content;
+  return next;
+}
+
+export function setRichListKindDoc(
+  document: DocumentModel,
+  _nodeId: NodeId,
+  _blockIndex: number,
+  _listKind: 'ul' | 'ol',
+): DocumentModel {
+  return document;
+}
+
+export function setRichListMarkerStyleDoc(
+  document: DocumentModel,
+  _nodeId: NodeId,
+  _blockIndex: number,
+  _markerStyle: string,
+): DocumentModel {
+  return document;
+}
+
+export function setRichBlockLineHeightDoc(
+  document: DocumentModel,
+  _nodeId: NodeId,
+  _blockIndex: number,
+  _lineHeight: number,
+): DocumentModel {
+  return document;
+}
+
+export function setRichBlockSpacingDoc(
+  document: DocumentModel,
+  _nodeId: NodeId,
+  _blockSpacing: number,
+): DocumentModel {
+  return document;
 }
 
 export function setNodeVisibilityDoc(

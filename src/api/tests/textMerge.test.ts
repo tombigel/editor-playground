@@ -8,10 +8,10 @@ import { createInitialDocument } from '../documentApi';
 import {
   convertTextNodeDoc,
   mergeTextNodesToRichDoc,
-  setNodeListContent,
-  setNodeTextField,
+  setListContentDoc,
+  setTextNodeContentDoc,
   splitRichTextNodeDoc,
-  switchSubtypeDoc,
+  switchTextSubtypeDoc,
 } from '../documentApi';
 
 function appendTextNode(document: ReturnType<typeof createInitialDocument>, node = createTextNode('block', sectionId(document))) {
@@ -35,7 +35,7 @@ describe('api/textMerge', () => {
   it('splits a multi-block rich node into sibling block text nodes', () => {
     const document = createInitialDocument();
     const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
-    const withRichContent = setNodeTextField(document, richId, 'name', 'Story');
+    const withRichContent = setTextNodeContentDoc(document, richId, 'name', 'Story');
     const richNode = withRichContent.nodes[richId];
     if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
       throw new Error('Expected rich text node');
@@ -99,10 +99,10 @@ describe('api/textMerge', () => {
     const codeId = appendTextNode(document, createTextNode('code', parentId));
     const listId = appendTextNode(document, createTextNode('list', parentId));
 
-    let next = setNodeTextField(document, headingId, 'content', 'Heading');
-    next = setNodeTextField(next, headingId, 'htmlTag', 'h2');
-    next = setNodeTextField(next, codeId, 'content', 'const value = 1;');
-    next = setNodeListContent(next, listId, {
+    let next = setTextNodeContentDoc(document, headingId, 'content', 'Heading');
+    next = setTextNodeContentDoc(next, headingId, 'htmlTag', 'h2');
+    next = setTextNodeContentDoc(next, codeId, 'content', 'const value = 1;');
+    next = setListContentDoc(next, listId, {
       type: 'ul',
       markerStyle: 'disc',
       items: [{ text: 'First item', direction: 'ltr' }],
@@ -165,12 +165,12 @@ describe('api/textMerge', () => {
     expect(converted.nodes[splitChildren[1]].contentType).toBe('text');
   });
 
-  it('keeps legacy switchSubtypeDoc aligned with the list subtype', () => {
+  it('keeps switchTextSubtypeDoc aligned with the list subtype', () => {
     const document = createInitialDocument();
     const blockId = appendTextNode(document, createTextNode('block', sectionId(document)));
-    const withContent = setNodeTextField(document, blockId, 'content', 'Line 1\nLine 2');
+    const withContent = setTextNodeContentDoc(document, blockId, 'content', 'Line 1\nLine 2');
 
-    const switched = switchSubtypeDoc(withContent, blockId, 'list');
+    const switched = switchTextSubtypeDoc(withContent, blockId, 'list');
     const node = switched.nodes[blockId];
     if (node.contentType !== 'text' || node.subtype !== 'list') {
       throw new Error('Expected list text node');

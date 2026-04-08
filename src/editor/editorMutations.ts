@@ -23,7 +23,7 @@ import type {
 import { isContainerNode, isLeafNode } from '../model/types';
 import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
-import { moveNodeInTreeDoc, setNodeTextField, setNodeVisibilityDoc } from '../api/documentApi';
+import { moveNodeInTreeDoc, setTextNodeContentDoc, setNodeVisibilityDoc } from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
 import { cloneDocument, normalizeDocument, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
@@ -192,7 +192,7 @@ export function updateTextField(
   field: EditorTextField,
   value: string,
 ): EditorState {
-  const document = setNodeTextField(state.document, nodeId, field, value);
+  const document = setTextNodeContentDoc(state.document, nodeId, field, value);
   if (document === state.document) {
     return state;
   }

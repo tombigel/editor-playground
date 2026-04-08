@@ -20,9 +20,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P15-Q1`
-- Last completed quantum: `P15-Q0`
-- Next quantum after current: `P15-Q2`
+- Current quantum: `P15-Q2`
+- Last completed quantum: `P15-Q1`
+- Next quantum after current: `P15-Q3`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
   - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
@@ -63,7 +63,7 @@ Execution rules:
   - Cross-link readback: passed
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `dc4f0e6`
 - Open follow-ups carried forward:
   - Start `P15-Q1` after the new roadmap docs are in place and cross-links are verified.
 
@@ -72,7 +72,7 @@ Execution rules:
 - Objective:
   - Rename and consolidate pure document APIs to canonical `*Doc` names.
   - Remove obsolete `setNode*` naming instead of preserving compatibility aliases.
-- Status: `in_progress`
+- Status: `done`
 - Allowed files:
   - `src/api/documentApi.ts`
   - `src/api/editorApi.ts`
@@ -113,7 +113,9 @@ Execution rules:
   - Focused `vitest`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/api/tests/documentApi.test.ts src/api/tests/textMerge.test.ts src/editor/tests/editorMutations.test.ts`: passed, 3 files / 187 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:

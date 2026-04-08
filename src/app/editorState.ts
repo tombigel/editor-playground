@@ -38,8 +38,8 @@ import {
 } from '../api/editorApi';
 import {
   mergeTextNodesToRichDoc,
-  setNodeListContent,
-  setNodeRichContent,
+  setListContentDoc,
+  setRichTextContentDoc,
   setSiteNodeStickyElevation,
   switchTextSubtypeDoc,
 } from '../api/documentApi';
@@ -132,9 +132,9 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     case 'deleteNode':
       return deleteNode(state, action.id);
     case 'setRichContent':
-      return { ...state, document: setNodeRichContent(state.document, action.id, action.content) };
+      return { ...state, document: setRichTextContentDoc(state.document, action.id, action.content) };
     case 'setListContent':
-      return { ...state, document: setNodeListContent(state.document, action.id, action.content) };
+      return { ...state, document: setListContentDoc(state.document, action.id, action.content) };
     case 'switchTextSubtype':
       return {
         ...state,
