@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q9`
-- Last completed quantum: `Q8`
-- Next quantum after current: `Q10`
+- Current quantum: `Q10`
+- Last completed quantum: `Q9`
+- Next quantum after current: `none`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -419,33 +419,52 @@ Execution rules:
 
 - Objective:
   - Thin the UI down to orchestration over pure APIs.
-- Status: `in_progress`
+- Status: `done`
 - Allowed files:
   - `src/app/types/index.ts`
   - `src/app/editorState.ts`
+  - `src/app/AppShell.tsx`
   - `src/panels/InspectorPanel.tsx`
+  - `src/panels/inspector/types/index.ts`
   - `src/panels/inspector/config.text.tsx`
   - `src/panels/inspector/contentSections/textSections.tsx`
   - `src/panels/MultiSelectInspector.tsx`
+  - Relevant app/panel tests for the widened API-consumer contracts
   - Panel tests
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/app/types/index.ts:86-159`
+  - `src/app/editorState.ts:39-163`
+  - `src/app/AppShell.tsx:1127-1135`
+  - `src/app/AppShell.tsx:1281-1286`
+  - `src/panels/InspectorPanel.tsx:50-187`
+  - `src/panels/FocusedModePanel.tsx:16-153`
+  - `src/panels/inspector/types/index.ts:17-43`
+  - `src/panels/inspector/config.text.tsx:38-227`
+  - `src/panels/inspector/contentSections/textSections.tsx:62-329`
+  - `src/panels/MultiSelectInspector.tsx:108-250`
+  - `src/app/tests/editorState.test.ts:246-306`
+  - `src/panels/tests/InspectorPanel.test.tsx:196-249`
+  - `docs/PLAYGROUND_SPEC.md:1247-1425`
 - Implementation notes:
-  - Make subtype switching call conversion APIs.
-  - Make merge action call merge API.
-  - Keep flatten/split prompts as API mode selectors only.
+  - Widen the app action surface so reducer-driven list updates and text merges call `setNodeListContent()` and `mergeTextNodesToRichDoc()` directly.
+  - Thread `conversionMode` through inspector/focused-mode call sites so subtype switching only selects API mode, not conversion logic.
+  - Expose the `list` subtype in the inspector, add a line-based list editor over `setNodeListContent()`, and keep list HTML-tag controls hidden.
+  - Add a DS-aligned rich conversion dialog for multi-block rich nodes and a same-parent text-merge card in the multi-select inspector.
 - Verification commands:
   - `npm run typecheck`
-  - Relevant `vitest` commands
+  - `npx vitest run src/app/tests/editorState.test.ts src/panels/tests/InspectorPanel.test.tsx src/panels/tests/FocusedModePanel.test.tsx src/panels/tests/EditorSidebar.test.tsx src/panels/inspector/tests/schema.test.tsx`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/app/tests/editorState.test.ts src/panels/tests/InspectorPanel.test.tsx src/panels/tests/FocusedModePanel.test.tsx src/panels/tests/EditorSidebar.test.tsx src/panels/inspector/tests/schema.test.tsx`: passed, 5 files / 67 tests
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `e31f632`
 - Open follow-ups carried forward:
-  - Pending
+  - List item direction and link metadata now survive API-driven edits, but inspector controls still expose only the phase-1 line editor; richer per-item controls remain future UI work.
+  - Rich `split` mode still performs the pure API rich-block split instead of converting each resulting sibling to the requested target subtype; that behavior is intentional until a richer conversion contract is designed.
 
 ## Q10: Stage editing UX
 
