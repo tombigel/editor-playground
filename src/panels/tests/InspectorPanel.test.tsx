@@ -246,6 +246,25 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('Items');
     expect(markup).toContain('>Type<');
     expect(markup).toContain('>Bullet<');
+    expect(markup).toContain('Add item');
+    expect(markup).toContain('Advanced bulk edit');
+    expect(markup).not.toContain('>Description<');
+  });
+
+  it('keeps description lists out of the structured standalone inspector flow', () => {
+    const listNode = createTextNode('list', 'section_1');
+    listNode.content = {
+      type: 'dl',
+      items: [{ term: 'API', description: 'Application Programming Interface' }],
+    };
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetListContent: () => {} })} />,
+    );
+
+    expect(markup).toContain('Description list inspector editing is deferred to phase 2');
+    expect(markup).toContain('Advanced bulk edit');
+    expect(markup).not.toContain('Add item');
   });
 
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {

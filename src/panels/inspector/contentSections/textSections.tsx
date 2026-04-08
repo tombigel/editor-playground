@@ -1,4 +1,5 @@
-import { Pencil } from 'lucide-react';
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -65,10 +66,11 @@ import {
 } from '../../../model/listContent';
 import type { ListContent } from '../../../model/types';
 
+type StructuredListContent = Extract<ListContent, { type: 'ul' | 'ol' }>;
+
 const LIST_TYPE_OPTIONS = [
   { value: 'ul', label: 'Bulleted' },
   { value: 'ol', label: 'Numbered' },
-  { value: 'dl', label: 'Description' },
 ] as const;
 
 const UNORDERED_MARKER_OPTIONS = [
@@ -154,6 +156,65 @@ function buildListContentFromLines(
   });
 }
 
+function isStructuredListContent(content: ListContent): content is StructuredListContent {
+  return content.type === 'ul' || content.type === 'ol';
+}
+
+function updateStructuredListItems(
+  content: StructuredListContent,
+  updater: (items: StructuredListContent['items']) => StructuredListContent['items'],
+): StructuredListContent {
+  const items = updater(content.items);
+  const normalizedItems = items.length > 0 ? items : [{ text: '' }];
+  return normalizeListContent({ ...content, items: normalizedItems }) as StructuredListContent;
+}
+
+function setStructuredListItemText(
+  content: StructuredListContent,
+  index: number,
+  text: string,
+): StructuredListContent {
+  return updateStructuredListItems(content, (items) =>
+    items.map((item, itemIndex) => (itemIndex === index ? { ...item, text } : item)),
+  );
+}
+
+function addStructuredListItem(content: StructuredListContent): StructuredListContent {
+  return updateStructuredListItems(content, (items) => [...items, { text: '' }]);
+}
+
+function removeStructuredListItem(content: StructuredListContent, index: number): StructuredListContent {
+  return updateStructuredListItems(content, (items) => items.filter((_, itemIndex) => itemIndex !== index));
+}
+
+function moveStructuredListItem(
+  content: StructuredListContent,
+  index: number,
+  direction: -1 | 1,
+): StructuredListContent {
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= content.items.length) {
+    return content;
+  }
+
+  return updateStructuredListItems(content, (items) => {
+    const nextItems = [...items];
+    const [movedItem] = nextItems.splice(index, 1);
+    nextItems.splice(nextIndex, 0, movedItem);
+    return nextItems;
+  });
+}
+
+function createStructuredListItemKeys(nodeId: string, content: StructuredListContent): string[] {
+  const seenCounts = new Map<string, number>();
+  return content.items.map((item) => {
+    const base = item.text.trim() || 'item';
+    const nextCount = (seenCounts.get(base) ?? 0) + 1;
+    seenCounts.set(base, nextCount);
+    return `${nodeId}-list-item-${base}-${nextCount}`;
+  });
+}
+
 export function TextContentSection({
   document,
   node,
@@ -226,6 +287,8 @@ export function ListContentSection({
 } & FocusModeCardProps) {
   const listContent = normalizeListContent(node.content);
   const itemsValue = listContent.items.map((item) => formatListLine(item)).join('\n');
+  const structuredListContent = isStructuredListContent(listContent) ? listContent : null;
+  const structuredItemKeys = structuredListContent ? createStructuredListItemKeys(node.id, structuredListContent) : [];
 
   return (
     <InspectorSectionCard
@@ -236,30 +299,38 @@ export function ListContentSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
       <InspectorFieldGroup gap>
-        <InspectorInlineRow label="Type" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
-          <Select
-            value={listContent.type}
-            onValueChange={(value: ListContent['type']) =>
-              onSetListContent(buildListContentFromLines(itemsValue, listContent, value))
-            }
-          >
-            <SelectTrigger className="h-8 text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LIST_TYPE_OPTIONS.map(({ value, label }) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </InspectorInlineRow>
-        {listContent.type === 'ul' ? (
+        {structuredListContent ? (
+          <InspectorInlineRow label="Type" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+            <Select
+              value={structuredListContent.type}
+              onValueChange={(value: StructuredListContent['type']) =>
+                onSetListContent(buildListContentFromLines(itemsValue, listContent, value))
+              }
+            >
+              <SelectTrigger className="h-8 text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LIST_TYPE_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </InspectorInlineRow>
+        ) : (
+          <div className="editor-border-subtle editor-bg-subtle editor-text-muted rounded-sm border px-3 py-2 text-[11px] leading-4">
+            Description list inspector editing is deferred to phase 2. Convert this node to bulleted or numbered to use structured controls.
+          </div>
+        )}
+        {structuredListContent?.type === 'ul' ? (
           <InspectorInlineRow label="Bullet" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
             <Select
-              value={listContent.markerStyle ?? 'disc'}
-              onValueChange={(value) => onSetListContent({ ...listContent, markerStyle: value as typeof listContent.markerStyle })}
+              value={structuredListContent.markerStyle ?? 'disc'}
+              onValueChange={(value) =>
+                onSetListContent({ ...structuredListContent, markerStyle: value as typeof structuredListContent.markerStyle })
+              }
             >
               <SelectTrigger className="h-8 text-[11px]">
                 <SelectValue />
@@ -274,21 +345,25 @@ export function ListContentSection({
             </Select>
           </InspectorInlineRow>
         ) : null}
-        {listContent.type === 'ol' ? (
+        {structuredListContent?.type === 'ol' ? (
           <>
             <InspectorInlineRow label="Start" controlWidth="88px">
               <NumberInput
-                value={listContent.start ?? 1}
+                value={structuredListContent.start ?? 1}
                 min={1}
                 max={999}
                 step={1}
-                onChange={(value) => onSetListContent({ ...listContent, start: Math.max(1, Math.trunc(value)) })}
+                onChange={(value) =>
+                  onSetListContent({ ...structuredListContent, start: Math.max(1, Math.trunc(value)) })
+                }
               />
             </InspectorInlineRow>
             <InspectorInlineRow label="Marker" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
               <Select
-                value={listContent.markerStyle ?? 'decimal'}
-                onValueChange={(value) => onSetListContent({ ...listContent, markerStyle: value as typeof listContent.markerStyle })}
+                value={structuredListContent.markerStyle ?? 'decimal'}
+                onValueChange={(value) =>
+                  onSetListContent({ ...structuredListContent, markerStyle: value as typeof structuredListContent.markerStyle })
+                }
               >
                 <SelectTrigger className="h-8 text-[11px]">
                   <SelectValue />
@@ -305,8 +380,80 @@ export function ListContentSection({
           </>
         ) : null}
       </InspectorFieldGroup>
+      {structuredListContent ? (
+        <InspectorFieldGroup separated>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="editor-text-strong text-[11px] font-medium">Items</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 px-2 text-[11px]"
+                onClick={() => onSetListContent(addStructuredListItem(structuredListContent))}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add item
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {structuredListContent.items.map((item, index) => (
+                <div
+                  key={structuredItemKeys[index]}
+                  className="editor-border-subtle editor-bg-subtle grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-sm border px-2 py-2"
+                >
+                  <Input
+                    aria-label={`List item ${index + 1}`}
+                    value={item.text}
+                    placeholder={`Item ${index + 1}`}
+                    className="h-8 rounded-sm text-[12px]"
+                    onChange={(event) =>
+                      onSetListContent(setStructuredListItemText(structuredListContent, index, event.target.value))
+                    }
+                  />
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      aria-label={`Move list item ${index + 1} up`}
+                      className="h-8 w-8 rounded-sm p-0"
+                      onClick={() => onSetListContent(moveStructuredListItem(structuredListContent, index, -1))}
+                      disabled={index === 0}
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      aria-label={`Move list item ${index + 1} down`}
+                      className="h-8 w-8 rounded-sm p-0"
+                      onClick={() => onSetListContent(moveStructuredListItem(structuredListContent, index, 1))}
+                      disabled={index === structuredListContent.items.length - 1}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      aria-label={`Remove list item ${index + 1}`}
+                      className="h-8 w-8 rounded-sm p-0"
+                      onClick={() => onSetListContent(removeStructuredListItem(structuredListContent, index))}
+                      disabled={structuredListContent.items.length === 1}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </InspectorFieldGroup>
+      ) : null}
       <InspectorFieldGroup separated>
-        <FormField label={listContent.type === 'dl' ? 'Items (term: description)' : 'Items'}>
+        <FormField label={listContent.type === 'dl' ? 'Advanced bulk edit (term: description)' : 'Advanced bulk edit'}>
           <Textarea
             value={itemsValue}
             rows={Math.max(4, listContentToLines(listContent).length)}
@@ -322,7 +469,7 @@ export function ListContentSection({
         </FormField>
       </InspectorFieldGroup>
       <p className="editor-text-muted px-0.5 text-[10px] opacity-70">
-        Use one line per item. Description lists use <span className="font-mono">term: description</span>.
+        Structured editing covers bulleted and numbered lists in phase 1.5. Use one line per item in the advanced field. Description lists remain bulk-edit only until phase 2.
       </p>
     </InspectorSectionCard>
   );

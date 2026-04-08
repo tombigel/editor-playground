@@ -1444,8 +1444,15 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 ### Inspector editing
 
 - List nodes are editable in the inspector through `setListContentDoc()`, not through editor-only transient formatting state.
-- The inspector exposes list type, marker style, ordered-list start, and a line-based items textarea.
-- Each line maps to one item. Description lists use the format `term: description`.
+- Phase 1.5 inspector editing is structured for `ul` and `ol`:
+  - list type
+  - bullet / ordered marker controls
+  - ordered-list start
+  - per-item add / reorder / remove
+  - one inline text field per item
+- The line-based textarea remains as an advanced bulk-edit / paste-import helper, not the primary editing surface.
+- `dl` inspector authoring is deferred to phase 2; existing description lists remain bulk-edit only with `term: description` lines.
+- Per-item links and per-item direction are deferred from the standalone inspector to the later on-stage editing phase.
 
 ## Headless Split And Merge
 
