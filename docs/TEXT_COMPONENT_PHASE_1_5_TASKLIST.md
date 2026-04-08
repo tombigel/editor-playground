@@ -20,9 +20,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P15-Q5`
-- Last completed quantum: `P15-Q4`
-- Next quantum after current: `P15-Q6`
+- Current quantum: `P15-Q6`
+- Last completed quantum: `P15-Q5`
+- Next quantum after current: `P15-Q7`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
   - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
@@ -281,7 +281,7 @@ Execution rules:
 
 - Objective:
   - Keep rich-only stage edit entry, but finish the rich floating toolbar and block-structure editing.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/stage/Stage.tsx`
   - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
@@ -290,9 +290,13 @@ Execution rules:
   - Relevant tests/docs
   - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
 - Read-first files and target lines:
-  - Current rich stage editor
-  - Current inspector text controls
-  - DS primitives and style-guide references
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-442`
+  - `src/render/richTextEditor.ts:1-63`
+  - `src/stage/Stage.tsx:64-232`
+  - `src/stage/tests/RichTextEditOverlay.test.tsx:1-32`
+  - `src/panels/inspector/contentSections/shared.tsx:145-258`
+  - `docs/EDITOR_STYLE_GUIDE.md:1-220`
+  - `docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md:1-220`
 - Implementation notes:
   - Floating text bar order:
     - font picker
@@ -328,17 +332,22 @@ Execution rules:
   - Line height applies only to non-list text blocks.
   - Block spacing edits rich-node `blockGap`.
   - Replace URL-only link popover with the shared link-type picker.
+  - Stage overlay controls must explicitly opt back into `pointer-events: auto` because `.stage-leaf-body *` disables pointer events by default.
 - Verification commands:
   - `npm run typecheck`
   - Focused rich-stage `vitest`
   - Targeted stage e2e
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/render/tests/richTextEditor.test.ts src/stage/tests/RichTextEditOverlay.test.tsx`: passed, 2 files / 15 tests
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps rich edit mode active|allows mouse text selection"`: passed, 1 file / 2 tests
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `e588439`
 - Open follow-ups carried forward:
-  - `P15-Q7` should stabilize the new rich-stage flows under targeted e2e coverage.
+  - `P15-Q7` should expand the new rich-stage flows into fuller targeted e2e coverage.
+  - The e2e harness now warms Vite optimized deps before startup and retries the first page load once to avoid `504 Outdated Optimize Dep` flakes during stage interaction tests.
 
 ## P15-Q6: Simplify standalone list inspector for phase 1.5
 
