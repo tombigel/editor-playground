@@ -1124,8 +1124,14 @@ export function AppShell({
 								})
 							}
 							showDebugInfo={state.ui.showDebugInfo}
-							onSwitchTextSubtype={(nodeId, subtype) =>
-								dispatch({ type: "switchTextSubtype", nodeId, subtype })
+							onSwitchTextSubtype={(nodeId, subtype, conversionMode) =>
+								dispatch({ type: "switchTextSubtype", nodeId, subtype, conversionMode })
+							}
+							onSetListContent={(nodeId, content) =>
+								dispatch({ type: "setListContent", id: nodeId, content })
+							}
+							onMergeTextSelectionToRich={(nodeIds) =>
+								dispatch({ type: "mergeTextSelectionToRich", nodeIds })
 							}
 							onEnterFocusedMode={(value) =>
 								dispatch({ type: "setFocusedMode", value })
@@ -1272,8 +1278,11 @@ export function AppShell({
 								pageIds,
 							})
 						}
-						onSwitchTextSubtype={(nodeId, subtype) =>
-							dispatch({ type: "switchTextSubtype", nodeId, subtype })
+						onSwitchTextSubtype={(nodeId, subtype, conversionMode) =>
+							dispatch({ type: "switchTextSubtype", nodeId, subtype, conversionMode })
+						}
+						onSetListContent={(nodeId, content) =>
+							dispatch({ type: "setListContent", id: nodeId, content })
 						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })

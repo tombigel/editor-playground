@@ -59,6 +59,100 @@ import {
   TypographyDesignFields,
 } from './shared';
 import { createLanguageSelectOptions } from '../../../i18n/languages';
+import {
+  listContentToLines,
+  normalizeListContent,
+} from '../../../model/listContent';
+import type { ListContent } from '../../../model/types';
+
+const LIST_TYPE_OPTIONS = [
+  { value: 'ul', label: 'Bulleted' },
+  { value: 'ol', label: 'Numbered' },
+  { value: 'dl', label: 'Description' },
+] as const;
+
+const UNORDERED_MARKER_OPTIONS = [
+  { value: 'disc', label: 'Disc' },
+  { value: 'circle', label: 'Circle' },
+  { value: 'square', label: 'Square' },
+] as const;
+
+const ORDERED_MARKER_OPTIONS = [
+  { value: 'decimal', label: 'Decimal' },
+  { value: 'lower-alpha', label: 'a, b, c' },
+  { value: 'upper-alpha', label: 'A, B, C' },
+  { value: 'lower-roman', label: 'i, ii, iii' },
+  { value: 'upper-roman', label: 'I, II, III' },
+] as const;
+
+function formatListLine(item: ListContent['items'][number]): string {
+  if ('text' in item) {
+    return item.text;
+  }
+
+  if (item.term && item.description) {
+    return `${item.term}: ${item.description}`;
+  }
+
+  return item.term || item.description;
+}
+
+function parseDescriptionItem(line: string) {
+  const separatorIndex = line.indexOf(':');
+  if (separatorIndex === -1) {
+    return { term: line.trim(), description: '' };
+  }
+
+  return {
+    term: line.slice(0, separatorIndex).trim(),
+    description: line.slice(separatorIndex + 1).trim(),
+  };
+}
+
+function buildListContentFromLines(
+  linesValue: string,
+  currentContent: ListContent,
+  nextType: ListContent['type'] = currentContent.type,
+): ListContent {
+  const lines = linesValue.split(/\r?\n/);
+  const normalizedLines = lines.length > 0 ? lines : [''];
+
+  if (nextType === 'dl') {
+    return normalizeListContent({
+      type: 'dl',
+      items: normalizedLines.map((line, index) => {
+        const currentItem = currentContent.items[index];
+        const { term, description } = parseDescriptionItem(line);
+        return {
+          term,
+          description,
+          direction: currentItem?.direction,
+          link: currentItem?.link,
+        };
+      }),
+    });
+  }
+
+  return normalizeListContent({
+    type: nextType,
+    ...(nextType === 'ol'
+      ? {
+          start: currentContent.type === 'ol' ? currentContent.start : 1,
+          markerStyle: currentContent.type === 'ol' ? currentContent.markerStyle : 'decimal',
+        }
+      : {
+          markerStyle: currentContent.type === 'ul' ? currentContent.markerStyle : 'disc',
+        }),
+    items: normalizedLines.map((line, index) => {
+      const currentItem = currentContent.items[index];
+      return {
+        text: line,
+        direction: currentItem?.direction,
+        link: currentItem?.link,
+      };
+    }),
+  });
+}
 
 export function TextContentSection({
   document,
@@ -114,6 +208,122 @@ export function TextContentSection({
           />
         </InspectorInlineRow>
       </InspectorFieldGroup>
+    </InspectorSectionCard>
+  );
+}
+
+export function ListContentSection({
+  node,
+  onSetListContent,
+  focusedMode,
+  onEnterFocusedMode,
+  headerContent,
+  headerAction,
+  contentClassName = 'px-3 pt-1.5 pb-3',
+}: {
+  node: TextInspectorNode;
+  onSetListContent: (content: ListContent) => void;
+} & FocusModeCardProps) {
+  const listContent = normalizeListContent(node.content);
+  const itemsValue = listContent.items.map((item) => formatListLine(item)).join('\n');
+
+  return (
+    <InspectorSectionCard
+      title="Content"
+      headerContent={headerContent}
+      headerAction={headerAction}
+      contentClassName={contentClassName}
+      focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
+    >
+      <InspectorFieldGroup gap>
+        <InspectorInlineRow label="Type" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <Select
+            value={listContent.type}
+            onValueChange={(value: ListContent['type']) =>
+              onSetListContent(buildListContentFromLines(itemsValue, listContent, value))
+            }
+          >
+            <SelectTrigger className="h-8 text-[11px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LIST_TYPE_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </InspectorInlineRow>
+        {listContent.type === 'ul' ? (
+          <InspectorInlineRow label="Bullet" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+            <Select
+              value={listContent.markerStyle ?? 'disc'}
+              onValueChange={(value) => onSetListContent({ ...listContent, markerStyle: value as typeof listContent.markerStyle })}
+            >
+              <SelectTrigger className="h-8 text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UNORDERED_MARKER_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </InspectorInlineRow>
+        ) : null}
+        {listContent.type === 'ol' ? (
+          <>
+            <InspectorInlineRow label="Start" controlWidth="88px">
+              <NumberInput
+                value={listContent.start ?? 1}
+                min={1}
+                max={999}
+                step={1}
+                onChange={(value) => onSetListContent({ ...listContent, start: Math.max(1, Math.trunc(value)) })}
+              />
+            </InspectorInlineRow>
+            <InspectorInlineRow label="Marker" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+              <Select
+                value={listContent.markerStyle ?? 'decimal'}
+                onValueChange={(value) => onSetListContent({ ...listContent, markerStyle: value as typeof listContent.markerStyle })}
+              >
+                <SelectTrigger className="h-8 text-[11px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ORDERED_MARKER_OPTIONS.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </InspectorInlineRow>
+          </>
+        ) : null}
+      </InspectorFieldGroup>
+      <InspectorFieldGroup separated>
+        <FormField label={listContent.type === 'dl' ? 'Items (term: description)' : 'Items'}>
+          <Textarea
+            value={itemsValue}
+            rows={Math.max(4, listContentToLines(listContent).length)}
+            onChange={(event) => onSetListContent(buildListContentFromLines(event.target.value, listContent))}
+            onPaste={(event) => {
+              const text = event.clipboardData.getData('text/plain');
+              if (text) {
+                event.preventDefault();
+                onSetListContent(buildListContentFromLines(text, listContent));
+              }
+            }}
+          />
+        </FormField>
+      </InspectorFieldGroup>
+      <p className="editor-text-muted px-0.5 text-[10px] opacity-70">
+        Use one line per item. Description lists use <span className="font-mono">term: description</span>.
+      </p>
     </InspectorSectionCard>
   );
 }
@@ -240,6 +450,7 @@ export function TextTextStyleSection({
   node,
   onTextChange,
   onOpenManageFonts,
+  showHtmlTag = true,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -250,6 +461,7 @@ export function TextTextStyleSection({
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
   onOpenManageFonts: () => void;
+  showHtmlTag?: boolean;
 } & FocusModeCardProps) {
   return (
     <InspectorSectionCard
@@ -265,24 +477,26 @@ export function TextTextStyleSection({
           onTextChange={onTextChange}
           onOpenManageFonts={onOpenManageFonts}
         />
-        <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
-          <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
-            <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="h1">h1</SelectItem>
-              <SelectItem value="h2">h2</SelectItem>
-              <SelectItem value="h3">h3</SelectItem>
-              <SelectItem value="h4">h4</SelectItem>
-              <SelectItem value="h5">h5</SelectItem>
-              <SelectItem value="h6">h6</SelectItem>
-              <SelectItem value="p">p</SelectItem>
-              <SelectItem value="blockquote">blockquote</SelectItem>
-              <SelectItem value="div">div</SelectItem>
-            </SelectContent>
-          </Select>
-        </InspectorInlineRow>
+        {showHtmlTag ? (
+          <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+            <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
+              <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="h1">h1</SelectItem>
+                <SelectItem value="h2">h2</SelectItem>
+                <SelectItem value="h3">h3</SelectItem>
+                <SelectItem value="h4">h4</SelectItem>
+                <SelectItem value="h5">h5</SelectItem>
+                <SelectItem value="h6">h6</SelectItem>
+                <SelectItem value="p">p</SelectItem>
+                <SelectItem value="blockquote">blockquote</SelectItem>
+                <SelectItem value="div">div</SelectItem>
+              </SelectContent>
+            </Select>
+          </InspectorInlineRow>
+        ) : null}
     </InspectorSectionCard>
   );
 }

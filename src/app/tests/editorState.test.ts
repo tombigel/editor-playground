@@ -243,6 +243,68 @@ describe('app/editorState', () => {
     expect(next.present.document.nodes[secondId]).toMatchObject({ style: { color: '#112233' } });
   });
 
+  it('merges selected sibling text nodes into one rich node through the reducer', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const firstId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const secondId = state.selectedId;
+
+    if (!firstId || !secondId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    const merged = editorReducer(state, {
+      type: 'mergeTextSelectionToRich',
+      nodeIds: [firstId, secondId],
+    });
+    const mergedNode = merged.document.nodes[firstId];
+
+    expect(merged.selectedId).toBe(firstId);
+    expect(merged.selectedIds).toEqual([firstId]);
+    expect(mergedNode).toMatchObject({ contentType: 'text', subtype: 'rich' });
+    expect(merged.document.nodes[secondId]).toBeUndefined();
+  });
+
+  it('updates list content through the reducer using the pure document api', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const nodeId = state.selectedId;
+
+    if (!nodeId) {
+      throw new Error('Expected inserted text node');
+    }
+
+    state = editorReducer(state, { type: 'switchTextSubtype', nodeId, subtype: 'list' });
+    const next = editorReducer(state, {
+      type: 'setListContent',
+      id: nodeId,
+      content: {
+        type: 'ol',
+        start: 3,
+        markerStyle: 'upper-alpha',
+        items: [
+          { text: 'Alpha', direction: 'ltr' },
+          { text: 'Beta', direction: 'rtl' },
+        ],
+      },
+    });
+
+    expect(next.document.nodes[nodeId]).toMatchObject({
+      contentType: 'text',
+      subtype: 'list',
+      content: {
+        type: 'ol',
+        start: 3,
+        markerStyle: 'upper-alpha',
+        items: [
+          { text: 'Alpha', direction: 'ltr' },
+          { text: 'Beta', direction: 'rtl' },
+        ],
+      },
+    });
+  });
+
   it('stores one history entry for a group move', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'text');

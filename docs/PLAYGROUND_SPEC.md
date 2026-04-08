@@ -1253,6 +1253,7 @@ Multi-select inspector:
 |---|---|---|
 | `Layout` | compatible selections | Align uses the first selected node as the anchor; distribution uses outermost selected items as endpoints. |
 | `Reorder` | same-parent movable nodes | Section wrappers never participate; reorder preserves relative order. |
+| `Text Merge` | same-parent standalone text nodes | Calls `mergeTextNodesToRichDoc()` and keeps the first selected node as the surviving anchor. |
 | `Typography` | text, link, button | Shared typography controls. |
 | `Text Design` | text, link, button | Shared foreground color and filter-shadow controls. |
 | `Surface Design` | compatible surface nodes | Shared background, border radius, and box shadow. |
@@ -1357,11 +1358,13 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 
 ### Inspector subtype switcher
 
-- The Content block in the text inspector shows a **Text / Rich / Code** segmented control above the content fields.
-- Switching subtype calls `switchTextSubtypeDoc()` — transferring position, sticky config, and style fields while replacing content with the target type's default.
-- The control is visible for all text nodes with `subtype` in `['block', 'rich', 'code']`.
-- Uses the shared `Tabs`/`TabsList`/`TabsTrigger` DS primitive.
-- `list` already exists in the document model and conversion APIs, but inspector exposure is intentionally deferred until the later editor/inspector quantum so the headless contract stays ahead of UI affordances.
+- The Content block in the text inspector shows a **Text / Rich / Code / List** segmented control above the content fields.
+- Switching subtype calls `switchTextSubtypeDoc()` and only passes the target subtype plus an optional conversion mode; the pure API still owns the conversion behavior.
+- The control is visible for all standalone text nodes with `subtype` in `['block', 'rich', 'code', 'list']`.
+- When converting a multi-block rich node to a non-rich subtype, the inspector opens a confirmation dialog that only selects the API mode:
+  - `Flatten` calls `switchTextSubtypeDoc(..., { mode: 'flatten' })`
+  - `Split into nodes` calls `switchTextSubtypeDoc(..., { mode: 'split' })`
+- The segmented control uses the shared editor button chrome rather than a browser-native tablist.
 
 ### Conversion modes
 
@@ -1400,6 +1403,12 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 - Description lists render semantic `<dt>` / `<dd>` pairs.
 - Site export uses the same shared list rendering helpers as the stage/site presentation path.
 
+### Inspector editing
+
+- List nodes are editable in the inspector through `setNodeListContent()`, not through editor-only transient formatting state.
+- The inspector exposes list type, marker style, ordered-list start, and a line-based items textarea.
+- Each line maps to one item. Description lists use the format `term: description`.
+
 ## Headless Split And Merge
 
 The text system supports structure-changing operations without depending on editor UI.
@@ -1417,6 +1426,7 @@ The text system supports structure-changing operations without depending on edit
 - Content order follows parent tree order, not the caller's selection order.
 - The surviving node can be chosen explicitly so later editor multi-select flows can keep the first-selected node's geometry and identity.
 - Mixed-parent merge requests are rejected as no-ops.
+- The multi-select inspector only offers the merge action when every selected node is a standalone text node under the same parent.
 
 ## Section Templates
 

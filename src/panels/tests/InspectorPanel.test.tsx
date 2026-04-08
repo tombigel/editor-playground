@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
+import { createDefaultListContent } from '../../model/listContent';
 import { resolveSizeMeasurementInput } from '../controls/SizeFields';
 import {
   buildSizeFieldValue,
@@ -228,7 +229,23 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('class="shrink-0" style="width:112px"');
     expect(markup).toContain('class="shrink-0" style="width:56px"');
     expect(markup).toContain('aria-label="Manage fonts"');
+    expect(markup).toContain('>Text Merge<');
+    expect(markup).toContain('>Merge into rich text<');
     expect(markup).not.toContain('class="h-8 rounded-sm text-[11px] w-[72px]"');
+  });
+
+  it('renders list content controls for standalone list text nodes', () => {
+    const listNode = createTextNode('list', 'section_1');
+    listNode.content = createDefaultListContent();
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetListContent: () => {} })} />,
+    );
+
+    expect(markup).toContain('>List<');
+    expect(markup).toContain('Items');
+    expect(markup).toContain('>Type<');
+    expect(markup).toContain('>Bullet<');
   });
 
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {

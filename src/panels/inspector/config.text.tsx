@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { TextAppearanceSection, TextContentSection, RichTextContentSection, CodeContentSection, TextDesignSection, TextTextStyleSection, CodeTextStyleSection, CodeDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
+import { normalizeRichContent } from '../../model/richContent';
 import { isTextNode as isTextNodeGuard } from '../../model/types';
 import type { TextSubtype } from '../../model/types';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { InspectorActionHandlers, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
+import { ListContentSection } from './contentSections/textSections';
 
 const textDesignSection: InspectorSectionDefinition = {
   id: 'text-design',
@@ -45,6 +49,19 @@ const textTextStyleSection: InspectorSectionDefinition = {
         />
       );
     }
+    if (node.subtype === 'list') {
+      return (
+        <TextTextStyleSection
+          document={document}
+          node={node}
+          onTextChange={actions.onTextChange}
+          onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
+          showHtmlTag={false}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+        />
+      );
+    }
     return (
       <TextTextStyleSection
         document={document}
@@ -77,26 +94,82 @@ const TEXT_SUBTYPES: { value: TextSubtype; label: string }[] = [
   { value: 'block', label: 'Text' },
   { value: 'rich', label: 'Rich' },
   { value: 'code', label: 'Code' },
+  { value: 'list', label: 'List' },
 ];
 
 function SubtypeSwitcher({ node, actions }: { node: InspectorNode | null; actions: InspectorActionHandlers }) {
+  const [pendingSubtype, setPendingSubtype] = useState<TextSubtype | null>(null);
   if (!node || !isTextNodeGuard(node)) return null;
-  const current = node.subtype as TextSubtype;
+  const textNode = node;
+  const current = textNode.subtype as TextSubtype;
+  const richBlockCount = textNode.subtype === 'rich' ? normalizeRichContent(textNode.content).length : 0;
+
+  function commitSwitch(nextSubtype: TextSubtype, conversionMode?: 'flatten' | 'split') {
+    actions.onSwitchTextSubtype(textNode.id, nextSubtype, conversionMode);
+    setPendingSubtype(null);
+  }
+
+  function handleSubtypeClick(nextSubtype: TextSubtype) {
+    if (nextSubtype === current) {
+      return;
+    }
+
+    if (textNode.subtype === 'rich' && nextSubtype !== 'rich' && richBlockCount > 1) {
+      setPendingSubtype(nextSubtype);
+      return;
+    }
+
+    commitSwitch(nextSubtype);
+  }
+
   return (
-    <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-      {TEXT_SUBTYPES.map(({ value, label }) => (
-        <Button
-          key={value}
-          type="button"
-          variant={current === value ? 'default' : 'ghost'}
-          size="sm"
-          className="h-6 rounded-md px-2 text-[11px]"
-          onClick={() => actions.onSwitchTextSubtype(node.id, value)}
-        >
-          {label}
-        </Button>
-      ))}
-    </div>
+    <>
+      <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+        {TEXT_SUBTYPES.map(({ value, label }) => (
+          <Button
+            key={value}
+            type="button"
+            variant={current === value ? 'default' : 'ghost'}
+            size="sm"
+            className="h-6 rounded-md px-2 text-[11px]"
+            onClick={() => handleSubtypeClick(value)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {pendingSubtype ? (
+        <Dialog open onOpenChange={(open) => !open && setPendingSubtype(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Convert rich text?</DialogTitle>
+              <DialogDescription>
+                This rich text node has {richBlockCount} blocks. Flatten keeps one node and removes unsupported
+                structure. Split uses the headless conversion API to turn each block into a sibling text node.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setPendingSubtype(null)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => commitSwitch(pendingSubtype, 'flatten')}
+              >
+                Flatten
+              </Button>
+              <Button
+                type="button"
+                onClick={() => commitSwitch(pendingSubtype, 'split')}
+              >
+                Split into nodes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
+    </>
   );
 }
 
@@ -133,6 +206,17 @@ const textContentSection: InspectorSectionDefinition = {
         <CodeContentSection
           node={node}
           onTextChange={actions.onTextChange}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+          headerContent={switcher}
+        />
+      );
+    }
+    if (node.subtype === 'list') {
+      return (
+        <ListContentSection
+          node={node}
+          onSetListContent={(content) => actions.onSetListContent?.(node.id, content)}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           headerContent={switcher}
@@ -188,12 +272,12 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
   }),
 ];
 
-// All text subtypes (block, rich, code) — used for sticky and design panels
+// All standalone text subtypes — used for sticky and design panels
 function isAnyTextNode(node: InspectorNode | null): node is TextInspectorNode {
   return Boolean(node && isTextNodeGuard(node) && node.link === undefined);
 }
 
-// Block and code subtypes only — used for text style panel (rich text has its own styling)
+// Non-rich standalone subtypes — used for shared text style and appearance panels
 function isNonRichTextNode(node: InspectorNode | null): node is TextInspectorNode {
   return Boolean(node && isTextNodeGuard(node) && node.subtype !== 'rich' && node.link === undefined);
 }

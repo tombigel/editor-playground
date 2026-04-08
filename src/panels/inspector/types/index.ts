@@ -1,9 +1,10 @@
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../../../api/editorApi';
 import type { WrapperStyleField } from '../../../api/documentApi';
+import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId } from '../../../model/types/site';
-import type { ContainerNode, MediaNode, TextNode, TextSubtype } from '../../../model/types';
+import type { ContainerNode, ListContent, MediaNode, TextNode, TextSubtype } from '../../../model/types';
 
 export type InspectorNode = DocumentNode;
 export type NonSiteInspectorNode = Exclude<DocumentNode, { contentType: 'site' }>;
@@ -33,7 +34,9 @@ export type InspectorActionHandlers = {
   onStickyDurationBottom: (value: number) => void;
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
-  onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype) => void;
+  onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
+  onSetListContent?: (nodeId: string, content: ListContent) => void;
+  onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: () => void;

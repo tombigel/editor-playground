@@ -106,6 +106,9 @@ export function MultiSelectInspector({
   onBulkEdit,
 }: Props) {
   const textNodes = selectedNodes.filter(isTypographyNode);
+  const standaloneTextNodes = selectedNodes.filter(
+    (node): node is TextNode => isTextNode(node) && node.link === undefined,
+  );
   const textLeafNodes = selectedNodes.filter(
     (node): node is TextNode => isTextNode(node) && !node.link,
   );
@@ -127,6 +130,14 @@ export function MultiSelectInspector({
   const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { contentType: 'site' }> => !isSiteNode(node));
   const canAlign = canAlignSelection(selectedNodes);
   const canDistribute = canAlign && selectedNodes.length >= 3;
+  const canMergeTextSelectionToRich =
+    standaloneTextNodes.length >= 2 &&
+    standaloneTextNodes.length === selectedNodes.length &&
+    standaloneTextNodes.every((node) => node.parentId != null) &&
+    new Set(standaloneTextNodes.map((node) => node.parentId)).size === 1;
+  const mergeTextHint = canMergeTextSelectionToRich
+    ? 'Merge selected sibling text nodes into one rich text component.'
+    : 'Merge works only for standalone text nodes under the same parent.';
 
   const fontSizeValues = textNodes.map((node) => node.style?.fontSize?.raw ?? '18px');
   const fontSizeState = resolveSharedString(fontSizeValues);
@@ -285,6 +296,27 @@ export function MultiSelectInspector({
             ) : null}
           </CardContent>
         </Card>
+
+        {selectedNodes.length >= 2 ? (
+          <Card className="editor-border-subtle rounded-lg shadow-none">
+            <CardHeader className="px-3 pt-3 pb-1">
+              <CardTitle className="text-xs">Text Merge</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+              <p className="editor-text-muted text-[11px] leading-relaxed">{mergeTextHint}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 w-full justify-center text-[11px]"
+                disabled={!canMergeTextSelectionToRich || !actions.onMergeTextSelectionToRich}
+                onClick={() => actions.onMergeTextSelectionToRich?.(standaloneTextNodes.map((node) => node.id))}
+              >
+                Merge into rich text
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {stickyNodes.length >= 2 ? <MultiStickySection selectedNodes={stickyNodes} actions={actions} focusedMode={null} globalStickyElevation={globalStickyElevation} /> : null}
 

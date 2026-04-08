@@ -36,7 +36,13 @@ import {
   type EditorState,
   type NodeId,
 } from '../api/editorApi';
-import { setSiteNodeStickyElevation, setNodeRichContent, switchTextSubtypeDoc } from '../api/documentApi';
+import {
+  mergeTextNodesToRichDoc,
+  setNodeListContent,
+  setNodeRichContent,
+  setSiteNodeStickyElevation,
+  switchTextSubtypeDoc,
+} from '../api/documentApi';
 import {
   addPage,
   addPageSlugAlias,
@@ -127,6 +133,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return deleteNode(state, action.id);
     case 'setRichContent':
       return { ...state, document: setNodeRichContent(state.document, action.id, action.content) };
+    case 'setListContent':
+      return { ...state, document: setNodeListContent(state.document, action.id, action.content) };
     case 'switchTextSubtype':
       return {
         ...state,
@@ -134,6 +142,25 @@ export function editorReducer(state: EditorState, action: EditorAction) {
           mode: action.conversionMode,
         }),
       };
+    case 'mergeTextSelectionToRich': {
+      const nodeIds = action.nodeIds ?? selectedIds;
+      if (nodeIds.length < 2) {
+        return state;
+      }
+
+      const survivorNodeId = nodeIds[0];
+      const nextDocument = mergeTextNodesToRichDoc(state.document, nodeIds, { survivorNodeId });
+      if (nextDocument === state.document) {
+        return state;
+      }
+
+      return {
+        ...state,
+        document: nextDocument,
+        selectedId: survivorNodeId,
+        selectedIds: [survivorNodeId],
+      };
+    }
     case 'setNodeVisibility':
       return setNodeVisibility(state, action.id, action.value);
     case 'stickyEnabled':

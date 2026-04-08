@@ -9,6 +9,8 @@ import { MultiSelectInspector } from './MultiSelectInspector';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 import { resolveInspectorBlocks } from './inspector/schema';
 import type { BulkEditOperation, AlignmentAction, DistributionMode } from '../app/types';
+import type { TextConversionMode } from '../api/textConversion';
+import type { ListContent, TextSubtype } from '../model/types';
 
 export {
   buildSizeFieldValue,
@@ -74,7 +76,9 @@ export type InspectorPanelProps = {
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
   globalStickyElevation: boolean;
-  onSwitchTextSubtype: (nodeId: string, subtype: import('../model/types').TextSubtype) => void;
+  onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
+  onSetListContent?: (nodeId: string, content: ListContent) => void;
+  onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: () => void;
@@ -128,6 +132,8 @@ export function InspectorPanel({
   onStickyElevated,
   globalStickyElevation,
   onSwitchTextSubtype,
+  onSetListContent,
+  onMergeTextSelectionToRich,
   onEnterFocusedMode,
   onActivateRichEdit,
   onOpenManageFonts = () => undefined,
@@ -164,6 +170,8 @@ export function InspectorPanel({
       onStickyElevation,
       onStickyElevated,
       onSwitchTextSubtype,
+      onSetListContent,
+      onMergeTextSelectionToRich,
       onEnterFocusedMode,
       onActivateRichEdit,
       onOpenManageFonts,
@@ -174,7 +182,8 @@ export function InspectorPanel({
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
-      onStickyElevation, onStickyElevated, onSwitchTextSubtype, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
+      onStickyElevation, onStickyElevated, onSwitchTextSubtype, onSetListContent,
+      onMergeTextSelectionToRich, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
     ],
   );
   const orderState = useMemo<InspectorOrderState>(

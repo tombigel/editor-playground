@@ -3,6 +3,7 @@ import type {
   DocumentNode,
   EditorTextField,
   FontLibrary,
+  ListContent,
   NodeId,
   RichContent,
   SectionTemplateId,
@@ -84,6 +85,7 @@ export type EditorAction =
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
   | { type: 'insertLeaf'; role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
+  | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
@@ -152,6 +154,7 @@ export type EditorAction =
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'setRichContent'; id: NodeId; content: RichContent }
+  | { type: 'setListContent'; id: NodeId; content: ListContent }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
   | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
 
