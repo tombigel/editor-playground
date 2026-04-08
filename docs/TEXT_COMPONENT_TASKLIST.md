@@ -14,7 +14,7 @@ Execution rules:
 
 - Overall status: `done`
 - Current quantum: `none`
-- Last completed quantum: `Q12`
+- Last completed quantum: `Q13`
 - Next quantum after current: `none`
 - Locked assumptions:
   - API-first overrides UI convenience.
@@ -577,3 +577,36 @@ Execution rules:
   - `a6dad9e`
 - Open follow-ups carried forward:
   - Add broader stable e2e coverage for the full select-then-edit lifecycle once the rest of the older stage-e2e failures are addressed.
+
+## Q13: Rich stage visual polish
+
+- Objective:
+  - Simplify the on-stage rich text editor chrome to better match the authored content and inspector control language.
+- Status: `done`
+- Allowed files:
+  - `src/stage/Stage.tsx`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_TASKLIST.md`
+- Read-first files and target lines:
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-320`
+  - `src/stage/Stage.tsx:140-260`
+  - `src/stage/tests/RichTextEditOverlay.test.tsx:1-40`
+  - `docs/PLAYGROUND_SPEC.md:1656-1692`
+- Implementation notes:
+  - Remove the rich edit box padding, radius, and framed shell so the stage editor sits directly on the authored text.
+  - Hide the stage selection overlay while rich edit mode is active.
+  - Replace mixed text/action toolbar content with icon-only controls and tooltip labels, reusing the inspector text-style button language locally over shared `Button` and `PopoverTooltip` primitives.
+- Verification commands:
+  - `npm run typecheck`
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `npm run build`
+- Verification result:
+  - `npm run typecheck`: passed
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx`: passed, 1 file / 1 test
+  - `npm run build`: passed
+- Commit SHA:
+  - `e038a83`
+- Open follow-ups carried forward:
+  - Pending
