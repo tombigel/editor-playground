@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q8`
-- Last completed quantum: `Q7`
-- Next quantum after current: `Q9`
+- Current quantum: `Q9`
+- Last completed quantum: `Q8`
+- Next quantum after current: `Q10`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -380,16 +380,24 @@ Execution rules:
 
 - Objective:
   - Make stage/site reflect subtype-aware semantics from the API layer.
-- Status: `in_progress`
+- Status: `done`
 - Allowed files:
   - `src/render/nodePresentation.tsx`
   - `src/render/leafPresentation.ts`
   - `src/site/SiteRenderer.tsx`
   - Render/site tests
+  - `src/panels/tests/LayersPanel.test.tsx`
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/render/nodePresentation.tsx:1-297`
+  - `src/render/leafPresentation.ts:1-240`
+  - `src/site/SiteRenderer.tsx:1-180`
+  - `src/render/tests/nodePresentation.test.tsx:1-140`
+  - `src/render/tests/leafPresentation.test.ts:1-140`
+  - `src/site/tests/SiteRenderer.test.tsx:1-250`
+  - `src/panels/tests/LayersPanel.test.tsx:210-245`
+  - `docs/PLAYGROUND_SPEC.md:1300-1375`
 - Implementation notes:
   - Add subtype-aware labels.
   - Keep renderer behavior shared across stage and site.
@@ -399,17 +407,19 @@ Execution rules:
   - Relevant `vitest` commands
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/render/tests/nodePresentation.test.tsx src/site/tests/SiteRenderer.test.tsx src/render/tests/leafPresentation.test.ts src/panels/tests/LayersPanel.test.tsx`: passed, 4 files / 38 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:
-  - Pending
+  - Shared label semantics now intentionally expose subtype labels for all text nodes, including block-derived link/button presets; if product copy later wants separate visible labels for those presets, it should be handled as a presentation decision above the pure subtype label helper.
 
 ## Q9: Rebuild editor and inspector as API consumers
 
 - Objective:
   - Thin the UI down to orchestration over pure APIs.
-- Status: `pending`
+- Status: `in_progress`
 - Allowed files:
   - `src/app/types/index.ts`
   - `src/app/editorState.ts`

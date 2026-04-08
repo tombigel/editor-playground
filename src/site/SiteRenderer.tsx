@@ -1,13 +1,11 @@
-import type { ReactElement } from 'react';
+import { cloneElement, type ReactElement } from 'react';
 import type { NodeId } from '../model/types';
-import { isMediaNode, isTextNode } from '../model/types';
-import { getLinkHref } from '../model/links';
-import { getNodeTextContent, renderListContent, renderRichContent } from '../render/nodePresentation';
+import { renderLeafContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
 import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
 import { collectInteractKeys, SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
-import type { DocumentModel, RichContent } from '../model/types';
+import type { DocumentModel } from '../model/types';
 import type { SiteRendererProps } from './types';
 
 export type { SiteRendererProps } from './types';
@@ -44,17 +42,6 @@ export function SiteRenderer({ document, previewSticky = true, includeAnimations
       {plan.footer ? renderWrapperPlan(plan.footer) : null}
     </div>
   );
-}
-
-function externalNavProps(linkType: string, openInNewTab?: boolean) {
-  if (linkType === 'anchor' || linkType === 'page') return {};
-  return openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {};
-}
-
-function pageCurrentProps(linkType: string, targetPageId?: string, pageAnchorId?: string) {
-  return linkType === 'page' && targetPageId && targetPageId === renderPageId && !pageAnchorId
-    ? { 'aria-current': 'page' as const }
-    : {};
 }
 
 function renderPlanNode(plan: RenderPlanNode): ReactElement {
@@ -112,64 +99,15 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
 function renderLeafPlan(plan: RenderLeafPlanNode) {
   const trackSpacers = getTrackSpacerDescriptors(plan.node.id, plan.spacerEdgesBefore, plan.spacerEdgesAfter);
   const node = plan.node;
-  let leaf: ReactElement = <div key={node.id} className={plan.nodeClassName} data-node-id={node.id} />;
-
-  if (isMediaNode(node)) {
-    leaf = node.src ? (
-      <img
-        key={node.id}
-        className={plan.imageClassName}
-        data-node-id={node.id}
-        src={node.src}
-        alt={node.alt ?? ''}
-      />
-    ) : (
-      <div key={node.id} className={plan.imagePlaceholderClassName} data-node-id={node.id}>
-        {getNodeTextContent(node)}
-      </div>
-    );
-  } else if (isTextNode(node) && node.subtype === 'rich') {
-    leaf = (
-      <div key={node.id} className={plan.nodeClassName} data-node-id={node.id}>
-        {renderRichContent(node.content as RichContent, renderDocument)}
-      </div>
-    );
-  } else if (isTextNode(node) && node.subtype === 'list') {
-    leaf = renderListContent(node.content as import('../model/types').ListContent, {
-      document: renderDocument,
-      className: plan.nodeClassName,
-      dataNodeId: node.id,
-    }) as ReactElement;
-  } else if (isTextNode(node) && node.link) {
-    const link = node.link;
-    const href = getLinkHref(link, renderDocument);
-    leaf = (
-      <a
-        key={node.id}
-        className={plan.nodeClassName}
-        data-node-id={node.id}
-        href={href}
-        {...externalNavProps(link.linkType, link.openInNewTab)}
-        {...pageCurrentProps(link.linkType, link.targetPageId, link.pageAnchorId)}
-      >
-        {getNodeTextContent(node)}
-      </a>
-    );
-  } else if (isTextNode(node) && node.style?.background) {
-    // button variant (no link — render as <button>)
-    leaf = (
-      <button key={node.id} className={plan.nodeClassName} data-node-id={node.id} type="button">
-        {getNodeTextContent(node)}
-      </button>
-    );
-  } else if (isTextNode(node)) {
-    const Tag = node.htmlTag ?? 'p';
-    leaf = (
-      <Tag key={node.id} className={plan.nodeClassName} data-node-id={node.id}>
-        {getNodeTextContent(node)}
-      </Tag>
-    );
-  }
+  const leafElement = renderLeafContent(node, {
+    document: renderDocument,
+    leafClassName: plan.nodeClassName,
+    dataNodeId: node.id,
+    currentPageId: renderPageId,
+    imageClassName: plan.imageClassName,
+    imagePlaceholderClassName: plan.imagePlaceholderClassName,
+  }) as ReactElement;
+  const leaf = leafElement.key == null ? cloneElement(leafElement, { key: node.id }) : leafElement;
 
   if (plan.selfStickyTrack) {
     return (

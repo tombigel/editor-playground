@@ -233,8 +233,8 @@ describe('panels/LayersPanel', () => {
 
     const markup = renderToStaticMarkup(<LayersPanelContent {...makeContentProps(document)} />);
 
-    // Should use the typeLabel "Link" instead of the whitespace name
-    expect(markup).toContain('aria-label="Edit Link"');
+    // Should use the subtype-aware text label instead of the whitespace name.
+    expect(markup).toContain('aria-label="Edit Text: block"');
   });
 
   it('renders the Show button label for a hidden node', () => {

@@ -28,9 +28,7 @@ export function formatNodeLabel(node: StageOrSiteNode) {
     return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
   }
   if (isTextNode(node)) {
-    if (node.subtype === 'block' && node.style?.background) return 'Button';
-    if (node.subtype === 'block' && node.link != null) return 'Link';
-    return 'Text';
+    return `Text: ${node.subtype}`;
   }
   return 'Image';
 }
@@ -231,11 +229,31 @@ function getExternalNavigationProps(node: LeafNode) {
     : {};
 }
 
+function getPageCurrentProps(
+  link: LinkExtension | undefined,
+  currentPageId: string | undefined,
+) {
+  return link?.linkType === 'page' && link.targetPageId && link.targetPageId === currentPageId && !link.pageAnchorId
+    ? { 'aria-current': 'page' as const }
+    : {};
+}
+
+function joinClassNames(...values: Array<string | undefined>) {
+  return values.filter(Boolean).join(' ') || undefined;
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-export function renderLeafContent(node: LeafNode, options: RenderLeafContentOptions = {}): ReactNode {
+export function renderLeafContent(
+  node: LeafNode,
+  options: RenderLeafContentOptions & {
+    leafClassName?: string;
+    dataNodeId?: string;
+    currentPageId?: string;
+  } = {},
+): ReactNode {
   const {
     contentStyle,
     imageClassName,
@@ -243,12 +261,15 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     imageDraggable = true,
     disableTabNavigation = false,
     document,
+    leafClassName,
+    dataNodeId,
+    currentPageId,
   } = options;
   const tabIndex = disableTabNavigation ? -1 : undefined;
 
   if (isTextNode(node) && node.subtype === 'rich') {
     return (
-      <div style={contentStyle}>
+      <div className={leafClassName} data-node-id={dataNodeId} style={contentStyle}>
         {renderRichContent(node.content as RichContent, document)}
       </div>
     );
@@ -258,13 +279,14 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     return node.src ? (
       <img
         className={imageClassName}
+        data-node-id={dataNodeId}
         style={contentStyle}
         src={node.src}
         alt={node.alt || 'Image'}
         draggable={imageDraggable}
       />
     ) : (
-      <div className={imagePlaceholderClassName} style={contentStyle}>{getNodeTextContent(node)}</div>
+      <div className={imagePlaceholderClassName} data-node-id={dataNodeId} style={contentStyle}>{getNodeTextContent(node)}</div>
     );
   }
 
@@ -273,7 +295,12 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     const theme = node.code?.theme ?? 'light';
     const html = node.code?.highlightedHtml ?? escapeHtml(node.content as string);
     return (
-      <pre className={`language-${lang}`} data-code-theme={theme} style={{ margin: 0, ...contentStyle }}>
+      <pre
+        className={joinClassNames(leafClassName, `language-${lang}`)}
+        data-node-id={dataNodeId}
+        data-code-theme={theme}
+        style={{ margin: 0, ...contentStyle }}
+      >
         <code
           className={`language-${lang}`}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer
@@ -284,7 +311,13 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
   }
 
   if (isTextNode(node) && node.subtype === 'list') {
-    return renderListContent(node.content as ListContent, { document, style: contentStyle, tabIndex });
+    return renderListContent(node.content as ListContent, {
+      document,
+      style: contentStyle,
+      tabIndex,
+      className: leafClassName,
+      dataNodeId,
+    });
   }
 
   if (isTextNode(node) && node.subtype === 'block') {
@@ -295,11 +328,19 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     if (isButton) {
       const href = getLinkHref({ linkType: link.linkType, anchorTargetId: link.anchorTargetId, href: link.href, targetPageId: link.targetPageId, pageAnchorId: link.pageAnchorId });
       return href ? (
-        <a href={href} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
+        <a
+          className={leafClassName}
+          data-node-id={dataNodeId}
+          href={href}
+          tabIndex={tabIndex}
+          style={contentStyle}
+          {...getExternalNavigationProps(node)}
+          {...getPageCurrentProps(link, currentPageId)}
+        >
           {node.content as string}
         </a>
       ) : (
-        <button type="button" tabIndex={tabIndex} style={contentStyle}>
+        <button className={leafClassName} data-node-id={dataNodeId} type="button" tabIndex={tabIndex} style={contentStyle}>
           {node.content as string}
         </button>
       );
@@ -308,14 +349,22 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     if (isLink) {
       const href = getLinkHref({ linkType: link.linkType, anchorTargetId: link.anchorTargetId, href: link.href, targetPageId: link.targetPageId, pageAnchorId: link.pageAnchorId });
       return (
-        <a href={href} tabIndex={tabIndex} style={contentStyle} {...getExternalNavigationProps(node)}>
+        <a
+          className={leafClassName}
+          data-node-id={dataNodeId}
+          href={href}
+          tabIndex={tabIndex}
+          style={contentStyle}
+          {...getExternalNavigationProps(node)}
+          {...getPageCurrentProps(link, currentPageId)}
+        >
           {node.content as string}
         </a>
       );
     }
 
     const Tag = node.htmlTag ?? 'p';
-    return <Tag style={contentStyle}>{node.content as string}</Tag>;
+    return <Tag className={leafClassName} data-node-id={dataNodeId} style={contentStyle}>{node.content as string}</Tag>;
   }
 
   return null;

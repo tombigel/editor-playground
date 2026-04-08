@@ -1315,16 +1315,18 @@ Naming and title behavior:
 - `src/render/layout.ts` owns the shared non-editor layout baseline for mesh-grid placement, wrapper sizing, and sticky-structure inputs.
 - `src/render/renderPlan.ts` and `src/render/renderPlanHelpers.ts` own the shared render tree and traversal helpers.
 - `src/render/leafPresentation.ts` owns shared leaf-content presentation defaults used by both editor stage rendering and site export.
+- `src/render/nodePresentation.tsx` owns shared leaf semantics and subtype-aware labels. Stage overlays and site rendering both consume the same text-subtype labeling and leaf element branching from this module.
 
 ### Editor renderer
 
 - `src/stage/Stage.tsx` is an editor renderer.
 - It measures live node geometry, renders the preview, publishes geometry upward for reuse, and owns editor-only visuals such as selection chrome, drag preview, snap guides, and sticky guides.
+- Selection labels for text nodes are subtype-aware and read from the shared render label helper, so stage chrome reports `Text: block`, `Text: rich`, `Text: code`, or `Text: list` instead of inferring editor-only names.
 
 ### Site renderer
 
 - `src/site/SiteRenderer.tsx` and `src/site/siteExport.tsx` define the site/runtime renderer boundary.
-- They consume the shared render plan and shared render style semantics, but not editor-only preview visuals or editor interaction state.
+- They consume the shared render plan plus the shared leaf renderer semantics from `src/render/nodePresentation.tsx`, but not editor-only preview visuals or editor interaction state.
 
 ### Editor-only UI state
 

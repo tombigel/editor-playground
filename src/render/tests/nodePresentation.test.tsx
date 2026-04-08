@@ -19,7 +19,8 @@ describe('render/nodePresentation', () => {
     }
 
     expect(formatNodeLabel(section)).toBe('Section');
-    expect(getNodeAriaLabel(title)).toBe('Text: Post Title');
+    expect(formatNodeLabel(title)).toBe('Text: block');
+    expect(getNodeAriaLabel(title)).toBe('Text: block: Post Title');
   });
 
   it('shares leaf text content and brand-mark detection', () => {
@@ -76,7 +77,7 @@ describe('render/nodePresentation', () => {
     code.link = { linkType: 'external', href: 'https://example.com' };
     code.style = { ...code.style, background: '#111827' };
 
-    expect(formatNodeLabel(code)).toBe('Text');
+    expect(formatNodeLabel(code)).toBe('Text: code');
 
     const markup = renderToStaticMarkup(renderLeafContent(code));
     expect(markup.startsWith('<pre')).toBe(true);
@@ -116,5 +117,17 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('start="3"');
     expect(markup).toContain('list-style-type:upper-alpha');
     expect(markup).toContain('dir="rtl"');
+  });
+
+  it('labels every text subtype explicitly', () => {
+    const block = createTextNode('block', 'root');
+    const rich = createTextNode('rich', 'root');
+    const code = createTextNode('code', 'root');
+    const list = createTextNode('list', 'root');
+
+    expect(formatNodeLabel(block)).toBe('Text: block');
+    expect(formatNodeLabel(rich)).toBe('Text: rich');
+    expect(formatNodeLabel(code)).toBe('Text: code');
+    expect(formatNodeLabel(list)).toBe('Text: list');
   });
 });

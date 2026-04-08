@@ -222,4 +222,30 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain('list-style-type:square');
     expect(markup).toContain('<li dir="rtl">Beta</li>');
   });
+
+  it('reuses shared code rendering semantics in site output', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = 3;',
+    };
+    document.nodes[code.id] = code;
+    section.children.push(code.id);
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).toContain(`data-node-id="${code.id}"`);
+    expect(markup).toContain('language-typescript');
+    expect(markup).toContain('data-code-theme="dark"');
+  });
 });
