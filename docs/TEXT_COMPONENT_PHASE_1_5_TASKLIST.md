@@ -19,9 +19,9 @@ Execution rules:
 
 ## Shared Progress Summary
 
-- Overall status: `in_progress`
-- Current quantum: `P15-Q7`
-- Last completed quantum: `P15-Q6`
+- Overall status: `done`
+- Current quantum: `none`
+- Last completed quantum: `P15-Q7`
 - Next quantum after current: `none`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
@@ -390,14 +390,15 @@ Execution rules:
 
 - Objective:
   - Lock rich stage editing with stable targeted e2e coverage.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - Stage e2e tests
   - Possibly tiny test-only harness updates
   - Docs/tasklist
 - Read-first files and target lines:
-  - Current stage e2e coverage
-  - Current targeted rich-stage tests
+  - `src/stage/tests/Stage.e2e.test.ts:1-1246`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-859`
+  - `docs/PLAYGROUND_SPEC.md:1748-1779`
 - Implementation notes:
   - Cover:
     - select then second-click enter
@@ -412,13 +413,18 @@ Execution rules:
     - auto-height growth
     - markdown paste/import where implemented
   - Replace brittle obsolete expectations rather than layering duplicate tests.
+  - Rich-toolbar selects, inline inputs, and the link popover now restore the last editor selection before applying content mutations so block/list/link actions still target the authored selection after focus moves into the chrome.
+  - The stage e2e fixture was expanded to cover rich commit/discard, anchor-link picker flow, block-scoped conversions, multi-block unification, list conversion, line-height and block-gap persistence, and auto-height growth.
+  - Existing non-rich stage e2e assertions were tightened to the current snap-state shape and seeded geometry so the full file is green again.
 - Verification commands:
   - `npm run typecheck`
-  - Targeted e2e run
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts`: passed
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `7045abc`
 - Open follow-ups carried forward:
-  - Close phase 1.5 or explicitly roll unresolved rich-stage issues into phase 2 only after this coverage lands.
+  - Phase 1.5 executable quanta are complete; future work should start from the planned-only phase 2 artifacts unless new phase 1.5 scope is explicitly added.
