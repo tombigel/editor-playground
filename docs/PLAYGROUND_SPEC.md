@@ -1394,7 +1394,9 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
   - `block -> list` splits hard line breaks into unordered items.
   - `code -> list` becomes a single unordered item.
   - `list -> code` emits markdown-like plain text.
-  - `list -> rich` currently flattens into rich paragraph blocks because rich list blocks are still deferred.
+  - `code -> rich` emits a rich `code-block`.
+  - supported `ul` / `ol` lists convert to rich list blocks instead of flattening to paragraphs.
+  - `dl -> rich` still degrades to paragraph blocks because rich description lists remain deferred.
 
 ### Rendering
 
@@ -1418,7 +1420,8 @@ The text system supports structure-changing operations without depending on edit
 - `splitRichTextNodeDoc()` accepts a `subtype: 'rich'` text node and splits it at rich block boundaries.
 - A single rich block is converted in place to the matching standalone text node.
 - Multiple rich blocks keep the original node id as the first split node and append additional sibling text nodes immediately after it.
-- Current rich blocks split into standalone block text nodes because embedded rich code/list blocks are still deferred.
+- Rich text blocks split to standalone block nodes, rich `code-block` nodes split to standalone code nodes, and rich `ul` / `ol` blocks split to standalone list nodes.
+- `convertTextNodeDoc(..., targetSubtype, { mode: 'split' })` on multi-block rich content splits first, then flattens each resulting block into the requested simple subtype for phase 1.5.
 
 ### Multi-node merge
 

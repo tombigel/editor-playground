@@ -273,7 +273,7 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 
 | Function / type | Signature / values | Description |
 |---|---|---|
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` splits hard line breaks into unordered items, `list -> code` emits markdown-like list text, and `list -> rich` currently flattens into paragraph blocks to preserve the rich-text block invariants. |
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` splits hard line breaks into unordered items, `code -> rich` emits a rich `code-block`, supported `ul` / `ol` lists convert to rich list blocks, and `rich -> simple` supports explicit `flatten` vs `split` behavior. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
 | `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | `auto` applies the default conversion policy, `flatten` explicitly degrades richer structures into plain text, and `split` delegates rich multi-block content to `splitRichTextNodeDoc()`. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
@@ -304,8 +304,9 @@ Pure helper module for structure-changing text operations. `documentApi` re-expo
 
 ### Deterministic behavior
 
-- `splitRichTextNodeDoc()` currently maps rich blocks to standalone block text nodes because the rich schema does not yet persist embedded list or code blocks.
+- `splitRichTextNodeDoc()` now maps rich text blocks to standalone block nodes, rich `code-block` nodes to standalone code nodes, and rich `ul` / `ol` blocks to standalone list nodes.
 - `convertTextNodeDoc(..., { mode: 'split' })` delegates rich multi-block content to `splitRichTextNodeDoc()` when converting away from `rich`.
+- `convertTextNodeDoc(..., { mode: 'split' })` with a simple target subtype splits multi-block rich content by block boundary and then flattens each split block into the requested simple subtype.
 - `mergeTextNodesToRichDoc()` rejects mixed-parent selections and leaves the document unchanged in that case.
 
 ---

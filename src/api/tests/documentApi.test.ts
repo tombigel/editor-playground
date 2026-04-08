@@ -326,6 +326,42 @@ describe('api/documentApi', () => {
     expect(node.htmlTag).toBeUndefined();
   });
 
+  it('converts code blocks to rich code blocks through the explicit text conversion API', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    code.content = 'const total = 3;';
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = 3;',
+    };
+    document.nodes[code.id] = code;
+    document.nodes[section.id].children.push(code.id);
+
+    const next = convertTextNodeDoc(document, code.id, 'rich');
+    const node = next.nodes[code.id];
+    if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
+      throw new Error('Expected rich text node');
+    }
+
+    expect(node.content).toEqual([
+      {
+        type: 'code-block',
+        language: 'typescript',
+        theme: 'dark',
+        highlightedHtml: 'const total = 3;',
+        children: [{ type: 'code-line', children: [{ text: 'const total = 3;' }] }],
+      },
+    ]);
+  });
+
   it('normalizes standalone list content through the pure document API', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -385,6 +421,47 @@ describe('api/documentApi', () => {
         { text: 'Second line', direction: 'ltr' },
       ],
     });
+  });
+
+  it('converts standalone lists to rich list blocks when the list kind is supported', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const list = createTextNode('list', section.id);
+    list.content = {
+      type: 'ol',
+      start: 3,
+      markerStyle: 'upper-alpha',
+      items: [
+        { text: 'Third', direction: 'ltr' },
+        { text: 'Fourth', direction: 'ltr' },
+      ],
+    };
+    document.nodes[list.id] = list;
+    document.nodes[section.id].children.push(list.id);
+
+    const next = convertTextNodeDoc(document, list.id, 'rich');
+    const node = next.nodes[list.id];
+    if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
+      throw new Error('Expected rich text node');
+    }
+
+    expect(node.content).toEqual([
+      {
+        type: 'ol',
+        start: 3,
+        markerStyle: 'upper-alpha',
+        children: [
+          { type: 'list-item', children: [{ text: 'Third' }] },
+          { type: 'list-item', children: [{ text: 'Fourth' }] },
+        ],
+      },
+    ]);
   });
 
   it('flattens rich text to code through the explicit text conversion API', () => {

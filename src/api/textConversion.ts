@@ -1,8 +1,10 @@
 import { createTextNode } from '../model/defaults';
 import {
+  createRichCodeBlock,
   createRichTextBlock,
   createRichTextLeaf,
   getTextContent,
+  listContentToRichListBlock,
   normalizeRichContent,
 } from '../model/richContent';
 import {
@@ -18,7 +20,9 @@ import type {
   HeadingTag,
   ListContent,
   NodeId,
+  RichBlock,
   RichContent,
+  RichInlineNode,
   TextNode,
   TextSubtype,
 } from '../model/types';
@@ -53,7 +57,7 @@ export function convertTextNodeDoc(
 
   const mode = normalizeTextConversionMode(options?.mode);
   if (mode === 'split' && node.subtype === 'rich' && targetSubtype !== 'rich') {
-    return splitRichTextNodeDoc(document, nodeId);
+    return splitRichTextNodeToSubtypeDoc(document, nodeId, targetSubtype);
   }
 
   const next = cloneDocument(document);
@@ -134,8 +138,17 @@ function convertTextContent(
       return listContentToRichContent(normalizeListContent(source.content));
     }
 
+    if (source.subtype === 'code') {
+      return [createRichCodeBlock(source.content as string, {
+        language: source.code?.language,
+        theme: source.code?.theme,
+        highlightedHtml: source.code?.highlightedHtml,
+      })];
+    }
+
     if (typeof source.content !== 'string') {
-      return normalizeRichContent(source.content);
+      const richContent = normalizeRichContent(source.content);
+      return richContent.length === 1 ? richContent : richContent;
     }
 
     return [
@@ -158,6 +171,13 @@ function convertTextContent(
     return getListTextContent(listContent);
   }
 
+  if (source.subtype === 'rich') {
+    const richContent = normalizeRichContent(source.content);
+    if (richContent.length === 1) {
+      return convertSingleRichBlock(richContent[0], targetSubtype);
+    }
+  }
+
   if (mode === 'auto' || mode === 'flatten') {
     return flattenTextContent(source.content);
   }
@@ -174,6 +194,13 @@ function convertToListContent(source: TextNode): ListContent {
     return createUnorderedListContentFromLines([source.content as string]);
   }
 
+  if (source.subtype === 'rich') {
+    const richContent = normalizeRichContent(source.content);
+    if (richContent.length === 1) {
+      return richBlockToListContent(richContent[0]);
+    }
+  }
+
   const rawContent = typeof source.content === 'string'
     ? source.content
     : flattenTextContent(source.content);
@@ -182,6 +209,10 @@ function convertToListContent(source: TextNode): ListContent {
 }
 
 function listContentToRichContent(content: ListContent): RichContent {
+  if (content.type === 'ul' || content.type === 'ol') {
+    return [listContentToRichListBlock(content)];
+  }
+
   return listContentToLines(content).map((line) =>
     createRichTextBlock('paragraph', [createRichTextLeaf(line)]),
   );
@@ -215,4 +246,104 @@ function buildCodeMetadata(
     theme,
     highlightedHtml: highlightCode(rawContent, language),
   };
+}
+
+function richBlockToListContent(block: RichBlock): ListContent {
+  if (block.type === 'ul') {
+    return {
+      type: 'ul',
+      markerStyle: block.markerStyle,
+      items: block.children.map((item) => ({
+        text: flattenRichInlineChildren(item.children),
+        direction: 'ltr',
+      })),
+    };
+  }
+
+  if (block.type === 'ol') {
+    return {
+      type: 'ol',
+      start: block.start,
+      markerStyle: block.markerStyle,
+      items: block.children.map((item) => ({
+        text: flattenRichInlineChildren(item.children),
+        direction: 'ltr',
+      })),
+    };
+  }
+
+  if (block.type === 'code-block') {
+    return createUnorderedListContentFromLines([
+      block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n'),
+    ]);
+  }
+
+  return createUnorderedListContentFromLines(flattenRichInlineChildren(block.children).split(/\r?\n/));
+}
+
+function convertSingleRichBlock(
+  block: RichBlock,
+  targetSubtype: Exclude<TextSubtype, 'rich'>,
+): string | ListContent {
+  if (targetSubtype === 'list') {
+    return richBlockToListContent(block);
+  }
+
+  if (targetSubtype === 'code') {
+    if (block.type === 'code-block') {
+      return block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n');
+    }
+    return getTextContent([block]);
+  }
+
+  return getTextContent([block]);
+}
+
+function flattenRichInlineChildren(children: RichInlineNode[]): string {
+  return children.flatMap((node) => ('type' in node ? node.children.map((leaf) => leaf.text) : [node.text ?? ''])).join('');
+}
+
+function splitRichTextNodeToSubtypeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  targetSubtype: Exclude<TextSubtype, 'rich'>,
+): DocumentModel {
+  const source = document.nodes[nodeId];
+  if (!source || !isTextNode(source) || source.subtype !== 'rich') {
+    return document;
+  }
+
+  const richContent = normalizeRichContent(source.content);
+  if (richContent.length <= 1) {
+    return convertTextNodeDoc(document, nodeId, targetSubtype, { mode: 'flatten' });
+  }
+
+  let next = splitRichTextNodeDoc(document, nodeId);
+  const parentId = source.parentId;
+  if (!parentId) {
+    return document;
+  }
+
+  const parent = next.nodes[parentId];
+  if (!parent || source.parentId == null) {
+    return document;
+  }
+
+  const anchorIndex = parent.children.indexOf(nodeId);
+  if (anchorIndex === -1) {
+    return document;
+  }
+
+  const splitChildIds = parent.children.slice(anchorIndex, anchorIndex + richContent.length);
+
+  for (const childId of splitChildIds) {
+    const child = next.nodes[childId];
+    if (!child || !isTextNode(child) || child.parentId !== parentId || child.subtype === 'rich') {
+      continue;
+    }
+
+    next = convertTextNodeDoc(next, childId, targetSubtype, { mode: 'flatten' });
+  }
+
+  return next;
 }

@@ -1,8 +1,10 @@
 import { createTextNode, syncIdCountersWithDocument } from '../model/defaults';
 import {
+  createRichCodeBlock,
   createRichTextBlock,
   createRichTextLeaf,
   getTextContent,
+  listContentToRichListBlock,
   normalizeRichContent,
 } from '../model/richContent';
 import {
@@ -216,6 +218,16 @@ function textNodeToRichContent(node: TextNode): RichContent {
     return listContentToRichContent(normalizeListContent(node.content));
   }
 
+  if (node.subtype === 'code') {
+    return [
+      createRichCodeBlock(typeof node.content === 'string' ? node.content : '', {
+        language: node.code?.language,
+        theme: node.code?.theme,
+        highlightedHtml: node.code?.highlightedHtml,
+      }),
+    ];
+  }
+
   if (node.subtype === 'block') {
     return [
       createRichTextBlock(
@@ -234,6 +246,10 @@ function textNodeToRichContent(node: TextNode): RichContent {
 }
 
 function listContentToRichContent(content: ListContent): RichContent {
+  if (content.type === 'ul' || content.type === 'ol') {
+    return [listContentToRichListBlock(content)];
+  }
+
   return listContentToLines(content).map((line) =>
     createRichTextBlock('paragraph', [createRichTextLeaf(line)]),
   );
@@ -254,6 +270,14 @@ function htmlTagToRichBlockType(
 }
 
 function richBlockToTextSubtype(_block: RichBlock): TextSubtype {
+  if (_block.type === 'code-block') {
+    return 'code';
+  }
+
+  if (_block.type === 'ul' || _block.type === 'ol') {
+    return 'list';
+  }
+
   return 'block';
 }
 
@@ -281,6 +305,14 @@ function createAnchorNodeFromRichBlock(
 ): TextNode {
   const subtype = richBlockToTextSubtype(block);
   const base = createTextNode(subtype, source.parentId ?? '');
+  const listContent = block.type === 'ul' || block.type === 'ol' ? richListBlockToListContent(block) : undefined;
+  const codeMetadata = block.type === 'code-block'
+    ? {
+        language: block.language ?? 'plaintext',
+        theme: block.theme ?? 'light',
+        highlightedHtml: block.highlightedHtml,
+      }
+    : undefined;
   return {
     ...base,
     id: source.id,
@@ -292,9 +324,10 @@ function createAnchorNodeFromRichBlock(
     rect: structuredClone(source.rect),
     ...(source.sticky !== undefined ? { sticky: structuredClone(source.sticky) } : {}),
     ...(source.animation !== undefined ? { animation: structuredClone(source.animation) } : {}),
-    content: getTextContent([block]),
+    content: subtype === 'list' ? listContent ?? richListBlockToListContentFallback(getTextContent([block])) : getTextContent([block]),
     ...(source.lang !== undefined ? { lang: source.lang } : {}),
     ...(subtype === 'block' ? { htmlTag: richBlockToHtmlTag(block) } : {}),
+    ...(subtype === 'code' && codeMetadata ? { code: codeMetadata } : {}),
     style: source.style ? structuredClone(source.style) : structuredClone(base.style),
   };
 }
@@ -308,6 +341,14 @@ function createSplitSiblingNodeFromRichBlock(
   const subtype = richBlockToTextSubtype(block);
   const base = createTextNode(subtype, source.parentId ?? '');
   const originYValue = source.rect.y.base.parsed.value;
+  const listContent = block.type === 'ul' || block.type === 'ol' ? richListBlockToListContent(block) : undefined;
+  const codeMetadata = block.type === 'code-block'
+    ? {
+        language: block.language ?? 'plaintext',
+        theme: block.theme ?? 'light',
+        highlightedHtml: block.highlightedHtml,
+      }
+    : undefined;
 
   return {
     ...base,
@@ -322,9 +363,10 @@ function createSplitSiblingNodeFromRichBlock(
       width: structuredClone(source.rect.width),
       height: { base: parseHeightValue('auto') },
     },
-    content: getTextContent([block]),
+    content: subtype === 'list' ? listContent ?? richListBlockToListContentFallback(getTextContent([block])) : getTextContent([block]),
     ...(source.lang !== undefined ? { lang: source.lang } : {}),
     ...(subtype === 'block' ? { htmlTag: richBlockToHtmlTag(block) } : {}),
+    ...(subtype === 'code' && codeMetadata ? { code: codeMetadata } : {}),
     style: source.style ? structuredClone(source.style) : structuredClone(base.style),
   };
 }
@@ -339,4 +381,35 @@ function estimateSplitAdvancePx(source: TextNode, block: RichBlock): number {
   const explicitLineCount = Math.max(1, blockText.split(/\r?\n/).length);
   const contentHeightPx = Math.ceil(fontSizePx * lineHeight * explicitLineCount);
   return Math.max(36, contentHeightPx + SPLIT_STACK_GAP_PX);
+}
+
+function richListBlockToListContent(block: Extract<RichBlock, { type: 'ul' | 'ol' }>): ListContent {
+  if (block.type === 'ol') {
+    return {
+      type: 'ol',
+      start: block.start,
+      markerStyle: block.markerStyle,
+      items: block.children.map((item) => ({
+        text: item.children.flatMap((child) => ('type' in child ? child.children.map((leaf) => leaf.text) : [child.text])).join(''),
+        direction: 'ltr',
+      })),
+    };
+  }
+
+  return {
+    type: 'ul',
+    markerStyle: block.markerStyle,
+    items: block.children.map((item) => ({
+      text: item.children.flatMap((child) => ('type' in child ? child.children.map((leaf) => leaf.text) : [child.text])).join(''),
+      direction: 'ltr',
+    })),
+  };
+}
+
+function richListBlockToListContentFallback(text: string): ListContent {
+  return {
+    type: 'ul',
+    markerStyle: 'disc',
+    items: [{ text, direction: 'ltr' }],
+  };
 }

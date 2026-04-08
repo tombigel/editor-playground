@@ -69,6 +69,58 @@ describe('api/textMerge', () => {
     expect(second.rect.y.base.raw).not.toBe(first.rect.y.base.raw);
   });
 
+  it('splits rich code and list blocks into matching standalone text subtypes', () => {
+    const document = createInitialDocument();
+    const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
+    const richNode = document.nodes[richId];
+    if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    richNode.content = [
+      {
+        type: 'code-block',
+        language: 'typescript',
+        theme: 'dark',
+        highlightedHtml: 'const value = 1;',
+        children: [{ type: 'code-line', children: [{ text: 'const value = 1;' }] }],
+      },
+      {
+        type: 'ul',
+        markerStyle: 'square',
+        children: [
+          { type: 'list-item', children: [{ text: 'First item' }] },
+          { type: 'list-item', children: [{ text: 'Second item' }] },
+        ],
+      },
+    ];
+
+    const split = splitRichTextNodeDoc(document, richId);
+    const parent = split.nodes[sectionId(split)];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const splitChildren = parent.children.slice(-2);
+    const first = split.nodes[splitChildren[0]];
+    const second = split.nodes[splitChildren[1]];
+    if (first.contentType !== 'text' || second.contentType !== 'text') {
+      throw new Error('Expected text nodes');
+    }
+
+    expect(first.subtype).toBe('code');
+    expect(first.content).toBe('const value = 1;');
+    expect(first.code).toMatchObject({ language: 'typescript', theme: 'dark' });
+    expect(second.subtype).toBe('list');
+    expect(second.content).toEqual({
+      type: 'ul',
+      markerStyle: 'square',
+      items: [
+        { text: 'First item', direction: 'ltr' },
+        { text: 'Second item', direction: 'ltr' },
+      ],
+    });
+  });
+
   it('converts a single-block rich node in place when splitting', () => {
     const document = createInitialDocument();
     const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
@@ -123,8 +175,18 @@ describe('api/textMerge', () => {
 
     expect(survivor.content).toEqual([
       createRichTextBlock('h2', [createRichTextLeaf('Heading')]),
-      createRichTextBlock('paragraph', [createRichTextLeaf('const value = 1;')]),
-      createRichTextBlock('paragraph', [createRichTextLeaf('First item')]),
+      {
+        type: 'code-block',
+        language: 'plaintext',
+        theme: 'light',
+        highlightedHtml: 'const value = 1;',
+        children: [{ type: 'code-line', children: [{ text: 'const value = 1;' }] }],
+      },
+      {
+        type: 'ul',
+        markerStyle: 'disc',
+        children: [{ type: 'list-item', children: [{ text: 'First item' }] }],
+      },
     ]);
   });
 
@@ -163,6 +225,43 @@ describe('api/textMerge', () => {
     expect(splitChildren[0]).toBe(richId);
     expect(converted.nodes[splitChildren[0]].contentType).toBe('text');
     expect(converted.nodes[splitChildren[1]].contentType).toBe('text');
+  });
+
+  it('splits rich nodes into requested simple list nodes when split mode targets list', () => {
+    const document = createInitialDocument();
+    const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
+    const richNode = document.nodes[richId];
+    if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    richNode.content = [
+      createRichTextBlock('paragraph', [createRichTextLeaf('Alpha\nBeta')]),
+      createRichTextBlock('paragraph', [createRichTextLeaf('Gamma')]),
+    ];
+
+    const converted = convertTextNodeDoc(document, richId, 'list', { mode: 'split' });
+    const parent = converted.nodes[sectionId(converted)];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const splitChildren = parent.children.slice(-2);
+    const first = converted.nodes[splitChildren[0]];
+    const second = converted.nodes[splitChildren[1]];
+    if (first.contentType !== 'text' || second.contentType !== 'text') {
+      throw new Error('Expected text nodes');
+    }
+
+    expect(first.subtype).toBe('list');
+    expect(first.content).toMatchObject({
+      type: 'ul',
+      items: [{ text: 'Alpha' }, { text: 'Beta' }],
+    });
+    expect(second.subtype).toBe('list');
+    expect(second.content).toMatchObject({
+      type: 'ul',
+      items: [{ text: 'Gamma' }],
+    });
   });
 
   it('keeps switchTextSubtypeDoc aligned with the list subtype', () => {
