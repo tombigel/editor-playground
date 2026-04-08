@@ -5,6 +5,7 @@
 - [Architecture Overview](#architecture-overview)
 - [`src/api/documentApi.ts`](#srcapidocumentapits)
 - [`src/api/textConversion.ts`](#srcapitextconversionts)
+- [`src/api/textMerge.ts`](#srcapitextmergets)
 - [`src/api/editorApi.ts`](#srcapieditorapits)
 - [`src/api/fontApi.ts`](#srcapifontapits)
 - [`src/api/siteApi.ts`](#srcapisiteapits)
@@ -19,6 +20,7 @@ The API layer is structured as multiple modules:
 
 - **`documentApi`** — Pure `DocumentModel → DocumentModel` functions. No side effects, no editor state. Safe to use in scripts, tests, and server-side contexts.
 - **`textConversion`** — Pure text-subtype conversion helpers used by `documentApi` to keep conversion policy explicit and reusable.
+- **`textMerge`** — Pure structure-changing text helpers used by `documentApi` for rich-text split and multi-node merge flows.
 - **`editorApi`** — Wraps `documentApi` with editor state, selection management, and history concerns. The editor UI calls these variants.
 - **`dragDropApi`** — Pure headless drag-and-drop session lifecycle and drag resolution utilities for editor canvases.
 - **`fontApi` / `siteApi` / `editorViewApi`** — Subsystem pass-throughs that re-export public surface from the `fonts/`, `site/`, and `stage/` subsystems respectively.
@@ -58,6 +60,8 @@ Every feature is achievable through the API layer without the editor UI.
 | `setNodeListContent` | `(document, nodeId, content: ListContent) => DocumentModel` | Canonical pure list-content mutation. Normalizes authored list payloads into the supported phase-1 `ul`, `ol`, or `dl` shapes before persisting. |
 | `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, `code`, and `list` text nodes. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
+| `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits one rich text node into one or more sibling text nodes using rich block boundaries. |
+| `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges sibling text nodes into one rich node while preserving tree order for content assembly. |
 
 ### Node selectors
 
@@ -125,8 +129,9 @@ Every feature is achievable through the API layer without the editor UI.
 | `WrapperStyleField` | Union of style field names applicable to wrappers. |
 | `LeafRole` | Union of leaf role strings. |
 | `EditorTextField` | Union of text/style field names settable via `setNodeTextField`. |
+| `MergeTextNodesOptions` | Optional merge options including `survivorNodeId` for choosing which existing node keeps geometry and identity. |
 | `TextSubtype` | `'block' \| 'rich' \| 'code' \| 'list'` |
-| `TextConversionMode` | `'auto' \| 'flatten'` | Explicit text conversion policy mode. `auto` currently resolves to flattening when converting rich content to simpler text subtypes. |
+| `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | Explicit text conversion policy mode. `split` delegates rich multi-block content to the pure rich splitter instead of flattening. |
 | `NodeTextField` | Subset of text fields for plain text nodes. |
 | `StickyDefinition` | Sticky behaviour config shape. |
 | `StickyGeometrySnapshot` | Snapshot of node geometry used during sticky resolution. |
@@ -266,7 +271,7 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 |---|---|---|
 | `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` splits hard line breaks into unordered items, `list -> code` emits markdown-like list text, and `list -> rich` currently flattens into paragraph blocks to preserve the rich-text block invariants. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
-| `TextConversionMode` | `'auto' \| 'flatten'` | `auto` applies the default conversion policy; `flatten` explicitly flattens richer structures into plain text when needed. |
+| `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | `auto` applies the default conversion policy, `flatten` explicitly degrades richer structures into plain text, and `split` delegates rich multi-block content to `splitRichTextNodeDoc()`. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
 | `normalizeCodeLanguage` | `(language: string) => string` | Normalizes unsupported code languages to `plaintext` for stable highlighting. |
 
@@ -278,6 +283,26 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 - `ol` also persists a `start` value and a predefined marker style.
 - `dl` persists `term` / `description` pairs with optional shared link metadata for the pair.
 - Nested lists are rejected by normalization and validation in phase 1.
+
+---
+
+## `src/api/textMerge.ts`
+
+Pure helper module for structure-changing text operations. `documentApi` re-exports these APIs so consumers can stay on the main pure API surface.
+
+### Split and merge
+
+| Function / type | Signature / values | Description |
+|---|---|---|
+| `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits a rich node at block boundaries. A single block is converted in place; multiple blocks keep the original node as the first split node and append newly generated sibling text nodes after it. |
+| `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges same-parent sibling text nodes into one rich node. Content order follows parent tree order, not caller order. |
+| `MergeTextNodesOptions` | `{ survivorNodeId?: NodeId }` | Optional surviving anchor node. The survivor keeps identity, geometry, and shared authored styling while absorbed siblings are removed. |
+
+### Deterministic behavior
+
+- `splitRichTextNodeDoc()` currently maps rich blocks to standalone block text nodes because the rich schema does not yet persist embedded list or code blocks.
+- `convertTextNodeDoc(..., { mode: 'split' })` delegates rich multi-block content to `splitRichTextNodeDoc()` when converting away from `rich`.
+- `mergeTextNodesToRichDoc()` rejects mixed-parent selections and leaves the document unchanged in that case.
 
 ---
 

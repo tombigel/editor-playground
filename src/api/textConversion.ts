@@ -12,6 +12,7 @@ import {
   listContentToMarkdown,
   normalizeListContent,
 } from '../model/listContent';
+import { splitRichTextNodeDoc } from './textMerge';
 import type {
   DocumentModel,
   HeadingTag,
@@ -24,7 +25,7 @@ import type {
 import { isTextNode } from '../model/types';
 import { highlightCode } from '../render/codeHighlight';
 
-export type TextConversionMode = 'auto' | 'flatten';
+export type TextConversionMode = 'auto' | 'flatten' | 'split';
 
 export type TextConversionOptions = {
   mode?: TextConversionMode;
@@ -51,6 +52,10 @@ export function convertTextNodeDoc(
   }
 
   const mode = normalizeTextConversionMode(options?.mode);
+  if (mode === 'split' && node.subtype === 'rich' && targetSubtype !== 'rich') {
+    return splitRichTextNodeDoc(document, nodeId);
+  }
+
   const next = cloneDocument(document);
   const textSource = next.nodes[nodeId];
   if (!textSource || !isTextNode(textSource)) {
@@ -109,7 +114,10 @@ function cloneDocument(document: DocumentModel): DocumentModel {
 }
 
 function normalizeTextConversionMode(mode: TextConversionMode | undefined): TextConversionMode {
-  return mode === 'flatten' ? 'flatten' : 'auto';
+  if (mode === 'flatten' || mode === 'split') {
+    return mode;
+  }
+  return 'auto';
 }
 
 function convertTextContent(

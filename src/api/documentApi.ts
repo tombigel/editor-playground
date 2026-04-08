@@ -30,6 +30,11 @@ import {
   type TextConversionOptions,
 } from './textConversion';
 import {
+  mergeTextNodesToRichDoc as mergeTextNodesToRichDocHelper,
+  splitRichTextNodeDoc as splitRichTextNodeDocHelper,
+  type MergeTextNodesOptions,
+} from './textMerge';
+import {
   getTopLevelWrapperVisibilityState,
   normalizeTopLevelWrapperTargetPageIds,
   type TopLevelWrapperVisibilityMode as TopLevelWrapperVisibilityModeModel,
@@ -91,6 +96,7 @@ export type {
 };
 export type { DocumentCommand } from './types/index';
 export type { TextConversionMode, TextConversionOptions } from './textConversion';
+export type { MergeTextNodesOptions } from './textMerge';
 
 export {
   SECTION_TEMPLATES,
@@ -1078,6 +1084,21 @@ export function switchTextSubtypeDoc(
   return switchTextSubtypeDocHelper(document, nodeId, targetSubtype, options);
 }
 
+export function splitRichTextNodeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+): DocumentModel {
+  return splitRichTextNodeDocHelper(document, nodeId);
+}
+
+export function mergeTextNodesToRichDoc(
+  document: DocumentModel,
+  nodeIds: NodeId[],
+  options?: MergeTextNodesOptions,
+): DocumentModel {
+  return mergeTextNodesToRichDocHelper(document, nodeIds, options);
+}
+
 /**
  * Legacy subtype switcher. Media switching remains in-place here for backward compatibility,
  * while text switching delegates to the explicit text conversion APIs.
@@ -1096,7 +1117,7 @@ export function switchSubtypeDoc(
 
   // Determine the target family from the targetSubtype value.
   const mediaSubtypes: MediaSubtype[] = ['image', 'video', 'svg', 'embed'];
-  const textSubtypes: TextSubtype[] = ['block', 'rich', 'code'];
+  const textSubtypes: TextSubtype[] = ['block', 'rich', 'code', 'list'];
   const targetIsMedia = (mediaSubtypes as string[]).includes(targetSubtype);
   const targetIsText = (textSubtypes as string[]).includes(targetSubtype);
 

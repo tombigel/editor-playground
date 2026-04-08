@@ -1303,6 +1303,7 @@ Naming and title behavior:
 - `src/api/documentApi.ts` provides editor-agnostic document operations for non-editor contexts such as scripts.
 - Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setNodeTextField()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - Text subtype conversion is also API-first: `convertTextNodeDoc()` owns the conversion policy, `switchTextSubtypeDoc()` is the thin entrypoint, and editor actions only choose the target subtype plus an optional conversion mode.
+- Rich split and multi-node merge are also API-first: `splitRichTextNodeDoc()` and `mergeTextNodesToRichDoc()` live in the pure API layer, so conversion and merge semantics do not depend on editor-only selection or stage-edit code.
 - Standalone lists are also API-first: `setNodeListContent()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
@@ -1360,6 +1361,12 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 - Uses the shared `Tabs`/`TabsList`/`TabsTrigger` DS primitive.
 - `list` already exists in the document model and conversion APIs, but inspector exposure is intentionally deferred until the later editor/inspector quantum so the headless contract stays ahead of UI affordances.
 
+### Conversion modes
+
+- `auto`: use the default pure conversion rules for the requested target subtype.
+- `flatten`: explicitly collapse unsupported structure into the simplest plain-text-compatible result.
+- `split`: when converting away from `rich`, split the rich node into sibling text nodes by block boundary instead of flattening all blocks into one node.
+
 ## Standalone List Text Nodes
 
 Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text formatting state.
@@ -1390,6 +1397,24 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 - Ordered lists honor persisted `start` and marker style values.
 - Description lists render semantic `<dt>` / `<dd>` pairs.
 - Site export uses the same shared list rendering helpers as the stage/site presentation path.
+
+## Headless Split And Merge
+
+The text system supports structure-changing operations without depending on editor UI.
+
+### Rich split
+
+- `splitRichTextNodeDoc()` accepts a `subtype: 'rich'` text node and splits it at rich block boundaries.
+- A single rich block is converted in place to the matching standalone text node.
+- Multiple rich blocks keep the original node id as the first split node and append additional sibling text nodes immediately after it.
+- Current rich blocks split into standalone block text nodes because embedded rich code/list blocks are still deferred.
+
+### Multi-node merge
+
+- `mergeTextNodesToRichDoc()` merges sibling text nodes under the same parent into one rich node.
+- Content order follows parent tree order, not the caller's selection order.
+- The surviving node can be chosen explicitly so later editor multi-select flows can keep the first-selected node's geometry and identity.
+- Mixed-parent merge requests are rejected as no-ops.
 
 ## Section Templates
 

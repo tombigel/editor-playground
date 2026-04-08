@@ -13,9 +13,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `Q7`
-- Last completed quantum: `Q6`
-- Next quantum after current: `Q8`
+- Current quantum: `Q8`
+- Last completed quantum: `Q7`
+- Next quantum after current: `Q9`
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -336,7 +336,7 @@ Execution rules:
 
 - Objective:
   - Implement split and merge as pure document APIs.
-- Status: `in_progress`
+- Status: `done`
 - Allowed files:
   - `src/api/documentApi.ts`
   - `src/api/textConversion.ts`
@@ -367,17 +367,20 @@ Execution rules:
   - Relevant `vitest` commands
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/api/tests/textMerge.test.ts src/api/tests/documentApi.test.ts`: passed, 2 files / 37 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:
-  - Pending
+  - Split currently stacks newly created sibling nodes using a deterministic estimated vertical offset; later stage/editor work can replace that with measured layout logic without changing the pure API contract.
+  - Rich split currently emits standalone block text nodes only because embedded rich code/list blocks are still deferred.
 
 ## Q8: Update renderers and labels to consume canonical model
 
 - Objective:
   - Make stage/site reflect subtype-aware semantics from the API layer.
-- Status: `pending`
+- Status: `in_progress`
 - Allowed files:
   - `src/render/nodePresentation.tsx`
   - `src/render/leafPresentation.ts`
