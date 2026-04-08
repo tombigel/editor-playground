@@ -12,9 +12,9 @@ Execution rules:
 
 ## Shared Progress Summary
 
-- Overall status: `done`
-- Current quantum: `none`
-- Last completed quantum: `Q10`
+- Overall status: `in_progress`
+- Current quantum: `Q12`
+- Last completed quantum: `Q11`
 - Next quantum after current: `none`
 - Locked assumptions:
   - API-first overrides UI convenience.
@@ -25,7 +25,8 @@ Execution rules:
 
 ## Discovered Issues
 
-- None recorded yet.
+- Rich stage edit mode currently treats some floating-toolbar interactions as outside clicks, which can commit or exit edit mode while formatting controls are still being used.
+- Mouse-based text selection inside the on-stage rich text edit box is currently unreliable, so selecting authored text directly on the stage does not consistently work.
 
 ## Q0: Bootstrap the memory layer
 
@@ -514,3 +515,63 @@ Execution rules:
 - Open follow-ups carried forward:
   - Add stable stage e2e coverage for the select-then-edit rich-text lifecycle once the Playwright stage click path is less timing-sensitive.
   - Reuse the richer link-type picker UI inside the stage overlay instead of the localized URL-only popover.
+
+## Q11: Rich stage regression coverage
+
+- Objective:
+  - Capture the currently broken on-stage rich edit interactions in targeted e2e coverage before attempting fixes.
+- Status: `done`
+- Allowed files:
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `docs/TEXT_COMPONENT_TASKLIST.md`
+- Read-first files and target lines:
+  - `src/stage/tests/Stage.e2e.test.ts:1-260`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-260`
+  - `docs/TEXT_COMPONENT_TASKLIST.md:1-40`
+- Implementation notes:
+  - Add seeded rich-text stage fixtures so edit-mode coverage can enter the stage editor deterministically.
+  - Record expected-failure e2e coverage for toolbar clicks preserving edit mode and for mouse-based text selection inside the rich edit box.
+  - Keep the tests as explicit regression coverage, not as silent skips, so the later fix quantum can flip them to passing assertions.
+- Verification commands:
+  - `npm run typecheck`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps rich edit mode active|allows mouse text selection"`
+  - `npm run build`
+- Verification result:
+  - `npm run typecheck`: passed
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps rich edit mode active|allows mouse text selection"`: passed, 1 file / 2 expected-fail tests / 15 skipped
+  - `npm run build`: passed
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - Q12 should fix the captured rich-stage interaction regressions and convert the expected-failure e2e cases into standard passing tests.
+
+## Q12: Rich stage interaction fixes
+
+- Objective:
+  - Fix the on-stage rich edit interaction regressions now captured by the e2e suite.
+- Status: `pending`
+- Allowed files:
+  - `src/stage/Stage.tsx`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/stage/stageRenderers/leafRenderer.tsx`
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_TASKLIST.md`
+- Read-first files and target lines:
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-260`
+  - `src/stage/Stage.tsx:287-473`
+  - `src/stage/tests/Stage.e2e.test.ts:1-260`
+- Implementation notes:
+  - Fix outside-click detection so stage-rich toolbar and link controls are treated as internal edit interactions.
+  - Restore reliable mouse text selection inside the stage rich edit surface without regressing drag/drop or selection chrome.
+  - Convert the Q11 expected-failure tests into standard passing e2e assertions.
+- Verification commands:
+  - `npm run typecheck`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts`
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - Pending

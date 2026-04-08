@@ -33,7 +33,12 @@ describe('stage/Stage e2e', () => {
     await server?.close();
   });
 
-  async function openEditor(options?: { document?: DocumentModel; snapEnabled?: boolean }) {
+  async function openEditor(options?: {
+    document?: DocumentModel;
+    snapEnabled?: boolean;
+    selectedId?: string | null;
+    selectedIds?: string[];
+  }) {
     page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
     const snapSettings = options?.snapEnabled === false
       ? { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } }
@@ -41,7 +46,8 @@ describe('stage/Stage e2e', () => {
     const state = options?.document
       ? {
           document: options.document,
-          selectedId: null,
+          selectedId: options.selectedId ?? null,
+          selectedIds: options.selectedIds ?? (options.selectedId ? [options.selectedId] : []),
           pendingRoleSwap: null,
           ui: {
             previewSticky: true,
@@ -113,6 +119,16 @@ describe('stage/Stage e2e', () => {
 
   async function readPersistedState() {
     return page.evaluate((storageKey) => JSON.parse(window.localStorage.getItem(storageKey) ?? 'null'), STORAGE_KEY);
+  }
+
+  async function enterRichEditMode(nodeId: string) {
+    const richLeaf = page.locator(`#stage-node-${nodeId}`).first();
+    await richLeaf.click();
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { timeout: 2_000 });
+    return {
+      richLeaf,
+      editable: page.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]').first(),
+    };
   }
 
   it('selects and drags a stage text node', async () => {
@@ -230,6 +246,44 @@ describe('stage/Stage e2e', () => {
     const beforeRatio = before?.width / before?.height;
     const afterRatio = (after?.width ?? 1) / Math.max(after?.height ?? 1, 1);
     expect(Math.abs(afterRatio - beforeRatio)).toBeLessThan(0.05);
+
+    await closeEditor();
+  }, 30_000);
+
+  it.fails('keeps rich edit mode active when the floating toolbar is clicked', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    const { editable } = await enterRichEditMode(richTextId);
+    await editable.click();
+    await page.keyboard.press('ControlOrMeta+A');
+
+    await page.getByRole('button', { name: 'Bold' }).click();
+
+    expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'paragraph', children: [{ text: 'Edit me on stage' }] },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it.fails('allows mouse text selection inside the rich text edit box', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    const { editable } = await enterRichEditMode(richTextId);
+    const editableBox = await editable.boundingBox();
+    expect(editableBox).not.toBeNull();
+
+    await page.mouse.move((editableBox?.x ?? 0) + 24, (editableBox?.y ?? 0) + 20);
+    await page.mouse.down();
+    await page.mouse.move((editableBox?.x ?? 0) + 160, (editableBox?.y ?? 0) + 20, { steps: 10 });
+    await page.mouse.up();
+
+    const selectedText = await page.evaluate(() => window.getSelection()?.toString() ?? '');
+    expect(selectedText.length).toBeGreaterThan(0);
 
     await closeEditor();
   }, 30_000);
@@ -812,5 +866,39 @@ function createStructuralResizeE2EDocument(): DocumentModel {
       [sectionAText.id]: sectionAText,
       [sectionBText.id]: sectionBText,
     },
+  };
+}
+
+function createRichTextEditE2EDocument(): { document: DocumentModel; richTextId: string } {
+  const siteId = 'site_rich_text_regression_e2e';
+  const section = createContainerNode('section', siteId);
+  section.name = 'Rich Edit Regression Section';
+  section.rect = createDefaultRect('0px', '0px', '100%', '320px');
+
+  const richText = createTextNode('rich', section.id) as TextNode;
+  richText.name = 'Rich Edit Regression Copy';
+  richText.content = [{ type: 'paragraph', children: [{ text: 'Edit me on stage' }] }];
+  richText.rect = createDefaultRect('72px', '88px', '280px', '72px');
+
+  section.children = [richText.id];
+
+  return {
+    document: {
+      rootId: siteId,
+      nodes: {
+        [siteId]: {
+          id: siteId,
+          contentType: 'site', type: 'site',
+          parentId: null,
+          children: [section.id],
+          name: 'Site',
+          visible: true,
+          locked: false,
+        },
+        [section.id]: section,
+        [richText.id]: richText,
+      },
+    },
+    richTextId: richText.id,
   };
 }
