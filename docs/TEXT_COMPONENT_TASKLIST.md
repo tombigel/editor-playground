@@ -371,7 +371,7 @@ Execution rules:
   - `npx vitest run src/api/tests/textMerge.test.ts src/api/tests/documentApi.test.ts`: passed, 2 files / 37 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `6934cd3`
 - Open follow-ups carried forward:
   - Split currently stacks newly created sibling nodes using a deterministic estimated vertical offset; later stage/editor work can replace that with measured layout logic without changing the pure API contract.
   - Rich split currently emits standalone block text nodes only because embedded rich code/list blocks are still deferred.
