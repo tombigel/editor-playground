@@ -143,7 +143,7 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
     const theme = node.code?.theme ?? 'light';
     const html = node.code?.highlightedHtml ?? escapeHtml(node.content as string);
     return (
-      <pre data-code-theme={theme} style={{ margin: 0, ...contentStyle }}>
+      <pre className={`language-${lang}`} data-code-theme={theme} style={{ margin: 0, ...contentStyle }}>
         <code
           className={`language-${lang}`}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer

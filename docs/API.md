@@ -265,6 +265,7 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
 | `TextConversionMode` | `'auto' \| 'flatten'` | `auto` applies the default conversion policy; `flatten` explicitly flattens richer structures into plain text when needed. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
+| `normalizeCodeLanguage` | `(language: string) => string` | Normalizes unsupported code languages to `plaintext` for stable highlighting. |
 
 ---
 

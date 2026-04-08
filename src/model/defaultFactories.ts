@@ -165,7 +165,6 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
       content: TEXT_NODE_DEFAULTS.code.content,
       code: { language: TEXT_NODE_DEFAULTS.code.language, theme: TEXT_NODE_DEFAULTS.code.theme },
       style: {
-        color: DEFAULT_TEXT_COLOR,
         ...TEXT_NODE_DEFAULTS.code.style,
         direction: 'ltr',
         textAlign: 'left',
@@ -363,4 +362,3 @@ export function createMediaNode(subtype: MediaSubtype, parentId: NodeId): MediaN
     style: {},
   };
 }
-

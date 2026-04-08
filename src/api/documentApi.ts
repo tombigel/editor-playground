@@ -20,6 +20,7 @@ import {
   removeDocumentFontFamily,
   toggleDocumentFontFavorite,
 } from '../fonts';
+import { CODE_THEME_SURFACE } from '../model/textNodeDefaults';
 import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } from '../model/links';
 import { getChildren, getNode } from '../model/selectors';
 import { setPageAsHome as setPageAsHomeDoc } from './pageApi';
@@ -59,7 +60,7 @@ import type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolv
 import { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 import { formatValue, parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue, resolveUnitValuePx } from '../model/units';
 import { validateDocument, validateLinks } from '../model/validation';
-import { highlightCode } from '../render/codeHighlight';
+import { highlightCode, normalizeCodeLanguage } from '../render/codeHighlight';
 import type { DocumentCommand } from './types/index';
 
 export type NodeOrderAction = 'back' | 'forward' | 'sendToBack' | 'bringToFront';
@@ -232,7 +233,7 @@ export function setNodeTextField(
   }
 
   if (field === 'content' && isTextNode(node) && node.subtype === 'code') {
-    const language = node.code?.language ?? 'plaintext';
+    const language = normalizeCodeLanguage(node.code?.language ?? 'plaintext');
     const highlightedHtml = highlightCode(value, language);
     node.content = value;
     node.code = { ...(node.code ?? { language }), highlightedHtml };
@@ -240,14 +241,28 @@ export function setNodeTextField(
   }
 
   if (field === 'codeLanguage' && isTextNode(node) && node.subtype === 'code') {
-    const language = value;
+    const language = normalizeCodeLanguage(value);
     const highlightedHtml = highlightCode(node.content as string, language);
     node.code = { ...(node.code ?? {}), language, highlightedHtml };
     return next;
   }
 
   if (field === 'codeTheme' && isTextNode(node) && node.subtype === 'code') {
-    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: value as 'light' | 'dark' };
+    const currentTheme = node.code?.theme ?? 'light';
+    const nextTheme = value === 'dark' ? 'dark' : 'light';
+    const currentSurface = CODE_THEME_SURFACE[currentTheme];
+    const nextSurface = CODE_THEME_SURFACE[nextTheme];
+    const currentBackground = node.style?.background;
+    const currentColor = node.style?.color;
+
+    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: nextTheme };
+    node.style ??= {};
+    if (currentBackground == null || currentBackground === currentSurface.background) {
+      node.style.background = nextSurface.background;
+    }
+    if (currentColor == null || currentColor === currentSurface.color) {
+      node.style.color = nextSurface.color;
+    }
     return next;
   }
 

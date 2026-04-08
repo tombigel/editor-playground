@@ -174,6 +174,40 @@ describe('api/documentApi', () => {
     expect(codeNode.style?.borderRadius?.raw).toBe('14px');
   });
 
+  it('normalizes unsupported code languages and reapplies theme-owned code surfaces', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    document.nodes[code.id] = code;
+    document.nodes[section.id].children.push(code.id);
+
+    const withInvalidLanguage = setNodeTextField(document, code.id, 'codeLanguage', 'unsupported-language');
+    const withDarkTheme = setNodeTextField(withInvalidLanguage, code.id, 'codeTheme', 'dark');
+    const withCustomBackground = setNodeTextField(withDarkTheme, code.id, 'background', '#123456');
+    const withLightTheme = setNodeTextField(withCustomBackground, code.id, 'codeTheme', 'light');
+
+    const darkNode = withDarkTheme.nodes[code.id];
+    const lightNode = withLightTheme.nodes[code.id];
+    if (darkNode.contentType !== 'text' || darkNode.subtype !== 'code') {
+      throw new Error('Expected dark code node');
+    }
+    if (lightNode.contentType !== 'text' || lightNode.subtype !== 'code') {
+      throw new Error('Expected light code node');
+    }
+
+    expect(darkNode.code?.language).toBe('plaintext');
+    expect(darkNode.style?.background).toBe('#272822');
+    expect(darkNode.style?.color).toBe('#f8f8f2');
+    expect(lightNode.style?.background).toBe('#123456');
+    expect(lightNode.style?.color).toBe('#16202a');
+  });
+
   it('updates navigation fields for links and buttons through API helpers', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

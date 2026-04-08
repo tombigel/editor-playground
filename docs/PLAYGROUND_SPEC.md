@@ -1304,6 +1304,7 @@ Naming and title behavior:
 - Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setNodeTextField()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - Text subtype conversion is also API-first: `convertTextNodeDoc()` owns the conversion policy, `switchTextSubtypeDoc()` is the thin entrypoint, and editor actions only choose the target subtype plus an optional conversion mode.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
+- Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
 

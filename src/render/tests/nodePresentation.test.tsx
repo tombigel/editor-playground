@@ -82,4 +82,18 @@ describe('render/nodePresentation', () => {
     expect(markup.startsWith('<pre')).toBe(true);
     expect(markup).toContain('<code');
   });
+
+  it('renders code blocks with a pre language class so prism theme chrome applies', () => {
+    const code = createTextNode('code', 'root');
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const answer = 42;',
+    };
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('class="language-typescript"');
+    expect(markup).toContain('data-code-theme="dark"');
+  });
 });
