@@ -181,7 +181,7 @@ export function Stage({
 	}, [document, onStickyGeometryChange]);
 
 	useLayoutEffect(() => {
-		if (selectedIds.length !== 1 || !selectedId || dragDrop.isDragging) {
+		if (selectedIds.length !== 1 || !selectedId || dragDrop.isDragging || editingId) {
 			setSingleSelectionOverlay(null);
 			return;
 		}
@@ -229,10 +229,10 @@ export function Stage({
 			wideSouthHandle:
 				node.contentType === "container" && isStructuralTopLevelWrapper(node, isTopLevel),
 		});
-	}, [document, dragDrop.isDragging, selectedId, selectedIds]);
+	}, [document, dragDrop.isDragging, editingId, selectedId, selectedIds]);
 
 	useLayoutEffect(() => {
-		if (selectedIds.length <= 1 || dragDrop.isDragging) {
+		if (selectedIds.length <= 1 || dragDrop.isDragging || editingId) {
 			setMultiSelectionBounds(null);
 			return;
 		}
@@ -280,7 +280,7 @@ export function Stage({
 			width: Math.max(0, right - left),
 			height: Math.max(0, bottom - top),
 		});
-	}, [document, dragDrop.isDragging, selectedIds]);
+	}, [document, dragDrop.isDragging, editingId, selectedIds]);
 
 	return (
 		// biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor stage needs aria-activedescendant for selection tracking

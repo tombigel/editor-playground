@@ -18,8 +18,15 @@ describe('stage/RichTextEditOverlay', () => {
     );
 
     expect(markup).toContain('data-stage-rich-toolbar="true"');
-    expect(markup).toContain('Rich text edit');
-    expect(markup).toContain('Cmd/Ctrl+Enter saves');
+    expect(markup).toContain('aria-label="Bold"');
+    expect(markup).toContain('aria-label="Italic"');
+    expect(markup).toContain('aria-label="Link"');
+    expect(markup).toContain('aria-label="Discard changes"');
+    expect(markup).toContain('aria-label="Save changes"');
+    expect(markup).not.toContain('Rich text edit');
+    expect(markup).not.toContain('Cmd/Ctrl+Enter saves');
     expect(markup).toContain('min-height:96px');
+    expect(markup).toContain('padding:0');
+    expect(markup).toContain('border-radius:0');
   });
 });

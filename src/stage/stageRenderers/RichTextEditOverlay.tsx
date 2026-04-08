@@ -9,11 +9,12 @@ import {
   type KeyboardEvent,
   type FormEvent,
 } from 'react';
-import { Bold, Check, Italic, Link2, X } from 'lucide-react';
+import { Check, Link2, X } from 'lucide-react';
 import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
 import { Button } from '@/components/ui/button';
 import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
 import { Input } from '@/components/ui/input';
+import { PopoverTooltip } from '@/components/ui/popover';
 import { getLinkHref } from '../../model/links';
 import type {
   DocumentModel,
@@ -267,7 +268,7 @@ export function RichTextEditOverlay({
             left: 0,
             zIndex: 220,
             transform: 'translateY(calc(-100% - 10px))',
-            maxWidth: 'min(100%, 480px)',
+            maxWidth: 'fit-content',
             pointerEvents: 'auto',
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -283,63 +284,39 @@ export function RichTextEditOverlay({
             event.stopPropagation();
           }}
         >
-          <span
-            style={{
-              marginRight: 6,
-              fontSize: 11,
-              fontWeight: 600,
-              color: 'var(--editor-utility-text-strong)',
-            }}
-          >
-            Rich text edit
-          </span>
           <ToolbarButton
             label="Bold"
-            icon={<Bold size={14} />}
             active={boldActive}
             onActivate={() => handleMarkAction('bold')}
-          />
+          >
+            <span className="font-black tracking-[-0.02em] no-underline decoration-transparent">B</span>
+          </ToolbarButton>
           <ToolbarButton
             label="Italic"
-            icon={<Italic size={14} />}
             active={italicActive}
             onActivate={() => handleMarkAction('italic')}
-          />
+          >
+            <span className="font-medium italic">I</span>
+          </ToolbarButton>
           <ToolbarButton
             label={linkActive ? 'Unlink' : 'Link'}
             icon={<Link2 size={14} />}
             active={linkActive || linkPopover.open}
             onActivate={handleLinkAction}
           />
-          <span
-            style={{
-              marginLeft: 'auto',
-              fontSize: 10,
-              color: 'var(--editor-utility-text-muted)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Cmd/Ctrl+Enter saves
-          </span>
-          <Button type="button" size="sm" variant="outline" onClick={onDiscard}>
-            <X size={14} />
-            Cancel
-          </Button>
-          <Button type="button" size="sm" onClick={commitCurrentContent}>
-            <Check size={14} />
-            Save
-          </Button>
+          <ToolbarButton label="Discard changes" icon={<X size={14} />} active={false} onActivate={onDiscard} />
+          <ToolbarButton label="Save changes" icon={<Check size={14} />} active={false} onActivate={commitCurrentContent} />
         </FloatingPanelShell>
         <div
           data-stage-rich-edit-box="true"
           style={{
             ...contentStyle,
             minHeight,
-            padding: '12px 14px',
-            borderRadius: 12,
-            border: '1px solid var(--editor-accent)',
-            background: 'color-mix(in srgb, var(--editor-bg-surface, #ffffff) 96%, var(--editor-accent) 4%)',
-            boxShadow: '0 0 0 1px color-mix(in srgb, var(--editor-accent) 22%, transparent)',
+            padding: 0,
+            borderRadius: 0,
+            border: 0,
+            background: 'transparent',
+            boxShadow: 'none',
             pointerEvents: 'auto',
             cursor: 'text',
             userSelect: 'text',
@@ -378,28 +355,38 @@ function ToolbarButton({
   icon,
   active,
   onActivate,
+  children,
 }: {
   label: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   active: boolean;
   onActivate: () => void;
+  children?: ReactNode;
 }) {
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant={active ? 'default' : 'outline'}
-      aria-label={label}
-      style={{ pointerEvents: 'auto' }}
-      onPointerDown={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }}
-      onClick={onActivate}
+    <PopoverTooltip
+      side="top"
+      align="center"
+      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      content={<div className="leading-3.5 font-medium">{label}</div>}
     >
-      {icon}
-      {label}
-    </Button>
+      <Button
+        type="button"
+        variant={active ? 'default' : 'outline'}
+        size="sm"
+        aria-label={label}
+        aria-pressed={active}
+        style={{ pointerEvents: 'auto' }}
+        className="h-8 w-8 p-0 text-xs"
+        onPointerDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onClick={onActivate}
+      >
+        {children ?? icon}
+      </Button>
+    </PopoverTooltip>
   );
 }
 

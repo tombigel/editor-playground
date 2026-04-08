@@ -1674,12 +1674,13 @@ undo history. Keystrokes are not propagated to the document until the editor exi
 
 While editing, the rich node gets visible stage chrome:
 
-- a floating toolbar built from the shared floating panel shell and button/input primitives
-- a localized edit outline around the text box
+- a floating toolbar built from the shared floating panel shell and inspector-style icon buttons with tooltips
+- the stage selection outline is hidden while the rich node is actively being edited
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it
 - toolbar and link-popover interactions stay inside edit mode instead of being treated as outside clicks
 - authored text remains directly mouse-selectable inside the stage edit surface
+- the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 
 ### Keyboard shortcuts
 
