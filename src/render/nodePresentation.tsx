@@ -8,13 +8,18 @@ import type {
   DescriptionListItem,
   ListContent,
   LinkExtension,
+  RichBlock,
+  RichCodeBlock,
   RichContent,
+  RichListBlock,
+  RichListItem,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
   ListTextItem,
 } from '../model/types';
+import { highlightCode } from './codeHighlight';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -72,7 +77,15 @@ function richLinkKey(node: RichTextLink): string {
   return `link|${node.linkType}|${node.href ?? ''}|${node.children.map((l) => l.text).join('')}`;
 }
 
-function richBlockKey(block: RichTextBlock, index: number): string {
+function richBlockKey(block: RichBlock, index: number): string {
+  if (block.type === 'code-block') {
+    return `block|${index}|code|${block.language ?? 'plaintext'}|${block.children.map((line) => line.children.map((leaf) => richLeafKey(leaf)).join('|')).join('||')}`;
+  }
+
+  if (block.type === 'ul' || block.type === 'ol') {
+    return `block|${index}|${block.type}|${block.children.map((item) => item.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')).join('||')}`;
+  }
+
   return `block|${index}|${block.type}|${block.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')}`;
 }
 
@@ -106,11 +119,100 @@ function renderRichInlineContent(content: RichTextBlock['children'], document?: 
   });
 }
 
+function renderRichListItemContent(item: RichListItem, document?: DocumentModel): ReactNode {
+  return renderRichInlineContent(item.children, document);
+}
+
+function richListItemKey(item: RichListItem): string {
+  return `rich-list-item|${item.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')}`;
+}
+
+function renderRichCodeBlock(block: RichCodeBlock, index: number): ReactNode {
+  const language = block.language ?? 'plaintext';
+  const rawText = block.children
+    .map((line) => line.children.map((leaf) => leaf.text).join(''))
+    .join('\n');
+  const html = block.highlightedHtml ?? highlightCode(rawText, language);
+
+  return (
+    <pre
+      key={richBlockKey(block, index)}
+      className={`language-${language}`}
+      data-code-theme={block.theme ?? 'light'}
+      dir={block.direction ?? 'ltr'}
+      style={{ margin: 0 }}
+    >
+      <code
+        className={`language-${language}`}
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor/model layer
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </pre>
+  );
+}
+
+function renderRichListBlock(
+  block: RichListBlock,
+  index: number,
+  document?: DocumentModel,
+): ReactNode {
+  const sharedStyle: CSSProperties = {
+    margin: 0,
+    listStyleType: block.markerStyle,
+  };
+
+  if (block.type === 'ol') {
+    return (
+      <ol
+        key={richBlockKey(block, index)}
+        dir={block.direction ?? 'ltr'}
+        start={block.start}
+        style={sharedStyle}
+      >
+        {block.children.map((item) => (
+          <li key={richListItemKey(item)}>
+            {renderRichListItemContent(item, document)}
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
+  return (
+    <ul
+      key={richBlockKey(block, index)}
+      dir={block.direction ?? 'ltr'}
+      style={sharedStyle}
+    >
+      {block.children.map((item) => (
+        <li key={richListItemKey(item)}>
+          {renderRichListItemContent(item, document)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
   return content.map((block, index) => {
+    if (block.type === 'code-block') {
+      return renderRichCodeBlock(block, index);
+    }
+
+    if (block.type === 'ul' || block.type === 'ol') {
+      return renderRichListBlock(block, index, document);
+    }
+
     const Tag = getRichTextBlockTag(block.type);
     return (
-      <Tag key={richBlockKey(block, index)}>
+      <Tag
+        key={richBlockKey(block, index)}
+        dir={block.direction ?? 'ltr'}
+        style={{
+          margin: 0,
+          ...(typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
+        }}
+      >
         {renderRichInlineContent(block.children, document)}
       </Tag>
     );
@@ -268,8 +370,19 @@ export function renderLeafContent(
   const tabIndex = disableTabNavigation ? -1 : undefined;
 
   if (isTextNode(node) && node.subtype === 'rich') {
+    const blockGap = typeof node.style?.blockGap === 'number'
+      ? `${node.style.blockGap}px`
+      : undefined;
     return (
-      <div className={leafClassName} data-node-id={dataNodeId} style={contentStyle}>
+      <div
+        className={leafClassName}
+        data-node-id={dataNodeId}
+        style={{
+          ...contentStyle,
+          display: 'grid',
+          ...(blockGap ? { rowGap: blockGap } : {}),
+        }}
+      >
         {renderRichContent(node.content as RichContent, document)}
       </div>
     );

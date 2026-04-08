@@ -56,7 +56,7 @@ Every feature is achievable through the API layer without the editor UI.
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
 | `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
-| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into block-rooted `RichContent` before persisting. |
+| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into the supported block-rooted `RichContent` subset before persisting. |
 | `setListContentDoc` | `(document, nodeId, content: ListContent) => DocumentModel` | Canonical pure list-content mutation. Normalizes authored list payloads into the supported phase-1 `ul`, `ol`, or `dl` shapes before persisting. |
 | `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) => DocumentModel` | Dedicated pure code-language mutator layered over the canonical text mutation path. |
 | `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) => DocumentModel` | Dedicated pure code-theme mutator layered over the canonical text mutation path. |

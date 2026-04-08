@@ -1575,12 +1575,39 @@ subset — rather than a plain string.
 ### RichContent format
 
 ```typescript
-type RichContent = RichTextBlock[]
+type RichContent = RichBlock[]
 
 type RichTextBlock = {
   type: 'paragraph' | 'div' | 'blockquote' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  direction?: 'ltr' | 'rtl'
+  lineHeight?: number
   children: RichInlineNode[]
 }
+
+type RichCodeBlock = {
+  type: 'code-block'
+  direction?: 'ltr' | 'rtl'
+  language?: string
+  theme?: 'light' | 'dark'
+  highlightedHtml?: string
+  children: Array<{
+    type: 'code-line'
+    children: RichTextLeaf[]
+  }>
+}
+
+type RichListBlock = {
+  type: 'ul' | 'ol'
+  direction?: 'ltr' | 'rtl'
+  markerStyle?: string
+  start?: number // ol only
+  children: Array<{
+    type: 'list-item'
+    children: RichInlineNode[]
+  }>
+}
+
+type RichBlock = RichTextBlock | RichCodeBlock | RichListBlock
 
 // Plain text leaf — text plus optional mark flags
 type RichTextLeaf = {
@@ -1608,9 +1635,14 @@ type RichTextLink = {
 Rules:
 
 - Rich roots must be block arrays only; free inline root text is invalid.
-- Blocks cannot nest other blocks.
+- Supported root blocks are non-list text blocks, `code-block`, and rich `ul` / `ol`.
+- Non-list text blocks may contain only text leaves and inline links.
+- `code-block` may contain only `code-line` children, and code lines may contain only text leaves.
+- Rich `ul` / `ol` blocks may contain only flat `list-item` children, and list items may contain only text leaves and inline links.
+- Nested rich lists and description-list rich blocks are deferred.
 - Inline links may contain only text leaves.
 - Legacy flat inline arrays are normalized to a single `paragraph` block by migration and `setRichTextContentDoc()`.
+- Rich-node block spacing lives on the text node style as `style.blockGap`; per-block line height is stored on supported non-list text blocks.
 
 `block` and `code` subtypes continue to use a plain `string` for `content`. The `subtype === 'rich'`
 narrowing is the canonical way to distinguish.
@@ -1618,12 +1650,15 @@ narrowing is the canonical way to distinguish.
 ### Rendering contract
 
 - **Site renderer** (`SiteRenderer.tsx`): rich nodes always render inside a nonsemantic outer
-  `<div>`. Each inner `RichTextBlock` renders as its semantic block tag, each `RichTextLeaf`
+  `<div>`. Non-list text blocks render as their semantic block tags, rich code blocks render as
+  `<pre><code>`, rich `ul` / `ol` blocks render semantically as lists, each `RichTextLeaf`
   becomes a `<span>` only when marks are needed, and each `RichTextLink` becomes an `<a>`
   resolved via `getLinkHref()`.
 - **Stage renderer** (`renderLeafContent` in `nodePresentation.tsx`): same via the shared
   `renderRichContent()` helper. The `document` option must be passed when page-link hrefs need
   to be resolved.
+- Rich outer wrappers apply `style.blockGap` as inter-block spacing without changing the persisted
+  inner block semantics.
 - `getNodeTextContent()` flattens `RichContent` to a plain string for aria labels and layer names.
 
 ### Link validation and sync

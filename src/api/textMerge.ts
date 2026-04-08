@@ -14,6 +14,7 @@ import type {
   DocumentModel,
   ListContent,
   NodeId,
+  RichBlock,
   RichContent,
   RichTextBlock,
   TextNode,
@@ -252,13 +253,17 @@ function htmlTagToRichBlockType(
   return 'paragraph';
 }
 
-function richBlockToTextSubtype(_block: RichTextBlock): TextSubtype {
+function richBlockToTextSubtype(_block: RichBlock): TextSubtype {
   return 'block';
 }
 
 function richBlockToHtmlTag(
-  block: RichTextBlock,
+  block: RichBlock,
 ): TextNode['htmlTag'] {
+  if (block.type === 'code-block' || block.type === 'ul' || block.type === 'ol') {
+    return 'p';
+  }
+
   if (block.type === 'blockquote') {
     return 'blockquote';
   }
@@ -272,7 +277,7 @@ function richBlockToHtmlTag(
 
 function createAnchorNodeFromRichBlock(
   source: TextNode,
-  block: RichTextBlock,
+  block: RichBlock,
 ): TextNode {
   const subtype = richBlockToTextSubtype(block);
   const base = createTextNode(subtype, source.parentId ?? '');
@@ -296,7 +301,7 @@ function createAnchorNodeFromRichBlock(
 
 function createSplitSiblingNodeFromRichBlock(
   source: TextNode,
-  block: RichTextBlock,
+  block: RichBlock,
   splitIndex: number,
   yOffsetPx: number,
 ): TextNode {
@@ -324,7 +329,7 @@ function createSplitSiblingNodeFromRichBlock(
   };
 }
 
-function estimateSplitAdvancePx(source: TextNode, block: RichTextBlock): number {
+function estimateSplitAdvancePx(source: TextNode, block: RichBlock): number {
   const fontSize = source.style?.fontSize?.parsed;
   const fontSizePx = fontSize && 'unit' in fontSize && fontSize.unit === 'px'
     ? fontSize.value

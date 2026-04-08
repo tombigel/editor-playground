@@ -38,6 +38,38 @@ describe('render/richTextEditor', () => {
       ];
       expect(fromSlateValue(toSlateValue(content))).toEqual(content);
     });
+
+    it('round-trips rich code blocks', () => {
+      const content: RichContent = [
+        {
+          type: 'code-block',
+          direction: 'ltr',
+          language: 'typescript',
+          theme: 'dark',
+          children: [
+            { type: 'code-line', children: [{ text: 'const answer = 42;' }] },
+            { type: 'code-line', children: [{ text: 'console.log(answer);' }] },
+          ],
+        },
+      ];
+      expect(fromSlateValue(toSlateValue(content))).toEqual(content);
+    });
+
+    it('round-trips rich list blocks', () => {
+      const content: RichContent = [
+        {
+          type: 'ol',
+          direction: 'rtl',
+          start: 2,
+          markerStyle: 'upper-alpha',
+          children: [
+            { type: 'list-item', children: [{ text: 'Second' }] },
+            { type: 'list-item', children: [{ text: 'Third' }] },
+          ],
+        },
+      ];
+      expect(fromSlateValue(toSlateValue(content))).toEqual(content);
+    });
   });
 
   describe('toggleMark', () => {

@@ -41,7 +41,7 @@ import {
   type TopLevelWrapperVisibilityState as TopLevelWrapperVisibilityStateModel,
 } from '../model/topLevelWrapperVisibility';
 import { normalizeListContent } from '../model/listContent';
-import { normalizeRichContent } from '../model/richContent';
+import { createRichTextBlock, createRichTextLeaf, getTextContent, normalizeRichContent } from '../model/richContent';
 import type { PageId } from '../model/types/site';
 import type {
   BorderColorField,
@@ -617,7 +617,9 @@ export function setRichBlockTypeDoc(
     return document;
   }
 
-  block.type = blockType;
+  content[blockIndex] = block.type === 'code-block' || block.type === 'ul' || block.type === 'ol'
+    ? createRichTextBlock(blockType, [createRichTextLeaf(getTextContent([block]))], { direction: block.direction })
+    : { ...block, type: blockType };
   node.content = content;
   return next;
 }
@@ -642,19 +644,51 @@ export function setRichListMarkerStyleDoc(
 
 export function setRichBlockLineHeightDoc(
   document: DocumentModel,
-  _nodeId: NodeId,
-  _blockIndex: number,
-  _lineHeight: number,
+  nodeId: NodeId,
+  blockIndex: number,
+  lineHeight: number,
 ): DocumentModel {
-  return document;
+  if (!Number.isFinite(lineHeight) || lineHeight <= 0) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'rich') {
+    return document;
+  }
+
+  const content = normalizeRichContent(node.content);
+  const block = content[blockIndex];
+  if (!block || block.type === 'code-block' || block.type === 'ul' || block.type === 'ol') {
+    return document;
+  }
+
+  content[blockIndex] = { ...block, lineHeight };
+  node.content = content;
+  return next;
 }
 
 export function setRichBlockSpacingDoc(
   document: DocumentModel,
-  _nodeId: NodeId,
-  _blockSpacing: number,
+  nodeId: NodeId,
+  blockSpacing: number,
 ): DocumentModel {
-  return document;
+  if (!Number.isFinite(blockSpacing) || blockSpacing < 0) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'rich') {
+    return document;
+  }
+
+  node.style = {
+    ...(node.style ?? {}),
+    blockGap: blockSpacing,
+  };
+  return next;
 }
 
 export function setNodeVisibilityDoc(

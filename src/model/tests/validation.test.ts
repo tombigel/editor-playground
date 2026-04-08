@@ -571,7 +571,37 @@ describe('model/validation', () => {
     section.children.push(rich.id);
 
     const errors = validateDocument(document);
-    expect(errors).toContain(`Rich text node ${rich.id}: Rich content root item 0 must be a block.`);
+    expect(errors).toContain(`Rich text node ${rich.id}: Rich content root item 0 must be a supported block.`);
+  });
+
+  it('rejects malformed rich code blocks', () => {
+    const document = createInitialDocument();
+    const section = getMainWrappers(document)[0];
+    const rich = createTextNode('rich', section.id) as TextNode;
+    rich.content = [{
+      type: 'code-block',
+      children: [{ type: 'paragraph', children: [{ text: 'nested' }] }],
+    }] as unknown as RichContent;
+    document.nodes[rich.id] = rich;
+    section.children.push(rich.id);
+
+    const errors = validateDocument(document);
+    expect(errors).toContain(`Rich text node ${rich.id}: Rich code block 0 child 0 must be a code-line element.`);
+  });
+
+  it('rejects malformed rich list blocks', () => {
+    const document = createInitialDocument();
+    const section = getMainWrappers(document)[0];
+    const rich = createTextNode('rich', section.id) as TextNode;
+    rich.content = [{
+      type: 'ul',
+      children: [{ type: 'paragraph', children: [{ text: 'nested' }] }],
+    }] as unknown as RichContent;
+    document.nodes[rich.id] = rich;
+    section.children.push(rich.id);
+
+    const errors = validateDocument(document);
+    expect(errors).toContain(`Rich text node ${rich.id}: Rich list block 0 child 0 must be a list-item element.`);
   });
 
   it('rejects malformed list content', () => {

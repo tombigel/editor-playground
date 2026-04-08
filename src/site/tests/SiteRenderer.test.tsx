@@ -189,8 +189,10 @@ describe('site/SiteRenderer', () => {
     const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
 
     expect(markup).toContain(`data-node-id="${rich.id}"`);
-    expect(markup).toContain('<h2>Heading</h2>');
-    expect(markup).toContain('<p>Paragraph copy</p>');
+    expect(markup).toContain('<h2');
+    expect(markup).toContain('>Heading</h2>');
+    expect(markup).toContain('<p');
+    expect(markup).toContain('>Paragraph copy</p>');
   });
 
   it('renders semantic list wrappers for standalone list nodes', () => {
@@ -247,5 +249,47 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain(`data-node-id="${code.id}"`);
     expect(markup).toContain('language-typescript');
     expect(markup).toContain('data-code-theme="dark"');
+  });
+
+  it('renders rich code and list blocks with the shared rich-content semantics', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const rich = createTextNode('rich', section.id);
+    rich.content = [
+      {
+        type: 'code-block',
+        language: 'typescript',
+        theme: 'dark',
+        highlightedHtml: 'const total = 3;',
+        children: [{ type: 'code-line', children: [{ text: 'const total = 3;' }] }],
+      },
+      {
+        type: 'ol',
+        start: 4,
+        markerStyle: 'upper-alpha',
+        children: [
+          { type: 'list-item', children: [{ text: 'Fourth' }] },
+          { type: 'list-item', children: [{ text: 'Fifth' }] },
+        ],
+      },
+    ];
+    document.nodes[rich.id] = rich;
+    section.children.push(rich.id);
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).toContain(`data-node-id="${rich.id}"`);
+    expect(markup).toContain('language-typescript');
+    expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('<ol');
+    expect(markup).toContain('start="4"');
+    expect(markup).toContain('list-style-type:upper-alpha');
   });
 });

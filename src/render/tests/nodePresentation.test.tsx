@@ -130,4 +130,35 @@ describe('render/nodePresentation', () => {
     expect(formatNodeLabel(code)).toBe('Text: code');
     expect(formatNodeLabel(list)).toBe('Text: list');
   });
+
+  it('renders rich code and list blocks through the shared rich renderer', () => {
+    const rich = createTextNode('rich', 'root');
+    rich.style = { ...rich.style, blockGap: 24 };
+    rich.content = [
+      {
+        type: 'code-block',
+        language: 'typescript',
+        theme: 'dark',
+        highlightedHtml: 'const answer = 42;',
+        children: [{ type: 'code-line', children: [{ text: 'const answer = 42;' }] }],
+      },
+      {
+        type: 'ul',
+        markerStyle: 'square',
+        children: [
+          { type: 'list-item', children: [{ text: 'Alpha' }] },
+          { type: 'list-item', children: [{ text: 'Beta' }] },
+        ],
+      },
+    ];
+
+    const markup = renderToStaticMarkup(renderLeafContent(rich));
+
+    expect(markup).toContain('row-gap:24px');
+    expect(markup).toContain('language-typescript');
+    expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('<ul');
+    expect(markup).toContain('list-style-type:square');
+    expect(markup).toContain('<li>Beta</li>');
+  });
 });

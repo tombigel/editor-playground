@@ -130,10 +130,48 @@ export type RichInlineNode = RichTextLeaf | RichTextLink;
 
 export interface RichTextBlock extends SlateElement {
   type: RichTextBlockType;
+  direction?: 'ltr' | 'rtl';
+  lineHeight?: number;
   children: RichInlineNode[];
 }
 
-export type RichContent = RichTextBlock[];
+export interface RichCodeLine extends SlateElement {
+  type: 'code-line';
+  children: RichTextLeaf[];
+}
+
+export interface RichCodeBlock extends SlateElement {
+  type: 'code-block';
+  direction?: 'ltr' | 'rtl';
+  language?: string;
+  theme?: 'light' | 'dark';
+  highlightedHtml?: string;
+  children: RichCodeLine[];
+}
+
+export interface RichListItem extends SlateElement {
+  type: 'list-item';
+  children: RichInlineNode[];
+}
+
+export interface RichUnorderedListBlock extends SlateElement {
+  type: 'ul';
+  direction?: 'ltr' | 'rtl';
+  markerStyle?: UnorderedListMarkerStyle;
+  children: RichListItem[];
+}
+
+export interface RichOrderedListBlock extends SlateElement {
+  type: 'ol';
+  direction?: 'ltr' | 'rtl';
+  start?: number;
+  markerStyle?: OrderedListMarkerStyle;
+  children: RichListItem[];
+}
+
+export type RichListBlock = RichUnorderedListBlock | RichOrderedListBlock;
+export type RichBlock = RichTextBlock | RichCodeBlock | RichListBlock;
+export type RichContent = RichBlock[];
 
 // ---------------------------------------------------------------------------
 // Value types
@@ -418,6 +456,7 @@ export type TextNode = BaseNode & {
     background?: string;
     paddingBlock?: ParsedValue<SpacingValue>;
     paddingInline?: ParsedValue<SpacingValue>;
+    blockGap?: number;
   } & BorderStyle;
 };
 
