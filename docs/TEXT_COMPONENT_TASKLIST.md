@@ -12,9 +12,9 @@ Execution rules:
 
 ## Shared Progress Summary
 
-- Overall status: `in_progress`
-- Current quantum: `Q12`
-- Last completed quantum: `Q11`
+- Overall status: `done`
+- Current quantum: `none`
+- Last completed quantum: `Q12`
 - Next quantum after current: `none`
 - Locked assumptions:
   - API-first overrides UI convenience.
@@ -25,8 +25,7 @@ Execution rules:
 
 ## Discovered Issues
 
-- Rich stage edit mode currently treats some floating-toolbar interactions as outside clicks, which can commit or exit edit mode while formatting controls are still being used.
-- Mouse-based text selection inside the on-stage rich text edit box is currently unreliable, so selecting authored text directly on the stage does not consistently work.
+- None recorded currently.
 
 ## Q0: Bootstrap the memory layer
 
@@ -549,7 +548,7 @@ Execution rules:
 
 - Objective:
   - Fix the on-stage rich edit interaction regressions now captured by the e2e suite.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/stage/Stage.tsx`
   - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
@@ -562,16 +561,19 @@ Execution rules:
   - `src/stage/Stage.tsx:287-473`
   - `src/stage/tests/Stage.e2e.test.ts:1-260`
 - Implementation notes:
-  - Fix outside-click detection so stage-rich toolbar and link controls are treated as internal edit interactions.
-  - Restore reliable mouse text selection inside the stage rich edit surface without regressing drag/drop or selection chrome.
-  - Convert the Q11 expected-failure tests into standard passing e2e assertions.
+  - Restore pointer and selection behavior on rich-edit descendants so toolbar buttons, link controls, and editable text stop inheriting the stage leaf's non-interactive chrome defaults.
+  - Keep toolbar and link-popover interactions inside edit mode instead of letting them fall through and trigger outside-click commit behavior.
+  - Restore direct mouse selection of authored text inside the stage rich edit surface.
+  - Convert the Q11 expected-failure regression coverage into standard passing e2e assertions.
 - Verification commands:
   - `npm run typecheck`
-  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps rich edit mode active|allows mouse text selection"`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps rich edit mode active|allows mouse text selection"`: passed, 1 file / 2 tests / 15 skipped
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `a6dad9e`
 - Open follow-ups carried forward:
-  - Pending
+  - Add broader stable e2e coverage for the full select-then-edit lifecycle once the rest of the older stage-e2e failures are addressed.
