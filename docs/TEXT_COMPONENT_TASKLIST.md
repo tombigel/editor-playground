@@ -541,7 +541,7 @@ Execution rules:
   - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps rich edit mode active|allows mouse text selection"`: passed, 1 file / 2 expected-fail tests / 15 skipped
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `612b9fe`
 - Open follow-ups carried forward:
   - Q12 should fix the captured rich-stage interaction regressions and convert the expected-failure e2e cases into standard passing tests.
 
