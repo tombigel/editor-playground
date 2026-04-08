@@ -117,7 +117,7 @@ Execution rules:
   - `npx vitest run src/api/tests/documentApi.test.ts src/api/tests/textMerge.test.ts src/editor/tests/editorMutations.test.ts`: passed, 3 files / 187 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `dd77d46`
 - Open follow-ups carried forward:
   - `P15-Q2` should update the rich schema and validation to match the canonical API surface.
 
