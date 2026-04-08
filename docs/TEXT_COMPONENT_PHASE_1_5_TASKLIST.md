@@ -20,9 +20,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P15-Q4`
-- Last completed quantum: `P15-Q3`
-- Next quantum after current: `P15-Q5`
+- Current quantum: `P15-Q5`
+- Last completed quantum: `P15-Q4`
+- Next quantum after current: `P15-Q6`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
   - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
@@ -240,16 +240,21 @@ Execution rules:
 
 - Objective:
   - Add markdown import/export as a headless capability and finish code language modes.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - Markdown/model/api helpers
   - Rich/code/list consumers
   - Relevant tests/docs
   - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
 - Read-first files and target lines:
-  - Current code highlighting support
-  - Existing markdown-related helpers, if any
-  - Current text serialization logic
+  - `src/render/codeHighlight.ts:1-44`
+  - `src/api/documentApi.ts:236-270`
+  - `src/api/documentApi.ts:523-596`
+  - `src/api/editorApi.ts:1-180`
+  - `src/api/textConversion.ts:1-247`
+  - `src/model/listContent.ts:181-214`
+  - `docs/API.md:236-308`
+  - `docs/PLAYGROUND_SPEC.md:1388-1425`
 - Implementation notes:
   - GFM is the baseline markdown contract.
   - Add pure markdown serialize/parse for block/code/list/rich.
@@ -263,11 +268,14 @@ Execution rules:
   - Focused markdown/code `vitest`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/api/tests/textMarkdown.test.ts src/render/tests/codeHighlight.test.ts src/api/tests/documentApi.test.ts`: passed, 3 files / 44 tests
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `969ca1a`
 - Open follow-ups carried forward:
   - `P15-Q5` and `P15-Q7` should cover markdown-facing rich editor behavior where applicable.
+  - Standalone editor surfaces still need wrappers for copy/paste affordances, but the canonical markdown logic now lives in `src/api/`.
 
 ## P15-Q5: Complete rich authoring UX on the existing rich stage editor
 
