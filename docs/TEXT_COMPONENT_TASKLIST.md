@@ -411,7 +411,7 @@ Execution rules:
   - `npx vitest run src/render/tests/nodePresentation.test.tsx src/site/tests/SiteRenderer.test.tsx src/render/tests/leafPresentation.test.ts src/panels/tests/LayersPanel.test.tsx`: passed, 4 files / 38 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `5937b47`
 - Open follow-ups carried forward:
   - Shared label semantics now intentionally expose subtype labels for all text nodes, including block-derived link/button presets; if product copy later wants separate visible labels for those presets, it should be handled as a presentation decision above the pure subtype label helper.
 
