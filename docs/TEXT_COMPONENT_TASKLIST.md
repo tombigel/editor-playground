@@ -12,9 +12,9 @@ Execution rules:
 
 ## Shared Progress Summary
 
-- Overall status: `in_progress`
-- Current quantum: `Q10`
-- Last completed quantum: `Q9`
+- Overall status: `done`
+- Current quantum: `none`
+- Last completed quantum: `Q10`
 - Next quantum after current: `none`
 - Locked assumptions:
   - API-first overrides UI convenience.
@@ -470,7 +470,7 @@ Execution rules:
 
 - Objective:
   - Add richer stage interaction only after the API and model are stable.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/stage/Stage.tsx`
   - `src/stage/useRichTextEditMode.ts`
@@ -483,19 +483,34 @@ Execution rules:
   - `docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/stage/Stage.tsx:1-513`
+  - `src/stage/useRichTextEditMode.ts:1-27`
+  - `src/stage/richEditContext.tsx:1-19`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-231`
+  - `src/stage/stageRenderers/leafRenderer.tsx:1-190`
+  - `src/stage/types/index.ts:1-57`
+  - `src/stage/tests/Stage.test.tsx:1-1810`
+  - `src/stage/tests/richTextEditMode.test.ts:1-69`
+  - `docs/PLAYGROUND_SPEC.md:1268-1277`
+  - `docs/PLAYGROUND_SPEC.md:1639-1675`
+  - `docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md:74-79`
 - Implementation notes:
-  - First click selects.
-  - Second click enters edit mode.
-  - Rich first, then other types later.
-  - Visible edit-state chrome, floating toolbar, commit/cancel/outside-click handling, and auto-height growth.
+  - Replace double-click activation with a select-first, second-plain-click entry path for `rich` text nodes only.
+  - Keep the content mutation path API-first by reusing `setNodeRichContent()` through the existing stage callback instead of mutating rich content in stage-local code.
+  - Add visible edit-state chrome with the shared floating shell and shared button/input primitives while keeping the stage overlay specialized.
+  - Commit on `Cmd/Ctrl+Enter`, the Save action, and outside click; discard on `Escape` or Cancel.
+  - Let editing rich leaves switch to auto height with the authored stage height as `min-height`, so overflow grows the component instead of clipping it.
+  - Add a focused markup test for the rich edit overlay rather than checking in unstable Playwright coverage for the second-click interaction path.
 - Verification commands:
   - `npm run typecheck`
-  - Relevant `vitest` commands
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx src/stage/tests/richTextEditMode.test.ts src/stage/tests/Stage.test.tsx`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx src/stage/tests/richTextEditMode.test.ts src/stage/tests/Stage.test.tsx`: passed, 3 files / 59 tests
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `0cc8df0`
 - Open follow-ups carried forward:
-  - Pending
+  - Add stable stage e2e coverage for the select-then-edit rich-text lifecycle once the Playwright stage click path is less timing-sensitive.
+  - Reuse the richer link-type picker UI inside the stage overlay instead of the localized URL-only popover.
