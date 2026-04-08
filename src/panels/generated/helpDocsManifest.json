@@ -70,5 +70,17 @@
     "fileName": "STICKY_RENDER_MODEL.md",
     "fullTitle": "Sticky - Principles, Guidelines and Model",
     "assetUrl": "/assets/help-docs/STICKY_RENDER_MODEL.md"
+  },
+  {
+    "path": "docs/TEXT_COMPONENT_MASTER_BRIEF.md",
+    "fileName": "TEXT_COMPONENT_MASTER_BRIEF.md",
+    "fullTitle": "Text Component Master Brief",
+    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_MASTER_BRIEF.md"
+  },
+  {
+    "path": "docs/TEXT_COMPONENT_TASKLIST.md",
+    "fileName": "TEXT_COMPONENT_TASKLIST.md",
+    "fullTitle": "Text Component Tasklist",
+    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_TASKLIST.md"
   }
 ]
