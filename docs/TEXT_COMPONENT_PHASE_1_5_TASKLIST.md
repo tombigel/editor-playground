@@ -1,0 +1,380 @@
+# Text Component Phase 1.5 Tasklist
+
+This file is the live director and memory model for the text-system phase 1.5 workstream.
+
+Source documents:
+
+- [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
+- [`TEXT_COMPONENT_MASTER_BRIEF.md`](./TEXT_COMPONENT_MASTER_BRIEF.md)
+- [`TEXT_COMPONENT_TASKLIST.md`](./TEXT_COMPONENT_TASKLIST.md)
+
+Execution rules:
+
+- Every fresh agent must read [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) first.
+- Each quantum updates only its own section and the shared progress summary.
+- If scope changes, update the phase 1.5 brief first, then this tasklist, then code.
+- If new bugs are discovered, add them to `Discovered issues` instead of solving them ad hoc.
+- API-first is mandatory.
+- Breaking changes are allowed.
+
+## Shared Progress Summary
+
+- Overall status: `in_progress`
+- Current quantum: `P15-Q1`
+- Last completed quantum: `P15-Q0`
+- Next quantum after current: `P15-Q2`
+- Locked assumptions:
+  - Rich content remains Slate-compatible but persists only the supported subset.
+  - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
+  - `dl` rich authoring, nested lists, and indent levels remain phase 2.
+  - Standalone list linking and per-item direction UI remain phase 2.
+  - One quantum at a time, commit before the next starts.
+
+## Discovered Issues
+
+- None recorded currently.
+
+## P15-Q0: Bootstrap the new 1.5 / 2.0 planning split
+
+- Objective:
+  - Create the four new roadmap docs.
+  - Wire links between them and the original artifacts.
+  - Annotate the original tasklist with deferred destinations.
+- Status: `done`
+- Allowed files:
+  - `docs/TEXT_COMPONENT_PHASE_1_5_BRIEF.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+  - `docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md`
+  - `docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`
+  - `docs/TEXT_COMPONENT_TASKLIST.md`
+- Read-first files and target lines:
+  - `docs/TEXT_COMPONENT_MASTER_BRIEF.md:1-220`
+  - `docs/TEXT_COMPONENT_TASKLIST.md:1-620`
+  - `docs/PLAYGROUND_SPEC.md:1-260`
+- Implementation notes:
+  - Keep the original master brief unchanged.
+  - Preserve the original tasklist history exactly; add only historical note(s) and deferred-destination annotations.
+  - Make the new 1.5 docs the active executable planning surface.
+  - Make the new 2.0 docs planned-only.
+- Verification commands:
+  - Document cross-link inspection
+  - `npm run build`
+- Verification result:
+  - Cross-link readback: passed
+  - `npm run build`: passed
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - Start `P15-Q1` after the new roadmap docs are in place and cross-links are verified.
+
+## P15-Q1: Replace the text API surface with the canonical contract
+
+- Objective:
+  - Rename and consolidate pure document APIs to canonical `*Doc` names.
+  - Remove obsolete `setNode*` naming instead of preserving compatibility aliases.
+- Status: `in_progress`
+- Allowed files:
+  - `src/api/documentApi.ts`
+  - `src/api/editorApi.ts`
+  - Text API consumers in app/editor/stage/site
+  - Relevant tests
+  - `docs/API.md`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+- Read-first files and target lines:
+  - `src/api/documentApi.ts:223-520`
+  - `src/api/documentApi.ts:1069-1099`
+  - `src/api/editorApi.ts:1-220`
+  - `src/app/editorState.ts:120-145`
+  - `src/editor/editorMutations.ts:187-210`
+- Implementation notes:
+  - Canonical surface must end with:
+    - `setTextNodeContentDoc`
+    - `setRichTextContentDoc`
+    - `setListContentDoc`
+    - `setCodeBlockLanguageDoc`
+    - `setCodeBlockThemeDoc`
+    - `setTextDirectionDoc`
+    - `normalizeTextNodeDoc`
+    - `convertTextNodeDoc`
+    - `switchTextSubtypeDoc`
+    - `splitRichTextNodeDoc`
+    - `mergeTextNodesToRichDoc`
+  - Add rich block-structure APIs:
+    - `setRichBlockTypeDoc`
+    - `setRichListKindDoc`
+    - `setRichListMarkerStyleDoc`
+    - `setRichBlockLineHeightDoc`
+    - `setRichBlockSpacingDoc`
+  - Remove old names rather than aliasing them.
+  - Keep one normalization path in `documentApi.ts`.
+- Verification commands:
+  - `npm run typecheck`
+  - Focused `vitest`
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - `P15-Q2` should update the rich schema and validation to match the canonical API surface.
+
+## P15-Q2: Tighten rich content into our validated Slate subset
+
+- Objective:
+  - Keep rich content Slate-compatible but persist only the supported subset.
+- Status: `pending`
+- Allowed files:
+  - `src/model/types/index.ts`
+  - `src/model/richContent.ts`
+  - `src/model/validation.ts`
+  - `src/model/migration.ts`
+  - `src/render/richTextEditor.ts`
+  - `src/render/nodePresentation.tsx`
+  - `src/site/SiteRenderer.tsx`
+  - Relevant API/tests/docs
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+- Read-first files and target lines:
+  - Current rich types in `src/model/types/index.ts`
+  - Current rich normalization in `src/model/richContent.ts`
+  - Current validation in `src/model/validation.ts`
+  - Current Slate adapter in `src/render/richTextEditor.ts`
+  - Current rich renderers in stage/site code
+- Implementation notes:
+  - Rich root must be an array of supported block nodes only.
+  - No free inline root nodes.
+  - Supported root blocks:
+    - `paragraph`, `div`, `blockquote`, `h1`-`h6`
+    - rich code block
+    - rich `ul`/`ol` list block
+  - Add per-block direction.
+  - Add rich-node `blockGap`.
+  - Add per-block line height for non-list text blocks.
+  - Rich lists are flat in phase 1.5, with no nesting or indent levels.
+  - Unsupported Slate nodes must be rejected or normalized out before persistence.
+  - Migration should move current rich data into the new subset shape.
+- Verification commands:
+  - `npm run typecheck`
+  - Focused model/render/api `vitest`
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - `P15-Q3` should remove remaining flatten-only conversion fallbacks now that rich can persist code/list blocks.
+
+## P15-Q3: Complete the conversion matrix exactly
+
+- Objective:
+  - Finish pure conversion behavior now that rich can represent code and lists.
+- Status: `pending`
+- Allowed files:
+  - `src/api/documentApi.ts`
+  - `src/api/textConversion.ts`
+  - Rich/list helpers and tests
+  - `docs/API.md`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+- Read-first files and target lines:
+  - Current conversion helpers
+  - Current rich/list/code schemas
+  - Current conversion tests
+- Implementation notes:
+  - Implement:
+    - `text -> code`
+    - `text -> list`
+    - `text -> rich`
+    - `code -> text`
+    - `code -> list`
+    - `code -> rich code block`
+    - `list -> text`
+    - `list -> code`
+    - `list -> rich list block`
+    - `rich -> text/code/list` with `flatten` vs `split`
+  - Phase 1.5 `rich -> simple`:
+    - single-block rich: flatten to one simple node
+    - multi-block rich with `split`: split by block boundary, then flatten each block to the requested simple subtype
+    - never preserve one-block rich wrappers during this path in phase 1.5
+  - Block/list conversion rules used by API and rich editor:
+    - `block -> ul/ol`: hard line breaks become one `li` each
+    - `ul -> ol` and `ol -> ul`: preserve existing `li` sequence
+    - `ul/ol -> block`: flatten list items to hard line breaks
+    - block, `ul`, and `ol` are mutually exclusive modes
+    - for multi-block selections converted to block/list, unify touched blocks into one result
+    - treat original block boundaries as hard line breaks
+- Verification commands:
+  - `npm run typecheck`
+  - Focused conversion `vitest`
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - `P15-Q5` should consume these conversion rules through block-scoped rich editor controls.
+
+## P15-Q4: GFM import/export and code language completion
+
+- Objective:
+  - Add markdown import/export as a headless capability and finish code language modes.
+- Status: `pending`
+- Allowed files:
+  - Markdown/model/api helpers
+  - Rich/code/list consumers
+  - Relevant tests/docs
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+- Read-first files and target lines:
+  - Current code highlighting support
+  - Existing markdown-related helpers, if any
+  - Current text serialization logic
+- Implementation notes:
+  - GFM is the baseline markdown contract.
+  - Add pure markdown serialize/parse for block/code/list/rich.
+  - Add copy-as-markdown and paste-from-markdown via API first, then editor wrappers.
+  - Add code language `auto`.
+  - Add code language `markdown`.
+  - `markdown` language means highlighted code source, not parsed markdown document content.
+  - Unsupported markdown constructs degrade deterministically.
+- Verification commands:
+  - `npm run typecheck`
+  - Focused markdown/code `vitest`
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - `P15-Q5` and `P15-Q7` should cover markdown-facing rich editor behavior where applicable.
+
+## P15-Q5: Complete rich authoring UX on the existing rich stage editor
+
+- Objective:
+  - Keep rich-only stage edit entry, but finish the rich floating toolbar and block-structure editing.
+- Status: `pending`
+- Allowed files:
+  - `src/stage/Stage.tsx`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/render/richTextEditor.ts`
+  - Shared DS controls if needed
+  - Relevant tests/docs
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+- Read-first files and target lines:
+  - Current rich stage editor
+  - Current inspector text controls
+  - DS primitives and style-guide references
+- Implementation notes:
+  - Floating text bar order:
+    - font picker
+    - font size
+    - bold
+    - italic
+    - underline
+    - strikethrough
+    - text color
+    - highlight color
+    - link
+    - non-list block enable/dropdown
+    - ordered-list enable/select plus marker-type dropdown
+    - unordered-list enable/select plus bullet-type dropdown
+    - line height
+    - block spacing
+  - `block`, `ol`, and `ul` are mutually exclusive.
+  - Controls are block-scoped:
+    - inline style controls affect inline selection
+    - block/list controls affect the containing block or blocks touched by the selection
+    - block/list controls never split a block around inline selection
+  - Behavior examples:
+    - `<p>text one two three</p>` with `two` selected and `h2` chosen becomes one `<h2>text one two three</h2>`
+    - `<p>one two</p><h2>three four</h2>` with `two three` selected and `h3` chosen becomes one `<h3>one two\nthree four</h3>`
+  - List conversion rules:
+    - converting selected non-list block scope to `ul`/`ol` treats block boundaries as hard line breaks
+    - each hard line becomes one `li`
+    - `ul <-> ol` preserves `li` structure
+  - Non-list block control chooses:
+    - paragraph, `div`, `blockquote`, headings
+  - `dl` does not appear here.
+  - Nesting and indent controls do not appear here.
+  - Line height applies only to non-list text blocks.
+  - Block spacing edits rich-node `blockGap`.
+  - Replace URL-only link popover with the shared link-type picker.
+- Verification commands:
+  - `npm run typecheck`
+  - Focused rich-stage `vitest`
+  - Targeted stage e2e
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - `P15-Q7` should stabilize the new rich-stage flows under targeted e2e coverage.
+
+## P15-Q6: Simplify standalone list inspector for phase 1.5
+
+- Objective:
+  - Make standalone list editing usable in inspector without solving the deferred UX.
+- Status: `pending`
+- Allowed files:
+  - Inspector list controls
+  - List API consumers/tests/docs
+  - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
+- Read-first files and target lines:
+  - Current standalone list inspector
+  - Current list API/model
+- Implementation notes:
+  - Scope in phase 1.5 is `ul` and `ol` only.
+  - `dl` authoring UI is deferred to 2.0 until a good UX is defined.
+  - Replace line-editor-first list editing as the main flow.
+  - Add structured item editing for `ul` and `ol`.
+  - Defer per-item linking UI.
+  - Defer per-item direction UI.
+  - Keep bulk text/markdown editing only as advanced helper.
+  - Preserve headless API/model support for deferred list fields.
+- Verification commands:
+  - `npm run typecheck`
+  - Focused inspector/list `vitest`
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - Phase 2 should add the deferred `dl`, link, and direction authoring UX.
+
+## P15-Q7: Stable rich-stage e2e completion
+
+- Objective:
+  - Lock rich stage editing with stable targeted e2e coverage.
+- Status: `pending`
+- Allowed files:
+  - Stage e2e tests
+  - Possibly tiny test-only harness updates
+  - Docs/tasklist
+- Read-first files and target lines:
+  - Current stage e2e coverage
+  - Current targeted rich-stage tests
+- Implementation notes:
+  - Cover:
+    - select then second-click enter
+    - toolbar interactions
+    - shared link picker interactions
+    - block/ul/ol mutual exclusivity
+    - containing-block conversion without block splitting
+    - multi-block selection unifying to one block/list result
+    - code/list block authoring
+    - outside-click commit
+    - escape discard
+    - auto-height growth
+    - markdown paste/import where implemented
+  - Replace brittle obsolete expectations rather than layering duplicate tests.
+- Verification commands:
+  - `npm run typecheck`
+  - Targeted e2e run
+  - `npm run build`
+- Verification result:
+  - Pending
+- Commit SHA:
+  - Pending
+- Open follow-ups carried forward:
+  - Close phase 1.5 or explicitly roll unresolved rich-stage issues into phase 2 only after this coverage lands.

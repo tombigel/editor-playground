@@ -16,6 +16,9 @@ Execution rules:
 - Current quantum: `none`
 - Last completed quantum: `Q13`
 - Next quantum after current: `none`
+- Historical note:
+  - Phase 1.0 is complete as originally executed.
+  - Remaining text roadmap work has been split into [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md), [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md), and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -271,6 +274,8 @@ Execution rules:
 - Open follow-ups carried forward:
   - Q6 should reuse the block-root rich helpers when introducing list blocks so list semantics do not get reimplemented in the editor only.
   - Stage rich editing still suppresses `Enter`; authoring new blocks remains deferred to the later stage-edit UX quantum.
+  - Historical deferral note:
+    - Remaining rich block-authoring and richer rich-stage editing scope now lives in [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
 
 ## Q6: Add standalone list subtype
 
@@ -331,6 +336,8 @@ Execution rules:
 - Open follow-ups carried forward:
   - Inspector exposure for `list` remains intentionally deferred to Q9; Q6 only widened inspector types enough to keep the API-first subtype model compiling.
   - Rich text still does not persist list blocks internally, so `list -> rich` remains a flattening conversion until a later rich-list phase is explicitly designed.
+  - Historical deferral note:
+    - Remaining rich list-block persistence and later list UX follow-up scope is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
 
 ## Q7: Add headless split and merge
 
@@ -375,6 +382,8 @@ Execution rules:
 - Open follow-ups carried forward:
   - Split currently stacks newly created sibling nodes using a deterministic estimated vertical offset; later stage/editor work can replace that with measured layout logic without changing the pure API contract.
   - Rich split currently emits standalone block text nodes only because embedded rich code/list blocks are still deferred.
+  - Historical deferral note:
+    - Remaining rich split and conversion follow-up scope is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
 
 ## Q8: Update renderers and labels to consume canonical model
 
@@ -414,6 +423,8 @@ Execution rules:
   - `5937b47`
 - Open follow-ups carried forward:
   - Shared label semantics now intentionally expose subtype labels for all text nodes, including block-derived link/button presets; if product copy later wants separate visible labels for those presets, it should be handled as a presentation decision above the pure subtype label helper.
+  - Historical deferral note:
+    - Any later presentation-only follow-up beyond phase 1.0 should be tracked in the newer phase-specific roadmap docs rather than reopening the 1.0 ledger.
 
 ## Q9: Rebuild editor and inspector as API consumers
 
@@ -465,6 +476,9 @@ Execution rules:
 - Open follow-ups carried forward:
   - List item direction and link metadata now survive API-driven edits, but inspector controls still expose only the phase-1 line editor; richer per-item controls remain future UI work.
   - Rich `split` mode still performs the pure API rich-block split instead of converting each resulting sibling to the requested target subtype; that behavior is intentional until a richer conversion contract is designed.
+  - Historical deferral note:
+    - Richer list inspector UX is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - Standalone list linking/per-item direction UI and granular rich-to-simple split preservation are deferred to [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md) and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
 
 ## Q10: Stage editing UX
 
@@ -514,6 +528,8 @@ Execution rules:
 - Open follow-ups carried forward:
   - Add stable stage e2e coverage for the select-then-edit rich-text lifecycle once the Playwright stage click path is less timing-sensitive.
   - Reuse the richer link-type picker UI inside the stage overlay instead of the localized URL-only popover.
+  - Historical deferral note:
+    - These follow-ups are deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
 
 ## Q11: Rich stage regression coverage
 
@@ -577,6 +593,8 @@ Execution rules:
   - `a6dad9e`
 - Open follow-ups carried forward:
   - Add broader stable e2e coverage for the full select-then-edit lifecycle once the rest of the older stage-e2e failures are addressed.
+  - Historical deferral note:
+    - This follow-up is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
 
 ## Q13: Rich stage visual polish
 
@@ -610,3 +628,5 @@ Execution rules:
   - `e038a83`
 - Open follow-ups carried forward:
   - Pending
+  - Historical deferral note:
+    - Remaining post-1.0 text roadmap work now continues in [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md), [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md), and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
