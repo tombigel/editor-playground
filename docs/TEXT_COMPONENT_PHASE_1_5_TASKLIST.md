@@ -20,9 +20,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P15-Q2`
-- Last completed quantum: `P15-Q1`
-- Next quantum after current: `P15-Q3`
+- Current quantum: `P15-Q3`
+- Last completed quantum: `P15-Q2`
+- Next quantum after current: `P15-Q4`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
   - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
@@ -125,7 +125,7 @@ Execution rules:
 
 - Objective:
   - Keep rich content Slate-compatible but persist only the supported subset.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - `src/model/types/index.ts`
   - `src/model/richContent.ts`
@@ -137,11 +137,16 @@ Execution rules:
   - Relevant API/tests/docs
   - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
 - Read-first files and target lines:
-  - Current rich types in `src/model/types/index.ts`
-  - Current rich normalization in `src/model/richContent.ts`
-  - Current validation in `src/model/validation.ts`
-  - Current Slate adapter in `src/render/richTextEditor.ts`
-  - Current rich renderers in stage/site code
+  - `src/model/types/index.ts:109-136`
+  - `src/model/types/index.ts:294-337`
+  - `src/model/types/index.ts:403-418`
+  - `src/model/richContent.ts:1-260`
+  - `src/model/validation.ts:1-120`
+  - `src/model/migration.ts:246-254`
+  - `src/render/richTextEditor.ts:1-26`
+  - `src/render/nodePresentation.tsx:49-116`
+  - `src/render/nodePresentation.tsx:270-275`
+  - `src/site/SiteRenderer.tsx:1-118`
 - Implementation notes:
   - Rich root must be an array of supported block nodes only.
   - No free inline root nodes.
@@ -155,16 +160,25 @@ Execution rules:
   - Rich lists are flat in phase 1.5, with no nesting or indent levels.
   - Unsupported Slate nodes must be rejected or normalized out before persistence.
   - Migration should move current rich data into the new subset shape.
+  - Replace the text-only rich block model with a richer root-block union:
+    - non-list text blocks
+    - rich `code-block`
+    - rich `ul` / `ol`
+  - Keep the persisted shape Slate-compatible while rejecting unsupported root elements and invalid nested structure.
+  - Render rich code/list blocks through the shared rich render path instead of flattening them back to paragraphs.
 - Verification commands:
   - `npm run typecheck`
   - Focused model/render/api `vitest`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/model/tests/richContent.test.ts src/model/tests/validation.test.ts src/model/tests/migration.test.ts src/render/tests/richTextEditor.test.ts src/render/tests/nodePresentation.test.tsx src/site/tests/SiteRenderer.test.tsx`: passed, 6 files / 89 tests
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `a0283f3`
 - Open follow-ups carried forward:
   - `P15-Q3` should remove remaining flatten-only conversion fallbacks now that rich can persist code/list blocks.
+  - `P15-Q3` should make the conversion layer emit rich `code-block` and rich `ul`/`ol` blocks instead of flattening everything back to paragraphs.
 
 ## P15-Q3: Complete the conversion matrix exactly
 
