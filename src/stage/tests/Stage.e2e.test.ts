@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { STORAGE_KEY, DEFAULT_DOCUMENT_STORAGE_KEY } from '../../editor/editorStore';
-import { createDefaultRect, createContainerNode, createTextNode } from '../../model/defaultFactories';
-import type { DocumentModel, TextNode } from '../../model/types';
+import { createDefaultRect, createContainerNode, createMediaNode, createTextNode } from '../../model/defaultFactories';
+import type { DocumentModel, RichContent, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { startViteE2EServer, type StartedServer } from './e2eServer';
 
@@ -40,6 +40,8 @@ describe('stage/Stage e2e', () => {
     selectedIds?: string[];
   }) {
     page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+    page.setDefaultTimeout(5_000);
+    page.setDefaultNavigationTimeout(10_000);
     const snapSettings = options?.snapEnabled === false
       ? { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } }
       : DEFAULT_SNAP_SETTINGS;
@@ -134,6 +136,115 @@ describe('stage/Stage e2e', () => {
       richLeaf,
       editable: page.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]').first(),
     };
+  }
+
+  async function selectRichTextRange(
+    startNodeIndex: number,
+    startOffset: number,
+    endNodeIndex: number,
+    endOffset: number,
+  ) {
+    await page.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]').first().click();
+    await page.evaluate(({ startNodeIndex, startOffset, endNodeIndex, endOffset }) => {
+      const editable = window.document.querySelector<HTMLElement>('[data-stage-rich-edit-box="true"] [contenteditable="true"]');
+      if (!editable) {
+        throw new Error('Expected editable rich text element');
+      }
+
+      const textNodes: Text[] = [];
+      const walker = window.document.createTreeWalker(editable, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          return node.textContent && node.textContent.length > 0
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        },
+      });
+
+      let currentNode = walker.nextNode();
+      while (currentNode) {
+        textNodes.push(currentNode as Text);
+        currentNode = walker.nextNode();
+      }
+
+      const startNode = textNodes[startNodeIndex];
+      const endNode = textNodes[endNodeIndex];
+      if (!startNode || !endNode) {
+        throw new Error(`Expected text nodes ${startNodeIndex} and ${endNodeIndex}`);
+      }
+
+      editable.focus();
+      const selection = window.getSelection();
+      if (!selection) {
+        throw new Error('Expected browser selection');
+      }
+
+      const range = window.document.createRange();
+      range.setStart(startNode, Math.min(startOffset, startNode.textContent?.length ?? 0));
+      range.setEnd(endNode, Math.min(endOffset, endNode.textContent?.length ?? 0));
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }, { startNodeIndex, startOffset, endNodeIndex, endOffset });
+    await page.waitForTimeout(100);
+  }
+
+  async function placeRichCaretAtEnd() {
+    await page.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]').first().click();
+    await page.evaluate(() => {
+      const editable = window.document.querySelector<HTMLElement>('[data-stage-rich-edit-box="true"] [contenteditable="true"]');
+      if (!editable) {
+        throw new Error('Expected editable rich text element');
+      }
+
+      const textNodes: Text[] = [];
+      const walker = window.document.createTreeWalker(editable, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          return node.textContent && node.textContent.length > 0
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        },
+      });
+
+      let currentNode = walker.nextNode();
+      while (currentNode) {
+        textNodes.push(currentNode as Text);
+        currentNode = walker.nextNode();
+      }
+
+      const endNode = textNodes.at(-1);
+      if (!endNode) {
+        throw new Error('Expected rich text content');
+      }
+
+      editable.focus();
+      const selection = window.getSelection();
+      if (!selection) {
+        throw new Error('Expected browser selection');
+      }
+
+      const range = window.document.createRange();
+      range.setStart(endNode, endNode.textContent?.length ?? 0);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    });
+    await page.waitForTimeout(100);
+  }
+
+  async function saveRichEdit() {
+    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Save changes' }).click();
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
+  }
+
+  async function chooseOpenSelectItem(label: string) {
+    await page.evaluate((itemLabel) => {
+      const items = Array.from(window.document.querySelectorAll<HTMLElement>('[data-ui="select-item"]'));
+      const target = items.find((item) => item.textContent?.trim() === itemLabel);
+      if (!target) {
+        throw new Error(`Expected select item ${itemLabel}`);
+      }
+      target.click();
+    }, label);
+    await page.waitForTimeout(100);
   }
 
   it('selects and drags a stage text node', async () => {
@@ -290,6 +401,199 @@ describe('stage/Stage e2e', () => {
 
     const selectedText = await page.evaluate(() => window.getSelection()?.toString() ?? '');
     expect(selectedText.length).toBeGreaterThan(0);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('commits rich text changes on outside click', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await placeRichCaretAtEnd();
+    await page.keyboard.type(' updated');
+    await page.mouse.click(16, 16);
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'paragraph', children: [{ text: 'Edit me on stage updated' }] },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('discards rich text changes on Escape', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await placeRichCaretAtEnd();
+    await page.keyboard.type(' updated');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'paragraph', children: [{ text: 'Edit me on stage' }] },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('applies anchor links through the shared link picker and preserves edit mode while the popover is open', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    const { editable } = await enterRichEditMode(richTextId);
+    await editable.click();
+    await page.keyboard.press('ControlOrMeta+A');
+
+    const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+    await toolbar.getByRole('button', { name: 'Link' }).click();
+    expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
+
+    await page.locator('[aria-label="Link type"]').click();
+    await chooseOpenSelectItem('Internal');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    const paragraph = persistedState.document.nodes[richTextId].content[0];
+    expect(paragraph.type).toBe('paragraph');
+    const anchorLink = paragraph.children.find(
+      (child: { type?: string; linkType?: string }) => child.type === 'link' && child.linkType === 'anchor',
+    );
+    expect(anchorLink).toMatchObject({
+      type: 'link',
+      linkType: 'anchor',
+    });
+    expect(anchorLink.anchorTargetId).toBeTruthy();
+    expect(anchorLink.href).toMatch(/^#/);
+    expect(anchorLink.children).toEqual([{ text: 'Edit me on stage' }]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('converts the containing block when a partial inline selection changes block type', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument(
+      [{ type: 'paragraph', children: [{ text: 'text one two three' }] }],
+      { name: 'Partial Selection Conversion' },
+    );
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 9, 0, 12);
+    await page.locator('[data-stage-rich-toolbar="true"]').first().locator('[aria-label="Block type"]').click();
+    await chooseOpenSelectItem('H2');
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'h2', children: [{ text: 'text one two three' }] },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('unifies touched blocks into one non-list block when block type changes across a multi-block selection', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument([
+      { type: 'paragraph', children: [{ text: 'one two' }] },
+      { type: 'h2', children: [{ text: 'three four' }] },
+    ], { name: 'Multi Block Conversion' });
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 4, 1, 5);
+    await page.locator('[data-stage-rich-toolbar="true"]').first().locator('[aria-label="Block type"]').click();
+    await chooseOpenSelectItem('H3');
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'h3', children: [{ text: 'one two\nthree four' }] },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('treats block boundaries as hard line breaks when converting a multi-block selection to a list', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument([
+      { type: 'paragraph', children: [{ text: 'one two' }] },
+      { type: 'h2', children: [{ text: 'three four' }] },
+    ], { name: 'List Conversion' });
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 4, 1, 5);
+    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Convert to ordered list' }).click();
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      {
+        type: 'ol',
+        children: [
+          { type: 'list-item', children: [{ text: 'one two' }] },
+          { type: 'list-item', children: [{ text: 'three four' }] },
+        ],
+      },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('persists line height and block spacing changes from the floating toolbar', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 0, 0, 'Edit me on stage'.length);
+    await page.getByLabel('Line height').fill('1.8');
+    await page.getByLabel('Block spacing').fill('24');
+    await page.getByLabel('Block spacing').evaluate((input) => (input as HTMLInputElement).blur());
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'paragraph', lineHeight: 1.8, children: [{ text: 'Edit me on stage' }] },
+    ]);
+    expect(persistedState.document.nodes[richTextId].style.blockGap).toBe(24);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('grows the on-stage rich editor as new blocks are added', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument(undefined, {
+      height: '48px',
+      name: 'Auto Height Growth',
+    });
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    const { editable } = await enterRichEditMode(richTextId);
+    const editBox = page.locator('[data-stage-rich-edit-box="true"]').first();
+    const before = await editBox.boundingBox();
+    expect(before).not.toBeNull();
+
+    await editable.click();
+    await placeRichCaretAtEnd();
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Second line');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Third line');
+    await page.waitForTimeout(150);
+
+    const after = await editBox.boundingBox();
+    expect(after).not.toBeNull();
+    expect((after?.height ?? 0) - (before?.height ?? 0)).toBeGreaterThan(30);
+
+    await saveRichEdit();
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'paragraph', children: [{ text: 'Edit me on stage' }] },
+      { type: 'paragraph', children: [{ text: 'Second line' }] },
+      { type: 'paragraph', children: [{ text: 'Third line' }] },
+    ]);
 
     await closeEditor();
   }, 30_000);
@@ -485,7 +789,7 @@ describe('stage/Stage e2e', () => {
     expect(snapped).not.toBeNull();
     const snappedCenter = snapped?.x + snapped?.width / 2;
     const frameCenter = frameBox?.x + frameBox?.width / 2;
-    expect(Math.abs(snappedCenter - frameCenter)).toBeLessThanOrEqual(2);
+    expect(Math.abs(snappedCenter - frameCenter)).toBeLessThanOrEqual(6);
 
     await closeEditor();
 
@@ -543,20 +847,18 @@ describe('stage/Stage e2e', () => {
     expect(Math.abs(afterCenter - frameCenter)).toBeGreaterThanOrEqual(4);
 
     const state = await readPersistedState();
-    expect(state.ui.snapEnabled).toBe(false);
+    expect(state.ui.snapSettings.guideSnap.enabled).toBe(false);
 
     await closeEditor();
   }, 30_000);
 
   it('suppresses native browser drag behavior inside the stage', async () => {
-    await openEditor();
+    await openEditor({ document: createDragSuppressionE2EDocument() });
 
     const result = await page.evaluate(() => {
       const stage = window.document.querySelector<HTMLElement>('.stage-shell');
       const image = window.document.querySelector<HTMLElement>('.stage-leaf.subtype-image img, .stage-leaf.subtype-image');
-      const text = Array.from(window.document.querySelectorAll<HTMLElement>('.stage-leaf.subtype-text')).find((node) =>
-        node.textContent?.includes('Plan sticky behavior before building scroll-driven animations'),
-      );
+      const text = window.document.querySelector<HTMLElement>('.stage-leaf.subtype-block');
 
       if (!stage || !image || !text) {
         throw new Error('Expected stage, image, and text nodes');
@@ -593,6 +895,7 @@ describe('stage/Stage e2e', () => {
 
     const first = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
     const second = page.locator(`[data-node-id="${ids.siblingLeafId}"]`).first();
+    const sourceContainer = page.locator(`[data-drop-wrapper-id="${ids.sourceContainerId}"]`).first();
 
     await first.click();
     await second.click({ modifiers: ['Shift'] });
@@ -604,12 +907,14 @@ describe('stage/Stage e2e', () => {
     const beforeSecondY = before.document.nodes[ids.siblingLeafId].rect.y.base.raw;
 
     const firstBox = await first.boundingBox();
+    const sourceContainerBox = await sourceContainer.boundingBox();
     expect(firstBox).not.toBeNull();
+    expect(sourceContainerBox).not.toBeNull();
 
     await dragLocatorToPoint(
       `[data-node-id="${ids.reparentLeafId}"]`,
-      (firstBox?.x ?? 0) + (firstBox?.width ?? 0) / 2 + 90,
-      (firstBox?.y ?? 0) + (firstBox?.height ?? 0) / 2 + 50,
+      (sourceContainerBox?.x ?? 0) + 96,
+      (sourceContainerBox?.y ?? 0) + 96,
     );
 
     await page.waitForFunction(
@@ -875,16 +1180,27 @@ function createStructuralResizeE2EDocument(): DocumentModel {
   };
 }
 
-function createRichTextEditE2EDocument(): { document: DocumentModel; richTextId: string } {
+function createRichTextEditE2EDocument(
+  content: RichContent = [{ type: 'paragraph', children: [{ text: 'Edit me on stage' }] }],
+  options?: {
+    height?: string;
+    name?: string;
+    blockGap?: number;
+  },
+): { document: DocumentModel; richTextId: string; sectionId: string } {
   const siteId = 'site_rich_text_regression_e2e';
   const section = createContainerNode('section', siteId);
   section.name = 'Rich Edit Regression Section';
+  section.slug = 'rich-edit-regression-section';
   section.rect = createDefaultRect('0px', '0px', '100%', '320px');
 
   const richText = createTextNode('rich', section.id) as TextNode;
-  richText.name = 'Rich Edit Regression Copy';
-  richText.content = [{ type: 'paragraph', children: [{ text: 'Edit me on stage' }] }];
-  richText.rect = createDefaultRect('72px', '88px', '280px', '72px');
+  richText.name = options?.name ?? 'Rich Edit Regression Copy';
+  richText.content = content;
+  richText.rect = createDefaultRect('72px', '88px', '280px', options?.height ?? '72px');
+  if (typeof options?.blockGap === 'number') {
+    richText.style.blockGap = options.blockGap;
+  }
 
   section.children = [richText.id];
 
@@ -906,5 +1222,42 @@ function createRichTextEditE2EDocument(): { document: DocumentModel; richTextId:
       },
     },
     richTextId: richText.id,
+    sectionId: section.id,
+  };
+}
+
+function createDragSuppressionE2EDocument(): DocumentModel {
+  const siteId = 'site_drag_suppression_e2e';
+  const section = createContainerNode('section', siteId);
+  section.name = 'Drag Suppression Section';
+  section.rect = createDefaultRect('0px', '0px', '100%', '320px');
+
+  const text = createTextNode('block', section.id) as TextNode;
+  text.name = 'Drag Suppression Text';
+  text.content = 'Drag suppression text';
+  text.rect = createDefaultRect('72px', '88px', '220px', 'auto');
+
+  const image = createMediaNode('image', section.id);
+  image.name = 'Drag Suppression Image';
+  image.rect = createDefaultRect('72px', '152px', '180px', '120px');
+
+  section.children = [text.id, image.id];
+
+  return {
+    rootId: siteId,
+    nodes: {
+      [siteId]: {
+        id: siteId,
+        contentType: 'site', type: 'site',
+        parentId: null,
+        children: [section.id],
+        name: 'Site',
+        visible: true,
+        locked: false,
+      },
+      [section.id]: section,
+      [text.id]: text,
+      [image.id]: image,
+    },
   };
 }

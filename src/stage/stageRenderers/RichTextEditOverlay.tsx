@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { Check, Link2, List, ListOrdered, Type, X } from 'lucide-react';
+import { Transforms, type BaseSelection } from 'slate';
 import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
 import { Button } from '@/components/ui/button';
 import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
@@ -150,6 +151,17 @@ const UNORDERED_MARKER_OPTIONS = [
   { value: 'square', label: 'Square' },
 ] as const;
 
+function cloneSelection(selection: BaseSelection): BaseSelection {
+  if (!selection) {
+    return null;
+  }
+
+  return {
+    anchor: { ...selection.anchor },
+    focus: { ...selection.focus },
+  };
+}
+
 export function RichTextEditOverlay({
   nodeId,
   content,
@@ -173,6 +185,8 @@ export function RichTextEditOverlay({
   const initialValue = useMemo(() => toSlateValue(content), [content]);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [linkPopover, setLinkPopover] = useState<LinkPopoverDraft>(DEFAULT_LINK_POPOVER);
+  const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
+  const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
   const [selectionRevision, setSelectionRevision] = useState(0);
   const [blockSpacingDraft, setBlockSpacingDraft] = useState(String(readInitialBlockSpacing(contentStyle)));
   const [toolbarPlacement, setToolbarPlacement] = useState<'above' | 'below'>('above');
@@ -298,8 +312,16 @@ export function RichTextEditOverlay({
         event.preventDefault();
         if (isLinkActive(editor)) {
           removeLink(editor);
+          setLinkSelection(null);
           setSelectionRevision((revision) => revision + 1);
         } else {
+          const currentSelection = editor.selection
+            ? {
+                anchor: { ...editor.selection.anchor },
+                focus: { ...editor.selection.focus },
+              }
+            : null;
+          setLinkSelection(currentSelection);
           setLinkPopover({
             ...DEFAULT_LINK_POPOVER,
             open: true,
@@ -313,7 +335,19 @@ export function RichTextEditOverlay({
     [commitCurrentContent, editor, linkPopover.open, onDiscard, pages, sectionOptions],
   );
 
+  const restoreToolbarSelection = useCallback(() => {
+    const selectionToRestore = linkSelection ?? toolbarSelection;
+    if (!selectionToRestore) {
+      return false;
+    }
+
+    ReactEditor.focus(editor);
+    Transforms.select(editor, selectionToRestore);
+    return true;
+  }, [editor, linkSelection, toolbarSelection]);
+
   const handleBooleanMark = useCallback((mark: 'bold' | 'italic' | 'underline' | 'strikethrough') => {
+    restoreToolbarSelection();
     toggleMark(editor, mark);
     setSelectionRevision((revision) => revision + 1);
     requestAnimationFrame(() => {
@@ -321,12 +355,13 @@ export function RichTextEditOverlay({
         ReactEditor.focus(editor);
       } catch {}
     });
-  }, [editor]);
+  }, [editor, restoreToolbarSelection]);
 
   const handleValueMark = useCallback((mark: 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize', value: string) => {
+    restoreToolbarSelection();
     setMarkValue(editor, mark, value === '__inherit__' ? '' : value);
     setSelectionRevision((revision) => revision + 1);
-  }, [editor]);
+  }, [editor, restoreToolbarSelection]);
 
   const handleBlockSpacingCommit = useCallback(() => {
     onUpdateTextField(nodeId, 'blockGap', blockSpacingDraft);
@@ -335,10 +370,13 @@ export function RichTextEditOverlay({
   const handleLinkAction = useCallback(() => {
     if (isLinkActive(editor)) {
       removeLink(editor);
+      setLinkSelection(null);
       setSelectionRevision((revision) => revision + 1);
       return;
     }
 
+    const currentSelection = cloneSelection(editor.selection);
+    setLinkSelection(currentSelection);
     setLinkPopover({
       ...DEFAULT_LINK_POPOVER,
       open: true,
@@ -352,9 +390,12 @@ export function RichTextEditOverlay({
     event.preventDefault();
 
     if (linkPopover.linkType === 'external' && !linkPopover.href.trim()) {
+      setLinkSelection(null);
       setLinkPopover(DEFAULT_LINK_POPOVER);
       return;
     }
+
+    restoreToolbarSelection();
 
     insertLink(editor, {
       type: 'link',
@@ -370,15 +411,19 @@ export function RichTextEditOverlay({
           }
         : {}),
     });
+    setLinkSelection(null);
     setLinkPopover(DEFAULT_LINK_POPOVER);
     setSelectionRevision((revision) => revision + 1);
-  }, [documentModel, editor, linkPopover, sectionOptions]);
+  }, [documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions]);
 
   return (
     <Slate
       editor={editor}
       initialValue={initialValue}
       onChange={() => {
+        if (editor.selection) {
+          setToolbarSelection(cloneSelection(editor.selection));
+        }
         setSelectionRevision((revision) => revision + 1);
       }}
     >
@@ -415,7 +460,6 @@ export function RichTextEditOverlay({
           bodyClassName="flex flex-wrap items-center gap-1.5 px-2 py-2"
           bodyStyle={{ pointerEvents: 'auto' }}
           onPointerDown={(event) => {
-            event.preventDefault();
             event.stopPropagation();
           }}
         >
@@ -453,33 +497,63 @@ export function RichTextEditOverlay({
           <ToolbarButton label={linkActive ? 'Unlink' : 'Link'} active={linkActive || linkPopover.open} onActivate={handleLinkAction}>
             <Link2 size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Convert to text block" active={selectedListKind == null} onActivate={() => convertSelectionToBlockType(editor, selectedBlockType)}>
+          <ToolbarButton
+            label="Convert to text block"
+            active={selectedListKind == null}
+            onActivate={() => {
+              restoreToolbarSelection();
+              convertSelectionToBlockType(editor, selectedBlockType);
+            }}
+          >
             <Type size={14} />
           </ToolbarButton>
           <CompactSelect
             label="Block type"
             value={selectedBlockType}
-            onValueChange={(value) => convertSelectionToBlockType(editor, value as RichTextBlockType)}
+            onValueChange={(value) => {
+              restoreToolbarSelection();
+              convertSelectionToBlockType(editor, value as RichTextBlockType);
+            }}
             options={BLOCK_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
             width={108}
           />
-          <ToolbarButton label="Convert to ordered list" active={selectedListKind === 'ol'} onActivate={() => convertSelectionToList(editor, 'ol')}>
+          <ToolbarButton
+            label="Convert to ordered list"
+            active={selectedListKind === 'ol'}
+            onActivate={() => {
+              restoreToolbarSelection();
+              convertSelectionToList(editor, 'ol');
+            }}
+          >
             <ListOrdered size={14} />
           </ToolbarButton>
           <CompactSelect
             label="Ordered list marker"
             value={selectedListKind === 'ol' ? selectedListMarkerStyle || 'decimal' : 'decimal'}
-            onValueChange={(value) => setSelectedListMarkerStyle(editor, value as typeof ORDERED_MARKER_OPTIONS[number]['value'])}
+            onValueChange={(value) => {
+              restoreToolbarSelection();
+              setSelectedListMarkerStyle(editor, value as typeof ORDERED_MARKER_OPTIONS[number]['value']);
+            }}
             options={ORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
             width={84}
           />
-          <ToolbarButton label="Convert to unordered list" active={selectedListKind === 'ul'} onActivate={() => convertSelectionToList(editor, 'ul')}>
+          <ToolbarButton
+            label="Convert to unordered list"
+            active={selectedListKind === 'ul'}
+            onActivate={() => {
+              restoreToolbarSelection();
+              convertSelectionToList(editor, 'ul');
+            }}
+          >
             <List size={14} />
           </ToolbarButton>
           <CompactSelect
             label="Unordered list marker"
             value={selectedListKind === 'ul' ? selectedListMarkerStyle || 'disc' : 'disc'}
-            onValueChange={(value) => setSelectedListMarkerStyle(editor, value as typeof UNORDERED_MARKER_OPTIONS[number]['value'])}
+            onValueChange={(value) => {
+              restoreToolbarSelection();
+              setSelectedListMarkerStyle(editor, value as typeof UNORDERED_MARKER_OPTIONS[number]['value']);
+            }}
             options={UNORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
             width={88}
           />
@@ -491,6 +565,7 @@ export function RichTextEditOverlay({
             onChange={(value) => {
               const parsed = Number.parseFloat(value);
               if (Number.isFinite(parsed) && parsed > 0) {
+                restoreToolbarSelection();
                 setSelectedBlocksLineHeight(editor, parsed);
                 setSelectionRevision((revision) => revision + 1);
               }
@@ -550,7 +625,10 @@ export function RichTextEditOverlay({
             sectionOptions={sectionOptions}
             targetPageSectionOptions={targetPageSectionOptions}
             onChange={setLinkPopover}
-            onCancel={() => setLinkPopover(DEFAULT_LINK_POPOVER)}
+            onCancel={() => {
+              setLinkSelection(null);
+              setLinkPopover(DEFAULT_LINK_POPOVER);
+            }}
             onSubmit={handleLinkSubmit}
           />
         ) : null}
@@ -621,9 +699,12 @@ function CompactSelect({
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger
           aria-label={label}
-          className="pointer-events-auto h-8 rounded-sm text-xs"
-          style={{ width, pointerEvents: 'auto' }}
-        >
+        className="pointer-events-auto h-8 rounded-sm text-xs"
+        style={{ width, pointerEvents: 'auto' }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+        }}
+      >
           <span className="truncate text-left">
             {options.find((option) => option.value === value)?.label ?? label}
           </span>
@@ -669,7 +750,6 @@ function CompactTextField({
         className="pointer-events-auto h-8 rounded-sm px-2 text-xs"
         style={{ width, pointerEvents: 'auto' }}
         onPointerDown={(event) => {
-          event.preventDefault();
           event.stopPropagation();
         }}
         onChange={(event) => onChange(event.target.value)}
@@ -702,7 +782,6 @@ function CompactColorField({
         className="pointer-events-auto h-8 w-8 cursor-pointer rounded-sm border border-[color:var(--editor-border-subtle)] bg-transparent p-0"
         style={{ pointerEvents: 'auto' }}
         onPointerDown={(event) => {
-          event.preventDefault();
           event.stopPropagation();
         }}
         onChange={(event) => onChange(event.target.value)}

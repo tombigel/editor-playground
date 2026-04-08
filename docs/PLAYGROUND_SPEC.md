@@ -1763,6 +1763,7 @@ While editing, the rich node gets visible stage chrome:
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, ordered-list controls, unordered-list controls, line height, and block spacing
+- toolbar selects, inline inputs, and the link popover restore the last rich-editor selection before applying block/list/link mutations, so focus leaving the editable surface does not retarget those actions
 - block, `ol`, and `ul` controls are block-scoped rather than inline-scoped: they affect the containing block or touched blocks, never by splitting around the inline selection
 - multi-block block/list conversions collapse the touched blocks into one resulting block or list container
 - converting touched blocks to `ul` / `ol` treats original block boundaries as hard line breaks before item creation
