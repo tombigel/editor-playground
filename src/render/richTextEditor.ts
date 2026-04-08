@@ -2,6 +2,7 @@ import { createEditor, Editor, Element, Transforms, type BaseEditor, type Descen
 import { withHistory } from 'slate-history';
 import { type ReactEditor, withReact } from 'slate-react';
 import type { RichContent, RichTextLink } from '../model/types';
+import { normalizeRichContent } from '../model/richContent';
 
 export function createRichEditor(): ReactEditor {
   return withInlines(withHistory(withReact(createEditor())));
@@ -14,14 +15,15 @@ function withInlines(editor: ReactEditor): ReactEditor {
   return editor;
 }
 
-type ParagraphElement = { type: 'paragraph'; children: RichContent };
-
 export function toSlateValue(content: RichContent): Descendant[] {
-  return [{ type: 'paragraph', children: content } as unknown as Descendant];
+  const normalized = normalizeRichContent(content);
+  return normalized.length > 0
+    ? normalized as unknown as Descendant[]
+    : [{ type: 'paragraph', children: [{ text: '' }] } as unknown as Descendant];
 }
 
 export function fromSlateValue(value: Descendant[]): RichContent {
-  return (value[0] as ParagraphElement).children;
+  return normalizeRichContent(value);
 }
 
 export function isMarkActive(editor: BaseEditor, mark: string): boolean {

@@ -207,7 +207,7 @@ Execution rules:
   - `npx vitest run src/api/tests/documentApi.test.ts src/render/tests/nodePresentation.test.tsx`: passed, 2 files / 34 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `9402cda`
 - Open follow-ups carried forward:
   - Q5 should replace the current flat rich content model without regressing the explicit text conversion APIs added in Q2.
 
@@ -215,37 +215,62 @@ Execution rules:
 
 - Objective:
   - Replace the single-paragraph inline-only rich model with the intended block-based model.
-- Status: `pending`
+- Status: `in_progress`
 - Allowed files:
   - `src/model/types/index.ts`
   - `src/model/richContent.ts`
+  - `src/model/textNodeDefaults.ts`
   - `src/model/migration.ts`
   - `src/model/validation.ts`
   - `src/api/documentApi.ts`
+  - `src/api/textConversion.ts`
   - `src/render/richTextEditor.ts`
   - `src/render/nodePresentation.tsx`
   - `src/site/SiteRenderer.tsx`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
   - Rich/model/site tests
+  - Compatibility tests that must adopt the new `RichContent` shape
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/API.md`
   - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - To be filled before implementation.
+  - `src/model/types/index.ts:105-129`
+  - `src/model/richContent.ts:1-60`
+  - `src/model/textNodeDefaults.ts:1-29`
+  - `src/model/migration.ts:241-262`
+  - `src/model/validation.ts:16-116`
+  - `src/api/documentApi.ts:484-495`
+  - `src/api/textConversion.ts:1-140`
+  - `src/render/richTextEditor.ts:1-61`
+  - `src/render/nodePresentation.tsx:31-124`
+  - `src/site/SiteRenderer.tsx:131-137`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-145`
+  - `src/model/tests/richContent.test.ts:1-97`
+  - `src/render/tests/richTextEditor.test.ts:1-94`
+  - `src/model/tests/validation.test.ts:473-517`
+  - `src/api/tests/documentApi.test.ts:299-353`
+  - `src/api/tests/pageApi.test.ts:507-564`
+  - `src/stage/tests/richTextEditMode.test.ts:1-44`
 - Implementation notes:
   - Introduce block-based Slate subset.
   - Keep outer wrapper nonsemantic.
   - Remove free root inline text and block nesting.
   - Add migration from old format.
+  - Keep conversions API-first by updating `src/api/textConversion.ts` alongside the model.
+  - Treat legacy flat inline arrays as migration and normalization input, but only persist block-shaped rich content.
 - Verification commands:
   - `npm run typecheck`
   - Relevant `vitest` commands
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/model/tests/richContent.test.ts src/model/tests/migration.test.ts src/model/tests/validation.test.ts src/render/tests/richTextEditor.test.ts src/api/tests/documentApi.test.ts src/api/tests/pageApi.test.ts src/stage/tests/richTextEditMode.test.ts src/site/tests/SiteRenderer.test.tsx`: passed, 8 files / 153 tests
+  - `npm run build`: passed
 - Commit SHA:
   - Pending
 - Open follow-ups carried forward:
-  - Pending
+  - Q6 should reuse the block-root rich helpers when introducing list blocks so list semantics do not get reimplemented in the editor only.
+  - Stage rich editing still suppresses `Enter`; authoring new blocks remains deferred to the later stage-edit UX quantum.
 
 ## Q6: Add standalone list subtype
 

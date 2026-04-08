@@ -10,26 +10,31 @@ function makeEditor() {
 describe('render/richTextEditor', () => {
   describe('toSlateValue / fromSlateValue', () => {
     it('round-trips plain text', () => {
-      const content: RichContent = [{ text: 'hello' }];
+      const content: RichContent = [{ type: 'paragraph', children: [{ text: 'hello' }] }];
       expect(fromSlateValue(toSlateValue(content))).toEqual(content);
     });
 
     it('round-trips bold mark', () => {
-      const content: RichContent = [{ text: 'bold', bold: true }];
+      const content: RichContent = [{ type: 'paragraph', children: [{ text: 'bold', bold: true }] }];
       expect(fromSlateValue(toSlateValue(content))).toEqual(content);
     });
 
     it('round-trips inline link', () => {
       const content: RichContent = [
-        { text: 'visit ' },
         {
-          type: 'link',
-          linkType: 'external',
-          href: 'https://example.com',
-          openInNewTab: false,
-          children: [{ text: 'here' }],
+          type: 'paragraph',
+          children: [
+            { text: 'visit ' },
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com',
+              openInNewTab: false,
+              children: [{ text: 'here' }],
+            },
+            { text: '.' },
+          ],
         },
-        { text: '.' },
       ];
       expect(fromSlateValue(toSlateValue(content))).toEqual(content);
     });
@@ -38,7 +43,7 @@ describe('render/richTextEditor', () => {
   describe('toggleMark', () => {
     it('adds bold when not active', () => {
       const editor = makeEditor();
-      editor.children = toSlateValue([{ text: 'hello' }]);
+      editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'hello' }] }]);
       Transforms.select(editor, {
         anchor: { path: [0, 0], offset: 0 },
         focus: { path: [0, 0], offset: 5 },
@@ -50,7 +55,7 @@ describe('render/richTextEditor', () => {
 
     it('removes bold when active', () => {
       const editor = makeEditor();
-      editor.children = toSlateValue([{ text: 'hello', bold: true }]);
+      editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'hello', bold: true }] }]);
       Transforms.select(editor, {
         anchor: { path: [0, 0], offset: 0 },
         focus: { path: [0, 0], offset: 5 },
@@ -63,7 +68,7 @@ describe('render/richTextEditor', () => {
   describe('insertLink / removeLink / isLinkActive', () => {
     it('wraps selection in link node', () => {
       const editor = makeEditor();
-      editor.children = toSlateValue([{ text: 'visit here now' }]);
+      editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'visit here now' }] }]);
       Transforms.select(editor, {
         anchor: { path: [0, 0], offset: 6 },
         focus: { path: [0, 0], offset: 10 },
@@ -80,15 +85,20 @@ describe('render/richTextEditor', () => {
     it('removeLink unwraps an existing link', () => {
       const editor = makeEditor();
       editor.children = toSlateValue([
-        { text: 'visit ' },
         {
-          type: 'link',
-          linkType: 'external',
-          href: 'https://example.com',
-          openInNewTab: false,
-          children: [{ text: 'here' }],
+          type: 'paragraph',
+          children: [
+            { text: 'visit ' },
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com',
+              openInNewTab: false,
+              children: [{ text: 'here' }],
+            },
+            { text: '.' },
+          ],
         },
-        { text: '.' },
       ]);
       Transforms.select(editor, {
         anchor: { path: [0, 1, 0], offset: 0 },

@@ -14,6 +14,8 @@ Execution rules:
 - Logic should be API first. Most important things should work if the editor is replaced or headless.
 - Use a tasklist as a director and a memory model.
 - Before starting implementation, save the original spec prompt together with the plan in the `docs` folder.
+- Q5 scope clarification: the rich-text model migration may update pure conversion helpers and compatibility tests when the new rich schema would otherwise break API-first conversions.
+- Q5 scope clarification: the rich-text model migration may also update rich defaults and the stage edit overlay when they still encode the legacy flat inline rich shape.
 
 ## Original Spec Prompt
 

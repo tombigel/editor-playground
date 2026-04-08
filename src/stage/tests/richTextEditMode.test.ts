@@ -8,7 +8,7 @@ import type { RichContent } from '../../model/types';
 // we verify the contract through a rendered component that uses it.
 import { useRichTextEditMode } from '../useRichTextEditMode';
 
-const CONTENT: RichContent = [{ text: 'hello' }];
+const CONTENT: RichContent = [{ type: 'paragraph', children: [{ text: 'hello' }] }];
 
 // Helper: capture hook output via a minimal stateful component rendered
 // with react-dom/server (server rendering is synchronous).

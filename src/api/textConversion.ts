@@ -1,10 +1,15 @@
 import { createTextNode } from '../model/defaults';
-import { isRichTextLink } from '../model/richContent';
+import {
+  createRichTextBlock,
+  createRichTextLeaf,
+  getTextContent,
+  normalizeRichContent,
+} from '../model/richContent';
 import type {
   DocumentModel,
+  HeadingTag,
   NodeId,
   RichContent,
-  RichTextLeaf,
   TextNode,
   TextSubtype,
 } from '../model/types';
@@ -78,14 +83,7 @@ export function flattenTextContent(content: string | RichContent): string {
   if (typeof content === 'string') {
     return content;
   }
-
-  return content
-    .flatMap((node) =>
-      isRichTextLink(node)
-        ? node.children.map((leaf) => leaf.text)
-        : [(node as RichTextLeaf).text],
-    )
-    .join('');
+  return getTextContent(content, { blockSeparator: '\n' });
 }
 
 function cloneDocument(document: DocumentModel): DocumentModel {
@@ -109,9 +107,16 @@ function convertTextContent(
   mode: TextConversionMode,
 ): string | RichContent {
   if (targetSubtype === 'rich') {
-    return typeof source.content === 'string'
-      ? [{ text: source.content }]
-      : source.content;
+    if (typeof source.content !== 'string') {
+      return normalizeRichContent(source.content);
+    }
+
+    return [
+      createRichTextBlock(
+        getRichBlockTypeForTextNode(source),
+        [createRichTextLeaf(source.content)],
+      ),
+    ];
   }
 
   if (typeof source.content === 'string') {
@@ -123,6 +128,22 @@ function convertTextContent(
   }
 
   return flattenTextContent(source.content);
+}
+
+function getRichBlockTypeForTextNode(source: TextNode): 'paragraph' | 'blockquote' | 'div' | HeadingTag {
+  if (source.subtype !== 'block') {
+    return 'paragraph';
+  }
+
+  if (source.htmlTag === 'blockquote') {
+    return 'blockquote';
+  }
+
+  if (source.htmlTag && source.htmlTag !== 'p') {
+    return source.htmlTag;
+  }
+
+  return 'paragraph';
 }
 
 function buildCodeMetadata(

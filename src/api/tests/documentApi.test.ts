@@ -316,7 +316,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected rich text node');
     }
 
-    expect(node.content).toEqual([{ text: 'Hello rich world' }]);
+    expect(node.content).toEqual([{ type: 'h1', children: [{ text: 'Hello rich world' }] }]);
     expect(node.code).toBeUndefined();
     expect(node.htmlTag).toBeUndefined();
   });
@@ -332,14 +332,19 @@ describe('api/documentApi', () => {
 
     const rich = createTextNode('rich', section.id);
     rich.content = [
-      { text: 'const ' },
       {
-        type: 'link',
-        linkType: 'external',
-        href: 'https://example.com',
-        children: [{ text: 'answer' }],
+        type: 'paragraph',
+        children: [
+          { text: 'const ' },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com',
+            children: [{ text: 'answer' }],
+          },
+          { text: ' = 42;' },
+        ],
       },
-      { text: ' = 42;' },
     ];
     document.nodes[rich.id] = rich;
     document.nodes[section.id].children.push(rich.id);

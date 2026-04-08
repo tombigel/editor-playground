@@ -1,6 +1,6 @@
 import type { ContainerSubtype, DocumentModel, DocumentNode, NodeId, RichContent } from './types';
 import { isContainerNode, isLeafNode, isSiteNode, isTextNode } from './types';
-import { walkLinks } from './richContent';
+import { validateRichContentStructure, walkLinks } from './richContent';
 import type { DocumentPage } from './types/site';
 import { getAllPageRoutes, getPageRole } from './pageRoutes';
 import { normalizeTopLevelWrapperTargetPageIds } from './topLevelWrapperVisibility';
@@ -158,6 +158,12 @@ export function validateDocument(document: DocumentModel): string[] {
   for (const node of nodes) {
     if (isLeafNode(node) && node.children.length > 0) {
       errors.push(`Leaf ${node.id} cannot contain children.`);
+    }
+
+    if (isTextNode(node) && node.subtype === 'rich') {
+      for (const issue of validateRichContentStructure(node.content)) {
+        errors.push(`Rich text node ${node.id}: ${issue}`);
+      }
     }
 
     validateChildReferences(document, node, errors);

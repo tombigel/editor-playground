@@ -477,8 +477,13 @@ describe('model/validation', () => {
       const section = getMainWrappers(doc)[0];
       const rich = createTextNode('rich', section.id) as TextNode;
       rich.content = [
-        { text: 'Visit ' },
-        { type: 'link', linkType: 'page', targetPageId: appended.page.id, children: [{ text: 'About' }] },
+        {
+          type: 'paragraph',
+          children: [
+            { text: 'Visit ' },
+            { type: 'link', linkType: 'page', targetPageId: appended.page.id, children: [{ text: 'About' }] },
+          ],
+        },
       ] as RichContent;
       doc.nodes[rich.id] = rich;
       section.children.push(rich.id);
@@ -491,7 +496,12 @@ describe('model/validation', () => {
       const section = getMainWrappers(doc)[0];
       const rich = createTextNode('rich', section.id) as TextNode;
       rich.content = [
-        { type: 'link', linkType: 'page', targetPageId: 'nonexistent-page', children: [{ text: 'Gone' }] },
+        {
+          type: 'paragraph',
+          children: [
+            { type: 'link', linkType: 'page', targetPageId: 'nonexistent-page', children: [{ text: 'Gone' }] },
+          ],
+        },
       ] as RichContent;
       doc.nodes[rich.id] = rich;
       section.children.push(rich.id);
@@ -506,7 +516,12 @@ describe('model/validation', () => {
       const section = getMainWrappers(doc)[0];
       const rich = createTextNode('rich', section.id) as TextNode;
       rich.content = [
-        { type: 'link', linkType: 'anchor', anchorTargetId: 'nonexistent-node', children: [{ text: 'Anchor' }] },
+        {
+          type: 'paragraph',
+          children: [
+            { type: 'link', linkType: 'anchor', anchorTargetId: 'nonexistent-node', children: [{ text: 'Anchor' }] },
+          ],
+        },
       ] as RichContent;
       doc.nodes[rich.id] = rich;
       section.children.push(rich.id);
@@ -528,5 +543,17 @@ describe('model/validation', () => {
 
     const errors = validateDocument(document);
     expect(errors).toContain(`Cycle detected at node ${section.id}.`);
+  });
+
+  it('rejects rich text with free inline root content', () => {
+    const document = createInitialDocument();
+    const section = getMainWrappers(document)[0];
+    const rich = createTextNode('rich', section.id) as TextNode;
+    rich.content = [{ text: 'orphan root leaf' }] as unknown as RichContent;
+    document.nodes[rich.id] = rich;
+    section.children.push(rich.id);
+
+    const errors = validateDocument(document);
+    expect(errors).toContain(`Rich text node ${rich.id}: Rich content root item 0 must be a block.`);
   });
 });

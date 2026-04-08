@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createSectionFromTemplate } from '../../model/defaults';
+import { createInitialDocument, createSectionFromTemplate, createTextNode } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
 import { SiteRenderer } from '../SiteRenderer';
 
@@ -166,5 +166,30 @@ describe('site/SiteRenderer', () => {
 
     expect(markup).toContain(`data-node-id="${pageLink.id}"`);
     expect(markup).toContain('aria-current="page"');
+  });
+
+  it('renders rich text with a div wrapper and semantic inner blocks', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const rich = createTextNode('rich', section.id);
+    rich.content = [
+      { type: 'h2', children: [{ text: 'Heading' }] },
+      { type: 'paragraph', children: [{ text: 'Paragraph copy' }] },
+    ];
+    document.nodes[rich.id] = rich;
+    section.children.push(rich.id);
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).toContain(`data-node-id="${rich.id}"`);
+    expect(markup).toContain('<h2>Heading</h2>');
+    expect(markup).toContain('<p>Paragraph copy</p>');
   });
 });

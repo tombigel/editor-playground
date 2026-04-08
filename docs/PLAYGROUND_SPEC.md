@@ -1499,13 +1499,18 @@ When enabled, a compact "Debug" inspector card appears above the Layout section 
 
 ## Rich Text Content
 
-Text nodes with `subtype: 'rich'` store their content as `RichContent` — a flat array of inline
-nodes — rather than a plain string.
+Text nodes with `subtype: 'rich'` store their content as `RichContent` — a block-rooted Slate
+subset — rather than a plain string.
 
 ### RichContent format
 
 ```typescript
-type RichContent = RichInlineNode[]
+type RichContent = RichTextBlock[]
+
+type RichTextBlock = {
+  type: 'paragraph' | 'div' | 'blockquote' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  children: RichInlineNode[]
+}
 
 // Plain text leaf — text plus optional mark flags
 type RichTextLeaf = {
@@ -1530,14 +1535,22 @@ type RichTextLink = {
 }
 ```
 
-`block` and `code` subtypes continue to use a plain `string` for `content`. The
-`subtype === 'rich'` narrowing is the canonical way to distinguish.
+Rules:
+
+- Rich roots must be block arrays only; free inline root text is invalid.
+- Blocks cannot nest other blocks.
+- Inline links may contain only text leaves.
+- Legacy flat inline arrays are normalized to a single `paragraph` block by migration and `setNodeRichContent()`.
+
+`block` and `code` subtypes continue to use a plain `string` for `content`. The `subtype === 'rich'`
+narrowing is the canonical way to distinguish.
 
 ### Rendering contract
 
-- **Site renderer** (`SiteRenderer.tsx`): rich nodes render before the link/button/plain branches.
-  Each `RichTextLeaf` becomes a `<span>` with inline mark styles; each `RichTextLink` becomes
-  an `<a>` resolved via `getLinkHref()`.
+- **Site renderer** (`SiteRenderer.tsx`): rich nodes always render inside a nonsemantic outer
+  `<div>`. Each inner `RichTextBlock` renders as its semantic block tag, each `RichTextLeaf`
+  becomes a `<span>` only when marks are needed, and each `RichTextLink` becomes an `<a>`
+  resolved via `getLinkHref()`.
 - **Stage renderer** (`renderLeafContent` in `nodePresentation.tsx`): same via the shared
   `renderRichContent()` helper. The `document` option must be passed when page-link hrefs need
   to be resolved.
@@ -1556,6 +1569,8 @@ Inline links inside `RichContent` follow the same rules as node-level links:
 
 | Function | Purpose |
 |---|---|
+| `normalizeRichContent(content)` | Normalizes legacy or mixed rich content into block-rooted `RichContent`. |
+| `validateRichContentStructure(content)` | Validates block-root rich invariants without relying on editor code. |
 | `isEmpty(content)` | Returns `true` if all leaf text strings are empty. |
 | `walkLinks(content, visitor)` | Calls visitor for every `RichTextLink`. |
 | `mapLinks(content, mapper)` | Returns new array with each link replaced; identity-safe. |
@@ -1569,6 +1584,8 @@ Text nodes with `subtype: 'rich'` support inline editing directly on the stage c
 
 Double-clicking a rich text node enters edit mode. The static `renderLeafContent` output is
 replaced by a Slate `<Editable>` at the same position and with the same typography styles.
+The editor now round-trips block-rooted `RichContent`, so existing headings, blockquotes, and
+paragraph blocks are preserved during editing.
 
 ### Edit mode lifecycle
 
@@ -1591,7 +1608,7 @@ undo history. Keystrokes are not propagated to the document until the editor exi
 | `Cmd/Ctrl+B` | Toggle bold on the current selection                               |
 | `Cmd/Ctrl+I` | Toggle italic on the current selection                             |
 | `Cmd/Ctrl+K` | Insert an external link (or remove if selection is already a link) |
-| `Enter`      | Suppressed — rich text nodes are single-paragraph                  |
+| `Enter`      | Currently suppressed — multi-block authoring UI is deferred        |
 | `Escape`     | Discard changes and exit edit mode                                 |
 
 ### Inline link insertion (`Cmd+K`)

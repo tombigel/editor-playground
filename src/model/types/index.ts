@@ -125,8 +125,15 @@ export interface RichTextLink extends SlateElement {
   openInNewTab?: boolean;
 }
 
+export type RichTextBlockType = 'paragraph' | 'div' | 'blockquote' | HeadingTag;
 export type RichInlineNode = RichTextLeaf | RichTextLink;
-export type RichContent = RichInlineNode[];
+
+export interface RichTextBlock extends SlateElement {
+  type: RichTextBlockType;
+  children: RichInlineNode[];
+}
+
+export type RichContent = RichTextBlock[];
 
 // ---------------------------------------------------------------------------
 // Value types
@@ -534,4 +541,3 @@ export type SectionTemplateSummary = {
   description: string;
   category: 'basic' | 'sticky';
 };
-

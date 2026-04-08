@@ -35,6 +35,7 @@ import {
   type TopLevelWrapperVisibilityMode as TopLevelWrapperVisibilityModeModel,
   type TopLevelWrapperVisibilityState as TopLevelWrapperVisibilityStateModel,
 } from '../model/topLevelWrapperVisibility';
+import { normalizeRichContent } from '../model/richContent';
 import type { PageId } from '../model/types/site';
 import type {
   BorderColorField,
@@ -491,7 +492,7 @@ export function setNodeRichContent(
   if (!node || !isTextNode(node) || node.subtype !== 'rich') {
     return document;
   }
-  node.content = content;
+  node.content = normalizeRichContent(content);
   return next;
 }
 

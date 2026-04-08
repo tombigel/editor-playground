@@ -10,8 +10,15 @@ import {
 import { Editor } from 'slate';
 import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
 import { getLinkHref } from '../../model/links';
-import type { DocumentModel, NodeId, RichContent, RichTextLeaf, RichTextLink } from '../../model/types';
-import { richLeafStyle } from '../../render/nodePresentation';
+import type {
+  DocumentModel,
+  NodeId,
+  RichContent,
+  RichTextBlock,
+  RichTextLeaf,
+  RichTextLink,
+} from '../../model/types';
+import { getRichTextBlockTag, richLeafStyle } from '../../render/nodePresentation';
 import {
   createRichEditor,
   fromSlateValue,
@@ -30,7 +37,7 @@ function renderEditElement(
   { attributes, children, element }: RenderElementProps,
   document: DocumentModel | undefined,
 ) {
-  const el = element as RichTextLink | { type?: string };
+  const el = element as RichTextLink | RichTextBlock | { type?: string };
   if ('type' in el && el.type === 'link') {
     const link = el as RichTextLink;
     const href = getLinkHref(link, document);
@@ -40,7 +47,8 @@ function renderEditElement(
       </a>
     );
   }
-  return <span {...attributes}>{children}</span>;
+  const Tag = getRichTextBlockTag((el as RichTextBlock).type ?? 'div');
+  return <Tag {...attributes}>{children}</Tag>;
 }
 
 type LinkPopoverState = { open: false } | { open: true; href: string };
@@ -137,7 +145,6 @@ export function RichTextEditOverlay({
 
   return (
     <Slate editor={editor} initialValue={initialValue}>
-      {/* div: Slate's Editable renders a div, so block tags like p/h2 would be invalid HTML */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: editor canvas overlay — stops propagation to drag layer */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: editor canvas overlay — stops propagation to drag layer */}
       <div

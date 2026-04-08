@@ -129,11 +129,10 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
       </div>
     );
   } else if (isTextNode(node) && node.subtype === 'rich') {
-    const Tag = node.htmlTag ?? 'p';
     leaf = (
-      <Tag key={node.id} className={plan.nodeClassName} data-node-id={node.id}>
+      <div key={node.id} className={plan.nodeClassName} data-node-id={node.id}>
         {renderRichContent(node.content as RichContent, renderDocument)}
-      </Tag>
+      </div>
     );
   } else if (isTextNode(node) && node.link) {
     const link = node.link;

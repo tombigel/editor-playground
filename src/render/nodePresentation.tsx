@@ -1,8 +1,15 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
-import { isRichTextLink } from '../model/richContent';
+import { getTextContent, isRichTextLink } from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
-import type { DocumentModel, RichContent, RichTextLeaf, RichTextLink } from '../model/types';
+import type {
+  DocumentModel,
+  RichContent,
+  RichTextBlock,
+  RichTextBlockType,
+  RichTextLeaf,
+  RichTextLink,
+} from '../model/types';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -30,11 +37,7 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
 
 export function getNodeTextContent(node: LeafNode): string {
   if (isTextNode(node)) {
-    if (typeof node.content === 'string') return node.content;
-    // RichContent: flatten all leaf text for labels/aria
-    return (node.content as RichContent)
-      .flatMap((n) => (isRichTextLink(n) ? n.children.map((l) => l.text) : [(n as RichTextLeaf).text]))
-      .join('');
+    return getTextContent(node.content);
   }
   if (isMediaNode(node)) {
     return node.alt ?? 'Image';
@@ -60,7 +63,18 @@ function richLinkKey(node: RichTextLink): string {
   return `link|${node.linkType}|${node.href ?? ''}|${node.children.map((l) => l.text).join('')}`;
 }
 
-export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
+function richBlockKey(block: RichTextBlock, index: number): string {
+  return `block|${index}|${block.type}|${block.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')}`;
+}
+
+export function getRichTextBlockTag(type: RichTextBlockType): 'p' | 'div' | 'blockquote' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' {
+  if (type === 'paragraph') {
+    return 'p';
+  }
+  return type;
+}
+
+function renderRichInlineContent(content: RichTextBlock['children'], document?: DocumentModel): ReactNode {
   return content.map((node) => {
     if (isRichTextLink(node)) {
       const href = getLinkHref(node, document);
@@ -80,6 +94,17 @@ export function renderRichContent(content: RichContent, document?: DocumentModel
     return Object.keys(style).length > 0
       ? <span key={richLeafKey(leaf)} style={style}>{leaf.text}</span>
       : leaf.text;
+  });
+}
+
+export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
+  return content.map((block, index) => {
+    const Tag = getRichTextBlockTag(block.type);
+    return (
+      <Tag key={richBlockKey(block, index)}>
+        {renderRichInlineContent(block.children, document)}
+      </Tag>
+    );
   });
 }
 
@@ -115,12 +140,10 @@ export function renderLeafContent(node: LeafNode, options: RenderLeafContentOpti
   const tabIndex = disableTabNavigation ? -1 : undefined;
 
   if (isTextNode(node) && node.subtype === 'rich') {
-    // Semantic tag is an explicit choice on the node; default to div (no imposed semantics)
-    const Tag = (node.htmlTag ?? 'div') as keyof JSX.IntrinsicElements;
     return (
-      <Tag style={contentStyle}>
+      <div style={contentStyle}>
         {renderRichContent(node.content as RichContent, document)}
-      </Tag>
+      </div>
     );
   }
 

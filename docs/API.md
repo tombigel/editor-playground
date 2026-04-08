@@ -54,6 +54,7 @@ Every feature is achievable through the API layer without the editor UI.
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
 | `setNodeTextField` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
+| `setNodeRichContent` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into block-rooted `RichContent` before persisting. |
 | `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, and `code` text nodes. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
 
@@ -261,7 +262,7 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 
 | Function / type | Signature / values | Description |
 |---|---|---|
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, and `code`. |
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, and `code`, preserving semantic block tags when converting `block -> rich`. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
 | `TextConversionMode` | `'auto' \| 'flatten'` | `auto` applies the default conversion policy; `flatten` explicitly flattens richer structures into plain text when needed. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |

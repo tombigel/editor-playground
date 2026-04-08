@@ -27,6 +27,7 @@ import type {
   SiteNode,
   TextNode,
 } from './types';
+import { normalizeRichContent } from './richContent';
 
 // ---------------------------------------------------------------------------
 // Internal raw-input shapes — mirrors the old persisted format
@@ -245,8 +246,12 @@ function migrateButtonLeaf(raw: RawNode): TextNode | null {
 function migrateNewFormatNode(raw: RawNode): DocumentNode | null {
   const ct = raw.contentType;
   if (ct === 'site' || ct === 'container' || ct === 'text' || ct === 'media') {
-    // Already new format — pass through.
-    return raw as unknown as DocumentNode;
+    const node = structuredClone(raw) as unknown as DocumentNode;
+    if (node.contentType === 'text' && node.subtype === 'rich') {
+      node.content = normalizeRichContent(node.content);
+      delete node.htmlTag;
+    }
+    return node;
   }
   return null;
 }

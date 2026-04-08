@@ -1,6 +1,7 @@
 import { parseFontSizeValue } from './units';
 import type { RichContent } from './types';
 import { DEFAULT_TEXT_COLOR } from './styleDefaults';
+import { createParagraphRichText } from './richContent';
 
 export const CODE_THEME_SURFACE = {
   light: {
@@ -23,7 +24,7 @@ export const TEXT_NODE_DEFAULTS = {
     style: { fontSize: parseFontSizeValue('18px'), lineHeight: 1.45 },
   },
   rich: {
-    content: [{ text: 'Edit rich text' }] as RichContent,
+    content: createParagraphRichText('Edit rich text') as RichContent,
     style: { fontSize: parseFontSizeValue('18px'), lineHeight: 1.45 },
   },
   code: {
