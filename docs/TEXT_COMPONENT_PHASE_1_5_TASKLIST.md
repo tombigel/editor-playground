@@ -20,9 +20,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P15-Q6`
-- Last completed quantum: `P15-Q5`
-- Next quantum after current: `P15-Q7`
+- Current quantum: `P15-Q7`
+- Last completed quantum: `P15-Q6`
+- Next quantum after current: `none`
 - Locked assumptions:
   - Rich content remains Slate-compatible but persists only the supported subset.
   - Phase 1.5 does not add stage edit entry for standalone `block`, `code`, or `list`.
@@ -353,14 +353,17 @@ Execution rules:
 
 - Objective:
   - Make standalone list editing usable in inspector without solving the deferred UX.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
   - Inspector list controls
   - List API consumers/tests/docs
   - `docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`
 - Read-first files and target lines:
-  - Current standalone list inspector
-  - Current list API/model
+  - `src/panels/inspector/contentSections/textSections.tsx:1-360`
+  - `src/panels/inspector/config.text.tsx:180-223`
+  - `src/model/listContent.ts:1-261`
+  - `src/panels/tests/InspectorPanel.test.tsx:237-262`
+  - `docs/PLAYGROUND_SPEC.md:1411-1450`
 - Implementation notes:
   - Scope in phase 1.5 is `ul` and `ol` only.
   - `dl` authoring UI is deferred to 2.0 until a good UX is defined.
@@ -375,9 +378,11 @@ Execution rules:
   - Focused inspector/list `vitest`
   - `npm run build`
 - Verification result:
-  - Pending
+  - `npm run typecheck`: passed
+  - `npx vitest run src/panels/tests/InspectorPanel.test.tsx`: passed
+  - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `b303075`
 - Open follow-ups carried forward:
   - Phase 2 should add the deferred `dl`, link, and direction authoring UX.
 
