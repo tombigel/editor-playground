@@ -327,7 +327,7 @@ Execution rules:
   - `npx vitest run src/model/tests/listContent.test.ts src/model/tests/defaults.test.ts src/model/tests/validation.test.ts src/api/tests/documentApi.test.ts src/render/tests/nodePresentation.test.tsx src/render/tests/leafPresentation.test.ts src/site/tests/SiteRenderer.test.tsx`: passed, 7 files / 110 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Pending
+  - `026b377`
 - Open follow-ups carried forward:
   - Inspector exposure for `list` remains intentionally deferred to Q9; Q6 only widened inspector types enough to keep the API-first subtype model compiling.
   - Rich text still does not persist list blocks internally, so `list -> rich` remains a flattening conversion until a later rich-list phase is explicitly designed.
