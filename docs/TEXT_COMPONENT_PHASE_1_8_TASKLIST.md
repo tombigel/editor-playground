@@ -23,8 +23,8 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `P18-Q2`
-- Last completed quantum: `P18-Q1`
+- Current quantum: `none`
+- Last completed quantum: `P18-Q2`
 - Next quantum after current: `P18-Q3`
 - Locked assumptions:
   - Phase 1.7 remains complete for the canonical text-model refactor.
@@ -40,7 +40,6 @@ Execution rules:
 - Rich-stage dropdown and popover interactions still have selection/focus regressions that make the current “phase complete” status too optimistic for pre-phase-2 readiness.
 - The toolbar is not yet modeled as a deterministic layered popover stack.
 - Nested dismissal order is not yet locked for outside click and `Escape`.
-- The first draggable-toolbar attempt shipped a visible but non-working drag handle and was rolled back; Q2 needs a fresh implementation based on the focused-panel host pattern.
 - Retained selection highlighting is still missing when focus leaves the editable surface for toolbar chrome.
 - Toolbar controls still use bespoke inputs where inspector controls should be reused later in phase 1.8.
 - Structure-specific dropdowns are still always visible and need to become conditional later in phase 1.8.
@@ -122,14 +121,14 @@ Execution rules:
 - Commit SHA:
   - `651b788`
 - Open follow-ups carried forward:
-  - `P18-Q2` should convert the base toolbar itself to a popover-backed draggable surface.
+  - `P18-Q2` should convert the base toolbar itself to a draggable UI-flow surface.
   - `P18-Q3` should add retained visual selection while focus moves into the toolbar stack.
 
 ## P18-Q2: Base toolbar popover and drag behavior
 
 - Objective:
-  - Convert the base rich-text toolbar into a draggable popover-backed floating panel.
-- Status: `pending`
+  - Convert the base rich-text toolbar into a draggable UI-flow floating panel.
+- Status: `done`
 - Allowed files:
   - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
   - `src/stage/stageRenderers/richToolbarPosition.ts`
@@ -145,24 +144,23 @@ Execution rules:
   - `src/stage/stageRenderers/RichTextEditOverlay.tsx:640-860`
   - `src/stage/tests/Stage.e2e.test.ts:374-470`
 - Implementation notes:
-  - Rebuild this quantum using the focused panel host pattern instead of bespoke in-toolbar drag wiring.
-  - Keep the base toolbar on the shared `FloatingPanelShell` / `PopoverSurface` path instead of the previous static shell override.
-  - The failed first pass was reverted; current runtime behavior is a non-draggable anchored popover while drag is redesigned.
-  - When Q2 is retried, store only a session-local drag offset; do not persist toolbar position into document state.
-  - When Q2 is retried, clamp toolbar movement inside the viewport with a protected top gap below the editor top bar.
-  - When Q2 is retried, keep nested link-panel positioning tied to the moved toolbar so link editing chrome travels with the base panel.
+  - Use the focused panel host pattern instead of bespoke in-toolbar drag wiring.
+  - Keep the base toolbar on the shared `FloatingPanelShell` path, but render it in UI flow outside the edited node instead of using native popover top-layer chrome.
+  - Store only a session-local drag offset; do not persist toolbar position into document state.
+  - Clamp toolbar movement inside the viewport with a protected top gap below the editor top bar.
+  - Keep nested link-panel positioning tied to the moved toolbar so link editing chrome travels with the base panel.
+  - Keep the drag affordance on the left side of the toolbar instead of the top edge.
 - Verification commands:
   - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx src/stage/tests/richToolbarPosition.test.ts`
   - `npm run typecheck`
-  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "without a drag handle|outside click|Escape|partial inline selection|ordered-list marker"`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "drags the rich toolbar|outside click|Escape|partial inline selection|ordered-list marker"`
   - `npm run build`
 - Verification result:
-  - Reopened after the first drag implementation shipped a visible but non-working handle.
+  - Passed before commit.
 - Commit SHA:
-  - `564d8ff` attempted Q2 but was rolled back in follow-up work; replacement commit pending.
+  - Pending the replacement Q2 commit
 - Open follow-ups carried forward:
-  - `P18-Q2` must be rebuilt against the focused-panel shell pattern before phase 1.8 can continue.
-  - `P18-Q3` should preserve the authored selection visually while the toolbar owns focus.
+  - `P18-Q3` should preserve the authored selection visually while the moved toolbar owns focus.
 
 ## P18-Q3: Selection retention and retained visual highlight
 

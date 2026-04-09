@@ -2,6 +2,7 @@ import {
 	type CSSProperties,
 	type FormEvent,
 	type KeyboardEvent as ReactKeyboardEvent,
+	type MouseEvent as ReactMouseEvent,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -9,6 +10,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Code2, Link2, List, ListOrdered, Type } from "lucide-react";
 import { Transforms, type BaseSelection } from "slate";
 import {
@@ -77,8 +79,13 @@ import {
 	toggleMark,
 } from "../../render/richTextEditor";
 import {
+	clampRichToolbarOffset,
+	DEFAULT_RICH_TOOLBAR_OFFSET,
 	getRichToolbarViewportPosition,
+	persistRichToolbarSessionOffset,
+	readRichToolbarSessionOffset,
 	RICH_TOOLBAR_EDGE_GAP_PX,
+	type RichToolbarOffset,
 	type RichToolbarPlacement,
 } from "./richToolbarPosition";
 
@@ -167,6 +174,12 @@ const DEFAULT_LINK_POPOVER: LinkPopoverDraft = {
 	targetPageId: "",
 	pageAnchorId: "",
 	anchorTargetId: "",
+};
+
+type ToolbarDragState = {
+	originX: number;
+	originY: number;
+	originOffset: RichToolbarOffset;
 };
 
 const RICH_SELECT_IDS = {
@@ -294,6 +307,10 @@ function isTargetWithinLinkPopover(target: EventTarget | null): boolean {
 	);
 }
 
+function isTargetWithinToolbar(target: EventTarget | null): boolean {
+	return isTargetWithinSelector(target, '[data-stage-rich-toolbar="true"]');
+}
+
 export function RichTextEditOverlay({
 	nodeId,
 	content,
@@ -337,6 +354,13 @@ export function RichTextEditOverlay({
 			getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
 		),
 	);
+	const toolbarDragRef = useRef<ToolbarDragState | null>(null);
+	const toolbarOffsetDraftRef = useRef<RichToolbarOffset>(
+		DEFAULT_RICH_TOOLBAR_OFFSET,
+	);
+	const [toolbarOffsetDraft, setToolbarOffsetDraft] =
+		useState<RichToolbarOffset>(() => readRichToolbarSessionOffset());
+	const [toolbarDragging, setToolbarDragging] = useState(false);
 	const [toolbarPlacement, setToolbarPlacement] =
 		useState<RichToolbarPlacement>("above");
 	const [toolbarPosition, setToolbarPosition] = useState({
@@ -354,6 +378,10 @@ export function RichTextEditOverlay({
 		});
 		return () => cancelAnimationFrame(id);
 	}, [editor]);
+
+	useEffect(() => {
+		toolbarOffsetDraftRef.current = toolbarOffsetDraft;
+	}, [toolbarOffsetDraft]);
 
 	useEffect(() => {
 		let frame = 0;
@@ -374,6 +402,70 @@ export function RichTextEditOverlay({
 		};
 	}, []);
 
+	useEffect(() => {
+		if (!toolbarDragging || typeof document === "undefined") {
+			return;
+		}
+
+		const { cursor, userSelect } = document.body.style;
+		document.body.style.cursor = "grabbing";
+		document.body.style.userSelect = "none";
+
+		return () => {
+			document.body.style.cursor = cursor;
+			document.body.style.userSelect = userSelect;
+		};
+	}, [toolbarDragging]);
+
+	useEffect(() => {
+		if (!toolbarDragging) {
+			return;
+		}
+
+		function finishToolbarDrag(nextOffset: RichToolbarOffset) {
+			toolbarDragRef.current = null;
+			setToolbarDragging(false);
+			persistRichToolbarSessionOffset(nextOffset);
+		}
+
+		function handleMouseMove(event: MouseEvent) {
+			if (!toolbarDragRef.current || !rootRef.current || !toolbarRef.current) {
+				return;
+			}
+
+			event.preventDefault();
+			const rootRect = rootRef.current.getBoundingClientRect();
+			const toolbarRect = toolbarRef.current.getBoundingClientRect();
+			const nextOffset = clampRichToolbarOffset({
+				rootRect,
+				panelWidth: toolbarRect.width,
+				panelHeight: toolbarRect.height,
+				viewportWidth: window.innerWidth,
+				viewportHeight: window.innerHeight,
+				offset: toolbarDragRef.current.originOffset,
+				deltaX: event.clientX - toolbarDragRef.current.originX,
+				deltaY: event.clientY - toolbarDragRef.current.originY,
+			});
+			toolbarOffsetDraftRef.current = nextOffset;
+			setToolbarOffsetDraft(nextOffset);
+		}
+
+		function handleMouseEnd() {
+			if (!toolbarDragRef.current) {
+				return;
+			}
+			finishToolbarDrag(toolbarOffsetDraftRef.current);
+		}
+
+		window.addEventListener("mousemove", handleMouseMove, { passive: false });
+		window.addEventListener("mouseup", handleMouseEnd);
+
+		return () => {
+			window.removeEventListener("mousemove", handleMouseMove);
+			window.removeEventListener("mouseup", handleMouseEnd);
+		};
+	}, [toolbarDragging]);
+
 	useLayoutEffect(() => {
 		void selectionRevision;
 		void toolbarLayoutRevision;
@@ -391,6 +483,7 @@ export function RichTextEditOverlay({
 			panelHeight: toolbarRect.height,
 			viewportWidth: window.innerWidth,
 			viewportHeight: window.innerHeight,
+			offset: toolbarOffsetDraft,
 		});
 
 		setToolbarPlacement((current) =>
@@ -407,7 +500,7 @@ export function RichTextEditOverlay({
 		setToolbarWidth((current) =>
 			current === toolbarRect.width ? current : toolbarRect.width,
 		);
-	}, [selectionRevision, toolbarLayoutRevision]);
+	}, [selectionRevision, toolbarLayoutRevision, toolbarOffsetDraft]);
 
 	const commitCurrentContent = useCallback(() => {
 		onCommit(
@@ -463,6 +556,9 @@ export function RichTextEditOverlay({
 				event.preventDefault();
 				event.stopPropagation();
 				closeLinkPopover();
+				return;
+			}
+			if (isTargetWithinToolbar(target)) {
 				return;
 			}
 			if (target instanceof Node && root.contains(target)) {
@@ -718,6 +814,23 @@ export function RichTextEditOverlay({
 		onUpdateBlockGap(nodeId, parsed);
 	}, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
 
+	const handleToolbarDragMouseDown = useCallback(
+		(event: ReactMouseEvent<HTMLButtonElement>) => {
+			if (event.button !== 0) {
+				return;
+			}
+			event.preventDefault();
+			event.stopPropagation();
+			toolbarDragRef.current = {
+				originX: event.clientX,
+				originY: event.clientY,
+				originOffset: toolbarOffsetDraftRef.current,
+			};
+			setToolbarDragging(true);
+		},
+		[],
+	);
+
 	const handleLinkAction = useCallback(() => {
 		if (isLinkActive(editor)) {
 			removeLink(editor);
@@ -816,55 +929,47 @@ export function RichTextEditOverlay({
 		toolbarState.selectedLineHeight,
 	]);
 
-	return (
-		<Slate
-			editor={editor}
-			initialValue={initialValue}
-			onChange={() => {
-				if (editor.selection) {
-					setToolbarSelection(cloneSelection(editor.selection));
-					setToolbarState(readToolbarState(editor));
-				}
-				setSelectionRevision((revision) => revision + 1);
-			}}
-		>
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: stage edit root only stops propagation into the drag layer */}
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: stage edit root only stops propagation into the drag layer */}
-			<div
-				ref={rootRef}
-				data-stage-rich-edit-root="true"
+	const toolbarChrome = (
+		<>
+			<FloatingPanelShell
+				ref={toolbarRef}
+				suppressPopover
+				open
+				data-stage-rich-toolbar="true"
 				style={{
-					position: "relative",
+					top: `${toolbarPosition.top}px`,
+					left: `${toolbarPosition.left}px`,
+					zIndex: 220,
+					width: "max-content",
+					maxWidth: "calc(100vw - 32px)",
 					pointerEvents: "auto",
-					userSelect: "text",
-					WebkitUserSelect: "text",
 				}}
-				onPointerDown={(event) => event.stopPropagation()}
-				onClick={(event) => event.stopPropagation()}
-				onDoubleClick={(event) => event.stopPropagation()}
+				bodyClassName="px-2 py-2"
+				bodyStyle={{
+					pointerEvents: "auto",
+					overflowX: "auto",
+					overflowY: "hidden",
+				}}
+				onPointerDown={(event) => {
+					event.stopPropagation();
+				}}
 			>
-				<FloatingPanelShell
-					ref={toolbarRef}
-					open
-					data-stage-rich-toolbar="true"
-					style={{
-						top: `${toolbarPosition.top}px`,
-						left: `${toolbarPosition.left}px`,
-						zIndex: 220,
-						width: "max-content",
-						maxWidth: "calc(100vw - 32px)",
-						pointerEvents: "auto",
-					}}
-					bodyClassName="px-2 py-2"
-					bodyStyle={{
-						pointerEvents: "auto",
-						overflowX: "auto",
-						overflowY: "hidden",
-					}}
-					onPointerDown={(event) => {
-						event.stopPropagation();
-					}}
-				>
+				<div className="flex items-stretch gap-2">
+					<button
+						type="button"
+						aria-label="Drag text toolbar"
+						data-stage-rich-toolbar-drag-handle="true"
+						data-dragging={toolbarDragging ? "true" : "false"}
+						className={
+							toolbarDragging
+								? "editor-border-subtle flex shrink-0 cursor-grabbing select-none touch-none items-center rounded-md border px-2 py-1"
+								: "editor-border-subtle flex shrink-0 cursor-grab touch-none items-center rounded-md border px-2 py-1"
+						}
+						onClick={(event) => event.preventDefault()}
+						onMouseDown={handleToolbarDragMouseDown}
+					>
+						<div className="editor-border-subtle h-full min-h-[72px] w-1 rounded-full border bg-[color-mix(in_srgb,var(--editor-border-subtle)_65%,white)]" />
+					</button>
 					<div className="space-y-1.5">
 						<div className="flex items-center gap-1.5">
 							<CompactSelect
@@ -1111,7 +1216,61 @@ export function RichTextEditOverlay({
 							/>
 						</div>
 					</div>
-				</FloatingPanelShell>
+				</div>
+			</FloatingPanelShell>
+			{linkPopover.open ? (
+				<LinkInsertPopover
+					draft={linkPopover}
+					placement={toolbarPlacement}
+					toolbarLeft={toolbarPosition.left}
+					toolbarTop={toolbarPosition.top}
+					toolbarWidth={toolbarWidth}
+					pages={pages}
+					sectionOptions={sectionOptions}
+					targetPageSectionOptions={targetPageSectionOptions}
+					onChange={setLinkPopover}
+					onCancel={() => {
+						closeLinkPopover();
+					}}
+					openSelectId={openSelectId}
+					onSelectOpenChange={handleSelectOpenChange}
+					onSubmit={handleLinkSubmit}
+				/>
+			) : null}
+		</>
+	);
+	const chromePortalTarget = globalThis.document?.body ?? null;
+
+	return (
+		<Slate
+			editor={editor}
+			initialValue={initialValue}
+			onChange={() => {
+				if (editor.selection) {
+					setToolbarSelection(cloneSelection(editor.selection));
+					setToolbarState(readToolbarState(editor));
+				}
+				setSelectionRevision((revision) => revision + 1);
+			}}
+		>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: stage edit root only stops propagation into the drag layer */}
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: stage edit root only stops propagation into the drag layer */}
+			<div
+				ref={rootRef}
+				data-stage-rich-edit-root="true"
+				style={{
+					position: "relative",
+					pointerEvents: "auto",
+					userSelect: "text",
+					WebkitUserSelect: "text",
+				}}
+				onPointerDown={(event) => event.stopPropagation()}
+				onClick={(event) => event.stopPropagation()}
+				onDoubleClick={(event) => event.stopPropagation()}
+			>
+				{chromePortalTarget
+					? createPortal(toolbarChrome, chromePortalTarget)
+					: toolbarChrome}
 				<div
 					data-stage-rich-edit-box="true"
 					style={{
@@ -1143,25 +1302,6 @@ export function RichTextEditOverlay({
 						}}
 					/>
 				</div>
-				{linkPopover.open ? (
-					<LinkInsertPopover
-						draft={linkPopover}
-						placement={toolbarPlacement}
-						toolbarLeft={toolbarPosition.left}
-						toolbarTop={toolbarPosition.top}
-						toolbarWidth={toolbarWidth}
-						pages={pages}
-						sectionOptions={sectionOptions}
-						targetPageSectionOptions={targetPageSectionOptions}
-						onChange={setLinkPopover}
-						onCancel={() => {
-							closeLinkPopover();
-						}}
-						openSelectId={openSelectId}
-						onSelectOpenChange={handleSelectOpenChange}
-						onSubmit={handleLinkSubmit}
-					/>
-				) : null}
 				<span hidden>{selectionRevision}</span>
 			</div>
 		</Slate>

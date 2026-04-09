@@ -525,7 +525,7 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
-	it("renders the rich toolbar without a drag handle while Q2 drag is being rebuilt", async () => {
+	it("drags the rich toolbar and remembers its position for the current browser session", async () => {
 		const { document, richTextId } = createRichTextEditE2EDocument();
 		await openEditor({
 			document,
@@ -535,13 +535,66 @@ describe("stage/Stage e2e", () => {
 
 		await enterRichEditMode(richTextId);
 		const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
-		expect(await toolbar.count()).toBe(1);
-		expect(await toolbar.boundingBox()).not.toBeNull();
-		expect(
-			await page
-				.locator('[data-stage-rich-toolbar-drag-handle="true"]')
-				.count(),
-		).toBe(0);
+		const before = await toolbar.boundingBox();
+		const handleBox = await page.evaluate(() => {
+			const handle = window.document.querySelector(
+				'[data-stage-rich-toolbar-drag-handle="true"]',
+			);
+			if (!(handle instanceof HTMLElement)) {
+				return null;
+			}
+			const rect = handle.getBoundingClientRect();
+			return {
+				x: rect.left,
+				y: rect.top,
+				width: rect.width,
+				height: rect.height,
+			};
+		});
+		expect(before).not.toBeNull();
+		expect(handleBox).not.toBeNull();
+
+		const startX = (handleBox?.x ?? 0) + (handleBox?.width ?? 0) / 2;
+		const startY = (handleBox?.y ?? 0) + (handleBox?.height ?? 0) / 2;
+		await page.mouse.move(startX, startY);
+		await page.mouse.down();
+		await page.mouse.move(startX + 140, startY + 72, { steps: 14 });
+		await page.mouse.up();
+
+		await page.waitForFunction(
+			({ beforeX, beforeY }) => {
+				const toolbarEl = window.document.querySelector(
+					'[data-stage-rich-toolbar="true"]',
+				);
+				if (!(toolbarEl instanceof HTMLElement)) {
+					return false;
+				}
+				const rect = toolbarEl.getBoundingClientRect();
+				return (
+					Math.abs(rect.left - beforeX) > 80 &&
+					Math.abs(rect.top - beforeY) > 40
+				);
+			},
+			{ beforeX: before?.x ?? 0, beforeY: before?.y ?? 0 },
+		);
+
+		const after = await toolbar.boundingBox();
+		expect(after).not.toBeNull();
+
+		await page.keyboard.press("Escape");
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+
+		await enterRichEditMode(richTextId);
+		const remembered = await page
+			.locator('[data-stage-rich-toolbar="true"]')
+			.first()
+			.boundingBox();
+		expect(remembered).not.toBeNull();
+		expect(Math.abs((remembered?.x ?? 0) - (after?.x ?? 0))).toBeLessThan(4);
+		expect(Math.abs((remembered?.y ?? 0) - (after?.y ?? 0))).toBeLessThan(4);
 
 		await closeEditor();
 	}, 30_000);

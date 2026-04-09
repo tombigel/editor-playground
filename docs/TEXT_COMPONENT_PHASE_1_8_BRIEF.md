@@ -38,7 +38,7 @@ Phase 2.0 remains planned-only and should not execute while rich-stage editing s
   - no unified all-text stage shell
 - Rich-stage editing must be reliable enough to serve as the baseline interaction model for phase 2.
 - The base rich-text floating panel stays open for the entire rich-edit session.
-- The base panel will become a popover-backed floating surface built on `FloatingPanelShell` / `PopoverSurface`.
+- The base panel will become a floating UI-layer surface built on `FloatingPanelShell`, rendered outside the edited node flow.
 - The base panel will be draggable by a dedicated header or drag zone and clamped to the viewport below the top bar.
 - Toolbar position should start anchored near the edited node, then remember its dragged offset for the current browser session.
 - Dropdowns, popovers, inline inputs, and outside-click commit behavior must preserve the authored Slate selection unless the user explicitly changes it.
@@ -88,8 +88,8 @@ Phase 2.0 remains planned-only and should not execute while rich-stage editing s
 
 ### P18-Q2: Base toolbar popover and drag behavior
 
-- Convert the base toolbar to a true popover-backed surface.
-- Add a drag handle, viewport clamping, and session-memory position behavior.
+- Convert the base toolbar to a UI-flow floating surface instead of stage-node-local chrome.
+- Add a drag handle, viewport clamping, and session-memory position behavior using the focused-panel host drag pattern.
 - Verify, commit, and pause.
 
 ### P18-Q3: Selection retention and retained visual highlight
