@@ -611,10 +611,19 @@ function isResizeStreamAction(action: EditorAction, nodeId: NodeId) {
 }
 
 function getTextDebounceKey(action: EditorAction, selectedId: string | null) {
-  if (action.type !== 'text' || !selectedId) {
-    return null;
+  if (action.type === 'text' && selectedId) {
+    return `text:${selectedId}:${action.field}`;
   }
-  return `text:${selectedId}:${action.field}`;
+
+  if (action.type === 'setTextDocumentContent') {
+    return `text:${action.id}:content`;
+  }
+
+  if (action.type === 'setTextDocumentBlockGap') {
+    return `text:${action.id}:blockGap`;
+  }
+
+  return null;
 }
 
 function applySelectedNodeUpdate(

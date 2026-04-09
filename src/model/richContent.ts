@@ -18,6 +18,7 @@ import type {
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
+  StandaloneTextNodeSnapshot,
   TextBlockContent,
   TextDocumentBlock,
   TextDocumentBlocks,
@@ -117,6 +118,57 @@ function normalizeRichBlockStyle(value: unknown): RichBlockStyle | undefined {
   return Object.keys(style).length > 0 ? style : undefined;
 }
 
+function normalizeStandaloneTextNodeSnapshot(value: unknown): StandaloneTextNodeSnapshot | undefined {
+  if (!isObjectRecord(value)) {
+    return undefined;
+  }
+
+  const subtype = value.subtype;
+  if (subtype !== 'block' && subtype !== 'code' && subtype !== 'list') {
+    return undefined;
+  }
+
+  if (typeof value.name !== 'string'
+    || typeof value.visible !== 'boolean'
+    || typeof value.locked !== 'boolean'
+    || !isObjectRecord(value.rect)) {
+    return undefined;
+  }
+
+  const contentBlock = normalizeRichBlock(value.contentBlock);
+  if (!contentBlock) {
+    return undefined;
+  }
+
+  return {
+    subtype,
+    name: value.name,
+    visible: value.visible,
+    locked: value.locked,
+    rect: structuredClone(value.rect) as StandaloneTextNodeSnapshot['rect'],
+    contentBlock,
+    ...(isObjectRecord(value.style) ? { style: structuredClone(value.style) as StandaloneTextNodeSnapshot['style'] } : {}),
+    ...(typeof value.lang === 'string' ? { lang: value.lang } : {}),
+    ...(value.htmlTag === 'p'
+      || value.htmlTag === 'blockquote'
+      || isRichTextBlockType(value.htmlTag)
+      ? { htmlTag: value.htmlTag as NonNullable<StandaloneTextNodeSnapshot['htmlTag']> }
+      : {}),
+    ...(isObjectRecord(value.link) ? { link: structuredClone(value.link) as StandaloneTextNodeSnapshot['link'] } : {}),
+    ...(isObjectRecord(value.code) && typeof value.code.language === 'string'
+      ? {
+          code: {
+            language: value.code.language,
+            ...(value.code.theme === 'light' || value.code.theme === 'dark' ? { theme: value.code.theme } : {}),
+            ...(typeof value.code.highlightedHtml === 'string' ? { highlightedHtml: value.code.highlightedHtml } : {}),
+          },
+        }
+      : {}),
+    ...(isObjectRecord(value.sticky) ? { sticky: structuredClone(value.sticky) as StandaloneTextNodeSnapshot['sticky'] } : {}),
+    ...(isObjectRecord(value.animation) ? { animation: structuredClone(value.animation) as StandaloneTextNodeSnapshot['animation'] } : {}),
+  };
+}
+
 function isRichTextBlockType(value: unknown): value is RichTextBlockType {
   return typeof value === 'string' && RICH_TEXT_BLOCK_TYPES.has(value as RichTextBlockType);
 }
@@ -211,13 +263,14 @@ export function createRichTextLeaf(text: string, marks?: Partial<RichTextLeaf>):
 export function createRichTextBlock(
   type: RichTextBlockType,
   children: RichInlineNode[],
-  options: Pick<RichTextBlock, 'direction' | 'lineHeight' | 'style'> = {},
+  options: Pick<RichTextBlock, 'direction' | 'lineHeight' | 'style' | 'standalone'> = {},
 ): RichTextBlock {
   return {
     type,
     ...(options.direction ? { direction: options.direction } : {}),
     ...(typeof options.lineHeight === 'number' ? { lineHeight: options.lineHeight } : {}),
     ...(options.style ? { style: options.style } : {}),
+    ...(options.standalone ? { standalone: options.standalone } : {}),
     children: children.length > 0 ? children : [createRichTextLeaf('')],
   };
 }
@@ -231,7 +284,7 @@ export function createRichCodeLine(text = ''): RichCodeLine {
 
 export function createRichCodeBlock(
   text = '',
-  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style'> = {},
+  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style' | 'standalone'> = {},
 ): RichCodeBlock {
   return {
     type: 'code-block',
@@ -240,6 +293,7 @@ export function createRichCodeBlock(
     ...(options.theme === 'light' || options.theme === 'dark' ? { theme: options.theme } : {}),
     ...(typeof options.highlightedHtml === 'string' ? { highlightedHtml: options.highlightedHtml } : {}),
     ...(options.style ? { style: options.style } : {}),
+    ...(options.standalone ? { standalone: options.standalone } : {}),
     children: [createRichCodeLine(text)],
   };
 }
@@ -281,13 +335,14 @@ export function createRichListItemFromText(
 export function createRichListBlock(
   type: RichListBlock['type'],
   items: RichListItem[],
-  options: Pick<RichListBlock, 'direction' | 'style'> & { markerStyle?: string; start?: number } = {},
+  options: Pick<RichListBlock, 'direction' | 'style' | 'standalone'> & { markerStyle?: string; start?: number } = {},
 ): RichListBlock {
   if (type === 'ol') {
     return {
       type: 'ol',
       ...(options.direction ? { direction: options.direction } : {}),
       ...(options.style ? { style: options.style } : {}),
+      ...(options.standalone ? { standalone: options.standalone } : {}),
       ...(typeof options.start === 'number' && Number.isFinite(options.start) ? { start: Math.max(1, Math.trunc(options.start)) } : {}),
       ...(typeof options.markerStyle === 'string' && ORDERED_MARKER_STYLES.has(options.markerStyle as OrderedListMarkerStyle)
         ? { markerStyle: options.markerStyle as OrderedListMarkerStyle }
@@ -300,6 +355,7 @@ export function createRichListBlock(
     type: 'ul',
     ...(options.direction ? { direction: options.direction } : {}),
     ...(options.style ? { style: options.style } : {}),
+    ...(options.standalone ? { standalone: options.standalone } : {}),
     ...(typeof options.markerStyle === 'string' && UNORDERED_MARKER_STYLES.has(options.markerStyle as UnorderedListMarkerStyle)
       ? { markerStyle: options.markerStyle as UnorderedListMarkerStyle }
       : {}),
@@ -394,6 +450,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
       direction: normalizeDirection(node.direction),
       lineHeight: normalizeLineHeight(node.lineHeight),
       style: normalizeRichBlockStyle(node.style),
+      standalone: normalizeStandaloneTextNodeSnapshot(node.standalone),
     });
   }
 
@@ -405,6 +462,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
       ...(node.theme === 'light' || node.theme === 'dark' ? { theme: node.theme } : {}),
       ...(typeof node.highlightedHtml === 'string' ? { highlightedHtml: node.highlightedHtml } : {}),
       ...(normalizeRichBlockStyle(node.style) ? { style: normalizeRichBlockStyle(node.style) } : {}),
+      ...(normalizeStandaloneTextNodeSnapshot(node.standalone) ? { standalone: normalizeStandaloneTextNodeSnapshot(node.standalone) } : {}),
       children: normalizeCodeLines(node.children),
     };
   }
@@ -413,6 +471,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
     return createRichListBlock(node.type, normalizeListItems(node.children), {
       direction: normalizeDirection(node.direction),
       style: normalizeRichBlockStyle(node.style),
+      standalone: normalizeStandaloneTextNodeSnapshot(node.standalone),
       ...(node.type === 'ol' && typeof node.start === 'number' ? { start: node.start } : {}),
       ...(typeof node.markerStyle === 'string' ? { markerStyle: node.markerStyle } : {}),
     });
@@ -510,14 +569,14 @@ export function createTextDocumentContent(
 export function createTextBlockContent(
   type: RichTextBlockType,
   text: string,
-  options: Pick<RichTextBlock, 'direction' | 'lineHeight' | 'style'> = {},
+  options: Pick<RichTextBlock, 'direction' | 'lineHeight' | 'style' | 'standalone'> = {},
 ): TextBlockContent {
   return createRichTextBlock(type, [createRichTextLeaf(text)], options);
 }
 
 export function createCodeBlockContent(
   text: string,
-  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style'> = {},
+  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style' | 'standalone'> = {},
 ): CodeBlockContent {
   return createRichCodeBlock(text, options);
 }
@@ -525,7 +584,7 @@ export function createCodeBlockContent(
 export function createListBlockContent(
   type: RichListBlock['type'],
   items: RichListItem[],
-  options: Pick<RichListBlock, 'direction' | 'style'> & { markerStyle?: string; start?: number } = {},
+  options: Pick<RichListBlock, 'direction' | 'style' | 'standalone'> & { markerStyle?: string; start?: number } = {},
 ): ListBlockContent {
   return createRichListBlock(type, items, options);
 }

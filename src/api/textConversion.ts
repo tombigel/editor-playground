@@ -19,7 +19,6 @@ import {
   createUnorderedListContentFromLines,
   getListTextContent,
   listContentToLines,
-  listContentToMarkdown,
 } from '../model/listContent';
 import { splitRichTextNodeDoc } from './textMerge';
 import type {
@@ -156,10 +155,11 @@ function convertTextContent(
   if (source.subtype === 'list') {
     const listContent = convertToListContent(source);
     if (targetSubtype === 'code') {
-      return createTextDocumentFromCode(listContentToMarkdown(listContent), {
+      const plainText = getListTextContent(listContent);
+      return createTextDocumentFromCode(plainText, {
         direction: 'ltr',
         language: source.code?.language ?? 'plaintext',
-        highlightedHtml: highlightCode(listContentToMarkdown(listContent), source.code?.language ?? 'plaintext'),
+        highlightedHtml: highlightCode(plainText, source.code?.language ?? 'plaintext'),
       });
     }
     return createTextDocumentFromText(getListTextContent(listContent), {
@@ -197,7 +197,7 @@ function convertToListContent(source: TextNode): ListContent {
   }
 
   if (source.subtype === 'code') {
-    return createUnorderedListContentFromLines([flattenTextContent(source.content)]);
+    return createUnorderedListContentFromLines(splitLinesForListItems(flattenTextContent(source.content)));
   }
 
   if (source.subtype === 'rich') {
@@ -282,9 +282,9 @@ function richBlockToListContent(block: RichBlock): ListContent {
   }
 
   if (block.type === 'code-block') {
-    return createUnorderedListContentFromLines([
-      block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n'),
-    ]);
+    return createUnorderedListContentFromLines(
+      splitLinesForListItems(block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n')),
+    );
   }
 
   return createUnorderedListContentFromLines(flattenRichInlineChildren(block.children).split(/\r?\n/));
@@ -326,6 +326,10 @@ function convertSingleRichBlock(
 
 function flattenRichInlineChildren(children: RichInlineNode[]): string {
   return children.flatMap((node) => ('type' in node ? node.children.map((leaf) => leaf.text) : [node.text ?? ''])).join('');
+}
+
+function splitLinesForListItems(text: string): string[] {
+  return text.split(/\r?\n/);
 }
 
 function splitRichTextNodeToSubtypeDoc(

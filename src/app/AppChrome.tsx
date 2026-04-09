@@ -1,5 +1,5 @@
 import type { CSSProperties, ComponentType, ReactNode, Ref } from 'react';
-import { AlignLeft, Code2, Heading2, FileText, Rows3, Type } from 'lucide-react';
+import { AlignLeft, Code2, Heading2, FileText, ListOrdered, Rows3, Type } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
 import { Button } from '@/components/ui/button';
 import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
@@ -161,7 +161,7 @@ export function SectionTemplatePopover({
   );
 }
 
-type TextTypeRole = 'heading' | 'text' | 'code' | 'richtext';
+type TextTypeRole = 'heading' | 'text' | 'list' | 'code' | 'richtext';
 
 const TEXT_TYPE_OPTIONS: {
   role: TextTypeRole;
@@ -171,6 +171,7 @@ const TEXT_TYPE_OPTIONS: {
 }[] = [
   { role: 'heading', label: 'Heading', description: 'Section title (h2)', icon: Heading2 },
   { role: 'text', label: 'Paragraph', description: 'Plain text block', icon: AlignLeft },
+  { role: 'list', label: 'List', description: 'Standalone list block', icon: ListOrdered },
   { role: 'code', label: 'Code', description: 'Monospace code snippet', icon: Code2 },
   { role: 'richtext', label: 'Rich text', description: 'Formatted inline content', icon: FileText },
 ];

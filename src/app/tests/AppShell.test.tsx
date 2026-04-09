@@ -121,6 +121,17 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("editor-rail-toggle-button");
 	});
 
+	it("renders a list option in the text type popover", () => {
+		const props = createProps();
+		props.textTypeOpen = true;
+
+		const markup = renderToStaticMarkup(<AppShell {...props} />);
+
+		expect(markup).toContain("Insert text");
+		expect(markup).toContain(">List<");
+		expect(markup).toContain("Standalone list block");
+	});
+
 	it("renders the top bar as a single-row menubar with a centered pages switcher", () => {
 		const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
 

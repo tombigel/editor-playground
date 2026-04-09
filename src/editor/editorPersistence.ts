@@ -463,7 +463,7 @@ function setNodePlainText(node: TextNode, text: string) {
   });
 }
 
-export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button', parentId: NodeId) {
+export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button', parentId: NodeId) {
   const make = () => {
     if (role === 'heading') {
       const node = createTextNode('block', parentId);
@@ -476,6 +476,7 @@ export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'headin
       };
     }
     if (role === 'richtext') return createTextNode('rich', parentId);
+    if (role === 'list') return createTextNode('list', parentId);
     if (role === 'code') {
       const node = createTextNode('code', parentId);
       const content = getNodePlainText(node);

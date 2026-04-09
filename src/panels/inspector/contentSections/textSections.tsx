@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -231,17 +231,7 @@ function moveStructuredListItem(
 }
 
 function createStructuredListItemKeys(nodeId: string, content: StructuredListContent): string[] {
-  const seenCounts = new Map<string, number>();
-  return content.items.map((item) => {
-    const base = item.text.trim() || 'item';
-    const nextCount = (seenCounts.get(base) ?? 0) + 1;
-    seenCounts.set(base, nextCount);
-    return `${nodeId}-list-item-${base}-${nextCount}`;
-  });
-}
-
-function renderCenteredHeaderContent(headerContent: ReactNode) {
-  return headerContent ? <div className="flex justify-center pb-2">{headerContent}</div> : null;
+  return content.items.map((_, index) => `${nodeId}-list-item-${index}`);
 }
 
 function HtmlTagInlineField({
@@ -326,11 +316,11 @@ export function TextContentSection({
   return (
     <InspectorSectionCard
       title="Content"
+      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      {renderCenteredHeaderContent(headerContent)}
       <InspectorFieldGroup>
         <FormField label="Text">
           <Textarea
@@ -399,11 +389,11 @@ export function ListContentSection({
   return (
     <InspectorSectionCard
       title="Content"
+      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      {renderCenteredHeaderContent(headerContent)}
       <InspectorFieldGroup gap>
         {structuredListContent ? (
           <InspectorInlineRow label="Type" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
@@ -487,7 +477,7 @@ export function ListContentSection({
         ) : null}
       </InspectorFieldGroup>
       {structuredListContent ? (
-        <InspectorFieldGroup separated>
+        <div className="space-y-2.5 pt-2.5">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
               <span className="editor-text-strong text-[11px] font-medium">Items</span>
@@ -506,7 +496,7 @@ export function ListContentSection({
               {structuredListContent.items.map((item, index) => (
                 <div
                   key={structuredItemKeys[index]}
-                  className="editor-border-subtle editor-bg-subtle grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-sm border px-2 py-2"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
                 >
                   <Input
                     aria-label={`List item ${index + 1}`}
@@ -556,9 +546,9 @@ export function ListContentSection({
               ))}
             </div>
           </div>
-        </InspectorFieldGroup>
+        </div>
       ) : null}
-      <InspectorFieldGroup separated>
+      <InspectorFieldGroup gap>
         <div className="flex items-center justify-between gap-2">
           <span className="editor-text-strong text-[11px] font-medium">Advanced edit</span>
           <Button
@@ -572,7 +562,7 @@ export function ListContentSection({
           </Button>
         </div>
         {showAdvancedEdit ? (
-          <FormField label={listContent.type === 'dl' ? 'Bulk edit (term: description)' : 'Bulk edit'}>
+          <FormField label={listContent.type === 'dl' ? 'Bulk edit (term: description)' : 'Bulk edit (new line separated)'}>
             <Textarea
               value={itemsValue}
               rows={Math.max(4, listContentToLines(listContent).length)}
@@ -588,9 +578,6 @@ export function ListContentSection({
           </FormField>
         ) : null}
       </InspectorFieldGroup>
-      <p className="editor-text-muted px-0.5 text-[10px] opacity-70">
-        Structured editing covers bulleted and numbered lists in phase 1.5. Use one line per item in the advanced field. Description lists remain bulk-edit only until phase 2.
-      </p>
     </InspectorSectionCard>
   );
 }
@@ -610,11 +597,11 @@ export function RichTextContentSection({
   return (
     <InspectorSectionCard
       title="Content"
+      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      {renderCenteredHeaderContent(headerContent)}
       <Button
         type="button"
         variant="outline"
@@ -665,11 +652,11 @@ export function CodeContentSection({
   return (
     <InspectorSectionCard
       title="Content"
+      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      {renderCenteredHeaderContent(headerContent)}
       <InspectorFieldGroup>
         <FormField label="Code">
           <Textarea

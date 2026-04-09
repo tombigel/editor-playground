@@ -162,6 +162,17 @@ describe('editor/editorMutations', () => {
       }
     });
 
+    it('inserts a list leaf', () => {
+      const state = createInitialState();
+      const next = insertLeaf(state, 'list');
+      const inserted = next.document.nodes[next.selectedId!];
+
+      expect(inserted.contentType).not.toBe('container');
+      if (inserted.contentType !== 'container' && inserted.contentType !== 'site') {
+        expect(inserted.subtype).toBe('list');
+      }
+    });
+
     it('inserts a link leaf', () => {
       const state = createInitialState();
       const next = insertLeaf(state, 'link');

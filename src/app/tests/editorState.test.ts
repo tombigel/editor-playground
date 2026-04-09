@@ -312,6 +312,74 @@ describe('app/editorState', () => {
     });
   });
 
+  it('stores an undo entry for canonical text document content updates', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'text');
+    const nodeId = present.selectedId;
+
+    if (!nodeId) {
+      throw new Error('Expected inserted text node');
+    }
+
+    const before = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const next = historyReducer(before, {
+      type: 'setTextDocumentContent',
+      id: nodeId,
+      content: createTextDocumentContent([
+        {
+          type: 'paragraph',
+          children: [{ text: 'Updated through canonical content' }],
+        },
+      ]),
+    });
+
+    expect(next.past).toHaveLength(1);
+    expect(next.present.document.nodes[nodeId]).toMatchObject({
+      contentType: 'text',
+      content: {
+        blocks: [{ type: 'paragraph', children: [{ text: 'Updated through canonical content' }] }],
+      },
+    });
+  });
+
+  it('stores an undo entry for canonical rich block gap updates', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'richtext');
+    const nodeId = present.selectedId;
+
+    if (!nodeId) {
+      throw new Error('Expected inserted rich text node');
+    }
+
+    const before = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const next = historyReducer(before, {
+      type: 'setTextDocumentBlockGap',
+      id: nodeId,
+      value: 28,
+    });
+
+    expect(next.past).toHaveLength(1);
+    const nextNode = next.present.document.nodes[nodeId];
+    if (nextNode.contentType !== 'text' || nextNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    expect(nextNode.content.blockGap).toBe(28);
+  });
+
   it('stores one history entry for a group move', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'text');

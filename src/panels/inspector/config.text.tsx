@@ -1,12 +1,20 @@
 import { useState } from 'react';
+import {
+  CodeXml,
+  ListOrdered,
+  PencilLine,
+  TextInitial,
+  type LucideIcon,
+} from 'lucide-react';
 import { TextAppearanceSection, TextContentSection, RichTextContentSection, CodeContentSection, TextDesignSection, TextTextStyleSection, CodeTextStyleSection, CodeDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
-import { normalizeRichContent } from '../../model/richContent';
+import { getTextDocumentBlocks } from '../../model/richContent';
 import { isTextNode as isTextNodeGuard } from '../../model/types';
 import type { TextSubtype } from '../../model/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { OptionsSelector, type OptionsSelectorOption } from '@/components/ui/options-selector';
 import type { InspectorActionHandlers, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
 import { ListContentSection } from './contentSections/textSections';
 
@@ -78,18 +86,42 @@ export const textAppearanceSection: InspectorSectionDefinition = {
 };
 
 const TEXT_SUBTYPES: { value: TextSubtype; label: string }[] = [
-  { value: 'block', label: 'Text' },
   { value: 'rich', label: 'Rich' },
-  { value: 'code', label: 'Code' },
+  { value: 'block', label: 'Text' },
   { value: 'list', label: 'List' },
+  { value: 'code', label: 'Code' },
 ];
+
+export function getTextSubtypeIcon(subtype: TextSubtype): LucideIcon {
+  if (subtype === 'rich') {
+    return PencilLine;
+  }
+  if (subtype === 'code') {
+    return CodeXml;
+  }
+  if (subtype === 'list') {
+    return ListOrdered;
+  }
+  return TextInitial;
+}
 
 function SubtypeSwitcher({ node, actions }: { node: InspectorNode | null; actions: InspectorActionHandlers }) {
   const [pendingSubtype, setPendingSubtype] = useState<TextSubtype | null>(null);
   if (!node || !isTextNodeGuard(node)) return null;
   const textNode = node;
   const current = textNode.subtype as TextSubtype;
-  const richBlockCount = textNode.subtype === 'rich' ? normalizeRichContent(textNode.content).length : 0;
+  const richBlockCount = textNode.subtype === 'rich' ? getTextDocumentBlocks(textNode.content).length : 0;
+  const options: OptionsSelectorOption[] = TEXT_SUBTYPES.map(({ value, label }) => {
+    const Icon = getTextSubtypeIcon(value);
+    const tooltipLabel = value === 'rich' ? 'Rich text' : label;
+    return {
+      value,
+      label,
+      ariaLabel: `Switch text subtype to ${tooltipLabel}`,
+      icon: <Icon className="h-3.5 w-3.5" />,
+      tooltip: <div className="leading-3.5 font-medium">{tooltipLabel}</div>,
+    };
+  });
 
   function commitSwitch(nextSubtype: TextSubtype, conversionMode?: 'flatten' | 'split') {
     actions.onSwitchTextSubtype(textNode.id, nextSubtype, conversionMode);
@@ -111,20 +143,14 @@ function SubtypeSwitcher({ node, actions }: { node: InspectorNode | null; action
 
   return (
     <>
-      <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-        {TEXT_SUBTYPES.map(({ value, label }) => (
-          <Button
-            key={value}
-            type="button"
-            variant={current === value ? 'default' : 'ghost'}
-            size="sm"
-            className="h-6 rounded-md px-2 text-[11px]"
-            onClick={() => handleSubtypeClick(value)}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
+      <OptionsSelector
+        ariaLabel="Text subtype"
+        display="icon"
+        size="compact"
+        value={current}
+        options={options}
+        onValueChange={(value) => handleSubtypeClick(value as TextSubtype)}
+      />
       {pendingSubtype ? (
         <Dialog open onOpenChange={(open) => !open && setPendingSubtype(null)}>
           <DialogContent className="max-w-lg">

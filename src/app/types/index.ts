@@ -82,7 +82,7 @@ export type EditorAction =
   | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
-  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
+  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'move'; id: string; x: string; y: string }

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { CodeXml, ListOrdered, PencilLine, TextInitial } from 'lucide-react';
 import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
 import { createDefaultListContent } from '../../model/listContent';
 import { createTextDocumentContent, listContentToRichListBlock } from '../../model/richContent';
+import { getTextSubtypeIcon } from '../inspector/config.text';
 import { resolveSizeMeasurementInput } from '../controls/SizeFields';
 import {
   buildSizeFieldValue,
@@ -69,6 +71,13 @@ describe('panels/InspectorPanel', () => {
       ...overrides,
     };
   }
+
+  it('keeps text subtype selector icons fixed by option', () => {
+    expect(getTextSubtypeIcon('block')).toBe(TextInitial);
+    expect(getTextSubtypeIcon('list')).toBe(ListOrdered);
+    expect(getTextSubtypeIcon('code')).toBe(CodeXml);
+    expect(getTextSubtypeIcon('rich')).toBe(PencilLine);
+  });
 
   it('renders the shared 3-button section type selector with the current type selected', () => {
     const document = createInitialDocument();
@@ -243,7 +252,7 @@ describe('panels/InspectorPanel', () => {
       <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetTextDocumentContent: () => {} })} />,
     );
 
-    expect(markup).toContain('>List<');
+    expect(markup).toContain('aria-label="Switch text subtype to List"');
     expect(markup).toContain('Items');
     expect(markup).toContain('>Type<');
     expect(markup).toContain('>Bullet<');
@@ -252,6 +261,11 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('>Show<');
     expect(markup).not.toContain('Bulk edit');
     expect(markup).not.toContain('>Description<');
+    expect(markup).not.toContain('Structured editing covers bulleted and numbered lists in phase 1.5.');
+    expect(markup).toContain('grid-cols-[minmax(0,1fr)_auto] items-center gap-2');
+    expect(markup).not.toContain('grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-sm border px-2 py-2');
+    expect(markup).not.toContain('data-ui="control-group" data-separated="true"');
+    expect(markup).toContain('space-y-2.5 mt-2.5');
   });
 
   it('falls back to default structured list controls when canonical list content is missing', () => {
@@ -262,7 +276,7 @@ describe('panels/InspectorPanel', () => {
       <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetTextDocumentContent: () => {} })} />,
     );
 
-    expect(markup).toContain('>List<');
+    expect(markup).toContain('aria-label="Switch text subtype to List"');
     expect(markup).toContain('Add item');
     expect(markup).toContain('Advanced edit');
   });

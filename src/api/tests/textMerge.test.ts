@@ -38,6 +38,28 @@ function sectionId(document: ReturnType<typeof createInitialDocument>) {
   return section.id;
 }
 
+function roundTripComparable(node: ReturnType<typeof createInitialDocument>['nodes'][string]) {
+  if (node.contentType !== 'text') {
+    throw new Error('Expected text node');
+  }
+
+  return {
+    subtype: node.subtype,
+    name: node.name,
+    visible: node.visible,
+    locked: node.locked,
+    rect: node.rect,
+    content: node.content,
+    style: node.style,
+    lang: node.lang,
+    htmlTag: node.htmlTag,
+    link: node.link,
+    code: node.code,
+    sticky: node.sticky,
+    animation: node.animation,
+  };
+}
+
 describe('api/textMerge', () => {
   it('splits a multi-block rich node into sibling block text nodes', () => {
     const document = createInitialDocument();
@@ -151,6 +173,64 @@ describe('api/textMerge', () => {
     expect(document.nodes[richId]).not.toBe(nextNode);
   });
 
+  it('preserves per-block styling when splitting rich text back into standalone nodes', () => {
+    const document = createInitialDocument();
+    const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
+    const richNode = document.nodes[richId];
+    if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    richNode.content = createTextDocumentContent([
+      createRichTextBlock('h2', [createRichTextLeaf('Heading')], {
+        lineHeight: 1.2,
+        style: {
+          color: '#c2410c',
+          fontSize: '32px',
+          fontWeight: 700,
+          textAlign: 'center',
+        },
+      }),
+      createRichTextBlock('paragraph', [createRichTextLeaf('Body copy')], {
+        lineHeight: 1.45,
+        style: {
+          color: '#0f172a',
+          fontSize: '18px',
+          fontWeight: 400,
+          textAlign: 'left',
+        },
+      }),
+    ]);
+
+    const split = splitRichTextNodeDoc(document, richId);
+    const parent = split.nodes[sectionId(split)];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const splitChildren = parent.children.slice(-2);
+    const first = split.nodes[splitChildren[0]];
+    const second = split.nodes[splitChildren[1]];
+    if (first.contentType !== 'text' || second.contentType !== 'text') {
+      throw new Error('Expected text nodes');
+    }
+
+    const firstMarkup = renderToStaticMarkup(renderLeafContent(first));
+    const secondMarkup = renderToStaticMarkup(renderLeafContent(second));
+
+    expect(firstMarkup).toContain('<h2');
+    expect(firstMarkup).toContain('color:#c2410c');
+    expect(firstMarkup).toContain('font-size:32px');
+    expect(firstMarkup).toContain('font-weight:700');
+    expect(firstMarkup).toContain('line-height:1.2');
+    expect(firstMarkup).toContain('text-align:center');
+    expect(secondMarkup).toContain('<p');
+    expect(secondMarkup).toContain('color:#0f172a');
+    expect(secondMarkup).toContain('font-size:18px');
+    expect(secondMarkup).toContain('font-weight:400');
+    expect(secondMarkup).toContain('line-height:1.45');
+    expect(secondMarkup).toContain('text-align:left');
+  });
+
   it('merges sibling text nodes into one rich node using tree order for content', () => {
     const document = createInitialDocument();
     const parentId = sectionId(document);
@@ -261,6 +341,108 @@ describe('api/textMerge', () => {
     expect(markup).toContain('color:#0f172a');
     expect(markup).toContain('font-size:18px');
     expect(markup).toContain('text-align:left');
+  });
+
+  it('round-trips standalone node data through merge then split', () => {
+    const document = createInitialDocument();
+    const parentId = sectionId(document);
+    const headingId = appendTextNode(document, createTextNode('block', parentId));
+    const bodyId = appendTextNode(document, createTextNode('block', parentId));
+
+    const heading = document.nodes[headingId];
+    const body = document.nodes[bodyId];
+    if (heading.contentType !== 'text' || body.contentType !== 'text') {
+      throw new Error('Expected text nodes');
+    }
+
+    heading.name = 'Hero Title';
+    heading.htmlTag = 'h2';
+    heading.link = { linkType: 'external', href: 'https://example.com', openInNewTab: true };
+    heading.rect.y.base = { raw: '40px', parsed: { value: 40, unit: 'px' } };
+    heading.style = {
+      ...heading.style,
+      color: '#c2410c',
+      fontSize: { raw: '32px', parsed: { value: 32, unit: 'px' } },
+      fontWeight: 700,
+      lineHeight: 1.2,
+      textAlign: 'center',
+      shadowColor: 'rgba(0,0,0,0.2)',
+      shadowBlur: 4,
+      shadowOffsetX: 1,
+      shadowOffsetY: 2,
+    };
+    heading.content = createTextDocumentContent([
+      createRichTextBlock('h2', [
+        createRichTextLeaf('Hello ', { bold: true }),
+        createRichTextLeaf('world', { color: '#c2410c' }),
+      ], {
+        lineHeight: 1.2,
+        style: {
+          color: '#c2410c',
+          fontSize: '32px',
+          fontWeight: 700,
+          textAlign: 'center',
+        },
+      }),
+    ]);
+
+    body.name = 'Hero Body';
+    body.rect.y.base = { raw: '110px', parsed: { value: 110, unit: 'px' } };
+    body.style = {
+      ...body.style,
+      color: '#0f172a',
+      fontSize: { raw: '18px', parsed: { value: 18, unit: 'px' } },
+      fontWeight: 400,
+      lineHeight: 1.45,
+      textAlign: 'left',
+    };
+    body.content = createTextDocumentContent([
+      createRichTextBlock('paragraph', [
+        createRichTextLeaf('Body copy'),
+      ], {
+        lineHeight: 1.45,
+        style: {
+          color: '#0f172a',
+          fontSize: '18px',
+          fontWeight: 400,
+          textAlign: 'left',
+        },
+      }),
+    ]);
+
+    const originalHeading = structuredClone(roundTripComparable(heading));
+    const originalBody = structuredClone(roundTripComparable(body));
+
+    const merged = mergeTextNodesToRichDoc(document, [headingId, bodyId], { survivorNodeId: headingId });
+    const mergedRich = merged.nodes[headingId];
+    if (mergedRich.contentType !== 'text' || mergedRich.subtype !== 'rich') {
+      throw new Error('Expected merged rich node');
+    }
+    const firstMergedContent = structuredClone(mergedRich.content);
+
+    const split = splitRichTextNodeDoc(merged, headingId);
+    const parent = split.nodes[parentId];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+    const splitChildren = parent.children.slice(-2);
+    const [firstId, secondId] = splitChildren;
+    const splitHeading = split.nodes[firstId];
+    const splitBody = split.nodes[secondId];
+    if (splitHeading.contentType !== 'text' || splitBody.contentType !== 'text') {
+      throw new Error('Expected split text nodes');
+    }
+
+    expect(roundTripComparable(splitHeading)).toEqual(originalHeading);
+    expect(roundTripComparable(splitBody)).toEqual(originalBody);
+
+    const mergedAgain = mergeTextNodesToRichDoc(split, [firstId, secondId], { survivorNodeId: firstId });
+    const mergedAgainNode = mergedAgain.nodes[firstId];
+    if (mergedAgainNode.contentType !== 'text' || mergedAgainNode.subtype !== 'rich') {
+      throw new Error('Expected rich node after re-merge');
+    }
+
+    expect(mergedAgainNode.content).toEqual(firstMergedContent);
   });
 
   it('rejects merge requests that span multiple parents', () => {

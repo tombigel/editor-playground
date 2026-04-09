@@ -150,11 +150,28 @@ export type RichBlockStyle = {
   boxShadow?: string;
 };
 
+export type StandaloneTextNodeSnapshot = {
+  subtype: 'block' | 'code' | 'list';
+  name: string;
+  visible: boolean;
+  locked: boolean;
+  rect: RectModel;
+  contentBlock: TextDocumentBlock;
+  style?: TextNode['style'];
+  lang?: string;
+  htmlTag?: HeadingTag | 'p' | 'blockquote';
+  link?: LinkExtension;
+  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };
+  sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
+};
+
 export interface RichTextBlock extends SlateElement {
   type: RichTextBlockType;
   direction?: 'ltr' | 'rtl';
   lineHeight?: number;
   style?: RichBlockStyle;
+  standalone?: StandaloneTextNodeSnapshot;
   children: RichInlineNode[];
 }
 
@@ -170,6 +187,7 @@ export interface RichCodeBlock extends SlateElement {
   theme?: 'light' | 'dark';
   highlightedHtml?: string;
   style?: RichBlockStyle;
+  standalone?: StandaloneTextNodeSnapshot;
   children: RichCodeLine[];
 }
 
@@ -184,6 +202,7 @@ export interface RichUnorderedListBlock extends SlateElement {
   direction?: 'ltr' | 'rtl';
   markerStyle?: UnorderedListMarkerStyle;
   style?: RichBlockStyle;
+  standalone?: StandaloneTextNodeSnapshot;
   children: RichListItem[];
 }
 
@@ -193,6 +212,7 @@ export interface RichOrderedListBlock extends SlateElement {
   start?: number;
   markerStyle?: OrderedListMarkerStyle;
   style?: RichBlockStyle;
+  standalone?: StandaloneTextNodeSnapshot;
   children: RichListItem[];
 }
 

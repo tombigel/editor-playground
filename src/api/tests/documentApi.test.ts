@@ -431,6 +431,37 @@ describe('api/documentApi', () => {
     });
   });
 
+  it('converts multiline code blocks to one list item per line', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    code.content = createTextDocumentFromCode('const total = 1;\n\nreturn total;');
+    document.nodes[code.id] = code;
+    document.nodes[section.id].children.push(code.id);
+
+    const next = convertTextNodeDoc(document, code.id, 'list');
+    const node = next.nodes[code.id];
+    if (node.contentType !== 'text' || node.subtype !== 'list') {
+      throw new Error('Expected list node');
+    }
+
+    expect(richListBlockToListContent(getSingleListBlockContent(node.content)!)).toEqual({
+      type: 'ul',
+      markerStyle: 'disc',
+      items: [
+        { text: 'const total = 1;', direction: 'ltr' },
+        { text: '', direction: 'ltr' },
+        { text: 'return total;', direction: 'ltr' },
+      ],
+    });
+  });
+
   it('converts standalone lists to rich list blocks when the list kind is supported', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -514,7 +545,7 @@ describe('api/documentApi', () => {
     expect(node.htmlTag).toBeUndefined();
   });
 
-  it('serializes lists to markdown-like code when converting to code', () => {
+  it('drops list markers when converting standalone lists to code', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
       (node) => node.contentType === 'container' && node.subtype === 'section',
@@ -544,7 +575,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected code node');
     }
 
-    expect(getTextContent(node.content.blocks, { blockSeparator: '\n' })).toBe('3. Third\n4. Fourth');
+    expect(getTextContent(node.content.blocks, { blockSeparator: '\n' })).toBe('Third\nFourth');
   });
 
   it('preserves catalog metadata when applying an existing document font family', async () => {

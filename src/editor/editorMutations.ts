@@ -131,7 +131,7 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   return applySelectionToDocument(state, normalizeDocumentFontState(document), [wrapper.id]);
 }
 
-export function insertLeaf(state: EditorState, role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button'): EditorState {
+export function insertLeaf(state: EditorState, role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button'): EditorState {
   const document = cloneDocument(state.document);
   syncIdCountersWithDocument(document);
   const parentId = state.selectedId

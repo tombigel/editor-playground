@@ -802,6 +802,7 @@ describe('editor/editorPersistence', () => {
 
       const cases = [
         { role: 'text' as const, expectedSubtype: 'block', expectedContentType: 'text' },
+        { role: 'list' as const, expectedSubtype: 'list', expectedContentType: 'text' },
         { role: 'image' as const, expectedSubtype: 'image', expectedContentType: 'media' },
         { role: 'link' as const, expectedSubtype: 'block', expectedContentType: 'text' },
         { role: 'button' as const, expectedSubtype: 'block', expectedContentType: 'text' },

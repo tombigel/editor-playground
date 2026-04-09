@@ -211,6 +211,54 @@ describe('model/richContent', () => {
         },
       ]);
     });
+
+    it('preserves standalone merge snapshots on canonical blocks', () => {
+      expect(normalizeRichContent([
+        {
+          type: 'h2',
+          standalone: {
+            subtype: 'block',
+            name: 'Title',
+            visible: true,
+            locked: false,
+            rect: {
+              x: { base: { raw: '24px', parsed: { value: 24, unit: 'px' } } },
+              y: { base: { raw: '48px', parsed: { value: 48, unit: 'px' } } },
+              width: { base: { raw: '320px', parsed: { value: 320, unit: 'px' } } },
+              height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
+            },
+            contentBlock: { type: 'h2', children: [makeLeaf('Heading')] },
+            htmlTag: 'h2',
+            style: {
+              color: '#c2410c',
+            },
+          },
+          children: [makeLeaf('Heading')],
+        },
+      ])).toEqual([
+        {
+          type: 'h2',
+          standalone: {
+            subtype: 'block',
+            name: 'Title',
+            visible: true,
+            locked: false,
+            rect: {
+              x: { base: { raw: '24px', parsed: { value: 24, unit: 'px' } } },
+              y: { base: { raw: '48px', parsed: { value: 48, unit: 'px' } } },
+              width: { base: { raw: '320px', parsed: { value: 320, unit: 'px' } } },
+              height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
+            },
+            contentBlock: { type: 'h2', children: [makeLeaf('Heading')] },
+            htmlTag: 'h2',
+            style: {
+              color: '#c2410c',
+            },
+          },
+          children: [makeLeaf('Heading')],
+        },
+      ]);
+    });
   });
 
   describe('normalizeTextDocumentContent', () => {
