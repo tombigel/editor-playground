@@ -666,6 +666,10 @@ describe("stage/Stage e2e", () => {
 		expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(
 			1,
 		);
+		await page
+			.locator('[data-stage-rich-link-popover="true"]')
+			.getByText("Type", { exact: true })
+			.waitFor();
 
 		await page.locator('[aria-label="Link type"]').click();
 		await chooseOpenSelectItem("Internal");

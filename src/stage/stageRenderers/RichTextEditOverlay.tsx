@@ -2111,27 +2111,32 @@ function LinkInsertPopover({
 			onPointerDown={(event) => event.stopPropagation()}
 		>
 			<form className="space-y-2" onSubmit={onSubmit}>
-				<CompactSelect
-					selectId={RICH_SELECT_IDS.linkType}
-					open={openSelectId === RICH_SELECT_IDS.linkType}
-					onOpenChange={(open) =>
-						onSelectOpenChange(RICH_SELECT_IDS.linkType, open)
-					}
-					label="Link type"
-					value={draft.linkType}
-					onValueChange={(value) =>
-						onChange({
-							...draft,
-							linkType: value as LinkPopoverDraft["linkType"],
-						})
-					}
-					options={[
-						{ value: "external", label: "External" },
-						{ value: "anchor", label: "Internal" },
-						...(pages.length > 0 ? [{ value: "page", label: "Page" }] : []),
-					]}
-					width={120}
-				/>
+				<div className="flex items-center gap-2">
+					<span className="editor-text-muted shrink-0 text-[11px] font-medium">
+						Type
+					</span>
+					<CompactSelect
+						selectId={RICH_SELECT_IDS.linkType}
+						open={openSelectId === RICH_SELECT_IDS.linkType}
+						onOpenChange={(open) =>
+							onSelectOpenChange(RICH_SELECT_IDS.linkType, open)
+						}
+						label="Link type"
+						value={draft.linkType}
+						onValueChange={(value) =>
+							onChange({
+								...draft,
+								linkType: value as LinkPopoverDraft["linkType"],
+							})
+						}
+						options={[
+							{ value: "external", label: "External" },
+							{ value: "anchor", label: "Internal" },
+							...(pages.length > 0 ? [{ value: "page", label: "Page" }] : []),
+						]}
+						width={120}
+					/>
+				</div>
 				{draft.linkType === "external" ? (
 					<Input
 						autoFocus
