@@ -39,6 +39,7 @@ import type {
 	DocumentModel,
 	NodeId,
 	RichBlock,
+	RichTextBlock,
 	TextDocumentContent,
 	RichTextBlockType,
 	RichTextLeaf,
@@ -132,6 +133,10 @@ function renderEditElement(
 	}
 
 	const block = el as RichBlock;
+	const blockLineHeight =
+		isEditableTextBlock(block) && typeof block.lineHeight === "number"
+			? block.lineHeight
+			: undefined;
 	const Tag =
 		block.type === "ul" || block.type === "ol"
 			? block.type
@@ -148,6 +153,9 @@ function renderEditElement(
 				...(block.type === "ul" || block.type === "ol"
 					? getDefaultListContainerStyle()
 					: {}),
+				...(blockLineHeight !== undefined
+					? { lineHeight: blockLineHeight }
+					: {}),
 				pointerEvents: "auto",
 				userSelect: "text",
 				WebkitUserSelect: "text",
@@ -155,6 +163,12 @@ function renderEditElement(
 		>
 			{children}
 		</Tag>
+	);
+}
+
+function isEditableTextBlock(block: RichBlock): block is RichTextBlock {
+	return (
+		block.type !== "code-block" && block.type !== "ul" && block.type !== "ol"
 	);
 }
 

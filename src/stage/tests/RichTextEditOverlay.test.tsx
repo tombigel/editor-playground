@@ -74,4 +74,25 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain("list-style-position:outside");
 		expect(markup).toContain("padding-inline-start:1.25em");
 	});
+
+	it("applies block line height in live edit markup", () => {
+		const markup = renderToStaticMarkup(
+			<RichTextEditOverlay
+				nodeId="rich-node"
+				content={createTextDocumentContent([
+					{
+						type: "paragraph",
+						lineHeight: 1.8,
+						children: [{ text: "Live line height" }],
+					},
+				])}
+				minHeight="96px"
+				onCommit={() => {}}
+				onUpdateBlockGap={() => {}}
+				onDiscard={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain("line-height:1.8");
+	});
 });

@@ -1780,6 +1780,7 @@ While editing, the rich node gets visible stage chrome:
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, code-block mode, ordered-list controls, unordered-list controls, line height, and block spacing
+- line-height edits apply immediately in the live rich-edit surface for supported non-list text blocks, not only after commit back to idle rendering
 - active icon buttons use the shared selected-control treatment rather than bespoke stage-only styling
 - toolbar selects, inline inputs, and the link popover preserve the authored rich-editor selection while their chrome is used, then restore that selection before applying block/list/link mutations so focus leaving the editable surface does not retarget those actions
 - rich `code-block` selections expose a language selector in the same toolbar; standalone code inspector language options include `plaintext`, `markdown`, and explicit Prism-backed languages
