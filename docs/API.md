@@ -61,7 +61,7 @@ Phase 1.7 note:
 | `reparentNodeDoc` | `(document, nodeId: NodeId, newParentId: NodeId) => DocumentModel` | Moves a node to a new parent; rejects invalid moves silently. |
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
-| `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Transitional pure field mutator for text, code, link, button, and image leaves. Content-oriented field cases now delegate into canonical `TextDocumentContent` mutations. |
+| `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Transitional pure field mutator for text, code, link, button, and image leaves. Content-oriented field cases now delegate into canonical `TextDocumentContent` mutations, and `fontFamily` stores only the normalized primary family name rather than a full fallback stack string. |
 | `setTextDocumentContentDoc` | `(document, nodeId, content: TextDocumentContent) => DocumentModel` | Canonical pure text-document mutation for all text subtypes. Normalizes wrapper content, enforces subtype constraints, and syncs transitional compatibility metadata from canonical blocks. |
 | `setTextDocumentBlockGapDoc` | `(document, nodeId, blockGap: number \| undefined) => DocumentModel` | Canonical pure rich-text block spacing mutation. Updates `content.blockGap` without routing through field-based editor state. |
 | `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Compatibility helper layered over `setTextDocumentContentDoc()` for legacy rich-array callers. |
@@ -217,7 +217,7 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 | Function | Signature | Description |
 |---|---|---|
 | `insertWrapper` | `(state, role: WrapperRole) => EditorState` | Inserts a wrapper under the current selection context. |
-| `insertLeaf` | `(state, role: LeafRole) => EditorState` | Inserts a leaf under the current selection context. |
+| `insertLeaf` | `(state, role: 'text' \| 'heading' \| 'list' \| 'richtext' \| 'code' \| 'image' \| 'link' \| 'button') => EditorState` | Inserts a leaf under the current selection context. The editor-facing role surface is broader than `documentApi.insertLeafDoc()` so the text type picker can insert heading, list, rich-text, and code presets directly. |
 | `insertSectionTemplate` | `(state, templateId: SectionTemplateId) => EditorState` | Inserts a section template before the footer. |
 | `deleteNode` | `(state, nodeId: NodeId) => EditorState` | Deletes a node and updates selection. |
 | `deleteNodes` | `(state, nodeIds: NodeId[]) => EditorState` | Deletes multiple nodes and updates selection. |
@@ -283,7 +283,7 @@ Pure helper module for text subtype conversion policy. `documentApi` re-exports 
 
 | Function / type | Signature / values | Description |
 |---|---|---|
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` splits hard line breaks into unordered items, `code -> rich` emits a rich `code-block`, supported `ul` / `ol` lists convert to rich list blocks, and `rich -> simple` supports explicit `flatten` vs `split` behavior. |
+| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` and `code -> list` split hard line breaks into unordered items, `list -> code` drops ordered/unordered markers and emits one plain code line per item, `code -> rich` emits a rich `code-block`, supported `ul` / `ol` lists convert to rich list blocks, and `rich -> simple` supports explicit `flatten` vs `split` behavior. |
 | `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
 | `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | `auto` applies the default conversion policy, `flatten` explicitly degrades richer structures into plain text, and `split` delegates rich multi-block content to `splitRichTextNodeDoc()`. |
 | `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
@@ -331,16 +331,18 @@ Pure helper module for structure-changing text operations. `documentApi` re-expo
 
 | Function / type | Signature / values | Description |
 |---|---|---|
-| `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits a rich node at block boundaries. A single block is converted in place; multiple blocks keep the original node as the first split node and append newly generated sibling text nodes after it. |
-| `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges same-parent sibling text nodes into one rich node. Content order follows parent tree order, not caller order. |
-| `MergeTextNodesOptions` | `{ survivorNodeId?: NodeId }` | Optional surviving anchor node. The survivor keeps identity and geometry while absorbed siblings are removed; compatible standalone text styling is preserved inline per merged rich block. |
+| `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits a rich node at block boundaries. A single block is converted in place; multiple blocks keep the original node as the first split node and append newly generated sibling text nodes after it. When a rich block carries a standalone snapshot from an earlier merge, split restores that canonical standalone block content and metadata instead of rebuilding it from flattened text. |
+| `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges same-parent sibling text nodes into one rich node. Content order follows parent tree order, not caller order, and each merged block carries a standalone snapshot so a later split can round-trip the original standalone node data. |
+| `MergeTextNodesOptions` | `{ survivorNodeId?: NodeId }` | Optional surviving anchor node. The survivor keeps identity and geometry while absorbed siblings are removed; merged blocks preserve per-source canonical structure and restorable standalone metadata. |
 
 ### Deterministic behavior
 
 - `splitRichTextNodeDoc()` now maps rich text blocks to standalone block nodes, rich `code-block` nodes to standalone code nodes, and rich `ul` / `ol` blocks to standalone list nodes.
+- If a rich block originated from a previous standalone node merge, `splitRichTextNodeDoc()` restores that block's saved standalone snapshot instead of flattening from the merged rich structure.
 - `convertTextNodeDoc(..., { mode: 'split' })` delegates rich multi-block content to `splitRichTextNodeDoc()` when converting away from `rich`.
 - `convertTextNodeDoc(..., { mode: 'split' })` with a simple target subtype splits multi-block rich content by block boundary and then flattens each split block into the requested simple subtype.
 - `mergeTextNodesToRichDoc()` rejects mixed-parent selections and leaves the document unchanged in that case.
+- Merge -> split round-trips preserve each source node's canonical block styling and restorable standalone metadata rather than collapsing everything to survivor-level styling.
 
 ---
 
@@ -369,6 +371,7 @@ Pass-through re-exports from the `src/fonts/` subsystem.
 | `listDocumentFontsForPicker` | Lists document fonts formatted for a font picker UI. |
 | `createDefaultFontLibrary` | Creates a default font library object. |
 | `getDefaultDocumentFontFamily` | Returns the default font family descriptor. |
+| `extractPrimaryFontFamily` | Extracts and normalizes the first CSS family name from a `font-family` string. |
 
 ### Google Fonts integration
 

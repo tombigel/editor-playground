@@ -1,6 +1,6 @@
 # Text Component Phase 1.7 Brief
 
-This document is the active execution brief for the text-system phase 1.7 workstream.
+This document records the completed phase 1.7 canonical-refactor workstream.
 
 Historical source documents:
 
@@ -13,10 +13,10 @@ Execution rules:
 
 - API-first remains mandatory: no important text behavior may exist only in editor code.
 - Breaking changes are allowed; obsolete APIs and schema shapes may be removed.
-- The canonical live execution ledger for this phase is [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md).
+- The canonical execution ledger for this completed phase is [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md).
 - Phase 1.7 continues quantum-to-quantum without pausing unless a blocker appears, the brief becomes contradictory, or a missing external dependency or product decision cannot be derived safely from the brief and codebase.
 - Do not pause for user input between quanta. Continue the full plan unless blocked by a real contradiction, missing external dependency, or a decision that cannot be derived safely from the brief/codebase.
-- Phase 1.7 is a prerequisite for phase 2.0 work that assumes canonical all-text storage.
+- Phase 1.7 is a prerequisite for phase 1.8 stabilization and for phase 2.0 work that assumes canonical all-text storage.
 
 ## Phase Boundary
 
@@ -24,7 +24,9 @@ Phase 1.7 includes the canonical Slate-compatible text AST refactor needed befor
 
 Phase 1.5 remains historical/completed.
 
-Phase 2.0 remains planned-only and should not execute work that assumes canonical all-text storage until phase 1.7 completes.
+Phase 1.8 is the active stabilization phase that follows 1.7.
+
+Phase 2.0 remains planned-only and should not execute work that assumes canonical all-text storage until phase 1.8 closes.
 
 ## Locked Product Decisions
 

@@ -22,9 +22,9 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `done`
-- Current quantum: `P17-Q9`
+- Current quantum: `none`
 - Last completed quantum: `P17-Q9`
-- Next quantum after current: `None`
+- Next quantum after current: `none`
 - Locked assumptions:
   - All text storage converges on canonical `TextDocumentContent`.
   - Canonical text blocks remain Slate-compatible.
@@ -35,10 +35,11 @@ Execution rules:
   - Saved templates/defaults are migrated only after the core canonical refactor is stable.
   - One quantum at a time, commit before the next starts.
   - Execution should continue quantum-to-quantum without pausing unless a true blocker appears.
+  - Post-refactor stabilization now continues in phase 1.8 rather than inside this completed ledger.
 
 ## Discovered Issues
 
-- None recorded currently.
+- Post-refactor rich-stage interaction regressions are tracked in phase 1.8 rather than reopening this completed refactor ledger.
 
 ## P17-Q0: Bootstrap the 1.7 planning surface
 

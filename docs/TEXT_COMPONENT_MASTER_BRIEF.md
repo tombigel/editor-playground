@@ -69,8 +69,8 @@ editor inspector:
 | From / to | text | code | list | rich |
 | :---- | :---- | :---- | :---- | :---- |
 | **text** | NA | Remove semantic block, apply code styling | Convert each hard line break to unordered list item | Convert to a rich text semantic block |
-| **code** | Remove highlight styling, change to default (or last selected) font \- use p | NA | Convert to a single item with inline code styling | Convert to a rich text code block |
-| **list** | Convert each item to hard line break \- use p | Convert to markdown code | NA | Convert to a rich text list block |
+| **code** | Remove highlight styling, change to default (or last selected) font \- use p | NA | Convert each hard line break to an unordered list item | Convert to a rich text code block |
+| **list** | Convert each item to hard line break \- use p | Convert to plain code text without list markers | NA | Convert to a rich text list block |
 | **rich** | Ask if to flatten or split:  
 if split \- 
 use api rules if exists else flatten per block type rules

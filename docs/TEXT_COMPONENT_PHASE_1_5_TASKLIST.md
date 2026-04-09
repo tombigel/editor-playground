@@ -217,7 +217,9 @@ Execution rules:
     - never preserve one-block rich wrappers during this path in phase 1.5
   - Block/list conversion rules used by API and rich editor:
     - `block -> ul/ol`: hard line breaks become one `li` each
+    - `code -> list`: hard line breaks become one `li` each
     - `ul -> ol` and `ol -> ul`: preserve existing `li` sequence
+    - `list -> code`: flatten to one code line per item using item text only, without ordered or unordered markers
     - `ul/ol -> block`: flatten list items to hard line breaks
     - block, `ul`, and `ol` are mutually exclusive modes
     - for multi-block selections converted to block/list, unify touched blocks into one result

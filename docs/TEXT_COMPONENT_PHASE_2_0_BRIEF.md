@@ -5,6 +5,8 @@ This document is the planned-only brief for the text-system phase 2.0 workstream
 Source documents:
 
 - [`TEXT_COMPONENT_MASTER_BRIEF.md`](./TEXT_COMPONENT_MASTER_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_8_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_8_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_8_TASKLIST.md)
 - [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md)
 - [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md)
 - [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
@@ -13,8 +15,8 @@ Source documents:
 Execution status:
 
 - This file is planned-only.
-- Do not execute phase 2.0 quanta until phase 1.7 is explicitly closed or superseded.
-- Phase 2.0 depends on the canonical all-text storage refactor tracked in phase 1.7.
+- Do not execute phase 2.0 quanta until phase 1.8 is explicitly closed or superseded.
+- Phase 2.0 depends on the canonical all-text storage refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8.
 
 ## Locked Phase 2 Scope
 
@@ -30,7 +32,7 @@ Phase 2.0 contains the explicitly deferred work:
 - standalone list per-item direction UI
 - unified all-text stage editing shell
 
-## Phase 1.7 Dependency
+## Phase 1.x Dependency
 
 Before phase 2.0 execution starts, phase 1.7 should complete the canonical text-model refactor:
 
@@ -40,7 +42,13 @@ Before phase 2.0 execution starts, phase 1.7 should complete the canonical text-
 - inspector/editor bindings stop depending on legacy standalone text storage
 - defaults and saved templates emit canonical text content
 
-Phase 2.0 should build on that canonical model instead of extending legacy `block`/`code`/`list` storage branches.
+Before phase 2.0 execution starts, phase 1.8 should stabilize the rich-stage editing surface enough that phase 2 can safely reuse it as the interaction baseline:
+
+- dropdown and popover flows preserve the authored selection
+- toolbar interactions do not accidentally commit, discard, or retarget edits
+- the remaining pre-phase-2 rich-stage regressions are tracked and closed explicitly
+
+Phase 2.0 should build on that canonical model and stabilized interaction baseline instead of extending legacy `block`/`code`/`list` storage branches.
 
 ## Planned 2.0 Work Items
 

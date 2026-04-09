@@ -18,13 +18,14 @@ Execution rules:
 - Next quantum after current: `none`
 - Historical note:
   - Phase 1.0 is complete as originally executed.
-  - Remaining text roadmap work has been split into [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md), [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md), [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md), and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
+  - Remaining text roadmap work has been split into [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md), [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md), [`TEXT_COMPONENT_PHASE_1_8_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_8_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_8_TASKLIST.md), [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md), and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
   - List is a first-class subtype, not an inspector formatting mode.
   - Same-parent sibling merge is the only phase-1 merge scope.
-  - Phase 1.7 is the active prerequisite refactor before phase 2 text editing execution.
+  - Phase 1.7 completed the canonical prerequisite refactor before phase 2 text editing execution.
+  - Phase 1.8 is the active stabilization tranche before phase 2 text editing execution.
   - One quantum at a time, commit before the next starts.
 
 ## Discovered Issues

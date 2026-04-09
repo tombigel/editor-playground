@@ -5,6 +5,8 @@ This file is the planned-only backlog for the text-system phase 2.0 workstream.
 Source documents:
 
 - [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_8_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_8_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_8_TASKLIST.md)
 - [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md)
 - [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md)
 - [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
@@ -13,8 +15,8 @@ Source documents:
 Execution rules:
 
 - Planned only.
-- Do not execute until phase 1.7 is explicitly closed or superseded.
-- Phase 2.0 assumes the canonical text-model refactor tracked in phase 1.7 is complete before execution starts.
+- Do not execute until phase 1.8 is explicitly closed or superseded.
+- Phase 2.0 assumes the canonical text-model refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8 are complete before execution starts.
 - When phase 2.0 execution starts, each quantum should be converted into the same execution ledger format used by phase 1.0 and phase 1.5.
 
 ## Shared Progress Summary
@@ -26,6 +28,7 @@ Execution rules:
 - Locked assumptions:
   - Phase 2 extends, rather than bypasses, the phase 1.5 API-first contract.
   - Phase 2 also extends the phase 1.7 canonical text-model contract rather than reviving legacy standalone text storage.
+  - Phase 2 also inherits the phase 1.8 rich-stage interaction baseline rather than rebuilding known-buggy dropdown/focus behavior.
   - Phase 2 is where non-rich on-stage editing enters.
   - Phase 2 is where deferred list and description-list UX is resolved.
 
