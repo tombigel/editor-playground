@@ -63,9 +63,28 @@ export function buildDocumentDefaultFontStack(document: Partial<Pick<DocumentMod
 }
 
 export function buildFontFamilyStack(familyName: string) {
-  return `${quoteFontFamily(familyName)}, ${DEFAULT_FONT_FALLBACK_STACK}`;
+  const primaryFamily = extractPrimaryFontFamily(familyName);
+  return `${quoteFontFamily(primaryFamily)}, ${DEFAULT_FONT_FALLBACK_STACK}`;
 }
 
 function quoteFontFamily(familyName: string) {
   return /[\s'",]/.test(familyName) ? `'${familyName.replace(/'/g, "\\'")}'` : familyName;
+}
+
+export function extractPrimaryFontFamily(fontFamily: string) {
+  const trimmed = fontFamily.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (trimmed.startsWith("'") || trimmed.startsWith('"')) {
+    const quote = trimmed[0];
+    const closingIndex = trimmed.indexOf(quote, 1);
+    if (closingIndex > 0) {
+      return trimmed.slice(1, closingIndex).trim();
+    }
+  }
+
+  const firstSegment = trimmed.split(',')[0]?.trim() ?? '';
+  return firstSegment.replace(/^['"]|['"]$/g, '').trim();
 }

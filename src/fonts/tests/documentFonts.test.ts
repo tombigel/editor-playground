@@ -98,6 +98,35 @@ describe('fonts/documentFonts', () => {
     });
   });
 
+  it('normalizes CSS font stacks back to primary family names', () => {
+    const document = createInitialDocument();
+    const postTitle = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
+    );
+
+    if (!postTitle || postTitle.contentType !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    postTitle.style ??= {};
+    postTitle.style.fontFamily = "'Assistant', system-ui, -apple-system, sans-serif";
+
+    const normalized = normalizeDocumentFontState(document);
+    const normalizedNode = normalized.nodes[postTitle.id];
+
+    if (!normalizedNode || normalizedNode.contentType !== 'text') {
+      throw new Error('Expected normalized text node');
+    }
+
+    expect(normalizedNode.style?.fontFamily).toBe('Assistant');
+    expect(getDocumentFontFamily(normalized, 'Assistant')).toBeDefined();
+    expect(
+      normalized.fontLibrary.usedFamilies.some(
+        (family) => family.family === "'Assistant', system-ui, -apple-system, sans-serif",
+      ),
+    ).toBe(false);
+  });
+
   it('resolves authored bundled Google fonts into full metadata during normalization', async () => {
     const document = createInitialDocument();
     const catalog = await getBundledGoogleFontsCatalog();
@@ -242,6 +271,26 @@ describe('fonts/documentFonts', () => {
 
     expect(href).toContain('family=Playfair+Display%3Awght%40400..900');
     expect(href).not.toContain('family=Playfair%2BDisplay');
+  });
+
+  it('builds Google Fonts requests from the primary family when node styles contain CSS stacks', () => {
+    const document = createInitialDocument();
+    const textNode = Object.values(document.nodes).find(
+      (node): node is TextNode => node.contentType === 'text',
+    );
+
+    if (!textNode) {
+      throw new Error('Expected text node');
+    }
+
+    textNode.style ??= {};
+    textNode.style.fontFamily = "'Playfair Display', system-ui, sans-serif";
+
+    const href = buildDocumentGoogleFontsStylesheetHref(document);
+
+    expect(href).toContain('family=Playfair+Display%3Awght%40400..900');
+    expect(href).not.toContain('system-ui');
+    expect(href).not.toContain('%27Playfair');
   });
 
   it('toggles bold between 400 and the nearest supported bold equivalent', () => {

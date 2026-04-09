@@ -4,6 +4,7 @@ export {
   createDefaultFontLibrary,
   DEFAULT_DOCUMENT_FONT_FAMILIES,
   DEFAULT_FONT_FALLBACK_STACK,
+  extractPrimaryFontFamily,
   getDefaultDocumentFontFamily,
   getDocumentDefaultFontFamily,
 } from './defaults';

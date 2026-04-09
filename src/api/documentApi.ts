@@ -11,6 +11,7 @@ import {
 import {
   addDocumentFontFamily,
   ensureDocumentFontFamilyByName,
+  extractPrimaryFontFamily,
   getDocumentFontLibrary,
   getFontUsage,
   isFontFamilyUsed,
@@ -447,7 +448,7 @@ export function setTextNodeContentDoc(
 
   if (field === 'fontFamily' && isTextNode(node)) {
     node.style ??= {};
-    const trimmedValue = value.trim();
+    const trimmedValue = extractPrimaryFontFamily(value);
     node.style.fontFamily = trimmedValue || undefined;
     if (trimmedValue) {
       next = ensureDocumentFontFamilyByName(next, trimmedValue);

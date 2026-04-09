@@ -1,5 +1,6 @@
 import type { DocumentModel, DocumentFontFamily } from '../model/types';
 import { isTextNode } from '../model/types';
+import { extractPrimaryFontFamily } from './defaults';
 import { getDocumentFontFamily } from './documentFonts';
 import { DEFAULT_FONT_WEIGHT, resolveNearestSupportedFontWeight } from './weights';
 
@@ -19,7 +20,7 @@ export function buildGoogleFontsStylesheetHref(requests: FontRequest[]) {
 
   const url = new URL(GOOGLE_FONTS_CSS_API_URL);
   for (const request of requests) {
-    const familyQuery = request.family.trim();
+    const familyQuery = extractPrimaryFontFamily(request.family);
     if (!familyQuery) {
       continue;
     }
@@ -42,7 +43,7 @@ export function collectDocumentFontRequests(document: DocumentModel) {
       continue;
     }
 
-    const familyName = node.style?.fontFamily?.trim();
+    const familyName = node.style?.fontFamily ? extractPrimaryFontFamily(node.style.fontFamily) : '';
     if (!familyName) {
       continue;
     }

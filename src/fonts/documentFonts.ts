@@ -6,7 +6,7 @@ import type {
   TypographyStyle,
 } from '../model/types';
 import { isTextNode } from '../model/types';
-import { createDefaultFontLibrary, getDefaultDocumentFontFamily } from './defaults';
+import { createDefaultFontLibrary, extractPrimaryFontFamily, getDefaultDocumentFontFamily } from './defaults';
 import { getCachedGoogleFontsCatalog } from './googleFontsCatalog';
 import { clampFontWeight } from './weights';
 
@@ -19,7 +19,8 @@ export function listDocumentFonts(document: DocumentModel) {
 }
 
 export function getDocumentFontFamily(document: DocumentModel, familyName: string) {
-  return document.fontLibrary.usedFamilies.find((family) => family.family === familyName);
+  const normalizedFamilyName = extractPrimaryFontFamily(familyName);
+  return document.fontLibrary.usedFamilies.find((family) => family.family === normalizedFamilyName);
 }
 
 export function addDocumentFontFamily(document: DocumentModel, family: DocumentFontFamily): DocumentModel {
@@ -112,16 +113,17 @@ export function ensureDocumentFontFamily(document: DocumentModel, family: Docume
 }
 
 export function ensureDocumentFontFamilyByName(document: DocumentModel, familyName: string): DocumentModel {
-  if (!familyName.trim() || getDocumentFontFamily(document, familyName)) {
+  const normalizedFamilyName = extractPrimaryFontFamily(familyName);
+  if (!normalizedFamilyName || getDocumentFontFamily(document, normalizedFamilyName)) {
     return document;
   }
-  const fallback = resolveKnownDocumentFontFamily(familyName);
+  const fallback = resolveKnownDocumentFontFamily(normalizedFamilyName);
   return addDocumentFontFamily(
     document,
     fallback
       ? { ...fallback }
       : {
-          family: familyName,
+          family: normalizedFamilyName,
           category: 'sans-serif',
           subsets: [],
           variants: ['regular'],
@@ -197,7 +199,7 @@ function normalizeTypographyStyle(style: TypographyStyle | undefined) {
   const mutableStyle = style as TypographyStyle & { fontWeight?: number | 'normal' | 'bold' | string };
 
   if (mutableStyle.fontFamily) {
-    const trimmedFamily = mutableStyle.fontFamily.trim();
+    const trimmedFamily = extractPrimaryFontFamily(mutableStyle.fontFamily);
     mutableStyle.fontFamily = trimmedFamily || undefined;
   }
 
