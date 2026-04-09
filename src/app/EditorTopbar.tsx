@@ -248,13 +248,6 @@ export function EditorTopbar({
 						<MenubarTrigger>View</MenubarTrigger>
 						<MenubarContent>
 							<MenubarSubmenu label="Theme" icon={Palette}>
-								<MenubarPanelLinkItem
-									icon={Settings}
-									onClick={() => onOpenSettingsSection("display")}
-								>
-									Customize
-								</MenubarPanelLinkItem>
-								<MenubarSeparator />
 								<MenubarGroupLabel>Light</MenubarGroupLabel>
 								{EDITOR_LIGHT_THEME_OPTIONS.map((option) => (
 									<MenubarItem
@@ -280,6 +273,13 @@ export function EditorTopbar({
 										{option.label}
 									</MenubarItem>
 								))}
+								<MenubarSeparator />
+								<MenubarPanelLinkItem
+									icon={Settings}
+									onClick={() => onOpenSettingsSection("display")}
+								>
+									Customize
+								</MenubarPanelLinkItem>
 							</MenubarSubmenu>
 							<MenubarSeparator />
 							<MenubarCheckboxItem

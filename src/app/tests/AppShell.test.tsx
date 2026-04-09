@@ -132,16 +132,18 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("editor-topbar-menubar-row");
 		expect(markup).toContain("editor-topbar-page-switcher");
 		expect(markup).toContain("editor-topbar-page-switcher-centered");
-			expect(markup).toContain("editor-topbar-page-switcher-row-content");
-			expect(markup).toContain('data-ui="select-trigger"');
-			expect(markup).toContain("Home");
-			expect(markup).not.toContain("editor-topbar-pages-row");
-			expect(markup).toContain("Fonts Panel");
-			expect(markup).toContain("Shift + F");
-			expect(markup).toContain("Components panel");
-			expect(markup).toContain("Pages panel");
-			expect(markup).not.toContain("Import JSON…");
-			expect(markup).not.toContain("Customize…");
+		expect(markup).toContain("editor-topbar-page-switcher-row-content");
+		expect(markup).toContain('data-ui="select-trigger"');
+		expect(markup).toContain("Home");
+		expect(markup).not.toContain("editor-topbar-pages-row");
+		expect(markup).toContain("Fonts Panel");
+		expect(markup).toContain("Shift + F");
+		expect(markup).toContain("Components panel");
+		expect(markup).toContain("Pages panel");
+		expect(markup).not.toContain("Import JSON…");
+		expect(markup).not.toContain("Customize…");
+		expect(markup.indexOf("Light")).toBeLessThan(markup.indexOf("Dark"));
+		expect(markup.indexOf("Dark")).toBeLessThan(markup.indexOf("Customize"));
 	});
 
 	it("renders the layers panel surface when the rail entry is active", () => {
