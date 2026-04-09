@@ -3,6 +3,14 @@ import { getBundledGoogleFontsCatalog } from '../../fonts';
 import { createMediaNode, createButtonTextNode, createTextNode, createLinkTextNode, createContainerNode, createSectionFromTemplate } from '../../model/defaults';
 import { createPage } from '../../model/pageDefaults';
 import {
+  createTextDocumentContent,
+  createTextDocumentFromCode,
+  getSingleListBlockContent,
+  getTextContent,
+  listContentToRichListBlock,
+  richListBlockToListContent,
+} from '../../model/richContent';
+import {
   applyDocumentCommands,
   convertTextNodeDoc,
   createInitialDocument,
@@ -317,11 +325,11 @@ describe('api/documentApi', () => {
     const withContent = setTextNodeContentDoc(document, textId, 'content', 'Hello rich world');
     const next = convertTextNodeDoc(withContent, textId, 'rich');
     const node = next.nodes[textId];
-    if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
+    if (node.contentType !== 'text' || node.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
 
-    expect(node.content).toEqual([{ type: 'h1', children: [{ text: 'Hello rich world' }] }]);
+    expect(node.content.blocks).toMatchObject([{ type: 'h1', direction: 'ltr', children: [{ text: 'Hello rich world' }] }]);
     expect(node.code).toBeUndefined();
     expect(node.htmlTag).toBeUndefined();
   });
@@ -336,7 +344,7 @@ describe('api/documentApi', () => {
     }
 
     const code = createTextNode('code', section.id);
-    code.content = 'const total = 3;';
+    code.content = createTextDocumentFromCode('const total = 3;');
     code.code = {
       language: 'typescript',
       theme: 'dark',
@@ -347,11 +355,11 @@ describe('api/documentApi', () => {
 
     const next = convertTextNodeDoc(document, code.id, 'rich');
     const node = next.nodes[code.id];
-    if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
+    if (node.contentType !== 'text' || node.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
 
-    expect(node.content).toEqual([
+    expect(node.content.blocks).toEqual([
       {
         type: 'code-block',
         language: 'typescript',
@@ -382,11 +390,11 @@ describe('api/documentApi', () => {
       items: [{ text: 'First', direction: 'rtl' }],
     });
     const node = next.nodes[list.id];
-    if (node.contentType !== 'text' || node.subtype !== 'list' || typeof node.content === 'string') {
+    if (node.contentType !== 'text' || node.subtype !== 'list') {
       throw new Error('Expected list node');
     }
 
-    expect(node.content).toEqual({
+    expect(richListBlockToListContent(getSingleListBlockContent(node.content)!)).toEqual({
       type: 'ol',
       start: 1,
       markerStyle: 'upper-alpha',
@@ -409,11 +417,11 @@ describe('api/documentApi', () => {
     const withContent = setTextNodeContentDoc(document, textId, 'content', 'First line\nSecond line');
     const next = convertTextNodeDoc(withContent, textId, 'list');
     const node = next.nodes[textId];
-    if (node.contentType !== 'text' || node.subtype !== 'list' || typeof node.content === 'string') {
+    if (node.contentType !== 'text' || node.subtype !== 'list') {
       throw new Error('Expected list node');
     }
 
-    expect(node.content).toEqual({
+    expect(richListBlockToListContent(getSingleListBlockContent(node.content)!)).toEqual({
       type: 'ul',
       markerStyle: 'disc',
       items: [
@@ -433,25 +441,27 @@ describe('api/documentApi', () => {
     }
 
     const list = createTextNode('list', section.id);
-    list.content = {
-      type: 'ol',
-      start: 3,
-      markerStyle: 'upper-alpha',
-      items: [
-        { text: 'Third', direction: 'ltr' },
-        { text: 'Fourth', direction: 'ltr' },
-      ],
-    };
+    list.content = createTextDocumentContent([
+      listContentToRichListBlock({
+        type: 'ol',
+        start: 3,
+        markerStyle: 'upper-alpha',
+        items: [
+          { text: 'Third', direction: 'ltr' },
+          { text: 'Fourth', direction: 'ltr' },
+        ],
+      }),
+    ]);
     document.nodes[list.id] = list;
     document.nodes[section.id].children.push(list.id);
 
     const next = convertTextNodeDoc(document, list.id, 'rich');
     const node = next.nodes[list.id];
-    if (node.contentType !== 'text' || node.subtype !== 'rich' || !Array.isArray(node.content)) {
+    if (node.contentType !== 'text' || node.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
 
-    expect(node.content).toEqual([
+    expect(node.content.blocks).toMatchObject([
       {
         type: 'ol',
         start: 3,
@@ -474,7 +484,7 @@ describe('api/documentApi', () => {
     }
 
     const rich = createTextNode('rich', section.id);
-    rich.content = [
+    rich.content = createTextDocumentContent([
       {
         type: 'paragraph',
         children: [
@@ -488,7 +498,7 @@ describe('api/documentApi', () => {
           { text: ' = 42;' },
         ],
       },
-    ];
+    ]);
     document.nodes[rich.id] = rich;
     document.nodes[section.id].children.push(rich.id);
 
@@ -498,7 +508,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected code node');
     }
 
-    expect(node.content).toBe('const answer = 42;');
+    expect(getTextContent(node.content.blocks, { blockSeparator: '\n' })).toBe('const answer = 42;');
     expect(node.code?.language).toBe('plaintext');
     expect(node.code?.highlightedHtml).toContain('const');
     expect(node.htmlTag).toBeUndefined();
@@ -514,15 +524,17 @@ describe('api/documentApi', () => {
     }
 
     const list = createTextNode('list', section.id);
-    list.content = {
-      type: 'ol',
-      start: 3,
-      markerStyle: 'decimal',
-      items: [
-        { text: 'Third', direction: 'ltr' },
-        { text: 'Fourth', direction: 'ltr' },
-      ],
-    };
+    list.content = createTextDocumentContent([
+      listContentToRichListBlock({
+        type: 'ol',
+        start: 3,
+        markerStyle: 'decimal',
+        items: [
+          { text: 'Third', direction: 'ltr' },
+          { text: 'Fourth', direction: 'ltr' },
+        ],
+      }),
+    ]);
     document.nodes[list.id] = list;
     document.nodes[section.id].children.push(list.id);
 
@@ -532,7 +544,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected code node');
     }
 
-    expect(node.content).toBe('3. Third\n4. Fourth');
+    expect(getTextContent(node.content.blocks, { blockSeparator: '\n' })).toBe('3. Third\n4. Fourth');
   });
 
   it('preserves catalog metadata when applying an existing document font family', async () => {
@@ -839,7 +851,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected text node');
     }
     expect(updatedText.rect.y.base.raw).toBe('777px');
-    expect(updatedText.content).toBe('Updated by command chain');
+    expect(getTextContent(updatedText.content.blocks, { blockSeparator: '\n' })).toBe('Updated by command chain');
     expect(updatedText.htmlTag).toBe('blockquote');
 
     const json = serializeDocumentJson(next);
@@ -885,7 +897,7 @@ describe('api/documentApi', () => {
             width: { base: { raw: 'fit-content', parsed: { keyword: 'fit-content' } } },
             height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
           },
-          content: 'bad',
+          content: createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'bad' }] }]),
         },
       },
     };
@@ -921,8 +933,8 @@ describe('api/documentApi', () => {
       throw new Error('Expected post link node');
     }
 
-    expect(postLink.content).toBe('Open playground spec');
-    expect((postLink.content as string).toLowerCase()).not.toContain('maintenance');
+    expect(getTextContent(postLink.content.blocks)).toBe('Open playground spec');
+    expect(getTextContent(postLink.content.blocks).toLowerCase()).not.toContain('maintenance');
   });
 
   it('seeds the initial post section with a 50vh height', () => {
@@ -1011,7 +1023,7 @@ describe('api/documentApi', () => {
       throw new Error('Expected repository link node');
     }
 
-    expect(repoLink.content).toBe('github.com/tombigel/sticky-playground');
+    expect(getTextContent(repoLink.content.blocks)).toBe('github.com/tombigel/sticky-playground');
     expect(repoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
   });
 });

@@ -1,15 +1,17 @@
 import { createTextNode, syncIdCountersWithDocument } from '../model/defaults';
 import {
+  createTextDocumentContent,
   createRichCodeBlock,
   createRichTextBlock,
   createRichTextLeaf,
   getTextContent,
+  getTextDocumentBlocks,
   listContentToRichListBlock,
   normalizeRichContent,
+  richListBlockToListContent,
 } from '../model/richContent';
 import {
   listContentToLines,
-  normalizeListContent,
 } from '../model/listContent';
 import { formatValue, parseHeightValue, parseUnitValue } from '../model/units';
 import type {
@@ -48,7 +50,7 @@ export function splitRichTextNodeDoc(
     return document;
   }
 
-  const blockContent = normalizeRichContent(source.content);
+  const blockContent = normalizeRichContent(getTextDocumentBlocks(source.content));
   const blocks = blockContent.length > 0
     ? blockContent
     : [createRichTextBlock('paragraph', [createRichTextLeaf('')])];
@@ -205,7 +207,7 @@ function createRichNodeFromSource(source: TextNode, content: RichContent): TextN
     rect: structuredClone(source.rect),
     ...(source.sticky !== undefined ? { sticky: structuredClone(source.sticky) } : {}),
     ...(source.animation !== undefined ? { animation: structuredClone(source.animation) } : {}),
-    content,
+    content: createTextDocumentContent(content, { blockGap: source.content.blockGap }),
     ...(source.lang !== undefined ? { lang: source.lang } : {}),
     style: structuredClone(base.style),
   };
@@ -213,16 +215,17 @@ function createRichNodeFromSource(source: TextNode, content: RichContent): TextN
 
 function textNodeToRichContent(node: TextNode): RichContent {
   if (node.subtype === 'rich') {
-    return normalizeRichContent(node.content);
+    return normalizeRichContent(getTextDocumentBlocks(node.content));
   }
 
   if (node.subtype === 'list') {
-    return listContentToRichContent(normalizeListContent(node.content), buildRichBlockStyleFromTextNode(node, 'list'), node.style?.direction);
+    return listContentToRichContent(richListBlockToListContent(getTextDocumentBlocks(node.content)[0] as Extract<RichBlock, { type: 'ul' | 'ol' }>), buildRichBlockStyleFromTextNode(node, 'list'), node.style?.direction);
   }
 
   if (node.subtype === 'code') {
+    const text = getTextContent(node.content.blocks, { blockSeparator: '\n' });
     return [
-      createRichCodeBlock(typeof node.content === 'string' ? node.content : '', {
+      createRichCodeBlock(text, {
         language: node.code?.language,
         theme: node.code?.theme,
         highlightedHtml: node.code?.highlightedHtml,
@@ -233,10 +236,11 @@ function textNodeToRichContent(node: TextNode): RichContent {
   }
 
   if (node.subtype === 'block') {
+    const text = getTextContent(node.content.blocks);
     return [
       createRichTextBlock(
         htmlTagToRichBlockType(node.htmlTag),
-        [createRichTextLeaf(typeof node.content === 'string' ? node.content : '')],
+        [createRichTextLeaf(text)],
         {
           direction: node.style?.direction,
           lineHeight: node.style?.lineHeight,
@@ -249,7 +253,7 @@ function textNodeToRichContent(node: TextNode): RichContent {
   return [
     createRichTextBlock(
       'paragraph',
-      [createRichTextLeaf(typeof node.content === 'string' ? node.content : '')],
+      [createRichTextLeaf(getTextContent(node.content.blocks))],
     ),
   ];
 }
@@ -430,7 +434,15 @@ function createAnchorNodeFromRichBlock(
     rect: structuredClone(source.rect),
     ...(source.sticky !== undefined ? { sticky: structuredClone(source.sticky) } : {}),
     ...(source.animation !== undefined ? { animation: structuredClone(source.animation) } : {}),
-    content: subtype === 'list' ? listContent ?? richListBlockToListContentFallback(getTextContent([block])) : getTextContent([block]),
+    content: subtype === 'list'
+      ? createTextDocumentContent([listContentToRichListBlock(listContent ?? richListBlockToListContentFallback(getTextContent([block])))])
+      : subtype === 'code'
+        ? createTextDocumentContent([createRichCodeBlock(getTextContent([block]), codeMetadata)])
+        : createTextDocumentContent([createRichTextBlock(htmlTagToRichBlockType(richBlockToHtmlTag(block)), [createRichTextLeaf(getTextContent([block]))], {
+          direction: block.direction,
+          lineHeight: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.lineHeight,
+          style: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.style,
+        })]),
     ...(source.lang !== undefined ? { lang: source.lang } : {}),
     ...(subtype === 'block' ? { htmlTag: richBlockToHtmlTag(block) } : {}),
     ...(subtype === 'code' && codeMetadata ? { code: codeMetadata } : {}),
@@ -469,7 +481,15 @@ function createSplitSiblingNodeFromRichBlock(
       width: structuredClone(source.rect.width),
       height: { base: parseHeightValue('auto') },
     },
-    content: subtype === 'list' ? listContent ?? richListBlockToListContentFallback(getTextContent([block])) : getTextContent([block]),
+    content: subtype === 'list'
+      ? createTextDocumentContent([listContentToRichListBlock(listContent ?? richListBlockToListContentFallback(getTextContent([block])))])
+      : subtype === 'code'
+        ? createTextDocumentContent([createRichCodeBlock(getTextContent([block]), codeMetadata)])
+        : createTextDocumentContent([createRichTextBlock(htmlTagToRichBlockType(richBlockToHtmlTag(block)), [createRichTextLeaf(getTextContent([block]))], {
+          direction: block.direction,
+          lineHeight: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.lineHeight,
+          style: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.style,
+        })]),
     ...(source.lang !== undefined ? { lang: source.lang } : {}),
     ...(subtype === 'block' ? { htmlTag: richBlockToHtmlTag(block) } : {}),
     ...(subtype === 'code' && codeMetadata ? { code: codeMetadata } : {}),
@@ -487,29 +507,6 @@ function estimateSplitAdvancePx(source: TextNode, block: RichBlock): number {
   const explicitLineCount = Math.max(1, blockText.split(/\r?\n/).length);
   const contentHeightPx = Math.ceil(fontSizePx * lineHeight * explicitLineCount);
   return Math.max(36, contentHeightPx + SPLIT_STACK_GAP_PX);
-}
-
-function richListBlockToListContent(block: Extract<RichBlock, { type: 'ul' | 'ol' }>): ListContent {
-  if (block.type === 'ol') {
-    return {
-      type: 'ol',
-      start: block.start,
-      markerStyle: block.markerStyle,
-      items: block.children.map((item) => ({
-        text: item.children.flatMap((child) => ('type' in child ? child.children.map((leaf) => leaf.text) : [child.text])).join(''),
-        direction: 'ltr',
-      })),
-    };
-  }
-
-  return {
-    type: 'ul',
-    markerStyle: block.markerStyle,
-    items: block.children.map((item) => ({
-      text: item.children.flatMap((child) => ('type' in child ? child.children.map((leaf) => leaf.text) : [child.text])).join(''),
-      direction: 'ltr',
-    })),
-  };
 }
 
 function richListBlockToListContentFallback(text: string): ListContent {

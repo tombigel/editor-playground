@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
+import { getTextContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import {
   formatNodeHeight,
@@ -127,7 +128,7 @@ describe('site/siteShared', () => {
 
     image.name = 'Brand Mark';
 
-    expect(getNodeTextContent(text)).toBe(text.content);
+    expect(getNodeTextContent(text)).toBe(getTextContent(text.content.blocks));
     expect(getNodeTextContent(image)).toBe(image.alt);
     expect(isBrandMark(image)).toBe(true);
     expect(formatNodeHeight(section)).toBe('50vh');

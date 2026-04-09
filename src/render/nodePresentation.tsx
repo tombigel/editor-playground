@@ -1,7 +1,13 @@
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
-import { getListTextContent } from '../model/listContent';
-import { getTextContent, isRichTextLink } from '../model/richContent';
+import {
+  getSingleCodeBlockContent,
+  getSingleListBlockContent,
+  getSingleTextBlockContent,
+  getTextContent,
+  isRichTextLink,
+  richListBlockToListContent,
+} from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
 import type {
   DocumentModel,
@@ -46,13 +52,7 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
 
 export function getNodeTextContent(node: LeafNode): string {
   if (isTextNode(node)) {
-    if (typeof node.content === 'string') {
-      return node.content;
-    }
-    if (node.subtype === 'list') {
-      return getListTextContent(node.content as ListContent);
-    }
-    return getTextContent(node.content as RichContent);
+    return getTextContent(node.content.blocks, { blockSeparator: '\n' });
   }
   if (isMediaNode(node)) {
     return node.alt ?? 'Image';
@@ -179,7 +179,7 @@ function renderRichListBlock(
         style={sharedStyle}
       >
         {block.children.map((item) => (
-          <li key={richListItemKey(item)}>
+          <li key={richListItemKey(item)} dir={item.direction ?? block.direction ?? 'ltr'}>
             {renderRichListItemContent(item, document)}
           </li>
         ))}
@@ -194,7 +194,7 @@ function renderRichListBlock(
       style={sharedStyle}
     >
       {block.children.map((item) => (
-        <li key={richListItemKey(item)}>
+        <li key={richListItemKey(item)} dir={item.direction ?? block.direction ?? 'ltr'}>
           {renderRichListItemContent(item, document)}
         </li>
       ))}
@@ -419,8 +419,8 @@ export function renderLeafContent(
   const tabIndex = disableTabNavigation ? -1 : undefined;
 
   if (isTextNode(node) && node.subtype === 'rich') {
-    const blockGap = typeof node.style?.blockGap === 'number'
-      ? `${node.style.blockGap}px`
+    const blockGap = typeof node.content.blockGap === 'number'
+      ? `${node.content.blockGap}px`
       : undefined;
     return (
       <div
@@ -432,7 +432,7 @@ export function renderLeafContent(
           ...(blockGap ? { rowGap: blockGap } : {}),
         }}
       >
-        {renderRichContent(node.content as RichContent, document)}
+        {renderRichContent(node.content.blocks, document)}
       </div>
     );
   }
@@ -453,9 +453,11 @@ export function renderLeafContent(
   }
 
   if (isTextNode(node) && node.subtype === 'code') {
-    const lang = node.code?.language ?? 'plaintext';
-    const theme = node.code?.theme ?? 'light';
-    const html = node.code?.highlightedHtml ?? escapeHtml(node.content as string);
+    const codeBlock = getSingleCodeBlockContent(node.content);
+    const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
+    const lang = codeBlock?.language ?? node.code?.language ?? 'plaintext';
+    const theme = codeBlock?.theme ?? node.code?.theme ?? 'light';
+    const html = codeBlock?.highlightedHtml ?? node.code?.highlightedHtml ?? escapeHtml(codeText);
     return (
       <pre
         className={joinClassNames(leafClassName, `language-${lang}`)}
@@ -473,16 +475,21 @@ export function renderLeafContent(
   }
 
   if (isTextNode(node) && node.subtype === 'list') {
-    return renderListContent(node.content as ListContent, {
-      document,
-      style: contentStyle,
-      tabIndex,
-      className: leafClassName,
-      dataNodeId,
-    });
+    const listBlock = getSingleListBlockContent(node.content);
+    return listBlock
+      ? renderListContent(richListBlockToListContent(listBlock), {
+          document,
+          style: contentStyle,
+          className: leafClassName,
+          dataNodeId,
+          tabIndex,
+        })
+      : null;
   }
 
   if (isTextNode(node) && node.subtype === 'block') {
+    const textBlock = getSingleTextBlockContent(node.content);
+    const text = getTextContent(node.content.blocks);
     const { link } = node;
     const isButton = link !== undefined && node.style?.background !== undefined;
     const isLink = link !== undefined;
@@ -499,11 +506,11 @@ export function renderLeafContent(
           {...getExternalNavigationProps(node)}
           {...getPageCurrentProps(link, currentPageId)}
         >
-          {node.content as string}
+          {text}
         </a>
       ) : (
         <button className={leafClassName} data-node-id={dataNodeId} type="button" tabIndex={tabIndex} style={contentStyle}>
-          {node.content as string}
+          {text}
         </button>
       );
     }
@@ -520,13 +527,14 @@ export function renderLeafContent(
           {...getExternalNavigationProps(node)}
           {...getPageCurrentProps(link, currentPageId)}
         >
-          {node.content as string}
+          {text}
         </a>
       );
     }
 
-    const Tag = node.htmlTag ?? 'p';
-    return <Tag className={leafClassName} data-node-id={dataNodeId} style={contentStyle}>{node.content as string}</Tag>;
+    const blockType = textBlock?.type ?? (node.htmlTag === 'blockquote' ? 'blockquote' : node.htmlTag && node.htmlTag !== 'p' ? node.htmlTag : 'paragraph');
+    const Tag = getRichTextBlockTag(blockType === 'paragraph' ? 'paragraph' : blockType);
+    return <Tag className={leafClassName} data-node-id={dataNodeId} style={contentStyle}>{text}</Tag>;
   }
 
   return null;

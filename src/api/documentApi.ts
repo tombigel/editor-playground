@@ -45,7 +45,25 @@ import {
   type TopLevelWrapperVisibilityState as TopLevelWrapperVisibilityStateModel,
 } from '../model/topLevelWrapperVisibility';
 import { normalizeListContent } from '../model/listContent';
-import { createRichTextBlock, createRichTextLeaf, getTextContent, normalizeRichContent } from '../model/richContent';
+import {
+  createRichTextBlock,
+  createRichTextLeaf,
+  createTextDocumentContent,
+  createTextDocumentFromCode,
+  createTextDocumentFromText,
+  getSingleCodeBlockContent,
+  getSingleTextBlockContent,
+  getTextContent,
+  getTextDocumentBlocks,
+  htmlTagToTextBlockType,
+  listContentToRichListBlock,
+  normalizeRichContent,
+  normalizeTextDocumentContent,
+  replaceTextDocumentBlocks,
+  setTextDocumentBlockGap,
+  textBlockTypeToHtmlTag,
+  validateTextSubtypeContentStructure,
+} from '../model/richContent';
 import type { PageId } from '../model/types/site';
 import type {
   BorderColorField,
@@ -65,6 +83,8 @@ import type {
   NodeTextField,
   NodeId,
   StickyDefinition,
+  TextDocumentContent,
+  TextNode,
   TextSubtype,
   WrapperStyleField,
 } from '../model/types';
@@ -144,6 +164,43 @@ export function cloneDocument(document: DocumentModel): DocumentModel {
     ...(document.siteSettings !== undefined ? { siteSettings: structuredClone(document.siteSettings) } : {}),
     ...(document.sharedRegionIds !== undefined ? { sharedRegionIds: [...document.sharedRegionIds] } : {}),
   };
+}
+
+function syncTransitionalTextNodeFields(node: TextNode): void {
+  if (node.subtype === 'block') {
+    const block = getSingleTextBlockContent(node.content);
+    node.htmlTag = block ? textBlockTypeToHtmlTag(block.type) : 'p';
+    delete node.code;
+    return;
+  }
+
+  if (node.subtype === 'code') {
+    const block = getSingleCodeBlockContent(node.content);
+    if (block) {
+      node.code = {
+        language: normalizeCodeLanguage(block.language ?? node.code?.language ?? 'plaintext'),
+        ...(block.theme ? { theme: block.theme } : {}),
+        ...(block.highlightedHtml ? { highlightedHtml: block.highlightedHtml } : {}),
+      };
+    } else {
+      delete node.code;
+    }
+    delete node.htmlTag;
+    return;
+  }
+
+  delete node.htmlTag;
+  delete node.code;
+}
+
+function normalizeTextDocumentContentForSubtype(
+  subtype: TextSubtype,
+  content: TextDocumentContent,
+): TextDocumentContent | null {
+  const normalized = normalizeTextDocumentContent(content);
+  const candidate =
+    subtype === 'rich' ? normalized : setTextDocumentBlockGap(normalized, undefined);
+  return validateTextSubtypeContentStructure(subtype, candidate).length === 0 ? candidate : null;
 }
 
 export function applyDocumentCommands(document: DocumentModel, commands: DocumentCommand[]): DocumentModel {
@@ -243,23 +300,38 @@ export function setTextNodeContentDoc(
   }
 
   if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
-    node.content = value;
-    return next;
+    const block = getSingleTextBlockContent(node.content);
+    return setTextDocumentContentDoc(document, nodeId, createTextDocumentFromText(value, {
+      type: block?.type === 'blockquote' ? 'blockquote' : block?.type && block.type !== 'div' && block.type !== 'paragraph' ? block.type : 'paragraph',
+      direction: node.style?.direction ?? block?.direction ?? 'ltr',
+      lineHeight: typeof block?.lineHeight === 'number' ? block.lineHeight : undefined,
+      style: block?.style,
+    }));
   }
 
   if (field === 'content' && isTextNode(node) && node.subtype === 'code') {
-    const language = normalizeCodeLanguage(node.code?.language ?? 'plaintext');
-    const highlightedHtml = highlightCode(value, language);
-    node.content = value;
-    node.code = { ...(node.code ?? { language }), highlightedHtml };
-    return next;
+    const block = getSingleCodeBlockContent(node.content);
+    const language = normalizeCodeLanguage(block?.language ?? node.code?.language ?? 'plaintext');
+    return setTextDocumentContentDoc(document, nodeId, createTextDocumentFromCode(value, {
+      direction: 'ltr',
+      language,
+      theme: block?.theme ?? node.code?.theme,
+      highlightedHtml: highlightCode(value, language),
+      style: block?.style,
+    }));
   }
 
   if (field === 'codeLanguage' && isTextNode(node) && node.subtype === 'code') {
     const language = normalizeCodeLanguage(value);
-    const highlightedHtml = highlightCode(node.content as string, language);
-    node.code = { ...(node.code ?? {}), language, highlightedHtml };
-    return next;
+    const codeBlock = getSingleCodeBlockContent(node.content);
+    const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
+    return setTextDocumentContentDoc(document, nodeId, createTextDocumentFromCode(codeText, {
+      direction: 'ltr',
+      language,
+      theme: codeBlock?.theme ?? node.code?.theme,
+      highlightedHtml: highlightCode(codeText, language),
+      style: codeBlock?.style,
+    }));
   }
 
   if (field === 'codeTheme' && isTextNode(node) && node.subtype === 'code') {
@@ -278,11 +350,21 @@ export function setTextNodeContentDoc(
     if (currentColor == null || currentColor === currentSurface.color) {
       node.style.color = nextSurface.color;
     }
+    const codeBlock = getSingleCodeBlockContent(node.content);
+    if (codeBlock) {
+      node.content = createTextDocumentFromCode(getTextContent(node.content.blocks, { blockSeparator: '\n' }), {
+        direction: 'ltr',
+        language: codeBlock.language,
+        theme: nextTheme,
+        highlightedHtml: codeBlock.highlightedHtml,
+        style: codeBlock.style,
+      });
+    }
     return next;
   }
 
   if (field === 'htmlTag' && isTextNode(node) && node.subtype === 'block') {
-    node.htmlTag =
+    const htmlTag =
       value === 'h1' ||
       value === 'h2' ||
       value === 'h3' ||
@@ -292,7 +374,14 @@ export function setTextNodeContentDoc(
       value === 'blockquote'
         ? value
         : 'p';
-    return next;
+    const block = getSingleTextBlockContent(node.content);
+    if (block) {
+      return setTextDocumentContentDoc(document, nodeId, replaceTextDocumentBlocks(node.content, [{
+        ...block,
+        type: htmlTagToTextBlockType(htmlTag),
+      }]));
+    }
+    return document;
   }
 
   if (field === 'lang' && isTextNode(node) && node.subtype === 'block') {
@@ -433,9 +522,7 @@ export function setTextNodeContentDoc(
     if (!Number.isFinite(parsed) || parsed < 0) {
       return document;
     }
-    node.style ??= {};
-    node.style.blockGap = parsed;
-    return next;
+    return setTextDocumentBlockGapDoc(document, nodeId, parsed);
   }
 
   if (field === 'direction' && isTextNode(node)) {
@@ -517,12 +604,49 @@ export function setRichTextContentDoc(
   nodeId: NodeId,
   content: RichContent,
 ): DocumentModel {
+  return setTextDocumentContentDoc(
+    document,
+    nodeId,
+    createTextDocumentContent(normalizeRichContent(content), {
+      blockGap: isTextNode(document.nodes[nodeId]) ? document.nodes[nodeId].content.blockGap : undefined,
+    }),
+  );
+}
+
+export function setTextDocumentContentDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  content: TextDocumentContent,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node)) {
+    return document;
+  }
+
+  const normalized = normalizeTextDocumentContentForSubtype(node.subtype, content);
+  if (!normalized) {
+    return document;
+  }
+
+  node.content = normalized;
+  syncTransitionalTextNodeFields(node);
+  return normalizeTextNodeDoc(next, nodeId);
+}
+
+export function setTextDocumentBlockGapDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  blockGap: number | undefined,
+): DocumentModel {
   const next = cloneDocument(document);
   const node = next.nodes[nodeId];
   if (!node || !isTextNode(node) || node.subtype !== 'rich') {
     return document;
   }
-  node.content = normalizeRichContent(content);
+
+  node.content = setTextDocumentBlockGap(node.content, blockGap);
+  syncTransitionalTextNodeFields(node);
   return next;
 }
 
@@ -531,13 +655,13 @@ export function setListContentDoc(
   nodeId: NodeId,
   content: ListContent,
 ): DocumentModel {
-  const next = cloneDocument(document);
-  const node = next.nodes[nodeId];
+  const node = document.nodes[nodeId];
   if (!node || !isTextNode(node) || node.subtype !== 'list') {
     return document;
   }
-  node.content = normalizeListContent(content);
-  return next;
+  return setTextDocumentContentDoc(document, nodeId, createTextDocumentContent([
+    listContentToRichListBlock(normalizeListContent(content), { direction: node.style?.direction ?? 'ltr' }),
+  ]));
 }
 
 export function setCodeBlockLanguageDoc(
@@ -588,14 +712,27 @@ export function applyMarkdownToTextNodeDoc(
   }
 
   const parsed = parseMarkdownForTextSubtype(markdown, node.subtype);
-  node.content = parsed.content;
-
   if (node.subtype === 'block') {
-    node.htmlTag = parsed.htmlTag ?? 'p';
-  }
-
-  if (node.subtype === 'code') {
-    node.code = parsed.code;
+    const block = getSingleTextBlockContent(parsed.content);
+    if (block) {
+      node.content = replaceTextDocumentBlocks(normalizeTextDocumentContent(parsed.content), [{
+        ...block,
+        type: htmlTagToTextBlockType(parsed.htmlTag ?? 'p'),
+      }]);
+    } else {
+      node.content = normalizeTextDocumentContent(parsed.content);
+    }
+  } else if (node.subtype === 'code' && parsed.code) {
+    const codeText = getTextContent(parsed.content.blocks, { blockSeparator: '\n' });
+    node.content = createTextDocumentFromCode(codeText, {
+      direction: 'ltr',
+      language: parsed.code.language,
+      theme: parsed.code.theme,
+      highlightedHtml: parsed.code.highlightedHtml ?? highlightCode(codeText, parsed.code.language),
+      style: getSingleCodeBlockContent(parsed.content)?.style,
+    });
+  } else {
+    node.content = normalizeTextDocumentContent(parsed.content);
   }
 
   return normalizeTextNodeDoc(next, nodeId);
@@ -612,30 +749,38 @@ export function normalizeTextNodeDoc(
   }
 
   if (node.subtype === 'block') {
-    if (
-      node.htmlTag !== undefined &&
-      node.htmlTag !== 'p' &&
-      node.htmlTag !== 'blockquote' &&
-      node.htmlTag !== 'h1' &&
-      node.htmlTag !== 'h2' &&
-      node.htmlTag !== 'h3' &&
-      node.htmlTag !== 'h4' &&
-      node.htmlTag !== 'h5' &&
-      node.htmlTag !== 'h6'
-    ) {
+    node.content = normalizeTextDocumentContent(node.content);
+    const block = getSingleTextBlockContent(node.content);
+    if (block) {
+      const direction =
+        node.style?.direction === 'rtl' ? 'rtl' : node.style?.direction === 'ltr' ? 'ltr' : block.direction;
+      node.content = replaceTextDocumentBlocks(node.content, [{
+        ...block,
+        direction,
+      }]);
+      node.htmlTag = textBlockTypeToHtmlTag(block.type);
+    } else {
       node.htmlTag = 'p';
     }
     if (node.style?.direction !== undefined) {
       node.style.direction = node.style.direction === 'rtl' ? 'rtl' : 'ltr';
     }
+    delete node.code;
     return next;
   }
 
   if (node.subtype === 'code') {
-    const language = normalizeCodeLanguage(node.code?.language ?? 'plaintext');
-    const theme = node.code?.theme === 'dark' ? 'dark' : 'light';
-    const content = typeof node.content === 'string' ? node.content : '';
-    node.content = content;
+    const codeBlock = getSingleCodeBlockContent(node.content);
+    const language = normalizeCodeLanguage(codeBlock?.language ?? node.code?.language ?? 'plaintext');
+    const theme = (codeBlock?.theme ?? node.code?.theme) === 'dark' ? 'dark' : 'light';
+    const content = getTextContent(node.content.blocks, { blockSeparator: '\n' });
+    node.content = createTextDocumentFromCode(content, {
+      direction: 'ltr',
+      language,
+      theme,
+      highlightedHtml: highlightCode(content, language),
+      style: codeBlock?.style,
+    });
     node.code = {
       ...(node.code ?? {}),
       language,
@@ -644,15 +789,20 @@ export function normalizeTextNodeDoc(
     };
     node.style ??= {};
     node.style.direction = 'ltr';
+    delete node.htmlTag;
     return next;
   }
 
   if (node.subtype === 'rich') {
-    node.content = normalizeRichContent(node.content);
+    node.content = normalizeTextDocumentContent(node.content);
+    delete node.htmlTag;
+    delete node.code;
     return next;
   }
 
-  node.content = normalizeListContent(node.content as ListContent);
+  node.content = normalizeTextDocumentContent(node.content);
+  delete node.htmlTag;
+  delete node.code;
   return next;
 }
 
@@ -668,7 +818,7 @@ export function setRichBlockTypeDoc(
     return document;
   }
 
-  const content = normalizeRichContent(node.content);
+  const content = normalizeRichContent(getTextDocumentBlocks(node.content));
   const block = content[blockIndex];
   if (!block) {
     return document;
@@ -677,7 +827,7 @@ export function setRichBlockTypeDoc(
   content[blockIndex] = block.type === 'code-block' || block.type === 'ul' || block.type === 'ol'
     ? createRichTextBlock(blockType, [createRichTextLeaf(getTextContent([block]))], { direction: block.direction })
     : { ...block, type: blockType };
-  node.content = content;
+  node.content = replaceTextDocumentBlocks(node.content, content);
   return next;
 }
 
@@ -715,14 +865,14 @@ export function setRichBlockLineHeightDoc(
     return document;
   }
 
-  const content = normalizeRichContent(node.content);
+  const content = normalizeRichContent(getTextDocumentBlocks(node.content));
   const block = content[blockIndex];
   if (!block || block.type === 'code-block' || block.type === 'ul' || block.type === 'ol') {
     return document;
   }
 
   content[blockIndex] = { ...block, lineHeight };
-  node.content = content;
+  node.content = replaceTextDocumentBlocks(node.content, content);
   return next;
 }
 
@@ -741,11 +891,7 @@ export function setRichBlockSpacingDoc(
     return document;
   }
 
-  node.style = {
-    ...(node.style ?? {}),
-    blockGap: blockSpacing,
-  };
-  return next;
+  return setTextDocumentBlockGapDoc(next, nodeId, blockSpacing);
 }
 
 export function setNodeVisibilityDoc(

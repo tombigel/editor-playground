@@ -1,18 +1,25 @@
 import { createTextNode } from '../model/defaults';
 import {
+  createTextDocumentContent,
+  createTextDocumentFromCode,
+  createTextDocumentFromText,
   createRichCodeBlock,
   createRichTextBlock,
   createRichTextLeaf,
+  getSingleCodeBlockContent,
+  getSingleListBlockContent,
+  getSingleTextBlockContent,
   getTextContent,
+  getTextDocumentBlocks,
   listContentToRichListBlock,
   normalizeRichContent,
+  richListBlockToListContent,
 } from '../model/richContent';
 import {
   createUnorderedListContentFromLines,
   getListTextContent,
   listContentToLines,
   listContentToMarkdown,
-  normalizeListContent,
 } from '../model/listContent';
 import { splitRichTextNodeDoc } from './textMerge';
 import type {
@@ -24,6 +31,7 @@ import type {
   RichContent,
   RichInlineNode,
   TextNode,
+  TextDocumentContent,
   TextSubtype,
 } from '../model/types';
 import { isTextNode } from '../model/types';
@@ -96,14 +104,8 @@ export function convertTextNodeDoc(
   return next;
 }
 
-export function flattenTextContent(content: string | RichContent | ListContent): string {
-  if (typeof content === 'string') {
-    return content;
-  }
-  if ('type' in content && !Array.isArray(content)) {
-    return getListTextContent(content);
-  }
-  return getTextContent(content, { blockSeparator: '\n' });
+export function flattenTextContent(content: TextDocumentContent): string {
+  return getTextContent(content.blocks, { blockSeparator: '\n' });
 }
 
 function cloneDocument(document: DocumentModel): DocumentModel {
@@ -127,83 +129,85 @@ function normalizeTextConversionMode(mode: TextConversionMode | undefined): Text
 function convertTextContent(
   source: TextNode,
   targetSubtype: TextSubtype,
-  mode: TextConversionMode,
-): string | RichContent | ListContent {
+  _mode: TextConversionMode,
+): TextDocumentContent {
   if (targetSubtype === 'list') {
-    return convertToListContent(source);
+    return createTextDocumentContent([listContentToRichListBlock(convertToListContent(source))]);
   }
 
   if (targetSubtype === 'rich') {
     if (source.subtype === 'list') {
-      return listContentToRichContent(normalizeListContent(source.content));
+      return createTextDocumentContent(listContentToRichContent(convertToListContent(source)));
     }
 
     if (source.subtype === 'code') {
-      return [createRichCodeBlock(source.content as string, {
-        language: source.code?.language,
-        theme: source.code?.theme,
-        highlightedHtml: source.code?.highlightedHtml,
-      })];
+      return createTextDocumentContent([createRichCodeBlock(flattenTextContent(source.content), {
+        language: source.code?.language ?? getSingleCodeBlockContent(source.content)?.language,
+        theme: source.code?.theme ?? getSingleCodeBlockContent(source.content)?.theme,
+        highlightedHtml: source.code?.highlightedHtml ?? getSingleCodeBlockContent(source.content)?.highlightedHtml,
+      })], { blockGap: source.content.blockGap });
     }
 
-    if (typeof source.content !== 'string') {
-      const richContent = normalizeRichContent(source.content);
-      return richContent.length === 1 ? richContent : richContent;
-    }
-
-    return [
-      createRichTextBlock(
-        getRichBlockTypeForTextNode(source),
-        [createRichTextLeaf(source.content)],
-      ),
-    ];
-  }
-
-  if (typeof source.content === 'string') {
-    return source.content;
+    return createTextDocumentContent(normalizeRichContent(getTextDocumentBlocks(source.content)), {
+      blockGap: source.subtype === 'rich' ? source.content.blockGap : undefined,
+    });
   }
 
   if (source.subtype === 'list') {
-    const listContent = normalizeListContent(source.content);
+    const listContent = convertToListContent(source);
     if (targetSubtype === 'code') {
-      return listContentToMarkdown(listContent);
+      return createTextDocumentFromCode(listContentToMarkdown(listContent), {
+        direction: 'ltr',
+        language: source.code?.language ?? 'plaintext',
+        highlightedHtml: highlightCode(listContentToMarkdown(listContent), source.code?.language ?? 'plaintext'),
+      });
     }
-    return getListTextContent(listContent);
+    return createTextDocumentFromText(getListTextContent(listContent), {
+      type: getRichBlockTypeForTextNode(source),
+      direction: source.style?.direction,
+    });
   }
 
   if (source.subtype === 'rich') {
-    const richContent = normalizeRichContent(source.content);
+    const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
     if (richContent.length === 1) {
       return convertSingleRichBlock(richContent[0], targetSubtype);
     }
   }
 
-  if (mode === 'auto' || mode === 'flatten') {
-    return flattenTextContent(source.content);
+  const flat = flattenTextContent(source.content);
+  if (targetSubtype === 'code') {
+    return createTextDocumentFromCode(flat, {
+      direction: 'ltr',
+      language: source.code?.language ?? 'plaintext',
+      highlightedHtml: highlightCode(flat, source.code?.language ?? 'plaintext'),
+    });
   }
 
-  return flattenTextContent(source.content);
+  return createTextDocumentFromText(flat, {
+    type: getRichBlockTypeForTextNode(source),
+    direction: source.style?.direction,
+  });
 }
 
 function convertToListContent(source: TextNode): ListContent {
   if (source.subtype === 'list') {
-    return normalizeListContent(source.content);
+    const listBlock = getSingleListBlockContent(source.content);
+    return listBlock ? richListBlockToListContent(listBlock) : createUnorderedListContentFromLines(['']);
   }
 
   if (source.subtype === 'code') {
-    return createUnorderedListContentFromLines([source.content as string]);
+    return createUnorderedListContentFromLines([flattenTextContent(source.content)]);
   }
 
   if (source.subtype === 'rich') {
-    const richContent = normalizeRichContent(source.content);
+    const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
     if (richContent.length === 1) {
       return richBlockToListContent(richContent[0]);
     }
   }
 
-  const rawContent = typeof source.content === 'string'
-    ? source.content
-    : flattenTextContent(source.content);
+  const rawContent = flattenTextContent(source.content);
   const lines = rawContent.split(/\r?\n/);
   return createUnorderedListContentFromLines(lines);
 }
@@ -220,7 +224,12 @@ function listContentToRichContent(content: ListContent): RichContent {
 
 function getRichBlockTypeForTextNode(source: TextNode): 'paragraph' | 'blockquote' | 'div' | HeadingTag {
   if (source.subtype !== 'block') {
-    return 'paragraph';
+    const blockType = getSingleTextBlockContent(source.content)?.type;
+    return blockType === 'blockquote'
+      ? 'blockquote'
+      : blockType && blockType !== 'paragraph' && blockType !== 'div'
+        ? blockType as HeadingTag
+        : 'paragraph';
   }
 
   if (source.htmlTag === 'blockquote') {
@@ -236,11 +245,11 @@ function getRichBlockTypeForTextNode(source: TextNode): 'paragraph' | 'blockquot
 
 function buildCodeMetadata(
   source: TextNode,
-  content: string | RichContent | ListContent,
+  content: TextDocumentContent,
 ): NonNullable<TextNode['code']> {
   const language = source.code?.language ?? 'plaintext';
   const theme = source.code?.theme ?? 'light';
-  const rawContent = typeof content === 'string' ? content : flattenTextContent(content);
+  const rawContent = flattenTextContent(content);
   return {
     language,
     theme,
@@ -284,19 +293,35 @@ function richBlockToListContent(block: RichBlock): ListContent {
 function convertSingleRichBlock(
   block: RichBlock,
   targetSubtype: Exclude<TextSubtype, 'rich'>,
-): string | ListContent {
+): TextDocumentContent {
   if (targetSubtype === 'list') {
-    return richBlockToListContent(block);
+    return createTextDocumentContent([listContentToRichListBlock(richBlockToListContent(block))]);
   }
 
   if (targetSubtype === 'code') {
     if (block.type === 'code-block') {
-      return block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n');
+      const code = block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n');
+      return createTextDocumentFromCode(code, {
+        direction: 'ltr',
+        language: block.language,
+        theme: block.theme,
+        highlightedHtml: block.highlightedHtml,
+        style: block.style,
+      });
     }
-    return getTextContent([block]);
+    return createTextDocumentFromCode(getTextContent([block]), {
+      direction: 'ltr',
+      language: 'plaintext',
+      highlightedHtml: highlightCode(getTextContent([block]), 'plaintext'),
+    });
   }
 
-  return getTextContent([block]);
+  return createTextDocumentFromText(getTextContent([block]), {
+    type: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? 'paragraph' : block.type,
+    direction: block.direction,
+    lineHeight: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.lineHeight,
+    style: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.style,
+  });
 }
 
 function flattenRichInlineChildren(children: RichInlineNode[]): string {
@@ -313,7 +338,7 @@ function splitRichTextNodeToSubtypeDoc(
     return document;
   }
 
-  const richContent = normalizeRichContent(source.content);
+  const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
   if (richContent.length <= 1) {
     return convertTextNodeDoc(document, nodeId, targetSubtype, { mode: 'flatten' });
   }

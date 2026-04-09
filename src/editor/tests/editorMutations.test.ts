@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getTextContent } from '../../model/richContent';
 import { createInitialState } from '../editorPersistence';
 import {
   alignNodes,
@@ -264,7 +265,7 @@ describe('editor/editorMutations', () => {
       const next = updateTextField(withLeaf, leafId, 'content', 'Hello world');
       const node = next.document.nodes[leafId];
       if (node.contentType === 'text') {
-        expect(node.content).toBe('Hello world');
+        expect(getTextContent(node.content.blocks)).toBe('Hello world');
       }
     });
 

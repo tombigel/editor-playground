@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument, createSectionFromTemplate, createTextNode } from '../../model/defaults';
+import { createTextDocumentContent, createTextDocumentFromCode, listContentToRichListBlock } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import { SiteRenderer } from '../SiteRenderer';
 
@@ -179,10 +180,10 @@ describe('site/SiteRenderer', () => {
     }
 
     const rich = createTextNode('rich', section.id);
-    rich.content = [
+    rich.content = createTextDocumentContent([
       { type: 'h2', children: [{ text: 'Heading' }] },
       { type: 'paragraph', children: [{ text: 'Paragraph copy' }] },
-    ];
+    ]);
     document.nodes[rich.id] = rich;
     section.children.push(rich.id);
 
@@ -206,14 +207,16 @@ describe('site/SiteRenderer', () => {
     }
 
     const list = createTextNode('list', section.id);
-    list.content = {
-      type: 'ul',
-      markerStyle: 'square',
-      items: [
-        { text: 'Alpha', direction: 'ltr' },
-        { text: 'Beta', direction: 'rtl' },
-      ],
-    };
+    list.content = createTextDocumentContent([
+      listContentToRichListBlock({
+        type: 'ul',
+        markerStyle: 'square',
+        items: [
+          { text: 'Alpha', direction: 'ltr' },
+          { text: 'Beta', direction: 'rtl' },
+        ],
+      }),
+    ]);
     document.nodes[list.id] = list;
     section.children.push(list.id);
 
@@ -236,6 +239,11 @@ describe('site/SiteRenderer', () => {
     }
 
     const code = createTextNode('code', section.id);
+    code.content = createTextDocumentFromCode('const total = 3;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = 3;',
+    });
     code.code = {
       language: 'typescript',
       theme: 'dark',
@@ -262,7 +270,7 @@ describe('site/SiteRenderer', () => {
     }
 
     const rich = createTextNode('rich', section.id);
-    rich.content = [
+    rich.content = createTextDocumentContent([
       {
         type: 'code-block',
         language: 'typescript',
@@ -279,7 +287,7 @@ describe('site/SiteRenderer', () => {
           { type: 'list-item', children: [{ text: 'Fifth' }] },
         ],
       },
-    ];
+    ]);
     document.nodes[rich.id] = rich;
     section.children.push(rich.id);
 

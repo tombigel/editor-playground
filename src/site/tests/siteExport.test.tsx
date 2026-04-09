@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createButtonTextNode, createSectionFromTemplate, createContainerNode } from '../../model/defaults';
+import { createTextDocumentFromText } from '../../model/richContent';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
@@ -49,7 +50,7 @@ describe('site/siteExport', () => {
     if (button.subtype !== 'block') {
       throw new Error('Expected button leaf');
     }
-    button.content = 'Start testing';
+    button.content = createTextDocumentFromText('Start testing');
     button.link = { ...(button.link ?? { linkType: 'external' }), href: 'https://example.com/start' };
     button.link = { ...(button.link ?? { linkType: 'external' }), openInNewTab: true };
     document.nodes[button.id] = button;

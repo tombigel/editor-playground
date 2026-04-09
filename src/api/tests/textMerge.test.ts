@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createContainerNode, createTextNode } from '../../model/defaults';
 import {
+  createTextDocumentContent,
   createRichTextBlock,
   createRichTextLeaf,
+  getSingleListBlockContent,
+  getTextContent,
+  richListBlockToListContent,
 } from '../../model/richContent';
 import type { RichContent } from '../../model/types';
 import { createInitialDocument } from '../documentApi';
@@ -43,10 +47,10 @@ describe('api/textMerge', () => {
     if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
-    richNode.content = [
+    richNode.content = createTextDocumentContent([
       createRichTextBlock('h2', [createRichTextLeaf('Heading')]),
       createRichTextBlock('paragraph', [createRichTextLeaf('Body copy')]),
-    ];
+    ]);
 
     const split = splitRichTextNodeDoc(withRichContent, richId);
     const parent = split.nodes[sectionId(split)];
@@ -65,10 +69,10 @@ describe('api/textMerge', () => {
     expect(first.id).toBe(richId);
     expect(first.subtype).toBe('block');
     expect(first.htmlTag).toBe('h2');
-    expect(first.content).toBe('Heading');
+    expect(getTextContent(first.content.blocks)).toBe('Heading');
     expect(second.subtype).toBe('block');
     expect(second.htmlTag).toBe('p');
-    expect(second.content).toBe('Body copy');
+    expect(getTextContent(second.content.blocks)).toBe('Body copy');
     expect(second.rect.y.base.raw).not.toBe(first.rect.y.base.raw);
   });
 
@@ -79,7 +83,7 @@ describe('api/textMerge', () => {
     if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
-    richNode.content = [
+    richNode.content = createTextDocumentContent([
       {
         type: 'code-block',
         language: 'typescript',
@@ -95,7 +99,7 @@ describe('api/textMerge', () => {
           { type: 'list-item', children: [{ text: 'Second item' }] },
         ],
       },
-    ];
+    ]);
 
     const split = splitRichTextNodeDoc(document, richId);
     const parent = split.nodes[sectionId(split)];
@@ -111,10 +115,10 @@ describe('api/textMerge', () => {
     }
 
     expect(first.subtype).toBe('code');
-    expect(first.content).toBe('const value = 1;');
+    expect(getTextContent(first.content.blocks, { blockSeparator: '\n' })).toBe('const value = 1;');
     expect(first.code).toMatchObject({ language: 'typescript', theme: 'dark' });
     expect(second.subtype).toBe('list');
-    expect(second.content).toEqual({
+    expect(richListBlockToListContent(getSingleListBlockContent(second.content)!)).toEqual({
       type: 'ul',
       markerStyle: 'square',
       items: [
@@ -131,9 +135,9 @@ describe('api/textMerge', () => {
     if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
-    richNode.content = [
+    richNode.content = createTextDocumentContent([
       createRichTextBlock('blockquote', [createRichTextLeaf('Quoted line')]),
-    ];
+    ]);
 
     const split = splitRichTextNodeDoc(document, richId);
     const nextNode = split.nodes[richId];
@@ -143,7 +147,7 @@ describe('api/textMerge', () => {
 
     expect(nextNode.subtype).toBe('block');
     expect(nextNode.htmlTag).toBe('blockquote');
-    expect(nextNode.content).toBe('Quoted line');
+    expect(getTextContent(nextNode.content.blocks)).toBe('Quoted line');
     expect(document.nodes[richId]).not.toBe(nextNode);
   });
 
@@ -176,7 +180,7 @@ describe('api/textMerge', () => {
       throw new Error('Expected merged rich node');
     }
 
-    expect(survivor.content).toMatchObject([
+    expect(survivor.content.blocks).toMatchObject([
       {
         type: 'h2',
         children: [{ text: 'Heading' }],
@@ -225,7 +229,7 @@ describe('api/textMerge', () => {
     expect(survivor.style?.color).toBe('#16202a');
     expect(survivor.style?.fontSize?.raw).toBe('18px');
 
-    const [headingBlock, bodyBlock] = survivor.content as RichContent;
+    const [headingBlock, bodyBlock] = survivor.content.blocks as RichContent;
     if (headingBlock.type === 'code-block' || headingBlock.type === 'ul' || headingBlock.type === 'ol') {
       throw new Error('Expected heading text block');
     }
@@ -279,10 +283,10 @@ describe('api/textMerge', () => {
     if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
-    richNode.content = [
+    richNode.content = createTextDocumentContent([
       createRichTextBlock('h3', [createRichTextLeaf('Alpha')]),
       createRichTextBlock('paragraph', [createRichTextLeaf('Beta')]),
-    ];
+    ]);
 
     const converted = convertTextNodeDoc(document, richId, 'block', { mode: 'split' });
     const parent = converted.nodes[sectionId(converted)];
@@ -303,10 +307,10 @@ describe('api/textMerge', () => {
     if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
       throw new Error('Expected rich text node');
     }
-    richNode.content = [
+    richNode.content = createTextDocumentContent([
       createRichTextBlock('paragraph', [createRichTextLeaf('Alpha\nBeta')]),
       createRichTextBlock('paragraph', [createRichTextLeaf('Gamma')]),
-    ];
+    ]);
 
     const converted = convertTextNodeDoc(document, richId, 'list', { mode: 'split' });
     const parent = converted.nodes[sectionId(converted)];
@@ -322,12 +326,12 @@ describe('api/textMerge', () => {
     }
 
     expect(first.subtype).toBe('list');
-    expect(first.content).toMatchObject({
+    expect(richListBlockToListContent(getSingleListBlockContent(first.content)!)).toMatchObject({
       type: 'ul',
       items: [{ text: 'Alpha' }, { text: 'Beta' }],
     });
     expect(second.subtype).toBe('list');
-    expect(second.content).toMatchObject({
+    expect(richListBlockToListContent(getSingleListBlockContent(second.content)!)).toMatchObject({
       type: 'ul',
       items: [{ text: 'Gamma' }],
     });
@@ -344,7 +348,7 @@ describe('api/textMerge', () => {
       throw new Error('Expected list text node');
     }
 
-    expect(node.content).toMatchObject({
+    expect(richListBlockToListContent(getSingleListBlockContent(node.content)!)).toMatchObject({
       type: 'ul',
       items: [
         { text: 'Line 1' },

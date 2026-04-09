@@ -1,12 +1,18 @@
 import { getLinkHref } from '../model/links';
 import {
+  createTextDocumentContent,
+  createTextDocumentFromCode,
+  createTextDocumentFromText,
+  getSingleListBlockContent,
   createRichCodeBlock,
   createRichListBlock,
   createRichTextBlock,
   createRichTextLeaf,
   getTextContent,
   isRichTextLink,
+  listContentToRichListBlock,
   normalizeRichContent,
+  richListBlockToListContent,
 } from '../model/richContent';
 import {
   createUnorderedListContentFromLines,
@@ -15,23 +21,22 @@ import {
 } from '../model/listContent';
 import type {
   DocumentModel,
-  ListContent,
   RichBlock,
   RichContent,
   RichInlineNode,
-  RichListBlock,
   RichListItem,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
   TextNode,
+  TextDocumentContent,
   TextSubtype,
 } from '../model/types';
 import { highlightCode } from '../render/codeHighlight';
 
 type ParsedMarkdownNode = {
   subtype: TextSubtype;
-  content: string | RichContent | ListContent;
+  content: TextDocumentContent;
   htmlTag?: TextNode['htmlTag'];
   code?: TextNode['code'];
 };
@@ -43,18 +48,19 @@ export function serializeTextNodeToMarkdown(
   document?: DocumentModel,
 ): string {
   if (node.subtype === 'rich') {
-    return serializeRichContentToMarkdown(node.content as RichContent, document);
+    return serializeRichContentToMarkdown(node.content.blocks, document);
   }
 
   if (node.subtype === 'list') {
-    return listContentToMarkdown(normalizeListContent(node.content));
+    const listBlock = getSingleListBlockContent(node.content);
+    return listContentToMarkdown(listBlock ? richListBlockToListContent(listBlock) : normalizeListContent(undefined));
   }
 
   if (node.subtype === 'code') {
-    return serializeCodeBlockToMarkdown(node.content as string, node.code?.language);
+    return serializeCodeBlockToMarkdown(getTextContent(node.content.blocks, { blockSeparator: '\n' }), node.code?.language);
   }
 
-  const content = typeof node.content === 'string' ? node.content : getTextContent(node.content as RichContent, { blockSeparator: '\n' });
+  const content = getTextContent(node.content.blocks, { blockSeparator: '\n' });
   if (node.link && document) {
     const href = getLinkHref(node.link, document);
     if (href) {
@@ -205,7 +211,12 @@ export function parseMarkdownForTextSubtype(
       const code = block.children.map((line) => line.children.map((leaf) => leaf.text).join('')).join('\n');
       return {
         subtype: 'code',
-        content: code,
+        content: createTextDocumentFromCode(code, {
+          direction: 'ltr',
+          language: block.language ?? 'plaintext',
+          theme: block.theme,
+          highlightedHtml: block.highlightedHtml ?? highlightCode(code, block.language ?? 'plaintext'),
+        }),
         code: {
           language: block.language ?? 'plaintext',
           theme: block.theme,
@@ -216,7 +227,11 @@ export function parseMarkdownForTextSubtype(
 
     return {
       subtype: 'code',
-      content: markdown,
+      content: createTextDocumentFromCode(markdown, {
+        direction: 'ltr',
+        language: 'markdown',
+        highlightedHtml: highlightCode(markdown, 'markdown'),
+      }),
       code: {
         language: 'markdown',
         highlightedHtml: highlightCode(markdown, 'markdown'),
@@ -227,7 +242,7 @@ export function parseMarkdownForTextSubtype(
   if (targetSubtype === 'rich') {
     return {
       subtype: 'rich',
-      content: parseMarkdownToRichContent(markdown),
+      content: createTextDocumentContent(parseMarkdownToRichContent(markdown)),
     };
   }
 
@@ -237,7 +252,7 @@ export function parseMarkdownForTextSubtype(
       const block = richContent[0];
       return {
         subtype: 'list',
-        content: richListBlockToListContent(block),
+        content: createTextDocumentContent([block]),
       };
     }
 
@@ -246,7 +261,9 @@ export function parseMarkdownForTextSubtype(
       .filter((line) => line.length > 0);
     return {
       subtype: 'list',
-      content: createUnorderedListContentFromLines(lines.length > 0 ? lines : ['']),
+      content: createTextDocumentContent([
+        listContentToRichListBlock(createUnorderedListContentFromLines(lines.length > 0 ? lines : [''])),
+      ]),
     };
   }
 
@@ -255,14 +272,22 @@ export function parseMarkdownForTextSubtype(
     const block = richContent[0];
     return {
       subtype: 'block',
-      content: getTextContent([block]),
+      content: createTextDocumentFromText(getTextContent([block]), {
+        type: block.type === 'blockquote' ? 'blockquote' : block.type === 'paragraph' ? 'paragraph' : block.type,
+        direction: block.direction,
+        lineHeight: block.lineHeight,
+        style: block.style,
+      }),
       htmlTag: richBlockToHtmlTag(block),
     };
   }
 
   return {
     subtype: 'block',
-    content: getTextContent(richContent, { blockSeparator: '\n' }),
+    content: createTextDocumentFromText(getTextContent(richContent, { blockSeparator: '\n' }), {
+      type: 'paragraph',
+      direction: 'ltr',
+    }),
     htmlTag: 'p',
   };
 }
@@ -413,27 +438,6 @@ function findNextMarkTokenIndex(text: string): number {
     .map((token) => text.indexOf(token))
     .filter((index) => index >= 0);
   return indexes.length > 0 ? Math.min(...indexes) : -1;
-}
-
-function richListBlockToListContent(block: RichListBlock): ListContent {
-  if (block.type === 'ol') {
-    return {
-      type: 'ol',
-      start: block.start,
-      markerStyle: block.markerStyle,
-      items: block.children.map((item) => ({ text: getTextContentFromRichListItem(item), direction: 'ltr' })),
-    };
-  }
-
-  return {
-    type: 'ul',
-    markerStyle: block.markerStyle,
-    items: block.children.map((item) => ({ text: getTextContentFromRichListItem(item), direction: 'ltr' })),
-  };
-}
-
-function getTextContentFromRichListItem(item: RichListItem): string {
-  return item.children.map((child) => (isRichTextLink(child) ? child.children.map((leaf) => leaf.text).join('') : child.text)).join('');
 }
 
 function isNonListTextBlock(block: RichBlock): block is RichTextBlock {

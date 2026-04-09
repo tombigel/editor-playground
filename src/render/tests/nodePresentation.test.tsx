@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createLinkTextNode, createTextNode } from '../../model/defaults';
+import { createTextDocumentContent, createTextDocumentFromCode, getTextContent, listContentToRichListBlock } from '../../model/richContent';
 import {
   formatNodeLabel,
   getNodeAriaLabel,
@@ -34,7 +35,7 @@ describe('render/nodePresentation', () => {
     image.name = 'Brand Mark';
 
     expect(getNodeTextContent(image)).toBe(image.alt);
-    expect(getNodeTextContent(link)).toBe(link.content);
+    expect(getNodeTextContent(link)).toBe(getTextContent(link.content.blocks));
     expect(isBrandMark(image)).toBe(true);
   });
 
@@ -86,6 +87,11 @@ describe('render/nodePresentation', () => {
 
   it('renders code blocks with a pre language class so prism theme chrome applies', () => {
     const code = createTextNode('code', 'root');
+    code.content = createTextDocumentFromCode('const answer = 42;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const answer = 42;',
+    });
     code.code = {
       language: 'typescript',
       theme: 'dark',
@@ -100,15 +106,17 @@ describe('render/nodePresentation', () => {
 
   it('renders semantic ordered lists and flattens them for labels', () => {
     const list = createTextNode('list', 'root');
-    list.content = {
-      type: 'ol',
-      start: 3,
-      markerStyle: 'upper-alpha',
-      items: [
-        { text: 'Third', direction: 'rtl' },
-        { text: 'Fourth', direction: 'ltr' },
-      ],
-    };
+    list.content = createTextDocumentContent([
+      listContentToRichListBlock({
+        type: 'ol',
+        start: 3,
+        markerStyle: 'upper-alpha',
+        items: [
+          { text: 'Third', direction: 'rtl' },
+          { text: 'Fourth', direction: 'ltr' },
+        ],
+      }),
+    ]);
 
     const markup = renderToStaticMarkup(renderLeafContent(list, { contentStyle: { color: '#111827' } }));
 
@@ -133,8 +141,7 @@ describe('render/nodePresentation', () => {
 
   it('renders rich code and list blocks through the shared rich renderer', () => {
     const rich = createTextNode('rich', 'root');
-    rich.style = { ...rich.style, blockGap: 24 };
-    rich.content = [
+    rich.content = createTextDocumentContent([
       {
         type: 'code-block',
         language: 'typescript',
@@ -150,7 +157,7 @@ describe('render/nodePresentation', () => {
           { type: 'list-item', children: [{ text: 'Beta' }] },
         ],
       },
-    ];
+    ], { blockGap: 24 });
 
     const markup = renderToStaticMarkup(renderLeafContent(rich));
 
@@ -159,6 +166,6 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('data-code-theme="dark"');
     expect(markup).toContain('<ul');
     expect(markup).toContain('list-style-type:square');
-    expect(markup).toContain('<li>Beta</li>');
+    expect(markup).toContain('<li dir="ltr">Beta</li>');
   });
 });

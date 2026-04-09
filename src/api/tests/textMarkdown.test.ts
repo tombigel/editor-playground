@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createContainerNode, createTextNode, createInitialDocument } from '../../model/defaults';
 import { normalizeListContent } from '../../model/listContent';
+import { getSingleListBlockContent, getTextContent, richListBlockToListContent } from '../../model/richContent';
 import { isTextNode } from '../../model/types';
 import { applyMarkdownToTextNodeDoc, serializeTextNodeMarkdownDoc } from '../documentApi';
 import { parseMarkdownForTextSubtype, parseMarkdownToRichContent, serializeRichContentToMarkdown } from '../textMarkdown';
@@ -42,7 +43,7 @@ describe('api/textMarkdown', () => {
       throw new Error('Expected rich text node');
     }
 
-    expect((node.content as Array<{ type: string }>).map((block) => block.type)).toEqual(['h1', 'ul']);
+    expect(node.content.blocks.map((block) => block.type)).toEqual(['h1', 'ul']);
     expect(serializeTextNodeMarkdownDoc(next, textId)).toContain('# Title');
   });
 
@@ -55,7 +56,7 @@ describe('api/textMarkdown', () => {
     }
 
     expect(node.htmlTag).toBe('h2');
-    expect(node.content).toBe('Section title');
+    expect(getTextContent(node.content.blocks)).toBe('Section title');
   });
 
   it('imports non-fenced markdown into code nodes as markdown-highlighted source', () => {
@@ -67,7 +68,7 @@ describe('api/textMarkdown', () => {
       throw new Error('Expected code node');
     }
 
-    expect(node.content).toBe(markdown);
+    expect(getTextContent(node.content.blocks, { blockSeparator: '\n' })).toBe(markdown);
     expect(node.code?.language).toBe('markdown');
     expect(node.code?.highlightedHtml).toContain('token');
   });
@@ -75,18 +76,18 @@ describe('api/textMarkdown', () => {
   it('preserves fenced code block language when importing into code nodes', () => {
     const parsed = parseMarkdownForTextSubtype('```typescript\nconst answer: number = 42;\n```', 'code');
     expect(parsed.code?.language).toBe('typescript');
-    expect(parsed.content).toBe('const answer: number = 42;');
+    expect(getTextContent(parsed.content.blocks, { blockSeparator: '\n' })).toBe('const answer: number = 42;');
   });
 
   it('flattens mixed markdown into unordered list items for standalone list nodes', () => {
     const { document, textId } = createDocumentWithTextNode('list');
     const next = applyMarkdownToTextNodeDoc(document, textId, '# Title\n\nParagraph\n\n> Quote');
     const node = next.nodes[textId];
-    if (!isTextNode(node) || node.subtype !== 'list' || node.content == null || typeof node.content === 'string') {
+    if (!isTextNode(node) || node.subtype !== 'list') {
       throw new Error('Expected list node');
     }
 
-    const content = normalizeListContent(node.content);
+    const content = normalizeListContent(richListBlockToListContent(getSingleListBlockContent(node.content)!));
     expect(content.type).toBe('ul');
     expect(content.items.map((item) => ('text' in item ? item.text : ''))).toEqual(['Title', 'Paragraph', 'Quote']);
   });
