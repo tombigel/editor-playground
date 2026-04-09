@@ -4,7 +4,7 @@ import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId } from '../../../model/types/site';
-import type { ContainerNode, ListContent, MediaNode, TextNode, TextSubtype } from '../../../model/types';
+import type { ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../model/types';
 
 export type InspectorNode = DocumentNode;
 export type NonSiteInspectorNode = Exclude<DocumentNode, { contentType: 'site' }>;
@@ -35,7 +35,8 @@ export type InspectorActionHandlers = {
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
-  onSetListContent?: (nodeId: string, content: ListContent) => void;
+  onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
+  onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;

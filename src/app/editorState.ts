@@ -38,9 +38,9 @@ import {
 } from '../api/editorApi';
 import {
   mergeTextNodesToRichDoc,
-  setListContentDoc,
-  setRichTextContentDoc,
   setSiteNodeStickyElevation,
+  setTextDocumentBlockGapDoc,
+  setTextDocumentContentDoc,
   switchTextSubtypeDoc,
 } from '../api/documentApi';
 import {
@@ -131,10 +131,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return selectedIds.length > 0 ? deleteNodes(state, selectedIds) : state;
     case 'deleteNode':
       return deleteNode(state, action.id);
-    case 'setRichContent':
-      return { ...state, document: setRichTextContentDoc(state.document, action.id, action.content) };
-    case 'setListContent':
-      return { ...state, document: setListContentDoc(state.document, action.id, action.content) };
+    case 'setTextDocumentContent':
+      return { ...state, document: setTextDocumentContentDoc(state.document, action.id, action.content) };
+    case 'setTextDocumentBlockGap':
+      return { ...state, document: setTextDocumentBlockGapDoc(state.document, action.id, action.value) };
     case 'switchTextSubtype':
       return {
         ...state,

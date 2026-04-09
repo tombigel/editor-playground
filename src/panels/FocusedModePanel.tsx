@@ -58,7 +58,8 @@ type Props = Pick<
   | 'onStickyElevated'
   | 'globalStickyElevation'
   | 'onSwitchTextSubtype'
-  | 'onSetListContent'
+  | 'onSetTextDocumentContent'
+  | 'onSetTextDocumentBlockGap'
   | 'onEnterFocusedMode'
   | 'onActivateRichEdit'
   | 'onOpenManageFonts'
@@ -113,7 +114,8 @@ export function FocusedModePanel({
   onStickyElevated,
   globalStickyElevation,
   onSwitchTextSubtype,
-  onSetListContent,
+  onSetTextDocumentContent,
+  onSetTextDocumentBlockGap,
   onEnterFocusedMode,
   onActivateRichEdit,
   onOpenManageFonts,
@@ -149,7 +151,8 @@ export function FocusedModePanel({
     onStickyElevation,
     onStickyElevated,
     onSwitchTextSubtype,
-    onSetListContent,
+    onSetTextDocumentContent,
+    onSetTextDocumentBlockGap,
     onEnterFocusedMode,
     onActivateRichEdit,
     onOpenManageFonts,

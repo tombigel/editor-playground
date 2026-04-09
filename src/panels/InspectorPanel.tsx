@@ -10,7 +10,7 @@ import type { InspectorActionHandlers, InspectorOrderState } from './inspector/t
 import { resolveInspectorBlocks } from './inspector/schema';
 import type { BulkEditOperation, AlignmentAction, DistributionMode } from '../app/types';
 import type { TextConversionMode } from '../api/textConversion';
-import type { ListContent, TextSubtype } from '../model/types';
+import type { TextDocumentContent, TextSubtype } from '../model/types';
 
 export {
   buildSizeFieldValue,
@@ -77,7 +77,8 @@ export type InspectorPanelProps = {
   onStickyElevated: (value: boolean) => void;
   globalStickyElevation: boolean;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
-  onSetListContent?: (nodeId: string, content: ListContent) => void;
+  onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
+  onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
@@ -132,7 +133,8 @@ export function InspectorPanel({
   onStickyElevated,
   globalStickyElevation,
   onSwitchTextSubtype,
-  onSetListContent,
+  onSetTextDocumentContent,
+  onSetTextDocumentBlockGap,
   onMergeTextSelectionToRich,
   onEnterFocusedMode,
   onActivateRichEdit,
@@ -170,7 +172,8 @@ export function InspectorPanel({
       onStickyElevation,
       onStickyElevated,
       onSwitchTextSubtype,
-      onSetListContent,
+      onSetTextDocumentContent,
+      onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich,
       onEnterFocusedMode,
       onActivateRichEdit,
@@ -182,7 +185,8 @@ export function InspectorPanel({
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
-      onStickyElevation, onStickyElevated, onSwitchTextSubtype, onSetListContent,
+      onStickyElevation, onStickyElevated, onSwitchTextSubtype, onSetTextDocumentContent,
+      onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
     ],
   );

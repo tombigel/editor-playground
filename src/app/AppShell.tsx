@@ -974,11 +974,11 @@ export function AppShell({
 							}
 							onResizeStart={(id) => dispatch({ type: "beginResize", id })}
 							onResizeEnd={(id) => dispatch({ type: "endResize", id })}
-							onUpdateRichContent={(id, content) =>
-								dispatch({ type: 'setRichContent', id, content })
+							onUpdateTextDocumentContent={(id, content) =>
+								dispatch({ type: 'setTextDocumentContent', id, content })
 							}
-							onUpdateTextField={(id, field, value) =>
-								dispatch({ type: "text", id, field, value })
+							onUpdateTextDocumentBlockGap={(id, value) =>
+								dispatch({ type: 'setTextDocumentBlockGap', id, value })
 							}
 							onRegisterActivateRichEdit={(fn) => { activateRichEditRef.current = fn; }}
 							onStickyGeometryChange={onStickyGeometryChange}
@@ -1130,8 +1130,11 @@ export function AppShell({
 							onSwitchTextSubtype={(nodeId, subtype, conversionMode) =>
 								dispatch({ type: "switchTextSubtype", nodeId, subtype, conversionMode })
 							}
-							onSetListContent={(nodeId, content) =>
-								dispatch({ type: "setListContent", id: nodeId, content })
+							onSetTextDocumentContent={(nodeId, content) =>
+								dispatch({ type: "setTextDocumentContent", id: nodeId, content })
+							}
+							onSetTextDocumentBlockGap={(nodeId, value) =>
+								dispatch({ type: "setTextDocumentBlockGap", id: nodeId, value })
 							}
 							onMergeTextSelectionToRich={(nodeIds) =>
 								dispatch({ type: "mergeTextSelectionToRich", nodeIds })
@@ -1284,8 +1287,11 @@ export function AppShell({
 						onSwitchTextSubtype={(nodeId, subtype, conversionMode) =>
 							dispatch({ type: "switchTextSubtype", nodeId, subtype, conversionMode })
 						}
-						onSetListContent={(nodeId, content) =>
-							dispatch({ type: "setListContent", id: nodeId, content })
+						onSetTextDocumentContent={(nodeId, content) =>
+							dispatch({ type: "setTextDocumentContent", id: nodeId, content })
+						}
+						onSetTextDocumentBlockGap={(nodeId, value) =>
+							dispatch({ type: "setTextDocumentBlockGap", id: nodeId, value })
 						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })

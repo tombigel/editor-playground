@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
 import { createDefaultListContent } from '../../model/listContent';
+import { createTextDocumentContent, listContentToRichListBlock } from '../../model/richContent';
 import { resolveSizeMeasurementInput } from '../controls/SizeFields';
 import {
   buildSizeFieldValue,
@@ -236,10 +237,10 @@ describe('panels/InspectorPanel', () => {
 
   it('renders list content controls for standalone list text nodes', () => {
     const listNode = createTextNode('list', 'section_1');
-    listNode.content = createDefaultListContent();
+    listNode.content = createTextDocumentContent([listContentToRichListBlock(createDefaultListContent())]);
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetListContent: () => {} })} />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetTextDocumentContent: () => {} })} />,
     );
 
     expect(markup).toContain('>List<');
@@ -253,26 +254,22 @@ describe('panels/InspectorPanel', () => {
     expect(markup).not.toContain('>Description<');
   });
 
-  it('keeps description lists out of the structured standalone inspector flow', () => {
+  it('falls back to default structured list controls when canonical list content is missing', () => {
     const listNode = createTextNode('list', 'section_1');
-    listNode.content = {
-      type: 'dl',
-      items: [{ term: 'API', description: 'Application Programming Interface' }],
-    };
+    listNode.content = createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'not a list block' }] } as never]);
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetListContent: () => {} })} />,
+      <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetTextDocumentContent: () => {} })} />,
     );
 
-    expect(markup).toContain('Description list inspector editing is deferred to phase 2');
+    expect(markup).toContain('>List<');
+    expect(markup).toContain('Add item');
     expect(markup).toContain('Advanced edit');
-    expect(markup).toContain('Bulk edit (term: description)');
-    expect(markup).not.toContain('Add item');
   });
 
   it('does not render a text preview in the rich text content card', () => {
     const richNode = createTextNode('rich', 'section_1');
-    richNode.content = [{ type: 'paragraph', children: [{ text: 'Preview should stay hidden' }] }];
+    richNode.content = createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'Preview should stay hidden' }] }]);
 
     const markup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ node: richNode, onActivateRichEdit: () => {} })} />,

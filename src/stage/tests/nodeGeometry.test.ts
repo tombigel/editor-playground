@@ -8,6 +8,7 @@ import {
   hasIntrinsicWidth,
   DEFAULT_STAGE_VIEWPORT,
 } from '../math/nodeGeometry';
+import { createTextDocumentFromText } from '../../model/richContent';
 import type { ViewportMeasurement } from '../../model/types';
 
 // ---------------------------------------------------------------------------
@@ -45,7 +46,7 @@ function makeLeafNode(opts: {
     name: 'Test',
     visible: true,
     locked: false,
-    content: opts.content ?? '',
+    content: createTextDocumentFromText(opts.content ?? ''),
     htmlTag: 'p' as const,
     rect: {
       x: { base: { raw: '0px', parsed: { value: 0, unit: 'px' as const } } },

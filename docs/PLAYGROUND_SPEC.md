@@ -1413,19 +1413,18 @@ Text markdown import/export is headless and API-first.
 
 Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text formatting state.
 
-### Phase-1 structure
+### Canonical structure
 
-- Supported wrappers are `ul`, `ol`, and `dl`.
-- `ul` and `ol` persist second-level items only; nested lists are not part of phase 1.
-- `dl` persists ordered `term` / `description` pairs.
+- Standalone list nodes persist one canonical top-level list block inside `TextDocumentContent.blocks`.
+- Supported canonical wrappers are `ul` and `ol`; nested lists are not part of phase 1.7.
 - Per-item writing direction is supported via `direction: 'ltr' | 'rtl'`.
-- Per-item links are supported in phase 1.
-- Styling remains node-level in phase 1; inline mixed styling inside list items is deferred.
+- Per-item links are supported.
+- Styling remains block-level in canonical content; mixed inline styling inside list items is deferred.
 
 ### API and validation
 
-- `setListContentDoc()` is the canonical pure mutation for list content.
-- Model normalization repairs malformed or missing list payloads into a default unordered list item.
+- `setTextDocumentContentDoc()` is the canonical pure mutation for standalone list content; `setListContentDoc()` remains as a compatibility helper layered over it.
+- Model normalization repairs malformed or missing list payloads into a default unordered list block.
 - `validateDocument()` reports malformed list structures and broken per-item page / anchor links.
 - Text conversion is deterministic:
   - `block -> list` splits hard line breaks into unordered items.
@@ -1433,18 +1432,17 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
   - `list -> code` emits markdown-like plain text.
   - `code -> rich` emits a rich `code-block`.
   - supported `ul` / `ol` lists convert to rich list blocks instead of flattening to paragraphs.
-  - `dl -> rich` still degrades to paragraph blocks because rich description lists remain deferred.
+  - legacy `dl` payloads degrade deterministically during migration because canonical list storage is `ul` / `ol` only.
 
 ### Rendering
 
-- Shared node presentation renders list nodes semantically as `<ul>`, `<ol>`, or `<dl>`.
+- Shared node presentation renders standalone canonical list nodes semantically as `<ul>` or `<ol>`.
 - Ordered lists honor persisted `start` and marker style values.
-- Description lists render semantic `<dt>` / `<dd>` pairs.
 - Site export uses the same shared list rendering helpers as the stage/site presentation path.
 
 ### Inspector editing
 
-- List nodes are editable in the inspector through `setListContentDoc()`, not through editor-only transient formatting state.
+- List nodes are editable in the inspector through canonical `TextDocumentContent` mutations, not through editor-only transient formatting state or a dedicated list-only reducer action.
 - Phase 1.5 inspector editing is structured for `ul` and `ol`:
   - list type
   - bullet / ordered marker controls
@@ -1452,7 +1450,6 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
   - per-item add / reorder / remove
   - one inline text field per item
 - The line-based textarea remains as an advanced bulk-edit / paste-import helper, not the primary editing surface.
-- `dl` inspector authoring is deferred to phase 2; existing description lists remain bulk-edit only with `term: description` lines.
 - Per-item links and per-item direction are deferred from the standalone inspector to the later on-stage editing phase.
 
 ## Headless Split And Merge
@@ -1617,8 +1614,14 @@ When enabled, a compact "Debug" inspector card appears above the Layout section 
 
 ## Rich Text Content
 
-Text nodes with `subtype: 'rich'` store their content as `RichContent` — a block-rooted Slate
-subset — rather than a plain string.
+Text nodes now store their content as `TextDocumentContent`, an app-owned, Slate-compatible
+wrapper around canonical top-level blocks:
+
+- `TextDocumentContent = { blocks, blockGap? }`
+- `TextBlockContent`, `CodeBlockContent`, and `ListBlockContent`
+
+These canonical types stay Slate-compatible. `RichContent` remains the block-array alias used by
+shared render helpers, but persisted `TextNode.content` is now the wrapper for every text subtype.
 
 ### RichContent format
 
@@ -1690,10 +1693,8 @@ Rules:
 - Nested rich lists and description-list rich blocks are deferred.
 - Inline links may contain only text leaves.
 - Legacy flat inline arrays are normalized to a single `paragraph` block by migration and `setRichTextContentDoc()`.
-- Rich-node block spacing lives on the text node style as `style.blockGap`; per-block line height is stored on supported non-list text blocks.
-
-`block` and `code` subtypes continue to use a plain `string` for `content`. The `subtype === 'rich'`
-narrowing is the canonical way to distinguish.
+- Rich-node block spacing lives on `content.blockGap`; per-block line height is stored on supported non-list text blocks.
+- `block`, `code`, and `list` subtypes also persist `TextDocumentContent`; subtype validation constrains them to one text block, one code block, or one list block respectively.
 
 ### Rendering contract
 
@@ -1705,7 +1706,7 @@ narrowing is the canonical way to distinguish.
 - **Stage renderer** (`renderLeafContent` in `nodePresentation.tsx`): same via the shared
   `renderRichContent()` helper. The `document` option must be passed when page-link hrefs need
   to be resolved.
-- Rich outer wrappers apply `style.blockGap` as inter-block spacing without changing the persisted
+- Rich outer wrappers apply `content.blockGap` as inter-block spacing without changing the persisted
   inner block semantics.
 - `getNodeTextContent()` flattens `RichContent` to a plain string for aria labels and layer names.
 
@@ -1748,8 +1749,10 @@ Idle ──select──► Selected ──second plain click──► Editing �
                                                             └── Escape ──► Discard ──► Idle
 ```
 
-- **Commit**: serialises the Slate editor state back to `RichContent` and dispatches a
-  `setRichContent` action, which calls `setRichTextContentDoc()` in `documentApi.ts`.
+- **Commit**: serialises the Slate editor state back to canonical `TextDocumentContent` and dispatches a
+  `setTextDocumentContent` action, which calls `setTextDocumentContentDoc()` in `documentApi.ts`.
+- **Block spacing**: rich stage editing writes spacing through `setTextDocumentBlockGap`,
+  which updates `content.blockGap` directly instead of routing through field-based text actions.
 - **Discard**: restores the original content; the document model is not mutated.
 
 Slate manages its own micro-undo while editing. On commit, one entry is pushed to the document-level
@@ -1777,7 +1780,7 @@ While editing, the rich node gets visible stage chrome:
 
 - The text subtype toggle is rendered as its own centered row inside the content card rather than as a right-aligned card-header control.
 - Rich content cards no longer render a text preview under the “Edit rich text” action.
-- Standalone list content cards keep advanced bulk editing collapsed by default for `ul` / `ol`; description-list bulk editing remains visible because structured `dl` editing is deferred.
+- Standalone list content cards edit canonical `ul` / `ol` list blocks and keep advanced bulk editing collapsed by default.
 
 ### Keyboard shortcuts
 

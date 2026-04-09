@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { isSiteNode, isTextNode, type RichContent } from "../model/types";
+import { isSiteNode, isTextNode, type TextDocumentContent } from "../model/types";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
 import { resolveStickyIsElevated } from "../render/sticky";
@@ -83,8 +83,8 @@ export function Stage({
 	onResizeStart,
 	onResizeEnd,
 	onStickyGeometryChange,
-	onUpdateRichContent,
-	onUpdateTextField,
+	onUpdateTextDocumentContent,
+	onUpdateTextDocumentBlockGap,
 	onRegisterActivateRichEdit,
 	followLinkPopup,
 }: StageProps) {
@@ -111,10 +111,10 @@ export function Stage({
 	useStageAnimations(document, animationPreview ?? defaultAnimationPreview);
 
 	const handleRichCommit = useCallback(
-		(id: string, content: RichContent) => {
-			onUpdateRichContent?.(id, content);
+		(id: string, content: TextDocumentContent) => {
+			onUpdateTextDocumentContent?.(id, content);
 		},
-		[onUpdateRichContent],
+		[onUpdateTextDocumentContent],
 	);
 	const { editingId, activateEdit, commitEdit, discardEdit } = useRichTextEditMode({
 		onCommit: handleRichCommit,
@@ -481,7 +481,7 @@ export function Stage({
 				editingId,
 				activateEdit,
 				commitEdit,
-				updateTextField: (id, field, value) => onUpdateTextField?.(id, field, value),
+				updateBlockGap: (id, value) => onUpdateTextDocumentBlockGap?.(id, value),
 				discardEdit,
 			}}>
 			<StageScene

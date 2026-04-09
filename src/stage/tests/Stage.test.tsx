@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
+import { createTextDocumentFromText } from '../../model/richContent';
 import type { DocumentModel, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { resolveWrapperStickyState } from '../../sticky/resolve';
+import { getNodeTextContent } from '../../render/nodePresentation';
 import {
   computeResizeFrame,
   DEFAULT_STAGE_VIEWPORT,
@@ -109,6 +111,7 @@ describe('stage/Stage', () => {
     }
 
     target.htmlTag = 'blockquote';
+    target.content = createTextDocumentFromText(getNodeTextContent(target), { type: 'blockquote' });
 
     const markup = renderToStaticMarkup(
       <Stage
@@ -708,6 +711,7 @@ describe('stage/Stage', () => {
     }
 
     target.htmlTag = 'blockquote';
+    target.content = createTextDocumentFromText(getNodeTextContent(target), { type: 'blockquote' });
     target.style ??= {};
     target.style!.fontSize = parseFontSizeValue('31px');
     target.style!.fontWeight = 700;

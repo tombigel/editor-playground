@@ -80,6 +80,7 @@ export function resolveFocusedModeBlocks(
             document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}
+            onSetTextDocumentContent={(content) => context.actions.onSetTextDocumentContent?.(node.id, content)}
             focusedMode={context.focusedMode}
             onEnterFocusedMode={context.actions.onEnterFocusedMode}
             headerContent={options.headerContent}
@@ -96,6 +97,7 @@ export function resolveFocusedModeBlocks(
             document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}
+            onSetTextDocumentContent={(content) => context.actions.onSetTextDocumentContent?.(node.id, content)}
             focusedMode={context.focusedMode}
             onEnterFocusedMode={context.actions.onEnterFocusedMode}
             headerContent={options.headerContent}
@@ -112,6 +114,7 @@ export function resolveFocusedModeBlocks(
             document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}
+            onSetTextDocumentContent={(content) => context.actions.onSetTextDocumentContent?.(node.id, content)}
             focusedMode={context.focusedMode}
             onEnterFocusedMode={context.actions.onEnterFocusedMode}
             headerContent={options.headerContent}

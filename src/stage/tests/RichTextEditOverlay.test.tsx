@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RichTextEditOverlay } from '../stageRenderers/RichTextEditOverlay';
-import type { RichContent } from '../../model/types';
+import { createTextDocumentContent } from '../../model/richContent';
 
-const CONTENT: RichContent = [{ type: 'paragraph', children: [{ text: 'Edit me on stage' }] }];
+const CONTENT = createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'Edit me on stage' }] }]);
 
 describe('stage/RichTextEditOverlay', () => {
   it('renders the floating edit toolbar and preserves the authored minimum height', () => {
@@ -13,7 +13,7 @@ describe('stage/RichTextEditOverlay', () => {
         content={CONTENT}
         minHeight="96px"
         onCommit={() => {}}
-        onUpdateTextField={() => {}}
+        onUpdateBlockGap={() => {}}
         onDiscard={() => {}}
       />,
     );

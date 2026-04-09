@@ -47,11 +47,14 @@ import {
   NavigationFields,
   TypographyTextStyleFields,
 } from './shared';
+import { createTextDocumentFromText, getSingleTextBlockContent, getTextContent } from '../../../model/richContent';
+import type { TextDocumentContent } from '../../../model/types';
 
 export function ButtonContentSection({
   document,
   node,
   onTextChange,
+  onSetTextDocumentContent,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -61,7 +64,10 @@ export function ButtonContentSection({
   document: DocumentModel;
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSetTextDocumentContent: (content: TextDocumentContent) => void;
 } & FocusModeCardProps) {
+  const textBlock = getSingleTextBlockContent(node.content);
+
   return (
     <InspectorSectionCard
       title="Content"
@@ -71,7 +77,17 @@ export function ButtonContentSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
         <FormField label="Label">
-          <Input value={node.content as string} onChange={(e) => onTextChange('content', e.target.value)} />
+          <Input
+            value={getTextContent(node.content.blocks)}
+            onChange={(e) =>
+              onSetTextDocumentContent(createTextDocumentFromText(e.target.value, {
+                type: textBlock?.type === 'blockquote' ? 'blockquote' : textBlock?.type && textBlock.type !== 'div' && textBlock.type !== 'paragraph' ? textBlock.type : 'paragraph',
+                direction: node.style?.direction ?? textBlock?.direction ?? 'ltr',
+                lineHeight: typeof textBlock?.lineHeight === 'number' ? textBlock.lineHeight : undefined,
+                style: textBlock?.style,
+              }))
+            }
+          />
         </FormField>
         <NavigationFields document={document} node={node} onTextChange={onTextChange} />
     </InspectorSectionCard>

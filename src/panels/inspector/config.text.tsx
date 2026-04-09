@@ -171,6 +171,7 @@ const textContentSection: InspectorSectionDefinition = {
           document={document}
           node={node}
           onTextChange={actions.onTextChange}
+          onSetTextDocumentContent={(content) => actions.onSetTextDocumentContent?.(node.id, content)}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           headerContent={switcher}
@@ -192,7 +193,8 @@ const textContentSection: InspectorSectionDefinition = {
       return (
         <CodeContentSection
           node={node}
-          onTextChange={actions.onTextChange}
+          onSetTextDocumentContent={(content) => actions.onSetTextDocumentContent?.(node.id, content)}
+          onSetCodeLanguage={(language) => actions.onTextChange('codeLanguage', language)}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           headerContent={switcher}
@@ -203,7 +205,7 @@ const textContentSection: InspectorSectionDefinition = {
       return (
         <ListContentSection
           node={node}
-          onSetListContent={(content) => actions.onSetListContent?.(node.id, content)}
+          onSetTextDocumentContent={(content) => actions.onSetTextDocumentContent?.(node.id, content)}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           headerContent={switcher}

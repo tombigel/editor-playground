@@ -1,8 +1,7 @@
 import type {
 	DocumentModel,
-	EditorTextField,
 	NodeId,
-	RichContent,
+	TextDocumentContent,
 	TextNode,
 	ViewportMeasurement,
 } from "../../model/types";
@@ -53,8 +52,8 @@ export type StageProps = {
 	onResizeStart: (id: NodeId) => void;
 	onResizeEnd: (id: NodeId) => void;
 	onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
-	onUpdateRichContent?: (id: NodeId, content: RichContent) => void;
-	onUpdateTextField?: (id: NodeId, field: EditorTextField, value: string) => void;
+	onUpdateTextDocumentContent?: (id: NodeId, content: TextDocumentContent) => void;
+	onUpdateTextDocumentBlockGap?: (id: NodeId, value: number) => void;
 	onRegisterActivateRichEdit?: (fn: (id: NodeId) => void) => void;
 	followLinkPopup?: FollowLinkPopupData | null;
 };

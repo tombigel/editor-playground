@@ -12,6 +12,7 @@ const linkContentSection: InspectorSectionDefinition = {
         document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSetTextDocumentContent={(content) => actions.onSetTextDocumentContent?.(node.id, content)}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />

@@ -21,14 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/u
 import { getSectionAnchorOptions, getLinkHref, isValidSectionAnchorTarget } from '../../model/links';
 import type {
   DocumentModel,
-  EditorTextField,
   NodeId,
-  RichContent,
+  TextDocumentContent,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
 } from '../../model/types';
+import { createTextDocumentContent, getTextDocumentBlockGap } from '../../model/richContent';
 import { CODE_LANGUAGE_OPTIONS } from '../../render/codeHighlight';
 import { getRichTextBlockTag, richLeafStyle } from '../../render/nodePresentation';
 import {
@@ -233,20 +233,20 @@ export function RichTextEditOverlay({
   minHeight,
   document: documentModel,
   onCommit,
-  onUpdateTextField,
+  onUpdateBlockGap,
   onDiscard,
 }: {
   nodeId: NodeId;
-  content: RichContent;
+  content: TextDocumentContent;
   contentStyle?: CSSProperties;
   minHeight?: string;
   document?: DocumentModel;
-  onCommit: (id: NodeId, content: RichContent) => void;
-  onUpdateTextField: (id: NodeId, field: EditorTextField, value: string) => void;
+  onCommit: (id: NodeId, content: TextDocumentContent) => void;
+  onUpdateBlockGap: (id: NodeId, value: number) => void;
   onDiscard: () => void;
 }) {
   const editor = useMemo(() => createRichEditor(), []);
-  const initialValue = useMemo(() => toSlateValue(content), [content]);
+  const initialValue = useMemo(() => toSlateValue(content.blocks), [content]);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [linkPopover, setLinkPopover] = useState<LinkPopoverDraft>(DEFAULT_LINK_POPOVER);
   const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
@@ -255,7 +255,7 @@ export function RichTextEditOverlay({
   const [toolbarState, setToolbarState] = useState<RichToolbarState>(() => readToolbarState(editor));
   const [fontSizeDraft, setFontSizeDraft] = useState('');
   const [lineHeightDraft, setLineHeightDraft] = useState(() => String(readToolbarState(editor).selectedLineHeight));
-  const [blockSpacingDraft, setBlockSpacingDraft] = useState(String(readInitialBlockSpacing(contentStyle)));
+  const [blockSpacingDraft, setBlockSpacingDraft] = useState(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
   const [toolbarPlacement, setToolbarPlacement] = useState<'above' | 'below'>('above');
 
   useEffect(() => {
@@ -279,8 +279,11 @@ export function RichTextEditOverlay({
   }, [selectionRevision]);
 
   const commitCurrentContent = useCallback(() => {
-    onCommit(nodeId, fromSlateValue(editor.children));
-  }, [editor, nodeId, onCommit]);
+    onCommit(
+      nodeId,
+      createTextDocumentContent(fromSlateValue(editor.children), { blockGap: getTextDocumentBlockGap(content) }),
+    );
+  }, [content, editor, nodeId, onCommit]);
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -352,6 +355,10 @@ export function RichTextEditOverlay({
   useEffect(() => {
     setLineHeightDraft(String(toolbarState.selectedLineHeight));
   }, [toolbarState.selectedLineHeight]);
+
+  useEffect(() => {
+    setBlockSpacingDraft(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
+  }, [content, contentStyle]);
 
   const syncToolbarState = useCallback(() => {
     setToolbarState(readToolbarState(editor));
@@ -451,8 +458,13 @@ export function RichTextEditOverlay({
   }, [editor, restoreToolbarSelection, syncToolbarState]);
 
   const handleBlockSpacingCommit = useCallback(() => {
-    onUpdateTextField(nodeId, 'blockGap', blockSpacingDraft);
-  }, [blockSpacingDraft, nodeId, onUpdateTextField]);
+    const parsed = Number.parseFloat(blockSpacingDraft);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setBlockSpacingDraft(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
+      return;
+    }
+    onUpdateBlockGap(nodeId, parsed);
+  }, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
 
   const handleLinkAction = useCallback(() => {
     if (isLinkActive(editor)) {

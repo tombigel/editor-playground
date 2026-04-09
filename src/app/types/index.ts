@@ -3,11 +3,10 @@ import type {
   DocumentNode,
   EditorTextField,
   FontLibrary,
-  ListContent,
   NodeId,
-  RichContent,
   SectionTemplateId,
   StickyDefinition,
+  TextDocumentContent,
   TextSubtype,
   WrapperStyleField,
 } from '../../model/types';
@@ -153,8 +152,8 @@ export type EditorAction =
   | { type: 'setPageViewTransition'; pageId: PageId; transition: DocumentPage['viewTransition'] }
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
-  | { type: 'setRichContent'; id: NodeId; content: RichContent }
-  | { type: 'setListContent'; id: NodeId; content: ListContent }
+  | { type: 'setTextDocumentContent'; id: NodeId; content: TextDocumentContent }
+  | { type: 'setTextDocumentBlockGap'; id: NodeId; value: number }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
   | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
 

@@ -27,6 +27,12 @@ The API layer is structured as multiple modules:
 
 Every feature is achievable through the API layer without the editor UI.
 
+Phase 1.7 note:
+
+- The model layer now defines a canonical text AST wrapper, `TextDocumentContent = { blocks, blockGap? }`, and canonical block variants that remain Slate-compatible.
+- Text-node persistence now uses that wrapper across `block`, `code`, `list`, and `rich` subtypes.
+- Transitional fields such as `htmlTag` and `code` still exist on `TextNode` for compatibility with editor surfaces, but canonical text semantics now live in `content.blocks` and rich-only spacing lives in `content.blockGap`.
+
 ---
 
 ## `src/api/documentApi.ts`
@@ -55,9 +61,11 @@ Every feature is achievable through the API layer without the editor UI.
 | `reparentNodeDoc` | `(document, nodeId: NodeId, newParentId: NodeId) => DocumentModel` | Moves a node to a new parent; rejects invalid moves silently. |
 | `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
 | `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
-| `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Canonical pure text-field mutator for text, code, link, button, and image leaves; editor flows delegate to it instead of duplicating field logic. |
-| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Canonical pure rich-text content mutation. Normalizes legacy flat inline arrays into the supported block-rooted `RichContent` subset before persisting. |
-| `setListContentDoc` | `(document, nodeId, content: ListContent) => DocumentModel` | Canonical pure list-content mutation. Normalizes authored list payloads into the supported phase-1 `ul`, `ol`, or `dl` shapes before persisting. |
+| `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Transitional pure field mutator for text, code, link, button, and image leaves. Content-oriented field cases now delegate into canonical `TextDocumentContent` mutations. |
+| `setTextDocumentContentDoc` | `(document, nodeId, content: TextDocumentContent) => DocumentModel` | Canonical pure text-document mutation for all text subtypes. Normalizes wrapper content, enforces subtype constraints, and syncs transitional compatibility metadata from canonical blocks. |
+| `setTextDocumentBlockGapDoc` | `(document, nodeId, blockGap: number \| undefined) => DocumentModel` | Canonical pure rich-text block spacing mutation. Updates `content.blockGap` without routing through field-based editor state. |
+| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Compatibility helper layered over `setTextDocumentContentDoc()` for legacy rich-array callers. |
+| `setListContentDoc` | `(document, nodeId, content: ListContent) => DocumentModel` | Compatibility helper layered over `setTextDocumentContentDoc()` for standalone list callers. |
 | `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) => DocumentModel` | Dedicated pure code-language mutator layered over the canonical text mutation path. |
 | `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) => DocumentModel` | Dedicated pure code-theme mutator layered over the canonical text mutation path. |
 | `setTextDirectionDoc` | `(document, nodeId, direction: 'ltr' \| 'rtl') => DocumentModel` | Dedicated pure text-direction mutator layered over the canonical text mutation path. |
@@ -157,9 +165,9 @@ These unions show up repeatedly across `documentApi` signatures and returned dat
 | `setNodeRect.field` | `'x' \| 'y' \| 'width' \| 'height'` | `x`/`y` are position; `width`/`height` accept the same string formats the model stores. |
 | `StickyDefinition.target` | `'self' \| 'contentWrapper'` | `contentWrapper` is meaningful for wrappers only; leaves effectively use `self`. |
 | `StickyDefinition.durationMode` | `'auto' \| 'custom'` | `auto` derives distance from available space; `custom` uses authored duration values. |
-| `NodeTextField` | `'name' \| 'content' \| 'htmlTag' \| 'lang' \| 'label' \| 'linkType' \| 'anchorTargetId' \| 'href' \| 'openInNewTab' \| 'targetPageId' \| 'pageAnchorId' \| 'src' \| 'alt' \| 'codeLanguage' \| 'codeTheme'` | Content / metadata fields for text-capable leaves, links, buttons, code blocks, and images. |
+| `NodeTextField` | `'name' \| 'content' \| 'htmlTag' \| 'lang' \| 'label' \| 'linkType' \| 'anchorTargetId' \| 'href' \| 'openInNewTab' \| 'targetPageId' \| 'pageAnchorId' \| 'src' \| 'alt' \| 'codeLanguage' \| 'codeTheme'` | Transitional field-level mutation surface for text-capable leaves, links, buttons, code blocks, and images. Content-oriented cases now rewrite canonical `TextDocumentContent`. |
 | `LinkKind` | `'anchor' \| 'external' \| 'page'` | Used by `linkType` on links and buttons. |
-| `TextLeaf.htmlTag` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p' \| 'blockquote' \| 'div'` | Semantics for text leaves. |
+| `TextLeaf.htmlTag` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p' \| 'blockquote' \| 'div'` | Transitional standalone semantic tag field. The canonical stored block tag now lives on the single text block in `content.blocks`. |
 | `TypographyStyle.fontStyle` | `'normal' \| 'italic'` | Text, link, and button typography. |
 | `TypographyStyle.textDecorationLine` | `'none' \| 'underline' \| 'line-through' \| 'underline line-through'` | Supports combined underline + strikethrough. |
 | `TypographyStyle.direction` | `'ltr' \| 'rtl'` | Writing direction. |
@@ -222,7 +230,7 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 | `reparentNode` | `(state, nodeId, newParentId: NodeId) => EditorState` | Moves a node to a new parent. |
 | `alignNodes` | `(state, nodeIds, alignment) => EditorState` | Aligns multiple nodes to a common edge or axis. |
 | `distributeNodes` | `(state, nodeIds, axis) => EditorState` | Distributes multiple nodes with equal spacing. |
-| `updateTextField` | `(state, nodeId, field: EditorTextField, value: string) => EditorState` | Sets a text or style field on a leaf node. |
+| `updateTextField` | `(state, nodeId, field: EditorTextField, value: string) => EditorState` | Sets a text/style field on a leaf node. Structured text-document editing now prefers `setTextDocumentContentDoc()` and `setTextDocumentBlockGapDoc()` through reducer actions instead of field-based content updates. |
 | `updateRectField` | `(state, nodeId, field, value: string) => EditorState` | Sets a single rect dimension on a node. |
 | `updateStickyField` | `(state, nodeId, patch) => EditorState` | Patches the sticky definition of a node. |
 | `updateWrapperStyleField` | `(state, nodeId, field: WrapperStyleField, value) => EditorState` | Sets a style field on a wrapper node. |
@@ -235,7 +243,7 @@ Wraps `documentApi` and `editorStore` operations with editor state, selection, a
 
 `editorApi` also re-exports these for convenience:
 
-`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `serializeTextNodeMarkdownDoc`, `applyMarkdownToTextNodeDoc`, `setTextNodeContentDoc`, `setRichTextContentDoc`, `setListContentDoc`, `setCodeBlockLanguageDoc`, `setCodeBlockThemeDoc`, `setTextDirectionDoc`, `normalizeTextNodeDoc`
+`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `serializeTextNodeMarkdownDoc`, `applyMarkdownToTextNodeDoc`, `setTextNodeContentDoc`, `setTextDocumentContentDoc`, `setTextDocumentBlockGapDoc`, `setRichTextContentDoc`, `setListContentDoc`, `setCodeBlockLanguageDoc`, `setCodeBlockThemeDoc`, `setTextDirectionDoc`, `normalizeTextNodeDoc`
 
 ### Exported types
 

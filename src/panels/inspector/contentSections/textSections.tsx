@@ -64,8 +64,20 @@ import {
   listContentToLines,
   normalizeListContent,
 } from '../../../model/listContent';
-import type { ListContent } from '../../../model/types';
-import { CODE_LANGUAGE_OPTIONS } from '../../../render/codeHighlight';
+import {
+  createTextDocumentContent,
+  createTextDocumentFromCode,
+  createTextDocumentFromText,
+  getSingleListBlockContent,
+  getSingleTextBlockContent,
+  getTextContent,
+  htmlTagToTextBlockType,
+  listContentToRichListBlock,
+  replaceTextDocumentBlocks,
+  richListBlockToListContent,
+} from '../../../model/richContent';
+import type { ListContent, TextDocumentContent } from '../../../model/types';
+import { CODE_LANGUAGE_OPTIONS, highlightCode, normalizeCodeLanguage } from '../../../render/codeHighlight';
 
 type StructuredListContent = Extract<ListContent, { type: 'ul' | 'ol' }>;
 
@@ -261,6 +273,7 @@ export function TextContentSection({
   document,
   node,
   onTextChange,
+  onSetTextDocumentContent,
   showHtmlTag = node.subtype === 'block',
   focusedMode,
   onEnterFocusedMode,
@@ -271,12 +284,44 @@ export function TextContentSection({
   document: DocumentModel;
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSetTextDocumentContent: (content: TextDocumentContent) => void;
   showHtmlTag?: boolean;
 } & FocusModeCardProps) {
+  const textValue = getTextContent(node.content.blocks, { blockSeparator: '\n' });
   const languageOptions = createLanguageSelectOptions({
     includeSiteLanguage: true,
     siteLanguageTag: document.siteSettings?.lang,
   });
+  const textBlock = getSingleTextBlockContent(node.content);
+
+  function setPlainTextContent(nextText: string) {
+    onSetTextDocumentContent(createTextDocumentFromText(nextText, {
+      type: textBlock?.type === 'blockquote' ? 'blockquote' : textBlock?.type && textBlock.type !== 'div' && textBlock.type !== 'paragraph' ? textBlock.type : 'paragraph',
+      direction: node.style?.direction ?? textBlock?.direction ?? 'ltr',
+      lineHeight: typeof textBlock?.lineHeight === 'number' ? textBlock.lineHeight : undefined,
+      style: textBlock?.style,
+    }));
+  }
+
+  function setHtmlTag(value: string) {
+    if (!textBlock) {
+      return;
+    }
+    onSetTextDocumentContent(replaceTextDocumentBlocks(node.content, [{
+      ...textBlock,
+      type: htmlTagToTextBlockType(
+        value === 'h1' ||
+          value === 'h2' ||
+          value === 'h3' ||
+          value === 'h4' ||
+          value === 'h5' ||
+          value === 'h6' ||
+          value === 'blockquote'
+          ? value
+          : 'p',
+      ),
+    }]));
+  }
 
   return (
     <InspectorSectionCard
@@ -289,13 +334,13 @@ export function TextContentSection({
       <InspectorFieldGroup>
         <FormField label="Text">
           <Textarea
-            value={node.content as string}
-            onChange={(e) => onTextChange('content', e.target.value)}
+            value={textValue}
+            onChange={(e) => setPlainTextContent(e.target.value)}
             onPaste={(e) => {
               const text = e.clipboardData.getData('text/plain');
               if (text) {
                 e.preventDefault();
-                onTextChange('content', text);
+                setPlainTextContent(text);
               }
             }}
           />
@@ -303,7 +348,7 @@ export function TextContentSection({
       </InspectorFieldGroup>
       <InspectorFieldGroup separated>
         {showHtmlTag ? (
-          <HtmlTagInlineField value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)} />
+          <HtmlTagInlineField value={node.htmlTag} onValueChange={setHtmlTag} />
         ) : null}
         <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
           <SearchableSelect
@@ -322,7 +367,7 @@ export function TextContentSection({
 
 export function ListContentSection({
   node,
-  onSetListContent,
+  onSetTextDocumentContent,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -330,10 +375,11 @@ export function ListContentSection({
   contentClassName = 'px-3 pt-1.5 pb-3',
 }: {
   node: TextInspectorNode;
-  onSetListContent: (content: ListContent) => void;
+  onSetTextDocumentContent: (content: TextDocumentContent) => void;
 } & FocusModeCardProps) {
-  const [showAdvancedEdit, setShowAdvancedEdit] = useState(() => normalizeListContent(node.content).type === 'dl');
-  const listContent = normalizeListContent(node.content);
+  const listBlock = getSingleListBlockContent(node.content);
+  const listContent = listBlock ? richListBlockToListContent(listBlock) : normalizeListContent(undefined);
+  const [showAdvancedEdit, setShowAdvancedEdit] = useState(() => listContent.type === 'dl');
   const itemsValue = listContent.items.map((item) => formatListLine(item)).join('\n');
   const structuredListContent = isStructuredListContent(listContent) ? listContent : null;
   const structuredItemKeys = structuredListContent ? createStructuredListItemKeys(node.id, structuredListContent) : [];
@@ -343,6 +389,12 @@ export function ListContentSection({
       setShowAdvancedEdit(true);
     }
   }, [listContent.type]);
+
+  function commitListContent(nextContent: ListContent) {
+    onSetTextDocumentContent(createTextDocumentContent([
+      listContentToRichListBlock(normalizeListContent(nextContent), { direction: node.style?.direction ?? 'ltr' }),
+    ]));
+  }
 
   return (
     <InspectorSectionCard
@@ -358,7 +410,7 @@ export function ListContentSection({
             <Select
               value={structuredListContent.type}
               onValueChange={(value: StructuredListContent['type']) =>
-                onSetListContent(buildListContentFromLines(itemsValue, listContent, value))
+                commitListContent(buildListContentFromLines(itemsValue, listContent, value))
               }
             >
               <SelectTrigger className="h-8 text-[11px]">
@@ -383,7 +435,7 @@ export function ListContentSection({
             <Select
               value={structuredListContent.markerStyle ?? 'disc'}
               onValueChange={(value) =>
-                onSetListContent({ ...structuredListContent, markerStyle: value as typeof structuredListContent.markerStyle })
+                commitListContent({ ...structuredListContent, markerStyle: value as typeof structuredListContent.markerStyle })
               }
             >
               <SelectTrigger className="h-8 text-[11px]">
@@ -408,7 +460,7 @@ export function ListContentSection({
                 max={999}
                 step={1}
                 onChange={(value) =>
-                  onSetListContent({ ...structuredListContent, start: Math.max(1, Math.trunc(value)) })
+                  commitListContent({ ...structuredListContent, start: Math.max(1, Math.trunc(value)) })
                 }
               />
             </InspectorInlineRow>
@@ -416,7 +468,7 @@ export function ListContentSection({
               <Select
                 value={structuredListContent.markerStyle ?? 'decimal'}
                 onValueChange={(value) =>
-                  onSetListContent({ ...structuredListContent, markerStyle: value as typeof structuredListContent.markerStyle })
+                  commitListContent({ ...structuredListContent, markerStyle: value as typeof structuredListContent.markerStyle })
                 }
               >
                 <SelectTrigger className="h-8 text-[11px]">
@@ -444,7 +496,7 @@ export function ListContentSection({
                 variant="outline"
                 size="sm"
                 className="h-7 gap-1.5 px-2 text-[11px]"
-                onClick={() => onSetListContent(addStructuredListItem(structuredListContent))}
+                onClick={() => commitListContent(addStructuredListItem(structuredListContent))}
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add item
@@ -462,7 +514,7 @@ export function ListContentSection({
                     placeholder={`Item ${index + 1}`}
                     className="h-8 rounded-sm text-[12px]"
                     onChange={(event) =>
-                      onSetListContent(setStructuredListItemText(structuredListContent, index, event.target.value))
+                      commitListContent(setStructuredListItemText(structuredListContent, index, event.target.value))
                     }
                   />
                   <div className="flex items-center gap-1">
@@ -472,7 +524,7 @@ export function ListContentSection({
                       size="sm"
                       aria-label={`Move list item ${index + 1} up`}
                       className="h-8 w-8 rounded-sm p-0"
-                      onClick={() => onSetListContent(moveStructuredListItem(structuredListContent, index, -1))}
+                      onClick={() => commitListContent(moveStructuredListItem(structuredListContent, index, -1))}
                       disabled={index === 0}
                     >
                       <ArrowUp className="h-3.5 w-3.5" />
@@ -483,7 +535,7 @@ export function ListContentSection({
                       size="sm"
                       aria-label={`Move list item ${index + 1} down`}
                       className="h-8 w-8 rounded-sm p-0"
-                      onClick={() => onSetListContent(moveStructuredListItem(structuredListContent, index, 1))}
+                      onClick={() => commitListContent(moveStructuredListItem(structuredListContent, index, 1))}
                       disabled={index === structuredListContent.items.length - 1}
                     >
                       <ArrowDown className="h-3.5 w-3.5" />
@@ -494,7 +546,7 @@ export function ListContentSection({
                       size="sm"
                       aria-label={`Remove list item ${index + 1}`}
                       className="h-8 w-8 rounded-sm p-0"
-                      onClick={() => onSetListContent(removeStructuredListItem(structuredListContent, index))}
+                      onClick={() => commitListContent(removeStructuredListItem(structuredListContent, index))}
                       disabled={structuredListContent.items.length === 1}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -524,12 +576,12 @@ export function ListContentSection({
             <Textarea
               value={itemsValue}
               rows={Math.max(4, listContentToLines(listContent).length)}
-              onChange={(event) => onSetListContent(buildListContentFromLines(event.target.value, listContent))}
+              onChange={(event) => commitListContent(buildListContentFromLines(event.target.value, listContent))}
               onPaste={(event) => {
                 const text = event.clipboardData.getData('text/plain');
                 if (text) {
                   event.preventDefault();
-                  onSetListContent(buildListContentFromLines(text, listContent));
+                  commitListContent(buildListContentFromLines(text, listContent));
                 }
               }}
             />
@@ -584,7 +636,8 @@ export function RichTextContentSection({
 
 export function CodeContentSection({
   node,
-  onTextChange,
+  onSetTextDocumentContent,
+  onSetCodeLanguage,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -592,9 +645,23 @@ export function CodeContentSection({
   contentClassName = 'px-3 pt-1.5 pb-3',
 }: {
   node: TextInspectorNode;
-  onTextChange: (field: EditorTextField, value: string) => void;
+  onSetTextDocumentContent: (content: TextDocumentContent) => void;
+  onSetCodeLanguage: (language: string) => void;
 } & FocusModeCardProps) {
-  const language = node.code?.language ?? 'plaintext';
+  const codeBlock = node.content.blocks[0]?.type === 'code-block' ? node.content.blocks[0] : undefined;
+  const language = normalizeCodeLanguage(codeBlock?.language ?? node.code?.language ?? 'plaintext');
+  const codeValue = getTextContent(node.content.blocks, { blockSeparator: '\n' });
+
+  function setCodeContent(nextText: string) {
+    onSetTextDocumentContent(createTextDocumentFromCode(nextText, {
+      direction: 'ltr',
+      language,
+      theme: codeBlock?.theme ?? node.code?.theme,
+      highlightedHtml: highlightCode(nextText, language),
+      style: codeBlock?.style,
+    }));
+  }
+
   return (
     <InspectorSectionCard
       title="Content"
@@ -606,15 +673,15 @@ export function CodeContentSection({
       <InspectorFieldGroup>
         <FormField label="Code">
           <Textarea
-            value={node.content as string}
+            value={codeValue}
             rows={5}
             style={{ fontFamily: 'monospace' }}
-            onChange={(e) => onTextChange('content', e.target.value)}
+            onChange={(e) => setCodeContent(e.target.value)}
             onPaste={(e) => {
               const text = e.clipboardData.getData('text/plain');
               if (text) {
                 e.preventDefault();
-                onTextChange('content', text);
+                setCodeContent(text);
               }
             }}
           />
@@ -622,7 +689,7 @@ export function CodeContentSection({
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
         <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
-          <Select value={language} onValueChange={(value) => onTextChange('codeLanguage', value)}>
+          <Select value={language} onValueChange={onSetCodeLanguage}>
             <SelectTrigger className="h-8 text-[11px]">
               <SelectValue />
             </SelectTrigger>

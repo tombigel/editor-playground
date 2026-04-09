@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeResizeFrame, px, getResizeCommitSize } from '../math/resize';
+import { createTextDocumentFromText } from '../../model/richContent';
 import type { ResizeState } from '../types';
 import type { DocumentNode } from '../../model/types';
 
@@ -328,7 +329,7 @@ function makeNodeForCommit(widthRaw: string, heightRaw: string) {
     name: 'Test',
     visible: true,
     locked: false,
-    content: '',
+    content: createTextDocumentFromText(''),
     htmlTag: 'p' as const,
     rect: {
       x: { base: { raw: '50px', parsed: { value: 50, unit: 'px' as const } } },

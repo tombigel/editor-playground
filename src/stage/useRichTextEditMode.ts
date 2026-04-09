@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
-import type { RichContent, NodeId } from '../model/types';
+import type { NodeId, TextDocumentContent } from '../model/types';
 
 export type RichEditCallbacks = {
-  onCommit: (id: NodeId, content: RichContent) => void;
+  onCommit: (id: NodeId, content: TextDocumentContent) => void;
 };
 
 export function useRichTextEditMode({ onCommit }: RichEditCallbacks) {
@@ -13,7 +13,7 @@ export function useRichTextEditMode({ onCommit }: RichEditCallbacks) {
   }, []);
 
   const commitEdit = useCallback(
-    (id: NodeId, content: RichContent) => {
+    (id: NodeId, content: TextDocumentContent) => {
       setEditingId(null);
       onCommit(id, content);
     },

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, distributeNodes, insertLeaf, insertWrapper, parseUnitValue } from '../../api/editorApi';
+import { createTextDocumentContent, getSingleListBlockContent, listContentToRichListBlock, richListBlockToListContent } from '../../model/richContent';
 import { editorReducer, historyReducer, type HistoryState } from '../editorState';
 
 function createTestHistoryState(): HistoryState {
@@ -277,31 +278,37 @@ describe('app/editorState', () => {
 
     state = editorReducer(state, { type: 'switchTextSubtype', nodeId, subtype: 'list' });
     const next = editorReducer(state, {
-      type: 'setListContent',
+      type: 'setTextDocumentContent',
       id: nodeId,
-      content: {
-        type: 'ol',
-        start: 3,
-        markerStyle: 'upper-alpha',
-        items: [
-          { text: 'Alpha', direction: 'ltr' },
-          { text: 'Beta', direction: 'rtl' },
-        ],
-      },
+      content: createTextDocumentContent([
+        listContentToRichListBlock({
+          type: 'ol',
+          start: 3,
+          markerStyle: 'upper-alpha',
+          items: [
+            { text: 'Alpha', direction: 'ltr' },
+            { text: 'Beta', direction: 'rtl' },
+          ],
+        }),
+      ]),
     });
 
     expect(next.document.nodes[nodeId]).toMatchObject({
       contentType: 'text',
       subtype: 'list',
-      content: {
-        type: 'ol',
-        start: 3,
-        markerStyle: 'upper-alpha',
-        items: [
-          { text: 'Alpha', direction: 'ltr' },
-          { text: 'Beta', direction: 'rtl' },
-        ],
-      },
+    });
+    const nextNode = next.document.nodes[nodeId];
+    if (nextNode.contentType !== 'text' || nextNode.subtype !== 'list') {
+      throw new Error('Expected list node');
+    }
+    expect(richListBlockToListContent(getSingleListBlockContent(nextNode.content)!)).toEqual({
+      type: 'ol',
+      start: 3,
+      markerStyle: 'upper-alpha',
+      items: [
+        { text: 'Alpha', direction: 'ltr' },
+        { text: 'Beta', direction: 'rtl' },
+      ],
     });
   });
 
