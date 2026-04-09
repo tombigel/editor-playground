@@ -768,6 +768,55 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
+	it("shows structure-specific toolbar dropdowns only for the active mode", async () => {
+		const { document, richTextId } = createRichTextEditE2EDocument();
+		await openEditor({
+			document,
+			selectedId: richTextId,
+			selectedIds: [richTextId],
+		});
+
+		const { editable } = await enterRichEditMode(richTextId);
+		await editable.click();
+		await page.keyboard.press("ControlOrMeta+A");
+
+		expect(await page.locator('[aria-label="Block type"]').count()).toBe(1);
+		expect(await page.locator('[aria-label="Ordered list marker"]').count()).toBe(
+			0,
+		);
+		expect(
+			await page.locator('[aria-label="Unordered list marker"]').count(),
+		).toBe(0);
+		expect(await page.locator('[aria-label="Code language"]').count()).toBe(0);
+
+		const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+		await toolbar.getByRole("button", { name: "Use ordered list" }).click();
+		expect(await page.locator('[aria-label="Block type"]').count()).toBe(0);
+		expect(await page.locator('[aria-label="Ordered list marker"]').count()).toBe(
+			1,
+		);
+
+		await toolbar.getByRole("button", { name: "Use unordered list" }).click();
+		expect(await page.locator('[aria-label="Ordered list marker"]').count()).toBe(
+			0,
+		);
+		expect(
+			await page.locator('[aria-label="Unordered list marker"]').count(),
+		).toBe(1);
+
+		await toolbar.getByRole("button", { name: "Use code block" }).click();
+		expect(
+			await page.locator('[aria-label="Unordered list marker"]').count(),
+		).toBe(0);
+		expect(await page.locator('[aria-label="Code language"]').count()).toBe(1);
+
+		await toolbar.getByRole("button", { name: "Use text block" }).click();
+		expect(await page.locator('[aria-label="Code language"]').count()).toBe(0);
+		expect(await page.locator('[aria-label="Block type"]').count()).toBe(1);
+
+		await closeEditor();
+	}, 30_000);
+
 	it("unwinds nested rich edit layers one step at a time on outside click", async () => {
 		const { document, richTextId } = createRichTextEditE2EDocument();
 		await openEditor({

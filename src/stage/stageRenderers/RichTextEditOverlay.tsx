@@ -2,6 +2,7 @@ import {
 	type CSSProperties,
 	type FormEvent,
 	type KeyboardEvent as ReactKeyboardEvent,
+	type FocusEvent as ReactFocusEvent,
 	type PointerEvent as ReactPointerEvent,
 	useCallback,
 	useEffect,
@@ -11,7 +12,15 @@ import {
 	useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Code2, Link2, List, ListOrdered, Type } from "lucide-react";
+import {
+	Code2,
+	Link2,
+	List,
+	ListOrdered,
+	MoveVertical,
+	Type,
+	UnfoldVertical,
+} from "lucide-react";
 import {
 	Editor,
 	Range,
@@ -38,10 +47,20 @@ import {
 	SelectTrigger,
 } from "@/components/ui/select";
 import {
+	ValueWithUnit,
+	type ValueWithUnitOption,
+	type ValueWithUnitSuggestion,
+} from "@/components/ui/value-with-unit";
+import {
 	getSectionAnchorOptions,
 	getLinkHref,
 	isValidSectionAnchorTarget,
 } from "../../model/links";
+import {
+	convertRenderedPxToFontRelativeUnit,
+	convertRenderedPxToSpacingUnit,
+	formatDisplayValue,
+} from "../../model/conversion";
 import type {
 	DocumentModel,
 	NodeId,
@@ -56,6 +75,12 @@ import {
 	createTextDocumentContent,
 	getTextDocumentBlockGap,
 } from "../../model/richContent";
+import {
+	parseFontSizeValue,
+	parseSpacingValue,
+	resolveFontSizePx,
+	resolveSpacingPx,
+} from "../../model/units";
 import { CODE_LANGUAGE_OPTIONS } from "../../render/codeHighlight";
 import {
 	getDefaultListContainerStyle,
@@ -260,6 +285,14 @@ const UNORDERED_MARKER_OPTIONS = [
 	{ value: "square", label: "Square" },
 ] as const;
 
+const FONT_SIZE_UNIT_OPTIONS = ["px", "em", "rem"] as const;
+const FONT_SIZE_SUGGESTIONS_BY_UNIT = {
+	px: [12, 14, 16, 18, 20, 24, 30, 36, 48, 64, 72],
+	em: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
+	rem: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
+} as const;
+const BLOCK_SPACING_UNIT_OPTIONS = ["px", "em"] as const;
+
 type RichToolbarState = {
 	boldActive: boolean;
 	italicActive: boolean;
@@ -278,6 +311,9 @@ type RichToolbarState = {
 	currentHighlightColor: string;
 };
 
+type ToolbarFontUnit = (typeof FONT_SIZE_UNIT_OPTIONS)[number];
+type ToolbarSpacingUnit = (typeof BLOCK_SPACING_UNIT_OPTIONS)[number];
+
 function cloneSelection(selection: BaseSelection): BaseSelection {
 	if (!selection) {
 		return null;
@@ -287,6 +323,81 @@ function cloneSelection(selection: BaseSelection): BaseSelection {
 		anchor: { ...selection.anchor },
 		focus: { ...selection.focus },
 	};
+}
+
+function readToolbarFontReference(element: HTMLElement | null) {
+	const ownerDocument = element?.ownerDocument ?? globalThis.document;
+	const defaultView = ownerDocument?.defaultView ?? globalThis.window;
+	if (!ownerDocument || !defaultView) {
+		return { rootFontSizePx: 16, inheritedFontSizePx: 16 };
+	}
+
+	const rootComputed = defaultView.getComputedStyle(ownerDocument.documentElement);
+	const inheritedComputed = defaultView.getComputedStyle(
+		element ?? ownerDocument.documentElement,
+	);
+	const rootFontSizePx = Number.parseFloat(rootComputed.fontSize);
+	const inheritedFontSizePx = Number.parseFloat(inheritedComputed.fontSize);
+	return {
+		rootFontSizePx:
+			Number.isFinite(rootFontSizePx) && rootFontSizePx > 0 ? rootFontSizePx : 16,
+		inheritedFontSizePx:
+			Number.isFinite(inheritedFontSizePx) && inheritedFontSizePx > 0
+				? inheritedFontSizePx
+				: 16,
+	};
+}
+
+function readFontSizeDraftState(value: string) {
+	try {
+		const parsed = parseFontSizeValue(value);
+		return {
+			draft: formatDisplayValue(parsed.parsed.value),
+			unit: parsed.parsed.unit as ToolbarFontUnit,
+			valid: true,
+		};
+	} catch {
+		return {
+			draft: "",
+			unit: "px" as ToolbarFontUnit,
+			valid: false,
+		};
+	}
+}
+
+function readSpacingDraftState(value: string) {
+	try {
+		const parsed = parseSpacingValue(value);
+		return {
+			draft: formatDisplayValue(parsed.parsed.value),
+			unit: parsed.parsed.unit as ToolbarSpacingUnit,
+			valid: true,
+		};
+	} catch {
+		return {
+			draft: "",
+			unit: "px" as ToolbarSpacingUnit,
+			valid: false,
+		};
+	}
+}
+
+function isSelectVisibleForStructureMode(
+	selectId: RichEditSelectId,
+	structureMode: RichToolbarState["structureMode"],
+) {
+	switch (selectId) {
+		case RICH_SELECT_IDS.blockType:
+			return structureMode === "block";
+		case RICH_SELECT_IDS.orderedListMarker:
+			return structureMode === "ol";
+		case RICH_SELECT_IDS.unorderedListMarker:
+			return structureMode === "ul";
+		case RICH_SELECT_IDS.codeLanguage:
+			return structureMode === "code-block";
+		default:
+			return true;
+	}
 }
 
 function readToolbarState(
@@ -384,14 +495,8 @@ export function RichTextEditOverlay({
 	const [toolbarState, setToolbarState] = useState<RichToolbarState>(() =>
 		readToolbarState(editor),
 	);
-	const [fontSizeDraft, setFontSizeDraft] = useState("");
 	const [lineHeightDraft, setLineHeightDraft] = useState(() =>
 		String(readToolbarState(editor).selectedLineHeight),
-	);
-	const [blockSpacingDraft, setBlockSpacingDraft] = useState(
-		String(
-			getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
-		),
 	);
 	const toolbarDragRef = useRef<ToolbarDragState | null>(null);
 	const toolbarOffsetDraftRef = useRef<RichToolbarOffset>(
@@ -739,23 +844,22 @@ export function RichTextEditOverlay({
 		currentTextColor,
 		currentHighlightColor,
 	} = toolbarState;
-
-	useEffect(() => {
-		setFontSizeDraft(toolbarState.currentFontSize);
-	}, [toolbarState.currentFontSize]);
+	const currentBlockSpacingValue = `${String(
+		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
+	)}px`;
 
 	useEffect(() => {
 		setLineHeightDraft(String(toolbarState.selectedLineHeight));
 	}, [toolbarState.selectedLineHeight]);
 
 	useEffect(() => {
-		setBlockSpacingDraft(
-			String(
-				getTextDocumentBlockGap(content) ??
-					readInitialBlockSpacing(contentStyle),
-			),
-		);
-	}, [content, contentStyle]);
+		if (
+			openSelectId &&
+			!isSelectVisibleForStructureMode(openSelectId, structureMode)
+		) {
+			setOpenSelectId(null);
+		}
+	}, [openSelectId, structureMode]);
 
 	const syncToolbarState = useCallback(() => {
 		setToolbarState(readToolbarState(editor));
@@ -886,19 +990,22 @@ export function RichTextEditOverlay({
 		[editor, restoreToolbarSelection, syncToolbarState],
 	);
 
-	const handleBlockSpacingCommit = useCallback(() => {
-		const parsed = Number.parseFloat(blockSpacingDraft);
-		if (!Number.isFinite(parsed) || parsed < 0) {
-			setBlockSpacingDraft(
-				String(
-					getTextDocumentBlockGap(content) ??
-						readInitialBlockSpacing(contentStyle),
-				),
-			);
-			return;
-		}
-		onUpdateBlockGap(nodeId, parsed);
-	}, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
+	const handleBlockSpacingCommit = useCallback(
+		(value: string) => {
+			try {
+				const parsed = parseSpacingValue(value);
+				const nextPx = resolveSpacingPx(
+					parsed.parsed,
+					readToolbarFontReference(rootRef.current),
+				);
+				if (!Number.isFinite(nextPx) || nextPx < 0) {
+					return;
+				}
+				onUpdateBlockGap(nodeId, nextPx);
+			} catch {}
+		},
+		[nodeId, onUpdateBlockGap],
+	);
 
 	const handleToolbarDragPointerDown = useCallback(
 		(event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -1004,9 +1111,12 @@ export function RichTextEditOverlay({
 		],
 	);
 
-	const commitFontSizeDraft = useCallback(() => {
-		handleValueMark("fontSize", fontSizeDraft);
-	}, [fontSizeDraft, handleValueMark]);
+	const commitFontSizeDraft = useCallback(
+		(value: string) => {
+			handleValueMark("fontSize", value);
+		},
+		[handleValueMark],
+	);
 
 	const commitLineHeightDraft = useCallback(() => {
 		const parsed = Number.parseFloat(lineHeightDraft);
@@ -1085,14 +1195,29 @@ export function RichTextEditOverlay({
 								}))}
 								width={132}
 							/>
-							<CompactTextField
+							<CompactFontSizeField
 								label="Font size"
-								value={fontSizeDraft}
-								placeholder="18px"
-								width={72}
-								onChange={setFontSizeDraft}
-								onBlur={commitFontSizeDraft}
+								value={toolbarState.currentFontSize}
+								width={90}
 								onCommit={commitFontSizeDraft}
+								resolveUnitValue={(nextUnit, currentValue) => {
+									try {
+										const parsed = parseFontSizeValue(currentValue);
+										const nextValue = convertRenderedPxToFontRelativeUnit(
+											resolveFontSizePx(
+												parsed.parsed,
+												readToolbarFontReference(rootRef.current),
+											),
+											nextUnit,
+											readToolbarFontReference(rootRef.current),
+										);
+										return nextValue == null
+											? null
+											: `${formatDisplayValue(nextValue)}${nextUnit}`;
+									} catch {
+										return null;
+									}
+								}}
 							/>
 							<ToolbarButton
 								label="Bold"
@@ -1153,29 +1278,31 @@ export function RichTextEditOverlay({
 							>
 								<Type size={14} />
 							</ToolbarButton>
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.blockType}
-								open={openSelectId === RICH_SELECT_IDS.blockType}
-								onOpenChange={(open) =>
-									handleSelectOpenChange(RICH_SELECT_IDS.blockType, open)
-								}
-								label="Block type"
-								value={selectedBlockType}
-								onValueChange={(value) => {
-									restoreToolbarSelection();
-									convertSelectionToBlockType(
-										editor,
-										value as RichTextBlockType,
-									);
-									syncToolbarState();
-									setSelectionRevision((revision) => revision + 1);
-								}}
-								options={BLOCK_TYPE_OPTIONS.map((option) => ({
-									value: option.value,
-									label: option.label,
-								}))}
-								width={112}
-							/>
+							{structureMode === "block" ? (
+								<CompactSelect
+									selectId={RICH_SELECT_IDS.blockType}
+									open={openSelectId === RICH_SELECT_IDS.blockType}
+									onOpenChange={(open) =>
+										handleSelectOpenChange(RICH_SELECT_IDS.blockType, open)
+									}
+									label="Block type"
+									value={selectedBlockType}
+									onValueChange={(value) => {
+										restoreToolbarSelection();
+										convertSelectionToBlockType(
+											editor,
+											value as RichTextBlockType,
+										);
+										syncToolbarState();
+										setSelectionRevision((revision) => revision + 1);
+									}}
+									options={BLOCK_TYPE_OPTIONS.map((option) => ({
+										value: option.value,
+										label: option.label,
+									}))}
+									width={112}
+								/>
+							) : null}
 							<ToolbarButton
 								label="Use code block"
 								active={structureMode === "code-block"}
@@ -1203,36 +1330,38 @@ export function RichTextEditOverlay({
 							>
 								<ListOrdered size={14} />
 							</ToolbarButton>
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.orderedListMarker}
-								open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
-								onOpenChange={(open) =>
-									handleSelectOpenChange(
-										RICH_SELECT_IDS.orderedListMarker,
-										open,
-									)
-								}
-								label="Ordered list marker"
-								value={
-									selectedListKind === "ol"
-										? selectedListMarkerStyle || "decimal"
-										: "decimal"
-								}
-								onValueChange={(value) => {
-									restoreToolbarSelection();
-									setSelectedListMarkerStyle(
-										editor,
-										value as (typeof ORDERED_MARKER_OPTIONS)[number]["value"],
-									);
-									syncToolbarState();
-									setSelectionRevision((revision) => revision + 1);
-								}}
-								options={ORDERED_MARKER_OPTIONS.map((option) => ({
-									value: option.value,
-									label: option.label,
-								}))}
-								width={88}
-							/>
+							{structureMode === "ol" ? (
+								<CompactSelect
+									selectId={RICH_SELECT_IDS.orderedListMarker}
+									open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
+									onOpenChange={(open) =>
+										handleSelectOpenChange(
+											RICH_SELECT_IDS.orderedListMarker,
+											open,
+										)
+									}
+									label="Ordered list marker"
+									value={
+										selectedListKind === "ol"
+											? selectedListMarkerStyle || "decimal"
+											: "decimal"
+									}
+									onValueChange={(value) => {
+										restoreToolbarSelection();
+										setSelectedListMarkerStyle(
+											editor,
+											value as (typeof ORDERED_MARKER_OPTIONS)[number]["value"],
+										);
+										syncToolbarState();
+										setSelectionRevision((revision) => revision + 1);
+									}}
+									options={ORDERED_MARKER_OPTIONS.map((option) => ({
+										value: option.value,
+										label: option.label,
+									}))}
+									width={88}
+								/>
+							) : null}
 							<ToolbarButton
 								label="Use unordered list"
 								active={selectedListKind === "ul"}
@@ -1245,36 +1374,38 @@ export function RichTextEditOverlay({
 							>
 								<List size={14} />
 							</ToolbarButton>
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.unorderedListMarker}
-								open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
-								onOpenChange={(open) =>
-									handleSelectOpenChange(
-										RICH_SELECT_IDS.unorderedListMarker,
-										open,
-									)
-								}
-								label="Unordered list marker"
-								value={
-									selectedListKind === "ul"
-										? selectedListMarkerStyle || "disc"
-										: "disc"
-								}
-								onValueChange={(value) => {
-									restoreToolbarSelection();
-									setSelectedListMarkerStyle(
-										editor,
-										value as (typeof UNORDERED_MARKER_OPTIONS)[number]["value"],
-									);
-									syncToolbarState();
-									setSelectionRevision((revision) => revision + 1);
-								}}
-								options={UNORDERED_MARKER_OPTIONS.map((option) => ({
-									value: option.value,
-									label: option.label,
-								}))}
-								width={92}
-							/>
+							{structureMode === "ul" ? (
+								<CompactSelect
+									selectId={RICH_SELECT_IDS.unorderedListMarker}
+									open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
+									onOpenChange={(open) =>
+										handleSelectOpenChange(
+											RICH_SELECT_IDS.unorderedListMarker,
+											open,
+										)
+									}
+									label="Unordered list marker"
+									value={
+										selectedListKind === "ul"
+											? selectedListMarkerStyle || "disc"
+											: "disc"
+									}
+									onValueChange={(value) => {
+										restoreToolbarSelection();
+										setSelectedListMarkerStyle(
+											editor,
+											value as (typeof UNORDERED_MARKER_OPTIONS)[number]["value"],
+										);
+										syncToolbarState();
+										setSelectionRevision((revision) => revision + 1);
+									}}
+									options={UNORDERED_MARKER_OPTIONS.map((option) => ({
+										value: option.value,
+										label: option.label,
+									}))}
+									width={92}
+								/>
+							) : null}
 							{structureMode === "code-block" ? (
 								<CompactSelect
 									selectId={RICH_SELECT_IDS.codeLanguage}
@@ -1294,23 +1425,40 @@ export function RichTextEditOverlay({
 									width={110}
 								/>
 							) : null}
-							<CompactTextField
+							<CompactIconTextField
 								label="Line height"
+								icon={<MoveVertical size={14} />}
 								value={lineHeightDraft}
 								placeholder="1.2"
-								width={64}
+								width={72}
 								onChange={setLineHeightDraft}
 								onBlur={commitLineHeightDraft}
 								onCommit={commitLineHeightDraft}
 							/>
-							<CompactTextField
+							<CompactSpacingField
 								label="Block spacing"
-								value={blockSpacingDraft}
-								placeholder="0"
-								width={68}
-								onChange={setBlockSpacingDraft}
-								onBlur={handleBlockSpacingCommit}
+								icon={<UnfoldVertical size={14} />}
+								value={currentBlockSpacingValue}
+								width={104}
 								onCommit={handleBlockSpacingCommit}
+								resolveUnitValue={(nextUnit, currentValue) => {
+									try {
+										const parsed = parseSpacingValue(currentValue);
+										const nextValue = convertRenderedPxToSpacingUnit(
+											resolveSpacingPx(
+												parsed.parsed,
+												readToolbarFontReference(rootRef.current),
+											),
+											nextUnit,
+											readToolbarFontReference(rootRef.current),
+										);
+										return nextValue == null
+											? null
+											: `${formatDisplayValue(nextValue)}${nextUnit}`;
+									} catch {
+										return null;
+									}
+								}}
 							/>
 						</div>
 					</div>
@@ -1515,8 +1663,147 @@ function CompactSelect({
 	);
 }
 
-function CompactTextField({
+function CompactFontSizeField({
 	label,
+	value,
+	width,
+	onCommit,
+	resolveUnitValue,
+}: {
+	label: string;
+	value: string;
+	width: number;
+	onCommit: (value: string) => void;
+	resolveUnitValue: (
+		nextUnit: ToolbarFontUnit,
+		currentValue: string,
+	) => string | null;
+}) {
+	const [draft, setDraft] = useState(readFontSizeDraftState(value));
+	const [invalid, setInvalid] = useState(false);
+	const options: ValueWithUnitOption[] = FONT_SIZE_UNIT_OPTIONS.map((option) => ({
+		type: "option",
+		value: option,
+		label: option,
+		inputMode: "numeric",
+	}));
+	const suggestions: ValueWithUnitSuggestion[] =
+		FONT_SIZE_SUGGESTIONS_BY_UNIT[draft.unit].map((option) => ({
+			value: formatDisplayValue(option),
+			label: `${formatDisplayValue(option)}${draft.unit}`,
+		}));
+
+	useEffect(() => {
+		setDraft(readFontSizeDraftState(value));
+		setInvalid(false);
+	}, [value]);
+
+	const commitDraft = useCallback(() => {
+		if (!draft.draft.trim()) {
+			onCommit("");
+			setInvalid(false);
+			return;
+		}
+		try {
+			const parsed = parseFontSizeValue(`${draft.draft}${draft.unit}`);
+			onCommit(`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`);
+			setInvalid(false);
+		} catch {
+			setDraft(readFontSizeDraftState(value));
+			setInvalid(false);
+		}
+	}, [draft, onCommit, value]);
+
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
+			<div
+				className="pointer-events-auto shrink-0"
+				style={{ width, pointerEvents: "auto" }}
+				onPointerDown={(event) => {
+					event.stopPropagation();
+				}}
+				onBlur={(event: ReactFocusEvent<HTMLDivElement>) => {
+					if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+						return;
+					}
+					commitDraft();
+				}}
+				onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+					if (event.defaultPrevented || event.key !== "Enter") {
+						return;
+					}
+					if (!(event.target instanceof HTMLInputElement)) {
+						return;
+					}
+					event.preventDefault();
+					commitDraft();
+					event.target.blur();
+				}}
+			>
+				<ValueWithUnit
+					mode="number-select"
+					value={value || `${draft.draft || 0}${draft.unit}`}
+					onChange={(nextValue) => {
+						try {
+							const parsed = parseFontSizeValue(nextValue);
+							setDraft({
+								draft: formatDisplayValue(parsed.parsed.value),
+								unit: parsed.parsed.unit as ToolbarFontUnit,
+								valid: true,
+							});
+							setInvalid(false);
+							onCommit(`${formatDisplayValue(parsed.parsed.value)}${parsed.parsed.unit}`);
+						} catch {
+							if (FONT_SIZE_UNIT_OPTIONS.includes(nextValue as ToolbarFontUnit)) {
+								setDraft((current) => ({
+									...current,
+									unit: nextValue as ToolbarFontUnit,
+								}));
+							}
+						}
+					}}
+					options={options}
+					inputValue={draft.draft}
+					selectedOption={draft.unit}
+					placeholder="18"
+					min={0}
+					step="any"
+					ariaLabel={label}
+					invalid={invalid}
+					segmentWidth={36}
+					suggestions={suggestions}
+					onInputBlur={commitDraft}
+					onInputValueChange={(nextDraft) => {
+						setDraft((current) => ({ ...current, draft: nextDraft }));
+						if (!nextDraft.trim()) {
+							setInvalid(false);
+							return;
+						}
+						try {
+							parseFontSizeValue(`${nextDraft}${draft.unit}`);
+							setInvalid(false);
+						} catch {
+							setInvalid(true);
+						}
+					}}
+					onResolveOptionValue={(nextUnit, currentValue) =>
+						resolveUnitValue(nextUnit as ToolbarFontUnit, currentValue)
+					}
+				/>
+			</div>
+		</PopoverTooltip>
+	);
+}
+
+function CompactIconTextField({
+	label,
+	icon,
 	value,
 	placeholder,
 	width,
@@ -1525,6 +1812,7 @@ function CompactTextField({
 	onCommit,
 }: {
 	label: string;
+	icon: React.ReactNode;
 	value: string;
 	placeholder?: string;
 	width: number;
@@ -1539,29 +1827,182 @@ function CompactTextField({
 			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
-			<Input
-				aria-label={label}
-				value={value}
-				placeholder={placeholder}
-				className="pointer-events-auto h-8 shrink-0 rounded-sm px-2 text-xs"
+			<div
+				className="editor-border-subtle pointer-events-auto flex h-8 shrink-0 items-center gap-1 rounded-sm border bg-transparent px-1.5"
 				style={{ width, pointerEvents: "auto" }}
 				onPointerDown={(event) => {
 					event.stopPropagation();
 				}}
-				onChange={(event) => onChange(event.target.value)}
-				onBlur={onBlur}
-				onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
-					if (event.key === "Enter") {
-						event.preventDefault();
-						onCommit?.();
+			>
+				<span className="editor-text-muted flex shrink-0 items-center">
+					{icon}
+				</span>
+				<Input
+					aria-label={label}
+					value={value}
+					placeholder={placeholder}
+					className="h-full min-w-0 border-0 bg-transparent px-0 text-center text-xs shadow-none focus-visible:ring-0"
+					style={{ pointerEvents: "auto" }}
+					onChange={(event) => onChange(event.target.value)}
+					onBlur={onBlur}
+					onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
+						if (event.key === "Enter") {
+							event.preventDefault();
+							onCommit?.();
+							return;
+						}
+						if (event.key === "Escape") {
+							event.preventDefault();
+							(event.target as HTMLInputElement).blur();
+						}
+					}}
+				/>
+			</div>
+		</PopoverTooltip>
+	);
+}
+
+function CompactSpacingField({
+	label,
+	icon,
+	value,
+	width,
+	onCommit,
+	resolveUnitValue,
+}: {
+	label: string;
+	icon: React.ReactNode;
+	value: string;
+	width: number;
+	onCommit: (value: string) => void;
+	resolveUnitValue: (
+		nextUnit: ToolbarSpacingUnit,
+		currentValue: string,
+	) => string | null;
+}) {
+	const [draft, setDraft] = useState(readSpacingDraftState(value));
+	const [invalid, setInvalid] = useState(false);
+	const options: ValueWithUnitOption[] = BLOCK_SPACING_UNIT_OPTIONS.map(
+		(option) => ({
+			type: "option",
+			value: option,
+			label: option,
+			inputMode: "numeric",
+		}),
+	);
+
+	useEffect(() => {
+		setDraft(readSpacingDraftState(value));
+		setInvalid(false);
+	}, [value]);
+
+	const commitDraft = useCallback(() => {
+		if (!draft.draft.trim()) {
+			setDraft(readSpacingDraftState(value));
+			setInvalid(false);
+			return;
+		}
+		try {
+			const parsed = parseSpacingValue(`${draft.draft}${draft.unit}`);
+			onCommit(`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`);
+			setInvalid(false);
+		} catch {
+			setDraft(readSpacingDraftState(value));
+			setInvalid(false);
+		}
+	}, [draft, onCommit, value]);
+
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
+			<div
+				className="pointer-events-auto flex shrink-0 items-center gap-1"
+				style={{ width, pointerEvents: "auto" }}
+				onPointerDown={(event) => {
+					event.stopPropagation();
+				}}
+				onBlur={(event: ReactFocusEvent<HTMLDivElement>) => {
+					if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
 						return;
 					}
-					if (event.key === "Escape") {
-						event.preventDefault();
-						(event.target as HTMLInputElement).blur();
-					}
+					commitDraft();
 				}}
-			/>
+				onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+					if (event.defaultPrevented || event.key !== "Enter") {
+						return;
+					}
+					if (!(event.target instanceof HTMLInputElement)) {
+						return;
+					}
+					event.preventDefault();
+					commitDraft();
+					event.target.blur();
+				}}
+			>
+				<span className="editor-text-muted flex h-8 shrink-0 items-center">
+					{icon}
+				</span>
+				<ValueWithUnit
+					mode="number-select"
+					value={value || `${draft.draft || 0}${draft.unit}`}
+					onChange={(nextValue) => {
+						try {
+							const parsed = parseSpacingValue(nextValue);
+							setDraft({
+								draft: formatDisplayValue(parsed.parsed.value),
+								unit: parsed.parsed.unit as ToolbarSpacingUnit,
+								valid: true,
+							});
+							setInvalid(false);
+							onCommit(`${formatDisplayValue(parsed.parsed.value)}${parsed.parsed.unit}`);
+						} catch {
+							if (
+								BLOCK_SPACING_UNIT_OPTIONS.includes(
+									nextValue as ToolbarSpacingUnit,
+								)
+							) {
+								setDraft((current) => ({
+									...current,
+									unit: nextValue as ToolbarSpacingUnit,
+								}));
+							}
+						}
+					}}
+					options={options}
+					inputValue={draft.draft}
+					selectedOption={draft.unit}
+					placeholder="0"
+					min={0}
+					step="any"
+					ariaLabel={label}
+					invalid={invalid}
+					segmentWidth={36}
+					className="min-w-0 flex-1"
+					onInputBlur={commitDraft}
+					onInputValueChange={(nextDraft) => {
+						setDraft((current) => ({ ...current, draft: nextDraft }));
+						if (!nextDraft.trim()) {
+							setInvalid(false);
+							return;
+						}
+						try {
+							parseSpacingValue(`${nextDraft}${draft.unit}`);
+							setInvalid(false);
+						} catch {
+							setInvalid(true);
+						}
+					}}
+					onResolveOptionValue={(nextUnit, currentValue) =>
+						resolveUnitValue(nextUnit as ToolbarSpacingUnit, currentValue)
+					}
+					expandToFill
+				/>
+			</div>
 		</PopoverTooltip>
 	);
 }

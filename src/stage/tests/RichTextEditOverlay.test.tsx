@@ -42,8 +42,9 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain('aria-label="Link"');
 		expect(markup).toContain('aria-label="Use text block"');
 		expect(markup).toContain('aria-label="Use code block"');
-		expect(markup).toContain('aria-label="Ordered list marker"');
-		expect(markup).toContain('aria-label="Unordered list marker"');
+		expect(markup).not.toContain('aria-label="Ordered list marker"');
+		expect(markup).not.toContain('aria-label="Unordered list marker"');
+		expect(markup).not.toContain('aria-label="Code language"');
 		expect(markup).toContain('aria-label="Line height"');
 		expect(markup).toContain('aria-label="Block spacing"');
 		expect(markup).not.toContain("Rich text edit");

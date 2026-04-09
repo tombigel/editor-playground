@@ -1779,7 +1779,11 @@ While editing, the rich node gets visible stage chrome:
 - the link panel follows the dragged toolbar position instead of staying anchored to the original text node position
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
-- the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, code-block mode, ordered-list controls, unordered-list controls, line height, and block spacing
+- the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls
+- font size uses the shared `ValueWithUnit` contract with font-size units
+- line height uses a compact numeric field with a leading `MoveVertical` icon
+- block spacing uses a compact `ValueWithUnit` field with `px` / `em` support and a leading `UnfoldVertical` icon while still persisting `content.blockGap` as px
+- the block-type, ordered-list marker, unordered-list marker, and code-language dropdowns render only for their active structure modes
 - line-height edits apply immediately in the live rich-edit surface for supported non-list text blocks, not only after commit back to idle rendering
 - when a non-collapsed authored selection exists and focus moves into toolbar chrome, the edit surface keeps a transient accent-blue retained highlight over that same range until the user changes selection or exits rich edit
 - active icon buttons use the shared selected-control treatment rather than bespoke stage-only styling

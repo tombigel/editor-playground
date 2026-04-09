@@ -189,7 +189,7 @@ Execution rules:
 - Verification result:
   - Passed before commit.
 - Commit SHA:
-  - Pending the Q3 commit
+  - `fad4198`
 - Open follow-ups carried forward:
   - `P18-Q4` should converge the remaining toolbar inputs onto inspector control contracts and hide structure-specific controls until their owning mode is active.
 
@@ -197,24 +197,35 @@ Execution rules:
 
 - Objective:
   - Replace bespoke toolbar inputs with inspector controls where appropriate and hide structure-specific controls unless their structure mode is active.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
-  - Planned during execution.
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`
 - Read-first files and target lines:
-  - Planned during execution.
+  - `src/components/ui/value-with-unit.tsx:1-220`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1080-1460`
+  - `src/stage/tests/RichTextEditOverlay.test.tsx:1-100`
+  - `src/stage/tests/Stage.e2e.test.ts:760-840`
+  - `docs/PLAYGROUND_SPEC.md:1778-1788`
 - Implementation notes:
   - Font size should reuse the inspector font-size control contract.
   - Block spacing should reuse a `ValueWithUnit` control with `px` / `em` support plus an `UnfoldVertical` icon.
   - Line height should use an inspector-style compact field plus a `MoveVertical` icon.
   - Block, ordered-list, unordered-list, and code-language dropdowns should appear only in their active structure modes.
+  - Keep the toolbar on shared `ValueWithUnit` / `Input` primitives, but preserve stage-toolbar commit semantics by applying numeric text edits on blur or Enter instead of on every keystroke.
 - Verification commands:
-  - Planned during execution
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "structure-specific toolbar dropdowns|partial inline selection|retained highlight"`
+  - `npm run build`
 - Verification result:
-  - Not started
+  - Passed before commit.
 - Commit SHA:
-  - Not started
+  - Pending the Q4 commit
 - Open follow-ups carried forward:
-  - None yet.
+  - `P18-Q5` remains for final layered-dismissal closeout and any remaining rich-stage stabilization bugs before phase 2.
 
 ## P18-Q5: Layered dismissal regressions and closeout
 
