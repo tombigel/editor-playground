@@ -5,13 +5,16 @@ This file is the planned-only backlog for the text-system phase 2.0 workstream.
 Source documents:
 
 - [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md)
 - [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
 - [`TEXT_COMPONENT_MASTER_BRIEF.md`](./TEXT_COMPONENT_MASTER_BRIEF.md)
 
 Execution rules:
 
 - Planned only.
-- Do not execute until phase 1.5 is explicitly closed or superseded.
+- Do not execute until phase 1.7 is explicitly closed or superseded.
+- Phase 2.0 assumes the canonical text-model refactor tracked in phase 1.7 is complete before execution starts.
 - When phase 2.0 execution starts, each quantum should be converted into the same execution ledger format used by phase 1.0 and phase 1.5.
 
 ## Shared Progress Summary
@@ -22,6 +25,7 @@ Execution rules:
 - Next quantum after current: `P2-A`
 - Locked assumptions:
   - Phase 2 extends, rather than bypasses, the phase 1.5 API-first contract.
+  - Phase 2 also extends the phase 1.7 canonical text-model contract rather than reviving legacy standalone text storage.
   - Phase 2 is where non-rich on-stage editing enters.
   - Phase 2 is where deferred list and description-list UX is resolved.
 
@@ -40,7 +44,7 @@ Execution rules:
   - Planned during execution
 - Implementation notes:
   - Reuse the phase 1.5 text-edit lifecycle where possible.
-  - Keep standalone block persistence semantics intact.
+  - Use canonical `TextDocumentContent` for standalone block persistence and editing.
 - Verification commands:
   - Planned during execution
 - Verification result:
@@ -63,6 +67,7 @@ Execution rules:
 - Implementation notes:
   - Keep code-theme/background behavior API-owned.
   - Keep code `markdown` mode as highlighted code, not parsed markdown content.
+  - Use canonical `TextDocumentContent` for standalone code persistence and editing.
 - Verification commands:
   - Planned during execution
 - Verification result:
@@ -85,6 +90,7 @@ Execution rules:
 - Implementation notes:
   - Finish standalone list linking UX here.
   - Resolve `dl` authoring UX for standalone lists here if still needed.
+  - Use canonical `TextDocumentContent` for standalone list persistence and editing.
 - Verification commands:
   - Planned during execution
 - Verification result:
@@ -149,6 +155,7 @@ Execution rules:
 - Implementation notes:
   - Keep activation, commit, discard, and outside-click semantics unified.
   - Keep subtype-specific controls modular.
+  - Build the shared shell on the phase 1.7 canonical text model.
 - Verification commands:
   - Planned during execution
 - Verification result:

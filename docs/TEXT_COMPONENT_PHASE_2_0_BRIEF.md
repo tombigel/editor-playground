@@ -5,13 +5,16 @@ This document is the planned-only brief for the text-system phase 2.0 workstream
 Source documents:
 
 - [`TEXT_COMPONENT_MASTER_BRIEF.md`](./TEXT_COMPONENT_MASTER_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md)
+- [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md)
 - [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
 - [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md)
 
 Execution status:
 
 - This file is planned-only.
-- Do not execute phase 2.0 quanta until phase 1.5 is explicitly closed or superseded.
+- Do not execute phase 2.0 quanta until phase 1.7 is explicitly closed or superseded.
+- Phase 2.0 depends on the canonical all-text storage refactor tracked in phase 1.7.
 
 ## Locked Phase 2 Scope
 
@@ -27,6 +30,18 @@ Phase 2.0 contains the explicitly deferred work:
 - standalone list per-item direction UI
 - unified all-text stage editing shell
 
+## Phase 1.7 Dependency
+
+Before phase 2.0 execution starts, phase 1.7 should complete the canonical text-model refactor:
+
+- all text nodes persist one canonical `TextDocumentContent`
+- canonical block/inline/leaf types remain Slate-compatible
+- merge/split preserve per-block styling
+- inspector/editor bindings stop depending on legacy standalone text storage
+- defaults and saved templates emit canonical text content
+
+Phase 2.0 should build on that canonical model instead of extending legacy `block`/`code`/`list` storage branches.
+
 ## Planned 2.0 Work Items
 
 ### P2-A: On-stage editing for standalone block text
@@ -34,6 +49,7 @@ Phase 2.0 contains the explicitly deferred work:
 - Add second-click edit entry for block text.
 - Allow inline marks and multiple links during editing.
 - Persist back through pure APIs.
+- Build on canonical `TextDocumentContent`, not legacy standalone block fields.
 
 ### P2-B: On-stage editing for standalone code blocks
 
@@ -42,6 +58,7 @@ Phase 2.0 contains the explicitly deferred work:
 - Support language modes including `auto` and `markdown`.
 - Expose theme controls from the stage toolbar.
 - Keep code-theme/background semantics API-owned.
+- Build on canonical `TextDocumentContent`, not legacy standalone code fields.
 
 ### P2-C: On-stage editing for standalone lists
 
@@ -51,6 +68,7 @@ Phase 2.0 contains the explicitly deferred work:
 - Add per-item direction UI.
 - Add nesting and indent levels.
 - Finish standalone list linking UX here.
+- Build on canonical `TextDocumentContent`, not legacy standalone list fields.
 
 ### P2-D: Granular rich-to-simple split conversion
 
