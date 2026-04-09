@@ -291,6 +291,9 @@ describe('panels/InspectorPanel', () => {
 
     expect(markup).toContain('Edit rich text');
     expect(markup).not.toContain('Preview should stay hidden');
+    expect(markup).not.toContain('⌘B');
+    expect(markup).not.toContain('⌘I');
+    expect(markup).not.toContain('⌘K');
   });
 
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {

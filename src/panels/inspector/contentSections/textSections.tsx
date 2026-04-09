@@ -612,11 +612,6 @@ export function RichTextContentSection({
         <Pencil size={12} />
         Edit rich text
       </Button>
-      <p className="editor-text-muted mt-2 px-0.5 text-[10px] opacity-50">
-        <kbd className="font-mono">⌘B</kbd> bold &nbsp;
-        <kbd className="font-mono">⌘I</kbd> italic &nbsp;
-        <kbd className="font-mono">⌘K</kbd> link
-      </p>
     </InspectorSectionCard>
   );
 }
