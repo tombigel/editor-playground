@@ -22,10 +22,10 @@ Execution rules:
 
 ## Shared Progress Summary
 
-- Overall status: `in_progress`
+- Overall status: `done`
 - Current quantum: `none`
-- Last completed quantum: `P18-Q2`
-- Next quantum after current: `P18-Q3`
+- Last completed quantum: `P18-Q5`
+- Next quantum after current: `none`
 - Locked assumptions:
   - Phase 1.7 remains complete for the canonical text-model refactor.
   - Phase 1.8 is stabilization only and does not absorb planned phase 2 feature scope.
@@ -33,16 +33,11 @@ Execution rules:
   - Shared DS primitives remain the correct base for toolbar/select/popover chrome.
   - The base rich-text toolbar remains open for the whole edit session.
   - Nested rich-edit layers unwind one step at a time before commit or discard can fire.
-  - One quantum at a time, commit before the next starts, then pause for review.
+  - Phase 2 remains planned-only until explicitly started; phase 1.8 no longer blocks it.
 
 ## Discovered Issues
 
-- Rich-stage dropdown and popover interactions still have selection/focus regressions that make the current “phase complete” status too optimistic for pre-phase-2 readiness.
-- The toolbar is not yet modeled as a deterministic layered popover stack.
-- Nested dismissal order is not yet locked for outside click and `Escape`.
-- Retained selection highlighting is still missing when focus leaves the editable surface for toolbar chrome.
-- Toolbar controls still use bespoke inputs where inspector controls should be reused later in phase 1.8.
-- Structure-specific dropdowns are still always visible and need to become conditional later in phase 1.8.
+- No open phase-1.8 blockers remain. Earlier rich-stage layer-stack, retained-selection, conditional-control, and shared-control convergence issues were resolved in `P18-Q1` through `P18-Q5`.
 
 ## P18-Q0: Bootstrap the stabilization ledger
 
@@ -158,7 +153,7 @@ Execution rules:
 - Verification result:
   - Passed before commit.
 - Commit SHA:
-  - Pending the replacement Q2 commit
+  - `27c70fa`
 - Open follow-ups carried forward:
   - `P18-Q3` should preserve the authored selection visually while the moved toolbar owns focus.
 
@@ -223,7 +218,7 @@ Execution rules:
 - Verification result:
   - Passed before commit.
 - Commit SHA:
-  - Pending the Q4 commit
+  - `770d065`
 - Open follow-ups carried forward:
   - `P18-Q5` remains for final layered-dismissal closeout and any remaining rich-stage stabilization bugs before phase 2.
 
@@ -231,19 +226,33 @@ Execution rules:
 
 - Objective:
   - Close the remaining pre-phase-2 rich-stage interaction bugs and verify the layered panel model end to end.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
-  - Planned during execution.
+  - `src/styles/inspector.css`
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`
+  - `docs/TEXT_COMPONENT_TASKLIST.md`
 - Read-first files and target lines:
-  - Planned during execution.
+  - `src/stage/tests/Stage.e2e.test.ts:1120-1225`
+  - `src/styles/inspector.css:1-80`
+  - `docs/PLAYGROUND_SPEC.md:1768-1794`
+  - `docs/TEXT_COMPONENT_TASKLIST.md:1-40`
 - Implementation notes:
   - Focus on one-layer-at-a-time outside-click and `Escape` regressions, plus any remaining stack-order edge cases discovered during Q2-Q4.
   - Do not absorb phase 2 features into this phase.
+  - Close the remaining rich-toolbar polish regressions needed for a stable pre-phase-2 baseline.
+  - Keep the shared color-picker swatch variant, but normalize its visible chip framing so light and dark toolbar swatches read as the same size.
+  - Add an e2e regression that verifies text and highlight swatches resolve to the same host, trigger, and chip geometry in the rich toolbar.
 - Verification commands:
-  - Planned during execution
+  - `npx vitest run src/components/ui/tests/color-picker.test.tsx`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps text and highlight color swatches the same size in the rich toolbar"`
+  - `npm run build`
 - Verification result:
-  - Not started
+  - `npx vitest run src/components/ui/tests/color-picker.test.tsx`: passed
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps text and highlight color swatches the same size in the rich toolbar"`: passed
+  - `npm run build`: passed
 - Commit SHA:
-  - Not started
+  - `pending`
 - Open follow-ups carried forward:
-  - None yet.
+  - None.

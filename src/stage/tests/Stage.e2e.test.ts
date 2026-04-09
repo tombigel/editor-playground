@@ -1177,6 +1177,53 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
+	it("keeps text and highlight color swatches the same size in the rich toolbar", async () => {
+		const { document, richTextId } = createRichTextEditE2EDocument();
+		await openEditor({
+			document,
+			selectedId: richTextId,
+			selectedIds: [richTextId],
+		});
+
+		await enterRichEditMode(richTextId);
+		const swatchRects = await page.evaluate(() => {
+			function readPickerRect(label: string) {
+				const host = window.document.querySelector<HTMLElement>(
+					`color-input[aria-label="${label}"]`,
+				);
+				if (!host?.shadowRoot) {
+					throw new Error(`Missing color picker host for ${label}`);
+				}
+				const trigger = host.shadowRoot.querySelector<HTMLElement>(".trigger");
+				const chip = host.shadowRoot.querySelector<HTMLElement>(".chip");
+				const hostRect = host.getBoundingClientRect();
+				const triggerRect = trigger?.getBoundingClientRect();
+				const chipRect = chip?.getBoundingClientRect();
+				return {
+					host: hostRect
+						? { width: hostRect.width, height: hostRect.height }
+						: null,
+					trigger: triggerRect
+						? { width: triggerRect.width, height: triggerRect.height }
+						: null,
+					chip: chipRect
+						? { width: chipRect.width, height: chipRect.height }
+						: null,
+				};
+			}
+			return {
+				text: readPickerRect("Text color"),
+				highlight: readPickerRect("Highlight color"),
+			};
+		});
+
+		expect(swatchRects.text.host).toEqual(swatchRects.highlight.host);
+		expect(swatchRects.text.trigger).toEqual(swatchRects.highlight.trigger);
+		expect(swatchRects.text.chip).toEqual(swatchRects.highlight.chip);
+
+		await closeEditor();
+	}, 30_000);
+
 	it("converts touched blocks into rich code blocks and applies the selected code language", async () => {
 		const { document, richTextId } = createRichTextEditE2EDocument(
 			[

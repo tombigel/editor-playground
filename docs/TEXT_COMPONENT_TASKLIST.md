@@ -25,8 +25,8 @@ Execution rules:
   - List is a first-class subtype, not an inspector formatting mode.
   - Same-parent sibling merge is the only phase-1 merge scope.
   - Phase 1.7 completed the canonical prerequisite refactor before phase 2 text editing execution.
-  - Phase 1.8 is the active stabilization tranche before phase 2 text editing execution.
-  - One quantum at a time, commit before the next starts.
+  - Phase 1.8 completed the rich-stage stabilization tranche before phase 2 text editing execution.
+  - Phase 2 remains planned-only until explicitly started.
 
 ## Discovered Issues
 
