@@ -13,6 +13,7 @@ import type {
   TextNodeConfig,
 } from './types';
 import { createContainerNode, createDefaultRect, createLinkTextNode, createMediaNode, createTextNode as createTextNodeFactory } from './defaultFactories';
+import { createTextBlockContent, createTextDocumentContent } from './richContent';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from './units';
 
 export function applyPadding(
@@ -71,7 +72,17 @@ export function buildTemplate(
 export function createTextNode(parentId: NodeId, config: TextNodeConfig): TextNode {
   const text = createTextNodeFactory('block', parentId);
   text.name = config.name;
-  text.content = config.content;
+  text.content = createTextDocumentContent([
+    createTextBlockContent(
+      config.style?.htmlTag === 'blockquote'
+        ? 'blockquote'
+        : config.style?.htmlTag && config.style.htmlTag !== 'p'
+          ? config.style.htmlTag
+          : 'paragraph',
+      config.content,
+      { direction: 'ltr' },
+    ),
+  ]);
   text.rect = createDefaultRect(config.x, config.y, config.width, config.height ?? 'auto');
   if (config.style) {
     styleText(text, config.style);
@@ -82,7 +93,9 @@ export function createTextNode(parentId: NodeId, config: TextNodeConfig): TextNo
 export function createLinkNode(parentId: NodeId, config: LinkNodeConfig): TextNode {
   const link = createLinkTextNode(parentId);
   link.name = config.name;
-  link.content = config.label;
+  link.content = createTextDocumentContent([
+    createTextBlockContent('paragraph', config.label, { direction: 'ltr' }),
+  ]);
   link.link = {
     ...link.link,
     linkType: config.linkType ?? link.link?.linkType ?? 'anchor',
@@ -138,6 +151,14 @@ export function styleText(
   }
   if (options.htmlTag) {
     leaf.htmlTag = options.htmlTag;
+    const firstBlock = leaf.content.blocks[0];
+    if (firstBlock && firstBlock.type !== 'code-block' && firstBlock.type !== 'ul' && firstBlock.type !== 'ol') {
+      firstBlock.type = options.htmlTag === 'blockquote'
+        ? 'blockquote'
+        : options.htmlTag === 'p'
+          ? 'paragraph'
+          : options.htmlTag;
+    }
   }
 }
 

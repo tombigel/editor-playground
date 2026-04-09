@@ -1,6 +1,10 @@
 import type {
+  CodeBlockContent,
   LinkKind,
+  LinkExtension,
+  ListBlockContent,
   ListContent,
+  ListDirection,
   OrderedListMarkerStyle,
   RichBlock,
   RichBlockStyle,
@@ -14,6 +18,11 @@ import type {
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
+  TextBlockContent,
+  TextDocumentBlock,
+  TextDocumentBlocks,
+  TextDocumentContent,
+  TextNode,
   UnorderedListMarkerStyle,
 } from './types';
 
@@ -56,8 +65,19 @@ function normalizeDirection(value: unknown): 'ltr' | 'rtl' | undefined {
   return undefined;
 }
 
+function normalizeListItemDirection(value: unknown): ListDirection | undefined {
+  if (value === 'ltr' || value === 'rtl') {
+    return value;
+  }
+  return undefined;
+}
+
 function normalizeLineHeight(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function normalizeBlockGap(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
 }
 
 const RICH_BLOCK_STYLE_KEYS = new Set<keyof RichBlockStyle>([
@@ -231,6 +251,33 @@ export function createRichListItem(text = ''): RichListItem {
   };
 }
 
+function createInlineLinkFromExtension(link: LinkExtension, text: string): RichTextLink {
+  return {
+    type: 'link',
+    linkType: link.linkType,
+    ...(typeof link.href === 'string' ? { href: link.href } : {}),
+    ...(typeof link.targetPageId === 'string' ? { targetPageId: link.targetPageId } : {}),
+    ...(typeof link.pageAnchorId === 'string' ? { pageAnchorId: link.pageAnchorId } : {}),
+    ...(typeof link.anchorTargetId === 'string' ? { anchorTargetId: link.anchorTargetId } : {}),
+    ...(typeof link.openInNewTab === 'boolean' ? { openInNewTab: link.openInNewTab } : {}),
+    children: [createRichTextLeaf(text)],
+  };
+}
+
+export function createRichListItemFromText(
+  text = '',
+  options: {
+    direction?: ListDirection;
+    link?: LinkExtension;
+  } = {},
+): RichListItem {
+  return {
+    type: 'list-item',
+    ...(options.direction ? { direction: options.direction } : {}),
+    children: options.link ? [createInlineLinkFromExtension(options.link, text)] : [createRichTextLeaf(text)],
+  };
+}
+
 export function createRichListBlock(
   type: RichListBlock['type'],
   items: RichListItem[],
@@ -292,6 +339,7 @@ function normalizeListItem(node: unknown): RichListItem | null {
 
   return {
     type: 'list-item',
+    ...(normalizeListItemDirection(node.direction) ? { direction: normalizeListItemDirection(node.direction) } : {}),
     children: normalizeInlineChildren(node.children),
   };
 }
@@ -314,6 +362,26 @@ export function isRichTextBlock(node: unknown): node is RichBlock {
     node.type === 'code-block' ||
     isRichListBlockType(node.type)
   ) && Array.isArray(node.children);
+}
+
+export function isTextBlockContent(node: unknown): node is TextBlockContent {
+  return isObjectRecord(node) && isRichTextBlockType(node.type) && Array.isArray(node.children);
+}
+
+export function isCodeBlockContent(node: unknown): node is CodeBlockContent {
+  return isObjectRecord(node) && node.type === 'code-block' && Array.isArray(node.children);
+}
+
+export function isListBlockContent(node: unknown): node is ListBlockContent {
+  return isObjectRecord(node) && isRichListBlockType(node.type) && Array.isArray(node.children);
+}
+
+export function isTextDocumentBlock(node: unknown): node is TextDocumentBlock {
+  return isTextBlockContent(node) || isCodeBlockContent(node) || isListBlockContent(node);
+}
+
+export function isTextDocumentContent(value: unknown): value is TextDocumentContent {
+  return isObjectRecord(value) && Array.isArray(value.blocks);
 }
 
 function normalizeRichBlock(node: unknown): RichBlock | null {
@@ -379,6 +447,12 @@ function blockText(block: RichBlock): string {
     .join('');
 }
 
+function flattenRichInlineChildren(children: RichInlineNode[]): string {
+  return children
+    .flatMap((node) => (isRichTextLink(node) ? node.children.map((leaf) => leaf.text) : [node.text]))
+    .join('');
+}
+
 /**
  * Returns the plain-text string for any content value.
  * For RichContent, concatenates all leaf text values.
@@ -402,7 +476,10 @@ export function listContentToRichListBlock(
   options: Pick<RichListBlock, 'direction' | 'style'> = {},
 ): RichListBlock {
   if (content.type === 'ol') {
-    return createRichListBlock('ol', content.items.map((item) => createRichListItem(item.text)), {
+    return createRichListBlock('ol', content.items.map((item) => createRichListItemFromText(item.text, {
+      direction: item.direction,
+      link: item.link,
+    })), {
       direction: options.direction,
       style: options.style,
       start: content.start,
@@ -410,11 +487,178 @@ export function listContentToRichListBlock(
     });
   }
 
-  return createRichListBlock('ul', content.items.map((item) => createRichListItem('text' in item ? item.text : `${item.term}${item.description ? `: ${item.description}` : ''}`)), {
+  return createRichListBlock('ul', content.items.map((item) => createRichListItemFromText('text' in item ? item.text : `${item.term}${item.description ? `: ${item.description}` : ''}`, {
+    direction: item.direction,
+    link: item.link,
+  })), {
     direction: options.direction,
     style: options.style,
     markerStyle: content.type === 'ul' ? content.markerStyle : undefined,
   });
+}
+
+export function createTextDocumentContent(
+  blocks: TextDocumentBlocks,
+  options: Pick<TextDocumentContent, 'blockGap'> = {},
+): TextDocumentContent {
+  return {
+    blocks,
+    ...(typeof options.blockGap === 'number' ? { blockGap: options.blockGap } : {}),
+  };
+}
+
+export function createTextBlockContent(
+  type: RichTextBlockType,
+  text: string,
+  options: Pick<RichTextBlock, 'direction' | 'lineHeight' | 'style'> = {},
+): TextBlockContent {
+  return createRichTextBlock(type, [createRichTextLeaf(text)], options);
+}
+
+export function createCodeBlockContent(
+  text: string,
+  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style'> = {},
+): CodeBlockContent {
+  return createRichCodeBlock(text, options);
+}
+
+export function createListBlockContent(
+  type: RichListBlock['type'],
+  items: RichListItem[],
+  options: Pick<RichListBlock, 'direction' | 'style'> & { markerStyle?: string; start?: number } = {},
+): ListBlockContent {
+  return createRichListBlock(type, items, options);
+}
+
+export function getTextDocumentBlockGap(content: RichContent | TextDocumentContent): number | undefined {
+  return isTextDocumentContent(content) ? content.blockGap : undefined;
+}
+
+export function setTextDocumentBlockGap(
+  content: TextDocumentContent,
+  blockGap: number | undefined,
+): TextDocumentContent {
+  return {
+    blocks: content.blocks,
+    ...(typeof blockGap === 'number' ? { blockGap } : {}),
+  };
+}
+
+export function getFirstTextDocumentBlock(content: RichContent | TextDocumentContent): TextDocumentBlock | undefined {
+  return getTextDocumentBlocks(content)[0];
+}
+
+export function getSingleTextBlockContent(content: RichContent | TextDocumentContent): TextBlockContent | undefined {
+  const block = getFirstTextDocumentBlock(content);
+  return block && isTextBlockContent(block) ? block : undefined;
+}
+
+export function getSingleCodeBlockContent(content: RichContent | TextDocumentContent): CodeBlockContent | undefined {
+  const block = getFirstTextDocumentBlock(content);
+  return block && isCodeBlockContent(block) ? block : undefined;
+}
+
+export function getSingleListBlockContent(content: RichContent | TextDocumentContent): ListBlockContent | undefined {
+  const block = getFirstTextDocumentBlock(content);
+  return block && isListBlockContent(block) ? block : undefined;
+}
+
+export function replaceTextDocumentBlocks(content: TextDocumentContent, blocks: TextDocumentBlocks): TextDocumentContent {
+  return {
+    blocks,
+    ...(typeof content.blockGap === 'number' ? { blockGap: content.blockGap } : {}),
+  };
+}
+
+export function textBlockTypeToHtmlTag(type: RichTextBlockType): TextNode['htmlTag'] {
+  if (type === 'blockquote') {
+    return 'blockquote';
+  }
+  if (type === 'paragraph' || type === 'div') {
+    return 'p';
+  }
+  return type;
+}
+
+export function htmlTagToTextBlockType(htmlTag: TextNode['htmlTag']): RichTextBlockType {
+  if (htmlTag === 'blockquote') {
+    return 'blockquote';
+  }
+  if (htmlTag && htmlTag !== 'p') {
+    return htmlTag;
+  }
+  return 'paragraph';
+}
+
+export function createTextDocumentFromText(
+  text: string,
+  options: Pick<TextBlockContent, 'direction' | 'lineHeight' | 'style'> & { type?: RichTextBlockType; blockGap?: number } = {},
+): TextDocumentContent {
+  return createTextDocumentContent([
+    createTextBlockContent(options.type ?? 'paragraph', text, {
+      direction: options.direction,
+      lineHeight: options.lineHeight,
+      style: options.style,
+    }),
+  ], { blockGap: options.blockGap });
+}
+
+export function createTextDocumentFromCode(
+  text: string,
+  options: Pick<CodeBlockContent, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style'> = {},
+): TextDocumentContent {
+  return createTextDocumentContent([
+    createCodeBlockContent(text, options),
+  ]);
+}
+
+export function richListBlockToListContent(block: RichListBlock): ListContent {
+  if (block.type === 'ol') {
+    return {
+      type: 'ol',
+      start: block.start,
+      markerStyle: block.markerStyle,
+      items: block.children.map((item) => {
+        const linkNode = item.children.find((child) => isRichTextLink(child));
+        return {
+          text: flattenRichInlineChildren(item.children),
+          direction: item.direction ?? 'ltr',
+          ...(linkNode ? {
+            link: {
+              linkType: linkNode.linkType,
+              ...(typeof linkNode.href === 'string' ? { href: linkNode.href } : {}),
+              ...(typeof linkNode.targetPageId === 'string' ? { targetPageId: linkNode.targetPageId } : {}),
+              ...(typeof linkNode.pageAnchorId === 'string' ? { pageAnchorId: linkNode.pageAnchorId } : {}),
+              ...(typeof linkNode.anchorTargetId === 'string' ? { anchorTargetId: linkNode.anchorTargetId } : {}),
+              ...(typeof linkNode.openInNewTab === 'boolean' ? { openInNewTab: linkNode.openInNewTab } : {}),
+            },
+          } : {}),
+        };
+      }),
+    };
+  }
+
+  return {
+    type: 'ul',
+    markerStyle: block.markerStyle,
+    items: block.children.map((item) => {
+      const linkNode = item.children.find((child) => isRichTextLink(child));
+      return {
+        text: flattenRichInlineChildren(item.children),
+        direction: item.direction ?? 'ltr',
+        ...(linkNode ? {
+          link: {
+            linkType: linkNode.linkType,
+            ...(typeof linkNode.href === 'string' ? { href: linkNode.href } : {}),
+            ...(typeof linkNode.targetPageId === 'string' ? { targetPageId: linkNode.targetPageId } : {}),
+            ...(typeof linkNode.pageAnchorId === 'string' ? { pageAnchorId: linkNode.pageAnchorId } : {}),
+            ...(typeof linkNode.anchorTargetId === 'string' ? { anchorTargetId: linkNode.anchorTargetId } : {}),
+            ...(typeof linkNode.openInNewTab === 'boolean' ? { openInNewTab: linkNode.openInNewTab } : {}),
+          },
+        } : {}),
+      };
+    }),
+  };
 }
 
 export function normalizeRichContent(content: unknown): RichContent {
@@ -449,6 +693,20 @@ export function normalizeRichContent(content: unknown): RichContent {
 
   flushInlineBuffer();
   return blocks;
+}
+
+export function normalizeTextDocumentContent(content: unknown): TextDocumentContent {
+  if (isTextDocumentContent(content)) {
+    const blockGap = normalizeBlockGap(content.blockGap);
+    return {
+      blocks: normalizeRichContent(content.blocks),
+      ...(blockGap !== undefined ? { blockGap } : {}),
+    };
+  }
+
+  return {
+    blocks: normalizeRichContent(content),
+  };
 }
 
 export function validateRichContentStructure(content: unknown): string[] {
@@ -570,6 +828,61 @@ export function validateRichContentStructure(content: unknown): string[] {
   });
 
   return errors;
+}
+
+export function validateTextDocumentContentStructure(content: unknown): string[] {
+  if (isTextDocumentContent(content)) {
+    const errors = validateRichContentStructure(content.blocks);
+    if (content.blockGap !== undefined && normalizeBlockGap(content.blockGap) === undefined) {
+      errors.push('Text document blockGap must be a non-negative number.');
+    }
+    return errors;
+  }
+
+  return validateRichContentStructure(content);
+}
+
+export function validateTextSubtypeContentStructure(
+  subtype: 'block' | 'rich' | 'code' | 'list',
+  content: TextDocumentContent,
+): string[] {
+  const errors = validateTextDocumentContentStructure(content);
+  const blockCount = content.blocks.length;
+
+  if (subtype !== 'rich' && content.blockGap !== undefined) {
+    errors.push(`Text subtype "${subtype}" cannot define blockGap.`);
+  }
+
+  if (subtype === 'block') {
+    if (blockCount !== 1 || !isTextBlockContent(content.blocks[0])) {
+      errors.push('Block subtype content must contain exactly one text block.');
+    }
+    return errors;
+  }
+
+  if (subtype === 'code') {
+    if (blockCount !== 1 || !isCodeBlockContent(content.blocks[0])) {
+      errors.push('Code subtype content must contain exactly one code block.');
+    }
+    return errors;
+  }
+
+  if (subtype === 'list') {
+    if (blockCount !== 1 || !isListBlockContent(content.blocks[0])) {
+      errors.push('List subtype content must contain exactly one list block.');
+    }
+    return errors;
+  }
+
+  if (blockCount === 0) {
+    errors.push('Rich subtype content must contain at least one block.');
+  }
+
+  return errors;
+}
+
+export function getTextDocumentBlocks(content: RichContent | TextDocumentContent): TextDocumentBlocks {
+  return isTextDocumentContent(content) ? content.blocks : content;
 }
 
 /**

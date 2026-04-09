@@ -175,6 +175,7 @@ export interface RichCodeBlock extends SlateElement {
 
 export interface RichListItem extends SlateElement {
   type: 'list-item';
+  direction?: 'ltr' | 'rtl';
   children: RichInlineNode[];
 }
 
@@ -197,7 +198,21 @@ export interface RichOrderedListBlock extends SlateElement {
 
 export type RichListBlock = RichUnorderedListBlock | RichOrderedListBlock;
 export type RichBlock = RichTextBlock | RichCodeBlock | RichListBlock;
-export type RichContent = RichBlock[];
+export type TextBlockContent = RichTextBlock;
+export type CodeBlockContent = RichCodeBlock;
+export type ListBlockContent = RichListBlock;
+export type TextDocumentBlock = TextBlockContent | CodeBlockContent | ListBlockContent;
+export type TextDocumentBlocks = TextDocumentBlock[];
+export type TextDocumentContent = {
+  blocks: TextDocumentBlocks;
+  blockGap?: number;
+};
+
+/**
+ * Legacy array-form rich content. Phase 1.7 introduces TextDocumentContent as the canonical
+ * text-document wrapper, while later quanta migrate runtime persistence to use it directly.
+ */
+export type RichContent = TextDocumentBlocks;
 
 // ---------------------------------------------------------------------------
 // Value types
@@ -469,11 +484,13 @@ export type ContainerNode = BaseNode & {
 export type TextNode = BaseNode & {
   contentType: 'text';
   subtype: TextSubtype;
-  content: string | RichContent | ListContent; // string for block/code; RichContent for rich; ListContent for list
+  content: TextDocumentContent;
   lang?: string;              // BCP-47 locale
-  htmlTag?: HeadingTag | 'p' | 'blockquote'; // block only
+  /** @deprecated transitional field during phase 1.7 migration; canonical block type lives in content */
+  htmlTag?: HeadingTag | 'p' | 'blockquote';
   link?: LinkExtension;       // block only
-  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string }; // code only
+  /** @deprecated transitional field during phase 1.7 migration; canonical code metadata lives in content */
+  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
@@ -482,7 +499,6 @@ export type TextNode = BaseNode & {
     background?: string;
     paddingBlock?: ParsedValue<SpacingValue>;
     paddingInline?: ParsedValue<SpacingValue>;
-    blockGap?: number;
   } & BorderStyle;
 };
 

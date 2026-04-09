@@ -66,9 +66,11 @@ describe('model/migration', () => {
       throw new Error('Expected rich text node');
     }
 
-    expect(rich.content).toEqual([
-      { type: 'paragraph', children: [{ text: 'legacy rich' }] },
-    ]);
+    expect(rich.content).toEqual({
+      blocks: [
+        { type: 'paragraph', children: [{ text: 'legacy rich' }] },
+      ],
+    });
     expect(rich.htmlTag).toBeUndefined();
   });
 });

@@ -1,7 +1,6 @@
-import type { ContainerSubtype, DocumentModel, DocumentNode, NodeId, RichContent } from './types';
+import type { ContainerSubtype, DocumentModel, DocumentNode, NodeId } from './types';
 import { isContainerNode, isLeafNode, isSiteNode, isTextNode } from './types';
-import { validateListContentStructure, walkListLinks } from './listContent';
-import { validateRichContentStructure, walkLinks } from './richContent';
+import { walkLinks, validateTextSubtypeContentStructure } from './richContent';
 import type { DocumentPage } from './types/site';
 import { getAllPageRoutes, getPageRole } from './pageRoutes';
 import { normalizeTopLevelWrapperTargetPageIds } from './topLevelWrapperVisibility';
@@ -33,25 +32,19 @@ export function validateLinks(document: DocumentModel): LinkValidationError[] {
       });
     }
 
-    // Validate inline links inside RichContent (rich subtype)
-    if (isTextNode(node) && node.subtype === 'rich') {
-      walkLinks(node.content as RichContent, (link) => {
+    if (isTextNode(node) && (node.subtype === 'rich' || node.subtype === 'list')) {
+      walkLinks(node.content.blocks, (link) => {
         validateLinkTarget(link, node.id, node.name, 'link', pageIds, document, errors, {
-          missingPage: 'Inline link has no target page set.',
-          brokenPage: (targetPageId) => `Inline link target page "${targetPageId}" no longer exists.`,
-          brokenPageAnchor: (pageAnchorId) => `Inline link page anchor target "${pageAnchorId}" does not exist.`,
-          brokenAnchor: (anchorTargetId) => `Inline link anchor target "${anchorTargetId}" does not exist.`,
-        });
-      });
-    }
-
-    if (isTextNode(node) && node.subtype === 'list') {
-      walkListLinks(node.content as import('./types').ListContent, (link) => {
-        validateLinkTarget(link, node.id, node.name, 'link', pageIds, document, errors, {
-          missingPage: 'List item link has no target page set.',
-          brokenPage: (targetPageId) => `List item link target page "${targetPageId}" no longer exists.`,
-          brokenPageAnchor: (pageAnchorId) => `List item page anchor target "${pageAnchorId}" does not exist.`,
-          brokenAnchor: (anchorTargetId) => `List item anchor target "${anchorTargetId}" does not exist.`,
+          missingPage: node.subtype === 'list' ? 'List item link has no target page set.' : 'Inline link has no target page set.',
+          brokenPage: (targetPageId) => node.subtype === 'list'
+            ? `List item link target page "${targetPageId}" no longer exists.`
+            : `Inline link target page "${targetPageId}" no longer exists.`,
+          brokenPageAnchor: (pageAnchorId) => node.subtype === 'list'
+            ? `List item page anchor target "${pageAnchorId}" does not exist.`
+            : `Inline link page anchor target "${pageAnchorId}" does not exist.`,
+          brokenAnchor: (anchorTargetId) => node.subtype === 'list'
+            ? `List item anchor target "${anchorTargetId}" does not exist.`
+            : `Inline link anchor target "${anchorTargetId}" does not exist.`,
         });
       });
     }
@@ -104,15 +97,9 @@ export function validateDocument(document: DocumentModel): string[] {
       errors.push(`Leaf ${node.id} cannot contain children.`);
     }
 
-    if (isTextNode(node) && node.subtype === 'rich') {
-      for (const issue of validateRichContentStructure(node.content)) {
-        errors.push(`Rich text node ${node.id}: ${issue}`);
-      }
-    }
-
-    if (isTextNode(node) && node.subtype === 'list') {
-      for (const issue of validateListContentStructure(node.content)) {
-        errors.push(`List node ${node.id}: ${issue}`);
+    if (isTextNode(node)) {
+      for (const issue of validateTextSubtypeContentStructure(node.subtype, node.content)) {
+        errors.push(`Text node ${node.id}: ${issue}`);
       }
     }
 

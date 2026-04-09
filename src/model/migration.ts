@@ -27,7 +27,14 @@ import type {
   SiteNode,
   TextNode,
 } from './types';
-import { normalizeRichContent } from './richContent';
+import {
+  createCodeBlockContent,
+  createTextBlockContent,
+  createTextDocumentContent,
+  listContentToRichListBlock,
+  normalizeTextDocumentContent,
+} from './richContent';
+import { normalizeListContent } from './listContent';
 
 // ---------------------------------------------------------------------------
 // Internal raw-input shapes — mirrors the old persisted format
@@ -138,22 +145,29 @@ function migrateTextLeaf(raw: RawNode): TextNode | null {
   }
 
   const base = extractBaseNode(raw);
+  const htmlTag =
+    raw.htmlTag === 'blockquote'
+      ? 'blockquote'
+      : raw.htmlTag === 'h1' ||
+          raw.htmlTag === 'h2' ||
+          raw.htmlTag === 'h3' ||
+          raw.htmlTag === 'h4' ||
+          raw.htmlTag === 'h5' ||
+          raw.htmlTag === 'h6'
+        ? raw.htmlTag
+        : 'p';
   return {
     ...base,
     contentType: 'text',
     subtype: 'block',
-    content: asString(raw.content, ''),
-    htmlTag:
-      raw.htmlTag === 'h1' ||
-      raw.htmlTag === 'h2' ||
-      raw.htmlTag === 'h3' ||
-      raw.htmlTag === 'h4' ||
-      raw.htmlTag === 'h5' ||
-      raw.htmlTag === 'h6' ||
-      raw.htmlTag === 'p' ||
-      raw.htmlTag === 'blockquote'
-        ? raw.htmlTag
-        : 'p',
+    content: createTextDocumentContent([
+      createTextBlockContent(
+        htmlTag === 'blockquote' ? 'blockquote' : htmlTag === 'p' ? 'paragraph' : htmlTag,
+        asString(raw.content, ''),
+        { direction: 'ltr' },
+      ),
+    ]),
+    htmlTag,
     ...(typeof raw.lang === 'string' ? { lang: raw.lang } : {}),
     rect: raw.rect as TextNode['rect'],
     ...(isObject(raw.sticky) ? { sticky: raw.sticky as TextNode['sticky'] } : {}),
@@ -198,7 +212,9 @@ function migrateLinkLeaf(raw: RawNode): TextNode | null {
     ...base,
     contentType: 'text',
     subtype: 'block',
-    content,
+    content: createTextDocumentContent([
+      createTextBlockContent('paragraph', content, { direction: 'ltr' }),
+    ]),
     htmlTag: 'p',
     ...(link ? { link } : {}),
     rect: raw.rect as TextNode['rect'],
@@ -228,7 +244,9 @@ function migrateButtonLeaf(raw: RawNode): TextNode | null {
     ...base,
     contentType: 'text',
     subtype: 'block',
-    content,
+    content: createTextDocumentContent([
+      createTextBlockContent('paragraph', content, { direction: 'ltr' }),
+    ]),
     htmlTag: 'p',
     link,
     rect: raw.rect as TextNode['rect'],
@@ -247,9 +265,35 @@ function migrateNewFormatNode(raw: RawNode): DocumentNode | null {
   const ct = raw.contentType;
   if (ct === 'site' || ct === 'container' || ct === 'text' || ct === 'media') {
     const node = structuredClone(raw) as unknown as DocumentNode;
-    if (node.contentType === 'text' && node.subtype === 'rich') {
-      node.content = normalizeRichContent(node.content);
-      delete node.htmlTag;
+    if (node.contentType === 'text') {
+      const rawContent = (node as unknown as { content: unknown }).content;
+      if (node.subtype === 'rich') {
+        node.content = normalizeTextDocumentContent(rawContent);
+        delete node.htmlTag;
+      } else if (node.subtype === 'code') {
+        const codeText = typeof rawContent === 'string' ? rawContent : '';
+        node.content = createTextDocumentContent([
+          createCodeBlockContent(codeText, {
+            direction: 'ltr',
+            language: node.code?.language,
+            theme: node.code?.theme,
+            highlightedHtml: node.code?.highlightedHtml,
+          }),
+        ]);
+      } else if (node.subtype === 'list') {
+        node.content = createTextDocumentContent([
+          listContentToRichListBlock(normalizeListContent(rawContent), { direction: 'ltr' }),
+        ]);
+      } else {
+        const blockText = typeof rawContent === 'string' ? rawContent : '';
+        node.content = createTextDocumentContent([
+          createTextBlockContent(
+            node.htmlTag === 'blockquote' ? 'blockquote' : node.htmlTag && node.htmlTag !== 'p' ? node.htmlTag : 'paragraph',
+            blockText,
+            { direction: 'ltr' },
+          ),
+        ]);
+      }
     }
     return node;
   }

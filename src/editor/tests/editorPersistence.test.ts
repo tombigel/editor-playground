@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createTextNode } from '../../model/defaults';
+import { createTextDocumentFromText, getTextContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import type { DocumentModel, TextNode, ContainerNode } from '../../model/types';
 import {
@@ -740,7 +741,7 @@ describe('editor/editorPersistence', () => {
         (n) => n.contentType === 'text' && n.link != null,
       );
       if (linkNode && linkNode.contentType === 'text' && linkNode.link != null) {
-        linkNode.content = 'github.com/tombigel/codex-playground';
+        linkNode.content = createTextDocumentFromText('github.com/tombigel/codex-playground');
         linkNode.link = { ...(linkNode.link ?? { linkType: 'external' }), href: 'https://github.com/tombigel/codex-playground' };
       }
 
@@ -748,7 +749,7 @@ describe('editor/editorPersistence', () => {
       if (linkNode) {
         const migrated = parsed.nodes[linkNode.id];
         if (migrated?.contentType === 'text' && migrated.subtype === 'block') {
-          expect(migrated.content).toBe('github.com/tombigel/sticky-playground');
+          expect(getTextContent(migrated.content.blocks)).toBe('github.com/tombigel/sticky-playground');
           expect(migrated.link?.href).toBe('https://github.com/tombigel/sticky-playground');
         }
       }

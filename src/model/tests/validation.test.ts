@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createContainerNode, createTextNode, createLinkTextNode, createButtonTextNode } from '../defaults';
 import { createPage } from '../pageDefaults';
-import type { ListContent, RichContent, TextNode } from '../types';
+import type { TextDocumentContent, TextNode } from '../types';
 import { getMainWrappers } from '../selectors';
+import { createTextDocumentContent, listContentToRichListBlock, validateTextSubtypeContentStructure } from '../richContent';
 import { validateDocument, validateLinks } from '../validation';
 
 function appendPage(document: ReturnType<typeof createInitialDocument>, options: Parameters<typeof createPage>[0]) {
@@ -12,6 +13,18 @@ function appendPage(document: ReturnType<typeof createInitialDocument>, options:
 }
 
 describe('model/validation', () => {
+  it('validates canonical subtype content invariants independently of runtime migration', () => {
+    const wrapped: TextDocumentContent = {
+      blocks: [{ type: 'paragraph', children: [{ text: 'Body' }] }],
+      blockGap: 18,
+    };
+
+    expect(validateTextSubtypeContentStructure('rich', wrapped)).toEqual([]);
+    expect(validateTextSubtypeContentStructure('block', wrapped)).toEqual([
+      'Text subtype "block" cannot define blockGap.',
+    ]);
+  });
+
   it('accepts the default document', () => {
     const document = createInitialDocument();
     expect(validateDocument(document)).toEqual([]);
@@ -476,7 +489,7 @@ describe('model/validation', () => {
       doc = appended.document;
       const section = getMainWrappers(doc)[0];
       const rich = createTextNode('rich', section.id) as TextNode;
-      rich.content = [
+      rich.content = createTextDocumentContent([
         {
           type: 'paragraph',
           children: [
@@ -484,7 +497,7 @@ describe('model/validation', () => {
             { type: 'link', linkType: 'page', targetPageId: appended.page.id, children: [{ text: 'About' }] },
           ],
         },
-      ] as RichContent;
+      ]);
       doc.nodes[rich.id] = rich;
       section.children.push(rich.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === rich.id);
@@ -495,14 +508,14 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const rich = createTextNode('rich', section.id) as TextNode;
-      rich.content = [
+      rich.content = createTextDocumentContent([
         {
           type: 'paragraph',
           children: [
             { type: 'link', linkType: 'page', targetPageId: 'nonexistent-page', children: [{ text: 'Gone' }] },
           ],
         },
-      ] as RichContent;
+      ]);
       doc.nodes[rich.id] = rich;
       section.children.push(rich.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === rich.id);
@@ -515,14 +528,14 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const rich = createTextNode('rich', section.id) as TextNode;
-      rich.content = [
+      rich.content = createTextDocumentContent([
         {
           type: 'paragraph',
           children: [
             { type: 'link', linkType: 'anchor', anchorTargetId: 'nonexistent-node', children: [{ text: 'Anchor' }] },
           ],
         },
-      ] as RichContent;
+      ]);
       doc.nodes[rich.id] = rich;
       section.children.push(rich.id);
       const errors = validateLinks(doc).filter((e) => e.nodeId === rich.id);
@@ -534,11 +547,13 @@ describe('model/validation', () => {
       const doc = createInitialDocument();
       const section = getMainWrappers(doc)[0];
       const list = createTextNode('list', section.id) as TextNode;
-      list.content = {
-        type: 'ul',
-        markerStyle: 'disc',
-        items: [{ text: 'Go', direction: 'ltr', link: { linkType: 'page', targetPageId: 'missing-page' } }],
-      } as ListContent;
+      list.content = createTextDocumentContent([
+        listContentToRichListBlock({
+          type: 'ul',
+          markerStyle: 'disc',
+          items: [{ text: 'Go', direction: 'ltr', link: { linkType: 'page', targetPageId: 'missing-page' } }],
+        }),
+      ]);
       doc.nodes[list.id] = list;
       section.children.push(list.id);
 
@@ -566,53 +581,62 @@ describe('model/validation', () => {
     const document = createInitialDocument();
     const section = getMainWrappers(document)[0];
     const rich = createTextNode('rich', section.id) as TextNode;
-    rich.content = [{ text: 'orphan root leaf' }] as unknown as RichContent;
+    rich.content = { blocks: [{ text: 'orphan root leaf' }] as unknown as TextDocumentContent['blocks'] };
     document.nodes[rich.id] = rich;
     section.children.push(rich.id);
 
     const errors = validateDocument(document);
-    expect(errors).toContain(`Rich text node ${rich.id}: Rich content root item 0 must be a supported block.`);
+    expect(errors).toContain(`Text node ${rich.id}: Rich content root item 0 must be a supported block.`);
   });
 
   it('rejects malformed rich code blocks', () => {
     const document = createInitialDocument();
     const section = getMainWrappers(document)[0];
     const rich = createTextNode('rich', section.id) as TextNode;
-    rich.content = [{
-      type: 'code-block',
-      children: [{ type: 'paragraph', children: [{ text: 'nested' }] }],
-    }] as unknown as RichContent;
+    rich.content = {
+      blocks: [{
+        type: 'code-block',
+        children: [{ type: 'paragraph', children: [{ text: 'nested' }] }],
+      }] as unknown as TextDocumentContent['blocks'],
+    };
     document.nodes[rich.id] = rich;
     section.children.push(rich.id);
 
     const errors = validateDocument(document);
-    expect(errors).toContain(`Rich text node ${rich.id}: Rich code block 0 child 0 must be a code-line element.`);
+    expect(errors).toContain(`Text node ${rich.id}: Rich code block 0 child 0 must be a code-line element.`);
   });
 
   it('rejects malformed rich list blocks', () => {
     const document = createInitialDocument();
     const section = getMainWrappers(document)[0];
     const rich = createTextNode('rich', section.id) as TextNode;
-    rich.content = [{
-      type: 'ul',
-      children: [{ type: 'paragraph', children: [{ text: 'nested' }] }],
-    }] as unknown as RichContent;
+    rich.content = {
+      blocks: [{
+        type: 'ul',
+        children: [{ type: 'paragraph', children: [{ text: 'nested' }] }],
+      }] as unknown as TextDocumentContent['blocks'],
+    };
     document.nodes[rich.id] = rich;
     section.children.push(rich.id);
 
     const errors = validateDocument(document);
-    expect(errors).toContain(`Rich text node ${rich.id}: Rich list block 0 child 0 must be a list-item element.`);
+    expect(errors).toContain(`Text node ${rich.id}: Rich list block 0 child 0 must be a list-item element.`);
   });
 
   it('rejects malformed list content', () => {
     const document = createInitialDocument();
     const section = getMainWrappers(document)[0];
     const list = createTextNode('list', section.id) as TextNode;
-    list.content = { type: 'ol', items: [{ value: 'missing-text' }] } as unknown as ListContent;
+    list.content = {
+      blocks: [{
+        type: 'ol',
+        items: [{ value: 'missing-text' }],
+      }] as unknown as TextDocumentContent['blocks'],
+    };
     document.nodes[list.id] = list;
     section.children.push(list.id);
 
     const errors = validateDocument(document);
-    expect(errors).toContain(`List node ${list.id}: List item 0 must define a string text value.`);
+    expect(errors.some((error) => error.includes(`Text node ${list.id}:`) && error.includes('Rich list block 0'))).toBe(true);
   });
 });

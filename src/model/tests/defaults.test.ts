@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getSingleListBlockContent, richListBlockToListContent } from '../richContent';
 import type { TextNode } from '../types';
 import {
   createDefaultFooter,
@@ -48,11 +49,11 @@ describe('model/defaults', () => {
   it('creates list text nodes with unordered defaults', () => {
     const list = createTextNode('list', 'section_1');
 
-    if (list.contentType !== 'text' || list.subtype !== 'list' || typeof list.content === 'string') {
+    if (list.contentType !== 'text' || list.subtype !== 'list') {
       throw new Error('Expected list text node');
     }
 
-    expect(list.content).toEqual({
+    expect(richListBlockToListContent(getSingleListBlockContent(list.content)!)).toEqual({
       type: 'ul',
       markerStyle: 'disc',
       items: [{ text: 'List item', direction: 'ltr' }],

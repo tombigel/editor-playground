@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveStickyLayout } from '../../sticky/resolve';
 import { createInitialDocument, createContainerNode } from '../../model/defaults';
+import { createTextDocumentFromText, getTextContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import { DEFAULT_SNAP_SETTINGS } from '../types';
 import {
@@ -469,7 +470,7 @@ describe('editor/editorStore integration', () => {
     if (!nextText || nextText.contentType !== 'text') {
       throw new Error('Expected inserted text leaf');
     }
-    nextText.content = 'Persisted text value';
+    nextText.content = createTextDocumentFromText('Persisted text value');
 
     localStorage.setItem(
       STORAGE_KEY,
@@ -534,7 +535,7 @@ describe('editor/editorStore integration', () => {
     });
     expect(loadedText.contentType).not.toBe('container');
     if (loadedText.contentType === 'text') {
-      expect(loadedText.content).toBe('Persisted text value');
+      expect(getTextContent(loadedText.content.blocks)).toBe('Persisted text value');
     }
   });
 
@@ -552,7 +553,7 @@ describe('editor/editorStore integration', () => {
       throw new Error('Expected repository link');
     }
 
-    repoLink.content = 'github.com/tombigel/codex-playground';
+    repoLink.content = createTextDocumentFromText('github.com/tombigel/codex-playground');
     repoLink.link = { ...(repoLink.link ?? { linkType: 'external' }), href: 'https://github.com/tombigel/codex-playground' };
 
     localStorage.setItem(
@@ -572,7 +573,7 @@ describe('editor/editorStore integration', () => {
       throw new Error('Expected migrated repository link node');
     }
 
-    expect(migratedRepoLink.content).toBe('github.com/tombigel/sticky-playground');
+    expect(getTextContent(migratedRepoLink.content.blocks)).toBe('github.com/tombigel/sticky-playground');
     expect(migratedRepoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
   });
 

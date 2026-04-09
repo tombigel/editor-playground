@@ -1,6 +1,6 @@
-import type { ContainerNode, DocumentModel, NodeId, RichContent, TextNode } from '../model/types';
+import type { ContainerNode, DocumentModel, NodeId, TextNode } from '../model/types';
 import { isContainerNode, isLeafNode, isTextNode } from '../model/types';
-import { mapLinks } from '../model/richContent';
+import { createTextDocumentContent, mapLinks } from '../model/richContent';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
 import {
   getAllPageRoutes,
@@ -448,13 +448,12 @@ export function syncPageHrefLinks(
       continue;
     }
 
-    // Sync inline links inside RichContent (rich subtype)
     if (node.subtype === 'rich') {
-      const updated = mapLinks(node.content as RichContent, (link) =>
+      const updated = mapLinks(node.content.blocks, (link) =>
         link.href === oldUrl ? { ...link, href: newUrl } : link,
       );
-      if (updated !== node.content) {
-        nodes[id] = { ...node, content: updated } as TextNode;
+      if (updated !== node.content.blocks) {
+        nodes[id] = { ...node, content: createTextDocumentContent(updated, { blockGap: node.content.blockGap }) } as TextNode;
         changed = true;
       }
     }

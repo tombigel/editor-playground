@@ -1,12 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import type { RichContent, RichListBlock, RichTextLeaf, RichTextLink } from '../types';
+import type { Element as SlateElement, Text as SlateText } from 'slate';
+import type {
+  CodeBlockContent,
+  ListBlockContent,
+  RichContent,
+  RichListBlock,
+  RichTextLeaf,
+  RichTextLink,
+  TextBlockContent,
+  TextDocumentBlock,
+  TextDocumentContent,
+} from '../types';
 import {
   createRichCodeBlock,
   createRichListBlock,
   createRichListItem,
+  getTextDocumentBlocks,
+  isCodeBlockContent,
   isEmpty,
+  isListBlockContent,
+  isTextBlockContent,
+  isTextDocumentBlock,
+  isTextDocumentContent,
   mapLinks,
+  normalizeTextDocumentContent,
   normalizeRichContent,
+  validateTextDocumentContentStructure,
+  validateTextSubtypeContentStructure,
   validateRichContentStructure,
   walkLinks,
 } from '../richContent';
@@ -28,7 +48,34 @@ function makeLink(href: string, text: string): RichTextLink {
   };
 }
 
+type Assert<T extends true> = T;
+type IsAssignable<From, To> = [From] extends [To] ? true : false;
+type _TextBlockAssignableToSlate = Assert<IsAssignable<TextBlockContent, SlateElement>>;
+type _CodeBlockAssignableToSlate = Assert<IsAssignable<CodeBlockContent, SlateElement>>;
+type _ListBlockAssignableToSlate = Assert<IsAssignable<ListBlockContent, SlateElement>>;
+type _TextDocumentBlockAssignableToSlate = Assert<IsAssignable<TextDocumentBlock, SlateElement>>;
+type _LeafAssignableToSlate = Assert<IsAssignable<RichTextLeaf, SlateText>>;
+
 describe('model/richContent', () => {
+  describe('canonical type guards', () => {
+    it('identifies canonical block variants and wrapped text documents', () => {
+      const paragraph = makeParagraph([makeLeaf('Paragraph')]);
+      const code = createRichCodeBlock('const value = 1;');
+      const list = createRichListBlock('ul', [createRichListItem('First')]);
+      const wrapped: TextDocumentContent = { blocks: [paragraph], blockGap: 24 };
+
+      expect(isTextBlockContent(paragraph)).toBe(true);
+      expect(isCodeBlockContent(code)).toBe(true);
+      expect(isListBlockContent(list)).toBe(true);
+      expect(isTextDocumentBlock(paragraph)).toBe(true);
+      expect(isTextDocumentBlock(code)).toBe(true);
+      expect(isTextDocumentBlock(list)).toBe(true);
+      expect(isTextDocumentContent(wrapped)).toBe(true);
+      expect(getTextDocumentBlocks(wrapped)).toEqual([paragraph]);
+      expect(getTextDocumentBlocks([paragraph])).toEqual([paragraph]);
+    });
+  });
+
   describe('isEmpty', () => {
     it('returns true when all text leaves are empty', () => {
       const content: RichContent = [makeParagraph([makeLeaf(''), makeLeaf('')])];
@@ -166,6 +213,30 @@ describe('model/richContent', () => {
     });
   });
 
+  describe('normalizeTextDocumentContent', () => {
+    it('wraps legacy rich block arrays in canonical content', () => {
+      expect(normalizeTextDocumentContent([
+        makeParagraph([makeLeaf('legacy')]),
+      ])).toEqual({
+        blocks: [makeParagraph([makeLeaf('legacy')])],
+      });
+    });
+
+    it('normalizes canonical wrapped text documents', () => {
+      expect(normalizeTextDocumentContent({
+        blocks: [
+          { type: 'h2', direction: 'rtl', children: [makeLeaf('Heading')] },
+        ],
+        blockGap: 16,
+      })).toEqual({
+        blocks: [
+          { type: 'h2', direction: 'rtl', children: [makeLeaf('Heading')] },
+        ],
+        blockGap: 16,
+      });
+    });
+  });
+
   describe('validateRichContentStructure', () => {
     it('reports free inline root content', () => {
       expect(validateRichContentStructure([makeLeaf('orphan')])).toEqual([
@@ -202,6 +273,67 @@ describe('model/richContent', () => {
         },
       ])).toEqual([
         'Rich list item 0.0 child 0 must be a text leaf or link.',
+      ]);
+    });
+  });
+
+  describe('validateTextDocumentContentStructure', () => {
+    it('accepts canonical wrapped content with blockGap', () => {
+      expect(validateTextDocumentContentStructure({
+        blocks: [makeParagraph([makeLeaf('One')])],
+        blockGap: 12,
+      })).toEqual([]);
+    });
+
+    it('rejects invalid wrapped blockGap', () => {
+      expect(validateTextDocumentContentStructure({
+        blocks: [makeParagraph([makeLeaf('One')])],
+        blockGap: -1,
+      })).toEqual([
+        'Text document blockGap must be a non-negative number.',
+      ]);
+    });
+  });
+
+  describe('validateTextSubtypeContentStructure', () => {
+    it('requires block subtype content to contain one text block', () => {
+      expect(validateTextSubtypeContentStructure('block', {
+        blocks: [createRichCodeBlock('const value = 1;')],
+      })).toEqual([
+        'Block subtype content must contain exactly one text block.',
+      ]);
+    });
+
+    it('requires code subtype content to contain one code block', () => {
+      expect(validateTextSubtypeContentStructure('code', {
+        blocks: [makeParagraph([makeLeaf('Paragraph')])],
+      })).toEqual([
+        'Code subtype content must contain exactly one code block.',
+      ]);
+    });
+
+    it('requires list subtype content to contain one list block', () => {
+      expect(validateTextSubtypeContentStructure('list', {
+        blocks: [makeParagraph([makeLeaf('Paragraph')])],
+      })).toEqual([
+        'List subtype content must contain exactly one list block.',
+      ]);
+    });
+
+    it('rejects blockGap for non-rich subtype content', () => {
+      expect(validateTextSubtypeContentStructure('code', {
+        blocks: [createRichCodeBlock('const value = 1;')],
+        blockGap: 12,
+      })).toEqual([
+        'Text subtype "code" cannot define blockGap.',
+      ]);
+    });
+
+    it('requires rich subtype content to contain at least one block', () => {
+      expect(validateTextSubtypeContentStructure('rich', {
+        blocks: [],
+      })).toEqual([
+        'Rich subtype content must contain at least one block.',
       ]);
     });
   });

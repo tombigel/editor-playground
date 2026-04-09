@@ -3,6 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/panels/InspectorControls";
 import { NavigationFields } from "@/panels/inspector/contentSections/shared";
 import type { LinkInspectorNode } from "@/panels/inspector/types";
+import { getTextContent } from "@/model/richContent";
 import {
 	mockDocument,
 	mockImageLeaf,
@@ -40,7 +41,7 @@ export function ContentDemos() {
 								Text
 							</div>
 							<FormField label="Text">
-								<Textarea value={(mockTextLeaf as { content: string }).content} onChange={() => {}} />
+								<Textarea value={getTextContent(mockTextLeaf.content.blocks)} onChange={() => {}} />
 							</FormField>
 						</div>
 						<div className="w-[300px] space-y-2.5">
@@ -48,7 +49,7 @@ export function ContentDemos() {
 								Link
 							</div>
 							<FormField label="Label">
-								<Input value={mockLinkLeaf.content as string} onChange={() => {}} />
+								<Input value={getTextContent(mockLinkLeaf.content.blocks)} onChange={() => {}} />
 							</FormField>
 							<NavigationFields
 								document={mockDocument}

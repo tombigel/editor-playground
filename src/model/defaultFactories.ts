@@ -10,6 +10,13 @@ import type {
   TextSubtype,
 } from './types';
 import {
+  createCodeBlockContent,
+  createListBlockContent,
+  createRichListItemFromText,
+  createTextBlockContent,
+  createTextDocumentContent,
+} from './richContent';
+import {
   DEFAULT_BUTTON_BACKGROUND,
   DEFAULT_BUTTON_BORDER_RADIUS,
   DEFAULT_BUTTON_PADDING_BLOCK,
@@ -162,7 +169,13 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
       visible: true,
       locked: false,
       rect: createDefaultRect('32px', '32px', '320px', 'auto'),
-      content: TEXT_NODE_DEFAULTS.code.content,
+      content: createTextDocumentContent([
+        createCodeBlockContent(TEXT_NODE_DEFAULTS.code.content, {
+          direction: 'ltr',
+          language: TEXT_NODE_DEFAULTS.code.language,
+          theme: TEXT_NODE_DEFAULTS.code.theme,
+        }),
+      ]),
       code: { language: TEXT_NODE_DEFAULTS.code.language, theme: TEXT_NODE_DEFAULTS.code.theme },
       style: {
         ...TEXT_NODE_DEFAULTS.code.style,
@@ -183,7 +196,7 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
       visible: true,
       locked: false,
       rect: createDefaultRect('32px', '32px', '320px', 'auto'),
-      content: TEXT_NODE_DEFAULTS.rich.content,
+      content: createTextDocumentContent(TEXT_NODE_DEFAULTS.rich.content),
       style: {
         color: DEFAULT_TEXT_COLOR,
         fontFamily: 'Inter',
@@ -205,11 +218,12 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
       visible: true,
       locked: false,
       rect: createDefaultRect('32px', '32px', '320px', 'auto'),
-      content: {
-        type: 'ul',
-        markerStyle: 'disc',
-        items: [{ text: 'List item', direction: 'ltr' }],
-      },
+      content: createTextDocumentContent([
+        createListBlockContent('ul', [createRichListItemFromText('List item', { direction: 'ltr' })], {
+          direction: 'ltr',
+          markerStyle: 'disc',
+        }),
+      ]),
       style: {
         color: DEFAULT_TEXT_COLOR,
         fontFamily: 'Inter',
@@ -232,7 +246,11 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
     visible: true,
     locked: false,
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-    content: TEXT_NODE_DEFAULTS.paragraph.content,
+    content: createTextDocumentContent([
+      createTextBlockContent('paragraph', TEXT_NODE_DEFAULTS.paragraph.content, {
+        direction: 'ltr',
+      }),
+    ]),
     htmlTag: 'p',
     sticky: undefined,
     style: {
@@ -255,7 +273,9 @@ export function createLinkTextNode(parentId: NodeId): TextNode {
     ...base,
     name: 'Link',
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-    content: 'Read more',
+    content: createTextDocumentContent([
+      createTextBlockContent('paragraph', 'Read more', { direction: 'ltr' }),
+    ]),
     link: {
       linkType: 'anchor',
       href: '#',
@@ -283,7 +303,9 @@ export function createButtonTextNode(parentId: NodeId): TextNode {
     ...base,
     name: 'Button',
     rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
-    content: 'Button',
+    content: createTextDocumentContent([
+      createTextBlockContent('paragraph', 'Button', { direction: 'ltr' }),
+    ]),
     link: {
       linkType: 'external',
       href: '#',

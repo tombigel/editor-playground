@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createContainerNode, createLinkTextNode, createTextNode } from '../../model/defaults';
-import type { DocumentModel, RichContent, RichTextLink, TextNode } from '../../model/types';
+import { createTextDocumentContent, createTextDocumentFromText } from '../../model/richContent';
+import type { DocumentModel, RichTextLink, TextNode } from '../../model/types';
 import { validateDocument } from '../../model/validation';
 import { setTopLevelWrapperVisibility } from '../documentApi';
 import {
@@ -462,7 +463,7 @@ describe('syncPageHrefLinks', () => {
     const section = doc.nodes[sectionId];
     const linkNode = createLinkTextNode(sectionId) as TextNode;
     linkNode.id = 'link-node-1';
-    linkNode.content = 'Click me';
+    linkNode.content = createTextDocumentFromText('Click me');
     linkNode.link = { ...(linkNode.link ?? { linkType: 'external' }), href };
     return {
       ...doc,
@@ -511,7 +512,7 @@ describe('syncPageHrefLinks', () => {
     const section = doc.nodes[sectionId];
     const rich = createTextNode('rich', sectionId) as TextNode;
     rich.id = 'rich-node-1';
-    rich.content = [
+    rich.content = createTextDocumentContent([
       {
         type: 'paragraph',
         children: [
@@ -520,7 +521,7 @@ describe('syncPageHrefLinks', () => {
           { text: '.' },
         ],
       },
-    ] as RichContent;
+    ]);
     const docWithRich: DocumentModel = {
       ...doc,
       nodes: {
@@ -531,7 +532,7 @@ describe('syncPageHrefLinks', () => {
     };
     const result = syncPageHrefLinks(docWithRich, '/old/', '/new/');
     const updatedRich = result.nodes['rich-node-1'] as TextNode;
-    const inlineLink = ((updatedRich.content as RichContent)[0]?.children?.[1]) as RichTextLink;
+    const inlineLink = (updatedRich.content.blocks[0]?.children?.[1]) as RichTextLink;
     expect(inlineLink.href).toBe('/new/');
   });
 
@@ -542,14 +543,14 @@ describe('syncPageHrefLinks', () => {
     const section = doc.nodes[sectionId];
     const rich = createTextNode('rich', sectionId) as TextNode;
     rich.id = 'rich-node-2';
-    rich.content = [
+    rich.content = createTextDocumentContent([
       {
         type: 'paragraph',
         children: [
           { type: 'link', linkType: 'external', href: '/other/', children: [{ text: 'other' }] },
         ],
       },
-    ] as RichContent;
+    ]);
     const docWithRich: DocumentModel = {
       ...doc,
       nodes: {
@@ -560,7 +561,7 @@ describe('syncPageHrefLinks', () => {
     };
     const result = syncPageHrefLinks(docWithRich, '/old/', '/new/');
     const updatedRich = result.nodes['rich-node-2'] as TextNode;
-    const inlineLink = ((updatedRich.content as RichContent)[0]?.children?.[0]) as RichTextLink;
+    const inlineLink = (updatedRich.content.blocks[0]?.children?.[0]) as RichTextLink;
     expect(inlineLink.href).toBe('/other/');
   });
 
@@ -571,7 +572,7 @@ describe('syncPageHrefLinks', () => {
     const section = doc.nodes[sectionId];
     const rich = createTextNode('rich', sectionId) as TextNode;
     rich.id = 'rich-node-3';
-    rich.content = [{ type: 'paragraph', children: [{ text: 'no links' }] }] as RichContent;
+    rich.content = createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'no links' }] }]);
     const docWithRich: DocumentModel = {
       ...doc,
       nodes: {

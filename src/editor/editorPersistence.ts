@@ -12,12 +12,14 @@ import {
 } from '../model/defaults';
 import { normalizeDocumentFontState } from '../fonts';
 import { getLinkHref } from '../model/links';
+import { createTextDocumentFromCode, createTextDocumentFromText, getTextContent } from '../model/richContent';
 import { validateDocument } from '../model/validation';
 import type {
   ContainerSubtype,
   DocumentModel,
   DocumentNode,
   NodeId,
+  RichTextBlockType,
   StickyDefinition,
   TextNode,
   ContainerNode,
@@ -432,17 +434,52 @@ export function isStructuralWrapper(subtype: ContainerSubtype) {
   return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
+function htmlTagToBlockType(htmlTag: TextNode['htmlTag']): RichTextBlockType {
+  if (htmlTag === 'blockquote') {
+    return 'blockquote';
+  }
+  if (htmlTag && htmlTag !== 'p') {
+    return htmlTag;
+  }
+  return 'paragraph';
+}
+
+function getNodePlainText(node: TextNode): string {
+  return getTextContent(node.content.blocks, { blockSeparator: '\n' });
+}
+
+function setNodePlainText(node: TextNode, text: string) {
+  if (node.subtype === 'code') {
+    node.content = createTextDocumentFromCode(text, {
+      language: node.code?.language,
+      theme: node.code?.theme,
+      highlightedHtml: node.code?.language ? highlightCode(text, node.code.language) : undefined,
+    });
+    return;
+  }
+
+  node.content = createTextDocumentFromText(text, {
+    type: htmlTagToBlockType(node.htmlTag),
+  });
+}
+
 export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'heading' | 'richtext' | 'code' | 'image' | 'link' | 'button', parentId: NodeId) {
   const make = () => {
     if (role === 'heading') {
       const node = createTextNode('block', parentId);
       const h = TEXT_NODE_DEFAULTS.heading;
-      return { ...node, htmlTag: 'h2' as const, content: h.content, style: { ...node.style, ...h.style } };
+      return {
+        ...node,
+        htmlTag: 'h2' as const,
+        content: createTextDocumentFromText(h.content, { type: 'h2' }),
+        style: { ...node.style, ...h.style },
+      };
     }
     if (role === 'richtext') return createTextNode('rich', parentId);
     if (role === 'code') {
       const node = createTextNode('code', parentId);
-      const { content, code } = node;
+      const content = getNodePlainText(node);
+      const { code } = node;
       const language = code?.language ?? 'plaintext';
       return {
         ...node,
@@ -487,8 +524,8 @@ function renameRepositoryLinks(document: DocumentModel) {
       continue;
     }
 
-    if (node.content === 'github.com/tombigel/codex-playground') {
-      node.content = 'github.com/tombigel/sticky-playground';
+    if (getNodePlainText(node) === 'github.com/tombigel/codex-playground') {
+      setNodePlainText(node, 'github.com/tombigel/sticky-playground');
     }
 
     if (node.link && getLinkHref(node.link) === 'https://github.com/tombigel/codex-playground') {
@@ -525,11 +562,11 @@ function normalizeStarterShellTextTags(document: DocumentModel) {
       continue;
     }
 
-    if (node.name === 'Product Title' && node.content === 'Sticky Playground') {
+    if (node.name === 'Product Title' && getNodePlainText(node) === 'Sticky Playground') {
       node.htmlTag = 'h1';
     }
 
-    if (node.name === 'Footer Title' && node.content === 'Sticky Playground') {
+    if (node.name === 'Footer Title' && getNodePlainText(node) === 'Sticky Playground') {
       node.htmlTag = 'h2';
     }
   }
@@ -581,11 +618,11 @@ function isLegacyStarterSection(document: DocumentModel, section: ContainerNode)
 
 function isLegacyStarterText(node: DocumentNode | undefined): node is TextNode {
   return Boolean(
-    node &&
+      node &&
       isTextNode(node) &&
       !node.link &&
       node.name === 'Text' &&
-      node.content === 'Edit text' &&
+      getNodePlainText(node) === 'Edit text' &&
       node.rect.x.base.raw === '32px' &&
       node.rect.y.base.raw === '32px' &&
       node.rect.width.base.raw === 'fit-content' &&
@@ -600,7 +637,7 @@ function isLegacyStarterButton(node: DocumentNode | undefined): node is TextNode
       node.link &&
       node.style?.background &&
       node.name === 'Button' &&
-      node.content === 'Button' &&
+      getNodePlainText(node) === 'Button' &&
       node.rect.x.base.raw === '32px' &&
       node.rect.y.base.raw === '32px' &&
       node.rect.width.base.raw === 'fit-content' &&
@@ -615,10 +652,10 @@ function isLegacyHeader(document: DocumentModel, header: ContainerNode) {
 
   const children = header.children.map((id) => document.nodes[id]).filter(Boolean);
   const brandName = children.find(
-    (node): node is TextNode => isTextNode(node) && !node.link && node.content === 'Business Name',
+    (node): node is TextNode => isTextNode(node) && !node.link && getNodePlainText(node) === 'Business Name',
   );
   const homeLink = children.find(
-    (node) => isTextNode(node) && node.link && node.content === 'Home',
+    (node) => isTextNode(node) && node.link && getNodePlainText(node) === 'Home',
   );
   if (brandName && homeLink) {
     return true;
@@ -628,7 +665,7 @@ function isLegacyHeader(document: DocumentModel, header: ContainerNode) {
     (node) => isMediaNode(node) && node.name === 'Brand Mark',
   );
   const hasStarterTitle = children.some(
-    (node) => isTextNode(node) && !node.link && node.name === 'Product Title' && node.content === 'Sticky Playground',
+    (node) => isTextNode(node) && !node.link && node.name === 'Product Title' && getNodePlainText(node) === 'Sticky Playground',
   );
   if (hasLegacyModernMark && hasStarterTitle) {
     return true;
@@ -636,7 +673,7 @@ function isLegacyHeader(document: DocumentModel, header: ContainerNode) {
 
   const textOnlyStarterTitle = children.find(
     (node): node is TextNode =>
-      isTextNode(node) && !node.link && node.name === 'Product Title' && node.content === 'Sticky Playground',
+      isTextNode(node) && !node.link && node.name === 'Product Title' && getNodePlainText(node) === 'Sticky Playground',
   );
   const titleX = textOnlyStarterTitle ? parseFloat(textOnlyStarterTitle.rect.x.base.raw) || 0 : 0;
   return Boolean(textOnlyStarterTitle && titleX < 40);
@@ -652,7 +689,7 @@ function isLegacyFooter(document: DocumentModel, footer: ContainerNode) {
     (node) =>
       isTextNode(node) &&
       !node.link &&
-      typeof node.content === 'string' && node.content.includes('Built for sticky exploration'),
+      getNodePlainText(node).includes('Built for sticky exploration'),
   );
   if (hasOldBusinessCopy) {
     return true;
@@ -663,7 +700,7 @@ function isLegacyFooter(document: DocumentModel, footer: ContainerNode) {
       isTextNode(node) &&
       !node.link &&
       node.name === 'Footer Copy' &&
-      node.content === 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.',
+      getNodePlainText(node) === 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.',
   );
   const hasModernMeta = children.some(
     (node) => isTextNode(node) && !node.link && node.name === 'Footer Meta',
@@ -694,7 +731,7 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
 
   const title = createUniqueTextNode(document, header.id);
   title.name = 'Product Title';
-  title.content = 'Sticky Playground';
+  setNodePlainText(title, 'Sticky Playground');
   title.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
   title.style ??= {};
   title.style.color = '#0f172a';
@@ -704,7 +741,7 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
 
   const subtitle = createUniqueTextNode(document, header.id);
   subtitle.name = 'Product Subtitle';
-  subtitle.content = 'Model, preview, and validate sticky behavior before implementation.';
+  setNodePlainText(subtitle, 'Model, preview, and validate sticky behavior before implementation.');
   subtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
   subtitle.style ??= {};
   subtitle.style.color = '#516174';
@@ -712,17 +749,17 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
 
   const templatesLink = createUniqueLinkTextNode(document, header.id);
   templatesLink.name = 'Templates Link';
-  templatesLink.content = 'Templates';
+  setNodePlainText(templatesLink, 'Templates');
   templatesLink.rect = createDefaultRect('836px', '48px', 'fit-content', 'auto');
 
   const stickyLink = createUniqueLinkTextNode(document, header.id);
   stickyLink.name = 'Sticky Demos Link';
-  stickyLink.content = 'Sticky Demos';
+  setNodePlainText(stickyLink, 'Sticky Demos');
   stickyLink.rect = createDefaultRect('947px', '48px', 'fit-content', 'auto');
 
   const testPlanLink = createUniqueLinkTextNode(document, header.id);
   testPlanLink.name = 'Test Plan Link';
-  testPlanLink.content = 'Test Plan';
+  setNodePlainText(testPlanLink, 'Test Plan');
   testPlanLink.rect = createDefaultRect('1082px', '48px', '144px', '24px');
 
   document.nodes[title.id] = title;
@@ -751,7 +788,7 @@ function applyModernFooter(document: DocumentModel, footer: ContainerNode) {
 
   const title = createUniqueTextNode(document, footer.id);
   title.name = 'Footer Title';
-  title.content = 'Sticky Playground';
+  setNodePlainText(title, 'Sticky Playground');
   title.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
   title.style ??= {};
   title.style.color = '#0f172a';
@@ -762,7 +799,7 @@ function applyModernFooter(document: DocumentModel, footer: ContainerNode) {
 
   const copy = createUniqueTextNode(document, footer.id);
   copy.name = 'Footer Copy';
-  copy.content = 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.';
+  setNodePlainText(copy, 'A prototyping surface for sticky logic, spacing strategy, and interaction QA.');
   copy.rect = createDefaultRect('64px', '53px', '271px', '38px');
   copy.style ??= {};
   copy.style.color = '#475569';
@@ -771,7 +808,7 @@ function applyModernFooter(document: DocumentModel, footer: ContainerNode) {
 
   const repoLink = createUniqueLinkTextNode(document, footer.id);
   repoLink.name = 'Repository Link';
-  repoLink.content = 'github.com/tombigel/sticky-playground';
+  setNodePlainText(repoLink, 'github.com/tombigel/sticky-playground');
   repoLink.link = { linkType: 'external', href: 'https://github.com/tombigel/sticky-playground', openInNewTab: true };
   repoLink.rect = createDefaultRect('866px', '48px', '322px', '24px');
 
