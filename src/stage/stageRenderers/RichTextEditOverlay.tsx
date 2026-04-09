@@ -12,7 +12,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Code2, Link2, List, ListOrdered, Type } from "lucide-react";
-import { Transforms, type BaseSelection } from "slate";
+import {
+	Editor,
+	Range,
+	Text,
+	Transforms,
+	type BaseSelection,
+	type Descendant,
+} from "slate";
 import {
 	Editable,
 	ReactEditor,
@@ -90,13 +97,26 @@ import {
 	type RichToolbarPlacement,
 } from "./richToolbarPosition";
 
+type RetainedSelectionLeaf = RichTextLeaf & { retainedSelection?: boolean };
+
 function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
-	const style = richLeafStyle(leaf as RichTextLeaf);
+	const editLeaf = leaf as RetainedSelectionLeaf;
+	const style = richLeafStyle(editLeaf);
 	return (
 		<span
 			{...attributes}
+			data-retained-selection={
+				editLeaf.retainedSelection ? "true" : undefined
+			}
 			style={{
 				...style,
+				...(editLeaf.retainedSelection
+					? {
+							backgroundColor:
+								"color-mix(in srgb, var(--editor-accent) 32%, transparent)",
+							borderRadius: "2px",
+						}
+					: {}),
 				pointerEvents: "auto",
 				userSelect: "text",
 				WebkitUserSelect: "text",
@@ -359,6 +379,7 @@ export function RichTextEditOverlay({
 		null,
 	);
 	const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
+	const [editorFocused, setEditorFocused] = useState(true);
 	const [selectionRevision, setSelectionRevision] = useState(0);
 	const [toolbarState, setToolbarState] = useState<RichToolbarState>(() =>
 		readToolbarState(editor),
@@ -814,6 +835,28 @@ export function RichTextEditOverlay({
 		Transforms.select(editor, selectionToRestore);
 		return true;
 	}, [editor, linkSelection, toolbarSelection]);
+
+	const retainedSelection = linkSelection ?? toolbarSelection;
+
+	const decorateRetainedSelection = useCallback(
+		([node, path]: [Descendant, number[]]) => {
+			if (
+				editorFocused ||
+				!retainedSelection ||
+				Range.isCollapsed(retainedSelection) ||
+				!Text.isText(node)
+			) {
+				return [];
+			}
+
+			const nodeRange = Editor.range(editor, path);
+			const intersection = Range.intersection(retainedSelection, nodeRange);
+			return intersection
+				? [{ ...intersection, retainedSelection: true }]
+				: [];
+		},
+		[editor, editorFocused, retainedSelection],
+	);
 
 	const handleBooleanMark = useCallback(
 		(mark: "bold" | "italic" | "underline" | "strikethrough") => {
@@ -1343,9 +1386,16 @@ export function RichTextEditOverlay({
 					}}
 				>
 					<Editable
+						decorate={decorateRetainedSelection}
 						renderLeaf={renderEditLeaf}
 						renderElement={(props) => renderEditElement(props, documentModel)}
 						onKeyDown={handleKeyDown}
+						onFocus={() => {
+							setEditorFocused(true);
+						}}
+						onBlur={() => {
+							setEditorFocused(false);
+						}}
 						style={{
 							outline: "none",
 							whiteSpace: "pre-wrap",

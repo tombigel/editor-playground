@@ -166,22 +166,32 @@ Execution rules:
 
 - Objective:
   - Preserve authored selection through toolbar interactions and keep it visibly highlighted while toolbar chrome owns focus.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
-  - Planned during execution.
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`
 - Read-first files and target lines:
-  - Planned during execution.
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1-180`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:330-620`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:1280-1370`
+  - `src/stage/tests/Stage.e2e.test.ts:694-760`
+  - `docs/PLAYGROUND_SPEC.md:1776-1788`
 - Implementation notes:
   - Logical selection retention and visual retained-selection decoration are separate concerns.
   - Retained visual highlight is transient editor UI state, not persisted content.
+  - Apply retained highlight through Slate `decorate(...)` over the remembered authored range instead of mutating the content model.
+  - Only show retained highlight while the editor itself is blurred and toolbar chrome owns focus; collapsed selections do not render a retained highlight.
 - Verification commands:
-  - Planned during execution
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "partial inline selection|retained highlight"`
+  - `npm run build`
 - Verification result:
-  - Not started
+  - Passed before commit.
 - Commit SHA:
-  - Not started
+  - Pending the Q3 commit
 - Open follow-ups carried forward:
-  - None yet.
+  - `P18-Q4` should converge the remaining toolbar inputs onto inspector control contracts and hide structure-specific controls until their owning mode is active.
 
 ## P18-Q4: Inspector-control convergence and conditional controls
 

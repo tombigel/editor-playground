@@ -729,6 +729,45 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
+	it("keeps a visible retained highlight when focus moves into the toolbar", async () => {
+		const { document, richTextId } = createRichTextEditE2EDocument(
+			[{ type: "paragraph", children: [{ text: "text one two three" }] }],
+			{ name: "Retained Toolbar Highlight" },
+		);
+		await openEditor({
+			document,
+			selectedId: richTextId,
+			selectedIds: [richTextId],
+		});
+
+		await enterRichEditMode(richTextId);
+		await selectRichTextRange(0, 9, 0, 12);
+
+		await page.locator('[aria-label="Line height"]').click();
+		await page.waitForSelector('[data-retained-selection="true"]', {
+			timeout: 2_000,
+		});
+
+		const retainedHighlight = await page.evaluate(() => {
+			const node = window.document.querySelector<HTMLElement>(
+				'[data-retained-selection="true"]',
+			);
+			if (!node) {
+				return null;
+			}
+			const style = window.getComputedStyle(node);
+			return {
+				text: node.textContent ?? "",
+				backgroundColor: style.backgroundColor,
+			};
+		});
+		expect(retainedHighlight).not.toBeNull();
+		expect(retainedHighlight?.text).toContain("two");
+		expect(retainedHighlight?.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+
+		await closeEditor();
+	}, 30_000);
+
 	it("unwinds nested rich edit layers one step at a time on outside click", async () => {
 		const { document, richTextId } = createRichTextEditE2EDocument();
 		await openEditor({
