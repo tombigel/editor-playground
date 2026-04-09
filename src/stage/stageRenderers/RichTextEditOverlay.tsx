@@ -14,6 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import {
 	Code2,
+	GripVertical,
 	Link2,
 	List,
 	ListOrdered,
@@ -65,6 +66,7 @@ import type {
 	DocumentModel,
 	NodeId,
 	RichBlock,
+	RichListItem,
 	RichTextBlock,
 	TextDocumentContent,
 	RichTextBlockType,
@@ -174,6 +176,23 @@ function renderEditElement(
 			>
 				{children}
 			</a>
+		);
+	}
+
+	if ("type" in el && el.type === "list-item") {
+		const listItem = el as RichListItem;
+		return (
+			<li
+				{...attributes}
+				dir={listItem.direction ?? "ltr"}
+				style={{
+					pointerEvents: "auto",
+					userSelect: "text",
+					WebkitUserSelect: "text",
+				}}
+			>
+				{children}
+			</li>
 		);
 	}
 
@@ -1155,8 +1174,7 @@ export function RichTextEditOverlay({
 				bodyClassName="px-2 py-2"
 				bodyStyle={{
 					pointerEvents: "auto",
-					overflowX: "auto",
-					overflowY: "hidden",
+					overflow: "visible",
 				}}
 				onPointerDown={(event) => {
 					event.stopPropagation();
@@ -1170,13 +1188,13 @@ export function RichTextEditOverlay({
 						data-dragging={toolbarDragging ? "true" : "false"}
 						className={
 							toolbarDragging
-								? "flex shrink-0 cursor-grabbing select-none touch-none self-center rounded-md px-1.5 py-3"
-								: "flex shrink-0 cursor-grab touch-none self-center rounded-md px-1.5 py-3"
+								? "editor-text-muted flex shrink-0 cursor-grabbing select-none touch-none self-center rounded-md px-1 py-2.5"
+								: "editor-text-muted flex shrink-0 cursor-grab touch-none self-center rounded-md px-1 py-2.5"
 						}
 						onClick={(event) => event.preventDefault()}
 						onPointerDown={handleToolbarDragPointerDown}
 					>
-						<div className="h-12 w-1 rounded-full bg-[color-mix(in_srgb,var(--editor-border-subtle)_80%,white)]" />
+						<GripVertical size={16} />
 					</button>
 					<div className="space-y-1.5">
 						<div className="flex items-center gap-1.5">
@@ -1318,6 +1336,25 @@ export function RichTextEditOverlay({
 							>
 								<Code2 size={14} />
 							</ToolbarButton>
+							{structureMode === "code-block" ? (
+								<CompactSelect
+									selectId={RICH_SELECT_IDS.codeLanguage}
+									open={openSelectId === RICH_SELECT_IDS.codeLanguage}
+									onOpenChange={(open) =>
+										handleSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)
+									}
+									label="Code language"
+									value={selectedCodeLanguage || "plaintext"}
+									onValueChange={(value) => {
+										restoreToolbarSelection();
+										setSelectedCodeBlockLanguage(editor, value);
+										syncToolbarState();
+										setSelectionRevision((revision) => revision + 1);
+									}}
+									options={CODE_LANGUAGE_OPTIONS}
+									width={110}
+								/>
+							) : null}
 							<ToolbarButton
 								label="Use ordered list"
 								active={selectedListKind === "ol"}
@@ -1406,26 +1443,7 @@ export function RichTextEditOverlay({
 									width={92}
 								/>
 							) : null}
-							{structureMode === "code-block" ? (
-								<CompactSelect
-									selectId={RICH_SELECT_IDS.codeLanguage}
-									open={openSelectId === RICH_SELECT_IDS.codeLanguage}
-									onOpenChange={(open) =>
-										handleSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)
-									}
-									label="Code language"
-									value={selectedCodeLanguage || "plaintext"}
-									onValueChange={(value) => {
-										restoreToolbarSelection();
-										setSelectedCodeBlockLanguage(editor, value);
-										syncToolbarState();
-										setSelectionRevision((revision) => revision + 1);
-									}}
-									options={CODE_LANGUAGE_OPTIONS}
-									width={110}
-								/>
-							) : null}
-							<CompactIconTextField
+							<CompactIconNumberField
 								label="Line height"
 								icon={<MoveVertical size={14} />}
 								value={lineHeightDraft}
@@ -1801,7 +1819,7 @@ function CompactFontSizeField({
 	);
 }
 
-function CompactIconTextField({
+function CompactIconNumberField({
 	label,
 	icon,
 	value,
@@ -1839,9 +1857,13 @@ function CompactIconTextField({
 				</span>
 				<Input
 					aria-label={label}
+					type="number"
+					inputMode="decimal"
+					min={0.1}
+					step="any"
 					value={value}
 					placeholder={placeholder}
-					className="h-full min-w-0 border-0 bg-transparent px-0 text-center text-xs shadow-none focus-visible:ring-0"
+					className="h-full min-w-0 border-0 bg-transparent px-0 text-center text-xs shadow-none [appearance:textfield] focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 					style={{ pointerEvents: "auto" }}
 					onChange={(event) => onChange(event.target.value)}
 					onBlur={onBlur}

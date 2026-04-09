@@ -1310,6 +1310,7 @@ Naming and title behavior:
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
+- Shared code-block rendering applies explicit wrap-safe `<pre>` styling in both stage preview and site output: code blocks use `white-space: pre-wrap`, `overflow-wrap: anywhere`, `overflow: visible`, and `min-width: 0` so intrinsic widths like `fit-content` and `min-content` do not introduce internal scrollbars.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
 
@@ -1779,11 +1780,12 @@ While editing, the rich node gets visible stage chrome:
 - the link panel follows the dragged toolbar position instead of staying anchored to the original text node position
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
-- the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls
-- font size uses the shared `ValueWithUnit` contract with font-size units
-- line height uses a compact numeric field with a leading `MoveVertical` icon
+- the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
+- font size uses the shared `ValueWithUnit` contract with font-size units, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
+- line height uses a compact spinnerless number field with a leading `MoveVertical` icon
 - block spacing uses a compact `ValueWithUnit` field with `px` / `em` support and a leading `UnfoldVertical` icon while still persisting `content.blockGap` as px
-- the block-type, ordered-list marker, unordered-list marker, and code-language dropdowns render only for their active structure modes
+- the block-type, ordered-list marker, unordered-list marker, and code-language dropdowns render only for their active structure modes, and the code-language dropdown sits immediately after the code-mode icon
+- rich list blocks render native `ol` / `ul` containers with native `li` items in live edit mode so ordered and unordered markers remain visible despite global reset CSS
 - line-height edits apply immediately in the live rich-edit surface for supported non-list text blocks, not only after commit back to idle rendering
 - when a non-collapsed authored selection exists and focus moves into toolbar chrome, the edit surface keeps a transient accent-blue retained highlight over that same range until the user changes selection or exits rich edit
 - active icon buttons use the shared selected-control treatment rather than bespoke stage-only styling

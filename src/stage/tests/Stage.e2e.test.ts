@@ -809,6 +809,23 @@ describe("stage/Stage e2e", () => {
 			await page.locator('[aria-label="Unordered list marker"]').count(),
 		).toBe(0);
 		expect(await page.locator('[aria-label="Code language"]').count()).toBe(1);
+		expect(
+			await toolbar.evaluate((element) => {
+				const row = element.querySelectorAll(".flex.items-center.gap-1\\.5")[1];
+				if (!row) {
+					return [];
+				}
+				return Array.from(row.children)
+					.map((child) =>
+						(child as HTMLElement).querySelector<HTMLElement>("[aria-label]")
+							?.getAttribute("aria-label"),
+					)
+					.filter((value): value is string => Boolean(value));
+			}),
+		).toSatisfy((labels: string[]) => {
+			const codeIndex = labels.indexOf("Use code block");
+			return codeIndex >= 0 && labels[codeIndex + 1] === "Code language";
+		});
 
 		await toolbar.getByRole("button", { name: "Use text block" }).click();
 		expect(await page.locator('[aria-label="Code language"]').count()).toBe(0);
@@ -1080,11 +1097,9 @@ describe("stage/Stage e2e", () => {
 
 		await enterRichEditMode(richTextId);
 		await selectRichTextRange(0, 0, 0, "Edit me on stage".length);
-		await page.getByLabel("Line height").fill("1.8");
-		await page.getByLabel("Block spacing").fill("24");
-		await page
-			.getByLabel("Block spacing")
-			.evaluate((input) => (input as HTMLInputElement).blur());
+		await page.getByLabel("Line height", { exact: true }).fill("1.8");
+		await page.getByLabel("Block spacing", { exact: true }).fill("24");
+		await page.keyboard.press("Tab");
 		await saveRichEdit();
 
 		const persistedState = await readPersistedState();
@@ -1095,7 +1110,7 @@ describe("stage/Stage e2e", () => {
 				children: [{ text: "Edit me on stage" }],
 			},
 		]);
-		expect(persistedState.document.nodes[richTextId].style.blockGap).toBe(24);
+		expect(persistedState.document.nodes[richTextId].content.blockGap).toBe(24);
 
 		await closeEditor();
 	}, 30_000);
@@ -1110,10 +1125,8 @@ describe("stage/Stage e2e", () => {
 
 		await enterRichEditMode(richTextId);
 		await selectRichTextRange(0, 0, 0, "Edit me on stage".length);
-		await page.getByLabel("Font size").fill("32px");
-		await page
-			.getByLabel("Font size")
-			.evaluate((input) => (input as HTMLInputElement).blur());
+		await page.getByLabel("Font size", { exact: true }).fill("32");
+		await page.keyboard.press("Tab");
 		await saveRichEdit();
 
 		const persistedState = await readPersistedState();
