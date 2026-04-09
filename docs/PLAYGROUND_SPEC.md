@@ -1769,8 +1769,8 @@ While editing, the rich node gets visible stage chrome:
 
 - a floating toolbar built from the shared floating panel shell plus compact shared inputs/selects and inspector-style icon buttons
 - the floating toolbar is arranged as a fixed two-row editor bar rather than a wrapping chip cloud
-- the base toolbar is a UI-flow floating panel with a dedicated left-side drag rail, rendered outside the edited node flow
-- toolbar drag is owned by the rich-edit host using the same lifecycle pattern as the focused panel, clamps inside the viewport below the top bar, and remembers a session-local offset when rich edit is reopened later in the same browser session
+- the base toolbar is a UI-flow floating panel with a slim integrated left-side drag rail, rendered outside the edited node flow
+- toolbar drag is owned by the rich-edit host using the same pointer-driven lifecycle pattern as the focused panel, uses cached drag geometry instead of remeasuring on every move, clamps inside the viewport below the top bar, and remembers a session-local offset when rich edit is reopened later in the same browser session
 - the stage selection outline is hidden while the rich node is actively being edited
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it

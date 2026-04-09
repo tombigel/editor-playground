@@ -28,6 +28,9 @@ describe("stage/RichTextEditOverlay", () => {
 			'data-stage-rich-toolbar="true" popover="manual"',
 		);
 		expect(markup).toContain('data-stage-rich-toolbar-drag-handle="true"');
+		expect(markup).toContain("self-center");
+		expect(markup).toContain("h-12");
+		expect(markup).not.toContain("min-h-[72px]");
 		expect(markup).toContain('aria-label="Font family"');
 		expect(markup).toContain('aria-label="Font size"');
 		expect(markup).toContain('aria-label="Bold"');

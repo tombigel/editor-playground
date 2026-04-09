@@ -2,7 +2,7 @@ import {
 	type CSSProperties,
 	type FormEvent,
 	type KeyboardEvent as ReactKeyboardEvent,
-	type MouseEvent as ReactMouseEvent,
+	type PointerEvent as ReactPointerEvent,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -177,9 +177,13 @@ const DEFAULT_LINK_POPOVER: LinkPopoverDraft = {
 };
 
 type ToolbarDragState = {
+	pointerId: number;
 	originX: number;
 	originY: number;
 	originOffset: RichToolbarOffset;
+	rootRect: DOMRect;
+	panelWidth: number;
+	panelHeight: number;
 };
 
 const RICH_SELECT_IDS = {
@@ -425,21 +429,23 @@ export function RichTextEditOverlay({
 		function finishToolbarDrag(nextOffset: RichToolbarOffset) {
 			toolbarDragRef.current = null;
 			setToolbarDragging(false);
+			setToolbarOffsetDraft(nextOffset);
 			persistRichToolbarSessionOffset(nextOffset);
 		}
 
-		function handleMouseMove(event: MouseEvent) {
-			if (!toolbarDragRef.current || !rootRef.current || !toolbarRef.current) {
+		function handlePointerMove(event: PointerEvent) {
+			if (
+				!toolbarDragRef.current ||
+				event.pointerId !== toolbarDragRef.current.pointerId
+			) {
 				return;
 			}
 
 			event.preventDefault();
-			const rootRect = rootRef.current.getBoundingClientRect();
-			const toolbarRect = toolbarRef.current.getBoundingClientRect();
 			const nextOffset = clampRichToolbarOffset({
-				rootRect,
-				panelWidth: toolbarRect.width,
-				panelHeight: toolbarRect.height,
+				rootRect: toolbarDragRef.current.rootRect,
+				panelWidth: toolbarDragRef.current.panelWidth,
+				panelHeight: toolbarDragRef.current.panelHeight,
 				viewportWidth: window.innerWidth,
 				viewportHeight: window.innerHeight,
 				offset: toolbarDragRef.current.originOffset,
@@ -447,22 +453,45 @@ export function RichTextEditOverlay({
 				deltaY: event.clientY - toolbarDragRef.current.originY,
 			});
 			toolbarOffsetDraftRef.current = nextOffset;
-			setToolbarOffsetDraft(nextOffset);
+			const nextViewportPosition = getRichToolbarViewportPosition({
+				rootRect: toolbarDragRef.current.rootRect,
+				panelWidth: toolbarDragRef.current.panelWidth,
+				panelHeight: toolbarDragRef.current.panelHeight,
+				viewportWidth: window.innerWidth,
+				viewportHeight: window.innerHeight,
+				offset: nextOffset,
+			});
+			setToolbarPlacement((current) =>
+				current === nextViewportPosition.placement
+					? current
+					: nextViewportPosition.placement,
+			);
+			setToolbarPosition((current) =>
+				current.top === nextViewportPosition.top &&
+				current.left === nextViewportPosition.left
+					? current
+					: { top: nextViewportPosition.top, left: nextViewportPosition.left },
+			);
 		}
 
-		function handleMouseEnd() {
-			if (!toolbarDragRef.current) {
+		function handlePointerEnd(event: PointerEvent) {
+			if (
+				!toolbarDragRef.current ||
+				event.pointerId !== toolbarDragRef.current.pointerId
+			) {
 				return;
 			}
 			finishToolbarDrag(toolbarOffsetDraftRef.current);
 		}
 
-		window.addEventListener("mousemove", handleMouseMove, { passive: false });
-		window.addEventListener("mouseup", handleMouseEnd);
+		window.addEventListener("pointermove", handlePointerMove, { passive: false });
+		window.addEventListener("pointerup", handlePointerEnd);
+		window.addEventListener("pointercancel", handlePointerEnd);
 
 		return () => {
-			window.removeEventListener("mousemove", handleMouseMove);
-			window.removeEventListener("mouseup", handleMouseEnd);
+			window.removeEventListener("pointermove", handlePointerMove);
+			window.removeEventListener("pointerup", handlePointerEnd);
+			window.removeEventListener("pointercancel", handlePointerEnd);
 		};
 	}, [toolbarDragging]);
 
@@ -814,18 +843,30 @@ export function RichTextEditOverlay({
 		onUpdateBlockGap(nodeId, parsed);
 	}, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
 
-	const handleToolbarDragMouseDown = useCallback(
-		(event: ReactMouseEvent<HTMLButtonElement>) => {
-			if (event.button !== 0) {
+	const handleToolbarDragPointerDown = useCallback(
+		(event: ReactPointerEvent<HTMLButtonElement>) => {
+			if (event.button !== 0 || !rootRef.current || !toolbarRef.current) {
 				return;
 			}
 			event.preventDefault();
 			event.stopPropagation();
+			try {
+				event.currentTarget.setPointerCapture(event.pointerId);
+			} catch {}
+			const rootRect = rootRef.current.getBoundingClientRect();
+			const toolbarRect = toolbarRef.current.getBoundingClientRect();
 			toolbarDragRef.current = {
+				pointerId: event.pointerId,
 				originX: event.clientX,
 				originY: event.clientY,
 				originOffset: toolbarOffsetDraftRef.current,
+				rootRect,
+				panelWidth: toolbarRect.width,
+				panelHeight: toolbarRect.height,
 			};
+			setToolbarWidth((current) =>
+				current === toolbarRect.width ? current : toolbarRect.width,
+			);
 			setToolbarDragging(true);
 		},
 		[],
@@ -962,13 +1003,13 @@ export function RichTextEditOverlay({
 						data-dragging={toolbarDragging ? "true" : "false"}
 						className={
 							toolbarDragging
-								? "editor-border-subtle flex shrink-0 cursor-grabbing select-none touch-none items-center rounded-md border px-2 py-1"
-								: "editor-border-subtle flex shrink-0 cursor-grab touch-none items-center rounded-md border px-2 py-1"
+								? "flex shrink-0 cursor-grabbing select-none touch-none self-center rounded-md px-1.5 py-3"
+								: "flex shrink-0 cursor-grab touch-none self-center rounded-md px-1.5 py-3"
 						}
 						onClick={(event) => event.preventDefault()}
-						onMouseDown={handleToolbarDragMouseDown}
+						onPointerDown={handleToolbarDragPointerDown}
 					>
-						<div className="editor-border-subtle h-full min-h-[72px] w-1 rounded-full border bg-[color-mix(in_srgb,var(--editor-border-subtle)_65%,white)]" />
+						<div className="h-12 w-1 rounded-full bg-[color-mix(in_srgb,var(--editor-border-subtle)_80%,white)]" />
 					</button>
 					<div className="space-y-1.5">
 						<div className="flex items-center gap-1.5">
