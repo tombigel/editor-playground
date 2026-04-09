@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RichTextEditOverlay } from '../stageRenderers/RichTextEditOverlay';
-import { createTextDocumentContent } from '../../model/richContent';
+import { createTextDocumentContent, listContentToRichListBlock } from '../../model/richContent';
 
 const CONTENT = createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'Edit me on stage' }] }]);
 
@@ -39,5 +39,27 @@ describe('stage/RichTextEditOverlay', () => {
     expect(markup).toContain('min-height:96px');
     expect(markup).toContain('padding:0');
     expect(markup).toContain('border-radius:0');
+  });
+
+  it('keeps list markers inside the edit box for list blocks', () => {
+    const markup = renderToStaticMarkup(
+      <RichTextEditOverlay
+        nodeId="rich-node"
+        content={createTextDocumentContent([
+          listContentToRichListBlock({
+            type: 'ol',
+            items: [{ text: 'First', direction: 'ltr' }],
+          }),
+        ])}
+        minHeight="96px"
+        onCommit={() => {}}
+        onUpdateBlockGap={() => {}}
+        onDiscard={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('<ol');
+    expect(markup).toContain('list-style-position:outside');
+    expect(markup).toContain('padding-inline-start:1.25em');
   });
 });

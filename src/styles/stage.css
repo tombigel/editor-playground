@@ -103,6 +103,7 @@
   transform: translateY(-100%);
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: 20px;
   padding: 0 10px;
   border-radius: 0;
@@ -113,6 +114,10 @@
   letter-spacing: 0.02em;
   box-shadow: var(--editor-accent-shadow);
   pointer-events: none;
+}
+
+.stage-single-selection-label-icon {
+  flex: 0 0 auto;
 }
 
 .stage-single-selection-label-badges {

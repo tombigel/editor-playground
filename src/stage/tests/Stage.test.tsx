@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { PencilLine } from 'lucide-react';
 import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentFromText } from '../../model/richContent';
 import type { DocumentModel, TextNode } from '../../model/types';
@@ -1127,6 +1128,7 @@ describe('stage/Stage', () => {
         overlay={{
           nodeId: 'container_1',
           label: 'Container',
+          icon: null,
           isSticky: false,
           hasAnimation: false,
           isElevated: false,
@@ -1156,6 +1158,7 @@ describe('stage/Stage', () => {
         overlay={{
           nodeId: 'section_1',
           label: 'Section',
+          icon: null,
           isSticky: false,
           hasAnimation: false,
           isElevated: false,
@@ -1176,6 +1179,33 @@ describe('stage/Stage', () => {
     expect(markup).not.toContain('class="resize-handle handle-n"');
     expect(markup).not.toContain('class="resize-handle handle-e"');
     expect(markup).not.toContain('class="resize-handle handle-se"');
+  });
+
+  it('renders an icon in the stage single-selection label when provided', () => {
+    const markup = renderToStaticMarkup(
+      <SingleSelectionOverlay
+        overlay={{
+          nodeId: 'text_1',
+          label: 'Text',
+          icon: PencilLine,
+          isSticky: false,
+          hasAnimation: false,
+          isElevated: false,
+          bounds: {
+            left: 24,
+            top: 36,
+            width: 280,
+            height: 180,
+          },
+          handles: ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'],
+          wideSouthHandle: false,
+        }}
+        onHandleMouseDown={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('stage-single-selection-label-icon');
+    expect(markup).toContain('Text');
   });
 
   it('suppresses the top-level structural resize knob for aspect-ratio heights', () => {

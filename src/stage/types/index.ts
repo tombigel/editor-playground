@@ -171,6 +171,7 @@ export type StageSceneProps = {
 	singleSelectionOverlay?: {
 		nodeId: NodeId;
 		label: string;
+		icon: LucideIcon | null;
 		isSticky: boolean;
 		hasAnimation: boolean;
 		isElevated: boolean;
@@ -226,3 +227,4 @@ export type RenderWrapperArgs = {
 	ownerBottomLanePx?: number;
 	interactKeys?: Set<NodeId>;
 };
+import type { LucideIcon } from 'lucide-react';

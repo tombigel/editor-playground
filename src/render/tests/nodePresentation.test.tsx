@@ -20,8 +20,8 @@ describe('render/nodePresentation', () => {
     }
 
     expect(formatNodeLabel(section)).toBe('Section');
-    expect(formatNodeLabel(title)).toBe('Text: block');
-    expect(getNodeAriaLabel(title)).toBe('Text: block: Post Title');
+    expect(formatNodeLabel(title)).toBe('Text');
+    expect(getNodeAriaLabel(title)).toBe('Text: Post Title');
   });
 
   it('shares leaf text content and brand-mark detection', () => {
@@ -78,7 +78,7 @@ describe('render/nodePresentation', () => {
     code.link = { linkType: 'external', href: 'https://example.com' };
     code.style = { ...code.style, background: '#111827' };
 
-    expect(formatNodeLabel(code)).toBe('Text: code');
+    expect(formatNodeLabel(code)).toBe('Text');
 
     const markup = renderToStaticMarkup(renderLeafContent(code));
     expect(markup.startsWith('<pre')).toBe(true);
@@ -124,6 +124,8 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('<ol');
     expect(markup).toContain('start="3"');
     expect(markup).toContain('list-style-type:upper-alpha');
+    expect(markup).toContain('list-style-position:outside');
+    expect(markup).toContain('padding-inline-start:1.25em');
     expect(markup).toContain('dir="rtl"');
   });
 
@@ -133,10 +135,10 @@ describe('render/nodePresentation', () => {
     const code = createTextNode('code', 'root');
     const list = createTextNode('list', 'root');
 
-    expect(formatNodeLabel(block)).toBe('Text: block');
-    expect(formatNodeLabel(rich)).toBe('Text: rich');
-    expect(formatNodeLabel(code)).toBe('Text: code');
-    expect(formatNodeLabel(list)).toBe('Text: list');
+    expect(formatNodeLabel(block)).toBe('Text');
+    expect(formatNodeLabel(rich)).toBe('Text');
+    expect(formatNodeLabel(code)).toBe('Text');
+    expect(formatNodeLabel(list)).toBe('Text');
   });
 
   it('renders rich code and list blocks through the shared rich renderer', () => {
@@ -166,6 +168,8 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('data-code-theme="dark"');
     expect(markup).toContain('<ul');
     expect(markup).toContain('list-style-type:square');
+    expect(markup).toContain('list-style-position:outside');
+    expect(markup).toContain('padding-inline-start:1.25em');
     expect(markup).toContain('<li dir="ltr">Beta</li>');
   });
 });

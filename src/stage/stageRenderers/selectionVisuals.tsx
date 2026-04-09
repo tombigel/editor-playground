@@ -24,6 +24,7 @@ export function SingleSelectionOverlay({
   overlay: NonNullable<StageSceneProps['singleSelectionOverlay']>;
   onHandleMouseDown: (handle: ResizeHandle, event: MouseEvent<HTMLDivElement>) => void;
 }) {
+  const Icon = overlay.icon;
   return (
     <div
       className="stage-single-selection-overlay"
@@ -36,6 +37,7 @@ export function SingleSelectionOverlay({
       }}
     >
       <div className="stage-single-selection-label">
+        {Icon ? <Icon className="stage-single-selection-label-icon h-3.5 w-3.5" /> : null}
         {overlay.label}
         {(overlay.isSticky || overlay.hasAnimation || overlay.isElevated) && (
           <span className="stage-single-selection-label-badges">

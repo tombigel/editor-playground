@@ -165,7 +165,6 @@ describe('panels/FocusedModePanel', () => {
 
     expect(markup).toContain('Content');
     expect(markup).toContain(textNode.name);
-    expect(markup).toContain('>Text<');
     expect(markup).toContain('>HTML tag<');
     expect(markup).toContain('aria-label="Close content focus mode"');
   });

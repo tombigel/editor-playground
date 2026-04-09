@@ -40,7 +40,7 @@ export function formatNodeLabel(node: StageOrSiteNode) {
     return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
   }
   if (isTextNode(node)) {
-    return `Text: ${node.subtype}`;
+    return 'Text';
   }
   return 'Image';
 }
@@ -165,7 +165,7 @@ function renderRichListBlock(
   document?: DocumentModel,
 ): ReactNode {
   const sharedStyle: CSSProperties = {
-    margin: 0,
+    ...getDefaultListContainerStyle(),
     listStyleType: block.markerStyle,
     ...richBlockStyleToCss(block.style),
   };
@@ -200,6 +200,14 @@ function renderRichListBlock(
       ))}
     </ul>
   );
+}
+
+export function getDefaultListContainerStyle(): CSSProperties {
+  return {
+    margin: 0,
+    listStylePosition: 'outside',
+    paddingInlineStart: '1.25em',
+  };
 }
 
 export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
@@ -338,7 +346,7 @@ export function renderListContent(
         className={className}
         data-node-id={dataNodeId}
         start={content.start}
-        style={{ listStyleType: content.markerStyle, ...style }}
+        style={{ ...getDefaultListContainerStyle(), listStyleType: content.markerStyle, ...style }}
       >
         {content.items.map((item, index) => (
           <li key={listItemKey(item, index)} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
@@ -353,7 +361,7 @@ export function renderListContent(
     <ul
       className={className}
       data-node-id={dataNodeId}
-      style={{ listStyleType: content.markerStyle, ...style }}
+      style={{ ...getDefaultListContainerStyle(), listStyleType: content.markerStyle, ...style }}
     >
       {content.items.map((item, index) => (
         <li key={listItemKey(item, index)} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
@@ -458,12 +466,15 @@ export function renderLeafContent(
     const lang = codeBlock?.language ?? node.code?.language ?? 'plaintext';
     const theme = codeBlock?.theme ?? node.code?.theme ?? 'light';
     const html = codeBlock?.highlightedHtml ?? node.code?.highlightedHtml ?? escapeHtml(codeText);
+    const codeStyle = codeBlock?.style
+      ? richBlockStyleToCss(codeBlock.style, { includeBorder: true, includeBoxShadow: true })
+      : undefined;
     return (
       <pre
         className={joinClassNames(leafClassName, `language-${lang}`)}
         data-node-id={dataNodeId}
         data-code-theme={theme}
-        style={{ margin: 0, ...contentStyle }}
+        style={{ margin: 0, ...contentStyle, ...codeStyle }}
       >
         <code
           className={`language-${lang}`}
@@ -479,7 +490,7 @@ export function renderLeafContent(
     return listBlock
       ? renderListContent(richListBlockToListContent(listBlock), {
           document,
-          style: contentStyle,
+          style: { ...contentStyle, ...richBlockStyleToCss(listBlock.style) },
           className: leafClassName,
           dataNodeId,
           tabIndex,
@@ -534,7 +545,19 @@ export function renderLeafContent(
 
     const blockType = textBlock?.type ?? (node.htmlTag === 'blockquote' ? 'blockquote' : node.htmlTag && node.htmlTag !== 'p' ? node.htmlTag : 'paragraph');
     const Tag = getRichTextBlockTag(blockType === 'paragraph' ? 'paragraph' : blockType);
-    return <Tag className={leafClassName} data-node-id={dataNodeId} style={contentStyle}>{text}</Tag>;
+    return (
+      <Tag
+        className={leafClassName}
+        data-node-id={dataNodeId}
+        style={{
+          ...contentStyle,
+          ...(typeof textBlock?.lineHeight === 'number' ? { lineHeight: textBlock.lineHeight } : {}),
+          ...richBlockStyleToCss(textBlock?.style),
+        }}
+      >
+        {text}
+      </Tag>
+    );
   }
 
   return null;

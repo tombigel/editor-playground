@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { isSiteNode, isTextNode, type TextDocumentContent } from "../model/types";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
+import { getNodeIcon } from "../render/nodeIcons";
 import { resolveStickyIsElevated } from "../render/sticky";
 import { useStageDragDrop } from "./dragDrop/useStageDragDrop";
 import { useStageAnimations } from "./useStageAnimations";
@@ -217,6 +218,7 @@ export function Stage({
 		setSingleSelectionOverlay({
 			nodeId: node.id,
 			label: formatNodeLabel(node),
+			icon: getNodeIcon(node),
 			isSticky,
 			hasAnimation: node.animation !== undefined,
 			isElevated: isSticky && node.sticky ? resolveStickyIsElevated(node.sticky, globalStickyElevation) : false,

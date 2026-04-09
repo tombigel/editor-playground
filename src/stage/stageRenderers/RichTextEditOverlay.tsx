@@ -22,15 +22,15 @@ import { getSectionAnchorOptions, getLinkHref, isValidSectionAnchorTarget } from
 import type {
   DocumentModel,
   NodeId,
+  RichBlock,
   TextDocumentContent,
-  RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
 } from '../../model/types';
 import { createTextDocumentContent, getTextDocumentBlockGap } from '../../model/richContent';
 import { CODE_LANGUAGE_OPTIONS } from '../../render/codeHighlight';
-import { getRichTextBlockTag, richLeafStyle } from '../../render/nodePresentation';
+import { getDefaultListContainerStyle, getRichTextBlockTag, richLeafStyle } from '../../render/nodePresentation';
 import {
   convertSelectionToBlockType,
   convertSelectionToCodeBlock,
@@ -77,7 +77,7 @@ function renderEditElement(
   { attributes, children, element }: RenderElementProps,
   documentModel: DocumentModel | undefined,
 ) {
-  const el = element as RichTextLink | RichTextBlock | { type?: string };
+  const el = element as RichTextLink | RichBlock | { type?: string };
   if ('type' in el && el.type === 'link') {
     const link = el as RichTextLink;
     const href = getLinkHref(link, documentModel);
@@ -98,11 +98,18 @@ function renderEditElement(
     );
   }
 
-  const Tag = getRichTextBlockTag((el as RichTextBlock).type ?? 'div');
+  const block = el as RichBlock;
+  const Tag = block.type === 'ul' || block.type === 'ol'
+    ? block.type
+    : block.type === 'code-block'
+      ? 'div'
+      : getRichTextBlockTag(block.type);
   return (
     <Tag
       {...attributes}
+      data-rich-block-type={block.type === 'code-block' ? 'code-block' : undefined}
       style={{
+        ...((block.type === 'ul' || block.type === 'ol') ? getDefaultListContainerStyle() : {}),
         pointerEvents: 'auto',
         userSelect: 'text',
         WebkitUserSelect: 'text',
