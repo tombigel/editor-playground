@@ -1782,7 +1782,7 @@ While editing, the rich node gets visible stage chrome:
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
 - text color and highlight color reuse the shared `ColorPicker` swatch control instead of a stage-local native color input
-- font size uses the shared `ValueWithUnit` contract with font-size units, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
+- font size uses the shared `ValueWithUnit` contract with font-size units, resolves inherited font size into a real field value instead of gray placeholder text, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
 - font-size suggestions participate in the rich-edit layer stack, so outside click and `Escape` close that suggestion layer before they can unwind the link panel or the base toolbar
 - line height uses the shared `NumberInput` contract as a compact spinnerless field with a leading `MoveVertical` icon
 - block spacing uses a compact `ValueWithUnit` field with `px` / `em` support and a leading `UnfoldVertical` icon while still persisting `content.blockGap` as px

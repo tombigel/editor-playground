@@ -408,6 +408,20 @@ function readSpacingDraftState(value: string) {
 	}
 }
 
+function readInitialFontSizeValue(contentStyle: CSSProperties | undefined) {
+	const fontSize = contentStyle?.fontSize;
+	if (typeof fontSize === "number" && Number.isFinite(fontSize) && fontSize > 0) {
+		return `${formatDisplayValue(fontSize)}px`;
+	}
+	if (typeof fontSize === "string") {
+		try {
+			const parsed = parseFontSizeValue(fontSize);
+			return `${formatDisplayValue(parsed.parsed.value)}${parsed.parsed.unit}`;
+		} catch {}
+	}
+	return null;
+}
+
 function isSelectVisibleForStructureMode(
 	selectId: RichEditSelectId,
 	structureMode: RichToolbarState["structureMode"],
@@ -906,6 +920,10 @@ export function RichTextEditOverlay({
 		currentTextColor,
 		currentHighlightColor,
 	} = toolbarState;
+	const resolvedToolbarFontSizeValue =
+		toolbarState.currentFontSize ||
+		readInitialFontSizeValue(contentStyle) ||
+		`${formatDisplayValue(readToolbarFontReference(rootRef.current).inheritedFontSizePx)}px`;
 	const currentBlockSpacingValue = `${String(
 		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
 	)}px`;
@@ -1245,7 +1263,7 @@ export function RichTextEditOverlay({
 							/>
 							<CompactFontSizeField
 								label="Font size"
-								value={toolbarState.currentFontSize}
+								value={resolvedToolbarFontSizeValue}
 								width={90}
 								onCommit={commitFontSizeDraft}
 								suggestionsOpen={
@@ -1829,7 +1847,7 @@ function CompactFontSizeField({
 					options={options}
 					inputValue={draft.draft}
 					selectedOption={draft.unit}
-					placeholder="18"
+					placeholder={value ? undefined : "18"}
 					min={0}
 					step="any"
 					ariaLabel={label}

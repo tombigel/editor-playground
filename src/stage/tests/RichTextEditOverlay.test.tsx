@@ -103,4 +103,22 @@ describe("stage/RichTextEditOverlay", () => {
 
 		expect(markup).toContain("line-height:1.8");
 	});
+
+	it("renders inherited font size as a real field value instead of placeholder text", () => {
+		const markup = renderToStaticMarkup(
+			<RichTextEditOverlay
+				nodeId="rich-node"
+				content={CONTENT}
+				contentStyle={{ fontSize: "18px" }}
+				minHeight="96px"
+				onCommit={() => {}}
+				onUpdateBlockGap={() => {}}
+				onDiscard={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain('aria-label="Font size"');
+		expect(markup).toContain('value="18"');
+		expect(markup).not.toContain('placeholder="18"');
+	});
 });
