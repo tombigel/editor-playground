@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { STORAGE_KEY, DEFAULT_DOCUMENT_STORAGE_KEY } from '../../editor/editorStore';
 import { createDefaultRect, createContainerNode, createMediaNode, createTextNode } from '../../model/defaultFactories';
+import { createTextDocumentContent } from '../../model/richContent';
 import type { DocumentModel, RichContent, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { startViteE2EServer, type StartedServer } from './e2eServer';
@@ -130,6 +131,8 @@ describe('stage/Stage e2e', () => {
 
   async function enterRichEditMode(nodeId: string) {
     const richLeaf = page.locator(`#stage-node-${nodeId}`).first();
+    await richLeaf.waitFor({ state: 'attached', timeout: 10_000 });
+    await richLeaf.scrollIntoViewIfNeeded();
     await richLeaf.click();
     await page.waitForSelector('[data-stage-rich-toolbar="true"]', { timeout: 2_000 });
     return {
@@ -380,7 +383,7 @@ describe('stage/Stage e2e', () => {
 
     expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'paragraph', children: [{ text: 'Edit me on stage' }] },
     ]);
 
@@ -417,7 +420,7 @@ describe('stage/Stage e2e', () => {
     await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'paragraph', children: [{ text: 'Edit me on stage updated' }] },
     ]);
 
@@ -435,7 +438,7 @@ describe('stage/Stage e2e', () => {
     await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'paragraph', children: [{ text: 'Edit me on stage' }] },
     ]);
 
@@ -460,7 +463,7 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    const paragraph = persistedState.document.nodes[richTextId].content[0];
+    const paragraph = persistedState.document.nodes[richTextId].content.blocks[0];
     expect(paragraph.type).toBe('paragraph');
     const anchorLink = paragraph.children.find(
       (child: { type?: string; linkType?: string }) => child.type === 'link' && child.linkType === 'anchor',
@@ -472,6 +475,103 @@ describe('stage/Stage e2e', () => {
     expect(anchorLink.anchorTargetId).toBeTruthy();
     expect(anchorLink.href).toMatch(/^#/);
     expect(anchorLink.children).toEqual([{ text: 'Edit me on stage' }]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('preserves a partial inline selection when link-popover dropdowns are used', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument(
+      [{ type: 'paragraph', children: [{ text: 'text one two three' }] }],
+      { name: 'Partial Link Selection' },
+    );
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 9, 0, 12);
+
+    const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+    await toolbar.getByRole('button', { name: 'Link' }).click();
+    await page.locator('[aria-label="Link type"]').click();
+    await chooseOpenSelectItem('Internal');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    const paragraph = persistedState.document.nodes[richTextId].content.blocks[0];
+    expect(paragraph.type).toBe('paragraph');
+    expect(paragraph.children[0]).toEqual({ text: 'text one ' });
+    expect(paragraph.children[2]).toEqual({ text: ' three' });
+    expect(paragraph.children[1]).toMatchObject({
+      type: 'link',
+      linkType: 'anchor',
+      children: [{ text: 'two' }],
+    });
+    expect(paragraph.children[1].anchorTargetId).toBeTruthy();
+    expect(paragraph.children[1].href).toMatch(/^#/);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('unwinds nested rich edit layers one step at a time on outside click', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    const { editable } = await enterRichEditMode(richTextId);
+    await editable.click();
+    await page.keyboard.press('ControlOrMeta+A');
+
+    const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+    await toolbar.getByRole('button', { name: 'Link' }).click();
+    await page.waitForSelector('[data-stage-rich-link-popover="true"]', { timeout: 2_000 });
+    await page.locator('[aria-label="Link type"]').click();
+    await page.waitForSelector('[data-ui="select-content"][data-stage-rich-select-id="link-type"]', { timeout: 2_000 });
+
+    await page.mouse.click(16, 16);
+    await page.waitForSelector('[data-ui="select-content"][data-stage-rich-select-id="link-type"]', {
+      state: 'detached',
+      timeout: 2_000,
+    });
+    expect(await page.locator('[data-stage-rich-link-popover="true"]').count()).toBe(1);
+    expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
+
+    await page.mouse.click(16, 16);
+    await page.waitForSelector('[data-stage-rich-link-popover="true"]', { state: 'detached', timeout: 2_000 });
+    expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
+
+    await page.mouse.click(16, 16);
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
+
+    await closeEditor();
+  }, 30_000);
+
+  it('unwinds nested rich edit layers one step at a time on Escape', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    const { editable } = await enterRichEditMode(richTextId);
+    await editable.click();
+    await page.keyboard.press('ControlOrMeta+A');
+
+    const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+    await toolbar.getByRole('button', { name: 'Link' }).click();
+    await page.waitForSelector('[data-stage-rich-link-popover="true"]', { timeout: 2_000 });
+    await page.locator('[aria-label="Link type"]').click();
+    await page.waitForSelector('[data-ui="select-content"][data-stage-rich-select-id="link-type"]', { timeout: 2_000 });
+
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('[data-ui="select-content"][data-stage-rich-select-id="link-type"]', {
+      state: 'detached',
+      timeout: 2_000,
+    });
+    expect(await page.locator('[data-stage-rich-link-popover="true"]').count()).toBe(1);
+    expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
+
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('[data-stage-rich-link-popover="true"]', { state: 'detached', timeout: 2_000 });
+    expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(1);
+
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
 
     await closeEditor();
   }, 30_000);
@@ -490,7 +590,7 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'h2', children: [{ text: 'text one two three' }] },
     ]);
 
@@ -511,7 +611,7 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'h3', children: [{ text: 'one two' }] },
       { type: 'h3', children: [{ text: 'three four' }] },
     ]);
@@ -532,12 +632,42 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       {
         type: 'ol',
         children: [
           { type: 'list-item', children: [{ text: 'one two' }] },
           { type: 'list-item', children: [{ text: 'three four' }] },
+        ],
+      },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('applies ordered-list marker changes from the dropdown without losing the authored selection', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument(
+      [{ type: 'paragraph', children: [{ text: 'one\ntwo\nthree' }] }],
+      { name: 'Ordered Marker Dropdown' },
+    );
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 0, 0, 'one\ntwo\nthree'.length);
+    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Use ordered list' }).click();
+    await page.locator('[data-stage-rich-toolbar="true"]').first().locator('[aria-label="Ordered list marker"]').click();
+    await chooseOpenSelectItem('I.');
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
+      {
+        type: 'ol',
+        markerStyle: 'upper-roman',
+        children: [
+          { type: 'list-item', children: [{ text: 'one' }] },
+          { type: 'list-item', children: [{ text: 'two' }] },
+          { type: 'list-item', children: [{ text: 'three' }] },
         ],
       },
     ]);
@@ -557,7 +687,7 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'paragraph', lineHeight: 1.8, children: [{ text: 'Edit me on stage' }] },
     ]);
     expect(persistedState.document.nodes[richTextId].style.blockGap).toBe(24);
@@ -576,7 +706,7 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'paragraph', children: [{ text: 'Edit me on stage', fontSize: '32px' }] },
     ]);
 
@@ -598,7 +728,7 @@ describe('stage/Stage e2e', () => {
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       {
         type: 'code-block',
         language: 'markdown',
@@ -642,7 +772,7 @@ describe('stage/Stage e2e', () => {
 
     await saveRichEdit();
     const persistedState = await readPersistedState();
-    expect(persistedState.document.nodes[richTextId].content).toEqual([
+    expect(persistedState.document.nodes[richTextId].content.blocks).toEqual([
       { type: 'paragraph', children: [{ text: 'Edit me on stage' }] },
       { type: 'paragraph', children: [{ text: 'Second line' }] },
       { type: 'paragraph', children: [{ text: 'Third line' }] },
@@ -1249,7 +1379,7 @@ function createRichTextEditE2EDocument(
 
   const richText = createTextNode('rich', section.id) as TextNode;
   richText.name = options?.name ?? 'Rich Edit Regression Copy';
-  richText.content = content;
+  richText.content = createTextDocumentContent(content);
   richText.rect = createDefaultRect('72px', '88px', '280px', options?.height ?? '72px');
   if (typeof options?.blockGap === 'number') {
     richText.style.blockGap = options.blockGap;

@@ -1139,6 +1139,7 @@ Language behavior:
 - `Edit` menu exposes undo/redo plus placeholder copy/duplicate/paste entries and contextual delete
 - `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Components and Pages
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
+- Design system showcase section jumps from the left navigation scroll only the main showcase pane and keep the top bar/back-to-editor affordance visible.
 - Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
 - Pages panel entry toggles a dedicated panel for multi-page management.
 - The main Settings panel `Pages` section reuses the same site-wide page settings content as the Pages panel `Settings` tab.
@@ -1317,13 +1318,14 @@ Naming and title behavior:
 - `src/render/layout.ts` owns the shared non-editor layout baseline for mesh-grid placement, wrapper sizing, and sticky-structure inputs.
 - `src/render/renderPlan.ts` and `src/render/renderPlanHelpers.ts` own the shared render tree and traversal helpers.
 - `src/render/leafPresentation.ts` owns shared leaf-content presentation defaults used by both editor stage rendering and site export.
-- `src/render/nodePresentation.tsx` owns shared leaf semantics and subtype-aware labels. Stage overlays and site rendering both consume the same text-subtype labeling and leaf element branching from this module.
+- `src/render/nodePresentation.tsx` owns shared leaf semantics and shared text labels. Stage overlays and site rendering both consume the same text labeling and leaf element branching from this module.
 
 ### Editor renderer
 
 - `src/stage/Stage.tsx` is an editor renderer.
 - It measures live node geometry, renders the preview, publishes geometry upward for reuse, and owns editor-only visuals such as selection chrome, drag preview, snap guides, and sticky guides.
-- Selection labels for text nodes are subtype-aware and read from the shared render label helper, so stage chrome reports `Text: block`, `Text: rich`, `Text: code`, or `Text: list` instead of inferring editor-only names.
+- Selection labels for text nodes read from the shared render label helper, so stage chrome reports the generic `Text` label while layers/editor iconography carries the block/code/rich/list distinction.
+- Single-selection stage pills also render the shared node icon, so stage chrome and layers use the same subtype-aware visual language.
 
 ### Site renderer
 
@@ -1344,7 +1346,7 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 
 - The picker opens from the left-rail `Text` add button.
 - It renders as a compact left-side pop panel at the shared top-left resting position below the top bar.
-- It shows four options in a vertical list: **Heading**, **Paragraph**, **Code**, **Rich text**.
+- It shows five options in a vertical list: **Heading**, **Paragraph**, **List**, **Code**, **Rich text**.
 - Clicking an option inserts the corresponding node and closes the picker.
 - **Known gap**: the picker does not yet close on outside-click (no `useDismissFloatingPanels` integration for this panel).
 
@@ -1354,6 +1356,7 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 | --------- | ------------- | ----------------- | --------- |
 | Heading   | block text    | `h2`              | `block`   |
 | Paragraph | block text    | `p` (default)     | `block`   |
+| List      | standalone list | —               | `list`    |
 | Code      | code text     | —                 | `code`    |
 | Rich text | rich text     | —                 | `rich`    |
 
@@ -1428,8 +1431,8 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 - `validateDocument()` reports malformed list structures and broken per-item page / anchor links.
 - Text conversion is deterministic:
   - `block -> list` splits hard line breaks into unordered items.
-  - `code -> list` becomes a single unordered item.
-  - `list -> code` emits markdown-like plain text.
+  - `code -> list` splits hard line breaks into unordered items.
+  - `list -> code` emits one plain code line per item using item text only, without ordered or unordered markers.
   - `code -> rich` emits a rich `code-block`.
   - supported `ul` / `ol` lists convert to rich list blocks instead of flattening to paragraphs.
   - legacy `dl` payloads degrade deterministically during migration because canonical list storage is `ul` / `ol` only.
@@ -1438,6 +1441,7 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 
 - Shared node presentation renders standalone canonical list nodes semantically as `<ul>` or `<ol>`.
 - Ordered lists honor persisted `start` and marker style values.
+- Default standalone and rich list presentation keeps the browser-standard outside marker position, but reserves internal list padding so bullets and numbering do not hang outside the node bounds on stage or in site output.
 - Site export uses the same shared list rendering helpers as the stage/site presentation path.
 
 ### Inspector editing
@@ -1462,6 +1466,7 @@ The text system supports structure-changing operations without depending on edit
 - A single rich block is converted in place to the matching standalone text node.
 - Multiple rich blocks keep the original node id as the first split node and append additional sibling text nodes immediately after it.
 - Rich text blocks split to standalone block nodes, rich `code-block` nodes split to standalone code nodes, and rich `ul` / `ol` blocks split to standalone list nodes.
+- When a rich block originated from a standalone text node merge, split restores that node's canonical block content plus its standalone metadata snapshot instead of rebuilding it from flattened text.
 - `convertTextNodeDoc(..., targetSubtype, { mode: 'split' })` on multi-block rich content splits first, then flattens each resulting block into the requested simple subtype for phase 1.5.
 
 ### Multi-node merge
@@ -1469,7 +1474,7 @@ The text system supports structure-changing operations without depending on edit
 - `mergeTextNodesToRichDoc()` merges sibling text nodes under the same parent into one rich node.
 - Content order follows parent tree order, not the caller's selection order.
 - The surviving node can be chosen explicitly so later editor multi-select flows can keep the first-selected node's geometry and identity.
-- Standalone text merges preserve per-source typography and compatible visual treatment inline on the resulting rich blocks instead of forcing the survivor's text style onto every merged block.
+- Standalone text merges preserve each source node's canonical block structure and attach a standalone snapshot so merge -> split round-trips keep per-block styling and restorable standalone data.
 - Mixed-parent merge requests are rejected as no-ops.
 - The multi-select inspector only offers the merge action when every selected node is a standalone text node under the same parent.
 
@@ -1753,6 +1758,8 @@ Idle ──select──► Selected ──second plain click──► Editing �
   `setTextDocumentContent` action, which calls `setTextDocumentContentDoc()` in `documentApi.ts`.
 - **Block spacing**: rich stage editing writes spacing through `setTextDocumentBlockGap`,
   which updates `content.blockGap` directly instead of routing through field-based text actions.
+- Both canonical text-document actions register normal document undo history and debounce with other text edits for the same node.
+- While nested rich-edit chrome is open, outside click and `Escape` unwind only the topmost nested layer instead of immediately exiting edit mode.
 - **Discard**: restores the original content; the document model is not mutated.
 
 Slate manages its own micro-undo while editing. On commit, one entry is pushed to the document-level
@@ -1766,11 +1773,12 @@ While editing, the rich node gets visible stage chrome:
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it
 - toolbar and link-popover interactions stay inside edit mode instead of being treated as outside clicks
+- rich-stage chrome uses a local layer stack: nested dropdowns close before their parent link panel, and the link panel closes before outside click or `Escape` can fall through to commit or discard the whole rich-edit session
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, code-block mode, ordered-list controls, unordered-list controls, line height, and block spacing
 - active icon buttons use the shared selected-control treatment rather than bespoke stage-only styling
-- toolbar selects, inline inputs, and the link popover restore the last rich-editor selection before applying block/list/link mutations, so focus leaving the editable surface does not retarget those actions
+- toolbar selects, inline inputs, and the link popover preserve the authored rich-editor selection while their chrome is used, then restore that selection before applying block/list/link mutations so focus leaving the editable surface does not retarget those actions
 - rich `code-block` selections expose a language selector in the same toolbar; standalone code inspector language options include `plaintext`, `markdown`, and explicit Prism-backed languages
 - block, `ol`, and `ul` controls are block-scoped rather than inline-scoped: they affect the containing block or touched blocks, never by splitting around the inline selection
 - multi-block block-type conversions preserve touched top-level block boundaries and retag each touched block instead of collapsing them into one block
@@ -1778,7 +1786,7 @@ While editing, the rich node gets visible stage chrome:
 
 ### Text inspector content panel
 
-- The text subtype toggle is rendered as its own centered row inside the content card rather than as a right-aligned card-header control.
+- The text subtype toggle is rendered as an icon-only options selector in the content card header, aligned beside the focus-mode action and using per-subtype tooltips.
 - Rich content cards no longer render a text preview under the “Edit rich text” action.
 - Standalone list content cards edit canonical `ul` / `ol` list blocks and keep advanced bulk editing collapsed by default.
 

@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { createServer } from 'node:net';
 
 export type StartedServer = {
   url: string;
@@ -8,8 +9,9 @@ export type StartedServer = {
 export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
   await warmViteOptimizeDeps();
 
-  const url = `http://127.0.0.1:${port}`;
-  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port), '--strictPort', '--force'], {
+  const resolvedPort = await findAvailablePort(port);
+  const url = `http://127.0.0.1:${resolvedPort}`;
+  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(resolvedPort), '--strictPort', '--force'], {
     cwd: process.cwd(),
     stdio: 'pipe',
     detached: true,
@@ -63,6 +65,30 @@ async function warmViteOptimizeDeps() {
   if (exitCode !== 0) {
     throw new Error(`Vite dependency optimization failed with code ${exitCode}\n${lastOutput}`);
   }
+}
+
+async function findAvailablePort(startPort: number) {
+  let port = startPort;
+  while (!(await isPortAvailable(port))) {
+    port += 1;
+  }
+  return port;
+}
+
+async function isPortAvailable(port: number) {
+  return await new Promise<boolean>((resolve) => {
+    const server = createServer();
+
+    server.once('error', () => {
+      resolve(false);
+    });
+
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+
+    server.listen(port, '127.0.0.1');
+  });
 }
 
 async function waitForServer(url: string, server: ChildProcessWithoutNullStreams) {

@@ -2,7 +2,6 @@ import {
   type CSSProperties,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
-  type KeyboardEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -138,6 +137,20 @@ const DEFAULT_LINK_POPOVER: LinkPopoverDraft = {
   anchorTargetId: '',
 };
 
+const RICH_SELECT_IDS = {
+  fontFamily: 'font-family',
+  blockType: 'block-type',
+  orderedListMarker: 'ordered-list-marker',
+  unorderedListMarker: 'unordered-list-marker',
+  codeLanguage: 'code-language',
+  linkType: 'link-type',
+  sectionTarget: 'section-target',
+  targetPage: 'target-page',
+  targetPageSection: 'target-page-section',
+} as const;
+
+type RichEditSelectId = (typeof RICH_SELECT_IDS)[keyof typeof RICH_SELECT_IDS];
+
 const BLOCK_TYPE_OPTIONS: Array<{ value: RichTextBlockType; label: string }> = [
   { value: 'paragraph', label: 'Paragraph' },
   { value: 'div', label: 'Div' },
@@ -213,24 +226,20 @@ function readToolbarState(editor: ReturnType<typeof createRichEditor>): RichTool
   };
 }
 
-function isInteractiveRichEditTarget(target: EventTarget | null, root: HTMLDivElement): boolean {
-  if (!(target instanceof Node)) {
-    return false;
-  }
-
-  if (root.contains(target)) {
-    return true;
-  }
-
+function isTargetWithinSelector(target: EventTarget | null, selector: string): boolean {
   if (!(target instanceof Element)) {
     return false;
   }
 
-  return Boolean(
-    target.closest(
-      '[data-stage-rich-link-popover="true"], [data-ui="select-content"], [data-radix-popper-content-wrapper]',
-    ),
-  );
+  return Boolean(target.closest(selector));
+}
+
+function isTargetWithinSelectLayer(target: EventTarget | null, selectId: RichEditSelectId): boolean {
+  return isTargetWithinSelector(target, `[data-stage-rich-select-id="${selectId}"]`);
+}
+
+function isTargetWithinLinkPopover(target: EventTarget | null): boolean {
+  return isTargetWithinSelector(target, '[data-stage-rich-link-popover="true"]');
 }
 
 export function RichTextEditOverlay({
@@ -257,6 +266,7 @@ export function RichTextEditOverlay({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [linkPopover, setLinkPopover] = useState<LinkPopoverDraft>(DEFAULT_LINK_POPOVER);
   const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
+  const [openSelectId, setOpenSelectId] = useState<RichEditSelectId | null>(null);
   const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
   const [selectionRevision, setSelectionRevision] = useState(0);
   const [toolbarState, setToolbarState] = useState<RichToolbarState>(() => readToolbarState(editor));
@@ -292,6 +302,25 @@ export function RichTextEditOverlay({
     );
   }, [content, editor, nodeId, onCommit]);
 
+  const closeOpenSelect = useCallback(() => {
+    setOpenSelectId(null);
+  }, []);
+
+  const closeLinkPopover = useCallback(() => {
+    setOpenSelectId(null);
+    setLinkSelection(null);
+    setLinkPopover(DEFAULT_LINK_POPOVER);
+  }, []);
+
+  const handleSelectOpenChange = useCallback((selectId: RichEditSelectId, open: boolean) => {
+    setOpenSelectId((current) => {
+      if (open) {
+        return selectId;
+      }
+      return current === selectId ? null : current;
+    });
+  }, []);
+
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
       const root = rootRef.current;
@@ -299,7 +328,25 @@ export function RichTextEditOverlay({
         return;
       }
       const target = event.target;
-      if (isInteractiveRichEditTarget(target, root)) {
+      if (openSelectId) {
+        if (isTargetWithinSelectLayer(target, openSelectId)) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        closeOpenSelect();
+        return;
+      }
+      if (linkPopover.open) {
+        if (isTargetWithinLinkPopover(target)) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        closeLinkPopover();
+        return;
+      }
+      if (target instanceof Node && root.contains(target)) {
         return;
       }
       commitCurrentContent();
@@ -309,7 +356,38 @@ export function RichTextEditOverlay({
     return () => {
       globalThis.document?.removeEventListener('pointerdown', handlePointerDown, true);
     };
-  }, [commitCurrentContent]);
+  }, [closeLinkPopover, closeOpenSelect, commitCurrentContent, linkPopover.open, openSelectId]);
+
+  useEffect(() => {
+    function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      if (openSelectId) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeOpenSelect();
+        return;
+      }
+
+      if (linkPopover.open) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeLinkPopover();
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      onDiscard();
+    }
+
+    globalThis.document?.addEventListener('keydown', handleGlobalKeyDown, true);
+    return () => {
+      globalThis.document?.removeEventListener('keydown', handleGlobalKeyDown, true);
+    };
+  }, [closeLinkPopover, closeOpenSelect, linkPopover.open, onDiscard, openSelectId]);
 
   const fontFamilies = useMemo(() => {
     const defaults = documentModel?.fontLibrary.defaults ?? [];
@@ -372,14 +450,8 @@ export function RichTextEditOverlay({
   }, [editor]);
 
   const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Escape') {
-        if (linkPopover.open) {
-          setLinkPopover(DEFAULT_LINK_POPOVER);
-          return;
-        }
-        event.preventDefault();
-        onDiscard();
         return;
       }
 
@@ -410,7 +482,7 @@ export function RichTextEditOverlay({
         event.preventDefault();
         if (isLinkActive(editor)) {
           removeLink(editor);
-          setLinkSelection(null);
+          closeLinkPopover();
           syncToolbarState();
           setSelectionRevision((revision) => revision + 1);
         } else {
@@ -431,7 +503,7 @@ export function RichTextEditOverlay({
         }
       }
     },
-    [commitCurrentContent, editor, linkPopover.open, onDiscard, pages, sectionOptions, syncToolbarState],
+    [closeLinkPopover, commitCurrentContent, editor, pages, sectionOptions, syncToolbarState],
   );
 
   const restoreToolbarSelection = useCallback(() => {
@@ -476,7 +548,7 @@ export function RichTextEditOverlay({
   const handleLinkAction = useCallback(() => {
     if (isLinkActive(editor)) {
       removeLink(editor);
-      setLinkSelection(null);
+      closeLinkPopover();
       syncToolbarState();
       setSelectionRevision((revision) => revision + 1);
       return;
@@ -491,7 +563,7 @@ export function RichTextEditOverlay({
       href: '',
       targetPageId: pages[0]?.id ?? '',
     });
-  }, [editor, pages, sectionOptions, syncToolbarState]);
+  }, [closeLinkPopover, editor, pages, sectionOptions, syncToolbarState]);
 
   const handleLinkSubmit = useCallback((event: FormEvent) => {
     event.preventDefault();
@@ -518,11 +590,10 @@ export function RichTextEditOverlay({
           }
         : {}),
     });
-    setLinkSelection(null);
-    setLinkPopover(DEFAULT_LINK_POPOVER);
+    closeLinkPopover();
     syncToolbarState();
     setSelectionRevision((revision) => revision + 1);
-  }, [documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions, syncToolbarState]);
+  }, [closeLinkPopover, documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions, syncToolbarState]);
 
   const commitFontSizeDraft = useCallback(() => {
     handleValueMark('fontSize', fontSizeDraft);
@@ -592,6 +663,9 @@ export function RichTextEditOverlay({
         >
           <div className="flex items-center gap-1.5">
             <CompactSelect
+              selectId={RICH_SELECT_IDS.fontFamily}
+              open={openSelectId === RICH_SELECT_IDS.fontFamily}
+              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.fontFamily, open)}
               label="Font family"
               value={currentFontFamily}
               onValueChange={(value) => handleValueMark('fontFamily', value)}
@@ -642,6 +716,9 @@ export function RichTextEditOverlay({
               <Type size={14} />
             </ToolbarButton>
             <CompactSelect
+              selectId={RICH_SELECT_IDS.blockType}
+              open={openSelectId === RICH_SELECT_IDS.blockType}
+              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.blockType, open)}
               label="Block type"
               value={selectedBlockType}
               onValueChange={(value) => {
@@ -678,6 +755,9 @@ export function RichTextEditOverlay({
               <ListOrdered size={14} />
             </ToolbarButton>
             <CompactSelect
+              selectId={RICH_SELECT_IDS.orderedListMarker}
+              open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
+              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.orderedListMarker, open)}
               label="Ordered list marker"
               value={selectedListKind === 'ol' ? selectedListMarkerStyle || 'decimal' : 'decimal'}
               onValueChange={(value) => {
@@ -702,6 +782,9 @@ export function RichTextEditOverlay({
               <List size={14} />
             </ToolbarButton>
             <CompactSelect
+              selectId={RICH_SELECT_IDS.unorderedListMarker}
+              open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
+              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.unorderedListMarker, open)}
               label="Unordered list marker"
               value={selectedListKind === 'ul' ? selectedListMarkerStyle || 'disc' : 'disc'}
               onValueChange={(value) => {
@@ -715,6 +798,9 @@ export function RichTextEditOverlay({
             />
             {structureMode === 'code-block' ? (
               <CompactSelect
+                selectId={RICH_SELECT_IDS.codeLanguage}
+                open={openSelectId === RICH_SELECT_IDS.codeLanguage}
+                onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)}
                 label="Code language"
                 value={selectedCodeLanguage || 'plaintext'}
                 onValueChange={(value) => {
@@ -787,9 +873,10 @@ export function RichTextEditOverlay({
             targetPageSectionOptions={targetPageSectionOptions}
             onChange={setLinkPopover}
             onCancel={() => {
-              setLinkSelection(null);
-              setLinkPopover(DEFAULT_LINK_POPOVER);
+              closeLinkPopover();
             }}
+            openSelectId={openSelectId}
+            onSelectOpenChange={handleSelectOpenChange}
             onSubmit={handleLinkSubmit}
           />
         ) : null}
@@ -837,13 +924,27 @@ function ToolbarButton({
   );
 }
 
+function preserveRichSelectionPointerDown(event: {
+  preventDefault: () => void;
+  stopPropagation: () => void;
+}) {
+  event.preventDefault();
+  event.stopPropagation();
+}
+
 function CompactSelect({
+  selectId,
+  open,
+  onOpenChange,
   label,
   value,
   onValueChange,
   options,
   width,
 }: {
+  selectId: RichEditSelectId;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   label: string;
   value: string;
   onValueChange: (value: string) => void;
@@ -857,21 +958,20 @@ function CompactSelect({
       className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
       content={<div className="leading-3.5 font-medium">{label}</div>}
     >
-      <Select value={value} onValueChange={onValueChange}>
+      <Select open={open} onOpenChange={onOpenChange} value={value} onValueChange={onValueChange}>
         <SelectTrigger
+          data-stage-rich-select-id={selectId}
           aria-label={label}
           size="compact"
           className="pointer-events-auto h-8 shrink-0 rounded-sm text-xs"
           style={{ width, pointerEvents: 'auto' }}
-          onPointerDown={(event) => {
-            event.stopPropagation();
-          }}
+          onPointerDown={preserveRichSelectionPointerDown}
         >
           <span className="truncate text-left">
             {options.find((option) => option.value === value)?.label ?? label}
           </span>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent data-stage-rich-select-id={selectId}>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
@@ -973,6 +1073,8 @@ function LinkInsertPopover({
   targetPageSectionOptions,
   onChange,
   onCancel,
+  openSelectId,
+  onSelectOpenChange,
   onSubmit,
 }: {
   draft: LinkPopoverDraft;
@@ -982,6 +1084,8 @@ function LinkInsertPopover({
   targetPageSectionOptions: Array<{ id: string; name: string }>;
   onChange: (draft: LinkPopoverDraft) => void;
   onCancel: () => void;
+  openSelectId: RichEditSelectId | null;
+  onSelectOpenChange: (selectId: RichEditSelectId, open: boolean) => void;
   onSubmit: (event: FormEvent) => void;
 }) {
   return (
@@ -1006,6 +1110,9 @@ function LinkInsertPopover({
     >
       <form className="space-y-2" onSubmit={onSubmit}>
         <CompactSelect
+          selectId={RICH_SELECT_IDS.linkType}
+          open={openSelectId === RICH_SELECT_IDS.linkType}
+          onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.linkType, open)}
           label="Link type"
           value={draft.linkType}
           onValueChange={(value) => onChange({ ...draft, linkType: value as LinkPopoverDraft['linkType'] })}
@@ -1029,15 +1136,23 @@ function LinkInsertPopover({
           />
         ) : draft.linkType === 'anchor' ? (
           <Select
+            open={openSelectId === RICH_SELECT_IDS.sectionTarget}
+            onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.sectionTarget, open)}
             value={draft.anchorTargetId}
             onValueChange={(value) => onChange({ ...draft, anchorTargetId: value })}
           >
-            <SelectTrigger aria-label="Section target" className="pointer-events-auto" style={{ pointerEvents: 'auto' }}>
+            <SelectTrigger
+              data-stage-rich-select-id={RICH_SELECT_IDS.sectionTarget}
+              aria-label="Section target"
+              className="pointer-events-auto"
+              style={{ pointerEvents: 'auto' }}
+              onPointerDown={preserveRichSelectionPointerDown}
+            >
               <span className="truncate text-left">
                 {sectionOptions.find((option) => option.id === draft.anchorTargetId)?.name ?? 'Select section'}
               </span>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent data-stage-rich-select-id={RICH_SELECT_IDS.sectionTarget}>
               {sectionOptions.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {option.name}
@@ -1048,15 +1163,23 @@ function LinkInsertPopover({
         ) : (
           <div className="space-y-2">
             <Select
+              open={openSelectId === RICH_SELECT_IDS.targetPage}
+              onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.targetPage, open)}
               value={draft.targetPageId}
               onValueChange={(value) => onChange({ ...draft, targetPageId: value })}
             >
-              <SelectTrigger aria-label="Target page" className="pointer-events-auto" style={{ pointerEvents: 'auto' }}>
+              <SelectTrigger
+                data-stage-rich-select-id={RICH_SELECT_IDS.targetPage}
+                aria-label="Target page"
+                className="pointer-events-auto"
+                style={{ pointerEvents: 'auto' }}
+                onPointerDown={preserveRichSelectionPointerDown}
+              >
                 <span className="truncate text-left">
                   {pages.find((page) => page.id === draft.targetPageId)?.displayName ?? 'Select page'}
                 </span>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent data-stage-rich-select-id={RICH_SELECT_IDS.targetPage}>
                 {pages.map((page) => (
                   <SelectItem key={page.id} value={page.id}>
                     {page.displayName || page.slug || page.id}
@@ -1066,17 +1189,25 @@ function LinkInsertPopover({
             </Select>
             {targetPageSectionOptions.length > 0 ? (
               <Select
+                open={openSelectId === RICH_SELECT_IDS.targetPageSection}
+                onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.targetPageSection, open)}
                 value={draft.pageAnchorId || '__none__'}
                 onValueChange={(value) => onChange({ ...draft, pageAnchorId: value === '__none__' ? '' : value })}
               >
-                <SelectTrigger aria-label="Target page section" className="pointer-events-auto" style={{ pointerEvents: 'auto' }}>
+                <SelectTrigger
+                  data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}
+                  aria-label="Target page section"
+                  className="pointer-events-auto"
+                  style={{ pointerEvents: 'auto' }}
+                  onPointerDown={preserveRichSelectionPointerDown}
+                >
                   <span className="truncate text-left">
                     {draft.pageAnchorId
                       ? (targetPageSectionOptions.find((option) => option.id === draft.pageAnchorId)?.name ?? draft.pageAnchorId)
                       : 'No section jump'}
                   </span>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}>
                   <SelectItem value="__none__">No section jump</SelectItem>
                   {targetPageSectionOptions.map((option) => (
                     <SelectItem key={option.id} value={option.id}>
