@@ -30,9 +30,22 @@ export function resolveDisplayedInputValue(options: {
 
 const Input = React.forwardRef<
   HTMLInputElement,
-  React.ComponentProps<'input'> & { syncValueWhileFocused?: boolean }
+  React.ComponentProps<'input'> & {
+    syncValueWhileFocused?: boolean;
+    includeDisabledStyles?: boolean;
+  }
 >(
-  ({ className, type, value, onChange, onFocus, onBlur, syncValueWhileFocused = false, ...props }, ref) => {
+  ({
+    className,
+    type,
+    value,
+    onChange,
+    onFocus,
+    onBlur,
+    syncValueWhileFocused = false,
+    includeDisabledStyles = true,
+    ...props
+  }, ref) => {
     const isControlled = value !== undefined;
     const [isFocused, setIsFocused] = React.useState(false);
     const [draftValue, setDraftValue] = React.useState(() => stringifyControlledInputValue(value));
@@ -72,7 +85,8 @@ const Input = React.forwardRef<
           onChange?.(event);
         }}
         className={cn(
-          'flex h-8 w-full min-w-0 rounded-sm border px-3 py-1 text-sm shadow-sm transition-[color,box-shadow,border-color] outline-none placeholder:text-slate-400 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-8 w-full min-w-0 rounded-sm border px-3 py-1 text-sm shadow-sm transition-[color,box-shadow,border-color] outline-none placeholder:text-slate-400',
+          includeDisabledStyles ? 'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50' : null,
           className,
         )}
         ref={ref}

@@ -28,6 +28,7 @@ function validateNumberInputDraft(draft: string, min: number, max: number) {
 
 export function NumberInput({
   id,
+  ariaLabel,
   value,
   min,
   max,
@@ -35,15 +36,22 @@ export function NumberInput({
   onChange,
   unitLabel,
   mixed = false,
+  placeholder,
+  inputClassName,
+  includeDisabledStyles = true,
 }: {
   id?: string;
+  ariaLabel?: string;
   value: number;
   min: number;
   max: number;
-  step: number;
+  step: number | 'any';
   onChange: (value: number) => void;
   unitLabel?: string;
   mixed?: boolean;
+  placeholder?: string;
+  inputClassName?: string;
+  includeDisabledStyles?: boolean;
 }) {
   const formattedValue = formatFieldNumber(clampFieldNumber(value));
   const [draft, setDraft] = useState(mixed ? '' : formattedValue);
@@ -86,6 +94,7 @@ export function NumberInput({
     return (
       <ValueWithUnit
         id={id}
+        ariaLabel={ariaLabel}
         mode="number-fixed"
         value={`${draft}${unitLabel}`}
         onChange={() => {}}
@@ -99,6 +108,8 @@ export function NumberInput({
         mixedSegment={false}
         invalid={invalid}
         segmentWidth={unitLabel === '°' ? MINIMAL_UNIT_SUFFIX_WIDTH - 2 : MINIMAL_UNIT_SUFFIX_WIDTH}
+        inputClassName={inputClassName}
+        includeDisabledStyles={includeDisabledStyles}
         onInputBlur={handleBlur}
         onInputValueChange={(nextDraft) => {
           setIsEditing(true);
@@ -111,16 +122,18 @@ export function NumberInput({
   return (
     <Input
       id={id}
+      aria-label={ariaLabel}
       type="number"
       min={min}
       max={max}
       step={step}
       value={draft}
-      placeholder="-"
+      placeholder={placeholder ?? '-'}
+      includeDisabledStyles={includeDisabledStyles}
       onFocus={() => setIsEditing(true)}
       onBlur={handleBlur}
       onChange={(event) => handleDraftChange(event.target.value)}
-      className={`h-8 w-full rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+      className={`${inputClassName ?? ''} h-8 w-full rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
         invalid ? 'border-red-400 focus-visible:ring-red-200' : ''
       }`}
     />

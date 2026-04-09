@@ -14,7 +14,7 @@ const SelectContext = React.createContext<SelectContextValue>({ open: false });
 const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
-  'editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center justify-between rounded-sm border px-3 shadow-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
+  'editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center justify-between rounded-sm border px-3 shadow-sm outline-none',
   {
     variants: {
       size: {
@@ -62,14 +62,15 @@ function Select({
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> &
-    VariantProps<typeof selectTriggerVariants>
->(({ className, children, size, ...props }, ref) => (
+    VariantProps<typeof selectTriggerVariants> & { includeDisabledStyles?: boolean }
+>(({ className, children, size, includeDisabledStyles = true, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     data-ui="select-trigger"
     data-size={size ?? 'default'}
     className={cn(
       selectTriggerVariants({ size }),
+      includeDisabledStyles ? 'disabled:cursor-not-allowed disabled:opacity-50' : null,
       className,
     )}
     {...props}

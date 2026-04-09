@@ -110,6 +110,26 @@ describe('components/ui/value-with-unit', () => {
     expect(markup).toContain('12px');
   });
 
+  it('can expose a controlled suggestions layer without disabled-state utility classes', () => {
+    const markup = renderToStaticMarkup(
+      <ValueWithUnit
+        mode="number-select"
+        value="16px"
+        onChange={() => {}}
+        options={[{ type: 'option', value: 'px', label: 'px', inputMode: 'numeric' }]}
+        inputValue="16"
+        selectedOption="px"
+        suggestions={[{ value: '12' }]}
+        suggestionsOpen
+        includeDisabledStyles={false}
+      />,
+    );
+
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).not.toContain('disabled:pointer-events-none');
+    expect(markup).not.toContain('disabled:cursor-default');
+  });
+
   it('renders component-owned focus and open state classes instead of relying on global rescue rules', () => {
     const markup = renderToStaticMarkup(
       <ValueWithUnit

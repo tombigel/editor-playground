@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { PopoverTooltip } from "@/components/ui/popover";
 import {
 	Select,
@@ -278,6 +279,11 @@ const RICH_SELECT_IDS = {
 } as const;
 
 type RichEditSelectId = (typeof RICH_SELECT_IDS)[keyof typeof RICH_SELECT_IDS];
+const RICH_VALUE_FIELD_IDS = {
+	fontSize: "font-size",
+} as const;
+type RichEditValueFieldId =
+	(typeof RICH_VALUE_FIELD_IDS)[keyof typeof RICH_VALUE_FIELD_IDS];
 
 const BLOCK_TYPE_OPTIONS: Array<{ value: RichTextBlockType; label: string }> = [
 	{ value: "paragraph", label: "Paragraph" },
@@ -476,6 +482,16 @@ function isTargetWithinLinkPopover(target: EventTarget | null): boolean {
 	);
 }
 
+function isTargetWithinValueFieldLayer(
+	target: EventTarget | null,
+	valueFieldId: RichEditValueFieldId,
+): boolean {
+	return isTargetWithinSelector(
+		target,
+		`[data-stage-rich-value-field-id="${valueFieldId}"]`,
+	);
+}
+
 function isTargetWithinToolbar(target: EventTarget | null): boolean {
 	return isTargetWithinSelector(target, '[data-stage-rich-toolbar="true"]');
 }
@@ -509,14 +525,13 @@ export function RichTextEditOverlay({
 	const [openSelectId, setOpenSelectId] = useState<RichEditSelectId | null>(
 		null,
 	);
+	const [openValueFieldId, setOpenValueFieldId] =
+		useState<RichEditValueFieldId | null>(null);
 	const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
 	const [editorFocused, setEditorFocused] = useState(true);
 	const [selectionRevision, setSelectionRevision] = useState(0);
 	const [toolbarState, setToolbarState] = useState<RichToolbarState>(() =>
 		readToolbarState(editor),
-	);
-	const [lineHeightDraft, setLineHeightDraft] = useState(() =>
-		String(readToolbarState(editor).selectedLineHeight),
 	);
 	const toolbarDragRef = useRef<ToolbarDragState | null>(null);
 	const toolbarOffsetDraftRef = useRef<RichToolbarOffset>(
@@ -704,6 +719,10 @@ export function RichTextEditOverlay({
 		setOpenSelectId(null);
 	}, []);
 
+	const closeOpenValueField = useCallback(() => {
+		setOpenValueFieldId(null);
+	}, []);
+
 	const closeLinkPopover = useCallback(() => {
 		setOpenSelectId(null);
 		setLinkSelection(null);
@@ -712,6 +731,9 @@ export function RichTextEditOverlay({
 
 	const handleSelectOpenChange = useCallback(
 		(selectId: RichEditSelectId, open: boolean) => {
+			if (open) {
+				setOpenValueFieldId(null);
+			}
 			setOpenSelectId((current) => {
 				if (open) {
 					return selectId;
@@ -729,6 +751,15 @@ export function RichTextEditOverlay({
 				return;
 			}
 			const target = event.target;
+			if (openValueFieldId) {
+				if (isTargetWithinValueFieldLayer(target, openValueFieldId)) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				closeOpenValueField();
+				return;
+			}
 			if (openSelectId) {
 				if (isTargetWithinSelectLayer(target, openSelectId)) {
 					return;
@@ -769,16 +800,25 @@ export function RichTextEditOverlay({
 			);
 		};
 	}, [
+		closeOpenValueField,
 		closeLinkPopover,
 		closeOpenSelect,
 		commitCurrentContent,
 		linkPopover.open,
 		openSelectId,
+		openValueFieldId,
 	]);
 
 	useEffect(() => {
 		function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
 			if (event.key !== "Escape") {
+				return;
+			}
+
+			if (openValueFieldId) {
+				event.preventDefault();
+				event.stopPropagation();
+				closeOpenValueField();
 				return;
 			}
 
@@ -810,11 +850,13 @@ export function RichTextEditOverlay({
 			);
 		};
 	}, [
+		closeOpenValueField,
 		closeLinkPopover,
 		closeOpenSelect,
 		linkPopover.open,
 		onDiscard,
 		openSelectId,
+		openValueFieldId,
 	]);
 
 	const fontFamilies = useMemo(() => {
@@ -867,10 +909,6 @@ export function RichTextEditOverlay({
 	const currentBlockSpacingValue = `${String(
 		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
 	)}px`;
-
-	useEffect(() => {
-		setLineHeightDraft(String(toolbarState.selectedLineHeight));
-	}, [toolbarState.selectedLineHeight]);
 
 	useEffect(() => {
 		if (
@@ -1138,24 +1176,15 @@ export function RichTextEditOverlay({
 		[handleValueMark],
 	);
 
-	const commitLineHeightDraft = useCallback(() => {
-		const parsed = Number.parseFloat(lineHeightDraft);
-		if (!Number.isFinite(parsed) || parsed <= 0) {
-			setLineHeightDraft(String(toolbarState.selectedLineHeight));
+	const handleLineHeightChange = useCallback((value: number) => {
+		if (!Number.isFinite(value) || value <= 0) {
 			return;
 		}
-
 		restoreToolbarSelection();
-		setSelectedBlocksLineHeight(editor, parsed);
+		setSelectedBlocksLineHeight(editor, value);
 		syncToolbarState();
 		setSelectionRevision((revision) => revision + 1);
-	}, [
-		editor,
-		lineHeightDraft,
-		restoreToolbarSelection,
-		syncToolbarState,
-		toolbarState.selectedLineHeight,
-	]);
+	}, [editor, restoreToolbarSelection, syncToolbarState]);
 
 	const toolbarChrome = (
 		<>
@@ -1219,6 +1248,14 @@ export function RichTextEditOverlay({
 								value={toolbarState.currentFontSize}
 								width={90}
 								onCommit={commitFontSizeDraft}
+								suggestionsOpen={
+									openValueFieldId === RICH_VALUE_FIELD_IDS.fontSize
+								}
+								onSuggestionsOpenChange={(open) =>
+									setOpenValueFieldId(
+										open ? RICH_VALUE_FIELD_IDS.fontSize : null,
+									)
+								}
 								resolveUnitValue={(nextUnit, currentValue) => {
 									try {
 										const parsed = parseFontSizeValue(currentValue);
@@ -1444,15 +1481,12 @@ export function RichTextEditOverlay({
 									width={92}
 								/>
 							) : null}
-							<CompactIconNumberField
+							<CompactLineHeightField
 								label="Line height"
 								icon={<MoveVertical size={14} />}
-								value={lineHeightDraft}
-								placeholder="1.2"
+								value={toolbarState.selectedLineHeight}
 								width={72}
-								onChange={setLineHeightDraft}
-								onBlur={commitLineHeightDraft}
-								onCommit={commitLineHeightDraft}
+								onChange={handleLineHeightChange}
 							/>
 							<CompactSpacingField
 								label="Block spacing"
@@ -1687,12 +1721,16 @@ function CompactFontSizeField({
 	value,
 	width,
 	onCommit,
+	suggestionsOpen,
+	onSuggestionsOpenChange,
 	resolveUnitValue,
 }: {
 	label: string;
 	value: string;
 	width: number;
 	onCommit: (value: string) => void;
+	suggestionsOpen: boolean;
+	onSuggestionsOpenChange: (open: boolean) => void;
 	resolveUnitValue: (
 		nextUnit: ToolbarFontUnit,
 		currentValue: string,
@@ -1742,6 +1780,7 @@ function CompactFontSizeField({
 		>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
 			<div
+				data-stage-rich-value-field-id={RICH_VALUE_FIELD_IDS.fontSize}
 				className="pointer-events-auto shrink-0"
 				style={{ width, pointerEvents: "auto" }}
 				onPointerDown={(event) => {
@@ -1797,6 +1836,9 @@ function CompactFontSizeField({
 					invalid={invalid}
 					segmentWidth={36}
 					suggestions={suggestions}
+					suggestionsOpen={suggestionsOpen}
+					onSuggestionsOpenChange={onSuggestionsOpenChange}
+					includeDisabledStyles={false}
 					onInputBlur={commitDraft}
 					onInputValueChange={(nextDraft) => {
 						setDraft((current) => ({ ...current, draft: nextDraft }));
@@ -1820,24 +1862,18 @@ function CompactFontSizeField({
 	);
 }
 
-function CompactIconNumberField({
+function CompactLineHeightField({
 	label,
 	icon,
 	value,
-	placeholder,
 	width,
 	onChange,
-	onBlur,
-	onCommit,
 }: {
 	label: string;
 	icon: React.ReactNode;
-	value: string;
-	placeholder?: string;
+	value: number;
 	width: number;
-	onChange: (value: string) => void;
-	onBlur?: () => void;
-	onCommit?: () => void;
+	onChange: (value: number) => void;
 }) {
 	return (
 		<PopoverTooltip
@@ -1847,7 +1883,7 @@ function CompactIconNumberField({
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			<div
-				className="editor-border-subtle pointer-events-auto flex h-8 shrink-0 items-center gap-1 rounded-sm border bg-transparent px-1.5"
+				className="pointer-events-auto flex h-8 shrink-0 items-center gap-1"
 				style={{ width, pointerEvents: "auto" }}
 				onPointerDown={(event) => {
 					event.stopPropagation();
@@ -1856,30 +1892,19 @@ function CompactIconNumberField({
 				<span className="editor-text-muted flex shrink-0 items-center">
 					{icon}
 				</span>
-				<Input
-					aria-label={label}
-					type="number"
-					inputMode="decimal"
-					min={0.1}
-					step="any"
-					value={value}
-					placeholder={placeholder}
-					className="h-full min-w-0 border-0 bg-transparent px-0 text-center text-xs shadow-none [appearance:textfield] focus-visible:ring-0 [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-					style={{ pointerEvents: "auto" }}
-					onChange={(event) => onChange(event.target.value)}
-					onBlur={onBlur}
-					onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
-						if (event.key === "Enter") {
-							event.preventDefault();
-							onCommit?.();
-							return;
-						}
-						if (event.key === "Escape") {
-							event.preventDefault();
-							(event.target as HTMLInputElement).blur();
-						}
-					}}
-				/>
+				<div className="min-w-0 flex-1">
+					<NumberInput
+						value={value}
+						ariaLabel={label}
+						min={0.1}
+						max={4}
+						step="any"
+						onChange={onChange}
+						placeholder="1.2"
+						includeDisabledStyles={false}
+						inputClassName="min-w-0"
+					/>
+				</div>
 			</div>
 		</PopoverTooltip>
 	);
@@ -2006,6 +2031,7 @@ function CompactSpacingField({
 					invalid={invalid}
 					segmentWidth={36}
 					className="min-w-0 flex-1"
+					includeDisabledStyles={false}
 					onInputBlur={commitDraft}
 					onInputValueChange={(nextDraft) => {
 						setDraft((current) => ({ ...current, draft: nextDraft }));
@@ -2114,7 +2140,7 @@ function LinkInsertPopover({
 			onPointerDown={(event) => event.stopPropagation()}
 		>
 			<form className="space-y-2" onSubmit={onSubmit}>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center justify-between">
 					<span className="editor-text-muted shrink-0 text-[11px] font-medium">
 						Type
 					</span>

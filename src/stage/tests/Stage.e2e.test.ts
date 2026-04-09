@@ -1144,6 +1144,39 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
+	it("unwinds font-size suggestions before closing the rich toolbar on outside click", async () => {
+		const { document, richTextId } = createRichTextEditE2EDocument();
+		await openEditor({
+			document,
+			selectedId: richTextId,
+			selectedIds: [richTextId],
+		});
+
+		await enterRichEditMode(richTextId);
+		await selectRichTextRange(0, 0, 0, "Edit me on stage".length);
+		await page.getByLabel("Font size", { exact: true }).click();
+		await page.waitForSelector(".value-with-unit-suggestions", {
+			timeout: 2_000,
+		});
+
+		await page.mouse.click(16, 16);
+		await page.waitForSelector(".value-with-unit-suggestions", {
+			state: "detached",
+			timeout: 2_000,
+		});
+		expect(await page.locator('[data-stage-rich-toolbar="true"]').count()).toBe(
+			1,
+		);
+
+		await page.mouse.click(16, 16);
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+
+		await closeEditor();
+	}, 30_000);
+
 	it("converts touched blocks into rich code blocks and applies the selected code language", async () => {
 		const { document, richTextId } = createRichTextEditE2EDocument(
 			[

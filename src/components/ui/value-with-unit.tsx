@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -99,12 +99,16 @@ export function ValueWithUnit({
   disabled = false,
   ariaLabel,
   className,
+  inputClassName,
+  includeDisabledStyles = true,
   onResolveOptionValue,
   onInputValueChange,
   onInputBlur,
   suggestions,
   suggestionListId,
   onSuggestionSelect,
+  suggestionsOpen: controlledSuggestionsOpen,
+  onSuggestionsOpenChange,
   invalid = false,
   segmentWidth,
   defaultSuggestionsOpen = false,
@@ -127,12 +131,16 @@ export function ValueWithUnit({
   disabled?: boolean;
   ariaLabel?: string;
   className?: string;
+  inputClassName?: string;
+  includeDisabledStyles?: boolean;
   onResolveOptionValue?: (nextOption: string, currentValue: string) => string | null;
   onInputValueChange?: (nextInput: string) => void;
   onInputBlur?: () => void;
   suggestions?: ValueWithUnitSuggestion[];
   suggestionListId?: string;
   onSuggestionSelect?: (nextSuggestion: string) => void;
+  suggestionsOpen?: boolean;
+  onSuggestionsOpenChange?: (open: boolean) => void;
   invalid?: boolean;
   segmentWidth?: number | string;
   defaultSuggestionsOpen?: boolean;
@@ -142,8 +150,10 @@ export function ValueWithUnit({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const generatedListId = useId().replace(/:/g, '');
   const resolvedSegmentWidth = resolveSegmentWidth(segmentWidth);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(defaultSuggestionsOpen);
+  const [uncontrolledSuggestionsOpen, setUncontrolledSuggestionsOpen] = useState(defaultSuggestionsOpen);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const suggestionsOpen = controlledSuggestionsOpen ?? uncontrolledSuggestionsOpen;
+  const suggestionsControlled = controlledSuggestionsOpen !== undefined;
 
   const selectableOptions = useMemo(
     () => options.filter(isValueWithUnitSelectableOption),
@@ -185,18 +195,28 @@ export function ValueWithUnit({
 
   useEffect(() => {
     if (!hasSuggestions) {
-      setSuggestionsOpen(false);
+      if (!suggestionsControlled) {
+        setUncontrolledSuggestionsOpen(false);
+      }
+      onSuggestionsOpenChange?.(false);
       setActiveSuggestionIndex(-1);
       return;
     }
-  }, [hasSuggestions]);
+  }, [hasSuggestions, onSuggestionsOpenChange, suggestionsControlled]);
+
+  const setSuggestionsOpen = useCallback((nextOpen: boolean) => {
+    if (!suggestionsControlled) {
+      setUncontrolledSuggestionsOpen(nextOpen);
+    }
+    onSuggestionsOpenChange?.(nextOpen);
+  }, [onSuggestionsOpenChange, suggestionsControlled]);
 
   useEffect(() => {
-    if (!suggestionsOpen) {
+    if (!suggestionsOpen || suggestionsControlled) {
       return;
     }
 
-    function handlePointerDown(event: MouseEvent) {
+    function handlePointerDown(event: PointerEvent) {
       if (!rootRef.current?.contains(event.target as Node)) {
         setSuggestionsOpen(false);
       }
@@ -208,13 +228,13 @@ export function ValueWithUnit({
       }
     }
 
-    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleEscape);
     return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [suggestionsOpen]);
+  }, [setSuggestionsOpen, suggestionsControlled, suggestionsOpen]);
 
   function commitInputValue(nextInput: string) {
     if (onInputValueChange) {
@@ -330,6 +350,7 @@ export function ValueWithUnit({
             autoComplete={hasSuggestions ? 'off' : undefined}
             spellCheck={hasSuggestions ? false : undefined}
             syncValueWhileFocused={hasSuggestions}
+            includeDisabledStyles={includeDisabledStyles}
             onBlur={() => {
               if (hasSuggestions) {
                 setSuggestionsOpen(false);
@@ -339,7 +360,7 @@ export function ValueWithUnit({
             }}
             onClick={() => {
               if (hasSuggestions) {
-                setSuggestionsOpen((current) => !current);
+                setSuggestionsOpen(!suggestionsOpen);
                 setActiveSuggestionIndex(-1);
               }
             }}
@@ -358,6 +379,7 @@ export function ValueWithUnit({
             className={cn(
               'value-with-unit-value h-full min-w-0 flex-1 overflow-visible rounded-l-sm border-0 bg-transparent px-2.5 text-center text-[12px] [appearance:textfield] shadow-none [padding-inline-end:0] focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
               hasSuggestions ? 'pr-5' : null,
+              inputClassName,
             )}
           />
         ) : null}
@@ -381,8 +403,9 @@ export function ValueWithUnit({
             >
               <SelectTrigger
                 aria-label={ariaLabel}
+                includeDisabledStyles={includeDisabledStyles}
                 className={cn(
-                  'value-with-unit-trigger value-with-unit-trigger-full peer/valuewithunittrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left !text-[11px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>span]:w-full [&>span]:justify-start [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_1px_var(--editor-accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)] disabled:cursor-default disabled:opacity-60',
+                  'value-with-unit-trigger value-with-unit-trigger-full peer/valuewithunittrigger h-full w-full justify-start rounded-sm border-0 bg-transparent px-2.5 pr-8 text-left !text-[11px] tracking-[-0.01em] whitespace-nowrap shadow-none [&>span]:w-full [&>span]:justify-start [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_1px_var(--editor-accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)]',
                   mixedSegment ? 'value-with-unit-segment-mixed' : null,
                 )}
               >
@@ -401,7 +424,7 @@ export function ValueWithUnit({
               </SelectContent>
             </Select>
             <div
-              className="value-with-unit-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/valuewithunit:opacity-100 peer-disabled/valuewithunittrigger:opacity-0"
+              className="value-with-unit-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/valuewithunit:opacity-100"
               style={{ width: resolvedSegmentWidth }}
             >
               <ChevronDown className="editor-text-strong h-3 w-3" />
@@ -427,8 +450,9 @@ export function ValueWithUnit({
             >
               <SelectTrigger
                 aria-label={ariaLabel ? `${ariaLabel} unit` : undefined}
+                includeDisabledStyles={includeDisabledStyles}
                 className={cn(
-                  'value-with-unit-segment peer/valuewithunittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_1px_var(--editor-accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)] disabled:cursor-default disabled:opacity-60',
+                  'value-with-unit-segment peer/valuewithunittrigger relative z-10 h-full shrink-0 justify-center rounded-r-sm rounded-l-none border-0 bg-transparent px-1.5 text-center !text-[11px] font-medium tracking-[-0.01em] shadow-none [&>span]:w-full [&>span]:justify-center [&>span]:text-inherit [&>svg]:hidden focus:border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_1px_var(--editor-accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--editor-accent)]',
                   mixedSegment ? 'value-with-unit-segment-mixed' : null,
                 )}
                 style={{ width: resolvedSegmentWidth }}
@@ -448,7 +472,7 @@ export function ValueWithUnit({
               </SelectContent>
             </Select>
             <div
-              className="value-with-unit-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/valuewithunit:opacity-100 peer-disabled/valuewithunittrigger:opacity-0"
+              className="value-with-unit-caret pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center justify-center rounded-r-sm opacity-0 transition-opacity group-hover/valuewithunit:opacity-100"
               style={{ width: resolvedSegmentWidth }}
             >
               <ChevronDown className="editor-text-strong h-3 w-3" />
