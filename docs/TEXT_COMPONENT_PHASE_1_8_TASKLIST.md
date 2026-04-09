@@ -24,8 +24,8 @@ Execution rules:
 
 - Overall status: `in_progress`
 - Current quantum: `none`
-- Last completed quantum: `P18-Q1`
-- Next quantum after current: `P18-Q2`
+- Last completed quantum: `P18-Q2`
+- Next quantum after current: `P18-Q3`
 - Locked assumptions:
   - Phase 1.7 remains complete for the canonical text-model refactor.
   - Phase 1.8 is stabilization only and does not absorb planned phase 2 feature scope.
@@ -113,9 +113,13 @@ Execution rules:
   - targeted stage e2e for nested outside-click and `Escape` unwinding
   - `npm run build`
 - Verification result:
-  - Pending in the current change set.
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `npm run typecheck`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "outside click|Escape|partial inline selection|ordered-list marker"`
+  - `npm run build`
+  - Result: passed before commit.
 - Commit SHA:
-  - Not committed yet
+  - `651b788`
 - Open follow-ups carried forward:
   - `P18-Q2` should convert the base toolbar itself to a popover-backed draggable surface.
   - `P18-Q3` should add retained visual selection while focus moves into the toolbar stack.
@@ -124,22 +128,38 @@ Execution rules:
 
 - Objective:
   - Convert the base rich-text toolbar into a draggable popover-backed floating panel.
-- Status: `pending`
+- Status: `done`
 - Allowed files:
-  - Planned during execution.
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/stage/stageRenderers/richToolbarPosition.ts`
+  - `src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `src/stage/tests/richToolbarPosition.test.ts`
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`
 - Read-first files and target lines:
-  - Planned during execution.
+  - `src/components/ui/floating-panel-shell.tsx:1-80`
+  - `src/components/ui/popover.tsx:1-80`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:280-420`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx:640-860`
+  - `src/stage/tests/Stage.e2e.test.ts:374-470`
 - Implementation notes:
   - Reuse the existing floating-panel drag pattern already used by focused/pages/layers panels.
-  - Keep toolbar position session-local and viewport-clamped.
+  - Keep the base toolbar on the shared `FloatingPanelShell` / `PopoverSurface` path instead of the previous static shell override.
+  - Store only a session-local drag offset; do not persist toolbar position into document state.
+  - Clamp toolbar movement inside the viewport with a protected top gap below the editor top bar.
+  - Keep nested link-panel positioning tied to the moved toolbar so link editing chrome travels with the base panel.
 - Verification commands:
-  - Planned during execution
+  - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx src/stage/tests/richToolbarPosition.test.ts`
+  - `npm run typecheck`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "drags the rich toolbar|outside click|Escape|partial inline selection|ordered-list marker"`
+  - `npm run build`
 - Verification result:
-  - Not started
+  - Passed before commit.
 - Commit SHA:
-  - Not started
+  - Pending the Q2 commit
 - Open follow-ups carried forward:
-  - None yet.
+  - `P18-Q3` should preserve the authored selection visually while the moved toolbar owns focus.
 
 ## P18-Q3: Selection retention and retained visual highlight
 

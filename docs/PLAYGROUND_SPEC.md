@@ -1769,11 +1769,14 @@ While editing, the rich node gets visible stage chrome:
 
 - a floating toolbar built from the shared floating panel shell plus compact shared inputs/selects and inspector-style icon buttons
 - the floating toolbar is arranged as a fixed two-row editor bar rather than a wrapping chip cloud
+- the base toolbar is a native-popover-backed floating panel with a dedicated drag handle, so it can be repositioned without leaving rich edit
+- toolbar drag is clamped inside the viewport below the top bar and remembers a session-local offset when rich edit is reopened later in the same browser session
 - the stage selection outline is hidden while the rich node is actively being edited
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it
 - toolbar and link-popover interactions stay inside edit mode instead of being treated as outside clicks
 - rich-stage chrome uses a local layer stack: nested dropdowns close before their parent link panel, and the link panel closes before outside click or `Escape` can fall through to commit or discard the whole rich-edit session
+- the link panel follows the dragged toolbar instead of staying anchored to the original text node position
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, code-block mode, ordered-list controls, unordered-list controls, line height, and block spacing

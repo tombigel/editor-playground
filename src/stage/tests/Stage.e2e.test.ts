@@ -409,6 +409,88 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
+  it('drags the rich toolbar and remembers its position for the current browser session', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
+    const dragHandle = page.locator('[data-stage-rich-toolbar-drag-handle="true"]').first();
+    const before = await toolbar.boundingBox();
+    const handleBox = await dragHandle.boundingBox();
+    expect(before).not.toBeNull();
+    expect(handleBox).not.toBeNull();
+
+    await page.evaluate(async ({ deltaX, deltaY }) => {
+      const handle = window.document.querySelector('[data-stage-rich-toolbar-drag-handle="true"]');
+      if (!(handle instanceof HTMLElement)) {
+        throw new Error('Expected rich toolbar drag handle');
+      }
+
+      const rect = handle.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+
+      handle.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        button: 0,
+        buttons: 1,
+        clientX: startX,
+        clientY: startY,
+      }));
+
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+
+      window.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        button: 0,
+        buttons: 1,
+        clientX: startX + deltaX,
+        clientY: startY + deltaY,
+      }));
+
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        button: 0,
+        clientX: startX + deltaX,
+        clientY: startY + deltaY,
+      }));
+    }, { deltaX: 140, deltaY: 72 });
+
+    await page.waitForFunction(
+      ({ beforeX, beforeY }) => {
+        const toolbarEl = window.document.querySelector('[data-stage-rich-toolbar="true"]');
+        if (!(toolbarEl instanceof HTMLElement)) {
+          return false;
+        }
+        const rect = toolbarEl.getBoundingClientRect();
+        return Math.abs(rect.left - beforeX) > 80 && Math.abs(rect.top - beforeY) > 40;
+      },
+      { beforeX: before?.x ?? 0, beforeY: before?.y ?? 0 },
+    );
+
+    const after = await toolbar.boundingBox();
+    expect(after).not.toBeNull();
+
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
+
+    await enterRichEditMode(richTextId);
+    const remembered = await page.locator('[data-stage-rich-toolbar="true"]').first().boundingBox();
+    expect(remembered).not.toBeNull();
+    expect(Math.abs((remembered?.x ?? 0) - (after?.x ?? 0))).toBeLessThan(4);
+    expect(Math.abs((remembered?.y ?? 0) - (after?.y ?? 0))).toBeLessThan(4);
+
+    await closeEditor();
+  }, 30_000);
+
   it('commits rich text changes on outside click', async () => {
     const { document, richTextId } = createRichTextEditE2EDocument();
     await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });

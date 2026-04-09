@@ -2,6 +2,7 @@ import {
   type CSSProperties,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -54,6 +55,16 @@ import {
   toSlateValue,
   toggleMark,
 } from '../../render/richTextEditor';
+import {
+  clampRichToolbarOffset,
+  DEFAULT_RICH_TOOLBAR_OFFSET,
+  getRichToolbarViewportPosition,
+  persistRichToolbarSessionOffset,
+  readRichToolbarSessionOffset,
+  RICH_TOOLBAR_EDGE_GAP_PX,
+  type RichToolbarOffset,
+  type RichToolbarPlacement,
+} from './richToolbarPosition';
 
 function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
   const style = richLeafStyle(leaf as RichTextLeaf);
@@ -135,6 +146,13 @@ const DEFAULT_LINK_POPOVER: LinkPopoverDraft = {
   targetPageId: '',
   pageAnchorId: '',
   anchorTargetId: '',
+};
+
+type ToolbarDragState = {
+  pointerId: number;
+  originX: number;
+  originY: number;
+  originOffset: RichToolbarOffset;
 };
 
 const RICH_SELECT_IDS = {
@@ -264,6 +282,7 @@ export function RichTextEditOverlay({
   const editor = useMemo(() => createRichEditor(), []);
   const initialValue = useMemo(() => toSlateValue(content.blocks), [content]);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const toolbarRef = useRef<HTMLDivElement | null>(null);
   const [linkPopover, setLinkPopover] = useState<LinkPopoverDraft>(DEFAULT_LINK_POPOVER);
   const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
   const [openSelectId, setOpenSelectId] = useState<RichEditSelectId | null>(null);
@@ -273,7 +292,16 @@ export function RichTextEditOverlay({
   const [fontSizeDraft, setFontSizeDraft] = useState('');
   const [lineHeightDraft, setLineHeightDraft] = useState(() => String(readToolbarState(editor).selectedLineHeight));
   const [blockSpacingDraft, setBlockSpacingDraft] = useState(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
-  const [toolbarPlacement, setToolbarPlacement] = useState<'above' | 'below'>('above');
+  const [toolbarOffset, setToolbarOffset] = useState<RichToolbarOffset>(() => readRichToolbarSessionOffset());
+  const toolbarOffsetRef = useRef(toolbarOffset);
+  const [toolbarDragState, setToolbarDragState] = useState<ToolbarDragState | null>(null);
+  const [toolbarPlacement, setToolbarPlacement] = useState<RichToolbarPlacement>('above');
+  const [toolbarPosition, setToolbarPosition] = useState({
+    top: RICH_TOOLBAR_EDGE_GAP_PX,
+    left: RICH_TOOLBAR_EDGE_GAP_PX,
+  });
+  const [toolbarWidth, setToolbarWidth] = useState(0);
+  const [toolbarLayoutRevision, setToolbarLayoutRevision] = useState(0);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -284,16 +312,121 @@ export function RichTextEditOverlay({
     return () => cancelAnimationFrame(id);
   }, [editor]);
 
-  useLayoutEffect(() => {
-    void selectionRevision;
-    const root = rootRef.current;
-    if (!root) {
+  useEffect(() => {
+    toolbarOffsetRef.current = toolbarOffset;
+  }, [toolbarOffset]);
+
+  useEffect(() => {
+    persistRichToolbarSessionOffset(toolbarOffset);
+  }, [toolbarOffset]);
+
+  useEffect(() => {
+    let frame = 0;
+
+    function queueToolbarLayoutRefresh() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setToolbarLayoutRevision((revision) => revision + 1);
+      });
+    }
+
+    window.addEventListener('resize', queueToolbarLayoutRefresh);
+    window.addEventListener('scroll', queueToolbarLayoutRefresh, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', queueToolbarLayoutRefresh);
+      window.removeEventListener('scroll', queueToolbarLayoutRefresh, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!toolbarDragState) {
       return;
     }
 
-    const rect = root.getBoundingClientRect();
-    setToolbarPlacement(rect.top < 164 ? 'below' : 'above');
-  }, [selectionRevision]);
+    const { cursor, userSelect } = window.document.body.style;
+    window.document.body.style.cursor = 'grabbing';
+    window.document.body.style.userSelect = 'none';
+    return () => {
+      window.document.body.style.cursor = cursor;
+      window.document.body.style.userSelect = userSelect;
+    };
+  }, [toolbarDragState]);
+
+  useEffect(() => {
+    if (!toolbarDragState) {
+      return;
+    }
+
+    const currentDrag = toolbarDragState;
+
+    function handlePointerMove(event: PointerEvent) {
+      if (event.pointerId !== currentDrag.pointerId || !rootRef.current || !toolbarRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      const rootRect = rootRef.current.getBoundingClientRect();
+      const toolbarRect = toolbarRef.current.getBoundingClientRect();
+      setToolbarOffset(
+        clampRichToolbarOffset({
+          rootRect,
+          panelWidth: toolbarRect.width,
+          panelHeight: toolbarRect.height,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          offset: currentDrag.originOffset,
+          deltaX: event.clientX - currentDrag.originX,
+          deltaY: event.clientY - currentDrag.originY,
+        }),
+      );
+    }
+
+    function handlePointerEnd(event: PointerEvent) {
+      if (event.pointerId !== currentDrag.pointerId) {
+        return;
+      }
+      setToolbarDragState(null);
+    }
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerEnd);
+    window.addEventListener('pointercancel', handlePointerEnd);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerEnd);
+      window.removeEventListener('pointercancel', handlePointerEnd);
+    };
+  }, [toolbarDragState]);
+
+  useLayoutEffect(() => {
+    void selectionRevision;
+    void toolbarLayoutRevision;
+    const root = rootRef.current;
+    const toolbar = toolbarRef.current;
+    if (!root || !toolbar) {
+      return;
+    }
+
+    const rootRect = root.getBoundingClientRect();
+    const toolbarRect = toolbar.getBoundingClientRect();
+    const nextViewportPosition = getRichToolbarViewportPosition({
+      rootRect,
+      panelWidth: toolbarRect.width,
+      panelHeight: toolbarRect.height,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      offset: toolbarOffset,
+    });
+
+    setToolbarPlacement((current) => current === nextViewportPosition.placement ? current : nextViewportPosition.placement);
+    setToolbarPosition((current) =>
+      current.top === nextViewportPosition.top && current.left === nextViewportPosition.left
+        ? current
+        : { top: nextViewportPosition.top, left: nextViewportPosition.left },
+    );
+    setToolbarWidth((current) => current === toolbarRect.width ? current : toolbarRect.width);
+  }, [selectionRevision, toolbarLayoutRevision, toolbarOffset]);
 
   const commitCurrentContent = useCallback(() => {
     onCommit(
@@ -545,6 +678,24 @@ export function RichTextEditOverlay({
     onUpdateBlockGap(nodeId, parsed);
   }, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
 
+  const handleToolbarDragPointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {}
+    setToolbarDragState({
+      pointerId: event.pointerId,
+      originX: event.clientX,
+      originY: event.clientY,
+      originOffset: toolbarOffsetRef.current ?? DEFAULT_RICH_TOOLBAR_OFFSET,
+    });
+  }, []);
+
   const handleLinkAction = useCallback(() => {
     if (isLinkActive(editor)) {
       removeLink(editor);
@@ -640,21 +791,29 @@ export function RichTextEditOverlay({
         onDoubleClick={(event) => event.stopPropagation()}
       >
         <FloatingPanelShell
-          suppressPopover
+          ref={toolbarRef}
           open
-          positionMode="absolute"
           data-stage-rich-toolbar="true"
           style={{
-            top: 0,
-            left: 0,
+            top: `${toolbarPosition.top}px`,
+            left: `${toolbarPosition.left}px`,
             zIndex: 220,
-            transform: toolbarPlacement === 'above'
-              ? 'translateY(calc(-100% - 10px))'
-              : 'translateY(calc(100% + 10px))',
             width: 'max-content',
             maxWidth: 'calc(100vw - 32px)',
-            pointerEvents: 'auto',
-          }}
+          pointerEvents: 'auto',
+        }}
+        header={(
+            <button
+              type="button"
+              data-stage-rich-toolbar-drag-handle="true"
+              aria-label="Move text toolbar"
+              className={toolbarDragState ? 'block w-full cursor-grabbing select-none px-3 pt-2 pb-1.5' : 'block w-full cursor-grab select-none px-3 pt-2 pb-1.5'}
+              onClick={(event) => event.preventDefault()}
+              onPointerDown={handleToolbarDragPointerDown}
+            >
+              <div className="editor-border-subtle mx-auto h-1 w-12 rounded-full border bg-[color-mix(in_srgb,var(--editor-border-subtle)_65%,white)]" />
+            </button>
+          )}
           bodyClassName="space-y-1.5 px-2 py-2"
           bodyStyle={{ pointerEvents: 'auto', overflowX: 'auto', overflowY: 'hidden' }}
           onPointerDown={(event) => {
@@ -868,6 +1027,9 @@ export function RichTextEditOverlay({
           <LinkInsertPopover
             draft={linkPopover}
             placement={toolbarPlacement}
+            toolbarLeft={toolbarPosition.left}
+            toolbarTop={toolbarPosition.top}
+            toolbarWidth={toolbarWidth}
             pages={pages}
             sectionOptions={sectionOptions}
             targetPageSectionOptions={targetPageSectionOptions}
@@ -1068,6 +1230,9 @@ function CompactColorField({
 function LinkInsertPopover({
   draft,
   placement,
+  toolbarLeft,
+  toolbarTop,
+  toolbarWidth,
   pages,
   sectionOptions,
   targetPageSectionOptions,
@@ -1079,6 +1244,9 @@ function LinkInsertPopover({
 }: {
   draft: LinkPopoverDraft;
   placement: 'above' | 'below';
+  toolbarLeft: number;
+  toolbarTop: number;
+  toolbarWidth: number;
   pages: NonNullable<DocumentModel['pages']>;
   sectionOptions: ReturnType<typeof getSectionAnchorOptions>;
   targetPageSectionOptions: Array<{ id: string; name: string }>;
@@ -1093,14 +1261,14 @@ function LinkInsertPopover({
       suppressPopover
       open
       data-stage-rich-link-popover="true"
-      positionMode="absolute"
+      positionMode="fixed"
       style={{
-        top: 0,
-        right: 0,
+        top: `${toolbarTop}px`,
+        left: `${toolbarLeft + toolbarWidth}px`,
         zIndex: 230,
         transform: placement === 'above'
-          ? 'translateY(calc(-100% - 58px))'
-          : 'translateY(calc(100% + 58px))',
+          ? 'translate(-100%, calc(-100% - 18px))'
+          : 'translate(-100%, calc(100% + 18px))',
         minWidth: 320,
         pointerEvents: 'auto',
       }}
