@@ -296,6 +296,8 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain(`data-node-id="${rich.id}"`);
     expect(markup).toContain('language-typescript');
     expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('white-space:pre-wrap');
+    expect(markup).toContain('word-break:break-word');
     expect(markup).toContain('<ol');
     expect(markup).toContain('start="4"');
     expect(markup).toContain('list-style-type:upper-alpha');

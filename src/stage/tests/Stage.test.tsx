@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PencilLine } from 'lucide-react';
 import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
-import { createTextDocumentFromText } from '../../model/richContent';
+import { createTextDocumentFromCode, createTextDocumentFromText } from '../../model/richContent';
 import type { DocumentModel, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
@@ -100,6 +100,55 @@ describe('stage/Stage', () => {
       expect(nodeMarkupMatch?.[1]).not.toContain('width:100%');
     },
   );
+
+  it('renders standalone code leaves with wrap-safe preview styles', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    code.rect.width.base = parseWidthValue('fit-content');
+    code.content = createTextDocumentFromCode('const total = items.reduce((sum, item) => sum + item.value, 0);', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = items.reduce((sum, item) =&gt; sum + item.value, 0);',
+    });
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = items.reduce((sum, item) =&gt; sum + item.value, 0);',
+    };
+    document.nodes[code.id] = code;
+    section.children.push(code.id);
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain(`id="stage-node-${code.id}"`);
+    expect(markup).toContain('class="language-typescript"');
+    expect(markup).toContain('white-space:pre-wrap');
+    expect(markup).toContain('word-break:break-word');
+  });
 
   it('renders text leaves using their configured html tag in the stage', () => {
     const document = structuredClone(createInitialDocument());

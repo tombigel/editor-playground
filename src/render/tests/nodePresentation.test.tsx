@@ -81,7 +81,8 @@ describe('render/nodePresentation', () => {
     expect(formatNodeLabel(code)).toBe('Text');
 
     const markup = renderToStaticMarkup(renderLeafContent(code));
-    expect(markup.startsWith('<pre')).toBe(true);
+    expect(markup.startsWith('<div')).toBe(true);
+    expect(markup).toContain('<pre');
     expect(markup).toContain('<code');
   });
 
@@ -100,8 +101,12 @@ describe('render/nodePresentation', () => {
 
     const markup = renderToStaticMarkup(renderLeafContent(code));
 
+    expect(markup.startsWith('<div')).toBe(true);
+    expect(markup).toContain('<pre');
     expect(markup).toContain('class="language-typescript"');
     expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('white-space:pre-wrap');
+    expect(markup).toContain('word-break:break-word');
   });
 
   it('renders semantic ordered lists and flattens them for labels', () => {
@@ -166,6 +171,8 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('row-gap:24px');
     expect(markup).toContain('language-typescript');
     expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('white-space:pre-wrap');
+    expect(markup).toContain('word-break:break-word');
     expect(markup).toContain('<ul');
     expect(markup).toContain('list-style-type:square');
     expect(markup).toContain('list-style-position:outside');

@@ -32,6 +32,7 @@ import type {
   RenderLeafContentOptions,
   StageOrSiteNode,
 } from './types';
+import { getStandaloneCodePreStyle, styleRecordToReactStyle } from './leafPresentation';
 export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
@@ -143,19 +144,23 @@ function renderRichCodeBlock(block: RichCodeBlock, index: number): ReactNode {
   const html = block.highlightedHtml ?? highlightCode(rawText, language);
 
   return (
-    <pre
+    <div
       key={richBlockKey(block, index)}
-      className={`language-${language}`}
-      data-code-theme={block.theme ?? 'light'}
       dir={block.direction ?? 'ltr'}
-      style={{ margin: 0, ...richBlockStyleToCss(block.style, { includeBorder: true, includeBoxShadow: true }) }}
+      style={richCodeBlockWrapperStyleToCss(block.style)}
     >
-      <code
+      <pre
         className={`language-${language}`}
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor/model layer
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    </pre>
+        data-code-theme={block.theme ?? 'light'}
+        style={richCodeBlockPreStyleToCss(block.style)}
+      >
+        <code
+          className={`language-${language}`}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor/model layer
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </pre>
+    </div>
   );
 }
 
@@ -272,6 +277,41 @@ function richBlockStyleToCss(
   if (options.includeBoxShadow && style.boxShadow) {
     css.boxShadow = style.boxShadow;
   }
+
+  return css;
+}
+
+function richCodeBlockWrapperStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
+  if (!style) {
+    return {};
+  }
+
+  return {
+    ...(style.color ? { color: style.color } : {}),
+    ...(style.fontFamily ? { fontFamily: style.fontFamily } : {}),
+    ...(style.fontSize ? { fontSize: style.fontSize } : {}),
+    ...(style.fontWeight ? { fontWeight: style.fontWeight } : {}),
+    ...(style.fontStyle ? { fontStyle: style.fontStyle } : {}),
+    ...(style.textDecorationLine ? { textDecorationLine: style.textDecorationLine } : {}),
+    ...(style.textAlign ? { textAlign: style.textAlign } : {}),
+  };
+}
+
+function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
+  const css: CSSProperties = {
+    margin: 0,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+    ...(style?.background ? { background: style.background } : {}),
+  };
+
+  if (style?.borderStyle) css.borderStyle = style.borderStyle;
+  if (style?.borderWidth) css.borderWidth = style.borderWidth;
+  if (style?.borderColor) css.borderColor = style.borderColor;
+  if (style?.borderRadius) css.borderRadius = style.borderRadius;
+  if (style?.boxSizing) css.boxSizing = style.boxSizing;
+  if (style?.backgroundClip) css.backgroundClip = style.backgroundClip;
+  if (style?.boxShadow) css.boxShadow = style.boxShadow;
 
   return css;
 }
@@ -397,9 +437,6 @@ function getPageCurrentProps(
     : {};
 }
 
-function joinClassNames(...values: Array<string | undefined>) {
-  return values.filter(Boolean).join(' ') || undefined;
-}
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -467,21 +504,26 @@ export function renderLeafContent(
     const theme = codeBlock?.theme ?? node.code?.theme ?? 'light';
     const html = codeBlock?.highlightedHtml ?? node.code?.highlightedHtml ?? escapeHtml(codeText);
     const codeStyle = codeBlock?.style
-      ? richBlockStyleToCss(codeBlock.style, { includeBorder: true, includeBoxShadow: true })
-      : undefined;
+      ? richCodeBlockPreStyleToCss(codeBlock.style)
+      : styleRecordToReactStyle(getStandaloneCodePreStyle(node));
     return (
-      <pre
-        className={joinClassNames(leafClassName, `language-${lang}`)}
+      <div
+        className={leafClassName}
         data-node-id={dataNodeId}
-        data-code-theme={theme}
-        style={{ margin: 0, ...contentStyle, ...codeStyle }}
+        style={contentStyle}
       >
-        <code
+        <pre
           className={`language-${lang}`}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      </pre>
+          data-code-theme={theme}
+          style={codeStyle}
+        >
+          <code
+            className={`language-${lang}`}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        </pre>
+      </div>
     );
   }
 

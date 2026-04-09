@@ -40,14 +40,24 @@ export function getTextLeafStyle(node: TextNode): StyleRecord {
 }
 
 export function getCodeLeafStyle(node: TextNode): StyleRecord {
-  const style: StyleRecord = getTypographyStyle(node.style, {
+  return {
+    display: 'block',
     maxWidth: '100%',
+    ...getTypographyStyle(node.style, {
+      maxWidth: '100%',
+      margin: 0,
+      fontFamily: 'monospace',
+    }, { includeFilter: false }),
+  };
+}
+
+export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
+  const style: StyleRecord = {
     margin: 0,
-    fontFamily: 'monospace',
-  });
-  if (node.style?.background) {
-    style.background = node.style.background;
-  }
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+    ...(node.style?.background ? { background: node.style.background } : {}),
+  };
   Object.assign(style, buildBorderStyle(node.style));
   const boxShadow = buildBoxShadow(node.style);
   if (boxShadow) {

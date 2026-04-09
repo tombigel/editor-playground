@@ -1310,7 +1310,7 @@ Naming and title behavior:
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
-- Shared code-block rendering applies explicit wrap-safe `<pre>` styling in both stage preview and site output: code blocks use `white-space: pre-wrap`, `overflow-wrap: anywhere`, `overflow: visible`, and `min-width: 0` so intrinsic widths like `fit-content` and `min-content` do not introduce internal scrollbars.
+- Shared code-block rendering keeps authored leaf width on an outer wrapper while the visible code chrome stays on the inner `<pre><code>` surface. The code surface uses `white-space: pre-wrap` plus break-word wrapping, and standalone code nodes use only `box-shadow` for authored shadows instead of stacking a duplicate `filter: drop-shadow(...)`.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
 
@@ -1783,7 +1783,8 @@ While editing, the rich node gets visible stage chrome:
 - the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
 - text color and highlight color reuse the shared `ColorPicker` swatch control instead of a stage-local native color input
 - font size uses the shared `ValueWithUnit` contract with font-size units, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
-- line height uses a compact spinnerless number field with a leading `MoveVertical` icon
+- font-size suggestions participate in the rich-edit layer stack, so outside click and `Escape` close that suggestion layer before they can unwind the link panel or the base toolbar
+- line height uses the shared `NumberInput` contract as a compact spinnerless field with a leading `MoveVertical` icon
 - block spacing uses a compact `ValueWithUnit` field with `px` / `em` support and a leading `UnfoldVertical` icon while still persisting `content.blockGap` as px
 - the block-type, ordered-list marker, unordered-list marker, and code-language dropdowns render only for their active structure modes, and the code-language dropdown sits immediately after the code-mode icon
 - the link popover shows an inline `Type` label beside the link-type dropdown instead of presenting that selector as a bare unlabeled row

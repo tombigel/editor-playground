@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createButtonTextNode, createMediaNode, createTextNode } from '../../model/defaults';
 import { parseUnitValue } from '../../model/units';
-import { getButtonLeafStyle, getImageLeafStyle, getLeafInlineStyle } from '../leafPresentation';
+import { getButtonLeafStyle, getCodeLeafStyle, getImageLeafStyle, getLeafInlineStyle, getStandaloneCodePreStyle } from '../leafPresentation';
 
 describe('render/leafPresentation', () => {
   it('uses shared default button presentation even without authored border or shadow overrides', () => {
@@ -108,9 +108,39 @@ describe('render/leafPresentation', () => {
     const style = getLeafInlineStyle(code);
 
     expect(style.fontFamily).toContain('monospace');
-    expect(style.background).toBe('#101418');
-    expect(style.display).toBeUndefined();
+    expect(style.display).toBe('block');
     expect(style.width).toBeUndefined();
+    expect(style.filter).toBeUndefined();
+  });
+
+  it('splits code node wrapper and pre surface styles', () => {
+    const code = createTextNode('code', 'root');
+    const wrapperStyle = getCodeLeafStyle(code);
+    const preStyle = getStandaloneCodePreStyle(code);
+
+    expect(wrapperStyle.display).toBe('block');
+    expect(wrapperStyle.maxWidth).toBe('100%');
+    expect(wrapperStyle.fontFamily).toContain('monospace');
+    expect(wrapperStyle.filter).toBeUndefined();
+    expect(preStyle.margin).toBe(0);
+    expect(preStyle.whiteSpace).toBe('pre-wrap');
+    expect(preStyle.wordBreak).toBe('break-word');
+    expect(preStyle.background).toBe(code.style?.background);
+  });
+
+  it('keeps code node shadows on box-shadow without adding a duplicate filter shadow', () => {
+    const code = createTextNode('code', 'root');
+    code.style ??= {};
+    code.style.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    code.style.shadowBlur = 16;
+    code.style.shadowOffsetX = 4;
+    code.style.shadowOffsetY = 8;
+
+    const wrapperStyle = getCodeLeafStyle(code);
+    const preStyle = getStandaloneCodePreStyle(code);
+
+    expect(wrapperStyle.filter).toBeUndefined();
+    expect(preStyle.boxShadow).toBe('4px 8px 16px rgba(15, 23, 42, 0.18)');
   });
 
   it('keeps rich text on the plain text presentation path even when block-only link fields leak in', () => {

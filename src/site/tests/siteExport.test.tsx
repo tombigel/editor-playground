@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createButtonTextNode, createSectionFromTemplate, createContainerNode } from '../../model/defaults';
-import { createTextDocumentFromText } from '../../model/richContent';
-import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue } from '../../model/units';
+import { createInitialDocument, createButtonTextNode, createSectionFromTemplate, createContainerNode, createTextNode } from '../../model/defaults';
+import { createTextDocumentFromCode, createTextDocumentFromText } from '../../model/richContent';
+import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
 describe('site/siteExport', () => {
@@ -23,6 +23,43 @@ describe('site/siteExport', () => {
     expect(html).toContain('<link rel="stylesheet" href="landing-page.css" />');
     expect(html).toContain('class="sp-site"');
     expect(html).toContain('<main class="sp-site-main">');
+  });
+
+  it('exports wrapped standalone code markup inside the leaf width shell', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const standaloneCode = createTextNode('code', section.id);
+    standaloneCode.id = 'code_wrap_test';
+    standaloneCode.name = 'Code Wrap Test';
+    standaloneCode.rect.width.base = parseWidthValue('fit-content');
+    standaloneCode.content = createTextDocumentFromCode('const total = items.reduce((sum, item) => sum + item.value, 0);', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = items.reduce((sum, item) =&gt; sum + item.value, 0);',
+    });
+    standaloneCode.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const total = items.reduce((sum, item) =&gt; sum + item.value, 0);',
+    };
+
+    document.nodes[standaloneCode.id] = standaloneCode;
+    section.children.push(standaloneCode.id);
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toContain(`class="sp-node sp-node-${standaloneCode.id} sp-role-button sp-leaf"`);
+    expect(html).toContain(`data-node-id="${standaloneCode.id}"`);
+    expect(html).toContain('<pre class="language-typescript"');
+    expect(html).toContain('white-space:pre-wrap');
+    expect(html).toContain('word-break:break-word');
   });
 
   it('links the seeded Google Fonts needed by the default typography pairings', () => {
