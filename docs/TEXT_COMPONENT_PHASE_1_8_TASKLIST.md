@@ -23,8 +23,8 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in_progress`
-- Current quantum: `none`
-- Last completed quantum: `P18-Q2`
+- Current quantum: `P18-Q2`
+- Last completed quantum: `P18-Q1`
 - Next quantum after current: `P18-Q3`
 - Locked assumptions:
   - Phase 1.7 remains complete for the canonical text-model refactor.
@@ -40,6 +40,7 @@ Execution rules:
 - Rich-stage dropdown and popover interactions still have selection/focus regressions that make the current “phase complete” status too optimistic for pre-phase-2 readiness.
 - The toolbar is not yet modeled as a deterministic layered popover stack.
 - Nested dismissal order is not yet locked for outside click and `Escape`.
+- The first draggable-toolbar attempt shipped a visible but non-working drag handle and was rolled back; Q2 needs a fresh implementation based on the focused-panel host pattern.
 - Retained selection highlighting is still missing when focus leaves the editable surface for toolbar chrome.
 - Toolbar controls still use bespoke inputs where inspector controls should be reused later in phase 1.8.
 - Structure-specific dropdowns are still always visible and need to become conditional later in phase 1.8.
@@ -128,7 +129,7 @@ Execution rules:
 
 - Objective:
   - Convert the base rich-text toolbar into a draggable popover-backed floating panel.
-- Status: `done`
+- Status: `pending`
 - Allowed files:
   - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
   - `src/stage/stageRenderers/richToolbarPosition.ts`
@@ -144,22 +145,24 @@ Execution rules:
   - `src/stage/stageRenderers/RichTextEditOverlay.tsx:640-860`
   - `src/stage/tests/Stage.e2e.test.ts:374-470`
 - Implementation notes:
-  - Reuse the existing floating-panel drag pattern already used by focused/pages/layers panels.
+  - Rebuild this quantum using the focused panel host pattern instead of bespoke in-toolbar drag wiring.
   - Keep the base toolbar on the shared `FloatingPanelShell` / `PopoverSurface` path instead of the previous static shell override.
-  - Store only a session-local drag offset; do not persist toolbar position into document state.
-  - Clamp toolbar movement inside the viewport with a protected top gap below the editor top bar.
-  - Keep nested link-panel positioning tied to the moved toolbar so link editing chrome travels with the base panel.
+  - The failed first pass was reverted; current runtime behavior is a non-draggable anchored popover while drag is redesigned.
+  - When Q2 is retried, store only a session-local drag offset; do not persist toolbar position into document state.
+  - When Q2 is retried, clamp toolbar movement inside the viewport with a protected top gap below the editor top bar.
+  - When Q2 is retried, keep nested link-panel positioning tied to the moved toolbar so link editing chrome travels with the base panel.
 - Verification commands:
   - `npx vitest run src/stage/tests/RichTextEditOverlay.test.tsx src/stage/tests/richToolbarPosition.test.ts`
   - `npm run typecheck`
-  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "drags the rich toolbar|outside click|Escape|partial inline selection|ordered-list marker"`
+  - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "without a drag handle|outside click|Escape|partial inline selection|ordered-list marker"`
   - `npm run build`
 - Verification result:
-  - Passed before commit.
+  - Reopened after the first drag implementation shipped a visible but non-working handle.
 - Commit SHA:
-  - Pending the Q2 commit
+  - `564d8ff` attempted Q2 but was rolled back in follow-up work; replacement commit pending.
 - Open follow-ups carried forward:
-  - `P18-Q3` should preserve the authored selection visually while the moved toolbar owns focus.
+  - `P18-Q2` must be rebuilt against the focused-panel shell pattern before phase 1.8 can continue.
+  - `P18-Q3` should preserve the authored selection visually while the toolbar owns focus.
 
 ## P18-Q3: Selection retention and retained visual highlight
 

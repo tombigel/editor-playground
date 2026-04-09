@@ -1,1426 +1,1601 @@
 import {
-  type CSSProperties,
-  type FormEvent,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { Code2, Link2, List, ListOrdered, Type } from 'lucide-react';
-import { Transforms, type BaseSelection } from 'slate';
-import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
-import { Button } from '@/components/ui/button';
-import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
-import { Input } from '@/components/ui/input';
-import { PopoverTooltip } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { getSectionAnchorOptions, getLinkHref, isValidSectionAnchorTarget } from '../../model/links';
+	type CSSProperties,
+	type FormEvent,
+	type KeyboardEvent as ReactKeyboardEvent,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { Code2, Link2, List, ListOrdered, Type } from "lucide-react";
+import { Transforms, type BaseSelection } from "slate";
+import {
+	Editable,
+	ReactEditor,
+	type RenderElementProps,
+	type RenderLeafProps,
+	Slate,
+} from "slate-react";
+import { Button } from "@/components/ui/button";
+import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
+import { Input } from "@/components/ui/input";
+import { PopoverTooltip } from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from "@/components/ui/select";
+import {
+	getSectionAnchorOptions,
+	getLinkHref,
+	isValidSectionAnchorTarget,
+} from "../../model/links";
 import type {
-  DocumentModel,
-  NodeId,
-  RichBlock,
-  TextDocumentContent,
-  RichTextBlockType,
-  RichTextLeaf,
-  RichTextLink,
-} from '../../model/types';
-import { createTextDocumentContent, getTextDocumentBlockGap } from '../../model/richContent';
-import { CODE_LANGUAGE_OPTIONS } from '../../render/codeHighlight';
-import { getDefaultListContainerStyle, getRichTextBlockTag, richLeafStyle } from '../../render/nodePresentation';
+	DocumentModel,
+	NodeId,
+	RichBlock,
+	TextDocumentContent,
+	RichTextBlockType,
+	RichTextLeaf,
+	RichTextLink,
+} from "../../model/types";
 import {
-  convertSelectionToBlockType,
-  convertSelectionToCodeBlock,
-  convertSelectionToList,
-  createRichEditor,
-  fromSlateValue,
-  getMarkValue,
-  getSelectedBlockType,
-  getSelectedCodeLanguage,
-  getSelectedLineHeight,
-  getSelectedListKind,
-  getSelectedListMarkerStyle,
-  getSelectedStructureMode,
-  insertLink,
-  isLinkActive,
-  isMarkActive,
-  removeLink,
-  setMarkValue,
-  setSelectedCodeBlockLanguage,
-  setSelectedBlocksLineHeight,
-  setSelectedListMarkerStyle,
-  toSlateValue,
-  toggleMark,
-} from '../../render/richTextEditor';
+	createTextDocumentContent,
+	getTextDocumentBlockGap,
+} from "../../model/richContent";
+import { CODE_LANGUAGE_OPTIONS } from "../../render/codeHighlight";
 import {
-  clampRichToolbarOffset,
-  DEFAULT_RICH_TOOLBAR_OFFSET,
-  getRichToolbarViewportPosition,
-  persistRichToolbarSessionOffset,
-  readRichToolbarSessionOffset,
-  RICH_TOOLBAR_EDGE_GAP_PX,
-  type RichToolbarOffset,
-  type RichToolbarPlacement,
-} from './richToolbarPosition';
+	getDefaultListContainerStyle,
+	getRichTextBlockTag,
+	richLeafStyle,
+} from "../../render/nodePresentation";
+import {
+	convertSelectionToBlockType,
+	convertSelectionToCodeBlock,
+	convertSelectionToList,
+	createRichEditor,
+	fromSlateValue,
+	getMarkValue,
+	getSelectedBlockType,
+	getSelectedCodeLanguage,
+	getSelectedLineHeight,
+	getSelectedListKind,
+	getSelectedListMarkerStyle,
+	getSelectedStructureMode,
+	insertLink,
+	isLinkActive,
+	isMarkActive,
+	removeLink,
+	setMarkValue,
+	setSelectedCodeBlockLanguage,
+	setSelectedBlocksLineHeight,
+	setSelectedListMarkerStyle,
+	toSlateValue,
+	toggleMark,
+} from "../../render/richTextEditor";
+import {
+	getRichToolbarViewportPosition,
+	RICH_TOOLBAR_EDGE_GAP_PX,
+	type RichToolbarPlacement,
+} from "./richToolbarPosition";
 
 function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
-  const style = richLeafStyle(leaf as RichTextLeaf);
-  return (
-    <span
-      {...attributes}
-      style={{
-        ...style,
-        pointerEvents: 'auto',
-        userSelect: 'text',
-        WebkitUserSelect: 'text',
-      }}
-    >
-      {children}
-    </span>
-  );
+	const style = richLeafStyle(leaf as RichTextLeaf);
+	return (
+		<span
+			{...attributes}
+			style={{
+				...style,
+				pointerEvents: "auto",
+				userSelect: "text",
+				WebkitUserSelect: "text",
+			}}
+		>
+			{children}
+		</span>
+	);
 }
 
 function renderEditElement(
-  { attributes, children, element }: RenderElementProps,
-  documentModel: DocumentModel | undefined,
+	{ attributes, children, element }: RenderElementProps,
+	documentModel: DocumentModel | undefined,
 ) {
-  const el = element as RichTextLink | RichBlock | { type?: string };
-  if ('type' in el && el.type === 'link') {
-    const link = el as RichTextLink;
-    const href = getLinkHref(link, documentModel);
-    return (
-      <a
-        href={href}
-        style={{
-          textDecoration: 'underline',
-          cursor: 'text',
-          pointerEvents: 'auto',
-          userSelect: 'text',
-          WebkitUserSelect: 'text',
-        }}
-        {...attributes}
-      >
-        {children}
-      </a>
-    );
-  }
+	const el = element as RichTextLink | RichBlock | { type?: string };
+	if ("type" in el && el.type === "link") {
+		const link = el as RichTextLink;
+		const href = getLinkHref(link, documentModel);
+		return (
+			<a
+				href={href}
+				style={{
+					textDecoration: "underline",
+					cursor: "text",
+					pointerEvents: "auto",
+					userSelect: "text",
+					WebkitUserSelect: "text",
+				}}
+				{...attributes}
+			>
+				{children}
+			</a>
+		);
+	}
 
-  const block = el as RichBlock;
-  const Tag = block.type === 'ul' || block.type === 'ol'
-    ? block.type
-    : block.type === 'code-block'
-      ? 'div'
-      : getRichTextBlockTag(block.type);
-  return (
-    <Tag
-      {...attributes}
-      data-rich-block-type={block.type === 'code-block' ? 'code-block' : undefined}
-      style={{
-        ...((block.type === 'ul' || block.type === 'ol') ? getDefaultListContainerStyle() : {}),
-        pointerEvents: 'auto',
-        userSelect: 'text',
-        WebkitUserSelect: 'text',
-      }}
-    >
-      {children}
-    </Tag>
-  );
+	const block = el as RichBlock;
+	const Tag =
+		block.type === "ul" || block.type === "ol"
+			? block.type
+			: block.type === "code-block"
+				? "div"
+				: getRichTextBlockTag(block.type);
+	return (
+		<Tag
+			{...attributes}
+			data-rich-block-type={
+				block.type === "code-block" ? "code-block" : undefined
+			}
+			style={{
+				...(block.type === "ul" || block.type === "ol"
+					? getDefaultListContainerStyle()
+					: {}),
+				pointerEvents: "auto",
+				userSelect: "text",
+				WebkitUserSelect: "text",
+			}}
+		>
+			{children}
+		</Tag>
+	);
 }
 
 type LinkPopoverDraft = {
-  open: boolean;
-  linkType: 'external' | 'page' | 'anchor';
-  href: string;
-  targetPageId: string;
-  pageAnchorId: string;
-  anchorTargetId: string;
+	open: boolean;
+	linkType: "external" | "page" | "anchor";
+	href: string;
+	targetPageId: string;
+	pageAnchorId: string;
+	anchorTargetId: string;
 };
 
 const DEFAULT_LINK_POPOVER: LinkPopoverDraft = {
-  open: false,
-  linkType: 'external',
-  href: '',
-  targetPageId: '',
-  pageAnchorId: '',
-  anchorTargetId: '',
-};
-
-type ToolbarDragState = {
-  pointerId: number;
-  originX: number;
-  originY: number;
-  originOffset: RichToolbarOffset;
+	open: false,
+	linkType: "external",
+	href: "",
+	targetPageId: "",
+	pageAnchorId: "",
+	anchorTargetId: "",
 };
 
 const RICH_SELECT_IDS = {
-  fontFamily: 'font-family',
-  blockType: 'block-type',
-  orderedListMarker: 'ordered-list-marker',
-  unorderedListMarker: 'unordered-list-marker',
-  codeLanguage: 'code-language',
-  linkType: 'link-type',
-  sectionTarget: 'section-target',
-  targetPage: 'target-page',
-  targetPageSection: 'target-page-section',
+	fontFamily: "font-family",
+	blockType: "block-type",
+	orderedListMarker: "ordered-list-marker",
+	unorderedListMarker: "unordered-list-marker",
+	codeLanguage: "code-language",
+	linkType: "link-type",
+	sectionTarget: "section-target",
+	targetPage: "target-page",
+	targetPageSection: "target-page-section",
 } as const;
 
 type RichEditSelectId = (typeof RICH_SELECT_IDS)[keyof typeof RICH_SELECT_IDS];
 
 const BLOCK_TYPE_OPTIONS: Array<{ value: RichTextBlockType; label: string }> = [
-  { value: 'paragraph', label: 'Paragraph' },
-  { value: 'div', label: 'Div' },
-  { value: 'blockquote', label: 'Quote' },
-  { value: 'h1', label: 'H1' },
-  { value: 'h2', label: 'H2' },
-  { value: 'h3', label: 'H3' },
-  { value: 'h4', label: 'H4' },
-  { value: 'h5', label: 'H5' },
-  { value: 'h6', label: 'H6' },
+	{ value: "paragraph", label: "Paragraph" },
+	{ value: "div", label: "Div" },
+	{ value: "blockquote", label: "Quote" },
+	{ value: "h1", label: "H1" },
+	{ value: "h2", label: "H2" },
+	{ value: "h3", label: "H3" },
+	{ value: "h4", label: "H4" },
+	{ value: "h5", label: "H5" },
+	{ value: "h6", label: "H6" },
 ];
 
 const ORDERED_MARKER_OPTIONS = [
-  { value: 'decimal', label: '1.' },
-  { value: 'lower-alpha', label: 'a.' },
-  { value: 'upper-alpha', label: 'A.' },
-  { value: 'lower-roman', label: 'i.' },
-  { value: 'upper-roman', label: 'I.' },
+	{ value: "decimal", label: "1." },
+	{ value: "lower-alpha", label: "a." },
+	{ value: "upper-alpha", label: "A." },
+	{ value: "lower-roman", label: "i." },
+	{ value: "upper-roman", label: "I." },
 ] as const;
 
 const UNORDERED_MARKER_OPTIONS = [
-  { value: 'disc', label: 'Disc' },
-  { value: 'circle', label: 'Circle' },
-  { value: 'square', label: 'Square' },
+	{ value: "disc", label: "Disc" },
+	{ value: "circle", label: "Circle" },
+	{ value: "square", label: "Square" },
 ] as const;
 
 type RichToolbarState = {
-  boldActive: boolean;
-  italicActive: boolean;
-  underlineActive: boolean;
-  strikethroughActive: boolean;
-  linkActive: boolean;
-  structureMode: 'block' | 'ul' | 'ol' | 'code-block' | null;
-  selectedBlockType: RichTextBlockType;
-  selectedListKind: 'ul' | 'ol' | null;
-  selectedListMarkerStyle: string;
-  selectedCodeLanguage: string;
-  selectedLineHeight: number;
-  currentFontFamily: string;
-  currentFontSize: string;
-  currentTextColor: string;
-  currentHighlightColor: string;
+	boldActive: boolean;
+	italicActive: boolean;
+	underlineActive: boolean;
+	strikethroughActive: boolean;
+	linkActive: boolean;
+	structureMode: "block" | "ul" | "ol" | "code-block" | null;
+	selectedBlockType: RichTextBlockType;
+	selectedListKind: "ul" | "ol" | null;
+	selectedListMarkerStyle: string;
+	selectedCodeLanguage: string;
+	selectedLineHeight: number;
+	currentFontFamily: string;
+	currentFontSize: string;
+	currentTextColor: string;
+	currentHighlightColor: string;
 };
 
 function cloneSelection(selection: BaseSelection): BaseSelection {
-  if (!selection) {
-    return null;
-  }
+	if (!selection) {
+		return null;
+	}
 
-  return {
-    anchor: { ...selection.anchor },
-    focus: { ...selection.focus },
-  };
+	return {
+		anchor: { ...selection.anchor },
+		focus: { ...selection.focus },
+	};
 }
 
-function readToolbarState(editor: ReturnType<typeof createRichEditor>): RichToolbarState {
-  return {
-    boldActive: isMarkActive(editor, 'bold'),
-    italicActive: isMarkActive(editor, 'italic'),
-    underlineActive: isMarkActive(editor, 'underline'),
-    strikethroughActive: isMarkActive(editor, 'strikethrough'),
-    linkActive: isLinkActive(editor),
-    structureMode: getSelectedStructureMode(editor),
-    selectedBlockType: getSelectedBlockType(editor) ?? 'paragraph',
-    selectedListKind: getSelectedListKind(editor),
-    selectedListMarkerStyle: getSelectedListMarkerStyle(editor),
-    selectedCodeLanguage: getSelectedCodeLanguage(editor),
-    selectedLineHeight: getSelectedLineHeight(editor),
-    currentFontFamily: getMarkValue(editor, 'fontFamily') || '__inherit__',
-    currentFontSize: getMarkValue(editor, 'fontSize'),
-    currentTextColor: normalizeColorInputValue(getMarkValue(editor, 'color'), '#111827'),
-    currentHighlightColor: normalizeColorInputValue(getMarkValue(editor, 'backgroundColor'), '#fff59d'),
-  };
+function readToolbarState(
+	editor: ReturnType<typeof createRichEditor>,
+): RichToolbarState {
+	return {
+		boldActive: isMarkActive(editor, "bold"),
+		italicActive: isMarkActive(editor, "italic"),
+		underlineActive: isMarkActive(editor, "underline"),
+		strikethroughActive: isMarkActive(editor, "strikethrough"),
+		linkActive: isLinkActive(editor),
+		structureMode: getSelectedStructureMode(editor),
+		selectedBlockType: getSelectedBlockType(editor) ?? "paragraph",
+		selectedListKind: getSelectedListKind(editor),
+		selectedListMarkerStyle: getSelectedListMarkerStyle(editor),
+		selectedCodeLanguage: getSelectedCodeLanguage(editor),
+		selectedLineHeight: getSelectedLineHeight(editor),
+		currentFontFamily: getMarkValue(editor, "fontFamily") || "__inherit__",
+		currentFontSize: getMarkValue(editor, "fontSize"),
+		currentTextColor: normalizeColorInputValue(
+			getMarkValue(editor, "color"),
+			"#111827",
+		),
+		currentHighlightColor: normalizeColorInputValue(
+			getMarkValue(editor, "backgroundColor"),
+			"#fff59d",
+		),
+	};
 }
 
-function isTargetWithinSelector(target: EventTarget | null, selector: string): boolean {
-  if (!(target instanceof Element)) {
-    return false;
-  }
+function isTargetWithinSelector(
+	target: EventTarget | null,
+	selector: string,
+): boolean {
+	if (!(target instanceof Element)) {
+		return false;
+	}
 
-  return Boolean(target.closest(selector));
+	return Boolean(target.closest(selector));
 }
 
-function isTargetWithinSelectLayer(target: EventTarget | null, selectId: RichEditSelectId): boolean {
-  return isTargetWithinSelector(target, `[data-stage-rich-select-id="${selectId}"]`);
+function isTargetWithinSelectLayer(
+	target: EventTarget | null,
+	selectId: RichEditSelectId,
+): boolean {
+	return isTargetWithinSelector(
+		target,
+		`[data-stage-rich-select-id="${selectId}"]`,
+	);
 }
 
 function isTargetWithinLinkPopover(target: EventTarget | null): boolean {
-  return isTargetWithinSelector(target, '[data-stage-rich-link-popover="true"]');
+	return isTargetWithinSelector(
+		target,
+		'[data-stage-rich-link-popover="true"]',
+	);
 }
 
 export function RichTextEditOverlay({
-  nodeId,
-  content,
-  contentStyle,
-  minHeight,
-  document: documentModel,
-  onCommit,
-  onUpdateBlockGap,
-  onDiscard,
+	nodeId,
+	content,
+	contentStyle,
+	minHeight,
+	document: documentModel,
+	onCommit,
+	onUpdateBlockGap,
+	onDiscard,
 }: {
-  nodeId: NodeId;
-  content: TextDocumentContent;
-  contentStyle?: CSSProperties;
-  minHeight?: string;
-  document?: DocumentModel;
-  onCommit: (id: NodeId, content: TextDocumentContent) => void;
-  onUpdateBlockGap: (id: NodeId, value: number) => void;
-  onDiscard: () => void;
+	nodeId: NodeId;
+	content: TextDocumentContent;
+	contentStyle?: CSSProperties;
+	minHeight?: string;
+	document?: DocumentModel;
+	onCommit: (id: NodeId, content: TextDocumentContent) => void;
+	onUpdateBlockGap: (id: NodeId, value: number) => void;
+	onDiscard: () => void;
 }) {
-  const editor = useMemo(() => createRichEditor(), []);
-  const initialValue = useMemo(() => toSlateValue(content.blocks), [content]);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const toolbarRef = useRef<HTMLDivElement | null>(null);
-  const [linkPopover, setLinkPopover] = useState<LinkPopoverDraft>(DEFAULT_LINK_POPOVER);
-  const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
-  const [openSelectId, setOpenSelectId] = useState<RichEditSelectId | null>(null);
-  const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
-  const [selectionRevision, setSelectionRevision] = useState(0);
-  const [toolbarState, setToolbarState] = useState<RichToolbarState>(() => readToolbarState(editor));
-  const [fontSizeDraft, setFontSizeDraft] = useState('');
-  const [lineHeightDraft, setLineHeightDraft] = useState(() => String(readToolbarState(editor).selectedLineHeight));
-  const [blockSpacingDraft, setBlockSpacingDraft] = useState(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
-  const [toolbarOffset, setToolbarOffset] = useState<RichToolbarOffset>(() => readRichToolbarSessionOffset());
-  const toolbarOffsetRef = useRef(toolbarOffset);
-  const [toolbarDragState, setToolbarDragState] = useState<ToolbarDragState | null>(null);
-  const [toolbarPlacement, setToolbarPlacement] = useState<RichToolbarPlacement>('above');
-  const [toolbarPosition, setToolbarPosition] = useState({
-    top: RICH_TOOLBAR_EDGE_GAP_PX,
-    left: RICH_TOOLBAR_EDGE_GAP_PX,
-  });
-  const [toolbarWidth, setToolbarWidth] = useState(0);
-  const [toolbarLayoutRevision, setToolbarLayoutRevision] = useState(0);
+	const editor = useMemo(() => createRichEditor(), []);
+	const initialValue = useMemo(() => toSlateValue(content.blocks), [content]);
+	const rootRef = useRef<HTMLDivElement | null>(null);
+	const toolbarRef = useRef<HTMLDivElement | null>(null);
+	const [linkPopover, setLinkPopover] =
+		useState<LinkPopoverDraft>(DEFAULT_LINK_POPOVER);
+	const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
+	const [openSelectId, setOpenSelectId] = useState<RichEditSelectId | null>(
+		null,
+	);
+	const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
+	const [selectionRevision, setSelectionRevision] = useState(0);
+	const [toolbarState, setToolbarState] = useState<RichToolbarState>(() =>
+		readToolbarState(editor),
+	);
+	const [fontSizeDraft, setFontSizeDraft] = useState("");
+	const [lineHeightDraft, setLineHeightDraft] = useState(() =>
+		String(readToolbarState(editor).selectedLineHeight),
+	);
+	const [blockSpacingDraft, setBlockSpacingDraft] = useState(
+		String(
+			getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
+		),
+	);
+	const [toolbarPlacement, setToolbarPlacement] =
+		useState<RichToolbarPlacement>("above");
+	const [toolbarPosition, setToolbarPosition] = useState({
+		top: RICH_TOOLBAR_EDGE_GAP_PX,
+		left: RICH_TOOLBAR_EDGE_GAP_PX,
+	});
+	const [toolbarWidth, setToolbarWidth] = useState(0);
+	const [toolbarLayoutRevision, setToolbarLayoutRevision] = useState(0);
 
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      try {
-        ReactEditor.focus(editor);
-      } catch {}
-    });
-    return () => cancelAnimationFrame(id);
-  }, [editor]);
+	useEffect(() => {
+		const id = requestAnimationFrame(() => {
+			try {
+				ReactEditor.focus(editor);
+			} catch {}
+		});
+		return () => cancelAnimationFrame(id);
+	}, [editor]);
 
-  useEffect(() => {
-    toolbarOffsetRef.current = toolbarOffset;
-  }, [toolbarOffset]);
+	useEffect(() => {
+		let frame = 0;
 
-  useEffect(() => {
-    persistRichToolbarSessionOffset(toolbarOffset);
-  }, [toolbarOffset]);
+		function queueToolbarLayoutRefresh() {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(() => {
+				setToolbarLayoutRevision((revision) => revision + 1);
+			});
+		}
 
-  useEffect(() => {
-    let frame = 0;
+		window.addEventListener("resize", queueToolbarLayoutRefresh);
+		window.addEventListener("scroll", queueToolbarLayoutRefresh, true);
+		return () => {
+			cancelAnimationFrame(frame);
+			window.removeEventListener("resize", queueToolbarLayoutRefresh);
+			window.removeEventListener("scroll", queueToolbarLayoutRefresh, true);
+		};
+	}, []);
 
-    function queueToolbarLayoutRefresh() {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        setToolbarLayoutRevision((revision) => revision + 1);
-      });
-    }
+	useLayoutEffect(() => {
+		void selectionRevision;
+		void toolbarLayoutRevision;
+		const root = rootRef.current;
+		const toolbar = toolbarRef.current;
+		if (!root || !toolbar) {
+			return;
+		}
 
-    window.addEventListener('resize', queueToolbarLayoutRefresh);
-    window.addEventListener('scroll', queueToolbarLayoutRefresh, true);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('resize', queueToolbarLayoutRefresh);
-      window.removeEventListener('scroll', queueToolbarLayoutRefresh, true);
-    };
-  }, []);
+		const rootRect = root.getBoundingClientRect();
+		const toolbarRect = toolbar.getBoundingClientRect();
+		const nextViewportPosition = getRichToolbarViewportPosition({
+			rootRect,
+			panelWidth: toolbarRect.width,
+			panelHeight: toolbarRect.height,
+			viewportWidth: window.innerWidth,
+			viewportHeight: window.innerHeight,
+		});
 
-  useEffect(() => {
-    if (!toolbarDragState) {
-      return;
-    }
+		setToolbarPlacement((current) =>
+			current === nextViewportPosition.placement
+				? current
+				: nextViewportPosition.placement,
+		);
+		setToolbarPosition((current) =>
+			current.top === nextViewportPosition.top &&
+			current.left === nextViewportPosition.left
+				? current
+				: { top: nextViewportPosition.top, left: nextViewportPosition.left },
+		);
+		setToolbarWidth((current) =>
+			current === toolbarRect.width ? current : toolbarRect.width,
+		);
+	}, [selectionRevision, toolbarLayoutRevision]);
 
-    const { cursor, userSelect } = window.document.body.style;
-    window.document.body.style.cursor = 'grabbing';
-    window.document.body.style.userSelect = 'none';
-    return () => {
-      window.document.body.style.cursor = cursor;
-      window.document.body.style.userSelect = userSelect;
-    };
-  }, [toolbarDragState]);
+	const commitCurrentContent = useCallback(() => {
+		onCommit(
+			nodeId,
+			createTextDocumentContent(fromSlateValue(editor.children), {
+				blockGap: getTextDocumentBlockGap(content),
+			}),
+		);
+	}, [content, editor, nodeId, onCommit]);
 
-  useEffect(() => {
-    if (!toolbarDragState) {
-      return;
-    }
+	const closeOpenSelect = useCallback(() => {
+		setOpenSelectId(null);
+	}, []);
 
-    const currentDrag = toolbarDragState;
+	const closeLinkPopover = useCallback(() => {
+		setOpenSelectId(null);
+		setLinkSelection(null);
+		setLinkPopover(DEFAULT_LINK_POPOVER);
+	}, []);
 
-    function handlePointerMove(event: PointerEvent) {
-      if (event.pointerId !== currentDrag.pointerId || !rootRef.current || !toolbarRef.current) {
-        return;
-      }
+	const handleSelectOpenChange = useCallback(
+		(selectId: RichEditSelectId, open: boolean) => {
+			setOpenSelectId((current) => {
+				if (open) {
+					return selectId;
+				}
+				return current === selectId ? null : current;
+			});
+		},
+		[],
+	);
 
-      event.preventDefault();
-      const rootRect = rootRef.current.getBoundingClientRect();
-      const toolbarRect = toolbarRef.current.getBoundingClientRect();
-      setToolbarOffset(
-        clampRichToolbarOffset({
-          rootRect,
-          panelWidth: toolbarRect.width,
-          panelHeight: toolbarRect.height,
-          viewportWidth: window.innerWidth,
-          viewportHeight: window.innerHeight,
-          offset: currentDrag.originOffset,
-          deltaX: event.clientX - currentDrag.originX,
-          deltaY: event.clientY - currentDrag.originY,
-        }),
-      );
-    }
+	useEffect(() => {
+		function handlePointerDown(event: PointerEvent) {
+			const root = rootRef.current;
+			if (!root) {
+				return;
+			}
+			const target = event.target;
+			if (openSelectId) {
+				if (isTargetWithinSelectLayer(target, openSelectId)) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				closeOpenSelect();
+				return;
+			}
+			if (linkPopover.open) {
+				if (isTargetWithinLinkPopover(target)) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				closeLinkPopover();
+				return;
+			}
+			if (target instanceof Node && root.contains(target)) {
+				return;
+			}
+			commitCurrentContent();
+		}
 
-    function handlePointerEnd(event: PointerEvent) {
-      if (event.pointerId !== currentDrag.pointerId) {
-        return;
-      }
-      setToolbarDragState(null);
-    }
+		globalThis.document?.addEventListener(
+			"pointerdown",
+			handlePointerDown,
+			true,
+		);
+		return () => {
+			globalThis.document?.removeEventListener(
+				"pointerdown",
+				handlePointerDown,
+				true,
+			);
+		};
+	}, [
+		closeLinkPopover,
+		closeOpenSelect,
+		commitCurrentContent,
+		linkPopover.open,
+		openSelectId,
+	]);
 
-    window.addEventListener('pointermove', handlePointerMove, { passive: false });
-    window.addEventListener('pointerup', handlePointerEnd);
-    window.addEventListener('pointercancel', handlePointerEnd);
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerEnd);
-      window.removeEventListener('pointercancel', handlePointerEnd);
-    };
-  }, [toolbarDragState]);
+	useEffect(() => {
+		function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
+			if (event.key !== "Escape") {
+				return;
+			}
 
-  useLayoutEffect(() => {
-    void selectionRevision;
-    void toolbarLayoutRevision;
-    const root = rootRef.current;
-    const toolbar = toolbarRef.current;
-    if (!root || !toolbar) {
-      return;
-    }
+			if (openSelectId) {
+				event.preventDefault();
+				event.stopPropagation();
+				closeOpenSelect();
+				return;
+			}
 
-    const rootRect = root.getBoundingClientRect();
-    const toolbarRect = toolbar.getBoundingClientRect();
-    const nextViewportPosition = getRichToolbarViewportPosition({
-      rootRect,
-      panelWidth: toolbarRect.width,
-      panelHeight: toolbarRect.height,
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
-      offset: toolbarOffset,
-    });
+			if (linkPopover.open) {
+				event.preventDefault();
+				event.stopPropagation();
+				closeLinkPopover();
+				return;
+			}
 
-    setToolbarPlacement((current) => current === nextViewportPosition.placement ? current : nextViewportPosition.placement);
-    setToolbarPosition((current) =>
-      current.top === nextViewportPosition.top && current.left === nextViewportPosition.left
-        ? current
-        : { top: nextViewportPosition.top, left: nextViewportPosition.left },
-    );
-    setToolbarWidth((current) => current === toolbarRect.width ? current : toolbarRect.width);
-  }, [selectionRevision, toolbarLayoutRevision, toolbarOffset]);
+			event.preventDefault();
+			event.stopPropagation();
+			onDiscard();
+		}
 
-  const commitCurrentContent = useCallback(() => {
-    onCommit(
-      nodeId,
-      createTextDocumentContent(fromSlateValue(editor.children), { blockGap: getTextDocumentBlockGap(content) }),
-    );
-  }, [content, editor, nodeId, onCommit]);
+		globalThis.document?.addEventListener("keydown", handleGlobalKeyDown, true);
+		return () => {
+			globalThis.document?.removeEventListener(
+				"keydown",
+				handleGlobalKeyDown,
+				true,
+			);
+		};
+	}, [
+		closeLinkPopover,
+		closeOpenSelect,
+		linkPopover.open,
+		onDiscard,
+		openSelectId,
+	]);
 
-  const closeOpenSelect = useCallback(() => {
-    setOpenSelectId(null);
-  }, []);
+	const fontFamilies = useMemo(() => {
+		const defaults = documentModel?.fontLibrary.defaults ?? [];
+		const used =
+			documentModel?.fontLibrary.usedFamilies.map((family) => family.family) ??
+			[];
+		return ["__inherit__", ...new Set([...defaults, ...used])];
+	}, [documentModel]);
 
-  const closeLinkPopover = useCallback(() => {
-    setOpenSelectId(null);
-    setLinkSelection(null);
-    setLinkPopover(DEFAULT_LINK_POPOVER);
-  }, []);
+	const pages = documentModel?.pages ?? [];
+	const sectionOptions = useMemo(
+		() => (documentModel ? getSectionAnchorOptions(documentModel) : []),
+		[documentModel],
+	);
 
-  const handleSelectOpenChange = useCallback((selectId: RichEditSelectId, open: boolean) => {
-    setOpenSelectId((current) => {
-      if (open) {
-        return selectId;
-      }
-      return current === selectId ? null : current;
-    });
-  }, []);
+	const targetPage = pages.find((page) => page.id === linkPopover.targetPageId);
+	const targetPageSectionOptions = useMemo(() => {
+		if (!documentModel || !targetPage) {
+			return [];
+		}
+		return targetPage.sectionIds
+			.map((sectionId) => {
+				const sectionNode = documentModel.nodes[sectionId];
+				if (!sectionNode) {
+					return null;
+				}
+				return { id: sectionId, name: sectionNode.name || sectionId };
+			})
+			.filter(
+				(option): option is { id: string; name: string } => option !== null,
+			);
+	}, [documentModel, targetPage]);
 
-  useEffect(() => {
-    function handlePointerDown(event: PointerEvent) {
-      const root = rootRef.current;
-      if (!root) {
-        return;
-      }
-      const target = event.target;
-      if (openSelectId) {
-        if (isTargetWithinSelectLayer(target, openSelectId)) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        closeOpenSelect();
-        return;
-      }
-      if (linkPopover.open) {
-        if (isTargetWithinLinkPopover(target)) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        closeLinkPopover();
-        return;
-      }
-      if (target instanceof Node && root.contains(target)) {
-        return;
-      }
-      commitCurrentContent();
-    }
+	const {
+		boldActive,
+		italicActive,
+		underlineActive,
+		strikethroughActive,
+		linkActive,
+		structureMode,
+		selectedBlockType,
+		selectedListKind,
+		selectedListMarkerStyle,
+		selectedCodeLanguage,
+		currentFontFamily,
+		currentTextColor,
+		currentHighlightColor,
+	} = toolbarState;
 
-    globalThis.document?.addEventListener('pointerdown', handlePointerDown, true);
-    return () => {
-      globalThis.document?.removeEventListener('pointerdown', handlePointerDown, true);
-    };
-  }, [closeLinkPopover, closeOpenSelect, commitCurrentContent, linkPopover.open, openSelectId]);
+	useEffect(() => {
+		setFontSizeDraft(toolbarState.currentFontSize);
+	}, [toolbarState.currentFontSize]);
 
-  useEffect(() => {
-    function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key !== 'Escape') {
-        return;
-      }
+	useEffect(() => {
+		setLineHeightDraft(String(toolbarState.selectedLineHeight));
+	}, [toolbarState.selectedLineHeight]);
 
-      if (openSelectId) {
-        event.preventDefault();
-        event.stopPropagation();
-        closeOpenSelect();
-        return;
-      }
+	useEffect(() => {
+		setBlockSpacingDraft(
+			String(
+				getTextDocumentBlockGap(content) ??
+					readInitialBlockSpacing(contentStyle),
+			),
+		);
+	}, [content, contentStyle]);
 
-      if (linkPopover.open) {
-        event.preventDefault();
-        event.stopPropagation();
-        closeLinkPopover();
-        return;
-      }
+	const syncToolbarState = useCallback(() => {
+		setToolbarState(readToolbarState(editor));
+	}, [editor]);
 
-      event.preventDefault();
-      event.stopPropagation();
-      onDiscard();
-    }
+	const handleKeyDown = useCallback(
+		(event: ReactKeyboardEvent<HTMLDivElement>) => {
+			if (event.key === "Escape") {
+				return;
+			}
 
-    globalThis.document?.addEventListener('keydown', handleGlobalKeyDown, true);
-    return () => {
-      globalThis.document?.removeEventListener('keydown', handleGlobalKeyDown, true);
-    };
-  }, [closeLinkPopover, closeOpenSelect, linkPopover.open, onDiscard, openSelectId]);
+			const isMod = event.metaKey || event.ctrlKey;
+			if (isMod && event.key === "Enter") {
+				event.preventDefault();
+				commitCurrentContent();
+				return;
+			}
 
-  const fontFamilies = useMemo(() => {
-    const defaults = documentModel?.fontLibrary.defaults ?? [];
-    const used = documentModel?.fontLibrary.usedFamilies.map((family) => family.family) ?? [];
-    return ['__inherit__', ...new Set([...defaults, ...used])];
-  }, [documentModel]);
+			if (isMod && event.key === "b") {
+				event.preventDefault();
+				toggleMark(editor, "bold");
+				syncToolbarState();
+				setSelectionRevision((revision) => revision + 1);
+				return;
+			}
 
-  const pages = documentModel?.pages ?? [];
-  const sectionOptions = useMemo(
-    () => (documentModel ? getSectionAnchorOptions(documentModel) : []),
-    [documentModel],
-  );
+			if (isMod && event.key === "i") {
+				event.preventDefault();
+				toggleMark(editor, "italic");
+				syncToolbarState();
+				setSelectionRevision((revision) => revision + 1);
+				return;
+			}
 
-  const targetPage = pages.find((page) => page.id === linkPopover.targetPageId);
-  const targetPageSectionOptions = useMemo(() => {
-    if (!documentModel || !targetPage) {
-      return [];
-    }
-    return targetPage.sectionIds
-      .map((sectionId) => {
-        const sectionNode = documentModel.nodes[sectionId];
-        if (!sectionNode) {
-          return null;
-        }
-        return { id: sectionId, name: sectionNode.name || sectionId };
-      })
-      .filter((option): option is { id: string; name: string } => option !== null);
-  }, [documentModel, targetPage]);
+			if (isMod && event.key === "k") {
+				event.preventDefault();
+				if (isLinkActive(editor)) {
+					removeLink(editor);
+					closeLinkPopover();
+					syncToolbarState();
+					setSelectionRevision((revision) => revision + 1);
+				} else {
+					const currentSelection = editor.selection
+						? {
+								anchor: { ...editor.selection.anchor },
+								focus: { ...editor.selection.focus },
+							}
+						: null;
+					setLinkSelection(currentSelection);
+					setLinkPopover({
+						...DEFAULT_LINK_POPOVER,
+						open: true,
+						anchorTargetId: sectionOptions[0]?.id ?? "",
+						href: sectionOptions[0]?.href ?? "",
+						targetPageId: pages[0]?.id ?? "",
+					});
+				}
+			}
+		},
+		[
+			closeLinkPopover,
+			commitCurrentContent,
+			editor,
+			pages,
+			sectionOptions,
+			syncToolbarState,
+		],
+	);
 
-  const {
-    boldActive,
-    italicActive,
-    underlineActive,
-    strikethroughActive,
-    linkActive,
-    structureMode,
-    selectedBlockType,
-    selectedListKind,
-    selectedListMarkerStyle,
-    selectedCodeLanguage,
-    currentFontFamily,
-    currentTextColor,
-    currentHighlightColor,
-  } = toolbarState;
+	const restoreToolbarSelection = useCallback(() => {
+		const selectionToRestore = linkSelection ?? toolbarSelection;
+		if (!selectionToRestore) {
+			return false;
+		}
 
-  useEffect(() => {
-    setFontSizeDraft(toolbarState.currentFontSize);
-  }, [toolbarState.currentFontSize]);
+		ReactEditor.focus(editor);
+		Transforms.select(editor, selectionToRestore);
+		return true;
+	}, [editor, linkSelection, toolbarSelection]);
 
-  useEffect(() => {
-    setLineHeightDraft(String(toolbarState.selectedLineHeight));
-  }, [toolbarState.selectedLineHeight]);
+	const handleBooleanMark = useCallback(
+		(mark: "bold" | "italic" | "underline" | "strikethrough") => {
+			restoreToolbarSelection();
+			toggleMark(editor, mark);
+			syncToolbarState();
+			setSelectionRevision((revision) => revision + 1);
+			requestAnimationFrame(() => {
+				try {
+					ReactEditor.focus(editor);
+				} catch {}
+			});
+		},
+		[editor, restoreToolbarSelection, syncToolbarState],
+	);
 
-  useEffect(() => {
-    setBlockSpacingDraft(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
-  }, [content, contentStyle]);
+	const handleValueMark = useCallback(
+		(
+			mark: "color" | "backgroundColor" | "fontFamily" | "fontSize",
+			value: string,
+		) => {
+			restoreToolbarSelection();
+			setMarkValue(editor, mark, value === "__inherit__" ? "" : value);
+			syncToolbarState();
+			setSelectionRevision((revision) => revision + 1);
+		},
+		[editor, restoreToolbarSelection, syncToolbarState],
+	);
 
-  const syncToolbarState = useCallback(() => {
-    setToolbarState(readToolbarState(editor));
-  }, [editor]);
+	const handleBlockSpacingCommit = useCallback(() => {
+		const parsed = Number.parseFloat(blockSpacingDraft);
+		if (!Number.isFinite(parsed) || parsed < 0) {
+			setBlockSpacingDraft(
+				String(
+					getTextDocumentBlockGap(content) ??
+						readInitialBlockSpacing(contentStyle),
+				),
+			);
+			return;
+		}
+		onUpdateBlockGap(nodeId, parsed);
+	}, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
 
-  const handleKeyDown = useCallback(
-    (event: ReactKeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Escape') {
-        return;
-      }
+	const handleLinkAction = useCallback(() => {
+		if (isLinkActive(editor)) {
+			removeLink(editor);
+			closeLinkPopover();
+			syncToolbarState();
+			setSelectionRevision((revision) => revision + 1);
+			return;
+		}
 
-      const isMod = event.metaKey || event.ctrlKey;
-      if (isMod && event.key === 'Enter') {
-        event.preventDefault();
-        commitCurrentContent();
-        return;
-      }
+		const currentSelection = cloneSelection(editor.selection);
+		setLinkSelection(currentSelection);
+		setLinkPopover({
+			...DEFAULT_LINK_POPOVER,
+			open: true,
+			anchorTargetId: sectionOptions[0]?.id ?? "",
+			href: "",
+			targetPageId: pages[0]?.id ?? "",
+		});
+	}, [closeLinkPopover, editor, pages, sectionOptions, syncToolbarState]);
 
-      if (isMod && event.key === 'b') {
-        event.preventDefault();
-        toggleMark(editor, 'bold');
-        syncToolbarState();
-        setSelectionRevision((revision) => revision + 1);
-        return;
-      }
+	const handleLinkSubmit = useCallback(
+		(event: FormEvent) => {
+			event.preventDefault();
 
-      if (isMod && event.key === 'i') {
-        event.preventDefault();
-        toggleMark(editor, 'italic');
-        syncToolbarState();
-        setSelectionRevision((revision) => revision + 1);
-        return;
-      }
+			if (linkPopover.linkType === "external" && !linkPopover.href.trim()) {
+				setLinkSelection(null);
+				setLinkPopover(DEFAULT_LINK_POPOVER);
+				return;
+			}
 
-      if (isMod && event.key === 'k') {
-        event.preventDefault();
-        if (isLinkActive(editor)) {
-          removeLink(editor);
-          closeLinkPopover();
-          syncToolbarState();
-          setSelectionRevision((revision) => revision + 1);
-        } else {
-          const currentSelection = editor.selection
-            ? {
-                anchor: { ...editor.selection.anchor },
-                focus: { ...editor.selection.focus },
-              }
-            : null;
-          setLinkSelection(currentSelection);
-          setLinkPopover({
-            ...DEFAULT_LINK_POPOVER,
-            open: true,
-            anchorTargetId: sectionOptions[0]?.id ?? '',
-            href: sectionOptions[0]?.href ?? '',
-            targetPageId: pages[0]?.id ?? '',
-          });
-        }
-      }
-    },
-    [closeLinkPopover, commitCurrentContent, editor, pages, sectionOptions, syncToolbarState],
-  );
+			restoreToolbarSelection();
 
-  const restoreToolbarSelection = useCallback(() => {
-    const selectionToRestore = linkSelection ?? toolbarSelection;
-    if (!selectionToRestore) {
-      return false;
-    }
+			insertLink(editor, {
+				type: "link",
+				linkType: linkPopover.linkType,
+				...(linkPopover.linkType === "external"
+					? { href: linkPopover.href.trim(), openInNewTab: false }
+					: {}),
+				...(linkPopover.linkType === "page"
+					? {
+							targetPageId: linkPopover.targetPageId || undefined,
+							pageAnchorId: linkPopover.pageAnchorId || undefined,
+						}
+					: {}),
+				...(linkPopover.linkType === "anchor"
+					? {
+							anchorTargetId:
+								documentModel &&
+								isValidSectionAnchorTarget(
+									documentModel,
+									linkPopover.anchorTargetId,
+								)
+									? linkPopover.anchorTargetId
+									: undefined,
+							href: sectionOptions.find(
+								(option) => option.id === linkPopover.anchorTargetId,
+							)?.href,
+						}
+					: {}),
+			});
+			closeLinkPopover();
+			syncToolbarState();
+			setSelectionRevision((revision) => revision + 1);
+		},
+		[
+			closeLinkPopover,
+			documentModel,
+			editor,
+			linkPopover,
+			restoreToolbarSelection,
+			sectionOptions,
+			syncToolbarState,
+		],
+	);
 
-    ReactEditor.focus(editor);
-    Transforms.select(editor, selectionToRestore);
-    return true;
-  }, [editor, linkSelection, toolbarSelection]);
+	const commitFontSizeDraft = useCallback(() => {
+		handleValueMark("fontSize", fontSizeDraft);
+	}, [fontSizeDraft, handleValueMark]);
 
-  const handleBooleanMark = useCallback((mark: 'bold' | 'italic' | 'underline' | 'strikethrough') => {
-    restoreToolbarSelection();
-    toggleMark(editor, mark);
-    syncToolbarState();
-    setSelectionRevision((revision) => revision + 1);
-    requestAnimationFrame(() => {
-      try {
-        ReactEditor.focus(editor);
-      } catch {}
-    });
-  }, [editor, restoreToolbarSelection, syncToolbarState]);
+	const commitLineHeightDraft = useCallback(() => {
+		const parsed = Number.parseFloat(lineHeightDraft);
+		if (!Number.isFinite(parsed) || parsed <= 0) {
+			setLineHeightDraft(String(toolbarState.selectedLineHeight));
+			return;
+		}
 
-  const handleValueMark = useCallback((mark: 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize', value: string) => {
-    restoreToolbarSelection();
-    setMarkValue(editor, mark, value === '__inherit__' ? '' : value);
-    syncToolbarState();
-    setSelectionRevision((revision) => revision + 1);
-  }, [editor, restoreToolbarSelection, syncToolbarState]);
+		restoreToolbarSelection();
+		setSelectedBlocksLineHeight(editor, parsed);
+		syncToolbarState();
+		setSelectionRevision((revision) => revision + 1);
+	}, [
+		editor,
+		lineHeightDraft,
+		restoreToolbarSelection,
+		syncToolbarState,
+		toolbarState.selectedLineHeight,
+	]);
 
-  const handleBlockSpacingCommit = useCallback(() => {
-    const parsed = Number.parseFloat(blockSpacingDraft);
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      setBlockSpacingDraft(String(getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle)));
-      return;
-    }
-    onUpdateBlockGap(nodeId, parsed);
-  }, [blockSpacingDraft, content, contentStyle, nodeId, onUpdateBlockGap]);
-
-  const handleToolbarDragPointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (event.button !== 0) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {}
-    setToolbarDragState({
-      pointerId: event.pointerId,
-      originX: event.clientX,
-      originY: event.clientY,
-      originOffset: toolbarOffsetRef.current ?? DEFAULT_RICH_TOOLBAR_OFFSET,
-    });
-  }, []);
-
-  const handleLinkAction = useCallback(() => {
-    if (isLinkActive(editor)) {
-      removeLink(editor);
-      closeLinkPopover();
-      syncToolbarState();
-      setSelectionRevision((revision) => revision + 1);
-      return;
-    }
-
-    const currentSelection = cloneSelection(editor.selection);
-    setLinkSelection(currentSelection);
-    setLinkPopover({
-      ...DEFAULT_LINK_POPOVER,
-      open: true,
-      anchorTargetId: sectionOptions[0]?.id ?? '',
-      href: '',
-      targetPageId: pages[0]?.id ?? '',
-    });
-  }, [closeLinkPopover, editor, pages, sectionOptions, syncToolbarState]);
-
-  const handleLinkSubmit = useCallback((event: FormEvent) => {
-    event.preventDefault();
-
-    if (linkPopover.linkType === 'external' && !linkPopover.href.trim()) {
-      setLinkSelection(null);
-      setLinkPopover(DEFAULT_LINK_POPOVER);
-      return;
-    }
-
-    restoreToolbarSelection();
-
-    insertLink(editor, {
-      type: 'link',
-      linkType: linkPopover.linkType,
-      ...(linkPopover.linkType === 'external' ? { href: linkPopover.href.trim(), openInNewTab: false } : {}),
-      ...(linkPopover.linkType === 'page' ? { targetPageId: linkPopover.targetPageId || undefined, pageAnchorId: linkPopover.pageAnchorId || undefined } : {}),
-      ...(linkPopover.linkType === 'anchor'
-        ? {
-            anchorTargetId: documentModel && isValidSectionAnchorTarget(documentModel, linkPopover.anchorTargetId)
-              ? linkPopover.anchorTargetId
-              : undefined,
-            href: sectionOptions.find((option) => option.id === linkPopover.anchorTargetId)?.href,
-          }
-        : {}),
-    });
-    closeLinkPopover();
-    syncToolbarState();
-    setSelectionRevision((revision) => revision + 1);
-  }, [closeLinkPopover, documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions, syncToolbarState]);
-
-  const commitFontSizeDraft = useCallback(() => {
-    handleValueMark('fontSize', fontSizeDraft);
-  }, [fontSizeDraft, handleValueMark]);
-
-  const commitLineHeightDraft = useCallback(() => {
-    const parsed = Number.parseFloat(lineHeightDraft);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setLineHeightDraft(String(toolbarState.selectedLineHeight));
-      return;
-    }
-
-    restoreToolbarSelection();
-    setSelectedBlocksLineHeight(editor, parsed);
-    syncToolbarState();
-    setSelectionRevision((revision) => revision + 1);
-  }, [editor, lineHeightDraft, restoreToolbarSelection, syncToolbarState, toolbarState.selectedLineHeight]);
-
-  return (
-    <Slate
-      editor={editor}
-      initialValue={initialValue}
-      onChange={() => {
-        if (editor.selection) {
-          setToolbarSelection(cloneSelection(editor.selection));
-          setToolbarState(readToolbarState(editor));
-        }
-        setSelectionRevision((revision) => revision + 1);
-      }}
-    >
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: stage edit root only stops propagation into the drag layer */}
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: stage edit root only stops propagation into the drag layer */}
-      <div
-        ref={rootRef}
-        data-stage-rich-edit-root="true"
-        style={{
-          position: 'relative',
-          pointerEvents: 'auto',
-          userSelect: 'text',
-          WebkitUserSelect: 'text',
-        }}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => event.stopPropagation()}
-        onDoubleClick={(event) => event.stopPropagation()}
-      >
-        <FloatingPanelShell
-          ref={toolbarRef}
-          open
-          data-stage-rich-toolbar="true"
-          style={{
-            top: `${toolbarPosition.top}px`,
-            left: `${toolbarPosition.left}px`,
-            zIndex: 220,
-            width: 'max-content',
-            maxWidth: 'calc(100vw - 32px)',
-          pointerEvents: 'auto',
-        }}
-        header={(
-            <button
-              type="button"
-              data-stage-rich-toolbar-drag-handle="true"
-              aria-label="Move text toolbar"
-              className={toolbarDragState ? 'block w-full cursor-grabbing select-none px-3 pt-2 pb-1.5' : 'block w-full cursor-grab select-none px-3 pt-2 pb-1.5'}
-              onClick={(event) => event.preventDefault()}
-              onPointerDown={handleToolbarDragPointerDown}
-            >
-              <div className="editor-border-subtle mx-auto h-1 w-12 rounded-full border bg-[color-mix(in_srgb,var(--editor-border-subtle)_65%,white)]" />
-            </button>
-          )}
-          bodyClassName="space-y-1.5 px-2 py-2"
-          bodyStyle={{ pointerEvents: 'auto', overflowX: 'auto', overflowY: 'hidden' }}
-          onPointerDown={(event) => {
-            event.stopPropagation();
-          }}
-        >
-          <div className="flex items-center gap-1.5">
-            <CompactSelect
-              selectId={RICH_SELECT_IDS.fontFamily}
-              open={openSelectId === RICH_SELECT_IDS.fontFamily}
-              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.fontFamily, open)}
-              label="Font family"
-              value={currentFontFamily}
-              onValueChange={(value) => handleValueMark('fontFamily', value)}
-              options={fontFamilies.map((family) => ({
-                value: family,
-                label: family === '__inherit__' ? 'Inherit' : family,
-              }))}
-              width={132}
-            />
-            <CompactTextField
-              label="Font size"
-              value={fontSizeDraft}
-              placeholder="18px"
-              width={72}
-              onChange={setFontSizeDraft}
-              onBlur={commitFontSizeDraft}
-              onCommit={commitFontSizeDraft}
-            />
-            <ToolbarButton label="Bold" active={boldActive} onActivate={() => handleBooleanMark('bold')}>
-              <span className="font-black tracking-[-0.02em]">B</span>
-            </ToolbarButton>
-            <ToolbarButton label="Italic" active={italicActive} onActivate={() => handleBooleanMark('italic')}>
-              <span className="font-medium italic">I</span>
-            </ToolbarButton>
-            <ToolbarButton label="Underline" active={underlineActive} onActivate={() => handleBooleanMark('underline')}>
-              <span className="underline">U</span>
-            </ToolbarButton>
-            <ToolbarButton label="Strikethrough" active={strikethroughActive} onActivate={() => handleBooleanMark('strikethrough')}>
-              <span className="line-through">S</span>
-            </ToolbarButton>
-            <CompactColorField label="Text color" value={currentTextColor} onChange={(value) => handleValueMark('color', value)} />
-            <CompactColorField label="Highlight color" value={currentHighlightColor} onChange={(value) => handleValueMark('backgroundColor', value)} />
-            <ToolbarButton label={linkActive ? 'Unlink' : 'Link'} active={linkActive || linkPopover.open} onActivate={handleLinkAction}>
-              <Link2 size={14} />
-            </ToolbarButton>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <ToolbarButton
-              label="Use text block"
-              active={structureMode === 'block'}
-              onActivate={() => {
-                restoreToolbarSelection();
-                convertSelectionToBlockType(editor, selectedBlockType);
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-            >
-              <Type size={14} />
-            </ToolbarButton>
-            <CompactSelect
-              selectId={RICH_SELECT_IDS.blockType}
-              open={openSelectId === RICH_SELECT_IDS.blockType}
-              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.blockType, open)}
-              label="Block type"
-              value={selectedBlockType}
-              onValueChange={(value) => {
-                restoreToolbarSelection();
-                convertSelectionToBlockType(editor, value as RichTextBlockType);
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-              options={BLOCK_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-              width={112}
-            />
-            <ToolbarButton
-              label="Use code block"
-              active={structureMode === 'code-block'}
-              onActivate={() => {
-                restoreToolbarSelection();
-                convertSelectionToCodeBlock(editor, selectedCodeLanguage || 'plaintext');
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-            >
-              <Code2 size={14} />
-            </ToolbarButton>
-            <ToolbarButton
-              label="Use ordered list"
-              active={selectedListKind === 'ol'}
-              onActivate={() => {
-                restoreToolbarSelection();
-                convertSelectionToList(editor, 'ol');
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-            >
-              <ListOrdered size={14} />
-            </ToolbarButton>
-            <CompactSelect
-              selectId={RICH_SELECT_IDS.orderedListMarker}
-              open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
-              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.orderedListMarker, open)}
-              label="Ordered list marker"
-              value={selectedListKind === 'ol' ? selectedListMarkerStyle || 'decimal' : 'decimal'}
-              onValueChange={(value) => {
-                restoreToolbarSelection();
-                setSelectedListMarkerStyle(editor, value as typeof ORDERED_MARKER_OPTIONS[number]['value']);
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-              options={ORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-              width={88}
-            />
-            <ToolbarButton
-              label="Use unordered list"
-              active={selectedListKind === 'ul'}
-              onActivate={() => {
-                restoreToolbarSelection();
-                convertSelectionToList(editor, 'ul');
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-            >
-              <List size={14} />
-            </ToolbarButton>
-            <CompactSelect
-              selectId={RICH_SELECT_IDS.unorderedListMarker}
-              open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
-              onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.unorderedListMarker, open)}
-              label="Unordered list marker"
-              value={selectedListKind === 'ul' ? selectedListMarkerStyle || 'disc' : 'disc'}
-              onValueChange={(value) => {
-                restoreToolbarSelection();
-                setSelectedListMarkerStyle(editor, value as typeof UNORDERED_MARKER_OPTIONS[number]['value']);
-                syncToolbarState();
-                setSelectionRevision((revision) => revision + 1);
-              }}
-              options={UNORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-              width={92}
-            />
-            {structureMode === 'code-block' ? (
-              <CompactSelect
-                selectId={RICH_SELECT_IDS.codeLanguage}
-                open={openSelectId === RICH_SELECT_IDS.codeLanguage}
-                onOpenChange={(open) => handleSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)}
-                label="Code language"
-                value={selectedCodeLanguage || 'plaintext'}
-                onValueChange={(value) => {
-                  restoreToolbarSelection();
-                  setSelectedCodeBlockLanguage(editor, value);
-                  syncToolbarState();
-                  setSelectionRevision((revision) => revision + 1);
-                }}
-                options={CODE_LANGUAGE_OPTIONS}
-                width={110}
-              />
-            ) : null}
-            <CompactTextField
-              label="Line height"
-              value={lineHeightDraft}
-              placeholder="1.2"
-              width={64}
-              onChange={setLineHeightDraft}
-              onBlur={commitLineHeightDraft}
-              onCommit={commitLineHeightDraft}
-            />
-            <CompactTextField
-              label="Block spacing"
-              value={blockSpacingDraft}
-              placeholder="0"
-              width={68}
-              onChange={setBlockSpacingDraft}
-              onBlur={handleBlockSpacingCommit}
-              onCommit={handleBlockSpacingCommit}
-            />
-          </div>
-        </FloatingPanelShell>
-        <div
-          data-stage-rich-edit-box="true"
-          style={{
-            ...contentStyle,
-            minHeight,
-            padding: 0,
-            borderRadius: 0,
-            border: 0,
-            background: 'transparent',
-            boxShadow: 'none',
-            pointerEvents: 'auto',
-            cursor: 'text',
-            userSelect: 'text',
-            WebkitUserSelect: 'text',
-          }}
-        >
-          <Editable
-            renderLeaf={renderEditLeaf}
-            renderElement={(props) => renderEditElement(props, documentModel)}
-            onKeyDown={handleKeyDown}
-            style={{
-              outline: 'none',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              minHeight,
-              pointerEvents: 'auto',
-              userSelect: 'text',
-              WebkitUserSelect: 'text',
-            }}
-          />
-        </div>
-        {linkPopover.open ? (
-          <LinkInsertPopover
-            draft={linkPopover}
-            placement={toolbarPlacement}
-            toolbarLeft={toolbarPosition.left}
-            toolbarTop={toolbarPosition.top}
-            toolbarWidth={toolbarWidth}
-            pages={pages}
-            sectionOptions={sectionOptions}
-            targetPageSectionOptions={targetPageSectionOptions}
-            onChange={setLinkPopover}
-            onCancel={() => {
-              closeLinkPopover();
-            }}
-            openSelectId={openSelectId}
-            onSelectOpenChange={handleSelectOpenChange}
-            onSubmit={handleLinkSubmit}
-          />
-        ) : null}
-        <span hidden>{selectionRevision}</span>
-      </div>
-    </Slate>
-  );
+	return (
+		<Slate
+			editor={editor}
+			initialValue={initialValue}
+			onChange={() => {
+				if (editor.selection) {
+					setToolbarSelection(cloneSelection(editor.selection));
+					setToolbarState(readToolbarState(editor));
+				}
+				setSelectionRevision((revision) => revision + 1);
+			}}
+		>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: stage edit root only stops propagation into the drag layer */}
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: stage edit root only stops propagation into the drag layer */}
+			<div
+				ref={rootRef}
+				data-stage-rich-edit-root="true"
+				style={{
+					position: "relative",
+					pointerEvents: "auto",
+					userSelect: "text",
+					WebkitUserSelect: "text",
+				}}
+				onPointerDown={(event) => event.stopPropagation()}
+				onClick={(event) => event.stopPropagation()}
+				onDoubleClick={(event) => event.stopPropagation()}
+			>
+				<FloatingPanelShell
+					ref={toolbarRef}
+					open
+					data-stage-rich-toolbar="true"
+					style={{
+						top: `${toolbarPosition.top}px`,
+						left: `${toolbarPosition.left}px`,
+						zIndex: 220,
+						width: "max-content",
+						maxWidth: "calc(100vw - 32px)",
+						pointerEvents: "auto",
+					}}
+					bodyClassName="px-2 py-2"
+					bodyStyle={{
+						pointerEvents: "auto",
+						overflowX: "auto",
+						overflowY: "hidden",
+					}}
+					onPointerDown={(event) => {
+						event.stopPropagation();
+					}}
+				>
+					<div className="space-y-1.5">
+						<div className="flex items-center gap-1.5">
+							<CompactSelect
+								selectId={RICH_SELECT_IDS.fontFamily}
+								open={openSelectId === RICH_SELECT_IDS.fontFamily}
+								onOpenChange={(open) =>
+									handleSelectOpenChange(RICH_SELECT_IDS.fontFamily, open)
+								}
+								label="Font family"
+								value={currentFontFamily}
+								onValueChange={(value) => handleValueMark("fontFamily", value)}
+								options={fontFamilies.map((family) => ({
+									value: family,
+									label: family === "__inherit__" ? "Inherit" : family,
+								}))}
+								width={132}
+							/>
+							<CompactTextField
+								label="Font size"
+								value={fontSizeDraft}
+								placeholder="18px"
+								width={72}
+								onChange={setFontSizeDraft}
+								onBlur={commitFontSizeDraft}
+								onCommit={commitFontSizeDraft}
+							/>
+							<ToolbarButton
+								label="Bold"
+								active={boldActive}
+								onActivate={() => handleBooleanMark("bold")}
+							>
+								<span className="font-black tracking-[-0.02em]">B</span>
+							</ToolbarButton>
+							<ToolbarButton
+								label="Italic"
+								active={italicActive}
+								onActivate={() => handleBooleanMark("italic")}
+							>
+								<span className="font-medium italic">I</span>
+							</ToolbarButton>
+							<ToolbarButton
+								label="Underline"
+								active={underlineActive}
+								onActivate={() => handleBooleanMark("underline")}
+							>
+								<span className="underline">U</span>
+							</ToolbarButton>
+							<ToolbarButton
+								label="Strikethrough"
+								active={strikethroughActive}
+								onActivate={() => handleBooleanMark("strikethrough")}
+							>
+								<span className="line-through">S</span>
+							</ToolbarButton>
+							<CompactColorField
+								label="Text color"
+								value={currentTextColor}
+								onChange={(value) => handleValueMark("color", value)}
+							/>
+							<CompactColorField
+								label="Highlight color"
+								value={currentHighlightColor}
+								onChange={(value) => handleValueMark("backgroundColor", value)}
+							/>
+							<ToolbarButton
+								label={linkActive ? "Unlink" : "Link"}
+								active={linkActive || linkPopover.open}
+								onActivate={handleLinkAction}
+							>
+								<Link2 size={14} />
+							</ToolbarButton>
+						</div>
+						<div className="flex items-center gap-1.5">
+							<ToolbarButton
+								label="Use text block"
+								active={structureMode === "block"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									convertSelectionToBlockType(editor, selectedBlockType);
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<Type size={14} />
+							</ToolbarButton>
+							<CompactSelect
+								selectId={RICH_SELECT_IDS.blockType}
+								open={openSelectId === RICH_SELECT_IDS.blockType}
+								onOpenChange={(open) =>
+									handleSelectOpenChange(RICH_SELECT_IDS.blockType, open)
+								}
+								label="Block type"
+								value={selectedBlockType}
+								onValueChange={(value) => {
+									restoreToolbarSelection();
+									convertSelectionToBlockType(
+										editor,
+										value as RichTextBlockType,
+									);
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+								options={BLOCK_TYPE_OPTIONS.map((option) => ({
+									value: option.value,
+									label: option.label,
+								}))}
+								width={112}
+							/>
+							<ToolbarButton
+								label="Use code block"
+								active={structureMode === "code-block"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									convertSelectionToCodeBlock(
+										editor,
+										selectedCodeLanguage || "plaintext",
+									);
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<Code2 size={14} />
+							</ToolbarButton>
+							<ToolbarButton
+								label="Use ordered list"
+								active={selectedListKind === "ol"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									convertSelectionToList(editor, "ol");
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<ListOrdered size={14} />
+							</ToolbarButton>
+							<CompactSelect
+								selectId={RICH_SELECT_IDS.orderedListMarker}
+								open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
+								onOpenChange={(open) =>
+									handleSelectOpenChange(
+										RICH_SELECT_IDS.orderedListMarker,
+										open,
+									)
+								}
+								label="Ordered list marker"
+								value={
+									selectedListKind === "ol"
+										? selectedListMarkerStyle || "decimal"
+										: "decimal"
+								}
+								onValueChange={(value) => {
+									restoreToolbarSelection();
+									setSelectedListMarkerStyle(
+										editor,
+										value as (typeof ORDERED_MARKER_OPTIONS)[number]["value"],
+									);
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+								options={ORDERED_MARKER_OPTIONS.map((option) => ({
+									value: option.value,
+									label: option.label,
+								}))}
+								width={88}
+							/>
+							<ToolbarButton
+								label="Use unordered list"
+								active={selectedListKind === "ul"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									convertSelectionToList(editor, "ul");
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<List size={14} />
+							</ToolbarButton>
+							<CompactSelect
+								selectId={RICH_SELECT_IDS.unorderedListMarker}
+								open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
+								onOpenChange={(open) =>
+									handleSelectOpenChange(
+										RICH_SELECT_IDS.unorderedListMarker,
+										open,
+									)
+								}
+								label="Unordered list marker"
+								value={
+									selectedListKind === "ul"
+										? selectedListMarkerStyle || "disc"
+										: "disc"
+								}
+								onValueChange={(value) => {
+									restoreToolbarSelection();
+									setSelectedListMarkerStyle(
+										editor,
+										value as (typeof UNORDERED_MARKER_OPTIONS)[number]["value"],
+									);
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+								options={UNORDERED_MARKER_OPTIONS.map((option) => ({
+									value: option.value,
+									label: option.label,
+								}))}
+								width={92}
+							/>
+							{structureMode === "code-block" ? (
+								<CompactSelect
+									selectId={RICH_SELECT_IDS.codeLanguage}
+									open={openSelectId === RICH_SELECT_IDS.codeLanguage}
+									onOpenChange={(open) =>
+										handleSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)
+									}
+									label="Code language"
+									value={selectedCodeLanguage || "plaintext"}
+									onValueChange={(value) => {
+										restoreToolbarSelection();
+										setSelectedCodeBlockLanguage(editor, value);
+										syncToolbarState();
+										setSelectionRevision((revision) => revision + 1);
+									}}
+									options={CODE_LANGUAGE_OPTIONS}
+									width={110}
+								/>
+							) : null}
+							<CompactTextField
+								label="Line height"
+								value={lineHeightDraft}
+								placeholder="1.2"
+								width={64}
+								onChange={setLineHeightDraft}
+								onBlur={commitLineHeightDraft}
+								onCommit={commitLineHeightDraft}
+							/>
+							<CompactTextField
+								label="Block spacing"
+								value={blockSpacingDraft}
+								placeholder="0"
+								width={68}
+								onChange={setBlockSpacingDraft}
+								onBlur={handleBlockSpacingCommit}
+								onCommit={handleBlockSpacingCommit}
+							/>
+						</div>
+					</div>
+				</FloatingPanelShell>
+				<div
+					data-stage-rich-edit-box="true"
+					style={{
+						...contentStyle,
+						minHeight,
+						padding: 0,
+						borderRadius: 0,
+						border: 0,
+						background: "transparent",
+						boxShadow: "none",
+						pointerEvents: "auto",
+						cursor: "text",
+						userSelect: "text",
+						WebkitUserSelect: "text",
+					}}
+				>
+					<Editable
+						renderLeaf={renderEditLeaf}
+						renderElement={(props) => renderEditElement(props, documentModel)}
+						onKeyDown={handleKeyDown}
+						style={{
+							outline: "none",
+							whiteSpace: "pre-wrap",
+							wordBreak: "break-word",
+							minHeight,
+							pointerEvents: "auto",
+							userSelect: "text",
+							WebkitUserSelect: "text",
+						}}
+					/>
+				</div>
+				{linkPopover.open ? (
+					<LinkInsertPopover
+						draft={linkPopover}
+						placement={toolbarPlacement}
+						toolbarLeft={toolbarPosition.left}
+						toolbarTop={toolbarPosition.top}
+						toolbarWidth={toolbarWidth}
+						pages={pages}
+						sectionOptions={sectionOptions}
+						targetPageSectionOptions={targetPageSectionOptions}
+						onChange={setLinkPopover}
+						onCancel={() => {
+							closeLinkPopover();
+						}}
+						openSelectId={openSelectId}
+						onSelectOpenChange={handleSelectOpenChange}
+						onSubmit={handleLinkSubmit}
+					/>
+				) : null}
+				<span hidden>{selectionRevision}</span>
+			</div>
+		</Slate>
+	);
 }
 
 function ToolbarButton({
-  label,
-  active,
-  onActivate,
-  children,
+	label,
+	active,
+	onActivate,
+	children,
 }: {
-  label: string;
-  active: boolean;
-  onActivate: () => void;
-  children: React.ReactNode;
+	label: string;
+	active: boolean;
+	onActivate: () => void;
+	children: React.ReactNode;
 }) {
-  return (
-    <PopoverTooltip
-      side="top"
-      align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
-      content={<div className="leading-3.5 font-medium">{label}</div>}
-    >
-      <Button
-        type="button"
-        variant={active ? 'default' : 'outline'}
-        size="sm"
-        aria-label={label}
-        aria-pressed={active}
-        className="pointer-events-auto h-8 w-8 shrink-0 rounded-sm p-0 text-xs"
-        style={{ pointerEvents: 'auto' }}
-        onPointerDown={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
-        onClick={onActivate}
-      >
-        {children}
-      </Button>
-    </PopoverTooltip>
-  );
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			<Button
+				type="button"
+				variant={active ? "default" : "outline"}
+				size="sm"
+				aria-label={label}
+				aria-pressed={active}
+				className="pointer-events-auto h-8 w-8 shrink-0 rounded-sm p-0 text-xs"
+				style={{ pointerEvents: "auto" }}
+				onPointerDown={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+				}}
+				onClick={onActivate}
+			>
+				{children}
+			</Button>
+		</PopoverTooltip>
+	);
 }
 
 function preserveRichSelectionPointerDown(event: {
-  preventDefault: () => void;
-  stopPropagation: () => void;
+	preventDefault: () => void;
+	stopPropagation: () => void;
 }) {
-  event.preventDefault();
-  event.stopPropagation();
+	event.preventDefault();
+	event.stopPropagation();
 }
 
 function CompactSelect({
-  selectId,
-  open,
-  onOpenChange,
-  label,
-  value,
-  onValueChange,
-  options,
-  width,
+	selectId,
+	open,
+	onOpenChange,
+	label,
+	value,
+	onValueChange,
+	options,
+	width,
 }: {
-  selectId: RichEditSelectId;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  label: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  options: Array<{ value: string; label: string }>;
-  width: number;
+	selectId: RichEditSelectId;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	label: string;
+	value: string;
+	onValueChange: (value: string) => void;
+	options: Array<{ value: string; label: string }>;
+	width: number;
 }) {
-  return (
-    <PopoverTooltip
-      side="top"
-      align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
-      content={<div className="leading-3.5 font-medium">{label}</div>}
-    >
-      <Select open={open} onOpenChange={onOpenChange} value={value} onValueChange={onValueChange}>
-        <SelectTrigger
-          data-stage-rich-select-id={selectId}
-          aria-label={label}
-          size="compact"
-          className="pointer-events-auto h-8 shrink-0 rounded-sm text-xs"
-          style={{ width, pointerEvents: 'auto' }}
-          onPointerDown={preserveRichSelectionPointerDown}
-        >
-          <span className="truncate text-left">
-            {options.find((option) => option.value === value)?.label ?? label}
-          </span>
-        </SelectTrigger>
-        <SelectContent data-stage-rich-select-id={selectId}>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </PopoverTooltip>
-  );
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			<Select
+				open={open}
+				onOpenChange={onOpenChange}
+				value={value}
+				onValueChange={onValueChange}
+			>
+				<SelectTrigger
+					data-stage-rich-select-id={selectId}
+					aria-label={label}
+					size="compact"
+					className="pointer-events-auto h-8 shrink-0 rounded-sm text-xs"
+					style={{ width, pointerEvents: "auto" }}
+					onPointerDown={preserveRichSelectionPointerDown}
+				>
+					<span className="truncate text-left">
+						{options.find((option) => option.value === value)?.label ?? label}
+					</span>
+				</SelectTrigger>
+				<SelectContent data-stage-rich-select-id={selectId}>
+					{options.map((option) => (
+						<SelectItem key={option.value} value={option.value}>
+							{option.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</PopoverTooltip>
+	);
 }
 
 function CompactTextField({
-  label,
-  value,
-  placeholder,
-  width,
-  onChange,
-  onBlur,
-  onCommit,
+	label,
+	value,
+	placeholder,
+	width,
+	onChange,
+	onBlur,
+	onCommit,
 }: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  width: number;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-  onCommit?: () => void;
+	label: string;
+	value: string;
+	placeholder?: string;
+	width: number;
+	onChange: (value: string) => void;
+	onBlur?: () => void;
+	onCommit?: () => void;
 }) {
-  return (
-    <PopoverTooltip
-      side="top"
-      align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
-      content={<div className="leading-3.5 font-medium">{label}</div>}
-    >
-      <Input
-        aria-label={label}
-        value={value}
-        placeholder={placeholder}
-        className="pointer-events-auto h-8 shrink-0 rounded-sm px-2 text-xs"
-        style={{ width, pointerEvents: 'auto' }}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-        }}
-        onChange={(event) => onChange(event.target.value)}
-        onBlur={onBlur}
-        onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            onCommit?.();
-            return;
-          }
-          if (event.key === 'Escape') {
-            event.preventDefault();
-            (event.target as HTMLInputElement).blur();
-          }
-        }}
-      />
-    </PopoverTooltip>
-  );
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			<Input
+				aria-label={label}
+				value={value}
+				placeholder={placeholder}
+				className="pointer-events-auto h-8 shrink-0 rounded-sm px-2 text-xs"
+				style={{ width, pointerEvents: "auto" }}
+				onPointerDown={(event) => {
+					event.stopPropagation();
+				}}
+				onChange={(event) => onChange(event.target.value)}
+				onBlur={onBlur}
+				onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
+					if (event.key === "Enter") {
+						event.preventDefault();
+						onCommit?.();
+						return;
+					}
+					if (event.key === "Escape") {
+						event.preventDefault();
+						(event.target as HTMLInputElement).blur();
+					}
+				}}
+			/>
+		</PopoverTooltip>
+	);
 }
 
 function CompactColorField({
-  label,
-  value,
-  onChange,
+	label,
+	value,
+	onChange,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
+	label: string;
+	value: string;
+	onChange: (value: string) => void;
 }) {
-  return (
-    <PopoverTooltip
-      side="top"
-      align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
-      content={<div className="leading-3.5 font-medium">{label}</div>}
-    >
-      <input
-        aria-label={label}
-        type="color"
-        value={value}
-        className="pointer-events-auto h-8 w-8 shrink-0 cursor-pointer rounded-sm border border-[color:var(--editor-border-subtle)] bg-transparent p-0"
-        style={{ pointerEvents: 'auto' }}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-        }}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </PopoverTooltip>
-  );
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			<input
+				aria-label={label}
+				type="color"
+				value={value}
+				className="pointer-events-auto h-8 w-8 shrink-0 cursor-pointer rounded-sm border border-[color:var(--editor-border-subtle)] bg-transparent p-0"
+				style={{ pointerEvents: "auto" }}
+				onPointerDown={(event) => {
+					event.stopPropagation();
+				}}
+				onChange={(event) => onChange(event.target.value)}
+			/>
+		</PopoverTooltip>
+	);
 }
 
 function LinkInsertPopover({
-  draft,
-  placement,
-  toolbarLeft,
-  toolbarTop,
-  toolbarWidth,
-  pages,
-  sectionOptions,
-  targetPageSectionOptions,
-  onChange,
-  onCancel,
-  openSelectId,
-  onSelectOpenChange,
-  onSubmit,
+	draft,
+	placement,
+	toolbarLeft,
+	toolbarTop,
+	toolbarWidth,
+	pages,
+	sectionOptions,
+	targetPageSectionOptions,
+	onChange,
+	onCancel,
+	openSelectId,
+	onSelectOpenChange,
+	onSubmit,
 }: {
-  draft: LinkPopoverDraft;
-  placement: 'above' | 'below';
-  toolbarLeft: number;
-  toolbarTop: number;
-  toolbarWidth: number;
-  pages: NonNullable<DocumentModel['pages']>;
-  sectionOptions: ReturnType<typeof getSectionAnchorOptions>;
-  targetPageSectionOptions: Array<{ id: string; name: string }>;
-  onChange: (draft: LinkPopoverDraft) => void;
-  onCancel: () => void;
-  openSelectId: RichEditSelectId | null;
-  onSelectOpenChange: (selectId: RichEditSelectId, open: boolean) => void;
-  onSubmit: (event: FormEvent) => void;
+	draft: LinkPopoverDraft;
+	placement: "above" | "below";
+	toolbarLeft: number;
+	toolbarTop: number;
+	toolbarWidth: number;
+	pages: NonNullable<DocumentModel["pages"]>;
+	sectionOptions: ReturnType<typeof getSectionAnchorOptions>;
+	targetPageSectionOptions: Array<{ id: string; name: string }>;
+	onChange: (draft: LinkPopoverDraft) => void;
+	onCancel: () => void;
+	openSelectId: RichEditSelectId | null;
+	onSelectOpenChange: (selectId: RichEditSelectId, open: boolean) => void;
+	onSubmit: (event: FormEvent) => void;
 }) {
-  return (
-    <FloatingPanelShell
-      suppressPopover
-      open
-      data-stage-rich-link-popover="true"
-      positionMode="fixed"
-      style={{
-        top: `${toolbarTop}px`,
-        left: `${toolbarLeft + toolbarWidth}px`,
-        zIndex: 230,
-        transform: placement === 'above'
-          ? 'translate(-100%, calc(-100% - 18px))'
-          : 'translate(-100%, calc(100% + 18px))',
-        minWidth: 320,
-        pointerEvents: 'auto',
-      }}
-      bodyClassName="space-y-2 px-3 py-3"
-      bodyStyle={{ pointerEvents: 'auto' }}
-      onPointerDown={(event) => event.stopPropagation()}
-    >
-      <form className="space-y-2" onSubmit={onSubmit}>
-        <CompactSelect
-          selectId={RICH_SELECT_IDS.linkType}
-          open={openSelectId === RICH_SELECT_IDS.linkType}
-          onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.linkType, open)}
-          label="Link type"
-          value={draft.linkType}
-          onValueChange={(value) => onChange({ ...draft, linkType: value as LinkPopoverDraft['linkType'] })}
-          options={[
-            { value: 'external', label: 'External' },
-            { value: 'anchor', label: 'Internal' },
-            ...(pages.length > 0 ? [{ value: 'page', label: 'Page' }] : []),
-          ]}
-          width={120}
-        />
-        {draft.linkType === 'external' ? (
-          <Input
-            autoFocus
-            aria-label="Link URL"
-            type="url"
-            placeholder="https://example.com"
-            className="pointer-events-auto"
-            style={{ pointerEvents: 'auto' }}
-            value={draft.href}
-            onChange={(event) => onChange({ ...draft, href: event.target.value })}
-          />
-        ) : draft.linkType === 'anchor' ? (
-          <Select
-            open={openSelectId === RICH_SELECT_IDS.sectionTarget}
-            onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.sectionTarget, open)}
-            value={draft.anchorTargetId}
-            onValueChange={(value) => onChange({ ...draft, anchorTargetId: value })}
-          >
-            <SelectTrigger
-              data-stage-rich-select-id={RICH_SELECT_IDS.sectionTarget}
-              aria-label="Section target"
-              className="pointer-events-auto"
-              style={{ pointerEvents: 'auto' }}
-              onPointerDown={preserveRichSelectionPointerDown}
-            >
-              <span className="truncate text-left">
-                {sectionOptions.find((option) => option.id === draft.anchorTargetId)?.name ?? 'Select section'}
-              </span>
-            </SelectTrigger>
-            <SelectContent data-stage-rich-select-id={RICH_SELECT_IDS.sectionTarget}>
-              {sectionOptions.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="space-y-2">
-            <Select
-              open={openSelectId === RICH_SELECT_IDS.targetPage}
-              onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.targetPage, open)}
-              value={draft.targetPageId}
-              onValueChange={(value) => onChange({ ...draft, targetPageId: value })}
-            >
-              <SelectTrigger
-                data-stage-rich-select-id={RICH_SELECT_IDS.targetPage}
-                aria-label="Target page"
-                className="pointer-events-auto"
-                style={{ pointerEvents: 'auto' }}
-                onPointerDown={preserveRichSelectionPointerDown}
-              >
-                <span className="truncate text-left">
-                  {pages.find((page) => page.id === draft.targetPageId)?.displayName ?? 'Select page'}
-                </span>
-              </SelectTrigger>
-              <SelectContent data-stage-rich-select-id={RICH_SELECT_IDS.targetPage}>
-                {pages.map((page) => (
-                  <SelectItem key={page.id} value={page.id}>
-                    {page.displayName || page.slug || page.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {targetPageSectionOptions.length > 0 ? (
-              <Select
-                open={openSelectId === RICH_SELECT_IDS.targetPageSection}
-                onOpenChange={(open) => onSelectOpenChange(RICH_SELECT_IDS.targetPageSection, open)}
-                value={draft.pageAnchorId || '__none__'}
-                onValueChange={(value) => onChange({ ...draft, pageAnchorId: value === '__none__' ? '' : value })}
-              >
-                <SelectTrigger
-                  data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}
-                  aria-label="Target page section"
-                  className="pointer-events-auto"
-                  style={{ pointerEvents: 'auto' }}
-                  onPointerDown={preserveRichSelectionPointerDown}
-                >
-                  <span className="truncate text-left">
-                    {draft.pageAnchorId
-                      ? (targetPageSectionOptions.find((option) => option.id === draft.pageAnchorId)?.name ?? draft.pageAnchorId)
-                      : 'No section jump'}
-                  </span>
-                </SelectTrigger>
-                <SelectContent data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}>
-                  <SelectItem value="__none__">No section jump</SelectItem>
-                  {targetPageSectionOptions.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : null}
-          </div>
-        )}
-        <div className="flex items-center justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" className="pointer-events-auto" style={{ pointerEvents: 'auto' }} onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" size="sm" className="pointer-events-auto" style={{ pointerEvents: 'auto' }}>
-            Apply
-          </Button>
-        </div>
-      </form>
-    </FloatingPanelShell>
-  );
+	return (
+		<FloatingPanelShell
+			suppressPopover
+			open
+			data-stage-rich-link-popover="true"
+			positionMode="fixed"
+			style={{
+				top: `${toolbarTop}px`,
+				left: `${toolbarLeft + toolbarWidth}px`,
+				zIndex: 230,
+				transform:
+					placement === "above"
+						? "translate(-100%, calc(-100% - 18px))"
+						: "translate(-100%, calc(100% + 18px))",
+				minWidth: 320,
+				pointerEvents: "auto",
+			}}
+			bodyClassName="space-y-2 px-3 py-3"
+			bodyStyle={{ pointerEvents: "auto" }}
+			onPointerDown={(event) => event.stopPropagation()}
+		>
+			<form className="space-y-2" onSubmit={onSubmit}>
+				<CompactSelect
+					selectId={RICH_SELECT_IDS.linkType}
+					open={openSelectId === RICH_SELECT_IDS.linkType}
+					onOpenChange={(open) =>
+						onSelectOpenChange(RICH_SELECT_IDS.linkType, open)
+					}
+					label="Link type"
+					value={draft.linkType}
+					onValueChange={(value) =>
+						onChange({
+							...draft,
+							linkType: value as LinkPopoverDraft["linkType"],
+						})
+					}
+					options={[
+						{ value: "external", label: "External" },
+						{ value: "anchor", label: "Internal" },
+						...(pages.length > 0 ? [{ value: "page", label: "Page" }] : []),
+					]}
+					width={120}
+				/>
+				{draft.linkType === "external" ? (
+					<Input
+						autoFocus
+						aria-label="Link URL"
+						type="url"
+						placeholder="https://example.com"
+						className="pointer-events-auto"
+						style={{ pointerEvents: "auto" }}
+						value={draft.href}
+						onChange={(event) =>
+							onChange({ ...draft, href: event.target.value })
+						}
+					/>
+				) : draft.linkType === "anchor" ? (
+					<Select
+						open={openSelectId === RICH_SELECT_IDS.sectionTarget}
+						onOpenChange={(open) =>
+							onSelectOpenChange(RICH_SELECT_IDS.sectionTarget, open)
+						}
+						value={draft.anchorTargetId}
+						onValueChange={(value) =>
+							onChange({ ...draft, anchorTargetId: value })
+						}
+					>
+						<SelectTrigger
+							data-stage-rich-select-id={RICH_SELECT_IDS.sectionTarget}
+							aria-label="Section target"
+							className="pointer-events-auto"
+							style={{ pointerEvents: "auto" }}
+							onPointerDown={preserveRichSelectionPointerDown}
+						>
+							<span className="truncate text-left">
+								{sectionOptions.find(
+									(option) => option.id === draft.anchorTargetId,
+								)?.name ?? "Select section"}
+							</span>
+						</SelectTrigger>
+						<SelectContent
+							data-stage-rich-select-id={RICH_SELECT_IDS.sectionTarget}
+						>
+							{sectionOptions.map((option) => (
+								<SelectItem key={option.id} value={option.id}>
+									{option.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				) : (
+					<div className="space-y-2">
+						<Select
+							open={openSelectId === RICH_SELECT_IDS.targetPage}
+							onOpenChange={(open) =>
+								onSelectOpenChange(RICH_SELECT_IDS.targetPage, open)
+							}
+							value={draft.targetPageId}
+							onValueChange={(value) =>
+								onChange({ ...draft, targetPageId: value })
+							}
+						>
+							<SelectTrigger
+								data-stage-rich-select-id={RICH_SELECT_IDS.targetPage}
+								aria-label="Target page"
+								className="pointer-events-auto"
+								style={{ pointerEvents: "auto" }}
+								onPointerDown={preserveRichSelectionPointerDown}
+							>
+								<span className="truncate text-left">
+									{pages.find((page) => page.id === draft.targetPageId)
+										?.displayName ?? "Select page"}
+								</span>
+							</SelectTrigger>
+							<SelectContent
+								data-stage-rich-select-id={RICH_SELECT_IDS.targetPage}
+							>
+								{pages.map((page) => (
+									<SelectItem key={page.id} value={page.id}>
+										{page.displayName || page.slug || page.id}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						{targetPageSectionOptions.length > 0 ? (
+							<Select
+								open={openSelectId === RICH_SELECT_IDS.targetPageSection}
+								onOpenChange={(open) =>
+									onSelectOpenChange(RICH_SELECT_IDS.targetPageSection, open)
+								}
+								value={draft.pageAnchorId || "__none__"}
+								onValueChange={(value) =>
+									onChange({
+										...draft,
+										pageAnchorId: value === "__none__" ? "" : value,
+									})
+								}
+							>
+								<SelectTrigger
+									data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}
+									aria-label="Target page section"
+									className="pointer-events-auto"
+									style={{ pointerEvents: "auto" }}
+									onPointerDown={preserveRichSelectionPointerDown}
+								>
+									<span className="truncate text-left">
+										{draft.pageAnchorId
+											? (targetPageSectionOptions.find(
+													(option) => option.id === draft.pageAnchorId,
+												)?.name ?? draft.pageAnchorId)
+											: "No section jump"}
+									</span>
+								</SelectTrigger>
+								<SelectContent
+									data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}
+								>
+									<SelectItem value="__none__">No section jump</SelectItem>
+									{targetPageSectionOptions.map((option) => (
+										<SelectItem key={option.id} value={option.id}>
+											{option.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						) : null}
+					</div>
+				)}
+				<div className="flex items-center justify-end gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="pointer-events-auto"
+						style={{ pointerEvents: "auto" }}
+						onClick={onCancel}
+					>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						size="sm"
+						className="pointer-events-auto"
+						style={{ pointerEvents: "auto" }}
+					>
+						Apply
+					</Button>
+				</div>
+			</form>
+		</FloatingPanelShell>
+	);
 }
 
-function readInitialBlockSpacing(contentStyle: CSSProperties | undefined): number {
-  const rowGap = contentStyle?.rowGap;
-  if (typeof rowGap === 'number') {
-    return rowGap;
-  }
-  if (typeof rowGap === 'string') {
-    const parsed = Number.parseFloat(rowGap);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return 0;
+function readInitialBlockSpacing(
+	contentStyle: CSSProperties | undefined,
+): number {
+	const rowGap = contentStyle?.rowGap;
+	if (typeof rowGap === "number") {
+		return rowGap;
+	}
+	if (typeof rowGap === "string") {
+		const parsed = Number.parseFloat(rowGap);
+		if (Number.isFinite(parsed)) {
+			return parsed;
+		}
+	}
+	return 0;
 }
 
 function normalizeColorInputValue(color: string, fallback: string): string {
-  if (/^#[0-9a-f]{6}$/i.test(color)) {
-    return color;
-  }
-  if (/^#[0-9a-f]{3}$/i.test(color)) {
-    const [, r, g, b] = color;
-    return `#${r}${r}${g}${g}${b}${b}`;
-  }
-  return fallback;
+	if (/^#[0-9a-f]{6}$/i.test(color)) {
+		return color;
+	}
+	if (/^#[0-9a-f]{3}$/i.test(color)) {
+		const [, r, g, b] = color;
+		return `#${r}${r}${g}${g}${b}${b}`;
+	}
+	return fallback;
 }
