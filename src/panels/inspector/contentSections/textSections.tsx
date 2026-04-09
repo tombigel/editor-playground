@@ -1,3 +1,4 @@
+import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,7 +38,6 @@ import {
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_TEXT_COLOR,
 } from '../../../model/styleDefaults';
-import { getNodeTextContent } from '../../../render/nodePresentation';
 import type { TextInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {
@@ -65,6 +65,7 @@ import {
   normalizeListContent,
 } from '../../../model/listContent';
 import type { ListContent } from '../../../model/types';
+import { CODE_LANGUAGE_OPTIONS } from '../../../render/codeHighlight';
 
 type StructuredListContent = Extract<ListContent, { type: 'ul' | 'ol' }>;
 
@@ -85,6 +86,18 @@ const ORDERED_MARKER_OPTIONS = [
   { value: 'upper-alpha', label: 'A, B, C' },
   { value: 'lower-roman', label: 'i, ii, iii' },
   { value: 'upper-roman', label: 'I, II, III' },
+] as const;
+
+const HTML_TAG_OPTIONS = [
+  { value: 'h1', label: 'h1' },
+  { value: 'h2', label: 'h2' },
+  { value: 'h3', label: 'h3' },
+  { value: 'h4', label: 'h4' },
+  { value: 'h5', label: 'h5' },
+  { value: 'h6', label: 'h6' },
+  { value: 'p', label: 'p' },
+  { value: 'blockquote', label: 'blockquote' },
+  { value: 'div', label: 'div' },
 ] as const;
 
 function formatListLine(item: ListContent['items'][number]): string {
@@ -215,10 +228,40 @@ function createStructuredListItemKeys(nodeId: string, content: StructuredListCon
   });
 }
 
+function renderCenteredHeaderContent(headerContent: ReactNode) {
+  return headerContent ? <div className="flex justify-center pb-2">{headerContent}</div> : null;
+}
+
+function HtmlTagInlineField({
+  value,
+  onValueChange,
+}: {
+  value: TextInspectorNode['htmlTag'];
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {HTML_TAG_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </InspectorInlineRow>
+  );
+}
+
 export function TextContentSection({
   document,
   node,
   onTextChange,
+  showHtmlTag = node.subtype === 'block',
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -228,6 +271,7 @@ export function TextContentSection({
   document: DocumentModel;
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  showHtmlTag?: boolean;
 } & FocusModeCardProps) {
   const languageOptions = createLanguageSelectOptions({
     includeSiteLanguage: true,
@@ -237,11 +281,11 @@ export function TextContentSection({
   return (
     <InspectorSectionCard
       title="Content"
-      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
+      {renderCenteredHeaderContent(headerContent)}
       <InspectorFieldGroup>
         <FormField label="Text">
           <Textarea
@@ -258,6 +302,9 @@ export function TextContentSection({
         </FormField>
       </InspectorFieldGroup>
       <InspectorFieldGroup separated>
+        {showHtmlTag ? (
+          <HtmlTagInlineField value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)} />
+        ) : null}
         <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
           <SearchableSelect
             value={node.lang ?? '__site__'}
@@ -285,19 +332,26 @@ export function ListContentSection({
   node: TextInspectorNode;
   onSetListContent: (content: ListContent) => void;
 } & FocusModeCardProps) {
+  const [showAdvancedEdit, setShowAdvancedEdit] = useState(() => normalizeListContent(node.content).type === 'dl');
   const listContent = normalizeListContent(node.content);
   const itemsValue = listContent.items.map((item) => formatListLine(item)).join('\n');
   const structuredListContent = isStructuredListContent(listContent) ? listContent : null;
   const structuredItemKeys = structuredListContent ? createStructuredListItemKeys(node.id, structuredListContent) : [];
 
+  useEffect(() => {
+    if (listContent.type === 'dl') {
+      setShowAdvancedEdit(true);
+    }
+  }, [listContent.type]);
+
   return (
     <InspectorSectionCard
       title="Content"
-      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
+      {renderCenteredHeaderContent(headerContent)}
       <InspectorFieldGroup gap>
         {structuredListContent ? (
           <InspectorInlineRow label="Type" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
@@ -453,20 +507,34 @@ export function ListContentSection({
         </InspectorFieldGroup>
       ) : null}
       <InspectorFieldGroup separated>
-        <FormField label={listContent.type === 'dl' ? 'Advanced bulk edit (term: description)' : 'Advanced bulk edit'}>
-          <Textarea
-            value={itemsValue}
-            rows={Math.max(4, listContentToLines(listContent).length)}
-            onChange={(event) => onSetListContent(buildListContentFromLines(event.target.value, listContent))}
-            onPaste={(event) => {
-              const text = event.clipboardData.getData('text/plain');
-              if (text) {
-                event.preventDefault();
-                onSetListContent(buildListContentFromLines(text, listContent));
-              }
-            }}
-          />
-        </FormField>
+        <div className="flex items-center justify-between gap-2">
+          <span className="editor-text-strong text-[11px] font-medium">Advanced edit</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-[11px]"
+            onClick={() => setShowAdvancedEdit((value) => !value)}
+          >
+            {showAdvancedEdit ? 'Hide' : 'Show'}
+          </Button>
+        </div>
+        {showAdvancedEdit ? (
+          <FormField label={listContent.type === 'dl' ? 'Bulk edit (term: description)' : 'Bulk edit'}>
+            <Textarea
+              value={itemsValue}
+              rows={Math.max(4, listContentToLines(listContent).length)}
+              onChange={(event) => onSetListContent(buildListContentFromLines(event.target.value, listContent))}
+              onPaste={(event) => {
+                const text = event.clipboardData.getData('text/plain');
+                if (text) {
+                  event.preventDefault();
+                  onSetListContent(buildListContentFromLines(text, listContent));
+                }
+              }}
+            />
+          </FormField>
+        ) : null}
       </InspectorFieldGroup>
       <p className="editor-text-muted px-0.5 text-[10px] opacity-70">
         Structured editing covers bulleted and numbered lists in phase 1.5. Use one line per item in the advanced field. Description lists remain bulk-edit only until phase 2.
@@ -487,15 +555,14 @@ export function RichTextContentSection({
   node: TextInspectorNode;
   onActivateRichEdit?: (nodeId: string) => void;
 } & FocusModeCardProps) {
-  const preview = getNodeTextContent(node);
   return (
     <InspectorSectionCard
       title="Content"
-      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
+      {renderCenteredHeaderContent(headerContent)}
       <Button
         type="button"
         variant="outline"
@@ -506,11 +573,6 @@ export function RichTextContentSection({
         <Pencil size={12} />
         Edit rich text
       </Button>
-      {preview && (
-        <p className="editor-text-muted mt-2 line-clamp-3 break-words px-0.5 text-[11px] leading-relaxed opacity-70">
-          {preview}
-        </p>
-      )}
       <p className="editor-text-muted mt-2 px-0.5 text-[10px] opacity-50">
         <kbd className="font-mono">⌘B</kbd> bold &nbsp;
         <kbd className="font-mono">⌘I</kbd> italic &nbsp;
@@ -519,22 +581,6 @@ export function RichTextContentSection({
     </InspectorSectionCard>
   );
 }
-
-const CODE_LANGUAGES = [
-  { value: 'plaintext', label: 'Plain text' },
-  { value: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'css', label: 'CSS' },
-  { value: 'html', label: 'HTML' },
-  { value: 'json', label: 'JSON' },
-  { value: 'python', label: 'Python' },
-  { value: 'bash', label: 'Bash' },
-  { value: 'cpp', label: 'C++' },
-  { value: 'rust', label: 'Rust' },
-  { value: 'java', label: 'Java' },
-  { value: 'go', label: 'Go' },
-  { value: 'csharp', label: 'C#' },
-];
 
 export function CodeContentSection({
   node,
@@ -552,11 +598,11 @@ export function CodeContentSection({
   return (
     <InspectorSectionCard
       title="Content"
-      headerContent={headerContent}
       headerAction={headerAction}
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
+      {renderCenteredHeaderContent(headerContent)}
       <InspectorFieldGroup>
         <FormField label="Code">
           <Textarea
@@ -581,7 +627,7 @@ export function CodeContentSection({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {CODE_LANGUAGES.map(({ value, label }) => (
+              {CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
                 <SelectItem key={value} value={value}>{label}</SelectItem>
               ))}
             </SelectContent>
@@ -597,7 +643,6 @@ export function TextTextStyleSection({
   node,
   onTextChange,
   onOpenManageFonts,
-  showHtmlTag = true,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -608,7 +653,6 @@ export function TextTextStyleSection({
   node: TextInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
   onOpenManageFonts: () => void;
-  showHtmlTag?: boolean;
 } & FocusModeCardProps) {
   return (
     <InspectorSectionCard
@@ -624,26 +668,6 @@ export function TextTextStyleSection({
           onTextChange={onTextChange}
           onOpenManageFonts={onOpenManageFonts}
         />
-        {showHtmlTag ? (
-          <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
-            <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
-              <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="h1">h1</SelectItem>
-                <SelectItem value="h2">h2</SelectItem>
-                <SelectItem value="h3">h3</SelectItem>
-                <SelectItem value="h4">h4</SelectItem>
-                <SelectItem value="h5">h5</SelectItem>
-                <SelectItem value="h6">h6</SelectItem>
-                <SelectItem value="p">p</SelectItem>
-                <SelectItem value="blockquote">blockquote</SelectItem>
-                <SelectItem value="div">div</SelectItem>
-              </SelectContent>
-            </Select>
-          </InspectorInlineRow>
-        ) : null}
     </InspectorSectionCard>
   );
 }
@@ -735,24 +759,6 @@ export function TextAppearanceSection({
         onTextChange={onTextChange}
         onOpenManageFonts={onOpenManageFonts}
       />
-      <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
-          <Select value={node.htmlTag} onValueChange={(value) => onTextChange('htmlTag', value)}>
-            <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="h1">h1</SelectItem>
-              <SelectItem value="h2">h2</SelectItem>
-              <SelectItem value="h3">h3</SelectItem>
-              <SelectItem value="h4">h4</SelectItem>
-              <SelectItem value="h5">h5</SelectItem>
-              <SelectItem value="h6">h6</SelectItem>
-              <SelectItem value="p">p</SelectItem>
-              <SelectItem value="blockquote">blockquote</SelectItem>
-              <SelectItem value="div">div</SelectItem>
-            </SelectContent>
-          </Select>
-      </InspectorInlineRow>
       <div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
         <TypographyDesignFields
           node={node}

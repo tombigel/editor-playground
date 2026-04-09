@@ -1,6 +1,7 @@
 import {
   type CSSProperties,
   type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type KeyboardEvent,
   useCallback,
   useEffect,
@@ -9,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Check, Link2, List, ListOrdered, Type, X } from 'lucide-react';
+import { Code2, Link2, List, ListOrdered, Type } from 'lucide-react';
 import { Transforms, type BaseSelection } from 'slate';
 import { Editable, ReactEditor, type RenderElementProps, type RenderLeafProps, Slate } from 'slate-react';
 import { Button } from '@/components/ui/button';
@@ -28,22 +29,27 @@ import type {
   RichTextLeaf,
   RichTextLink,
 } from '../../model/types';
+import { CODE_LANGUAGE_OPTIONS } from '../../render/codeHighlight';
 import { getRichTextBlockTag, richLeafStyle } from '../../render/nodePresentation';
 import {
   convertSelectionToBlockType,
+  convertSelectionToCodeBlock,
   convertSelectionToList,
   createRichEditor,
   fromSlateValue,
   getMarkValue,
   getSelectedBlockType,
+  getSelectedCodeLanguage,
   getSelectedLineHeight,
   getSelectedListKind,
   getSelectedListMarkerStyle,
+  getSelectedStructureMode,
   insertLink,
   isLinkActive,
   isMarkActive,
   removeLink,
   setMarkValue,
+  setSelectedCodeBlockLanguage,
   setSelectedBlocksLineHeight,
   setSelectedListMarkerStyle,
   toSlateValue,
@@ -151,6 +157,24 @@ const UNORDERED_MARKER_OPTIONS = [
   { value: 'square', label: 'Square' },
 ] as const;
 
+type RichToolbarState = {
+  boldActive: boolean;
+  italicActive: boolean;
+  underlineActive: boolean;
+  strikethroughActive: boolean;
+  linkActive: boolean;
+  structureMode: 'block' | 'ul' | 'ol' | 'code-block' | null;
+  selectedBlockType: RichTextBlockType;
+  selectedListKind: 'ul' | 'ol' | null;
+  selectedListMarkerStyle: string;
+  selectedCodeLanguage: string;
+  selectedLineHeight: number;
+  currentFontFamily: string;
+  currentFontSize: string;
+  currentTextColor: string;
+  currentHighlightColor: string;
+};
+
 function cloneSelection(selection: BaseSelection): BaseSelection {
   if (!selection) {
     return null;
@@ -160,6 +184,46 @@ function cloneSelection(selection: BaseSelection): BaseSelection {
     anchor: { ...selection.anchor },
     focus: { ...selection.focus },
   };
+}
+
+function readToolbarState(editor: ReturnType<typeof createRichEditor>): RichToolbarState {
+  return {
+    boldActive: isMarkActive(editor, 'bold'),
+    italicActive: isMarkActive(editor, 'italic'),
+    underlineActive: isMarkActive(editor, 'underline'),
+    strikethroughActive: isMarkActive(editor, 'strikethrough'),
+    linkActive: isLinkActive(editor),
+    structureMode: getSelectedStructureMode(editor),
+    selectedBlockType: getSelectedBlockType(editor) ?? 'paragraph',
+    selectedListKind: getSelectedListKind(editor),
+    selectedListMarkerStyle: getSelectedListMarkerStyle(editor),
+    selectedCodeLanguage: getSelectedCodeLanguage(editor),
+    selectedLineHeight: getSelectedLineHeight(editor),
+    currentFontFamily: getMarkValue(editor, 'fontFamily') || '__inherit__',
+    currentFontSize: getMarkValue(editor, 'fontSize'),
+    currentTextColor: normalizeColorInputValue(getMarkValue(editor, 'color'), '#111827'),
+    currentHighlightColor: normalizeColorInputValue(getMarkValue(editor, 'backgroundColor'), '#fff59d'),
+  };
+}
+
+function isInteractiveRichEditTarget(target: EventTarget | null, root: HTMLDivElement): boolean {
+  if (!(target instanceof Node)) {
+    return false;
+  }
+
+  if (root.contains(target)) {
+    return true;
+  }
+
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest(
+      '[data-stage-rich-link-popover="true"], [data-ui="select-content"], [data-radix-popper-content-wrapper]',
+    ),
+  );
 }
 
 export function RichTextEditOverlay({
@@ -188,6 +252,9 @@ export function RichTextEditOverlay({
   const [linkSelection, setLinkSelection] = useState<BaseSelection>(null);
   const [toolbarSelection, setToolbarSelection] = useState<BaseSelection>(null);
   const [selectionRevision, setSelectionRevision] = useState(0);
+  const [toolbarState, setToolbarState] = useState<RichToolbarState>(() => readToolbarState(editor));
+  const [fontSizeDraft, setFontSizeDraft] = useState('');
+  const [lineHeightDraft, setLineHeightDraft] = useState(() => String(readToolbarState(editor).selectedLineHeight));
   const [blockSpacingDraft, setBlockSpacingDraft] = useState(String(readInitialBlockSpacing(contentStyle)));
   const [toolbarPlacement, setToolbarPlacement] = useState<'above' | 'below'>('above');
 
@@ -201,6 +268,7 @@ export function RichTextEditOverlay({
   }, [editor]);
 
   useLayoutEffect(() => {
+    void selectionRevision;
     const root = rootRef.current;
     if (!root) {
       return;
@@ -221,7 +289,7 @@ export function RichTextEditOverlay({
         return;
       }
       const target = event.target;
-      if (!(target instanceof Node) || root.contains(target)) {
+      if (isInteractiveRichEditTarget(target, root)) {
         return;
       }
       commitCurrentContent();
@@ -261,19 +329,33 @@ export function RichTextEditOverlay({
       .filter((option): option is { id: string; name: string } => option !== null);
   }, [documentModel, targetPage]);
 
-  const boldActive = isMarkActive(editor, 'bold');
-  const italicActive = isMarkActive(editor, 'italic');
-  const underlineActive = isMarkActive(editor, 'underline');
-  const strikethroughActive = isMarkActive(editor, 'strikethrough');
-  const linkActive = isLinkActive(editor);
-  const selectedBlockType = getSelectedBlockType(editor) ?? 'paragraph';
-  const selectedListKind = getSelectedListKind(editor);
-  const selectedListMarkerStyle = getSelectedListMarkerStyle(editor);
-  const selectedLineHeight = getSelectedLineHeight(editor);
-  const currentFontFamily = getMarkValue(editor, 'fontFamily') || '__inherit__';
-  const currentFontSize = getMarkValue(editor, 'fontSize');
-  const currentTextColor = normalizeColorInputValue(getMarkValue(editor, 'color'), '#111827');
-  const currentHighlightColor = normalizeColorInputValue(getMarkValue(editor, 'backgroundColor'), '#fff59d');
+  const {
+    boldActive,
+    italicActive,
+    underlineActive,
+    strikethroughActive,
+    linkActive,
+    structureMode,
+    selectedBlockType,
+    selectedListKind,
+    selectedListMarkerStyle,
+    selectedCodeLanguage,
+    currentFontFamily,
+    currentTextColor,
+    currentHighlightColor,
+  } = toolbarState;
+
+  useEffect(() => {
+    setFontSizeDraft(toolbarState.currentFontSize);
+  }, [toolbarState.currentFontSize]);
+
+  useEffect(() => {
+    setLineHeightDraft(String(toolbarState.selectedLineHeight));
+  }, [toolbarState.selectedLineHeight]);
+
+  const syncToolbarState = useCallback(() => {
+    setToolbarState(readToolbarState(editor));
+  }, [editor]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -297,6 +379,7 @@ export function RichTextEditOverlay({
       if (isMod && event.key === 'b') {
         event.preventDefault();
         toggleMark(editor, 'bold');
+        syncToolbarState();
         setSelectionRevision((revision) => revision + 1);
         return;
       }
@@ -304,6 +387,7 @@ export function RichTextEditOverlay({
       if (isMod && event.key === 'i') {
         event.preventDefault();
         toggleMark(editor, 'italic');
+        syncToolbarState();
         setSelectionRevision((revision) => revision + 1);
         return;
       }
@@ -313,6 +397,7 @@ export function RichTextEditOverlay({
         if (isLinkActive(editor)) {
           removeLink(editor);
           setLinkSelection(null);
+          syncToolbarState();
           setSelectionRevision((revision) => revision + 1);
         } else {
           const currentSelection = editor.selection
@@ -332,7 +417,7 @@ export function RichTextEditOverlay({
         }
       }
     },
-    [commitCurrentContent, editor, linkPopover.open, onDiscard, pages, sectionOptions],
+    [commitCurrentContent, editor, linkPopover.open, onDiscard, pages, sectionOptions, syncToolbarState],
   );
 
   const restoreToolbarSelection = useCallback(() => {
@@ -349,19 +434,21 @@ export function RichTextEditOverlay({
   const handleBooleanMark = useCallback((mark: 'bold' | 'italic' | 'underline' | 'strikethrough') => {
     restoreToolbarSelection();
     toggleMark(editor, mark);
+    syncToolbarState();
     setSelectionRevision((revision) => revision + 1);
     requestAnimationFrame(() => {
       try {
         ReactEditor.focus(editor);
       } catch {}
     });
-  }, [editor, restoreToolbarSelection]);
+  }, [editor, restoreToolbarSelection, syncToolbarState]);
 
   const handleValueMark = useCallback((mark: 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize', value: string) => {
     restoreToolbarSelection();
     setMarkValue(editor, mark, value === '__inherit__' ? '' : value);
+    syncToolbarState();
     setSelectionRevision((revision) => revision + 1);
-  }, [editor, restoreToolbarSelection]);
+  }, [editor, restoreToolbarSelection, syncToolbarState]);
 
   const handleBlockSpacingCommit = useCallback(() => {
     onUpdateTextField(nodeId, 'blockGap', blockSpacingDraft);
@@ -371,6 +458,7 @@ export function RichTextEditOverlay({
     if (isLinkActive(editor)) {
       removeLink(editor);
       setLinkSelection(null);
+      syncToolbarState();
       setSelectionRevision((revision) => revision + 1);
       return;
     }
@@ -384,7 +472,7 @@ export function RichTextEditOverlay({
       href: '',
       targetPageId: pages[0]?.id ?? '',
     });
-  }, [editor, pages, sectionOptions]);
+  }, [editor, pages, sectionOptions, syncToolbarState]);
 
   const handleLinkSubmit = useCallback((event: FormEvent) => {
     event.preventDefault();
@@ -413,8 +501,26 @@ export function RichTextEditOverlay({
     });
     setLinkSelection(null);
     setLinkPopover(DEFAULT_LINK_POPOVER);
+    syncToolbarState();
     setSelectionRevision((revision) => revision + 1);
-  }, [documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions]);
+  }, [documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions, syncToolbarState]);
+
+  const commitFontSizeDraft = useCallback(() => {
+    handleValueMark('fontSize', fontSizeDraft);
+  }, [fontSizeDraft, handleValueMark]);
+
+  const commitLineHeightDraft = useCallback(() => {
+    const parsed = Number.parseFloat(lineHeightDraft);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setLineHeightDraft(String(toolbarState.selectedLineHeight));
+      return;
+    }
+
+    restoreToolbarSelection();
+    setSelectedBlocksLineHeight(editor, parsed);
+    syncToolbarState();
+    setSelectionRevision((revision) => revision + 1);
+  }, [editor, lineHeightDraft, restoreToolbarSelection, syncToolbarState, toolbarState.selectedLineHeight]);
 
   return (
     <Slate
@@ -423,6 +529,7 @@ export function RichTextEditOverlay({
       onChange={() => {
         if (editor.selection) {
           setToolbarSelection(cloneSelection(editor.selection));
+          setToolbarState(readToolbarState(editor));
         }
         setSelectionRevision((revision) => revision + 1);
       }}
@@ -454,137 +561,172 @@ export function RichTextEditOverlay({
             transform: toolbarPlacement === 'above'
               ? 'translateY(calc(-100% - 10px))'
               : 'translateY(calc(100% + 10px))',
-            maxWidth: 'min(100%, 960px)',
+            width: 'max-content',
+            maxWidth: 'calc(100vw - 32px)',
             pointerEvents: 'auto',
           }}
-          bodyClassName="flex flex-wrap items-center gap-1.5 px-2 py-2"
-          bodyStyle={{ pointerEvents: 'auto' }}
+          bodyClassName="space-y-1.5 px-2 py-2"
+          bodyStyle={{ pointerEvents: 'auto', overflowX: 'auto', overflowY: 'hidden' }}
           onPointerDown={(event) => {
             event.stopPropagation();
           }}
         >
-          <CompactSelect
-            label="Font family"
-            value={currentFontFamily}
-            onValueChange={(value) => handleValueMark('fontFamily', value)}
-            options={fontFamilies.map((family) => ({
-              value: family,
-              label: family === '__inherit__' ? 'Inherit' : family,
-            }))}
-            width={128}
-          />
-          <CompactTextField
-            label="Font size"
-            value={currentFontSize}
-            placeholder="18px"
-            width={68}
-            onChange={(value) => handleValueMark('fontSize', value)}
-          />
-          <ToolbarButton label="Bold" active={boldActive} onActivate={() => handleBooleanMark('bold')}>
-            <span className="font-black tracking-[-0.02em]">B</span>
-          </ToolbarButton>
-          <ToolbarButton label="Italic" active={italicActive} onActivate={() => handleBooleanMark('italic')}>
-            <span className="font-medium italic">I</span>
-          </ToolbarButton>
-          <ToolbarButton label="Underline" active={underlineActive} onActivate={() => handleBooleanMark('underline')}>
-            <span className="underline">U</span>
-          </ToolbarButton>
-          <ToolbarButton label="Strikethrough" active={strikethroughActive} onActivate={() => handleBooleanMark('strikethrough')}>
-            <span className="line-through">S</span>
-          </ToolbarButton>
-          <CompactColorField label="Text color" value={currentTextColor} onChange={(value) => handleValueMark('color', value)} />
-          <CompactColorField label="Highlight color" value={currentHighlightColor} onChange={(value) => handleValueMark('backgroundColor', value)} />
-          <ToolbarButton label={linkActive ? 'Unlink' : 'Link'} active={linkActive || linkPopover.open} onActivate={handleLinkAction}>
-            <Link2 size={14} />
-          </ToolbarButton>
-          <ToolbarButton
-            label="Convert to text block"
-            active={selectedListKind == null}
-            onActivate={() => {
-              restoreToolbarSelection();
-              convertSelectionToBlockType(editor, selectedBlockType);
-            }}
-          >
-            <Type size={14} />
-          </ToolbarButton>
-          <CompactSelect
-            label="Block type"
-            value={selectedBlockType}
-            onValueChange={(value) => {
-              restoreToolbarSelection();
-              convertSelectionToBlockType(editor, value as RichTextBlockType);
-            }}
-            options={BLOCK_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-            width={108}
-          />
-          <ToolbarButton
-            label="Convert to ordered list"
-            active={selectedListKind === 'ol'}
-            onActivate={() => {
-              restoreToolbarSelection();
-              convertSelectionToList(editor, 'ol');
-            }}
-          >
-            <ListOrdered size={14} />
-          </ToolbarButton>
-          <CompactSelect
-            label="Ordered list marker"
-            value={selectedListKind === 'ol' ? selectedListMarkerStyle || 'decimal' : 'decimal'}
-            onValueChange={(value) => {
-              restoreToolbarSelection();
-              setSelectedListMarkerStyle(editor, value as typeof ORDERED_MARKER_OPTIONS[number]['value']);
-            }}
-            options={ORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-            width={84}
-          />
-          <ToolbarButton
-            label="Convert to unordered list"
-            active={selectedListKind === 'ul'}
-            onActivate={() => {
-              restoreToolbarSelection();
-              convertSelectionToList(editor, 'ul');
-            }}
-          >
-            <List size={14} />
-          </ToolbarButton>
-          <CompactSelect
-            label="Unordered list marker"
-            value={selectedListKind === 'ul' ? selectedListMarkerStyle || 'disc' : 'disc'}
-            onValueChange={(value) => {
-              restoreToolbarSelection();
-              setSelectedListMarkerStyle(editor, value as typeof UNORDERED_MARKER_OPTIONS[number]['value']);
-            }}
-            options={UNORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-            width={88}
-          />
-          <CompactTextField
-            label="Line height"
-            value={String(selectedLineHeight)}
-            placeholder="1.2"
-            width={58}
-            onChange={(value) => {
-              const parsed = Number.parseFloat(value);
-              if (Number.isFinite(parsed) && parsed > 0) {
+          <div className="flex items-center gap-1.5">
+            <CompactSelect
+              label="Font family"
+              value={currentFontFamily}
+              onValueChange={(value) => handleValueMark('fontFamily', value)}
+              options={fontFamilies.map((family) => ({
+                value: family,
+                label: family === '__inherit__' ? 'Inherit' : family,
+              }))}
+              width={132}
+            />
+            <CompactTextField
+              label="Font size"
+              value={fontSizeDraft}
+              placeholder="18px"
+              width={72}
+              onChange={setFontSizeDraft}
+              onBlur={commitFontSizeDraft}
+              onCommit={commitFontSizeDraft}
+            />
+            <ToolbarButton label="Bold" active={boldActive} onActivate={() => handleBooleanMark('bold')}>
+              <span className="font-black tracking-[-0.02em]">B</span>
+            </ToolbarButton>
+            <ToolbarButton label="Italic" active={italicActive} onActivate={() => handleBooleanMark('italic')}>
+              <span className="font-medium italic">I</span>
+            </ToolbarButton>
+            <ToolbarButton label="Underline" active={underlineActive} onActivate={() => handleBooleanMark('underline')}>
+              <span className="underline">U</span>
+            </ToolbarButton>
+            <ToolbarButton label="Strikethrough" active={strikethroughActive} onActivate={() => handleBooleanMark('strikethrough')}>
+              <span className="line-through">S</span>
+            </ToolbarButton>
+            <CompactColorField label="Text color" value={currentTextColor} onChange={(value) => handleValueMark('color', value)} />
+            <CompactColorField label="Highlight color" value={currentHighlightColor} onChange={(value) => handleValueMark('backgroundColor', value)} />
+            <ToolbarButton label={linkActive ? 'Unlink' : 'Link'} active={linkActive || linkPopover.open} onActivate={handleLinkAction}>
+              <Link2 size={14} />
+            </ToolbarButton>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <ToolbarButton
+              label="Use text block"
+              active={structureMode === 'block'}
+              onActivate={() => {
                 restoreToolbarSelection();
-                setSelectedBlocksLineHeight(editor, parsed);
+                convertSelectionToBlockType(editor, selectedBlockType);
+                syncToolbarState();
                 setSelectionRevision((revision) => revision + 1);
-              }
-            }}
-          />
-          <CompactTextField
-            label="Block spacing"
-            value={blockSpacingDraft}
-            placeholder="0"
-            width={64}
-            onChange={setBlockSpacingDraft}
-            onBlur={handleBlockSpacingCommit}
-          />
-          <ToolbarButton label="Discard changes" active={false} onActivate={onDiscard}>
-            <X size={14} />
-          </ToolbarButton>
-          <ToolbarButton label="Save changes" active={false} onActivate={commitCurrentContent}>
-            <Check size={14} />
-          </ToolbarButton>
+              }}
+            >
+              <Type size={14} />
+            </ToolbarButton>
+            <CompactSelect
+              label="Block type"
+              value={selectedBlockType}
+              onValueChange={(value) => {
+                restoreToolbarSelection();
+                convertSelectionToBlockType(editor, value as RichTextBlockType);
+                syncToolbarState();
+                setSelectionRevision((revision) => revision + 1);
+              }}
+              options={BLOCK_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              width={112}
+            />
+            <ToolbarButton
+              label="Use code block"
+              active={structureMode === 'code-block'}
+              onActivate={() => {
+                restoreToolbarSelection();
+                convertSelectionToCodeBlock(editor, selectedCodeLanguage || 'plaintext');
+                syncToolbarState();
+                setSelectionRevision((revision) => revision + 1);
+              }}
+            >
+              <Code2 size={14} />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Use ordered list"
+              active={selectedListKind === 'ol'}
+              onActivate={() => {
+                restoreToolbarSelection();
+                convertSelectionToList(editor, 'ol');
+                syncToolbarState();
+                setSelectionRevision((revision) => revision + 1);
+              }}
+            >
+              <ListOrdered size={14} />
+            </ToolbarButton>
+            <CompactSelect
+              label="Ordered list marker"
+              value={selectedListKind === 'ol' ? selectedListMarkerStyle || 'decimal' : 'decimal'}
+              onValueChange={(value) => {
+                restoreToolbarSelection();
+                setSelectedListMarkerStyle(editor, value as typeof ORDERED_MARKER_OPTIONS[number]['value']);
+                syncToolbarState();
+                setSelectionRevision((revision) => revision + 1);
+              }}
+              options={ORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              width={88}
+            />
+            <ToolbarButton
+              label="Use unordered list"
+              active={selectedListKind === 'ul'}
+              onActivate={() => {
+                restoreToolbarSelection();
+                convertSelectionToList(editor, 'ul');
+                syncToolbarState();
+                setSelectionRevision((revision) => revision + 1);
+              }}
+            >
+              <List size={14} />
+            </ToolbarButton>
+            <CompactSelect
+              label="Unordered list marker"
+              value={selectedListKind === 'ul' ? selectedListMarkerStyle || 'disc' : 'disc'}
+              onValueChange={(value) => {
+                restoreToolbarSelection();
+                setSelectedListMarkerStyle(editor, value as typeof UNORDERED_MARKER_OPTIONS[number]['value']);
+                syncToolbarState();
+                setSelectionRevision((revision) => revision + 1);
+              }}
+              options={UNORDERED_MARKER_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              width={92}
+            />
+            {structureMode === 'code-block' ? (
+              <CompactSelect
+                label="Code language"
+                value={selectedCodeLanguage || 'plaintext'}
+                onValueChange={(value) => {
+                  restoreToolbarSelection();
+                  setSelectedCodeBlockLanguage(editor, value);
+                  syncToolbarState();
+                  setSelectionRevision((revision) => revision + 1);
+                }}
+                options={CODE_LANGUAGE_OPTIONS}
+                width={110}
+              />
+            ) : null}
+            <CompactTextField
+              label="Line height"
+              value={lineHeightDraft}
+              placeholder="1.2"
+              width={64}
+              onChange={setLineHeightDraft}
+              onBlur={commitLineHeightDraft}
+              onCommit={commitLineHeightDraft}
+            />
+            <CompactTextField
+              label="Block spacing"
+              value={blockSpacingDraft}
+              placeholder="0"
+              width={68}
+              onChange={setBlockSpacingDraft}
+              onBlur={handleBlockSpacingCommit}
+              onCommit={handleBlockSpacingCommit}
+            />
+          </div>
         </FloatingPanelShell>
         <div
           data-stage-rich-edit-box="true"
@@ -659,10 +801,10 @@ function ToolbarButton({
       <Button
         type="button"
         variant={active ? 'default' : 'outline'}
-        size="icon"
+        size="sm"
         aria-label={label}
         aria-pressed={active}
-        className="pointer-events-auto h-8 w-8 rounded-sm"
+        className="pointer-events-auto h-8 w-8 shrink-0 rounded-sm p-0 text-xs"
         style={{ pointerEvents: 'auto' }}
         onPointerDown={(event) => {
           event.preventDefault();
@@ -699,12 +841,13 @@ function CompactSelect({
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger
           aria-label={label}
-        className="pointer-events-auto h-8 rounded-sm text-xs"
-        style={{ width, pointerEvents: 'auto' }}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-        }}
-      >
+          size="compact"
+          className="pointer-events-auto h-8 shrink-0 rounded-sm text-xs"
+          style={{ width, pointerEvents: 'auto' }}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+          }}
+        >
           <span className="truncate text-left">
             {options.find((option) => option.value === value)?.label ?? label}
           </span>
@@ -728,6 +871,7 @@ function CompactTextField({
   width,
   onChange,
   onBlur,
+  onCommit,
 }: {
   label: string;
   value: string;
@@ -735,6 +879,7 @@ function CompactTextField({
   width: number;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  onCommit?: () => void;
 }) {
   return (
     <PopoverTooltip
@@ -747,13 +892,24 @@ function CompactTextField({
         aria-label={label}
         value={value}
         placeholder={placeholder}
-        className="pointer-events-auto h-8 rounded-sm px-2 text-xs"
+        className="pointer-events-auto h-8 shrink-0 rounded-sm px-2 text-xs"
         style={{ width, pointerEvents: 'auto' }}
         onPointerDown={(event) => {
           event.stopPropagation();
         }}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
+        onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onCommit?.();
+            return;
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            (event.target as HTMLInputElement).blur();
+          }
+        }}
       />
     </PopoverTooltip>
   );
@@ -779,7 +935,7 @@ function CompactColorField({
         aria-label={label}
         type="color"
         value={value}
-        className="pointer-events-auto h-8 w-8 cursor-pointer rounded-sm border border-[color:var(--editor-border-subtle)] bg-transparent p-0"
+        className="pointer-events-auto h-8 w-8 shrink-0 cursor-pointer rounded-sm border border-[color:var(--editor-border-subtle)] bg-transparent p-0"
         style={{ pointerEvents: 'auto' }}
         onPointerDown={(event) => {
           event.stopPropagation();
@@ -813,6 +969,7 @@ function LinkInsertPopover({
     <FloatingPanelShell
       suppressPopover
       open
+      data-stage-rich-link-popover="true"
       positionMode="absolute"
       style={{
         top: 0,

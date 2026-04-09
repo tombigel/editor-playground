@@ -28,13 +28,12 @@ describe('stage/RichTextEditOverlay', () => {
     expect(markup).toContain('aria-label="Text color"');
     expect(markup).toContain('aria-label="Highlight color"');
     expect(markup).toContain('aria-label="Link"');
-    expect(markup).toContain('aria-label="Convert to text block"');
+    expect(markup).toContain('aria-label="Use text block"');
+    expect(markup).toContain('aria-label="Use code block"');
     expect(markup).toContain('aria-label="Ordered list marker"');
     expect(markup).toContain('aria-label="Unordered list marker"');
     expect(markup).toContain('aria-label="Line height"');
     expect(markup).toContain('aria-label="Block spacing"');
-    expect(markup).toContain('aria-label="Discard changes"');
-    expect(markup).toContain('aria-label="Save changes"');
     expect(markup).not.toContain('Rich text edit');
     expect(markup).not.toContain('Cmd/Ctrl+Enter saves');
     expect(markup).toContain('min-height:96px');

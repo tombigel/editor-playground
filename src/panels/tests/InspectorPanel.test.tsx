@@ -247,7 +247,9 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('>Type<');
     expect(markup).toContain('>Bullet<');
     expect(markup).toContain('Add item');
-    expect(markup).toContain('Advanced bulk edit');
+    expect(markup).toContain('Advanced edit');
+    expect(markup).toContain('>Show<');
+    expect(markup).not.toContain('Bulk edit');
     expect(markup).not.toContain('>Description<');
   });
 
@@ -263,8 +265,21 @@ describe('panels/InspectorPanel', () => {
     );
 
     expect(markup).toContain('Description list inspector editing is deferred to phase 2');
-    expect(markup).toContain('Advanced bulk edit');
+    expect(markup).toContain('Advanced edit');
+    expect(markup).toContain('Bulk edit (term: description)');
     expect(markup).not.toContain('Add item');
+  });
+
+  it('does not render a text preview in the rich text content card', () => {
+    const richNode = createTextNode('rich', 'section_1');
+    richNode.content = [{ type: 'paragraph', children: [{ text: 'Preview should stay hidden' }] }];
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ node: richNode, onActivateRichEdit: () => {} })} />,
+    );
+
+    expect(markup).toContain('Edit rich text');
+    expect(markup).not.toContain('Preview should stay hidden');
   });
 
   it('shows a disabled width field for top-level wrappers locked to 100%', () => {
@@ -413,6 +428,7 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup).not.toContain('aria-label="Suggested font sizes"');
     expect(textMarkup).not.toContain('>Weight<');
     expect(textMarkup).toContain('>HTML tag<');
+    expect(textMarkup.indexOf('>HTML tag<')).toBeLessThan(textMarkup.indexOf('>Text style<'));
     expect(textMarkup).toContain('>Color<');
     expect(textMarkup).toContain('>Shadow<');
     expect(textMarkup).toContain('aria-label="Text color"');

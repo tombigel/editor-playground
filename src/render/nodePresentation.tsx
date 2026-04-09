@@ -9,6 +9,7 @@ import type {
   ListContent,
   LinkExtension,
   RichBlock,
+  RichBlockStyle,
   RichCodeBlock,
   RichContent,
   RichListBlock,
@@ -147,7 +148,7 @@ function renderRichCodeBlock(block: RichCodeBlock, index: number): ReactNode {
       className={`language-${language}`}
       data-code-theme={block.theme ?? 'light'}
       dir={block.direction ?? 'ltr'}
-      style={{ margin: 0 }}
+      style={{ margin: 0, ...richBlockStyleToCss(block.style, { includeBorder: true, includeBoxShadow: true }) }}
     >
       <code
         className={`language-${language}`}
@@ -166,6 +167,7 @@ function renderRichListBlock(
   const sharedStyle: CSSProperties = {
     margin: 0,
     listStyleType: block.markerStyle,
+    ...richBlockStyleToCss(block.style),
   };
 
   if (block.type === 'ol') {
@@ -218,12 +220,52 @@ export function renderRichContent(content: RichContent, document?: DocumentModel
         style={{
           margin: 0,
           ...(typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
+          ...richBlockStyleToCss(block.style),
         }}
       >
         {renderRichInlineContent(block.children, document)}
       </Tag>
     );
   });
+}
+
+function richBlockStyleToCss(
+  style: RichBlockStyle | undefined,
+  options: {
+    includeBorder?: boolean;
+    includeBoxShadow?: boolean;
+  } = {},
+): CSSProperties {
+  if (!style) {
+    return {};
+  }
+
+  const css: CSSProperties = {
+    ...(style.color ? { color: style.color } : {}),
+    ...(style.background ? { background: style.background } : {}),
+    ...(style.fontFamily ? { fontFamily: style.fontFamily } : {}),
+    ...(style.fontSize ? { fontSize: style.fontSize } : {}),
+    ...(style.fontWeight ? { fontWeight: style.fontWeight } : {}),
+    ...(style.fontStyle ? { fontStyle: style.fontStyle } : {}),
+    ...(style.textDecorationLine ? { textDecorationLine: style.textDecorationLine } : {}),
+    ...(style.textAlign ? { textAlign: style.textAlign } : {}),
+    ...(style.filter ? { filter: style.filter } : {}),
+  };
+
+  if (options.includeBorder) {
+    if (style.borderStyle) css.borderStyle = style.borderStyle;
+    if (style.borderWidth) css.borderWidth = style.borderWidth;
+    if (style.borderColor) css.borderColor = style.borderColor;
+    if (style.borderRadius) css.borderRadius = style.borderRadius;
+    if (style.boxSizing) css.boxSizing = style.boxSizing;
+    if (style.backgroundClip) css.backgroundClip = style.backgroundClip;
+  }
+
+  if (options.includeBoxShadow && style.boxShadow) {
+    css.boxShadow = style.boxShadow;
+  }
+
+  return css;
 }
 
 function listItemKey(item: ListTextItem | DescriptionListItem, index: number): string {

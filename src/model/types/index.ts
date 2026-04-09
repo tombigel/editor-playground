@@ -131,11 +131,30 @@ export interface RichTextLink extends SlateElement {
 
 export type RichTextBlockType = 'paragraph' | 'div' | 'blockquote' | HeadingTag;
 export type RichInlineNode = RichTextLeaf | RichTextLink;
+export type RichBlockStyle = {
+  color?: string;
+  background?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: number;
+  fontStyle?: 'normal' | 'italic';
+  textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through';
+  textAlign?: 'left' | 'center' | 'right';
+  filter?: string;
+  borderStyle?: 'solid';
+  borderWidth?: string;
+  borderColor?: string;
+  borderRadius?: string;
+  boxSizing?: 'border-box';
+  backgroundClip?: 'padding-box';
+  boxShadow?: string;
+};
 
 export interface RichTextBlock extends SlateElement {
   type: RichTextBlockType;
   direction?: 'ltr' | 'rtl';
   lineHeight?: number;
+  style?: RichBlockStyle;
   children: RichInlineNode[];
 }
 
@@ -150,6 +169,7 @@ export interface RichCodeBlock extends SlateElement {
   language?: string;
   theme?: 'light' | 'dark';
   highlightedHtml?: string;
+  style?: RichBlockStyle;
   children: RichCodeLine[];
 }
 
@@ -162,6 +182,7 @@ export interface RichUnorderedListBlock extends SlateElement {
   type: 'ul';
   direction?: 'ltr' | 'rtl';
   markerStyle?: UnorderedListMarkerStyle;
+  style?: RichBlockStyle;
   children: RichListItem[];
 }
 
@@ -170,6 +191,7 @@ export interface RichOrderedListBlock extends SlateElement {
   direction?: 'ltr' | 'rtl';
   start?: number;
   markerStyle?: OrderedListMarkerStyle;
+  style?: RichBlockStyle;
   children: RichListItem[];
 }
 

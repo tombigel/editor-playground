@@ -142,7 +142,7 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('Design');
     expect(markup).toContain(textNode.name);
     expect(markup).toContain('aria-label="Manage fonts"');
-    expect(markup).toContain('>HTML tag<');
+    expect(markup).not.toContain('>HTML tag<');
     expect(markup).toContain('>Color<');
     expect(markup).toContain('>Shadow<');
     expect(markup).toContain('editor-border-subtle space-y-2.5 border-t pt-2.5');
@@ -166,8 +166,8 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('Content');
     expect(markup).toContain(textNode.name);
     expect(markup).toContain('>Text<');
+    expect(markup).toContain('>HTML tag<');
     expect(markup).toContain('aria-label="Close content focus mode"');
-    expect(markup).not.toContain('>HTML tag<');
   });
 
   it('renders content-focused navigation controls for button nodes', () => {

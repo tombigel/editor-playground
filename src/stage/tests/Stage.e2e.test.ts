@@ -231,7 +231,8 @@ describe('stage/Stage e2e', () => {
   }
 
   async function saveRichEdit() {
-    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Save changes' }).click();
+    await page.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]').first().click();
+    await page.keyboard.press('ControlOrMeta+Enter');
     await page.waitForSelector('[data-stage-rich-toolbar="true"]', { state: 'detached', timeout: 2_000 });
   }
 
@@ -496,7 +497,7 @@ describe('stage/Stage e2e', () => {
     await closeEditor();
   }, 30_000);
 
-  it('unifies touched blocks into one non-list block when block type changes across a multi-block selection', async () => {
+  it('preserves touched block boundaries when block type changes across a multi-block selection', async () => {
     const { document, richTextId } = createRichTextEditE2EDocument([
       { type: 'paragraph', children: [{ text: 'one two' }] },
       { type: 'h2', children: [{ text: 'three four' }] },
@@ -511,7 +512,8 @@ describe('stage/Stage e2e', () => {
 
     const persistedState = await readPersistedState();
     expect(persistedState.document.nodes[richTextId].content).toEqual([
-      { type: 'h3', children: [{ text: 'one two\nthree four' }] },
+      { type: 'h3', children: [{ text: 'one two' }] },
+      { type: 'h3', children: [{ text: 'three four' }] },
     ]);
 
     await closeEditor();
@@ -526,7 +528,7 @@ describe('stage/Stage e2e', () => {
 
     await enterRichEditMode(richTextId);
     await selectRichTextRange(0, 4, 1, 5);
-    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Convert to ordered list' }).click();
+    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Use ordered list' }).click();
     await saveRichEdit();
 
     const persistedState = await readPersistedState();
@@ -559,6 +561,57 @@ describe('stage/Stage e2e', () => {
       { type: 'paragraph', lineHeight: 1.8, children: [{ text: 'Edit me on stage' }] },
     ]);
     expect(persistedState.document.nodes[richTextId].style.blockGap).toBe(24);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('applies font size changes after the toolbar input takes focus', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument();
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 0, 0, 'Edit me on stage'.length);
+    await page.getByLabel('Font size').fill('32px');
+    await page.getByLabel('Font size').evaluate((input) => (input as HTMLInputElement).blur());
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      { type: 'paragraph', children: [{ text: 'Edit me on stage', fontSize: '32px' }] },
+    ]);
+
+    await closeEditor();
+  }, 30_000);
+
+  it('converts touched blocks into rich code blocks and applies the selected code language', async () => {
+    const { document, richTextId } = createRichTextEditE2EDocument([
+      { type: 'paragraph', children: [{ text: 'const one = 1;' }] },
+      { type: 'h2', children: [{ text: 'console.log(one);' }] },
+    ], { name: 'Code Block Conversion' });
+    await openEditor({ document, selectedId: richTextId, selectedIds: [richTextId] });
+
+    await enterRichEditMode(richTextId);
+    await selectRichTextRange(0, 0, 1, 'console.log(one);'.length);
+    await page.locator('[data-stage-rich-toolbar="true"]').first().getByRole('button', { name: 'Use code block' }).click();
+    await page.locator('[data-stage-rich-toolbar="true"]').first().locator('[aria-label="Code language"]').click();
+    await chooseOpenSelectItem('Markdown');
+    await saveRichEdit();
+
+    const persistedState = await readPersistedState();
+    expect(persistedState.document.nodes[richTextId].content).toEqual([
+      {
+        type: 'code-block',
+        language: 'markdown',
+        highlightedHtml: expect.any(String),
+        children: [{ type: 'code-line', children: [{ text: 'const one = 1;' }] }],
+      },
+      {
+        type: 'code-block',
+        language: 'markdown',
+        highlightedHtml: expect.any(String),
+        children: [{ type: 'code-line', children: [{ text: 'console.log(one);' }] }],
+      },
+    ]);
 
     await closeEditor();
   }, 30_000);

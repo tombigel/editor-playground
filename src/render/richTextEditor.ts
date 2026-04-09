@@ -3,22 +3,25 @@ import { withHistory } from 'slate-history';
 import { type ReactEditor, withReact } from 'slate-react';
 import type {
   OrderedListMarkerStyle,
+  RichCodeBlock,
   RichBlock,
   RichContent,
   RichInlineNode,
   RichListBlock,
+  RichListItem,
   RichTextBlock,
   RichTextBlockType,
   RichTextLink,
   UnorderedListMarkerStyle,
 } from '../model/types';
 import {
+  createRichCodeBlock,
   createRichListBlock,
-  createRichListItem,
   createRichTextBlock,
   createRichTextLeaf,
   normalizeRichContent,
 } from '../model/richContent';
+import { highlightCode } from './codeHighlight';
 
 type RichMarkName = 'bold' | 'italic' | 'underline' | 'strikethrough';
 type RichValueMarkName = 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize';
@@ -110,12 +113,16 @@ export function getSelectedBlockType(editor: BaseEditor): RichTextBlockType | nu
 
 export function getSelectedListKind(editor: BaseEditor): 'ul' | 'ol' | null {
   const blocks = getSelectedTopLevelBlocks(editor);
-  if (blocks.length !== 1) {
+  if (blocks.length === 0) {
     return null;
   }
 
-  const block = blocks[0];
-  return block.type === 'ul' || block.type === 'ol' ? block.type : null;
+  const firstBlock = blocks[0];
+  if (firstBlock.type !== 'ul' && firstBlock.type !== 'ol') {
+    return null;
+  }
+
+  return blocks.every((block) => block.type === firstBlock.type) ? firstBlock.type : null;
 }
 
 export function getSelectedLineHeight(editor: BaseEditor): number {
@@ -125,6 +132,15 @@ export function getSelectedLineHeight(editor: BaseEditor): number {
   }
 
   return blocks[0].lineHeight ?? DEFAULT_LINE_HEIGHT;
+}
+
+export function getSelectedCodeLanguage(editor: BaseEditor): string {
+  const blocks = getSelectedTopLevelBlocks(editor);
+  if (blocks.length === 0 || !blocks.every((block) => block.type === 'code-block')) {
+    return '';
+  }
+
+  return blocks[0].language ?? 'plaintext';
 }
 
 export function convertSelectionToBlockType(editor: BaseEditor, blockType: RichTextBlockType): void {
@@ -138,10 +154,21 @@ export function convertSelectionToBlockType(editor: BaseEditor, blockType: RichT
     return;
   }
 
-  const lines = flattenBlocksToLines(blocks);
-  replaceSelectedTopLevelBlocks(editor, [
-    createRichTextBlock(blockType, [createRichTextLeaf(lines.join('\n'))]),
-  ]);
+  replaceSelectedTopLevelBlocks(editor, blocks.map((block) => blockToTextBlock(block, blockType)));
+}
+
+export function convertSelectionToCodeBlock(editor: BaseEditor, language = 'plaintext'): void {
+  const blocks = getSelectedTopLevelBlocks(editor);
+  if (blocks.length === 0) {
+    return;
+  }
+
+  if (blocks.every((block) => block.type === 'code-block')) {
+    setSelectedCodeBlockLanguage(editor, language);
+    return;
+  }
+
+  replaceSelectedTopLevelBlocks(editor, blocks.map((block) => blockToCodeBlock(block, language)));
 }
 
 export function convertSelectionToList(editor: BaseEditor, listKind: 'ul' | 'ol'): void {
@@ -155,7 +182,7 @@ export function convertSelectionToList(editor: BaseEditor, listKind: 'ul' | 'ol'
     return;
   }
 
-  const items = flattenBlocksToLines(blocks).map((line) => createRichListItem(line));
+  const items = blocks.flatMap((block) => blockToListItems(block));
   replaceSelectedTopLevelBlocks(editor, [createRichListBlock(listKind, items)]);
 }
 
@@ -220,6 +247,55 @@ export function setSelectedBlocksLineHeight(editor: BaseEditor, lineHeight: numb
   });
 }
 
+export function setSelectedCodeBlockLanguage(editor: BaseEditor, language: string): void {
+  const range = getSelectedTopLevelBlockRange(editor);
+  if (!range) {
+    return;
+  }
+
+  Editor.withoutNormalizing(editor, () => {
+    for (let index = range.start; index <= range.end; index += 1) {
+      const node = editor.children[index];
+      if (!Element.isElement(node) || (node as { type?: string }).type !== 'code-block') {
+        continue;
+      }
+      const codeBlock = node as RichCodeBlock;
+      const rawText = codeBlock.children
+        .map((line) => line.children.map((leaf) => leaf.text).join(''))
+        .join('\n');
+      Transforms.setNodes(
+        editor,
+        {
+          language,
+          highlightedHtml: highlightCode(rawText, language),
+        } as Partial<RichCodeBlock>,
+        { at: [index] },
+      );
+    }
+  });
+}
+
+export function getSelectedStructureMode(editor: BaseEditor): 'block' | 'ul' | 'ol' | 'code-block' | null {
+  const blocks = getSelectedTopLevelBlocks(editor);
+  if (blocks.length === 0) {
+    return null;
+  }
+
+  if (blocks.every((block) => block.type === 'code-block')) {
+    return 'code-block';
+  }
+
+  if (blocks[0].type === 'ul' || blocks[0].type === 'ol') {
+    return blocks.every((block) => block.type === blocks[0].type) ? blocks[0].type : null;
+  }
+
+  if (blocks.every(isNonListTextBlock)) {
+    return 'block';
+  }
+
+  return null;
+}
+
 function getSelectedTopLevelBlocks(editor: BaseEditor): RichBlock[] {
   const range = getSelectedTopLevelBlockRange(editor);
   if (!range) {
@@ -251,20 +327,138 @@ function replaceSelectedTopLevelBlocks(editor: BaseEditor, blocks: RichBlock[]):
       Transforms.removeNodes(editor, { at: [index] });
     }
     Transforms.insertNodes(editor, blocks as unknown as Descendant[], { at: [range.start] });
-    Transforms.select(editor, Editor.start(editor, [range.start]));
+    const startPath: number[] = [range.start];
+    const endPath: number[] = [range.start + blocks.length - 1];
+    Transforms.select(editor, {
+      anchor: Editor.start(editor, startPath),
+      focus: Editor.end(editor, endPath),
+    });
   });
 }
 
-function flattenBlocksToLines(blocks: RichBlock[]): string[] {
-  return blocks.flatMap((block) => {
-    if (block.type === 'ul' || block.type === 'ol') {
-      return block.children.map((item) => flattenInlineNodes(item.children));
-    }
-    if (block.type === 'code-block') {
-      return block.children.map((line) => line.children.map((leaf) => leaf.text).join(''));
-    }
-    return flattenInlineNodes(block.children).split('\n');
+function blockToTextBlock(block: RichBlock, blockType: RichTextBlockType): RichTextBlock {
+  if (isNonListTextBlock(block)) {
+    return createRichTextBlock(blockType, cloneInlineNodes(block.children), {
+      direction: block.direction,
+      lineHeight: block.lineHeight,
+    });
+  }
+
+  return createRichTextBlock(blockType, [createRichTextLeaf(blockToPlainText(block))], {
+    direction: block.direction,
   });
+}
+
+function blockToCodeBlock(block: RichBlock, language: string): RichCodeBlock {
+  const text = blockToPlainText(block);
+  const codeBlock = createRichCodeBlock(text, {
+    direction: block.direction,
+    language,
+    highlightedHtml: highlightCode(text, language),
+  });
+  codeBlock.children = blockToPlainTextLines(block).map((line) => ({
+    type: 'code-line',
+    children: [createRichTextLeaf(line)],
+  }));
+  return codeBlock;
+}
+
+function blockToListItems(block: RichBlock): RichListItem[] {
+  if (block.type === 'ul' || block.type === 'ol') {
+    return block.children.flatMap((item) => inlineNodesToListItems(item.children));
+  }
+
+  if (block.type === 'code-block') {
+    return block.children.map((line) => createRichListItemFromChildren(cloneInlineNodes(line.children)));
+  }
+
+  return inlineNodesToListItems(block.children);
+}
+
+function inlineNodesToListItems(nodes: RichInlineNode[]): RichListItem[] {
+  return splitInlineNodesToLineGroups(nodes).map((children) => createRichListItemFromChildren(children));
+}
+
+function createRichListItemFromChildren(children: RichInlineNode[]): RichListItem {
+  return {
+    type: 'list-item',
+    children: children.length > 0 ? children : [createRichTextLeaf('')],
+  };
+}
+
+function splitInlineNodesToLineGroups(nodes: RichInlineNode[]): RichInlineNode[][] {
+  const lines: RichInlineNode[][] = [[]];
+
+  for (const node of nodes) {
+    const nodeGroups = isLinkNode(node)
+      ? splitLinkNodeToLineGroups(node)
+      : splitLeafNodeToLineGroups(node);
+
+    lines[lines.length - 1].push(...nodeGroups[0]);
+    for (let index = 1; index < nodeGroups.length; index += 1) {
+      lines.push([...nodeGroups[index]]);
+    }
+  }
+
+  return lines.length > 0 ? lines : [[]];
+}
+
+function splitLeafNodeToLineGroups(node: Exclude<RichInlineNode, RichTextLink>): RichInlineNode[][] {
+  return node.text.split('\n').map((part) => (part.length > 0 ? [{ ...node, text: part }] : []));
+}
+
+function splitLinkNodeToLineGroups(node: RichTextLink): RichInlineNode[][] {
+  const lines: RichInlineNode[][] = [[]];
+  let currentChildren: RichTextLink['children'] = [];
+
+  function flushLink() {
+    if (currentChildren.length === 0) {
+      return;
+    }
+    lines[lines.length - 1].push({
+      ...node,
+      children: currentChildren,
+    });
+    currentChildren = [];
+  }
+
+  for (const child of node.children) {
+    const parts = child.text.split('\n');
+    for (let index = 0; index < parts.length; index += 1) {
+      const part = parts[index];
+      if (part.length > 0) {
+        currentChildren.push({ ...child, text: part });
+      }
+      if (index < parts.length - 1) {
+        flushLink();
+        lines.push([]);
+      }
+    }
+  }
+
+  flushLink();
+  return lines;
+}
+
+function blockToPlainTextLines(block: RichBlock): string[] {
+  if (block.type === 'ul' || block.type === 'ol') {
+    return block.children.flatMap((item) => flattenInlineNodes(item.children).split('\n'));
+  }
+
+  if (block.type === 'code-block') {
+    return block.children.map((line) => line.children.map((leaf) => leaf.text).join(''));
+  }
+
+  return flattenInlineNodes(block.children).split('\n');
+}
+
+function blockToPlainText(block: RichBlock): string {
+  return blockToPlainTextLines(block).join('\n');
+}
+
+function cloneInlineNodes(nodes: RichInlineNode[]): RichInlineNode[] {
+  const cloned = structuredClone(nodes) as RichInlineNode[];
+  return cloned.length > 0 ? cloned : [createRichTextLeaf('')];
 }
 
 function flattenInlineNodes(nodes: RichInlineNode[]): string {

@@ -78,6 +78,30 @@
     "assetUrl": "/assets/help-docs/TEXT_COMPONENT_MASTER_BRIEF.md"
   },
   {
+    "path": "docs/TEXT_COMPONENT_PHASE_1_5_BRIEF.md",
+    "fileName": "TEXT_COMPONENT_PHASE_1_5_BRIEF.md",
+    "fullTitle": "Text Component Phase 1.5 Brief",
+    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_1_5_BRIEF.md"
+  },
+  {
+    "path": "docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md",
+    "fileName": "TEXT_COMPONENT_PHASE_1_5_TASKLIST.md",
+    "fullTitle": "Text Component Phase 1.5 Tasklist",
+    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md"
+  },
+  {
+    "path": "docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md",
+    "fileName": "TEXT_COMPONENT_PHASE_2_0_BRIEF.md",
+    "fullTitle": "Text Component Phase 2.0 Brief",
+    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md"
+  },
+  {
+    "path": "docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md",
+    "fileName": "TEXT_COMPONENT_PHASE_2_0_TASKLIST.md",
+    "fullTitle": "Text Component Phase 2.0 Tasklist",
+    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md"
+  },
+  {
     "path": "docs/TEXT_COMPONENT_TASKLIST.md",
     "fileName": "TEXT_COMPONENT_TASKLIST.md",
     "fullTitle": "Text Component Tasklist",

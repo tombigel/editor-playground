@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { createContainerNode, createTextNode } from '../../model/defaults';
 import {
   createRichTextBlock,
   createRichTextLeaf,
 } from '../../model/richContent';
+import type { RichContent } from '../../model/types';
 import { createInitialDocument } from '../documentApi';
 import {
   convertTextNodeDoc,
@@ -13,6 +15,7 @@ import {
   splitRichTextNodeDoc,
   switchTextSubtypeDoc,
 } from '../documentApi';
+import { renderLeafContent } from '../../render/nodePresentation';
 
 function appendTextNode(document: ReturnType<typeof createInitialDocument>, node = createTextNode('block', sectionId(document))) {
   const sectionIdValue = sectionId(document);
@@ -173,8 +176,11 @@ describe('api/textMerge', () => {
       throw new Error('Expected merged rich node');
     }
 
-    expect(survivor.content).toEqual([
-      createRichTextBlock('h2', [createRichTextLeaf('Heading')]),
+    expect(survivor.content).toMatchObject([
+      {
+        type: 'h2',
+        children: [{ text: 'Heading' }],
+      },
       {
         type: 'code-block',
         language: 'plaintext',
@@ -188,6 +194,69 @@ describe('api/textMerge', () => {
         children: [{ type: 'list-item', children: [{ text: 'First item' }] }],
       },
     ]);
+  });
+
+  it('preserves per-block inline styling when merging standalone text nodes', () => {
+    const document = createInitialDocument();
+    const parentId = sectionId(document);
+    const headingId = appendTextNode(document, createTextNode('block', parentId));
+    const bodyId = appendTextNode(document, createTextNode('block', parentId));
+
+    let next = setTextNodeContentDoc(document, headingId, 'content', 'Heading');
+    next = setTextNodeContentDoc(next, headingId, 'htmlTag', 'h2');
+    next = setTextNodeContentDoc(next, headingId, 'color', '#c2410c');
+    next = setTextNodeContentDoc(next, headingId, 'fontSize', '32px');
+    next = setTextNodeContentDoc(next, headingId, 'fontWeight', '700');
+    next = setTextNodeContentDoc(next, headingId, 'lineHeight', '1.2');
+    next = setTextNodeContentDoc(next, headingId, 'textAlign', 'center');
+    next = setTextNodeContentDoc(next, bodyId, 'content', 'Body copy');
+    next = setTextNodeContentDoc(next, bodyId, 'color', '#0f172a');
+    next = setTextNodeContentDoc(next, bodyId, 'fontSize', '18px');
+    next = setTextNodeContentDoc(next, bodyId, 'fontWeight', '400');
+    next = setTextNodeContentDoc(next, bodyId, 'lineHeight', '1.45');
+    next = setTextNodeContentDoc(next, bodyId, 'textAlign', 'left');
+
+    const merged = mergeTextNodesToRichDoc(next, [headingId, bodyId], { survivorNodeId: headingId });
+    const survivor = merged.nodes[headingId];
+    if (survivor.contentType !== 'text' || survivor.subtype !== 'rich') {
+      throw new Error('Expected merged rich node');
+    }
+
+    expect(survivor.style?.color).toBe('#16202a');
+    expect(survivor.style?.fontSize?.raw).toBe('18px');
+
+    const [headingBlock, bodyBlock] = survivor.content as RichContent;
+    if (headingBlock.type === 'code-block' || headingBlock.type === 'ul' || headingBlock.type === 'ol') {
+      throw new Error('Expected heading text block');
+    }
+    if (bodyBlock.type === 'code-block' || bodyBlock.type === 'ul' || bodyBlock.type === 'ol') {
+      throw new Error('Expected body text block');
+    }
+
+    expect(headingBlock.style).toMatchObject({
+      color: '#c2410c',
+      fontSize: '32px',
+      fontWeight: 700,
+      textAlign: 'center',
+    });
+    expect(headingBlock.lineHeight).toBe(1.2);
+    expect(bodyBlock.style).toMatchObject({
+      color: '#0f172a',
+      fontSize: '18px',
+      fontWeight: 400,
+      textAlign: 'left',
+    });
+    expect(bodyBlock.lineHeight).toBe(1.45);
+
+    const markup = renderToStaticMarkup(renderLeafContent(survivor));
+    expect(markup).toContain('<h2');
+    expect(markup).toContain('color:#c2410c');
+    expect(markup).toContain('font-size:32px');
+    expect(markup).toContain('text-align:center');
+    expect(markup).toContain('Body copy');
+    expect(markup).toContain('color:#0f172a');
+    expect(markup).toContain('font-size:18px');
+    expect(markup).toContain('text-align:left');
   });
 
   it('rejects merge requests that span multiple parents', () => {

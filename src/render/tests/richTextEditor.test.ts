@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   convertSelectionToBlockType,
+  convertSelectionToCodeBlock,
   convertSelectionToList,
   createRichEditor,
   fromSlateValue,
   getMarkValue,
+  getSelectedCodeLanguage,
+  getSelectedStructureMode,
   insertLink,
   isLinkActive,
   isMarkActive,
   removeLink,
   setMarkValue,
+  setSelectedCodeBlockLanguage,
   toSlateValue,
   toggleMark,
 } from '../richTextEditor';
@@ -149,7 +153,7 @@ describe('render/richTextEditor', () => {
       ]);
     });
 
-    it('unifies touched blocks into one block conversion result', () => {
+    it('preserves touched block boundaries when changing block type across a multi-block selection', () => {
       const editor = makeEditor();
       editor.children = toSlateValue([
         { type: 'paragraph', children: [{ text: 'one two' }] },
@@ -163,7 +167,8 @@ describe('render/richTextEditor', () => {
       convertSelectionToBlockType(editor, 'h3');
 
       expect(fromSlateValue(editor.children as never)).toEqual([
-        { type: 'h3', children: [{ text: 'one two\nthree four' }] },
+        { type: 'h3', children: [{ text: 'one two' }] },
+        { type: 'h3', children: [{ text: 'three four' }] },
       ]);
     });
 
@@ -185,6 +190,134 @@ describe('render/richTextEditor', () => {
             { type: 'list-item', children: [{ text: 'two' }] },
             { type: 'list-item', children: [{ text: 'three' }] },
           ],
+        },
+      ]);
+    });
+
+    it('preserves inline marks and links when converting multiple blocks to a list', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'paragraph',
+          children: [
+            { text: 'Visit ' },
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com',
+              openInNewTab: false,
+              children: [{ text: 'docs', bold: true }],
+            },
+          ],
+        },
+        {
+          type: 'h2',
+          children: [{ text: 'Title', italic: true }],
+        },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0], offset: 0 },
+        focus: { path: [1, 0], offset: 5 },
+      });
+
+      convertSelectionToList(editor, 'ol');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ol',
+          children: [
+            {
+              type: 'list-item',
+              children: [
+                { text: 'Visit ' },
+                {
+                  type: 'link',
+                  linkType: 'external',
+                  href: 'https://example.com',
+                  openInNewTab: false,
+                  children: [{ text: 'docs', bold: true }],
+                },
+                { text: '' },
+              ],
+            },
+            {
+              type: 'list-item',
+              children: [{ text: 'Title', italic: true }],
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('converts each touched block into its own code block', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        { type: 'paragraph', children: [{ text: 'alpha' }] },
+        { type: 'h2', children: [{ text: 'beta' }] },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0], offset: 0 },
+        focus: { path: [1, 0], offset: 4 },
+      });
+
+      convertSelectionToCodeBlock(editor, 'markdown');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'code-block',
+          language: 'markdown',
+          highlightedHtml: expect.any(String),
+          children: [{ type: 'code-line', children: [{ text: 'alpha' }] }],
+        },
+        {
+          type: 'code-block',
+          language: 'markdown',
+          highlightedHtml: expect.any(String),
+          children: [{ type: 'code-line', children: [{ text: 'beta' }] }],
+        },
+      ]);
+    });
+  });
+
+  describe('code block toolbar helpers', () => {
+    it('reads the selected code block language', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'code-block',
+          language: 'markdown',
+          children: [{ type: 'code-line', children: [{ text: '# Heading' }] }],
+        },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 0 },
+        focus: { path: [0, 0, 0], offset: 9 },
+      });
+
+      expect(getSelectedStructureMode(editor)).toBe('code-block');
+      expect(getSelectedCodeLanguage(editor)).toBe('markdown');
+    });
+
+    it('updates the selected rich code block language', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'code-block',
+          language: 'plaintext',
+          children: [{ type: 'code-line', children: [{ text: '# Heading' }] }],
+        },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 0 },
+        focus: { path: [0, 0, 0], offset: 9 },
+      });
+
+      setSelectedCodeBlockLanguage(editor, 'markdown');
+
+      expect(fromSlateValue(editor.children as never)).toMatchObject([
+        {
+          type: 'code-block',
+          language: 'markdown',
         },
       ]);
     });

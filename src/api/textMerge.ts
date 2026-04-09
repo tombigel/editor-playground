@@ -11,18 +11,20 @@ import {
   listContentToLines,
   normalizeListContent,
 } from '../model/listContent';
-import { parseHeightValue, parseUnitValue } from '../model/units';
+import { formatValue, parseHeightValue, parseUnitValue } from '../model/units';
 import type {
   DocumentModel,
   ListContent,
   NodeId,
   RichBlock,
+  RichBlockStyle,
   RichContent,
   RichTextBlock,
   TextNode,
   TextSubtype,
 } from '../model/types';
 import { isTextNode } from '../model/types';
+import { buildFontFamilyStack } from '../fonts';
 
 const DEFAULT_SPLIT_FONT_SIZE_PX = 18;
 const DEFAULT_SPLIT_LINE_HEIGHT = 1.45;
@@ -205,7 +207,7 @@ function createRichNodeFromSource(source: TextNode, content: RichContent): TextN
     ...(source.animation !== undefined ? { animation: structuredClone(source.animation) } : {}),
     content,
     ...(source.lang !== undefined ? { lang: source.lang } : {}),
-    style: source.style ? structuredClone(source.style) : structuredClone(base.style),
+    style: structuredClone(base.style),
   };
 }
 
@@ -215,7 +217,7 @@ function textNodeToRichContent(node: TextNode): RichContent {
   }
 
   if (node.subtype === 'list') {
-    return listContentToRichContent(normalizeListContent(node.content));
+    return listContentToRichContent(normalizeListContent(node.content), buildRichBlockStyleFromTextNode(node, 'list'), node.style?.direction);
   }
 
   if (node.subtype === 'code') {
@@ -224,6 +226,8 @@ function textNodeToRichContent(node: TextNode): RichContent {
         language: node.code?.language,
         theme: node.code?.theme,
         highlightedHtml: node.code?.highlightedHtml,
+        direction: node.style?.direction,
+        style: buildRichBlockStyleFromTextNode(node, 'code'),
       }),
     ];
   }
@@ -233,6 +237,11 @@ function textNodeToRichContent(node: TextNode): RichContent {
       createRichTextBlock(
         htmlTagToRichBlockType(node.htmlTag),
         [createRichTextLeaf(typeof node.content === 'string' ? node.content : '')],
+        {
+          direction: node.style?.direction,
+          lineHeight: node.style?.lineHeight,
+          style: buildRichBlockStyleFromTextNode(node, 'text'),
+        },
       ),
     ];
   }
@@ -245,13 +254,20 @@ function textNodeToRichContent(node: TextNode): RichContent {
   ];
 }
 
-function listContentToRichContent(content: ListContent): RichContent {
+function listContentToRichContent(
+  content: ListContent,
+  style?: RichBlockStyle,
+  direction?: 'ltr' | 'rtl',
+): RichContent {
   if (content.type === 'ul' || content.type === 'ol') {
-    return [listContentToRichListBlock(content)];
+    return [listContentToRichListBlock(content, { style, direction })];
   }
 
   return listContentToLines(content).map((line) =>
-    createRichTextBlock('paragraph', [createRichTextLeaf(line)]),
+    createRichTextBlock('paragraph', [createRichTextLeaf(line)], {
+      direction,
+      style,
+    }),
   );
 }
 
@@ -267,6 +283,96 @@ function htmlTagToRichBlockType(
   }
 
   return 'paragraph';
+}
+
+function buildRichBlockStyleFromTextNode(
+  node: TextNode,
+  kind: 'text' | 'code' | 'list',
+): RichBlockStyle | undefined {
+  const style = node.style;
+  if (!style) {
+    return undefined;
+  }
+
+  const richStyle: RichBlockStyle = {
+    ...(style.color ? { color: style.color } : {}),
+    ...(style.fontFamily ? { fontFamily: buildFontFamilyStack(style.fontFamily) } : {}),
+    ...(style.fontSize ? { fontSize: formatValue(style.fontSize.parsed) } : {}),
+    ...(style.fontWeight ? { fontWeight: style.fontWeight } : {}),
+    ...(style.fontStyle ? { fontStyle: style.fontStyle } : {}),
+    ...(style.textDecorationLine ? { textDecorationLine: style.textDecorationLine } : {}),
+    ...(style.textAlign ? { textAlign: style.textAlign } : {}),
+  };
+
+  if (kind === 'text' || kind === 'list') {
+    const filter = buildFilterShadowCss(style);
+    if (filter) {
+      richStyle.filter = filter;
+    }
+  }
+
+  if (kind === 'code') {
+    if (style.background) {
+      richStyle.background = style.background;
+    }
+    const borderStyle = buildUnifiedBorderCss(style);
+    if (borderStyle) {
+      Object.assign(richStyle, borderStyle);
+    }
+    const boxShadow = buildBoxShadowCss(style);
+    if (boxShadow) {
+      richStyle.boxShadow = boxShadow;
+    }
+  }
+
+  return Object.keys(richStyle).length > 0 ? richStyle : undefined;
+}
+
+function buildFilterShadowCss(style: TextNode['style']): string | undefined {
+  const resolved = resolveShadowStyle(style);
+  if (!resolved) {
+    return undefined;
+  }
+  return `drop-shadow(${resolved.offsetX}px ${resolved.offsetY}px ${resolved.blur}px ${resolved.color})`;
+}
+
+function buildBoxShadowCss(style: TextNode['style']): string | undefined {
+  const resolved = resolveShadowStyle(style);
+  if (!resolved) {
+    return undefined;
+  }
+  const spread = resolved.spread !== 0 ? ` ${resolved.spread}px` : '';
+  return `${resolved.offsetX}px ${resolved.offsetY}px ${resolved.blur}px${spread} ${resolved.color}`;
+}
+
+function resolveShadowStyle(style: TextNode['style']) {
+  if (!style?.shadowColor) {
+    return null;
+  }
+
+  return {
+    color: style.shadowColor,
+    blur: style.shadowBlur ?? 0,
+    spread: style.shadowSpread ?? 0,
+    offsetX: style.shadowOffsetX ?? 0,
+    offsetY: style.shadowOffsetY ?? 0,
+  };
+}
+
+function buildUnifiedBorderCss(style: TextNode['style']): RichBlockStyle | undefined {
+  const borderWidth = style?.borderWidth ? formatValue(style.borderWidth.parsed) : undefined;
+  const borderColor = style?.borderColor;
+  const borderRadius = style?.borderRadius ? formatValue(style.borderRadius.parsed) : undefined;
+  if (!borderWidth && !borderColor && !borderRadius) {
+    return undefined;
+  }
+
+  return {
+    ...(borderWidth ? { borderStyle: 'solid' as const, borderWidth } : {}),
+    ...(borderColor ? { borderColor } : {}),
+    ...(borderRadius ? { borderRadius } : {}),
+    ...(borderWidth ? { boxSizing: 'border-box' as const, backgroundClip: 'padding-box' as const } : {}),
+  };
 }
 
 function richBlockToTextSubtype(_block: RichBlock): TextSubtype {

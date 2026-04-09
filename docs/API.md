@@ -325,7 +325,7 @@ Pure helper module for structure-changing text operations. `documentApi` re-expo
 |---|---|---|
 | `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits a rich node at block boundaries. A single block is converted in place; multiple blocks keep the original node as the first split node and append newly generated sibling text nodes after it. |
 | `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges same-parent sibling text nodes into one rich node. Content order follows parent tree order, not caller order. |
-| `MergeTextNodesOptions` | `{ survivorNodeId?: NodeId }` | Optional surviving anchor node. The survivor keeps identity, geometry, and shared authored styling while absorbed siblings are removed. |
+| `MergeTextNodesOptions` | `{ survivorNodeId?: NodeId }` | Optional surviving anchor node. The survivor keeps identity and geometry while absorbed siblings are removed; compatible standalone text styling is preserved inline per merged rich block. |
 
 ### Deterministic behavior
 

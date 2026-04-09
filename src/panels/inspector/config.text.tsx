@@ -49,19 +49,6 @@ const textTextStyleSection: InspectorSectionDefinition = {
         />
       );
     }
-    if (node.subtype === 'list') {
-      return (
-        <TextTextStyleSection
-          document={document}
-          node={node}
-          onTextChange={actions.onTextChange}
-          onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
-          showHtmlTag={false}
-          focusedMode={focusedMode}
-          onEnterFocusedMode={actions.onEnterFocusedMode}
-        />
-      );
-    }
     return (
       <TextTextStyleSection
         document={document}
@@ -253,14 +240,14 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     id: 'content',
     bucket: 'primary',
     title: 'Content',
-    description: 'Copy fields for text nodes.',
+    description: 'Copy and semantic fields for text nodes.',
     sections: [textContentSection],
   }),
   createSectionBlock({
     id: 'text-style',
     bucket: 'primary',
     title: 'Text style',
-    description: 'Typography and semantic text controls.',
+    description: 'Typography controls.',
     sections: [textTextStyleSection],
   }),
   createSectionBlock({

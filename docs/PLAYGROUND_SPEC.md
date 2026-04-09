@@ -564,7 +564,7 @@ Additional rules:
 
 | Leaf kind | Content section | Style section(s) | Special semantics |
 |---|---|---|---|
-| `text` | body copy | `Text style`, `Design` | Editable HTML tag |
+| `text` | body copy + HTML tag | `Text style`, `Design` | Editable HTML tag |
 | `link` | label + destination | `Text style`, `Design` | Internal/anchor vs external link behavior |
 | `image` | `src`, `alt` | `Design` | Unified border/radius/shadow surface |
 | `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
@@ -1239,6 +1239,7 @@ Single-node inspector:
 - Sticky-capable single-node inspectors place `Sticky behavior` immediately after `Layout`.
 - `Content` is the standard content-editing section title across leaf inspectors.
 - Text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`.
+- Standalone block text keeps its editable HTML tag in `Content`; `Text style` remains typography-only.
 - Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
 - Link nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
 
@@ -1359,6 +1360,7 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 ### Inspector subtype switcher
 
 - The Content block in the text inspector shows a **Text / Rich / Code / List** segmented control above the content fields.
+- In `Text` subtype, the same block also holds the editable HTML tag row beside the other content metadata.
 - Switching subtype calls `switchTextSubtypeDoc()` and only passes the target subtype plus an optional conversion mode; the pure API still owns the conversion behavior.
 - The control is visible for all standalone text nodes with `subtype` in `['block', 'rich', 'code', 'list']`.
 - When converting a multi-block rich node to a non-rich subtype, the inspector opens a confirmation dialog that only selects the API mode:
@@ -1404,8 +1406,7 @@ Text markdown import/export is headless and API-first.
 
 ## Code Language Modes
 
-- Standalone and rich code blocks support `plaintext`, `auto`, and explicit languages including `markdown`.
-- `auto` stores the authored language mode and resolves highlighting with lightweight language detection at render/update time.
+- Standalone and rich code blocks support `plaintext`, `markdown`, and explicit Prism-backed languages.
 - `markdown` means syntax-highlighted markdown source code, not parsed document markdown.
 
 ## Standalone List Text Nodes
@@ -1471,6 +1472,7 @@ The text system supports structure-changing operations without depending on edit
 - `mergeTextNodesToRichDoc()` merges sibling text nodes under the same parent into one rich node.
 - Content order follows parent tree order, not the caller's selection order.
 - The surviving node can be chosen explicitly so later editor multi-select flows can keep the first-selected node's geometry and identity.
+- Standalone text merges preserve per-source typography and compatible visual treatment inline on the resulting rich blocks instead of forcing the survivor's text style onto every merged block.
 - Mixed-parent merge requests are rejected as no-ops.
 - The multi-select inspector only offers the merge action when every selected node is a standalone text node under the same parent.
 
@@ -1742,8 +1744,8 @@ during editing.
 ### Edit mode lifecycle
 
 ```text
-Idle ──select──► Selected ──second plain click──► Editing ──outside click / Cmd+Enter / Save──► Commit ──► Idle
-                                                            └── Escape / Cancel ──► Discard ──► Idle
+Idle ──select──► Selected ──second plain click──► Editing ──outside click / Cmd+Enter──► Commit ──► Idle
+                                                            └── Escape ──► Discard ──► Idle
 ```
 
 - **Commit**: serialises the Slate editor state back to `RichContent` and dispatches a
@@ -1756,17 +1758,26 @@ undo history. Keystrokes are not propagated to the document until the editor exi
 While editing, the rich node gets visible stage chrome:
 
 - a floating toolbar built from the shared floating panel shell plus compact shared inputs/selects and inspector-style icon buttons
+- the floating toolbar is arranged as a fixed two-row editor bar rather than a wrapping chip cloud
 - the stage selection outline is hidden while the rich node is actively being edited
 - the node height switches to auto with a minimum height equal to the authored stage height, so
   vertical overflow grows the component instead of clipping it
 - toolbar and link-popover interactions stay inside edit mode instead of being treated as outside clicks
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
-- the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, ordered-list controls, unordered-list controls, line height, and block spacing
+- the toolbar now exposes inline font family, font size, bold, italic, underline, strikethrough, text color, highlight color, link, non-list block type, code-block mode, ordered-list controls, unordered-list controls, line height, and block spacing
+- active icon buttons use the shared selected-control treatment rather than bespoke stage-only styling
 - toolbar selects, inline inputs, and the link popover restore the last rich-editor selection before applying block/list/link mutations, so focus leaving the editable surface does not retarget those actions
+- rich `code-block` selections expose a language selector in the same toolbar; standalone code inspector language options include `plaintext`, `markdown`, and explicit Prism-backed languages
 - block, `ol`, and `ul` controls are block-scoped rather than inline-scoped: they affect the containing block or touched blocks, never by splitting around the inline selection
-- multi-block block/list conversions collapse the touched blocks into one resulting block or list container
-- converting touched blocks to `ul` / `ol` treats original block boundaries as hard line breaks before item creation
+- multi-block block-type conversions preserve touched top-level block boundaries and retag each touched block instead of collapsing them into one block
+- converting touched blocks to `ul` / `ol` keeps one list container, preserves inline marks/links inside items, and treats touched block boundaries and hard line breaks as item boundaries
+
+### Text inspector content panel
+
+- The text subtype toggle is rendered as its own centered row inside the content card rather than as a right-aligned card-header control.
+- Rich content cards no longer render a text preview under the “Edit rich text” action.
+- Standalone list content cards keep advanced bulk editing collapsed by default for `ul` / `ol`; description-list bulk editing remains visible because structured `dl` editing is deferred.
 
 ### Keyboard shortcuts
 

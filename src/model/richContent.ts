@@ -3,6 +3,7 @@ import type {
   ListContent,
   OrderedListMarkerStyle,
   RichBlock,
+  RichBlockStyle,
   RichCodeBlock,
   RichCodeLine,
   RichContent,
@@ -57,6 +58,43 @@ function normalizeDirection(value: unknown): 'ltr' | 'rtl' | undefined {
 
 function normalizeLineHeight(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+const RICH_BLOCK_STYLE_KEYS = new Set<keyof RichBlockStyle>([
+  'color',
+  'background',
+  'fontFamily',
+  'fontSize',
+  'fontWeight',
+  'fontStyle',
+  'textDecorationLine',
+  'textAlign',
+  'filter',
+  'borderStyle',
+  'borderWidth',
+  'borderColor',
+  'borderRadius',
+  'boxSizing',
+  'backgroundClip',
+  'boxShadow',
+]);
+
+function normalizeRichBlockStyle(value: unknown): RichBlockStyle | undefined {
+  if (!isObjectRecord(value)) {
+    return undefined;
+  }
+
+  const style: RichBlockStyle = {};
+  for (const [key, rawValue] of Object.entries(value)) {
+    if (!RICH_BLOCK_STYLE_KEYS.has(key as keyof RichBlockStyle)) {
+      continue;
+    }
+    if (typeof rawValue === 'string' || typeof rawValue === 'number') {
+      (style as Record<string, string | number>)[key] = rawValue;
+    }
+  }
+
+  return Object.keys(style).length > 0 ? style : undefined;
 }
 
 function isRichTextBlockType(value: unknown): value is RichTextBlockType {
@@ -153,12 +191,13 @@ export function createRichTextLeaf(text: string, marks?: Partial<RichTextLeaf>):
 export function createRichTextBlock(
   type: RichTextBlockType,
   children: RichInlineNode[],
-  options: Pick<RichTextBlock, 'direction' | 'lineHeight'> = {},
+  options: Pick<RichTextBlock, 'direction' | 'lineHeight' | 'style'> = {},
 ): RichTextBlock {
   return {
     type,
     ...(options.direction ? { direction: options.direction } : {}),
     ...(typeof options.lineHeight === 'number' ? { lineHeight: options.lineHeight } : {}),
+    ...(options.style ? { style: options.style } : {}),
     children: children.length > 0 ? children : [createRichTextLeaf('')],
   };
 }
@@ -172,7 +211,7 @@ export function createRichCodeLine(text = ''): RichCodeLine {
 
 export function createRichCodeBlock(
   text = '',
-  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml'> = {},
+  options: Pick<RichCodeBlock, 'direction' | 'language' | 'theme' | 'highlightedHtml' | 'style'> = {},
 ): RichCodeBlock {
   return {
     type: 'code-block',
@@ -180,6 +219,7 @@ export function createRichCodeBlock(
     ...(typeof options.language === 'string' ? { language: options.language } : {}),
     ...(options.theme === 'light' || options.theme === 'dark' ? { theme: options.theme } : {}),
     ...(typeof options.highlightedHtml === 'string' ? { highlightedHtml: options.highlightedHtml } : {}),
+    ...(options.style ? { style: options.style } : {}),
     children: [createRichCodeLine(text)],
   };
 }
@@ -194,12 +234,13 @@ export function createRichListItem(text = ''): RichListItem {
 export function createRichListBlock(
   type: RichListBlock['type'],
   items: RichListItem[],
-  options: Pick<RichListBlock, 'direction'> & { markerStyle?: string; start?: number } = {},
+  options: Pick<RichListBlock, 'direction' | 'style'> & { markerStyle?: string; start?: number } = {},
 ): RichListBlock {
   if (type === 'ol') {
     return {
       type: 'ol',
       ...(options.direction ? { direction: options.direction } : {}),
+      ...(options.style ? { style: options.style } : {}),
       ...(typeof options.start === 'number' && Number.isFinite(options.start) ? { start: Math.max(1, Math.trunc(options.start)) } : {}),
       ...(typeof options.markerStyle === 'string' && ORDERED_MARKER_STYLES.has(options.markerStyle as OrderedListMarkerStyle)
         ? { markerStyle: options.markerStyle as OrderedListMarkerStyle }
@@ -211,6 +252,7 @@ export function createRichListBlock(
   return {
     type: 'ul',
     ...(options.direction ? { direction: options.direction } : {}),
+    ...(options.style ? { style: options.style } : {}),
     ...(typeof options.markerStyle === 'string' && UNORDERED_MARKER_STYLES.has(options.markerStyle as UnorderedListMarkerStyle)
       ? { markerStyle: options.markerStyle as UnorderedListMarkerStyle }
       : {}),
@@ -283,6 +325,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
     return createRichTextBlock(node.type, normalizeInlineChildren(node.children), {
       direction: normalizeDirection(node.direction),
       lineHeight: normalizeLineHeight(node.lineHeight),
+      style: normalizeRichBlockStyle(node.style),
     });
   }
 
@@ -293,6 +336,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
       ...(typeof node.language === 'string' ? { language: node.language } : {}),
       ...(node.theme === 'light' || node.theme === 'dark' ? { theme: node.theme } : {}),
       ...(typeof node.highlightedHtml === 'string' ? { highlightedHtml: node.highlightedHtml } : {}),
+      ...(normalizeRichBlockStyle(node.style) ? { style: normalizeRichBlockStyle(node.style) } : {}),
       children: normalizeCodeLines(node.children),
     };
   }
@@ -300,6 +344,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
   if (isRichListBlockType(node.type)) {
     return createRichListBlock(node.type, normalizeListItems(node.children), {
       direction: normalizeDirection(node.direction),
+      style: normalizeRichBlockStyle(node.style),
       ...(node.type === 'ol' && typeof node.start === 'number' ? { start: node.start } : {}),
       ...(typeof node.markerStyle === 'string' ? { markerStyle: node.markerStyle } : {}),
     });
@@ -352,15 +397,22 @@ export function createParagraphRichText(text: string, marks?: Partial<RichTextLe
   return [createParagraphBlock([createRichTextLeaf(text, marks)])];
 }
 
-export function listContentToRichListBlock(content: ListContent): RichListBlock {
+export function listContentToRichListBlock(
+  content: ListContent,
+  options: Pick<RichListBlock, 'direction' | 'style'> = {},
+): RichListBlock {
   if (content.type === 'ol') {
     return createRichListBlock('ol', content.items.map((item) => createRichListItem(item.text)), {
+      direction: options.direction,
+      style: options.style,
       start: content.start,
       markerStyle: content.markerStyle,
     });
   }
 
   return createRichListBlock('ul', content.items.map((item) => createRichListItem('text' in item ? item.text : `${item.term}${item.description ? `: ${item.description}` : ''}`)), {
+    direction: options.direction,
+    style: options.style,
     markerStyle: content.type === 'ul' ? content.markerStyle : undefined,
   });
 }
