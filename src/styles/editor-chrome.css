@@ -781,11 +781,11 @@
 }
 
 .editor-inline-field-value {
-  color: var(--editor-utility-text-muted);
+  color: var(--editor-input-text);
 }
 
 .value-with-unit-value {
-  color: var(--editor-utility-text-muted);
+  color: var(--editor-input-text);
 }
 
 .editor-inline-field-trigger {

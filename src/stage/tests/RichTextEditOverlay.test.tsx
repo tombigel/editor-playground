@@ -49,6 +49,9 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain('aria-label="Line height"');
 		expect(markup).toContain('aria-label="Block spacing"');
 		expect(markup).toContain('type="number"');
+		expect(markup).toContain("editor-text-strong");
+		expect(markup).toContain("editor-border-subtle");
+		expect(markup).toContain("focus-visible:outline-[color:var(--editor-focus-ring-strong)]");
 		expect(markup).not.toContain('aria-label="Font size unit" class="editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center rounded-sm outline-none disabled:cursor-not-allowed');
 		expect(markup).not.toContain("Rich text edit");
 		expect(markup).not.toContain("Cmd/Ctrl+Enter saves");
