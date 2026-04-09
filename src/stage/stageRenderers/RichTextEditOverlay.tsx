@@ -38,6 +38,7 @@ import {
 	Slate,
 } from "slate-react";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
 import { PopoverTooltip } from "@/components/ui/popover";
@@ -2045,17 +2046,19 @@ function CompactColorField({
 			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
-			<input
-				aria-label={label}
-				type="color"
-				value={value}
-				className="pointer-events-auto h-8 w-8 shrink-0 cursor-pointer rounded-sm border border-[color:var(--editor-border-subtle)] bg-transparent p-0"
+			<div
 				style={{ pointerEvents: "auto" }}
 				onPointerDown={(event) => {
 					event.stopPropagation();
 				}}
-				onChange={(event) => onChange(event.target.value)}
-			/>
+			>
+				<ColorPicker
+					value={value}
+					ariaLabel={label}
+					variant="swatch"
+					onChange={onChange}
+				/>
+			</div>
 		</PopoverTooltip>
 	);
 }

@@ -1781,6 +1781,7 @@ While editing, the rich node gets visible stage chrome:
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
+- text color and highlight color reuse the shared `ColorPicker` swatch control instead of a stage-local native color input
 - font size uses the shared `ValueWithUnit` contract with font-size units, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
 - line height uses a compact spinnerless number field with a leading `MoveVertical` icon
 - block spacing uses a compact `ValueWithUnit` field with `px` / `em` support and a leading `UnfoldVertical` icon while still persisting `content.blockGap` as px
