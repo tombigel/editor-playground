@@ -253,6 +253,6 @@ Execution rules:
   - `npx vitest run --config vitest.e2e.config.ts src/stage/tests/Stage.e2e.test.ts -t "keeps text and highlight color swatches the same size in the rich toolbar"`: passed
   - `npm run build`: passed
 - Commit SHA:
-  - `pending`
+  - `d5b4f66`
 - Open follow-ups carried forward:
   - None.
