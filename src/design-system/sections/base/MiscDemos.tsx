@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Rocket, Layers2, Pin } from "lucide-react";
+import { CodeXml, Layers2, List, PencilLine, Pin, Rocket, TextInitial } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
+import { OptionsSelector } from "@/components/ui/options-selector";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import { ListCard } from "@/components/ui/list-card";
@@ -73,9 +74,20 @@ const OPTIONS_SELECTOR_PROPS: PropDefinition[] = [
 		description: "Currently selected option value.",
 	},
 	{
-		name: "onChange",
+		name: "options",
+		type: "OptionsSelectorOption[]",
+		description: "Mutually exclusive choices with labels, optional icons, and optional per-option tooltips.",
+	},
+	{
+		name: "onValueChange",
 		type: "(value: string) => void",
 		description: "Selection change handler.",
+	},
+	{
+		name: "display",
+		type: "'label' | 'icon' | 'icon-label'",
+		default: "'label'",
+		description: "Whether options show labels only, icons only, or both.",
 	},
 ];
 
@@ -237,61 +249,75 @@ function SwitchDemo() {
 function OptionsSelectorDemo() {
 	const [twoOption, setTwoOption] = useState("left");
 	const [threeOption, setThreeOption] = useState("center");
+	const [textSubtype, setTextSubtype] = useState("block");
 	return (
 		<div className="space-y-4">
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					2-option selector
 				</div>
-				<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-1">
-					<Button
-						variant={twoOption === "left" ? "default" : "ghost"}
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-						onClick={() => setTwoOption("left")}
-					>
-						Left
-					</Button>
-					<Button
-						variant={twoOption === "right" ? "default" : "ghost"}
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-						onClick={() => setTwoOption("right")}
-					>
-						Right
-					</Button>
-				</div>
+				<OptionsSelector
+					ariaLabel="Alignment"
+					value={twoOption}
+					onValueChange={setTwoOption}
+					options={[
+						{ value: "left", label: "Left" },
+						{ value: "right", label: "Right" },
+					]}
+				/>
 			</div>
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					3-option selector
 				</div>
-				<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-1">
-					<Button
-						variant={threeOption === "left" ? "default" : "ghost"}
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-						onClick={() => setThreeOption("left")}
-					>
-						Left
-					</Button>
-					<Button
-						variant={threeOption === "center" ? "default" : "ghost"}
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-						onClick={() => setThreeOption("center")}
-					>
-						Center
-					</Button>
-					<Button
-						variant={threeOption === "right" ? "default" : "ghost"}
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-						onClick={() => setThreeOption("right")}
-					>
-						Right
-					</Button>
+				<OptionsSelector
+					ariaLabel="Alignment"
+					value={threeOption}
+					onValueChange={setThreeOption}
+					options={[
+						{ value: "left", label: "Left" },
+						{ value: "center", label: "Center" },
+						{ value: "right", label: "Right" },
+					]}
+				/>
+			</div>
+			<div>
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
+					Icon-only selector
 				</div>
+				<OptionsSelector
+					ariaLabel="Text subtype"
+					display="icon"
+					size="compact"
+					value={textSubtype}
+					onValueChange={setTextSubtype}
+					options={[
+						{
+							value: "rich",
+							label: "Rich text",
+							icon: <PencilLine className="h-3.5 w-3.5" />,
+							tooltip: <div className="leading-3.5 font-medium">Rich text</div>,
+						},
+						{
+							value: "block",
+							label: "Text",
+							icon: <TextInitial className="h-3.5 w-3.5" />,
+							tooltip: <div className="leading-3.5 font-medium">Text</div>,
+						},
+						{
+							value: "list",
+							label: "List",
+							icon: <List className="h-3.5 w-3.5" />,
+							tooltip: <div className="leading-3.5 font-medium">List</div>,
+						},
+						{
+							value: "code",
+							label: "Code",
+							icon: <CodeXml className="h-3.5 w-3.5" />,
+							tooltip: <div className="leading-3.5 font-medium">Code</div>,
+						},
+					]}
+				/>
 			</div>
 			{/* Multi-select (mixed) */}
 			<div>
@@ -513,8 +539,8 @@ export function MiscDemos() {
 			<ComponentPreview
 				id="base-options-selector"
 				name="Options Selector"
-				description="Segmented button group for mutually exclusive choices, built from Button variants in a styled container."
-				sourceFile="(pattern using src/components/ui/button.tsx)"
+				description="Segmented selector for mutually exclusive choices, with support for label buttons or icon-only buttons with per-option tooltips."
+				sourceFile="src/components/ui/options-selector.tsx"
 				props={OPTIONS_SELECTOR_PROPS}
 			>
 				<OptionsSelectorDemo />

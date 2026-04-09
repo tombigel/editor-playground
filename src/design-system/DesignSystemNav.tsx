@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SettingsNavItem } from "@/components/ui/settings-panel";
+import { scrollDesignSystemSectionIntoView } from "./navigationScroll";
 import type { DSSection } from "./types";
 
 export function DesignSystemNav({
@@ -80,13 +81,15 @@ export function DesignSystemNav({
 			if (!scrollContainer) {
 				return;
 			}
-			const el = scrollContainer.querySelector(`#${CSS.escape(id)}`);
+			const el = scrollContainer.querySelector<HTMLElement>(
+				`#${CSS.escape(id)}`,
+			);
 			if (!el) {
 				return;
 			}
 			isScrollingRef.current = true;
 			setActiveId(id);
-			el.scrollIntoView({ behavior: "smooth", block: "start" });
+			scrollDesignSystemSectionIntoView(scrollContainer, el);
 			setTimeout(() => {
 				isScrollingRef.current = false;
 			}, 600);

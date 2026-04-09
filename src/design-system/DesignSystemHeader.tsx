@@ -10,7 +10,7 @@ export function DesignSystemHeader({
 }) {
 	return (
 		<header
-			className="editor-border-subtle editor-bg-surface flex h-14 items-center justify-between gap-4 border-b px-4"
+			className="editor-border-subtle editor-bg-surface sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4"
 			style={{ boxShadow: "var(--editor-surface-shadow)" }}
 		>
 			{/* Left: back + title */}
