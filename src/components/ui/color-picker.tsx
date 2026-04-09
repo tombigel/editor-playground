@@ -484,7 +484,9 @@ function ColorPickerImpl({
       class={cn(
         'block min-w-0',
         variant === 'default' ? 'w-full' : null,
-        variant === 'swatch' ? 'editor-color-picker editor-icon-button-subtle h-8 w-8 overflow-hidden rounded-md border shadow-sm' : null,
+        variant === 'swatch'
+          ? 'editor-color-picker editor-icon-button-subtle inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-md border p-0 align-top shadow-sm'
+          : null,
         className,
       )}
       data-ui="color-picker"

@@ -22,5 +22,7 @@ describe('components/ui/color-picker', () => {
     expect(markup).toContain('editor-color-picker');
     expect(markup).toContain('editor-icon-button-subtle');
     expect(markup).toContain('h-8 w-8');
+    expect(markup).toContain('inline-flex');
+    expect(markup).toContain('shrink-0');
   });
 });
