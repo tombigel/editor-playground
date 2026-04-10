@@ -95,6 +95,7 @@ export const distributeNodes = editorStore.distributeNodes;
 export const importDocument = editorStore.importDocument;
 export const getValidationErrors = editorStore.getValidationErrors;
 export const alignNodes = editorStore.alignNodes;
+export const applyTextNodeMarkdown = editorStore.applyTextNodeMarkdown;
 export const insertLeaf = editorStore.insertLeaf;
 export const insertSectionTemplate = editorStore.insertSectionTemplate;
 export const insertWrapper = editorStore.insertWrapper;

@@ -77,6 +77,7 @@ export type InspectorPanelProps = {
   onStickyElevated: (value: boolean) => void;
   globalStickyElevation: boolean;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
+  onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
@@ -133,6 +134,7 @@ export function InspectorPanel({
   onStickyElevated,
   globalStickyElevation,
   onSwitchTextSubtype,
+  onApplyTextNodeMarkdown,
   onSetTextDocumentContent,
   onSetTextDocumentBlockGap,
   onMergeTextSelectionToRich,
@@ -172,6 +174,7 @@ export function InspectorPanel({
       onStickyElevation,
       onStickyElevated,
       onSwitchTextSubtype,
+      onApplyTextNodeMarkdown,
       onSetTextDocumentContent,
       onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich,
@@ -186,6 +189,7 @@ export function InspectorPanel({
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
       onStickyElevation, onStickyElevated, onSwitchTextSubtype, onSetTextDocumentContent,
+      onApplyTextNodeMarkdown,
       onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
     ],

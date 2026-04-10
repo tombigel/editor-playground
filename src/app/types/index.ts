@@ -152,6 +152,7 @@ export type EditorAction =
   | { type: 'setPageViewTransition'; pageId: PageId; transition: DocumentPage['viewTransition'] }
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
+  | { type: 'applyTextNodeMarkdown'; id: NodeId; markdown: string }
   | { type: 'setTextDocumentContent'; id: NodeId; content: TextDocumentContent }
   | { type: 'setTextDocumentBlockGap'; id: NodeId; value: number }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }

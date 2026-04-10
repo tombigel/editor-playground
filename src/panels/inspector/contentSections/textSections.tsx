@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { ArrowDown, ArrowUp, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { InlineNotice } from '@/components/ui/settings-panel';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -600,13 +601,37 @@ export function RichTextContentSection({
   focusedMode,
   onEnterFocusedMode,
   onActivateRichEdit,
+  onApplyTextNodeMarkdown,
   headerContent,
   headerAction,
   contentClassName = 'px-3 pt-2 pb-3',
 }: {
   node: TextInspectorNode;
   onActivateRichEdit?: (nodeId: string) => void;
+  onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
 } & FocusModeCardProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+
+  async function handleMarkdownFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !onApplyTextNodeMarkdown) {
+      return;
+    }
+
+    setImportError(null);
+    setImporting(true);
+    try {
+      onApplyTextNodeMarkdown(node.id, await file.text());
+    } catch {
+      setImportError('Markdown import failed.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <InspectorSectionCard
       title="Content"
@@ -615,16 +640,39 @@ export function RichTextContentSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="h-7 w-full gap-1.5 text-[11px]"
-        onClick={() => onActivateRichEdit?.(node.id)}
-      >
-        <Pencil size={12} />
-        Edit rich text
-      </Button>
+      <InspectorFieldGroup>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-full gap-1.5 text-[11px]"
+          onClick={() => onActivateRichEdit?.(node.id)}
+        >
+          <Pencil size={12} />
+          Edit rich text
+        </Button>
+      </InspectorFieldGroup>
+      <InspectorFieldGroup gap>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-full gap-1.5 text-[11px]"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!onApplyTextNodeMarkdown || importing}
+        >
+          <FileUp size={12} />
+          {importing ? 'Importing...' : 'Import markdown'}
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".md,.markdown,text/markdown"
+          className="hidden"
+          onChange={handleMarkdownFileSelection}
+        />
+        {importError ? <InlineNotice tone="danger">{importError}</InlineNotice> : null}
+      </InspectorFieldGroup>
     </InspectorSectionCard>
   );
 }

@@ -8,6 +8,7 @@ import {
   ButtonContentSection,
   ImageContentSection,
   ImageDesignSection,
+  RichTextContentSection,
   TextAppearanceSection,
   TextContentSection,
 } from '../inspector/ContentSections';
@@ -71,6 +72,22 @@ export function resolveFocusedModeBlocks(
   }
 
   if (mode === 'content' && node) {
+    if (isTextNode(node) && node.subtype === 'rich' && !(node.link !== undefined && node.style?.background !== undefined)) {
+      return [
+        createFocusedModeBlock('content', 'primary', () => (
+          <RichTextContentSection
+            node={node}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            onActivateRichEdit={context.actions.onActivateRichEdit}
+            onApplyTextNodeMarkdown={context.actions.onApplyTextNodeMarkdown}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
     if (isTextNode(node) && !(node.link !== undefined && node.style?.background !== undefined)) {
       return [
         createFocusedModeBlock('content', 'primary', () => (

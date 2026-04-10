@@ -1130,6 +1130,9 @@ export function AppShell({
 							onSwitchTextSubtype={(nodeId, subtype, conversionMode) =>
 								dispatch({ type: "switchTextSubtype", nodeId, subtype, conversionMode })
 							}
+							onApplyTextNodeMarkdown={(nodeId, markdown) =>
+								dispatch({ type: "applyTextNodeMarkdown", id: nodeId, markdown })
+							}
 							onSetTextDocumentContent={(nodeId, content) =>
 								dispatch({ type: "setTextDocumentContent", id: nodeId, content })
 							}
@@ -1286,6 +1289,9 @@ export function AppShell({
 						}
 						onSwitchTextSubtype={(nodeId, subtype, conversionMode) =>
 							dispatch({ type: "switchTextSubtype", nodeId, subtype, conversionMode })
+						}
+						onApplyTextNodeMarkdown={(nodeId, markdown) =>
+							dispatch({ type: "applyTextNodeMarkdown", id: nodeId, markdown })
 						}
 						onSetTextDocumentContent={(nodeId, content) =>
 							dispatch({ type: "setTextDocumentContent", id: nodeId, content })

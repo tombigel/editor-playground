@@ -211,6 +211,7 @@ const textContentSection: InspectorSectionDefinition = {
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           onActivateRichEdit={actions.onActivateRichEdit}
+          onApplyTextNodeMarkdown={actions.onApplyTextNodeMarkdown}
           headerContent={switcher}
         />
       );

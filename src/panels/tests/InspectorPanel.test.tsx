@@ -286,10 +286,17 @@ describe('panels/InspectorPanel', () => {
     richNode.content = createTextDocumentContent([{ type: 'paragraph', children: [{ text: 'Preview should stay hidden' }] }]);
 
     const markup = renderToStaticMarkup(
-      <InspectorPanel {...makeBaseInspectorProps({ node: richNode, onActivateRichEdit: () => {} })} />,
+      <InspectorPanel
+        {...makeBaseInspectorProps({
+          node: richNode,
+          onActivateRichEdit: () => {},
+          onApplyTextNodeMarkdown: () => {},
+        })}
+      />,
     );
 
     expect(markup).toContain('Edit rich text');
+    expect(markup).toContain('Import markdown');
     expect(markup).not.toContain('Preview should stay hidden');
     expect(markup).not.toContain('⌘B');
     expect(markup).not.toContain('⌘I');

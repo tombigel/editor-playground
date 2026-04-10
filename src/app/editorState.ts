@@ -1,4 +1,5 @@
 import {
+  applyTextNodeMarkdown,
   alignNodes,
   cancelPromoteWrapperRole,
   clearSelection,
@@ -131,6 +132,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return selectedIds.length > 0 ? deleteNodes(state, selectedIds) : state;
     case 'deleteNode':
       return deleteNode(state, action.id);
+    case 'applyTextNodeMarkdown':
+      return applyTextNodeMarkdown(state, action.id, action.markdown);
     case 'setTextDocumentContent':
       return { ...state, document: setTextDocumentContentDoc(state.document, action.id, action.content) };
     case 'setTextDocumentBlockGap':
@@ -616,6 +619,10 @@ function getTextDebounceKey(action: EditorAction, selectedId: string | null) {
   }
 
   if (action.type === 'setTextDocumentContent') {
+    return `text:${action.id}:content`;
+  }
+
+  if (action.type === 'applyTextNodeMarkdown') {
     return `text:${action.id}:content`;
   }
 

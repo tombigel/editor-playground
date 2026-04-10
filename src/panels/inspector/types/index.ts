@@ -35,6 +35,7 @@ export type InspectorActionHandlers = {
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
+  onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;

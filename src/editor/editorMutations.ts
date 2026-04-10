@@ -23,7 +23,7 @@ import type {
 import { isContainerNode, isLeafNode } from '../model/types';
 import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
-import { moveNodeInTreeDoc, setTextNodeContentDoc, setNodeVisibilityDoc } from '../api/documentApi';
+import { applyMarkdownToTextNodeDoc, moveNodeInTreeDoc, setTextNodeContentDoc, setNodeVisibilityDoc } from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
 import { cloneDocument, normalizeDocument, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
@@ -193,6 +193,18 @@ export function updateTextField(
   value: string,
 ): EditorState {
   const document = setTextNodeContentDoc(state.document, nodeId, field, value);
+  if (document === state.document) {
+    return state;
+  }
+  return { ...state, document: normalizeDocumentFontState(document) };
+}
+
+export function applyTextNodeMarkdown(
+  state: EditorState,
+  nodeId: NodeId,
+  markdown: string,
+): EditorState {
+  const document = applyMarkdownToTextNodeDoc(state.document, nodeId, markdown);
   if (document === state.document) {
     return state;
   }

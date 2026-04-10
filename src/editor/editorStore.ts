@@ -30,6 +30,7 @@ export {
   insertWrapper,
   insertSectionTemplate,
   insertLeaf,
+  applyTextNodeMarkdown,
   updateTextField,
   updateRectField,
   updateStickyField,

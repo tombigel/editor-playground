@@ -349,6 +349,61 @@ describe('app/editorState', () => {
     });
   });
 
+  it('applies markdown import to rich text nodes through the reducer', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'richtext');
+    const nodeId = state.selectedId;
+
+    if (!nodeId) {
+      throw new Error('Expected inserted rich text node');
+    }
+
+    const next = editorReducer(state, {
+      type: 'applyTextNodeMarkdown',
+      id: nodeId,
+      markdown: '# Imported title\n\n- First\n- Second',
+    });
+    const nextNode = next.document.nodes[nodeId];
+
+    expect(nextNode).toMatchObject({ contentType: 'text', subtype: 'rich' });
+    if (nextNode.contentType !== 'text' || nextNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    expect(nextNode.content.blocks.map((block) => block.type)).toEqual(['h1', 'ul']);
+  });
+
+  it('stores an undo entry for markdown imports into rich text nodes', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'richtext');
+    const nodeId = present.selectedId;
+
+    if (!nodeId) {
+      throw new Error('Expected inserted rich text node');
+    }
+
+    const before = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const next = historyReducer(before, {
+      type: 'applyTextNodeMarkdown',
+      id: nodeId,
+      markdown: '## Imported section',
+    });
+    const nextNode = next.present.document.nodes[nodeId];
+
+    expect(next.past).toHaveLength(1);
+    expect(nextNode).toMatchObject({ contentType: 'text', subtype: 'rich' });
+    if (nextNode.contentType !== 'text' || nextNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    expect(nextNode.content.blocks).toMatchObject([{ type: 'h2' }]);
+  });
+
   it('stores an undo entry for canonical rich block gap updates', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'richtext');
