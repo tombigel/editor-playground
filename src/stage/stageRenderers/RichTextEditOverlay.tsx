@@ -4,6 +4,7 @@ import {
 	type KeyboardEvent as ReactKeyboardEvent,
 	type FocusEvent as ReactFocusEvent,
 	type PointerEvent as ReactPointerEvent,
+	type ReactNode,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -14,12 +15,19 @@ import {
 import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import { createPortal } from "react-dom";
 import {
+	AlignCenter,
+	AlignLeft,
+	AlignRight,
+	Baseline,
 	Code2,
 	GripVertical,
+	Highlighter,
 	Link2,
 	List,
 	ListOrdered,
 	MoveVertical,
+	PilcrowLeft,
+	PilcrowRight,
 	Type,
 	UnfoldVertical,
 } from "lucide-react";
@@ -43,6 +51,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
 import { NumberInput } from "@/components/ui/number-input";
+import { OptionsSelector } from "@/components/ui/options-selector";
 import { PopoverTooltip } from "@/components/ui/popover";
 import {
 	Select,
@@ -273,7 +282,6 @@ const RICH_SELECT_IDS = {
 	orderedListMarker: "ordered-list-marker",
 	unorderedListMarker: "unordered-list-marker",
 	codeLanguage: "code-language",
-	linkType: "link-type",
 	sectionTarget: "section-target",
 	targetPage: "target-page",
 	targetPageSection: "target-page-section",
@@ -1325,11 +1333,13 @@ export function RichTextEditOverlay({
 							<CompactColorField
 								label="Text color"
 								value={currentTextColor}
+								icon={<Baseline size={14} />}
 								onChange={(value) => handleValueMark("color", value)}
 							/>
 							<CompactColorField
 								label="Highlight color"
 								value={currentHighlightColor}
+								icon={<Highlighter size={14} />}
 								onChange={(value) => handleValueMark("backgroundColor", value)}
 							/>
 							<ToolbarButton
@@ -2078,10 +2088,12 @@ function CompactSpacingField({
 function CompactColorField({
 	label,
 	value,
+	icon,
 	onChange,
 }: {
 	label: string;
 	value: string;
+	icon?: ReactNode;
 	onChange: (value: string) => void;
 }) {
 	return (
@@ -2101,6 +2113,7 @@ function CompactColorField({
 					value={value}
 					ariaLabel={label}
 					variant="swatch"
+					icon={icon}
 					onChange={onChange}
 				/>
 			</div>
@@ -2159,32 +2172,22 @@ function LinkInsertPopover({
 			onPointerDown={(event) => event.stopPropagation()}
 		>
 			<form className="space-y-2" onSubmit={onSubmit}>
-				<div className="flex items-center justify-between">
-					<span className="editor-text-muted shrink-0 text-[11px] font-medium">
-						Type
-					</span>
-					<CompactSelect
-						selectId={RICH_SELECT_IDS.linkType}
-						open={openSelectId === RICH_SELECT_IDS.linkType}
-						onOpenChange={(open) =>
-							onSelectOpenChange(RICH_SELECT_IDS.linkType, open)
-						}
-						label="Link type"
-						value={draft.linkType}
-						onValueChange={(value) =>
-							onChange({
-								...draft,
-								linkType: value as LinkPopoverDraft["linkType"],
-							})
-						}
-						options={[
-							{ value: "external", label: "External" },
-							{ value: "anchor", label: "Internal" },
-							...(pages.length > 0 ? [{ value: "page", label: "Page" }] : []),
-						]}
-						width={120}
-					/>
-				</div>
+				<OptionsSelector
+					ariaLabel="Link type"
+					value={draft.linkType}
+					onValueChange={(value) =>
+						onChange({
+							...draft,
+							linkType: value as LinkPopoverDraft["linkType"],
+						})
+					}
+					options={[
+						{ value: "external", label: "External" },
+						{ value: "anchor", label: "Internal" },
+						...(pages.length > 0 ? [{ value: "page", label: "Page" }] : []),
+					]}
+					size="compact"
+				/>
 				{draft.linkType === "external" ? (
 					<Input
 						autoFocus
