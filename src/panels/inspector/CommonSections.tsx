@@ -264,6 +264,7 @@ export function NodeBasicsSection({
       title="Layout"
       headerContent={headerContent}
       headerAction={headerAction}
+      hideHeader={!!focusedMode}
       contentClassName="space-y-2.5 px-3 py-3"
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'layout', actions.onEnterFocusedMode)}
     >

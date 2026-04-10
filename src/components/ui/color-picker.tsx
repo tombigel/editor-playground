@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { ChangeDetail, ColorInput as HdrColorInputElement } from 'hdr-color-input';
 
 import { cn } from '@/lib/utils';
+import type { ReactNode } from 'react';
 
 type EditorTheme = 'auto' | 'light' | 'dark';
 export type ColorPickerVariant = 'default' | 'swatch';
@@ -219,6 +220,7 @@ function ColorPickerImpl({
   ariaLabel,
   variant = 'default',
   className,
+  icon,
   onChange,
 }: {
   value: string | undefined;
@@ -227,6 +229,7 @@ function ColorPickerImpl({
   ariaLabel: string;
   variant?: ColorPickerVariant;
   className?: string;
+  icon?: ReactNode;
   onChange: (value: string) => void;
 }) {
   const elementRef = React.useRef<HdrColorInputElement | null>(null);
@@ -478,7 +481,7 @@ function ColorPickerImpl({
     }
   }, [isReady]);
 
-  return (
+  const colorInput = (
     <color-input
       ref={elementRef}
       class={cn(
@@ -500,6 +503,23 @@ function ColorPickerImpl({
       suppressHydrationWarning
     />
   );
+
+  if (icon && variant === 'swatch') {
+    return (
+      <span className="relative inline-flex h-8 w-8 shrink-0 align-top">
+        {colorInput}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          style={{ color: `oklch(from ${resolvedValue} calc(1.21 - L) 0 0)` }}
+        >
+          {icon}
+        </span>
+      </span>
+    );
+  }
+
+  return colorInput;
 }
 
 export const ColorPicker = React.memo(
@@ -510,5 +530,6 @@ export const ColorPicker = React.memo(
     prev.allowAlpha === next.allowAlpha &&
     prev.ariaLabel === next.ariaLabel &&
     prev.variant === next.variant &&
-    prev.className === next.className,
+    prev.className === next.className &&
+    prev.icon === next.icon,
 );
