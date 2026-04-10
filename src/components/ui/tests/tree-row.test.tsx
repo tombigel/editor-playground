@@ -32,6 +32,20 @@ describe('components/ui/tree-row', () => {
     expect(markup).toContain('editor-layers-row-badges');
   });
 
+  it('supports multiline tree row labels when requested by the consumer', () => {
+    const markup = renderToStaticMarkup(
+      <TreeRowLabelContent
+        title="A much longer help entry title that should wrap"
+        subtitle="A longer subtitle that should also wrap cleanly"
+        wrapTitle
+        wrapSubtitle
+      />,
+    );
+
+    expect(markup).toContain('whitespace-normal');
+    expect(markup).toContain('break-words');
+  });
+
   it('renders shared row action buttons and visibility toggles', () => {
     const markup = renderToStaticMarkup(
       <>

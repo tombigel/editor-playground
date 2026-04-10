@@ -1575,7 +1575,7 @@ export function AppShell({
 						closeLabel="Close manage fonts"
 						onClose={() => onManageFontsOpenChange(false)}
 					/>
-					<div className="editor-scrollbar min-h-0 overflow-y-auto p-5 pt-4">
+					<div className="editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto p-5 pt-4">
 						<Suspense fallback={null}>
 							<ManageFontsPanel
 								document={state.document}

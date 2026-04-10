@@ -23,6 +23,8 @@ describe('components/ui/page-switcher-select', () => {
     expect(markup).toContain('data-size="small"');
     expect(markup).toContain('editor-topbar-page-switcher-row');
     expect(markup).toContain('New page');
+    expect(markup).toContain('data-ui="select-option-row"');
+    expect(markup).toContain('editor-topbar-page-switcher-label');
   });
 
   it('still exposes page creation when only one page exists', () => {

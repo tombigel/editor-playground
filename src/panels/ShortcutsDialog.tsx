@@ -25,7 +25,7 @@ export function ShortcutsDialog({
           closeLabel="Close shortcuts"
           onClose={() => onOpenChange(false)}
         />
-        <div className="editor-scrollbar max-h-[min(72vh,640px)] overflow-y-auto p-6">
+        <div className="editor-scrollbar editor-scrollbar-gutter max-h-[min(72vh,640px)] overflow-y-auto p-6">
           <ShortcutHelpContent />
         </div>
       </DialogContent>

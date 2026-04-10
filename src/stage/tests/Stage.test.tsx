@@ -59,7 +59,7 @@ describe('stage/Stage', () => {
       />,
     );
 
-    expect(markup).toContain('class="stage-shell editor-scrollbar"');
+    expect(markup).toContain('class="stage-shell editor-scrollbar editor-scrollbar-gutter"');
   });
 
   it.each(['fit-content', 'max-content', 'min-content'])(

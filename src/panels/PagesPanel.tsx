@@ -248,7 +248,7 @@ export function PagesPanel({
                   onSetPageVisibility={onSetPageVisibility}
                 />
               </aside>
-              <div className="editor-scrollbar min-h-0 overflow-y-auto px-5 py-4">
+              <div className="editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto px-5 py-4">
                 <div className="max-w-[420px]">
                   {selectedPage ? (
                     <PageEditorContent
@@ -275,7 +275,7 @@ export function PagesPanel({
           </TabsContent>
 
           <TabsContent value="settings" className="m-0">
-            <div className="editor-scrollbar max-h-[560px] overflow-y-auto px-5 py-4">
+            <div className="editor-scrollbar editor-scrollbar-gutter max-h-[560px] overflow-y-auto px-5 py-4">
               <div className="max-w-[420px]">
                 <PagesSiteSettingsContent
                   siteSettings={document.siteSettings}

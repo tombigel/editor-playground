@@ -209,12 +209,14 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                         hasChildren={row.hasChildren}
                         isExpanded={row.isExpanded}
                         isSelected={row.isSelected}
-                        className="help-nav-row my-1 rounded-lg"
+                        className="help-nav-row my-0.5 rounded-md"
                         icon={renderEntryIcon(row.entry)}
                         label={
                           <TreeRowLabelContent
                             title={row.entry.title}
                             subtitle={row.entry.subtitle}
+                            wrapTitle
+                            wrapSubtitle
                             badges={
                               row.entry.navVisibility === 'secondary' ? (
                                 <span className="help-nav-badge">Secondary</span>
@@ -243,9 +245,11 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                       {breadcrumbs.map((entry, index) => (
                         <span key={entry.id} className="flex items-center gap-2">
                           {index > 0 ? <span className="editor-text-muted">/</span> : null}
-                          <button
+                          <Button
                             type="button"
-                            className={`text-left ${entry.id === activeEntry.id ? 'editor-text-strong font-medium' : 'editor-text-muted hover:text-[color:var(--editor-accent)]'}`}
+                            variant="ghost"
+                            size="sm"
+                            className={`help-breadcrumb-button h-auto px-1.5 py-1 text-left whitespace-normal ${entry.id === activeEntry.id ? 'editor-text-strong font-medium' : 'editor-text-muted'}`}
                             onClick={() => {
                               setTableOfContents([]);
                               setContentReadyVersion(0);
@@ -253,7 +257,7 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                             }}
                           >
                             {entry.title}
-                          </button>
+                          </Button>
                   </span>
                 ))}
               </div>
@@ -317,7 +321,7 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                 )}
               </div>
 
-              <aside className="editor-bg-subtle editor-border-subtle hidden min-h-0 border-l lg:block">
+              <aside className="editor-border-subtle hidden min-h-0 border-l lg:block">
                 <div className="border-b border-[color:var(--editor-utility-border)] px-4 py-3">
                   <div className="editor-text-muted text-[11px] font-medium uppercase tracking-[0.12em]">
                     On this page
@@ -327,18 +331,18 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                   {tableOfContents.length > 0 ? (
                     <div className="space-y-1">
                       {tableOfContents.map((heading) => (
-                        <button
+                        <Button
                           key={`${heading.anchor}-${heading.depth}`}
                           type="button"
-                          className={`help-toc-link w-full rounded-md px-2 py-1.5 text-left text-sm ${
-                            state.pendingAnchor === heading.anchor ? 'data-[active=true]' : ''
-                          }`}
+                          variant="ghost"
+                          size="sm"
+                          className="help-toc-link h-auto w-full justify-start px-2 py-1.5 text-left text-sm whitespace-normal"
                           data-active={state.pendingAnchor === heading.anchor ? 'true' : 'false'}
                           style={{ paddingLeft: `${8 + (heading.depth - 1) * 12}px` }}
                           onClick={() => handleNavigate({ kind: 'anchor', anchor: heading.anchor }, setState)}
                         >
                           {heading.text}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   ) : (
@@ -493,14 +497,21 @@ function HelpSectionLanding({ entry, onSelect }: { entry: Extract<HelpEntry, { k
 
       <div className="space-y-3">
         {primaryChildren.map((child) => (
-          <button key={child.id} type="button" className="block w-full text-left" onClick={() => onSelect(child.id)}>
+          <Button
+            key={child.id}
+            type="button"
+            variant="ghost"
+            className="h-auto w-full justify-start p-0 text-left whitespace-normal"
+            onClick={() => onSelect(child.id)}
+          >
             <ListCard
-              tone="subtle"
+              tone="default"
+              className="rounded-md"
               title={child.title}
               description={child.subtitle ?? getSectionLandingDescription(child)}
               meta={child.kind === 'markdown' ? child.fileName : 'Section'}
             />
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -508,14 +519,21 @@ function HelpSectionLanding({ entry, onSelect }: { entry: Extract<HelpEntry, { k
         <div className="space-y-3">
           <div className="editor-text-muted text-xs font-medium uppercase tracking-[0.12em]">Secondary</div>
           {secondaryChildren.map((child) => (
-            <button key={child.id} type="button" className="block w-full text-left opacity-85" onClick={() => onSelect(child.id)}>
+            <Button
+              key={child.id}
+              type="button"
+              variant="ghost"
+              className="h-auto w-full justify-start p-0 text-left whitespace-normal opacity-85"
+              onClick={() => onSelect(child.id)}
+            >
               <ListCard
-                tone="subtle"
+                tone="default"
+                className="rounded-md"
                 title={child.title}
                 description={child.subtitle ?? getSectionLandingDescription(child)}
                 meta={child.kind === 'markdown' ? child.fileName : 'Section'}
               />
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}

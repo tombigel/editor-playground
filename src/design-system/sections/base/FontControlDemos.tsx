@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { EyeOff, File, Files, ListFilter } from "lucide-react";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
+	SelectOptionRow,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
@@ -140,19 +142,35 @@ function FontPickerDemo() {
 }
 
 function SelectDemo() {
-	const [value, setValue] = useState("air");
+	const [value, setValue] = useState("currentPage");
+	const options = [
+		{ value: "currentPage", label: "Current page", icon: <File className="h-3.5 w-3.5" /> },
+		{ value: "allPages", label: "All pages", icon: <Files className="h-3.5 w-3.5" /> },
+		{ value: "customPages", label: "Custom pages", icon: <ListFilter className="h-3.5 w-3.5" /> },
+		{ value: "hidden", label: "Hidden", icon: <EyeOff className="h-3.5 w-3.5" /> },
+	] as const;
+	const activeOption = options.find((option) => option.value === value) ?? options[0];
 	return (
 		<div className="space-y-6">
 			<div className="w-[200px]">
 				<Select value={value} onValueChange={setValue}>
 					<SelectTrigger aria-label="Select demo">
-						<SelectValue />
+						<SelectOptionRow
+							icon={activeOption.icon}
+							label={activeOption.label}
+							labelClassName="text-xs font-medium"
+						/>
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="air">Air</SelectItem>
-						<SelectItem value="paper">Paper</SelectItem>
-						<SelectItem value="midday">Midday</SelectItem>
-						<SelectItem value="clarity">Clarity</SelectItem>
+						{options.map((option) => (
+							<SelectItem key={option.value} value={option.value}>
+								<SelectOptionRow
+									icon={option.icon}
+									label={option.label}
+									labelClassName="text-xs font-medium"
+								/>
+							</SelectItem>
+						))}
 					</SelectContent>
 				</Select>
 			</div>

@@ -171,7 +171,6 @@ describe('panels/InspectorPanel', () => {
     );
 
     expect(markup).toContain('Visibility: Current page');
-    expect(markup).toContain('Choose where this top-level component appears.');
     expect(markup.indexOf('Padding')).toBeLessThan(markup.indexOf('Visibility'));
   });
 

@@ -215,7 +215,7 @@ export function MultiSelectInspector({
   });
 
   return (
-    <div className="editor-scrollbar h-full overflow-auto">
+    <div className="editor-scrollbar editor-scrollbar-gutter h-full overflow-auto">
       <div className="space-y-3 p-3">
         {showDebugInfo && debugInfoItems.length > 0 && (
           <DebugInfoSection items={debugInfoItems} />

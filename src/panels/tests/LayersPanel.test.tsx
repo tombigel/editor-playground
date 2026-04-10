@@ -6,6 +6,13 @@ import { LayersPanel, LayersPanelContent } from '../LayersPanel';
 
 const NO_OP = () => undefined;
 
+function getTriggerMarkup(markup: string, ariaLabel: string) {
+  const triggerStart = markup.indexOf(`aria-label="${ariaLabel}"`);
+  const buttonStart = markup.lastIndexOf('<button', triggerStart);
+  const buttonEnd = markup.indexOf('</button>', triggerStart);
+  return markup.slice(buttonStart, buttonEnd + '</button>'.length);
+}
+
 function makeContentProps(document: DocumentModel, selectedIds: string[] = []) {
   return {
     document,
@@ -65,6 +72,9 @@ describe('panels/LayersPanel', () => {
       />,
     );
 
+    const allPagesTriggerMarkup = getTriggerMarkup(markup, 'Visibility: All pages');
+    const currentPageTriggerMarkup = getTriggerMarkup(markup, 'Visibility: Current page');
+
     expect(markup).toContain('editor-layers-row-type');
     expect(markup).toContain('editor-layers-divider');
     expect(markup).toContain('aria-label="Edit Playground Header"');
@@ -72,6 +82,10 @@ describe('panels/LayersPanel', () => {
     expect(markup).toContain('editor-layers-action-visibility');
     expect(markup).toContain('Visibility: All pages');
     expect(markup).toContain('Visibility: Current page');
+    expect(allPagesTriggerMarkup).toContain('h-7 w-7 justify-center p-0');
+    expect(currentPageTriggerMarkup).toContain('h-7 w-7 justify-center p-0');
+    expect(allPagesTriggerMarkup).not.toContain('All pages</span>');
+    expect(currentPageTriggerMarkup).not.toContain('Current page</span>');
     expect(markup).toContain('Edit title');
     expect(markup).toContain('Hide');
     expect(markup).not.toContain('aria-label="Delete Playground Header"');

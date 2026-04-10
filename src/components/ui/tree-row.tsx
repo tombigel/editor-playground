@@ -108,37 +108,41 @@ export function TreeRowLabelContent({
   badges,
   editing = false,
   projectedSubtitle,
+  wrapTitle = false,
+  wrapSubtitle = false,
 }: {
   title: ReactNode;
   subtitle?: ReactNode;
   badges?: ReactNode;
   editing?: boolean;
   projectedSubtitle?: ReactNode;
+  wrapTitle?: boolean;
+  wrapSubtitle?: boolean;
 }) {
   return (
     <span className="min-w-0 flex-1" data-ui="tree-row-label-content">
-      <span className={cn('flex min-w-0 items-center gap-1', editing && 'block')}>
-        <span className="editor-layers-row-title truncate text-sm font-medium">
+      <span className={cn('flex min-w-0 items-center gap-1', (editing || wrapTitle) && 'block')}>
+        <span className={cn('editor-layers-row-title text-sm font-medium', wrapTitle ? 'whitespace-normal break-words' : 'truncate')}>
           {title}
         </span>
         {badges ? (
-          <span className="editor-layers-row-badges flex shrink-0 items-center gap-0.5">
+          <span className={cn('editor-layers-row-badges flex items-center gap-0.5', wrapTitle ? 'mt-1' : 'shrink-0')}>
             {badges}
           </span>
         ) : null}
       </span>
       {projectedSubtitle ? (
-        <span className="editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4">
+        <span className={cn('editor-layers-type-transition mt-0.5 flex items-center gap-1 text-[11px] leading-4', wrapSubtitle && 'flex-wrap')}>
           {subtitle ? (
-            <span className="editor-layers-row-type truncate">{subtitle}</span>
+            <span className={cn('editor-layers-row-type', wrapSubtitle ? 'whitespace-normal break-words' : 'truncate')}>{subtitle}</span>
           ) : null}
           <span className="editor-layers-type-arrow" aria-hidden="true">
             -&gt;
           </span>
-          <span className="editor-layers-row-type truncate">{projectedSubtitle}</span>
+          <span className={cn('editor-layers-row-type', wrapSubtitle ? 'whitespace-normal break-words' : 'truncate')}>{projectedSubtitle}</span>
         </span>
       ) : subtitle ? (
-        <span className="editor-layers-row-type mt-0.5 block truncate text-[11px] leading-4">
+        <span className={cn('editor-layers-row-type mt-0.5 block text-[11px] leading-4', wrapSubtitle ? 'whitespace-normal break-words' : 'truncate')}>
           {subtitle}
         </span>
       ) : null}

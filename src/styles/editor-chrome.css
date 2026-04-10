@@ -1,7 +1,10 @@
 .editor-scrollbar {
-  scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
+}
+
+.editor-scrollbar-gutter {
+  scrollbar-gutter: stable both-edges;
 }
 
 .editor-scrollbar:is(:hover, :focus-within, :active) {

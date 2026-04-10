@@ -29,6 +29,60 @@ const selectTriggerVariants = cva(
   },
 );
 
+export function SelectOptionRow({
+  icon,
+  label,
+  description,
+  meta,
+  className,
+  iconClassName,
+  labelClassName,
+  descriptionClassName,
+  metaClassName,
+}: {
+  icon?: React.ReactNode;
+  label: React.ReactNode;
+  description?: React.ReactNode;
+  meta?: React.ReactNode;
+  className?: string;
+  iconClassName?: string;
+  labelClassName?: string;
+  descriptionClassName?: string;
+  metaClassName?: string;
+}) {
+  return (
+    <span className={cn('flex min-w-0 items-center gap-2', className)} data-ui="select-option-row">
+      {icon ? (
+        <span
+          aria-hidden="true"
+          className={cn('flex h-4 w-4 shrink-0 items-center justify-center', iconClassName)}
+          data-ui="select-option-icon"
+        >
+          {icon}
+        </span>
+      ) : null}
+      <span className="min-w-0 flex-1" data-ui="select-option-body">
+        <span className={cn('block truncate', labelClassName)} data-ui="select-option-label">
+          {label}
+        </span>
+        {description ? (
+          <span
+            className={cn('editor-text-muted block truncate text-[11px]', descriptionClassName)}
+            data-ui="select-option-description"
+          >
+            {description}
+          </span>
+        ) : null}
+      </span>
+      {meta ? (
+        <span className={cn('shrink-0 text-[11px]', metaClassName)} data-ui="select-option-meta">
+          {meta}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 function Select({
   children,
   open: openProp,
@@ -136,7 +190,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     data-ui="select-item"
     className={cn(
-      'editor-text-strong relative flex w-full cursor-default select-none items-start rounded-sm py-2 pl-8 pr-2 text-sm outline-none focus:bg-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'editor-text-strong relative flex w-full cursor-default select-none items-start rounded-sm py-2 pl-8 pr-2 text-sm outline-none focus:bg-[var(--editor-select-highlight-background)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}

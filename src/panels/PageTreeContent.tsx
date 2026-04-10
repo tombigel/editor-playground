@@ -277,7 +277,7 @@ export function PageTreeContent({
 
 	return (
 		<div className="flex flex-col">
-			<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
+			<div className="editor-scrollbar editor-scrollbar-gutter max-h-[64vh] overflow-y-auto p-1.5">
 				{rows.length === 0 ? (
 					<NoticeSurface
 						tone="info"

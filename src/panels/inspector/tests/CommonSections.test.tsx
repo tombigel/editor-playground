@@ -174,7 +174,6 @@ describe('panels/inspector/CommonSections', () => {
     );
 
     expect(markup).toContain('Visibility: Current page');
-    expect(markup).toContain('Choose where this top-level component appears.');
   });
 
   it('renders a visible/hidden switch for non-top-level nodes', () => {

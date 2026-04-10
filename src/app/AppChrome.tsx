@@ -121,7 +121,7 @@ export function SectionTemplatePopover({
           onClose={onClose}
         />
       )}
-      bodyClassName="editor-scrollbar max-h-[62vh] overflow-y-auto p-3"
+      bodyClassName="editor-scrollbar editor-scrollbar-gutter max-h-[62vh] overflow-y-auto p-3"
     >
         <div className="grid grid-cols-2 gap-2.5">
           {SECTION_TEMPLATES.map((template) => (

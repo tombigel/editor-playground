@@ -559,7 +559,7 @@ export function LayersPanelContent({
 
 	return (
 		<>
-			<div className="editor-scrollbar max-h-[64vh] overflow-y-auto p-1.5">
+			<div className="editor-scrollbar editor-scrollbar-gutter max-h-[64vh] overflow-y-auto p-1.5">
 						{rows.length === 0 ? (
 							<NoticeSurface
 								tone="info"
@@ -738,6 +738,7 @@ function LayersTreeRowItem({
 					document={document}
 					activePageId={activePageId}
 					value={getTopLevelWrapperVisibilityState(document, row.id)}
+					triggerDisplay="icon"
 					onChange={(visibility, pageIds) =>
 						onSetTopLevelWrapperVisibility(activePageId, row.id, visibility, pageIds)
 					}

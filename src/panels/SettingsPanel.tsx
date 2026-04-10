@@ -227,7 +227,7 @@ export function SettingsPanel({
 
           <div
             ref={scrollRef}
-            className="editor-scrollbar min-h-0 overflow-y-auto"
+            className="editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto"
             onScroll={updateActiveSection}
           >
             <div className="px-6 py-5">

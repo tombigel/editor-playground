@@ -42,7 +42,7 @@ describe('panels/PagesPanel', () => {
     expect(markup).toContain('grid-cols-[280px_minmax(0,1fr)]');
     expect(markup).toContain('editor-panel-header-actions');
     expect(markup).toContain('editor-bg-subtle editor-border-subtle min-h-0 border-r');
-    expect(markup).toContain('editor-scrollbar min-h-0 overflow-y-auto px-5 py-4');
+    expect(markup).toContain('editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto px-5 py-4');
     expect(markup).toContain('max-w-[420px]');
     expect(markup).toContain('Language');
     expect(markup).toContain('Home page');

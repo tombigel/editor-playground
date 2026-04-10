@@ -4,6 +4,7 @@ import { CodeXml, Layers2, List, PencilLine, Pin, Rocket, TextInitial } from "lu
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
 import { OptionsSelector } from "@/components/ui/options-selector";
+import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import { ListCard } from "@/components/ui/list-card";
@@ -114,6 +115,14 @@ const LIST_CARD_PROPS: PropDefinition[] = [
 		default: "'default'",
 		description: "Surface emphasis variant.",
 	},
+];
+
+const SEARCHABLE_MULTI_SELECT_PROPS: PropDefinition[] = [
+	{ name: "values", type: "string[]", description: "Currently selected option values." },
+	{ name: "options", type: "SearchableMultiSelectOption[]", description: "Fixed option set with optional descriptions and search keywords." },
+	{ name: "placeholder", type: "string", description: "Trigger text when nothing is selected." },
+	{ name: "searchPlaceholder", type: "string", description: "Filter input placeholder text." },
+	{ name: "onValuesChange", type: "(values: string[]) => void", description: "Selection change handler." },
 ];
 
 const SELECTION_CHROME_PROPS: PropDefinition[] = [
@@ -507,6 +516,28 @@ export function MiscDemos() {
 						placeholder="Site language"
 						searchPlaceholder="Search languages"
 						onValueChange={() => {}}
+					/>
+				</div>
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="base-searchable-multi-select"
+				name="Searchable Multi Select"
+				description="Searchable multi-select menu for page targeting and other checklist-style dropdown workflows."
+				sourceFile="src/components/ui/searchable-multi-select.tsx"
+				props={SEARCHABLE_MULTI_SELECT_PROPS}
+			>
+				<div className="max-w-[320px] space-y-3">
+					<SearchableMultiSelect
+						values={["home", "about"]}
+						options={[
+							{ value: "home", label: "Home", description: "/home" },
+							{ value: "about", label: "About", description: "/about" },
+							{ value: "contact", label: "Contact", description: "/contact" },
+						]}
+						placeholder="Choose pages"
+						searchPlaceholder="Search pages"
+						onValuesChange={() => {}}
 					/>
 				</div>
 			</ComponentPreview>

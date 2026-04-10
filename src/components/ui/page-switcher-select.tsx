@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { FilePlus2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectOptionRow, SelectSeparator, SelectTrigger } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 export type PageSwitcherOption = {
@@ -49,7 +49,7 @@ export function PageSwitcherSelect({
         size="small"
         className={cn('editor-topbar-page-switcher', triggerClassName)}
       >
-        <PageSwitcherRowContent label={activeOption?.label || placeholder} />
+        <PageSwitcherRowContent label={activeOption?.label || placeholder} centeredLabel />
       </SelectTrigger>
       <SelectContent className={cn('editor-topbar-page-switcher-menu', contentClassName)}>
         {options.map((option) => {
@@ -77,14 +77,18 @@ export function PageSwitcherSelect({
 function PageSwitcherRowContent({
   label,
   icon,
+  centeredLabel = false,
 }: {
   label: string;
   icon?: ReactNode;
+  centeredLabel?: boolean;
 }) {
   return (
-    <span className="editor-topbar-page-switcher-row-content">
-      {icon}
-      <span className="min-w-0 truncate">{label}</span>
-    </span>
+    <SelectOptionRow
+      icon={icon}
+      label={label}
+      className="editor-topbar-page-switcher-row-content"
+      labelClassName={centeredLabel ? 'editor-topbar-page-switcher-label' : undefined}
+    />
   );
 }

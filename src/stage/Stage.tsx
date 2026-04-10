@@ -308,7 +308,7 @@ export function Stage({
 		// biome-ignore lint/a11y/useKeyWithClickEvents: second-click rich edit activation mirrors pointer-driven stage selection
 		<section
 			ref={handleStageRef}
-			className="stage-shell editor-scrollbar"
+			className="stage-shell editor-scrollbar editor-scrollbar-gutter"
 			// biome-ignore lint/a11y/noNoninteractiveTabindex: editor stage requires keyboard focus for shortcuts and selection
 			tabIndex={0}
 			aria-label="Editor stage"
