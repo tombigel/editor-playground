@@ -192,7 +192,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("editor-panel-header-close");
 		expect(markup).toContain("max-h-[min(84vh,820px)]");
 		expect(markup).toContain(
-			"editor-scrollbar min-h-0 overflow-y-auto p-5 pt-4",
+			"editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto p-5 pt-4",
 		);
 	});
 
@@ -202,12 +202,13 @@ describe("app/AppShell", () => {
 		);
 
 		expect(markup).toContain('data-help-entry="shortcuts"');
-		expect(markup).toContain("Browse help");
+		expect(markup).toContain("Browse docs");
 		expect(markup).toContain("Keyboard shortcuts");
+		expect(markup).toContain("Usage");
+		expect(markup).toContain("Reference");
+		expect(markup).toContain("Developers");
 		expect(markup).toContain("API Reference");
-		expect(markup).toContain("Console Testing Guide");
-		expect(markup).toContain("Animations and Rich Text");
-		expect(markup).toContain("How to add docs?");
+		expect(markup).toContain("Workflows");
 		expect(markup).toContain("Close shortcuts");
 		expect(markup).toContain("Close about");
 		expect(markup).toContain("Sticky Playground");

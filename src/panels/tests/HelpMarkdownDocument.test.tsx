@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { renderHelpLink } from '../HelpMarkdownDocument';
+import { resolveHelpAssetUrl } from '../helpDocs';
 
 describe('panels/HelpMarkdownDocument', () => {
   it('renders internal markdown links as anchors instead of buttons', () => {
@@ -34,5 +35,11 @@ describe('panels/HelpMarkdownDocument', () => {
     expect(markup).toContain('<a');
     expect(markup).not.toContain('<button');
     expect(markup).toContain('href="./EDITOR_STYLE_GUIDE.md"');
+  });
+
+  it('resolves docs asset paths under the help-doc public asset tree', () => {
+    expect(resolveHelpAssetUrl('docs/USAGE.md', './assets/help-browser-overview.svg')).toBe(
+      '/assets/help-docs/assets/help-browser-overview.svg',
+    );
   });
 });
