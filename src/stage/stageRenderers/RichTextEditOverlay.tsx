@@ -836,7 +836,6 @@ export function RichTextEditOverlay({
 		};
 	}, [
 		closeOpenValueField,
-		applyAndCloseLinkPopoverRef,
 		closeOpenSelect,
 		commitCurrentContent,
 		linkPopover.open,
@@ -886,7 +885,6 @@ export function RichTextEditOverlay({
 		};
 	}, [
 		closeOpenValueField,
-		applyAndCloseLinkPopoverRef,
 		closeOpenSelect,
 		linkPopover.open,
 		onDiscard,
@@ -1019,7 +1017,6 @@ export function RichTextEditOverlay({
 			}
 		},
 		[
-			closeLinkPopover,
 			commitCurrentContent,
 			editor,
 			pages,
