@@ -1413,7 +1413,6 @@ Text markdown import/export is headless and API-first.
 ### Subtype-specific behavior
 
 - Rich nodes parse markdown into the validated rich Slate subset.
-- The rich-text inspector `Content` section exposes an `Import markdown` file action for `.md` / `.markdown` sources; it applies the same headless markdown parser through normal editor undo history.
 - Standalone block nodes preserve a single heading or blockquote when the markdown resolves to one compatible text block; otherwise they flatten to plain text with block boundaries as hard line breaks.
 - Standalone list nodes preserve a single parsed `ul` / `ol`; mixed markdown flattens into unordered list items.
 - Standalone code nodes preserve a single fenced code block, including its language info string; any other markdown pasted into code becomes raw code content with language `markdown`.

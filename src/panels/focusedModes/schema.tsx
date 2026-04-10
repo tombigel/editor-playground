@@ -80,7 +80,6 @@ export function resolveFocusedModeBlocks(
             focusedMode={context.focusedMode}
             onEnterFocusedMode={context.actions.onEnterFocusedMode}
             onActivateRichEdit={context.actions.onActivateRichEdit}
-            onApplyTextNodeMarkdown={context.actions.onApplyTextNodeMarkdown}
             headerContent={options.headerContent}
             headerAction={headerAction}
             contentClassName="px-3 pt-1.5 pb-5"

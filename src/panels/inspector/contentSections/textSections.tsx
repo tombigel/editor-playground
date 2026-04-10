@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { ArrowDown, ArrowUp, FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { InlineNotice } from '@/components/ui/settings-panel';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -105,15 +104,15 @@ const ORDERED_MARKER_OPTIONS = [
 ] as const;
 
 const HTML_TAG_OPTIONS = [
-  { value: 'h1', label: 'h1' },
-  { value: 'h2', label: 'h2' },
-  { value: 'h3', label: 'h3' },
-  { value: 'h4', label: 'h4' },
-  { value: 'h5', label: 'h5' },
-  { value: 'h6', label: 'h6' },
-  { value: 'p', label: 'p' },
-  { value: 'blockquote', label: 'blockquote' },
-  { value: 'div', label: 'div' },
+  { value: 'h1', label: 'H1' },
+  { value: 'h2', label: 'H2' },
+  { value: 'h3', label: 'H3' },
+  { value: 'h4', label: 'H4' },
+  { value: 'h5', label: 'H5' },
+  { value: 'h6', label: 'H6' },
+  { value: 'p', label: 'P' },
+  { value: 'blockquote', label: 'Blockquote' },
+  { value: 'div', label: 'Div' },
 ] as const;
 
 function formatListLine(item: ListContent['items'][number]): string {
@@ -601,37 +600,13 @@ export function RichTextContentSection({
   focusedMode,
   onEnterFocusedMode,
   onActivateRichEdit,
-  onApplyTextNodeMarkdown,
   headerContent,
   headerAction,
   contentClassName = 'px-3 pt-2 pb-3',
 }: {
   node: TextInspectorNode;
   onActivateRichEdit?: (nodeId: string) => void;
-  onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
 } & FocusModeCardProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
-
-  async function handleMarkdownFileSelection(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file || !onApplyTextNodeMarkdown) {
-      return;
-    }
-
-    setImportError(null);
-    setImporting(true);
-    try {
-      onApplyTextNodeMarkdown(node.id, await file.text());
-    } catch {
-      setImportError('Markdown import failed.');
-    } finally {
-      setImporting(false);
-    }
-  }
-
   return (
     <InspectorSectionCard
       title="Content"
@@ -640,39 +615,16 @@ export function RichTextContentSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
-      <InspectorFieldGroup>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-full gap-1.5 text-[11px]"
-          onClick={() => onActivateRichEdit?.(node.id)}
-        >
-          <Pencil size={12} />
-          Edit rich text
-        </Button>
-      </InspectorFieldGroup>
-      <InspectorFieldGroup gap>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-full gap-1.5 text-[11px]"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={!onApplyTextNodeMarkdown || importing}
-        >
-          <FileUp size={12} />
-          {importing ? 'Importing...' : 'Import markdown'}
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".md,.markdown,text/markdown"
-          className="hidden"
-          onChange={handleMarkdownFileSelection}
-        />
-        {importError ? <InlineNotice tone="danger">{importError}</InlineNotice> : null}
-      </InspectorFieldGroup>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 w-full gap-1.5 text-[11px]"
+        onClick={() => onActivateRichEdit?.(node.id)}
+      >
+        <Pencil size={12} />
+        Edit rich text
+      </Button>
     </InspectorSectionCard>
   );
 }
