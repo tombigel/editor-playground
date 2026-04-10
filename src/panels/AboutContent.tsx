@@ -1,6 +1,7 @@
 const ABOUT_LINKS = [
+  { label: 'Usage', href: 'docs/USAGE.md' },
+  { label: 'Reference', href: 'docs/REFERENCE.md' },
   { label: 'Playground spec', href: 'docs/PLAYGROUND_SPEC.md' },
-  { label: 'Editor style guide', href: 'docs/EDITOR_STYLE_GUIDE.md' },
   { label: 'API reference', href: 'docs/API.md' },
 ] as const;
 

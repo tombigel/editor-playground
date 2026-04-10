@@ -115,10 +115,14 @@
   overflow-x: auto;
   border: 1px solid var(--editor-utility-border);
   border-radius: 0.5rem;
-  background: var(--editor-utility-bg-subtle);
+  background: #272822;
   padding: 1rem;
   font-size: 0.75rem;
   line-height: 1.25rem;
+}
+
+.help-markdown pre code {
+  display: block;
 }
 
 .help-markdown :is(p, li, td, th, blockquote) > code {
@@ -127,4 +131,40 @@
   background: var(--editor-utility-bg-subtle);
   padding: 0.125rem 0.375rem;
   font-size: 0.92em;
+}
+
+.help-markdown-image {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--editor-utility-border);
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--editor-utility-bg-subtle) 88%, white);
+}
+
+.help-nav-row[data-selected='true'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 25%, transparent);
+}
+
+.help-nav-badge {
+  border: 1px solid var(--editor-utility-border);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+  color: var(--editor-utility-text-muted);
+  font-size: 0.65rem;
+  line-height: 1.15rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.help-toc-link {
+  color: var(--editor-utility-text-muted);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.help-toc-link:hover,
+.help-toc-link[data-active='true'] {
+  background: color-mix(in srgb, var(--editor-accent) 10%, var(--editor-utility-bg-subtle));
+  color: var(--editor-utility-text-strong);
 }

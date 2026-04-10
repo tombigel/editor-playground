@@ -1,7 +1,16 @@
 import { createElement, type MouseEvent, type ReactNode, useEffect, useEffectEvent, useState } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { resolveHelpLink, slugifyMarkdownHeading, type HelpLinkTarget, type MarkdownHelpEntry } from './helpDocs';
+import { highlightCode, normalizeCodeLanguage } from '../render/codeHighlight';
+import {
+  extractMarkdownHeadings,
+  resolveHelpAssetUrl,
+  resolveHelpLink,
+  slugifyMarkdownHeading,
+  type HelpHeading,
+  type HelpLinkTarget,
+  type MarkdownHelpEntry,
+} from './helpDocs';
 
 const helpDocumentCache = new Map<string, string>();
 
@@ -9,7 +18,7 @@ type Props = {
   entry: MarkdownHelpEntry;
   availableDocPaths: Set<string>;
   onNavigate: (target: HelpLinkTarget) => void;
-  onContentReady: () => void;
+  onContentReady: (headings: HelpHeading[]) => void;
 };
 
 const HELP_LINK_CLASS_NAME = 'text-left text-[color:var(--editor-accent)] underline underline-offset-2';
@@ -57,7 +66,7 @@ export function HelpMarkdownDocument({ entry, availableDocPaths, onNavigate, onC
     if (raw == null) {
       return;
     }
-    notifyContentReady();
+    notifyContentReady(extractMarkdownHeadings(raw));
   }, [raw]);
 
   const components: Components = {
@@ -72,6 +81,20 @@ export function HelpMarkdownDocument({ entry, availableDocPaths, onNavigate, onC
         <table>{children}</table>
       </div>
     ),
+    pre: ({ children }) => (
+      <pre data-code-theme="dark" className="help-markdown-code-block editor-scrollbar">
+        {children}
+      </pre>
+    ),
+    code: ({ className, children }) => renderCodeBlock(className, children),
+    img: ({ src, alt }) => {
+      const resolvedSrc = resolveHelpAssetUrl(entry.path, src ?? '');
+      if (!resolvedSrc) {
+        return <span className="editor-text-muted text-sm">Unable to resolve image {src}.</span>;
+      }
+
+      return <img src={resolvedSrc} alt={alt ?? ''} loading="lazy" className="help-markdown-image" />;
+    },
     a: ({ href, children }) => renderHelpLink({
       currentPath: entry.path,
       href: href ?? '',
@@ -172,4 +195,23 @@ function handleInternalHelpLinkClick(
 ) {
   event.preventDefault();
   onNavigate(target);
+}
+
+function renderCodeBlock(className: string | undefined, children: ReactNode) {
+  const languageMatch = className?.match(/language-([\w-]+)/);
+  if (!languageMatch?.[1]) {
+    return <code className={className}>{children}</code>;
+  }
+
+  const language = normalizeCodeLanguage(languageMatch[1]);
+  const code = String(children ?? '').replace(/\n$/, '');
+  const highlighted = highlightCode(code, language);
+
+  return (
+    <code
+      className={`language-${language}`}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: Prism output is generated from markdown source in-app
+      dangerouslySetInnerHTML={{ __html: highlighted }}
+    />
+  );
 }
