@@ -1,6 +1,5 @@
 import {
 	type CSSProperties,
-	type FormEvent,
 	type KeyboardEvent as ReactKeyboardEvent,
 	type FocusEvent as ReactFocusEvent,
 	type PointerEvent as ReactPointerEvent,
@@ -23,6 +22,7 @@ import {
 	GripVertical,
 	Highlighter,
 	Link2,
+	Link2Off,
 	List,
 	ListOrdered,
 	MoveVertical,
@@ -50,6 +50,7 @@ import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { NumberInput } from "@/components/ui/number-input";
 import { OptionsSelector } from "@/components/ui/options-selector";
 import { PopoverTooltip } from "@/components/ui/popover";
@@ -107,6 +108,7 @@ import {
 	convertSelectionToList,
 	createRichEditor,
 	fromSlateValue,
+	getActiveLinkNode,
 	getMarkValue,
 	getSelectedBlockType,
 	getSelectedCodeLanguage,
@@ -760,6 +762,8 @@ export function RichTextEditOverlay({
 		setLinkPopover(DEFAULT_LINK_POPOVER);
 	}, []);
 
+	const applyAndCloseLinkPopoverRef = useRef<(() => void) | null>(null);
+
 	const handleSelectOpenChange = useCallback(
 		(selectId: RichEditSelectId, open: boolean) => {
 			if (open) {
@@ -806,7 +810,7 @@ export function RichTextEditOverlay({
 				}
 				event.preventDefault();
 				event.stopPropagation();
-				closeLinkPopover();
+				applyAndCloseLinkPopoverRef.current?.();
 				return;
 			}
 			if (isTargetWithinToolbar(target)) {
@@ -832,7 +836,7 @@ export function RichTextEditOverlay({
 		};
 	}, [
 		closeOpenValueField,
-		closeLinkPopover,
+		applyAndCloseLinkPopoverRef,
 		closeOpenSelect,
 		commitCurrentContent,
 		linkPopover.open,
@@ -863,7 +867,7 @@ export function RichTextEditOverlay({
 			if (linkPopover.open) {
 				event.preventDefault();
 				event.stopPropagation();
-				closeLinkPopover();
+				applyAndCloseLinkPopoverRef.current?.();
 				return;
 			}
 
@@ -882,7 +886,7 @@ export function RichTextEditOverlay({
 		};
 	}, [
 		closeOpenValueField,
-		closeLinkPopover,
+		applyAndCloseLinkPopoverRef,
 		closeOpenSelect,
 		linkPopover.open,
 		onDiscard,
@@ -991,24 +995,24 @@ export function RichTextEditOverlay({
 
 			if (isMod && event.key === "k") {
 				event.preventDefault();
-				if (isLinkActive(editor)) {
-					removeLink(editor);
-					closeLinkPopover();
-					syncToolbarState();
-					setSelectionRevision((revision) => revision + 1);
+				const currentSelection = cloneSelection(editor.selection);
+				setLinkSelection(currentSelection);
+				const existingLink = getActiveLinkNode(editor);
+				if (existingLink) {
+					setLinkPopover({
+						open: true,
+						linkType: existingLink.linkType,
+						href: existingLink.href ?? "",
+						targetPageId: existingLink.targetPageId ?? pages[0]?.id ?? "",
+						pageAnchorId: existingLink.pageAnchorId ?? "",
+						anchorTargetId: existingLink.anchorTargetId ?? sectionOptions[0]?.id ?? "",
+					});
 				} else {
-					const currentSelection = editor.selection
-						? {
-								anchor: { ...editor.selection.anchor },
-								focus: { ...editor.selection.focus },
-							}
-						: null;
-					setLinkSelection(currentSelection);
 					setLinkPopover({
 						...DEFAULT_LINK_POPOVER,
 						open: true,
 						anchorTargetId: sectionOptions[0]?.id ?? "",
-						href: sectionOptions[0]?.href ?? "",
+						href: "",
 						targetPageId: pages[0]?.id ?? "",
 					});
 				}
@@ -1132,79 +1136,79 @@ export function RichTextEditOverlay({
 	);
 
 	const handleLinkAction = useCallback(() => {
-		if (isLinkActive(editor)) {
-			removeLink(editor);
-			closeLinkPopover();
-			syncToolbarState();
-			setSelectionRevision((revision) => revision + 1);
-			return;
-		}
-
 		const currentSelection = cloneSelection(editor.selection);
 		setLinkSelection(currentSelection);
-		setLinkPopover({
-			...DEFAULT_LINK_POPOVER,
-			open: true,
-			anchorTargetId: sectionOptions[0]?.id ?? "",
-			href: "",
-			targetPageId: pages[0]?.id ?? "",
-		});
-	}, [closeLinkPopover, editor, pages, sectionOptions, syncToolbarState]);
-
-	const handleLinkSubmit = useCallback(
-		(event: FormEvent) => {
-			event.preventDefault();
-
-			if (linkPopover.linkType === "external" && !linkPopover.href.trim()) {
-				setLinkSelection(null);
-				setLinkPopover(DEFAULT_LINK_POPOVER);
-				return;
-			}
-
-			restoreToolbarSelection();
-
-			insertLink(editor, {
-				type: "link",
-				linkType: linkPopover.linkType,
-				...(linkPopover.linkType === "external"
-					? { href: linkPopover.href.trim(), openInNewTab: false }
-					: {}),
-				...(linkPopover.linkType === "page"
-					? {
-							targetPageId: linkPopover.targetPageId || undefined,
-							pageAnchorId: linkPopover.pageAnchorId || undefined,
-						}
-					: {}),
-				...(linkPopover.linkType === "anchor"
-					? {
-							anchorTargetId:
-								documentModel &&
-								isValidSectionAnchorTarget(
-									documentModel,
-									linkPopover.anchorTargetId,
-								)
-									? linkPopover.anchorTargetId
-									: undefined,
-							href: sectionOptions.find(
-								(option) => option.id === linkPopover.anchorTargetId,
-							)?.href,
-						}
-					: {}),
+		const existingLink = getActiveLinkNode(editor);
+		if (existingLink) {
+			setLinkPopover({
+				open: true,
+				linkType: existingLink.linkType,
+				href: existingLink.href ?? "",
+				targetPageId: existingLink.targetPageId ?? pages[0]?.id ?? "",
+				pageAnchorId: existingLink.pageAnchorId ?? "",
+				anchorTargetId: existingLink.anchorTargetId ?? sectionOptions[0]?.id ?? "",
 			});
-			closeLinkPopover();
-			syncToolbarState();
-			setSelectionRevision((revision) => revision + 1);
-		},
-		[
-			closeLinkPopover,
-			documentModel,
-			editor,
-			linkPopover,
-			restoreToolbarSelection,
-			sectionOptions,
-			syncToolbarState,
-		],
-	);
+		} else {
+			setLinkPopover({
+				...DEFAULT_LINK_POPOVER,
+				open: true,
+				anchorTargetId: sectionOptions[0]?.id ?? "",
+				href: "",
+				targetPageId: pages[0]?.id ?? "",
+			});
+		}
+	}, [editor, pages, sectionOptions]);
+
+	const applyLinkFromPopover = useCallback(() => {
+		if (linkPopover.linkType === "external" && !linkPopover.href.trim()) {
+			return;
+		}
+		restoreToolbarSelection();
+		insertLink(editor, {
+			type: "link",
+			linkType: linkPopover.linkType,
+			...(linkPopover.linkType === "external"
+				? { href: linkPopover.href.trim(), openInNewTab: false }
+				: {}),
+			...(linkPopover.linkType === "page"
+				? {
+						targetPageId: linkPopover.targetPageId || undefined,
+						pageAnchorId: linkPopover.pageAnchorId || undefined,
+					}
+				: {}),
+			...(linkPopover.linkType === "anchor"
+				? {
+						anchorTargetId:
+							documentModel &&
+							isValidSectionAnchorTarget(
+								documentModel,
+								linkPopover.anchorTargetId,
+							)
+								? linkPopover.anchorTargetId
+								: undefined,
+						href: sectionOptions.find(
+							(option) => option.id === linkPopover.anchorTargetId,
+						)?.href,
+					}
+				: {}),
+		});
+		syncToolbarState();
+		setSelectionRevision((revision) => revision + 1);
+	}, [documentModel, editor, linkPopover, restoreToolbarSelection, sectionOptions, syncToolbarState]);
+
+	const applyAndCloseLinkPopover = useCallback(() => {
+		applyLinkFromPopover();
+		closeLinkPopover();
+	}, [applyLinkFromPopover, closeLinkPopover]);
+	applyAndCloseLinkPopoverRef.current = applyAndCloseLinkPopover;
+
+	const handleRemoveLinkFromPopover = useCallback(() => {
+		restoreToolbarSelection();
+		removeLink(editor);
+		closeLinkPopover();
+		syncToolbarState();
+		setSelectionRevision((revision) => revision + 1);
+	}, [closeLinkPopover, editor, restoreToolbarSelection, syncToolbarState]);
 
 	const commitFontSizeDraft = useCallback(
 		(value: string) => {
@@ -1403,7 +1407,7 @@ export function RichTextEditOverlay({
 								{selectedDirection === "rtl" ? <PilcrowLeft size={14} /> : <PilcrowRight size={14} />}
 							</ToolbarButton>
 							<ToolbarButton
-								label={linkActive ? "Unlink" : "Link"}
+								label="Link"
 								active={linkActive || linkPopover.open}
 								onActivate={handleLinkAction}
 							>
@@ -1615,12 +1619,9 @@ export function RichTextEditOverlay({
 					sectionOptions={sectionOptions}
 					targetPageSectionOptions={targetPageSectionOptions}
 					onChange={setLinkPopover}
-					onCancel={() => {
-						closeLinkPopover();
-					}}
+					onRemove={handleRemoveLinkFromPopover}
 					openSelectId={openSelectId}
 					onSelectOpenChange={handleSelectOpenChange}
-					onSubmit={handleLinkSubmit}
 				/>
 			) : null}
 		</>
@@ -2189,10 +2190,9 @@ function LinkInsertPopover({
 	sectionOptions,
 	targetPageSectionOptions,
 	onChange,
-	onCancel,
+	onRemove,
 	openSelectId,
 	onSelectOpenChange,
-	onSubmit,
 }: {
 	draft: LinkPopoverDraft;
 	placement: "above" | "below";
@@ -2203,10 +2203,9 @@ function LinkInsertPopover({
 	sectionOptions: ReturnType<typeof getSectionAnchorOptions>;
 	targetPageSectionOptions: Array<{ id: string; name: string }>;
 	onChange: (draft: LinkPopoverDraft) => void;
-	onCancel: () => void;
+	onRemove: () => void;
 	openSelectId: RichEditSelectId | null;
 	onSelectOpenChange: (selectId: RichEditSelectId, open: boolean) => void;
-	onSubmit: (event: FormEvent) => void;
 }) {
 	return (
 		<FloatingPanelShell
@@ -2222,14 +2221,15 @@ function LinkInsertPopover({
 					placement === "above"
 						? "translate(-100%, calc(-100% - 18px))"
 						: "translate(-100%, calc(100% + 18px))",
-				minWidth: 320,
+				width: 300,
 				pointerEvents: "auto",
 			}}
-			bodyClassName="space-y-2 px-3 py-3"
+			bodyClassName="space-y-3 px-3 py-3"
 			bodyStyle={{ pointerEvents: "auto" }}
 			onPointerDown={(event) => event.stopPropagation()}
 		>
-			<form className="space-y-2" onSubmit={onSubmit}>
+			<div className="flex items-center justify-between gap-2">
+				<Label className="text-[11px] font-medium">Type</Label>
 				<OptionsSelector
 					ariaLabel="Link type"
 					value={draft.linkType}
@@ -2246,10 +2246,12 @@ function LinkInsertPopover({
 					]}
 					size="compact"
 				/>
-				{draft.linkType === "external" ? (
+			</div>
+			{draft.linkType === "external" ? (
+				<div className="space-y-0.5">
+					<Label className="text-[11px] font-medium">Link</Label>
 					<Input
 						autoFocus
-						aria-label="Link URL"
 						type="url"
 						placeholder="https://example.com"
 						className="pointer-events-auto"
@@ -2259,7 +2261,10 @@ function LinkInsertPopover({
 							onChange({ ...draft, href: event.target.value })
 						}
 					/>
-				) : draft.linkType === "anchor" ? (
+				</div>
+			) : draft.linkType === "anchor" ? (
+				<div className="space-y-0.5">
+					<Label className="text-[11px] font-medium">Section</Label>
 					<Select
 						open={openSelectId === RICH_SELECT_IDS.sectionTarget}
 						onOpenChange={(open) =>
@@ -2293,8 +2298,11 @@ function LinkInsertPopover({
 							))}
 						</SelectContent>
 					</Select>
-				) : (
-					<div className="space-y-2">
+				</div>
+			) : (
+				<div className="space-y-2">
+					<div className="space-y-0.5">
+						<Label className="text-[11px] font-medium">Page</Label>
 						<Select
 							open={openSelectId === RICH_SELECT_IDS.targetPage}
 							onOpenChange={(open) =>
@@ -2327,7 +2335,12 @@ function LinkInsertPopover({
 								))}
 							</SelectContent>
 						</Select>
-						{targetPageSectionOptions.length > 0 ? (
+					</div>
+					{targetPageSectionOptions.length > 0 ? (
+						<div className="space-y-0.5">
+							<Label className="text-[11px] font-medium">
+								Jump to section (optional)
+							</Label>
 							<Select
 								open={openSelectId === RICH_SELECT_IDS.targetPageSection}
 								onOpenChange={(open) =>
@@ -2353,13 +2366,13 @@ function LinkInsertPopover({
 											? (targetPageSectionOptions.find(
 													(option) => option.id === draft.pageAnchorId,
 												)?.name ?? draft.pageAnchorId)
-											: "No section jump"}
+											: "None"}
 									</span>
 								</SelectTrigger>
 								<SelectContent
 									data-stage-rich-select-id={RICH_SELECT_IDS.targetPageSection}
 								>
-									<SelectItem value="__none__">No section jump</SelectItem>
+									<SelectItem value="__none__">None</SelectItem>
 									{targetPageSectionOptions.map((option) => (
 										<SelectItem key={option.id} value={option.id}>
 											{option.name}
@@ -2367,30 +2380,21 @@ function LinkInsertPopover({
 									))}
 								</SelectContent>
 							</Select>
-						) : null}
-					</div>
-				)}
-				<div className="flex items-center justify-end gap-2">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						className="pointer-events-auto"
-						style={{ pointerEvents: "auto" }}
-						onClick={onCancel}
-					>
-						Cancel
-					</Button>
-					<Button
-						type="submit"
-						size="sm"
-						className="pointer-events-auto"
-						style={{ pointerEvents: "auto" }}
-					>
-						Apply
-					</Button>
+						</div>
+					) : null}
 				</div>
-			</form>
+			)}
+			<Button
+				type="button"
+				variant="ghost"
+				size="sm"
+				className="pointer-events-auto w-full justify-start gap-2 text-destructive hover:text-destructive"
+				style={{ pointerEvents: "auto" }}
+				onClick={onRemove}
+			>
+				<Link2Off size={14} />
+				Remove link
+			</Button>
 		</FloatingPanelShell>
 	);
 }

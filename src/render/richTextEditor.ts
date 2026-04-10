@@ -101,6 +101,13 @@ export function isLinkActive(editor: BaseEditor): boolean {
   return !!link;
 }
 
+export function getActiveLinkNode(editor: BaseEditor): RichTextLink | null {
+  const [match] = Editor.nodes(editor, {
+    match: (n) => !Editor.isEditor(n) && Element.isElement(n) && (n as { type?: string }).type === 'link',
+  });
+  return match ? (match[0] as RichTextLink) : null;
+}
+
 export function getSelectedBlockType(editor: BaseEditor): RichTextBlockType | null {
   const blocks = getSelectedTopLevelBlocks(editor);
   if (blocks.length === 0) {
