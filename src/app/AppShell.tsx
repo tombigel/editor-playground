@@ -627,7 +627,7 @@ export function AppShell({
 	const selectedLinkNode = (() => {
 		if (!state.selectedId) return null;
 		const node = state.document.nodes[state.selectedId];
-		if (node && isTextNode(node) && node.link !== undefined) return node;
+		if (node && isTextNode(node) && node.subtype !== 'rich' && node.link !== undefined) return node;
 		return null;
 	})();
 
