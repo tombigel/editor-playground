@@ -4,6 +4,8 @@ import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useEscapeKey } from '@/lib/useEscapeKey';
+import { useClickOutside } from '@/lib/useClickOutside';
 
 const DEFAULT_SEGMENT_WIDTH_PX = 36;
 
@@ -211,30 +213,9 @@ export function ValueWithUnit({
     onSuggestionsOpenChange?.(nextOpen);
   }, [onSuggestionsOpenChange, suggestionsControlled]);
 
-  useEffect(() => {
-    if (!suggestionsOpen || suggestionsControlled) {
-      return;
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setSuggestionsOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setSuggestionsOpen(false);
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [setSuggestionsOpen, suggestionsControlled, suggestionsOpen]);
+  const dismissSuggestions = useCallback(() => setSuggestionsOpen(false), [setSuggestionsOpen]);
+  useEscapeKey(dismissSuggestions, suggestionsOpen && !suggestionsControlled);
+  useClickOutside(rootRef, dismissSuggestions, suggestionsOpen && !suggestionsControlled);
 
   function commitInputValue(nextInput: string) {
     if (onInputValueChange) {

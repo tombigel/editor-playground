@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { PopoverSurface } from '@/components/ui/popover';
 import { ValueWithUnit, type ValueWithUnitOption, type ValueWithUnitSuggestion } from '@/components/ui/value-with-unit';
 import { cn } from '@/lib/utils';
+import { useEscapeKey } from '@/lib/useEscapeKey';
+import { useClickOutside } from '@/lib/useClickOutside';
 
 import type { OrderedFontFamilyGroups } from '../inspector/fontPickerHelpers';
 import {
@@ -189,30 +191,8 @@ export const FontPickerPopover = memo(function FontPickerPopover({
     }
   }, [familyValue, open, weightValue]);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    function handlePointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        closePicker();
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [open, closePicker]);
+  useEscapeKey(closePicker, open);
+  useClickOutside(rootRef, useCallback(() => setOpen(false), []), open);
 
   const familyOptions = useMemo(
     () => [

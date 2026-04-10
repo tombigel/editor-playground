@@ -1,5 +1,7 @@
 import { Check, ChevronDown, Eye, EyeOff } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEscapeKey } from '@/lib/useEscapeKey';
+import { useClickOutside } from '@/lib/useClickOutside';
 import type {
   DocumentModel,
   DocumentPage,
@@ -83,33 +85,21 @@ export function TopLevelWrapperVisibilityControl({
 
     updatePosition();
 
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target as Node | null;
-      if (target && (triggerRef.current?.contains(target) || surfaceRef.current?.contains(target))) {
-        return;
-      }
-      setOpen(false);
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    }
-
-    window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [open]);
+
+  const closeAndFocus = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
+  useEscapeKey(closeAndFocus, open);
+  useClickOutside([triggerRef, surfaceRef], useCallback(() => setOpen(false), []), open);
 
   const label =
     value.mode === 'hidden'

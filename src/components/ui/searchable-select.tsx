@@ -3,6 +3,8 @@ import { Check, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PopoverSurface } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useEscapeKey } from '@/lib/useEscapeKey';
+import { useClickOutside } from '@/lib/useClickOutside';
 
 const SEARCHABLE_SELECT_VIEWPORT_MARGIN_PX = 12;
 const SEARCHABLE_SELECT_MIN_WIDTH_PX = 240;
@@ -137,35 +139,20 @@ export function SearchableSelect({
     updatePosition();
     inputRef.current?.focus();
 
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target as Node | null;
-      if (
-        target &&
-        (triggerRef.current?.contains(target) || surfaceRef.current?.contains(target))
-      ) {
-        return;
-      }
-      setOpen(false);
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    }
-
-    window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [open, updatePosition]);
+
+  const closeAndFocus = React.useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
+  useEscapeKey(closeAndFocus, open);
+  useClickOutside([triggerRef, surfaceRef], React.useCallback(() => setOpen(false), []), open);
 
   return (
     <div className={cn('relative', className)}>
