@@ -452,12 +452,19 @@ Variants:
 | secondary | neutral subtle fill | none | strong text |
 | outline | surface | subtle border | muted/strong text |
 | ghost | transparent | none | muted text |
+| menu | transparent at rest; accent-tinted hover/active fill | transparent | strong text at rest; accent text on hover/active |
 | destructive | light red tint | subtle red border | red text in light mode, near-white text in dark mode |
 
 Focus:
 
 - accent-derived ring
 - visible keyboard-only focus state
+
+Menu button rules:
+
+- use for compact inline editor actions that should read like menu items instead of chrome-heavy icon buttons
+- hover, focus-visible, and selected/open states use the same accent-tinted surface treatment as top-bar menu items
+- prefer `rounded-sm` and compact geometry when used inside rows such as the Components panel
 
 ### 11.2 Inputs
 

@@ -11,6 +11,7 @@ export interface TreeRowItemProps
   depth: number;
   hasChildren: boolean;
   isExpanded: boolean;
+  variant?: 'layers' | 'menu';
   isSelected?: boolean;
   isHidden?: boolean;
   isDragging?: boolean;
@@ -29,6 +30,7 @@ export const TreeRowItem = forwardRef<HTMLDivElement, TreeRowItemProps>(
       depth,
       hasChildren,
       isExpanded,
+      variant = 'layers',
       isSelected,
       isHidden,
       isDragging,
@@ -52,6 +54,7 @@ export const TreeRowItem = forwardRef<HTMLDivElement, TreeRowItemProps>(
         <div
           ref={ref}
           className={`editor-layers-row group ${className}`}
+          data-variant={variant}
           data-selected={isSelected ? 'true' : 'false'}
           data-hidden={isHidden ? 'true' : 'false'}
           data-dragging={isDragging ? 'true' : 'false'}
@@ -65,7 +68,7 @@ export const TreeRowItem = forwardRef<HTMLDivElement, TreeRowItemProps>(
               type="button"
               variant="ghost"
               size="icon"
-              className="editor-layers-disclosure h-5 w-5 rounded-md"
+              className={cn('editor-layers-disclosure h-5 w-5 rounded-md', variant === 'menu' && 'rounded-sm')}
               data-layers-control="true"
               aria-label={onToggleAriaLabel}
               onClick={(event) => {
@@ -170,9 +173,9 @@ export function TreeRowActionButton({
   const button = (
     <Button
       type="button"
-      variant="ghost"
+      variant="menu"
       size="icon"
-      className={cn('editor-layers-action h-7 w-7 rounded-md border', className)}
+      className={cn('editor-layers-action h-7 w-7 rounded-sm', className)}
       data-layers-control="true"
       aria-label={ariaLabel}
       disabled={disabled}
@@ -218,9 +221,9 @@ export function VisibilityToggle({ isHidden, onToggle, nodeId, label, disabled =
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="menu"
       size="icon"
-      className="editor-layers-action editor-layers-action-visibility h-7 w-7 rounded-md border"
+      className="editor-layers-action editor-layers-action-visibility h-7 w-7 rounded-sm"
       data-layers-control="true"
       aria-label={`${label ?? defaultLabel} ${nodeId}`}
       disabled={disabled}

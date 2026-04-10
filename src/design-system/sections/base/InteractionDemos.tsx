@@ -20,7 +20,7 @@ import type { PropDefinition } from "../../types";
 const BUTTON_PROPS: PropDefinition[] = [
 	{
 		name: "variant",
-		type: "'default' | 'secondary' | 'outline' | 'ghost' | 'destructive'",
+		type: "'default' | 'secondary' | 'outline' | 'ghost' | 'menu' | 'destructive'",
 		default: "'default'",
 		description: "Visual style variant.",
 	},
@@ -47,7 +47,7 @@ const BUTTON_PROPS: PropDefinition[] = [
 const ICON_BUTTON_PROPS: PropDefinition[] = [
 	{
 		name: "variant",
-		type: "'default' | 'outline' | 'ghost'",
+		type: "'default' | 'outline' | 'ghost' | 'menu'",
 		default: "'default'",
 		description: "Visual style variant.",
 	},
@@ -95,6 +95,14 @@ function TextButtonDemo() {
 						{
 							label: "Ghost",
 							render: () => <Button variant="ghost">Ghost</Button>,
+						},
+						{
+							label: "Menu",
+							render: () => (
+								<Button variant="menu" size="sm" className="gap-1.5 rounded-sm px-2.5">
+									<Settings className="h-4 w-4" /> Actions
+								</Button>
+							),
 						},
 						{
 							label: "Destructive",
@@ -222,6 +230,14 @@ function IconButtonDemo() {
 						render: () => (
 							<Button size="icon" variant="ghost">
 								<Info className="h-4 w-4" />
+							</Button>
+						),
+					},
+					{
+						label: "Menu",
+						render: () => (
+							<Button size="icon" variant="menu" className="h-7 w-7 rounded-sm" data-selected="true">
+								<Settings className="h-3.5 w-3.5" />
 							</Button>
 						),
 					},

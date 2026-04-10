@@ -32,6 +32,22 @@ describe('components/ui/tree-row', () => {
     expect(markup).toContain('editor-layers-row-badges');
   });
 
+  it('supports the shared compact menu row variant', () => {
+    const markup = renderToStaticMarkup(
+      <TreeRowItem
+        depth={0}
+        hasChildren
+        isExpanded={false}
+        variant="menu"
+        icon={<Layers2 className="h-3.5 w-3.5" />}
+        label={<TreeRowLabelContent title="Usage" subtitle="Core editor workflows" />}
+      />,
+    );
+
+    expect(markup).toContain('data-variant="menu"');
+    expect(markup).toContain('editor-layers-disclosure');
+  });
+
   it('supports multiline tree row labels when requested by the consumer', () => {
     const markup = renderToStaticMarkup(
       <TreeRowLabelContent
@@ -68,5 +84,7 @@ describe('components/ui/tree-row', () => {
     expect(markup).toContain('aria-label="Edit Sticky Card"');
     expect(markup).toContain('Edit title');
     expect(markup).toContain('aria-label="Hide Sticky Card"');
+    expect(markup).toContain('data-variant="menu"');
+    expect(markup).toContain('rounded-sm');
   });
 });

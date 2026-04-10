@@ -181,18 +181,16 @@ export function TopLevelWrapperVisibilityControl({
     onChange('customPages', nextPageIds);
   }
 
-  const trigger = (
+  const trigger = isIconOnlyTrigger ? (
     <Button
       ref={triggerRef}
       type="button"
-      variant="ghost"
-      size="sm"
-      className={cn(
-        'editor-pill-subtle editor-border-subtle rounded-md border text-[11px] font-medium',
-        isIconOnlyTrigger ? 'h-7 w-7 justify-center p-0' : 'h-7 justify-between px-2',
-      )}
+      variant="menu"
+      size="icon"
+      className="h-7 w-7 rounded-sm"
       data-layers-control="true"
-      aria-haspopup="dialog"
+      data-selected={open ? 'true' : undefined}
+      aria-haspopup="menu"
       aria-expanded={open}
       aria-label={`Visibility: ${selectedLabel}`}
       onClick={() => {
@@ -200,21 +198,29 @@ export function TopLevelWrapperVisibilityControl({
         setOpen((current) => !current);
       }}
     >
-      {isIconOnlyTrigger ? (
-        <TriggerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-      ) : (
-        <>
-          <SelectOptionRow
-            icon={<TriggerIcon className="h-3.5 w-3.5" />}
-            label={selectedLabel}
-            className="min-w-0 flex-1 gap-1.5"
-            labelClassName="text-[11px] font-medium"
-            iconClassName="h-3.5 w-3.5"
-          />
-          <ChevronDown className="h-3 w-3 shrink-0" />
-        </>
-      )}
+      <TriggerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
     </Button>
+  ) : (
+    <button
+      ref={triggerRef}
+      type="button"
+      className="editor-menubar-trigger"
+      data-layers-control="true"
+      data-state={open ? 'open' : 'closed'}
+      aria-haspopup="menu"
+      aria-expanded={open}
+      aria-label={`Visibility: ${selectedLabel}`}
+      onClick={() => {
+        updatePosition();
+        setOpen((current) => !current);
+      }}
+    >
+      <span className="inline-flex min-w-0 items-center gap-1.5">
+        <TriggerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown aria-hidden="true" className="h-3 w-3 shrink-0" />
+      </span>
+    </button>
   );
 
   return (

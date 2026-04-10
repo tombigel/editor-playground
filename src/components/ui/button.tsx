@@ -13,6 +13,8 @@ const buttonVariants = cva(
         secondary: 'shadow-sm',
         outline: 'border shadow-sm',
         ghost: '',
+        menu:
+          'border border-transparent bg-transparent text-[color:var(--editor-utility-text-strong)] shadow-none hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] hover:text-[color:var(--editor-accent)] focus-visible:bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] focus-visible:text-[color:var(--editor-accent)] data-[selected=true]:bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] data-[selected=true]:text-[color:var(--editor-accent)] aria-pressed:bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] aria-pressed:text-[color:var(--editor-accent)]',
         destructive: 'border shadow-sm',
       },
       size: {

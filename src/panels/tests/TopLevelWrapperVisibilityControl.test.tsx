@@ -46,7 +46,9 @@ describe('panels/TopLevelWrapperVisibilityControl', () => {
     expect(markup).toContain('aria-label="Visibility: All pages"');
     expect(markup).toContain('role="tooltip"');
     expect(markup).toContain('Visibility: All pages</div>');
-    expect(triggerMarkup).toContain('h-7 w-7 justify-center p-0');
+    expect(triggerMarkup).toContain('data-ui="button"');
+    expect(triggerMarkup).toContain('data-variant="menu"');
+    expect(triggerMarkup).toContain('h-7 w-7 rounded-sm');
     expect(triggerMarkup).not.toContain('data-ui="select-option-row"');
     expect(triggerMarkup).not.toContain('All pages</span>');
   });
