@@ -264,7 +264,7 @@ export function NodeBasicsSection({
       title="Layout"
       headerContent={headerContent}
       headerAction={headerAction}
-      hideHeader={!!focusedMode}
+      hideTitle={!!focusedMode}
       contentClassName="space-y-2.5 px-3 py-3"
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'layout', actions.onEnterFocusedMode)}
     >
@@ -554,6 +554,7 @@ export function InspectorSectionCard({
   contentClassName = 'space-y-3 px-3 pt-1.5 pb-3',
   borderless = false,
   hideHeader = false,
+  hideTitle = false,
 }: {
   title: string;
   headerContent?: ReactNode;
@@ -563,12 +564,13 @@ export function InspectorSectionCard({
   contentClassName?: string;
   borderless?: boolean;
   hideHeader?: boolean;
+  hideTitle?: boolean;
 }) {
   return (
     <Card className={borderless ? 'border-0 bg-transparent shadow-none' : 'editor-border-subtle rounded-lg shadow-none'}>
       {!hideHeader ? (
         <CardHeader className="flex flex-row items-start justify-between gap-2 px-3 pt-3 pb-1">
-          <CardTitle className="text-xs">{title}</CardTitle>
+          {!hideTitle ? <CardTitle className="text-xs">{title}</CardTitle> : null}
           {headerContent ? (
             <div className="min-w-0 flex-1 flex justify-end">{headerContent}</div>
           ) : null}

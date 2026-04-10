@@ -110,17 +110,21 @@ import {
 	getMarkValue,
 	getSelectedBlockType,
 	getSelectedCodeLanguage,
+	getSelectedDirection,
 	getSelectedLineHeight,
 	getSelectedListKind,
 	getSelectedListMarkerStyle,
 	getSelectedStructureMode,
+	getSelectedTextAlign,
 	insertLink,
 	isLinkActive,
 	isMarkActive,
 	removeLink,
 	setMarkValue,
-	setSelectedCodeBlockLanguage,
+	setSelectedBlocksDirection,
 	setSelectedBlocksLineHeight,
+	setSelectedBlocksTextAlign,
+	setSelectedCodeBlockLanguage,
 	setSelectedListMarkerStyle,
 	toSlateValue,
 	toggleMark,
@@ -340,6 +344,8 @@ type RichToolbarState = {
 	selectedListMarkerStyle: string;
 	selectedCodeLanguage: string;
 	selectedLineHeight: number;
+	selectedTextAlign: "left" | "center" | "right";
+	selectedDirection: "ltr" | "rtl";
 	currentFontFamily: string;
 	currentFontSize: string;
 	currentTextColor: string;
@@ -464,6 +470,8 @@ function readToolbarState(
 		selectedListMarkerStyle: getSelectedListMarkerStyle(editor),
 		selectedCodeLanguage: getSelectedCodeLanguage(editor),
 		selectedLineHeight: getSelectedLineHeight(editor),
+		selectedTextAlign: getSelectedTextAlign(editor),
+		selectedDirection: getSelectedDirection(editor),
 		currentFontFamily: getMarkValue(editor, "fontFamily") || "__inherit__",
 		currentFontSize: getMarkValue(editor, "fontSize"),
 		currentTextColor: normalizeColorInputValue(
@@ -925,6 +933,8 @@ export function RichTextEditOverlay({
 		selectedListKind,
 		selectedListMarkerStyle,
 		selectedCodeLanguage,
+		selectedTextAlign,
+		selectedDirection,
 		currentFontFamily,
 		currentTextColor,
 		currentHighlightColor,
@@ -1343,14 +1353,62 @@ export function RichTextEditOverlay({
 								onChange={(value) => handleValueMark("backgroundColor", value)}
 							/>
 							<ToolbarButton
+								label="Align left"
+								active={selectedTextAlign === "left"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									setSelectedBlocksTextAlign(editor, "left");
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<AlignLeft size={14} />
+							</ToolbarButton>
+							<ToolbarButton
+								label="Align center"
+								active={selectedTextAlign === "center"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									setSelectedBlocksTextAlign(editor, "center");
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<AlignCenter size={14} />
+							</ToolbarButton>
+							<ToolbarButton
+								label="Align right"
+								active={selectedTextAlign === "right"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									setSelectedBlocksTextAlign(editor, "right");
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								<AlignRight size={14} />
+							</ToolbarButton>
+						</div>
+						<div className="flex items-center gap-1.5">
+							<ToolbarButton
+								label={selectedDirection === "rtl" ? "Switch to LTR" : "Switch to RTL"}
+								active={selectedDirection === "rtl"}
+								onActivate={() => {
+									restoreToolbarSelection();
+									setSelectedBlocksDirection(editor, selectedDirection === "rtl" ? "ltr" : "rtl");
+									syncToolbarState();
+									setSelectionRevision((revision) => revision + 1);
+								}}
+							>
+								{selectedDirection === "rtl" ? <PilcrowLeft size={14} /> : <PilcrowRight size={14} />}
+							</ToolbarButton>
+							<ToolbarButton
 								label={linkActive ? "Unlink" : "Link"}
 								active={linkActive || linkPopover.open}
 								onActivate={handleLinkAction}
 							>
 								<Link2 size={14} />
 							</ToolbarButton>
-						</div>
-						<div className="flex items-center gap-1.5">
 							<ToolbarButton
 								label="Use text block"
 								active={structureMode === "block"}

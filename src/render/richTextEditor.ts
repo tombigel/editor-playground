@@ -247,6 +247,73 @@ export function setSelectedBlocksLineHeight(editor: BaseEditor, lineHeight: numb
   });
 }
 
+export function getSelectedTextAlign(editor: BaseEditor): 'left' | 'center' | 'right' {
+  const blocks = getSelectedTopLevelBlocks(editor).filter(isNonListTextBlock);
+  if (blocks.length === 0) {
+    return 'left';
+  }
+
+  return (blocks[0] as RichTextBlock).style?.textAlign ?? 'left';
+}
+
+export function getSelectedDirection(editor: BaseEditor): 'ltr' | 'rtl' {
+  const blocks = getSelectedTopLevelBlocks(editor);
+  if (blocks.length === 0) {
+    return 'ltr';
+  }
+
+  return (blocks[0] as RichBlock).direction ?? 'ltr';
+}
+
+export function setSelectedBlocksTextAlign(
+  editor: BaseEditor,
+  textAlign: 'left' | 'center' | 'right',
+): void {
+  const range = getSelectedTopLevelBlockRange(editor);
+  if (!range) {
+    return;
+  }
+
+  Editor.withoutNormalizing(editor, () => {
+    for (let index = range.start; index <= range.end; index += 1) {
+      const node = editor.children[index];
+      const nodeType = Element.isElement(node) ? (node as { type?: string }).type : undefined;
+      if (nodeType === 'code-block' || nodeType === 'ul' || nodeType === 'ol' || nodeType == null) {
+        continue;
+      }
+      const currentStyle = (node as RichTextBlock).style ?? {};
+      Transforms.setNodes(
+        editor,
+        { style: { ...currentStyle, textAlign } } as Partial<RichTextBlock>,
+        { at: [index] },
+      );
+    }
+  });
+}
+
+export function setSelectedBlocksDirection(
+  editor: BaseEditor,
+  direction: 'ltr' | 'rtl',
+): void {
+  const range = getSelectedTopLevelBlockRange(editor);
+  if (!range) {
+    return;
+  }
+
+  Editor.withoutNormalizing(editor, () => {
+    for (let index = range.start; index <= range.end; index += 1) {
+      if (!Element.isElement(editor.children[index])) {
+        continue;
+      }
+      Transforms.setNodes(
+        editor,
+        { direction } as Partial<RichBlock>,
+        { at: [index] },
+      );
+    }
+  });
+}
+
 export function setSelectedCodeBlockLanguage(editor: BaseEditor, language: string): void {
   const range = getSelectedTopLevelBlockRange(editor);
   if (!range) {
