@@ -427,6 +427,29 @@ Text-entry behavior:
 - Settings stays available from non-text interactive chrome, while panel shortcuts stay blocked in text-entry contexts.
 - Stage-only nudges still require a stage-focused selection.
 
+### Shared interaction hooks
+
+Reusable interaction hooks live in `src/lib/` and should be used instead of ad-hoc implementations when adding new interactive UI.
+
+| Hook | Source | Purpose |
+| --- | --- | --- |
+| `useEscapeKey(callback, enabled?)` | `src/lib/useEscapeKey.ts` | Document-level Escape key listener. Use for dismiss-on-escape in panels, popovers, pickers. |
+| `useClickOutside(refs, callback, enabled?)` | `src/lib/useClickOutside.ts` | Fires when a pointer event occurs outside all provided refs. Supports single ref or array. |
+
+When adding a new panel, popover, or dismissable overlay:
+
+1. Use `useEscapeKey` for escape-to-dismiss instead of inline `document.addEventListener('keydown', ...)`.
+2. Use `useClickOutside` for click-outside-to-close instead of inline pointer event listeners.
+3. Both hooks accept an `enabled` flag so they can be activated conditionally (e.g. only when the panel is open).
+
+Shared UI constants:
+
+| Constant | Source | Purpose |
+| --- | --- | --- |
+| `DARK_TOOLTIP_CLASS` | `src/lib/utils.ts` | Tailwind class string for dark inverted tooltips. Use instead of inline class duplication. |
+
+Popover positioning and pointer drag tracking remain per-component because the positioning strategies differ fundamentally between tooltip, menu, select, and overlay use cases.
+
 ## History Model
 
 Undo/redo uses an in-memory history stack.

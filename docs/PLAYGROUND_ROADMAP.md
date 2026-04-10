@@ -87,7 +87,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-35` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | `⚪ Not started` | LLM | 6 components bypass existing tokens |
 | `RI-36` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | `⚪ Not started` | LLM | 15 occurrences across 8 files |
 | `RI-37` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | `⚪ Not started` | LLM | Deferred from convergence audit |
-| `RI-38` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | `⚪ Not started` | Shared | Escape, click-outside, drag, positioning hooks |
+| `RI-38` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | `🟢 In progress` | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
 | `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
 | `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
 | `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
@@ -407,8 +407,8 @@ None yet.
 - `Status`: `Not started`
 - `Source`: `RI-38`
 - `Why it matters`: Escape key handling (6+ implementations), click-outside detection (3+ patterns), pointer drag tracking (3+ implementations), and popover positioning (4+ implementations) are each reimplemented ad-hoc in every consumer. This makes behavior inconsistent and requires re-explaining expected behavior for each new panel, dropdown, or dialog.
-- `Current state`: No shared interaction hooks exist. Each consumer (LayersPanel, FocusedModePanel, FontControls, MenuBar, SearchableSelect, etc.) implements its own escape, click-outside, drag, and positioning logic.
-- `Next move`: Extract `useEscapeKey`, `useClickOutside`, `usePointerDrag`, `usePopoverPosition` hooks into `src/hooks/`. Compose into `DismissablePopover` and `DraggablePanel` design system components. Migrate all consumers.
+- `Current state`: `useEscapeKey` and `useClickOutside` hooks extracted to `src/lib/` and migrated to 4 consumers (FontControls, ValueWithUnit, TopLevelWrapperVisibilityControl, SearchableSelect). `DARK_TOOLTIP_CLASS` constant extracted and deduplicated across 15 occurrences in 8 files. Popover positioning and pointer drag hooks assessed and deferred — the positioning strategies are fundamentally different per component (tooltip side-based, select viewport-smart, menu fixed-offset) making a shared abstraction a poor fit.
+- `Next move`: Evaluate whether new composite components (`DismissablePopover`, `DraggablePanel`) are worth building as more interactive panels are added. For now the hooks cover the most common duplication.
 
 #### Infra
 
