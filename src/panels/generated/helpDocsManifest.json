@@ -18,12 +18,6 @@
     "assetUrl": "/assets/help-docs/CONSOLE_TEST_GUIDE.md"
   },
   {
-    "path": "docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md",
-    "fileName": "DESIGN_SYSTEM_CONVERGENCE_AUDIT.md",
-    "fullTitle": "Design System Convergence Audit",
-    "assetUrl": "/assets/help-docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md"
-  },
-  {
     "path": "docs/EDITOR_STYLE_GUIDE.md",
     "fileName": "EDITOR_STYLE_GUIDE.md",
     "fullTitle": "Editor Style Guide",
@@ -76,30 +70,6 @@
     "fileName": "TEXT_COMPONENT_MASTER_BRIEF.md",
     "fullTitle": "Text Component Master Brief",
     "assetUrl": "/assets/help-docs/TEXT_COMPONENT_MASTER_BRIEF.md"
-  },
-  {
-    "path": "docs/TEXT_COMPONENT_PHASE_1_5_BRIEF.md",
-    "fileName": "TEXT_COMPONENT_PHASE_1_5_BRIEF.md",
-    "fullTitle": "Text Component Phase 1.5 Brief",
-    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_1_5_BRIEF.md"
-  },
-  {
-    "path": "docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md",
-    "fileName": "TEXT_COMPONENT_PHASE_1_5_TASKLIST.md",
-    "fullTitle": "Text Component Phase 1.5 Tasklist",
-    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_1_5_TASKLIST.md"
-  },
-  {
-    "path": "docs/TEXT_COMPONENT_PHASE_1_7_BRIEF.md",
-    "fileName": "TEXT_COMPONENT_PHASE_1_7_BRIEF.md",
-    "fullTitle": "Text Component Phase 1.7 Brief",
-    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_1_7_BRIEF.md"
-  },
-  {
-    "path": "docs/TEXT_COMPONENT_PHASE_1_7_TASKLIST.md",
-    "fileName": "TEXT_COMPONENT_PHASE_1_7_TASKLIST.md",
-    "fullTitle": "Text Component Phase 1.7 Tasklist",
-    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_1_7_TASKLIST.md"
   },
   {
     "path": "docs/TEXT_COMPONENT_PHASE_1_8_BRIEF.md",
