@@ -117,6 +117,7 @@ export interface RichTextLeaf extends SlateText {
   backgroundColor?: string;
   fontFamily?: string;
   fontSize?: string;
+  fontWeight?: number;
 }
 
 export interface RichTextLink extends SlateElement {

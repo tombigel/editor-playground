@@ -33,10 +33,12 @@ describe('panels/layersIcons', () => {
 
     const code = createTextNode('code', 'root');
     const rich = createTextNode('rich', 'root');
+    rich.link = { linkType: 'external', href: 'https://example.com/rich' };
     const link = createTextNode('block', 'root');
     link.link = { linkType: 'external', href: 'https://example.com' };
 
     const unorderedList = createTextNode('list', 'root');
+    unorderedList.link = { linkType: 'external', href: 'https://example.com/list' };
     unorderedList.content = createTextDocumentContent([
       listContentToRichListBlock({
         type: 'ul',

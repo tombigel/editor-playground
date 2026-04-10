@@ -107,7 +107,7 @@ function StageLeaf({
   viewport: ViewportMeasurement;
   interactKeys?: Set<NodeId>;
 }) {
-  const { editingId, commitEdit, updateBlockGap, discardEdit } = useRichEditContext();
+  const { editingId, commitEdit, updateBlockGap, discardEdit, onOpenManageFonts } = useRichEditContext();
   const child = plan.node;
   const hiddenStyle = getStageHiddenStyle(plan.hiddenState);
   const meshPlacement = plan.meshPlacement;
@@ -197,6 +197,7 @@ function StageLeaf({
               onCommit={commitEdit}
               onUpdateBlockGap={updateBlockGap}
               onDiscard={discardEdit}
+              onOpenManageFonts={onOpenManageFonts}
             />
           )
           : renderLeafContent(child, {
@@ -255,6 +256,7 @@ function LeafRichBody({
   onCommit,
   onUpdateBlockGap,
   onDiscard,
+  onOpenManageFonts,
 }: {
   child: { id: NodeId; contentType: string; subtype: string; content: unknown; htmlTag?: string };
   contentStyle?: CSSProperties;
@@ -264,6 +266,7 @@ function LeafRichBody({
   onCommit: (id: NodeId, content: TextDocumentContent) => void;
   onUpdateBlockGap: (id: NodeId, value: number) => void;
   onDiscard: () => void;
+  onOpenManageFonts: () => void;
 }) {
   if (isEditing) {
     return (
@@ -276,6 +279,7 @@ function LeafRichBody({
         onCommit={onCommit}
         onUpdateBlockGap={onUpdateBlockGap}
         onDiscard={onDiscard}
+        onOpenManageFonts={onOpenManageFonts}
       />
     );
   }

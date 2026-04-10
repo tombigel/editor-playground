@@ -1,6 +1,7 @@
 import { createEditor, Editor, Element, Transforms, type BaseEditor, type Descendant } from 'slate';
 import { withHistory } from 'slate-history';
 import { type ReactEditor, withReact } from 'slate-react';
+import { parseFontWeightInput } from '../api/fontApi';
 import type {
   OrderedListMarkerStyle,
   RichCodeBlock,
@@ -24,7 +25,7 @@ import {
 import { highlightCode } from './codeHighlight';
 
 type RichMarkName = 'bold' | 'italic' | 'underline' | 'strikethrough';
-type RichValueMarkName = 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize';
+type RichValueMarkName = 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize' | 'fontWeight';
 
 const DEFAULT_LINE_HEIGHT = 1.2;
 
@@ -58,7 +59,13 @@ export function isMarkActive(editor: BaseEditor, mark: RichMarkName): boolean {
 export function getMarkValue(editor: BaseEditor, mark: RichValueMarkName): string {
   const marks = Editor.marks(editor);
   const value = marks ? (marks as Record<string, unknown>)[mark] : undefined;
-  return typeof value === 'string' ? value : '';
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  return '';
 }
 
 export function toggleMark(editor: BaseEditor, mark: RichMarkName): void {
@@ -71,6 +78,15 @@ export function toggleMark(editor: BaseEditor, mark: RichMarkName): void {
 
 export function setMarkValue(editor: BaseEditor, mark: RichValueMarkName, value: string): void {
   const trimmedValue = value.trim();
+  if (mark === 'fontWeight') {
+    const parsed = parseFontWeightInput(trimmedValue);
+    if (parsed != null) {
+      Editor.addMark(editor, mark, parsed);
+      return;
+    }
+    Editor.removeMark(editor, mark);
+    return;
+  }
   if (trimmedValue) {
     Editor.addMark(editor, mark, trimmedValue);
     return;

@@ -198,4 +198,43 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('padding-inline-start:1.25em');
     expect(markup).toContain('<li dir="ltr">Beta</li>');
   });
+
+  it('renders rich inline links with explicit link styling', () => {
+    const rich = createTextNode('rich', 'root');
+    rich.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Visit ' },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com/docs',
+            children: [{ text: 'docs' }],
+          },
+          { text: ' today' },
+        ],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(rich));
+
+    expect(markup).toContain('href="https://example.com/docs"');
+    expect(markup).toContain('text-decoration:underline');
+    expect(markup).toContain('color:#172033');
+  });
+
+  it('renders numeric rich leaf font weights', () => {
+    const rich = createTextNode('rich', 'root');
+    rich.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [{ text: 'Weighted copy', fontWeight: 600 }],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(rich));
+
+    expect(markup).toContain('font-weight:600');
+  });
 });

@@ -1726,6 +1726,7 @@ type RichTextLeaf = {
   color?: string
   fontFamily?: string
   fontSize?: string
+  fontWeight?: number
 }
 
 // Inline link — wraps a list of leaves
@@ -1832,7 +1833,7 @@ While editing, the rich node gets visible stage chrome:
 - the link panel follows the dragged toolbar position instead of staying anchored to the original text node position
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
-- the toolbar now exposes inline font family, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
+- the toolbar now exposes the shared family-and-weight font picker plus an adjacent manage-fonts action, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
 - text color and highlight color reuse the shared `ColorPicker` swatch control instead of a stage-local native color input
 - text and highlight swatches share the same framed swatch treatment so light and dark colors read as the same visual size in the toolbar
 - font size uses the shared `ValueWithUnit` contract with font-size units, resolves inherited font size into a real field value instead of gray placeholder text, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
@@ -1843,6 +1844,7 @@ While editing, the rich node gets visible stage chrome:
 - the link popover shows an inline `Type` label beside the link-type dropdown instead of presenting that selector as a bare unlabeled row
 - rich list blocks render native `ol` / `ul` containers with native `li` items in live edit mode so ordered and unordered markers remain visible despite global reset CSS
 - line-height edits apply immediately in the live rich-edit surface for supported non-list text blocks, not only after commit back to idle rendering
+- the live rich-edit surface reuses the authored rich-content rendering rules for block alignment, list marker styles, block gaps, and explicit inline link styling so edit mode matches idle mode instead of introducing link-preview styling
 - when a non-collapsed authored selection exists and focus moves into toolbar chrome, the edit surface keeps a transient accent-blue retained highlight over that same range until the user changes selection or exits rich edit
 - active icon buttons use the shared selected-control treatment rather than bespoke stage-only styling
 - toolbar selects, inline inputs, and the link popover preserve the authored rich-editor selection while their chrome is used, then restore that selection before applying block/list/link mutations so focus leaving the editable surface does not retarget those actions

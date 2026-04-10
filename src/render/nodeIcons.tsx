@@ -41,9 +41,6 @@ export function getNodeIcon(node: StageOrSiteNode | Exclude<DocumentNode, { cont
   }
 
   if (isTextNode(node)) {
-    if (node.link !== undefined) {
-      return Link2;
-    }
     if (node.subtype === 'code') {
       return CodeXml;
     }
@@ -53,6 +50,9 @@ export function getNodeIcon(node: StageOrSiteNode | Exclude<DocumentNode, { cont
     if (node.subtype === 'list') {
       const listBlock = getSingleListBlockContent(node.content);
       return listBlock?.type === 'ol' ? ListOrdered : List;
+    }
+    if (node.link !== undefined) {
+      return Link2;
     }
 
     const blockType = getSingleTextBlockContent(node.content)?.type;

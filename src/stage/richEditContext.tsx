@@ -7,6 +7,7 @@ export type RichEditContextValue = {
   commitEdit: (id: NodeId, content: TextDocumentContent) => void;
   updateBlockGap: (id: NodeId, value: number) => void;
   discardEdit: () => void;
+  onOpenManageFonts: () => void;
 };
 
 export const RichEditContext = createContext<RichEditContextValue>({
@@ -15,6 +16,7 @@ export const RichEditContext = createContext<RichEditContextValue>({
   commitEdit: () => {},
   updateBlockGap: () => {},
   discardEdit: () => {},
+  onOpenManageFonts: () => {},
 });
 
 export function useRichEditContext() {

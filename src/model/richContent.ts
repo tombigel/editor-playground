@@ -198,6 +198,7 @@ function normalizeLeaf(node: unknown): RichTextLeaf | null {
     ...(typeof node.backgroundColor === 'string' ? { backgroundColor: node.backgroundColor } : {}),
     ...(typeof node.fontFamily === 'string' ? { fontFamily: node.fontFamily } : {}),
     ...(typeof node.fontSize === 'string' ? { fontSize: node.fontSize } : {}),
+    ...(typeof node.fontWeight === 'number' && Number.isFinite(node.fontWeight) ? { fontWeight: node.fontWeight } : {}),
   };
 }
 
@@ -257,6 +258,7 @@ export function createRichTextLeaf(text: string, marks?: Partial<RichTextLeaf>):
     ...(typeof marks?.backgroundColor === 'string' ? { backgroundColor: marks.backgroundColor } : {}),
     ...(typeof marks?.fontFamily === 'string' ? { fontFamily: marks.fontFamily } : {}),
     ...(typeof marks?.fontSize === 'string' ? { fontSize: marks.fontSize } : {}),
+    ...(typeof marks?.fontWeight === 'number' && Number.isFinite(marks.fontWeight) ? { fontWeight: marks.fontWeight } : {}),
   };
 }
 

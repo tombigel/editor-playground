@@ -28,6 +28,7 @@ import {
 	MoveVertical,
 	PilcrowLeft,
 	PilcrowRight,
+	Settings2,
 	Type,
 	UnfoldVertical,
 } from "lucide-react";
@@ -80,7 +81,6 @@ import type {
 	NodeId,
 	RichBlock,
 	RichListItem,
-	RichTextBlock,
 	TextDocumentContent,
 	RichTextBlockType,
 	RichTextLeaf,
@@ -98,8 +98,17 @@ import {
 } from "../../model/units";
 import { CODE_LANGUAGE_OPTIONS } from "../../render/codeHighlight";
 import {
-	getDefaultListContainerStyle,
+	BOLD_FONT_WEIGHT,
+	DEFAULT_FONT_WEIGHT,
+	getDocumentFontFamily,
+	isBoldFontWeight,
+	listDocumentFontsForPicker,
+	resolveNearestSupportedFontWeight,
+} from "../../api/fontApi";
+import {
+	getRichBlockRenderStyle,
 	getRichTextBlockTag,
+	getRichLinkStyle,
 	richLeafStyle,
 } from "../../render/nodePresentation";
 import {
@@ -131,6 +140,7 @@ import {
 	toSlateValue,
 	toggleMark,
 } from "../../render/richTextEditor";
+import { FontPickerPopover } from "../../panels/controls/FontControls";
 import {
 	clampRichToolbarOffset,
 	DEFAULT_RICH_TOOLBAR_OFFSET,
@@ -184,7 +194,7 @@ function renderEditElement(
 			<a
 				href={href}
 				style={{
-					textDecoration: "underline",
+					...getRichLinkStyle(),
 					cursor: "text",
 					pointerEvents: "auto",
 					userSelect: "text",
@@ -215,10 +225,6 @@ function renderEditElement(
 	}
 
 	const block = el as RichBlock;
-	const blockLineHeight =
-		isEditableTextBlock(block) && typeof block.lineHeight === "number"
-			? block.lineHeight
-			: undefined;
 	const Tag =
 		block.type === "ul" || block.type === "ol"
 			? block.type
@@ -228,16 +234,12 @@ function renderEditElement(
 	return (
 		<Tag
 			{...attributes}
+			dir={block.direction ?? "ltr"}
 			data-rich-block-type={
 				block.type === "code-block" ? "code-block" : undefined
 			}
 			style={{
-				...(block.type === "ul" || block.type === "ol"
-					? getDefaultListContainerStyle()
-					: {}),
-				...(blockLineHeight !== undefined
-					? { lineHeight: blockLineHeight }
-					: {}),
+				...getRichBlockRenderStyle(block),
 				pointerEvents: "auto",
 				userSelect: "text",
 				WebkitUserSelect: "text",
@@ -245,12 +247,6 @@ function renderEditElement(
 		>
 			{children}
 		</Tag>
-	);
-}
-
-function isEditableTextBlock(block: RichBlock): block is RichTextBlock {
-	return (
-		block.type !== "code-block" && block.type !== "ul" && block.type !== "ol"
 	);
 }
 
@@ -283,7 +279,6 @@ type ToolbarDragState = {
 };
 
 const RICH_SELECT_IDS = {
-	fontFamily: "font-family",
 	blockType: "block-type",
 	orderedListMarker: "ordered-list-marker",
 	unorderedListMarker: "unordered-list-marker",
@@ -333,6 +328,7 @@ const FONT_SIZE_SUGGESTIONS_BY_UNIT = {
 	rem: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
 } as const;
 const BLOCK_SPACING_UNIT_OPTIONS = ["px", "em"] as const;
+const SYSTEM_FONT_VALUE = "__system-font__";
 
 type RichToolbarState = {
 	boldActive: boolean;
@@ -349,6 +345,7 @@ type RichToolbarState = {
 	selectedTextAlign: "left" | "center" | "right";
 	selectedDirection: "ltr" | "rtl";
 	currentFontFamily: string;
+	currentFontWeight: number;
 	currentFontSize: string;
 	currentTextColor: string;
 	currentHighlightColor: string;
@@ -460,8 +457,11 @@ function isSelectVisibleForStructureMode(
 function readToolbarState(
 	editor: ReturnType<typeof createRichEditor>,
 ): RichToolbarState {
+	const currentFontWeight =
+		Number.parseInt(getMarkValue(editor, "fontWeight"), 10)
+		|| (isMarkActive(editor, "bold") ? BOLD_FONT_WEIGHT : DEFAULT_FONT_WEIGHT);
 	return {
-		boldActive: isMarkActive(editor, "bold"),
+		boldActive: isMarkActive(editor, "bold") || isBoldFontWeight(currentFontWeight),
 		italicActive: isMarkActive(editor, "italic"),
 		underlineActive: isMarkActive(editor, "underline"),
 		strikethroughActive: isMarkActive(editor, "strikethrough"),
@@ -474,7 +474,8 @@ function readToolbarState(
 		selectedLineHeight: getSelectedLineHeight(editor),
 		selectedTextAlign: getSelectedTextAlign(editor),
 		selectedDirection: getSelectedDirection(editor),
-		currentFontFamily: getMarkValue(editor, "fontFamily") || "__inherit__",
+		currentFontFamily: getMarkValue(editor, "fontFamily") || SYSTEM_FONT_VALUE,
+		currentFontWeight,
 		currentFontSize: getMarkValue(editor, "fontSize"),
 		currentTextColor: normalizeColorInputValue(
 			getMarkValue(editor, "color"),
@@ -538,6 +539,7 @@ export function RichTextEditOverlay({
 	onCommit,
 	onUpdateBlockGap,
 	onDiscard,
+	onOpenManageFonts = () => undefined,
 }: {
 	nodeId: NodeId;
 	content: TextDocumentContent;
@@ -547,6 +549,7 @@ export function RichTextEditOverlay({
 	onCommit: (id: NodeId, content: TextDocumentContent) => void;
 	onUpdateBlockGap: (id: NodeId, value: number) => void;
 	onDiscard: () => void;
+	onOpenManageFonts?: () => void;
 }) {
 	const editor = useMemo(() => createRichEditor(), []);
 	const initialValue = useMemo(() => toSlateValue(content.blocks), [content]);
@@ -892,13 +895,10 @@ export function RichTextEditOverlay({
 		openValueFieldId,
 	]);
 
-	const fontFamilies = useMemo(() => {
-		const defaults = documentModel?.fontLibrary.defaults ?? [];
-		const used =
-			documentModel?.fontLibrary.usedFamilies.map((family) => family.family) ??
-			[];
-		return ["__inherit__", ...new Set([...defaults, ...used])];
-	}, [documentModel]);
+	const documentFonts = useMemo(
+		() => (documentModel ? listDocumentFontsForPicker(documentModel) : []),
+		[documentModel],
+	);
 
 	const pages = documentModel?.pages ?? [];
 	const sectionOptions = useMemo(
@@ -938,6 +938,7 @@ export function RichTextEditOverlay({
 		selectedTextAlign,
 		selectedDirection,
 		currentFontFamily,
+		currentFontWeight,
 		currentTextColor,
 		currentHighlightColor,
 	} = toolbarState;
@@ -945,9 +946,9 @@ export function RichTextEditOverlay({
 		toolbarState.currentFontSize ||
 		readInitialFontSizeValue(contentStyle) ||
 		`${formatDisplayValue(readToolbarFontReference(rootRef.current).inheritedFontSizePx)}px`;
-	const currentBlockSpacingValue = `${String(
-		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle),
-	)}px`;
+	const currentBlockGap =
+		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle);
+	const currentBlockSpacingValue = `${String(currentBlockGap)}px`;
 
 	useEffect(() => {
 		if (
@@ -1061,6 +1062,32 @@ export function RichTextEditOverlay({
 	const handleBooleanMark = useCallback(
 		(mark: "bold" | "italic" | "underline" | "strikethrough") => {
 			restoreToolbarSelection();
+			if (mark === "bold") {
+				const selectedFamily =
+					documentModel &&
+					currentFontFamily !== SYSTEM_FONT_VALUE
+						? getDocumentFontFamily(documentModel, currentFontFamily)
+						: undefined;
+				const nextFontWeight = resolveNearestSupportedFontWeight(
+					isBoldFontWeight(currentFontWeight)
+						? DEFAULT_FONT_WEIGHT
+						: BOLD_FONT_WEIGHT,
+					selectedFamily,
+				);
+				setMarkValue(editor, "fontWeight", String(nextFontWeight));
+				Transforms.unsetNodes(editor, "bold", {
+					match: Text.isText,
+					split: true,
+				});
+				syncToolbarState();
+				setSelectionRevision((revision) => revision + 1);
+				requestAnimationFrame(() => {
+					try {
+						ReactEditor.focus(editor);
+					} catch {}
+				});
+				return;
+			}
 			toggleMark(editor, mark);
 			syncToolbarState();
 			setSelectionRevision((revision) => revision + 1);
@@ -1070,20 +1097,32 @@ export function RichTextEditOverlay({
 				} catch {}
 			});
 		},
-		[editor, restoreToolbarSelection, syncToolbarState],
+			[currentFontFamily, currentFontWeight, documentModel, editor, restoreToolbarSelection, syncToolbarState],
 	);
 
 	const handleValueMark = useCallback(
 		(
-			mark: "color" | "backgroundColor" | "fontFamily" | "fontSize",
+			mark: "color" | "backgroundColor" | "fontFamily" | "fontSize" | "fontWeight",
 			value: string,
 		) => {
 			restoreToolbarSelection();
-			setMarkValue(editor, mark, value === "__inherit__" ? "" : value);
+			if (mark === "fontWeight") {
+				setMarkValue(editor, mark, value);
+				Transforms.unsetNodes(editor, "bold", {
+					match: Text.isText,
+					split: true,
+				});
+			} else {
+				setMarkValue(
+					editor,
+					mark,
+					mark === "fontFamily" && value === SYSTEM_FONT_VALUE ? "" : value,
+				);
+			}
 			syncToolbarState();
 			setSelectionRevision((revision) => revision + 1);
 		},
-		[editor, restoreToolbarSelection, syncToolbarState],
+			[editor, restoreToolbarSelection, syncToolbarState],
 	);
 
 	const handleBlockSpacingCommit = useCallback(
@@ -1263,27 +1302,51 @@ export function RichTextEditOverlay({
 						onPointerDown={handleToolbarDragPointerDown}
 					>
 						<GripVertical size={16} />
-					</button>
-					<div className="space-y-1.5">
-						<div className="flex items-center gap-1.5">
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.fontFamily}
-								open={openSelectId === RICH_SELECT_IDS.fontFamily}
-								onOpenChange={(open) =>
-									handleSelectOpenChange(RICH_SELECT_IDS.fontFamily, open)
-								}
-								label="Font family"
-								value={currentFontFamily}
-								onValueChange={(value) => handleValueMark("fontFamily", value)}
-								options={fontFamilies.map((family) => ({
-									value: family,
-									label: family === "__inherit__" ? "Inherit" : family,
-								}))}
-								width={132}
-							/>
-							<CompactFontSizeField
-								label="Font size"
-								value={resolvedToolbarFontSizeValue}
+						</button>
+						<div className="space-y-1.5">
+							<div className="flex items-center gap-1.5">
+								<div className="flex items-center gap-1">
+									<div className="w-[136px] shrink-0">
+										<FontPickerPopover
+											familyValue={currentFontFamily}
+											weightValue={currentFontWeight}
+											families={documentFonts}
+											systemOptionValue={SYSTEM_FONT_VALUE}
+											systemLabel="Inherit"
+											onFamilyChange={(value) =>
+												handleValueMark("fontFamily", value)
+											}
+											onWeightChange={(value) =>
+												handleValueMark("fontWeight", value)
+											}
+											className="w-full"
+										/>
+									</div>
+									<PopoverTooltip
+										side="top"
+										align="center"
+										className={DARK_TOOLTIP_CLASS}
+										content={
+											<div className="leading-3.5 font-medium">
+												Manage fonts
+											</div>
+										}
+									>
+										<Button
+											type="button"
+											variant="outline"
+											size="icon"
+											className="h-8 w-8 rounded-sm"
+											aria-label="Manage fonts"
+											onClick={onOpenManageFonts}
+										>
+											<Settings2 className="h-3.5 w-3.5" />
+										</Button>
+									</PopoverTooltip>
+								</div>
+								<CompactFontSizeField
+									label="Font size"
+									value={resolvedToolbarFontSizeValue}
 								width={90}
 								onCommit={commitFontSizeDraft}
 								suggestionsOpen={
@@ -1686,6 +1749,9 @@ export function RichTextEditOverlay({
 							outline: "none",
 							whiteSpace: "pre-wrap",
 							wordBreak: "break-word",
+							display: "grid",
+							alignContent: "start",
+							rowGap: `${currentBlockGap}px`,
 							minHeight,
 							pointerEvents: "auto",
 							userSelect: "text",

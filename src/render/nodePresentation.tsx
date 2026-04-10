@@ -1,5 +1,6 @@
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
+import { DEFAULT_LINK_COLOR } from '../model/styleDefaults';
 import {
   getSingleCodeBlockContent,
   getSingleListBlockContent,
@@ -75,11 +76,19 @@ export function richLeafStyle(leaf: RichTextLeaf): CSSProperties {
   if (leaf.backgroundColor) style.backgroundColor = leaf.backgroundColor;
   if (leaf.fontFamily) style.fontFamily = leaf.fontFamily;
   if (leaf.fontSize) style.fontSize = leaf.fontSize;
+  if (typeof leaf.fontWeight === 'number') style.fontWeight = leaf.fontWeight;
   return style;
 }
 
+export function getRichLinkStyle(): CSSProperties {
+  return {
+    color: DEFAULT_LINK_COLOR,
+    textDecoration: 'underline',
+  };
+}
+
 function richLeafKey(leaf: RichTextLeaf): string {
-  return `${leaf.text}|${leaf.bold ? 'b' : ''}${leaf.italic ? 'i' : ''}${leaf.underline ? 'u' : ''}${leaf.strikethrough ? 's' : ''}|${leaf.color ?? ''}|${leaf.backgroundColor ?? ''}|${leaf.fontFamily ?? ''}|${leaf.fontSize ?? ''}`;
+  return `${leaf.text}|${leaf.bold ? 'b' : ''}${leaf.italic ? 'i' : ''}${leaf.underline ? 'u' : ''}${leaf.strikethrough ? 's' : ''}|${leaf.color ?? ''}|${leaf.backgroundColor ?? ''}|${leaf.fontFamily ?? ''}|${leaf.fontSize ?? ''}|${leaf.fontWeight ?? ''}`;
 }
 
 function richLinkKey(node: RichTextLink): string {
@@ -113,7 +122,7 @@ function renderRichInlineContent(content: RichTextBlock['children'], document?: 
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {};
       return (
-        <a key={richLinkKey(node)} href={href} {...externalProps}>
+        <a key={richLinkKey(node)} href={href} style={getRichLinkStyle()} {...externalProps}>
           {node.children.map((leaf) => (
             <span key={richLeafKey(leaf)} style={richLeafStyle(leaf)}>{leaf.text}</span>
           ))}
@@ -169,11 +178,7 @@ function renderRichListBlock(
   index: number,
   document?: DocumentModel,
 ): ReactNode {
-  const sharedStyle: CSSProperties = {
-    ...getDefaultListContainerStyle(),
-    listStyleType: block.markerStyle,
-    ...richBlockStyleToCss(block.style),
-  };
+  const sharedStyle = getRichBlockRenderStyle(block);
 
   if (block.type === 'ol') {
     return (
@@ -215,6 +220,26 @@ export function getDefaultListContainerStyle(): CSSProperties {
   };
 }
 
+export function getRichBlockRenderStyle(block: RichBlock): CSSProperties {
+  if (block.type === 'code-block') {
+    return richCodeBlockWrapperStyleToCss(block.style);
+  }
+
+  if (block.type === 'ul' || block.type === 'ol') {
+    return {
+      ...getDefaultListContainerStyle(),
+      listStyleType: block.markerStyle,
+      ...richBlockStyleToCss(block.style),
+    };
+  }
+
+  return {
+    margin: 0,
+    ...(typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
+    ...richBlockStyleToCss(block.style),
+  };
+}
+
 export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
   return content.map((block, index) => {
     if (block.type === 'code-block') {
@@ -230,11 +255,7 @@ export function renderRichContent(content: RichContent, document?: DocumentModel
       <Tag
         key={richBlockKey(block, index)}
         dir={block.direction ?? 'ltr'}
-        style={{
-          margin: 0,
-          ...(typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
-          ...richBlockStyleToCss(block.style),
-        }}
+        style={getRichBlockRenderStyle(block)}
       >
         {renderRichInlineContent(block.children, document)}
       </Tag>

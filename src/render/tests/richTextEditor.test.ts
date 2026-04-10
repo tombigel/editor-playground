@@ -46,6 +46,16 @@ describe('render/richTextEditor', () => {
       expect(fromSlateValue(toSlateValue(content))).toEqual(content);
     });
 
+    it('round-trips inline numeric font weight', () => {
+      const content: RichContent = [
+        {
+          type: 'paragraph',
+          children: [{ text: 'weighted', fontWeight: 600 }],
+        },
+      ];
+      expect(fromSlateValue(toSlateValue(content))).toEqual(content);
+    });
+
     it('round-trips inline link', () => {
       const content: RichContent = [
         {
@@ -134,6 +144,17 @@ describe('render/richTextEditor', () => {
       });
       setMarkValue(editor, 'fontSize', '24px');
       expect(getMarkValue(editor, 'fontSize')).toBe('24px');
+    });
+
+    it('stores numeric font weight marks as numbers and reads them back as strings', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'hello' }] }]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0], offset: 0 },
+        focus: { path: [0, 0], offset: 5 },
+      });
+      setMarkValue(editor, 'fontWeight', '600');
+      expect(getMarkValue(editor, 'fontWeight')).toBe('600');
     });
   });
 

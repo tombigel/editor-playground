@@ -90,6 +90,7 @@ export function Stage({
 	onUpdateTextDocumentContent,
 	onUpdateTextDocumentBlockGap,
 	onRegisterActivateRichEdit,
+	onOpenManageFonts = () => {},
 	followLinkPopup,
 }: StageProps) {
 	const stageRef = useRef<HTMLDivElement | null>(null);
@@ -503,6 +504,7 @@ export function Stage({
 				commitEdit,
 				updateBlockGap: (id, value) => onUpdateTextDocumentBlockGap?.(id, value),
 				discardEdit,
+				onOpenManageFonts,
 			}}>
 			<StageScene
 				document={document}

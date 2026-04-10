@@ -30,7 +30,7 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain('data-stage-rich-toolbar-drag-handle="true"');
 		expect(markup).toContain("self-center");
 		expect(markup).toContain("cursor-grab");
-		expect(markup).toContain('aria-label="Font family"');
+		expect(markup).toContain('aria-label="Manage fonts"');
 		expect(markup).toContain('aria-label="Font size"');
 		expect(markup).toContain('aria-label="Bold"');
 		expect(markup).toContain('aria-label="Italic"');
@@ -52,6 +52,7 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain("editor-text-strong");
 		expect(markup).toContain("editor-border-subtle");
 		expect(markup).toContain("focus-visible:outline-[color:var(--editor-focus-ring-strong)]");
+		expect(markup).toContain("Inherit");
 		expect(markup).not.toContain('aria-label="Font size unit" class="editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center rounded-sm outline-none disabled:cursor-not-allowed');
 		expect(markup).not.toContain("Rich text edit");
 		expect(markup).not.toContain("Cmd/Ctrl+Enter saves");
@@ -67,6 +68,7 @@ describe("stage/RichTextEditOverlay", () => {
 				content={createTextDocumentContent([
 					listContentToRichListBlock({
 						type: "ol",
+						markerStyle: "upper-roman",
 						items: [{ text: "First", direction: "ltr" }],
 					}),
 				])}
@@ -80,10 +82,11 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain("<ol");
 		expect(markup).toContain("<li");
 		expect(markup).toContain("list-style-position:outside");
+		expect(markup).toContain("list-style-type:upper-roman");
 		expect(markup).toContain("padding-inline-start:1.25em");
 	});
 
-	it("applies block line height in live edit markup", () => {
+	it("applies authored rich block styling in live edit markup", () => {
 		const markup = renderToStaticMarkup(
 			<RichTextEditOverlay
 				nodeId="rich-node"
@@ -91,9 +94,17 @@ describe("stage/RichTextEditOverlay", () => {
 					{
 						type: "paragraph",
 						lineHeight: 1.8,
-						children: [{ text: "Live line height" }],
+						style: { textAlign: "center" },
+						children: [
+							{
+								type: "link",
+								linkType: "external",
+								href: "https://example.com",
+								children: [{ text: "Live rich styling" }],
+							},
+						],
 					},
-				])}
+				], { blockGap: 24 })}
 				minHeight="96px"
 				onCommit={() => {}}
 				onUpdateBlockGap={() => {}}
@@ -102,6 +113,11 @@ describe("stage/RichTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain("line-height:1.8");
+		expect(markup).toContain("text-align:center");
+		expect(markup).toContain("display:grid");
+		expect(markup).toContain("row-gap:24px");
+		expect(markup).toContain("text-decoration:underline");
+		expect(markup).toContain("color:#172033");
 	});
 
 	it("renders inherited font size as a real field value instead of placeholder text", () => {

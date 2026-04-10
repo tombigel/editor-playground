@@ -993,6 +993,7 @@ export function AppShell({
 								dispatch({ type: 'setTextDocumentBlockGap', id, value })
 							}
 							onRegisterActivateRichEdit={(fn) => { activateRichEditRef.current = fn; }}
+							onOpenManageFonts={() => onManageFontsOpenChange(true)}
 							onStickyGeometryChange={onStickyGeometryChange}
 							followLinkPopup={
 								linkPopupVisible && selectedLinkNode
