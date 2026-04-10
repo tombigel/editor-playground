@@ -24,6 +24,7 @@ Current-state notes in the structured roadmap should stay short and point back t
   - [Priority: High](#priority-high)
   - [Priority: Low](#priority-low)
   - [Priority: Optional](#priority-optional)
+- [Completed Milestones](#completed-milestones)
 - [Implementation Pre-Plan](#implementation-pre-plan)
 - [Cross-Cutting Themes](#cross-cutting-themes)
 - [Review Cadence](#review-cadence)
@@ -63,7 +64,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
 | `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
 | `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
-| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `🟣 Partially present` | Shared | Wave 1-2: page model, editor UI, preview mode, export |
+| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `✅ Done` | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
 | `RI-33` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: `RI-07` |
 | `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | `⚪ Not started` | Shared | - |
 | `RI-12A` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | `🟣 Partially present` | Shared | - |
@@ -81,7 +82,12 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
 | `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `⚪ Not started` | Shared | - |
 | `RI-31` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | `⚪ Not started` | Shared | Dep: `RI-07` |
-| `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `🟡 In progress` | Shared | Dep: `RI-11`, `RI-28` |
+| `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `🟢 In progress` | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
+| `RI-34` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: Phase 1.8 (closed). See `TEXT_COMPONENT_PHASE_2_0_BRIEF.md` |
+| `RI-35` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | `⚪ Not started` | LLM | 6 components bypass existing tokens |
+| `RI-36` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | `⚪ Not started` | LLM | 15 occurrences across 8 files |
+| `RI-37` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | `⚪ Not started` | LLM | Deferred from convergence audit |
+| `RI-38` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | `⚪ Not started` | Shared | Escape, click-outside, drag, positioning hooks |
 | `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
 | `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
 | `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
@@ -97,7 +103,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 Extended product vision, feature requests, UX ideas, and open questions for this stage live in [NEXT_STAGE_BRIEF.md](./NEXT_STAGE_BRIEF.md).
 
-Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-07`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`
+Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`
 
 ## Raw Intake
 
@@ -137,6 +143,11 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-31` migrate persistence from localStorage to IndexedDB to remove the 5MB storage ceiling as site data grows
 - `RI-32` unified node type discriminator model — text, media, and container node families each use a type discriminator so the renderer picks the right component, and nodes within a family are interchangeable by switching type
 - `RI-33` editor support for copy/paste components and sections within a page and between pages, plus page duplication flows
+- `RI-34` text component phase 2.0 — on-stage editing for block text, code, lists; description lists in rich editing; unified all-text stage editing shell
+- `RI-35` base UI primitive token migration — switch, slider, select, input, textarea, dialog bypass existing CSS tokens with hardcoded Tailwind slate classes
+- `RI-36` dark tooltip deduplication — identical tooltip class string duplicated 15 times across 8 files; extract shared utility
+- `RI-37` Wave F CSS cleanup — deferred from design-system convergence audit; delete superseded CSS after all migrations land
+- `RI-38` interaction pattern unification — escape key, click-outside, pointer drag, popover positioning, and focus management each have multiple ad-hoc implementations; extract shared hooks and composite design system components
 
 ## Structured Roadmap
 
@@ -279,13 +290,11 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Partially present`
+- `Status`: `Done`
 - `Source`: `RI-07`
 - `Why it matters`: Multi-page support changes the document model, navigation semantics, export shape, and future product scope.
-- `Current state`: **Wave 1-2 complete**: Page model with hierarchy, slug management, aliases, and uniqueness checks during new-page creation. Editor page switching via four UI entry points. Page linking with internal anchor support. Export with `outputStructure` selection (directory vs. flat). Preview mode with navigation. Top-level wrapper page visibility is implemented with `Hidden`, `Current page`, `All pages`, and `Custom pages`, exposed from the Components panel and Inspector. Missing: copy/paste and full page templates.
-- `Implemented features`: Page model with displayName, slug, sectionIds, slugAliases, parentPageId. Page hierarchy validation (cycle detection). URL resolution with nested paths. Editor UI (pages tab in layers, dedicated panel, inspector no-selection, topbar dropdown). New-page auto-increment for duplicate names/slugs with alias-aware slug collision handling. Follow-link popup for page navigation. Preview mode (`?mode=preview`). Multi-page export with configurable output structure. Route manifest building. Top-level wrapper page visibility targeting in the Components panel and Inspector, including custom page selection.
-- `Follow-up task`: Refine the visibility menu visuals in the Components panel and Inspector now that the functionality is complete.
-- `Next review question`: Are the deferred features (copy/paste, page templates) blocking real-world authoring workflows, or can they land in a follow-up wave?
+- `Delivered (Wave 1-2)`: Page model with hierarchy, slug management, aliases, and uniqueness checks during new-page creation. Editor page switching via four UI entry points. Page linking with internal anchor support. Export with `outputStructure` selection (directory vs. flat). Preview mode with navigation. Top-level wrapper page visibility with `Hidden`, `Current page`, `All pages`, and `Custom pages`, exposed from the Components panel and Inspector.
+- `Deferred to RI-33`: Copy/paste across pages, page duplication, full page templates.
 
 ##### Copy/paste and duplication across page structure
 
@@ -340,6 +349,24 @@ None yet.
 - `Current state`: The spec already contains some performance-minded decisions, but performance should be treated as a recurring maintenance track rather than a one-time pass.
 - `Next move`: Re-run focused perf audits every once in a while, especially after large project advancements, covering stage rendering, history pressure, export cost, and animation/runtime overhead.
 
+##### Text phase 2.0: on-stage editing
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-34`
+- `Dependencies`: Phase 1.8 (closed as of d5b4f66)
+- `Why it matters`: On-stage text editing is the next step toward a real authoring environment. Phase 1 established the canonical text model and rich text stability; phase 2 brings direct manipulation to the stage.
+- `Current state`: Phase 1.8 stabilization is closed. The phase 2.0 brief and tasklist exist at `docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md` and `docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`.
+- `Scope (P2-A through P2-F)`:
+  - P2-A: On-stage editing for standalone block text
+  - P2-B: On-stage editing for standalone code blocks
+  - P2-C: On-stage editing for standalone lists (per-item linking, direction, nesting, indent)
+  - P2-D: Granular rich-to-simple split conversion
+  - P2-E: Description lists in rich editing
+  - P2-F: Unified all-text stage editing shell
+- `Next move`: Begin P2-A (block text on-stage editing) as the first quantum.
+
 #### Refactor
 
 ##### Unified node type discriminator model
@@ -350,8 +377,38 @@ None yet.
 - `Source`: `RI-32`
 - `Dependencies`: `RI-11`, `RI-28`
 - `Why it matters`: As text, media, and container node families grow, each needs interchangeable subtypes (single-block vs rich text, image vs video vs inline SVG, container vs display-contents group). A shared type discriminator pattern lets the renderer pick the right component per node and lets the editor switch types by changing one property, with shared data (position, size, styles) transferring automatically.
-- `Current state`: Task 1 (model migration) complete — `ContainerNode`/`TextNode`/`MediaNode` with `contentType`/`subtype` discriminators are the canonical types; all deprecated aliases and shims removed. Tasks 2–3 (slate-subset rich text model, on-stage rich text editor) pending.
+- `Current state`: **Task 1 (model migration) complete** — `ContainerNode`/`TextNode`/`MediaNode` with `contentType`/`subtype` discriminators are the canonical types; all deprecated aliases and shims removed. Tasks 2-3 (slate-subset rich text model, on-stage rich text editor) pending. See also `RI-34` for the related text phase 2.0 work.
 - `Next move`: Task 2 — define the slate-subset rich text model for `TextNode` with `subtype: 'rich'`, then Task 3 — on-stage rich text editing.
+
+##### Base UI primitive token migration
+
+- `Type`: `Refactor`
+- `Owner lane`: `LLM`
+- `Status`: `Not started`
+- `Source`: `RI-35`
+- `Why it matters`: Six base UI primitives use hardcoded Tailwind slate classes despite existing CSS tokens in `variables.css`, breaking light/dark theme parity.
+- `Current state`: `switch.tsx` (`bg-slate-300`), `slider.tsx` (`bg-slate-200`), `select.tsx` (`focus:bg-slate-100`), `input.tsx` and `textarea.tsx` (`placeholder:text-slate-400`), `dialog.tsx` (`bg-slate-950/30`) all bypass existing tokens like `--editor-switch-background`, `--editor-slider-track-background`, `--editor-select-highlight-background`, `--editor-input-placeholder`. Dialog overlay needs a new token.
+- `Next move`: Add `--editor-dialog-overlay-background` token, then migrate all six components to use CSS variables.
+
+##### Dark tooltip deduplication
+
+- `Type`: `Refactor`
+- `Owner lane`: `LLM`
+- `Status`: `Not started`
+- `Source`: `RI-36`
+- `Why it matters`: The identical dark tooltip class string (`rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white`) is duplicated 15 times across 8 files, making it fragile and inconsistent to update.
+- `Current state`: Duplicated in `options-selector.tsx`, `RichTextEditOverlay.tsx` (6x), `ManageFontsPanel.tsx`, `MultiSelectInspector.tsx`, `shared.tsx`, `CommonSections.tsx`, `InteractionControls.tsx` (3x), `MiscDemos.tsx`.
+- `Next move`: Add dark tooltip tokens to `variables.css`, create a shared utility class, and replace all 15 occurrences.
+
+##### Interaction pattern unification
+
+- `Type`: `Refactor`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-38`
+- `Why it matters`: Escape key handling (6+ implementations), click-outside detection (3+ patterns), pointer drag tracking (3+ implementations), and popover positioning (4+ implementations) are each reimplemented ad-hoc in every consumer. This makes behavior inconsistent and requires re-explaining expected behavior for each new panel, dropdown, or dialog.
+- `Current state`: No shared interaction hooks exist. Each consumer (LayersPanel, FocusedModePanel, FontControls, MenuBar, SearchableSelect, etc.) implements its own escape, click-outside, drag, and positioning logic.
+- `Next move`: Extract `useEscapeKey`, `useClickOutside`, `usePointerDrag`, `usePopoverPosition` hooks into `src/hooks/`. Compose into `DismissablePopover` and `DraggablePanel` design system components. Migrate all consumers.
 
 #### Infra
 
@@ -465,7 +522,15 @@ None yet.
 
 #### Refactor
 
-None yet.
+##### Wave F CSS cleanup
+
+- `Type`: `Refactor`
+- `Owner lane`: `LLM`
+- `Status`: `Not started`
+- `Source`: `RI-37`
+- `Why it matters`: After the design-system convergence audit (Waves A-E, now archived), superseded CSS remains in the codebase.
+- `Current state`: Waves A-E complete. Follow-ups (insert rail composite, searchable select compact mode, color picker upstream) documented in the archived audit. Wave F was explicitly deferred.
+- `Next move`: After `RI-35` and `RI-36` land, audit and delete remaining dead CSS.
 
 #### Infra
 
@@ -579,6 +644,20 @@ None yet.
 - `Why it matters`: Arbitrary CSS could unlock fast experimentation, but it may weaken editor predictability and renderer parity.
 - `Current state`: Styling is currently modeled and exported through the existing node/style system rather than freeform CSS injection.
 - `Next review question`: Should arbitrary CSS exist at all, and if so at what scope: component, page, or project?
+
+## Completed Milestones
+
+These milestones are closed. Their briefs and tasklists are archived in `archive/`.
+
+| Milestone | Completed | Summary |
+| --- | --- | --- |
+| Text Phase 1.5 | 2026-03 | Rich block structure APIs, GFM import/export, code language completion |
+| Text Phase 1.7 | 2026-03 | Canonical `TextDocumentContent` model, normalized storage, canonical APIs. All text nodes persist one canonical wrapper. |
+| Text Phase 1.8 | 2026-04 | Rich-stage editing stabilization. Closed at d5b4f66. |
+| Google Fonts integration | 2026-03 | Catalog bundled, API layer, inspector UI, export. Phases 1-4 complete. |
+| Animate API enhancements | 2026-03 | Interact/motion-presets integration, all defects fixed. |
+| Multiple pages Wave 1-2 | 2026-04 | Page model, hierarchy, editor UI, preview mode, export with configurable output structure. |
+| Design-system convergence audit | 2026-04 | Waves A-E complete (29 surfaces audited, 24 done). Follow-ups tracked in `RI-35`-`RI-38`. |
 
 ## Implementation Pre-Plan
 
