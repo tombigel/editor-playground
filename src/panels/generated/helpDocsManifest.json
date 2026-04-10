@@ -60,6 +60,12 @@
     "assetUrl": "/assets/help-docs/PLAYGROUND_SPEC.md"
   },
   {
+    "path": "docs/SKILLS.md",
+    "fileName": "SKILLS.md",
+    "fullTitle": "Project Skills",
+    "assetUrl": "/assets/help-docs/SKILLS.md"
+  },
+  {
     "path": "docs/STICKY_RENDER_MODEL.md",
     "fileName": "STICKY_RENDER_MODEL.md",
     "fullTitle": "Sticky - Principles, Guidelines and Model",

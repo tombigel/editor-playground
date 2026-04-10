@@ -73,6 +73,21 @@ Important functional change includes (non-exhaustive):
 When no doc change is needed, explicitly confirm why in the final summary.
 When a change is not reasonably testable, explicitly confirm why in the final summary.
 
+## Project Skills
+
+Recurring audit and development skills are defined in `.claude/skills/` and documented in [docs/SKILLS.md](./docs/SKILLS.md).
+
+Key skills:
+
+- `/maintenance` — full maintenance pass (composes all audit skills)
+- `/api-audit` — API-first compliance check
+- `/design-system-check` — design token and CSS audit
+- `/doc-triage` — planning document freshness check
+- `/file-size-check` — component size limit enforcement
+- `/interaction-pattern` — guide for building new interactive components
+
+Run `/maintenance` periodically to catch drift. Run `/interaction-pattern <type>` before building new interactive UI.
+
 ## Archived Documents
 
 Files under `archive/` are historical records only. Do not read, reference, or act on them unless explicitly asked. They reflect past state and may contradict current code or active plans.
