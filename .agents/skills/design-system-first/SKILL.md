@@ -15,9 +15,9 @@ Use this skill for any editor-facing UI work:
 
 ## Required Workflow
 
-1. Read [`AGENTS.md`](../../../AGENTS.md).
-2. Read [`docs/EDITOR_STYLE_GUIDE.md`](../../../docs/EDITOR_STYLE_GUIDE.md) for visual direction.
-3. Check [`docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`](../../../docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md) for the relevant surface and any existing migration decision.
+1. Read [`docs/EDITOR_STYLE_GUIDE.md`](../../../docs/EDITOR_STYLE_GUIDE.md) for visual direction.
+2. Read [`docs/SKILLS.md`](../../../docs/SKILLS.md) for available audit and development skills.
+3. Run `/design-system-check` to find existing token violations and duplication in the area you're touching.
 4. Inspect `src/components/ui` and `src/design-system` before creating local markup or CSS.
 
 ## Decision Order
@@ -43,7 +43,7 @@ Do not add bespoke editor markup first and “share it later”.
 
 If you keep something specialized:
 
-- make the reason explicit in [`docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`](../../../docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md)
+- make the reason explicit in a code comment and note it for the next `/maintenance` pass
 - keep specialization local to the owning surface
 - still reuse shared primitives where possible
 

@@ -86,18 +86,22 @@ Composes all audit skills into a single pass with a unified report grouped by se
 
 **Run:** weekly/bi-weekly, before new development phases, after milestones
 
-## External / Extension Skills
+### `/design-system-first` — Design System Workflow Gate
 
-These skills are provided by the Claude Code VS Code extension or personal configuration, not by the project repo. They may reference project conventions but aren't version-controlled here.
+Enforces the decision order for editor-facing UI work: reuse existing shared component > extend a primitive > add new shared component > keep specialized (with justification).
 
-### `design-system-first` (VS Code extension)
+**What it provides:**
+- Required workflow before writing any editor UI (read style guide, check existing components)
+- Decision order for reuse vs new code
+- Follow-through requirements (update demos, preserve light/dark parity)
+- Exception rule for justified specialization
 
-Triggers proactively when adding or changing editor-facing UI. Checks the editor style guide, design-system showcase, and shared components before allowing bespoke UI.
+**Relationship to other skills:**
+- `/design-system-check` is the **after-the-fact audit** (finds violations)
+- `/design-system-first` is the **before-you-start gate** (prevents violations)
+- `/interaction-pattern` covers the **interaction behavior** side (hooks, dismiss patterns)
 
-**Relationship to project skills:**
-- Overlaps with `/design-system-check` (which is an on-demand audit) and `/interaction-pattern` (which is a build guide)
-- `design-system-first` fires automatically during editing; the project skills are invoked manually
-- If `design-system-first` references stale files (e.g. archived convergence audit), the project skills are the authoritative source
+**Run:** automatically triggered when editing editor-facing UI, or invoke manually before starting UI work
 
 ## Adding New Skills
 
