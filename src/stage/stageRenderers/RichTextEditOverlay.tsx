@@ -2384,17 +2384,19 @@ function LinkInsertPopover({
 					) : null}
 				</div>
 			)}
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				className="pointer-events-auto w-full justify-start gap-2 text-destructive hover:text-destructive"
-				style={{ pointerEvents: "auto" }}
-				onClick={onRemove}
-			>
-				<Link2Off size={14} />
-				Remove link
-			</Button>
+			<div className="flex items-center justify-between gap-2">
+				<Label className="text-[11px] font-medium">Remove link</Label>
+				<Button
+					type="button"
+					variant="destructive"
+					size="icon"
+					className="pointer-events-auto"
+					style={{ pointerEvents: "auto" }}
+					onClick={onRemove}
+				>
+					<Link2Off size={14} />
+				</Button>
+			</div>
 		</FloatingPanelShell>
 	);
 }
