@@ -40,14 +40,14 @@ describe('components/ui/options-selector', () => {
           {
             value: 'block',
             label: 'Text',
-            ariaLabel: 'Switch text subtype to Text',
+            ariaLabel: 'Switch text subtype to Text Block',
             icon: <TextInitial className="h-3.5 w-3.5" />,
             tooltip: <div className="leading-3.5 font-medium">Text</div>,
           },
           {
             value: 'code',
             label: 'Code',
-            ariaLabel: 'Switch text subtype to Code',
+            ariaLabel: 'Switch text subtype to Code Block',
             icon: <CodeXml className="h-3.5 w-3.5" />,
             tooltip: <div className="leading-3.5 font-medium">Code</div>,
           },
@@ -56,8 +56,8 @@ describe('components/ui/options-selector', () => {
     );
 
     expect(markup).toContain('data-display="icon"');
-    expect(markup).toContain('aria-label="Switch text subtype to Text"');
-    expect(markup).toContain('aria-label="Switch text subtype to Code"');
+    expect(markup).toContain('aria-label="Switch text subtype to Text Block"');
+    expect(markup).toContain('aria-label="Switch text subtype to Code Block"');
     expect(markup).toContain('leading-3.5 font-medium');
   });
 });

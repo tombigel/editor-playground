@@ -286,15 +286,15 @@ type RichEditValueFieldId =
 	(typeof RICH_VALUE_FIELD_IDS)[keyof typeof RICH_VALUE_FIELD_IDS];
 
 const BLOCK_TYPE_OPTIONS: Array<{ value: RichTextBlockType; label: string }> = [
-	{ value: "paragraph", label: "Paragraph" },
-	{ value: "div", label: "Div" },
-	{ value: "blockquote", label: "Quote" },
-	{ value: "h1", label: "H1" },
-	{ value: "h2", label: "H2" },
-	{ value: "h3", label: "H3" },
-	{ value: "h4", label: "H4" },
-	{ value: "h5", label: "H5" },
-	{ value: "h6", label: "H6" },
+	{ value: 'h1', label: 'H1' },
+    { value: 'h2', label: 'H2' },
+    { value: 'h3', label: 'H3' },
+    { value: 'h4', label: 'H4' },
+    { value: 'h5', label: 'H5' },
+    { value: 'h6', label: 'H6' },
+    { value: 'paragraph', label: 'P' },
+    { value: 'blockquote', label: 'Blockquote' },
+    { value: 'div', label: 'Div' },
 ];
 
 const ORDERED_MARKER_OPTIONS = [

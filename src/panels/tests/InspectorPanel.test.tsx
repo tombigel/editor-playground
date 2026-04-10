@@ -252,7 +252,7 @@ describe('panels/InspectorPanel', () => {
       <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetTextDocumentContent: () => {} })} />,
     );
 
-    expect(markup).toContain('aria-label="Switch text subtype to List"');
+    expect(markup).toContain('aria-label="Switch text subtype to List Block"');
     expect(markup).toContain('Items');
     expect(markup).toContain('>Type<');
     expect(markup).toContain('>Bullet<');
@@ -276,7 +276,7 @@ describe('panels/InspectorPanel', () => {
       <InspectorPanel {...makeBaseInspectorProps({ node: listNode, onSetTextDocumentContent: () => {} })} />,
     );
 
-    expect(markup).toContain('aria-label="Switch text subtype to List"');
+    expect(markup).toContain('aria-label="Switch text subtype to List Block"');
     expect(markup).toContain('Add item');
     expect(markup).toContain('Advanced edit');
   });
@@ -290,13 +290,11 @@ describe('panels/InspectorPanel', () => {
         {...makeBaseInspectorProps({
           node: richNode,
           onActivateRichEdit: () => {},
-          onApplyTextNodeMarkdown: () => {},
         })}
       />,
     );
 
     expect(markup).toContain('Edit rich text');
-    expect(markup).toContain('Import markdown');
     expect(markup).not.toContain('Preview should stay hidden');
     expect(markup).not.toContain('⌘B');
     expect(markup).not.toContain('⌘I');

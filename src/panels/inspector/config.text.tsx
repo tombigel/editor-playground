@@ -86,10 +86,10 @@ export const textAppearanceSection: InspectorSectionDefinition = {
 };
 
 const TEXT_SUBTYPES: { value: TextSubtype; label: string }[] = [
-  { value: 'rich', label: 'Rich' },
-  { value: 'block', label: 'Text' },
-  { value: 'list', label: 'List' },
-  { value: 'code', label: 'Code' },
+  { value: 'rich', label: 'Rich Text' },
+  { value: 'block', label: 'Text Block' },
+  { value: 'list', label: 'List Block' },
+  { value: 'code', label: 'Code Block' },
 ];
 
 export function getTextSubtypeIcon(subtype: TextSubtype): LucideIcon {
@@ -113,7 +113,7 @@ function SubtypeSwitcher({ node, actions }: { node: InspectorNode | null; action
   const richBlockCount = textNode.subtype === 'rich' ? getTextDocumentBlocks(textNode.content).length : 0;
   const options: OptionsSelectorOption[] = TEXT_SUBTYPES.map(({ value, label }) => {
     const Icon = getTextSubtypeIcon(value);
-    const tooltipLabel = value === 'rich' ? 'Rich text' : label;
+    const tooltipLabel = label;
     return {
       value,
       label,
@@ -211,7 +211,6 @@ const textContentSection: InspectorSectionDefinition = {
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           onActivateRichEdit={actions.onActivateRichEdit}
-          onApplyTextNodeMarkdown={actions.onApplyTextNodeMarkdown}
           headerContent={switcher}
         />
       );
