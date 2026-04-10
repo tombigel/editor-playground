@@ -3,723 +3,1109 @@
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
-- [`src/api/documentApi.ts`](#srcapidocumentapits)
-- [`src/api/textConversion.ts`](#srcapitextconversionts)
-- [`src/api/textMerge.ts`](#srcapitextmergets)
-- [`src/api/editorApi.ts`](#srcapieditorapits)
-- [`src/api/fontApi.ts`](#srcapifontapits)
-- [`src/api/siteApi.ts`](#srcapisiteapits)
-- [`src/api/editorViewApi.ts`](#srcapieditorviewapits)
-- [`src/api/dragDropApi.ts`](#srcapidragdropapits)
-- [`src/api/animationApi.ts`](#srcapianimationapits)
-- [`src/api/types/index.ts`](#srcapitypesindexts)
+- [Core Document Model](#core-document-model)
+- [Node CRUD](#node-crud)
+- [Geometry and Layout](#geometry-and-layout)
+- [Text Content](#text-content)
+- [Rich Text](#rich-text)
+- [Text Conversion](#text-conversion)
+- [Code Blocks](#code-blocks)
+- [Pages and Site Structure](#pages-and-site-structure)
+- [Top-Level Wrappers](#top-level-wrappers)
+- [Fonts](#fonts)
+- [Animations](#animations)
+- [Drag and Drop](#drag-and-drop)
+- [Editor State](#editor-state)
+- [Editor Mutations](#editor-mutations)
+- [Rendering and Export](#rendering-and-export)
+- [Utilities](#utilities)
+- [Type Reference](#type-reference)
+
+---
 
 ## Architecture Overview
 
 The API layer is structured as multiple modules:
 
-- **`documentApi`** — Pure `DocumentModel → DocumentModel` functions. No side effects, no editor state. Safe to use in scripts, tests, and server-side contexts.
-- **`textConversion`** — Pure text-subtype conversion helpers used by `documentApi` to keep conversion policy explicit and reusable.
-- **`textMerge`** — Pure structure-changing text helpers used by `documentApi` for rich-text split and multi-node merge flows.
-- **`editorApi`** — Wraps `documentApi` with editor state, selection management, and history concerns. The editor UI calls these variants.
-- **`dragDropApi`** — Pure headless drag-and-drop session lifecycle and drag resolution utilities for editor canvases.
-- **`fontApi` / `siteApi` / `editorViewApi`** — Subsystem pass-throughs that re-export public surface from the `fonts/`, `site/`, and `stage/` subsystems respectively.
+| Module | Purpose | Side effects |
+| --- | --- | --- |
+| `documentApi` | Pure `DocumentModel -> DocumentModel` functions. Safe for scripts, tests, server-side. | None |
+| `pageApi` | Pure page/site-structure mutations and queries. | None |
+| `textConversion` | Pure text-subtype conversion helpers. | None |
+| `textMerge` | Pure split/merge helpers for rich text. | None |
+| `textMarkdown` | Markdown serialization and parsing. | None |
+| `editorApi` | Wraps document APIs with editor state, selection, and history. The editor UI calls these. | Yes (state) |
+| `fontApi` | Font library, Google Fonts catalog, stylesheet builders, weight utilities. | Some (fetching) |
+| `siteApi` | Site renderer component and export functions. | Yes (rendering) |
+| `editorViewApi` | Stage editor component. | Yes (rendering) |
+| `dragDropApi` | Headless drag-and-drop session lifecycle. | None |
+| `animationApi` | Animation model, presets, runtime preview, Interact config builder. | Some (preview) |
 
-Every feature is achievable through the API layer without the editor UI.
+**Key principle**: every feature is achievable through the API layer without the editor UI. Core operations live in `documentApi` as pure functions; `editorApi` wraps them with selection and history concerns.
 
-Phase 1.7 note:
+### Model note (Phase 1.7+)
 
-- The model layer now defines a canonical text AST wrapper, `TextDocumentContent = { blocks, blockGap? }`, and canonical block variants that remain Slate-compatible.
-- Text-node persistence now uses that wrapper across `block`, `code`, `list`, and `rich` subtypes.
-- Transitional fields such as `htmlTag` and `code` still exist on `TextNode` for compatibility with editor surfaces, but canonical text semantics now live in `content.blocks` and rich-only spacing lives in `content.blockGap`.
+The model layer defines a canonical text AST wrapper `TextDocumentContent = { blocks, blockGap? }` with Slate-compatible block variants. All text subtypes (`block`, `rich`, `code`, `list`) persist through this wrapper. Transitional fields like `htmlTag` and `code` still exist on `TextNode` for compatibility but canonical semantics live in `content.blocks`.
 
 ---
 
-## `src/api/documentApi.ts`
+## Core Document Model
+
+Source: `src/api/documentApi.ts`
 
 ### Document lifecycle
 
 | Function | Signature | Description |
-|---|---|---|
-| `createInitialDocument` | `() => DocumentModel` | Creates a blank document with default structure. |
-| `cloneDocument` | `(document: DocumentModel) => DocumentModel` | Deep-clones a document. |
-| `parseDocumentJson` | `(raw: string) => DocumentModel` | Parses and validates a JSON string into a `DocumentModel`; throws on invalid input. |
-| `serializeDocumentJson` | `(document: DocumentModel) => string` | Serializes a `DocumentModel` to a formatted JSON string. |
-| `validateDocument` | `(document: DocumentModel) => string[]` | Returns a list of validation error messages (empty = valid). |
-| `applyDocumentCommands` | `(document: DocumentModel, commands: DocumentCommand[]) => DocumentModel` | Applies a batch of typed commands to a document in one pass. |
+| --- | --- | --- |
+| `createInitialDocument` | `() -> DocumentModel` | Creates a blank document with default structure |
+| `cloneDocument` | `(document) -> DocumentModel` | Deep-clones a document |
+| `parseDocumentJson` | `(raw: string) -> DocumentModel` | Parses and validates JSON into a `DocumentModel`; throws on invalid input |
+| `serializeDocumentJson` | `(document) -> string` | Serializes a `DocumentModel` to formatted JSON |
+| `validateDocument` | `(document) -> string[]` | Returns validation error messages (empty = valid) |
+| `validateLinks` | `(document) -> LinkValidationError[]` | Returns link validation errors for all nodes |
 
-### Node mutations
+### Batch commands
 
-| Function | Signature | Description |
-|---|---|---|
-| `insertWrapperDoc` | `(document, role: WrapperRole, parentId: NodeId) => DocumentModel` | Appends a new wrapper node as the last child of `parentId`. |
-| `insertLeafDoc` | `(document, role: LeafRole, parentId: NodeId) => DocumentModel` | Appends a new leaf node as the last child of `parentId`. |
-| `insertSectionTemplateBeforeFooter` | `(document, templateId: SectionTemplateId) => DocumentModel` | Inserts a section from a built-in template before the footer node. |
-| `deleteNodeDoc` | `(document, nodeId: NodeId) => DocumentModel` | Removes a node and all its descendants. |
-| `deleteNodesDoc` | `(document, nodeIds: NodeId[]) => DocumentModel` | Removes multiple nodes (and descendants); handles parent/child overlap gracefully. |
-| `reorderNodeDoc` | `(document, nodeId: NodeId, action: NodeOrderAction) => DocumentModel` | Reorders a node among its siblings. |
-| `reparentNodeDoc` | `(document, nodeId: NodeId, newParentId: NodeId) => DocumentModel` | Moves a node to a new parent; rejects invalid moves silently. |
-| `setNodeRect` | `(document, nodeId, field: 'x'\|'y'\|'width'\|'height', value: string) => DocumentModel` | Sets a single rect dimension on a node. |
-| `setNodeSticky` | `(document, nodeId, patch: Partial<StickyDefinition>) => DocumentModel` | Patches the sticky definition of a node. |
-| `setTextNodeContentDoc` | `(document, nodeId, field: EditorTextField, value: string) => DocumentModel` | Transitional pure field mutator for text, code, link, button, and image leaves. Content-oriented field cases now delegate into canonical `TextDocumentContent` mutations, and `fontFamily` stores only the normalized primary family name rather than a full fallback stack string. |
-| `setTextDocumentContentDoc` | `(document, nodeId, content: TextDocumentContent) => DocumentModel` | Canonical pure text-document mutation for all text subtypes. Normalizes wrapper content, enforces subtype constraints, and syncs transitional compatibility metadata from canonical blocks. |
-| `setTextDocumentBlockGapDoc` | `(document, nodeId, blockGap: number \| undefined) => DocumentModel` | Canonical pure rich-text block spacing mutation. Updates `content.blockGap` without routing through field-based editor state. |
-| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) => DocumentModel` | Compatibility helper layered over `setTextDocumentContentDoc()` for legacy rich-array callers. |
-| `setListContentDoc` | `(document, nodeId, content: ListContent) => DocumentModel` | Compatibility helper layered over `setTextDocumentContentDoc()` for standalone list callers. |
-| `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) => DocumentModel` | Dedicated pure code-language mutator layered over the canonical text mutation path. |
-| `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) => DocumentModel` | Dedicated pure code-theme mutator layered over the canonical text mutation path. |
-| `setTextDirectionDoc` | `(document, nodeId, direction: 'ltr' \| 'rtl') => DocumentModel` | Dedicated pure text-direction mutator layered over the canonical text mutation path. |
-| `normalizeTextNodeDoc` | `(document, nodeId) => DocumentModel` | Normalizes one text node according to its subtype invariants in the pure API layer. |
-| `serializeTextNodeMarkdownDoc` | `(document, nodeId) => string` | Serializes one text node to supported-subset GFM. Rich nodes serialize semantically; standalone code preserves its info string; unsupported app-specific structures degrade deterministically. |
-| `applyMarkdownToTextNodeDoc` | `(document, nodeId, markdown: string) => DocumentModel` | Applies supported-subset GFM to one existing text node according to its current subtype. Rich nodes parse to rich blocks, block/list nodes preserve compatible single-shape inputs before flattening, and code nodes treat non-fenced markdown as `markdown` source code. |
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Explicit pure converter for `block`, `rich`, `code`, and `list` text nodes. |
-| `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Thin wrapper over `convertTextNodeDoc` used by editor flows that switch text subtypes. |
-| `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits one rich text node into one or more sibling text nodes using rich block boundaries. |
-| `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges sibling text nodes into one rich node while preserving tree order for content assembly. |
+```typescript
+applyDocumentCommands(document: DocumentModel, commands: DocumentCommand[]): DocumentModel
+```
+
+Applies a batch of typed commands in one pass. See [`DocumentCommand`](#documentcommand) in the type reference.
 
 ### Node selectors
 
 | Function | Signature | Description |
-|---|---|---|
-| `getNode` | `(document, nodeId) => DocumentNode \| undefined` | Returns the node for a given id. |
-| `getChildren` | `(document, nodeId) => DocumentNode[]` | Returns the child nodes of a given node. |
+| --- | --- | --- |
+| `getNode` | `(document, nodeId) -> DocumentNode \| undefined` | Look up a single node by ID |
+| `getChildren` | `(document, nodeId) -> DocumentNode[]` | Get direct children of a node |
+
+### Type guards
+
+| Function | Returns | Description |
+| --- | --- | --- |
+| `isSiteNode(node)` | `node is SiteNode` | Check if node is the site root |
+| `isContainerNode(node)` | `node is ContainerNode` | Check if node is a container |
+| `isTextNode(node)` | `node is TextNode` | Check if node is a text node |
+| `isMediaNode(node)` | `node is MediaNode` | Check if node is a media node |
+| `isLeafNode(node)` | `node is LeafNode` | Check if node is a leaf (text or media) |
+
+---
+
+## Node CRUD
+
+Source: `src/api/documentApi.ts`
+
+### Insert operations
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `insertContainerDoc` | `(document, subtype: ContainerSubtype, parentId) -> DocumentModel` | Insert a container as last child of parent |
+| `insertTextDoc` | `(document, parentId) -> DocumentModel` | Insert a text node as last child of parent |
+| `insertMediaDoc` | `(document, parentId) -> DocumentModel` | Insert a media node as last child of parent |
+| `insertSectionTemplateBeforeFooter` | `(document, templateId: SectionTemplateId) -> DocumentModel` | Insert a pre-built section template |
+
+#### `insertContainerDoc` parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `document` | `DocumentModel` | Source document |
+| `subtype` | `ContainerSubtype` | `'section'`, `'header'`, `'footer'`, `'container'`, `'group'` |
+| `parentId` | `NodeId` | Parent node to append into |
+
+#### Section templates
+
+The `SECTION_TEMPLATES` constant exports available template metadata as `SectionTemplateSummary[]`.
+
+| Template ID | Category | Description |
+| --- | --- | --- |
+| `'blank'` | basic | Empty section |
+| `'post'` | basic | Blog-style text section |
+| `'stickyStaggeredImages'` | sticky | Staggered images with sticky scroll |
+| `'stickyPinnedCards'` | sticky | Pinned cards with sticky scroll |
+| `'stickyMediaReveal'` | sticky | Media reveal with sticky scroll |
+| `'stickySteps'` | sticky | Step-through with sticky scroll |
+
+#### Deprecated aliases
+
+| Function | Use instead |
+| --- | --- |
+| `insertWrapperDoc` | `insertContainerDoc` |
+| `insertLeafDoc(document, role, parentId)` | `insertTextDoc` / `insertMediaDoc` |
+
+### Delete operations
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `deleteNodeDoc` | `(document, nodeId) -> DocumentModel` | Delete a node and its descendants |
+| `deleteNodesDoc` | `(document, nodeIds: NodeId[]) -> DocumentModel` | Delete multiple nodes; auto-filters to top-level IDs |
+
+### Reorder and reparent
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `reorderNodeDoc` | `(document, nodeId, action: NodeOrderAction) -> DocumentModel` | Reorder among siblings |
+| `reparentNodeDoc` | `(document, nodeId, newParentId) -> DocumentModel` | Move to new parent; returns unchanged on invalid ops |
+| `moveNodeInTreeDoc` | `(document, nodeId, targetParentId, targetIndex: number) -> DocumentModel` | Move to specific index in target parent |
+
+`NodeOrderAction`: `'back'` | `'forward'` | `'sendToBack'` | `'bringToFront'`
+
+---
+
+## Geometry and Layout
+
+Source: `src/api/documentApi.ts`
+
+### Rect mutations
+
+```typescript
+setNodeRect(document: DocumentModel, nodeId: NodeId, field: 'x' | 'y' | 'width' | 'height', value: string): DocumentModel
+```
+
+Sets a single geometry field. The `value` is a CSS-like string (e.g. `'100px'`, `'50%'`, `'fit-content'`).
+
+### Sticky behavior
+
+```typescript
+setNodeSticky(document: DocumentModel, nodeId: NodeId, patch: Partial<StickyDefinition>): DocumentModel
+```
+
+Merges a partial sticky definition into the node's existing sticky config. See [`StickyDefinition`](#stickydefinition) for all fields.
+
+```typescript
+setSiteNodeStickyElevation(document: DocumentModel, enabled: boolean): DocumentModel
+```
+
+Controls whether all sticky nodes are elevated (z-index boost) globally.
 
 ### Sticky resolution
 
 | Function | Signature | Description |
-|---|---|---|
-| `resolveStickyLayout` | `(document, ...) => StickyLayoutState` | Computes the full sticky layout state for a document. |
-| `resolveWrapperStickyState` | `(document, nodeId) => ComputedWrapperStickyState` | Computes the resolved sticky state for a specific wrapper node. |
+| --- | --- | --- |
+| `resolveStickyLayout` | `(document, snapshots: StickyGeometrySnapshot[]) -> StickyLayoutState` | Compute sticky layout for the full document given geometry snapshots |
+| `resolveWrapperStickyState` | `(document, nodeId) -> ComputedWrapperStickyState` | Compute resolved sticky state for a single wrapper |
 
-### Font management
+### Visibility
 
-| Function | Signature | Description |
-|---|---|---|
-| `addDocumentFontFamily` | `(document, family) => DocumentModel` | Adds a font family to the document font library. |
-| `removeDocumentFontFamily` | `(document, familyId) => DocumentModel` | Removes a font family from the document font library. |
-| `toggleDocumentFontFavorite` | `(document, familyId) => DocumentModel` | Toggles the favorite flag on a font family. |
-| `purgeUnusedDocumentFonts` | `(document) => DocumentModel` | Removes font families that are not referenced by any node. |
-| `getDocumentFontLibrary` | `(document) => FontLibrary` | Returns the document's font library. |
-| `listDocumentFonts` | `(document) => FontFamily[]` | Lists all font families registered in the document. |
-| `getFontUsage` | `(document) => FontUsage` | Returns a map of font usage across the document. |
-| `isFontFamilyUsed` | `(document, familyId) => boolean` | Returns whether a font family is referenced by any node. |
-
-### Unit utilities
-
-| Function | Signature | Description |
-|---|---|---|
-| `parseUnitValue` | `(value: string) => UnitValue` | Parses a CSS unit string into a structured `UnitValue`. |
-| `parseWidthValue` | `(value: string) => UnitValue` | Parses a width value string. |
-| `parseHeightValue` | `(value: string) => UnitValue` | Parses a height value string. |
-| `parseSpacingValue` | `(value: string) => UnitValue` | Parses a spacing value string. |
-| `parseFontSizeValue` | `(value: string) => UnitValue` | Parses a font-size value string. |
-| `resolveUnitValuePx` | `(value: UnitValue, context) => number` | Resolves a `UnitValue` to a pixel number given a layout context. |
-| `formatValue` | `(value: UnitValue) => string` | Formats a `UnitValue` back to a CSS string. |
-
-### Navigation helpers
-
-| Function | Signature | Description |
-|---|---|---|
-| `getLinkHref` | `(node) => string` | Resolves the effective href string for a link or button node. |
-| `shouldOpenNavigationInNewTab` | `(node) => boolean` | Returns whether a link should open in a new tab. |
-
-### Section templates
-
-| Constant | Description |
-|---|---|
-| `SECTION_TEMPLATES` | Array of built-in section template descriptors. |
-
-### Exported types
-
-| Type | Description |
-|---|---|
-| `DocumentModel` | The root document data structure. |
-| `DocumentNode` | Union of all node types (`site`, `wrapper`, `leaf`). |
-| `DocumentCommand` | Discriminated union of batch command types (`setRect`, `setSticky`, `setText`). |
-| `NodeId` | Opaque string identifier for a node. |
-| `NodeOrderAction` | `'back' \| 'forward' \| 'sendToBack' \| 'bringToFront'` |
-| `WrapperNode` | A wrapper-type node. |
-| `WrapperRole` | Union of wrapper role strings. |
-| `WrapperStyleField` | Union of style field names applicable to wrappers. |
-| `LeafRole` | Union of leaf role strings. |
-| `EditorTextField` | Union of text/style field names settable via `setTextNodeContentDoc`. |
-| `MergeTextNodesOptions` | Optional merge options including `survivorNodeId` for choosing which existing node keeps geometry and identity. |
-| `TextSubtype` | `'block' \| 'rich' \| 'code' \| 'list'` |
-| `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | Explicit text conversion policy mode. `split` delegates rich multi-block content to the pure rich splitter instead of flattening. |
-| `NodeTextField` | Subset of text fields for plain text nodes. |
-| `StickyDefinition` | Sticky behaviour config shape. |
-| `StickyGeometrySnapshot` | Snapshot of node geometry used during sticky resolution. |
-| `StickyLayoutState` | Computed sticky layout state for a full document. |
-| `ComputedWrapperStickyState` | Resolved sticky state for a single wrapper node. |
-
-### Common value reference
-
-These unions show up repeatedly across `documentApi` signatures and returned data.
-
-| Type / field | Allowed values | Notes |
-|---|---|---|
-| `WrapperRole` | `'section' \| 'header' \| 'footer' \| 'container'` | Structural wrappers. |
-| `LeafRole` | `'text' \| 'image' \| 'link' \| 'button'` | Leaf/content nodes. |
-| `SectionTemplateId` | `'blank' \| 'post' \| 'stickyStaggeredImages' \| 'stickyPinnedCards' \| 'stickyMediaReveal' \| 'stickySteps'` | `stickySteps` is the internal id for the template labeled `Sticky Edge Lab`. |
-| `NodeOrderAction` | `'back' \| 'forward' \| 'sendToBack' \| 'bringToFront'` | Used by reorder helpers in both `documentApi` and `editorApi`. |
-| `setNodeRect.field` | `'x' \| 'y' \| 'width' \| 'height'` | `x`/`y` are position; `width`/`height` accept the same string formats the model stores. |
-| `StickyDefinition.target` | `'self' \| 'contentWrapper'` | `contentWrapper` is meaningful for wrappers only; leaves effectively use `self`. |
-| `StickyDefinition.durationMode` | `'auto' \| 'custom'` | `auto` derives distance from available space; `custom` uses authored duration values. |
-| `NodeTextField` | `'name' \| 'content' \| 'htmlTag' \| 'lang' \| 'label' \| 'linkType' \| 'anchorTargetId' \| 'href' \| 'openInNewTab' \| 'targetPageId' \| 'pageAnchorId' \| 'src' \| 'alt' \| 'codeLanguage' \| 'codeTheme'` | Transitional field-level mutation surface for text-capable leaves, links, buttons, code blocks, and images. Content-oriented cases now rewrite canonical `TextDocumentContent`. |
-| `LinkKind` | `'anchor' \| 'external' \| 'page'` | Used by `linkType` on links and buttons. |
-| `TextLeaf.htmlTag` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p' \| 'blockquote' \| 'div'` | Transitional standalone semantic tag field. The canonical stored block tag now lives on the single text block in `content.blocks`. |
-| `TypographyStyle.fontStyle` | `'normal' \| 'italic'` | Text, link, and button typography. |
-| `TypographyStyle.textDecorationLine` | `'none' \| 'underline' \| 'line-through' \| 'underline line-through'` | Supports combined underline + strikethrough. |
-| `TypographyStyle.direction` | `'ltr' \| 'rtl'` | Writing direction. |
-| `TypographyStyle.textAlign` | `'left' \| 'center' \| 'right'` | Horizontal alignment for text-bearing leaves. |
-| `TextWrapMode` | `'single-line' \| 'wrap'` | Used by links and buttons. |
-| `DocumentCommand.type` | `'setRect' \| 'setSticky' \| 'setText'` | Batch command discriminator for `applyDocumentCommands`. |
+```typescript
+setNodeVisibilityDoc(document: DocumentModel, nodeId: NodeId, visible: boolean): DocumentModel
+```
 
 ---
 
-## `src/api/editorApi.ts`
+## Text Content
 
-Wraps `documentApi` and `editorStore` operations with editor state, selection, and history. The editor UI always calls these variants rather than `documentApi` directly.
+Source: `src/api/documentApi.ts`, `src/api/textMarkdown.ts`
 
-### State lifecycle
+### Field-level mutations
 
-| Function | Signature | Description |
-|---|---|---|
-| `createInitialState` | `() => EditorState` | Creates a blank editor state with default document. |
-| `loadPersistedState` | `() => EditorState` | Loads editor state from local storage. |
-| `persistState` | `(state: EditorState) => void` | Persists current editor state to local storage. |
-| `persistDefaultDocument` | `(document: DocumentModel) => void` | Persists a document as the default on next load. |
-| `clearSessionState` | `() => void` | Clears session-scoped storage. |
-| `clearPersistedState` | `() => void` | Clears all persisted editor storage. |
-| `createFactoryResetState` | `() => EditorState` | Returns a fresh state that discards all persisted data. |
-| `parseImportedDocumentJson` | `(raw: string) => DocumentModel` | Parses an imported JSON string with migration applied. |
-| `importDocument` | `(state, document: DocumentModel) => EditorState` | Replaces the current document, clears selection. |
-| `getValidationErrors` | `(state: EditorState) => string[]` | Returns current document validation errors. |
+```typescript
+setTextNodeContentDoc(document: DocumentModel, nodeId: NodeId, field: EditorTextField, value: string): DocumentModel
+```
 
-### Selection
+Sets a single text field by name. Handles text nodes and media nodes. The `field` parameter is a wide union covering content, typography, link, border, shadow, and background properties. See [`EditorTextField`](#editortextfield) for the full list.
 
-| Function | Signature | Description |
-|---|---|---|
-| `selectNode` | `(state, nodeId: NodeId \| null) => EditorState` | Sets the selection to a single node (or clears it). |
-| `clearSelection` | `(state) => EditorState` | Clears the current selection. |
-| `toggleNodeSelection` | `(state, nodeId: NodeId) => EditorState` | Adds or removes a node from the multi-selection. |
-| `selectManyNodes` | `(state, nodeIds: NodeId[], mode: 'replace'\|'toggle') => EditorState` | Sets or toggles a multi-node selection. |
+**Link fields** (available on block text and image nodes when `linkEnabled` is set):
 
-### Stage navigation
+| Field | Type | Description |
+| --- | --- | --- |
+| `linkEnabled` | `'true'` / `'false'` | Toggle link presence |
+| `linkType` | `'anchor'` / `'external'` / `'page'` | Link destination type |
+| `anchorTargetId` | `NodeId` | Anchor target node ID |
+| `href` | `string` | External URL |
+| `openInNewTab` | `'true'` / `'false'` | Open link in new tab |
+| `targetPageId` | `PageId` | Internal page link target |
+| `pageAnchorId` | `NodeId` | Page-relative anchor target |
 
-| Function | Signature | Description |
-|---|---|---|
-| `getStageSelectableNodeIds` | `(document: DocumentModel) => NodeId[]` | Returns all node ids that are selectable in the stage. |
-| `getAdjacentStageSelection` | `(document, currentId, direction: 'forward'\|'backward') => NodeId \| null` | Returns the next/previous selectable node id for keyboard navigation. |
+**Styled link fields** (block text with `linkEnabled` and background):
 
-### Node mutations (editor-state variants)
+| Field | Type | Description |
+| --- | --- | --- |
+| `background` | CSS color string | Background color for link button style |
+| `paddingBlock` | CSS value string | Vertical padding |
+| `paddingInline` | CSS value string | Horizontal padding |
+
+### Document-level content mutations
 
 | Function | Signature | Description |
-|---|---|---|
-| `insertWrapper` | `(state, role: WrapperRole) => EditorState` | Inserts a wrapper under the current selection context. |
-| `insertLeaf` | `(state, role: 'text' \| 'heading' \| 'list' \| 'richtext' \| 'code' \| 'image' \| 'link' \| 'button') => EditorState` | Inserts a leaf under the current selection context. The editor-facing role surface is broader than `documentApi.insertLeafDoc()` so the text type picker can insert heading, list, rich-text, and code presets directly. |
-| `insertSectionTemplate` | `(state, templateId: SectionTemplateId) => EditorState` | Inserts a section template before the footer. |
-| `deleteNode` | `(state, nodeId: NodeId) => EditorState` | Deletes a node and updates selection. |
-| `deleteNodes` | `(state, nodeIds: NodeId[]) => EditorState` | Deletes multiple nodes and updates selection. |
-| `moveNode` | `(state, nodeId, dx: number, dy: number) => EditorState` | Moves a single node by a pixel delta. |
-| `moveNodes` | `(state, nodeIds, dx: number, dy: number) => EditorState` | Moves multiple nodes by a pixel delta. |
-| `nudgeNode` | `(state, nodeId, dx: number, dy: number) => EditorState` | Nudges a node (single-pixel keyboard move). |
-| `resizeNode` | `(state, nodeId, dw: number, dh: number) => EditorState` | Resizes a node by a pixel delta. |
-| `reorderNode` | `(state, nodeId, action: NodeOrderAction) => EditorState` | Reorders a node among its siblings. |
-| `reorderNodes` | `(state, nodeIds, action: NodeOrderAction) => EditorState` | Reorders multiple nodes among their siblings. |
-| `reparentNode` | `(state, nodeId, newParentId: NodeId) => EditorState` | Moves a node to a new parent. |
-| `alignNodes` | `(state, nodeIds, alignment) => EditorState` | Aligns multiple nodes to a common edge or axis. |
-| `distributeNodes` | `(state, nodeIds, axis) => EditorState` | Distributes multiple nodes with equal spacing. |
-| `updateTextField` | `(state, nodeId, field: EditorTextField, value: string) => EditorState` | Sets a text/style field on a leaf node. Structured text-document editing now prefers `setTextDocumentContentDoc()` and `setTextDocumentBlockGapDoc()` through reducer actions instead of field-based content updates. |
-| `updateRectField` | `(state, nodeId, field, value: string) => EditorState` | Sets a single rect dimension on a node. |
-| `updateStickyField` | `(state, nodeId, patch) => EditorState` | Patches the sticky definition of a node. |
-| `updateWrapperStyleField` | `(state, nodeId, field: WrapperStyleField, value) => EditorState` | Sets a style field on a wrapper node. |
-| `requestPromoteWrapperRole` | `(state, nodeId) => EditorState` | Initiates a wrapper role promotion flow. |
-| `confirmPromoteWrapperRole` | `(state) => EditorState` | Confirms a pending role promotion. |
-| `cancelPromoteWrapperRole` | `(state) => EditorState` | Cancels a pending role promotion. |
-| `demoteWrapperRole` | `(state, nodeId) => EditorState` | Demotes a wrapper to a plain container role. |
+| --- | --- | --- |
+| `setTextDocumentContentDoc` | `(document, nodeId, content: TextDocumentContent) -> DocumentModel` | Replace entire text document content |
+| `setTextDocumentBlockGapDoc` | `(document, nodeId, blockGap: number \| undefined) -> DocumentModel` | Set block gap spacing |
+| `setRichTextContentDoc` | `(document, nodeId, content: RichContent) -> DocumentModel` | Replace rich content blocks (legacy array form) |
+| `setListContentDoc` | `(document, nodeId, content: ListContent) -> DocumentModel` | Replace list content |
+| `normalizeTextNodeDoc` | `(document, nodeId) -> DocumentModel` | Normalize text node to canonical form |
 
-### Re-exported `documentApi` utilities
+### Text direction
 
-`editorApi` also re-exports these for convenience:
+```typescript
+setTextDirectionDoc(document: DocumentModel, nodeId: NodeId, direction: 'ltr' | 'rtl'): DocumentModel
+```
 
-`SECTION_TEMPLATES`, `deleteNodeDoc`, `deleteNodesDoc`, `getNode`, `insertLeafDoc`, `insertWrapperDoc`, `parseUnitValue`, `reorderNodeDoc`, `reparentNodeDoc`, `resolveStickyLayout`, `resolveWrapperStickyState`, `serializeDocumentJson`, `serializeTextNodeMarkdownDoc`, `applyMarkdownToTextNodeDoc`, `setTextNodeContentDoc`, `setTextDocumentContentDoc`, `setTextDocumentBlockGapDoc`, `setRichTextContentDoc`, `setListContentDoc`, `setCodeBlockLanguageDoc`, `setCodeBlockThemeDoc`, `setTextDirectionDoc`, `normalizeTextNodeDoc`
+### Markdown import/export
 
-### Exported types
+| Function | Signature | Description |
+| --- | --- | --- |
+| `serializeTextNodeMarkdownDoc` | `(document, nodeId) -> string` | Serialize a text node to GFM markdown |
+| `applyMarkdownToTextNodeDoc` | `(document, nodeId, markdown: string) -> DocumentModel` | Apply markdown content to a text node |
 
-| Type | Description |
-|---|---|
-| `EditorState` | Full editor state shape (document + selection + UI flags). |
-| `FocusedMode` | Union of editor focus mode strings. |
-| `DocumentModel` | Re-exported from `documentApi`. |
-| `DocumentNode` | Re-exported from `documentApi`. |
-| `EditorTextField` | Re-exported from `documentApi`. |
-| `NodeId` | Re-exported from `documentApi`. |
-| `NodeOrderAction` | Re-exported from `documentApi`. |
-| `StickyGeometrySnapshot` | Re-exported from `documentApi`. |
-| `StickyLayoutState` | Re-exported from `documentApi`. |
-| `SectionTemplateId` | Identifier for a built-in section template. |
+Lower-level markdown utilities (from `textMarkdown.ts`):
 
-### Editor-specific value reference
-
-| Function / type | Allowed values | Notes |
-|---|---|---|
-| `selectManyNodes(..., mode)` | `'replace' \| 'toggle'` | `replace` overwrites the current multi-selection; `toggle` adds/removes ids. |
-| `getAdjacentStageSelection(..., direction)` | `'forward' \| 'backward'` | DOM-order stage traversal. |
-| `alignNodes(..., alignment)` | `'left' \| 'center-x' \| 'right' \| 'top' \| 'center-y' \| 'bottom'` | Shared with keyboard shortcuts and reducer actions. |
-| `distributeNodes(..., axis)` | `'horizontal' \| 'vertical' \| 'left' \| 'right' \| 'top' \| 'bottom'` | Gap distribution (`horizontal`/`vertical`) or edge distribution. |
-| `FocusedMode` | `null \| 'layout' \| 'sticky' \| 'content' \| 'design'` | `null` means normal mode with no focused floating panel. |
-| `EditorState.ui.spacerVisibility` | `'selected' \| 'all'` | Drives spacer debugging overlays. |
-| `EditorState.ui.animationPreview.mode` | `'passive' \| 'interactive'` | Passive previews autoplay supported triggers; interactive previews wait for user input. |
-| `EditorState.ui.animationPreview.triggers` | `entrance`, `ongoing`, `scroll`, `mouse`, `click`, `hover` keys mapped to `boolean` | Canonical editor preview trigger set. |
+| Function | Signature | Description |
+| --- | --- | --- |
+| `serializeTextNodeToMarkdown` | `(node: TextNode, document?) -> string` | Serialize a node directly |
+| `serializeRichContentToMarkdown` | `(content: RichContent, document?) -> string` | Serialize rich blocks to markdown |
+| `parseMarkdownToRichContent` | `(markdown: string) -> RichContent` | Parse markdown to rich content blocks |
+| `parseMarkdownForTextSubtype` | `(markdown: string, targetSubtype: TextSubtype) -> ParsedMarkdownNode` | Parse markdown for a specific text subtype |
 
 ---
 
-## `src/api/textConversion.ts`
+## Rich Text
 
-Pure helper module for text subtype conversion policy. `documentApi` re-exports the public conversion functions so consumers can stay on the main API surface while the conversion rules remain isolated and testable.
+Source: `src/api/documentApi.ts`
 
-### Text conversion
+### Block-level mutations
 
-| Function / type | Signature / values | Description |
-|---|---|---|
-| `convertTextNodeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Converts a text node between `block`, `rich`, `code`, and `list`. `block -> list` and `code -> list` split hard line breaks into unordered items, `list -> code` drops ordered/unordered markers and emits one plain code line per item, `code -> rich` emits a rich `code-block`, supported `ul` / `ol` lists convert to rich list blocks, and `rich -> simple` supports explicit `flatten` vs `split` behavior. |
-| `switchTextSubtypeDoc` | `(document, nodeId, targetSubtype: TextSubtype, options?: TextConversionOptions) => DocumentModel` | Alias-style wrapper for subtype switching flows. |
-| `TextConversionMode` | `'auto' \| 'flatten' \| 'split'` | `auto` applies the default conversion policy, `flatten` explicitly degrades richer structures into plain text, and `split` delegates rich multi-block content to `splitRichTextNodeDoc()`. |
-| `TextConversionOptions` | `{ mode?: TextConversionMode }` | Options bag for explicit conversion behavior. |
-| `normalizeCodeLanguage` | `(language: string) => string` | Normalizes supported code languages, including `auto` and `markdown`, and degrades unsupported values to `plaintext`. |
+| Function | Parameters | Description |
+| --- | --- | --- |
+| `setRichBlockTypeDoc` | `(document, nodeId, blockIndex: number, blockType: RichTextBlockType)` | Change block type (paragraph, heading, blockquote, etc.) |
+| `setRichBlockLineHeightDoc` | `(document, nodeId, blockIndex: number, lineHeight: number)` | Set line height for a specific block |
+| `setRichBlockSpacingDoc` | `(document, nodeId, blockSpacing: number)` | Set block spacing for the entire rich text node |
 
----
+`RichTextBlockType`: `'paragraph'` | `'div'` | `'blockquote'` | `'h1'` | `'h2'` | `'h3'` | `'h4'` | `'h5'` | `'h6'`
 
-## `src/api/textMarkdown.ts`
+### List mutations
 
-Pure helper module for supported-subset markdown import/export. `documentApi` exposes the document-level wrappers, while this module keeps the block/inline parsing and serialization rules testable in isolation.
+| Function | Parameters | Description |
+| --- | --- | --- |
+| `setRichListKindDoc` | `(document, nodeId, blockIndex: number, listKind: 'ul' \| 'ol')` | Switch between ordered and unordered list |
+| `setRichListMarkerStyleDoc` | `(document, nodeId, blockIndex: number, markerStyle: string)` | Set list marker style |
 
-### Markdown helpers
-
-| Function | Signature | Description |
-|---|---|---|
-| `serializeTextNodeToMarkdown` | `(node, document?) => string` | Serializes one text node to supported-subset GFM. Page / anchor links degrade when they cannot be expressed as portable markdown URLs. |
-| `serializeRichContentToMarkdown` | `(content, document?) => string` | Serializes rich content block-by-block as supported GFM headings, paragraphs, blockquotes, fenced code blocks, and `ul` / `ol` lists. |
-| `parseMarkdownToRichContent` | `(markdown: string) => RichContent` | Parses supported-subset GFM into validated rich blocks. Unsupported constructs degrade into paragraphs or flat lists instead of persisting arbitrary markdown AST nodes. |
-| `parseMarkdownForTextSubtype` | `(markdown, targetSubtype) => { ... }` | Converts supported-subset GFM into the content shape expected by the target text subtype. |
-
-### Deterministic markdown behavior
-
-- GFM is the baseline contract, but persistence still uses the validated rich/list/code subsets rather than arbitrary markdown AST shapes.
-- Rich parsing supports headings, paragraphs, blockquotes, fenced code blocks, ordered lists, unordered lists, inline links, bold, and italic.
-- Standalone code import preserves a single fenced block as code, including the info string; any other markdown imported into a code node becomes raw code content with language `markdown`.
-- Standalone list import preserves a single parsed `ul` / `ol`; mixed markdown flattens to unordered list items using block boundaries as hard line breaks.
-- `markdown` as a code language means markdown syntax highlighting for source code, not parsing that content as document markdown.
-
-### List content semantics
-
-- `ListContent` is a first-class text payload used by `subtype: 'list'`.
-- Supported phase-1 wrappers are `ul`, `ol`, and `dl`.
-- `ul` and `ol` items persist as second-level list items with per-item `text`, `direction`, and optional `link`.
-- `ol` also persists a `start` value and a predefined marker style.
-- `dl` persists `term` / `description` pairs with optional shared link metadata for the pair.
-- Nested lists are rejected by normalization and validation in phase 1.
-
----
-
-## `src/api/textMerge.ts`
-
-Pure helper module for structure-changing text operations. `documentApi` re-exports these APIs so consumers can stay on the main pure API surface.
+Unordered marker styles: `'disc'` | `'circle'` | `'square'`
+Ordered marker styles: `'decimal'` | `'lower-alpha'` | `'upper-alpha'` | `'lower-roman'` | `'upper-roman'`
 
 ### Split and merge
 
-| Function / type | Signature / values | Description |
-|---|---|---|
-| `splitRichTextNodeDoc` | `(document, nodeId) => DocumentModel` | Splits a rich node at block boundaries. A single block is converted in place; multiple blocks keep the original node as the first split node and append newly generated sibling text nodes after it. When a rich block carries a standalone snapshot from an earlier merge, split restores that canonical standalone block content and metadata instead of rebuilding it from flattened text. |
-| `mergeTextNodesToRichDoc` | `(document, nodeIds, options?: MergeTextNodesOptions) => DocumentModel` | Merges same-parent sibling text nodes into one rich node. Content order follows parent tree order, not caller order, and each merged block carries a standalone snapshot so a later split can round-trip the original standalone node data. |
-| `MergeTextNodesOptions` | `{ survivorNodeId?: NodeId }` | Optional surviving anchor node. The survivor keeps identity and geometry while absorbed siblings are removed; merged blocks preserve per-source canonical structure and restorable standalone metadata. |
+Source: `src/api/textMerge.ts`
 
-### Deterministic behavior
+```typescript
+splitRichTextNodeDoc(document: DocumentModel, nodeId: NodeId): DocumentModel
+```
 
-- `splitRichTextNodeDoc()` now maps rich text blocks to standalone block nodes, rich `code-block` nodes to standalone code nodes, and rich `ul` / `ol` blocks to standalone list nodes.
-- If a rich block originated from a previous standalone node merge, `splitRichTextNodeDoc()` restores that block's saved standalone snapshot instead of flattening from the merged rich structure.
-- `convertTextNodeDoc(..., { mode: 'split' })` delegates rich multi-block content to `splitRichTextNodeDoc()` when converting away from `rich`.
-- `convertTextNodeDoc(..., { mode: 'split' })` with a simple target subtype splits multi-block rich content by block boundary and then flattens each split block into the requested simple subtype.
-- `mergeTextNodesToRichDoc()` rejects mixed-parent selections and leaves the document unchanged in that case.
-- Merge -> split round-trips preserve each source node's canonical block styling and restorable standalone metadata rather than collapsing everything to survivor-level styling.
+Splits a rich text node into multiple standalone text nodes (one per block).
+
+```typescript
+mergeTextNodesToRichDoc(document: DocumentModel, nodeIds: NodeId[], options?: MergeTextNodesOptions): DocumentModel
+```
+
+Merges multiple text nodes into a single rich text node.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `survivorNodeId` | `NodeId` | first in `nodeIds` | Which node keeps its identity (position, styles) |
 
 ---
 
-## `src/api/fontApi.ts`
+## Text Conversion
 
-Pass-through re-exports from the `src/fonts/` subsystem.
+Source: `src/api/textConversion.ts`
 
-### Font library management
+```typescript
+convertTextNodeDoc(document: DocumentModel, nodeId: NodeId, targetSubtype: TextSubtype, options?: TextConversionOptions): DocumentModel
+```
 
-| Export | Description |
-|---|---|
-| `addDocumentFontFamily` | Adds a font family to a document's font library. |
-| `removeDocumentFontFamily` | Removes a font family from the document font library. |
-| `toggleDocumentFontFavorite` | Toggles the favorite flag on a font family. |
-| `purgeUnusedDocumentFonts` | Removes font families not referenced by any node. |
-| `ensureDocumentFontFamily` | Ensures a font family entry exists by id. |
-| `ensureDocumentFontFamilyByName` | Ensures a font family entry exists by name, adding it if absent. |
-| `normalizeDocumentFontState` | Normalizes the font library state of a document (migration/repair). |
-| `getDocumentFontLibrary` | Returns the document's font library object. |
-| `getDocumentFontFamily` | Returns a specific font family from the document. |
-| `getDocumentDefaultFontFamily` | Returns the document's default font family. |
-| `getDocumentFontUsageMap` | Returns a map of font family id to usage count. |
-| `getFontUsage` | Returns a summary of font usage across a document. |
-| `isFontFamilyUsed` | Returns whether a font family is used by any node. |
-| `listDocumentFonts` | Lists all font families in the document. |
-| `listDocumentFontsForPicker` | Lists document fonts formatted for a font picker UI. |
-| `createDefaultFontLibrary` | Creates a default font library object. |
-| `getDefaultDocumentFontFamily` | Returns the default font family descriptor. |
-| `extractPrimaryFontFamily` | Extracts and normalizes the first CSS family name from a `font-family` string. |
+Converts a text node to a different subtype, preserving content where possible.
 
-### Google Fonts integration
+```typescript
+switchTextSubtypeDoc(document: DocumentModel, nodeId: NodeId, targetSubtype: TextSubtype, options?: TextConversionOptions): DocumentModel
+```
 
-| Export | Description |
-|---|---|
-| `fetchGoogleFontCatalog` | Fetches the full Google Fonts catalog from the API. |
-| `loadGoogleFontsCatalog` | Loads the Google Fonts catalog (cached after first load). |
-| `getCachedGoogleFontsCatalog` | Returns the in-memory cached catalog if available. |
-| `getBundledGoogleFontsCatalog` | Returns the bundled (build-time) Google Fonts catalog. |
-| `queryGoogleFontFamilies` | Queries font families by a structured `GoogleFontsQuery`. |
-| `filterGoogleFontFamilies` | Filters a catalog by category, subset, or other criteria. |
-| `searchGoogleFontFamilies` | Full-text searches font families by name. |
-| `sortGoogleFontFamilies` | Sorts font families by a `GoogleFontSort` criterion. |
-| `getGoogleFontFamily` | Looks up a single Google Font family by name. |
-| `useGoogleFontsCatalog` | React hook — returns the catalog and loading state. |
-| `buildGoogleFontsStylesheetHref` | Builds a Google Fonts stylesheet URL for arbitrary families. |
-| `buildEditorGoogleFontsStylesheetHref` | Builds a Google Fonts stylesheet URL for editor-loaded fonts. |
-| `buildDocumentGoogleFontsStylesheetHref` | Builds a Google Fonts stylesheet URL for fonts used in a document. |
-| `buildFontPreviewStylesheetHref` | Builds a stylesheet URL for previewing a single font family. |
-| `buildFontPickerPreviewStylesheetHref` | Builds a stylesheet URL for font picker preview rows. |
-| `collectDocumentFontRequests` | Collects all font load requests needed for a document. |
+Alias for `convertTextNodeDoc` with identical behavior.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `TextConversionMode` | `'auto'` | `'auto'`: best-effort, `'flatten'`: collapse to single block, `'split'`: split into multiple nodes |
+
+```typescript
+flattenTextContent(content: TextDocumentContent): string
+```
+
+Extracts plain text from a text document content structure.
+
+### Legacy subtype switcher
+
+```typescript
+switchSubtypeDoc(document: DocumentModel, nodeId: NodeId, targetSubtype: MediaSubtype | TextSubtype): DocumentModel
+```
+
+Handles both media and text subtype switching. Media switching remains in-place; text switching delegates to conversion APIs.
+
+---
+
+## Code Blocks
+
+Source: `src/api/documentApi.ts`
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) -> DocumentModel` | Set the programming language for syntax highlighting |
+| `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) -> DocumentModel` | Set the color theme (`'light'` or `'dark'`) |
+
+---
+
+## Pages and Site Structure
+
+Source: `src/api/pageApi.ts`
+
+### Page CRUD
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `addPage` | `(document, options?: Partial<Omit<DocumentPage, 'type' \| 'id'>>) -> DocumentModel` | Add a new page with optional properties |
+| `deletePage` | `(document, pageId) -> DocumentModel` | Delete a page and unlink its sections |
+| `reorderPage` | `(document, pageId, direction: 'back' \| 'forward') -> DocumentModel` | Move page in the page list |
+
+### Page metadata
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `setPageDisplayName` | `(document, pageId, displayName: string) -> DocumentModel` | Set page display name |
+| `setPageSlug` | `(document, pageId, slug: string) -> DocumentModel` | Set URL slug |
+| `setPageAsHome` | `(document, pageId) -> DocumentModel` | Designate page as home |
+| `setPageParent` | `(document, pageId, newParentId: PageId \| null) -> DocumentModel` | Set parent for page hierarchy (with cycle detection) |
+| `setPageLang` | `(document, pageId, lang: string \| undefined) -> DocumentModel` | Set BCP-47 locale override |
+| `setPageVisibility` | `(document, pageId, visible: boolean) -> DocumentModel` | Show/hide page |
+| `setPageViewTransition` | `(document, pageId, transition: 'none' \| 'crossfade' \| 'slide') -> DocumentModel` | Set view transition style |
+
+### Slug aliases
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `addPageSlugAlias` | `(document, pageId, alias: string) -> DocumentModel` | Add a slug alias for URL redirects |
+| `removePageSlugAlias` | `(document, pageId, alias: string) -> DocumentModel` | Remove a slug alias |
+| `validatePageSlug` | `(slug: string) -> string[]` | Validate slug format; returns error messages |
+
+### URL resolution
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `resolvePageUrl` | `(document, pageId) -> string` | Resolve the canonical URL for a page |
+| `resolvePageHierarchyUrl` | `(document, pageId) -> string` | Resolve URL based on page hierarchy path |
+| `resolvePageSystemAliasUrl` | `(document, pageId) -> string` | Resolve URL from system alias |
+| `resolvePageManualAliasUrls` | `(document, pageId) -> string[]` | Resolve all manual alias URLs |
+| `getPageRoutes` | `(document, pageId) -> PageRoute[]` | Get all routes for a page |
+| `getAllPageRoutes` | `(document) -> PageRoute[]` | Get all routes for all pages |
+
+### Page queries
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `getHomePage` | `(document) -> DocumentPage \| null` | Get the home page |
+| `getPageRole` | `(document, pageId) -> PageRole \| null` | Get page role (`'home'` \| `'default'`) |
+| `getPageForSection` | `(document, sectionId) -> DocumentPage \| null` | Find which page owns a section |
+| `getActiveSections` | `(document, pageId) -> ContainerNode[]` | Get visible sections for a page |
+
+### Language resolution
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `resolveSiteLanguage` | `(document) -> string` | Resolve the site-level language |
+| `resolvePageLanguage` | `(document, pageId) -> string` | Resolve language for a page (falls back to site) |
+| `resolveTextLeafLanguage` | `(document, nodeId) -> string` | Resolve language for a text leaf (page -> site fallback) |
+
+### Section operations
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `moveSectionToPage` | `(document, sectionId, fromPageId, toPageId) -> DocumentModel` | Move a section between pages |
+| `syncPageHrefLinks` | `(document, oldUrl: string, newUrl: string) -> DocumentModel` | Update internal links after URL changes |
+
+### Site settings
+
+```typescript
+setSiteSettings(document: DocumentModel, patch: Partial<SiteSettings>): DocumentModel
+```
+
+| Setting | Type | Description |
+| --- | --- | --- |
+| `lang` | `string` | Site-level BCP-47 locale |
+| `status` | `'draft'` \| `'published'` | Publication status |
+| `viewTransition` | `'none'` \| `'crossfade'` \| `'slide'` | Default page transition |
+| `title` | `string?` | Site title |
+| `autoSyncSlugs` | `boolean?` | Auto-sync slugs when display name changes |
+| `outputStructure` | `'directory'` \| `'flat'` | Export file structure |
+
+---
+
+## Top-Level Wrappers
+
+Source: `src/api/documentApi.ts`
+
+Top-level wrappers (headers, footers, shared sections) can control their placement and visibility across pages.
+
+```typescript
+setPageTopLevelWrapperPlacement(document: DocumentModel, pageId: PageId, nodeId: NodeId, placement: TopLevelWrapperPlacement): DocumentModel
+```
+
+`TopLevelWrapperPlacement`: `'currentPage'` | `'global'`
+
+```typescript
+setTopLevelWrapperVisibility(document: DocumentModel, pageId: PageId, nodeId: NodeId, visibility: TopLevelWrapperVisibilityMode, pageIds?: PageId[]): DocumentModel
+```
+
+`TopLevelWrapperVisibilityMode`: `'hidden'` | `'currentPage'` | `'allPages'` | `'customPages'`
+
+When `visibility` is `'customPages'`, pass `pageIds` to specify which pages show the wrapper.
+
+```typescript
+getTopLevelWrapperVisibilityState(document: DocumentModel, nodeId: NodeId): TopLevelWrapperVisibilityState
+```
+
+Returns `{ mode: TopLevelWrapperVisibilityMode, pageIds: PageId[] }`.
+
+---
+
+## Fonts
+
+Source: `src/api/fontApi.ts`
+
+### Document font library
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `addDocumentFontFamily` | `(document, family: DocumentFontFamily) -> DocumentModel` | Add a font family to the document |
+| `removeDocumentFontFamily` | `(document, familyId: string) -> DocumentModel` | Remove a font family |
+| `toggleDocumentFontFavorite` | `(document, familyId: string) -> DocumentModel` | Toggle favorite status |
+| `purgeUnusedDocumentFonts` | `(document) -> DocumentModel` | Remove fonts not used by any node |
+| `getDocumentFontLibrary` | `(document) -> FontLibrary` | Get the full font library |
+| `listDocumentFonts` | `(document) -> DocumentFontFamily[]` | List all document fonts |
+| `listDocumentFontsForPicker` | `(document) -> DocumentFontFamily[]` | List fonts formatted for the picker UI |
+| `getFontUsage` | `(document) -> FontUsage` | Get usage statistics |
+| `isFontFamilyUsed` | `(document, familyId: string) -> boolean` | Check if a font is used |
+| `ensureDocumentFontFamily` | `(document, family: DocumentFontFamily) -> DocumentModel` | Add font if not already present |
+| `ensureDocumentFontFamilyByName` | `(document, familyName: string) -> DocumentModel` | Add font by name if not present |
+| `getDocumentFontFamily` | `(document, familyId: string) -> DocumentFontFamily \| undefined` | Look up a font |
+
+### Google Fonts catalog
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `getBundledGoogleFontsCatalog` | `() -> GoogleFontsCatalog` | Get the bundled catalog (offline) |
+| `fetchGoogleFontCatalog` | `(options?) -> Promise<GoogleFontsCatalog>` | Fetch fresh catalog from Google |
+| `loadGoogleFontsCatalog` | `() -> Promise<GoogleFontsCatalog>` | Load catalog (bundled or fetched) |
+| `getCachedGoogleFontsCatalog` | `() -> GoogleFontsCatalog \| null` | Get cached catalog if available |
+| `queryGoogleFontFamilies` | `(query: GoogleFontsQuery) -> GoogleFontFamily[]` | Query fonts with filters |
+| `searchGoogleFontFamilies` | `(catalog, query: string) -> GoogleFontFamily[]` | Search fonts by name |
+| `filterGoogleFontFamilies` | `(catalog, filter) -> GoogleFontFamily[]` | Filter catalog |
+| `sortGoogleFontFamilies` | `(families, sort: GoogleFontSort) -> GoogleFontFamily[]` | Sort font results |
+| `getGoogleFontFamily` | `(catalog, familyName: string) -> GoogleFontFamily \| undefined` | Look up a specific font |
+| `useGoogleFontsCatalog` | `() -> GoogleFontsCatalog \| null` | React hook for catalog state |
+
+### Stylesheet builders
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `buildDocumentGoogleFontsStylesheetHref` | `(document) -> string` | Build Google Fonts URL for all document fonts |
+| `buildEditorGoogleFontsStylesheetHref` | `(document) -> string` | Build Google Fonts URL for editor preview |
+| `buildFontFamilyStack` | `(family: string, category: string) -> string` | Build CSS font-family stack |
+| `buildFontPickerPreviewStylesheetHref` | `(families) -> string` | Build URL for font picker previews |
+| `buildFontPreviewStylesheetHref` | `(family: string) -> string` | Build URL for single font preview |
+| `buildGoogleFontsStylesheetHref` | `(requests) -> string` | Build custom Google Fonts URL |
+| `collectDocumentFontRequests` | `(document) -> FontRequest[]` | Collect all font requests from document |
 
 ### Font weight utilities
 
-| Export | Description |
-|---|---|
-| `getSupportedFontWeights` | Returns supported weight values for a font family. |
-| `resolveNearestSupportedFontWeight` | Resolves the nearest available weight to a target value. |
-| `getFontWeightLabel` | Returns a human-readable label for a numeric font weight. |
-| `listFontWeightOptions` | Lists all weight options for a font family. |
-| `isBoldFontWeight` | Returns whether a weight value is considered bold. |
-| `toggleBoldFontWeight` | Toggles between bold and normal weight values. |
-| `parseFontWeightInput` | Parses a user-entered font weight string. |
-| `buildFontFamilyStack` | Builds a CSS font-family stack string from a font family descriptor. |
-| `DEFAULT_FONT_WEIGHT` | Default font weight constant. |
-| `BOLD_FONT_WEIGHT` | Bold font weight constant. |
-| `BOLD_ACTIVE_WEIGHT` | Active bold weight constant used by the editor. |
-
-### Default fonts
-
-| Export | Description |
-|---|---|
-| `DEFAULT_DOCUMENT_FONT_FAMILIES` | Array of font family names included in a new document by default. |
-
-### Exported types
-
-| Type | Description |
-|---|---|
-| `GoogleFontFamily` | Descriptor for a single Google Fonts family. |
-| `GoogleFontSort` | Sort criterion for Google Fonts queries. |
-| `GoogleFontsCatalog` | Full catalog shape returned by the Google Fonts API. |
-| `GoogleFontsFetchOptions` | Options for `fetchGoogleFontCatalog`. |
-| `GoogleFontsQuery` | Query shape for `queryGoogleFontFamilies`. |
-
----
-
-## `src/api/siteApi.ts`
-
-Pass-through re-exports from the `src/site/` subsystem.
-
-### Site renderer component
-
-| Export | Description |
-|---|---|
-| `SiteRenderer` | React component that renders a full site from a `DocumentModel`. |
-
-### Site export / rendering
-
-| Export | Description |
-|---|---|
-| `renderSiteBodyHtml` | Renders the `<body>` HTML string for a document. |
-| `renderSiteCss` | Renders the CSS string for a document. |
-| `renderSiteHtmlDocument` | Renders a complete standalone HTML document string. |
-| `renderSiteExportBundle` | Returns a `SiteExportBundle` with all files needed to export a site. |
-| `DEFAULT_SITE_HTML_FILE_NAME` | Default file name for the exported HTML file. |
-| `DEFAULT_SITE_CSS_FILE_NAME` | Default file name for the exported CSS file. |
-
-### Exported types
-
-| Type | Description |
-|---|---|
-| `SiteRendererProps` | Props for the `SiteRenderer` component. |
-| `SiteExportBundle` | Shape of the export bundle (map of file name → content). |
-| `SiteExportOptions` | Options passed to `renderSiteExportBundle`. |
-
----
-
-## `src/api/editorViewApi.ts`
-
-Pass-through re-export from the `src/stage/` subsystem.
-
-### Stage renderer component
-
-| Export | Description |
-|---|---|
-| `Stage` | React component that renders the interactive stage (editor canvas) and suppresses native browser drag/drop so editor pointer-drag logic remains authoritative. |
-
-### Exported types
-
-| Type | Description |
-|---|---|
-| `StageProps` | Props for the `Stage` component. |
-
----
-
-## `src/api/dragDropApi.ts`
-
-Pure headless drag-and-drop session lifecycle and drag resolution helpers for editor canvases. This module is DOM-free and can be driven from any renderer or input adapter.
-
-`dragDropApi` is intentionally DOM-agnostic: it only consumes a `DragStartContext` with pre-measured geometry and a `DragUpdateInput` stream. Public drag-drop types live in `src/api/types.ts` and are re-exported from `dragDropApi` for convenience.
-
-### Session lifecycle
-
 | Function | Signature | Description |
-|---|---|---|
-| `beginDragSession` | `(context: DragStartContext) => DragSession` | Starts a drag session from a document snapshot, pointer origin, and pre-measured geometry. |
-| `updateDragSession` | `(session: DragSession, input: DragUpdateInput) => DragSession` | Advances a drag session with pointer and modifier updates, including thresholding, snapping, drop resolution, and bounds clamping. |
-| `finishDragSession` | `(session: DragSession, input: DragUpdateInput) => DragCommitIntent` | Resolves the final drag commit as `none`, `move`, `moveSelection`, or `reparent`. |
-| `cancelDragSession` | `(session: DragSession \| null) => null` | Cancels an in-flight session without producing a commit. |
+| --- | --- | --- |
+| `getSupportedFontWeights` | `(family: DocumentFontFamily) -> number[]` | Get available weights |
+| `resolveNearestSupportedFontWeight` | `(family, targetWeight: number) -> number` | Find closest available weight |
+| `isBoldFontWeight` | `(weight: number) -> boolean` | Check if weight is bold (>= 600) |
+| `toggleBoldFontWeight` | `(weight: number) -> number` | Toggle between normal and bold |
+| `getFontWeightLabel` | `(weight: number) -> string` | Human-readable weight name |
+| `listFontWeightOptions` | `(family) -> WeightOption[]` | List weight options for UI |
+| `parseFontWeightInput` | `(input: string) -> number` | Parse weight from string |
 
-### Drag resolution rules
-
-- Multi-selection is reduced to top-level ids first.
-- If a parent and child are both selected, dragging resolves to the parent only.
-- Grouped dragging is allowed only when all resolved drag ids share the same parent; otherwise the session falls back to a single anchor drag.
-- Coordinates are measured from wrapper content boxes, not border boxes, and move/reparent commits clamp fully inside the target content box.
-- Drop highlighting resolves to the deepest valid hovered target.
-- Standard in-parent child drags do not highlight the source parent wrapper, and while the pointer remains inside that source parent, ancestor wrappers are not promoted as highlights.
-- Container-wrapper drags are the exception: the structural source parent (`section`/`header`/`footer`) may highlight to indicate structural reparent intent.
-- `Shift` axis-locks before snapping.
-- `Alt` inverts the ambient snap toggle during drag.
-- Invalid hovered targets fall back to moving inside the current parent.
-
-### Geometry and exported types
-
-| Type | Description |
-|---|---|
-| `DragPreviewItem` | One visual preview item in the drag ghost, including offset and size. |
-| `DragGuide` | A resolved snap guide with value and source (`component` or `page`). |
-| `DragDropTarget` | A valid droppable wrapper target with measured content-box bounds and depth/order metadata. |
-| `DragGeometrySnapshot` | Pre-measured drag geometry: preview items, source offsets, source content box, snap targets, and drop targets. |
-| `DragStartContext` | Input required to begin a drag session: document, anchor id, current selection, start pointer, and geometry snapshot. |
-| `DragUpdateInput` | Pointer coordinates plus `Shift`, `Alt`, and `snapEnabled` state for one drag update. |
-| `DragSession` | Headless session state, including phase, resolved drag ids, preview position, guides, and highlighted drop target. |
-| `DragCommitIntent` | Final drag outcome: `none`, `move`, `moveSelection`, or `reparent`. |
-| `DocumentModel` | Re-exported document model type from `documentApi`. |
-| `DocumentNode` | Re-exported node union type from `documentApi`. |
-| `NodeId` | Re-exported node id type from `documentApi`. |
+Constants: `DEFAULT_FONT_WEIGHT` (400), `BOLD_FONT_WEIGHT` (700), `BOLD_ACTIVE_WEIGHT` (600).
 
 ---
 
-## `src/api/animationApi.ts`
+## Animations
 
-Pass-through re-exports from the `src/animations/` subsystem. Built against `@wix/interact@2.1.4` and `@wix/motion-presets`.
+Source: `src/api/animationApi.ts`
 
-### Version
+### Setting animations
 
-| Export | Description |
-|---|---|
-| `INTERACT_VERSION` | Semver string of the `@wix/interact` version this API targets (`'2.1.4'`). |
-
-### High-level API (preferred)
-
-All mutating functions are pure `DocumentModel → DocumentModel`.
-
-| Function | Signature | Description |
-|---|---|---|
-| `setPresetAnimation` | `(doc, target, { trigger, preset, options?, source?, outAction?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a named preset animation on a node. Validates preset/trigger compatibility. |
-| `setKeyframeAnimation` | `(doc, target, { trigger, name, keyframes, duration?, easing?, source?, outAction?, reducedMotion?, requiresSticky? }) → DocumentModel` | Sets a custom WAAPI-style keyframe animation on a node. |
-| `updateAnimationOptions` | `(doc, target, { source?, outAction?, reducedMotion?, requiresSticky? }) → DocumentModel` | Merges options onto an existing animation. Throws if the node has no animation. |
-| `clearAnimation` | `(doc, target) → DocumentModel` | Removes an animation from a node. Silent no-op if absent. |
-| `setDocumentAnimationSettings` | `(doc, settings) → DocumentModel` | Sets document-level animation settings (a11y policy). |
-
-### High-level option value reference
-
-`setPresetAnimation`, `setKeyframeAnimation`, and `updateAnimationOptions` all accept a small set of shared option fields. Those fields are typed, but the signatures alone do not show the allowed values clearly:
-
-| Option | Allowed values | Applies to | Notes |
-|---|---|---|---|
-| `trigger` | `'entrance' \| 'ongoing' \| 'scroll' \| 'click' \| 'activate' \| 'hover' \| 'interest' \| 'mouse'` | `setPresetAnimation`, `setKeyframeAnimation` | `click`/`activate` and `hover`/`interest` are document-model aliases; the config builder canonicalizes them to `activate` and `interest`. |
-| `source` | `NodeId \| undefined` | `setPresetAnimation`, `setKeyframeAnimation`, `updateAnimationOptions` | Stored internally as `triggerId`. When omitted, the animated node triggers itself. |
-| `outAction` | `'reverse' \| 'keep' \| 'none'` | Hover / interest animations only | Ignored for non-hover triggers. When omitted on hover-like triggers, defaults to `'reverse'`. |
-| `reducedMotion` | `'disable' \| { alternative: NamedAnimationEffect \| KeyframeAnimationEffect }` | All animation definitions and document settings | `'disable'` suppresses playback for users who prefer reduced motion. `alternative` swaps in a reduced-motion-safe effect. |
-| `requiresSticky` | `boolean \| undefined` | All animation definitions | Marks an animation as depending on sticky behavior being active for the node/document. |
-
-### Document animation settings shape
-
-`setDocumentAnimationSettings(doc, settings)` writes a `DocumentAnimationSettings` object of the form:
-
-```ts
-{
-  a11y?: {
-    reducedMotion?: 'disable' | { alternative: NamedAnimationEffect | KeyframeAnimationEffect };
-    perTrigger?: Partial<Record<
-      'entrance' | 'ongoing' | 'scroll' | 'click' | 'activate' | 'hover' | 'interest' | 'mouse',
-      'disable' | { alternative: NamedAnimationEffect | KeyframeAnimationEffect }
-    >>;
-  };
-}
+```typescript
+setPresetAnimation(document: DocumentModel, nodeId: NodeId, trigger: AnimationTriggerType, preset: string, options?: Record<string, unknown>): DocumentModel
 ```
 
-Notes:
+Apply a named preset animation to a node.
 
-- `a11y.reducedMotion` is the global default.
-- `a11y.perTrigger` lets a specific trigger family override that global default.
-- Per-animation `reducedMotion` on the node still has the lowest precedence in the final resolution chain.
+```typescript
+setKeyframeAnimation(document: DocumentModel, nodeId: NodeId, trigger: AnimationTriggerType, keyframes: Keyframe[], options?: { duration?: number; easing?: string; name?: string }): DocumentModel
+```
 
-### Low-level API (direct data access)
+Apply a custom keyframe animation.
+
+```typescript
+updateAnimationOptions(document: DocumentModel, nodeId: NodeId, options: Partial<AnimationDefinition>): DocumentModel
+```
+
+Update options on an existing animation without replacing the effect.
+
+```typescript
+clearAnimation(document: DocumentModel, nodeId: NodeId): DocumentModel
+```
+
+Remove the animation from a node.
+
+```typescript
+setNodeAnimation(document: DocumentModel, nodeId: NodeId, animation: AnimationDefinition | undefined): DocumentModel
+```
+
+Set or clear the raw animation definition.
+
+### Document animation settings
+
+```typescript
+setDocumentAnimationSettings(document: DocumentModel, settings: Partial<DocumentAnimationSettings>): DocumentModel
+```
+
+Set document-level animation accessibility policy (reduced motion behavior).
+
+### Animation queries
 
 | Function | Signature | Description |
-|---|---|---|
-| `setNodeAnimation` | `(doc, nodeId, def \| undefined) → DocumentModel` | Sets or clears a full `AnimationDefinition` on a node. |
-| `getNodeAnimation` | `(doc, nodeId) → AnimationDefinition \| undefined` | Reads the animation stored on a node. |
-| `getAnimatedNodes` | `(doc) → NodeId[]` | Returns IDs of all nodes that have an animation. |
+| --- | --- | --- |
+| `getNodeAnimation` | `(document, nodeId) -> AnimationDefinition \| undefined` | Get animation for a node |
+| `getAnimatedNodes` | `(document) -> NodeId[]` | Get all nodes with animations |
 
 ### Preset catalog
 
 | Function | Signature | Description |
-|---|---|---|
-| `getMotionPresets` | `() → { entrance, ongoing, scroll, mouse }` | Returns all preset names grouped by category. |
-| `getPresetCategory` | `(preset) → 'entrance' \| 'ongoing' \| 'scroll' \| 'mouse' \| null` | Returns the category of a preset name. |
-| `getPresetsForTrigger` | `(trigger) → PresetInfo[]` | Returns presets valid for a trigger, with parameter schemas. |
-| `getPresetParams` | `(preset) → PresetParamSchema \| null` | Returns the parameter schema for a preset. |
+| --- | --- | --- |
+| `getMotionPresets` | `() -> PresetInfo[]` | Get all available motion presets |
+| `getPresetCategory` | `(preset: string) -> string \| undefined` | Get category for a preset |
+| `getPresetsForTrigger` | `(trigger: AnimationTriggerType) -> PresetInfo[]` | Get presets available for a trigger type |
+| `getPresetParams` | `(preset: string) -> PresetParam[]` | Get configurable parameters for a preset |
 
-### Config builder
+### Interact config builder
+
+```typescript
+buildDocumentInteractConfig(document: DocumentModel): InteractConfig
+```
+
+Builds a complete `@wix/interact` configuration object from the document's animation definitions.
+
+### Animation preview runtime
 
 | Function | Signature | Description |
-|---|---|---|
-| `buildDocumentInteractConfig` | `(doc) → InteractConfig` | Builds the full `@wix/interact` config for all animated nodes. |
+| --- | --- | --- |
+| `createAnimationPreview` | `(container: HTMLElement, config: InteractConfig) -> AnimationPreviewHandle` | Create a live animation preview instance |
+| `filterInteractConfig` | `(config, nodeIds: string[]) -> InteractConfig` | Filter config to specific nodes |
+| `buildPreviewConfig` | `(document, options?) -> InteractConfig` | Build preview-ready config |
+| `preloadMotionPresets` | `() -> Promise<void>` | Preload motion preset assets |
 
-### Animation Options vs Preset Parameters
+The `AnimationPreviewHandle` returned by `createAnimationPreview`:
 
-There are two distinct layers of configuration on an animation:
+| Method | Description |
+| --- | --- |
+| `updateConfig(config)` | Swap the running config (no-ops if deep-equal) |
+| `invoke(nodeId, action)` | Play click/hoverIn/hoverOut animation |
+| `destroy()` | Tear down and clean up |
+| `isActive()` | Whether the Interact instance is running |
 
-- **Preset parameters** (`direction`, `blur`, `intensity`, `distance`, `depth`, etc.) are set on the named effect object and control what the animation looks like. These are preset-specific; use `getPresetParams` to discover the available parameters and their allowed values for any given preset.
-- **Animation options** (`duration`, `delay`, `easing`, `iterations`, `rangeStart`/`rangeEnd`, `fill`, `alternate`) are set on the effect wrapper by the config builder and control how and when the animation plays. These are independent of which preset is used.
-
-### Config Builder Defaults
-
-`buildDocumentInteractConfig` applies the following defaults per trigger when building the `@wix/interact` config:
-
-| Trigger | Interact Trigger | Duration | Easing | Iterations | Scroll Range | Interaction Params |
-|---------|-----------------|----------|--------|------------|--------------|-------------------|
-| `entrance` | `viewEnter` | 1000ms | browser default | 1 | n/a | `{ type: 'once' }` |
-| `ongoing` | `viewEnter` | 1000ms | browser default | `Infinity` | n/a | `{ type: 'once', threshold: -0.1 }` |
-| `scroll` | `viewProgress` | n/a (scrub) | `'linear'` | 1 | `entry 0%` → `exit 100%` | — |
-| `hover` / `interest` | `interest` | 1000ms | browser default | 1 | n/a | `reverse -> { type: 'alternate' }`, `keep -> { type: 'state' }`, `none -> { type: 'repeat' }` |
-| `click` / `activate` | `activate` | 1000ms | browser default | 1 | n/a | — |
-| `mouse` | `pointerMove` | n/a | n/a | n/a | n/a | `{ hitArea: 'self' }` |
-
-Scroll range defaults are exported as `SCROLL_DEFAULT_RANGE_START` and `SCROLL_DEFAULT_RANGE_END`.
-
-### Duration Guidelines
-
-From the official `@wix/motion-presets` documentation:
-
-| Animation type | Recommended duration |
-|---------------|---------------------|
-| Functional UI animations | < 500ms |
-| Decorative animations | up to 1200ms |
-| Hero / showcase animations | up to 2000ms |
-
-The config builder defaults to **1000ms**, which sits in the decorative range.
-
-### Trigger Aliases
-
-- The document model accepts both `hover` and `interest` for hover-like interactions.
-- The document model accepts both `click` and `activate` for click-like interactions.
-- `buildDocumentInteractConfig` always canonicalizes those aliases to Interact's accessibility-aware triggers: `interest` and `activate`.
-
-### Trigger compatibility summary
-
-| Trigger | Named preset categories allowed | Keyframes allowed | Notes |
-|---|---|---|---|
-| `entrance` | `entrance` | Yes | View-enter, one-shot style animations. |
-| `ongoing` | `ongoing` | Yes | Looping in-view animations. |
-| `scroll` | `scroll` | Yes | Scroll-scrubbed effects. |
-| `mouse` | `mouse` | Yes | Pointer-move driven effects. |
-| `click` / `activate` | `entrance`, `ongoing` | Yes | Triggered by activation, not viewport presence. |
-| `hover` / `interest` | `entrance`, `ongoing` | Yes | Supports `outAction`. |
-
-### Special Hover Behavior
-
-The config builder applies additional rules when the trigger is `hover` or `interest`:
-
-- `outAction: 'reverse'` maps to Interact hover mode `{ type: 'alternate' }`, so enter plays forward and leave reverses.
-- `outAction: 'keep'` maps to Interact hover mode `{ type: 'state' }`, so hover behaves like play/pause instead of reset/restart.
-- `outAction: 'none'` maps to Interact hover mode `{ type: 'repeat' }`, so enter restarts and leave cancels/resets.
-- Hover reverse effects are emitted with `fill: 'both'` so alternate enter/leave can hold the active hover state correctly.
-- Hover `keep` and `none` modes omit `fill`, following Interact's native `state` and `repeat` patterns.
-- `outAction` is supported for hover entrance, hover ongoing, and hover keyframe animations.
-- Hover ongoing named presets with `outAction: 'keep'` get `iterations: Infinity` so they can genuinely pause and resume.
-- When omitted, `outAction` defaults to `'reverse'`.
-
-### Reduced Motion Priority Chain
-
-When computing the effective reduced-motion response for a given animation, the first matching rule in the following chain wins:
-
-1. `doc.animationSettings.a11y.reducedMotion` — global document-level override
-2. `doc.animationSettings.a11y.perTrigger[trigger]` — per-trigger override
-3. `animationDef.reducedMotion` — per-animation override
-
-Resolution behavior:
-
-- When the resolved response is `'disable'`: the interaction is wrapped in a `(prefers-reduced-motion: no-preference)` media condition, so it plays only when the user has not requested reduced motion.
-- When the resolved response is `{ alternative: ... }`: two conditional effects are created — the main animation under `no-preference` and the alternative animation under `reduce`.
-
-### Official Preset Documentation
-
-Per-preset parameter details (defaults, intensity guides, atmosphere selection, and accessibility notes) are covered in the official `@wix/motion-presets` package documentation. Individual category references document all parameters with their defaults and allowed ranges.
-
-### Error handling
-
-- **Throws** on: unknown node, site root, unknown preset, invalid preset/trigger combo, `updateAnimationOptions` on unanimated node.
-- **Silent no-op** on: `clearAnimation` when no animation exists.
-
-### Exported types
-
-| Type | Description |
-|---|---|
-| `AnimationTriggerType` | `'entrance' \| 'ongoing' \| 'scroll' \| 'click' \| 'activate' \| 'hover' \| 'interest' \| 'mouse'` |
-| `HoverOutAction` | `'keep' \| 'reverse' \| 'none'` — hover leave behavior selector. |
-| `AnimationDefinition` | Discriminated union of per-trigger animation definitions. |
-| `NamedAnimationEffect` | Union of all named preset effect wrappers. |
-| `KeyframeAnimationEffect` | WAAPI-style keyframe effect shape. |
-| `ReducedMotionResponse` | `'disable' \| { alternative: ... }` — per-animation a11y override. |
-| `DocumentAnimationSettings` | Document-level a11y settings. |
-| `PresetInfo` | Preset name + category + param schema (for editor UI). |
-| `PresetParamSchema` | Full parameter schema for a preset. |
-| `PresetParam` | Single parameter descriptor (name, type, enum, min/max). |
-| `InteractConfig` | Re-exported from `@wix/interact`. |
+Constants: `INTERACT_VERSION`, `SCROLL_DEFAULT_RANGE_START`, `SCROLL_DEFAULT_RANGE_END`.
 
 ---
 
-## `src/api/types/index.ts`
+## Drag and Drop
 
-Internal types shared across the `src/api/` subsystem.
+Source: `src/api/dragDropApi.ts`
 
-### Exported types
+Headless drag-and-drop session lifecycle for editor canvases.
 
-| Type | Description |
-|---|---|
-| `DocumentCommand` | Discriminated union of batch document commands: `setRect`, `setSticky`, `setText`. |
+### Session lifecycle
 
-### `DocumentCommand` variants
+```typescript
+beginDragSession(context: DragStartContext): DragSession
+```
 
-| Variant | Shape | Notes |
-|---|---|---|
-| `setRect` | `{ type: 'setRect'; nodeId; field: 'x' \| 'y' \| 'width' \| 'height'; value: string }` | Writes one rect field exactly as an authored model string. |
-| `setSticky` | `{ type: 'setSticky'; nodeId; patch: Partial<StickyDefinition> }` | Partial patch over the sticky object. |
-| `setText` | `{ type: 'setText'; nodeId; field: EditorTextField; value: string }` | Covers both content fields and text/style fields. |
+Start a new drag session from a pointer-down event.
+
+```typescript
+updateDragSession(session: DragSession, input: DragUpdateInput): DragSession
+```
+
+Update the session with new pointer position; recalculates guides, snaps, and drop targets.
+
+```typescript
+finishDragSession(session: DragSession, input: DragUpdateInput): DragCommitIntent
+```
+
+Finalize the drag and return the commit intent (what to move/reparent).
+
+```typescript
+cancelDragSession(session: DragSession | null): null
+```
+
+Cancel and clean up.
+
+### Types
+
+See [`DragSession`](#dragsession), [`DragStartContext`](#dragstartcontext), [`DragUpdateInput`](#dragupdateinput), [`DragCommitIntent`](#dragcommitintent) in the type reference.
+
+---
+
+## Editor State
+
+Source: `src/api/editorApi.ts`
+
+### State lifecycle
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `createInitialState` | `() -> EditorState` | Create a fresh editor state |
+| `loadPersistedState` | `() -> EditorState` | Load from localStorage |
+| `persistState` | `(state) -> void` | Save to localStorage |
+| `persistDefaultDocument` | `(document) -> void` | Save a document as the default |
+| `clearSessionState` | `() -> void` | Clear session-only state |
+| `clearPersistedState` | `() -> void` | Clear all persisted state |
+| `createFactoryResetState` | `() -> EditorState` | Create a clean factory-reset state |
+
+### Import and validation
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseImportedDocumentJson` | `(raw: string) -> DocumentModel` | Parse imported JSON with migration |
+| `importDocument` | `(state, document) -> EditorState` | Import a document into editor state |
+| `getValidationErrors` | `(state) -> string[]` | Get validation errors for the current state |
+
+### Selection
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `selectNode` | `(state, nodeId: NodeId \| null) -> EditorState` | Select a single node (null to clear) |
+| `clearSelection` | `(state) -> EditorState` | Clear all selection |
+| `toggleNodeSelection` | `(state, nodeId) -> EditorState` | Toggle a node in/out of selection |
+| `selectManyNodes` | `(state, nodeIds, mode: 'replace' \| 'toggle') -> EditorState` | Select multiple nodes |
+
+### Stage navigation
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `getStageSelectableNodeIds` | `(document) -> NodeId[]` | Get IDs of all selectable nodes on stage |
+| `getAdjacentStageSelection` | `(document, currentId, direction: 'forward' \| 'backward') -> NodeId \| null` | Get next/previous selectable node |
+
+### Page switching
+
+```typescript
+setActivePage(state: EditorState, pageId: PageId): EditorState
+```
+
+Switch the active page in the editor. This is editor-only state (no documentApi counterpart needed).
+
+### Wrapper role promotion
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `requestPromoteWrapperRole` | `(state, nodeId) -> EditorState` | Request promotion (triggers confirmation) |
+| `confirmPromoteWrapperRole` | `(state) -> EditorState` | Confirm pending promotion |
+| `cancelPromoteWrapperRole` | `(state) -> EditorState` | Cancel pending promotion |
+| `demoteWrapperRole` | `(state, nodeId) -> EditorState` | Demote wrapper to simpler role |
+
+---
+
+## Editor Mutations
+
+Source: `src/api/editorApi.ts`
+
+These wrap `documentApi` functions with editor state, selection, and history management.
+
+### Node insert/delete
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `insertWrapper` | `(state, role: WrapperRole) -> EditorState` | Insert a container with role |
+| `insertLeaf` | `(state, role: LeafRole) -> EditorState` | Insert a leaf with role |
+| `insertSectionTemplate` | `(state, templateId) -> EditorState` | Insert a section template |
+| `deleteNode` | `(state, nodeId) -> EditorState` | Delete a node |
+| `deleteNodes` | `(state, nodeIds) -> EditorState` | Delete multiple nodes |
+
+### Movement and resize
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `moveNode` | `(state, nodeId, dx, dy) -> EditorState` | Move a node by delta |
+| `moveNodes` | `(state, nodeIds, dx, dy) -> EditorState` | Move multiple nodes |
+| `nudgeNode` | `(state, nodeId, dx, dy) -> EditorState` | Nudge (small move, usually keyboard) |
+| `resizeNode` | `(state, nodeId, dw, dh) -> EditorState` | Resize by delta |
+
+### Reorder and reparent
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `reorderNode` | `(state, nodeId, action) -> EditorState` | Reorder among siblings |
+| `reorderNodes` | `(state, nodeIds, action) -> EditorState` | Reorder multiple nodes |
+| `reparentNode` | `(state, nodeId, newParentId) -> EditorState` | Reparent a node |
+| `reparentNodes` | `(state, nodeIds, newParentId) -> EditorState` | Reparent multiple nodes |
+| `moveNodeInTree` | `(state, nodeId, targetParentId, targetIndex) -> EditorState` | Move to specific tree position |
+
+### Alignment and distribution
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `alignNodes` | `(state, nodeIds, alignment) -> EditorState` | Align selected nodes |
+| `distributeNodes` | `(state, nodeIds, axis) -> EditorState` | Distribute nodes evenly |
+
+### Field updates
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `updateTextField` | `(state, nodeId, field: EditorTextField, value: string) -> EditorState` | Update text/style field |
+| `updateRectField` | `(state, nodeId, field, value: string) -> EditorState` | Update geometry field |
+| `updateStickyField` | `(state, nodeId, patch) -> EditorState` | Update sticky config |
+| `updateWrapperStyleField` | `(state, nodeId, field: WrapperStyleField, value) -> EditorState` | Update wrapper style |
+| `setNodeVisibility` | `(state, nodeId, visible: boolean) -> EditorState` | Set visibility |
+
+### Text operations
+
+```typescript
+applyTextNodeMarkdown(state: EditorState, nodeId: NodeId, markdown: string): EditorState
+```
+
+Apply markdown to a text node with history tracking.
+
+---
+
+## Rendering and Export
+
+Source: `src/api/siteApi.ts`
+
+### Components
+
+| Export | Type | Description |
+| --- | --- | --- |
+| `SiteRenderer` | React component | Renders the site from a `DocumentModel` |
+| `Stage` | React component | Editor canvas (from `editorViewApi`) |
+
+### Export functions
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `renderSiteBodyHtml` | `(document, options?) -> string` | Render site body as HTML string |
+| `renderSiteCss` | `(document, options?) -> string` | Render site CSS |
+| `renderSiteHtmlDocument` | `(document, options?) -> string` | Render complete HTML document |
+| `renderPageHtmlDocument` | `(document, pageId, options?) -> string` | Render a single page HTML document |
+| `renderSiteExportBundle` | `(document, options?) -> SiteExportBundle` | Generate export bundle (HTML + CSS + assets) |
+| `renderSiteExportBundles` | `(document, options?) -> SitePageExportBundle[]` | Generate per-page export bundles |
+| `buildRouteManifest` | `(document) -> RouteManifest` | Build route manifest for all pages |
+| `buildHostingConfigs` | `(document) -> HostingConfig[]` | Build hosting platform configs (redirects, etc.) |
+
+### Constants
+
+`DEFAULT_SITE_CSS_FILE_NAME`, `DEFAULT_SITE_HTML_FILE_NAME`
+
+---
+
+## Utilities
+
+Source: `src/api/documentApi.ts`
+
+### Unit parsing
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseUnitValue` | `(value: string) -> UnitValue` | Parse `'100px'` -> `{ value: 100, unit: 'px' }` |
+| `parseWidthValue` | `(value: string) -> WidthValue` | Parse width (supports keywords like `'fit-content'`) |
+| `parseHeightValue` | `(value: string) -> HeightValue` | Parse height (supports `'auto'`, `'aspect-ratio:16/9'`) |
+| `parseSpacingValue` | `(value: string) -> SpacingValue` | Parse spacing values |
+| `parseFontSizeValue` | `(value: string) -> FontSizeValue` | Parse font size values |
+| `resolveUnitValuePx` | `(value: UnitValue, context) -> number` | Resolve to absolute pixels given viewport context |
+| `formatValue` | `(value: UnitValue) -> string` | Format back to CSS string |
+
+### Link helpers
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `getLinkHref` | `(node) -> string` | Resolve the href for a linked node |
+| `shouldOpenNavigationInNewTab` | `(node) -> boolean` | Check if a link should open in new tab |
+
+### Default factories
+
+Source: `src/model/defaultFactories.ts`
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `createDefaultLinkExtension` | `() -> LinkExtension` | Create a default link extension (`{ linkType: 'anchor', href: '#' }`) |
+| `createDefaultRect` | `(x?, y?, width?, height?) -> RectModel` | Create a default rect |
+| `createDefaultSticky` | `() -> StickyDefinition` | Create a default sticky definition |
+| `createContainerNode` | `(subtype, parentId) -> ContainerNode` | Create a container node |
+| `createTextNode` | `(subtype, parentId) -> TextNode` | Create a text node |
+| `createMediaNode` | `(subtype, parentId) -> MediaNode` | Create a media node |
+| `createLinkTextNode` | `(parentId) -> TextNode` | Create a text node preconfigured as a link |
+| `createButtonTextNode` | `(parentId) -> TextNode` | Create a text node preconfigured as a button |
+
+---
+
+## Type Reference
+
+### DocumentModel
+
+```typescript
+type DocumentModel = {
+  rootId: NodeId;
+  nodes: Record<NodeId, DocumentNode>;
+  fontLibrary: FontLibrary;
+  animationSettings?: DocumentAnimationSettings;
+  pages?: DocumentPage[];
+  siteSettings?: SiteSettings;
+  sharedRegionIds?: NodeId[];
+};
+```
+
+### DocumentNode
+
+```typescript
+type DocumentNode = SiteNode | ContainerNode | MediaNode | TextNode;
+type LeafNode = MediaNode | TextNode;
+```
+
+### ContainerNode
+
+```typescript
+type ContainerNode = BaseNode & {
+  contentType: 'container';
+  subtype: ContainerSubtype;  // 'section' | 'header' | 'footer' | 'container' | 'group'
+  rect: RectModel;
+  sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
+  pageTargetIds?: PageId[];
+  topLevelWrapperVisibility?: TopLevelWrapperVisibilityState;
+  style?: BorderStyle & ShadowStyle & BackgroundStyle & PaddingStyle & {
+    sectionBorderBottomColor?: string;
+    sectionBorderBottomWidth?: ParsedValue<UnitValue>;
+  };
+};
+```
+
+### TextNode
+
+```typescript
+type TextNode = BaseNode & {
+  contentType: 'text';
+  subtype: TextSubtype;  // 'block' | 'rich' | 'code' | 'list'
+  content: TextDocumentContent;
+  lang?: string;
+  htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';  // @deprecated transitional
+  link?: LinkExtension;
+  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };  // @deprecated transitional
+  rect: RectModel;
+  sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
+  style?: ShadowStyle & TypographyStyle & BorderStyle & {
+    textWrap?: TextWrapMode;
+    background?: string;
+    paddingBlock?: ParsedValue<SpacingValue>;
+    paddingInline?: ParsedValue<SpacingValue>;
+  };
+};
+```
+
+### MediaNode
+
+```typescript
+type MediaNode = BaseNode & {
+  contentType: 'media';
+  subtype: MediaSubtype;  // 'image' | 'video' | 'svg' | 'embed'
+  src?: string;
+  alt?: string;
+  link?: LinkExtension;
+  video?: { autoplay?: boolean; loop?: boolean; muted?: boolean };
+  svg?: { renderMode: 'img' | 'inline' };
+  rect: RectModel;
+  sticky?: StickyDefinition;
+  animation?: AnimationDefinition;
+  style?: BorderStyle & ShadowStyle;
+};
+```
+
+### StickyDefinition
+
+```typescript
+type StickyDefinition = {
+  enabled: boolean;
+  target: 'self' | 'contentWrapper';
+  edges: { top?: boolean; bottom?: boolean };
+  offsetTop?: ParsedValue<UnitValue>;
+  offsetBottom?: ParsedValue<UnitValue>;
+  durationMode?: 'auto' | 'custom';
+  duration: ParsedValue<UnitValue>;
+  durationTop?: ParsedValue<UnitValue>;
+  durationBottom?: ParsedValue<UnitValue>;
+  elevated?: boolean;
+};
+```
+
+### LinkExtension
+
+```typescript
+type LinkExtension = {
+  linkType: 'external' | 'page' | 'anchor';
+  href?: string;
+  openInNewTab?: boolean;
+  targetPageId?: PageId;
+  pageAnchorId?: NodeId;
+  anchorTargetId?: NodeId;
+};
+```
+
+### TextDocumentContent
+
+```typescript
+type TextDocumentContent = {
+  blocks: TextDocumentBlock[];
+  blockGap?: number;
+};
+
+type TextDocumentBlock = TextBlockContent | CodeBlockContent | ListBlockContent;
+```
+
+### ListContent
+
+```typescript
+type ListContent = UnorderedListContent | OrderedListContent | DescriptionListContent;
+
+type UnorderedListContent = { type: 'ul'; markerStyle?: UnorderedListMarkerStyle; items: ListTextItem[] };
+type OrderedListContent = { type: 'ol'; start?: number; markerStyle?: OrderedListMarkerStyle; items: ListTextItem[] };
+type DescriptionListContent = { type: 'dl'; items: DescriptionListItem[] };
+type ListTextItem = { text: string; direction?: 'ltr' | 'rtl'; link?: LinkExtension };
+type DescriptionListItem = { term: string; description: string; direction?: 'ltr' | 'rtl'; link?: LinkExtension };
+```
+
+### DocumentCommand
+
+```typescript
+type DocumentCommand =
+  | { type: 'setRect'; nodeId: NodeId; field: 'x' | 'y' | 'width' | 'height'; value: string }
+  | { type: 'setSticky'; nodeId: NodeId; patch: Partial<StickyDefinition> }
+  | { type: 'setText'; nodeId: NodeId; field: EditorTextField; value: string };
+```
+
+### EditorTextField
+
+Wide union of all text/style field names:
+
+```typescript
+type EditorTextField =
+  // Node content fields
+  | 'name' | 'content' | 'htmlTag' | 'lang' | 'label'
+  // Link fields
+  | 'linkEnabled' | 'linkType' | 'anchorTargetId' | 'href' | 'openInNewTab' | 'src' | 'alt' | 'targetPageId' | 'pageAnchorId'
+  // Code fields
+  | 'codeLanguage' | 'codeTheme'
+  // Typography
+  | 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle'
+  | 'textDecorationLine' | 'lineHeight' | 'direction' | 'textAlign'
+  // Text wrap
+  | 'textWrap'
+  // Background and padding (link/button)
+  | 'background' | 'paddingBlock' | 'paddingInline'
+  // Border
+  | 'borderColor' | 'borderTopColor' | 'borderRightColor' | 'borderBottomColor' | 'borderLeftColor'
+  | 'borderWidth' | 'borderTopWidth' | 'borderRightWidth' | 'borderBottomWidth' | 'borderLeftWidth'
+  | 'borderRadius' | 'borderTopLeftRadius' | 'borderTopRightRadius' | 'borderBottomRightRadius' | 'borderBottomLeftRadius'
+  // Shadow
+  | 'shadowColor' | 'shadowBlur' | 'shadowSpread' | 'shadowOffsetX' | 'shadowOffsetY'
+  // Block gap
+  | 'blockGap';
+```
+
+### WrapperStyleField
+
+```typescript
+type WrapperStyleField =
+  | 'background'
+  | BorderColorField | BorderWidthField | BorderRadiusField | ShadowStyleField
+  | 'paddingTop' | 'paddingRight' | 'paddingBottom' | 'paddingLeft'
+  | 'sectionBorderBottomColor' | 'sectionBorderBottomWidth';
+```
+
+### AnimationDefinition
+
+```typescript
+type AnimationDefinition =
+  | EntranceAnimationDefinition   // trigger: 'entrance'
+  | OngoingAnimationDefinition    // trigger: 'ongoing'
+  | ScrollAnimationDefinition     // trigger: 'scroll'
+  | MouseAnimationDefinition      // trigger: 'mouse'
+  | ClickAnimationDefinition      // trigger: 'click' | 'activate'
+  | HoverAnimationDefinition;     // trigger: 'hover' | 'interest'
+```
+
+Each variant has:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `trigger` | `AnimationTriggerType` | The trigger kind |
+| `triggerId` | `NodeId?` | Optional trigger source node |
+| `effect` | Named or keyframe effect | The animation effect |
+| `reducedMotion` | `ReducedMotionResponse?` | Accessibility policy |
+| `requiresSticky` | `boolean?` | Whether the animation requires sticky |
+
+`HoverAnimationDefinition` additionally has `outAction?: 'keep' | 'reverse' | 'none'`.
+
+### AnimationTriggerType
+
+```typescript
+type AnimationTriggerType = 'entrance' | 'ongoing' | 'scroll' | 'click' | 'activate' | 'hover' | 'interest' | 'mouse';
+```
+
+### DocumentPage
+
+```typescript
+type DocumentPage = {
+  type: 'page';
+  id: PageId;
+  slug: string;
+  displayName: string;
+  pageRole?: 'default' | 'home';
+  sectionIds: NodeId[];
+  parentPageId?: PageId;
+  slugAliases?: string[];
+  lang?: string;
+  visible: boolean;
+  viewTransition?: 'none' | 'crossfade' | 'slide';
+};
+```
+
+### SiteSettings
+
+```typescript
+type SiteSettings = {
+  lang: string;
+  status: 'draft' | 'published';
+  viewTransition: 'none' | 'crossfade' | 'slide';
+  title?: string;
+  autoSyncSlugs?: boolean;
+  outputStructure?: 'directory' | 'flat';
+};
+```
+
+### Value Types
+
+```typescript
+type UnitValue = { value: number; unit: 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax' };
+type FontSizeValue = { value: number; unit: 'px' | 'em' | 'rem' };
+type SpacingValue = { value: number; unit: 'px' | 'em' | 'rem' };
+type WidthValue = UnitValue | { keyword: 'fit-content' | 'min-content' | 'max-content' };
+type HeightValue = UnitValue | { keyword: 'auto' } | { keyword: 'aspect-ratio'; ratio: number };
+type ParsedValue<T> = { raw: string; parsed: T };
+
+type RectModel = {
+  x: ResponsiveValue<ParsedValue<UnitValue>>;
+  y: ResponsiveValue<ParsedValue<UnitValue>>;
+  width: ResponsiveValue<ParsedValue<WidthValue>>;
+  height: ResponsiveValue<ParsedValue<HeightValue>>;
+};
+
+type ResponsiveValue<T> = { base: T; tablet?: T; mobile?: T };
+```
