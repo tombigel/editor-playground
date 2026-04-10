@@ -181,7 +181,7 @@ Their authored visibility modes are:
 - `Custom pages`: render the wrapper only on the selected page IDs
 
 The Components panel and Inspector both expose this control for eligible top-level wrappers, including custom page selection. The Pages panel no longer owns this control.
-Behavior is complete; remaining follow-up is visual polish of the visibility menu surfaces.
+The control uses a compact dropdown trigger. Opening it shows page-targeting modes (`Current page`, `All pages`, `Custom pages`, `Hidden`), and choosing `Custom pages` swaps the dropdown into a searchable multi-select checklist with immediate updates and a guard against clearing the last selected page.
 
 ### Editor page switching
 
@@ -1217,26 +1217,30 @@ Navigation model:
 - `?` opens the detached `Shortcuts` dialog.
 - `Help → Documentation` opens the documentation browser dialog with a collapsible left nav.
 - `Help → About` opens a detached about dialog.
-- The documentation browser lists markdown documents from `docs/`; shortcuts are no longer the default top-level entry there.
-- The help-browser nav ends with a separator followed by `Keyboard shortcuts` and `About`, so those reference surfaces remain browseable there even though they also have detached dialogs.
-- Help-doc ordering is configurable in the help-doc registry; unlisted `docs/*.md` files still appear automatically after explicitly ordered entries.
+- The documentation browser root IA is `About`, `Usage`, `Reference`, `Developers`, and `Keyboard shortcuts`.
+- `About` and `Keyboard shortcuts` remain top-level browseable surfaces even though they also have detached dialogs.
+- `Usage` is the user-facing docs root for actual editor guidance.
+- `Reference` is the stable reference root; stage 1 starts by nesting `API Reference` under it.
+- `Developers` is the development-facing root; `How to add docs?` now lives under `Developers / Workflows`.
+- Help-doc hierarchy, ordering, and visibility are configurable in the help-doc registry; unlisted `docs/*.md` files fall back under `Developers / Planning` as secondary items.
 - Nav buttons do not show filenames. If a title contains a spaced dash separator (`-`, `–`, `—`), the text after the separator becomes the subtitle and the separator is hidden.
-- The left nav reserves a dedicated bottom entry for `How to add docs?`.
 - The left nav can collapse into a slim rail with a single reopen control to widen the reading pane without leaving the current document.
+- The document pane shows breadcrumbs above the active entry and a right-side in-page table of contents for markdown pages.
 
 Documentation browser sourcing and rendering:
 
 - Markdown help entries render the source filename in a compact status bar above the document pane rather than in the nav button.
 - Markdown bodies are loaded from copied static files under `assets/help-docs/` instead of being embedded inline in the main app bundle.
-- Help entries support in-panel `#anchor` jumps and relative `.md` navigation.
+- Docs assets under `docs/assets/` are copied into the same help-doc public asset tree and are available through relative markdown image references.
+- Help entries support in-panel `#anchor` jumps, relative `.md` navigation, and moved-link aliases defined by the registry.
 - Absolute filesystem links referenced by docs are rendered inertly.
-- Markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables, and help docs are expected to stay markdown-native instead of relying on raw HTML.
+- Markdown rendering uses a lazy-loaded React markdown pipeline with GFM tables, syntax-highlighted fenced code blocks, responsive images, and heading-derived table-of-contents data; help docs are expected to stay markdown-native instead of relying on raw HTML.
 - The shortcut guide also appears as the last section inside settings.
 
 State persistence:
 
 - Closing the documentation browser preserves the last selected document.
-- Reopening the documentation browser resets transient view state such as nav collapse and in-document anchor position.
+- Reopening the documentation browser resets transient view state such as nav collapse, tree expansion, and in-document anchor position.
 
 ### Stage interaction
 

@@ -1,5 +1,53 @@
 [
   {
+    "path": "docs/API_DOCUMENT_MODEL.md",
+    "fileName": "API_DOCUMENT_MODEL.md",
+    "fullTitle": "API Reference - Document Model",
+    "assetUrl": "/assets/help-docs/API_DOCUMENT_MODEL.md"
+  },
+  {
+    "path": "docs/API_EDITOR.md",
+    "fileName": "API_EDITOR.md",
+    "fullTitle": "API Reference - Editor",
+    "assetUrl": "/assets/help-docs/API_EDITOR.md"
+  },
+  {
+    "path": "docs/API_NODE_AND_LAYOUT.md",
+    "fileName": "API_NODE_AND_LAYOUT.md",
+    "fullTitle": "API Reference - Node and Layout",
+    "assetUrl": "/assets/help-docs/API_NODE_AND_LAYOUT.md"
+  },
+  {
+    "path": "docs/API_OVERVIEW.md",
+    "fileName": "API_OVERVIEW.md",
+    "fullTitle": "API Reference - Overview",
+    "assetUrl": "/assets/help-docs/API_OVERVIEW.md"
+  },
+  {
+    "path": "docs/API_PAGES_AND_SITE.md",
+    "fileName": "API_PAGES_AND_SITE.md",
+    "fullTitle": "API Reference - Pages and Site",
+    "assetUrl": "/assets/help-docs/API_PAGES_AND_SITE.md"
+  },
+  {
+    "path": "docs/API_RENDERING_AND_EXPORT.md",
+    "fileName": "API_RENDERING_AND_EXPORT.md",
+    "fullTitle": "API Reference - Rendering and Export",
+    "assetUrl": "/assets/help-docs/API_RENDERING_AND_EXPORT.md"
+  },
+  {
+    "path": "docs/API_TEXT.md",
+    "fileName": "API_TEXT.md",
+    "fullTitle": "API Reference - Text",
+    "assetUrl": "/assets/help-docs/API_TEXT.md"
+  },
+  {
+    "path": "docs/API_TYPES.md",
+    "fileName": "API_TYPES.md",
+    "fullTitle": "API Reference - Types",
+    "assetUrl": "/assets/help-docs/API_TYPES.md"
+  },
+  {
     "path": "docs/API.md",
     "fileName": "API.md",
     "fullTitle": "API Reference",
@@ -16,6 +64,24 @@
     "fileName": "CONSOLE_TEST_GUIDE.md",
     "fullTitle": "Console Testing Guide - Animations and Rich Text",
     "assetUrl": "/assets/help-docs/CONSOLE_TEST_GUIDE.md"
+  },
+  {
+    "path": "docs/DEVELOPERS.md",
+    "fileName": "DEVELOPERS.md",
+    "fullTitle": "Developers",
+    "assetUrl": "/assets/help-docs/DEVELOPERS.md"
+  },
+  {
+    "path": "docs/DOCUMENTATION_MASTER_BRIEF.md",
+    "fileName": "DOCUMENTATION_MASTER_BRIEF.md",
+    "fullTitle": "Documentation Master Brief",
+    "assetUrl": "/assets/help-docs/DOCUMENTATION_MASTER_BRIEF.md"
+  },
+  {
+    "path": "docs/DOCUMENTATION_TASKLIST.md",
+    "fileName": "DOCUMENTATION_TASKLIST.md",
+    "fullTitle": "Documentation Tasklist",
+    "assetUrl": "/assets/help-docs/DOCUMENTATION_TASKLIST.md"
   },
   {
     "path": "docs/EDITOR_STYLE_GUIDE.md",
@@ -58,6 +124,12 @@
     "fileName": "PLAYGROUND_SPEC.md",
     "fullTitle": "Playground Spec",
     "assetUrl": "/assets/help-docs/PLAYGROUND_SPEC.md"
+  },
+  {
+    "path": "docs/REFERENCE.md",
+    "fileName": "REFERENCE.md",
+    "fullTitle": "Reference",
+    "assetUrl": "/assets/help-docs/REFERENCE.md"
   },
   {
     "path": "docs/SKILLS.md",
@@ -106,5 +178,11 @@
     "fileName": "TEXT_COMPONENT_TASKLIST.md",
     "fullTitle": "Text Component Tasklist",
     "assetUrl": "/assets/help-docs/TEXT_COMPONENT_TASKLIST.md"
+  },
+  {
+    "path": "docs/USAGE.md",
+    "fileName": "USAGE.md",
+    "fullTitle": "Usage",
+    "assetUrl": "/assets/help-docs/USAGE.md"
   }
 ]

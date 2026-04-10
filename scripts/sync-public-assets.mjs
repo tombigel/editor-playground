@@ -1,13 +1,15 @@
-import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const docsDir = path.join(rootDir, 'docs');
+const docsAssetSourceDir = path.join(docsDir, 'assets');
 const staticAssetSourceDir = path.join(rootDir, 'src', 'assets', 'static');
 const publicDir = path.join(rootDir, 'public');
 const rootAssetDir = publicDir;
 const helpDocAssetDir = path.join(publicDir, 'assets', 'help-docs');
+const helpDocDocsAssetDir = path.join(helpDocAssetDir, 'assets');
 const manifestPath = path.join(rootDir, 'src', 'panels', 'generated', 'helpDocsManifest.json');
 
 const docFiles = (await readdir(docsDir))
@@ -19,6 +21,7 @@ const rootAssetFiles = (await readdir(staticAssetSourceDir))
 
 await mkdir(rootAssetDir, { recursive: true });
 await mkdir(helpDocAssetDir, { recursive: true });
+await rm(helpDocDocsAssetDir, { recursive: true, force: true });
 
 const manifest = [];
 const desiredHelpDocFileNames = new Set(docFiles);
@@ -41,6 +44,11 @@ for (const fileName of docFiles) {
     fullTitle: extractHelpDocTitle(raw, fileName),
     assetUrl: `/assets/help-docs/${fileName}`,
   });
+}
+
+const docsAssetDirExists = await statPath(docsAssetSourceDir);
+if (docsAssetDirExists) {
+  await cp(docsAssetSourceDir, helpDocDocsAssetDir, { recursive: true });
 }
 
 const existingRootAssetEntries = await readdir(rootAssetDir, { withFileTypes: true }).catch(() => []);
@@ -77,4 +85,13 @@ function extractHelpDocTitle(raw, fileName) {
   return fileName
     .replace(/\.md$/i, '')
     .replace(/[_-]+/g, ' ');
+}
+
+async function statPath(targetPath) {
+  try {
+    await readdir(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
 }
