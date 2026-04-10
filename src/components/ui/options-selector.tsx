@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { PopoverTooltip } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn, DARK_TOOLTIP_CLASS } from '@/lib/utils';
 
 export type OptionsSelectorOption = {
   value: string;
@@ -23,7 +23,7 @@ type OptionsSelectorProps = {
   className?: string;
 };
 
-const TOOLTIP_CLASS_NAME = 'rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white';
+const TOOLTIP_CLASS_NAME = DARK_TOOLTIP_CLASS;
 
 export function OptionsSelector({
   value,

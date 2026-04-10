@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import { CodeXml, Layers2, List, PencilLine, Pin, Rocket, TextInitial } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
@@ -702,7 +703,7 @@ export function MiscDemos() {
 								Inspector compact (rounded-md)
 							</div>
 							<div
-								className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+								className={DARK_TOOLTIP_CLASS}
 								style={{ width: "fit-content" }}
 							>
 								<div className="font-medium leading-3.5">Position Forward</div>

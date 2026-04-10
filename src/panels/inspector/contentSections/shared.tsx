@@ -9,6 +9,7 @@ import {
   TextWrap,
   TriangleAlert,
 } from 'lucide-react';
+import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import { useMemo, useState, type ReactNode } from 'react';
 import { buildFontPickerPreviewStylesheetHref, listFontWeightOptions } from '../../../api/fontApi';
 import { useFontPreviewStylesheet } from '../useFontPreviewStylesheet';
@@ -187,7 +188,7 @@ export function TypographyTextStyleFields({
           <PopoverTooltip
             side="top"
             align="center"
-            className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+            className={DARK_TOOLTIP_CLASS}
             content={<div className="leading-3.5 font-medium">Manage fonts</div>}
           >
             <Button

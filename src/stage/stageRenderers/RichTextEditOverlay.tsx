@@ -11,6 +11,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import { createPortal } from "react-dom";
 import {
 	Code2,
@@ -1647,7 +1648,7 @@ function ToolbarButton({
 		<PopoverTooltip
 			side="top"
 			align="center"
-			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			<Button
@@ -1701,7 +1702,7 @@ function CompactSelect({
 		<PopoverTooltip
 			side="top"
 			align="center"
-			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			<Select
@@ -1793,7 +1794,7 @@ function CompactFontSizeField({
 		<PopoverTooltip
 			side="top"
 			align="center"
-			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
@@ -1897,7 +1898,7 @@ function CompactLineHeightField({
 		<PopoverTooltip
 			side="top"
 			align="center"
-			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			<div
@@ -1982,7 +1983,7 @@ function CompactSpacingField({
 		<PopoverTooltip
 			side="top"
 			align="center"
-			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
@@ -2087,7 +2088,7 @@ function CompactColorField({
 		<PopoverTooltip
 			side="top"
 			align="center"
-			className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			<div

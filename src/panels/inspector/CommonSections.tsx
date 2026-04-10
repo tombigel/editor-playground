@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { ValuePill } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+import { cn, DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
 import {
   BorderControlGroup,
@@ -582,7 +582,7 @@ export function InspectorSectionCard({
             <PopoverTooltip
               side="top"
               align="center"
-              className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+              className={DARK_TOOLTIP_CLASS}
               content={
                 <div className="leading-3.5 font-medium">
                   {focusedModeEntry.tooltip ?? focusedModeEntry.label}

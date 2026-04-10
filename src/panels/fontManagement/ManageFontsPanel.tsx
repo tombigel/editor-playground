@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import { useFontPreviewStylesheet } from '../inspector/useFontPreviewStylesheet';
 import { Plus, RotateCcw, Star, Trash2 } from 'lucide-react';
 import type { DocumentFontFamily, DocumentModel } from '../../model/types';
@@ -691,7 +692,7 @@ function getPrimaryLanguageLabel(family: DocumentFontFamily) {
 function FontButtonTooltip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <PopoverTooltip
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      className={DARK_TOOLTIP_CLASS}
       content={<div className="leading-3.5 font-medium">{label}</div>}
       side="top"
       align="center"

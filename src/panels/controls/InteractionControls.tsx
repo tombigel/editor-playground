@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import {
   BetweenHorizontalStart,
   ListEnd,
@@ -34,7 +35,7 @@ export function OrderIconButton({
     <PopoverTooltip
       side="top"
       align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      className={DARK_TOOLTIP_CLASS}
       content={
         <>
           <div className="leading-3.5 font-medium">{label}</div>
@@ -78,7 +79,7 @@ function TypeIconButton({
     <PopoverTooltip
       side="top"
       align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      className={DARK_TOOLTIP_CLASS}
       content={<div className="leading-3.5 font-medium">{label}</div>}
     >
       <Button
@@ -119,7 +120,7 @@ export function TextStyleIconButton({
     <PopoverTooltip
       side="top"
       align="center"
-      className="rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white"
+      className={DARK_TOOLTIP_CLASS}
       content={<div className="leading-3.5 font-medium">{label}</div>}
     >
       <Button
