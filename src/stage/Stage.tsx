@@ -9,6 +9,7 @@ import { useStageAnimations } from "./useStageAnimations";
 import { StageScene } from "./StageScene";
 import { RichEditContext } from "./richEditContext";
 import { useRichTextEditMode } from "./useRichTextEditMode";
+import { useStageLayoutResync } from "./useStageLayoutResync";
 import {
 	areMeasuredNodeSizesEqual,
 	computeResizeFrame,
@@ -101,6 +102,7 @@ export function Stage({
 		useState<SingleSelectionOverlay | null>(null);
 	const [multiSelectionBounds, setMultiSelectionBounds] =
 		useState<MultiSelectionBounds | null>(null);
+	const [layoutRevision, setLayoutRevision] = useState(0);
 	const pendingRichEditIdRef = useRef<string | null>(null);
 	const lastGeometryRef = useRef<{
 		nodeSizes: MeasuredNodeSizes;
@@ -130,6 +132,16 @@ export function Stage({
 		setStageElement(node);
 	}
 
+	const handleStageLayoutChange = useCallback(() => {
+		setLayoutRevision((revision) => revision + 1);
+	}, []);
+
+	useStageLayoutResync({
+		root: stageElement,
+		selectedIds,
+		onLayoutChange: handleStageLayoutChange,
+	});
+
 	const dragDrop = useStageDragDrop({
 		document,
 		selectedIds,
@@ -143,6 +155,7 @@ export function Stage({
 	});
 
 	useLayoutEffect(() => {
+		void layoutRevision;
 		const root = stageRef.current;
 		if (!root) {
 			return;
@@ -180,9 +193,10 @@ export function Stage({
 			lastGeometryRef.current = geometry;
 			onStickyGeometryChange?.(geometry);
 		}
-	}, [document, onStickyGeometryChange]);
+	}, [document, layoutRevision, onStickyGeometryChange]);
 
 	useLayoutEffect(() => {
+		void layoutRevision;
 		if (selectedIds.length !== 1 || !selectedId || dragDrop.isDragging || editingId) {
 			setSingleSelectionOverlay(null);
 			return;
@@ -232,9 +246,10 @@ export function Stage({
 			wideSouthHandle:
 				node.contentType === "container" && isStructuralTopLevelWrapper(node, isTopLevel),
 		});
-	}, [document, dragDrop.isDragging, editingId, selectedId, selectedIds]);
+	}, [document, dragDrop.isDragging, editingId, layoutRevision, selectedId, selectedIds]);
 
 	useLayoutEffect(() => {
+		void layoutRevision;
 		if (selectedIds.length <= 1 || dragDrop.isDragging || editingId) {
 			setMultiSelectionBounds(null);
 			return;
@@ -283,7 +298,7 @@ export function Stage({
 			width: Math.max(0, right - left),
 			height: Math.max(0, bottom - top),
 		});
-	}, [document, dragDrop.isDragging, editingId, selectedIds]);
+	}, [document, dragDrop.isDragging, editingId, layoutRevision, selectedIds]);
 
 	return (
 		// biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor stage needs aria-activedescendant for selection tracking

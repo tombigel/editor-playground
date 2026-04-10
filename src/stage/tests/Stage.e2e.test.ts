@@ -108,6 +108,29 @@ describe("stage/Stage e2e", () => {
 		await page.close();
 	}
 
+	async function expectSingleSelectionOverlayToMatchNode(nodeId: string) {
+		const nodeBox = await page.locator(`#stage-node-${nodeId}`).boundingBox();
+		const overlayBox = await page
+			.locator(".stage-single-selection-overlay")
+			.first()
+			.boundingBox();
+		expect(nodeBox).not.toBeNull();
+		expect(overlayBox).not.toBeNull();
+
+		expect(Math.abs((overlayBox?.x ?? 0) - ((nodeBox?.x ?? 0) - 2))).toBeLessThan(
+			1,
+		);
+		expect(Math.abs((overlayBox?.y ?? 0) - ((nodeBox?.y ?? 0) - 2))).toBeLessThan(
+			1,
+		);
+		expect(
+			Math.abs((overlayBox?.width ?? 0) - ((nodeBox?.width ?? 0) + 4)),
+		).toBeLessThan(1);
+		expect(
+			Math.abs((overlayBox?.height ?? 0) - ((nodeBox?.height ?? 0) + 4)),
+		).toBeLessThan(1);
+	}
+
 	async function dragLocatorToPoint(
 		locatorSelector: string,
 		targetX: number,
@@ -387,6 +410,33 @@ describe("stage/Stage e2e", () => {
 		expect(await title.getAttribute("class")).toMatch(/\bselected-primary\b/);
 		expect(await image.getAttribute("class")).not.toMatch(/\bselected\b/);
 		expect(await groupOutline.count()).toBe(0);
+
+		await closeEditor();
+	}, 30_000);
+
+	it("keeps the single-selection overlay aligned when selected layout shifts without a new selection event", async () => {
+		const { document, richTextId } = createRichTextEditE2EDocument();
+		await openEditor({
+			document,
+			selectedId: richTextId,
+			selectedIds: [richTextId],
+		});
+
+		await page.waitForSelector(".stage-single-selection-overlay", {
+			timeout: 2_000,
+		});
+		await expectSingleSelectionOverlayToMatchNode(richTextId);
+
+		await page.evaluate((nodeId) => {
+			const node = window.document.getElementById(`stage-node-${nodeId}`);
+			if (!node) {
+				throw new Error(`Expected stage node ${nodeId}`);
+			}
+			node.style.transform = "translateY(18px)";
+		}, richTextId);
+		await page.waitForTimeout(150);
+
+		await expectSingleSelectionOverlayToMatchNode(richTextId);
 
 		await closeEditor();
 	}, 30_000);

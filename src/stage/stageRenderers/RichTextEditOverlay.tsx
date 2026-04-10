@@ -1603,11 +1603,11 @@ export function RichTextEditOverlay({
 						userSelect: "text",
 						WebkitUserSelect: "text",
 					}}
-				>
-					<Editable
-						decorate={decorateRetainedSelection}
-						renderLeaf={renderEditLeaf}
-						renderElement={(props) => renderEditElement(props, documentModel)}
+					>
+						<Editable
+							decorate={decorateRetainedSelection}
+							renderLeaf={renderEditLeaf}
+							renderElement={(props) => renderEditElement(props, documentModel)}
 						onKeyDown={handleKeyDown}
 						onFocus={() => {
 							setEditorFocused(true);
