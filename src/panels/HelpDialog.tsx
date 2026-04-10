@@ -165,16 +165,17 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
           style={{ gridTemplateColumns: getHelpDialogGridTemplateColumns(state.navCollapsed) }}
         >
           <aside
+            id="help-dialog-nav"
             className={`editor-bg-subtle editor-border-subtle min-h-0 border-r ${
-              state.navCollapsed ? 'flex items-start justify-center px-2 py-3' : 'grid grid-rows-[auto_minmax(0,1fr)] px-3 py-4'
+              state.navCollapsed ? 'flex items-start justify-center' : 'editor-scrollbar help-nav-scroll overflow-y-auto'
             }`}
           >
             {state.navCollapsed ? (
               <Button
                 type="button"
-                variant="ghost"
+                variant="menu"
                 size="icon"
-                className="editor-icon-button-subtle rounded-lg border"
+                className="m-2 h-7 w-7 rounded-sm p-0"
                 aria-label={getHelpNavToggleLabel(state.navCollapsed)}
                 aria-controls="help-dialog-nav"
                 aria-expanded={!state.navCollapsed}
@@ -184,13 +185,13 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
               </Button>
             ) : (
               <>
-                <div className="mb-3 flex items-center justify-between gap-2 px-2">
-                  <div className="editor-text-muted text-[11px] font-medium uppercase tracking-[0.12em]">Browse docs</div>
+                <div className="help-nav-header editor-bg-subtle sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2.5">
+                  <div className="editor-text-muted text-xs font-medium">Browse docs</div>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="menu"
                     size="icon"
-                    className="editor-icon-button-subtle rounded-lg border"
+                    className="h-7 w-7 rounded-sm p-0"
                     aria-label={getHelpNavToggleLabel(state.navCollapsed)}
                     aria-controls="help-dialog-nav"
                     aria-expanded={!state.navCollapsed}
@@ -199,90 +200,66 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                     <NavToggleIcon className="h-4 w-4" />
                   </Button>
                 </div>
-                <div id="help-dialog-nav" className="min-h-0">
-                  <nav className="editor-scrollbar editor-scrollbar-gutter max-h-full overflow-y-auto pr-1">
-                    {treeRows.map((row) => (
-                      <TreeRowItem
-                        key={row.entry.id}
-                        data-help-entry={row.entry.id}
-                        depth={row.depth}
-                        hasChildren={row.hasChildren}
-                        isExpanded={row.isExpanded}
-                        isSelected={row.isSelected}
-                        className="help-nav-row my-0.5 rounded-md"
-                        icon={renderEntryIcon(row.entry)}
-                        label={
-                          <TreeRowLabelContent
-                            title={row.entry.title}
-                            subtitle={row.entry.subtitle}
-                            wrapTitle
-                            wrapSubtitle
-                            badges={
-                              row.entry.navVisibility === 'secondary' ? (
-                                <span className="help-nav-badge">Secondary</span>
-                              ) : undefined
-                            }
-                          />
-                        }
-                        onToggleAriaLabel={`${row.isExpanded ? 'Collapse' : 'Expand'} ${row.entry.title}`}
-                        onToggle={() => handleToggle(row.entry.id, row.isExpanded, setState)}
-                        onClick={() => {
-                          setTableOfContents([]);
-                          setContentReadyVersion(0);
-                          handleEntrySelect(row.entry.id, setState);
-                        }}
-                      />
-                    ))}
-                  </nav>
-                </div>
+                <nav className="px-2 pb-2">
+                  {treeRows.map((row) => (
+                    <TreeRowItem
+                      key={row.entry.id}
+                      data-help-entry={row.entry.id}
+                      depth={row.depth}
+                      hasChildren={row.hasChildren}
+                      isExpanded={row.isExpanded}
+                      variant="menu"
+                      isSelected={row.isSelected}
+                      icon={renderEntryIcon(row.entry)}
+                      label={
+                        <TreeRowLabelContent
+                          title={row.entry.title}
+                          subtitle={row.entry.subtitle}
+                          wrapTitle
+                          wrapSubtitle
+                          badges={
+                            row.entry.navVisibility === 'secondary' ? (
+                              <span className="help-nav-badge">Secondary</span>
+                            ) : undefined
+                          }
+                        />
+                      }
+                      onToggleAriaLabel={`${row.isExpanded ? 'Collapse' : 'Expand'} ${row.entry.title}`}
+                      onToggle={() => handleToggle(row.entry.id, row.isExpanded, setState)}
+                      onClick={() => {
+                        setTableOfContents([]);
+                        setContentReadyVersion(0);
+                        handleEntrySelect(row.entry.id, setState);
+                      }}
+                    />
+                  ))}
+                </nav>
               </>
             )}
           </aside>
 
           <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)]">
-            <div className="editor-bg-subtle editor-border-subtle space-y-2 border-b px-6 py-3">
+            <div className="editor-bg-subtle editor-border-subtle border-b px-6 py-3">
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                      {breadcrumbs.map((entry, index) => (
-                        <span key={entry.id} className="flex items-center gap-2">
-                          {index > 0 ? <span className="editor-text-muted">/</span> : null}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className={`help-breadcrumb-button h-auto px-1.5 py-1 text-left whitespace-normal ${entry.id === activeEntry.id ? 'editor-text-strong font-medium' : 'editor-text-muted'}`}
-                            onClick={() => {
-                              setTableOfContents([]);
-                              setContentReadyVersion(0);
-                              handleEntrySelect(entry.id, setState);
-                            }}
-                          >
-                            {entry.title}
-                          </Button>
+                {breadcrumbs.map((entry, index) => (
+                  <span key={entry.id} className="flex items-center gap-2">
+                    {index > 0 ? <span className="editor-text-muted">/</span> : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={`help-breadcrumb-button h-auto px-1.5 py-1 text-left whitespace-normal ${entry.id === activeEntry.id ? 'editor-text-strong font-medium' : 'editor-text-muted'}`}
+                      onClick={() => {
+                        setTableOfContents([]);
+                        setContentReadyVersion(0);
+                        handleEntrySelect(entry.id, setState);
+                      }}
+                    >
+                      {entry.title}
+                    </Button>
                   </span>
                 ))}
               </div>
-
-              {activeEntry.kind === 'markdown' ? (
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="editor-text-strong text-sm font-medium">{activeEntry.title}</div>
-                    {activeEntry.subtitle ? (
-                      <div className="editor-text-muted mt-0.5 text-xs leading-5">{activeEntry.subtitle}</div>
-                    ) : null}
-                  </div>
-                  <div className="editor-text-muted flex items-center gap-2 text-[11px]">
-                    <span>File</span>
-                    <span className="editor-text-strong font-mono leading-5">{activeEntry.fileName}</span>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div className="editor-text-strong text-sm font-medium">{activeEntry.title}</div>
-                  {activeEntry.subtitle ? (
-                    <div className="editor-text-muted mt-0.5 text-xs leading-5">{activeEntry.subtitle}</div>
-                  ) : null}
-                </div>
-              )}
             </div>
 
             <div className="grid min-h-0 lg:grid-cols-[minmax(0,1fr)_220px]">
@@ -323,9 +300,7 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
 
               <aside className="editor-border-subtle hidden min-h-0 border-l lg:block">
                 <div className="border-b border-[color:var(--editor-utility-border)] px-4 py-3">
-                  <div className="editor-text-muted text-[11px] font-medium uppercase tracking-[0.12em]">
-                    On this page
-                  </div>
+                  <div className="editor-text-muted text-xs font-medium">On this page</div>
                 </div>
                 <div className="editor-scrollbar editor-scrollbar-gutter max-h-full overflow-y-auto p-3">
                   {tableOfContents.length > 0 ? (
@@ -517,7 +492,7 @@ function HelpSectionLanding({ entry, onSelect }: { entry: Extract<HelpEntry, { k
 
       {secondaryChildren.length > 0 ? (
         <div className="space-y-3">
-          <div className="editor-text-muted text-xs font-medium uppercase tracking-[0.12em]">Secondary</div>
+          <div className="editor-text-muted text-xs font-medium">Secondary</div>
           {secondaryChildren.map((child) => (
             <Button
               key={child.id}

@@ -115,7 +115,8 @@
   overflow-x: auto;
   border: 1px solid var(--editor-utility-border);
   border-radius: 0.375rem;
-  background: #272822;
+  background: var(--editor-utility-bg-subtle);
+  color: var(--editor-utility-text-strong);
   padding: 1rem;
   font-size: 0.75rem;
   line-height: 1.25rem;
@@ -123,6 +124,49 @@
 
 .help-markdown pre code {
   display: block;
+  color: inherit;
+  text-shadow: none;
+}
+
+.help-markdown pre .token.comment,
+.help-markdown pre .token.prolog,
+.help-markdown pre .token.doctype,
+.help-markdown pre .token.cdata {
+  color: var(--editor-utility-text-muted);
+}
+
+.help-markdown pre .token.punctuation,
+.help-markdown pre .token.operator,
+.help-markdown pre .token.entity,
+.help-markdown pre .token.url,
+.help-markdown pre .token.variable {
+  color: var(--editor-utility-text-strong);
+}
+
+.help-markdown pre .token.keyword,
+.help-markdown pre .token.atrule,
+.help-markdown pre .token.attr-value,
+.help-markdown pre .token.function,
+.help-markdown pre .token.class-name {
+  color: var(--editor-accent);
+}
+
+.help-markdown pre .token.property,
+.help-markdown pre .token.tag,
+.help-markdown pre .token.constant,
+.help-markdown pre .token.symbol,
+.help-markdown pre .token.deleted,
+.help-markdown pre .token.boolean,
+.help-markdown pre .token.number,
+.help-markdown pre .token.selector,
+.help-markdown pre .token.attr-name,
+.help-markdown pre .token.string,
+.help-markdown pre .token.char,
+.help-markdown pre .token.builtin,
+.help-markdown pre .token.inserted,
+.help-markdown pre .token.regex,
+.help-markdown pre .token.important {
+  color: color-mix(in srgb, var(--editor-accent) 72%, var(--editor-utility-text-strong));
 }
 
 .help-markdown :is(p, li, td, th, blockquote) > code {
@@ -141,16 +185,19 @@
   background: transparent;
 }
 
-.help-nav-row[data-selected='true'] {
-  background: var(--editor-utility-bg-subtle);
-}
-
 .help-nav-badge {
   color: var(--editor-utility-text-muted);
-  font-size: 0.65rem;
-  line-height: 1.15rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+}
+
+.help-nav-scroll {
+  overscroll-behavior: none;
+  scrollbar-gutter: stable;
+}
+
+.help-nav-header {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--editor-utility-border) 72%, transparent);
 }
 
 .help-breadcrumb-button {

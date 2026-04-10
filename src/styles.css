@@ -2,10 +2,10 @@
 @import "tw-animate-css";
 @import "./styles/variables.css";
 @import "./styles/editor-chrome.css";
-@import "./styles/help-docs.css";
 @import "./styles/layers-panel.css";
 @import "./styles/inspector.css";
 @import "./styles/stage.css";
+@import "./styles/help-docs.css";
 
 @layer base {
   button,

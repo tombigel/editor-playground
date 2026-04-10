@@ -28,6 +28,9 @@ describe('panels/HelpDialog', () => {
     expect(markup).toContain('On this page');
     expect(markup).toContain('Collapse help navigation');
     expect(markup).toContain('data-help-nav-collapsed="false"');
+    expect(markup).toContain('id="help-dialog-nav"');
+    expect(markup).toContain('help-nav-header');
+    expect(markup).toContain('editor-scrollbar help-nav-scroll overflow-y-auto');
   });
 
   it('supports opening directly to usage documentation', () => {
@@ -37,7 +40,7 @@ describe('panels/HelpDialog', () => {
 
     expect(markup).toContain('data-help-entry="doc:docs/USAGE.md"');
     expect(markup).toContain('data-selected="true"');
-    expect(markup).toContain('USAGE.md');
+    expect(markup).toContain('Usage');
     expect(markup).not.toContain('data-help-entry="shortcuts" data-selected="true"');
   });
 
