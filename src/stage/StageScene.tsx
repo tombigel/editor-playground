@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { buildDocumentDefaultFontStack } from '../fonts/defaults';
-import { buildRenderRootPlan } from '../render/renderPlan';
+import { buildStageRenderRootPlan } from '../render/renderPlan';
 import { collectInteractKeys } from '../site/siteShared';
 import type { StageSceneProps } from './types';
 export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
@@ -17,6 +17,7 @@ export const StageScene = memo(function StageScene({
   singleSelectionOverlay = null,
   multiSelectionBounds = null,
   previewSticky,
+  showHidden = true,
   animationPreview,
   spacerVisibility,
   showGridLanes,
@@ -31,8 +32,12 @@ export const StageScene = memo(function StageScene({
   followLinkPopup = null,
 }: StageSceneProps) {
   const plan = useMemo(
-    () => buildRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport, activePageId ?? undefined),
-    [document, previewSticky, measuredNodeSizes, viewport, activePageId],
+    () =>
+      buildStageRenderRootPlan(document, previewSticky, measuredNodeSizes, viewport, activePageId ?? undefined, {
+        showHidden,
+        selectedIds,
+      }),
+    [activePageId, document, measuredNodeSizes, previewSticky, selectedIds, showHidden, viewport],
   );
 
   const interactKeys = useMemo(
@@ -138,6 +143,7 @@ export const StageScene = memo(function StageScene({
   prev.singleSelectionOverlay === next.singleSelectionOverlay &&
   prev.multiSelectionBounds === next.multiSelectionBounds &&
   prev.previewSticky === next.previewSticky &&
+  prev.showHidden === next.showHidden &&
   prev.animationPreview === next.animationPreview &&
   prev.spacerVisibility === next.spacerVisibility &&
   prev.showGridLanes === next.showGridLanes &&

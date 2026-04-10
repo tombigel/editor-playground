@@ -61,6 +61,26 @@
   background: transparent;
 }
 
+.stage-wrapper.is-hidden-ghost,
+.stage-leaf.is-hidden-ghost {
+  opacity: 0.5;
+}
+
+.stage-wrapper.is-hidden-ghost::after,
+.stage-leaf.is-hidden-ghost::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(128, 128, 128, 0.22) 0 10px,
+    rgba(128, 128, 128, 0) 10px 20px
+  );
+  border: 1px solid rgba(128, 128, 128, 0.28);
+  border-radius: inherit;
+}
+
 .stage-wrapper.role-header,
 .stage-wrapper.role-footer,
 .stage-wrapper.role-section {
@@ -94,6 +114,10 @@
   box-sizing: border-box;
   pointer-events: none;
   z-index: var(--editor-layer-selection);
+}
+
+.stage-single-selection-overlay[data-hidden='true'] .stage-single-selection-outline {
+  border-style: dashed;
 }
 
 .stage-single-selection-label {

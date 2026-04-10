@@ -27,7 +27,15 @@ export function useAppViewModel(state: EditorState, stickyGeometry: StickyGeomet
     [state.document, stickyGeometry],
   );
   const documentJson = useMemo(() => serializeDocumentJson(state.document), [state.document]);
-  const stageSelectableIds = useMemo(() => getStageSelectableNodeIds(state.document), [state.document]);
+  const stageSelectableIds = useMemo(
+    () =>
+      getStageSelectableNodeIds(state.document, {
+        activePageId: state.activePageId,
+        showHidden: state.ui.showHidden,
+        selectedIds,
+      }),
+    [selectedIds, state.activePageId, state.document, state.ui.showHidden],
+  );
   const systemPrefersDark = useSystemThemePreference();
   const resolvedTheme = useMemo<ResolvedTheme>(
     () => resolveThemeMode(state.ui.themeMode, systemPrefersDark),

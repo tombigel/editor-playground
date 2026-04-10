@@ -18,6 +18,7 @@ function createHandlers() {
       togglePagesPanel: vi.fn(),
     },
     viewState: {
+      setShowHidden: vi.fn(),
       setPreviewSticky: vi.fn(),
       setAnimationPreview: vi.fn(),
       setSpacerVisibility: vi.fn(),
@@ -49,6 +50,7 @@ function getShortcut(shortcutId: (typeof SHORTCUT_DEFINITIONS)[number]['id']) {
 }
 
 const baseState: ShortcutUiState = {
+  showHidden: true,
   previewSticky: true,
   animationPreview: {
     enabled: false,

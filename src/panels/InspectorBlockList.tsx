@@ -19,10 +19,11 @@ export function InspectorBlockList({
         <div
           key={block.id}
           data-inspector-block={block.id}
+          data-inspector-disabled={block.disabled ? 'true' : 'false'}
           data-inspector-bucket={block.bucket}
           data-inspector-align={block.align}
           data-inspector-layout={block.layout}
-          className={block.align === 'start' ? 'self-start' : undefined}
+          className={`${block.align === 'start' ? 'self-start' : ''} ${block.disabled ? 'pointer-events-none opacity-55' : ''}`.trim() || undefined}
         >
           {block.render ? (
             block.render()

@@ -1,16 +1,30 @@
 import type { DocumentModel, NodeId } from '../model/types';
+import type { PageId } from '../model/types/site';
 import { isSiteNode } from '../model/types';
+import {
+  collectHiddenSelectionScope,
+  getEditorStageRootWrappers,
+  isNodeEffectivelyHidden,
+} from '../model/selectors';
 
-export function getStageSelectableNodeIds(document: DocumentModel): NodeId[] {
-  const root = document.nodes[document.rootId];
-  if (!root || !isSiteNode(root)) {
-    return [];
-  }
+type StageSelectableOptions = {
+  activePageId?: PageId | null;
+  showHidden?: boolean;
+  selectedIds?: NodeId[];
+};
+
+export function getStageSelectableNodeIds(
+  document: DocumentModel,
+  options: StageSelectableOptions = {},
+): NodeId[] {
+  const ghostVisibleIds =
+    options.showHidden === false
+      ? collectHiddenSelectionScope(document, options.selectedIds ?? [])
+      : new Set<NodeId>();
 
   const ids: NodeId[] = [];
-
-  for (const childId of root.children) {
-    visitStageNode(document, childId, ids);
+  for (const wrapper of getEditorStageRootWrappers(document, options.activePageId)) {
+    visitStageNode(document, wrapper.id, ids, options.showHidden ?? true, ghostVisibleIds);
   }
 
   return ids;
@@ -20,8 +34,9 @@ export function getAdjacentStageSelection(
   document: DocumentModel,
   currentSelectedId: NodeId | null,
   direction: 'forward' | 'backward',
+  options: StageSelectableOptions = {},
 ): NodeId | null {
-  const ids = getStageSelectableNodeIds(document);
+  const ids = getStageSelectableNodeIds(document, options);
   if (ids.length === 0) {
     return null;
   }
@@ -39,15 +54,24 @@ export function getAdjacentStageSelection(
   return ids[nextIndex] ?? null;
 }
 
-function visitStageNode(document: DocumentModel, nodeId: NodeId, ids: NodeId[]) {
+function visitStageNode(
+  document: DocumentModel,
+  nodeId: NodeId,
+  ids: NodeId[],
+  showHidden: boolean,
+  ghostVisibleIds: ReadonlySet<NodeId>,
+) {
   const node = document.nodes[nodeId];
-  if (!node || isSiteNode(node) || !node.visible) {
+  if (!node || isSiteNode(node)) {
     return;
   }
 
-  ids.push(node.id);
+  const isHidden = isNodeEffectivelyHidden(document, node.id);
+  if (!isHidden || showHidden || ghostVisibleIds.has(node.id)) {
+    ids.push(node.id);
+  }
 
   for (const childId of node.children) {
-    visitStageNode(document, childId, ids);
+    visitStageNode(document, childId, ids, showHidden, ghostVisibleIds);
   }
 }

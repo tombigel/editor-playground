@@ -106,6 +106,7 @@ describe('panels/InspectorControls e2e', () => {
           selectedId: seeded.titleId,
           pendingRoleSwap: null,
           ui: {
+            showHidden: true,
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
@@ -173,6 +174,7 @@ describe('panels/InspectorControls e2e', () => {
           selectedId: seeded.titleId,
           pendingRoleSwap: null,
           ui: {
+            showHidden: true,
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
@@ -227,6 +229,7 @@ describe('panels/InspectorControls e2e', () => {
           selectedId: seeded.titleId,
           pendingRoleSwap: null,
           ui: {
+            showHidden: true,
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
@@ -303,6 +306,7 @@ describe('panels/InspectorControls e2e', () => {
           selectedId: seeded.titleId,
           pendingRoleSwap: null,
           ui: {
+            showHidden: true,
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
@@ -374,6 +378,7 @@ describe('panels/InspectorControls e2e', () => {
           selectedId: seeded.bodyId,
           pendingRoleSwap: null,
           ui: {
+            showHidden: true,
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,

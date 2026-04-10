@@ -184,6 +184,140 @@ describe('stage/Stage', () => {
     expect(markup).toContain('<blockquote');
   });
 
+  it('renders hidden nodes as ghosts when Show Hidden is enabled', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.contentType !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.visible = false;
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={null}
+        showHidden
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain(`id="stage-node-${target.id}"`);
+    expect(markup).toContain('is-hidden-ghost');
+    expect(markup).toContain('data-hidden="true"');
+    expect(markup).toContain('data-ghost-visible="true"');
+  });
+
+  it('keeps hidden nodes in layout but not ghost-visible when Show Hidden is disabled', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.contentType !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.visible = false;
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={null}
+        showHidden={false}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain(`id="stage-node-${target.id}"`);
+    expect(markup).toContain('visibility:hidden');
+    expect(markup).toContain('data-ghost-visible="false"');
+  });
+
+  it('reveals the selected hidden node as a ghost when Show Hidden is disabled', () => {
+    const document = structuredClone(createInitialDocument());
+    const target = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.name === 'Post Title',
+    );
+
+    if (!target || target.contentType !== 'text') {
+      throw new Error('Expected post title text node');
+    }
+
+    target.visible = false;
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={target.id}
+        selectedIds={[target.id]}
+        showHidden={false}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('is-hidden-ghost');
+    expect(markup).toContain('data-ghost-visible="true"');
+    expect(markup).toContain(`data-node-id="${target.id}"`);
+    expect(markup).toContain('data-hidden="true"');
+  });
+
+  it('marks hidden single-selection overlays with the hidden data attribute', () => {
+    const markup = renderToStaticMarkup(
+      <SingleSelectionOverlay
+        overlay={{
+          nodeId: 'text_hidden',
+          isHidden: true,
+          label: 'Hidden Copy',
+          icon: PencilLine,
+          isSticky: false,
+          hasAnimation: false,
+          isElevated: false,
+          bounds: { left: 10, top: 20, width: 120, height: 48 },
+          handles: ['n', 'e', 's', 'w'],
+          wideSouthHandle: false,
+        }}
+        onHandleMouseDown={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('class="stage-single-selection-overlay"');
+    expect(markup).toContain('data-hidden="true"');
+  });
+
   it('renders authored section height as a content-wrapper minimum height', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

@@ -62,6 +62,7 @@ export function renderContainer({
 }: RenderWrapperArgs): ReactElement {
   const node = plan.node;
   const Tag = plan.tag;
+  const hiddenStyle = getStageHiddenStyle(plan.hiddenState);
   const meshLayout = plan.meshLayout;
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, node.id);
@@ -118,13 +119,20 @@ export function renderContainer({
         selectedIds.length === 1 && selectedId === node.id ? 'selected-primary' : ''
       } ${
         dragSourceIds.includes(node.id) ? 'drag-source' : ''
-      } ${isHighlightedDropTarget ? 'drop-target' : ''}`}
+      } ${isHighlightedDropTarget ? 'drop-target' : ''} ${
+        plan.hiddenState.isEffectivelyHidden ? 'is-effectively-hidden' : ''
+      } ${plan.hiddenState.isGhostVisible ? 'is-hidden-ghost' : ''} ${
+        plan.hiddenState.isHiddenSelected ? 'is-hidden-selected' : ''
+      }`}
+      data-hidden={plan.hiddenState.isEffectivelyHidden ? 'true' : 'false'}
+      data-ghost-visible={plan.hiddenState.isGhostVisible ? 'true' : 'false'}
       aria-label={getNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,
         ...(isSelfStickyTrack ? {} : plan.meshPlacement),
         ...getWrapperBorderStyle(node),
         ...wrapperStickyCss,
+        ...hiddenStyle,
       }}
     >
       <div
@@ -254,6 +262,17 @@ export function renderContainer({
     bottomDistancePx,
     body: wrapperBody,
   });
+}
+
+function getStageHiddenStyle(hiddenState: RenderWrapperArgs['plan']['hiddenState']): CSSProperties | undefined {
+  if (!hiddenState.isEffectivelyHidden || hiddenState.isGhostVisible) {
+    return undefined;
+  }
+
+  return {
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  };
 }
 
 // Keep renderWrapper as alias for backward compat during the transition

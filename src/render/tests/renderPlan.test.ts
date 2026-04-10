@@ -3,7 +3,7 @@ import { createInitialDocument } from '../../model/defaults';
 import { createPage } from '../../model/pageDefaults';
 import { parseUnitValue } from '../../model/units';
 import { setPageTopLevelWrapperPlacement, setTopLevelWrapperVisibility } from '../../api/documentApi';
-import { buildRenderRootPlan, getTrackSpacerDescriptor } from '../renderPlan';
+import { buildRenderRootPlan, buildStageRenderRootPlan, getTrackSpacerDescriptor } from '../renderPlan';
 import { renderPageHtmlDocument } from '../../site/siteExport';
 
 describe('render/renderPlan', () => {
@@ -90,6 +90,45 @@ describe('render/renderPlan', () => {
     expect(renderPageHtmlDocument(custom, aboutPage.id)).not.toContain(`data-node-id="${section.id}"`);
     expect(renderPageHtmlDocument(custom, contactPage.id)).toContain(`data-node-id="${section.id}"`);
     expect(renderPageHtmlDocument(hidden, homePage.id)).not.toContain(`data-node-id="${section.id}"`);
+  });
+
+  it('shows only actually hidden top-level wrappers as stage ghosts on pages where custom-page wrappers are absent', () => {
+    const document = createInitialDocument();
+    const homePage = document.pages?.[0];
+    const aboutPage = createPage({ displayName: 'About', slug: 'about' });
+    const contactPage = createPage({ displayName: 'Contact', slug: 'contact' });
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!homePage || !section || section.contentType !== 'container') {
+      throw new Error('Expected home page and section wrapper');
+    }
+
+    const withPages = {
+      ...document,
+      pages: [...(document.pages ?? []), aboutPage, contactPage],
+    };
+    const custom = setTopLevelWrapperVisibility(withPages, homePage.id, section.id, 'customPages', [
+      homePage.id,
+      contactPage.id,
+    ]);
+    const hidden = setTopLevelWrapperVisibility(custom, homePage.id, section.id, 'hidden');
+
+    const customAboutPlan = buildStageRenderRootPlan(custom, true, {}, undefined, aboutPage.id, {
+      showHidden: true,
+      selectedIds: [],
+    });
+    const hiddenAboutPlan = buildStageRenderRootPlan(hidden, true, {}, undefined, aboutPage.id, {
+      showHidden: true,
+      selectedIds: [],
+    });
+
+    expect(customAboutPlan.main.map((node) => node.node.id)).not.toContain(section.id);
+    expect(hiddenAboutPlan.main.map((node) => node.node.id)).toContain(section.id);
+    expect(
+      hiddenAboutPlan.main.find((node) => node.node.id === section.id)?.hiddenState.isGhostVisible,
+    ).toBe(true);
   });
 
   it('propagates measured geometry into wrapper mesh placement', () => {

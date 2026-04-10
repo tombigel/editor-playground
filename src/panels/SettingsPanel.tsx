@@ -37,6 +37,7 @@ import type { LinkValidationError } from '@/api/editorApi';
 type Props = {
   document: DocumentModel;
   documentJson: string;
+  showHidden?: boolean;
   previewSticky: boolean;
   animationPreview: AnimationPreviewState;
   onAnimationPreviewChange: (value: Partial<AnimationPreviewState>) => void;
@@ -58,6 +59,7 @@ type Props = {
   onRemoveFont?: (familyName: string) => void;
   onToggleFontFavorite?: (familyName: string) => void;
   onPurgeUnusedFonts?: () => void;
+  onShowHiddenChange?: (value: boolean) => void;
   onPreviewStickyChange: (value: boolean) => void;
   onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
   onShowGridLanesChange: (value: boolean) => void;
@@ -84,6 +86,7 @@ type Props = {
 export function SettingsPanel({
   document,
   documentJson,
+  showHidden = true,
   previewSticky,
   animationPreview,
   onAnimationPreviewChange,
@@ -105,6 +108,7 @@ export function SettingsPanel({
   onRemoveFont = () => undefined,
   onToggleFontFavorite = () => undefined,
   onPurgeUnusedFonts = () => undefined,
+  onShowHiddenChange = () => undefined,
   onPreviewStickyChange,
   onSpacerVisibilityChange,
   onShowGridLanesChange,
@@ -236,6 +240,7 @@ export function SettingsPanel({
                 >
                   {renderSectionContent(section.id, {
                     document,
+                    showHidden,
                     previewSticky,
                     animationPreview,
                     spacerVisibility,
@@ -257,6 +262,7 @@ export function SettingsPanel({
                     onRemoveFont,
                     onToggleFontFavorite,
                     onPurgeUnusedFonts,
+                    onShowHiddenChange,
                     onPreviewStickyChange,
                     onAnimationPreviewChange,
                     onSpacerVisibilityChange,
@@ -299,6 +305,7 @@ function renderSectionContent(
   sectionId: SettingsSectionId,
   props: {
     document: DocumentModel;
+    showHidden: boolean;
     previewSticky: boolean;
     animationPreview: AnimationPreviewState;
     spacerVisibility: 'selected' | 'all';
@@ -321,6 +328,7 @@ function renderSectionContent(
     onToggleFontFavorite: (familyName: string) => void;
     onPurgeUnusedFonts: () => void;
     onPreviewStickyChange: (value: boolean) => void;
+    onShowHiddenChange: (value: boolean) => void;
     onAnimationPreviewChange: (value: Partial<AnimationPreviewState>) => void;
     onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
     onShowGridLanesChange: (value: boolean) => void;
@@ -345,6 +353,7 @@ function renderSectionContent(
     case 'display':
       return (
         <DisplaySettingsSection
+          showHidden={props.showHidden}
           previewSticky={props.previewSticky}
           animationPreview={props.animationPreview}
           spacerVisibility={props.spacerVisibility}
@@ -357,6 +366,7 @@ function renderSectionContent(
           darkTheme={props.darkTheme}
           resolvedTheme={props.resolvedTheme}
           startupFocusedMode={props.startupFocusedMode}
+          onShowHiddenChange={props.onShowHiddenChange}
           onPreviewStickyChange={props.onPreviewStickyChange}
           onAnimationPreviewChange={props.onAnimationPreviewChange}
           onSpacerVisibilityChange={props.onSpacerVisibilityChange}

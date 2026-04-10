@@ -90,6 +90,7 @@ export type EditorState = {
   selectedIds: NodeId[];
   pendingRoleSwap: ConfirmReplaceRole | null;
   ui: {
+    showHidden: boolean;
     previewSticky: boolean;
     animationPreview: AnimationPreviewState;
     spacerVisibility: 'selected' | 'all';

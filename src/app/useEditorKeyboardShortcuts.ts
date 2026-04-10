@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi';
+import type { PageId } from '../model/types/site';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
 import { getShortcutFocusContext } from './useEditorEnvironment';
@@ -7,6 +8,7 @@ import type { ShortcutExecutionHandlers } from './types';
 
 type UseEditorKeyboardShortcutsArgs = {
   document: DocumentModel;
+  activePageId: PageId | null;
   selectedId: string | null;
   selectedIds: string[];
   ui: ShortcutUiState;
@@ -18,6 +20,7 @@ type UseEditorKeyboardShortcutsArgs = {
 
 export function useEditorKeyboardShortcuts({
   document,
+  activePageId,
   selectedId,
   selectedIds,
   ui,
@@ -36,6 +39,11 @@ export function useEditorKeyboardShortcuts({
           document,
           selectedId,
           event.shiftKey ? 'backward' : 'forward',
+          {
+            activePageId,
+            showHidden: ui.showHidden,
+            selectedIds,
+          },
         );
         if (nextSelection) {
           event.preventDefault();
@@ -66,6 +74,7 @@ export function useEditorKeyboardShortcuts({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     document,
+    activePageId,
     hasDismissiblePanels,
     onSelect,
     selectedId,

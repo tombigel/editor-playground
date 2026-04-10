@@ -18,6 +18,7 @@ function createState(): EditorState {
     selectedIds: [],
     pendingRoleSwap: null,
     ui: {
+      showHidden: true,
       previewSticky: true,
       animationPreview: {
         enabled: false,

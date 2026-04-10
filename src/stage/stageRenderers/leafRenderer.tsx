@@ -109,6 +109,7 @@ function StageLeaf({
 }) {
   const { editingId, commitEdit, updateBlockGap, discardEdit } = useRichEditContext();
   const child = plan.node;
+  const hiddenStyle = getStageHiddenStyle(plan.hiddenState);
   const meshPlacement = plan.meshPlacement;
   const isAutoSticky =
     child.sticky?.enabled && child.sticky.target === 'self' && child.sticky.durationMode === 'auto' && registration;
@@ -140,7 +141,13 @@ function StageLeaf({
       {...(interactKeys?.has(child.id) ? { 'data-interact-key': child.id } : {})}
       className={`stage-leaf subtype-${child.subtype} ${brandMark ? 'is-brand-mark' : ''} ${
         selectedIds.includes(child.id) ? 'selected' : ''
-      } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${dragSourceIds.includes(child.id) ? 'drag-source' : ''}`}
+      } ${selectedIds.length > 1 && selectedIds.includes(child.id) ? 'selected-multi' : ''} ${selectedIds.length === 1 && selectedId === child.id ? 'selected-primary' : ''} ${dragSourceIds.includes(child.id) ? 'drag-source' : ''} ${
+        plan.hiddenState.isEffectivelyHidden ? 'is-effectively-hidden' : ''
+      } ${plan.hiddenState.isGhostVisible ? 'is-hidden-ghost' : ''} ${
+        plan.hiddenState.isHiddenSelected ? 'is-hidden-selected' : ''
+      }`}
+      data-hidden={plan.hiddenState.isEffectivelyHidden ? 'true' : 'false'}
+      data-ghost-visible={plan.hiddenState.isGhostVisible ? 'true' : 'false'}
       aria-label={getNodeAriaLabel(child)}
       style={{
         ...(isSelfStickyTrack
@@ -164,6 +171,7 @@ function StageLeaf({
         ...(previewSticky && child.sticky?.enabled
           ? getStageStickyCssProperties(child.sticky, { includeZIndex: true })
           : {}),
+        ...hiddenStyle,
       }}
     >
       <div
@@ -225,6 +233,17 @@ function StageLeaf({
     bottomDistancePx,
     body: leafBody,
   });
+}
+
+function getStageHiddenStyle(hiddenState: RenderLeafPlanNode['hiddenState']): CSSProperties | undefined {
+  if (!hiddenState.isEffectivelyHidden || hiddenState.isGhostVisible) {
+    return undefined;
+  }
+
+  return {
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  };
 }
 
 function LeafRichBody({

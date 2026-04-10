@@ -30,6 +30,7 @@ export type StageProps = {
 	selectedId: NodeId | null;
 	selectedIds?: NodeId[];
 	activePageId?: PageId | null;
+	showHidden?: boolean;
 	previewSticky: boolean;
 	animationPreview?: AnimationPreviewState;
 	spacerVisibility: "selected" | "all";
@@ -170,6 +171,7 @@ export type StageSceneProps = {
 	selectedIds?: NodeId[];
 	singleSelectionOverlay?: {
 		nodeId: NodeId;
+		isHidden?: boolean;
 		label: string;
 		icon: LucideIcon | null;
 		isSticky: boolean;
@@ -191,6 +193,7 @@ export type StageSceneProps = {
 		height: number;
 	} | null;
 	previewSticky: boolean;
+	showHidden?: boolean;
 	animationPreview?: AnimationPreviewState;
 	spacerVisibility: "selected" | "all";
 	showGridLanes: boolean;

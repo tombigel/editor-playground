@@ -68,6 +68,7 @@ export type InspectorSectionContext = {
   document: DocumentModel;
   activePageId?: PageId | null;
   node: InspectorNode | null;
+  hiddenSelection?: boolean;
   actions: InspectorActionHandlers;
   orderState: InspectorOrderState;
   focusedMode: FocusedMode;
@@ -106,6 +107,7 @@ export type ResolvedInspectorSection = {
 export type ResolvedInspectorBlock = {
   id: string;
   bucket: InspectorBlockBucket;
+  disabled?: boolean;
   title?: string;
   description?: string;
   align: InspectorBlockAlign;

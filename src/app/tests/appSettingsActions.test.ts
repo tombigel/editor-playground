@@ -27,6 +27,7 @@ describe('app/appSettingsActions', () => {
   it('preserves ui settings when resetting only editor data', () => {
     const customSnapSettings = { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } };
     const next = resetEditorData({
+      showHidden: true,
       previewSticky: false,
       animationPreview: {
         enabled: false,
@@ -50,6 +51,7 @@ describe('app/appSettingsActions', () => {
 
     expect(next.selectedId).toBeNull();
     expect(next.ui).toEqual({
+      showHidden: true,
       previewSticky: false,
       animationPreview: {
         enabled: false,
@@ -76,6 +78,7 @@ describe('app/appSettingsActions', () => {
     const next = resetEditorState();
 
     expect(next.ui).toEqual({
+      showHidden: true,
       previewSticky: true,
       animationPreview: {
         enabled: false,

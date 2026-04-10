@@ -203,6 +203,38 @@ describe('panels/InspectorPanel', () => {
     expect(markup.indexOf('>W<')).toBeLessThan(markup.indexOf('Visibility'));
   });
 
+  it('keeps layout enabled and disables other inspector blocks for hidden selections', () => {
+    const document = createInitialDocument();
+    const sectionNode = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!sectionNode || sectionNode.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const textNode = createTextNode('block', sectionNode.id);
+    textNode.name = 'Hidden Copy';
+    textNode.visible = false;
+    document.nodes[textNode.id] = textNode;
+    sectionNode.children.push(textNode.id);
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        {...makeBaseInspectorProps({
+          document,
+          node: textNode,
+        })}
+      />,
+    );
+
+    expect(markup).toContain('data-inspector-block="layout" data-inspector-disabled="false"');
+    expect(markup).toContain('data-inspector-block="content" data-inspector-disabled="true"');
+    expect(markup).toContain('data-inspector-block="text-style" data-inspector-disabled="true"');
+    expect(markup).toContain('data-inspector-block="design" data-inspector-disabled="true"');
+    expect(markup).toContain('pointer-events-none opacity-55');
+  });
+
   it('renders the dedicated multi-select inspector for multiple selected nodes', () => {
     const textNode = createTextNode('block', 'section_1');
     const buttonNode = createButtonTextNode('section_1');

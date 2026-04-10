@@ -61,6 +61,7 @@ import {
   setSiteSettings,
 } from '../api/pageApi';
 import { setActivePage } from '../editor/editorMutations';
+import { isNodeEffectivelyHidden } from '../model/selectors';
 import {
   appendHistoryEntry,
   applyHistoryEntry,
@@ -85,13 +86,13 @@ export function editorReducer(state: EditorState, action: EditorAction) {
   const selectedIds = state.selectedIds ?? (selectedId ? [selectedId] : []);
   switch (action.type) {
     case 'select':
-      return selectNode(state, action.id);
+      return applyHiddenSelectionConstraints(selectNode(state, action.id));
     case 'toggleSelect':
-      return toggleNodeSelection(state, action.id);
+      return applyHiddenSelectionConstraints(toggleNodeSelection(state, action.id));
     case 'clearSelection':
       return clearSelection(state);
     case 'selectMany':
-      return selectManyNodes(state, action.ids, action.mode);
+      return applyHiddenSelectionConstraints(selectManyNodes(state, action.ids, action.mode));
     case 'insertWrapper':
       return insertWrapper(state, action.role);
     case 'insertSectionTemplate':
@@ -165,7 +166,7 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       };
     }
     case 'setNodeVisibility':
-      return setNodeVisibility(state, action.id, action.value);
+      return applyHiddenSelectionConstraints(setNodeVisibility(state, action.id, action.value));
     case 'stickyEnabled':
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         updateStickyField(nextState, nodeId, { enabled: action.value }),
@@ -298,6 +299,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       );
     case 'importDocument':
       return importEditorDocument(state, action.document);
+    case 'setShowHidden':
+      return { ...state, ui: { ...state.ui, showHidden: action.value } };
     case 'setPreviewSticky':
       return { ...state, ui: { ...state.ui, previewSticky: action.value } };
     case 'setAnimationPreview':
@@ -401,7 +404,7 @@ export function editorReducer(state: EditorState, action: EditorAction) {
         document: setPageTopLevelWrapperPlacement(state.document, action.pageId, action.nodeId, action.placement),
       };
     case 'setTopLevelWrapperVisibility':
-      return {
+      return applyHiddenSelectionConstraints({
         ...state,
         document: setTopLevelWrapperVisibility(
           state.document,
@@ -410,7 +413,7 @@ export function editorReducer(state: EditorState, action: EditorAction) {
           action.visibility,
           action.pageIds,
         ),
-      };
+      });
     case 'setPageVisibility':
       return { ...state, document: setPageVisibility(state.document, action.pageId, action.visible) };
     case 'setPageViewTransition':
@@ -426,6 +429,29 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     default:
       return state;
   }
+}
+
+function constrainSelectionForHiddenNodes(state: EditorState, selectedIds: NodeId[]) {
+  if (selectedIds.length <= 1) {
+    return selectedIds;
+  }
+
+  const firstHiddenId = selectedIds.find((selectedId) =>
+    isNodeEffectivelyHidden(state.document, selectedId),
+  );
+  return firstHiddenId ? [firstHiddenId] : selectedIds;
+}
+
+function applyHiddenSelectionConstraints(state: EditorState) {
+  const selectedIds = constrainSelectionForHiddenNodes(state, state.selectedIds);
+  if (selectedIds === state.selectedIds) {
+    return state;
+  }
+  return {
+    ...state,
+    selectedId: selectedIds[0] ?? null,
+    selectedIds,
+  };
 }
 
 export function createHistoryState(): HistoryState {
@@ -588,6 +614,7 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
 function shouldTrackInHistory(action: EditorAction) {
   return (
     action.type !== 'select' &&
+    action.type !== 'setShowHidden' &&
     action.type !== 'setPreviewSticky' &&
     action.type !== 'setSpacerVisibility' &&
     action.type !== 'setShowGridLanes' &&

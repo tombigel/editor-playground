@@ -2,6 +2,7 @@ import {
   ArrowDownToLine,
   Bug,
   Eye,
+  Ghost,
   Grid3X3,
   Play,
   SwatchBook,
@@ -28,6 +29,7 @@ import {
 } from '../SettingsShared';
 
 type DisplaySettingsSectionProps = {
+  showHidden?: boolean;
   previewSticky: boolean;
   animationPreview: AnimationPreviewState;
   spacerVisibility: 'selected' | 'all';
@@ -40,6 +42,7 @@ type DisplaySettingsSectionProps = {
   darkTheme: EditorDarkTheme;
   resolvedTheme: ResolvedTheme;
   startupFocusedMode: FocusedMode;
+  onShowHiddenChange?: (value: boolean) => void;
   onPreviewStickyChange: (value: boolean) => void;
   onAnimationPreviewChange: (value: Partial<AnimationPreviewState>) => void;
   onSpacerVisibilityChange: (value: 'selected' | 'all') => void;
@@ -54,6 +57,7 @@ type DisplaySettingsSectionProps = {
 };
 
 export function DisplaySettingsSection({
+  showHidden = true,
   previewSticky,
   animationPreview,
   spacerVisibility,
@@ -66,6 +70,7 @@ export function DisplaySettingsSection({
   darkTheme,
   resolvedTheme,
   startupFocusedMode,
+  onShowHiddenChange = () => undefined,
   onPreviewStickyChange,
   onAnimationPreviewChange,
   onSpacerVisibilityChange,
@@ -118,6 +123,14 @@ export function DisplaySettingsSection({
       <FocusedModeStartupRow
         value={startupFocusedMode}
         onChange={onStartupFocusedModeChange}
+      />
+      <SettingRow
+        icon={Ghost}
+        title="Show Hidden"
+        description="Shows hidden components and wrappers as stage ghosts."
+        checked={showHidden}
+        onCheckedChange={onShowHiddenChange}
+        tooltip="On shows hidden nodes as ghosts. Off hides them until selected from Components."
       />
       <SettingRow
         icon={Eye}

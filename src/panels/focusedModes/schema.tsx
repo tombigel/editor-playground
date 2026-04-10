@@ -38,6 +38,33 @@ export function resolveFocusedModeBlocks(
   const node = context.node && context.node.contentType !== 'site' ? context.node : null;
   const headerAction = createHeaderAction(mode, options.onExitFocusedMode);
 
+  if (context.hiddenSelection && mode !== 'layout') {
+    return [
+      {
+        id: `${mode}-hidden-selection`,
+        bucket: 'behavior',
+        align: 'stretch',
+        layout: 'custom',
+        sections: [],
+        render: () => (
+          <InspectorSectionCard
+            title={getFocusedModeLabel(mode)}
+            headerContent={
+              options.headerContent ?? <div className="editor-text-strong text-sm font-medium">{getFocusedModeLabel(mode)}</div>
+            }
+            headerAction={headerAction}
+            contentClassName="px-3 py-3"
+          >
+            <div className="editor-text-strong text-xs font-medium">Hidden components are layout-only</div>
+            <div className="editor-text-muted mt-1 text-xs leading-5">
+              Unhide the selected component to edit its {mode} controls.
+            </div>
+          </InspectorSectionCard>
+        ),
+      },
+    ];
+  }
+
   if (mode === 'sticky' && node) {
     return [
       createFocusedModeBlock('sticky-behavior', 'behavior', () => (

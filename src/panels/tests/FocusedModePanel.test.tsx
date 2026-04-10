@@ -193,6 +193,26 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('space-y-2.5 px-3 pt-1.5 pb-5');
   });
 
+  it('renders a layout-only message for hidden non-layout focused modes', () => {
+    const { document, textNode, baseProps } = createInspectorProps();
+    textNode.visible = false;
+
+    const markup = renderToStaticMarkup(
+      <FocusedModePanel
+        {...baseProps}
+        document={document}
+        node={textNode}
+        focusedMode="content"
+        mode="content"
+        onExitFocusedMode={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('Hidden components are layout-only');
+    expect(markup).toContain('Unhide the selected component to edit its content controls.');
+    expect(markup).not.toContain('>HTML tag<');
+  });
+
   it('renders sticky-focused controls for multiple selected nodes', () => {
     const { document, textNode, baseProps } = createInspectorProps();
     const secondTextNode = Object.values(document.nodes).find(

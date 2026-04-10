@@ -166,6 +166,7 @@ export function App() {
       togglePagesPanel: () => panels.togglePagesPanel(),
     },
     viewState: {
+      setShowHidden: (value) => dispatch({ type: "setShowHidden", value }),
       setPreviewSticky: (value) => dispatch({ type: "setPreviewSticky", value }),
       setAnimationPreview: (value) =>
         dispatch({ type: "setAnimationPreview", value }),
@@ -227,9 +228,11 @@ export function App() {
 
   useEditorKeyboardShortcuts({
     document: state.document,
+    activePageId: state.activePageId,
 		selectedId: state.selectedId,
 		selectedIds: state.selectedIds,
     ui: {
+      showHidden: state.ui.showHidden,
       previewSticky: state.ui.previewSticky,
       animationPreview: state.ui.animationPreview,
       spacerVisibility: state.ui.spacerVisibility,

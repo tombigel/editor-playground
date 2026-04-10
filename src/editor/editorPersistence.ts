@@ -93,6 +93,7 @@ function normalizePersistedState(parsed: EditorState): EditorState | null {
     selectedIds,
     pendingRoleSwap: null,
     ui: {
+      showHidden: parsed.ui?.showHidden ?? true,
       previewSticky: parsed.ui?.previewSticky ?? true,
       animationPreview: parsed.ui?.animationPreview ?? {
         enabled: false,
@@ -191,6 +192,7 @@ export function createFactoryResetState(ui?: EditorState['ui']): EditorState {
 
 function createDefaultUiState(): EditorState['ui'] {
   return {
+    showHidden: true,
     previewSticky: true,
     animationPreview: {
       enabled: false,

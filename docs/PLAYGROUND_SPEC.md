@@ -162,6 +162,13 @@ Links support `linkType: 'page'` in addition to `'anchor'` and `'external'`:
 - Editor follow-link popups allow clicking links to navigate between pages
 - Broken page links (missing target page) are flagged by validation
 
+Hidden-stage semantics:
+
+- Only authored hidden visibility participates in hidden ghosts:
+  - regular nodes use their `visible` / `hidden` flag
+  - top-level `section`, `header`, and `footer` wrappers use the authored top-level wrapper visibility mode, including `Hidden`
+- Top-level wrappers that are merely absent from the active page because of `Current page` or `Custom pages` targeting are not treated as hidden ghosts on that page
+
 ### Top-level wrapper visibility
 
 Eligible top-level wrappers are the site-root children with role `section`, `header`, or `footer`.
@@ -539,6 +546,7 @@ Validation during import and persistence restore checks document graph integrity
 - `src/site/siteExport.tsx` renders body HTML, generated CSS, and a full HTML document that links the generated CSS file.
 - Rendered HTML adds Google Fonts preconnect and stylesheet links when the document authors Google-backed families.
 - Rendered site export does not depend on browser measurement APIs.
+- Hidden nodes are omitted from site output entirely; export does not serialize them with `hidden`, `visibility:hidden`, or `display:none`.
 
 ## Units
 
@@ -1157,7 +1165,8 @@ Language behavior:
 
 - The settings panel is centered, scrollable, and uses sticky left anchor links for `UI`, `Pages`, `Defaults`, `Fonts`, `Import / Export`, `Advanced`, and `Shortcuts`.
 - Left-rail primary entries expose Components and Pages directly below the insert tools.
-- Left-rail quick actions expose sticky preview, spacer visibility, and snap-to-guides.
+- Left-rail quick actions expose hidden ghosts, sticky preview, spacer visibility, and snap-to-guides.
+- `Show Hidden` is enabled by default and is also exposed in Settings → `UI`.
 - The top bar uses a single-row application layout:
   - the left side uses a traditional menubar with `Settings`, `Edit`, `View`, and `Help`
   - the current-page switcher sits centered in the same row and uses the shared page-switcher select component
@@ -1237,6 +1246,9 @@ State persistence:
 - Intrinsic-height leaf nodes align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy.
 - Auto-height wrapper sizing in the stage is measured from the inner content box so dragging or repositioning selected nodes does not inflate surrounding header or section height through wrapper borders.
 - Button focus states use a stronger visible ring across editor controls.
+- When `Show Hidden` is enabled, hidden nodes render on stage as editor-only ghosts with reduced opacity and a faint diagonal-stripe overlay while preserving their authored layout footprint.
+- When `Show Hidden` is disabled, hidden nodes stay out of normal stage navigation and pointer targeting, but selecting them from Components reveals the selected hidden chain as ghosts for context.
+- Hidden nodes that are not ghost-visible still participate in editor layout with `visibility:hidden` semantics so sibling geometry stays stable.
 
 ### Multi-selection
 
@@ -1246,6 +1258,7 @@ Selection rules:
 - The first selected node remains the primary or master selection unless removed.
 - A plain second click on an already-selected node in a multi-selection collapses the selection back to just that node.
 - Top-level structural wrappers with role `section`, `header`, or `footer` are single-select only and are removed from any attempted multi-selection set.
+- Hidden selections are also single-select only; if a hidden node enters the selection, the selection collapses to that hidden node.
 
 Supported operations:
 
@@ -1275,6 +1288,7 @@ Single-node inspector:
 - Standalone block text keeps its editable HTML tag in `Content`; `Text style` remains typography-only.
 - Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
 - Link-enabled standalone text nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
+- Hidden selections keep `Layout` editable, including visibility controls, and disable all other inspector blocks.
 
 Multi-select inspector:
 
@@ -1309,6 +1323,7 @@ Naming and title behavior:
 - The floating focused-mode panel reuses the same inspector card chrome as the source section, fills the leading slot with component name plus type, and replaces the header action with the close button.
 - Focused `Design` mode combines `Text style` and `Design` into one floating card for text, link, and button nodes; wrappers and images keep their existing `Design` card only.
 - Sticky focused mode can render the shared multi-select sticky card when multiple nodes are selected.
+- Hidden selections are layout-only in focused modes as well; non-layout focused modes show a message directing the user to unhide the node first.
 
 ### History, persistence, and reset
 
@@ -1369,6 +1384,7 @@ Naming and title behavior:
 
 - `src/editor/editorStore.ts` owns editor session state such as selection, panel UI flags, persistence keys, and undo-related app state usage.
 - Focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only and does not affect document semantics, sticky math, stage rendering, or site export behavior.
+- `showHidden` is editor-only UI state; it changes stage ghost rendering and selection affordances but does not change exported site output.
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal` / `none` for no focused mode.
 
 ## Text Type Picker

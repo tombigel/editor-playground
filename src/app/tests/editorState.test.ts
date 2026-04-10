@@ -92,6 +92,16 @@ describe('app/editorState', () => {
     expect(next.future).toHaveLength(0);
   });
 
+  it('setShowHidden toggles ui.showHidden outside undo history', () => {
+    const initial = createTestHistoryState();
+
+    const next = historyReducer(initial, { type: 'setShowHidden', value: false });
+
+    expect(next.present.ui.showHidden).toBe(false);
+    expect(next.past).toHaveLength(0);
+    expect(next.future).toHaveLength(0);
+  });
+
   it('coalesces resize streams into a single history entry when the resize ends', () => {
     let present = createInitialState();
     present = insertLeaf(present, 'text');
@@ -210,6 +220,42 @@ describe('app/editorState', () => {
     });
     expect(footerSelection.selectedId).toBe(textId);
     expect(footerSelection.selectedIds).toEqual([textId]);
+  });
+
+  it('collapses mixed visible and hidden selections to the hidden node', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const hiddenId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const visibleId = state.selectedId;
+
+    if (!hiddenId || !visibleId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    state = editorReducer(state, { type: 'setNodeVisibility', id: hiddenId, value: false });
+    const mixed = editorReducer(state, { type: 'toggleSelect', id: hiddenId });
+
+    expect(mixed.selectedId).toBe(hiddenId);
+    expect(mixed.selectedIds).toEqual([hiddenId]);
+  });
+
+  it('collapses an existing mixed selection when one selected node is hidden', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const firstId = state.selectedId;
+    state = insertLeaf(state, 'text');
+    const secondId = state.selectedId;
+
+    if (!firstId || !secondId) {
+      throw new Error('Expected inserted text nodes');
+    }
+
+    state = editorReducer(state, { type: 'toggleSelect', id: firstId });
+    const next = editorReducer(state, { type: 'setNodeVisibility', id: firstId, value: false });
+
+    expect(next.selectedId).toBe(firstId);
+    expect(next.selectedIds).toEqual([firstId]);
   });
 
   it('stores one history entry for a bulk multi-select edit', () => {

@@ -54,6 +54,8 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Palette');
     expect(markup).toContain('Accent');
     expect(markup).toContain('Startup mode');
+    expect(markup).toContain('Show Hidden');
+    expect(markup).toContain('Shows hidden components and wrappers as stage ghosts.');
     expect(markup).toContain('Animation preview');
     expect(markup).toContain('Pages');
     expect(markup).toContain('Fonts');

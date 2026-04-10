@@ -122,6 +122,7 @@ export type EditorAction =
   | { type: 'bulkEdit'; operations: BulkEditOperation[] }
   | { type: 'nudgeSelection'; deltaX: number; deltaY: number }
   | { type: 'importDocument'; document: DocumentModel }
+  | { type: 'setShowHidden'; value: boolean }
   | { type: 'setPreviewSticky'; value: boolean }
   | { type: 'setAnimationPreview'; value: Partial<AnimationPreviewState> }
   | { type: 'setSpacerVisibility'; value: 'selected' | 'all' }
@@ -183,6 +184,7 @@ export type HistoryState = {
 };
 
 export type ShortcutUiState = {
+  showHidden: boolean;
   previewSticky: boolean;
   animationPreview: AnimationPreviewState;
   spacerVisibility: 'selected' | 'all';
@@ -203,6 +205,7 @@ export type ShortcutExecutionHandlers = {
     togglePagesPanel: () => void;
   };
   viewState: {
+    setShowHidden: (value: boolean) => void;
     setPreviewSticky: (value: boolean) => void;
     setAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
     setSpacerVisibility: (value: 'selected' | 'all') => void;

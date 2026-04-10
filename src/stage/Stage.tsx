@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isSiteNode, isTextNode, type TextDocumentContent } from "../model/types";
+import { isNodeEffectivelyHidden } from "../model/selectors";
 import { getTopLevelSelectedIds } from "../editor/selection";
 import { formatNodeLabel } from "../render/nodePresentation";
 import { getNodeIcon } from "../render/nodeIcons";
@@ -68,6 +69,7 @@ export function Stage({
 	selectedId,
 	selectedIds = selectedId ? [selectedId] : [],
 	activePageId,
+	showHidden = true,
 	previewSticky,
 	animationPreview,
 	spacerVisibility,
@@ -231,6 +233,7 @@ export function Stage({
 		const isSticky = Boolean(node.sticky?.enabled);
 		setSingleSelectionOverlay({
 			nodeId: node.id,
+			isHidden: isNodeEffectivelyHidden(document, node.id),
 			label: formatNodeLabel(node),
 			icon: getNodeIcon(node),
 			isSticky,
@@ -509,6 +512,7 @@ export function Stage({
 				singleSelectionOverlay={singleSelectionOverlay}
 				multiSelectionBounds={multiSelectionBounds}
 				previewSticky={previewSticky}
+				showHidden={showHidden}
 				animationPreview={animationPreview}
 				spacerVisibility={spacerVisibility}
 				showGridLanes={showGridLanes}

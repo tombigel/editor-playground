@@ -4,6 +4,7 @@ import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../model/defaults';
 import type { PageId } from '../model/types/site';
 import { buildNodeDebugInfo } from '../editor/debugInfo';
+import { isNodeEffectivelyHidden } from '../model/selectors';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiSelectInspector } from './MultiSelectInspector';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
@@ -241,7 +242,18 @@ export function InspectorPanel({
     [showDebugInfo, selectedNodes, resolvedDocument],
   );
   const blocks = useMemo(
-    () => resolveInspectorBlocks({ document: resolvedDocument, node, actions, orderState, focusedMode, globalStickyElevation, showDebugInfo, debugInfo }),
+    () =>
+      resolveInspectorBlocks({
+        document: resolvedDocument,
+        node,
+        hiddenSelection: Boolean(node && node.contentType !== 'site' && isNodeEffectivelyHidden(resolvedDocument, node.id)),
+        actions,
+        orderState,
+        focusedMode,
+        globalStickyElevation,
+        showDebugInfo,
+        debugInfo,
+      }),
     [resolvedDocument, node, actions, orderState, focusedMode, globalStickyElevation, showDebugInfo, debugInfo],
   );
 

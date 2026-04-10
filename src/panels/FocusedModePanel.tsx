@@ -3,6 +3,7 @@ import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { PointerEventHandler } from 'react';
 import type { FocusedMode } from '../api/editorApi';
+import { isNodeEffectivelyHidden } from '../model/selectors';
 import { isSiteNode, isContainerNode, isLeafNode } from '../model/types';
 import { getFocusedModeLabel } from '../editor/focusedModes';
 import { createInitialDocument } from '../model/defaults';
@@ -180,6 +181,7 @@ export function FocusedModePanel({
     onSectionForward,
   };
   const title = node?.name ?? 'No component selected';
+  const hiddenSelection = Boolean(node && node.contentType !== 'site' && isNodeEffectivelyHidden(resolvedDocument, node.id));
   const roleLabel = node ? (isSiteNode(node) ? 'site' : (isContainerNode(node) || isLeafNode(node) ? node.subtype : null)) : null;
   const isMultiSticky = mode === 'sticky' && selectedNodes.length > 1;
   const modeLabel = getFocusedModeLabel(mode);
@@ -257,6 +259,7 @@ export function FocusedModePanel({
       document: resolvedDocument,
       activePageId,
       node,
+      hiddenSelection,
       actions,
       orderState,
       focusedMode,

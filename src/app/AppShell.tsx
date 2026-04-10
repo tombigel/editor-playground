@@ -11,7 +11,7 @@ import {
 	type PointerEvent as ReactPointerEvent,
 	type Ref,
 } from "react";
-import { Magnet, Play, ScanEye, Type } from "lucide-react";
+import { Ghost, Magnet, Play, ScanEye, Type } from "lucide-react";
 import type {
 	DocumentNode,
 	EditorState,
@@ -856,6 +856,17 @@ export function AppShell({
 										}
 									/>
 									<RailToggleButton
+										icon={Ghost}
+										pressed={state.ui.showHidden}
+										label="Show Hidden"
+										onClick={() =>
+											dispatch({
+												type: "setShowHidden",
+												value: !state.ui.showHidden,
+											})
+										}
+									/>
+									<RailToggleButton
 										icon={SpacerIcon}
 										pressed={state.ui.spacerVisibility === "all"}
 										label={
@@ -938,6 +949,7 @@ export function AppShell({
 							selectedId={state.selectedId}
 							selectedIds={state.selectedIds}
 							activePageId={state.activePageId}
+							showHidden={state.ui.showHidden}
 							previewSticky={state.ui.previewSticky}
 							animationPreview={state.ui.animationPreview}
 							spacerVisibility={state.ui.spacerVisibility}
@@ -1454,6 +1466,7 @@ export function AppShell({
 						<SettingsPanel
 							document={state.document}
 							documentJson={documentJson}
+							showHidden={state.ui.showHidden}
 							previewSticky={state.ui.previewSticky}
 							spacerVisibility={state.ui.spacerVisibility}
 							showGridLanes={state.ui.showGridLanes}
@@ -1475,6 +1488,9 @@ export function AppShell({
 							animationPreview={state.ui.animationPreview}
 							onAnimationPreviewChange={(value) =>
 								dispatch({ type: "setAnimationPreview", value })
+							}
+							onShowHiddenChange={(value) =>
+								dispatch({ type: "setShowHidden", value })
 							}
 							onPreviewStickyChange={(value) =>
 								dispatch({ type: "setPreviewSticky", value })

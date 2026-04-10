@@ -67,6 +67,7 @@ describe("stage/Stage e2e", () => {
 						(options.selectedId ? [options.selectedId] : []),
 					pendingRoleSwap: null,
 					ui: {
+						showHidden: true,
 						previewSticky: true,
 						spacerVisibility: "selected",
 						showGridLanes: false,

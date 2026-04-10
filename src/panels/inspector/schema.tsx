@@ -83,6 +83,7 @@ export function resolveInspectorBlocks(context: InspectorSectionContext): Resolv
     .map((definition) => ({
       id: definition.id,
       bucket: definition.bucket,
+      disabled: Boolean(context.hiddenSelection && definition.id !== 'summary' && definition.id !== 'layout'),
       title: definition.title,
       description: definition.description,
       align: definition.align ?? 'stretch',

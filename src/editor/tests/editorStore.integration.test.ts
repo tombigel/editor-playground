@@ -485,6 +485,7 @@ describe('editor/editorStore integration', () => {
           existingId: textId,
         },
         ui: {
+          showHidden: true,
           previewSticky: false,
           animationPreview: {
             enabled: false,
@@ -513,6 +514,7 @@ describe('editor/editorStore integration', () => {
     expect(loaded.selectedId).toBeNull();
     expect(loaded.pendingRoleSwap).toBeNull();
     expect(loaded.ui).toEqual({
+      showHidden: true,
       previewSticky: false,
       animationPreview: {
         enabled: false,
@@ -779,6 +781,7 @@ describe('editor/editorStore integration', () => {
     const state = createInitialState();
     const customSnapSettings = { ...DEFAULT_SNAP_SETTINGS, guideSnap: { ...DEFAULT_SNAP_SETTINGS.guideSnap, enabled: false } };
     const reset = createFactoryResetState({
+      showHidden: true,
       previewSticky: false,
       animationPreview: {
         enabled: false,
@@ -807,6 +810,7 @@ describe('editor/editorStore integration', () => {
     expect(reset.selectedId).toBeNull();
     expect(reset.pendingRoleSwap).toBeNull();
     expect(reset.ui).toEqual({
+      showHidden: true,
       previewSticky: false,
       animationPreview: {
         enabled: false,

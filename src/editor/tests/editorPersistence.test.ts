@@ -390,12 +390,14 @@ describe('editor/editorPersistence', () => {
 
     it('uses default UI when no ui argument provided', () => {
       const reset = createFactoryResetState();
+      expect(reset.ui.showHidden).toBe(true);
       expect(reset.ui.themeMode).toBe('auto');
       expect(reset.ui.previewSticky).toBe(true);
     });
 
     it('preserves provided UI settings but clears temporaryInspectorOpen', () => {
       const reset = createFactoryResetState({
+        showHidden: true,
         previewSticky: false,
         animationPreview: {
           enabled: false,
@@ -480,6 +482,7 @@ describe('editor/editorPersistence', () => {
           selectedIds: [],
           pendingRoleSwap: null,
           ui: {
+            showHidden: true,
             previewSticky: true,
             spacerVisibility: 'selected',
             showGridLanes: false,
@@ -550,6 +553,7 @@ describe('editor/editorPersistence', () => {
       );
 
       const loaded = loadPersistedState();
+      expect(loaded.ui.showHidden).toBe(true);
       expect(loaded.ui.previewSticky).toBe(true);
       expect(loaded.ui.snapSettings.guideSnap.enabled).toBe(true);
       expect(loaded.ui.snapSettings.guideSnap.maxSpeedPxPerSecond).toBe(1200);

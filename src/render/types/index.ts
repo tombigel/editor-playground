@@ -26,6 +26,12 @@ export type RenderLeafNode = TextNode | MediaNode;
 export type RenderExportableNode = Exclude<DocumentNode, { contentType: 'site' }>;
 export type RenderMeasuredNodeSizes = StickyMeasuredNodeSizes;
 
+export type RenderHiddenState = {
+  isEffectivelyHidden: boolean;
+  isGhostVisible: boolean;
+  isHiddenSelected: boolean;
+};
+
 export type MeshLayout = {
   columnTemplate: string;
   rowTemplate: string;
@@ -48,6 +54,7 @@ export type RenderWrapperTag = 'div' | 'section' | 'header' | 'footer';
 export type RenderLeafPlanNode = {
   kind: 'leaf';
   node: RenderLeafNode;
+  hiddenState: RenderHiddenState;
   nodeClassName: string;
   meshPlacement?: CSSProperties;
   selfSticky: boolean;
@@ -63,6 +70,7 @@ export type RenderLeafPlanNode = {
 export type RenderWrapperPlanNode = {
   kind: 'wrapper';
   node: ContainerNode;
+  hiddenState: RenderHiddenState;
   isTopLevel: boolean;
   tag: RenderWrapperTag;
   nodeClassName: string;
@@ -89,4 +97,3 @@ export type RenderRootPlan = {
   footer: RenderWrapperPlanNode | null;
   main: RenderWrapperPlanNode[];
 };
-
