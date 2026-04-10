@@ -79,15 +79,16 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-18` | [Project management](#project-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-19` | [Assets management](#assets-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-20` | [CMS](#cms) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
-| `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `⚪ Not started` | Shared | - |
+| `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `✅ Done` | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
 | `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `⚪ Not started` | Shared | - |
 | `RI-31` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | `⚪ Not started` | Shared | Dep: `RI-07` |
 | `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `🟢 In progress` | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-34` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: Phase 1.8 (closed). See `TEXT_COMPONENT_PHASE_2_0_BRIEF.md` |
-| `RI-35` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | `⚪ Not started` | LLM | 6 components bypass existing tokens |
-| `RI-36` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | `⚪ Not started` | LLM | 15 occurrences across 8 files |
-| `RI-37` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | `⚪ Not started` | LLM | Deferred from convergence audit |
+| `RI-35` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | `✅ Done` | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
+| `RI-36` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | `✅ Done` | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
+| `RI-37` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | `✅ Done` | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
 | `RI-38` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | `🟢 In progress` | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
+| `RI-39` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | `✅ Done` | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
 | `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
 | `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
 | `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
@@ -148,6 +149,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-36` dark tooltip deduplication — identical tooltip class string duplicated 15 times across 8 files; extract shared utility
 - `RI-37` Wave F CSS cleanup — deferred from design-system convergence audit; delete superseded CSS after all migrations land
 - `RI-38` interaction pattern unification — escape key, click-outside, pointer drag, popover positioning, and focus management each have multiple ad-hoc implementations; extract shared hooks and composite design system components
+- `RI-39` hidden ghost mode — hidden nodes (and hidden-targeted top-level wrappers) should render as semi-transparent ghost overlays in the editor stage so authors can see and select hidden content without cluttering the live layout; selection, inspector, and export should handle hidden nodes consistently
 
 ## Structured Roadmap
 
@@ -262,6 +264,15 @@ None yet.
 - `Why it matters`: Variable fonts affect typography quality, performance, expressive control, and future responsive typography behavior.
 - `Current state`: Font metadata and stylesheet generation already carry variable-font concepts, and the spec notes variable fonts are hidden by default while static-font flows are being debugged.
 - `Next move`: Decide whether the first milestone is simply exposing supported variable families, or also exposing axis-aware controls.
+
+##### Hidden ghost mode for hidden nodes
+
+- `Type`: `UX`
+- `Owner lane`: `Shared`
+- `Status`: `Done`
+- `Source`: `RI-39`
+- `Why it matters`: Authors need to see and edit hidden content without being blocked by its hidden state, and without hidden nodes disappearing from stage layout or accidentally affecting sibling geometry.
+- `Current state`: **Complete** — hidden nodes (and top-level wrappers with `Hidden` visibility) render as semi-transparent ghosts with a diagonal-stripe overlay on stage. Selection collapses to a single hidden node and restricts the inspector to layout-only controls. `showHidden` setting is persisted and exposed in Settings → UI and the left-rail quick actions. Export omits hidden nodes entirely. Delivered sha: 1318f22.
 
 #### Feature
 
@@ -384,21 +395,20 @@ None yet.
 
 - `Type`: `Refactor`
 - `Owner lane`: `LLM`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-35`
 - `Why it matters`: Six base UI primitives use hardcoded Tailwind slate classes despite existing CSS tokens in `variables.css`, breaking light/dark theme parity.
-- `Current state`: `switch.tsx` (`bg-slate-300`), `slider.tsx` (`bg-slate-200`), `select.tsx` (`focus:bg-slate-100`), `input.tsx` and `textarea.tsx` (`placeholder:text-slate-400`), `dialog.tsx` (`bg-slate-950/30`) all bypass existing tokens like `--editor-switch-background`, `--editor-slider-track-background`, `--editor-select-highlight-background`, `--editor-input-placeholder`. Dialog overlay needs a new token.
-- `Next move`: Add `--editor-dialog-overlay-background` token, then migrate all six components to use CSS variables.
+- `Current state`: **Complete** — `--editor-dialog-overlay-background` token added to `variables.css` (light + dark). All six components migrated: `switch.tsx`, `slider.tsx`, `select.tsx`, `input.tsx`, `textarea.tsx`, `dialog.tsx`.
 
 ##### Dark tooltip deduplication
 
 - `Type`: `Refactor`
 - `Owner lane`: `LLM`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-36`
 - `Why it matters`: The identical dark tooltip class string (`rounded-md border-slate-800 bg-slate-900 px-2 py-1 text-center text-[11px] text-white`) is duplicated 15 times across 8 files, making it fragile and inconsistent to update.
-- `Current state`: Duplicated in `options-selector.tsx`, `RichTextEditOverlay.tsx` (6x), `ManageFontsPanel.tsx`, `MultiSelectInspector.tsx`, `shared.tsx`, `CommonSections.tsx`, `InteractionControls.tsx` (3x), `MiscDemos.tsx`.
-- `Next move`: Add dark tooltip tokens to `variables.css`, create a shared utility class, and replace all 15 occurrences.
+- `Current state`: **Complete** — `DARK_TOOLTIP_CLASS` constant extracted to `src/lib/utils` and all 15 occurrences replaced. See also `RI-38` current state.
+- `Delivered sha`: 9f8f232
 
 ##### Interaction pattern unification
 
@@ -451,11 +461,11 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-28`
 - `Why it matters`: A richer text surface can unlock more realistic content authoring without forcing authors to decompose every text pattern into many separate nodes.
-- `Current state`: The current text model supports text content, semantic tags, and typography/design controls, but not a richer inline-styled text authoring surface.
-- `Next review question`: Should the first version optimize for markdown-backed authoring, rich inline editing UX, or a model that can support both? if we want fonts we need html support, md is simple but doesn't cover all the bases.
+- `Current state`: **Complete** — Slate-based rich text editor built through phases 1.x–1.8. Supports inline styling, semantic tags, code blocks, lists, links, markdown import, and a draggable on-stage toolbar. The canonical `TextNode` with `subtype: 'rich'` and the Slate-subset content model are in place. Phase 2.0 (on-stage editing for block text, lists, code) continues as `RI-34`.
+- `Delivered sha`: d5b4f66 (phase 1.8 closeout)
 
 #### Platform
 
@@ -526,11 +536,10 @@ None yet.
 
 - `Type`: `Refactor`
 - `Owner lane`: `LLM`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-37`
 - `Why it matters`: After the design-system convergence audit (Waves A-E, now archived), superseded CSS remains in the codebase.
-- `Current state`: Waves A-E complete. Follow-ups (insert rail composite, searchable select compact mode, color picker upstream) documented in the archived audit. Wave F was explicitly deferred.
-- `Next move`: After `RI-35` and `RI-36` land, audit and delete remaining dead CSS.
+- `Current state`: **Complete** — `.editor-inline-field-trigger-static` rule and its 4 `:is()` selector references deleted from `editor-chrome.css`. Note: `.editor-inline-field-invalid` was confirmed live (used in `SizeFields.tsx`) and retained. Structural relocation of `.editor-template-*` / `.editor-insert-*` to component-local CSS is deferred as a separate judgment call.
 
 #### Infra
 
@@ -658,6 +667,7 @@ These milestones are closed. Their briefs and tasklists are archived in `archive
 | Animate API enhancements | 2026-03 | Interact/motion-presets integration, all defects fixed. |
 | Multiple pages Wave 1-2 | 2026-04 | Page model, hierarchy, editor UI, preview mode, export with configurable output structure. |
 | Design-system convergence audit | 2026-04 | Waves A-E complete (29 surfaces audited, 24 done). Follow-ups tracked in `RI-35`-`RI-38`. |
+| Hidden ghost mode (`RI-39`) | 2026-04 | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated. Closed at 1318f22. |
 
 ## Implementation Pre-Plan
 

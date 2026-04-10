@@ -798,10 +798,6 @@
   color: var(--editor-utility-text-strong);
 }
 
-.editor-inline-field-trigger-static {
-  color: color-mix(in srgb, var(--editor-text) 88%, var(--editor-utility-text-strong));
-}
-
 .value-with-unit-segment-static {
   color: color-mix(in srgb, var(--editor-text) 88%, var(--editor-utility-text-strong));
 }
@@ -962,9 +958,9 @@
   border-width: 2px;
 }
 
-:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static),
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger),
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static),
-:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger),
 :is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static) {
   box-shadow: inset 2px 0 0 var(--editor-input-border);
 }
@@ -976,9 +972,9 @@
   font-size: 12px;
 }
 
-:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static, [data-ui='select-trigger']),
+:is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .editor-inline-field :is(.editor-inline-field-trigger, [data-ui='select-trigger']),
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static, [data-ui='select-trigger']),
-:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger, .editor-inline-field-trigger-static, [data-ui='select-trigger']),
+:is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .editor-inline-field :is(.editor-inline-field-trigger, [data-ui='select-trigger']),
 :is(body, .editor-shell)[data-editor-theme='dark'][data-editor-dark-theme='ink'] .value-with-unit :is(.value-with-unit-segment, .value-with-unit-segment-static, [data-ui='select-trigger']) {
   font-size: 11px;
 }

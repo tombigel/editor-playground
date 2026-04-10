@@ -53,7 +53,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         aria-modal="true"
         data-backdrop-variant={backdropVariant}
         className={cn(
-          'ui-dialog-popover fixed inset-0 grid h-screen w-screen max-h-none max-w-none place-items-center bg-slate-950/30 p-6 backdrop-blur-[1px]',
+          'ui-dialog-popover fixed inset-0 grid h-screen w-screen max-h-none max-w-none place-items-center bg-[var(--editor-dialog-overlay-background)] p-6 backdrop-blur-[1px]',
           surfaceClassName,
         )}
         onMouseDown={(event) => {

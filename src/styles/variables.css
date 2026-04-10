@@ -84,6 +84,7 @@
   --editor-accent-foreground: #f8fafc;
   --editor-accent-foreground-muted: rgba(255, 255, 255, 0.68);
   --editor-accent-shadow: 0 2px 8px color-mix(in srgb, var(--editor-accent) 24%, transparent);
+  --editor-dialog-overlay-background: rgba(15, 23, 42, 0.3);
   --editor-focus-ring: color-mix(in srgb, var(--editor-accent) 20%, transparent);
   --editor-focus-ring-strong: color-mix(in srgb, var(--editor-accent) 40%, transparent);
   --editor-focus-ring-offset: var(--editor-surface-background);
@@ -358,6 +359,7 @@ body[data-editor-theme='dark'] {
     var(--editor-accent) var(--editor-dark-tint-strong),
     var(--editor-dark-surface-border-base)
   );
+  --editor-dialog-overlay-background: rgba(0, 0, 0, 0.4);
   --editor-scrollbar-track: color-mix(in srgb, var(--editor-accent) 10%, transparent);
   --editor-scrollbar-thumb: color-mix(in srgb, var(--editor-accent) 36%, transparent);
   --editor-scrollbar-thumb-hover: color-mix(in srgb, var(--editor-accent) 58%, transparent);
