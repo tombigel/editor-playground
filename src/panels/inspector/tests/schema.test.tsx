@@ -127,7 +127,7 @@ describe('panels/inspector/schema', () => {
     const buttonNode = createButtonTextNode(section.id);
 
     expect(resolveInspectorConfigKey(buttonNode)).toBe('button');
-    expect(resolveInspectorConfigKey(linkNode ?? null)).toBe('link');
+    expect(resolveInspectorConfigKey(linkNode ?? null)).toBe('text');
     expect(resolveInspectorConfigKey(imageNode ?? null)).toBe('image');
     expect(resolveInspectorConfigKey(siteNode)).toBe('site');
   });

@@ -4,6 +4,7 @@ import { createMediaNode, createButtonTextNode, createTextNode, createLinkTextNo
 import { createPage } from '../../model/pageDefaults';
 import {
   createTextDocumentContent,
+  createTextDocumentFromText,
   createTextDocumentFromCode,
   getSingleListBlockContent,
   getTextContent,
@@ -226,18 +227,22 @@ describe('api/documentApi', () => {
     const section = Object.values(document.nodes).find(
       (node) => node.contentType === 'container' && node.subtype === 'section',
     );
+    const image = Object.values(document.nodes).find(
+      (node) => node.contentType === 'media' && node.subtype === 'image',
+    );
     const linkId = Object.keys(document.nodes).find(
       (nodeId) => document.nodes[nodeId]?.contentType === 'text' && (document.nodes[nodeId] as { link?: unknown }).link != null,
     );
-    if (!section || section.contentType !== 'container' || !linkId) {
-      throw new Error('Expected section wrapper and link node');
+    if (!section || section.contentType !== 'container' || !linkId || !image || image.contentType !== 'media') {
+      throw new Error('Expected section wrapper, link node, and image node');
     }
 
     const button = createButtonTextNode(section.id);
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
-    const withLinkType = setTextNodeContentDoc(document, linkId, 'linkType', 'anchor');
+    const withImageLink = setTextNodeContentDoc(document, image.id, 'linkEnabled', 'true');
+    const withLinkType = setTextNodeContentDoc(withImageLink, linkId, 'linkType', 'anchor');
     const withLinkAnchor = setTextNodeContentDoc(withLinkType, linkId, 'anchorTargetId', section.id);
     const withLinkHref = setTextNodeContentDoc(withLinkAnchor, linkId, 'href', 'https://example.com/docs');
     const withLinkTarget = setTextNodeContentDoc(withLinkHref, linkId, 'openInNewTab', 'true');
@@ -245,15 +250,23 @@ describe('api/documentApi', () => {
     const withButtonAnchor = setTextNodeContentDoc(withButtonType, button.id, 'anchorTargetId', section.id);
     const withButtonHref = setTextNodeContentDoc(withButtonAnchor, button.id, 'href', 'https://example.com/start');
     const withButtonTarget = setTextNodeContentDoc(withButtonHref, button.id, 'openInNewTab', 'true');
+    const withImageType = setTextNodeContentDoc(withButtonTarget, image.id, 'linkType', 'anchor');
+    const withImageAnchor = setTextNodeContentDoc(withImageType, image.id, 'anchorTargetId', section.id);
+    const withImageHref = setTextNodeContentDoc(withImageAnchor, image.id, 'href', 'https://example.com/gallery');
+    const withImageTarget = setTextNodeContentDoc(withImageHref, image.id, 'openInNewTab', 'true');
 
-    const linkNode = withButtonTarget.nodes[linkId];
-    const buttonNode = withButtonTarget.nodes[button.id];
+    const linkNode = withImageTarget.nodes[linkId];
+    const buttonNode = withImageTarget.nodes[button.id];
+    const imageNode = withImageTarget.nodes[image.id];
 
     if (linkNode.contentType !== 'text' || linkNode.link == null) {
       throw new Error('Expected link node');
     }
     if (buttonNode.contentType !== 'text' || buttonNode.subtype !== 'block') {
       throw new Error('Expected button node');
+    }
+    if (imageNode.contentType !== 'media' || imageNode.link == null) {
+      throw new Error('Expected image node');
     }
 
     expect(linkNode.link?.linkType).toBe('anchor');
@@ -264,6 +277,10 @@ describe('api/documentApi', () => {
     expect(buttonNode.link?.anchorTargetId).toBe(section.id);
     expect(buttonNode.link?.href).toBe('https://example.com/start');
     expect(buttonNode.link?.openInNewTab).toBe(true);
+    expect(imageNode.link?.linkType).toBe('anchor');
+    expect(imageNode.link?.anchorTargetId).toBe(section.id);
+    expect(imageNode.link?.href).toBe('https://example.com/gallery');
+    expect(imageNode.link?.openInNewTab).toBe(true);
   });
 
   it('updates page-link target fields for links and buttons through API helpers', () => {
@@ -271,11 +288,14 @@ describe('api/documentApi', () => {
     const section = Object.values(document.nodes).find(
       (node) => node.contentType === 'container' && node.subtype === 'section',
     );
+    const image = Object.values(document.nodes).find(
+      (node) => node.contentType === 'media' && node.subtype === 'image',
+    );
     const linkId = Object.keys(document.nodes).find(
       (nodeId) => document.nodes[nodeId]?.contentType === 'text' && (document.nodes[nodeId] as { link?: unknown }).link != null,
     );
-    if (!section || section.contentType !== 'container' || !linkId) {
-      throw new Error('Expected section wrapper and link node');
+    if (!section || section.contentType !== 'container' || !linkId || !image || image.contentType !== 'media') {
+      throw new Error('Expected section wrapper, link node, and image node');
     }
 
     const aboutPage = createPage({ displayName: 'About', slug: 'about' });
@@ -284,22 +304,30 @@ describe('api/documentApi', () => {
     document.nodes[button.id] = button;
     document.nodes[section.id].children.push(button.id);
 
-    const withLinkType = setTextNodeContentDoc(document, linkId, 'linkType', 'page');
+    const withImageLink = setTextNodeContentDoc(document, image.id, 'linkEnabled', 'true');
+    const withLinkType = setTextNodeContentDoc(withImageLink, linkId, 'linkType', 'page');
     const withLinkTarget = setTextNodeContentDoc(withLinkType, linkId, 'targetPageId', aboutPage.id);
     const withLinkAnchor = setTextNodeContentDoc(withLinkTarget, linkId, 'pageAnchorId', section.id);
     const withButtonType = setTextNodeContentDoc(withLinkAnchor, button.id, 'linkType', 'page');
     const withButtonTarget = setTextNodeContentDoc(withButtonType, button.id, 'targetPageId', aboutPage.id);
     const withButtonAnchor = setTextNodeContentDoc(withButtonTarget, button.id, 'pageAnchorId', section.id);
-    const withLinkReset = setTextNodeContentDoc(withButtonAnchor, linkId, 'linkType', 'external');
+    const withImageType = setTextNodeContentDoc(withButtonAnchor, image.id, 'linkType', 'page');
+    const withImageTarget = setTextNodeContentDoc(withImageType, image.id, 'targetPageId', aboutPage.id);
+    const withImageAnchor = setTextNodeContentDoc(withImageTarget, image.id, 'pageAnchorId', section.id);
+    const withLinkReset = setTextNodeContentDoc(withImageAnchor, linkId, 'linkType', 'external');
 
     const linkNode = withLinkReset.nodes[linkId];
     const buttonNode = withLinkReset.nodes[button.id];
+    const imageNode = withLinkReset.nodes[image.id];
 
     if (linkNode.contentType !== 'text' || linkNode.link == null) {
       throw new Error('Expected link node');
     }
     if (buttonNode.contentType !== 'text' || buttonNode.subtype !== 'block' || buttonNode.link == null) {
       throw new Error('Expected button node');
+    }
+    if (imageNode.contentType !== 'media' || imageNode.link == null) {
+      throw new Error('Expected image node');
     }
 
     expect(linkNode.link.linkType).toBe('external');
@@ -308,6 +336,56 @@ describe('api/documentApi', () => {
     expect(buttonNode.link.linkType).toBe('page');
     expect(buttonNode.link.targetPageId).toBe(aboutPage.id);
     expect(buttonNode.link.pageAnchorId).toBe(section.id);
+    expect(imageNode.link.linkType).toBe('page');
+    expect(imageNode.link.targetPageId).toBe(aboutPage.id);
+    expect(imageNode.link.pageAnchorId).toBe(section.id);
+  });
+
+  it('toggles link enablement for block text and images through the API', () => {
+    const document = createInitialDocument();
+    const textNode = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.subtype === 'block' && node.link == null,
+    );
+    const imageNode = Object.values(document.nodes).find(
+      (node) => node.contentType === 'media' && node.subtype === 'image',
+    );
+
+    if (!textNode || textNode.contentType !== 'text' || !imageNode || imageNode.contentType !== 'media') {
+      throw new Error('Expected block text node and image node');
+    }
+
+    const withTextLink = setTextNodeContentDoc(document, textNode.id, 'linkEnabled', 'true');
+    const withImageLink = setTextNodeContentDoc(withTextLink, imageNode.id, 'linkEnabled', 'true');
+    const withoutTextLink = setTextNodeContentDoc(withImageLink, textNode.id, 'linkEnabled', '');
+    const withoutImageLink = setTextNodeContentDoc(withoutTextLink, imageNode.id, 'linkEnabled', '');
+
+    expect((withTextLink.nodes[textNode.id] as typeof textNode).link).toMatchObject({ linkType: 'anchor', href: '#' });
+    expect((withImageLink.nodes[imageNode.id] as typeof imageNode).link).toMatchObject({ linkType: 'anchor', href: '#' });
+    expect((withoutTextLink.nodes[textNode.id] as typeof textNode).link).toBeUndefined();
+    expect((withoutImageLink.nodes[imageNode.id] as typeof imageNode).link).toBeUndefined();
+  });
+
+  it('preserves div block semantics when editing plain text content', () => {
+    const document = createInitialDocument();
+    const text = createTextNode('block', 'section_1');
+    text.htmlTag = 'div';
+    text.content = createTextDocumentFromText('Original', { type: 'div' });
+
+    const next = setTextNodeContentDoc({
+      ...document,
+      nodes: {
+        ...document.nodes,
+        [text.id]: text,
+      },
+    }, text.id, 'content', 'Updated');
+    const updated = next.nodes[text.id];
+
+    if (updated.contentType !== 'text' || updated.subtype !== 'block') {
+      throw new Error('Expected block text node');
+    }
+
+    expect(updated.htmlTag).toBe('div');
+    expect(updated.content.blocks[0]).toMatchObject({ type: 'div', children: [{ text: 'Updated' }] });
   });
 
   it('converts block text to rich through the explicit text conversion API', () => {

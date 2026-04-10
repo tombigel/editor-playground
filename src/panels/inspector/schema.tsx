@@ -45,9 +45,6 @@ export function resolveInspectorConfigKey(node: InspectorNode | null): Inspector
     if (node.link !== undefined && node.style?.background !== undefined) {
       return 'button';
     }
-    if (node.link !== undefined) {
-      return 'link';
-    }
     return 'text';
   }
   if (isMediaNode(node)) {

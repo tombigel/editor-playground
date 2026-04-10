@@ -6,9 +6,10 @@ import type { ImageInspectorNode, InspectorBlockDefinition, InspectorNode, Inspe
 
 const imageContentSection: InspectorSectionDefinition = {
   id: 'image-content',
-  render: ({ node, actions, focusedMode }) =>
+  render: ({ document, node, actions, focusedMode }) =>
     isImageNode(node) ? (
       <ImageContentSection
+        document={document}
         node={node}
         onTextChange={actions.onTextChange}
         focusedMode={focusedMode}

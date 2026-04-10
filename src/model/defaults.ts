@@ -4,6 +4,7 @@ export { createDefaultFooter, createDefaultHeader } from './defaultChrome';
 export {
   createButtonTextNode,
   createContainerNode,
+  createDefaultLinkExtension,
   createDefaultRect,
   createDefaultSticky,
   createLinkTextNode,

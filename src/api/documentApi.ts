@@ -1,6 +1,7 @@
 import {
   SECTION_TEMPLATES,
   createContainerNode,
+  createDefaultLinkExtension,
   createInitialDocument,
   createMediaNode,
   createSectionFromTemplate,
@@ -303,7 +304,7 @@ export function setTextNodeContentDoc(
   if (field === 'content' && isTextNode(node) && node.subtype === 'block') {
     const block = getSingleTextBlockContent(node.content);
     return setTextDocumentContentDoc(document, nodeId, createTextDocumentFromText(value, {
-      type: block?.type === 'blockquote' ? 'blockquote' : block?.type && block.type !== 'div' && block.type !== 'paragraph' ? block.type : 'paragraph',
+      type: block?.type ?? 'paragraph',
       direction: node.style?.direction ?? block?.direction ?? 'ltr',
       lineHeight: typeof block?.lineHeight === 'number' ? block.lineHeight : undefined,
       style: block?.style,
@@ -372,7 +373,8 @@ export function setTextNodeContentDoc(
       value === 'h4' ||
       value === 'h5' ||
       value === 'h6' ||
-      value === 'blockquote'
+      value === 'blockquote' ||
+      value === 'div'
         ? value
         : 'p';
     const block = getSingleTextBlockContent(node.content);
@@ -390,7 +392,17 @@ export function setTextNodeContentDoc(
     return next;
   }
 
-  if (field === 'linkType' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
+  if (field === 'linkEnabled' && isTextNode(node) && node.subtype === 'block') {
+    node.link = value === 'true' ? (node.link ?? createDefaultLinkExtension()) : undefined;
+    return next;
+  }
+
+  if (field === 'linkEnabled' && isMediaNode(node) && node.subtype === 'image') {
+    node.link = value === 'true' ? (node.link ?? createDefaultLinkExtension()) : undefined;
+    return next;
+  }
+
+  if (field === 'linkType' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
     const linkType = normalizeNavigationKind(value);
     node.link = { ...node.link, linkType };
     if (linkType !== 'page') {
@@ -399,27 +411,27 @@ export function setTextNodeContentDoc(
     return next;
   }
 
-  if (field === 'anchorTargetId' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
+  if (field === 'anchorTargetId' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
     node.link = { ...node.link, anchorTargetId: value || undefined };
     return next;
   }
 
-  if (field === 'href' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
+  if (field === 'href' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
     node.link = { ...node.link, href: value };
     return next;
   }
 
-  if (field === 'openInNewTab' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
+  if (field === 'openInNewTab' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
     node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
     return next;
   }
 
-  if (field === 'targetPageId' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
+  if (field === 'targetPageId' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
     node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
     return next;
   }
 
-  if (field === 'pageAnchorId' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
+  if (field === 'pageAnchorId' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
     node.link = { ...node.link, pageAnchorId: value || undefined };
     return next;
   }

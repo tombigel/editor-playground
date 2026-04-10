@@ -8,8 +8,6 @@ import {
   ButtonContentSection,
   ImageContentSection,
   ImageDesignSection,
-  LinkAppearanceSection,
-  LinkContentSection,
   TextAppearanceSection,
   TextContentSection,
 } from '../inspector/ContentSections';
@@ -73,7 +71,7 @@ export function resolveFocusedModeBlocks(
   }
 
   if (mode === 'content' && node) {
-    if (isTextNode(node) && !node.link) {
+    if (isTextNode(node) && !(node.link !== undefined && node.style?.background !== undefined)) {
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <TextContentSection
@@ -86,23 +84,6 @@ export function resolveFocusedModeBlocks(
             headerContent={options.headerContent}
             headerAction={headerAction}
             contentClassName="px-3 pt-1.5 pb-5"
-          />
-        )),
-      ];
-    }
-    if (isTextNode(node) && node.link !== undefined && !node.style?.background) {
-      return [
-        createFocusedModeBlock('content', 'primary', () => (
-          <LinkContentSection
-            document={context.document}
-            node={node}
-            onTextChange={context.actions.onTextChange}
-            onSetTextDocumentContent={(content) => context.actions.onSetTextDocumentContent?.(node.id, content)}
-            focusedMode={context.focusedMode}
-            onEnterFocusedMode={context.actions.onEnterFocusedMode}
-            headerContent={options.headerContent}
-            headerAction={headerAction}
-            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
           />
         )),
       ];
@@ -128,6 +109,7 @@ export function resolveFocusedModeBlocks(
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <ImageContentSection
+            document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}
             focusedMode={context.focusedMode}
@@ -157,27 +139,10 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (isTextNode(node) && !node.link) {
+    if (isTextNode(node) && !(node.link !== undefined && node.style?.background !== undefined)) {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <TextAppearanceSection
-            document={context.document}
-            node={node}
-            onTextChange={context.actions.onTextChange}
-            onOpenManageFonts={context.actions.onOpenManageFonts ?? (() => undefined)}
-            focusedMode={context.focusedMode}
-            onEnterFocusedMode={context.actions.onEnterFocusedMode}
-            headerContent={options.headerContent}
-            headerAction={headerAction}
-            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
-          />
-        )),
-      ];
-    }
-    if (isTextNode(node) && node.link !== undefined && !node.style?.background) {
-      return [
-        createFocusedModeBlock('design', 'primary', () => (
-          <LinkAppearanceSection
             document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}

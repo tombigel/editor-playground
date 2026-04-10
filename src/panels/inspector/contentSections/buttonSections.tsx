@@ -81,7 +81,7 @@ export function ButtonContentSection({
             value={getTextContent(node.content.blocks)}
             onChange={(e) =>
               onSetTextDocumentContent(createTextDocumentFromText(e.target.value, {
-                type: textBlock?.type === 'blockquote' ? 'blockquote' : textBlock?.type && textBlock.type !== 'div' && textBlock.type !== 'paragraph' ? textBlock.type : 'paragraph',
+                type: textBlock?.type ?? 'paragraph',
                 direction: node.style?.direction ?? textBlock?.direction ?? 'ltr',
                 lineHeight: typeof textBlock?.lineHeight === 'number' ? textBlock.lineHeight : undefined,
                 style: textBlock?.style,

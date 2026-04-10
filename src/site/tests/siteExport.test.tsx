@@ -101,7 +101,7 @@ describe('site/siteExport', () => {
 
     expect(html).toMatch(
       new RegExp(
-        `<a[^>]+data-node-id="${link.id}"[^>]+href="https://example\\.com/spec"[^>]+target="_blank"[^>]+rel="noopener noreferrer"`,
+        `<p[^>]+data-node-id="${link.id}"[^>]*>\\s*<a[^>]+href="https://example\\.com/spec"[^>]+target="_blank"[^>]+rel="noopener noreferrer"`,
       ),
     );
     expect(html).toMatch(
@@ -130,8 +130,8 @@ describe('site/siteExport', () => {
     const html = renderSiteHtmlDocument(document);
 
     expect(html).toContain(`data-node-id="${section.id}" data-top-level="true" id="${section.id}"`);
-    expect(html).toMatch(new RegExp(`<a[^>]+data-node-id="${link.id}"[^>]+href="#${section.id}"`));
-    expect(html).not.toMatch(new RegExp(`<a[^>]+data-node-id="${link.id}"[^>]+target="_blank"`));
+    expect(html).toMatch(new RegExp(`<p[^>]+data-node-id="${link.id}"[^>]*>\\s*<a[^>]+href="#${section.id}"`));
+    expect(html).not.toMatch(new RegExp(`<p[^>]+data-node-id="${link.id}"[^>]*>\\s*<a[^>]+target="_blank"`));
   });
 
   it('exports same-page anchor buttons against section ids', () => {
@@ -313,11 +313,33 @@ describe('site/siteExport', () => {
     expect(css).toContain('.sp-leaf.sp-role-text {');
     expect(css).toContain('font: inherit;');
     expect(css).toContain('quotes: none;');
-    expect(css).toContain('.sp-leaf.sp-role-link {');
+    expect(css).toContain('.sp-leaf.sp-role-link > a {');
+    expect(css).toContain('a.sp-leaf.sp-role-image {');
     expect(css).toContain('button.sp-leaf.sp-role-button {');
     expect(css).toContain('appearance: none;');
     expect(css).toContain('font: inherit;');
     expect(css).toContain('cursor: pointer;');
+  });
+
+  it('exports linked images as anchors that wrap the image element', () => {
+    const document = structuredClone(createInitialDocument());
+    const image = Object.values(document.nodes).find(
+      (node) => node.contentType === 'media' && node.subtype === 'image',
+    );
+
+    if (!image || image.contentType !== 'media') {
+      throw new Error('Expected image node');
+    }
+
+    image.link = { linkType: 'external', href: 'https://example.com/image', openInNewTab: true };
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toMatch(
+      new RegExp(
+        `<a[^>]+data-node-id="${image.id}"[^>]+href="https://example\\.com/image"[^>]+target="_blank"[^>]+rel="noopener noreferrer"[^>]*>\\s*<img`,
+      ),
+    );
   });
 
   it('uses the shared stage mesh grid for wrapper content and child placement', () => {
@@ -541,10 +563,10 @@ describe('site/siteExport', () => {
     const document = createInitialDocument();
     const css = renderSiteCss(document);
 
-    expect(css).toContain('img.sp-leaf.sp-role-image.sp-image {');
+    expect(css).toContain('img.sp-image {');
     expect(css).toContain('object-fit: cover;');
     expect(css).toContain('border-radius: 16px;');
-    expect(css).toContain('.sp-leaf.sp-role-image.is-brand-mark.sp-image {');
+    expect(css).toContain('img.sp-image.is-brand-mark {');
     expect(css).toContain('object-fit: contain;');
     expect(css).toContain('box-shadow: none;');
   });

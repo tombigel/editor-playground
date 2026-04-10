@@ -73,6 +73,7 @@ export function getLinkLeafStyle(node: TextNode): StyleRecord {
     maxWidth: '100%',
     ...getTypographyStyle(node.style, {
       fontFamily: DEFAULT_FONT_FALLBACK_STACK,
+      margin: 0,
       whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,
     }),
   };
@@ -131,8 +132,8 @@ export function styleRecordToCssDeclarations(style: StyleRecord): string[] {
 export function getSiteLeafBaseRules(selectors: {
   text: string;
   blockquoteText: string;
-  link: string;
-  imageRole: string;
+  linkAnchor: string;
+  imageLink: string;
   image: string;
   brandMarkImage: string;
   imagePlaceholder: string;
@@ -159,7 +160,7 @@ export function getSiteLeafBaseRules(selectors: {
       },
     },
     {
-      selector: selectors.link,
+      selector: selectors.linkAnchor,
       style: {
         fontFamily: 'inherit',
         textDecoration: 'inherit',
@@ -168,11 +169,10 @@ export function getSiteLeafBaseRules(selectors: {
       },
     },
     {
-      selector: selectors.imageRole,
+      selector: selectors.imageLink,
       style: {
-        border: 0,
-        background: 'transparent',
-        boxShadow: 'none',
+        color: 'inherit',
+        textDecoration: 'none',
       },
     },
     {

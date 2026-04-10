@@ -289,10 +289,10 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
 
 // All standalone text subtypes — used for sticky and design panels
 function isAnyTextNode(node: InspectorNode | null): node is TextInspectorNode {
-  return Boolean(node && isTextNodeGuard(node) && node.link === undefined);
+  return Boolean(node && isTextNodeGuard(node) && !(node.link !== undefined && node.style?.background !== undefined));
 }
 
 // Non-rich standalone subtypes — used for shared text style and appearance panels
 function isNonRichTextNode(node: InspectorNode | null): node is TextInspectorNode {
-  return Boolean(node && isTextNodeGuard(node) && node.subtype !== 'rich' && node.link === undefined);
+  return Boolean(node && isAnyTextNode(node) && node.subtype !== 'rich');
 }

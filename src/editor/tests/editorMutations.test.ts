@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getTextContent } from '../../model/richContent';
+import { getSingleTextBlockContent, getTextContent } from '../../model/richContent';
 import { createInitialState } from '../editorPersistence';
 import {
   alignNodes,
@@ -179,8 +179,11 @@ describe('editor/editorMutations', () => {
       const inserted = next.document.nodes[next.selectedId!];
 
       expect(inserted.contentType).not.toBe('container');
-      if (inserted.contentType !== 'container' && inserted.contentType !== 'site') {
+      if (inserted.contentType !== 'container' && inserted.contentType !== 'site' && inserted.contentType !== 'media') {
         expect(inserted.subtype).toBe('block');
+        expect(inserted.link).toMatchObject({ linkType: 'anchor', href: '#' });
+        expect(inserted.htmlTag).toBe('div');
+        expect(getSingleTextBlockContent(inserted.content)?.type).toBe('div');
       }
     });
 

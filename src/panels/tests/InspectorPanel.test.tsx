@@ -410,8 +410,12 @@ describe('panels/InspectorPanel', () => {
     const imageMarkup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ node: imageNode })} />,
     );
+    imageNode.link = { linkType: 'external', href: 'https://example.com/image' };
+    const linkedImageMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: imageNode })} />,
+    );
     const linkMarkup = renderToStaticMarkup(
-      <InspectorPanel {...makeBaseInspectorProps({ node: linkNode })} />,
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: linkNode })} />,
     );
     const buttonMarkup = renderToStaticMarkup(
       <InspectorPanel {...makeBaseInspectorProps({ document, node: buttonNode })} />,
@@ -450,6 +454,8 @@ describe('panels/InspectorPanel', () => {
     expect(linkMarkup).toContain('>Text style<');
     expect(linkMarkup).toContain('>Design<');
     expect(linkMarkup).toContain('>Sticky<');
+    expect(linkMarkup).toContain('>HTML tag<');
+    expect(linkMarkup).toContain('>Link<');
     expect(linkMarkup).toContain('>Type<');
     expect(linkMarkup).toContain('>Internal<');
     expect(linkMarkup).toContain('>Section<');
@@ -471,7 +477,12 @@ describe('panels/InspectorPanel', () => {
     expect(imageMarkup.indexOf('>Sticky<')).toBeLessThan(imageMarkup.indexOf('>Content<'));
     expect(imageMarkup).toContain('>Src<');
     expect(imageMarkup).toContain('>Alt<');
+    expect(imageMarkup).toContain('>Link<');
+    expect(imageMarkup).not.toContain('>Type<');
     expect(imageMarkup).toContain('>Border<');
+    expect(linkedImageMarkup).toContain('>Type<');
+    expect(linkedImageMarkup).toContain('>Href<');
+    expect(linkedImageMarkup).toContain('Open in a new tab');
     expect(buttonMarkup).toContain('>Text style<');
     expect(buttonMarkup).toContain('>Design<');
     expect(buttonMarkup).toContain('>Sticky<');
@@ -493,6 +504,43 @@ describe('panels/InspectorPanel', () => {
     expect(buttonMarkup.indexOf('>Background<')).toBeLessThan(buttonMarkup.indexOf('>Border<'));
     expect(buttonMarkup.indexOf('>Border<')).toBeLessThan(buttonMarkup.indexOf('>Shadow<'));
     expect(buttonMarkup.indexOf('>Shadow<')).toBeLessThan(buttonMarkup.indexOf('>Padding<'));
+  });
+
+  it('shows link destination controls only when text or image linking is enabled', () => {
+    const document = createInitialDocument();
+    const textNode = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.subtype === 'block' && node.link == null,
+    );
+    const imageNode = Object.values(document.nodes).find(
+      (node) => node.contentType === 'media' && node.subtype === 'image',
+    );
+
+    if (!textNode || textNode.contentType !== 'text' || !imageNode || imageNode.contentType !== 'media') {
+      throw new Error('Expected text node and image node');
+    }
+
+    const textMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: textNode })} />,
+    );
+    textNode.link = { linkType: 'external', href: 'https://example.com/text' };
+    const linkedTextMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: textNode })} />,
+    );
+
+    const imageMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: imageNode })} />,
+    );
+    imageNode.link = { linkType: 'external', href: 'https://example.com/image' };
+    const linkedImageMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: imageNode })} />,
+    );
+
+    expect(textMarkup).not.toContain('>Type<');
+    expect(linkedTextMarkup).toContain('>Type<');
+    expect(linkedTextMarkup).toContain('>Href<');
+    expect(imageMarkup).not.toContain('>Type<');
+    expect(linkedImageMarkup).toContain('>Type<');
+    expect(linkedImageMarkup).toContain('>Href<');
   });
 
   it('renders anchor link controls with section choices and a broken-link warning', () => {

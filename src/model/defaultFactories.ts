@@ -2,6 +2,7 @@ import type {
   ContainerNode,
   ContainerSubtype,
   DocumentModel,
+  LinkExtension,
   MediaNode,
   MediaSubtype,
   NodeId,
@@ -264,6 +265,13 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
   };
 }
 
+export function createDefaultLinkExtension(): LinkExtension {
+  return {
+    linkType: 'anchor',
+    href: '#',
+  };
+}
+
 /**
  * Create a TextNode pre-configured as a link (equivalent to old `role: 'link'`).
  */
@@ -276,10 +284,7 @@ export function createLinkTextNode(parentId: NodeId): TextNode {
     content: createTextDocumentContent([
       createTextBlockContent('paragraph', 'Read more', { direction: 'ltr' }),
     ]),
-    link: {
-      linkType: 'anchor',
-      href: '#',
-    },
+    link: createDefaultLinkExtension(),
     style: {
       color: DEFAULT_LINK_COLOR,
       fontFamily: 'Inter',

@@ -1,8 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { DocumentModel } from '../../../api/editorApi';
 import {
   BorderControlGroup,
   FormField,
+  InspectorFieldGroup,
   ShadowControlGroup,
   readShadowFieldValues,
   readUnifiedBorderColor,
@@ -34,9 +36,12 @@ import {
 import {
   type FocusModeCardProps,
   createShadowFallback,
+  LinkEnabledRow,
+  NavigationFields,
 } from './shared';
 
 export function ImageContentSection({
+  document,
   node,
   onTextChange,
   focusedMode,
@@ -45,6 +50,7 @@ export function ImageContentSection({
   headerAction,
   contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
+  document: DocumentModel;
   node: ImageInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
 } & FocusModeCardProps) {
@@ -56,12 +62,21 @@ export function ImageContentSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
+      <InspectorFieldGroup>
         <FormField label="Src">
           <Input value={node.src ?? ''} onChange={(e) => onTextChange('src', e.target.value)} />
         </FormField>
         <FormField label="Alt">
           <Input value={node.alt ?? ''} onChange={(e) => onTextChange('alt', e.target.value)} />
         </FormField>
+      </InspectorFieldGroup>
+      <InspectorFieldGroup gap>
+        <LinkEnabledRow
+          checked={Boolean(node.link)}
+          onCheckedChange={(checked) => onTextChange('linkEnabled', checked ? 'true' : '')}
+        />
+        {node.link ? <NavigationFields document={document} node={node} onTextChange={onTextChange} /> : null}
+      </InspectorFieldGroup>
     </InspectorSectionCard>
   );
 }

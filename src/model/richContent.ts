@@ -633,8 +633,11 @@ export function textBlockTypeToHtmlTag(type: RichTextBlockType): TextNode['htmlT
   if (type === 'blockquote') {
     return 'blockquote';
   }
-  if (type === 'paragraph' || type === 'div') {
+  if (type === 'paragraph') {
     return 'p';
+  }
+  if (type === 'div') {
+    return 'div';
   }
   return type;
 }

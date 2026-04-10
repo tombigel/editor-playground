@@ -2,6 +2,7 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
+  Link2,
   PilcrowLeft,
   PilcrowRight,
   Settings2,
@@ -35,11 +36,13 @@ import {
   InspectorInlineRow,
   NumberInput,
   ShadowControlGroup,
+  SwitchBlock,
   TextStyleIconButton,
   type readShadowFieldValues,
 } from '../../InspectorControls';
 import type {
   ButtonInspectorNode,
+  ImageInspectorNode,
   LinkInspectorNode,
   TextInspectorNode,
 } from '../types';
@@ -346,7 +349,25 @@ export function TypographyDesignFields({
   );
 }
 
-export type NavigationInspectorNode = ButtonInspectorNode | LinkInspectorNode;
+export type NavigationInspectorNode = ButtonInspectorNode | LinkInspectorNode | ImageInspectorNode;
+
+export function LinkEnabledRow({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <SwitchBlock
+      icon={<Link2 className={`h-3.5 w-3.5 shrink-0 ${checked ? 'editor-text-accent' : 'editor-text-muted'}`} />}
+      title="Link"
+      description="Turn this content into a navigation target."
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+    />
+  );
+}
 
 export function OpenInNewTabField({
   checked,

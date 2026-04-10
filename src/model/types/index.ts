@@ -27,6 +27,7 @@ export type NodeTextField =
   | 'htmlTag'
   | 'lang'
   | 'label'
+  | 'linkEnabled'
   | 'linkType'
   | 'anchorTargetId'
   | 'href'
@@ -159,7 +160,7 @@ export type StandaloneTextNodeSnapshot = {
   contentBlock: TextDocumentBlock;
   style?: TextNode['style'];
   lang?: string;
-  htmlTag?: HeadingTag | 'p' | 'blockquote';
+  htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';
   link?: LinkExtension;
   code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };
   sticky?: StickyDefinition;
@@ -507,7 +508,7 @@ export type TextNode = BaseNode & {
   content: TextDocumentContent;
   lang?: string;              // BCP-47 locale
   /** @deprecated transitional field during phase 1.7 migration; canonical block type lives in content */
-  htmlTag?: HeadingTag | 'p' | 'blockquote';
+  htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';
   link?: LinkExtension;       // block only
   /** @deprecated transitional field during phase 1.7 migration; canonical code metadata lives in content */
   code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };

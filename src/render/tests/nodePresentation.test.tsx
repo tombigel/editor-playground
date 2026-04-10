@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument, createLinkTextNode, createTextNode } from '../../model/defaults';
-import { createTextDocumentContent, createTextDocumentFromCode, getTextContent, listContentToRichListBlock } from '../../model/richContent';
+import { createTextDocumentContent, createTextDocumentFromCode, createTextDocumentFromText, getTextContent, listContentToRichListBlock } from '../../model/richContent';
 import {
   formatNodeLabel,
   getNodeAriaLabel,
@@ -64,13 +64,32 @@ describe('render/nodePresentation', () => {
   it('keeps block links on a single anchor wrapper', () => {
     const link = createLinkTextNode('root');
     link.htmlTag = 'h2';
+    link.content = createTextDocumentFromText('Read more', { type: 'h2' });
 
     const linkMarkup = renderToStaticMarkup(renderLeafContent(link));
 
-    expect(linkMarkup.startsWith('<a')).toBe(true);
+    expect(linkMarkup.startsWith('<h2')).toBe(true);
+    expect(linkMarkup).toContain('<a');
     expect(linkMarkup).toContain('Read more');
-    expect(linkMarkup).not.toContain('<h2');
-    expect(linkMarkup).not.toContain('<p');
+    expect(linkMarkup).toContain('</a></h2>');
+  });
+
+  it('wraps linked images in an anchor while keeping the image element inside', () => {
+    const image = createInitialDocument();
+    const node = Object.values(image.nodes).find((entry) => entry.contentType === 'media' && entry.subtype === 'image');
+
+    if (!node || node.contentType !== 'media') {
+      throw new Error('Expected image node');
+    }
+
+    node.link = { linkType: 'external', href: 'https://example.com/media' };
+
+    const markup = renderToStaticMarkup(renderLeafContent(node));
+
+    expect(markup).toContain('<a');
+    expect(markup).toContain('href="https://example.com/media"');
+    expect(markup).toContain('<img');
+    expect(markup).toContain('</a>');
   });
 
   it('does not classify code nodes by legacy block-only link styling', () => {

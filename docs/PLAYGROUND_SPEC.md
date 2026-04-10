@@ -564,9 +564,9 @@ Additional rules:
 
 | Leaf kind | Content section | Style section(s) | Special semantics |
 |---|---|---|---|
-| `text` | body copy + HTML tag | `Text style`, `Design` | Editable HTML tag |
-| `link` | label + destination | `Text style`, `Design` | Internal/anchor vs external link behavior |
-| `image` | `src`, `alt` | `Design` | Unified border/radius/shadow surface |
+| `text` | body copy + HTML tag + optional link | `Text style`, `Design` | Editable HTML tag, optional destination |
+| `link` | label + destination | `Text style`, `Design` | Add-rail shortcut for link-enabled block text |
+| `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface |
 | `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
 
 ### Text leaf semantics
@@ -585,10 +585,13 @@ Rules:
 
 Content and styling:
 
-- Links use `Content`, `Text style`, and `Design` sections.
-- Newly inserted links default to the internal or anchor destination type.
-- Links render as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame.
+- Standalone block text exposes a `Link` toggle in `Content`; enabling it reveals the shared destination controls inline.
+- The Add-rail `Link` entry inserts a block text node with `htmlTag: 'div'` and link authoring enabled by default.
+- Newly enabled links default to the internal or anchor destination type.
+- Link-enabled block text renders as block-level leaf content with `width: 100%`, so text alignment applies across the authored leaf frame.
 - Link wrap defaults to `single-line`; enabling `Wrap` switches the link to multi-line wrapping.
+- Standalone linked text renders and exports as semantic wrapper markup: `<Tag><a href="...">text</a></Tag>`.
+- The Add-rail `Link` default therefore exports as `<div><a href="...">Read more</a></div>`.
 
 Destination behavior:
 
@@ -602,6 +605,12 @@ Broken anchor behavior:
 
 - If an authored anchor target no longer exists, the selected link shows a compact dark-yellow `Broken anchor` annotation with a triangle-alert icon inline beside the `Section` picker label.
 - Broken anchors are surfaced to the editor but are not auto-repaired.
+
+### Image link behavior
+
+- Images expose the same `Link` toggle and destination controls in `Content`.
+- Linked images render and export as `<a href="..."><img ... /></a>`.
+- Linked image placeholders use the same anchor wrapper pattern.
 
 ### Button leaf behavior
 
@@ -1242,7 +1251,7 @@ Single-node inspector:
 - Text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`.
 - Standalone block text keeps its editable HTML tag in `Content`; `Text style` remains typography-only.
 - Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
-- Link nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
+- Link-enabled standalone text nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
 
 Multi-select inspector:
 

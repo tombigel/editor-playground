@@ -54,11 +54,11 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
     ...getSiteLeafBaseRules({
       text: `.${SITE_LEAF_CLASS}.sp-role-text`,
       blockquoteText: `blockquote.${SITE_LEAF_CLASS}.sp-role-text`,
-      link: `.${SITE_LEAF_CLASS}.sp-role-link`,
-      imageRole: `.${SITE_LEAF_CLASS}.sp-role-image`,
-      image: `img.${SITE_LEAF_CLASS}.sp-role-image.${SITE_IMAGE_CLASS}`,
-      brandMarkImage: `.${SITE_LEAF_CLASS}.sp-role-image.${SITE_BRAND_MARK_CLASS}.${SITE_IMAGE_CLASS}`,
-      imagePlaceholder: `.${SITE_LEAF_CLASS}.sp-role-image.${SITE_IMAGE_PLACEHOLDER_CLASS}`,
+      linkAnchor: `.${SITE_LEAF_CLASS}.sp-role-link > a`,
+      imageLink: `a.${SITE_LEAF_CLASS}.sp-role-image`,
+      image: `img.${SITE_IMAGE_CLASS}`,
+      brandMarkImage: `img.${SITE_IMAGE_CLASS}.${SITE_BRAND_MARK_CLASS}`,
+      imagePlaceholder: `.${SITE_IMAGE_PLACEHOLDER_CLASS}`,
       button: `button.${SITE_LEAF_CLASS}.sp-role-button`,
     }),
   ];

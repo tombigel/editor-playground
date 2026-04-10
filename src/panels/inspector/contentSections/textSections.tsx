@@ -36,6 +36,7 @@ import {
   DEFAULT_SHADOW_SPREAD_PX,
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
+  DEFAULT_LINK_COLOR,
   DEFAULT_TEXT_COLOR,
 } from '../../../model/styleDefaults';
 import type { TextInspectorNode } from '../types';
@@ -56,6 +57,8 @@ import {
   textDecorationHasLineThrough,
   textDecorationHasUnderline,
   toggleTextDecorationLine,
+  LinkEnabledRow,
+  NavigationFields,
   TypographyTextStyleFields,
   TypographyDesignFields,
 } from './shared';
@@ -286,7 +289,7 @@ export function TextContentSection({
 
   function setPlainTextContent(nextText: string) {
     onSetTextDocumentContent(createTextDocumentFromText(nextText, {
-      type: textBlock?.type === 'blockquote' ? 'blockquote' : textBlock?.type && textBlock.type !== 'div' && textBlock.type !== 'paragraph' ? textBlock.type : 'paragraph',
+      type: textBlock?.type ?? 'paragraph',
       direction: node.style?.direction ?? textBlock?.direction ?? 'ltr',
       lineHeight: typeof textBlock?.lineHeight === 'number' ? textBlock.lineHeight : undefined,
       style: textBlock?.style,
@@ -306,7 +309,8 @@ export function TextContentSection({
           value === 'h4' ||
           value === 'h5' ||
           value === 'h6' ||
-          value === 'blockquote'
+          value === 'blockquote' ||
+          value === 'div'
           ? value
           : 'p',
       ),
@@ -350,6 +354,15 @@ export function TextContentSection({
             onValueChange={(value) => onTextChange('lang', value === '__site__' ? '' : value)}
           />
         </InspectorInlineRow>
+      </InspectorFieldGroup>
+      <InspectorFieldGroup gap>
+        <LinkEnabledRow
+          checked={Boolean(node.link)}
+          onCheckedChange={(checked) => onTextChange('linkEnabled', checked ? 'true' : '')}
+        />
+        {node.link ? (
+          <NavigationFields document={document} node={node} onTextChange={onTextChange} />
+        ) : null}
       </InspectorFieldGroup>
     </InspectorSectionCard>
   );
@@ -715,6 +728,7 @@ export function TextTextStyleSection({
           document={document}
           node={node}
           onTextChange={onTextChange}
+          supportsWrap={node.link !== undefined}
           onOpenManageFonts={onOpenManageFonts}
         />
     </InspectorSectionCard>
@@ -755,7 +769,7 @@ export function TextDesignSection({
         <TypographyDesignFields
           node={node}
           onTextChange={onTextChange}
-          colorFallback={DEFAULT_TEXT_COLOR}
+          colorFallback={node.link ? DEFAULT_LINK_COLOR : DEFAULT_TEXT_COLOR}
           shadow={shadow}
           shadowFallback={createShadowFallback(
             DEFAULT_SHADOW_COLOR,
@@ -806,13 +820,14 @@ export function TextAppearanceSection({
         document={document}
         node={node}
         onTextChange={onTextChange}
+        supportsWrap={node.link !== undefined}
         onOpenManageFonts={onOpenManageFonts}
       />
       <div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
         <TypographyDesignFields
           node={node}
           onTextChange={onTextChange}
-          colorFallback={DEFAULT_TEXT_COLOR}
+          colorFallback={node.link ? DEFAULT_LINK_COLOR : DEFAULT_TEXT_COLOR}
           shadow={shadow}
           shadowFallback={shadowFallback}
         />

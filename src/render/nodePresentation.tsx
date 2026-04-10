@@ -417,7 +417,7 @@ export function isBrandMark(node: LeafNode) {
 }
 
 function getExternalNavigationProps(node: LeafNode) {
-  if (!isTextNode(node) || !node.link) {
+  if (!node.link) {
     return {};
   }
   return shouldOpenNavigationInNewTab({ linkType: node.link.linkType, openInNewTab: node.link.openInNewTab })
@@ -483,6 +483,33 @@ export function renderLeafContent(
   }
 
   if (isMediaNode(node)) {
+    const mediaContent = node.src ? (
+      <img
+        className={imageClassName}
+        src={node.src}
+        alt={node.alt || 'Image'}
+        draggable={imageDraggable}
+      />
+    ) : (
+      <div className={imagePlaceholderClassName}>{getNodeTextContent(node)}</div>
+    );
+
+    if (node.link) {
+      return (
+        <a
+          className={leafClassName}
+          data-node-id={dataNodeId}
+          href={getLinkHref(node.link, document)}
+          tabIndex={tabIndex}
+          style={contentStyle}
+          {...getExternalNavigationProps(node)}
+          {...getPageCurrentProps(node.link, currentPageId)}
+        >
+          {mediaContent}
+        </a>
+      );
+    }
+
     return node.src ? (
       <img
         className={imageClassName}
@@ -544,11 +571,18 @@ export function renderLeafContent(
     const textBlock = getSingleTextBlockContent(node.content);
     const text = getTextContent(node.content.blocks);
     const { link } = node;
+    const blockType = textBlock?.type ?? (node.htmlTag === 'blockquote' ? 'blockquote' : node.htmlTag && node.htmlTag !== 'p' ? node.htmlTag : 'paragraph');
+    const Tag = getRichTextBlockTag(blockType === 'paragraph' ? 'paragraph' : blockType);
+    const blockStyle = {
+      ...contentStyle,
+      ...(typeof textBlock?.lineHeight === 'number' ? { lineHeight: textBlock.lineHeight } : {}),
+      ...richBlockStyleToCss(textBlock?.style),
+    };
     const isButton = link !== undefined && node.style?.background !== undefined;
     const isLink = link !== undefined;
 
     if (isButton) {
-      const href = getLinkHref({ linkType: link.linkType, anchorTargetId: link.anchorTargetId, href: link.href, targetPageId: link.targetPageId, pageAnchorId: link.pageAnchorId });
+      const href = getLinkHref(link, document);
       return href ? (
         <a
           className={leafClassName}
@@ -569,33 +603,30 @@ export function renderLeafContent(
     }
 
     if (isLink) {
-      const href = getLinkHref({ linkType: link.linkType, anchorTargetId: link.anchorTargetId, href: link.href, targetPageId: link.targetPageId, pageAnchorId: link.pageAnchorId });
+      const href = getLinkHref(link, document);
       return (
-        <a
+        <Tag
           className={leafClassName}
           data-node-id={dataNodeId}
-          href={href}
-          tabIndex={tabIndex}
-          style={contentStyle}
-          {...getExternalNavigationProps(node)}
-          {...getPageCurrentProps(link, currentPageId)}
+          style={blockStyle}
         >
-          {text}
-        </a>
+          <a
+            href={href}
+            tabIndex={tabIndex}
+            {...getExternalNavigationProps(node)}
+            {...getPageCurrentProps(link, currentPageId)}
+          >
+            {text}
+          </a>
+        </Tag>
       );
     }
 
-    const blockType = textBlock?.type ?? (node.htmlTag === 'blockquote' ? 'blockquote' : node.htmlTag && node.htmlTag !== 'p' ? node.htmlTag : 'paragraph');
-    const Tag = getRichTextBlockTag(blockType === 'paragraph' ? 'paragraph' : blockType);
     return (
       <Tag
         className={leafClassName}
         data-node-id={dataNodeId}
-        style={{
-          ...contentStyle,
-          ...(typeof textBlock?.lineHeight === 'number' ? { lineHeight: textBlock.lineHeight } : {}),
-          ...richBlockStyleToCss(textBlock?.style),
-        }}
+        style={blockStyle}
       >
         {text}
       </Tag>

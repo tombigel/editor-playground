@@ -811,6 +811,10 @@ describe('editor/editorPersistence', () => {
         const leaf = createUniqueLeaf(doc, role, sectionId);
         expect(leaf.subtype).toBe(expectedSubtype);
         expect(leaf.contentType).toBe(expectedContentType);
+        if (role === 'link' && leaf.contentType === 'text') {
+          expect(leaf.htmlTag).toBe('div');
+          expect(leaf.content.blocks[0]).toMatchObject({ type: 'div' });
+        }
       }
     });
   });

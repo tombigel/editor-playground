@@ -493,7 +493,14 @@ export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'headin
     }
     if (role === 'text') return createTextNode('block', parentId);
     if (role === 'image') return createMediaNode('image', parentId);
-    if (role === 'link') return createLinkTextNode(parentId);
+    if (role === 'link') {
+      const node = createLinkTextNode(parentId);
+      return {
+        ...node,
+        htmlTag: 'div' as const,
+        content: createTextDocumentFromText(getNodePlainText(node), { type: 'div' }),
+      };
+    }
     return createButtonTextNode(parentId);
   };
   let node = make();
