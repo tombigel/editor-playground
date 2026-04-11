@@ -124,6 +124,8 @@ export function renderContainer({
       } ${plan.hiddenState.isGhostVisible ? 'is-hidden-ghost' : ''} ${
         plan.hiddenState.isHiddenSelected ? 'is-hidden-selected' : ''
       }`}
+      data-has-animation={node.animation !== undefined ? 'true' : undefined}
+      data-scroll-animation={node.animation?.trigger === 'scroll' ? 'true' : undefined}
       data-hidden={plan.hiddenState.isEffectivelyHidden ? 'true' : 'false'}
       data-ghost-visible={plan.hiddenState.isGhostVisible ? 'true' : 'false'}
       aria-label={getNodeAriaLabel(node)}

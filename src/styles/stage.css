@@ -823,3 +823,27 @@
   left: var(--resize-handle-offset);
   cursor: nwse-resize;
 }
+
+/* ── Animation indicator on non-selected nodes (T16) ────────────────────────── */
+
+.stage-wrapper[data-has-animation="true"]:not(.selected)::before,
+.stage-leaf[data-has-animation="true"]:not(.selected)::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--editor-accent, #1668ff);
+  opacity: 0.6;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Scroll-animated nodes get a left-edge accent bar (T18) */
+.stage-wrapper[data-scroll-animation="true"]:not(.selected),
+.stage-leaf[data-scroll-animation="true"]:not(.selected) {
+  border-left: 2px solid var(--editor-accent, #1668ff);
+  border-left-style: dashed;
+}

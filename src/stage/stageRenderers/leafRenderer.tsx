@@ -146,6 +146,8 @@ function StageLeaf({
       } ${plan.hiddenState.isGhostVisible ? 'is-hidden-ghost' : ''} ${
         plan.hiddenState.isHiddenSelected ? 'is-hidden-selected' : ''
       }`}
+      data-has-animation={child.animation !== undefined ? 'true' : undefined}
+      data-scroll-animation={child.animation?.trigger === 'scroll' ? 'true' : undefined}
       data-hidden={plan.hiddenState.isEffectivelyHidden ? 'true' : 'false'}
       data-ghost-visible={plan.hiddenState.isGhostVisible ? 'true' : 'false'}
       aria-label={getNodeAriaLabel(child)}
