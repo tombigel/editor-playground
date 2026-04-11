@@ -72,7 +72,7 @@ Execution rules:
   - `npx vitest run src/panels/tests/helpDocs.test.ts src/panels/tests/HelpDialog.test.tsx src/panels/tests/AboutContent.test.tsx src/app/tests/AppShell.test.tsx`: passed, 4 files / 26 tests
   - `npm run build`: passed
 - Commit SHA:
-  - Not committed in this session
+  - `1e1f49f`
 - Open follow-ups carried forward:
   - None currently.
 

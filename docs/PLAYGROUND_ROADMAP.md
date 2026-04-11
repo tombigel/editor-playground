@@ -678,6 +678,7 @@ These milestones are closed. Their briefs and tasklists are archived in `archive
 | Google Fonts integration | 2026-03 | Catalog bundled, API layer, inspector UI, export. Phases 1-4 complete. |
 | Animate API enhancements | 2026-03 | Interact/motion-presets integration, all defects fixed. |
 | Multiple pages Wave 1-2 | 2026-04 | Page model, hierarchy, editor UI, preview mode, export with configurable output structure. |
+| Help browser IA refresh | 2026-04 | Internal markdown links kept as the docs primitive; left nav regrouped into `About`, `Keyboard shortcuts`, `Guides`, `Reference`, `Developers`; `Usage` replaced by `Guides / Getting Started`; About now links into the docs surface. Closed at 1e1f49f. |
 | Design-system convergence audit | 2026-04 | Waves A-E complete (29 surfaces audited, 24 done). Follow-ups tracked in `RI-35`-`RI-38`. |
 | Hidden ghost mode (`RI-39`) | 2026-04 | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated. Closed at 1318f22. |
 
