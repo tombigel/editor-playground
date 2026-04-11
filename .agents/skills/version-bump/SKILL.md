@@ -101,18 +101,43 @@ Read `src/lib/version.ts` directly, or open the About panel in the editor (top-r
 
 ---
 
+## Commit message convention
+
+All commits must use [Conventional Commits](https://www.conventionalcommits.org/) format, enforced by commitlint via the `commit-msg` hook.
+
+Format: `type(optional-scope): description`
+
+| Type | Changelog heading |
+| --- | --- |
+| `feat` | Added |
+| `fix` | Fixed |
+| `refactor`, `style`, `perf`, `docs`, `test`, `build`, `ci`, `chore` | Changed |
+
+Write the description as a user-facing change note. The prefix is stripped in the changelog.
+
 ## Changelog workflow
 
-Every commit automatically appends its first-line message to the `[Unreleased]` section of `CHANGELOG.md` via the `commit-msg` hook. This means commit messages should have a meaningful, concise first line.
+Every commit automatically appends its description to the `[Unreleased]` section of `CHANGELOG.md` via the post-commit hook, categorized under the correct heading (Added, Changed, or Fixed) based on the conventional commit prefix.
 
-When you run a minor or major bump, the script converts `[Unreleased]` into a versioned entry (stamped with the new version and today's date) and adds a fresh empty `[Unreleased]` section above it. The accumulated commit bullets become the release notes.
+When you run a minor or major bump, the script converts `[Unreleased]` into a versioned entry (stamped with the new version and today's date) and adds a fresh empty `[Unreleased]` section above it. The accumulated bullets become the release notes.
+
+## Git hooks
+
+Three hooks run in sequence on every commit:
+
+1. **pre-commit** — patches all four subsystem versions, stages `version.ts` and `package.json`
+2. **commit-msg** — commitlint validates the message format
+3. **post-commit** — appends the commit description to `CHANGELOG.md` under `[Unreleased]`, then amends the commit to include it
+
+The post-commit amend uses `CHANGELOG_HOOK_AMEND` env var to prevent infinite recursion — both the pre-commit and post-commit hooks skip when this variable is set.
 
 ## Implementation reference
 
 - `src/lib/version.ts` — version constants (source of truth)
 - `scripts/bump-version.mjs` — semver arithmetic, file writes, and changelog conversion
 - `scripts/pre-commit-version-bump.mjs` — pre-commit hook (patch bumps)
-- `scripts/commit-msg-changelog.mjs` — prepare-commit-msg hook (changelog bullets)
+- `scripts/commit-msg-changelog.mjs` — post-commit hook (changelog categorization and amend)
+- `commitlint.config.mjs` — commitlint configuration
 - `package.json["simple-git-hooks"]` — hook registration
 - `docs/API.md#versioning` — full versioning documentation
 - `CHANGELOG.md` — release history

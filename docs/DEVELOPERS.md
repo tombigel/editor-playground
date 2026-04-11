@@ -16,6 +16,10 @@ This section is the development-facing subtree for architecture, workflows, plan
 - [Project Skills](./SKILLS.md)
 - [Changelog](../CHANGELOG.md)
 
+## Commit Conventions
+
+Commits use [Conventional Commits](https://www.conventionalcommits.org/) format, enforced by commitlint. The commit description is automatically added to `CHANGELOG.md` under `[Unreleased]`, categorized by prefix (`feat:` → Added, `fix:` → Fixed, others → Changed). See `/version-bump` skill for full details.
+
 ## Planning
 
 - [Playground Roadmap](./PLAYGROUND_ROADMAP.md)
