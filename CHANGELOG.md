@@ -18,6 +18,9 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 - update expected titles for section:reference to include 'Changelog'
 
+### Fixed
+- initialize animation runtime in preview mode and fix grid layout
+
 ---
 
 ## [0.4.1] — 2026-04-11

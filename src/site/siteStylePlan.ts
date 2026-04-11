@@ -190,6 +190,12 @@ function getBaseSiteCssRules(document: DocumentModel): SharedCssRule[] {
         width: '100%',
       },
     },
+    {
+      selector: 'interact-element',
+      style: {
+        display: 'contents',
+      },
+    },
   ];
 }
 

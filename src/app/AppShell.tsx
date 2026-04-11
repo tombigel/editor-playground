@@ -17,7 +17,7 @@ import type {
 	EditorState,
 	StickyGeometrySnapshot,
 } from "../api/editorApi";
-import type { DocumentFontFamily } from "../model/types";
+import type { DocumentFontFamily, DocumentModel } from "../model/types";
 import { isTextNode } from "../model/types";
 import { buildDocumentGoogleFontsStylesheetHref } from "../fonts";
 import {
@@ -56,6 +56,7 @@ const EditorSidebar = lazy(() =>
 );
 import { FocusedModePanel } from "../panels/FocusedModePanel";
 import { BackToEditorButton } from "../panels/BackToEditorButton";
+import { usePreviewAnimations } from "../site/usePreviewAnimations";
 import { SiteRenderer } from "../site/SiteRenderer";
 import { renderSiteCss } from "../api/siteApi";
 import type { ActionResult } from "../panels/settingsTransfer";
@@ -168,6 +169,32 @@ function PreviewSiteAssets({ css, fontHref }: PreviewSiteAssetsProps) {
 				</>
 			) : null}
 			<style data-preview-site-css="true">{css}</style>
+		</>
+	);
+}
+
+type PreviewModeProps = {
+	css: string;
+	fontHref: string | null;
+	document: DocumentModel;
+	previewSticky: boolean;
+	pageId: string | undefined;
+};
+
+function PreviewMode({ css, fontHref, document, previewSticky, pageId }: PreviewModeProps) {
+	usePreviewAnimations(document);
+	return (
+		<>
+			<PreviewSiteAssets css={css} fontHref={fontHref} />
+			<div style={{ position: "fixed", inset: 0, overflow: "auto" }}>
+				<SiteRenderer
+					document={document}
+					includeAnimations
+					previewSticky={previewSticky}
+					pageId={pageId}
+				/>
+			</div>
+			<BackToEditorButton />
 		</>
 	);
 }
@@ -616,18 +643,13 @@ export function AppShell({
 
 	if (isPreview) {
 		return (
-			<>
-				<PreviewSiteAssets css={previewCss} fontHref={previewFontHref} />
-				<div style={{ position: "fixed", inset: 0, overflow: "auto" }}>
-					<SiteRenderer
-						document={state.document}
-						includeAnimations
-						previewSticky={state.ui.previewSticky}
-						pageId={state.activePageId ?? undefined}
-					/>
-				</div>
-				<BackToEditorButton />
-			</>
+			<PreviewMode
+				css={previewCss}
+				fontHref={previewFontHref}
+				document={state.document}
+				previewSticky={state.ui.previewSticky}
+				pageId={state.activePageId ?? undefined}
+			/>
 		);
 	}
 
