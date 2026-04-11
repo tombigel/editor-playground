@@ -50,6 +50,7 @@ import {
   updateAnimationOptions,
   clearAnimation,
   setDocumentAnimationSettings,
+  getNodeAnimation,
 } from '../api/animationApi';
 import {
   addPage,
@@ -272,15 +273,22 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         updateStickyField(nextState, nodeId, { elevated: action.value }),
       );
-    case 'animationPreset':
-      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => ({
-        ...nextState,
-        document: setPresetAnimation(nextState.document, nodeId, {
-          trigger: action.trigger,
-          preset: action.preset,
-          ...(action.params ? action.params : {}),
-        }),
-      }));
+    case 'animationPreset': {
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => {
+        // Preserve existing timing when changing preset params
+        const existing = getNodeAnimation(nextState.document, nodeId);
+        const existingTiming = existing && 'timing' in existing ? existing.timing : undefined;
+        return {
+          ...nextState,
+          document: setPresetAnimation(nextState.document, nodeId, {
+            trigger: action.trigger,
+            preset: action.preset,
+            options: action.params,
+            timing: existingTiming,
+          }),
+        };
+      });
+    }
     case 'animationKeyframe':
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => ({
         ...nextState,

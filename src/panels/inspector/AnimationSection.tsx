@@ -15,9 +15,8 @@ import {
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
 import { NumberInput } from '@/components/ui/number-input';
-import { SliderNumberField } from '@/components/ui/slider-number-field';
 import { NoticeSurface } from '@/components/ui/settings-panel';
-import { FormField, SwitchBlock } from '../InspectorControls';
+import { FormField, RangeField, SwitchBlock } from '../InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard } from './CommonSections';
 import { hasAnimation, getAnimationSummary, isScrollAnimation, requiresStickyForAnimation } from '../../animations/selectors';
 import { getPresetsForTrigger, getPresetParams, NAMED_EASINGS } from '../../animations/animationApi';
@@ -195,7 +194,7 @@ export function AnimationSection({
                 value={(node.animation && 'outAction' in node.animation ? (node.animation as { outAction?: HoverOutAction }).outAction : undefined) ?? 'reverse'}
                 onValueChange={(value) => actions.onAnimationOptionsChange({ outAction: value as HoverOutAction })}
               >
-                <SelectTrigger>
+                <SelectTrigger size="compact">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,7 +327,7 @@ function PresetParamControl({
           value={String(value ?? param.default ?? param.enum[0])}
           onValueChange={onChange}
         >
-          <SelectTrigger>
+          <SelectTrigger size="compact">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -347,15 +346,14 @@ function PresetParamControl({
     const hasRange = param.min != null && param.max != null;
     if (hasRange) {
       return (
-        <FormField label={label} layout="inline">
-          <SliderNumberField
-            value={typeof value === 'number' ? value : (param.default as number) ?? param.min!}
-            min={param.min!}
-            max={param.max!}
-            unitLabel={param.unit}
-            onChange={(v) => onChange(v)}
-          />
-        </FormField>
+        <RangeField
+          label={label}
+          value={typeof value === 'number' ? value : (param.default as number) ?? param.min!}
+          min={param.min!}
+          max={param.max!}
+          unit={param.unit}
+          onValueChange={(v) => onChange(v)}
+        />
       );
     }
     return (
@@ -365,6 +363,7 @@ function PresetParamControl({
           min={param.min ?? 0}
           max={param.max ?? 1000}
           step={1}
+          unitLabel={param.unit}
           onChange={(v) => onChange(v)}
         />
       </FormField>

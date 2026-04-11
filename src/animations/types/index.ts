@@ -49,6 +49,21 @@ export type KeyframeAnimationEffect = {
   easing?: string;
 };
 
+// ── Timing options ──────────────────────────────────────────────────────────
+// Timing options apply to time-based triggers (entrance, ongoing, click, hover).
+// Scroll and mouse triggers are driven by position, not time.
+
+export type AnimationTimingOptions = {
+  duration?: number;   // Animation duration in ms
+  delay?: number;      // Animation start delay in ms
+  easing?: string;     // CSS easing function
+};
+
+export type OngoingTimingOptions = AnimationTimingOptions & {
+  iterations?: number;   // Number of iterations (Infinity for infinite)
+  alternate?: boolean;   // Alternate direction on each iteration
+};
+
 // ── Per-trigger AnimationDefinition variants ──────────────────────────────────
 // Each variant restricts which named effects are allowed while keyframe is
 // always permitted. Discriminated on `trigger`.
@@ -57,6 +72,7 @@ export type EntranceAnimationDefinition = {
   trigger: 'entrance';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | KeyframeAnimationEffect;
+  timing?: AnimationTimingOptions;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
@@ -65,6 +81,7 @@ export type OngoingAnimationDefinition = {
   trigger: 'ongoing';
   triggerId?: NodeId;
   effect: NamedOngoingEffect | KeyframeAnimationEffect;
+  timing?: OngoingTimingOptions;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
@@ -89,6 +106,7 @@ export type ClickAnimationDefinition = {
   trigger: 'click' | 'activate';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | NamedOngoingEffect | KeyframeAnimationEffect;
+  timing?: AnimationTimingOptions;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
@@ -99,6 +117,7 @@ export type HoverAnimationDefinition = {
   trigger: 'hover' | 'interest';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | NamedOngoingEffect | KeyframeAnimationEffect;
+  timing?: AnimationTimingOptions;
   outAction?: HoverOutAction;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
@@ -144,6 +163,7 @@ export type PresetParam = {
   enum?: readonly (string | number)[];
   min?: number;
   max?: number;
+  unit?: string;
   description?: string;
 };
 

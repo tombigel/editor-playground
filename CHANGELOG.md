@@ -15,6 +15,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add commitlint and automatic changelog categorization
 - add commit message guidelines and enforce Conventional Commits format
 - add grouped option headers and height cap to SearchableSelect
+- add timing controls, named easings, and preserve timing on preset change
 
 ### Changed
 - update expected titles for section:reference to include 'Changelog'

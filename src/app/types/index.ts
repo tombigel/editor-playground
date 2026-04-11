@@ -14,7 +14,7 @@ import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, Animat
 import type { PageId, DocumentPage, SiteSettings } from '../../model/types/site';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
-import type { AnimationTriggerType, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
+import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -116,7 +116,7 @@ export type EditorAction =
   | { type: 'stickyElevated'; value: boolean }
   | { type: 'animationPreset'; trigger: AnimationTriggerType; preset: string; params?: Record<string, unknown> }
   | { type: 'animationKeyframe'; trigger: AnimationTriggerType; name: string; keyframes: KeyframeAnimationEffect['keyframes']; duration?: number; easing?: string }
-  | { type: 'animationOptions'; options: { outAction?: HoverOutAction; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean } }
+  | { type: 'animationOptions'; options: { outAction?: HoverOutAction; timing?: AnimationTimingOptions | OngoingTimingOptions; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean } }
   | { type: 'animationClear' }
   | { type: 'animationDocSettings'; settings: DocumentAnimationSettings }
   | { type: 'orderBack' }

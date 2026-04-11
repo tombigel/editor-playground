@@ -772,6 +772,16 @@ describe('panels/InspectorPanel', () => {
     expect(markup).not.toContain('data-ui="select-trigger"');
   });
 
+  it('renders size labels on a fixed rail with additional spacing before the control', () => {
+    const markup = renderToStaticMarkup(
+      <SizeInlineField label="W" nodeId="node_1" axis="width" value="120px" onChange={() => {}} />,
+    );
+
+    expect(markup).toContain('gap-1.5');
+    expect(markup).toContain('w-4');
+    expect(markup).toContain('text-right');
+  });
+
   it('normalizes aspect-ratio expressions from a single inline text field', () => {
     expect(normalizeAspectRatioExpression('16 / 9')).toBe('16/9');
     expect(normalizeAspectRatioExpression('1.5')).toBe('1.5');
