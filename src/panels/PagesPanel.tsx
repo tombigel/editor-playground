@@ -1,7 +1,6 @@
 import { BookOpenText } from 'lucide-react';
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -9,7 +8,7 @@ import {
 } from 'react';
 import type { DocumentModel, DocumentPage, PageId, SiteSettings } from '@/api/editorApi';
 import { PopoverSurface } from '@/components/ui/popover';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import { PageEditorContent } from './PageEditorContent';
 import { PageTreeContent } from './PageTreeContent';
@@ -89,20 +88,8 @@ export function PagesPanel({
   }, [initialTab]);
 
   useEffect(() => {
-    if (selectedPageId) {
-      setFocusedPageId(selectedPageId);
-    }
-  }, [selectedPageId]);
-
-  useEffect(() => {
-    if (!focusedPageId) {
-      setFocusedPageId(activePageId ?? pages[0]?.id ?? null);
-      return;
-    }
-    if (!pages.some((page) => page.id === focusedPageId)) {
-      setFocusedPageId(activePageId ?? pages[0]?.id ?? null);
-    }
-  }, [activePageId, focusedPageId, pages]);
+    setFocusedPageId(selectedPageId ?? activePageId ?? pages[0]?.id ?? null);
+  }, [activePageId, pages, selectedPageId]);
 
   useEffect(() => {
     if (!panelDragState) {
@@ -184,10 +171,18 @@ export function PagesPanel({
     });
   }
 
-  const selectedPage = useMemo(
-    () => pages.find((page) => page.id === focusedPageId) ?? null,
-    [focusedPageId, pages],
-  );
+  const selectedPage = pages.find((page) => page.id === focusedPageId) ?? null;
+
+  function handlePageSelect(pageId: PageId) {
+    setActiveTab('page');
+    setFocusedPageId(pageId);
+    onSetActivePage(pageId);
+  }
+
+  function handleAddPage() {
+    setActiveTab('page');
+    onAddPage();
+  }
 
   return (
     <PopoverSurface
@@ -223,68 +218,49 @@ export function PagesPanel({
       </div>
 
       <div className="min-h-0">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'page' | 'settings')}>
-          <TabsContent value="page" className="m-0">
-            <div className="grid min-h-[560px] grid-cols-[280px_minmax(0,1fr)]">
-              <aside className="editor-bg-subtle editor-border-subtle min-h-0 border-r">
-                <PageTreeContent
-                  document={document}
-                  activePageId={activePageId}
-                  onSetActivePage={(pageId) => {
-                    setFocusedPageId(pageId);
-                    onSetActivePage(pageId);
-                  }}
-                  onAddPage={() => {
-                    onAddPage();
-                    const nextPages = document.pages ?? [];
-                    const lastPage = nextPages[nextPages.length - 1];
-                    if (lastPage) {
-                      setFocusedPageId(lastPage.id);
-                    }
-                  }}
-                  onDeletePage={onDeletePage}
-                  onSetPageParent={onSetPageParent}
-                  onReorderPage={onReorderPage}
-                  onSetPageVisibility={onSetPageVisibility}
-                />
-              </aside>
-              <div className="editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto px-5 py-4">
-                <div className="max-w-[420px]">
-                  {selectedPage ? (
-                    <PageEditorContent
-                      page={selectedPage}
-                      document={document}
-                      onSetDisplayName={onSetPageDisplayName}
-                      onSetHomePage={onSetPageAsHome}
-                      onSetLang={onSetPageLang}
-                      onSetSlug={onSetPageSlug}
-                      onAddAlias={onAddPageAlias}
-                      onRemoveAlias={onRemovePageAlias}
-                      onSetVisibility={onSetPageVisibility}
-                      onSetViewTransition={onSetPageViewTransition}
-                      onSetParent={onSetPageParent}
-                      onSyncPageLinks={onSyncPageLinks}
-                      onValidateLinks={onValidateLinks}
-                    />
-                  ) : (
-                    <div className="editor-text-muted text-sm">No page selected.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
+        <div className="grid min-h-[560px] grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="editor-bg-subtle editor-border-subtle min-h-0 border-r">
+            <PageTreeContent
+              document={document}
+              activePageId={activePageId}
+              onSetActivePage={handlePageSelect}
+              onAddPage={handleAddPage}
+              onDeletePage={onDeletePage}
+              onSetPageParent={onSetPageParent}
+              onReorderPage={onReorderPage}
+              onSetPageVisibility={onSetPageVisibility}
+            />
+          </aside>
 
-          <TabsContent value="settings" className="m-0">
-            <div className="editor-scrollbar editor-scrollbar-gutter max-h-[560px] overflow-y-auto px-5 py-4">
-              <div className="max-w-[420px]">
+          <div className="editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto px-5 py-4">
+            <div className="max-w-[420px]">
+              {activeTab === 'settings' ? (
                 <PagesSiteSettingsContent
                   siteSettings={document.siteSettings}
                   onSetSiteSettings={onSetSiteSettings}
                 />
-              </div>
+              ) : selectedPage ? (
+                <PageEditorContent
+                  page={selectedPage}
+                  document={document}
+                  onSetDisplayName={onSetPageDisplayName}
+                  onSetHomePage={onSetPageAsHome}
+                  onSetLang={onSetPageLang}
+                  onSetSlug={onSetPageSlug}
+                  onAddAlias={onAddPageAlias}
+                  onRemoveAlias={onRemovePageAlias}
+                  onSetVisibility={onSetPageVisibility}
+                  onSetViewTransition={onSetPageViewTransition}
+                  onSetParent={onSetPageParent}
+                  onSyncPageLinks={onSyncPageLinks}
+                  onValidateLinks={onValidateLinks}
+                />
+              ) : (
+                <div className="editor-text-muted text-sm">No page selected.</div>
+              )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </PopoverSurface>
   );

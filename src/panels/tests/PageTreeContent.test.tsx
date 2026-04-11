@@ -62,6 +62,9 @@ describe("panels/PageTreeContent", () => {
 		expect(markup).toContain('data-ui="tree-row-label-content"');
 		expect(markup).toContain('aria-label="Delete About"');
 		expect(markup).toContain("editor-pill-subtle");
+		expect(markup).toContain('class="editor-border-subtle border-t px-3 py-3"');
+		expect(markup).toContain('data-variant="default"');
+		expect(markup).toContain("Add page");
 	});
 
 	it("does not render children of collapsed parents by default", () => {

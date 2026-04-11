@@ -1,4 +1,4 @@
-import { Ban, File, Trash2 } from "lucide-react";
+import { Ban, File, Plus, Trash2 } from "lucide-react";
 import {
 	useEffect,
 	useRef,
@@ -394,15 +394,14 @@ export function PageTreeContent({
 					</div>
 				)}
 			</div>
-			<div className="border-t px-3 py-2">
+			<div className="editor-border-subtle border-t px-3 py-3">
 				<Button
 					type="button"
-					variant="ghost"
-					size="sm"
-					className="w-full justify-start text-sm"
+					className="w-full justify-center gap-2"
 					onClick={onAddPage}
 				>
-					+ Add page
+					<Plus className="h-4 w-4" />
+					Add page
 				</Button>
 			</div>
 
