@@ -794,6 +794,27 @@ Rules:
 - mixed-selection presentation belongs in the shared contract when more than one control uses it
 - warnings and informational notes should use the shared notice surfaces unless the content is truly stage-specific
 
+### 13.2 Field Layout Modes
+
+Implementation reference: [src/panels/controls/FormLayout.tsx](../src/panels/controls/FormLayout.tsx)
+
+`FormField` accepts a `layout` prop that selects one of four label-to-control arrangements. Use the appropriate layout for the control type:
+
+| Layout             | Description                                          | Use when                                                 |
+| ------------------ | ---------------------------------------------------- | -------------------------------------------------------- |
+| `stack` (default)  | Label above, control fills width                     | Multi-line inputs, textareas, wide SearchableSelect      |
+| `inline`           | Label left, control right, justify-between           | Selects, switches, pills — most inspector controls       |
+| `inline-start`     | Label left, control immediately after, no justify    | Compact badges, status indicators next to a label        |
+| `inline-group`     | Label left, group of controls right, justify-between | Multiple related inputs (e.g. X/Y pair, color + opacity) |
+
+Rules:
+
+- prefer `inline` for inspector panel controls — it is the most space-efficient layout for the narrow panel width
+- use `stack` only when the control is wide enough that inline layout would compress the label unreadably
+- `inline-group` is for controls that belong together semantically (width + height, color + opacity) but are distinct fields
+- `inline-start` is rare — use it for read-only status badges or compact indicators where justify-between would leave too much gap
+- the `layout` prop is on `FormField` only; `LabeledControlRow` and `LabeledFieldStack` remain available as lower-level primitives for non-inspector contexts
+
 ### 13.2 Color Picker Note
 
 Implementation reference:

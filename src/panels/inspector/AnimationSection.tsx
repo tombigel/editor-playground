@@ -16,7 +16,7 @@ import {
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
 import { NumberInput } from '@/components/ui/number-input';
-import { LabeledControlRow, NoticeSurface } from '@/components/ui/settings-panel';
+import { NoticeSurface } from '@/components/ui/settings-panel';
 import { FormField, SwitchBlock } from '../InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard } from './CommonSections';
 import { hasAnimation, getAnimationSummary, isScrollAnimation, requiresStickyForAnimation } from '../../animations/selectors';
@@ -109,7 +109,7 @@ export function AnimationSection({
 
       {enabled ? (
         <>
-          <FormField label="Trigger">
+          <FormField label="Trigger" layout="inline">
             <Select
               value={summary?.trigger ?? 'entrance'}
               onValueChange={handleTriggerChange}
@@ -140,7 +140,7 @@ export function AnimationSection({
               }
             />
           ) : summary ? (
-            <FormField label="Effect">
+            <FormField label="Effect" layout="inline">
               <div className="flex items-center gap-2">
                 <span className="editor-text-strong text-xs font-medium">{summary.effectName}</span>
                 <span className="editor-bg-subtle editor-border-subtle editor-text-muted rounded border px-1.5 py-0.5 text-[10px]">
@@ -167,7 +167,7 @@ export function AnimationSection({
 
           {/* T12: Hover out-action selector */}
           {(summary?.trigger === 'hover' || summary?.trigger === 'interest') ? (
-            <FormField label="On leave">
+            <FormField label="On leave" layout="inline">
               <Select
                 value={(node.animation && 'outAction' in node.animation ? (node.animation as { outAction?: HoverOutAction }).outAction : undefined) ?? 'reverse'}
                 onValueChange={(value) => actions.onAnimationOptionsChange({ outAction: value as HoverOutAction })}
@@ -187,17 +187,12 @@ export function AnimationSection({
           {/* T14: Requires sticky toggle */}
           {isScrollAnimation(node) ? (
             <>
-              <LabeledControlRow
-                label="Requires sticky"
-                className="gap-3"
-                labelClassName="text-[11px] font-medium"
-                controlClassName="shrink-0"
-              >
+              <FormField label="Requires sticky" layout="inline">
                 <Switch
                   checked={requiresStickyForAnimation(node)}
                   onCheckedChange={(checked) => actions.onAnimationOptionsChange({ requiresSticky: checked })}
                 />
-              </LabeledControlRow>
+              </FormField>
               {requiresStickyForAnimation(node) && !node.sticky?.enabled ? (
                 <NoticeSurface tone="info" className="px-2.5 py-1.5 text-[11px] leading-4">
                   Enable sticky to use this animation effectively.
@@ -207,19 +202,14 @@ export function AnimationSection({
           ) : null}
 
           {/* T13: Reduced-motion toggle */}
-          <LabeledControlRow
-            label="Disable under reduced motion"
-            className="gap-3"
-            labelClassName="text-[11px] font-medium"
-            controlClassName="shrink-0"
-          >
+          <FormField label="Disable under reduced motion" layout="inline">
             <Switch
               checked={node.animation?.reducedMotion === 'disable'}
               onCheckedChange={(checked) =>
                 actions.onAnimationOptionsChange({ reducedMotion: checked ? 'disable' : undefined })
               }
             />
-          </LabeledControlRow>
+          </FormField>
 
           <div className="flex justify-end">
             <Button
@@ -261,7 +251,7 @@ function PresetPicker({
   }, [trigger]);
 
   return (
-    <FormField label="Effect">
+    <FormField label="Effect" layout="inline">
       <SearchableSelect
         value={currentPreset}
         options={options}
@@ -319,7 +309,7 @@ function PresetParamControl({
 
   if (param.type === 'string' && param.enum && param.enum.length > 0) {
     return (
-      <FormField label={label}>
+      <FormField label={label} layout="inline">
         <Select
           value={String(value ?? param.default ?? param.enum[0])}
           onValueChange={onChange}
@@ -341,7 +331,7 @@ function PresetParamControl({
 
   if (param.type === 'number') {
     return (
-      <FormField label={label}>
+      <FormField label={label} layout="inline">
         <NumberInput
           value={typeof value === 'number' ? value : (param.default as number) ?? 0}
           min={param.min ?? 0}
@@ -355,17 +345,12 @@ function PresetParamControl({
 
   if (param.type === 'boolean') {
     return (
-      <LabeledControlRow
-        label={label}
-        className="gap-3"
-        labelClassName="text-[11px] font-medium"
-        controlClassName="shrink-0"
-      >
+      <FormField label={label} layout="inline">
         <Switch
           checked={Boolean(value ?? param.default ?? false)}
           onCheckedChange={onChange}
         />
-      </LabeledControlRow>
+      </FormField>
     );
   }
 

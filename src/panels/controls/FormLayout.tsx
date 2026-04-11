@@ -5,12 +5,93 @@ import {
 } from '@/components/ui/settings-panel';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
 
-export function FormField({ label, children }: { label: string; children: ReactNode }) {
+// ── Field layout types ────────────────────────────────────────────────────────
+//
+// Four layout modes for labeled inspector controls:
+//
+//  'stack'         Label above, field fills width (default).
+//                  ┌──────────────────────┐
+//                  │ Label                │
+//                  │ [  control         ] │
+//                  └──────────────────────┘
+//
+//  'inline'        Label left, control right, justify-between.
+//                  ┌──────────────────────┐
+//                  │ Label     [control]  │
+//                  └──────────────────────┘
+//
+//  'inline-start'  Label left, control immediately after (no justify).
+//                  ┌──────────────────────┐
+//                  │ Label [control]      │
+//                  └──────────────────────┘
+//
+//  'inline-group'  Label left, group of controls right, justify-between.
+//                  ┌──────────────────────┐
+//                  │ Label  [c1] [c2] [c3]│
+//                  └──────────────────────┘
+
+export type FieldLayout = 'stack' | 'inline' | 'inline-start' | 'inline-group';
+
+export function FormField({
+  label,
+  layout = 'stack',
+  children,
+  className,
+  labelClassName,
+  controlClassName,
+  controlWidth,
+}: {
+  label: string;
+  layout?: FieldLayout;
+  children: ReactNode;
+  className?: string;
+  labelClassName?: string;
+  controlClassName?: string;
+  controlWidth?: string;
+}) {
+  if (layout === 'stack') {
+    return (
+      <div className={cn('space-y-0.5', className)} data-ui="form-field" data-layout="stack">
+        <Label className={cn('text-[11px] font-medium', labelClassName)}>{label}</Label>
+        {children}
+      </div>
+    );
+  }
+
+  if (layout === 'inline') {
+    return (
+      <div className={cn('flex items-center gap-1', className)} data-ui="form-field" data-layout="inline">
+        <Label className={cn('min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
+        <div
+          className={cn('ml-auto flex min-w-0 items-center justify-end', controlClassName)}
+          style={controlWidth ? { width: controlWidth } : undefined}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  if (layout === 'inline-start') {
+    return (
+      <div className={cn('flex items-center gap-2', className)} data-ui="form-field" data-layout="inline-start">
+        <Label className={cn('shrink-0 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
+        <div className={cn('min-w-0', controlClassName)}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  // layout === 'inline-group'
   return (
-    <div className="space-y-0.5">
-      <Label className="text-[11px] font-medium">{label}</Label>
-      {children}
+    <div className={cn('flex items-center gap-1', className)} data-ui="form-field" data-layout="inline-group">
+      <Label className={cn('shrink-0 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
+      <div className={cn('ml-auto flex min-w-0 items-center gap-1', controlClassName)}>
+        {children}
+      </div>
     </div>
   );
 }
