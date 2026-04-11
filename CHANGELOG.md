@@ -13,6 +13,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Added
 - add commitlint and automatic changelog categorization
+- add commit message guidelines and enforce Conventional Commits format
 
 ---
 

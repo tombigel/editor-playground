@@ -88,6 +88,31 @@ Key skills:
 
 Run `/maintenance` periodically to catch drift. Run `/interaction-pattern <type>` before building new interactive UI.
 
+## Commit Messages
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) format. Commitlint enforces this via a `commit-msg` hook.
+
+Format: `type(optional-scope): description`
+
+Allowed types:
+
+| Type | Changelog section | When to use |
+| --- | --- | --- |
+| `feat` | Added | New feature or capability |
+| `fix` | Fixed | Bug fix |
+| `refactor` | Changed | Code restructuring, no behavior change |
+| `style` | Changed | Formatting, CSS, visual polish |
+| `perf` | Changed | Performance improvement |
+| `docs` | Changed | Documentation only |
+| `test` | Changed | Adding or updating tests |
+| `build` | Changed | Build system or dependency changes |
+| `ci` | Changed | CI/CD changes |
+| `chore` | Changed | Maintenance, tooling, config |
+
+The first line of each commit message becomes a bullet in `CHANGELOG.md` under `[Unreleased]`, categorized automatically by prefix. Write the description as a user-facing change note, not a code-level detail.
+
+When a minor or major version bump is run (`/version-bump`), the `[Unreleased]` section is converted to a versioned entry.
+
 ## Archived Documents
 
 Files under `archive/` are historical records only. Do not read, reference, or act on them unless explicitly asked. They reflect past state and may contradict current code or active plans.
