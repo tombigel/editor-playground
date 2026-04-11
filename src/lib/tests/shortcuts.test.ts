@@ -50,7 +50,7 @@ function createMockFocusTarget(options: {
 }
 
 describe('shortcut registry', () => {
-  it('matches arrange shortcuts with industry-standard shift variants', () => {
+  it('matches arrange shortcuts with platform-specific front and back ordering variants', () => {
     const sendBackward = findMatchingShortcut(
       {
         code: 'BracketLeft',
@@ -73,8 +73,8 @@ describe('shortcut registry', () => {
         code: 'BracketLeft',
         metaKey: true,
         ctrlKey: false,
-        shiftKey: true,
-        altKey: false,
+        shiftKey: false,
+        altKey: true,
       },
       {
         interactiveFocus: false,
@@ -85,8 +85,28 @@ describe('shortcut registry', () => {
       'mac',
     );
 
+    const bringToFrontOther = findMatchingShortcut(
+      {
+        code: 'BracketRight',
+        metaKey: false,
+        ctrlKey: true,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: true,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
     expect(sendBackward?.id).toBe('orderBack');
     expect(sendToBack?.id).toBe('orderSendToBack');
+    expect(bringToFrontOther?.id).toBe('orderBringToFront');
+    expect(getShortcutLabel('orderSendToBack', 'mac')).toBe('Cmd + Alt + [');
+    expect(getShortcutLabel('orderBringToFront', 'other')).toBe('Ctrl + Shift + ]');
   });
 
   it('supports redo labels for both mac and non-mac platforms', () => {
@@ -245,7 +265,7 @@ describe('shortcut registry', () => {
     expect(undoOutsideTextInput?.id).toBe('undo');
   });
 
-  it('matches the fonts, layers, and pages panel shortcuts', () => {
+  it('matches the fonts, components, and pages panel shortcuts', () => {
     const fonts = findMatchingShortcut(
       {
         code: 'KeyF',
@@ -263,7 +283,7 @@ describe('shortcut registry', () => {
       'other',
     );
 
-    const layers = findMatchingShortcut(
+    const components = findMatchingShortcut(
       {
         code: 'KeyL',
         metaKey: false,
@@ -316,11 +336,11 @@ describe('shortcut registry', () => {
     );
 
     expect(fonts?.id).toBe('toggleFontsPanel');
-    expect(layers?.id).toBe('toggleLayersPanel');
+    expect(components?.id).toBe('toggleComponentsPanel');
     expect(pages?.id).toBe('togglePagesPanel');
     expect(panelInTextInput).toBeNull();
     expect(getShortcutLabel('toggleFontsPanel', 'other')).toBe('Shift + F');
-    expect(getShortcutLabel('toggleLayersPanel', 'other')).toBe('Shift + L');
+    expect(getShortcutLabel('toggleComponentsPanel', 'other')).toBe('Shift + L');
     expect(getShortcutLabel('togglePagesPanel', 'other')).toBe('Shift + O');
   });
 

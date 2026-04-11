@@ -14,7 +14,7 @@ function createHandlers() {
       toggleSettings: vi.fn(),
       openShortcuts: vi.fn(),
       toggleFontsPanel: vi.fn(),
-      toggleLayersPanel: vi.fn(),
+      toggleComponentsPanel: vi.fn(),
       togglePagesPanel: vi.fn(),
     },
     viewState: {
@@ -98,7 +98,7 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('openSettings'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('showShortcutHelp'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleFontsPanel'), baseState, false, handlers);
-    executeEditorShortcut(getShortcut('toggleLayersPanel'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleComponentsPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('togglePagesPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleBoldSelection'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleUnderlineSelection'), baseState, false, handlers);
@@ -110,7 +110,7 @@ describe('app/shortcutController', () => {
     expect(handlers.panels.toggleSettings).toHaveBeenCalledOnce();
     expect(handlers.panels.openShortcuts).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleFontsPanel).toHaveBeenCalledOnce();
-    expect(handlers.panels.toggleLayersPanel).toHaveBeenCalledOnce();
+    expect(handlers.panels.toggleComponentsPanel).toHaveBeenCalledOnce();
     expect(handlers.panels.togglePagesPanel).toHaveBeenCalledOnce();
     expect(handlers.selection.toggleBoldSelection).toHaveBeenCalledOnce();
     expect(handlers.selection.toggleUnderlineSelection).toHaveBeenCalledOnce();

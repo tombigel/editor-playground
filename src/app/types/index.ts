@@ -207,7 +207,7 @@ export type ShortcutExecutionHandlers = {
     toggleSettings: () => void;
     openShortcuts: () => void;
     toggleFontsPanel: () => void;
-    toggleLayersPanel: () => void;
+    toggleComponentsPanel: () => void;
     togglePagesPanel: () => void;
   };
   viewState: {

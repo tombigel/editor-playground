@@ -162,7 +162,7 @@ export function App() {
       toggleSettings: () => panels.setSettingsOpen((open) => !open),
       openShortcuts: () => panels.setShortcutsOpen(true),
       toggleFontsPanel: () => panels.toggleManageFontsPanel(),
-      toggleLayersPanel: () => panels.toggleLayersPanel(),
+      toggleComponentsPanel: () => panels.toggleLayersPanel(),
       togglePagesPanel: () => panels.togglePagesPanel(),
     },
     viewState: {

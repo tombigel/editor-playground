@@ -80,12 +80,12 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     execution: { actionId: 'toggleFontsPanel' },
   },
   {
-    id: 'toggleLayersPanel',
+    id: 'toggleComponentsPanel',
     category: 'View',
-    description: 'Layers panel',
+    description: 'Components panel',
     combos: [{ code: 'KeyL', keyLabel: 'L', shift: true }],
     context: {},
-    execution: { actionId: 'toggleLayersPanel' },
+    execution: { actionId: 'toggleComponentsPanel' },
   },
   {
     id: 'togglePagesPanel',
@@ -380,7 +380,10 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     id: 'orderSendToBack',
     category: 'Arrange',
     description: 'Send to back',
-    combos: [{ code: 'BracketLeft', keyLabel: '[', mod: true, shift: true }],
+    combos: [
+      { code: 'BracketLeft', keyLabel: '[', meta: true, alt: true, platforms: ['mac'] },
+      { code: 'BracketLeft', keyLabel: '[', ctrl: true, shift: true, platforms: ['other'] },
+    ],
     context: {
       requiresSelection: true,
     },
@@ -390,7 +393,10 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     id: 'orderBringToFront',
     category: 'Arrange',
     description: 'Bring to front',
-    combos: [{ code: 'BracketRight', keyLabel: ']', mod: true, shift: true }],
+    combos: [
+      { code: 'BracketRight', keyLabel: ']', meta: true, alt: true, platforms: ['mac'] },
+      { code: 'BracketRight', keyLabel: ']', ctrl: true, shift: true, platforms: ['other'] },
+    ],
     context: {
       requiresSelection: true,
     },

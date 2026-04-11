@@ -12,7 +12,7 @@ export type ShortcutId =
   | 'openSettings'
   | 'showShortcutHelp'
   | 'toggleFontsPanel'
-  | 'toggleLayersPanel'
+  | 'toggleComponentsPanel'
   | 'togglePagesPanel'
   | 'togglePreviewSticky'
   | 'toggleAnimationPreview'

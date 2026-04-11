@@ -30,8 +30,8 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
   toggleFontsPanel: (_state, _shiftKey, handlers) => {
     handlers.panels.toggleFontsPanel();
   },
-  toggleLayersPanel: (_state, _shiftKey, handlers) => {
-    handlers.panels.toggleLayersPanel();
+  toggleComponentsPanel: (_state, _shiftKey, handlers) => {
+    handlers.panels.toggleComponentsPanel();
   },
   togglePagesPanel: (_state, _shiftKey, handlers) => {
     handlers.panels.togglePagesPanel();

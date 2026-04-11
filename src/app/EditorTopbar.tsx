@@ -367,7 +367,7 @@ export function EditorTopbar({
 								icon={Layers2}
 								checked={layersOpen}
 								shortcut={getShortcutLabel(
-									"toggleLayersPanel",
+									"toggleComponentsPanel",
 									shortcutPlatform,
 								)}
 								onCheckedChange={onToggleLayersPanel}
