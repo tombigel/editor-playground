@@ -32,6 +32,11 @@ export const noopActions: InspectorActionHandlers = {
 	onOpenManageFonts: noop,
 	onStickyElevation: () => undefined,
 	onStickyElevated: () => undefined,
+	onAnimationPresetChange: noop,
+	onAnimationKeyframeChange: noop,
+	onAnimationOptionsChange: noop,
+	onAnimationClear: noop,
+	onAnimationDocSettingsChange: noop,
 };
 
 export const noopOrderState: InspectorOrderState = {

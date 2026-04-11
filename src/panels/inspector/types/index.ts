@@ -5,6 +5,7 @@ import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId } from '../../../model/types/site';
 import type { ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../model/types';
+import type { AnimationTriggerType, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../../animations/types';
 
 export type InspectorNode = DocumentNode;
 export type NonSiteInspectorNode = Exclude<DocumentNode, { contentType: 'site' }>;
@@ -39,6 +40,11 @@ export type InspectorActionHandlers = {
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
+  onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;
+  onAnimationKeyframeChange: (trigger: AnimationTriggerType, effect: KeyframeAnimationEffect) => void;
+  onAnimationOptionsChange: (options: { outAction?: HoverOutAction; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean }) => void;
+  onAnimationClear: () => void;
+  onAnimationDocSettingsChange: (settings: DocumentAnimationSettings) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: () => void;

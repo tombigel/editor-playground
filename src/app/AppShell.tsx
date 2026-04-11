@@ -1121,6 +1121,21 @@ export function AppShell({
 							onStickyElevated={(value) =>
 								dispatch({ type: "stickyElevated", value })
 							}
+							onAnimationPresetChange={(trigger, preset, params) =>
+								dispatch({ type: "animationPreset", trigger, preset, params })
+							}
+							onAnimationKeyframeChange={(trigger, effect) =>
+								dispatch({ type: "animationKeyframe", trigger, name: effect.name, keyframes: effect.keyframes, duration: effect.duration, easing: effect.easing })
+							}
+							onAnimationOptionsChange={(options) =>
+								dispatch({ type: "animationOptions", options })
+							}
+							onAnimationClear={() =>
+								dispatch({ type: "animationClear" })
+							}
+							onAnimationDocSettingsChange={(settings) =>
+								dispatch({ type: "animationDocSettings", settings })
+							}
 							globalStickyElevation={globalStickyElevation}
 							onSetNodeVisibility={(id, value) =>
 								dispatch({ type: "setNodeVisibility", id, value })
@@ -1280,6 +1295,21 @@ export function AppShell({
 						}
 						onStickyElevated={(value) =>
 							dispatch({ type: "stickyElevated", value })
+						}
+						onAnimationPresetChange={(trigger, preset, params) =>
+							dispatch({ type: "animationPreset", trigger, preset, params })
+						}
+						onAnimationKeyframeChange={(trigger, effect) =>
+							dispatch({ type: "animationKeyframe", trigger, name: effect.name, keyframes: effect.keyframes, duration: effect.duration, easing: effect.easing })
+						}
+						onAnimationOptionsChange={(options) =>
+							dispatch({ type: "animationOptions", options })
+						}
+						onAnimationClear={() =>
+							dispatch({ type: "animationClear" })
+						}
+						onAnimationDocSettingsChange={(settings) =>
+							dispatch({ type: "animationDocSettings", settings })
 						}
 						globalStickyElevation={globalStickyElevation}
 						activePageId={state.activePageId}

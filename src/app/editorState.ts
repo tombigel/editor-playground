@@ -45,6 +45,13 @@ import {
   switchTextSubtypeDoc,
 } from '../api/documentApi';
 import {
+  setPresetAnimation,
+  setKeyframeAnimation,
+  updateAnimationOptions,
+  clearAnimation,
+  setDocumentAnimationSettings,
+} from '../api/animationApi';
+import {
   addPage,
   addPageSlugAlias,
   deletePage,
@@ -265,6 +272,38 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         updateStickyField(nextState, nodeId, { elevated: action.value }),
       );
+    case 'animationPreset':
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => ({
+        ...nextState,
+        document: setPresetAnimation(nextState.document, nodeId, {
+          trigger: action.trigger,
+          preset: action.preset,
+          ...(action.params ? action.params : {}),
+        }),
+      }));
+    case 'animationKeyframe':
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => ({
+        ...nextState,
+        document: setKeyframeAnimation(nextState.document, nodeId, {
+          trigger: action.trigger,
+          name: action.name,
+          keyframes: action.keyframes,
+          duration: action.duration,
+          easing: action.easing,
+        }),
+      }));
+    case 'animationOptions':
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => ({
+        ...nextState,
+        document: updateAnimationOptions(nextState.document, nodeId, action.options),
+      }));
+    case 'animationClear':
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) => ({
+        ...nextState,
+        document: clearAnimation(nextState.document, nodeId),
+      }));
+    case 'animationDocSettings':
+      return { ...state, document: setDocumentAnimationSettings(state.document, action.settings) };
     case 'orderBack':
       return selectedIds.length > 0 ? reorderNodes(state, selectedIds, 'back') : state;
     case 'orderForward':

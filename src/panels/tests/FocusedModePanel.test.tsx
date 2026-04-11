@@ -73,6 +73,11 @@ function createInspectorProps() {
     globalStickyElevation: true,
     onStickyElevation: () => undefined,
     onStickyElevated: () => undefined,
+    onAnimationPresetChange: () => {},
+    onAnimationKeyframeChange: () => {},
+    onAnimationOptionsChange: () => {},
+    onAnimationClear: () => {},
+    onAnimationDocSettingsChange: () => {},
   };
 
   return { document, textNode, linkNode, buttonNode, siteNode, baseProps };

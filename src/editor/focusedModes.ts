@@ -1,6 +1,6 @@
 import type { FocusedMode } from './types';
 
-export const FOCUSED_MODE_VALUES = ['layout', 'sticky', 'content', 'design'] as const;
+export const FOCUSED_MODE_VALUES = ['layout', 'sticky', 'content', 'design', 'animation'] as const;
 
 export type ActiveFocusedMode = (typeof FOCUSED_MODE_VALUES)[number];
 
@@ -9,6 +9,7 @@ const FOCUSED_MODE_LABELS: Record<ActiveFocusedMode, string> = {
   sticky: 'Sticky',
   content: 'Content',
   design: 'Design',
+  animation: 'Animation',
 };
 
 export function normalizeFocusedMode(value: unknown): FocusedMode {

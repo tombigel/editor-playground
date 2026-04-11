@@ -3,6 +3,7 @@ import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLeve
 import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../model/defaults';
 import type { PageId } from '../model/types/site';
+import type { AnimationTriggerType, KeyframeAnimationEffect, HoverOutAction, ReducedMotionResponse, DocumentAnimationSettings } from '../api/animationApi';
 import { buildNodeDebugInfo } from '../editor/debugInfo';
 import { isNodeEffectivelyHidden } from '../model/selectors';
 import { InspectorBlockList } from './InspectorBlockList';
@@ -76,6 +77,11 @@ export type InspectorPanelProps = {
   onStickyDurationBottom: (value: number) => void;
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
+  onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;
+  onAnimationKeyframeChange: (trigger: AnimationTriggerType, effect: KeyframeAnimationEffect) => void;
+  onAnimationOptionsChange: (options: { outAction?: HoverOutAction; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean }) => void;
+  onAnimationClear: () => void;
+  onAnimationDocSettingsChange: (settings: DocumentAnimationSettings) => void;
   globalStickyElevation: boolean;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
   onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
@@ -133,6 +139,11 @@ export function InspectorPanel({
   onStickyDurationBottom,
   onStickyElevation,
   onStickyElevated,
+  onAnimationPresetChange,
+  onAnimationKeyframeChange,
+  onAnimationOptionsChange,
+  onAnimationClear,
+  onAnimationDocSettingsChange,
   globalStickyElevation,
   onSwitchTextSubtype,
   onApplyTextNodeMarkdown,
@@ -174,6 +185,11 @@ export function InspectorPanel({
       onStickyDurationBottom,
       onStickyElevation,
       onStickyElevated,
+      onAnimationPresetChange,
+      onAnimationKeyframeChange,
+      onAnimationOptionsChange,
+      onAnimationClear,
+      onAnimationDocSettingsChange,
       onSwitchTextSubtype,
       onApplyTextNodeMarkdown,
       onSetTextDocumentContent,
@@ -189,7 +205,10 @@ export function InspectorPanel({
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
-      onStickyElevation, onStickyElevated, onSwitchTextSubtype, onSetTextDocumentContent,
+      onStickyElevation, onStickyElevated,
+      onAnimationPresetChange, onAnimationKeyframeChange, onAnimationOptionsChange,
+      onAnimationClear, onAnimationDocSettingsChange,
+      onSwitchTextSubtype, onSetTextDocumentContent,
       onApplyTextNodeMarkdown,
       onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,

@@ -81,6 +81,24 @@ export function resolveFocusedModeBlocks(
     ];
   }
 
+  if (mode === 'animation' && node) {
+    return [
+      createFocusedModeBlock('animation-behavior', 'behavior', () => (
+        <InspectorSectionCard
+          title="Animation"
+          headerContent={options.headerContent}
+          headerAction={headerAction}
+          contentClassName="px-3 py-3"
+        >
+          <div className="editor-text-strong text-xs font-medium">Animation controls</div>
+          <div className="editor-text-muted mt-1 text-xs leading-5">
+            Animation authoring UI will be added here.
+          </div>
+        </InspectorSectionCard>
+      )),
+    ];
+  }
+
   if (mode === 'layout' && node) {
     return [
       createFocusedModeBlock('layout', 'primary', () => (

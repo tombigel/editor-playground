@@ -57,6 +57,11 @@ type Props = Pick<
   | 'onStickyDurationBottom'
   | 'onStickyElevation'
   | 'onStickyElevated'
+  | 'onAnimationPresetChange'
+  | 'onAnimationKeyframeChange'
+  | 'onAnimationOptionsChange'
+  | 'onAnimationClear'
+  | 'onAnimationDocSettingsChange'
   | 'globalStickyElevation'
   | 'onSwitchTextSubtype'
   | 'onApplyTextNodeMarkdown'
@@ -114,6 +119,11 @@ export function FocusedModePanel({
   onStickyDurationBottom,
   onStickyElevation,
   onStickyElevated,
+  onAnimationPresetChange,
+  onAnimationKeyframeChange,
+  onAnimationOptionsChange,
+  onAnimationClear,
+  onAnimationDocSettingsChange,
   globalStickyElevation,
   onSwitchTextSubtype,
   onApplyTextNodeMarkdown,
@@ -153,6 +163,11 @@ export function FocusedModePanel({
     onStickyDurationBottom,
     onStickyElevation,
     onStickyElevated,
+    onAnimationPresetChange,
+    onAnimationKeyframeChange,
+    onAnimationOptionsChange,
+    onAnimationClear,
+    onAnimationDocSettingsChange,
     onSwitchTextSubtype,
     onApplyTextNodeMarkdown,
     onSetTextDocumentContent,

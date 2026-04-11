@@ -2,7 +2,7 @@ import type { DocumentModel, NodeId } from '../../model/types';
 import type { EditorDarkTheme, EditorLightTheme, ThemeMode } from '../../lib/types';
 import type { PageId } from '../../model/types/site';
 
-export type FocusedMode = null | 'layout' | 'sticky' | 'content' | 'design';
+export type FocusedMode = null | 'layout' | 'sticky' | 'content' | 'design' | 'animation';
 export type FocusedPanelOffset = { x: number; y: number };
 
 export type ConfirmReplaceRole = {

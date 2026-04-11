@@ -68,6 +68,11 @@ describe('panels/InspectorPanel', () => {
       globalStickyElevation: true,
       onStickyElevation: () => undefined,
       onStickyElevated: () => undefined,
+      onAnimationPresetChange: () => {},
+      onAnimationKeyframeChange: () => {},
+      onAnimationOptionsChange: () => {},
+      onAnimationClear: () => {},
+      onAnimationDocSettingsChange: () => {},
       ...overrides,
     };
   }

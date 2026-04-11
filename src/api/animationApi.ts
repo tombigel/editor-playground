@@ -62,3 +62,11 @@ export type {
   AnimationInvokeAction,
   AnimationPreviewHandle,
 } from '../animations/types';
+
+export {
+  hasAnimation,
+  getAnimationSummary,
+  isScrollAnimation,
+  requiresStickyForAnimation,
+  getAnimatedNodeIds,
+} from '../animations/selectors';
