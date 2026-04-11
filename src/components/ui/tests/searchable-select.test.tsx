@@ -65,6 +65,6 @@ describe('components/ui/searchable-select', () => {
     });
 
     expect(position.top).toBe(278);
-    expect(position.maxHeight).toBe(522);
+    expect(position.maxHeight).toBe(256);
   });
 });

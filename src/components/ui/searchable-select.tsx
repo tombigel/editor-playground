@@ -17,6 +17,7 @@ export type SearchableSelectOption = {
   keywords?: string[];
   description?: string;
   dividerAfter?: boolean;
+  group?: string;
 };
 
 export function getSearchableSelectPosition(options: {
@@ -65,9 +66,12 @@ export function getSearchableSelectPosition(options: {
         ),
       );
 
-  const maxHeight = Math.max(
-    96,
-    shouldOpenAbove ? availableAbove - SEARCHABLE_SELECT_TRIGGER_GAP_PX : availableBelow - SEARCHABLE_SELECT_TRIGGER_GAP_PX,
+  const maxHeight = Math.min(
+    SEARCHABLE_SELECT_MAX_HEIGHT_PX,
+    Math.max(
+      96,
+      shouldOpenAbove ? availableAbove - SEARCHABLE_SELECT_TRIGGER_GAP_PX : availableBelow - SEARCHABLE_SELECT_TRIGGER_GAP_PX,
+    ),
   );
 
   return { top, left, width: clampedWidth, maxHeight, side: shouldOpenAbove ? 'top' : 'bottom' as const };
@@ -216,36 +220,47 @@ export function SearchableSelect({
             {filteredOptions.length === 0 ? (
               <div className="editor-text-muted px-3 py-2 text-xs">{emptyText}</div>
             ) : (
-              filteredOptions.map((option) => {
+              filteredOptions.map((option, index) => {
                 const selected = option.value === value;
+                const showGroupHeader =
+                  option.group && option.group !== filteredOptions[index - 1]?.group;
                 return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    data-ui="searchable-select-item"
-                    className={cn(
-                      'editor-text-strong flex w-full items-start gap-2 rounded-sm px-3 py-2 text-left text-xs',
-                      option.dividerAfter && 'editor-border-subtle mb-1 border-b pb-3',
-                    )}
-                    onClick={() => {
-                      onValueChange(option.value);
-                      setOpen(false);
-                    }}
-                  >
-                    <span className="flex h-4 w-4 items-center justify-center pt-0.5">
-                      {selected ? <Check className="h-4 w-4" /> : null}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate">{option.label}</span>
-                      {option.description ? (
-                        <span className="editor-text-muted block truncate text-[11px]">
-                          {option.description}
-                        </span>
-                      ) : null}
-                    </span>
-                  </button>
+                  <React.Fragment key={option.value}>
+                    {showGroupHeader ? (
+                      <div
+                        role="presentation"
+                        className="editor-text-muted px-3 pt-3 pb-1 text-[10px] font-semibold"
+                      >
+                        {option.group}
+                      </div>
+                    ) : null}
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      data-ui="searchable-select-item"
+                      className={cn(
+                        'editor-text-strong flex w-full items-start gap-2 rounded-sm px-3 py-2 text-left text-xs',
+                        option.dividerAfter && 'editor-border-subtle mb-1 border-b pb-3',
+                      )}
+                      onClick={() => {
+                        onValueChange(option.value);
+                        setOpen(false);
+                      }}
+                    >
+                      <span className="flex h-4 w-4 items-center justify-center pt-0.5">
+                        {selected ? <Check className="h-4 w-4" /> : null}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">{option.label}</span>
+                        {option.description ? (
+                          <span className="editor-text-muted block truncate text-[11px]">
+                            {option.description}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                  </React.Fragment>
                 );
               })
             )}
