@@ -18,6 +18,7 @@ import {
   WrapperDesignSection,
   type InspectorSectionHeaderAction,
 } from '../inspector/CommonSections';
+import { AnimationSection } from '../inspector/AnimationSection';
 import { StickySection } from '../inspector/StickySection';
 import type { InspectorSectionContext, ResolvedInspectorBlock } from '../inspector/types';
 
@@ -84,17 +85,14 @@ export function resolveFocusedModeBlocks(
   if (mode === 'animation' && node) {
     return [
       createFocusedModeBlock('animation-behavior', 'behavior', () => (
-        <InspectorSectionCard
-          title="Animation"
+        <AnimationSection
+          node={node}
+          actions={context.actions}
+          focusedMode={context.focusedMode}
           headerContent={options.headerContent}
           headerAction={headerAction}
-          contentClassName="px-3 py-3"
-        >
-          <div className="editor-text-strong text-xs font-medium">Animation controls</div>
-          <div className="editor-text-muted mt-1 text-xs leading-5">
-            Animation authoring UI will be added here.
-          </div>
-        </InspectorSectionCard>
+          contentClassName="space-y-3 px-3 pt-1.5 pb-5"
+        />
       )),
     ];
   }

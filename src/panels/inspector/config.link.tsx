@@ -1,3 +1,4 @@
+import { AnimationSection } from './AnimationSection';
 import { LinkAppearanceSection, LinkContentSection, LinkDesignSection, LinkTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
@@ -23,6 +24,12 @@ const linkStickySection: InspectorSectionDefinition = {
   id: 'sticky',
   render: ({ node, actions, focusedMode, globalStickyElevation }) =>
     isLinkNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
+};
+
+const linkAnimationSection: InspectorSectionDefinition = {
+  id: 'animation',
+  render: ({ node, actions, focusedMode }) =>
+    isLinkNode(node) ? <AnimationSection node={node} actions={actions} focusedMode={focusedMode} /> : null,
 };
 
 const linkDesignSection: InspectorSectionDefinition = {
@@ -83,6 +90,13 @@ export const LINK_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Sticky behavior',
     description: 'Target, offsets, and duration behavior.',
     sections: [linkStickySection],
+  }),
+  createSectionBlock({
+    id: 'animation-behavior',
+    bucket: 'behavior',
+    title: 'Animation',
+    description: 'Motion effects and trigger configuration.',
+    sections: [linkAnimationSection],
   }),
   createSectionBlock({
     id: 'content',

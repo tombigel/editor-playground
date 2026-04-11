@@ -6,6 +6,7 @@ import {
   TextInitial,
   type LucideIcon,
 } from 'lucide-react';
+import { AnimationSection } from './AnimationSection';
 import { TextAppearanceSection, TextContentSection, RichTextContentSection, CodeContentSection, TextDesignSection, TextTextStyleSection, CodeTextStyleSection, CodeDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
@@ -248,6 +249,12 @@ const textStickySection: InspectorSectionDefinition = {
     isAnyTextNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
+const textAnimationSection: InspectorSectionDefinition = {
+  id: 'animation',
+  render: ({ node, actions, focusedMode }) =>
+    isAnyTextNode(node) ? <AnimationSection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+};
+
 export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
   summaryBlock,
   createSectionBlock({
@@ -263,6 +270,13 @@ export const TEXT_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Sticky behavior',
     description: 'Target, offsets, and duration behavior.',
     sections: [textStickySection],
+  }),
+  createSectionBlock({
+    id: 'animation-behavior',
+    bucket: 'behavior',
+    title: 'Animation',
+    description: 'Motion effects and trigger configuration.',
+    sections: [textAnimationSection],
   }),
   createSectionBlock({
     id: 'content',

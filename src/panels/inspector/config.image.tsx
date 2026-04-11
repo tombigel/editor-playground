@@ -1,3 +1,4 @@
+import { AnimationSection } from './AnimationSection';
 import { ImageContentSection, ImageDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
@@ -22,6 +23,12 @@ const imageStickySection: InspectorSectionDefinition = {
   id: 'sticky',
   render: ({ node, actions, focusedMode, globalStickyElevation }) =>
     isImageNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
+};
+
+const imageAnimationSection: InspectorSectionDefinition = {
+  id: 'animation',
+  render: ({ node, actions, focusedMode }) =>
+    isImageNode(node) ? <AnimationSection node={node} actions={actions} focusedMode={focusedMode} /> : null,
 };
 
 const imageDesignSection: InspectorSectionDefinition = {
@@ -52,6 +59,13 @@ export const IMAGE_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Sticky behavior',
     description: 'Target, offsets, and duration behavior.',
     sections: [imageStickySection],
+  }),
+  createSectionBlock({
+    id: 'animation-behavior',
+    bucket: 'behavior',
+    title: 'Animation',
+    description: 'Motion effects and trigger configuration.',
+    sections: [imageAnimationSection],
   }),
   createSectionBlock({
     id: 'content',

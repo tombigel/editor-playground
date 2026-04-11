@@ -1,3 +1,4 @@
+import { AnimationSection } from './AnimationSection';
 import { WrapperDesignSection } from './CommonSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
@@ -22,6 +23,12 @@ const wrapperStickySection: InspectorSectionDefinition = {
     isWrapperNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
 };
 
+const wrapperAnimationSection: InspectorSectionDefinition = {
+  id: 'animation',
+  render: ({ node, actions, focusedMode }) =>
+    isWrapperNode(node) ? <AnimationSection node={node} actions={actions} focusedMode={focusedMode} /> : null,
+};
+
 export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonly InspectorBlockDefinition[] {
   return [
     summaryBlock,
@@ -38,6 +45,13 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
       title,
       description: 'Target, offsets, and duration behavior.',
       sections: [wrapperStickySection],
+    }),
+    createSectionBlock({
+      id: 'animation-behavior',
+      bucket: 'behavior',
+      title: 'Animation',
+      description: 'Motion effects and trigger configuration.',
+      sections: [wrapperAnimationSection],
     }),
     createSectionBlock({
       id: 'design',

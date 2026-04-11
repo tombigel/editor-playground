@@ -75,8 +75,8 @@ describe('panels/inspector/schema', () => {
 
     const blocks = resolveInspectorBlocks({ document, node: wrapper, actions, orderState, focusedMode: null, globalStickyElevation: true });
     expect(resolveInspectorConfigKey(wrapper)).toBe('section');
-    expect(blocks.map((block) => block.id)).toEqual(['layout', 'sticky-behavior', 'design']);
-    expect(blocks.map((block) => block.bucket)).toEqual(['primary', 'behavior', 'primary']);
+    expect(blocks.map((block) => block.id)).toEqual(['layout', 'sticky-behavior', 'animation-behavior', 'design']);
+    expect(blocks.map((block) => block.bucket)).toEqual(['primary', 'behavior', 'behavior', 'primary']);
     expect(blocks[0]?.title).toBe('Layout');
     expect(blocks[1]?.title).toBe('Section sticky behavior');
     expect(blocks[1]?.sections.map((section) => section.id)).toEqual(['sticky']);
@@ -94,14 +94,15 @@ describe('panels/inspector/schema', () => {
 
     const blocks = resolveInspectorBlocks({ document, node: textNode, actions, orderState, focusedMode: null, globalStickyElevation: true });
     expect(resolveInspectorConfigKey(textNode)).toBe('text');
-    expect(blocks.map((block) => block.id)).toEqual(['layout', 'sticky-behavior', 'content', 'text-style', 'design']);
+    expect(blocks.map((block) => block.id)).toEqual(['layout', 'sticky-behavior', 'animation-behavior', 'content', 'text-style', 'design']);
     expect(blocks[1]?.title).toBe('Sticky behavior');
-    expect(blocks[2]?.title).toBe('Content');
-    expect(blocks[2]?.description).toContain('Copy');
-    expect(blocks[3]?.title).toBe('Text style');
-    expect(blocks[3]?.description).toContain('Typography');
-    expect(blocks[4]?.title).toBe('Design');
-    expect(blocks[4]?.description).toContain('Color');
+    expect(blocks[2]?.title).toBe('Animation');
+    expect(blocks[3]?.title).toBe('Content');
+    expect(blocks[3]?.description).toContain('Copy');
+    expect(blocks[4]?.title).toBe('Text style');
+    expect(blocks[4]?.description).toContain('Typography');
+    expect(blocks[5]?.title).toBe('Design');
+    expect(blocks[5]?.description).toContain('Color');
   });
 
   it('keeps custom summary blocks separate from section-based layout blocks', () => {
@@ -154,6 +155,7 @@ describe('panels/inspector/schema', () => {
     expect(resolveInspectorBlocks({ document, node: linkNode, actions, orderState, focusedMode: null, globalStickyElevation: true }).map((block) => block.id)).toEqual([
       'layout',
       'sticky-behavior',
+      'animation-behavior',
       'content',
       'text-style',
       'design',
@@ -161,12 +163,14 @@ describe('panels/inspector/schema', () => {
     expect(resolveInspectorBlocks({ document, node: imageNode, actions, orderState, focusedMode: null, globalStickyElevation: true }).map((block) => block.id)).toEqual([
       'layout',
       'sticky-behavior',
+      'animation-behavior',
       'content',
       'design',
     ]);
     expect(resolveInspectorBlocks({ document, node: buttonNode, actions, orderState, focusedMode: null, globalStickyElevation: true }).map((block) => block.id)).toEqual([
       'layout',
       'sticky-behavior',
+      'animation-behavior',
       'content',
       'text-style',
       'design',

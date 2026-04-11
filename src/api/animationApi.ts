@@ -70,3 +70,16 @@ export {
   requiresStickyForAnimation,
   getAnimatedNodeIds,
 } from '../animations/selectors';
+
+export {
+  PRESET_METADATA,
+  TRIGGER_METADATA,
+  getPresetMetadata,
+  getPresetLabel,
+  getTriggerLabel,
+} from '../animations/presetMetadata';
+
+export type {
+  PresetMetadata,
+  TriggerMetadata,
+} from '../animations/presetMetadata';

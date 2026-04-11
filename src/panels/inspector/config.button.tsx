@@ -1,3 +1,4 @@
+import { AnimationSection } from './AnimationSection';
 import { ButtonAppearanceSection, ButtonContentSection, ButtonDesignSection, ButtonTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
@@ -23,6 +24,12 @@ const buttonStickySection: InspectorSectionDefinition = {
   id: 'sticky',
   render: ({ node, actions, focusedMode, globalStickyElevation }) =>
     isButtonNode(node) ? <StickySection node={node} actions={actions} focusedMode={focusedMode} globalStickyElevation={globalStickyElevation} /> : null,
+};
+
+const buttonAnimationSection: InspectorSectionDefinition = {
+  id: 'animation',
+  render: ({ node, actions, focusedMode }) =>
+    isButtonNode(node) ? <AnimationSection node={node} actions={actions} focusedMode={focusedMode} /> : null,
 };
 
 const buttonDesignSection: InspectorSectionDefinition = {
@@ -83,6 +90,13 @@ export const BUTTON_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [
     title: 'Sticky behavior',
     description: 'Target, offsets, and duration behavior.',
     sections: [buttonStickySection],
+  }),
+  createSectionBlock({
+    id: 'animation-behavior',
+    bucket: 'behavior',
+    title: 'Animation',
+    description: 'Motion effects and trigger configuration.',
+    sections: [buttonAnimationSection],
   }),
   createSectionBlock({
     id: 'content',
