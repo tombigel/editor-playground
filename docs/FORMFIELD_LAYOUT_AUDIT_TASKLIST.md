@@ -17,7 +17,7 @@
   - update `docs/PLAYGROUND_SPEC.md`
   - update `docs/EDITOR_STYLE_GUIDE.md` only if the current wording needs a tighter exception rule
   - add/update representative tests for converted rows
-- [ ] `TODO 5` Final verification
+- [x] `TODO 5` Final verification
   - run targeted tests
   - run `npm run build`
   - fix any introduced failures before completion

@@ -24,7 +24,7 @@ describe("panels/inspector/content section rows", () => {
 			<CodeDesignSection node={codeNode} onTextChange={() => {}} />,
 		);
 
-		expect((buttonMarkup.match(/data-layout=\"inline\"/g) ?? []).length).toBeGreaterThanOrEqual(2);
+		expect((buttonMarkup.match(/data-layout="inline"/g) ?? []).length).toBeGreaterThanOrEqual(2);
 		expect(buttonMarkup).toContain(">Border<");
 		expect(codeMarkup).toContain('data-layout="inline"');
 		expect(codeMarkup).toContain(">Border<");
@@ -35,7 +35,7 @@ describe("panels/inspector/content section rows", () => {
 		const page = document.pages?.[0];
 		const node = createButtonTextNode(document.rootId);
 
-		if (!page || !page.sectionIds[0]) {
+		if (!page?.sectionIds[0]) {
 			throw new Error("Expected initial document page with a section");
 		}
 
@@ -59,7 +59,7 @@ describe("panels/inspector/content section rows", () => {
 
 		expect(navigationMarkup).toContain("Page");
 		expect(navigationMarkup).toContain("Jump to section (optional)");
-		expect((navigationMarkup.match(/data-layout=\"stack\"/g) ?? []).length).toBeGreaterThanOrEqual(2);
+		expect((navigationMarkup.match(/data-layout="stack"/g) ?? []).length).toBeGreaterThanOrEqual(2);
 		expect(openInNewTabMarkup).toContain('data-layout="inline"');
 		expect(openInNewTabMarkup).toContain('aria-label="Open in a new tab"');
 	});

@@ -10,7 +10,6 @@ import {
   BorderControlGroup,
   FormField,
   HoverColorField,
-  InspectorInlineRow,
   ShadowControlGroup,
   SpacingField,
   readShadowFieldValues,

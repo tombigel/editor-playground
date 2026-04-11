@@ -34,7 +34,7 @@ describe("panels/inspector/PageInspectorSection", () => {
 		expect(markup).toContain("Visible");
 		expect(markup).toContain("Transition");
 		expect(markup).toContain("Parent");
-		expect((markup.match(/data-layout=\"stack\"/g) ?? []).length).toBeGreaterThanOrEqual(2);
-		expect((markup.match(/data-layout=\"inline\"/g) ?? []).length).toBeGreaterThanOrEqual(4);
+		expect((markup.match(/data-layout="stack"/g) ?? []).length).toBeGreaterThanOrEqual(2);
+		expect((markup.match(/data-layout="inline"/g) ?? []).length).toBeGreaterThanOrEqual(4);
 	});
 });
