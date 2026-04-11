@@ -1110,14 +1110,17 @@ The animation inspector section appears in the behavior bucket of all animatable
 
 **Inspector controls:**
 
-- Enable/disable toggle with Sparkles icon
+- Enable/disable toggle with Rocket icon
 - Trigger type selector (entrance, ongoing, scroll, click, hover, mouse) with smart defaults per trigger
-- Searchable preset picker populated from `getPresetsForTrigger()`
+- Searchable preset picker populated from `getPresetsForTrigger()`, with "Entrance"/"Loop" group headers for click and hover triggers
 - Dynamic preset parameter controls generated from `getPresetParams()` schema (enum selects, number inputs, boolean switches)
+- Timing options (duration, delay) with ms unit — visible for entrance, ongoing, click, hover triggers
+- Easing selector with 28 named easings (Penner set) from `@wix/motion`, grouped by family — visible for entrance, ongoing, click, hover triggers
+- Iterations and alternate controls — visible only for ongoing trigger
+- Number params with defined min/max use a slider control with toggle to number input (`SliderNumberField`)
 - Hover out-action selector (reverse/keep/none) — visible only for hover/interest triggers
 - Requires-sticky toggle — visible only for scroll triggers, with warning when sticky is disabled
 - Reduced-motion toggle (per-animation disable)
-- Clear animation button
 
 **Focused mode:** Animation has a dedicated focused mode (`'animation'`) accessible from the inspector section header, following the same pattern as sticky focused mode.
 
@@ -1125,8 +1128,6 @@ The animation inspector section appears in the behavior bucket of all animatable
 
 - Selection frame: Rocket badge icon on selected animated nodes (alongside Pin for sticky, Layers2 for elevated)
 - Layers panel: Rocket icon on animated node rows
-- Non-selected nodes: small accent dot at top-right corner of animated nodes (`data-has-animation` attribute + CSS `::before`)
-- Scroll animations: dashed left-border accent on scroll-driven nodes (`data-scroll-animation` attribute)
 
 **Preset metadata:** Human-readable labels and descriptions for all 64 presets and 6 trigger types in `src/animations/presetMetadata.ts`, accessible via `getPresetLabel()` and `getTriggerLabel()`.
 
@@ -1155,7 +1156,7 @@ The editor surface is organized around one stage, a small set of persistent rail
 
 The editor supports multi-page management with three UI entry points:
 
-1. **Dedicated Pages panel**: a draggable floating page-management panel with `Page` and `Settings` tabs
+1. **Dedicated Pages panel**: a draggable floating page-management panel with a persistent page tree on the left and `Page` / `Settings` view toggles for the right column
 2. **Inspector no-selection state**: when no node is selected, inspector shows the current page editor with direct actions for page settings and the full pages panel
 3. **Top-bar pages dropdown**: a centered page switcher in the main top bar for quick page switching and `New page`
 
@@ -1168,9 +1169,9 @@ Page switching behavior:
 
 Page settings:
 
-- The Pages panel `Page` tab uses a two-column layout:
+- The Pages panel uses a persistent two-column layout:
   - left column: page tree with expand/collapse and reorder/reparent drag behavior
-  - right column: embedded page editor content for the selected page
+  - right column: either embedded page editor content for the selected page or the site-wide page settings view
   - the panel is narrower than the general settings dialog and keeps the site-settings tab content in a constrained form column instead of stretching rows across the full panel width
 - The embedded page editor handles displayName, slug, slug aliases, page language, visibility, transition, and parent-page selection
 - `autoSyncSlugs` site setting controls automatic slug generation during renames
@@ -1179,7 +1180,8 @@ Page settings:
 - Creating a page with an existing name or slug auto-increments both values; alias collisions are treated as slug collisions too
 - The no-selection inspector page editor supports inline slug editing, direct parent-page selection, and page language
 - Inspector `Page settings` deep-links to the Pages panel `Page` tab with the current page selected
-- The Pages panel `Settings` tab contains only site-wide page settings; export controls are not duplicated there
+- The Pages panel `Settings` view contains only site-wide page settings; export controls are not duplicated there
+- Clicking a page row or `Add page` always returns the right column to the `Page` view
 
 Follow-link popups:
 

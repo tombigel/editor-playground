@@ -209,7 +209,7 @@ None yet.
 - `Source`: `RI-02`
 - `Relationship`: Landed as part of `RI-03`.
 - `Why it matters`: A functional animation authoring flow needs visible stage feedback, especially if sticky already has clear stage indicators.
-- `Current state`: **Complete** — three indicator layers: (1) Rocket badge on selection frame and layers panel rows for animated nodes, (2) accent dot (`::before`) on non-selected animated nodes via `data-has-animation` attribute, (3) dashed left-border accent on scroll-animated nodes via `data-scroll-animation` attribute. Both CSS indicators hidden when node is selected to avoid doubling with the selection badge. Delivered sha: e8dcb7e.
+- `Current state`: **Complete** — Rocket badge on selection frame and layers panel rows for animated nodes. Previously had accent dot and dashed border indicators on non-selected nodes; removed as not spec'd. Delivered sha: e8dcb7e.
 
 ##### Animation authoring UI for development phase
 

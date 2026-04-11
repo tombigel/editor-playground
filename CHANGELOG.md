@@ -27,6 +27,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - make edge dropdown compact and inline
 - replace toggle-pill with always-input number fields, unify RangeField
 - remove slider knob focus ring and add visible pill hover state
+- add inspector action button demo, update spec and roadmap
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout

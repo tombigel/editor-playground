@@ -5,6 +5,7 @@ import {
 	Info,
 	Keyboard,
 	Settings,
+	TextCursorInput,
 	X,
 } from "lucide-react";
 import { useState } from "react";
@@ -309,6 +310,19 @@ function IconButtonDemo() {
 							>
 								<X className="h-3.5 w-3.5" />
 							</button>
+						),
+					},
+					{
+						label: "Inspector action",
+						render: () => (
+							<Button
+								type="button"
+								variant="menu"
+								size="icon"
+								className="h-7 w-7 rounded-sm"
+							>
+								<TextCursorInput className="h-3.5 w-3.5" />
+							</Button>
 						),
 					},
 				]}

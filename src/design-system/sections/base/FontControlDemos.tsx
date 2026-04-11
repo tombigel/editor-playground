@@ -107,7 +107,7 @@ function FontPickerDemo() {
 			</div>
 			{/* Multi-select (mixed) */}
 			<div>
-				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
+				<div className="editor-text-muted mb-1.5 text-[11px] font-medium">Multi-select</div>
 				<div className="flex gap-4">
 					<div style={{ width: 136 }}>
 						<div className="editor-text-muted mb-1 text-[10px]">Mixed family</div>
@@ -176,7 +176,7 @@ function SelectDemo() {
 		<div className="space-y-6">
 			{/* Default size */}
 			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Default — h-8, text-sm
 				</div>
 				<div className="w-[200px]">
@@ -205,7 +205,7 @@ function SelectDemo() {
 
 			{/* Compact size */}
 			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Compact — h-8, text-xs (inspector controls)
 				</div>
 				<div className="editor-border-subtle w-full max-w-[300px] space-y-2 rounded-sm border p-3">
@@ -244,7 +244,7 @@ function SelectDemo() {
 
 			{/* Small size */}
 			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Small — h-7, text-[11px]
 				</div>
 				<div className="w-[160px]">
@@ -263,7 +263,7 @@ function SelectDemo() {
 
 			{/* Multi-select (mixed) */}
 			<div>
-				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+				<div className="editor-text-muted mb-1.5 text-[11px] font-medium">
 					Multi-select
 				</div>
 				<div className="w-[200px]">
