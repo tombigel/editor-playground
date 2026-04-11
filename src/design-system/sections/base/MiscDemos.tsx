@@ -443,7 +443,7 @@ export function MiscDemos() {
 								>
 									Snap
 								</MenubarToggleWithMoreItem>
-								<MenubarPanelLinkItem shortcut="Shift + L">Layers panel</MenubarPanelLinkItem>
+								<MenubarPanelLinkItem shortcut="Shift + L">Components panel</MenubarPanelLinkItem>
 							</MenubarContent>
 						</MenubarMenu>
 					</Menubar>

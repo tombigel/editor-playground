@@ -365,8 +365,8 @@ Ordering:
 
 - `Mod + [`: position backward
 - `Mod + ]`: position forward
-- `Mod + Shift + [`: send to back
-- `Mod + Shift + ]`: bring to front
+- macOS: `Cmd + Alt + [` / `Cmd + Alt + ]`: send to back / bring to front
+- Windows/Linux: `Ctrl + Shift + [` / `Ctrl + Shift + ]`: send to back / bring to front
 
 Text styling:
 

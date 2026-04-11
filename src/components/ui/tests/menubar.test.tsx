@@ -62,7 +62,7 @@ describe('components/ui/menubar', () => {
             <MenubarSubmenu label="Theme">
               <MenubarItem selected>Air</MenubarItem>
             </MenubarSubmenu>
-            <MenubarPanelLinkItem>Layers panel</MenubarPanelLinkItem>
+            <MenubarPanelLinkItem>Components panel</MenubarPanelLinkItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>,
@@ -76,6 +76,6 @@ describe('components/ui/menubar', () => {
     expect(markup).toContain('editor-menubar-toggle-more-row');
     expect(markup).toContain('editor-menubar-group-label');
     expect(markup).toContain('Shift + P');
-    expect(markup).toContain('Layers panel');
+    expect(markup).toContain('Components panel');
   });
 });

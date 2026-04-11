@@ -25,7 +25,7 @@ export function ShortcutHelpContent({ compact = false }: Props) {
         <div>
           <div className="editor-text-strong text-[13px] font-medium leading-4">Keyboard shortcuts</div>
           <div className="editor-text-muted text-xs leading-4">
-            Mod maps to {modLabel}. Arrange uses the standard bracket keys for layer order.
+            Mod maps to {modLabel}. Arrange keeps bracket keys for layer order with platform-specific front and back variants.
           </div>
         </div>
       </div>
