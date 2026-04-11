@@ -20,6 +20,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add axe accessibility e2e check
 - add Select size variants and bordered slider demos
 - split editor and site axe scans
+- strengthen tabs hover accent state
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout

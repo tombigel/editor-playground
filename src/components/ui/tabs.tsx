@@ -21,7 +21,7 @@ const tabsListVariants = cva('inline-flex border', {
   },
 });
 
-const tabsTriggerVariants = cva('font-medium', {
+const tabsTriggerVariants = cva('font-medium transition-colors', {
   variants: {
     variant: {
       default: 'editor-text-muted',
@@ -34,7 +34,8 @@ const tabsTriggerVariants = cva('font-medium', {
     },
     selected: {
       true: 'editor-bg-surface editor-text-strong shadow-sm',
-      false: '',
+      false:
+        'hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] hover:text-[color:var(--editor-accent)] focus-visible:bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] focus-visible:text-[color:var(--editor-accent)]',
     },
   },
   defaultVariants: {
