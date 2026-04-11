@@ -208,6 +208,85 @@ describe('shortcut registry', () => {
     expect(getShortcutLabel('toggleSnapEnabled', 'other')).toBe('Shift + G');
   });
 
+  it('matches the phase 2 view shortcuts', () => {
+    const preview = findMatchingShortcut(
+      {
+        code: 'KeyV',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    const showHidden = findMatchingShortcut(
+      {
+        code: 'KeyH',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    const showGrid = findMatchingShortcut(
+      {
+        code: 'KeyR',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    const showDebugInfo = findMatchingShortcut(
+      {
+        code: 'KeyD',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    expect(preview?.id).toBe('openPreviewSite');
+    expect(showHidden?.id).toBe('toggleShowHidden');
+    expect(showGrid?.id).toBe('toggleShowGridLanes');
+    expect(showDebugInfo?.id).toBe('toggleShowDebugInfo');
+    expect(getShortcutLabel('openPreviewSite', 'other')).toBe('Shift + V');
+    expect(getShortcutLabel('toggleShowHidden', 'other')).toBe('Shift + H');
+    expect(getShortcutLabel('toggleShowGridLanes', 'other')).toBe('Shift + R');
+    expect(getShortcutLabel('toggleShowDebugInfo', 'other')).toBe('Shift + D');
+  });
+
   it('lets browser undo and redo win in text-entry contexts', () => {
     const textInput = createMockFocusTarget({ textInput: true, interactive: true });
     const baseContext = {

@@ -27,6 +27,9 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
   showShortcutHelp: (_state, _shiftKey, handlers) => {
     handlers.panels.openShortcuts();
   },
+  openPreviewSite: (_state, _shiftKey, handlers) => {
+    handlers.app.openPreviewSite();
+  },
   toggleFontsPanel: (_state, _shiftKey, handlers) => {
     handlers.panels.toggleFontsPanel();
   },
@@ -56,6 +59,15 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
         maxSpeedPxPerSecond: state.snapSettings.guideSnap.maxSpeedPxPerSecond,
       },
     });
+  },
+  toggleShowHidden: (state, _shiftKey, handlers) => {
+    handlers.viewState.setShowHidden(!state.showHidden);
+  },
+  toggleShowGridLanes: (state, _shiftKey, handlers) => {
+    handlers.viewState.setShowGridLanes(!state.showGridLanes);
+  },
+  toggleShowDebugInfo: (state, _shiftKey, handlers) => {
+    handlers.viewState.setShowDebugInfo(!state.showDebugInfo);
   },
   nudgeSelectionLeft: (_state, shiftKey, handlers) => {
     handlers.selection.nudgeSelection(shiftKey ? -10 : -1, 0);

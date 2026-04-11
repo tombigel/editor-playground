@@ -12,9 +12,9 @@ Live implementation checklist for the two-phase shortcut expansion.
 - [x] TODO 3 Phase 1 UI/docs sync
   - update menus, rail/help labels, settings/help surfaces, `PLAYGROUND_SPEC`
   - update render/help tests
-- [ ] TODO 4 Phase 2 registry/type additions
+- [x] TODO 4 Phase 2 registry/type additions
   - add `toggleShowHidden`, `toggleShowGridLanes`, `toggleShowDebugInfo`, `openPreviewSite`
-- [ ] TODO 5 Phase 2 controller wiring + tests
+- [x] TODO 5 Phase 2 controller wiring + tests
   - wire new handlers through controller/types/App
   - add/adjust controller and registry tests
 - [ ] TODO 6 Phase 2 UI/docs sync

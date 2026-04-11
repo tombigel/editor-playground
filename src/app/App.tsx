@@ -23,6 +23,7 @@ import { useAppPanels } from "./useAppPanels";
 import { useAppRuntime } from "./useAppRuntime";
 import { useAppViewModel } from "./useAppViewModel";
 import { useEditorKeyboardShortcuts } from "./useEditorKeyboardShortcuts";
+import { openPreviewSiteWindow } from "./previewWindow";
 import type { ShortcutExecutionHandlers } from "./types";
 
 export function App() {
@@ -150,6 +151,9 @@ export function App() {
   useAppRuntime(state, viewModel.resolvedTheme, dispatch);
 
   const shortcutHandlers: ShortcutExecutionHandlers = {
+    app: {
+      openPreviewSite: () => openPreviewSiteWindow(),
+    },
     history: {
       undo: () => dispatch({ type: "undo" }),
       redo: () => dispatch({ type: "redo" }),
@@ -173,6 +177,8 @@ export function App() {
       setSpacerVisibility: (value) =>
         dispatch({ type: "setSpacerVisibility", value }),
       setSnapSettings: (value) => dispatch({ type: "setSnapSettings", value }),
+      setShowGridLanes: (value) => dispatch({ type: "setShowGridLanes", value }),
+      setShowDebugInfo: (value) => dispatch({ type: "setShowDebugInfo", value }),
     },
     selection: {
       nudgeSelection: (deltaX, deltaY) =>
@@ -237,6 +243,8 @@ export function App() {
       animationPreview: state.ui.animationPreview,
       spacerVisibility: state.ui.spacerVisibility,
       snapSettings: state.ui.snapSettings,
+      showGridLanes: state.ui.showGridLanes,
+      showDebugInfo: state.ui.showDebugInfo,
     },
     hasDismissiblePanels:
       panels.hasDismissiblePanels || state.ui.temporaryInspectorOpen,

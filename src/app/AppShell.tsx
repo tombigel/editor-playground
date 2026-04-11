@@ -71,6 +71,7 @@ import {
 } from "@/components/ui/dialog";
 import { PopoverSurface } from "@/components/ui/popover";
 import { getShortcutLabel, type ShortcutPlatform } from "@/lib/shortcuts";
+import { getOrCreateEditorWindowId, openPreviewSiteWindow } from "./previewWindow";
 import {
 	getAccentColorForDarkThemeSelection,
 	getAccentColorForLightThemeSelection,
@@ -232,25 +233,7 @@ export function AppShell({
 		[],
 	);
 	const isPreview = searchParams.get("mode") === "preview";
-	const editorWindowId = useMemo(() => {
-		if (typeof window === "undefined") {
-			return "server";
-		}
-
-		const storageKey = "sticky-window-group-id";
-		const storage = "localStorage" in window ? window.localStorage : undefined;
-		const existingId = storage?.getItem(storageKey);
-		if (existingId) {
-			return existingId;
-		}
-
-		const nextId =
-			typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-				? crypto.randomUUID()
-				: `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-		storage?.setItem(storageKey, nextId);
-		return nextId;
-	}, []);
+	const editorWindowId = useMemo(() => getOrCreateEditorWindowId(), []);
 
 	const [showStorageWarning, setShowStorageWarning] = useState(false);
 	const [linkPopupVisible, setLinkPopupVisible] = useState(false);
@@ -708,12 +691,7 @@ export function AppShell({
 					onUndo={() => dispatch({ type: "undo" })}
 					onRedo={() => dispatch({ type: "redo" })}
 					onPreview={() => {
-						const previewUrl = new URL(
-							window.location.pathname,
-							window.location.origin,
-						);
-						previewUrl.searchParams.set("mode", "preview");
-						window.open(previewUrl.toString(), `sticky-preview-${editorWindowId}`);
+						openPreviewSiteWindow(editorWindowId);
 					}}
 					onImportJson={handleImportJson}
 					onExportJson={handleExportJson}

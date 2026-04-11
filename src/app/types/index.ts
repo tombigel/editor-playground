@@ -195,9 +195,14 @@ export type ShortcutUiState = {
   animationPreview: AnimationPreviewState;
   spacerVisibility: 'selected' | 'all';
   snapSettings: SnapSettings;
+  showGridLanes: boolean;
+  showDebugInfo: boolean;
 };
 
 export type ShortcutExecutionHandlers = {
+  app: {
+    openPreviewSite: () => void;
+  };
   history: {
     undo: () => void;
     redo: () => void;
@@ -216,6 +221,8 @@ export type ShortcutExecutionHandlers = {
     setAnimationPreview: (value: Partial<AnimationPreviewState>) => void;
     setSpacerVisibility: (value: 'selected' | 'all') => void;
     setSnapSettings: (value: Partial<SnapSettings>) => void;
+    setShowGridLanes: (value: boolean) => void;
+    setShowDebugInfo: (value: boolean) => void;
   };
   selection: {
     nudgeSelection: (deltaX: number, deltaY: number) => void;

@@ -5,6 +5,9 @@ import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 
 function createHandlers() {
   return {
+    app: {
+      openPreviewSite: vi.fn(),
+    },
     history: {
       undo: vi.fn(),
       redo: vi.fn(),
@@ -23,6 +26,8 @@ function createHandlers() {
       setAnimationPreview: vi.fn(),
       setSpacerVisibility: vi.fn(),
       setSnapSettings: vi.fn(),
+      setShowGridLanes: vi.fn(),
+      setShowDebugInfo: vi.fn(),
     },
     selection: {
       nudgeSelection: vi.fn(),
@@ -59,6 +64,8 @@ const baseState: ShortcutUiState = {
   },
   spacerVisibility: 'selected',
   snapSettings: DEFAULT_SNAP_SETTINGS,
+  showGridLanes: false,
+  showDebugInfo: false,
 };
 
 describe('app/shortcutController', () => {
@@ -68,6 +75,9 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('togglePreviewSticky'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleSpacerVisibility'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleSnapEnabled'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleShowHidden'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleShowGridLanes'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleShowDebugInfo'), baseState, false, handlers);
 
     expect(handlers.viewState.setPreviewSticky).toHaveBeenCalledWith(false);
     expect(handlers.viewState.setSpacerVisibility).toHaveBeenCalledWith('all');
@@ -79,6 +89,9 @@ describe('app/shortcutController', () => {
         maxSpeedPxPerSecond: 1200,
       },
     });
+    expect(handlers.viewState.setShowHidden).toHaveBeenCalledWith(false);
+    expect(handlers.viewState.setShowGridLanes).toHaveBeenCalledWith(true);
+    expect(handlers.viewState.setShowDebugInfo).toHaveBeenCalledWith(true);
   });
 
   it('maps shift-modified nudge shortcuts to larger movement deltas', () => {
@@ -97,6 +110,7 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('dismissPanels'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('openSettings'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('showShortcutHelp'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('openPreviewSite'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleFontsPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleComponentsPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('togglePagesPanel'), baseState, false, handlers);
@@ -109,6 +123,7 @@ describe('app/shortcutController', () => {
     expect(handlers.panels.closePanels).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleSettings).toHaveBeenCalledOnce();
     expect(handlers.panels.openShortcuts).toHaveBeenCalledOnce();
+    expect(handlers.app.openPreviewSite).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleFontsPanel).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleComponentsPanel).toHaveBeenCalledOnce();
     expect(handlers.panels.togglePagesPanel).toHaveBeenCalledOnce();
