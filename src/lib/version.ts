@@ -1,4 +1,4 @@
-export const PROJECT_VERSION = '0.4.23';
-export const DOCUMENT_MODEL_VERSION = '1.3.23';
-export const API_VERSION = '1.3.23';
-export const EDITOR_VERSION = '0.10.23';
+export const PROJECT_VERSION = '0.4.24';
+export const DOCUMENT_MODEL_VERSION = '1.3.24';
+export const API_VERSION = '1.3.24';
+export const EDITOR_VERSION = '0.10.24';

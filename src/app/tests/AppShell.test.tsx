@@ -115,8 +115,10 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("editor-text-strong text-sm font-semibold");
 		expect(markup).toContain("editor-insert-button h-8 w-8 rounded-md p-0");
 		expect(markup).not.toContain("editor-insert-button-inner");
-		expect(markup).toContain('data-panel-trigger="layers"');
+		expect(markup).toContain('data-panel-trigger="components"');
 		expect(markup).toContain('data-panel-trigger="pages"');
+		expect(markup).toContain('aria-label="Components"');
+		expect(markup).toContain('aria-label="Pages"');
 		expect(markup).toContain("editor-rail-entry-button");
 		expect(markup).toContain("editor-rail-toggle-button");
 	});

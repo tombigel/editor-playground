@@ -22,6 +22,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout
+- improve editor accessibility semantics
 
 ---
 

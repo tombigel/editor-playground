@@ -81,6 +81,9 @@ export function InsertPanel({
 	onOpenPages = () => undefined,
 	onClosePages = () => undefined,
 }: Props) {
+	const componentsLabel = "Components";
+	const pagesLabel = "Pages";
+
 	return (
 		<div className="flex flex-col items-center gap-2 overflow-visible">
 			<div className="pb-1">
@@ -150,7 +153,7 @@ export function InsertPanel({
 				content={
 					<>
 						<span className="editor-text-strong block text-sm font-medium">
-							Components
+							{componentsLabel}
 						</span>
 						<span className="editor-text-muted mt-0.5 block text-xs">
 							Structure, visibility, and order
@@ -162,7 +165,8 @@ export function InsertPanel({
 					type="button"
 					variant="ghost"
 					size="icon"
-					data-panel-trigger="layers"
+					data-panel-trigger="components"
+					aria-label={componentsLabel}
 					aria-pressed={layersOpen}
 					className="editor-rail-entry-button mt-2"
 					onClick={(event) => {
@@ -183,7 +187,7 @@ export function InsertPanel({
 				content={
 					<>
 						<span className="editor-text-strong block text-sm font-medium">
-							Pages
+							{pagesLabel}
 						</span>
 						<span className="editor-text-muted mt-0.5 block text-xs">
 							Manage and switch site pages
@@ -196,6 +200,7 @@ export function InsertPanel({
 					variant="ghost"
 					size="icon"
 					data-panel-trigger="pages"
+					aria-label={pagesLabel}
 					aria-pressed={pagesOpen}
 					className="editor-rail-entry-button"
 					onClick={(event) => {

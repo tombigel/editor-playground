@@ -76,6 +76,9 @@ export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfacePro
     return (
       <div
         ref={setRef}
+        hidden={!open}
+        aria-hidden={open ? undefined : true}
+        data-state={open ? 'open' : 'closed'}
         className={cn('ui-popover-surface m-0 outline-none', className)}
         {...surfaceProps}
       >

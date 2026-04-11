@@ -305,14 +305,16 @@ export function Stage({
 	}, [document, dragDrop.isDragging, editingId, layoutRevision, selectedIds]);
 
 	return (
+		// biome-ignore lint/a11y/noStaticElementInteractions: editor stage shell handles pointer-driven selection and drag interactions
 		// biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor stage needs aria-activedescendant for selection tracking
 		// biome-ignore lint/a11y/useKeyWithClickEvents: second-click rich edit activation mirrors pointer-driven stage selection
-		<section
+		<div
 			ref={handleStageRef}
 			className="stage-shell editor-scrollbar editor-scrollbar-gutter"
 			// biome-ignore lint/a11y/noNoninteractiveTabindex: editor stage requires keyboard focus for shortcuts and selection
 			tabIndex={0}
 			aria-label="Editor stage"
+			aria-description="Tab selects components in stage order. Arrow keys move the selected component by 1 pixel. Shift plus arrow keys move by 10 pixels."
 			aria-activedescendant={
 				selectedId ? `stage-node-${selectedId}` : undefined
 			}
@@ -494,10 +496,6 @@ export function Stage({
 			}}
 			onLostPointerCapture={dragDrop.handleLostPointerCapture}
 		>
-			<p className="sr-only">
-				Tab selects components in stage order. Arrow keys move the selected
-				component by 1 pixel. Shift plus arrow keys move by 10 pixels.
-			</p>
 			<RichEditContext.Provider value={{
 				editingId,
 				activateEdit,
@@ -590,7 +588,7 @@ export function Stage({
 				/>
 			) : null}
 			</RichEditContext.Provider>
-		</section>
+		</div>
 	);
 }
 

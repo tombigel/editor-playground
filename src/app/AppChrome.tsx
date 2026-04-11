@@ -274,6 +274,7 @@ export function RailToggleButton({
     >
       <button
         type="button"
+        aria-label={label}
         aria-pressed={pressed}
         data-pressed={pressed ? 'true' : 'false'}
         onClick={onClick}

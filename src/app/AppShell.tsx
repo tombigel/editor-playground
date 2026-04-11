@@ -927,7 +927,7 @@ export function AppShell({
 						</div>
 					</nav>
 
-					<main className="editor-workspace-shell relative min-h-0 overflow-hidden">
+					<div className="editor-workspace-shell relative min-h-0 overflow-hidden">
 						{showStorageWarning && (
 							<div
 								className="editor-bg-subtle editor-border-subtle flex items-center justify-between border-b px-4 py-2 text-xs"
@@ -1022,7 +1022,7 @@ export function AppShell({
 									: null
 							}
 						/>
-					</main>
+					</div>
 
 					<Suspense fallback={null}>
 						<EditorSidebar

@@ -178,7 +178,7 @@ export function EditorTopbar({
 	);
 
 	return (
-		<header className={topbarClass}>
+		<div className={topbarClass} role="toolbar" aria-label="Editor toolbar">
 			<div className="editor-topbar-menubar-row">
 				<img
 					src="/sticky_512.png"
@@ -475,6 +475,6 @@ export function EditorTopbar({
 					</TopbarIconAction>
 				</div>
 			</div>
-		</header>
+		</div>
 	);
 }

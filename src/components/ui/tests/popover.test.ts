@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { getTooltipDelayBypassUntil, getTooltipHoverDelay, shouldBypassTooltipDelay } from '../popover';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { PopoverSurface, getTooltipDelayBypassUntil, getTooltipHoverDelay, shouldBypassTooltipDelay } from '../popover';
 
 describe('components/ui/popover', () => {
+  it('marks closed surfaces hidden so unopened editor popovers do not remain in the accessibility tree', () => {
+    const closedMarkup = renderToStaticMarkup(createElement(PopoverSurface, { open: false }, 'Hidden surface'));
+    const openMarkup = renderToStaticMarkup(createElement(PopoverSurface, { open: true }, 'Visible surface'));
+
+    expect(closedMarkup).toContain('hidden=""');
+    expect(closedMarkup).toContain('aria-hidden="true"');
+    expect(closedMarkup).toContain('data-state="closed"');
+    expect(openMarkup).toContain('data-state="open"');
+    expect(openMarkup).not.toContain('hidden=""');
+  });
+
   it('bypasses the hover delay when a tooltip is visible or still inside the close grace window', () => {
     const now = 1_000;
     const graceUntil = getTooltipDelayBypassUntil(now);

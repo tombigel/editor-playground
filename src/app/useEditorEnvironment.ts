@@ -315,7 +315,7 @@ export function useDismissFloatingPanels({
 				layersOpen &&
 				layersPanelRef?.current &&
 				!layersPanelRef.current.contains(target) &&
-				!target.closest('[data-panel-trigger="layers"]')
+				!target.closest('[data-panel-trigger="components"]')
 			) {
 				onCloseLayers?.();
 			}
