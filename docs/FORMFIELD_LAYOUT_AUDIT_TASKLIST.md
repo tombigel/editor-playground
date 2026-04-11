@@ -13,7 +13,7 @@
 - [x] `TODO 3` Audit shared inspector content sections
   - update repeated eligible patterns in shared content helpers and page inspector content
   - keep multiline, matrix, and action-heavy layouts custom
-- [ ] `TODO 4` Docs and tests sync
+- [x] `TODO 4` Docs and tests sync
   - update `docs/PLAYGROUND_SPEC.md`
   - update `docs/EDITOR_STYLE_GUIDE.md` only if the current wording needs a tighter exception rule
   - add/update representative tests for converted rows

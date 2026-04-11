@@ -1139,6 +1139,12 @@ Inspector field layout is formalized through the `FormField` component's `layout
 - `inline-start`: label left, control immediately after
 - `inline-group`: label left, group of controls right
 
+Inspector adoption rules:
+
+- Prefer `FormField layout=...` for true label/control rows across single-selection, multi-selection, and page inspector surfaces.
+- Keep dense composite controls custom when they are not semantically one field row, including `X/Y/W/H` groups, padding matrices, reorder/alignment clusters, and border/shadow control assemblies.
+- Use `inline-group` only when several controls still represent one labeled field, such as a divider width + color row.
+
 See [EDITOR_STYLE_GUIDE.md section 13.2](./EDITOR_STYLE_GUIDE.md) for usage rules.
 
 ## Editor UX

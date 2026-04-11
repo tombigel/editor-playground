@@ -813,6 +813,7 @@ Rules:
 - use `stack` only when the control is wide enough that inline layout would compress the label unreadably
 - `inline-group` is for controls that belong together semantically (width + height, color + opacity) but are distinct fields
 - `inline-start` is rare — use it for read-only status badges or compact indicators where justify-between would leave too much gap
+- use `FormField` only for true label/control rows; keep dense composite controls like `X/Y/W/H`, padding matrices, reorder clusters, and border/shadow assemblies custom
 - the `layout` prop is on `FormField` only; `LabeledControlRow` and `LabeledFieldStack` remain available as lower-level primitives for non-inspector contexts
 
 ### 13.2 Color Picker Note
