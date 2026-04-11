@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { FocusedMode } from '../../api/editorApi';
 import type { AnimationTriggerType } from '../../api/animationApi';
@@ -12,12 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
+import { NumberInput } from '@/components/ui/number-input';
 import { LabeledControlRow, NoticeSurface } from '@/components/ui/settings-panel';
 import { FormField, SwitchBlock } from '../InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard } from './CommonSections';
 import { hasAnimation, getAnimationSummary, isScrollAnimation, requiresStickyForAnimation } from '../../animations/selectors';
+import { getPresetsForTrigger, getPresetParams } from '../../animations/animationApi';
+import { getPresetLabel } from '../../animations/presetMetadata';
 import type { HoverOutAction } from '../../animations/types';
+import type { PresetParam } from '../../animations/types';
 
 // ── Trigger display labels ────────────────────────────────────────────────────
 
@@ -121,15 +127,43 @@ export function AnimationSection({
             </Select>
           </FormField>
 
-          {summary ? (
+          {/* T09: Preset picker */}
+          {summary?.effectKind === 'named' ? (
+            <PresetPicker
+              trigger={(summary?.trigger ?? 'entrance') as AnimationTriggerType}
+              currentPreset={summary?.effectName ?? ''}
+              onPresetChange={(preset) =>
+                actions.onAnimationPresetChange(
+                  (summary?.trigger ?? 'entrance') as AnimationTriggerType,
+                  preset,
+                )
+              }
+            />
+          ) : summary ? (
             <FormField label="Effect">
               <div className="flex items-center gap-2">
                 <span className="editor-text-strong text-xs font-medium">{summary.effectName}</span>
                 <span className="editor-bg-subtle editor-border-subtle editor-text-muted rounded border px-1.5 py-0.5 text-[10px]">
-                  {summary.effectKind}
+                  keyframe
                 </span>
               </div>
             </FormField>
+          ) : null}
+
+          {/* T10: Dynamic preset options */}
+          {summary?.effectKind === 'named' ? (
+            <PresetOptions
+              preset={summary.effectName}
+              currentParams={node.animation?.effect.kind === 'named' ? node.animation.effect : {}}
+              trigger={(summary.trigger ?? 'entrance') as AnimationTriggerType}
+              onParamChange={(params) =>
+                actions.onAnimationPresetChange(
+                  (summary.trigger ?? 'entrance') as AnimationTriggerType,
+                  summary.effectName,
+                  params,
+                )
+              }
+            />
           ) : null}
 
           {/* T12: Hover out-action selector */}
@@ -205,4 +239,138 @@ export function AnimationSection({
       ) : null}
     </InspectorSectionCard>
   );
+}
+
+// ── T09: Preset picker ────────────────────────────────────────────────────────
+
+function PresetPicker({
+  trigger,
+  currentPreset,
+  onPresetChange,
+}: {
+  trigger: AnimationTriggerType;
+  currentPreset: string;
+  onPresetChange: (preset: string) => void;
+}) {
+  const options = useMemo<SearchableSelectOption[]>(() => {
+    const presets = getPresetsForTrigger(trigger);
+    return presets.map((p) => ({
+      value: p.preset,
+      label: getPresetLabel(p.preset),
+      keywords: [p.preset, p.category],
+    }));
+  }, [trigger]);
+
+  return (
+    <FormField label="Effect">
+      <SearchableSelect
+        value={currentPreset}
+        options={options}
+        placeholder="Select preset"
+        searchPlaceholder="Search presets…"
+        emptyText="No matching presets."
+        onValueChange={onPresetChange}
+      />
+    </FormField>
+  );
+}
+
+// ── T10: Dynamic preset options ───────────────────────────────────────────────
+
+function PresetOptions({
+  preset,
+  currentParams,
+  trigger,
+  onParamChange,
+}: {
+  preset: string;
+  currentParams: Record<string, unknown>;
+  trigger: AnimationTriggerType;
+  onParamChange: (params: Record<string, unknown>) => void;
+}) {
+  const schema = useMemo(() => getPresetParams(preset), [preset]);
+  if (!schema || schema.params.length === 0) return null;
+
+  function handleParamUpdate(paramName: string, value: unknown) {
+    onParamChange({ ...currentParams, [paramName]: value });
+  }
+
+  return (
+    <>
+      {schema.params.map((param) => (
+        <PresetParamControl
+          key={param.name}
+          param={param}
+          value={currentParams[param.name]}
+          onChange={(value) => handleParamUpdate(param.name, value)}
+        />
+      ))}
+    </>
+  );
+}
+
+function PresetParamControl({
+  param,
+  value,
+  onChange,
+}: {
+  param: PresetParam;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const label = param.name.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+
+  if (param.type === 'string' && param.enum && param.enum.length > 0) {
+    return (
+      <FormField label={label}>
+        <Select
+          value={String(value ?? param.default ?? param.enum[0])}
+          onValueChange={onChange}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {param.enum.map((opt) => (
+              <SelectItem key={String(opt)} value={String(opt)}>
+                {String(opt)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FormField>
+    );
+  }
+
+  if (param.type === 'number') {
+    return (
+      <FormField label={label}>
+        <NumberInput
+          value={typeof value === 'number' ? value : (param.default as number) ?? 0}
+          min={param.min ?? 0}
+          max={param.max ?? 1000}
+          step={1}
+          onChange={(v) => onChange(v)}
+        />
+      </FormField>
+    );
+  }
+
+  if (param.type === 'boolean') {
+    return (
+      <LabeledControlRow
+        label={label}
+        className="gap-3"
+        labelClassName="text-[11px] font-medium"
+        controlClassName="shrink-0"
+      >
+        <Switch
+          checked={Boolean(value ?? param.default ?? false)}
+          onCheckedChange={onChange}
+        />
+      </LabeledControlRow>
+    );
+  }
+
+  return null;
 }
