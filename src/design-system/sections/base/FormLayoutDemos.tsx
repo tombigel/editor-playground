@@ -157,7 +157,7 @@ export function FormLayoutDemos() {
 						{
 							label: 'layout="stack" (default)',
 							render: () => (
-								<div className="w-[260px]">
+								<div className="editor-border-subtle w-[260px] rounded-md border p-3">
 									<FormField label="Font family">
 										<Input placeholder="Inter" onChange={() => {}} />
 									</FormField>
@@ -167,7 +167,7 @@ export function FormLayoutDemos() {
 						{
 							label: 'layout="inline"',
 							render: () => (
-								<div className="w-[260px] space-y-2">
+								<div className="editor-border-subtle w-[260px] space-y-2 rounded-md border p-3">
 									<FormField label="Trigger" layout="inline">
 										<Select value="entrance" onValueChange={() => {}}>
 											<SelectTrigger><SelectValue /></SelectTrigger>
@@ -189,7 +189,7 @@ export function FormLayoutDemos() {
 						{
 							label: 'layout="inline-start"',
 							render: () => (
-								<div className="w-[260px]">
+								<div className="editor-border-subtle w-[260px] rounded-md border p-3">
 									<FormField label="Status" layout="inline-start">
 										<span className="editor-bg-subtle editor-border-subtle editor-text-muted rounded border px-1.5 py-0.5 text-[10px]">
 											named
@@ -201,7 +201,7 @@ export function FormLayoutDemos() {
 						{
 							label: 'layout="inline-group"',
 							render: () => (
-								<div className="w-[260px]">
+								<div className="editor-border-subtle w-[260px] rounded-md border p-3">
 									<FormField label="Size" layout="inline-group">
 										<NumberInput value={100} min={0} max={999} step={1} onChange={() => {}} />
 										<NumberInput value={50} min={0} max={999} step={1} onChange={() => {}} />
