@@ -404,6 +404,9 @@ Global controls:
 
 - `Mod + ,`: open settings
 - `?`: open the detached Shortcuts dialog when no input field is focused
+- `Shift + M`: open Documentation when no input field is focused
+- `Shift + Y`: open the Design system showcase when no input field is focused
+- `Shift + I`: open About when no input field is focused
 - `Esc`: close open panels and dialogs
 
 ### Shortcut maintenance
@@ -1102,6 +1105,43 @@ Exported HTML includes:
 ### Development Console
 
 In DEV mode, `window.playgroundAnimationApi` is available for testing and debugging animation state without going through the editor UI.
+
+### Animation Editor UI
+
+The animation inspector section appears in the behavior bucket of all animatable node types (wrappers, text, image, link, button).
+
+**Inspector controls:**
+
+- Enable/disable toggle with Sparkles icon
+- Trigger type selector (entrance, ongoing, scroll, click, hover, mouse) with smart defaults per trigger
+- Searchable preset picker populated from `getPresetsForTrigger()`
+- Dynamic preset parameter controls generated from `getPresetParams()` schema (enum selects, number inputs, boolean switches)
+- Hover out-action selector (reverse/keep/none) — visible only for hover/interest triggers
+- Requires-sticky toggle — visible only for scroll triggers, with warning when sticky is disabled
+- Reduced-motion toggle (per-animation disable)
+- Clear animation button
+
+**Focused mode:** Animation has a dedicated focused mode (`'animation'`) accessible from the inspector section header, following the same pattern as sticky focused mode.
+
+**On-stage indicators:**
+
+- Selection frame: Rocket badge icon on selected animated nodes (alongside Pin for sticky, Layers2 for elevated)
+- Layers panel: Rocket icon on animated node rows
+- Non-selected nodes: small accent dot at top-right corner of animated nodes (`data-has-animation` attribute + CSS `::before`)
+- Scroll animations: dashed left-border accent on scroll-driven nodes (`data-scroll-animation` attribute)
+
+**Preset metadata:** Human-readable labels and descriptions for all 64 presets and 6 trigger types in `src/animations/presetMetadata.ts`, accessible via `getPresetLabel()` and `getTriggerLabel()`.
+
+### FormField Layout Modes
+
+Inspector field layout is formalized through the `FormField` component's `layout` prop:
+
+- `stack` (default): label above, control fills width
+- `inline`: label left, control right, justify-between — used for most animation controls
+- `inline-start`: label left, control immediately after
+- `inline-group`: label left, group of controls right
+
+See [EDITOR_STYLE_GUIDE.md section 13.2](./EDITOR_STYLE_GUIDE.md) for usage rules.
 
 ## Editor UX
 

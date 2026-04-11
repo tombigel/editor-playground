@@ -57,10 +57,10 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 | Raw intake id | Short name | Priority | Type | Status | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | `🟤 Needs audit` | Shared | Dep: `RI-05` |
-| `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | `⚪ Not started` | LLM | Note: standalone or can land as part of `RI-03`/`RI-04`/`RI-05` |
-| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `🟣 Partially present` | LLM | Simple on/off animated-state indicator implemented |
-| `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `⚪ Not started` | LLM | - |
+| `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | `✅ Done` | Shared | Audited; 5 reducer actions with undo support |
+| `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | `✅ Done` | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
+| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `✅ Done` | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
+| `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `⚪ Not started` | LLM | Deferred to next phase |
 | `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
 | `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
 | `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
@@ -193,12 +193,11 @@ None yet.
 
 - `Type`: `Bug`
 - `Owner lane`: `Shared`
-- `Status`: `Needs audit`
+- `Status`: `Done`
 - `Source`: `RI-01`
 - `Dependencies`: `RI-05`
 - `Why it matters`: If animation authoring actions do not create reliable undo entries, the editing workflow will feel unsafe and inconsistent with the rest of the editor.
-- `Current state`: The app has document undo/redo and animation APIs, but this item now depends on the designed animation UI because the real risk is missing history coverage in user-facing authoring flows rather than raw data mutations alone.
-- `Next review question`: Once `RI-05` lands, which animation interactions create correct undo/redo history entries, and which editor-facing flows still bypass or fragment history?
+- `Current state`: **Complete** — audited all animation mutation paths. Five new reducer actions (`animationPreset`, `animationKeyframe`, `animationOptions`, `animationClear`, `animationDocSettings`) wired through the standard `applySelectedNodeUpdate` pattern with automatic history tracking. The console API intentionally bypasses undo via `importDocument`. Delivered sha: 5dc5b2a.
 
 #### UX
 
@@ -206,22 +205,21 @@ None yet.
 
 - `Type`: `UX`
 - `Owner lane`: `LLM`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-02`
-- `Relationship`: Standalone task, or it can land as part of `RI-03`, `RI-04`, or `RI-05`.
+- `Relationship`: Landed as part of `RI-03`.
 - `Why it matters`: A functional animation authoring flow needs visible stage feedback, especially if sticky already has clear stage indicators.
-- `Current state`: Sticky preview and guides are well defined in the stage; animation preview exists globally, but an equivalent node-level on-stage indicator is not documented.
-- `Next move`: Decide whether the first indicator is a badge, outline, trigger hint, or a richer overlay model.
+- `Current state`: **Complete** — three indicator layers: (1) Rocket badge on selection frame and layers panel rows for animated nodes, (2) accent dot (`::before`) on non-selected animated nodes via `data-has-animation` attribute, (3) dashed left-border accent on scroll-animated nodes via `data-scroll-animation` attribute. Both CSS indicators hidden when node is selected to avoid doubling with the selection badge. Delivered sha: e8dcb7e.
 
 ##### Animation authoring UI for development phase
 
 - `Type`: `UX`
 - `Owner lane`: `LLM`
-- `Status`: `Partially present`
+- `Status`: `Done` (RI-03 presets); `Not started` (RI-04 keyframes)
 - `Source`: `RI-03`, `RI-04`
 - `Why it matters`: The animation subsystem needs a functional authoring surface that is good enough for development, testing, and iteration before the designed product UI is ready.
-- `Current state`: The animation model, preview runtime, and console API exist, and the editor now has a simple on/off indicator showing when a node is animated. Preset and keyframe authoring UI are still not documented.
-- `Next move`: Extend the current basic indicator into a minimal development authoring surface for preset selection, keyframe editing, and state inspection without over-investing in final UX.
+- `Current state`: **RI-03 complete** — `AnimationSection` inspector component with: enable/disable toggle, trigger type selector (6 types with smart defaults), searchable preset picker (64 presets), dynamic preset parameter controls from schema, hover out-action selector, requires-sticky toggle with warning, reduced-motion toggle, clear button. Wired into all 8 inspector configs. Animation focused mode. Delivered across sha: f56e9c8, 65b379e. **RI-04 (keyframes) deferred** — keyframe list editor, property editor, and CSS import are planned for the next phase.
+- `Next move`: Implement RI-04 keyframe authoring UI.
 
 ##### Animation authoring UI with real product/UX design
 

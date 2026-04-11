@@ -357,6 +357,30 @@ Set document-level animation accessibility policy (reduced motion behavior).
 | `getNodeAnimation` | `(document, nodeId) -> AnimationDefinition \| undefined` | Get animation for a node |
 | `getAnimatedNodes` | `(document) -> NodeId[]` | Get all nodes with animations |
 
+### Animation selectors
+
+Source: `src/animations/selectors.ts`
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hasAnimation` | `(node) -> boolean` | Whether the node has any animation definition |
+| `getAnimationSummary` | `(node) -> { trigger, effectName, effectKind } \| null` | Display summary of a node's animation |
+| `isScrollAnimation` | `(node) -> boolean` | Whether the node has a scroll-triggered animation |
+| `requiresStickyForAnimation` | `(node) -> boolean` | Whether the node's animation requires sticky |
+| `getAnimatedNodeIds` | `(document) -> NodeId[]` | All node IDs with animations |
+
+### Preset metadata
+
+Source: `src/animations/presetMetadata.ts`
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `getPresetLabel` | `(preset: string) -> string` | Human-readable label for a preset (fallback: split PascalCase) |
+| `getPresetMetadata` | `(preset: string) -> PresetMetadata \| null` | Full metadata (label, description, category) |
+| `getTriggerLabel` | `(trigger: string) -> string` | Human-readable label for a trigger type |
+
+Constants: `PRESET_METADATA` (64 entries), `TRIGGER_METADATA` (6 entries).
+
 ### Preset catalog
 
 | Function | Signature | Description |
