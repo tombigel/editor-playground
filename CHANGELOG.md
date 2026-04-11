@@ -11,6 +11,9 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Fixed
+- simplify range parameter handling in PresetParamControl
+
 ---
 
 ## [0.5.1] — 2026-04-11

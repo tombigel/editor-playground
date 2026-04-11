@@ -343,14 +343,15 @@ function PresetParamControl({
   }
 
   if (param.type === 'number') {
-    const hasRange = param.min != null && param.max != null;
-    if (hasRange) {
+    if (param.min != null && param.max != null) {
+      const min = param.min;
+      const max = param.max;
       return (
         <RangeField
           label={label}
-          value={typeof value === 'number' ? value : (param.default as number) ?? param.min!}
-          min={param.min!}
-          max={param.max!}
+          value={typeof value === 'number' ? value : (param.default as number) ?? min}
+          min={min}
+          max={max}
           unit={param.unit}
           onValueChange={(v) => onChange(v)}
         />
