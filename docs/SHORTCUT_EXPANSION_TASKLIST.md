@@ -17,10 +17,10 @@ Live implementation checklist for the two-phase shortcut expansion.
 - [x] TODO 5 Phase 2 controller wiring + tests
   - wire new handlers through controller/types/App
   - add/adjust controller and registry tests
-- [ ] TODO 6 Phase 2 UI/docs sync
+- [x] TODO 6 Phase 2 UI/docs sync
   - update every visible shortcut surface and documentation entry
   - update render/help tests
-- [ ] TODO 7 Rich-text policy + audit
+- [x] TODO 7 Rich-text policy + audit
   - document precedence rules
   - document currently explicit rich-text shortcuts and audited gaps
 - [ ] TODO 8 Final verification

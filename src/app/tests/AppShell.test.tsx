@@ -149,6 +149,10 @@ describe("app/AppShell", () => {
 		expect(markup).not.toContain("editor-topbar-pages-row");
 		expect(markup).toContain("Fonts Panel");
 		expect(markup).toContain("Shift + F");
+		expect(markup).toContain("Shift + V");
+		expect(markup).toContain("Shift + H");
+		expect(markup).toContain("Shift + R");
+		expect(markup).toContain("Shift + D");
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
 		expect(markup).not.toContain("Import JSON…");

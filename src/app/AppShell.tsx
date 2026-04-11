@@ -837,6 +837,10 @@ export function AppShell({
 										icon={Ghost}
 										pressed={state.ui.showHidden}
 										label="Show Hidden"
+										shortcut={getShortcutLabel(
+											"toggleShowHidden",
+											shortcutPlatform,
+										)}
 										onClick={() =>
 											dispatch({
 												type: "setShowHidden",

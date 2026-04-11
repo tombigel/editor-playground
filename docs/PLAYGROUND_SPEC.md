@@ -387,12 +387,16 @@ Alignment and distribution:
 
 Preview and stage controls:
 
+- `Shift + V`: open Preview site when no input field is focused
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
 - `Shift + F`: toggle the Fonts panel from the View menu when no input field is focused
 - `Shift + L`: toggle the Components panel when no input field is focused
 - `Shift + O`: toggle the Pages panel when no input field is focused
+- `Shift + H`: toggle hidden-node visibility ghosts when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
+- `Shift + R`: toggle grid visibility when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
+- `Shift + D`: toggle debug info visibility when no input field is focused
 - `Left` / `Right` / `Up` / `Down`: move the focused stage selection by `1px`
 - `Shift + Left` / `Shift + Right` / `Shift + Up` / `Shift + Down`: move the focused stage selection by `10px`
 
@@ -431,8 +435,10 @@ Text-entry behavior:
 
 - The shortcut matcher distinguishes text-entry focus from generic interactive chrome.
 - `Cmd + Z` / `Cmd + Shift + Z` fall through to the browser in text fields and other editable content.
+- Rich-text edit mode owns text-editor-standard shortcuts before the global shortcut registry can act.
 - Settings stays available from non-text interactive chrome, while panel shortcuts stay blocked in text-entry contexts.
 - Stage-only nudges still require a stage-focused selection.
+- `Mod + A`, `Mod + C`, `Mod + X`, `Mod + V`, and `Mod + D` remain reserved for future API-backed edit commands and are not assigned to unrelated app actions.
 
 ### Shared interaction hooks
 
@@ -1870,6 +1876,13 @@ While editing, the rich node gets visible stage chrome:
 | `Cmd/Ctrl+K` | Insert an external link (or remove if selection is already a link) |
 | `Cmd/Ctrl+Enter` | Commit changes and exit edit mode                              |
 | `Escape`     | Discard changes and exit edit mode                                 |
+
+### Shortcut precedence
+
+- While rich-text edit mode is active, the rich-text surface owns text-editor-standard shortcuts before the global shortcut registry can act.
+- Browser-native undo/redo, selection, clipboard, and caret navigation should keep falling through to the editor/browser text surface instead of being intercepted by app-global shortcuts.
+- The current explicit rich-text shortcut contract is `Cmd/Ctrl+B`, `Cmd/Ctrl+I`, `Cmd/Ctrl+K`, `Cmd/Ctrl+Enter`, and `Escape`.
+- Audited candidates that are not yet part of the explicit contract include `Cmd/Ctrl+U`, a strikethrough shortcut, alignment shortcuts, and other editor-style rich-text bindings that still need a product decision.
 
 ### Inline link insertion (`Cmd+K`)
 

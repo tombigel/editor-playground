@@ -314,6 +314,10 @@ export function EditorTopbar({
 							</MenubarCheckboxItem>
 							<MenubarCheckboxItem
 								checked={showGridLanes}
+								shortcut={getShortcutLabel(
+									"toggleShowGridLanes",
+									shortcutPlatform,
+								)}
 								onCheckedChange={onToggleShowGridLanes}
 							>
 								Show grid
@@ -331,6 +335,10 @@ export function EditorTopbar({
 							</MenubarToggleWithMoreItem>
 							<MenubarCheckboxItem
 								checked={showDebugInfo}
+								shortcut={getShortcutLabel(
+									"toggleShowDebugInfo",
+									shortcutPlatform,
+								)}
 								onCheckedChange={onToggleShowDebugInfo}
 							>
 								Show debug info
@@ -455,6 +463,7 @@ export function EditorTopbar({
 					<TopbarIconAction
 						icon={Eye}
 						label="Preview site"
+						shortcut={getShortcutLabel("openPreviewSite", shortcutPlatform)}
 						className="editor-topbar-preview-button"
 						onClick={onPreview}
 					>
