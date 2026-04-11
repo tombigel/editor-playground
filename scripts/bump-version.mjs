@@ -65,6 +65,49 @@ for (const target of targets) {
 
 writeFileSync(versionFile, content, 'utf8');
 
+// --- Changelog placeholder for minor/major bumps ---
+if (levelArg !== 'patch') {
+  const changelogFile = resolve(root, 'CHANGELOG.md');
+  const changelog = readFileSync(changelogFile, 'utf8');
+
+  const pv = content.match(/PROJECT_VERSION = '([^']+)'/)[1];
+  const dv = content.match(/DOCUMENT_MODEL_VERSION = '([^']+)'/)[1];
+  const av = content.match(/API_VERSION = '([^']+)'/)[1];
+  const ev = content.match(/EDITOR_VERSION = '([^']+)'/)[1];
+
+  const heading = `## [${pv}]`;
+
+  if (!changelog.includes(heading)) {
+    const today = new Date().toISOString().slice(0, 10);
+    const placeholder = [
+      `${heading} — ${today}`,
+      '',
+      `Document: ${dv} · API: ${av} · Editor: ${ev}`,
+      '',
+      '### Added',
+      '',
+      '- (describe new features here)',
+      '',
+      '### Changed',
+      '',
+      '- (describe changes here)',
+      '',
+      '---',
+      '',
+    ].join('\n');
+
+    const marker = '\n---\n';
+    const firstSeparatorIndex = changelog.indexOf(marker);
+    if (firstSeparatorIndex !== -1) {
+      const insertPos = firstSeparatorIndex + marker.length;
+      const updated =
+        changelog.slice(0, insertPos) + '\n' + placeholder + changelog.slice(insertPos);
+      writeFileSync(changelogFile, updated, 'utf8');
+      console.log(`CHANGELOG.md: added placeholder for ${heading}`);
+    }
+  }
+}
+
 // Keep package.json version in sync with PROJECT_VERSION
 if (targets.includes('project')) {
   const match = content.match(/export const PROJECT_VERSION = '([^']+)';/);

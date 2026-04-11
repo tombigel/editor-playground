@@ -9,6 +9,61 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ---
 
+## [0.4.1] — 2026-04-11
+
+Document: 1.3.0 · API: 1.3.0 · Editor: 0.10.0
+
+### Added
+- FormField layout system with four modes: stack, inline, inline-start, inline-group.
+- FormField layout modes added to design system showcase and menu.
+
+### Changed
+- Inspector audit: all ad-hoc inline rows replaced with FormField composites.
+- Inspector row variants extended (inline-start, inline-group).
+- Visibility trigger styling restored.
+- Section insertion placement updated.
+- FormField inspector layout rules documented.
+
+---
+
+## [0.4.0] — 2026-04-11
+
+Document: 1.3.0 · API: 1.3.0 · Editor: 0.10.0
+
+### Added
+- Animation authoring Phase 1: selection model, animation reducer, node handlers, focused animation panel.
+- Animation authoring Phase 2: inspector section with trigger, presets, and controls; preset picker with dynamic options; on-stage animation indicators for non-selected nodes.
+- Shortcut registry expansion — Phase 1 and Phase 2 wiring and handlers.
+
+### Changed
+- Shortcut help content and key bindings refined.
+
+### Fixed
+- `outAction` read path corrected to read from `node.animation`.
+- Removed unused `trigger` parameter from `PresetOptions`.
+
+### Changed (Document 1.2.0 → 1.3.0)
+- Animation settings extended for authoring triggers and presets.
+
+### Changed (API 1.2.0 → 1.3.0)
+- Animation authoring functions added to `documentApi`.
+
+### Changed (Editor 0.9.0 → 0.10.0)
+- Focused animation panel, animation inspector section, shortcut expansion.
+
+---
+
+## [0.3.4] — 2026-04-11
+
+Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0
+
+### Added
+- Help browser information architecture refresh with hierarchical navigation.
+- Version-bump skill and enhanced audit skills documentation.
+- Archived documentation workstream docs.
+
+---
+
 ## [0.3.3] — 2026-04-10
 
 Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0

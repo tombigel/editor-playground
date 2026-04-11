@@ -79,7 +79,7 @@ node scripts/bump-version.mjs [subsystem|all] [minor|major]
 After running:
 
 1. Review the diff in `src/lib/version.ts` and `package.json`.
-2. Add a new entry to `CHANGELOG.md` under the bumped version.
+2. Fill in the changelog placeholder that the script added to `CHANGELOG.md` (replace the `(describe ...)` markers with actual feature/change descriptions).
 3. Commit. The pre-commit hook will patch-bump all four versions again — this is expected and correct. The manual bump you just made is the meaningful one; the patch on top is the hook's normal per-commit behavior.
 
 ### Examples

@@ -36,6 +36,17 @@ export function AboutContent({ onOpenHelpEntry }: { onOpenHelpEntry?: (entryId: 
             </div>
           ))}
         </div>
+        {onOpenHelpEntry && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mt-3 h-auto w-full justify-start px-0 py-1 text-left text-sm text-[color:var(--editor-accent)] underline underline-offset-2"
+            onClick={() => onOpenHelpEntry('doc:CHANGELOG.md')}
+          >
+            Changelog
+          </Button>
+        )}
       </div>
       <div className="editor-bg-subtle editor-border-subtle rounded-xl border p-4">
         <div className="editor-text-muted text-[11px] font-medium uppercase tracking-[0.12em]">

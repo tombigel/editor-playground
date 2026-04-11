@@ -46,6 +46,18 @@ for (const fileName of docFiles) {
   });
 }
 
+// Copy root CHANGELOG.md into help-docs alongside the docs/ files
+const changelogSource = path.join(rootDir, 'CHANGELOG.md');
+const changelogRaw = await readFile(changelogSource, 'utf8');
+await copyFile(changelogSource, path.join(helpDocAssetDir, 'CHANGELOG.md'));
+desiredHelpDocFileNames.add('CHANGELOG.md');
+manifest.push({
+  path: 'CHANGELOG.md',
+  fileName: 'CHANGELOG.md',
+  fullTitle: extractHelpDocTitle(changelogRaw, 'CHANGELOG.md'),
+  assetUrl: '/assets/help-docs/CHANGELOG.md',
+});
+
 const docsAssetDirExists = await statPath(docsAssetSourceDir);
 if (docsAssetDirExists) {
   await cp(docsAssetSourceDir, helpDocDocsAssetDir, { recursive: true });

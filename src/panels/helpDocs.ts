@@ -253,11 +253,12 @@ export function resolveHelpAssetUrl(currentPath: string, src: string) {
   }
 
   const resolvedPath = resolveRelativeHelpPath(currentPath, trimmedSrc);
-  if (!resolvedPath.startsWith('docs/')) {
+  const prefix = resolvedPath.startsWith('docs/') ? 'docs/'.length : 0;
+  if (!prefix && resolvedPath.includes('/')) {
     return null;
   }
 
-  return `/assets/help-docs/${resolvedPath.slice('docs/'.length)}`;
+  return `/assets/help-docs/${resolvedPath.slice(prefix)}`;
 }
 
 export function extractMarkdownHeadings(raw: string): HelpHeading[] {

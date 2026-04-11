@@ -161,6 +161,14 @@ export const HELP_DOC_REGISTRY: readonly HelpDocRegistryEntry[] = [
     aliases: [{ path: 'docs/API.md', anchor: 'type-reference' }],
   },
   {
+    id: 'doc:CHANGELOG.md',
+    kind: 'markdown',
+    sourcePath: 'CHANGELOG.md',
+    title: 'Changelog',
+    parentId: 'section:reference',
+    order: 90,
+  },
+  {
     id: 'section:developers',
     kind: 'section',
     title: 'Developers',

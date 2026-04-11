@@ -190,5 +190,11 @@
     "fileName": "TEXT_COMPONENT_TASKLIST.md",
     "fullTitle": "Text Component Tasklist",
     "assetUrl": "/assets/help-docs/TEXT_COMPONENT_TASKLIST.md"
+  },
+  {
+    "path": "CHANGELOG.md",
+    "fileName": "CHANGELOG.md",
+    "fullTitle": "Changelog",
+    "assetUrl": "/assets/help-docs/CHANGELOG.md"
   }
 ]
