@@ -69,6 +69,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | `⚪ Not started` | Shared | - |
 | `RI-12A` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | `🟣 Partially present` | Shared | - |
 | `RI-12B` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | `🟣 Partially present` | Shared | - |
+| `RI-40` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: `RI-11`, `RI-12B` |
 | `RI-09` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
 | `RI-10` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-09` |
 | `RI-25` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | `🟢 In progress` | Shared | - |
@@ -80,7 +81,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-19` | [Assets management](#assets-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-20` | [CMS](#cms) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
 | `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `✅ Done` | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
-| `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `⚪ Not started` | Shared | - |
+| `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `✅ Done` | Shared | Four semver versions in `src/lib/version.ts`; pre-commit patch bump; `schemaVersion` on export |
 | `RI-31` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | `⚪ Not started` | Shared | Dep: `RI-07` |
 | `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `🟢 In progress` | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-34` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: Phase 1.8 (closed). See `TEXT_COMPONENT_PHASE_2_0_BRIEF.md` |
@@ -150,6 +151,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-37` Wave F CSS cleanup — deferred from design-system convergence audit; delete superseded CSS after all migrations land
 - `RI-38` interaction pattern unification — escape key, click-outside, pointer drag, popover positioning, and focus management each have multiple ad-hoc implementations; extract shared hooks and composite design system components
 - `RI-39` hidden ghost mode — hidden nodes (and hidden-targeted top-level wrappers) should render as semi-transparent ghost overlays in the editor stage so authors can see and select hidden content without cluttering the live layout; selection, inspector, and export should handle hidden nodes consistently
+- `RI-40` table component support — add two table directions under components/wrappers: a simple markdown-backed table for fast authoring/export, and a more robust designable table where each cell can host nodes and participate in wrapper/layout semantics
 
 ## Structured Roadmap
 
@@ -327,6 +329,17 @@ None yet.
 - `Why it matters`: Richer components widen the playground from a sticky/layout lab into a broader authoring environment.
 - `Current state`: The current core leaf set is text, image, link, and button.
 - `Next move`: Rank candidate components by model complexity and export/site value rather than by visual novelty alone.
+
+##### Table component support: markdown and designable variants
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-40`
+- `Dependencies`: `RI-11`, `RI-12B`
+- `Why it matters`: Tables are a common authoring need, but one implementation will not cover both lightweight content tables and deeply designed layouts. The roadmap should treat quick authoring tables and fully designable table structures as related but distinct component directions.
+- `Current state`: There is no dedicated table component yet, and the current component/wrapper model does not define how table rows, columns, headers, or cells should behave in export, selection, or layout authoring.
+- `Next move`: Split the first planning pass into two variants: a simple markdown-backed table optimized for fast text/data authoring and predictable export, and a more robust designable table where each cell can host nodes and inherit wrapper/layout semantics. Then decide whether they share one base model with two authoring modes or should remain separate component families.
 
 ##### More semantic components
 
@@ -513,11 +526,10 @@ None yet.
 
 - `Type`: `Platform`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-30`
-- `Why it matters`: Versioning creates safer iteration, clearer milestone management, and a path to compare, restore, branch, or publish project states without relying only on local undo history.
-- `Current state`: The project has document undo/redo and import/export flows, but there is no project-level version history or named snapshot model described in the roadmap.
-- `Next review question`: Should the first versioning milestone be simple named snapshots, linear history, or a richer branch/restore workflow tied to import/export and future collaboration?
+- `Why it matters`: Versioning creates safer iteration, clearer milestone management, and a path to communicate compatibility clearly — to users importing documents, to future contributors, and in the About page.
+- `Current state`: **Complete** — Four independent semver versions (`PROJECT_VERSION`, `DOCUMENT_MODEL_VERSION`, `API_VERSION`, `EDITOR_VERSION`) defined in `src/lib/version.ts`. Pre-commit hook auto-bumps all four at patch level on every commit. `scripts/bump-version.mjs` handles manual minor/major bumps. `schemaVersion` stamped on document export; mismatch warning on import. Versions displayed in the About panel. `CHANGELOG.md` seeded with 15 milestones. `/version-bump` skill documents the workflow.
 
 ##### Migrate persistence to IndexedDB
 

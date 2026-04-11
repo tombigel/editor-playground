@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+/**
+ * pre-commit-version-bump.mjs
+ *
+ * Registered as the simple-git-hooks pre-commit hook.
+ * Bumps all four subsystem versions at patch level and stages the changes
+ * so the bump is included in the same commit being made.
+ */
+
+import { execSync } from 'child_process';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const root = resolve(__dirname, '..');
+
+try {
+  execSync('node scripts/bump-version.mjs all patch', { cwd: root, stdio: 'inherit' });
+  execSync('git add src/lib/version.ts package.json', { cwd: root, stdio: 'inherit' });
+} catch (err) {
+  console.error('pre-commit version bump failed:', err.message);
+  process.exit(1);
+}

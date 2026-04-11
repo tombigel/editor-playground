@@ -972,10 +972,30 @@ describe('api/documentApi', () => {
     const document = createInitialDocument();
     const serialized = JSON.parse(serializeDocumentJson(document)) as Record<string, unknown>;
 
-    expect(Object.keys(serialized).sort()).toEqual(['fontLibrary', 'nodes', 'pages', 'rootId', 'sharedRegionIds', 'siteSettings']);
+    expect(Object.keys(serialized).sort()).toEqual(['fontLibrary', 'nodes', 'pages', 'rootId', 'schemaVersion', 'sharedRegionIds', 'siteSettings']);
     expect(serialized.rootId).toBe(document.rootId);
     expect(serialized.fontLibrary).toEqual(document.fontLibrary);
     expect(serialized.nodes).toEqual(document.nodes);
+  });
+
+  it('stamps schemaVersion matching DOCUMENT_MODEL_VERSION', () => {
+    const document = createInitialDocument();
+    const serialized = JSON.parse(serializeDocumentJson(document)) as Record<string, unknown>;
+    expect(typeof serialized.schemaVersion).toBe('string');
+    expect(serialized.schemaVersion).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it('does not mutate the original document when serializing', () => {
+    const document = createInitialDocument();
+    serializeDocumentJson(document);
+    expect(document.schemaVersion).toBeUndefined();
+  });
+
+  it('overwrites any pre-existing schemaVersion in the input', () => {
+    const document = { ...createInitialDocument(), schemaVersion: '0.0.1' };
+    const serialized = JSON.parse(serializeDocumentJson(document)) as Record<string, unknown>;
+    expect(serialized.schemaVersion).not.toBe('0.0.1');
+    expect(serialized.schemaVersion).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it('rejects invalid documents via parseDocumentJson', () => {

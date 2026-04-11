@@ -578,6 +578,7 @@ export function isLeafNode(node: DocumentNode): node is LeafNode {
 // Document model
 // ---------------------------------------------------------------------------
 export type DocumentModel = {
+  schemaVersion?: string;
   rootId: NodeId;
   nodes: Record<NodeId, DocumentNode>;
   fontLibrary: FontLibrary;

@@ -8,6 +8,7 @@ import {
   DEFAULT_EDITOR_DARK_THEME,
   DEFAULT_EDITOR_LIGHT_THEME,
 } from '../../lib/theme';
+import { DOCUMENT_MODEL_VERSION } from '../../lib/version';
 import { DEFAULT_SNAP_SETTINGS } from '../types';
 import { DEFAULT_FOCUSED_PANEL_OFFSET } from '../focusedPanelPosition';
 import {
@@ -1006,5 +1007,35 @@ describe('editor/editorPersistence', () => {
       const loaded = loadPersistedState();
       expect(loaded.ui.showDebugInfo).toBe(false);
     });
+  });
+});
+
+describe('parseImportedDocumentJson — schemaVersion checking', () => {
+  it('loads a document with no schemaVersion without warning', () => {
+    const doc = createInitialDocument();
+    const { schemaVersion: _omit, ...docWithoutVersion } = doc as typeof doc & { schemaVersion?: string };
+    const raw = JSON.stringify(docWithoutVersion);
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() => parseImportedDocumentJson(raw)).not.toThrow();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it('loads a document with a matching schemaVersion without warning', () => {
+    const doc = { ...createInitialDocument(), schemaVersion: DOCUMENT_MODEL_VERSION };
+    const raw = JSON.stringify(doc);
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() => parseImportedDocumentJson(raw)).not.toThrow();
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it('warns when schemaVersion does not match current version', () => {
+    const doc = { ...createInitialDocument(), schemaVersion: '0.0.1' };
+    const raw = JSON.stringify(doc);
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() => parseImportedDocumentJson(raw)).not.toThrow();
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[sticky-playground]'));
+    consoleSpy.mockRestore();
   });
 });

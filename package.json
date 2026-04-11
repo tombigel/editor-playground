@@ -1,12 +1,15 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.3.4",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
+    "postinstall": "simple-git-hooks",
+    "version:minor": "node scripts/bump-version.mjs all minor",
+    "version:major": "node scripts/bump-version.mjs all major",
     "sync:public": "node scripts/sync-public-assets.mjs",
     "sync:help-docs": "npm run sync:public",
     "predev": "npm run sync:public",
@@ -52,6 +55,9 @@
     "slate-react": "^0.115.0",
     "tailwind-merge": "^3.5.0"
   },
+  "simple-git-hooks": {
+    "pre-commit": "node scripts/pre-commit-version-bump.mjs"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
     "@tailwindcss/vite": "^4.2.2",
@@ -61,7 +67,9 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.2",
     "playwright": "^1.59.1",
+    "semver": "^7.7.2",
     "shadcn": "^4.1.2",
+    "simple-git-hooks": "^2.13.0",
     "tailwindcss": "^4.2.2",
     "tw-animate-css": "^1.4.0",
     "typescript": "^6.0.2",

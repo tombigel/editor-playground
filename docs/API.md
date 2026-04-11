@@ -888,3 +888,30 @@ type RectModel = {
 
 type ResponsiveValue<T> = { base: T; tablet?: T; mobile?: T };
 ```
+
+---
+
+## Versioning
+
+Sticky Playground tracks four independent semver versions, all defined in `src/lib/version.ts`.
+
+| Constant | Tracks |
+| --- | --- |
+| `PROJECT_VERSION` | Umbrella version — mirrors `package.json "version"` |
+| `DOCUMENT_MODEL_VERSION` | The `DocumentModel` serialized JSON schema |
+| `API_VERSION` | The `documentApi` / `editorApi` contract |
+| `EDITOR_VERSION` | The editor UI / shell |
+
+### Bump rules
+
+| Level | Trigger | How |
+| --- | --- | --- |
+| **Patch** | Every commit | Automatic — pre-commit hook runs `node scripts/bump-version.mjs all patch` and stages the result as part of the same commit |
+| **Minor** | Small migratable breaking change, significant new feature | Manual — `node scripts/bump-version.mjs [subsystem] minor` |
+| **Major** | Unrecoverable breaking change, project-wide feature shift | Manual — `node scripts/bump-version.mjs [subsystem] major` |
+
+Run `/version-bump` for guidance on which level to use for each subsystem.
+
+### `schemaVersion` in exported documents
+
+`serializeDocumentJson()` stamps the current `DOCUMENT_MODEL_VERSION` into the top-level `schemaVersion` field of the serialized JSON. On import, `parseImportedDocumentJson()` emits a `console.warn` if the stored version differs from the current one, but still attempts to load the document through the normal normalization and validation pipeline. A version mismatch is informational — structural invalidity is the hard-error condition.

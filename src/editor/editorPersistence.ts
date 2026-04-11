@@ -38,6 +38,7 @@ import {
   normalizeEditorLightTheme,
   normalizeThemeMode,
 } from '../lib/theme';
+import { DOCUMENT_MODEL_VERSION } from '../lib/version';
 import { DEFAULT_SNAP_SETTINGS } from './types';
 import { normalizeFocusedMode, resolveFocusedModeUrlOverride } from './focusedModes';
 import { DEFAULT_FOCUSED_PANEL_OFFSET, normalizeFocusedPanelOffset } from './focusedPanelPosition';
@@ -242,6 +243,13 @@ export function parseImportedDocumentJson(raw: string): DocumentModel {
     parsed = JSON.parse(raw);
   } catch {
     throw new Error('Import failed: invalid JSON.');
+  }
+
+  const storedVersion = (parsed as Record<string, unknown>)?.schemaVersion;
+  if (typeof storedVersion === 'string' && storedVersion !== DOCUMENT_MODEL_VERSION) {
+    console.warn(
+      `[sticky-playground] Document schema version mismatch: stored ${storedVersion}, current ${DOCUMENT_MODEL_VERSION}. Attempting import anyway.`,
+    );
   }
 
   try {

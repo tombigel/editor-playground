@@ -1,3 +1,4 @@
+import { DOCUMENT_MODEL_VERSION } from '../lib/version';
 import {
   SECTION_TEMPLATES,
   createContainerNode,
@@ -1107,7 +1108,7 @@ export function parseDocumentJson(raw: string): DocumentModel {
 }
 
 export function serializeDocumentJson(document: DocumentModel): string {
-  return JSON.stringify(document, null, 2);
+  return JSON.stringify({ ...document, schemaVersion: DOCUMENT_MODEL_VERSION }, null, 2);
 }
 
 // ---------------------------------------------------------------------------
