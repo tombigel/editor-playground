@@ -25,6 +25,9 @@ describe('panels/TopLevelWrapperVisibilityControl', () => {
 
     expect(markup).toContain('Visibility: Custom pages (2)');
     expect(markup).toContain('Custom pages (2)');
+    expect(markup).toContain('data-ui="select-trigger"');
+    expect(markup).toContain('editor-bg-surface editor-border-subtle editor-text-strong flex h-7');
+    expect(markup).toContain('text-[11px]');
     expect(markup).toContain('data-ui="select-option-row"');
   });
 

@@ -204,7 +204,8 @@ export function TopLevelWrapperVisibilityControl({
     <button
       ref={triggerRef}
       type="button"
-      className="editor-menubar-trigger"
+      data-ui="select-trigger"
+      className="editor-bg-surface editor-border-subtle editor-text-strong flex h-7 min-w-[124px] items-center justify-between gap-2 rounded-sm border px-2.5 text-[11px] shadow-sm"
       data-layers-control="true"
       data-state={open ? 'open' : 'closed'}
       aria-haspopup="menu"
