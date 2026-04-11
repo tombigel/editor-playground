@@ -112,7 +112,7 @@ When you run a minor or major bump, the script converts `[Unreleased]` into a ve
 - `src/lib/version.ts` — version constants (source of truth)
 - `scripts/bump-version.mjs` — semver arithmetic, file writes, and changelog conversion
 - `scripts/pre-commit-version-bump.mjs` — pre-commit hook (patch bumps)
-- `scripts/commit-msg-changelog.mjs` — commit-msg hook (changelog bullets)
+- `scripts/commit-msg-changelog.mjs` — prepare-commit-msg hook (changelog bullets)
 - `package.json["simple-git-hooks"]` — hook registration
 - `docs/API.md#versioning` — full versioning documentation
 - `CHANGELOG.md` — release history

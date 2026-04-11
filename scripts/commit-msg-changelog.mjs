@@ -2,9 +2,12 @@
 /**
  * commit-msg-changelog.mjs
  *
- * Registered as the simple-git-hooks commit-msg hook.
+ * Registered as the simple-git-hooks prepare-commit-msg hook.
  * Reads the first line of the commit message and appends it as a bullet
  * to the [Unreleased] section of CHANGELOG.md, then stages the file.
+ *
+ * Uses prepare-commit-msg (not commit-msg) so that `git add` updates
+ * the index before the commit tree is built.
  */
 
 import { execSync } from 'child_process';

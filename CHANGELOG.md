@@ -11,6 +11,9 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+- Add automatic changelog entries via commit-msg hook
+
+
 ---
 
 ## [0.4.1] — 2026-04-11
