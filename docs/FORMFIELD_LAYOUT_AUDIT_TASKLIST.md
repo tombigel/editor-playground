@@ -6,7 +6,7 @@
   - add `base-form-field` to the design-system registry
   - keep ordering aligned with the rendered base demos
   - add/update navigation coverage if needed
-- [ ] `TODO 2` Audit and convert simple inspector rows
+- [x] `TODO 2` Audit and convert simple inspector rows
   - convert eligible single label/control rows to `FormField layout="inline"` or `stack`
   - convert eligible grouped rows to `layout="inline-group"` only when they are still one semantic field
   - leave complex composite rows untouched

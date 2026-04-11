@@ -2,7 +2,7 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createTextNode, createContainerNode } from '../../../model/defaults';
-import { InspectorSectionCard, InspectorSummary, NodeBasicsSection } from '../CommonSections';
+import { InspectorSectionCard, InspectorSummary, NodeBasicsSection, WrapperDesignSection } from '../CommonSections';
 
 describe('panels/inspector/CommonSections', () => {
   it('invokes the focused-mode entry action from the section header button', () => {
@@ -226,6 +226,24 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('Visibility');
     expect(markup).toContain('data-ui="switch"');
     expect(markup).toContain('aria-label="Hide Hero Copy"');
+    expect(markup).toContain('data-ui="form-field"');
+    expect(markup).toContain('data-layout="inline"');
+  });
+
+  it('uses FormField layouts for simple wrapper design rows while keeping complex controls custom', () => {
+    const node = createContainerNode('section', 'root');
+
+    const markup = renderToStaticMarkup(
+      <WrapperDesignSection
+        node={node}
+        onWrapperStyleChange={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('data-ui="form-field"');
+    expect(markup).toContain('data-layout="inline"');
+    expect(markup).toContain('data-layout="inline-group"');
+    expect(markup).not.toContain('>Border<');
   });
 
   it('renders custom header content and action without affecting the shared card structure', () => {

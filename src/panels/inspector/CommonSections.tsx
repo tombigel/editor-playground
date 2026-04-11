@@ -39,8 +39,8 @@ import { cn, DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
 import {
   BorderControlGroup,
+  FormField,
   HoverColorField,
-  InspectorInlineRow,
   NumericUnitInlineField,
   OrderIconButton,
   ShadowControlGroup,
@@ -398,7 +398,7 @@ export function NodeBasicsSection({
         />
       ) : null}
       {node.contentType !== 'site' ? (
-        <InspectorInlineRow label="Visibility" controlClassName="gap-2">
+        <FormField label="Visibility" layout="inline" controlClassName="gap-2">
           {isTopLevelVisibilityWrapper ? (
             <TopLevelWrapperVisibilityControl
               document={document}
@@ -416,7 +416,7 @@ export function NodeBasicsSection({
               />
             </div>
           )}
-        </InspectorInlineRow>
+        </FormField>
       ) : null}
     </InspectorSectionCard>
   );
@@ -481,14 +481,14 @@ export function WrapperDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-        <InspectorInlineRow label="Background" controlClassName="gap-2">
+        <FormField label="Background" layout="inline" controlClassName="gap-2">
           <HoverColorField
             value={node.style?.background}
             onChange={(value) => onWrapperStyleChange('background', value)}
             ariaLabel="Background color"
             showOpacity={allowsBackgroundOpacity}
           />
-        </InspectorInlineRow>
+        </FormField>
         {supportsContainerSurfaceStyling ? (
           <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
             <Label className="pt-1 text-[11px] font-medium">Border</Label>
@@ -523,7 +523,7 @@ export function WrapperDesignSection({
         ) : null}
 
         {node.subtype === 'section' ? (
-          <InspectorInlineRow label="Divider" controlClassName="gap-2">
+          <FormField label="Divider" layout="inline-group" controlClassName="gap-2">
             <NumericUnitInlineField
               value={node.style?.sectionBorderBottomWidth?.raw ?? ''}
               units={['px']}
@@ -539,7 +539,7 @@ export function WrapperDesignSection({
               fallback="#dbe3ee"
               showOpacity={false}
             />
-          </InspectorInlineRow>
+          </FormField>
         ) : null}
     </InspectorSectionCard>
   );
