@@ -1,5 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { NumberInput } from "@/components/ui/number-input";
+import { FormField } from "@/panels/InspectorControls";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import { VariationsGrid } from "../../previews/VariationsGrid";
 import type { PropDefinition } from "../../types";
@@ -26,6 +30,20 @@ const BADGE_PROPS: PropDefinition[] = [
 
 const LABEL_PROPS: PropDefinition[] = [
 	{ name: "htmlFor", type: "string", description: "Associated input id." },
+];
+
+const FORM_FIELD_PROPS: PropDefinition[] = [
+	{ name: "label", type: "string", description: "Field label text." },
+	{
+		name: "layout",
+		type: "'stack' | 'inline' | 'inline-start' | 'inline-group'",
+		description:
+			"Label-to-control arrangement. stack = label above (default), inline = label left with justify-between, inline-start = label left compact, inline-group = label left with grouped controls right.",
+	},
+	{ name: "className", type: "string", description: "Outer wrapper class." },
+	{ name: "labelClassName", type: "string", description: "Label class override." },
+	{ name: "controlClassName", type: "string", description: "Control wrapper class override (inline modes only)." },
+	{ name: "controlWidth", type: "string", description: "Explicit control width (inline mode only)." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -123,6 +141,76 @@ export function FormLayoutDemos() {
 					<Label htmlFor="demo-label-input">Field label</Label>
 					<Input id="demo-label-input" placeholder="Associated input" />
 				</div>
+			</ComponentPreview>
+
+			{/* FormField Layout Modes */}
+			<ComponentPreview
+				id="base-form-field"
+				name="FormField"
+				description="Labeled field wrapper with four layout modes for inspector controls."
+				sourceFile="src/panels/controls/FormLayout.tsx"
+				props={FORM_FIELD_PROPS}
+			>
+				<VariationsGrid
+					columns={1}
+					variations={[
+						{
+							label: 'layout="stack" (default)',
+							render: () => (
+								<div className="w-[260px]">
+									<FormField label="Font family">
+										<Input placeholder="Inter" onChange={() => {}} />
+									</FormField>
+								</div>
+							),
+						},
+						{
+							label: 'layout="inline"',
+							render: () => (
+								<div className="w-[260px] space-y-2">
+									<FormField label="Trigger" layout="inline">
+										<Select value="entrance" onValueChange={() => {}}>
+											<SelectTrigger><SelectValue /></SelectTrigger>
+											<SelectContent>
+												<SelectItem value="entrance">Entrance</SelectItem>
+												<SelectItem value="scroll">Scroll</SelectItem>
+											</SelectContent>
+										</Select>
+									</FormField>
+									<FormField label="Requires sticky" layout="inline">
+										<Switch checked={false} onCheckedChange={() => {}} />
+									</FormField>
+									<FormField label="Depth" layout="inline">
+										<NumberInput value={50} min={0} max={100} step={1} onChange={() => {}} />
+									</FormField>
+								</div>
+							),
+						},
+						{
+							label: 'layout="inline-start"',
+							render: () => (
+								<div className="w-[260px]">
+									<FormField label="Status" layout="inline-start">
+										<span className="editor-bg-subtle editor-border-subtle editor-text-muted rounded border px-1.5 py-0.5 text-[10px]">
+											named
+										</span>
+									</FormField>
+								</div>
+							),
+						},
+						{
+							label: 'layout="inline-group"',
+							render: () => (
+								<div className="w-[260px]">
+									<FormField label="Size" layout="inline-group">
+										<NumberInput value={100} min={0} max={999} step={1} onChange={() => {}} />
+										<NumberInput value={50} min={0} max={999} step={1} onChange={() => {}} />
+									</FormField>
+								</div>
+							),
+						},
+					]}
+				/>
 			</ComponentPreview>
 		</>
 	);
