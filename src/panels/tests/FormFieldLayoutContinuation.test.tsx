@@ -6,6 +6,7 @@ import { MultiSelectInspector } from "../MultiSelectInspector";
 import { PageEditorContent } from "../PageEditorContent";
 import { PagesExportSettingsContent } from "../PagesExportSettingsContent";
 import { PagesSiteSettingsContent } from "../PagesSiteSettingsContent";
+import { FormField } from "../controls/FormLayout";
 
 const ORDER_STATE: InspectorOrderState = {
 	showOrderControls: false,
@@ -58,6 +59,30 @@ const ACTIONS = {
 } as unknown as InspectorActionHandlers;
 
 describe("panels/FormField layout continuation", () => {
+	it("right-aligns inline-group control rails within fixed widths", () => {
+		const markup = renderToStaticMarkup(
+			<FormField label="Align" layout="inline-group" controlWidth="180px">
+				<button type="button">One</button>
+				<button type="button">Two</button>
+			</FormField>,
+		);
+
+		expect(markup).toContain('data-layout="inline-group"');
+		expect(markup).toContain('style="width:180px"');
+		expect(markup).toContain("justify-end");
+	});
+
+	it("renders supporting description content below the field body", () => {
+		const markup = renderToStaticMarkup(
+			<FormField label="Align" description="Uses the first selected node as the anchor.">
+				<button type="button">One</button>
+			</FormField>,
+		);
+
+		expect(markup).toContain('data-ui="form-field-description"');
+		expect(markup).toContain('Uses the first selected node as the anchor.');
+	});
+
 	it("uses FormField layouts in page and site settings surfaces", () => {
 		const document = createInitialDocument();
 		const page = document.pages?.[0];

@@ -26,7 +26,6 @@ import {
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { parseUnitValue } from '../api/documentApi';
@@ -225,8 +224,15 @@ export function MultiSelectInspector({
             <CardTitle className="text-xs">Layout</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-medium">Align</Label>
+            <FormField
+              label="Align"
+              description={(
+                <div className="space-y-0.5">
+                  <div>First selected node is the alignment anchor.</div>
+                  {!canAlign ? <div>Align works on sibling movable nodes with the first selected node as the anchor.</div> : null}
+                </div>
+              )}
+            >
               <div className="flex flex-wrap gap-1">
                 <TextStyleIconButton label="Align left" active={false} disabled={!canAlign} onClick={() => onAlignSelection('left')}>
                   <AlignStartVertical className="h-4 w-4" />
@@ -247,12 +253,12 @@ export function MultiSelectInspector({
                   <AlignEndHorizontal className="h-4 w-4" />
                 </TextStyleIconButton>
               </div>
-              <div className="editor-text-muted text-[11px]">First selected node is the alignment anchor.</div>
-              {!canAlign ? <div className="editor-text-muted text-[11px]">Align works on sibling movable nodes with the first selected node as the anchor.</div> : null}
-            </div>
+            </FormField>
 
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-medium">Distribute</Label>
+            <FormField
+              label="Distribute"
+              description={!canDistribute ? 'Distribution needs at least 3 selected nodes in one valid layout context.' : undefined}
+            >
               <div className="flex flex-wrap gap-1">
                 <TextStyleIconButton label="Distribute horizontal" active={false} disabled={!canDistribute} onClick={() => onDistributeSelection('horizontal')}>
                   <AlignHorizontalDistributeCenter className="h-4 w-4" />
@@ -273,12 +279,10 @@ export function MultiSelectInspector({
                   <AlignVerticalDistributeEnd className="h-4 w-4" />
                 </TextStyleIconButton>
               </div>
-              {!canDistribute ? <div className="editor-text-muted text-[11px]">Distribution needs at least 3 selected nodes in one valid layout context.</div> : null}
-            </div>
+            </FormField>
 
             {orderState.showOrderControls ? (
-              <div className="space-y-0.5">
-                <Label className="text-[11px] font-medium">Reorder</Label>
+              <FormField label="Reorder">
                 <div className="flex gap-1.5">
                   <OrderIconButton label="Position Forward" shortcut={orderState.orderForwardShortcut} onClick={orderState.onOrderForward} disabled={!orderState.canOrderForward}>
                     <ArrowBigUp className="h-4 w-4" />
@@ -293,7 +297,7 @@ export function MultiSelectInspector({
                     <ArrowBigDownDash className="h-4 w-4" />
                   </OrderIconButton>
                 </div>
-              </div>
+              </FormField>
             ) : null}
           </CardContent>
         </Card>

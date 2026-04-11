@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,7 +34,7 @@ const LABEL_PROPS: PropDefinition[] = [
 ];
 
 const FORM_FIELD_PROPS: PropDefinition[] = [
-	{ name: "label", type: "string", description: "Field label text." },
+	{ name: "label", type: "string | ReactNode", description: "Field label text or richer label content for inline notices/status." },
 	{
 		name: "layout",
 		type: "'stack' | 'inline' | 'inline-start' | 'inline-group'",
@@ -42,8 +43,10 @@ const FORM_FIELD_PROPS: PropDefinition[] = [
 	},
 	{ name: "className", type: "string", description: "Outer wrapper class." },
 	{ name: "labelClassName", type: "string", description: "Label class override." },
+	{ name: "description", type: "ReactNode", description: "Optional supporting text/content rendered below the field." },
+	{ name: "descriptionClassName", type: "string", description: "Supporting text class override." },
 	{ name: "controlClassName", type: "string", description: "Control wrapper class override (inline modes only)." },
-	{ name: "controlWidth", type: "string", description: "Explicit control width (inline mode only)." },
+	{ name: "controlWidth", type: "string", description: "Explicit control width for inline and inline-group control rails." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -165,9 +168,32 @@ export function FormLayoutDemos() {
 							),
 						},
 						{
+							label: 'supporting description',
+							render: () => (
+								<div className="editor-border-subtle w-[280px] rounded-md border p-3">
+									<FormField
+										label="Align"
+										description="Uses the first selected node as the anchor."
+									>
+										<div className="flex flex-wrap gap-1">
+											<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+												L
+											</Button>
+											<Button type="button" variant="default" size="sm" className="h-8 w-8 p-0 text-xs">
+												C
+											</Button>
+											<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+												R
+											</Button>
+										</div>
+									</FormField>
+								</div>
+							),
+						},
+						{
 							label: 'layout="inline"',
 							render: () => (
-								<div className="editor-border-subtle w-[260px] space-y-2 rounded-md border p-3">
+								<div className="editor-border-subtle w-[280px] space-y-2 rounded-md border p-3">
 									<FormField label="Trigger" layout="inline">
 										<Select value="entrance" onValueChange={() => {}}>
 											<SelectTrigger><SelectValue /></SelectTrigger>
@@ -187,6 +213,31 @@ export function FormLayoutDemos() {
 							),
 						},
 						{
+							label: 'label={<...>} with inline notice',
+							render: () => (
+								<div className="editor-border-subtle w-[280px] rounded-md border p-3">
+									<FormField
+										label={(
+											<div className="flex items-center justify-between gap-2">
+												<span>Section</span>
+												<span className="editor-pill-subtle rounded-md px-1.5 py-0.5 text-[10px] font-medium">
+													Broken anchor
+												</span>
+											</div>
+										)}
+									>
+										<Select value="hero" onValueChange={() => {}}>
+											<SelectTrigger><SelectValue /></SelectTrigger>
+											<SelectContent>
+												<SelectItem value="hero">Hero</SelectItem>
+												<SelectItem value="features">Features</SelectItem>
+											</SelectContent>
+										</Select>
+									</FormField>
+								</div>
+							),
+						},
+						{
 							label: 'layout="inline-start"',
 							render: () => (
 								<div className="editor-border-subtle w-[260px] rounded-md border p-3">
@@ -199,7 +250,25 @@ export function FormLayoutDemos() {
 							),
 						},
 						{
-							label: 'layout="inline-group"',
+							label: 'layout="inline-group" with right-aligned fixed rail',
+							render: () => (
+								<div className="editor-border-subtle w-[280px] rounded-md border p-3">
+									<FormField label="Align" layout="inline-group" controlWidth="172px" controlClassName="gap-1">
+										<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+											L
+										</Button>
+										<Button type="button" variant="default" size="sm" className="h-8 w-8 p-0 text-xs">
+											C
+										</Button>
+										<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+											R
+										</Button>
+									</FormField>
+								</div>
+							),
+						},
+						{
+							label: 'layout="inline-group" compact numeric pair',
 							render: () => (
 								<div className="editor-border-subtle w-[260px] rounded-md border p-3">
 									<FormField label="Size" layout="inline-group">

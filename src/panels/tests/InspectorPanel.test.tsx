@@ -268,7 +268,7 @@ describe('panels/InspectorPanel', () => {
     expect(markup.indexOf('>Layout<')).toBeLessThan(markup.indexOf('>Sticky<'));
     expect(markup.indexOf('>Sticky<')).toBeLessThan(markup.indexOf('>Typography<'));
     expect(markup.match(/data-layout="inline-group"/g)?.length).toBeGreaterThanOrEqual(4);
-    expect(markup).toContain('class="ml-auto flex min-w-0 items-center gap-1" style="width:172px"');
+    expect(markup).toContain('class="ml-auto flex min-w-0 items-center justify-end gap-1" style="width:172px"');
     expect(markup).toContain('class="shrink-0" style="width:136px"');
     expect(markup).toContain('class="relative w-full"');
     expect(markup).toContain('class="grid w-full items-center gap-1" style="grid-template-columns:112px 56px"');
@@ -478,7 +478,7 @@ describe('panels/InspectorPanel', () => {
     expect(textMarkup).toContain('>Manage fonts<');
     expect(textMarkup).toContain('class="space-y-2.5 editor-border-subtle border-t pt-2.5"');
     expect(textMarkup.match(/data-layout="inline-group"/g)?.length).toBeGreaterThanOrEqual(4);
-    expect(textMarkup).toContain('class="ml-auto flex min-w-0 items-center gap-1" style="width:172px"');
+    expect(textMarkup).toContain('class="ml-auto flex min-w-0 items-center justify-end gap-1" style="width:172px"');
     expect(textMarkup).toContain('class="shrink-0" style="width:136px"');
     expect(textMarkup).toContain('class="relative w-full"');
     expect(textMarkup).toContain('class="grid w-full items-center gap-1" style="grid-template-columns:112px 56px"');

@@ -246,6 +246,54 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).not.toContain('>Border<');
   });
 
+  it('uses FormField inline-group for the layout order row', () => {
+    const document = createInitialDocument();
+    const node = Object.values(document.nodes).find((candidate) => candidate.contentType === 'text');
+
+    if (!node || node.contentType !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    const markup = renderToStaticMarkup(
+      <NodeBasicsSection
+        document={document}
+        activePageId={document.pages?.[0]?.id ?? null}
+        node={node}
+        orderState={{
+          showOrderControls: true,
+          canOrderBack: true,
+          canOrderForward: true,
+          canSendToBack: true,
+          canBringToFront: true,
+          orderBackShortcut: '',
+          orderForwardShortcut: '',
+          sendToBackShortcut: '',
+          bringToFrontShortcut: '',
+          canSectionBack: false,
+          canSectionForward: false,
+          onOrderBack: () => {},
+          onOrderForward: () => {},
+          onSendToBack: () => {},
+          onBringToFront: () => {},
+          onSectionBack: () => {},
+          onSectionForward: () => {},
+        }}
+        actions={{
+          onWrapperStyleChange: () => {},
+          onRectChange: () => {},
+          onPromote: () => {},
+          onDemote: () => {},
+          onSetNodeVisibility: () => {},
+          onSetTopLevelWrapperVisibility: () => {},
+        }}
+      />,
+    );
+
+    expect(markup).toContain('>Order<');
+    expect(markup).toContain('data-ui="form-field"');
+    expect(markup).toContain('data-layout="inline-group"');
+  });
+
   it('renders custom header content and action without affecting the shared card structure', () => {
     const onClick = vi.fn();
     const tree = InspectorSectionCard({

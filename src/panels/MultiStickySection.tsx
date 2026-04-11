@@ -3,7 +3,6 @@ import type { DocumentNode, FocusedMode } from '../api/editorApi';
 import { isContainerNode } from '../model/types';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FormField, RangeField, StickyOffsetBandField, SwitchBlock } from './InspectorControls';
@@ -151,8 +150,7 @@ export function MultiStickySection({
           )}
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-3">
-              <Label className="text-[11px] font-medium">Duration</Label>
+            <FormField label="Duration" layout="inline" controlClassName="shrink-0">
               {forceAutoDuration ? (
                 <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
                   <Button type="button" variant="default" size="sm" className="h-7 px-2.5 text-[11px]" disabled>
@@ -181,7 +179,7 @@ export function MultiStickySection({
                   </Button>
                 </div>
               )}
-            </div>
+            </FormField>
             {showCustomDuration ? (
               showOffsetBand ? (
                 <div className="space-y-1.5">
@@ -314,4 +312,3 @@ function readStickyDurationBottomValue(node: Exclude<DocumentNode, { type: 'site
   const duration = node.sticky?.durationBottom?.parsed ?? node.sticky?.duration.parsed;
   return duration?.unit === 'vh' ? duration.value : 50;
 }
-

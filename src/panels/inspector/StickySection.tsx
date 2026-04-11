@@ -3,7 +3,7 @@ import { isContainerNode } from '../../model/types';
 import type { FocusedMode } from '../../api/editorApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LabeledControlRow, NoticeSurface } from '@/components/ui/settings-panel';
+import { NoticeSurface } from '@/components/ui/settings-panel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { FormField, RangeField, StickyOffsetBandField, SwitchBlock } from '../InspectorControls';
@@ -105,12 +105,7 @@ export function StickySection({
             )}
 
             <div className="space-y-1.5">
-              <LabeledControlRow
-                label="Duration"
-                className="gap-3"
-                labelClassName="text-[11px] font-medium"
-                controlClassName="shrink-0"
-              >
+              <FormField label="Duration" layout="inline" controlClassName="shrink-0">
                 {forceAutoDuration ? (
                   <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
                     <Button
@@ -145,7 +140,7 @@ export function StickySection({
                     </Button>
                   </div>
                 )}
-              </LabeledControlRow>
+              </FormField>
               {!forceAutoDuration && (node.sticky?.durationMode ?? 'auto') === 'custom' ? (
                 edgeValue(node) === 'both' ? (
                   <div className="space-y-1.5">

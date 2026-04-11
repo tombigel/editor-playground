@@ -347,9 +347,7 @@ export function NodeBasicsSection({
       ) : null}
 
       {orderState.showOrderControls ? (
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1.5">
-          <Label className="text-[11px] font-medium">Order</Label>
-          <div className="flex justify-end gap-1.5">
+        <FormField label="Order" layout="inline-group" controlClassName="gap-1.5">
             <OrderIconButton
               label="Position Forward"
               shortcut={orderState.orderForwardShortcut}
@@ -382,8 +380,7 @@ export function NodeBasicsSection({
             >
               <ArrowBigDownDash className="h-4 w-4" />
             </OrderIconButton>
-          </div>
-        </div>
+        </FormField>
       ) : null}
 
       {isContainerNode(node) ? (

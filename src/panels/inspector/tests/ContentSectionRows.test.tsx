@@ -34,6 +34,7 @@ describe("panels/inspector/content section rows", () => {
 		const document = createInitialDocument();
 		const page = document.pages?.[0];
 		const node = createButtonTextNode(document.rootId);
+		const anchorNode = createButtonTextNode(document.rootId);
 
 		if (!page?.sectionIds[0]) {
 			throw new Error("Expected initial document page with a section");
@@ -45,11 +46,23 @@ describe("panels/inspector/content section rows", () => {
 			pageAnchorId: page.sectionIds[0],
 			href: `/${page.slug}`,
 		};
+		anchorNode.link = {
+			linkType: "anchor",
+			anchorTargetId: page.sectionIds[0],
+			href: `#${page.sectionIds[0]}`,
+		};
 
 		const navigationMarkup = renderToStaticMarkup(
 			<NavigationFields
 				document={document}
 				node={node}
+				onTextChange={() => {}}
+			/>,
+		);
+		const anchorMarkup = renderToStaticMarkup(
+			<NavigationFields
+				document={document}
+				node={anchorNode}
 				onTextChange={() => {}}
 			/>,
 		);
@@ -60,6 +73,8 @@ describe("panels/inspector/content section rows", () => {
 		expect(navigationMarkup).toContain("Page");
 		expect(navigationMarkup).toContain("Jump to section (optional)");
 		expect((navigationMarkup.match(/data-layout="stack"/g) ?? []).length).toBeGreaterThanOrEqual(2);
+		expect(anchorMarkup).toContain(">Section<");
+		expect((anchorMarkup.match(/data-layout="stack"/g) ?? []).length).toBeGreaterThanOrEqual(1);
 		expect(openInNewTabMarkup).toContain('data-layout="inline"');
 		expect(openInNewTabMarkup).toContain('aria-label="Open in a new tab"');
 	});
