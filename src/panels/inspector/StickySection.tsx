@@ -66,9 +66,9 @@ export function StickySection({
 
         {node.sticky?.enabled ? (
           <>
-            <FormField label="Edge">
-              <Select value={edgeValue(node)} onValueChange={(value) => actions.onStickyEdges(value as 'top' | 'bottom' | 'both')}>
-                <SelectTrigger>
+            <FormField label="Edge" layout="inline">
+              <Select size="compact" value={edgeValue(node)} onValueChange={(value) => actions.onStickyEdges(value as 'top' | 'bottom' | 'both')}>
+                <SelectTrigger size="compact">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

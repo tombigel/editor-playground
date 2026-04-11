@@ -101,8 +101,9 @@ export function MultiStickySection({
 
       {stickyEnabledState.value || stickyEnabledState.mixed ? (
         <>
-          <FormField label="Edge">
+          <FormField label="Edge" layout="inline">
             <Select
+              size="compact"
               value={stickyEdgesState.mixed ? MIXED_SELECT_VALUE : stickyEdgesState.value}
               onValueChange={(value) => {
                 if (value !== MIXED_SELECT_VALUE) {
@@ -110,7 +111,7 @@ export function MultiStickySection({
                 }
               }}
             >
-              <SelectTrigger className={stickyEdgesState.mixed ? 'border-dashed' : undefined}>
+              <SelectTrigger size="compact" className={stickyEdgesState.mixed ? 'border-dashed' : undefined}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

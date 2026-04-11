@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add Select size variants and bordered slider demos
 - split editor and site axe scans
 - strengthen tabs hover accent state
+- make edge dropdown compact and inline
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout
