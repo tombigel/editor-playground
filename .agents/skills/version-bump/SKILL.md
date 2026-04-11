@@ -79,7 +79,7 @@ node scripts/bump-version.mjs [subsystem|all] [minor|major]
 After running:
 
 1. Review the diff in `src/lib/version.ts` and `package.json`.
-2. Fill in the changelog placeholder that the script added to `CHANGELOG.md` (replace the `(describe ...)` markers with actual feature/change descriptions).
+2. Review the changelog: the script converts the `[Unreleased]` section into a versioned entry with the new version number and date. The accumulated commit message bullets are preserved as the release notes. Edit if needed.
 3. Commit. The pre-commit hook will patch-bump all four versions again — this is expected and correct. The manual bump you just made is the meaningful one; the patch on top is the hook's normal per-commit behavior.
 
 ### Examples
@@ -101,11 +101,18 @@ Read `src/lib/version.ts` directly, or open the About panel in the editor (top-r
 
 ---
 
+## Changelog workflow
+
+Every commit automatically appends its first-line message to the `[Unreleased]` section of `CHANGELOG.md` via the `commit-msg` hook. This means commit messages should have a meaningful, concise first line.
+
+When you run a minor or major bump, the script converts `[Unreleased]` into a versioned entry (stamped with the new version and today's date) and adds a fresh empty `[Unreleased]` section above it. The accumulated commit bullets become the release notes.
+
 ## Implementation reference
 
 - `src/lib/version.ts` — version constants (source of truth)
-- `scripts/bump-version.mjs` — semver arithmetic and file writes
-- `scripts/pre-commit-version-bump.mjs` — pre-commit hook entry point
+- `scripts/bump-version.mjs` — semver arithmetic, file writes, and changelog conversion
+- `scripts/pre-commit-version-bump.mjs` — pre-commit hook (patch bumps)
+- `scripts/commit-msg-changelog.mjs` — commit-msg hook (changelog bullets)
 - `package.json["simple-git-hooks"]` — hook registration
 - `docs/API.md#versioning` — full versioning documentation
 - `CHANGELOG.md` — release history

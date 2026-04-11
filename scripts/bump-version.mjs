@@ -65,7 +65,7 @@ for (const target of targets) {
 
 writeFileSync(versionFile, content, 'utf8');
 
-// --- Changelog placeholder for minor/major bumps ---
+// --- Convert [Unreleased] to versioned entry on minor/major bumps ---
 if (levelArg !== 'patch') {
   const changelogFile = resolve(root, 'CHANGELOG.md');
   const changelog = readFileSync(changelogFile, 'utf8');
@@ -75,36 +75,18 @@ if (levelArg !== 'patch') {
   const av = content.match(/API_VERSION = '([^']+)'/)[1];
   const ev = content.match(/EDITOR_VERSION = '([^']+)'/)[1];
 
-  const heading = `## [${pv}]`;
+  const unreleasedHeading = '## [Unreleased]';
+  const today = new Date().toISOString().slice(0, 10);
+  const versionedHeading = `## [${pv}] — ${today}`;
+  const versionLine = `\nDocument: ${dv} · API: ${av} · Editor: ${ev}`;
 
-  if (!changelog.includes(heading)) {
-    const today = new Date().toISOString().slice(0, 10);
-    const placeholder = [
-      `${heading} — ${today}`,
-      '',
-      `Document: ${dv} · API: ${av} · Editor: ${ev}`,
-      '',
-      '### Added',
-      '',
-      '- (describe new features here)',
-      '',
-      '### Changed',
-      '',
-      '- (describe changes here)',
-      '',
-      '---',
-      '',
-    ].join('\n');
-
-    const marker = '\n---\n';
-    const firstSeparatorIndex = changelog.indexOf(marker);
-    if (firstSeparatorIndex !== -1) {
-      const insertPos = firstSeparatorIndex + marker.length;
-      const updated =
-        changelog.slice(0, insertPos) + '\n' + placeholder + changelog.slice(insertPos);
-      writeFileSync(changelogFile, updated, 'utf8');
-      console.log(`CHANGELOG.md: added placeholder for ${heading}`);
-    }
+  if (changelog.includes(unreleasedHeading)) {
+    const updated = changelog.replace(
+      unreleasedHeading,
+      `${unreleasedHeading}\n\n---\n\n${versionedHeading}${versionLine}`,
+    );
+    writeFileSync(changelogFile, updated, 'utf8');
+    console.log(`CHANGELOG.md: [Unreleased] → ${versionedHeading}`);
   }
 }
 
