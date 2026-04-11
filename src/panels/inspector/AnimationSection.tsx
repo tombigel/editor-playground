@@ -155,7 +155,6 @@ export function AnimationSection({
             <PresetOptions
               preset={summary.effectName}
               currentParams={node.animation?.effect.kind === 'named' ? node.animation.effect : {}}
-              trigger={(summary.trigger ?? 'entrance') as AnimationTriggerType}
               onParamChange={(params) =>
                 actions.onAnimationPresetChange(
                   (summary.trigger ?? 'entrance') as AnimationTriggerType,
@@ -170,7 +169,7 @@ export function AnimationSection({
           {(summary?.trigger === 'hover' || summary?.trigger === 'interest') ? (
             <FormField label="On leave">
               <Select
-                value={('outAction' in node && (node as { outAction?: HoverOutAction }).outAction) ?? 'reverse'}
+                value={'outAction' in node ? (node as { outAction?: HoverOutAction }).outAction ?? 'reverse' : 'reverse'}
                 onValueChange={(value) => actions.onAnimationOptionsChange({ outAction: value as HoverOutAction })}
               >
                 <SelectTrigger>
@@ -280,12 +279,10 @@ function PresetPicker({
 function PresetOptions({
   preset,
   currentParams,
-  trigger,
   onParamChange,
 }: {
   preset: string;
   currentParams: Record<string, unknown>;
-  trigger: AnimationTriggerType;
   onParamChange: (params: Record<string, unknown>) => void;
 }) {
   const schema = useMemo(() => getPresetParams(preset), [preset]);

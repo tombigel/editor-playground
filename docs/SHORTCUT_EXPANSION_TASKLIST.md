@@ -23,7 +23,7 @@ Live implementation checklist for the two-phase shortcut expansion.
 - [x] TODO 7 Rich-text policy + audit
   - document precedence rules
   - document currently explicit rich-text shortcuts and audited gaps
-- [ ] TODO 8 Final verification
+- [x] TODO 8 Final verification
   - run targeted tests
   - run `npm run build`
   - fix any introduced failures before completion
