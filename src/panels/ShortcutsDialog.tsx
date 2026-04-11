@@ -26,7 +26,7 @@ export function ShortcutsDialog({
           onClose={() => onOpenChange(false)}
         />
         <div className="editor-scrollbar editor-scrollbar-gutter max-h-[min(72vh,640px)] overflow-y-auto p-6">
-          <ShortcutHelpContent />
+          <ShortcutHelpContent showHeader={false} />
         </div>
       </DialogContent>
     </Dialog>

@@ -6,6 +6,7 @@ import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
 function createHandlers() {
   return {
     app: {
+      openDocumentation: vi.fn(),
       openPreviewSite: vi.fn(),
     },
     history: {
@@ -110,6 +111,7 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('dismissPanels'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('openSettings'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('showShortcutHelp'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('openDocumentation'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('openPreviewSite'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleFontsPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleComponentsPanel'), baseState, false, handlers);
@@ -123,6 +125,7 @@ describe('app/shortcutController', () => {
     expect(handlers.panels.closePanels).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleSettings).toHaveBeenCalledOnce();
     expect(handlers.panels.openShortcuts).toHaveBeenCalledOnce();
+    expect(handlers.app.openDocumentation).toHaveBeenCalledOnce();
     expect(handlers.app.openPreviewSite).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleFontsPanel).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleComponentsPanel).toHaveBeenCalledOnce();

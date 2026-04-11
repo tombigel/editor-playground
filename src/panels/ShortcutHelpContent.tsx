@@ -3,9 +3,10 @@ import { getShortcutDefinitionsByCategory, getShortcutGestures, getShortcutPlatf
 
 type Props = {
   compact?: boolean;
+  showHeader?: boolean;
 };
 
-export function ShortcutHelpContent({ compact = false }: Props) {
+export function ShortcutHelpContent({ compact = false, showHeader = true }: Props) {
   const platform = getShortcutPlatform();
   const categories = getShortcutDefinitionsByCategory(platform);
   const gestures = getShortcutGestures(platform);
@@ -18,17 +19,19 @@ export function ShortcutHelpContent({ compact = false }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2.5">
-        <div className="editor-icon-surface flex h-9 w-9 items-center justify-center rounded-lg border">
-          <Keyboard className="h-3.5 w-3.5" />
-        </div>
-        <div>
-          <div className="editor-text-strong text-[13px] font-medium leading-4">Keyboard shortcuts</div>
-          <div className="editor-text-muted text-xs leading-4">
-            Mod maps to {modLabel}. Arrange keeps bracket keys for layer order with platform-specific front and back variants.
+      {showHeader ? (
+        <div className="flex items-center gap-2.5">
+          <div className="editor-icon-surface flex h-9 w-9 items-center justify-center rounded-lg border">
+            <Keyboard className="h-3.5 w-3.5" />
+          </div>
+          <div>
+            <div className="editor-text-strong text-[13px] font-medium leading-4">Keyboard shortcuts</div>
+            <div className="editor-text-muted text-xs leading-4">
+              Mod maps to {modLabel}. Arrange keeps bracket keys for layer order with platform-specific front and back variants.
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       {compact ? (
         <>

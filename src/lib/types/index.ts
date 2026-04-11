@@ -11,6 +11,7 @@ export type ShortcutId =
   | 'redo'
   | 'openSettings'
   | 'showShortcutHelp'
+  | 'openDocumentation'
   | 'openPreviewSite'
   | 'toggleFontsPanel'
   | 'toggleComponentsPanel'

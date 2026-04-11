@@ -387,12 +387,12 @@ Alignment and distribution:
 
 Preview and stage controls:
 
-- `Shift + V`: open Preview site when no input field is focused
+- `Cmd/Ctrl + Alt + P`: open Preview site when no input field is focused
 - `Shift + P`: toggle sticky preview from the left rail when no input field is focused
 - `Shift + F`: toggle the Fonts panel from the View menu when no input field is focused
 - `Shift + L`: toggle the Components panel when no input field is focused
 - `Shift + O`: toggle the Pages panel when no input field is focused
-- `Shift + H`: toggle hidden-node visibility ghosts when no input field is focused
+- `Shift + V`: toggle hidden-node visibility ghosts when no input field is focused
 - `Shift + S`: toggle spacer visuals from the left rail between selected-only and all when no input field is focused
 - `Shift + R`: toggle grid visibility when no input field is focused
 - `Shift + G`: toggle snap to guides when no input field is focused
@@ -404,9 +404,7 @@ Global controls:
 
 - `Mod + ,`: open settings
 - `?`: open the detached Shortcuts dialog when no input field is focused
-- `Shift + M`: open Documentation when no input field is focused
-- `Shift + Y`: open the Design system showcase when no input field is focused
-- `Shift + I`: open About when no input field is focused
+- `Shift + H`: open Documentation when no input field is focused
 - `Esc`: close open panels and dialogs
 
 ### Shortcut maintenance

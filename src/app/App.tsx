@@ -152,6 +152,7 @@ export function App() {
 
   const shortcutHandlers: ShortcutExecutionHandlers = {
     app: {
+      openDocumentation: () => panels.setHelpOpen(true),
       openPreviewSite: () => openPreviewSiteWindow(),
     },
     history: {

@@ -27,6 +27,9 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
   showShortcutHelp: (_state, _shiftKey, handlers) => {
     handlers.panels.openShortcuts();
   },
+  openDocumentation: (_state, _shiftKey, handlers) => {
+    handlers.app.openDocumentation();
+  },
   openPreviewSite: (_state, _shiftKey, handlers) => {
     handlers.app.openPreviewSite();
   },

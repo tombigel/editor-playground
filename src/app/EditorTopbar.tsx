@@ -411,6 +411,10 @@ export function EditorTopbar({
 							</MenubarItem>
 							<MenubarPanelLinkItem
 								icon={BookOpen}
+								shortcut={getShortcutLabel(
+									"openDocumentation",
+									shortcutPlatform,
+								)}
 								onClick={() => onOpenDocumentation(DOCUMENTATION_ENTRY_ID)}
 							>
 								Documentation

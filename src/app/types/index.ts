@@ -201,6 +201,7 @@ export type ShortcutUiState = {
 
 export type ShortcutExecutionHandlers = {
   app: {
+    openDocumentation: () => void;
     openPreviewSite: () => void;
   };
   history: {

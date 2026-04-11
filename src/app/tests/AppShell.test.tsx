@@ -153,8 +153,10 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Shift + H");
 		expect(markup).toContain("Shift + R");
 		expect(markup).toContain("Shift + D");
+		expect(markup).toContain("Cmd + Alt + P");
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
+		expect(markup).toContain("Documentation");
 		expect(markup).not.toContain("Import JSON…");
 		expect(markup).not.toContain("Customize…");
 		expect(markup.indexOf("Light")).toBeLessThan(markup.indexOf("Dark"));

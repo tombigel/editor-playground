@@ -186,6 +186,28 @@ describe('shortcut registry', () => {
     expect(getShortcutLabel('showShortcutHelp', 'other')).toBe('?');
   });
 
+  it('matches the help and reference shortcuts', () => {
+    const documentation = findMatchingShortcut(
+      {
+        code: 'KeyH',
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+      },
+      {
+        interactiveFocus: false,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'other',
+    );
+
+    expect(documentation?.id).toBe('openDocumentation');
+    expect(getShortcutLabel('openDocumentation', 'other')).toBe('Shift + H');
+  });
+
   it('matches and labels the snap-to-guides shortcut', () => {
     const snap = findMatchingShortcut(
       {
@@ -211,11 +233,11 @@ describe('shortcut registry', () => {
   it('matches the phase 2 view shortcuts', () => {
     const preview = findMatchingShortcut(
       {
-        code: 'KeyV',
+        code: 'KeyP',
         metaKey: false,
-        ctrlKey: false,
-        shiftKey: true,
-        altKey: false,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: true,
       },
       {
         interactiveFocus: false,
@@ -228,7 +250,7 @@ describe('shortcut registry', () => {
 
     const showHidden = findMatchingShortcut(
       {
-        code: 'KeyH',
+        code: 'KeyV',
         metaKey: false,
         ctrlKey: false,
         shiftKey: true,
@@ -281,8 +303,9 @@ describe('shortcut registry', () => {
     expect(showHidden?.id).toBe('toggleShowHidden');
     expect(showGrid?.id).toBe('toggleShowGridLanes');
     expect(showDebugInfo?.id).toBe('toggleShowDebugInfo');
-    expect(getShortcutLabel('openPreviewSite', 'other')).toBe('Shift + V');
-    expect(getShortcutLabel('toggleShowHidden', 'other')).toBe('Shift + H');
+    expect(getShortcutLabel('openPreviewSite', 'other')).toBe('Ctrl + Alt + P');
+    expect(getShortcutLabel('openPreviewSite', 'mac')).toBe('Cmd + Alt + P');
+    expect(getShortcutLabel('toggleShowHidden', 'other')).toBe('Shift + V');
     expect(getShortcutLabel('toggleShowGridLanes', 'other')).toBe('Shift + R');
     expect(getShortcutLabel('toggleShowDebugInfo', 'other')).toBe('Shift + D');
   });
