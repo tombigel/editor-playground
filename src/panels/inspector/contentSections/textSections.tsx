@@ -12,7 +12,6 @@ import {
   FontSizeField,
   HoverColorField,
   InspectorFieldGroup,
-  InspectorInlineRow,
   NumberInput,
   readShadowFieldValues,
   ShadowControlGroup,
@@ -245,7 +244,11 @@ function HtmlTagInlineField({
   onValueChange: (value: string) => void;
 }) {
   return (
-    <InspectorInlineRow label="HTML tag" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+    <FormField
+      label="HTML tag"
+      layout="inline"
+      controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+    >
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
           <SelectValue />
@@ -258,7 +261,7 @@ function HtmlTagInlineField({
           ))}
         </SelectContent>
       </Select>
-    </InspectorInlineRow>
+    </FormField>
   );
 }
 
@@ -344,7 +347,11 @@ export function TextContentSection({
         {showHtmlTag ? (
           <HtmlTagInlineField value={node.htmlTag} onValueChange={setHtmlTag} />
         ) : null}
-        <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+        <FormField
+          label="Language"
+          layout="inline"
+          controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+        >
           <SearchableSelect
             value={node.lang ?? '__site__'}
             options={languageOptions}
@@ -353,7 +360,7 @@ export function TextContentSection({
             triggerClassName="h-8 text-[11px]"
             onValueChange={(value) => onTextChange('lang', value === '__site__' ? '' : value)}
           />
-        </InspectorInlineRow>
+        </FormField>
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
         <LinkEnabledRow
@@ -409,7 +416,11 @@ export function ListContentSection({
     >
       <InspectorFieldGroup gap>
         {structuredListContent ? (
-          <InspectorInlineRow label="Type" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <FormField
+            label="Type"
+            layout="inline"
+            controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+          >
             <Select
               value={structuredListContent.type}
               onValueChange={(value: StructuredListContent['type']) =>
@@ -427,14 +438,18 @@ export function ListContentSection({
                 ))}
               </SelectContent>
             </Select>
-          </InspectorInlineRow>
+          </FormField>
         ) : (
           <div className="editor-border-subtle editor-bg-subtle editor-text-muted rounded-sm border px-3 py-2 text-[11px] leading-4">
             Description list inspector editing is deferred to phase 2. Convert this node to bulleted or numbered to use structured controls.
           </div>
         )}
         {structuredListContent?.type === 'ul' ? (
-          <InspectorInlineRow label="Bullet" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+          <FormField
+            label="Bullet"
+            layout="inline"
+            controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+          >
             <Select
               value={structuredListContent.markerStyle ?? 'disc'}
               onValueChange={(value) =>
@@ -452,11 +467,11 @@ export function ListContentSection({
                 ))}
               </SelectContent>
             </Select>
-          </InspectorInlineRow>
+          </FormField>
         ) : null}
         {structuredListContent?.type === 'ol' ? (
           <>
-            <InspectorInlineRow label="Start" controlWidth="88px">
+            <FormField label="Start" layout="inline" controlWidth="88px">
               <NumberInput
                 value={structuredListContent.start ?? 1}
                 min={1}
@@ -466,8 +481,12 @@ export function ListContentSection({
                   commitListContent({ ...structuredListContent, start: Math.max(1, Math.trunc(value)) })
                 }
               />
-            </InspectorInlineRow>
-            <InspectorInlineRow label="Marker" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+            </FormField>
+            <FormField
+              label="Marker"
+              layout="inline"
+              controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+            >
               <Select
                 value={structuredListContent.markerStyle ?? 'decimal'}
                 onValueChange={(value) =>
@@ -485,7 +504,7 @@ export function ListContentSection({
                   ))}
                 </SelectContent>
               </Select>
-            </InspectorInlineRow>
+            </FormField>
           </>
         ) : null}
       </InspectorFieldGroup>
@@ -683,7 +702,11 @@ export function CodeContentSection({
         </FormField>
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
-        <InspectorInlineRow label="Language" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+        <FormField
+          label="Language"
+          layout="inline"
+          controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+        >
           <Select value={language} onValueChange={onSetCodeLanguage}>
             <SelectTrigger className="h-8 text-[11px]">
               <SelectValue />
@@ -694,7 +717,7 @@ export function CodeContentSection({
               ))}
             </SelectContent>
           </Select>
-        </InspectorInlineRow>
+        </FormField>
       </InspectorFieldGroup>
     </InspectorSectionCard>
   );
@@ -857,7 +880,11 @@ export function CodeTextStyleSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-      <InspectorInlineRow label="Size" controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}>
+      <FormField
+        label="Size"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}
+      >
         <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
           <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
             <FontSizeField nodeId={node.id} value={fontSizeFieldValueFromNode(node)} onChange={(value) => onTextChange('fontSize', value)} />
@@ -872,8 +899,13 @@ export function CodeTextStyleSection({
             />
           </div>
         </div>
-      </InspectorInlineRow>
-      <InspectorInlineRow label="Style" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
+      </FormField>
+      <FormField
+        label="Style"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+        controlClassName="gap-1"
+      >
         <TextStyleIconButton
           label="Bold"
           active={isBoldFontWeight(node.style?.fontWeight)}
@@ -902,8 +934,12 @@ export function CodeTextStyleSection({
         >
           <span className="line-through">S</span>
         </TextStyleIconButton>
-      </InspectorInlineRow>
-      <InspectorInlineRow label="Theme" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}>
+      </FormField>
+      <FormField
+        label="Theme"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+      >
         <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
           {(['light', 'dark'] as const).map((t) => (
             <Button
@@ -918,7 +954,7 @@ export function CodeTextStyleSection({
             </Button>
           ))}
         </div>
-      </InspectorInlineRow>
+      </FormField>
     </InspectorSectionCard>
   );
 }

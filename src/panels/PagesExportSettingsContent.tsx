@@ -4,7 +4,7 @@ import type { LinkValidationError, SiteSettings } from '@/api/editorApi';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ActionRow, PlainGroup } from '@/components/ui/settings-panel';
-import { InspectorInlineRow } from './controls/FormLayout';
+import { FormField } from './controls/FormLayout';
 
 export function PagesExportSettingsContent({
   siteSettings,
@@ -39,7 +39,7 @@ export function PagesExportSettingsContent({
 
   return (
     <PlainGroup title="Routing and validation">
-      <InspectorInlineRow label="Output structure">
+      <FormField label="Output structure" layout="inline">
         <Select
           value={siteSettings?.outputStructure ?? 'directory'}
           onValueChange={(value) =>
@@ -56,7 +56,7 @@ export function PagesExportSettingsContent({
             <SelectItem value="flat">Flat (about.html)</SelectItem>
           </SelectContent>
         </Select>
-      </InspectorInlineRow>
+      </FormField>
 
       <ActionRow
         title="Validate links"

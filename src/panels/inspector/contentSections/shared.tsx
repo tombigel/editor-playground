@@ -34,7 +34,6 @@ import {
   FontSizeField,
   FormField,
   HoverColorField,
-  InspectorInlineRow,
   NumberInput,
   ShadowControlGroup,
   SwitchBlock,
@@ -170,7 +169,12 @@ export function TypographyTextStyleFields({
 
   return (
     <>
-      <InspectorInlineRow label="Font" controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`} controlClassName="gap-1">
+      <FormField
+        label="Font"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`}
+        controlClassName="gap-1"
+      >
           <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_PICKER_WIDTH_PX}px` }}>
             <FontPickerPopover
               familyValue={currentFamily}
@@ -202,8 +206,12 @@ export function TypographyTextStyleFields({
               <Settings2 className="h-3.5 w-3.5" />
             </Button>
           </PopoverTooltip>
-      </InspectorInlineRow>
-      <InspectorInlineRow label="Size" controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}>
+      </FormField>
+      <FormField
+        label="Size"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}
+      >
         <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
           <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
             <FontSizeField nodeId={node.id} value={fontSizeFieldValueFromNode(node)} onChange={(value) => onTextChange('fontSize', value)} />
@@ -218,8 +226,13 @@ export function TypographyTextStyleFields({
             />
           </div>
         </div>
-      </InspectorInlineRow>
-      <InspectorInlineRow label="Style" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
+      </FormField>
+      <FormField
+        label="Style"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+        controlClassName="gap-1"
+      >
           <TextStyleIconButton
             label="Bold"
             active={isBoldFontWeight(node.style?.fontWeight)}
@@ -260,8 +273,13 @@ export function TypographyTextStyleFields({
           >
             <span className="line-through">S</span>
           </TextStyleIconButton>
-      </InspectorInlineRow>
-      <InspectorInlineRow label="Align" controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
+      </FormField>
+      <FormField
+        label="Align"
+        layout="inline-group"
+        controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+        controlClassName="gap-1"
+      >
           <TextStyleIconButton
             label="Align left"
             active={(node.style?.textAlign ?? 'left') === 'left'}
@@ -294,9 +312,14 @@ export function TypographyTextStyleFields({
               <PilcrowRight className="h-4 w-4" />
             )}
           </TextStyleIconButton>
-      </InspectorInlineRow>
+      </FormField>
       {supportsWrap ? (
-        <InspectorInlineRow label={wrapFieldLabel} controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`} controlClassName="gap-1">
+        <FormField
+          label={wrapFieldLabel}
+          layout="inline"
+          controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+          controlClassName="gap-1"
+        >
             <TextStyleIconButton
               label={wrapEnabled ? 'Wrapped text' : 'Single line'}
               active={wrapEnabled}
@@ -304,7 +327,7 @@ export function TypographyTextStyleFields({
             >
               <TextWrap className="h-4 w-4" />
             </TextStyleIconButton>
-        </InspectorInlineRow>
+        </FormField>
       ) : null}
     </>
   );
@@ -456,7 +479,7 @@ export function NavigationFields({
 
   return (
     <>
-      <InspectorInlineRow label="Type">
+      <FormField label="Type" layout="inline">
         <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
           <Button
             type="button"
@@ -488,7 +511,7 @@ export function NavigationFields({
             </Button>
           ) : null}
         </div>
-      </InspectorInlineRow>
+      </FormField>
       {linkType === 'anchor' ? (
         <div className="space-y-0.5">
           <div className="flex items-center justify-between gap-2">

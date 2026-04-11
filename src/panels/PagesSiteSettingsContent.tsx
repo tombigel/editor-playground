@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { InspectorInlineRow } from './controls/FormLayout';
+import { FormField } from './controls/FormLayout';
 import type { SiteSettings } from '@/api/editorApi';
 import { createLanguageSelectOptions, getDefaultSiteLanguage } from '@/i18n/languages';
 import { ControlGroup, LabeledFieldStack, PlainGroup, SectionHeading } from '@/components/ui/settings-panel';
@@ -47,7 +47,7 @@ export function PagesSiteSettingsContent({
         </LabeledFieldStack>
 
         <ControlGroup separated>
-          <InspectorInlineRow label="Site transition">
+          <FormField label="Site transition" layout="inline">
             <Select
               value={siteSettings?.viewTransition ?? 'none'}
               onValueChange={(value) =>
@@ -65,9 +65,9 @@ export function PagesSiteSettingsContent({
                 <SelectItem value="slide">Slide</SelectItem>
               </SelectContent>
             </Select>
-          </InspectorInlineRow>
+          </FormField>
 
-          <InspectorInlineRow label="Site language">
+          <FormField label="Site language" layout="inline">
             <SearchableSelect
               value={resolvedLanguage}
               options={languageOptions}
@@ -76,14 +76,14 @@ export function PagesSiteSettingsContent({
               triggerClassName="h-8 text-xs"
               onValueChange={(value) => onSetSiteSettings({ lang: value })}
             />
-          </InspectorInlineRow>
+          </FormField>
 
-          <InspectorInlineRow label="Auto-sync slugs">
+          <FormField label="Auto-sync slugs" layout="inline">
             <Switch
               checked={siteSettings?.autoSyncSlugs ?? true}
               onCheckedChange={(checked) => onSetSiteSettings({ autoSyncSlugs: checked })}
             />
-          </InspectorInlineRow>
+          </FormField>
         </ControlGroup>
       </PlainGroup>
     </div>

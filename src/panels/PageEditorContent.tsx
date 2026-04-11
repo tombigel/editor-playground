@@ -15,7 +15,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ControlGroup, InlineNotice, LabeledFieldStack, NoticeSurface, PlainGroup, ValuePill } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
-import { InspectorInlineRow } from './controls/FormLayout';
+import { FormField } from './controls/FormLayout';
 import { isDescendant } from './pageTree';
 
 type PendingSlugChange = {
@@ -346,15 +346,15 @@ export function PageEditorContent({
             />
           </LabeledFieldStack>
 
-          <InspectorInlineRow label="Visible">
+          <FormField label="Visible" layout="inline">
             <Switch
               checked={page.visible}
               disabled={isHomePage}
               onCheckedChange={(checked) => onSetVisibility(page.id, checked)}
             />
-          </InspectorInlineRow>
+          </FormField>
 
-          <InspectorInlineRow label="Transition">
+          <FormField label="Transition" layout="inline">
             <Select
               value={page.viewTransition ?? '__inherit__'}
               onValueChange={(value) =>
@@ -371,9 +371,9 @@ export function PageEditorContent({
                 <SelectItem value="slide">Slide</SelectItem>
               </SelectContent>
             </Select>
-          </InspectorInlineRow>
+          </FormField>
 
-          <InspectorInlineRow label="Parent">
+          <FormField label="Parent" layout="inline">
             <Select
               value={page.parentPageId ?? '__top__'}
               onValueChange={(value) => onSetParent(page.id, value === '__top__' ? null : value)}
@@ -390,7 +390,7 @@ export function PageEditorContent({
                 ))}
               </SelectContent>
             </Select>
-          </InspectorInlineRow>
+          </FormField>
         </ControlGroup>
       </PlainGroup>
     </div>

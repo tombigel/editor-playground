@@ -47,7 +47,6 @@ import {
   FontPickerPopover,
   FontSizeField,
   HoverColorField,
-  InspectorInlineRow,
   NumericUnitInlineField,
   NumberInput,
   OrderIconButton,
@@ -328,7 +327,12 @@ export function MultiSelectInspector({
             <CardTitle className="text-xs">Typography</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
-            <InspectorInlineRow label="Font" controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`} controlClassName="gap-1">
+            <FormField
+              label="Font"
+              layout="inline-group"
+              controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`}
+              controlClassName="gap-1"
+            >
                 <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_PICKER_WIDTH_PX}px` }}>
                   <FontPickerPopover
                     familyValue={fontFamilyState.value}
@@ -362,8 +366,12 @@ export function MultiSelectInspector({
                     <Settings2 className="h-3.5 w-3.5" />
                   </Button>
                 </PopoverTooltip>
-            </InspectorInlineRow>
-              <InspectorInlineRow label="Size" controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}>
+            </FormField>
+              <FormField
+                label="Size"
+                layout="inline-group"
+                controlWidth={`${TYPOGRAPHY_SIZE_ROW_WIDTH_PX}px`}
+              >
                 <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
                   <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
                     <FontSizeField
@@ -385,8 +393,8 @@ export function MultiSelectInspector({
                     />
                   </div>
                 </div>
-              </InspectorInlineRow>
-              <InspectorInlineRow label="Style" controlClassName="gap-1">
+              </FormField>
+              <FormField label="Style" layout="inline-group" controlClassName="gap-1">
                   <TextStyleIconButton
                     label="Bold"
                     active={Boolean(fontWeightState.value != null && isBoldFontWeight(fontWeightState.value) && !fontWeightState.mixed)}
@@ -422,8 +430,8 @@ export function MultiSelectInspector({
                   <TextStyleIconButton label="Strikethrough" active={hasLineThrough(decorationState.value) && !decorationState.mixed} mixed={decorationState.mixed} onClick={() => actions.onTextChange('textDecorationLine', toggleTextDecoration(decorationState.value, 'line-through'))}>
                     <span className="line-through">S</span>
                   </TextStyleIconButton>
-              </InspectorInlineRow>
-              <InspectorInlineRow label="Align" controlClassName="gap-1">
+              </FormField>
+              <FormField label="Align" layout="inline-group" controlClassName="gap-1">
                   <TextStyleIconButton label="Align left" active={textAlignState.value === 'left' && !textAlignState.mixed} mixed={textAlignState.mixed} onClick={() => actions.onTextChange('textAlign', 'left')}>
                     <AlignLeft className="h-4 w-4" />
                   </TextStyleIconButton>
@@ -436,7 +444,7 @@ export function MultiSelectInspector({
                   <TextStyleIconButton label="Text direction" active={false} mixed={directionState.mixed} onClick={() => actions.onTextChange('direction', directionState.value === 'rtl' && !directionState.mixed ? 'ltr' : 'rtl')}>
                     {directionState.value === 'rtl' && !directionState.mixed ? <PilcrowLeft className="h-4 w-4" /> : <PilcrowRight className="h-4 w-4" />}
                   </TextStyleIconButton>
-              </InspectorInlineRow>
+              </FormField>
               {textLeafNodes.length >= 2 ? (
                 <FormField label="Language">
                   <SearchableSelect
@@ -520,7 +528,7 @@ export function MultiSelectInspector({
               ) : null}
 
               {radiusWrapperIds.length + radiusLeafIds.length >= 2 ? (
-                <InspectorInlineRow label="Radius" controlWidth="120px">
+                <FormField label="Radius" layout="inline" controlWidth="120px">
                     <NumericUnitInlineField
                       value={radiusState.value}
                       units={['px', '%']}
@@ -539,7 +547,7 @@ export function MultiSelectInspector({
                       mixedUnit={radiusUnitState.mixed}
                       min={0}
                     />
-                  </InspectorInlineRow>
+                  </FormField>
               ) : null}
 
               {boxShadowWrapperIds.length + boxShadowLeafIds.length >= 2 ? (
