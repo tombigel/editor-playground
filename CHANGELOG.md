@@ -11,6 +11,14 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Changed
+- bump minor version to 0.5.0
+
+---
+
+## [0.5.0] — 2026-04-11
+Document: 1.4.0 · API: 1.4.0 · Editor: 0.11.0
+
 ### Added
 - add commitlint and automatic changelog categorization
 - add commit message guidelines and enforce Conventional Commits format
