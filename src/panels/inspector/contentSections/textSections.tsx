@@ -952,14 +952,14 @@ export function CodeDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-      <InspectorInlineRow label="Background" controlClassName="gap-2">
+      <FormField label="Background" layout="inline" controlClassName="gap-2">
         <HoverColorField
           value={node.style?.background}
           onChange={(value) => onTextChange('background', value)}
           ariaLabel="Code block background"
           fallback="transparent"
         />
-      </InspectorInlineRow>
+      </FormField>
       <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
         <span className="editor-text-strong pt-1 text-[11px] font-medium">Border</span>
         <BorderControlGroup

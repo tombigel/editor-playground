@@ -16,7 +16,6 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
 	FormField,
 	InspectorFieldGroup,
-	InspectorInlineRow,
 } from "../../controls/FormLayout";
 import { InspectorSectionCard } from "../CommonSections";
 import type { DocumentModel } from "../../../model/types";
@@ -142,7 +141,7 @@ export function PageInspectorSection({
 			</InspectorFieldGroup>
 
 			<InspectorFieldGroup separated>
-				<InspectorInlineRow label="Language">
+				<FormField label="Language" layout="inline">
 					<SearchableSelect
 						value={page.lang ?? "__site__"}
 						options={languageOptions}
@@ -153,16 +152,16 @@ export function PageInspectorSection({
 							onSetLang(page.id, value === "__site__" ? undefined : value)
 						}
 					/>
-				</InspectorInlineRow>
+				</FormField>
 
-				<InspectorInlineRow label="Visible">
+				<FormField label="Visible" layout="inline">
 					<Switch
 						checked={page.visible}
 						onCheckedChange={(value) => onSetVisibility(page.id, value)}
 					/>
-				</InspectorInlineRow>
+				</FormField>
 
-				<InspectorInlineRow label="Transition">
+				<FormField label="Transition" layout="inline">
 					<Select
 						value={viewTransition}
 						onValueChange={(value) => {
@@ -189,9 +188,9 @@ export function PageInspectorSection({
 							<SelectItem value="slide">Slide</SelectItem>
 						</SelectContent>
 					</Select>
-				</InspectorInlineRow>
+				</FormField>
 
-				<InspectorInlineRow label="Parent">
+				<FormField label="Parent" layout="inline">
 					<Select
 						value={page.parentPageId ?? "__top__"}
 						onValueChange={(value) =>
@@ -210,7 +209,7 @@ export function PageInspectorSection({
 							))}
 						</SelectContent>
 					</Select>
-				</InspectorInlineRow>
+				</FormField>
 			</InspectorFieldGroup>
 
 			<div className="editor-border-subtle flex items-center gap-2 border-t pt-3">

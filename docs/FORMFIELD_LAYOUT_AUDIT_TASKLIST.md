@@ -10,7 +10,7 @@
   - convert eligible single label/control rows to `FormField layout="inline"` or `stack`
   - convert eligible grouped rows to `layout="inline-group"` only when they are still one semantic field
   - leave complex composite rows untouched
-- [ ] `TODO 3` Audit shared inspector content sections
+- [x] `TODO 3` Audit shared inspector content sections
   - update repeated eligible patterns in shared content helpers and page inspector content
   - keep multiline, matrix, and action-heavy layouts custom
 - [ ] `TODO 4` Docs and tests sync

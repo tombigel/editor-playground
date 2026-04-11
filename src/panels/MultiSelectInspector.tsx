@@ -43,6 +43,7 @@ import {
 } from '../api/fontApi';
 import type { BulkEditOperation } from '../app/types';
 import {
+  FormField,
   FontPickerPopover,
   FontSizeField,
   HoverColorField,
@@ -437,26 +438,25 @@ export function MultiSelectInspector({
                   </TextStyleIconButton>
               </InspectorInlineRow>
               {textLeafNodes.length >= 2 ? (
-                <div className="space-y-1">
-                <Label className="text-[11px] font-medium">Language</Label>
-                <SearchableSelect
-                  value={textLanguageState.mixed ? undefined : textLanguageState.value}
-                  options={languageOptions}
-                  placeholder={textLanguageState.mixed ? 'Mixed values' : 'Site language'}
-                  searchPlaceholder="Search languages"
-                  triggerClassName="h-8 text-[11px]"
-                  onValueChange={(value) =>
-                    onBulkEdit([
-                      {
-                        kind: 'text',
-                        targetIds: textLeafNodes.map((node) => node.id),
-                        field: 'lang',
-                        value: value === '__site__' ? '' : value,
-                      },
-                    ])
-                  }
-                />
-              </div>
+                <FormField label="Language">
+                  <SearchableSelect
+                    value={textLanguageState.mixed ? undefined : textLanguageState.value}
+                    options={languageOptions}
+                    placeholder={textLanguageState.mixed ? 'Mixed values' : 'Site language'}
+                    searchPlaceholder="Search languages"
+                    triggerClassName="h-8 text-[11px]"
+                    onValueChange={(value) =>
+                      onBulkEdit([
+                        {
+                          kind: 'text',
+                          targetIds: textLeafNodes.map((node) => node.id),
+                          field: 'lang',
+                          value: value === '__site__' ? '' : value,
+                        },
+                      ])
+                    }
+                  />
+                </FormField>
               ) : null}
             </CardContent>
           </Card>
@@ -467,11 +467,11 @@ export function MultiSelectInspector({
             <CardHeader className="px-3 pt-3 pb-1">
               <CardTitle className="text-xs">Text Design</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
+              <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
               {textNodes.length >= 2 ? (
-                <InspectorInlineRow label="Color" controlClassName="gap-2">
+                <FormField label="Color" layout="inline" controlClassName="gap-2">
                     <HoverColorField value={foregroundState.value || undefined} mixed={foregroundState.mixed} onChange={(value) => actions.onTextChange('color', value)} ariaLabel="Text color" fallback={DEFAULT_SHADOW_COLOR} />
-                  </InspectorInlineRow>
+                  </FormField>
               ) : null}
               {filterShadowNodes.length >= 2 ? (
                 <div className="space-y-1.5">
@@ -500,7 +500,7 @@ export function MultiSelectInspector({
             </CardHeader>
             <CardContent className="space-y-2.5 px-3 pt-1.5 pb-3">
               {backgroundWrapperIds.length + backgroundLeafIds.length >= 2 ? (
-                <InspectorInlineRow label="Background" controlClassName="gap-2">
+                <FormField label="Background" layout="inline" controlClassName="gap-2">
                     <HoverColorField
                       value={backgroundState.value || undefined}
                       mixed={backgroundState.mixed}
@@ -516,7 +516,7 @@ export function MultiSelectInspector({
                       }
                       ariaLabel="Background color"
                     />
-                  </InspectorInlineRow>
+                  </FormField>
               ) : null}
 
               {radiusWrapperIds.length + radiusLeafIds.length >= 2 ? (

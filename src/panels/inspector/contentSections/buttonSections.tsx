@@ -159,22 +159,22 @@ export function ButtonDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-        <InspectorInlineRow label="Color" controlClassName="gap-2">
+        <FormField label="Color" layout="inline" controlClassName="gap-2">
           <HoverColorField
             value={node.style?.color}
             onChange={(value) => onTextChange('color', value)}
             ariaLabel="Text color"
             fallback={DEFAULT_BUTTON_TEXT_COLOR}
           />
-        </InspectorInlineRow>
-        <InspectorInlineRow label="Background" controlClassName="gap-2">
+        </FormField>
+        <FormField label="Background" layout="inline" controlClassName="gap-2">
           <HoverColorField
             value={node.style?.background}
             onChange={(value) => onTextChange('background', value)}
             ariaLabel="Button background color"
             fallback={DEFAULT_BUTTON_BACKGROUND}
           />
-        </InspectorInlineRow>
+        </FormField>
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>
           <BorderControlGroup
@@ -270,27 +270,23 @@ export function ButtonAppearanceSection({
         onOpenManageFonts={onOpenManageFonts}
       />
       <div className="editor-border-subtle border-t pt-2.5">
-        <div className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Color</Label>
-          <div className="ml-auto flex items-center gap-2">
+        <FormField label="Color" layout="inline" controlClassName="gap-2">
             <HoverColorField
               value={node.style?.color}
               onChange={(value) => onTextChange('color', value)}
               ariaLabel="Text color"
               fallback={DEFAULT_BUTTON_TEXT_COLOR}
             />
-          </div>
-        </div>
-        <div className="mt-2.5 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-          <Label className="text-[11px] font-medium">Background</Label>
-          <div className="ml-auto flex items-center gap-2">
+        </FormField>
+        <div className="mt-2.5">
+          <FormField label="Background" layout="inline" controlClassName="gap-2">
             <HoverColorField
               value={node.style?.background}
               onChange={(value) => onTextChange('background', value)}
               ariaLabel="Button background color"
               fallback={DEFAULT_BUTTON_BACKGROUND}
             />
-          </div>
+          </FormField>
         </div>
         <div className="mt-2.5 grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>

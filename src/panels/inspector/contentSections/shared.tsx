@@ -325,14 +325,14 @@ export function TypographyDesignFields({
 }) {
   return (
     <>
-      <InspectorInlineRow label="Color" controlClassName="gap-2">
+      <FormField label="Color" layout="inline" controlClassName="gap-2">
         <HoverColorField
           value={node.style?.color}
           onChange={(value) => onTextChange('color', value)}
           ariaLabel="Text color"
           fallback={colorFallback}
         />
-      </InspectorInlineRow>
+      </FormField>
       <div className="space-y-1.5">
         <ShadowControlGroup
           color={shadow.color}
@@ -378,15 +378,15 @@ export function OpenInNewTabField({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="editor-text-strong inline-flex items-center gap-2 text-[11px] font-medium">
+    <FormField label="Open in a new tab" layout="inline">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
+        aria-label="Open in a new tab"
         className="editor-border-subtle h-4 w-4 rounded-sm border"
       />
-      <span>Open in a new tab</span>
-    </label>
+    </FormField>
   );
 }
 
@@ -536,8 +536,7 @@ export function NavigationFields({
         </div>
       ) : linkType === 'page' ? (
         <div className="space-y-2">
-          <div className="space-y-0.5">
-            <Label className="text-[11px] font-medium">Page</Label>
+          <FormField label="Page">
             <Select
               value={targetPageId}
               onValueChange={(value) => onTextChange('targetPageId', value)}
@@ -561,10 +560,9 @@ export function NavigationFields({
                 })}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
           {targetPage && targetPageSectionOptions.length > 0 ? (
-            <div className="space-y-0.5">
-              <Label className="text-[11px] font-medium">Jump to section (optional)</Label>
+            <FormField label="Jump to section (optional)">
               <Select
                 value={pageAnchorId ?? ''}
                 onValueChange={(value) =>
@@ -587,7 +585,7 @@ export function NavigationFields({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           ) : null}
         </div>
       ) : (
