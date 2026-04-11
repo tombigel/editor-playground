@@ -4,8 +4,7 @@ import type { FocusedMode } from '../../api/editorApi';
 import type { AnimationTriggerType } from '../../api/animationApi';
 import type { InspectorActionHandlers, NonSiteInspectorNode } from './types';
 import type { InspectorSectionHeaderAction } from './CommonSections';
-import { Sparkles, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Rocket } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -16,13 +15,14 @@ import {
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
 import { NumberInput } from '@/components/ui/number-input';
+import { SliderNumberField } from '@/components/ui/slider-number-field';
 import { NoticeSurface } from '@/components/ui/settings-panel';
 import { FormField, SwitchBlock } from '../InspectorControls';
 import { createFocusedModeEntry, InspectorSectionCard } from './CommonSections';
 import { hasAnimation, getAnimationSummary, isScrollAnimation, requiresStickyForAnimation } from '../../animations/selectors';
-import { getPresetsForTrigger, getPresetParams } from '../../animations/animationApi';
+import { getPresetsForTrigger, getPresetParams, NAMED_EASINGS } from '../../animations/animationApi';
 import { getPresetLabel } from '../../animations/presetMetadata';
-import type { HoverOutAction } from '../../animations/types';
+import type { HoverOutAction, AnimationTimingOptions, OngoingTimingOptions } from '../../animations/types';
 import type { PresetParam } from '../../animations/types';
 
 // ── Trigger display labels ────────────────────────────────────────────────────
@@ -46,6 +46,18 @@ function defaultPresetForTrigger(trigger: AnimationTriggerType): string {
     case 'mouse': return 'TrackMouse';
     default: return 'FadeIn';
   }
+}
+
+// ── Timing options per trigger ───────────────────────────────────────────────
+
+/** Triggers that support timing options (duration, delay, easing) */
+function hasTiming(trigger: AnimationTriggerType): boolean {
+  return trigger === 'entrance' || trigger === 'ongoing' || trigger === 'click' || trigger === 'hover';
+}
+
+/** Only ongoing supports iterations and alternate */
+function hasIterations(trigger: AnimationTriggerType): boolean {
+  return trigger === 'ongoing';
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -87,6 +99,11 @@ export function AnimationSection({
     actions.onAnimationPresetChange(trigger, defaultPresetForTrigger(trigger));
   }
 
+  const trigger = (summary?.trigger ?? 'entrance') as AnimationTriggerType;
+  const timing = (node.animation && 'timing' in node.animation ? node.animation.timing : undefined) as
+    | (AnimationTimingOptions & { iterations?: number; alternate?: boolean })
+    | undefined;
+
   return (
     <InspectorSectionCard
       title="Animation"
@@ -98,8 +115,8 @@ export function AnimationSection({
       <SwitchBlock
         icon={
           enabled
-            ? <Sparkles className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
-            : <Sparkles className="h-3.5 w-3.5 shrink-0 editor-text-muted" />
+            ? <Rocket className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
+            : <Rocket className="h-3.5 w-3.5 shrink-0 editor-text-muted" />
         }
         title={enabled ? 'Enabled' : 'Disabled'}
         description="Add motion effects to this element."
@@ -111,10 +128,11 @@ export function AnimationSection({
         <>
           <FormField label="Trigger" layout="inline">
             <Select
-              value={summary?.trigger ?? 'entrance'}
+              size="compact"
+              value={trigger}
               onValueChange={handleTriggerChange}
             >
-              <SelectTrigger>
+              <SelectTrigger size="compact">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -127,16 +145,13 @@ export function AnimationSection({
             </Select>
           </FormField>
 
-          {/* T09: Preset picker */}
+          {/* Preset picker */}
           {summary?.effectKind === 'named' ? (
             <PresetPicker
-              trigger={(summary?.trigger ?? 'entrance') as AnimationTriggerType}
+              trigger={trigger}
               currentPreset={summary?.effectName ?? ''}
               onPresetChange={(preset) =>
-                actions.onAnimationPresetChange(
-                  (summary?.trigger ?? 'entrance') as AnimationTriggerType,
-                  preset,
-                )
+                actions.onAnimationPresetChange(trigger, preset)
               }
             />
           ) : summary ? (
@@ -150,25 +165,33 @@ export function AnimationSection({
             </FormField>
           ) : null}
 
-          {/* T10: Dynamic preset options */}
+          {/* Timing options: duration, delay first — always before preset params */}
+          {hasTiming(trigger) ? (
+            <TimingControls
+              trigger={trigger}
+              timing={timing}
+              onTimingChange={(updates) =>
+                actions.onAnimationOptionsChange({ timing: updates })
+              }
+            />
+          ) : null}
+
+          {/* Dynamic preset options */}
           {summary?.effectKind === 'named' ? (
             <PresetOptions
               preset={summary.effectName}
               currentParams={node.animation?.effect.kind === 'named' ? node.animation.effect : {}}
               onParamChange={(params) =>
-                actions.onAnimationPresetChange(
-                  (summary.trigger ?? 'entrance') as AnimationTriggerType,
-                  summary.effectName,
-                  params,
-                )
+                actions.onAnimationPresetChange(trigger, summary.effectName, params)
               }
             />
           ) : null}
 
-          {/* T12: Hover out-action selector */}
+          {/* Hover out-action selector */}
           {(summary?.trigger === 'hover' || summary?.trigger === 'interest') ? (
             <FormField label="On leave" layout="inline">
               <Select
+                size="compact"
                 value={(node.animation && 'outAction' in node.animation ? (node.animation as { outAction?: HoverOutAction }).outAction : undefined) ?? 'reverse'}
                 onValueChange={(value) => actions.onAnimationOptionsChange({ outAction: value as HoverOutAction })}
               >
@@ -184,7 +207,7 @@ export function AnimationSection({
             </FormField>
           ) : null}
 
-          {/* T14: Requires sticky toggle */}
+          {/* Requires sticky toggle */}
           {isScrollAnimation(node) ? (
             <>
               <FormField label="Requires sticky" layout="inline">
@@ -201,7 +224,7 @@ export function AnimationSection({
             </>
           ) : null}
 
-          {/* T13: Reduced-motion toggle */}
+          {/* Reduced-motion toggle */}
           <FormField label="Disable under reduced motion" layout="inline">
             <Switch
               checked={node.animation?.reducedMotion === 'disable'}
@@ -210,27 +233,13 @@ export function AnimationSection({
               }
             />
           </FormField>
-
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1.5 px-2 text-[11px]"
-              onClick={actions.onAnimationClear}
-              aria-label="Clear animation"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Clear
-            </Button>
-          </div>
         </>
       ) : null}
     </InspectorSectionCard>
   );
 }
 
-// ── T09: Preset picker ────────────────────────────────────────────────────────
+// ── Preset picker ────────────────────────────────────────────────────────────
 
 function PresetPicker({
   trigger,
@@ -243,10 +252,12 @@ function PresetPicker({
 }) {
   const options = useMemo<SearchableSelectOption[]>(() => {
     const presets = getPresetsForTrigger(trigger);
+    const needsGroups = trigger === 'click' || trigger === 'hover';
     return presets.map((p) => ({
       value: p.preset,
       label: getPresetLabel(p.preset),
       keywords: [p.preset, p.category],
+      group: needsGroups ? (p.category === 'entrance' ? 'Entrance' : 'Loop') : undefined,
     }));
   }, [trigger]);
 
@@ -258,13 +269,14 @@ function PresetPicker({
         placeholder="Select preset"
         searchPlaceholder="Search presets…"
         emptyText="No matching presets."
+        triggerClassName="text-xs"
         onValueChange={onPresetChange}
       />
     </FormField>
   );
 }
 
-// ── T10: Dynamic preset options ───────────────────────────────────────────────
+// ── Dynamic preset options ───────────────────────────────────────────────────
 
 function PresetOptions({
   preset,
@@ -279,7 +291,8 @@ function PresetOptions({
   if (!schema || schema.params.length === 0) return null;
 
   function handleParamUpdate(paramName: string, value: unknown) {
-    onParamChange({ ...currentParams, [paramName]: value });
+    const { kind: _, type: __, ...rest } = currentParams;
+    onParamChange({ ...rest, [paramName]: value });
   }
 
   return (
@@ -311,6 +324,7 @@ function PresetParamControl({
     return (
       <FormField label={label} layout="inline">
         <Select
+          size="compact"
           value={String(value ?? param.default ?? param.enum[0])}
           onValueChange={onChange}
         >
@@ -330,6 +344,20 @@ function PresetParamControl({
   }
 
   if (param.type === 'number') {
+    const hasRange = param.min != null && param.max != null;
+    if (hasRange) {
+      return (
+        <FormField label={label} layout="inline">
+          <SliderNumberField
+            value={typeof value === 'number' ? value : (param.default as number) ?? param.min!}
+            min={param.min!}
+            max={param.max!}
+            unitLabel={param.unit}
+            onChange={(v) => onChange(v)}
+          />
+        </FormField>
+      );
+    }
     return (
       <FormField label={label} layout="inline">
         <NumberInput
@@ -355,4 +383,84 @@ function PresetParamControl({
   }
 
   return null;
+}
+
+// ── Timing controls ──────────────────────────────────────────────────────────
+
+function TimingControls({
+  trigger,
+  timing,
+  onTimingChange,
+}: {
+  trigger: AnimationTriggerType;
+  timing: (AnimationTimingOptions & { iterations?: number; alternate?: boolean }) | undefined;
+  onTimingChange: (updates: AnimationTimingOptions | OngoingTimingOptions) => void;
+}) {
+  const easingOptions = useMemo<SearchableSelectOption[]>(() =>
+    NAMED_EASINGS.map((e, i, arr) => ({
+      value: e.value,
+      label: e.label,
+      keywords: [e.value, e.group],
+      dividerAfter: i < arr.length - 1 && arr[i + 1].group !== e.group,
+    })),
+  []);
+
+  return (
+    <>
+      <FormField label="Duration" layout="inline">
+        <NumberInput
+          value={timing?.duration ?? 1000}
+          min={0}
+          max={30000}
+          step={100}
+          unitLabel="ms"
+          onChange={(v) => onTimingChange({ duration: v })}
+        />
+      </FormField>
+
+      <FormField label="Delay" layout="inline">
+        <NumberInput
+          value={timing?.delay ?? 0}
+          min={0}
+          max={10000}
+          step={100}
+          unitLabel="ms"
+          onChange={(v) => onTimingChange({ delay: v })}
+        />
+      </FormField>
+
+      <FormField label="Easing" layout="inline">
+        <SearchableSelect
+          value={timing?.easing ?? 'ease'}
+          options={easingOptions}
+          placeholder="Select easing"
+          searchPlaceholder="Search easings…"
+          emptyText="No matching easings."
+          triggerClassName="text-xs"
+          onValueChange={(value) => onTimingChange({ easing: value })}
+        />
+      </FormField>
+
+      {hasIterations(trigger) ? (
+        <>
+          <FormField label="Iterations" layout="inline">
+            <NumberInput
+              value={timing?.iterations === Infinity ? 0 : (timing?.iterations ?? 0)}
+              min={0}
+              max={100}
+              step={1}
+              onChange={(v) => onTimingChange({ iterations: v === 0 ? Infinity : v })}
+            />
+          </FormField>
+
+          <FormField label="Alternate" layout="inline">
+            <Switch
+              checked={timing?.alternate ?? false}
+              onCheckedChange={(checked) => onTimingChange({ alternate: checked })}
+            />
+          </FormField>
+        </>
+      ) : null}
+    </>
+  );
 }

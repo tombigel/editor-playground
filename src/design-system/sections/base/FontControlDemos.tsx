@@ -43,6 +43,12 @@ const SELECT_PROPS: PropDefinition[] = [
 		type: "(value: string) => void",
 		description: "Change handler.",
 	},
+	{
+		name: "size",
+		type: "'default' | 'compact' | 'small'",
+		default: "'default'",
+		description: "Propagated to SelectItem via context — sets item text size to match the trigger density (text-sm / text-xs / text-[11px]).",
+	},
 	{ name: "open", type: "boolean", description: "Open state (controlled)." },
 	{ name: "defaultOpen", type: "boolean", description: "Default open state." },
 ];
@@ -143,6 +149,8 @@ function FontPickerDemo() {
 
 function SelectDemo() {
 	const [value, setValue] = useState("currentPage");
+	const [compactValue, setCompactValue] = useState("entrance");
+	const [smallValue, setSmallValue] = useState("fade");
 	const options = [
 		{ value: "currentPage", label: "Current page", icon: <File className="h-3.5 w-3.5" /> },
 		{ value: "allPages", label: "All pages", icon: <Files className="h-3.5 w-3.5" /> },
@@ -150,30 +158,109 @@ function SelectDemo() {
 		{ value: "hidden", label: "Hidden", icon: <EyeOff className="h-3.5 w-3.5" /> },
 	] as const;
 	const activeOption = options.find((option) => option.value === value) ?? options[0];
+	const triggerOptions = [
+		{ value: "entrance", label: "Entrance" },
+		{ value: "ongoing", label: "Ongoing" },
+		{ value: "scroll", label: "Scroll" },
+		{ value: "click", label: "Click" },
+		{ value: "hover", label: "Hover" },
+		{ value: "mouse", label: "Mouse" },
+	];
+	const effectOptions = [
+		{ value: "fade", label: "Fade" },
+		{ value: "slide", label: "Slide" },
+		{ value: "bounce", label: "Bounce" },
+		{ value: "spin", label: "Spin" },
+	];
 	return (
 		<div className="space-y-6">
-			<div className="w-[200px]">
-				<Select value={value} onValueChange={setValue}>
-					<SelectTrigger aria-label="Select demo">
-						<SelectOptionRow
-							icon={activeOption.icon}
-							label={activeOption.label}
-							labelClassName="text-xs font-medium"
-						/>
-					</SelectTrigger>
-					<SelectContent>
-						{options.map((option) => (
-							<SelectItem key={option.value} value={option.value}>
-								<SelectOptionRow
-									icon={option.icon}
-									label={option.label}
-									labelClassName="text-xs font-medium"
-								/>
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+			{/* Default size */}
+			<div>
+				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+					Default — h-8, text-sm
+				</div>
+				<div className="w-[200px]">
+					<Select value={value} onValueChange={setValue}>
+						<SelectTrigger aria-label="Select demo">
+							<SelectOptionRow
+								icon={activeOption.icon}
+								label={activeOption.label}
+								labelClassName="text-xs font-medium"
+							/>
+						</SelectTrigger>
+						<SelectContent>
+							{options.map((option) => (
+								<SelectItem key={option.value} value={option.value}>
+									<SelectOptionRow
+										icon={option.icon}
+										label={option.label}
+										labelClassName="text-xs font-medium"
+									/>
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
+
+			{/* Compact size */}
+			<div>
+				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+					Compact — h-8, text-xs (inspector controls)
+				</div>
+				<div className="editor-border-subtle w-full max-w-[300px] space-y-2 rounded-sm border p-3">
+					<div className="flex items-center justify-between">
+						<span className="editor-text-muted text-[11px]">Trigger</span>
+						<div className="w-[140px]">
+							<Select size="compact" value={compactValue} onValueChange={setCompactValue}>
+								<SelectTrigger size="compact" aria-label="Trigger select">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{triggerOptions.map((opt) => (
+										<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+					<div className="flex items-center justify-between">
+						<span className="editor-text-muted text-[11px]">Effect</span>
+						<div className="w-[140px]">
+							<Select size="compact" value={smallValue} onValueChange={setSmallValue}>
+								<SelectTrigger size="compact" aria-label="Effect select">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{effectOptions.map((opt) => (
+										<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Small size */}
+			<div>
+				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+					Small — h-7, text-[11px]
+				</div>
+				<div className="w-[160px]">
+					<Select size="small" value={compactValue} onValueChange={setCompactValue}>
+						<SelectTrigger size="small" aria-label="Small select">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							{triggerOptions.map((opt) => (
+								<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
+			</div>
+
 			{/* Multi-select (mixed) */}
 			<div>
 				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">

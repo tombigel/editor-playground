@@ -1,18 +1,21 @@
 import type { DocumentModel, NodeId } from '../model/types';
 import type {
   AnimationDefinition,
+  AnimationTimingOptions,
   AnimationTriggerType,
   DocumentAnimationSettings,
   HoverOutAction,
   HoverAnimationDefinition,
   InteractConfig,
   KeyframeAnimationEffect,
+  OngoingTimingOptions,
   PresetInfo,
   PresetParam,
   PresetParamSchema,
   ReducedMotionResponse,
 } from './types';
 import type { Interaction, Effect, TriggerType } from '@wix/interact/web';
+import { cssEasings } from '@wix/motion';
 
 // ── Version ──────────────────────────────────────────────────────────────────
 // Tracks the @wix/interact version this API was built against.
@@ -23,6 +26,24 @@ export const INTERACT_VERSION = '2.1.4';
 
 export const SCROLL_DEFAULT_RANGE_START = { name: 'entry', offset: { unit: 'percentage', value: 0 } };
 export const SCROLL_DEFAULT_RANGE_END = { name: 'exit', offset: { unit: 'percentage', value: 100 } };
+
+// ── Easing catalog ──────────────────────────────────────────────────────────
+// Derived from @wix/motion's cssEasings export (Robert Penner set + CSS standard).
+
+function getEasingGroup(name: string): string {
+  if (['linear', 'ease', 'easeIn', 'easeOut', 'easeInOut'].includes(name)) return 'Standard';
+  return name.replace(/(In|Out|InOut)$/, '');
+}
+
+function formatEasingLabel(name: string): string {
+  return name.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+}
+
+export const NAMED_EASINGS: { value: string; label: string; group: string }[] = Object.keys(cssEasings).map((name) => ({
+  value: name,
+  label: formatEasingLabel(name),
+  group: getEasingGroup(name),
+}));
 
 // ── Preset catalog ───────────────────────────────────────────────────────────
 // These arrays mirror @wix/motion-presets discriminated union members.
@@ -95,6 +116,12 @@ function directionParam(values: readonly string[]): PresetParam {
 function numberParam(name: string, extra?: Partial<PresetParam>): PresetParam {
   return { name, type: 'number', required: false, ...extra };
 }
+function pxParam(name: string, extra?: Partial<PresetParam>): PresetParam {
+  return { name, type: 'number', required: false, unit: 'px', ...extra };
+}
+function degParam(name: string, extra?: Partial<PresetParam>): PresetParam {
+  return { name, type: 'number', required: false, unit: '°', ...extra };
+}
 function scrollRangeParam(): PresetParam {
   return { name: 'range', type: 'string', required: false, enum: SCROLL_RANGE };
 }
@@ -108,78 +135,80 @@ function boolParam(name: string): PresetParam {
 // Note: `distance` and `depth` params accept numbers (px) but @wix/interact
 // also accepts UnitLengthPercentage objects like { value: 200, unit: 'px' }.
 // Values are passed through to interact as-is via the options spread.
+// Defaults and ranges sourced from @wix/motion-presets rules:
+// https://github.com/wix/interact/tree/master/packages/motion-presets/rules/presets
 const PRESET_PARAMS: Record<string, PresetParam[]> = {
-  // Entrance
+  // ── Entrance ────────────────────────────────────────────────────────────────
   FadeIn: [],
-  ArcIn: [directionParam(FOUR_DIRECTIONS), numberParam('depth'), numberParam('perspective')],
-  BlurIn: [numberParam('blur')],
-  BounceIn: [directionParam([...FOUR_DIRECTIONS, 'center']), numberParam('distanceFactor'), numberParam('perspective')],
-  CurveIn: [directionParam(['left', 'right', 'pseudoLeft', 'pseudoRight']), numberParam('depth'), numberParam('perspective')],
-  DropIn: [numberParam('initialScale')],
-  ExpandIn: [numberParam('initialScale'), numberParam('direction'), numberParam('distance')],
-  FlipIn: [directionParam(FOUR_DIRECTIONS), numberParam('initialRotate'), numberParam('perspective')],
+  ArcIn: [directionParam(FOUR_DIRECTIONS), pxParam('depth', { default: 200 }), pxParam('perspective', { default: 800, min: 200, max: 2000 })],
+  BlurIn: [pxParam('blur', { default: 6, min: 0, max: 50 })],
+  BounceIn: [directionParam([...FOUR_DIRECTIONS, 'center']), numberParam('distanceFactor', { default: 1, min: 1, max: 3 }), pxParam('perspective', { default: 800, min: 200, max: 2000 })],
+  CurveIn: [directionParam(['left', 'right', 'pseudoLeft', 'pseudoRight']), pxParam('depth', { default: 300 }), pxParam('perspective', { default: 200, min: 100, max: 1000 })],
+  DropIn: [numberParam('initialScale', { default: 1.6, min: 1, max: 3 })],
+  ExpandIn: [numberParam('initialScale', { default: 0, min: 0, max: 1 }), degParam('direction', { default: 90 }), pxParam('distance')],
+  FlipIn: [directionParam(FOUR_DIRECTIONS), degParam('initialRotate', { default: 90, min: 0, max: 360 }), pxParam('perspective', { default: 800, min: 200, max: 2000 })],
   FloatIn: [directionParam(FOUR_DIRECTIONS)],
-  FoldIn: [directionParam(FOUR_DIRECTIONS), numberParam('initialRotate'), numberParam('perspective')],
-  GlideIn: [numberParam('direction'), numberParam('distance')],
+  FoldIn: [directionParam(FOUR_DIRECTIONS), degParam('initialRotate', { default: 90, min: 0, max: 360 }), pxParam('perspective', { default: 800, min: 200, max: 2000 })],
+  GlideIn: [degParam('direction', { default: 180 }), pxParam('distance')],
   RevealIn: [directionParam(FOUR_DIRECTIONS)],
-  ShapeIn: [{ name: 'shape', type: 'string', required: false, enum: SHAPE_TYPES }],
-  ShuttersIn: [directionParam(FOUR_DIRECTIONS), numberParam('shutters'), boolParam('staggered')],
-  SlideIn: [directionParam(FOUR_DIRECTIONS), numberParam('initialTranslate')],
-  SpinIn: [numberParam('spins'), directionParam(['clockwise', 'counter-clockwise']), numberParam('initialScale')],
-  TiltIn: [directionParam(TWO_SIDES), numberParam('depth'), numberParam('perspective')],
+  ShapeIn: [{ name: 'shape', type: 'string', required: false, enum: SHAPE_TYPES, default: 'rectangle' }],
+  ShuttersIn: [directionParam(FOUR_DIRECTIONS), numberParam('shutters', { default: 12, min: 2, max: 30 }), boolParam('staggered')],
+  SlideIn: [directionParam(FOUR_DIRECTIONS), numberParam('initialTranslate', { default: 1, min: 0, max: 1 })],
+  SpinIn: [numberParam('spins', { default: 0.5, min: 0, max: 5 }), directionParam(['clockwise', 'counter-clockwise']), numberParam('initialScale', { default: 0, min: 0, max: 2 })],
+  TiltIn: [directionParam(TWO_SIDES), pxParam('depth', { default: 200 }), pxParam('perspective', { default: 800, min: 200, max: 2000 })],
   TurnIn: [directionParam(['top-right', 'top-left', 'bottom-right', 'bottom-left'])],
   WinkIn: [directionParam(['vertical', 'horizontal'])],
 
-  // Ongoing
-  Bounce: [numberParam('intensity')],
-  Breathe: [directionParam(['vertical', 'horizontal', 'center']), numberParam('distance'), numberParam('perspective')],
-  Cross: [directionParam(EIGHT_DIRECTIONS)],
+  // ── Ongoing ─────────────────────────────────────────────────────────────────
+  Bounce: [numberParam('intensity', { default: 0, min: 0, max: 1 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Breathe: [directionParam(['vertical', 'horizontal', 'center']), pxParam('distance', { default: 25 }), pxParam('perspective', { default: 800, min: 200, max: 2000 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Cross: [directionParam(EIGHT_DIRECTIONS), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
   DVD: [],
-  Flash: [],
-  Flip: [directionParam(['vertical', 'horizontal']), numberParam('perspective')],
-  Fold: [directionParam(FOUR_DIRECTIONS), numberParam('angle')],
-  Jello: [numberParam('intensity')],
-  Poke: [directionParam(FOUR_DIRECTIONS), numberParam('intensity')],
-  Pulse: [numberParam('intensity')],
-  Rubber: [numberParam('intensity')],
-  Spin: [directionParam(['clockwise', 'counter-clockwise'])],
-  Swing: [numberParam('swing'), directionParam(FOUR_DIRECTIONS)],
-  Wiggle: [numberParam('intensity')],
+  Flash: [numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Flip: [directionParam(['vertical', 'horizontal']), pxParam('perspective', { default: 800, min: 200, max: 2000 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Fold: [directionParam(FOUR_DIRECTIONS), degParam('angle', { default: 15, min: 0, max: 90 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Jello: [numberParam('intensity', { default: 0.25, min: 0, max: 1 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Poke: [directionParam(FOUR_DIRECTIONS), numberParam('intensity', { default: 0.5, min: 0, max: 1 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Pulse: [numberParam('intensity', { default: 0, min: 0, max: 1 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Rubber: [numberParam('intensity', { default: 0.5, min: 0, max: 1 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Spin: [directionParam(['clockwise', 'counter-clockwise']), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Swing: [directionParam(FOUR_DIRECTIONS), degParam('swing', { default: 20, min: 0, max: 90 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
+  Wiggle: [numberParam('intensity', { default: 0.5, min: 0, max: 1 }), numberParam('iterationDelay', { default: 0, min: 0, max: 5000, unit: 'ms' })],
 
-  // Scroll
-  ArcScroll: [directionParam(['vertical', 'horizontal']), scrollRangeParam(), numberParam('perspective')],
-  BlurScroll: [scrollRangeParam(), numberParam('blur')],
-  FadeScroll: [scrollRangeParam(), numberParam('opacity')],
-  FlipScroll: [directionParam(['vertical', 'horizontal']), scrollRangeParam(), numberParam('rotate'), numberParam('perspective')],
-  GrowScroll: [directionParam(NINE_DIRECTIONS), scrollRangeParam(), numberParam('scale'), numberParam('speed')],
-  MoveScroll: [numberParam('angle'), scrollRangeParam(), numberParam('distance')],
-  PanScroll: [directionParam(TWO_SIDES), numberParam('distance'), boolParam('startFromOffScreen'), scrollRangeParam()],
-  ParallaxScroll: [numberParam('parallaxFactor'), scrollRangeParam()],
+  // ── Scroll ──────────────────────────────────────────────────────────────────
+  ArcScroll: [directionParam(['vertical', 'horizontal']), scrollRangeParam(), pxParam('perspective', { default: 500, min: 200, max: 2000 })],
+  BlurScroll: [scrollRangeParam(), pxParam('blur', { default: 6, min: 0, max: 50 })],
+  FadeScroll: [scrollRangeParam(), numberParam('opacity', { default: 0, min: 0, max: 1 })],
+  FlipScroll: [directionParam(['vertical', 'horizontal']), scrollRangeParam(), degParam('rotate', { default: 240, min: 0, max: 720 }), pxParam('perspective', { default: 800, min: 200, max: 2000 })],
+  GrowScroll: [directionParam(NINE_DIRECTIONS), scrollRangeParam(), numberParam('scale', { default: 0, min: 0, max: 5 }), numberParam('speed', { default: 0 })],
+  MoveScroll: [degParam('angle', { default: 120, min: 0, max: 360 }), scrollRangeParam(), pxParam('distance', { default: 400 })],
+  PanScroll: [directionParam(TWO_SIDES), pxParam('distance', { default: 400 }), boolParam('startFromOffScreen'), scrollRangeParam()],
+  ParallaxScroll: [numberParam('parallaxFactor', { default: 0.5, min: 0, max: 2 }), scrollRangeParam()],
   RevealScroll: [directionParam(FOUR_DIRECTIONS), scrollRangeParam()],
-  ShapeScroll: [{ name: 'shape', type: 'string', required: false, enum: SHAPE_TYPES }, scrollRangeParam(), numberParam('intensity')],
-  ShrinkScroll: [directionParam(NINE_DIRECTIONS), scrollRangeParam(), numberParam('scale'), numberParam('speed')],
-  ShuttersScroll: [directionParam(FOUR_DIRECTIONS), numberParam('shutters'), boolParam('staggered'), scrollRangeParam()],
-  SkewPanScroll: [directionParam(TWO_SIDES), scrollRangeParam(), numberParam('skew')],
+  ShapeScroll: [{ name: 'shape', type: 'string', required: false, enum: SHAPE_TYPES, default: 'circle' }, scrollRangeParam(), numberParam('intensity', { default: 0.5, min: 0, max: 1 })],
+  ShrinkScroll: [directionParam(NINE_DIRECTIONS), scrollRangeParam(), numberParam('scale', { default: 1.2, min: 0, max: 5 }), numberParam('speed', { default: 0 })],
+  ShuttersScroll: [directionParam(FOUR_DIRECTIONS), numberParam('shutters', { default: 12, min: 2, max: 30 }), boolParam('staggered'), scrollRangeParam()],
+  SkewPanScroll: [directionParam(TWO_SIDES), scrollRangeParam(), degParam('skew', { default: 10, min: 0, max: 45 })],
   SlideScroll: [directionParam(FOUR_DIRECTIONS), scrollRangeParam()],
-  Spin3dScroll: [scrollRangeParam(), numberParam('rotate'), numberParam('speed'), numberParam('perspective')],
-  SpinScroll: [directionParam(['clockwise', 'counter-clockwise']), numberParam('spins'), scrollRangeParam(), numberParam('scale')],
-  StretchScroll: [scrollRangeParam(), numberParam('stretch')],
-  TiltScroll: [directionParam(TWO_SIDES), scrollRangeParam(), numberParam('parallaxFactor'), numberParam('perspective')],
-  TurnScroll: [directionParam(TWO_SIDES), { name: 'spin', type: 'string', required: false, enum: ['clockwise', 'counter-clockwise'] }, scrollRangeParam(), numberParam('scale'), numberParam('rotation')],
+  Spin3dScroll: [scrollRangeParam(), degParam('rotate', { default: -100, min: -360, max: 360 }), numberParam('speed', { default: 0 }), pxParam('perspective', { default: 1000, min: 200, max: 2000 })],
+  SpinScroll: [directionParam(['clockwise', 'counter-clockwise']), numberParam('spins', { default: 0.15, min: 0, max: 5 }), scrollRangeParam(), numberParam('scale', { default: 1, min: 0, max: 3 })],
+  StretchScroll: [scrollRangeParam(), numberParam('stretch', { default: 0.6, min: 0, max: 3 })],
+  TiltScroll: [directionParam(TWO_SIDES), scrollRangeParam(), numberParam('parallaxFactor', { default: 0, min: 0, max: 2 }), pxParam('perspective', { default: 400, min: 200, max: 2000 })],
+  TurnScroll: [directionParam(TWO_SIDES), { name: 'spin', type: 'string', required: false, enum: ['clockwise', 'counter-clockwise'] }, scrollRangeParam(), numberParam('scale', { default: 1, min: 0, max: 3 })],
 
-  // Mouse (all except CustomMouse have inverted?: boolean)
-  AiryMouse: [mouseAxisParam(), numberParam('distance'), numberParam('angle'), boolParam('inverted')],
-  BlobMouse: [numberParam('distance'), numberParam('scale'), boolParam('inverted')],
-  BlurMouse: [numberParam('distance'), numberParam('angle'), numberParam('scale'), numberParam('blur'), numberParam('perspective'), boolParam('inverted')],
+  // ── Mouse ───────────────────────────────────────────────────────────────────
+  AiryMouse: [mouseAxisParam(), pxParam('distance', { default: 200 }), degParam('angle', { default: 30, min: 0, max: 90 }), boolParam('inverted')],
+  BlobMouse: [pxParam('distance', { default: 200 }), numberParam('scale', { default: 1.4, min: 0, max: 3 }), boolParam('inverted')],
+  BlurMouse: [pxParam('distance', { default: 80 }), degParam('angle', { default: 5, min: 0, max: 90 }), numberParam('scale', { default: 0.3, min: 0, max: 2 }), pxParam('blur', { default: 20, min: 0, max: 50 }), pxParam('perspective', { default: 600, min: 200, max: 2000 }), boolParam('inverted')],
   BounceMouse: [mouseAxisParam(), boolParam('inverted')],
   CustomMouse: [],
-  ScaleMouse: [mouseAxisParam(), numberParam('distance'), numberParam('scale'), boolParam('inverted')],
-  SkewMouse: [numberParam('distance'), numberParam('angle'), mouseAxisParam(), boolParam('inverted')],
+  ScaleMouse: [mouseAxisParam(), pxParam('distance', { default: 80 }), numberParam('scale', { default: 1.4, min: 0, max: 3 }), boolParam('inverted')],
+  SkewMouse: [pxParam('distance', { default: 200 }), degParam('angle', { default: 25, min: 0, max: 45 }), mouseAxisParam(), boolParam('inverted')],
   SpinMouse: [mouseAxisParam(), boolParam('inverted')],
-  SwivelMouse: [numberParam('angle'), numberParam('perspective'), { name: 'pivotAxis', type: 'string', required: false, enum: MOUSE_PIVOT_AXIS }, boolParam('inverted')],
-  Tilt3DMouse: [numberParam('angle'), numberParam('perspective'), boolParam('inverted')],
-  Track3DMouse: [numberParam('distance'), numberParam('angle'), mouseAxisParam(), numberParam('perspective'), boolParam('inverted')],
-  TrackMouse: [mouseAxisParam(), numberParam('distance'), boolParam('inverted')],
+  SwivelMouse: [degParam('angle', { default: 5, min: 0, max: 90 }), pxParam('perspective', { default: 800, min: 200, max: 2000 }), { name: 'pivotAxis', type: 'string', required: false, enum: MOUSE_PIVOT_AXIS, default: 'center-horizontal' }, boolParam('inverted')],
+  Tilt3DMouse: [degParam('angle', { default: 5, min: 0, max: 90 }), pxParam('perspective', { default: 800, min: 200, max: 2000 }), boolParam('inverted')],
+  Track3DMouse: [pxParam('distance', { default: 200 }), degParam('angle', { default: 5, min: 0, max: 90 }), mouseAxisParam(), pxParam('perspective', { default: 800, min: 200, max: 2000 }), boolParam('inverted')],
+  TrackMouse: [mouseAxisParam(), pxParam('distance', { default: 200 }), boolParam('inverted')],
 };
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
@@ -301,6 +330,7 @@ export function setPresetAnimation(
     trigger: AnimationTriggerType;
     preset: string;
     options?: Record<string, unknown>;
+    timing?: AnimationTimingOptions | OngoingTimingOptions;
     source?: NodeId;
     outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
@@ -332,6 +362,7 @@ export function setPresetAnimation(
 
   const def: AnimationDefinition = buildDefinition(params.trigger, {
     effect,
+    timing: params.timing,
     triggerId: params.source,
     outAction: params.outAction,
     reducedMotion: params.reducedMotion,
@@ -350,6 +381,7 @@ export function setKeyframeAnimation(
     keyframes: Array<{ offset: number; easing?: string; [key: string]: unknown }>;
     duration?: number;
     easing?: string;
+    timing?: AnimationTimingOptions | OngoingTimingOptions;
     source?: NodeId;
     outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
@@ -369,6 +401,7 @@ export function setKeyframeAnimation(
 
   const def: AnimationDefinition = buildDefinition(params.trigger, {
     effect,
+    timing: params.timing,
     triggerId: params.source,
     outAction: params.outAction,
     reducedMotion: params.reducedMotion,
@@ -384,6 +417,7 @@ export function updateAnimationOptions(
   updates: {
     source?: NodeId;
     outAction?: HoverOutAction;
+    timing?: AnimationTimingOptions | OngoingTimingOptions;
     reducedMotion?: ReducedMotionResponse;
     requiresSticky?: boolean;
   },
@@ -399,8 +433,19 @@ export function updateAnimationOptions(
   const updated = { ...existing } as Record<string, unknown>;
   if (updates.source !== undefined) updated.triggerId = updates.source;
   if (updates.outAction !== undefined) updated.outAction = updates.outAction;
-  if (updates.reducedMotion !== undefined) updated.reducedMotion = updates.reducedMotion;
+  if ('reducedMotion' in updates) {
+    if (updates.reducedMotion) {
+      updated.reducedMotion = updates.reducedMotion;
+    } else {
+      delete updated.reducedMotion;
+    }
+  }
   if (updates.requiresSticky !== undefined) updated.requiresSticky = updates.requiresSticky;
+  if (updates.timing !== undefined) {
+    // Merge timing: spread existing timing with new values
+    const existingTiming = (updated.timing as Record<string, unknown> | undefined) ?? {};
+    updated.timing = { ...existingTiming, ...updates.timing };
+  }
 
   return setNodeAnimation(doc, target, updated as AnimationDefinition);
 }
@@ -458,8 +503,15 @@ function getHoverOutAction(animDef: AnimationDefinition): HoverOutAction {
   return (animDef as HoverAnimationDefinition).outAction ?? 'reverse';
 }
 
+/** Extract timing from definition variants that support it */
+function getDefinitionTiming(animDef: AnimationDefinition): (AnimationTimingOptions & { iterations?: number; alternate?: boolean }) | undefined {
+  if ('timing' in animDef) return animDef.timing;
+  return undefined;
+}
+
 function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
   const { effect } = animDef;
+  const timing = getDefinitionTiming(animDef);
   const hoverOutAction = isHoverLikeTrigger(animDef.trigger) ? getHoverOutAction(animDef) : null;
   const isHoverOngoing =
     isHoverLikeTrigger(animDef.trigger) && effect.kind === 'named' && getPresetCategory(effect.type) === 'ongoing';
@@ -481,8 +533,11 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
 
     const timeEffect: Record<string, unknown> = {
       namedEffect,
-      duration: 1000,
+      duration: timing?.duration ?? 1000,
     };
+
+    if (timing?.delay) timeEffect.delay = timing.delay;
+    if (timing?.easing) timeEffect.easing = timing.easing;
 
     if (isHoverLikeTrigger(animDef.trigger) && hoverOutAction === 'reverse') {
       timeEffect.fill = 'both';
@@ -491,12 +546,14 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
     // Interact's hover state mode is play/pause oriented; give ongoing presets
     // infinite iterations so they can truly resume instead of finishing once.
     if (hoverOutAction === 'keep' && isHoverOngoing) {
-      timeEffect.iterations = Infinity;
+      timeEffect.iterations = timing?.iterations ?? Infinity;
     }
 
     if (animDef.trigger === 'ongoing') {
-      timeEffect.iterations = Infinity;
+      timeEffect.iterations = timing?.iterations ?? Infinity;
     }
+
+    if (timing?.alternate) timeEffect.direction = 'alternate';
 
     return timeEffect as unknown as Effect;
   }
@@ -523,17 +580,21 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
 
   const timeEffect: Record<string, unknown> = {
     keyframeEffect,
-    duration: effect.duration ?? 1000,
-    easing: effect.easing,
+    duration: timing?.duration ?? effect.duration ?? 1000,
+    easing: timing?.easing ?? effect.easing,
   };
+
+  if (timing?.delay) timeEffect.delay = timing.delay;
 
   if (isHoverLikeTrigger(animDef.trigger) && hoverOutAction === 'reverse') {
     timeEffect.fill = 'both';
   }
 
   if (animDef.trigger === 'ongoing') {
-    timeEffect.iterations = Infinity;
+    timeEffect.iterations = timing?.iterations ?? Infinity;
   }
+
+  if (timing?.alternate) timeEffect.direction = 'alternate';
 
   return timeEffect as unknown as Effect;
 }
@@ -633,6 +694,7 @@ function buildDefinition(
   trigger: AnimationTriggerType,
   parts: {
     effect: AnimationDefinition['effect'];
+    timing?: AnimationTimingOptions | OngoingTimingOptions;
     triggerId?: NodeId;
     outAction?: HoverOutAction;
     reducedMotion?: ReducedMotionResponse;
@@ -648,6 +710,10 @@ function buildDefinition(
   if (parts.requiresSticky) base.requiresSticky = parts.requiresSticky;
   if (isHoverLikeTrigger(trigger) && parts.outAction) {
     base.outAction = parts.outAction;
+  }
+  // Timing is only relevant for time-based triggers
+  if (parts.timing && trigger !== 'scroll' && trigger !== 'mouse') {
+    base.timing = parts.timing;
   }
   return base as AnimationDefinition;
 }

@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 - update expected titles for section:reference to include 'Changelog'
 - add axe accessibility e2e check
+- add Select size variants and bordered slider demos
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 type SelectContextValue = {
   open: boolean;
+  size?: 'default' | 'compact' | 'small';
 };
 
 const SelectContext = React.createContext<SelectContextValue>({ open: false });
@@ -85,11 +86,12 @@ export function SelectOptionRow({
 
 function Select({
   children,
+  size,
   open: openProp,
   defaultOpen,
   onOpenChange,
   ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root> & { size?: 'default' | 'compact' | 'small' }) {
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen ?? false);
   const open = openProp ?? uncontrolledOpen;
 
@@ -101,7 +103,7 @@ function Select({
   }
 
   return (
-    <SelectContext.Provider value={{ open }}>
+    <SelectContext.Provider value={{ open, size }}>
       <SelectPrimitive.Root
         {...props}
         {...(openProp !== undefined ? { open: openProp } : { defaultOpen })}
@@ -185,24 +187,29 @@ SelectContent.displayName = SelectPrimitive.Content.displayName;
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    data-ui="select-item"
-    className={cn(
-      'editor-text-strong relative flex w-full cursor-default select-none items-start rounded-sm py-2 pl-8 pr-2 text-sm outline-none focus:bg-[var(--editor-select-highlight-background)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      className,
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 top-2.5 flex size-4 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="size-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-));
+>(({ className, children, ...props }, ref) => {
+  const { size } = React.useContext(SelectContext);
+  const textClass = size === 'compact' ? 'text-xs' : size === 'small' ? 'text-[11px]' : 'text-sm';
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      data-ui="select-item"
+      className={cn(
+        'editor-text-strong relative flex w-full cursor-default select-none items-start rounded-sm py-1.5 pl-8 pr-2 outline-none focus:bg-[var(--editor-select-highlight-background)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        textClass,
+        className,
+      )}
+      {...props}
+    >
+      <span className="absolute left-2 top-2 flex size-4 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className="size-3.5" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  );
+});
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
 const SelectSeparator = React.forwardRef<
