@@ -9,7 +9,7 @@
 - [x] `TODO 2` Convert page/site/export editor field rows
   - update page editor content, site page settings, and export settings rows
   - keep settings-specific stacked fields unchanged when `LabeledFieldStack` remains the better fit
-- [ ] `TODO 3` Verification and cleanup
+- [x] `TODO 3` Verification and cleanup
   - rerun focused tests and `npm run build`
   - confirm the remaining local layout classes are only on intentional composite controls
 

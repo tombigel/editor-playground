@@ -89,7 +89,10 @@ export function FormField({
   return (
     <div className={cn('flex items-center gap-1', className)} data-ui="form-field" data-layout="inline-group">
       <Label className={cn('shrink-0 whitespace-nowrap text-[11px] font-medium', labelClassName)}>{label}</Label>
-      <div className={cn('ml-auto flex min-w-0 items-center gap-1', controlClassName)}>
+      <div
+        className={cn('ml-auto flex min-w-0 items-center gap-1', controlClassName)}
+        style={controlWidth ? { width: controlWidth } : undefined}
+      >
         {children}
       </div>
     </div>
