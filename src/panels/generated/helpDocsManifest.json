@@ -72,18 +72,6 @@
     "assetUrl": "/assets/help-docs/DEVELOPERS.md"
   },
   {
-    "path": "docs/DOCUMENTATION_MASTER_BRIEF.md",
-    "fileName": "DOCUMENTATION_MASTER_BRIEF.md",
-    "fullTitle": "Documentation Master Brief",
-    "assetUrl": "/assets/help-docs/DOCUMENTATION_MASTER_BRIEF.md"
-  },
-  {
-    "path": "docs/DOCUMENTATION_TASKLIST.md",
-    "fileName": "DOCUMENTATION_TASKLIST.md",
-    "fullTitle": "Documentation Tasklist",
-    "assetUrl": "/assets/help-docs/DOCUMENTATION_TASKLIST.md"
-  },
-  {
     "path": "docs/EDITOR_STYLE_GUIDE.md",
     "fileName": "EDITOR_STYLE_GUIDE.md",
     "fullTitle": "Editor Style Guide",

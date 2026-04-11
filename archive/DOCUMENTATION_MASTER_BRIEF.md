@@ -5,9 +5,9 @@ This document is the immutable source brief for the documentation IA and help-br
 Execution rules:
 
 - Every fresh agent must read this file first.
-- The canonical live execution ledger is [`DOCUMENTATION_TASKLIST.md`](./DOCUMENTATION_TASKLIST.md).
-- If scope changes, update this brief first, then the tasklist, then code.
-- Use the tasklist as the director and memory model for the workstream.
+- The historical execution ledger is archived at [`archive/DOCUMENTATION_TASKLIST.md`](../archive/DOCUMENTATION_TASKLIST.md).
+- If scope changes, update this brief first, then revive or replace the archived tasklist, then code.
+- Use the tasklist as the director and memory model for the workstream while it is active.
 - Each quantum runs with an exact file allowlist, read-first notes, verification commands, and carried-forward follow-ups.
 
 ## Locked IA Decisions

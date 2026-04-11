@@ -323,20 +323,4 @@ export const HELP_DOC_REGISTRY: readonly HelpDocRegistryEntry[] = [
     order: 90,
     navVisibility: 'secondary',
   },
-  {
-    id: 'doc:docs/DOCUMENTATION_MASTER_BRIEF.md',
-    kind: 'markdown',
-    sourcePath: 'docs/DOCUMENTATION_MASTER_BRIEF.md',
-    parentId: 'section:developers-planning',
-    order: 100,
-    navVisibility: 'secondary',
-  },
-  {
-    id: 'doc:docs/DOCUMENTATION_TASKLIST.md',
-    kind: 'markdown',
-    sourcePath: 'docs/DOCUMENTATION_TASKLIST.md',
-    parentId: 'section:developers-planning',
-    order: 110,
-    navVisibility: 'secondary',
-  },
 ] as const;
