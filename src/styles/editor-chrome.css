@@ -392,6 +392,22 @@
   color: var(--editor-utility-text-muted);
 }
 
+button.editor-pill-subtle:hover,
+a.editor-pill-subtle:hover,
+.editor-pill-subtle:has(input):hover,
+.editor-bg-subtle:has(input):hover {
+  box-shadow: inset 0 0 0 1px var(--editor-utility-border);
+  color: var(--editor-utility-text-strong);
+  cursor: text;
+}
+
+button.editor-pill-subtle:focus-visible,
+a.editor-pill-subtle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--editor-accent);
+  color: var(--editor-utility-text-strong);
+}
+
 .editor-pill-contrast {
   background-color: color-mix(in srgb, var(--editor-utility-bg-subtle) 84%, var(--editor-accent) 8%);
   color: var(--editor-utility-text-strong);

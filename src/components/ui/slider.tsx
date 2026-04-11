@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(({ className, value, defaultValue, ...props }, ref) => {
+>(({ className, value, defaultValue, tabIndex, ...props }, ref) => {
   const values = Array.isArray(value)
     ? value
     : Array.isArray(defaultValue)
@@ -30,8 +30,9 @@ const Slider = React.forwardRef<
         <SliderPrimitive.Thumb
           // biome-ignore lint/suspicious/noArrayIndexKey: stable list of identical thumbs
           key={index}
+          tabIndex={tabIndex}
           data-ui="slider-thumb"
-          className="block size-4 rounded-full border bg-white shadow-sm transition-colors disabled:pointer-events-none disabled:opacity-50"
+          className="block size-4 rounded-full border bg-white shadow-sm transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

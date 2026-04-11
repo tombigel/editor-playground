@@ -25,6 +25,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - strengthen tabs hover accent state
 - make edge dropdown compact and inline
 - replace toggle-pill with always-input number fields, unify RangeField
+- remove slider knob focus ring and add visible pill hover state
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout
