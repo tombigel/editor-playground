@@ -22,6 +22,7 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "base-title", label: "Title" },
 			{ id: "base-badge", label: "Component Badges" },
 			{ id: "base-label", label: "Label" },
+			{ id: "base-form-field", label: "FormField" },
 			{ id: "base-text-button", label: "Text Button" },
 			{ id: "base-icon-button", label: "Icon Button" },
 			{ id: "base-shortcut-key", label: "Shortcut Key" },
