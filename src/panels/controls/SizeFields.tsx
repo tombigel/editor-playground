@@ -1,4 +1,4 @@
-import { memo, useEffect, useId, useState } from 'react';
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, Proportions } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -269,8 +269,8 @@ export const SizeInlineField = memo(function SizeInlineField({
   return (
     <LabeledControlRow
       label={label}
-      className="gap-1"
-      labelClassName="flex-none text-[12px] font-medium"
+      className="gap-1.5"
+      labelClassName="w-4 shrink-0 flex-none text-right text-[12px] font-medium"
       controlClassName="ml-0 flex-1"
     >
       {showAspectInput ? (
@@ -346,8 +346,31 @@ export const SizeInlineField = memo(function SizeInlineField({
 });
 
 // ---------------------------------------------------------------------------
+// RangeField helpers
+// ---------------------------------------------------------------------------
+
+function deriveStep(min: number, max: number): number {
+  const range = max - min;
+  if (range <= 1) return 0.01;
+  if (range <= 10) return 0.1;
+  return 1;
+}
+
+function formatRangeValue(value: number, step: number): string {
+  if (step < 0.1) return parseFloat(value.toFixed(2)).toString();
+  if (step < 1) return parseFloat(value.toFixed(1)).toString();
+  return String(Math.round(value));
+}
+
+// ---------------------------------------------------------------------------
 // RangeField
 // ---------------------------------------------------------------------------
+
+// Shared input-as-pill classes
+const PILL_INPUT_CLASS =
+  'w-[5ch] bg-transparent text-right text-[10px] font-medium tabular-nums [appearance:textfield] ' +
+  '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ' +
+  'focus:outline-none';
 
 export function RangeField({
   label,
@@ -355,7 +378,7 @@ export function RangeField({
   min,
   max,
   step,
-  unit,
+  unit = '',
   onValueChange,
   mixed = false,
 }: {
@@ -363,24 +386,87 @@ export function RangeField({
   value: number;
   min: number;
   max: number;
-  step: number;
-  unit: string;
+  step?: number;
+  unit?: string;
   onValueChange: (value: number) => void;
   mixed?: boolean;
 }) {
+  const effectiveStep = useMemo(() => step ?? deriveStep(min, max), [step, min, max]);
+
+  // Local value for smooth slider dragging
+  const [localValue, setLocalValue] = useState(value);
+  const dragging = useRef(false);
+  // Draft string for the input — kept in sync when not focused
+  const [draft, setDraft] = useState(() => formatRangeValue(value, effectiveStep));
+  const inputFocused = useRef(false);
+
+  useEffect(() => {
+    if (!dragging.current && !inputFocused.current) {
+      setLocalValue(value);
+      setDraft(formatRangeValue(value, effectiveStep));
+    }
+  }, [value, effectiveStep]);
+
+  function commit() {
+    inputFocused.current = false;
+    const parsed = parseFloat(draft);
+    if (Number.isFinite(parsed)) {
+      const clamped = Math.min(max, Math.max(min, parsed));
+      setDraft(formatRangeValue(clamped, effectiveStep));
+      if (clamped !== value) onValueChange(clamped);
+    } else {
+      setDraft(formatRangeValue(value, effectiveStep));
+    }
+  }
+
   return (
     <div className="space-y-1">
-      {label ? (
-        <div className="flex items-center justify-between gap-2">
-          <Label className="text-[11px] font-medium">{label}</Label>
-          <ValuePill mixed={mixed} value={`${value}${unit}`} />
-        </div>
-      ) : (
-        <div className="flex justify-end">
-          <ValuePill mixed={mixed} value={`${value}${unit}`} />
-        </div>
-      )}
-      <Slider aria-label={label ?? undefined} value={[value]} min={min} max={max} step={step} onValueChange={([next]) => onValueChange(next ?? value)} />
+      <div className="flex min-h-5 items-center justify-between gap-2">
+        {label ? <Label className="text-[11px] font-medium">{label}</Label> : null}
+        <span className="editor-pill-subtle ml-auto inline-flex shrink-0 items-center gap-px rounded-md px-2 py-0.5 text-[10px] font-medium focus-within:ring-1 focus-within:ring-[var(--editor-accent)]">
+          {mixed ? (
+            <span className={PILL_INPUT_CLASS}>-</span>
+          ) : (
+            <input
+              type="number"
+              value={draft}
+              min={min}
+              max={max}
+              step={effectiveStep}
+              aria-label={label ?? undefined}
+              className={PILL_INPUT_CLASS}
+              onFocus={(e) => { inputFocused.current = true; e.target.select(); }}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+                if (e.key === 'Escape') {
+                  setDraft(formatRangeValue(value, effectiveStep));
+                  inputFocused.current = false;
+                  e.currentTarget.blur();
+                }
+              }}
+            />
+          )}
+          {unit ? <span className="shrink-0">{unit}</span> : null}
+        </span>
+      </div>
+      <Slider
+        tabIndex={-1}
+        aria-label={label ?? undefined}
+        value={[localValue]}
+        min={min}
+        max={max}
+        step={effectiveStep}
+        onValueChange={([next]) => {
+          dragging.current = true;
+          const v = next ?? localValue;
+          setLocalValue(v);
+          if (!inputFocused.current) setDraft(formatRangeValue(v, effectiveStep));
+          onValueChange(v);
+        }}
+        onValueCommit={() => { dragging.current = false; }}
+      />
     </div>
   );
 }
@@ -415,37 +501,116 @@ export function StickyOffsetBandField({
   const sliderEnd = Math.max(topValue, sliderEndFromTop);
   const rangeSpan = Math.max(0, sliderEnd - sliderStart);
 
+  const [topDraft, setTopDraft] = useState(() => String(Math.round(topValue)));
+  const [bottomDraft, setBottomDraft] = useState(() => String(Math.round(bottomValue)));
+  const topFocused = useRef(false);
+  const bottomFocused = useRef(false);
+
+  useEffect(() => {
+    if (!topFocused.current) setTopDraft(String(Math.round(clamp(topOffset, min, max))));
+  }, [topOffset, min, max]);
+
+  useEffect(() => {
+    if (!bottomFocused.current) setBottomDraft(String(Math.round(clamp(bottomOffset, min, max))));
+  }, [bottomOffset, min, max]);
+
+  function commitTop() {
+    topFocused.current = false;
+    const parsed = parseFloat(topDraft);
+    if (Number.isFinite(parsed)) {
+      const clamped = clamp(Math.round(parsed), min, max);
+      setTopDraft(String(clamped));
+      if (clamped !== Math.round(topValue)) onValueChange(clamped, bottomValue);
+    } else {
+      setTopDraft(String(Math.round(topValue)));
+    }
+  }
+
+  function commitBottom() {
+    bottomFocused.current = false;
+    const parsed = parseFloat(bottomDraft);
+    if (Number.isFinite(parsed)) {
+      const clamped = clamp(Math.round(parsed), min, max);
+      setBottomDraft(String(clamped));
+      if (clamped !== Math.round(bottomValue)) onValueChange(topValue, clamped);
+    } else {
+      setBottomDraft(String(Math.round(bottomValue)));
+    }
+  }
+
+  const CHIP_INPUT_CLASS =
+    'w-[3ch] bg-transparent text-[10px] tabular-nums [appearance:textfield] ' +
+    '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ' +
+    'focus:outline-none';
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
         <Label className="text-[11px] font-medium">Offset Range</Label>
         <ValuePill mixed={mixed} value={`Span ${Math.round(rangeSpan)}${unit}`} />
       </div>
-      <div className="editor-text-muted grid grid-cols-2 gap-1 text-[10px]">
-        <span className="editor-bg-subtle inline-flex items-center gap-1 rounded-md px-2 py-0.5">
-          <ArrowUp className="editor-text-muted h-3 w-3" />
-          {mixed ? 'Top -' : `Top ${Math.round(topValue)}${unit}`}
+      <div className="editor-text-muted flex justify-between gap-1 text-[10px]">
+        {/* Top chip */}
+        <span className="editor-bg-subtle inline-flex items-center gap-1 rounded-md px-2 py-0.5 focus-within:ring-1 focus-within:ring-[var(--editor-accent)]">
+          <ArrowUp className="editor-text-muted h-3 w-3 shrink-0" />
+          {mixed ? <span className="tabular-nums">-</span> : (
+            <input
+              type="number"
+              value={topDraft}
+              min={min}
+              max={max}
+              step={step}
+              aria-label="Top offset"
+              className={CHIP_INPUT_CLASS}
+              onFocus={(e) => { topFocused.current = true; e.target.select(); }}
+              onChange={(e) => setTopDraft(e.target.value)}
+              onBlur={commitTop}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+                if (e.key === 'Escape') { setTopDraft(String(Math.round(topValue))); topFocused.current = false; e.currentTarget.blur(); }
+              }}
+            />
+          )}
+          <span className="shrink-0">{unit}</span>
         </span>
-        <span className="editor-bg-subtle inline-flex items-center justify-end gap-1 rounded-md px-2 py-0.5 text-right">
-          {mixed ? 'Bottom -' : `Bottom ${Math.round(bottomValue)}${unit}`}
-          <ArrowDown className="editor-text-muted h-3 w-3" />
+        {/* Bottom chip */}
+        <span className="editor-bg-subtle inline-flex items-center justify-end gap-1 rounded-md px-2 py-0.5 focus-within:ring-1 focus-within:ring-[var(--editor-accent)]">
+          {mixed ? <span className="tabular-nums">-</span> : (
+            <input
+              type="number"
+              value={bottomDraft}
+              min={min}
+              max={max}
+              step={step}
+              aria-label="Bottom offset"
+              className={CHIP_INPUT_CLASS}
+              onFocus={(e) => { bottomFocused.current = true; e.target.select(); }}
+              onChange={(e) => setBottomDraft(e.target.value)}
+              onBlur={commitBottom}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+                if (e.key === 'Escape') { setBottomDraft(String(Math.round(bottomValue))); bottomFocused.current = false; e.currentTarget.blur(); }
+              }}
+            />
+          )}
+          <span className="shrink-0">{unit}</span>
+          <ArrowDown className="editor-text-muted h-3 w-3 shrink-0" />
         </span>
       </div>
       <Slider
+        tabIndex={-1}
         value={[sliderStart, sliderEnd]}
         min={min}
         max={max}
         step={step}
         onValueChange={(next) => {
-          if (next.length < 2) {
-            return;
-          }
+          if (next.length < 2) return;
           const rawStart = next[0] ?? sliderStart;
           const rawEnd = next[1] ?? sliderEnd;
-          const nextStart = Math.min(rawStart, rawEnd);
-          const nextEnd = Math.max(rawStart, rawEnd);
-          const nextTop = clamp(Math.round(nextStart), min, max);
-          const nextBottom = clamp(Math.round(max - nextEnd), min, max);
+          const nextTop = clamp(Math.round(Math.min(rawStart, rawEnd)), min, max);
+          const nextBottom = clamp(Math.round(max - Math.max(rawStart, rawEnd)), min, max);
+          if (!topFocused.current) setTopDraft(String(nextTop));
+          if (!bottomFocused.current) setBottomDraft(String(nextBottom));
           onValueChange(nextTop, nextBottom);
         }}
       />

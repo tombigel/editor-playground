@@ -3,8 +3,6 @@ import {
 	RangeField,
 	StickyOffsetBandField,
 } from "@/panels/InspectorControls";
-import { SliderNumberField } from "@/components/ui/slider-number-field";
-import { FormField } from "@/panels/InspectorControls";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
 
@@ -32,7 +30,7 @@ function SliderDemo() {
 	return (
 		<div className="space-y-6">
 			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					RangeField — labeled slider with value badge
 				</div>
 				<div className="editor-border-subtle w-full max-w-[300px] rounded-sm border p-3">
@@ -48,7 +46,7 @@ function SliderDemo() {
 				</div>
 			</div>
 			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					StickyOffsetBandField — dual-handle range
 				</div>
 				<div className="editor-border-subtle w-full max-w-[300px] rounded-sm border p-3">
@@ -67,7 +65,7 @@ function SliderDemo() {
 				</div>
 			</div>
 			<div>
-				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
+				<div className="editor-text-muted mb-1.5 text-[11px] font-medium">Multi-select</div>
 				<div className="editor-border-subtle w-full max-w-[300px] rounded-sm border p-3">
 					<RangeField
 						label="Opacity"
@@ -90,37 +88,10 @@ function SliderNumberFieldDemo() {
 	const [perspective, setPerspective] = useState(800);
 	const [angle, setAngle] = useState(30);
 	return (
-		<div className="space-y-6">
-			{/* Inline layout */}
-			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">Inline layout</div>
-				<div className="editor-border-subtle w-full max-w-[300px] space-y-2 rounded-sm border p-3">
-					<FormField label="Intensity" layout="inline">
-						<SliderNumberField value={intensity} min={0} max={1} onChange={setIntensity} />
-					</FormField>
-					<FormField label="Perspective" layout="inline">
-						<SliderNumberField value={perspective} min={200} max={2000} unitLabel="px" onChange={setPerspective} />
-					</FormField>
-					<FormField label="Angle" layout="inline">
-						<SliderNumberField value={angle} min={0} max={90} unitLabel="°" onChange={setAngle} />
-					</FormField>
-				</div>
-			</div>
-			{/* Stack layout */}
-			<div>
-				<div className="editor-text-muted mb-2 text-[10px] font-medium uppercase tracking-wide">Stack layout</div>
-				<div className="editor-border-subtle w-full max-w-[300px] space-y-2 rounded-sm border p-3">
-					<FormField label="Intensity" layout="stack">
-						<SliderNumberField value={intensity} min={0} max={1} onChange={setIntensity} />
-					</FormField>
-					<FormField label="Perspective" layout="stack">
-						<SliderNumberField value={perspective} min={200} max={2000} unitLabel="px" onChange={setPerspective} />
-					</FormField>
-					<FormField label="Angle" layout="stack">
-						<SliderNumberField value={angle} min={0} max={90} unitLabel="°" onChange={setAngle} />
-					</FormField>
-				</div>
-			</div>
+		<div className="editor-border-subtle w-full max-w-[300px] space-y-3 rounded-sm border p-3">
+			<RangeField label="Intensity" value={intensity} min={0} max={1} onValueChange={setIntensity} />
+			<RangeField label="Perspective" value={perspective} min={200} max={2000} unit="px" onValueChange={setPerspective} />
+			<RangeField label="Angle" value={angle} min={0} max={90} unit="°" onValueChange={setAngle} />
 		</div>
 	);
 }
@@ -265,11 +236,11 @@ export function SizeFieldDemos() {
 				</div>
 			</ComponentPreview>
 
-			{/* Slider / RangeField / StickyOffsetBandField */}
+			{/* Slider / RangeField / StickyOffsetBandField / SliderNumberField */}
 			<ComponentPreview
 				id="base-slider"
 				name="Slider"
-				description="Range slider based on Radix UI, labeled RangeField with value badge, and StickyOffsetBandField with dual handles."
+				description="Slider pattern with editable value pill header. RangeField and StickyOffsetBandField wrap Radix UI sliders with clickable pill labels. SliderNumberField is used for bounded animation parameters."
 				sourceFile="src/components/ui/slider.tsx"
 				props={[
 					{ name: "value", type: "number[]", description: "Current value(s)." },
@@ -296,27 +267,19 @@ export function SizeFieldDemos() {
 						type: "(value: number[]) => void",
 						description: "Change handler.",
 					},
+					{ name: "label", type: "string", description: "(RangeField / SliderNumberField) Optional label shown left of the value pill." },
+					{ name: "unitLabel", type: "string", description: "(SliderNumberField) Unit suffix shown in the value pill." },
+					{ name: "unit", type: "string", description: "(RangeField) Unit suffix shown in the value pill." },
+					{ name: "onChange", type: "(value: number) => void", description: "(SliderNumberField) Commits on pointer-up or inline edit." },
 				]}
 			>
 				<SliderDemo />
-			</ComponentPreview>
-
-			{/* SliderNumberField */}
-			<ComponentPreview
-				id="base-slider-number-field"
-				name="Slider Number Field"
-				description="Slider with min/max range labels and a toggle to switch to a number input. Used for bounded numeric parameters in animation controls (intensity, distance, perspective, angle, etc.)."
-				sourceFile="src/components/ui/slider-number-field.tsx"
-				props={[
-					{ name: "value", type: "number", description: "Current value." },
-					{ name: "min", type: "number", description: "Minimum value." },
-					{ name: "max", type: "number", description: "Maximum value." },
-					{ name: "step", type: "number", description: "Step increment. Auto-derived from range if omitted (0.01 for ≤1, 0.1 for ≤10, 1 otherwise)." },
-					{ name: "unitLabel", type: "string", description: "Unit suffix — shown after min/max labels in slider mode (e.g. '0px … 200px') and after the value in number mode." },
-					{ name: "onChange", type: "(value: number) => void", description: "Change handler. Commits only on pointer-up (slider) or on valid input (number mode)." },
-				]}
-			>
-				<SliderNumberFieldDemo />
+				<div className="mt-6">
+					<div className="editor-text-muted mb-2 text-[11px] font-medium">
+						SliderNumberField — label + editable pill + slider
+					</div>
+					<SliderNumberFieldDemo />
+				</div>
 			</ComponentPreview>
 		</>
 	);

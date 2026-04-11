@@ -24,6 +24,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - split editor and site axe scans
 - strengthen tabs hover accent state
 - make edge dropdown compact and inline
+- replace toggle-pill with always-input number fields, unify RangeField
 
 ### Fixed
 - initialize animation runtime in preview mode and fix grid layout
