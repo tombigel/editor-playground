@@ -11,6 +11,11 @@ import { execSync } from 'child_process';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
+// Skip during post-commit changelog amend to avoid double-bumping
+if (process.env.CHANGELOG_HOOK_AMEND) {
+  process.exit(0);
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 

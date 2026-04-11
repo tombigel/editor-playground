@@ -2,12 +2,13 @@
 /**
  * commit-msg-changelog.mjs
  *
- * Registered as the simple-git-hooks prepare-commit-msg hook.
- * Reads the first line of the commit message and appends it as a bullet
- * to the [Unreleased] section of CHANGELOG.md, then stages the file.
+ * Registered as the simple-git-hooks post-commit hook.
+ * Reads the commit message from .git/COMMIT_EDITMSG, appends the first line
+ * as a bullet to the [Unreleased] section of CHANGELOG.md, and amends the
+ * commit to include the change.
  *
- * Uses prepare-commit-msg (not commit-msg) so that `git add` updates
- * the index before the commit tree is built.
+ * Uses CHANGELOG_HOOK_AMEND env var to prevent infinite recursion when
+ * the amend re-triggers hooks.
  */
 
 import { execSync } from 'child_process';
@@ -15,18 +16,23 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, '..');
-const changelogFile = resolve(root, 'CHANGELOG.md');
-
-const msgFile = process.argv[2];
-if (!msgFile) {
+if (process.env.CHANGELOG_HOOK_AMEND) {
   process.exit(0);
 }
 
-const rawMsg = readFileSync(msgFile, 'utf8').trim();
-const firstLine = rawMsg.split('\n')[0].trim();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const root = resolve(__dirname, '..');
+const changelogFile = resolve(root, 'CHANGELOG.md');
+const commitMsgFile = resolve(root, '.git', 'COMMIT_EDITMSG');
 
+let rawMsg;
+try {
+  rawMsg = readFileSync(commitMsgFile, 'utf8').trim();
+} catch {
+  process.exit(0);
+}
+
+const firstLine = rawMsg.split('\n')[0].trim();
 if (!firstLine) {
   process.exit(0);
 }
@@ -62,4 +68,14 @@ const updated =
   changelog.slice(insertPos);
 
 writeFileSync(changelogFile, updated, 'utf8');
-execSync('git add CHANGELOG.md', { cwd: root, stdio: 'inherit' });
+
+try {
+  execSync('git add CHANGELOG.md', { cwd: root, stdio: 'inherit' });
+  execSync('git commit --amend --no-edit', {
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...process.env, CHANGELOG_HOOK_AMEND: '1' },
+  });
+} catch (err) {
+  console.error('post-commit changelog amend failed:', err.message);
+}

@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.4.15",
+  "version": "0.4.16",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -57,7 +57,7 @@
   },
   "simple-git-hooks": {
     "pre-commit": "node scripts/pre-commit-version-bump.mjs",
-    "prepare-commit-msg": "node scripts/commit-msg-changelog.mjs $1"
+    "post-commit": "node scripts/commit-msg-changelog.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",

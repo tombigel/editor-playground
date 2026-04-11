@@ -12,6 +12,8 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ## [Unreleased]
 
 - Add automatic changelog entries via commit-msg hook
+- Switch changelog hook to prepare-commit-msg for same-commit inclusion
+- Use post-commit hook with amend for same-commit changelog entries
 
 
 ---
