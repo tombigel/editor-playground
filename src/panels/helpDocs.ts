@@ -166,11 +166,16 @@ export function getHelpInitialExpandedIds(activeEntryId?: string | null) {
   return expandedIds;
 }
 
-export function buildHelpTreeRows(activeEntryId: string, expandedIds: Set<string>) {
+export function buildHelpTreeRows(
+  activeEntryId: string,
+  expandedIds: Set<string>,
+  parentId: string | null = null,
+  baseDepth = 0,
+) {
   const rows: HelpTreeRow[] = [];
 
-  function visit(parentId: string | null, depth: number) {
-    for (const entry of getHelpChildEntries(parentId)) {
+  function visit(nextParentId: string | null, depth: number) {
+    for (const entry of getHelpChildEntries(nextParentId)) {
       const hasChildren = getHelpChildEntries(entry.id).length > 0;
       const isExpanded = expandedIds.has(entry.id);
       rows.push({
@@ -187,7 +192,7 @@ export function buildHelpTreeRows(activeEntryId: string, expandedIds: Set<string
     }
   }
 
-  visit(null, 0);
+  visit(parentId, baseDepth);
   return rows;
 }
 
@@ -462,15 +467,13 @@ function resolveHelpAlias(path: string, anchor: string | null) {
     }
   }
 
-  if (anchor == null) {
-    for (const entry of getMarkdownHelpEntries()) {
-      for (const alias of entry.aliases) {
-        if (alias.path === path && alias.anchor == null) {
-          return {
-            path: entry.path,
-            anchor: alias.targetAnchor ?? null,
-          };
-        }
+  for (const entry of getMarkdownHelpEntries()) {
+    for (const alias of entry.aliases) {
+      if (alias.path === path && alias.anchor == null) {
+        return {
+          path: entry.path,
+          anchor: alias.targetAnchor === undefined ? anchor : alias.targetAnchor,
+        };
       }
     }
   }

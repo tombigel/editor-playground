@@ -1217,11 +1217,13 @@ Navigation model:
 - `?` opens the detached `Shortcuts` dialog.
 - `Help → Documentation` opens the documentation browser dialog with a collapsible left nav.
 - `Help → About` opens a detached about dialog.
-- The documentation browser root IA is `About`, `Usage`, `Reference`, `Developers`, and `Keyboard shortcuts`.
+- The documentation browser root IA is `About`, `Keyboard shortcuts`, `Guides`, `Reference`, and `Developers`.
 - `About` and `Keyboard shortcuts` remain top-level browseable surfaces even though they also have detached dialogs.
-- `Usage` is the user-facing docs root for actual editor guidance.
-- `Reference` is the stable reference root; stage 1 starts by nesting `API Reference` under it.
-- `Developers` is the development-facing root; `How to add docs?` now lives under `Developers / Workflows`.
+- Opening the documentation browser without an explicit entry target defaults to `About`.
+- `Guides` is the user-facing docs root for actual editor guidance and currently starts with `Getting Started`.
+- `Reference` and `Developers` render as grouped menu headings with their second-level entries visible underneath.
+- `Reference` is the stable reference root and starts with `Overview` plus `API Reference`.
+- `Developers` is the development-facing root and starts with `Overview`; `How to add docs?` now lives under `Developers / Workflows`.
 - Help-doc hierarchy, ordering, and visibility are configurable in the help-doc registry; unlisted `docs/*.md` files fall back under `Developers / Planning` as secondary items.
 - Nav buttons do not show filenames. If a title contains a spaced dash separator (`-`, `–`, `—`), the text after the separator becomes the subtitle and the separator is hidden.
 - The left nav can collapse into a slim rail with a single reopen control to widen the reading pane without leaving the current document.

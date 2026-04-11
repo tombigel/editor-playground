@@ -1,10 +1,11 @@
+import { Button } from '@/components/ui/button';
 import { PROJECT_VERSION, DOCUMENT_MODEL_VERSION, API_VERSION, EDITOR_VERSION } from '../lib/version';
 
 const ABOUT_LINKS = [
-  { label: 'Usage', href: 'docs/USAGE.md' },
-  { label: 'Reference', href: 'docs/REFERENCE.md' },
-  { label: 'Playground spec', href: 'docs/PLAYGROUND_SPEC.md' },
-  { label: 'API reference', href: 'docs/API.md' },
+  { label: 'Getting Started', entryId: 'doc:docs/GETTING_STARTED.md' },
+  { label: 'Reference Overview', entryId: 'doc:docs/REFERENCE.md' },
+  { label: 'API Reference', entryId: 'doc:docs/API.md' },
+  { label: 'Playground Spec', entryId: 'doc:docs/PLAYGROUND_SPEC.md' },
 ] as const;
 
 const VERSIONS = [
@@ -14,7 +15,7 @@ const VERSIONS = [
   { label: 'Editor', value: EDITOR_VERSION },
 ] as const;
 
-export function AboutContent() {
+export function AboutContent({ onOpenHelpEntry }: { onOpenHelpEntry?: (entryId: string) => void } = {}) {
   return (
     <div className="space-y-5 p-6">
       <div className="space-y-2">
@@ -40,12 +41,19 @@ export function AboutContent() {
         <div className="editor-text-muted text-[11px] font-medium uppercase tracking-[0.12em]">
           Documentation
         </div>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-1">
           {ABOUT_LINKS.map((link) => (
-            <div key={link.href} className="flex items-center justify-between gap-3 text-sm">
-              <span className="editor-text-strong">{link.label}</span>
-              <span className="editor-text-muted font-mono text-[11px]">{link.href}</span>
-            </div>
+            <Button
+              key={link.entryId}
+              type="button"
+              variant="ghost"
+              size="sm"
+              data-help-entry-target={link.entryId}
+              className="h-auto w-full justify-start px-0 py-1 text-left text-sm text-[color:var(--editor-accent)] underline underline-offset-2"
+              onClick={() => onOpenHelpEntry?.(link.entryId)}
+            >
+              {link.label}
+            </Button>
           ))}
         </div>
       </div>

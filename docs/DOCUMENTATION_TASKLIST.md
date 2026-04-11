@@ -14,18 +14,67 @@ Execution rules:
 
 - Overall status: `done`
 - Current quantum: `none`
-- Last completed quantum: `Q6`
+- Last completed quantum: `Q7`
 - Next quantum after current: `none`
 - Locked assumptions:
-  - Root IA stays `About`, `Usage`, `Reference`, `Developers`, `Keyboard shortcuts`.
+  - Root IA is `About`, `Keyboard shortcuts`, `Guides`, `Reference`, `Developers`.
+  - `Guides`, `Reference`, and `Developers` render as grouped headings, not clickable root pages.
   - Markdown files stay flat in `docs/`; docs assets may live in `docs/assets/`.
   - The help browser remains an in-app docs surface, not an external docs generator.
   - Registry metadata is the source of truth for hierarchy, labels, ordering, and aliases.
   - `How to add docs?` moves under `Developers / Workflows`.
+  - `Reference` and `Developers` keep their existing markdown landing content as `Overview` child pages.
 
 ## Discovered Issues
 
 - None recorded currently.
+
+## Q7: Refresh the help browser IA around grouped roots and guides
+
+- Objective:
+  - Replace the old `Usage` root with a `Guides` group.
+  - Render grouped roots as section headings in the left nav.
+  - Convert the help-browser `About` page from raw paths to real help-entry links.
+- Status: `done`
+- Allowed files:
+  - `docs/DOCUMENTATION_MASTER_BRIEF.md`
+  - `docs/DOCUMENTATION_TASKLIST.md`
+  - `docs/GETTING_STARTED.md`
+  - `docs/HELP_BROWSER.md`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `src/panels/helpDocRegistry.ts`
+  - `src/panels/helpDocs.ts`
+  - `src/panels/HelpDialog.tsx`
+  - `src/panels/AboutContent.tsx`
+  - `src/panels/AboutDialog.tsx`
+  - `src/app/EditorTopbar.tsx`
+  - `src/app/AppShell.tsx`
+  - help-doc related tests
+- Read-first files and target lines:
+  - `docs/DOCUMENTATION_MASTER_BRIEF.md:1-120`
+  - `docs/DOCUMENTATION_TASKLIST.md:1-220`
+  - `docs/HELP_BROWSER.md:1-120`
+  - `docs/PLAYGROUND_SPEC.md:1210-1260`
+  - `src/panels/helpDocRegistry.ts:1-220`
+  - `src/panels/helpDocs.ts:1-280`
+  - `src/panels/HelpDialog.tsx:1-360`
+- Implementation notes:
+  - Keep relative `.md` links as the canonical internal-link mechanism.
+  - Add a flat `Getting Started` markdown file under a new `Guides` root section.
+  - Preserve old `docs/USAGE.md` links through registry aliasing.
+  - Keep `Reference` and `Developers` content as `Overview` child pages.
+- Verification commands:
+  - `npm run typecheck`
+  - `npx vitest run src/panels/tests/helpDocs.test.ts src/panels/tests/HelpDialog.test.tsx src/panels/tests/AboutContent.test.tsx src/app/tests/AppShell.test.tsx`
+  - `npm run build`
+- Verification result:
+  - `npm run typecheck`: passed
+  - `npx vitest run src/panels/tests/helpDocs.test.ts src/panels/tests/HelpDialog.test.tsx src/panels/tests/AboutContent.test.tsx src/app/tests/AppShell.test.tsx`: passed, 4 files / 26 tests
+  - `npm run build`: passed
+- Commit SHA:
+  - Not committed in this session
+- Open follow-ups carried forward:
+  - None currently.
 
 ## Q0: Bootstrap the documentation memory layer
 

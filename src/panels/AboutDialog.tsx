@@ -6,9 +6,11 @@ import { EditorPanelHeader } from './EditorPanelHeader';
 export function AboutDialog({
   open,
   onOpenChange,
+  onOpenDocumentation,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenDocumentation?: (entryId: string) => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -25,7 +27,16 @@ export function AboutDialog({
           closeLabel="Close about"
           onClose={() => onOpenChange(false)}
         />
-        <AboutContent />
+        <AboutContent
+          onOpenHelpEntry={
+            onOpenDocumentation
+              ? (entryId) => {
+                  onOpenChange(false);
+                  onOpenDocumentation(entryId);
+                }
+              : undefined
+          }
+        />
       </DialogContent>
     </Dialog>
   );

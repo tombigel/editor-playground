@@ -38,7 +38,7 @@ describe('panels/HelpMarkdownDocument', () => {
   });
 
   it('resolves docs asset paths under the help-doc public asset tree', () => {
-    expect(resolveHelpAssetUrl('docs/USAGE.md', './assets/help-browser-overview.svg')).toBe(
+    expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', './assets/help-browser-overview.svg')).toBe(
       '/assets/help-docs/assets/help-browser-overview.svg',
     );
   });

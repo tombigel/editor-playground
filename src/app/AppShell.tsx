@@ -1631,7 +1631,14 @@ export function AppShell({
 				open={shortcutsOpen}
 				onOpenChange={onShortcutsOpenChange}
 			/>
-			<AboutDialog open={aboutOpen} onOpenChange={onAboutOpenChange} />
+			<AboutDialog
+				open={aboutOpen}
+				onOpenChange={onAboutOpenChange}
+				onOpenDocumentation={(entryId) => {
+					setHelpEntryTarget(entryId);
+					onHelpOpenChange(true);
+				}}
+			/>
 		</div>
 	);
 }

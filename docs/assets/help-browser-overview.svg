@@ -8,7 +8,7 @@
   <rect x="44" y="108" width="214" height="348" rx="20" fill="#f3eadf" stroke="#d8cabc"/>
   <text x="64" y="144" font-family="ui-sans-serif, system-ui" font-size="20" font-weight="700" fill="#514237">Navigation</text>
   <text x="64" y="182" font-family="ui-sans-serif, system-ui" font-size="16" fill="#514237">About</text>
-  <text x="64" y="216" font-family="ui-sans-serif, system-ui" font-size="16" fill="#514237">Usage</text>
+  <text x="64" y="216" font-family="ui-sans-serif, system-ui" font-size="16" fill="#514237">Guides</text>
   <text x="64" y="250" font-family="ui-sans-serif, system-ui" font-size="16" fill="#514237">Reference</text>
   <text x="88" y="284" font-family="ui-sans-serif, system-ui" font-size="16" fill="#7a5b3e">API Reference</text>
   <text x="112" y="318" font-family="ui-sans-serif, system-ui" font-size="16" fill="#7a5b3e">Text</text>
@@ -25,7 +25,7 @@
   <text x="470" y="286" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#f92672">=</text>
   <text x="486" y="286" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#a6e22e"> buildDocs()</text>
   <text x="334" y="320" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#f8f8f2">render(</text>
-  <text x="392" y="320" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#e6db74">"usage"</text>
+  <text x="392" y="320" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#e6db74">"guides"</text>
   <text x="456" y="320" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#f8f8f2">, helpTree)</text>
   <rect x="704" y="108" width="152" height="348" rx="20" fill="#f3eadf" stroke="#d8cabc"/>
   <text x="724" y="144" font-family="ui-sans-serif, system-ui" font-size="20" font-weight="700" fill="#514237">TOC</text>

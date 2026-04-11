@@ -20,12 +20,14 @@ describe('panels/helpDocs', () => {
   it('builds the configured root IA in the expected order', () => {
     const roots = getHelpRootEntries().map((entry) => entry.title);
 
-    expect(roots).toEqual(['About', 'Usage', 'Reference', 'Developers', 'Keyboard shortcuts']);
+    expect(roots).toEqual(['About', 'Keyboard shortcuts', 'Guides', 'Reference', 'Developers']);
   });
 
-  it('nests reference and developers content under the expected parents', () => {
-    expect(getHelpChildEntries('doc:docs/REFERENCE.md').map((entry) => entry.title)).toContain('API Reference');
-    expect(getHelpChildEntries('doc:docs/DEVELOPERS.md').map((entry) => entry.title)).toEqual([
+  it('nests guides, reference, and developers content under the expected parents', () => {
+    expect(getHelpChildEntries('section:guides').map((entry) => entry.title)).toEqual(['Getting Started']);
+    expect(getHelpChildEntries('section:reference').map((entry) => entry.title)).toEqual(['Overview', 'API Reference']);
+    expect(getHelpChildEntries('section:developers').map((entry) => entry.title)).toEqual([
+      'Overview',
       'Architecture',
       'Workflows',
       'Planning',
@@ -42,7 +44,7 @@ describe('panels/helpDocs', () => {
     const expandedIds = getHelpInitialExpandedIds('doc:docs/API_TEXT.md');
 
     expect(breadcrumbs).toEqual(['Reference', 'API Reference', 'Text']);
-    expect(expandedIds.has('doc:docs/REFERENCE.md')).toBe(true);
+    expect(expandedIds.has('section:reference')).toBe(true);
     expect(expandedIds.has('doc:docs/API.md')).toBe(true);
   });
 
@@ -51,7 +53,7 @@ describe('panels/helpDocs', () => {
       'docs/API.md',
       'docs/API_TEXT.md',
       'docs/EDITOR_STYLE_GUIDE.md',
-      'docs/USAGE.md',
+      'docs/GETTING_STARTED.md',
     ];
 
     expect(resolveHelpLink('docs/API.md', '#api-reference', docPaths)).toEqual({
@@ -65,10 +67,16 @@ describe('panels/helpDocs', () => {
       anchor: null,
     });
 
-    expect(resolveHelpLink('docs/USAGE.md', './API.md#text-content', docPaths)).toEqual({
+    expect(resolveHelpLink('docs/GETTING_STARTED.md', './API.md#text-content', docPaths)).toEqual({
       kind: 'document',
       path: 'docs/API_TEXT.md',
       anchor: 'text-content',
+    });
+
+    expect(resolveHelpLink('docs/API.md', './USAGE.md#placeholder', docPaths)).toEqual({
+      kind: 'document',
+      path: 'docs/GETTING_STARTED.md',
+      anchor: 'placeholder',
     });
 
     expect(resolveHelpLink('docs/API.md', '/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css', docPaths)).toEqual({
@@ -78,17 +86,19 @@ describe('panels/helpDocs', () => {
   });
 
   it('resolves docs assets relative to markdown paths', () => {
-    expect(resolveHelpAssetUrl('docs/USAGE.md', './assets/help-browser-overview.svg')).toBe(
+    expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', './assets/help-browser-overview.svg')).toBe(
       '/assets/help-docs/assets/help-browser-overview.svg',
     );
-    expect(resolveHelpAssetUrl('docs/USAGE.md', 'https://example.com/demo.png')).toBe('https://example.com/demo.png');
+    expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', 'https://example.com/demo.png')).toBe(
+      'https://example.com/demo.png',
+    );
   });
 
   it('extracts heading toc items while ignoring fenced code headings', () => {
     const headings = extractMarkdownHeadings([
-      '# Usage',
+      '# Getting Started',
       '',
-      '## Getting Started',
+      '## First Session',
       '',
       '```markdown',
       '## Fake heading',
@@ -98,8 +108,8 @@ describe('panels/helpDocs', () => {
     ].join('\n'));
 
     expect(headings).toEqual([
-      { depth: 1, text: 'Usage', anchor: 'usage' },
-      { depth: 2, text: 'Getting Started', anchor: 'getting-started' },
+      { depth: 1, text: 'Getting Started', anchor: 'getting-started' },
+      { depth: 2, text: 'First Session', anchor: 'first-session' },
       { depth: 3, text: 'Preview And Export', anchor: 'preview-and-export' },
     ]);
   });
@@ -110,13 +120,13 @@ describe('panels/helpDocs', () => {
   });
 
   it('builds tree rows with nested entries expanded under their roots', () => {
-    const rows = buildHelpTreeRows('doc:docs/API_TEXT.md', new Set(['doc:docs/REFERENCE.md', 'doc:docs/API.md']));
+    const rows = buildHelpTreeRows('doc:docs/API_TEXT.md', new Set(['doc:docs/API.md']), 'section:reference');
     const rowTitles = rows.map((row) => row.entry.title);
 
-    expect(rowTitles).toContain('Reference');
+    expect(rowTitles).toContain('Overview');
     expect(rowTitles).toContain('API Reference');
     expect(rowTitles).toContain('Text');
-    expect(rows.find((row) => row.entry.id === 'doc:docs/API_TEXT.md')?.depth).toBe(2);
+    expect(rows.find((row) => row.entry.id === 'doc:docs/API_TEXT.md')?.depth).toBe(1);
   });
 
   it('keeps the roadmap summary table in markdown so help docs do not need raw html rendering', () => {
@@ -128,9 +138,9 @@ describe('panels/helpDocs', () => {
   });
 
   it('finds registered markdown entries by id', () => {
-    const usage = getHelpEntryById('doc:docs/USAGE.md');
+    const gettingStarted = getHelpEntryById('doc:docs/GETTING_STARTED.md');
 
-    expect(usage?.kind).toBe('markdown');
-    expect(usage?.title).toBe('Usage');
+    expect(gettingStarted?.kind).toBe('markdown');
+    expect(gettingStarted?.title).toBe('Getting Started');
   });
 });

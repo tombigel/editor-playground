@@ -1,10 +1,7 @@
 import {
-  BookMarked,
-  BookOpen,
+  ChevronDown,
+  ChevronRight,
   CircleQuestionMark,
-  FileText,
-  FolderTree,
-  Keyboard,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -12,8 +9,7 @@ import { lazy, Suspense, type Dispatch, type SetStateAction, useEffect, useMemo,
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ListCard } from '@/components/ui/list-card';
-import { NoticeSurface } from '@/components/ui/settings-panel';
-import { TreeRowItem, TreeRowLabelContent } from '@/components/ui/tree-row';
+import { NoticeSurface, SettingsNavItem } from '@/components/ui/settings-panel';
 import { AboutContent } from './AboutContent';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import {
@@ -80,16 +76,12 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
   const lastScrollContextKeyRef = useRef<string | null>(null);
   const [contentReadyVersion, setContentReadyVersion] = useState(0);
   const [tableOfContents, setTableOfContents] = useState<HelpHeading[]>([]);
-  const [state, setState] = useState<HelpDialogState>(() => createHelpDialogState(initialEntryId ?? 'shortcuts'));
+  const [state, setState] = useState<HelpDialogState>(() => createHelpDialogState(initialEntryId ?? 'about'));
   const activeEntry = getHelpEntryById(state.activeEntryId) ?? rootEntries[0];
   const activeEntryKind = activeEntry.kind;
   const NavToggleIcon = state.navCollapsed ? PanelLeftOpen : PanelLeftClose;
   const breadcrumbs = activeEntry ? getHelpBreadcrumbs(activeEntry.id) : [];
   const expandedIdSet = useMemo(() => new Set(state.expandedIds), [state.expandedIds]);
-  const treeRows = useMemo(
-    () => buildHelpTreeRows(activeEntry?.id ?? 'shortcuts', expandedIdSet),
-    [activeEntry?.id, expandedIdSet],
-  );
 
   useEffect(() => {
     if (open) {
@@ -200,39 +192,44 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                     <NavToggleIcon className="h-4 w-4" />
                   </Button>
                 </div>
-                <nav className="px-2 pb-2">
-                  {treeRows.map((row) => (
-                    <TreeRowItem
-                      key={row.entry.id}
-                      data-help-entry={row.entry.id}
-                      depth={row.depth}
-                      hasChildren={row.hasChildren}
-                      isExpanded={row.isExpanded}
-                      variant="menu"
-                      isSelected={row.isSelected}
-                      icon={renderEntryIcon(row.entry)}
-                      label={
-                        <TreeRowLabelContent
-                          title={row.entry.title}
-                          subtitle={row.entry.subtitle}
-                          wrapTitle
-                          wrapSubtitle
-                          badges={
-                            row.entry.navVisibility === 'secondary' ? (
-                              <span className="help-nav-badge">Secondary</span>
-                            ) : undefined
-                          }
+                <nav className="px-3 pb-4 pt-2">
+                  <div className="space-y-2.5">
+                    {rootEntries.map((entry) =>
+                      entry.kind === 'section' ? (
+                        <HelpNavSection
+                          key={entry.id}
+                          entry={entry}
+                          activeEntryId={activeEntry?.id ?? 'shortcuts'}
+                          expandedIds={expandedIdSet}
+                          onToggle={(entryId, isExpanded) => handleToggle(entryId, isExpanded, setState)}
+                          onSelect={(entryId) => {
+                            setTableOfContents([]);
+                            setContentReadyVersion(0);
+                            handleEntrySelect(entryId, setState);
+                          }}
                         />
-                      }
-                      onToggleAriaLabel={`${row.isExpanded ? 'Collapse' : 'Expand'} ${row.entry.title}`}
-                      onToggle={() => handleToggle(row.entry.id, row.isExpanded, setState)}
-                      onClick={() => {
-                        setTableOfContents([]);
-                        setContentReadyVersion(0);
-                        handleEntrySelect(row.entry.id, setState);
-                      }}
-                    />
-                  ))}
+                      ) : (
+                        <div key={entry.id} data-help-entry={entry.id}>
+                          <SettingsNavItem
+                            type="button"
+                            compact
+                            variant="accent-hover"
+                            active={entry.id === activeEntry?.id}
+                            title={entry.title}
+                            description={formatHelpEntryDescription(entry)}
+                            titleClassName="text-[13px] font-medium"
+                            descriptionClassName="text-[11px] leading-4"
+                            aria-current={entry.id === activeEntry?.id ? 'true' : undefined}
+                            onClick={() => {
+                              setTableOfContents([]);
+                              setContentReadyVersion(0);
+                              handleEntrySelect(entry.id, setState);
+                            }}
+                          />
+                        </div>
+                      ),
+                    )}
+                  </div>
                 </nav>
               </>
             )}
@@ -244,19 +241,23 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                 {breadcrumbs.map((entry, index) => (
                   <span key={entry.id} className="flex items-center gap-2">
                     {index > 0 ? <span className="editor-text-muted">/</span> : null}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={`help-breadcrumb-button h-auto px-1.5 py-1 text-left whitespace-normal ${entry.id === activeEntry.id ? 'editor-text-strong font-medium' : 'editor-text-muted'}`}
-                      onClick={() => {
-                        setTableOfContents([]);
-                        setContentReadyVersion(0);
-                        handleEntrySelect(entry.id, setState);
-                      }}
-                    >
-                      {entry.title}
-                    </Button>
+                    {entry.parentId == null && entry.kind === 'section' ? (
+                      <span className="editor-text-muted px-1.5 py-1">{entry.title}</span>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={`help-breadcrumb-button h-auto px-1.5 py-1 text-left whitespace-normal ${entry.id === activeEntry.id ? 'editor-text-strong font-medium' : 'editor-text-muted'}`}
+                        onClick={() => {
+                          setTableOfContents([]);
+                          setContentReadyVersion(0);
+                          handleEntrySelect(entry.id, setState);
+                        }}
+                      >
+                        {entry.title}
+                      </Button>
+                    )}
                   </span>
                 ))}
               </div>
@@ -267,7 +268,13 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
                 {activeEntry.kind === 'shortcuts' ? (
                   <ShortcutHelpContent />
                 ) : activeEntry.kind === 'about' ? (
-                  <AboutContent />
+                  <AboutContent
+                    onOpenHelpEntry={(entryId) => {
+                      setTableOfContents([]);
+                      setContentReadyVersion(0);
+                      handleEntrySelect(entryId, setState);
+                    }}
+                  />
                 ) : activeEntry.kind === 'section' ? (
                   <HelpSectionLanding
                     entry={activeEntry}
@@ -334,7 +341,7 @@ export function HelpDialog({ open, onOpenChange, initialEntryId }: Props) {
 }
 
 function createHelpDialogState(initialEntryId: string): HelpDialogState {
-  const resolvedEntryId = getHelpEntryById(initialEntryId)?.id ?? 'shortcuts';
+  const resolvedEntryId = getHelpEntryById(initialEntryId)?.id ?? 'about';
   return {
     activeEntryId: resolvedEntryId,
     pendingAnchor: null,
@@ -411,25 +418,6 @@ function handleToggle(
       expandedIds: [...nextExpandedIds],
     };
   });
-}
-
-function renderEntryIcon(entry: HelpEntry) {
-  if (entry.kind === 'about') {
-    return <CircleQuestionMark className="h-4 w-4" />;
-  }
-  if (entry.kind === 'shortcuts') {
-    return <Keyboard className="h-4 w-4" />;
-  }
-  if (entry.kind === 'section') {
-    return <FolderTree className="h-4 w-4" />;
-  }
-  if (entry.id === 'doc:docs/USAGE.md') {
-    return <BookOpen className="h-4 w-4" />;
-  }
-  if (entry.id === 'doc:docs/REFERENCE.md' || entry.id === 'doc:docs/DEVELOPERS.md') {
-    return <BookMarked className="h-4 w-4" />;
-  }
-  return <FileText className="h-4 w-4" />;
 }
 
 function collectMarkdownEntries(entryId: string): MarkdownHelpEntry[] {
@@ -514,6 +502,90 @@ function HelpSectionLanding({ entry, onSelect }: { entry: Extract<HelpEntry, { k
       ) : null}
     </div>
   );
+}
+
+function HelpNavSection({
+  entry,
+  activeEntryId,
+  expandedIds,
+  onToggle,
+  onSelect,
+}: {
+  entry: Extract<HelpEntry, { kind: 'section' }>;
+  activeEntryId: string;
+  expandedIds: Set<string>;
+  onToggle: (entryId: string, isExpanded: boolean) => void;
+  onSelect: (entryId: string) => void;
+}) {
+  const rows = buildHelpTreeRows(activeEntryId, expandedIds, entry.id, 0);
+
+  return (
+    <div data-help-section-root={entry.id} className="space-y-1.5">
+      <div className="editor-text-muted px-2 text-[15px] font-bold tracking-normal">{entry.title}</div>
+      <div className="space-y-0.5">
+        {rows.map((row) => (
+          <HelpNavRow key={row.entry.id} row={row} onToggle={onToggle} onSelect={onSelect} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HelpNavRow({
+  row,
+  onToggle,
+  onSelect,
+}: {
+  row: ReturnType<typeof buildHelpTreeRows>[number];
+  onToggle: (entryId: string, isExpanded: boolean) => void;
+  onSelect: (entryId: string) => void;
+}) {
+  const DisclosureIcon = row.isExpanded ? ChevronDown : ChevronRight;
+
+  return (
+    <div
+      data-help-entry={row.entry.id}
+      className="flex items-start gap-1"
+      style={{ paddingLeft: `${row.depth * 14}px` }}
+    >
+      {row.hasChildren ? (
+        <Button
+          type="button"
+          variant="menu"
+          size="icon"
+          className="mt-0.5 h-7 w-7 rounded-sm p-0"
+          aria-label={`${row.isExpanded ? 'Collapse' : 'Expand'} ${row.entry.title}`}
+          onClick={() => onToggle(row.entry.id, row.isExpanded)}
+        >
+          <DisclosureIcon className="h-3.5 w-3.5" />
+        </Button>
+      ) : (
+        <span aria-hidden="true" className="mt-0.5 block h-7 w-7 shrink-0" />
+      )}
+
+      <SettingsNavItem
+        type="button"
+        compact
+        variant="accent-hover"
+        active={row.isSelected}
+        className="min-w-0 flex-1"
+        title={row.entry.title}
+        description={formatHelpEntryDescription(row.entry)}
+        titleClassName="text-[13px] font-medium"
+        descriptionClassName="text-[11px] leading-4"
+        aria-current={row.isSelected ? 'true' : undefined}
+        onClick={() => onSelect(row.entry.id)}
+      />
+    </div>
+  );
+}
+
+function formatHelpEntryDescription(entry: HelpEntry) {
+  const parts = [entry.subtitle];
+  if (entry.navVisibility === 'secondary') {
+    parts.push('Secondary');
+  }
+  return parts.filter(Boolean).join(' · ') || undefined;
 }
 
 function getSectionLandingDescription(entry: HelpEntry) {

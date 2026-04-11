@@ -47,7 +47,7 @@ import type { FocusedMode } from "@/editor/types";
 import { openDesignSystemShowcase } from "@/lib/designSystem";
 import type { ThemeMode } from "@/lib/theme";
 
-const DOCUMENTATION_ENTRY_ID = "doc:docs/USAGE.md";
+const DOCUMENTATION_ENTRY_ID = "about";
 
 function getPageDepth(pages: DocumentPage[], page: DocumentPage) {
 	let depth = 0;

@@ -90,6 +90,12 @@
     "assetUrl": "/assets/help-docs/EDITOR_STYLE_GUIDE.md"
   },
   {
+    "path": "docs/GETTING_STARTED.md",
+    "fileName": "GETTING_STARTED.md",
+    "fullTitle": "Getting Started",
+    "assetUrl": "/assets/help-docs/GETTING_STARTED.md"
+  },
+  {
     "path": "docs/HELP_BROWSER.md",
     "fileName": "HELP_BROWSER.md",
     "fullTitle": "How to add docs?",
@@ -178,11 +184,5 @@
     "fileName": "TEXT_COMPONENT_TASKLIST.md",
     "fullTitle": "Text Component Tasklist",
     "assetUrl": "/assets/help-docs/TEXT_COMPONENT_TASKLIST.md"
-  },
-  {
-    "path": "docs/USAGE.md",
-    "fileName": "USAGE.md",
-    "fullTitle": "Usage",
-    "assetUrl": "/assets/help-docs/USAGE.md"
   }
 ]

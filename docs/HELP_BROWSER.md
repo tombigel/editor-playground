@@ -42,7 +42,10 @@ Unregistered markdown files still appear automatically as secondary items under 
 - the filename is shown in the document status bar, not in the sidebar
 - the sidebar label comes from the first `#` heading in the file
 - if that heading contains a spaced dash separator such as `Title - Subtitle`, the left side becomes the button title and the right side becomes the subtitle
-- top-level entries are `About`, `Usage`, `Reference`, `Developers`, and `Keyboard shortcuts`
+- top-level navigation is `About`, `Keyboard shortcuts`, `Guides`, `Reference`, and `Developers`
+- `Guides`, `Reference`, and `Developers` render as static group headings in the left nav
+- the second-level entries under each group stay visible without selecting the group first
+- the documentation browser defaults to `About` when opened without an explicit target
 - section nodes can exist without moving markdown files into nested source folders
 - the sidebar can collapse into a slim rail so the document pane has more reading room, while keeping a single button visible to reopen navigation
 - the right rail shows an in-page table of contents for the active markdown page
@@ -52,7 +55,7 @@ Unregistered markdown files still appear automatically as secondary items under 
 
 - relative `.md` links navigate inside the Help browser
 - `#anchor` links scroll within the current document
-- moved-page and split-anchor aliases can be defined in the registry so old links continue to work
+- moved-page and split-anchor aliases can be defined in the registry so old links continue to work, including page-level moved links such as `docs/USAGE.md`
 - absolute filesystem links render as inert text
 - docs images resolve from relative paths under `docs/assets/`
 - prefer plain markdown and GFM tables for help docs; the Help browser does not rely on raw HTML rendering

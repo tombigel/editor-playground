@@ -14,20 +14,32 @@ Execution rules:
 
 - The help-browser root IA is:
   - `About`
-  - `Usage`
+  - `Keyboard shortcuts`
+  - `Guides`
   - `Reference`
   - `Developers`
-  - `Keyboard shortcuts`
 - `About` and `Keyboard shortcuts` remain top-level surfaces.
-- `Usage` is the user-facing docs root.
-- `Reference` contains stable reference docs, starting with `API Reference`.
-- `Developers` contains architecture, workflows, roadmap, briefs, tasklists, and other development-facing material.
+- The documentation browser defaults to `About` when opened without an explicit entry target.
+- `Guides`, `Reference`, and `Developers` render as top-level menu headings instead of clickable root pages.
+- `Guides` is the user-facing docs root and starts with a `Getting Started` placeholder guide.
+- `Reference` contains stable reference docs, starting with `Overview` and `API Reference`.
+- `Developers` contains `Overview`, architecture, workflows, roadmap, briefs, tasklists, and other development-facing material.
 - `How to add docs?` moves under `Developers / Workflows`.
 - Markdown source files stay flat in `docs/`.
 - Images and other documentation assets live under `docs/assets/`.
 - Hierarchy is virtual and registry-driven.
 - Use a typed registry module, not frontmatter, as the source of truth for hierarchy and nav behavior.
 - Aliases are required for moved pages and split anchors.
+
+## IA Refresh Addendum
+
+Follow-up refinement approved after the original rollout:
+
+- keep relative markdown links as the canonical internal cross-doc technique
+- replace the left-rail root tree with grouped headings closer to the design-system nav
+- remove `Usage` as a root doc and replace it with `Guides`
+- let `About` link to relevant help entries instead of showing raw markdown paths
+- preserve the existing `Reference` and `Developers` landing markdown as `Overview` child pages
 
 ## Non-Goals
 

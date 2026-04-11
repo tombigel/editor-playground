@@ -203,8 +203,10 @@ describe("app/AppShell", () => {
 
 		expect(markup).toContain('data-help-entry="shortcuts"');
 		expect(markup).toContain("Browse docs");
+		expect(markup).toContain("Sticky Playground");
 		expect(markup).toContain("Keyboard shortcuts");
-		expect(markup).toContain("Usage");
+		expect(markup).toContain("Guides");
+		expect(markup).toContain("Getting Started");
 		expect(markup).toContain("Reference");
 		expect(markup).toContain("Developers");
 		expect(markup).toContain("API Reference");
