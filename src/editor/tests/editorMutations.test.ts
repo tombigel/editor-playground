@@ -226,7 +226,7 @@ describe('editor/editorMutations', () => {
   // insertSectionTemplate
   // ---------------------------------------------------------------------------
   describe('insertSectionTemplate', () => {
-    it('inserts a blank section template before footer', () => {
+    it('inserts a blank section template before footer when nothing is selected', () => {
       const state = createInitialState();
       const rootBefore = getRoot(state.document);
       const lastChildBefore = rootBefore.children[rootBefore.children.length - 1];
@@ -236,6 +236,42 @@ describe('editor/editorMutations', () => {
 
       expect(rootAfter.children[rootAfter.children.length - 1]).toBe(lastChildBefore);
       expect(rootAfter.children.length).toBe(rootBefore.children.length + 1);
+    });
+
+    it('inserts after the selected section when a descendant is selected', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section');
+      if (!section || section.contentType !== 'container' || section.children.length === 0) {
+        throw new Error('Expected section with content');
+      }
+
+      const withSelection: EditorState = {
+        ...state,
+        selectedId: section.children[0],
+        selectedIds: [section.children[0]],
+      };
+      const rootBefore = getRoot(withSelection.document);
+
+      const next = insertSectionTemplate(withSelection, 'blank');
+      const rootAfter = getRoot(next.document);
+
+      expect(rootAfter.children.indexOf(next.selectedId!)).toBe(rootBefore.children.indexOf(section.id) + 1);
+    });
+
+    it('inserts before footer when the footer is selected', () => {
+      const state = createInitialState();
+      const footer = findNodeByRole(state, 'wrapper', 'footer');
+      if (!footer || footer.contentType !== 'container') {
+        throw new Error('Expected footer');
+      }
+
+      const withSelection: EditorState = { ...state, selectedId: footer.id, selectedIds: [footer.id] };
+      const rootBefore = getRoot(withSelection.document);
+
+      const next = insertSectionTemplate(withSelection, 'blank');
+      const rootAfter = getRoot(next.document);
+
+      expect(rootAfter.children.indexOf(next.selectedId!)).toBe(rootBefore.children.indexOf(footer.id));
     });
 
     it('inserts a post section template', () => {

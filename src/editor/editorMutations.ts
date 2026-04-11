@@ -1,6 +1,5 @@
 import {
   createContainerNode,
-  createSectionFromTemplate,
   syncIdCountersWithDocument,
   type SectionTemplateId,
 } from '../model/defaults';
@@ -23,7 +22,13 @@ import type {
 import { isContainerNode, isLeafNode } from '../model/types';
 import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../model/units';
 import { forceOpaqueColorValue } from '../model/colors';
-import { applyMarkdownToTextNodeDoc, moveNodeInTreeDoc, setTextNodeContentDoc, setNodeVisibilityDoc } from '../api/documentApi';
+import {
+  applyMarkdownToTextNodeDoc,
+  insertSectionTemplateDoc,
+  moveNodeInTreeDoc,
+  setTextNodeContentDoc,
+  setNodeVisibilityDoc,
+} from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
 import { cloneDocument, normalizeDocument, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
@@ -103,32 +108,25 @@ export function insertWrapper(state: EditorState, role: ContainerSubtype): Edito
 }
 
 export function insertSectionTemplate(state: EditorState, templateId: SectionTemplateId): EditorState {
-  const document = cloneDocument(state.document);
-  syncIdCountersWithDocument(document);
+  const document = insertSectionTemplateDoc(state.document, templateId, {
+    selectedId: state.selectedId,
+    pageId: state.activePageId,
+  });
+  if (document === state.document) {
+    return state;
+  }
+
   const root = document.nodes[document.rootId];
   if (!root || root.contentType !== 'site') {
     return state;
   }
 
-  const { wrapper, nodes } = createSectionFromTemplate(templateId, document.rootId);
-  Object.assign(document.nodes, nodes);
-  const footerIndex = root.children.findIndex((childId) => {
-    const child = document.nodes[childId];
-    return child && isContainerNode(child) && child.subtype === 'footer';
-  });
-  const insertAt = footerIndex >= 0 ? footerIndex : root.children.length;
-  root.children.splice(insertAt, 0, wrapper.id);
-
-  if (state.activePageId && document.pages) {
-    const pageIndex = document.pages.findIndex((p) => p.id === state.activePageId);
-    if (pageIndex >= 0) {
-      document.pages = document.pages.map((p, i) =>
-        i === pageIndex ? { ...p, sectionIds: [...p.sectionIds, wrapper.id] } : p,
-      );
-    }
+  const insertedId = root.children.find((childId) => !state.document.nodes[childId]);
+  if (!insertedId) {
+    return state;
   }
 
-  return applySelectionToDocument(state, normalizeDocumentFontState(document), [wrapper.id]);
+  return applySelectionToDocument(state, document, [insertedId]);
 }
 
 export function insertLeaf(state: EditorState, role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button'): EditorState {

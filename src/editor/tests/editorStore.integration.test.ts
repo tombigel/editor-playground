@@ -867,6 +867,34 @@ describe('editor/editorStore integration', () => {
     }
   });
 
+  it('inserts sections after the selected section ancestor and preserves page order', () => {
+    const initial = createInitialState();
+    const section = Object.values(initial.document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container' || section.children.length === 0) {
+      throw new Error('Expected section with content');
+    }
+
+    const selectedChildId = section.children[0];
+    const withSelection = {
+      ...initial,
+      selectedId: selectedChildId,
+      selectedIds: [selectedChildId],
+    };
+    const rootBefore = getRoot(withSelection.document);
+
+    const next = insertSectionTemplate(withSelection, 'blank');
+    const rootAfter = getRoot(next.document);
+    const homePage = next.document.pages?.[0];
+    if (!next.selectedId || !homePage) {
+      throw new Error('Expected inserted section and page');
+    }
+
+    expect(rootAfter.children.indexOf(next.selectedId)).toBe(rootBefore.children.indexOf(section.id) + 1);
+    expect(homePage.sectionIds).toEqual([section.id, next.selectedId]);
+  });
+
   it('reorders sections only among section siblings', () => {
     const state0 = createInitialState();
     const state1 = insertSectionTemplate(state0, 'blank');

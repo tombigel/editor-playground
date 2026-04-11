@@ -104,6 +104,10 @@ export type TopLevelWrapperPlacement = 'currentPage' | 'global';
 export type TopLevelWrapperVisibilityMode = TopLevelWrapperVisibilityModeModel;
 export type TopLevelWrapperVisibilityState = TopLevelWrapperVisibilityStateModel;
 export type TopLevelWrapperVisibility = TopLevelWrapperVisibilityModeModel;
+export type SectionTemplateInsertionOptions = {
+  selectedId?: NodeId | null;
+  pageId?: PageId | null;
+};
 
 export type {
   ComputedWrapperStickyState,
@@ -1660,25 +1664,114 @@ function normalizeRootStructuralRoles(document: DocumentModel) {
   }
 }
 
-export function insertSectionTemplateBeforeFooter(
+function findSelectedTopLevelWrapper(
+  document: DocumentModel,
+  selectedId: NodeId | null | undefined,
+): ContainerNode | null {
+  if (!selectedId) {
+    return null;
+  }
+
+  let current: DocumentNode | undefined = document.nodes[selectedId];
+  while (current) {
+    if (
+      isContainerNode(current) &&
+      current.parentId === document.rootId &&
+      isSiteSectionRole(current.subtype)
+    ) {
+      return current;
+    }
+    current = current.parentId ? document.nodes[current.parentId] : undefined;
+  }
+
+  return null;
+}
+
+function resolveInsertedSectionIndex(
+  document: DocumentModel,
+  rootChildIds: NodeId[],
+  referenceWrapper: ContainerNode | null,
+): number {
+  if (referenceWrapper) {
+    const referenceIndex = rootChildIds.indexOf(referenceWrapper.id);
+    if (referenceIndex >= 0) {
+      return referenceWrapper.subtype === 'footer' ? referenceIndex : referenceIndex + 1;
+    }
+  }
+
+  const footerIndex = rootChildIds.findIndex((id) => {
+    const node = document.nodes[id];
+    return node && isContainerNode(node) && node.subtype === 'footer';
+  });
+  return footerIndex >= 0 ? footerIndex : rootChildIds.length;
+}
+
+function insertSectionIntoPage(
+  pages: DocumentModel['pages'],
+  pageId: PageId | null | undefined,
+  sectionId: NodeId,
+  referenceWrapper: ContainerNode | null,
+) {
+  if (!pages || !pageId) {
+    return pages;
+  }
+
+  const pageIndex = pages.findIndex((page) => page.id === pageId);
+  if (pageIndex < 0) {
+    return pages;
+  }
+
+  return pages.map((page, index) => {
+    if (index !== pageIndex) {
+      return page;
+    }
+
+    const sectionIds = [...page.sectionIds];
+    let insertAt = sectionIds.length;
+
+    if (referenceWrapper?.subtype === 'header') {
+      insertAt = 0;
+    } else if (referenceWrapper?.subtype === 'section') {
+      const referenceIndex = sectionIds.indexOf(referenceWrapper.id);
+      if (referenceIndex >= 0) {
+        insertAt = referenceIndex + 1;
+      }
+    }
+
+    sectionIds.splice(insertAt, 0, sectionId);
+    return { ...page, sectionIds };
+  });
+}
+
+export function insertSectionTemplateDoc(
   document: DocumentModel,
   templateId: SectionTemplateId,
+  options: SectionTemplateInsertionOptions = {},
 ): DocumentModel {
   const next = cloneDocument(document);
+  syncIdCountersWithDocument(next);
   const root = next.nodes[next.rootId];
   if (!root || root.contentType !== 'site') {
     return document;
   }
 
+  const referenceWrapper = findSelectedTopLevelWrapper(next, options.selectedId);
   const build = createSectionFromTemplate(templateId, root.id);
-  const footerIndex = root.children.findIndex((id) => {
-    const node = next.nodes[id];
-    return node && isContainerNode(node) && node.subtype === 'footer';
-  });
-
-  const insertionIndex = footerIndex >= 0 ? footerIndex : root.children.length;
+  const insertionIndex = resolveInsertedSectionIndex(next, root.children, referenceWrapper);
   root.children.splice(insertionIndex, 0, build.wrapper.id);
   Object.assign(next.nodes, build.nodes);
+  next.pages = insertSectionIntoPage(next.pages, options.pageId, build.wrapper.id, referenceWrapper);
 
   return normalizeDocumentFontState(next);
+}
+
+/**
+ * @deprecated Use insertSectionTemplateDoc instead.
+ * Legacy alias kept for compatibility with callers that insert before footer by default.
+ */
+export function insertSectionTemplateBeforeFooter(
+  document: DocumentModel,
+  templateId: SectionTemplateId,
+): DocumentModel {
+  return insertSectionTemplateDoc(document, templateId);
 }

@@ -1595,7 +1595,10 @@ Adding a section opens a section-template picker instead of inserting immediatel
 - It closes on outside click and `Esc`.
 - It shows template cards in a two-column grid.
 - Clicking an active template inserts one top-level section and selects it.
-- Inserted sections are placed before the footer when a footer exists.
+- With no relevant selection, inserted sections are placed before the footer when a footer exists.
+- If the current selection is a top-level structural wrapper (`header`, `section`, `footer`), or any descendant inside one, the new section is inserted relative to that wrapper.
+- The new section is inserted after the selected `header` or `section`.
+- If the selected wrapper is the `footer`, the new section is inserted immediately before the footer.
 
 ### Template catalog
 

@@ -15,6 +15,7 @@ import {
   applyDocumentCommands,
   convertTextNodeDoc,
   createInitialDocument,
+  insertSectionTemplateDoc,
   insertSectionTemplateBeforeFooter,
   moveNodeInTreeDoc,
   parseDocumentJson,
@@ -40,6 +41,14 @@ function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>)
     throw new Error('Expected editable node');
   }
   return id;
+}
+
+function getRoot(document: ReturnType<typeof createInitialDocument>) {
+  const root = document.nodes[document.rootId];
+  if (!root || root.contentType !== 'site') {
+    throw new Error('Expected site root');
+  }
+  return root;
 }
 
 describe('api/documentApi', () => {
@@ -1034,22 +1043,92 @@ describe('api/documentApi', () => {
     expect(() => parseDocumentJson(JSON.stringify(bad))).toThrow('Invalid document');
   });
 
-  it('inserts section templates before footer', () => {
+  it('inserts section templates before footer by default', () => {
     const document = createInitialDocument();
-    const root = document.nodes[document.rootId];
-    if (!root || root.contentType !== 'site') {
-      throw new Error('Expected site root');
-    }
+    const root = getRoot(document);
     const footerId = root.children[root.children.length - 1];
 
-    const next = insertSectionTemplateBeforeFooter(document, 'blank');
-    const nextRoot = next.nodes[next.rootId];
-    if (!nextRoot || nextRoot.contentType !== 'site') {
-      throw new Error('Expected site root');
+    const next = insertSectionTemplateDoc(document, 'blank', {
+      pageId: document.pages?.[0]?.id,
+    });
+    const nextRoot = getRoot(next);
+    const insertedId = nextRoot.children.find((childId) => !document.nodes[childId]);
+    const homePage = next.pages?.[0];
+    if (!insertedId) {
+      throw new Error('Expected inserted section');
+    }
+    if (!homePage) {
+      throw new Error('Expected home page');
     }
 
     expect(nextRoot.children[nextRoot.children.length - 1]).toBe(footerId);
     expect(nextRoot.children.length).toBe(root.children.length + 1);
+    expect(homePage.sectionIds[homePage.sectionIds.length - 1]).toBe(insertedId);
+  });
+
+  it('inserts section templates after the selected section ancestor', () => {
+    const document = createInitialDocument();
+    const root = getRoot(document);
+    const section = root.children
+      .map((childId) => document.nodes[childId])
+      .find((node) => node && node.contentType === 'container' && node.subtype === 'section');
+    if (!section || section.contentType !== 'container' || section.children.length === 0) {
+      throw new Error('Expected section wrapper with content');
+    }
+
+    const next = insertSectionTemplateDoc(document, 'blank', {
+      selectedId: section.children[0],
+      pageId: document.pages?.[0]?.id,
+    });
+    const nextRoot = getRoot(next);
+    const insertedId = nextRoot.children.find((childId) => !document.nodes[childId]);
+    if (!insertedId) {
+      throw new Error('Expected inserted section');
+    }
+
+    expect(nextRoot.children.indexOf(insertedId)).toBe(root.children.indexOf(section.id) + 1);
+    expect(next.pages?.[0]?.sectionIds).toEqual([section.id, insertedId]);
+  });
+
+  it('inserts section templates before footer when the footer or one of its descendants is selected', () => {
+    const document = createInitialDocument();
+    const root = getRoot(document);
+    const footer = root.children
+      .map((childId) => document.nodes[childId])
+      .find((node) => node && node.contentType === 'container' && node.subtype === 'footer');
+    const section = root.children
+      .map((childId) => document.nodes[childId])
+      .find((node) => node && node.contentType === 'container' && node.subtype === 'section');
+    if (!footer || footer.contentType !== 'container' || footer.children.length === 0) {
+      throw new Error('Expected footer wrapper with content');
+    }
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const next = insertSectionTemplateDoc(document, 'blank', {
+      selectedId: footer.children[0],
+      pageId: document.pages?.[0]?.id,
+    });
+    const nextRoot = getRoot(next);
+    const insertedId = nextRoot.children.find((childId) => !document.nodes[childId]);
+    if (!insertedId) {
+      throw new Error('Expected inserted section');
+    }
+
+    expect(nextRoot.children.indexOf(insertedId)).toBe(root.children.indexOf(footer.id));
+    expect(next.pages?.[0]?.sectionIds).toEqual([section.id, insertedId]);
+  });
+
+  it('keeps the legacy before-footer helper behavior', () => {
+    const document = createInitialDocument();
+    const root = getRoot(document);
+    const footerId = root.children[root.children.length - 1];
+
+    const next = insertSectionTemplateBeforeFooter(document, 'blank');
+    const nextRoot = getRoot(next);
+
+    expect(nextRoot.children[nextRoot.children.length - 1]).toBe(footerId);
   });
 
   it('seeds the default post link with product documentation copy', () => {

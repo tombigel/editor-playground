@@ -529,7 +529,7 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | --- | --- | --- |
 | `insertWrapper` | `(state, role: WrapperRole) -> EditorState` | Insert a container with role |
 | `insertLeaf` | `(state, role: LeafRole) -> EditorState` | Insert a leaf with role |
-| `insertSectionTemplate` | `(state, templateId) -> EditorState` | Insert a section template |
+| `insertSectionTemplate` | `(state, templateId) -> EditorState` | Insert a section template relative to the selected top-level wrapper when present |
 | `deleteNode` | `(state, nodeId) -> EditorState` | Delete a node |
 | `deleteNodes` | `(state, nodeIds) -> EditorState` | Delete multiple nodes |
 
