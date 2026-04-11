@@ -25,7 +25,7 @@ describe('panels/helpDocs', () => {
 
   it('nests guides, reference, and developers content under the expected parents', () => {
     expect(getHelpChildEntries('section:guides').map((entry) => entry.title)).toEqual(['Getting Started']);
-    expect(getHelpChildEntries('section:reference').map((entry) => entry.title)).toEqual(['Overview', 'API Reference']);
+    expect(getHelpChildEntries('section:reference').map((entry) => entry.title)).toEqual(['Overview', 'API Reference', 'Changelog']);
     expect(getHelpChildEntries('section:developers').map((entry) => entry.title)).toEqual([
       'Overview',
       'Architecture',

@@ -15,6 +15,9 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add commitlint and automatic changelog categorization
 - add commit message guidelines and enforce Conventional Commits format
 
+### Changed
+- update expected titles for section:reference to include 'Changelog'
+
 ---
 
 ## [0.4.1] — 2026-04-11
