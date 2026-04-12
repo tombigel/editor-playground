@@ -15,6 +15,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - simplify range parameter handling in PresetParamControl
 - allow all text node subtypes to merge into rich text
 - mark owner section for selected nodes
+- preserve drag preview position on release
 
 ---
 

@@ -674,6 +674,47 @@ describe('api/dragDropApi', () => {
     expect(session.motion.speedPxPerSecond).toBeGreaterThan(1200);
   });
 
+  it('preserves the visible unsnapped position when the pointer is released without moving', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const draggingSession = updateDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 100,
+        startClientY: 100,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          horizontalGuides: [{ value: 200, source: 'page', anchor: 'edge' }],
+        }),
+      }),
+      makeDragInput({
+        clientX: 206,
+        clientY: 120,
+        timestampMs: 8,
+      }),
+    );
+
+    expect(draggingSession.currentClientX).toBe(206);
+    expect(draggingSession.guideX).toBeNull();
+
+    const commit = finishDragSession(draggingSession, makeDragInput({
+      clientX: 206,
+      clientY: 120,
+      timestampMs: 160,
+    }));
+
+    expect(commit).toEqual({
+      type: 'move',
+      id: leafAId,
+      x: '66px',
+      y: '0px',
+    });
+  });
+
   it('suppresses perpendicular guide snap when a dominant axis is clear', () => {
     const { document, leafAId, containerAId } = createDragDocument();
     const session = updateDragSession(

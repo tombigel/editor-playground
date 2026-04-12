@@ -415,8 +415,7 @@ function resolveDragMotion(
 ) {
   if (
     previousSample.clientX === clientX &&
-    previousSample.clientY === clientY &&
-    previousSample.timestampMs === timestampMs
+    previousSample.clientY === clientY
   ) {
     return {
       sample: previousSample,

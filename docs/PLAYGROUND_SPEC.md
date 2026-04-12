@@ -306,6 +306,7 @@ Drag preview and drop targeting:
 
 - The dragged source node fades and suppresses local box/filter shadows so the drag silhouette stays clean.
 - The drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it.
+- Pointer-up commits preserve the last visible drag preview position; releasing without moving the pointer does not introduce a new snap target.
 - Hovering a valid drop target (`section` or `container`) highlights that wrapper with an accent-colored outline and tinted background.
 - Highlighted drop targets with non-zero wrapper padding also render the padding boundary line so the drop inset is visible.
 - While dragging a child inside its current parent, that source parent and its ancestors are not highlighted as drop targets.

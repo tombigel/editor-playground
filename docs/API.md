@@ -438,7 +438,7 @@ Start a new drag session from a pointer-down event.
 updateDragSession(session: DragSession, input: DragUpdateInput): DragSession
 ```
 
-Update the session with new pointer position; recalculates guides, snaps, and drop targets.
+Update the session with new pointer position; recalculates guides, snaps, and drop targets. Stationary updates preserve the prior snap state so a pointer-up without movement commits the same visible preview position.
 
 ```typescript
 finishDragSession(session: DragSession, input: DragUpdateInput): DragCommitIntent
