@@ -13,6 +13,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Fixed
 - simplify range parameter handling in PresetParamControl
+- allow all text node subtypes to merge into rich text
 
 ---
 

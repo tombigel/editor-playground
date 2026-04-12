@@ -107,7 +107,7 @@ export function MultiSelectInspector({
 }: Props) {
   const textNodes = selectedNodes.filter(isTypographyNode);
   const standaloneTextNodes = selectedNodes.filter(
-    (node): node is TextNode => isTextNode(node) && node.link === undefined,
+    (node): node is TextNode => isTextNode(node),
   );
   const textLeafNodes = selectedNodes.filter(
     (node): node is TextNode => isTextNode(node) && !node.link,
