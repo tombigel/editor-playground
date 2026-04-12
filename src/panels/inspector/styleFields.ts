@@ -1,6 +1,6 @@
 import type { EditorTextField } from '../../api/documentApi';
 import type { WrapperStyleField } from '../../api/documentApi';
-import type { ShadowStyle } from '../../model/types';
+import type { ShadowStyle } from '../../api/documentViewApi';
 import { offsetsFromDistanceAndAngle } from '../InspectorControls';
 
 const BORDER_WIDTH_RESET_FIELDS: EditorTextField[] = ['borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'];

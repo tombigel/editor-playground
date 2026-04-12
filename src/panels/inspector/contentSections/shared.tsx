@@ -47,7 +47,7 @@ import type {
 } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import type { FocusedMode } from '../../../api/editorApi';
-import { getSectionAnchorOptions, isValidSectionAnchorTarget } from '../../../model/links';
+import { getSectionAnchorOptions, isValidSectionAnchorTarget } from '../../../api/documentViewApi';
 import {
   applyLeafShadowPatch,
 } from '../styleFields';

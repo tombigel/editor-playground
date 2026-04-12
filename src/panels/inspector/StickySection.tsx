@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { isContainerNode } from '../../model/types';
+import { isContainerNode } from '../../api/documentViewApi';
 import type { FocusedMode } from '../../api/editorApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';

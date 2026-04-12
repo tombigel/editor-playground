@@ -17,8 +17,8 @@ import type {
 	EditorState,
 	StickyGeometrySnapshot,
 } from "../api/editorApi";
-import type { DocumentFontFamily, DocumentModel } from "../model/types";
-import { isTextNode } from "../model/types";
+import type { DocumentFontFamily, DocumentModel } from "../api/documentViewApi";
+import { isTextNode } from "../api/documentViewApi";
 import { buildDocumentGoogleFontsStylesheetHref } from "../fonts";
 import {
 	addDocumentFontFamily,
@@ -97,7 +97,7 @@ import type { TextTypeRole } from "./AppChrome";
 import type { HistoryAction, HistoryState } from "./editorState";
 import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { HelpEntry } from "../panels/helpDocs";
-import { validateLinks } from "../model/validation";
+import { validateLinks } from "../api/documentViewApi";
 
 type Props = {
 	state: EditorState;

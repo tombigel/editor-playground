@@ -9,9 +9,9 @@ import type {
   TextDocumentContent,
   TextSubtype,
   WrapperStyleField,
-} from '../../model/types';
+} from '../../api/documentViewApi';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
-import type { PageId, DocumentPage, SiteSettings } from '../../model/types/site';
+import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewApi';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';

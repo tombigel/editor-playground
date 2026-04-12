@@ -1,5 +1,5 @@
 import { getNode, type EditorState, type NodeId } from '../api/editorApi';
-import { isContainerNode, isLeafNode, isSiteNode } from '../model/types';
+import { isContainerNode, isLeafNode, isSiteNode } from '../api/documentViewApi';
 
 export function selectedNodeHasTopEdge(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import { useFontPreviewStylesheet } from '../inspector/useFontPreviewStylesheet';
 import { Plus, RotateCcw, Star, Trash2 } from 'lucide-react';
-import type { DocumentFontFamily, DocumentModel } from '../../model/types';
+import type { DocumentFontFamily, DocumentModel } from '../../api/documentViewApi';
 import {
   buildFontFamilyStack,
   buildFontPreviewStylesheetHref,

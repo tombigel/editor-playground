@@ -2,7 +2,7 @@ import { AnimationSection } from './AnimationSection';
 import { LinkAppearanceSection, LinkContentSection, LinkDesignSection, LinkTextStyleSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
-import { isTextNode } from '../../model/types';
+import { isTextNode } from '../../api/documentViewApi';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, LinkInspectorNode } from './types';
 
 const linkContentSection: InspectorSectionDefinition = {

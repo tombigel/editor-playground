@@ -16,9 +16,8 @@ import {
 	TreeRowLabelContent,
 	VisibilityToggle,
 } from "@/components/ui/tree-row";
-import { getPageRole } from "../model/pageRoutes";
-import type { DocumentModel } from "../model/types";
-import type { PageId } from "../model/types/site";
+import { getPageRole } from "../api/documentViewApi";
+import type { DocumentModel, PageId } from "../api/documentViewApi";
 import { TreeDragGhost } from "./TreeDragGhost";
 import {
 	buildPageTreeRows,

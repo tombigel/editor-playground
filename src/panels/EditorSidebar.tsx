@@ -11,8 +11,7 @@ export {
 	INSPECTOR_TRANSITION_MS,
 } from "./inspectorLayout";
 import { INSPECTOR_EXPANDED_WIDTH_PX } from "./inspectorLayout";
-import type { PageId } from "../model/types/site";
-import type { DocumentPage } from "../model/types/site";
+import type { PageId, DocumentPage } from "../api/documentViewApi";
 
 type Props = InspectorPanelProps & {
 	inspectorCollapsed: boolean;

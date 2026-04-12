@@ -24,11 +24,9 @@ import {
   DEFAULT_SHADOW_SPREAD_PX,
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
-} from '../../model/styleDefaults';
-import { getTopLevelWrapperVisibilityState, isEligibleTopLevelWrapper } from '../../model/topLevelWrapperVisibility';
-import type { PageId } from '../../model/types/site';
-import { isContainerNode } from '../../model/types';
-import { getChildren } from '../../model/selectors';
+} from '../../api/documentViewApi';
+import { getTopLevelWrapperVisibilityState, isEligibleTopLevelWrapper, isContainerNode, getChildren } from '../../api/documentViewApi';
+import type { PageId } from '../../api/documentViewApi';
 import type { WidthKeywordFamily } from './stageConversions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

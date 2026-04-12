@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi';
-import type { PageId } from '../model/types/site';
+import type { PageId } from '../api/documentViewApi';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
 import { getShortcutFocusContext } from './useEditorEnvironment';

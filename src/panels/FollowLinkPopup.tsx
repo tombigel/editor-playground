@@ -1,8 +1,7 @@
 // Rendered inside the stage frame, positioned below the selected node's edit box.
 // Uses the same frame-relative coordinate system as SingleSelectionOverlay.
 
-import type { DocumentModel, TextNode, NodeId } from '../model/types';
-import type { PageId } from '../model/types/site';
+import type { DocumentModel, TextNode, NodeId, PageId } from '../api/documentViewApi';
 
 const POPUP_HEIGHT = 40;
 const POPUP_OFFSET = 8;

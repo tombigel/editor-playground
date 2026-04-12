@@ -11,7 +11,7 @@ import {
   DEFAULT_SHADOW_SPREAD_PX,
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
-} from '../../../model/styleDefaults';
+} from '../../../api/documentViewApi';
 import type { LinkInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {
@@ -25,8 +25,8 @@ import {
   TypographyTextStyleFields,
   TypographyDesignFields,
 } from './shared';
-import { createTextDocumentFromText, getSingleTextBlockContent, getTextContent } from '../../../model/richContent';
-import type { TextDocumentContent } from '../../../model/types';
+import { createTextDocumentFromText, getSingleTextBlockContent, getTextContent } from '../../../api/documentViewApi';
+import type { TextDocumentContent } from '../../../api/documentViewApi';
 
 export function LinkContentSection({
   document,

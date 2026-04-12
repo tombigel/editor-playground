@@ -1,4 +1,4 @@
-import type { DocumentFontFamily } from '../../model/types';
+import type { DocumentFontFamily } from '../../api/documentViewApi';
 
 // ---------------------------------------------------------------------------
 // Types

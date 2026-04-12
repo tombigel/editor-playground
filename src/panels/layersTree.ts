@@ -1,6 +1,6 @@
 import { moveNodeInTreeDoc } from '../api/documentApi';
-import type { DocumentModel, DocumentNode, NodeId } from '../model/types';
-import { isSiteNode, isContainerNode, isLeafNode } from '../model/types';
+import type { DocumentModel, DocumentNode, NodeId } from '../api/documentViewApi';
+import { isSiteNode, isContainerNode, isLeafNode } from '../api/documentViewApi';
 import { formatNodeLabel } from '../render/nodePresentation';
 import { resolveStickyIsElevated } from '../render/sticky';
 

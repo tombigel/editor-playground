@@ -68,9 +68,9 @@ import {
   DEFAULT_SHADOW_OFFSET_X_PX,
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_SHADOW_SPREAD_PX,
-} from '../model/styleDefaults';
-import type { ShadowStyle, TextNode } from '../model/types';
-import { isTextNode, isContainerNode, isLeafNode, isSiteNode, isMediaNode } from '../model/types';
+} from '../api/documentViewApi';
+import type { ShadowStyle, TextNode } from '../api/documentViewApi';
+import { isTextNode, isContainerNode, isLeafNode, isSiteNode, isMediaNode } from '../api/documentViewApi';
 import { offsetsFromDistanceAndAngle } from './InspectorControls';
 import { readRecentFontFamilies, writeRecentFontFamilies } from './inspector/fontPickerHelpers';
 import { useFontPreviewStylesheet } from './inspector/useFontPreviewStylesheet';

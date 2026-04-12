@@ -4,8 +4,8 @@ import {
   convertRenderedPxToGeometryUnit,
   convertRenderedPxToSpacingUnit,
   formatDisplayValue,
-} from '../../model/conversion';
-import type { BorderStyle, ShadowStyle, ViewportMeasurement } from '../../model/types';
+} from '../../api/documentViewApi';
+import type { BorderStyle, ShadowStyle, ViewportMeasurement } from '../../api/documentViewApi';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../api/documentApi';
 
 // ---------------------------------------------------------------------------

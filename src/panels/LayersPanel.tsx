@@ -17,7 +17,7 @@ import {
 	type PointerEvent as ReactPointerEvent,
 	type Ref,
 } from "react";
-import type { DocumentModel, NodeId } from "../model/types";
+import type { DocumentModel, NodeId } from "../api/documentViewApi";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Input } from "@/components/ui/input";
 import { PopoverTooltip } from "@/components/ui/popover";

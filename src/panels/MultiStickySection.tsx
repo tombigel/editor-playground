@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { DocumentNode, FocusedMode } from '../api/editorApi';
-import { isContainerNode } from '../model/types';
+import { isContainerNode } from '../api/documentViewApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

@@ -7,7 +7,7 @@ import {
   PanelBottom,
   PanelTop,
 } from 'lucide-react';
-import type { ContainerNode } from '../../model/types';
+import type { ContainerNode } from '../../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { LabeledControlRow } from '@/components/ui/settings-panel';

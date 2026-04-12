@@ -8,7 +8,7 @@ import type {
   AnimationPreviewState,
   SnapSettings,
 } from '../editor/types';
-import type { DocumentFontFamily } from '../model/types';
+import type { DocumentFontFamily } from '../api/documentViewApi';
 import { EditorPanelHeader } from './EditorPanelHeader';
 import {
   DEFAULT_SETTINGS_SECTION_ID,

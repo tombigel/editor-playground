@@ -2,7 +2,7 @@ import { AnimationSection } from './AnimationSection';
 import { ImageContentSection, ImageDesignSection } from './ContentSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
-import { isMediaNode } from '../../model/types';
+import { isMediaNode } from '../../api/documentViewApi';
 import type { ImageInspectorNode, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition } from './types';
 
 const imageContentSection: InspectorSectionDefinition = {

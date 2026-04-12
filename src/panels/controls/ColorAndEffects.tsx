@@ -1,5 +1,5 @@
 import { memo, useRef } from 'react';
-import { forceOpaqueColorValue } from '../../model/colors';
+import { forceOpaqueColorValue } from '../../api/documentViewApi';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Label } from '@/components/ui/label';
 import { LabeledNumberField, LabeledUnitField } from './NumberFields';

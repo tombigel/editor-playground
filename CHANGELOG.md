@@ -15,6 +15,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - implement changelog update functionality and tests for commit messages
 
+### Changed
+
+- route ui model reads through document view api
+
 ### Fixed
 
 - simplify range parameter handling in PresetParamControl

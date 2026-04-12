@@ -19,8 +19,7 @@ import {
   TransferSubsection,
 } from '../SettingsShared';
 import type { SettingsTransferState } from '../useSettingsTransferState';
-import type { SiteSettings } from '../../../model/types/site';
-import type { LinkValidationError } from '../../../model/validation';
+import type { SiteSettings, LinkValidationError } from '../../../api/documentViewApi';
 import { PagesExportSettingsContent } from '../../PagesExportSettingsContent';
 
 type TransferSettingsSectionProps = {

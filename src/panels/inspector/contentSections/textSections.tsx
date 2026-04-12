@@ -37,7 +37,7 @@ import {
   DEFAULT_SHADOW_OFFSET_Y_PX,
   DEFAULT_LINK_COLOR,
   DEFAULT_TEXT_COLOR,
-} from '../../../model/styleDefaults';
+} from '../../../api/documentViewApi';
 import type { TextInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {
@@ -65,7 +65,7 @@ import { createLanguageSelectOptions } from '../../../i18n/languages';
 import {
   listContentToLines,
   normalizeListContent,
-} from '../../../model/listContent';
+} from '../../../api/documentViewApi';
 import {
   createTextDocumentContent,
   createTextDocumentFromCode,
@@ -77,8 +77,8 @@ import {
   listContentToRichListBlock,
   replaceTextDocumentBlocks,
   richListBlockToListContent,
-} from '../../../model/richContent';
-import type { ListContent, TextDocumentContent } from '../../../model/types';
+} from '../../../api/documentViewApi';
+import type { ListContent, TextDocumentContent } from '../../../api/documentViewApi';
 import { CODE_LANGUAGE_OPTIONS, highlightCode, normalizeCodeLanguage } from '../../../render/codeHighlight';
 
 type StructuredListContent = Extract<ListContent, { type: 'ul' | 'ol' }>;

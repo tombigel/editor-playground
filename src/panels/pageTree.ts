@@ -1,4 +1,4 @@
-import type { DocumentPage, PageId } from "../model/types/site";
+import type { DocumentPage, PageId } from "../api/documentViewApi";
 
 export type PageDropPosition = "before" | "after" | "inside";
 

@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { parseUnitValue } from '../../api/documentApi';
-import { formatDisplayValue } from '../../model/conversion';
+import { formatDisplayValue } from '../../api/documentViewApi';
 import { Input } from '@/components/ui/input';
 import { LabeledFieldStack } from '@/components/ui/settings-panel';
 import { NumberInput } from '@/components/ui/number-input';

@@ -2,7 +2,7 @@ import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useSt
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { buildFontFamilyStack, buildFontPickerPreviewStylesheetHref, listFontWeightOptions, resolveNearestSupportedFontWeight } from '../../api/fontApi';
-import type { DocumentFontFamily } from '../../model/types';
+import type { DocumentFontFamily } from '../../api/documentViewApi';
 import { parseFontSizeValue, parseSpacingValue } from '../../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { PopoverSurface } from '@/components/ui/popover';

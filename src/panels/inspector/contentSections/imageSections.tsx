@@ -20,7 +20,7 @@ import {
   DEFAULT_IMAGE_SHADOW_SPREAD_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
-} from '../../../model/styleDefaults';
+} from '../../../api/documentViewApi';
 import type { ImageInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {

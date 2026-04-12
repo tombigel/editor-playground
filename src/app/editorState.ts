@@ -69,7 +69,7 @@ import {
   setSiteSettings,
 } from '../api/pageApi';
 import { setActivePage } from '../editor/editorMutations';
-import { isNodeEffectivelyHidden } from '../model/selectors';
+import { isNodeEffectivelyHidden } from '../api/documentViewApi';
 import {
   appendHistoryEntry,
   applyHistoryEntry,

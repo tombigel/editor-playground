@@ -18,8 +18,7 @@ import {
 	InspectorFieldGroup,
 } from "../../controls/FormLayout";
 import { InspectorSectionCard } from "../CommonSections";
-import type { DocumentModel } from "../../../model/types";
-import type { DocumentPage, PageId } from "../../../model/types/site";
+import type { DocumentModel, DocumentPage, PageId } from "../../../api/documentViewApi";
 import { isDescendant } from "../../pageTree";
 
 export type PageInspectorSectionProps = {

@@ -27,7 +27,7 @@ import {
   DEFAULT_BUTTON_SHADOW_OFFSET_X_PX,
   DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
   DEFAULT_BUTTON_TEXT_COLOR,
-} from '../../../model/styleDefaults';
+} from '../../../api/documentViewApi';
 import type { ButtonInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {
@@ -46,8 +46,8 @@ import {
   NavigationFields,
   TypographyTextStyleFields,
 } from './shared';
-import { createTextDocumentFromText, getSingleTextBlockContent, getTextContent } from '../../../model/richContent';
-import type { TextDocumentContent } from '../../../model/types';
+import { createTextDocumentFromText, getSingleTextBlockContent, getTextContent } from '../../../api/documentViewApi';
+import type { TextDocumentContent } from '../../../api/documentViewApi';
 
 export function ButtonContentSection({
   document,

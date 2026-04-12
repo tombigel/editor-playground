@@ -1,7 +1,7 @@
 import { SquareArrowRightEnter } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { FocusedMode } from '../../api/editorApi';
-import { isContainerNode, isTextNode, isMediaNode } from '../../model/types';
+import { isContainerNode, isTextNode, isMediaNode } from '../../api/documentViewApi';
 import { getFocusedModeLabel } from '../../editor/focusedModes';
 import {
   ButtonAppearanceSection,

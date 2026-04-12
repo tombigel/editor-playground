@@ -3,8 +3,7 @@ import type { WrapperStyleField } from '../../../api/documentApi';
 import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
-import type { PageId } from '../../../model/types/site';
-import type { ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../model/types';
+import type { PageId, ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../api/documentViewApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../../animations/types';
 
 export type InspectorNode = DocumentNode;

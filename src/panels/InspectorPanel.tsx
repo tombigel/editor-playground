@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
-import { createInitialDocument } from '../model/defaults';
-import type { PageId } from '../model/types/site';
+import { createInitialDocument } from '../api/documentViewApi';
+import type { PageId } from '../api/documentViewApi';
 import type { AnimationTriggerType, KeyframeAnimationEffect, HoverOutAction, ReducedMotionResponse, DocumentAnimationSettings } from '../api/animationApi';
 import { buildNodeDebugInfo } from '../editor/debugInfo';
-import { isNodeEffectivelyHidden } from '../model/selectors';
+import { isNodeEffectivelyHidden } from '../api/documentViewApi';
 import { InspectorBlockList } from './InspectorBlockList';
 import { MultiSelectInspector } from './MultiSelectInspector';
 import type { InspectorActionHandlers, InspectorOrderState } from './inspector/types';
 import { resolveInspectorBlocks } from './inspector/schema';
 import type { BulkEditOperation, AlignmentAction, DistributionMode } from '../app/types';
 import type { TextConversionMode } from '../api/textConversion';
-import type { TextDocumentContent, TextSubtype } from '../model/types';
+import type { TextDocumentContent, TextSubtype } from '../api/documentViewApi';
 
 export {
   buildSizeFieldValue,
