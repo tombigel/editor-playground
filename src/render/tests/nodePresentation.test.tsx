@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createLinkTextNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentContent, createTextDocumentFromCode, createTextDocumentFromText, getTextContent, listContentToRichListBlock } from '../../model/richContent';
 import {
@@ -222,6 +222,42 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('href="https://example.com/docs"');
     expect(markup).toContain('text-decoration:underline');
     expect(markup).toContain('color:#172033');
+  });
+
+  it('renders repeated rich inline nodes without React key warnings', () => {
+    const rich = createTextNode('rich', 'root');
+    rich.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'same' },
+          { text: 'same' },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com/docs',
+            children: [{ text: 'docs' }],
+          },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com/docs',
+            children: [{ text: 'docs' }],
+          },
+        ],
+      },
+    ]);
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderToStaticMarkup(renderLeafContent(rich));
+
+    expect(consoleErrorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('Each child in a list should have a unique "key" prop.'),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(consoleErrorSpy.mock.calls.flat().join('\n')).not.toContain('Each child in a list should have a unique "key" prop.');
+    consoleErrorSpy.mockRestore();
   });
 
   it('renders numeric rich leaf font weights', () => {

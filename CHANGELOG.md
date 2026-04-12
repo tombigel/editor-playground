@@ -27,6 +27,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - preserve drag preview position on release
 - restrict width keywords per node type and break measurement loop for fit-content
 - set previewSticky to always be true in site preview
+- stabilize stage and rich content keys
 
 ---
 

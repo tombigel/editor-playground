@@ -67,6 +67,7 @@ export function renderLeaf({
 }) {
   return (
     <StageLeaf
+      key={plan.node.id}
       document={document}
       plan={plan}
       selectedId={selectedId}

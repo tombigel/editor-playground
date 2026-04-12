@@ -12,7 +12,6 @@ import {
 import { isMediaNode, isTextNode } from '../model/types';
 import type {
   DocumentModel,
-  DescriptionListItem,
   ListContent,
   LinkExtension,
   RichBlock,
@@ -24,8 +23,6 @@ import type {
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
-  RichTextLink,
-  ListTextItem,
 } from '../model/types';
 import { highlightCode } from './codeHighlight';
 import type {
@@ -87,24 +84,16 @@ export function getRichLinkStyle(): CSSProperties {
   };
 }
 
-function richLeafKey(leaf: RichTextLeaf): string {
-  return `${leaf.text}|${leaf.bold ? 'b' : ''}${leaf.italic ? 'i' : ''}${leaf.underline ? 'u' : ''}${leaf.strikethrough ? 's' : ''}|${leaf.color ?? ''}|${leaf.backgroundColor ?? ''}|${leaf.fontFamily ?? ''}|${leaf.fontSize ?? ''}|${leaf.fontWeight ?? ''}`;
+function buildRenderPath(parentPath: string, index: number): string {
+  return parentPath ? `${parentPath}.${index}` : String(index);
 }
 
-function richLinkKey(node: RichTextLink): string {
-  return `link|${node.linkType}|${node.href ?? ''}|${node.children.map((l) => l.text).join('')}`;
-}
-
-function richBlockKey(block: RichBlock, index: number): string {
-  if (block.type === 'code-block') {
-    return `block|${index}|code|${block.language ?? 'plaintext'}|${block.children.map((line) => line.children.map((leaf) => richLeafKey(leaf)).join('|')).join('||')}`;
-  }
-
-  if (block.type === 'ul' || block.type === 'ol') {
-    return `block|${index}|${block.type}|${block.children.map((item) => item.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')).join('||')}`;
-  }
-
-  return `block|${index}|${block.type}|${block.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')}`;
+function mapWithRenderPaths<T>(
+  items: readonly T[],
+  parentPath: string,
+  render: (item: T, path: string) => ReactNode,
+): ReactNode[] {
+  return items.map((item, index) => render(item, buildRenderPath(parentPath, index)));
 }
 
 export function getRichTextBlockTag(type: RichTextBlockType): 'p' | 'div' | 'blockquote' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' {
@@ -114,17 +103,21 @@ export function getRichTextBlockTag(type: RichTextBlockType): 'p' | 'div' | 'blo
   return type;
 }
 
-function renderRichInlineContent(content: RichTextBlock['children'], document?: DocumentModel): ReactNode {
-  return content.map((node) => {
+function renderRichInlineContent(
+  content: RichTextBlock['children'],
+  document?: DocumentModel,
+  parentPath = 'inline',
+): ReactNode {
+  return mapWithRenderPaths(content, parentPath, (node, path) => {
     if (isRichTextLink(node)) {
       const href = getLinkHref(node, document);
       const externalProps = node.linkType === 'external' && node.openInNewTab
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {};
       return (
-        <a key={richLinkKey(node)} href={href} style={getRichLinkStyle()} {...externalProps}>
-          {node.children.map((leaf) => (
-            <span key={richLeafKey(leaf)} style={richLeafStyle(leaf)}>{leaf.text}</span>
+        <a key={path} href={href} style={getRichLinkStyle()} {...externalProps}>
+          {mapWithRenderPaths(node.children, `${path}.leaf`, (leaf, leafPath) => (
+            <span key={leafPath} style={richLeafStyle(leaf)}>{leaf.text}</span>
           ))}
         </a>
       );
@@ -132,20 +125,16 @@ function renderRichInlineContent(content: RichTextBlock['children'], document?: 
     const leaf = node as RichTextLeaf;
     const style = richLeafStyle(leaf);
     return Object.keys(style).length > 0
-      ? <span key={richLeafKey(leaf)} style={style}>{leaf.text}</span>
-      : leaf.text;
+      ? <span key={path} style={style}>{leaf.text}</span>
+      : <Fragment key={path}>{leaf.text}</Fragment>;
   });
 }
 
-function renderRichListItemContent(item: RichListItem, document?: DocumentModel): ReactNode {
-  return renderRichInlineContent(item.children, document);
+function renderRichListItemContent(item: RichListItem, document?: DocumentModel, path = 'item'): ReactNode {
+  return renderRichInlineContent(item.children, document, `${path}.inline`);
 }
 
-function richListItemKey(item: RichListItem): string {
-  return `rich-list-item|${item.children.map((child) => (isRichTextLink(child) ? richLinkKey(child) : richLeafKey(child as RichTextLeaf))).join('|')}`;
-}
-
-function renderRichCodeBlock(block: RichCodeBlock, index: number): ReactNode {
+function renderRichCodeBlock(block: RichCodeBlock, path: string): ReactNode {
   const language = block.language ?? 'plaintext';
   const rawText = block.children
     .map((line) => line.children.map((leaf) => leaf.text).join(''))
@@ -154,7 +143,7 @@ function renderRichCodeBlock(block: RichCodeBlock, index: number): ReactNode {
 
   return (
     <div
-      key={richBlockKey(block, index)}
+      key={path}
       dir={block.direction ?? 'ltr'}
       style={richCodeBlockWrapperStyleToCss(block.style)}
     >
@@ -175,7 +164,7 @@ function renderRichCodeBlock(block: RichCodeBlock, index: number): ReactNode {
 
 function renderRichListBlock(
   block: RichListBlock,
-  index: number,
+  path: string,
   document?: DocumentModel,
 ): ReactNode {
   const sharedStyle = getRichBlockRenderStyle(block);
@@ -183,14 +172,14 @@ function renderRichListBlock(
   if (block.type === 'ol') {
     return (
       <ol
-        key={richBlockKey(block, index)}
+        key={path}
         dir={block.direction ?? 'ltr'}
         start={block.start}
         style={sharedStyle}
       >
-        {block.children.map((item) => (
-          <li key={richListItemKey(item)} dir={item.direction ?? block.direction ?? 'ltr'}>
-            {renderRichListItemContent(item, document)}
+        {mapWithRenderPaths(block.children, `${path}.item`, (item, itemPath) => (
+          <li key={itemPath} dir={item.direction ?? block.direction ?? 'ltr'}>
+            {renderRichListItemContent(item, document, itemPath)}
           </li>
         ))}
       </ol>
@@ -199,13 +188,13 @@ function renderRichListBlock(
 
   return (
     <ul
-      key={richBlockKey(block, index)}
+      key={path}
       dir={block.direction ?? 'ltr'}
       style={sharedStyle}
     >
-      {block.children.map((item) => (
-        <li key={richListItemKey(item)} dir={item.direction ?? block.direction ?? 'ltr'}>
-          {renderRichListItemContent(item, document)}
+      {mapWithRenderPaths(block.children, `${path}.item`, (item, itemPath) => (
+        <li key={itemPath} dir={item.direction ?? block.direction ?? 'ltr'}>
+          {renderRichListItemContent(item, document, itemPath)}
         </li>
       ))}
     </ul>
@@ -241,23 +230,23 @@ export function getRichBlockRenderStyle(block: RichBlock): CSSProperties {
 }
 
 export function renderRichContent(content: RichContent, document?: DocumentModel): ReactNode {
-  return content.map((block, index) => {
+  return mapWithRenderPaths(content, 'block', (block, path) => {
     if (block.type === 'code-block') {
-      return renderRichCodeBlock(block, index);
+      return renderRichCodeBlock(block, path);
     }
 
     if (block.type === 'ul' || block.type === 'ol') {
-      return renderRichListBlock(block, index, document);
+      return renderRichListBlock(block, path, document);
     }
 
     const Tag = getRichTextBlockTag(block.type);
     return (
       <Tag
-        key={richBlockKey(block, index)}
+        key={path}
         dir={block.direction ?? 'ltr'}
         style={getRichBlockRenderStyle(block)}
       >
-        {renderRichInlineContent(block.children, document)}
+        {renderRichInlineContent(block.children, document, `${path}.inline`)}
       </Tag>
     );
   });
@@ -337,13 +326,6 @@ function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSPrope
   return css;
 }
 
-function listItemKey(item: ListTextItem | DescriptionListItem, index: number): string {
-  if ('text' in item) {
-    return `${index}|${item.text}|${item.direction ?? 'ltr'}|${item.link?.href ?? ''}`;
-  }
-  return `${index}|${item.term}|${item.description}|${item.direction ?? 'ltr'}|${item.link?.href ?? ''}`;
-}
-
 function getExternalLinkProps(link: LinkExtension | undefined) {
   if (!link) {
     return {};
@@ -387,8 +369,8 @@ export function renderListContent(
   if (content.type === 'dl') {
     return (
       <dl className={className} data-node-id={dataNodeId} style={style}>
-        {content.items.map((item, index) => (
-          <Fragment key={listItemKey(item, index)}>
+        {mapWithRenderPaths(content.items, 'dl-item', (item, path) => (
+          <Fragment key={path}>
             <dt dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
               {renderListItemText(item.term, item.link, document)}
             </dt>
@@ -409,8 +391,8 @@ export function renderListContent(
         start={content.start}
         style={{ ...getDefaultListContainerStyle(), listStyleType: content.markerStyle, ...style }}
       >
-        {content.items.map((item, index) => (
-          <li key={listItemKey(item, index)} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+        {mapWithRenderPaths(content.items, 'ol-item', (item, path) => (
+          <li key={path} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
             {renderListItemText(item.text, item.link, document)}
           </li>
         ))}
@@ -424,8 +406,8 @@ export function renderListContent(
       data-node-id={dataNodeId}
       style={{ ...getDefaultListContainerStyle(), listStyleType: content.markerStyle, ...style }}
     >
-      {content.items.map((item, index) => (
-        <li key={listItemKey(item, index)} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+      {mapWithRenderPaths(content.items, 'ul-item', (item, path) => (
+        <li key={path} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
           {renderListItemText(item.text, item.link, document)}
         </li>
       ))}

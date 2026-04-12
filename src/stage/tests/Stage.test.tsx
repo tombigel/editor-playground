@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PencilLine } from 'lucide-react';
 import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
@@ -547,6 +547,36 @@ describe('stage/Stage', () => {
     expect(markup).toContain('class="wrapper-padding-overlay"');
     expect(markup).toContain('class="wrapper-padding-overlay-boundary"');
     expect(markup).toContain('top:64px;right:72px;bottom:72px;left:72px');
+  });
+
+  it('does not emit React key warnings while rendering StageScene', () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    renderToStaticMarkup(
+      <StageScene
+        document={createInitialDocument()}
+        selectedId={null}
+        selectedIds={[]}
+        singleSelectionOverlay={null}
+        multiSelectionBounds={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        onResizeStart={() => {}}
+        dragSourceIds={[]}
+        highlightedDropId={null}
+        registerDraggableNode={() => {}}
+        registerDropTarget={() => {}}
+        resizeState={null}
+        setResizeState={() => {}}
+        onSelectionOverlayHandleMouseDown={() => {}}
+        measuredNodeSizes={{}}
+        viewport={DEFAULT_STAGE_VIEWPORT}
+      />,
+    );
+
+    expect(consoleErrorSpy.mock.calls.flat().join('\n')).not.toContain('Each child in a list should have a unique "key" prop.');
+    consoleErrorSpy.mockRestore();
   });
 
   it('renders selection outlines for all selected nodes without primary label chrome during multi-select', () => {
