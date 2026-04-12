@@ -246,7 +246,7 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
     name: 'Text',
     visible: true,
     locked: false,
-    rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
+    rect: createDefaultRect('32px', '32px', 'max-content', 'auto'),
     content: createTextDocumentContent([
       createTextBlockContent('paragraph', TEXT_NODE_DEFAULTS.paragraph.content, {
         direction: 'ltr',
@@ -280,7 +280,7 @@ export function createLinkTextNode(parentId: NodeId): TextNode {
   return {
     ...base,
     name: 'Link',
-    rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
+    rect: createDefaultRect('32px', '32px', 'max-content', 'auto'),
     content: createTextDocumentContent([
       createTextBlockContent('paragraph', 'Read more', { direction: 'ltr' }),
     ]),
@@ -307,7 +307,7 @@ export function createButtonTextNode(parentId: NodeId): TextNode {
   return {
     ...base,
     name: 'Button',
-    rect: createDefaultRect('32px', '32px', 'fit-content', 'auto'),
+    rect: createDefaultRect('32px', '32px', 'max-content', 'auto'),
     content: createTextDocumentContent([
       createTextBlockContent('paragraph', 'Button', { direction: 'ltr' }),
     ]),

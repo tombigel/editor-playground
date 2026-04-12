@@ -20,7 +20,7 @@ export function createDefaultHeader(parentId: NodeId) {
     content: 'Sticky Playground',
     x: '62px',
     y: '25.5px',
-    width: 'fit-content',
+    width: 'max-content',
     style: {
       color: '#0f172a',
       fontFamily: EDITORIAL_HEADING_FONT,
@@ -36,7 +36,7 @@ export function createDefaultHeader(parentId: NodeId) {
     content: 'Model, preview, and validate sticky behavior before implementation.',
     x: '61px',
     y: '60px',
-    width: 'fit-content',
+    width: 'max-content',
     style: {
       color: '#516174',
       fontFamily: EDITORIAL_BODY_FONT,
@@ -50,7 +50,7 @@ export function createDefaultHeader(parentId: NodeId) {
     label: 'Templates',
     x: '836px',
     y: '48px',
-    width: 'fit-content',
+    width: 'max-content',
   });
 
   const navSticky = createLinkNode(header.id, {
@@ -58,7 +58,7 @@ export function createDefaultHeader(parentId: NodeId) {
     label: 'Sticky Demos',
     x: '947px',
     y: '48px',
-    width: 'fit-content',
+    width: 'max-content',
   });
 
   const navTests = createLinkNode(header.id, {
@@ -94,7 +94,7 @@ export function createDefaultFooter(parentId: NodeId) {
     content: 'Sticky Playground',
     x: '67px',
     y: '28px',
-    width: 'fit-content',
+    width: 'max-content',
     style: {
       color: '#0f172a',
       fontFamily: EDITORIAL_HEADING_FONT,

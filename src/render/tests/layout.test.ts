@@ -67,7 +67,7 @@ describe('render/layout', () => {
     expect(getNodeHeight(image)).toBe(315);
     expect(usesIntrinsicHeight(text)).toBe(true);
     expect(hasIntrinsicWidth(text)).toBe(true);
-    expect(getTrackCssWidth(text)).toBe('fit-content');
+    expect(getTrackCssWidth(text)).toBe('max-content');
     expect(getLeafCssHeight(image)).toBe('auto');
     expect(getLeafCssHeight(text)).toBe('auto');
   });

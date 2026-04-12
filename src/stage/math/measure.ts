@@ -123,7 +123,10 @@ export function areMeasuredNodeSizesEqual(current: MeasuredNodeSizes, next: Meas
 
 function shouldMeasureNodeWidth(node: Exclude<import('../../model/types').DocumentNode, { contentType: 'site' }>) {
   const width = node.rect.width.base.parsed;
-  return !('unit' in width) || width.unit === '%';
+  // Only measure percentage widths.  Keyword widths (fit-content, min-content,
+  // max-content) are resolved natively by the browser — feeding the measured
+  // value back into the grid column template creates a resize feedback loop.
+  return 'unit' in width && width.unit === '%';
 }
 
 function shouldMeasureNodeHeight(node: Exclude<import('../../model/types').DocumentNode, { contentType: 'site' }>) {

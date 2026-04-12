@@ -328,7 +328,7 @@ const minimalDebugInfo: NodeDebugInfo = {
   family: 'leaf' as const,
   subtype: 'text',
   parentId: 'section_abc123def',
-  authoredRect: { x: '24px', y: '0px', width: 'fit-content', height: 'auto' },
+  authoredRect: { x: '24px', y: '0px', width: 'max-content', height: 'auto' },
   measuredBounds: null,
   sticky: {
     enabled: false,

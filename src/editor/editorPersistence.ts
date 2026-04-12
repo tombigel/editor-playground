@@ -750,7 +750,7 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
   const title = createUniqueTextNode(document, header.id);
   title.name = 'Product Title';
   setNodePlainText(title, 'Sticky Playground');
-  title.rect = createDefaultRect('62px', '25.5px', 'fit-content', 'auto');
+  title.rect = createDefaultRect('62px', '25.5px', 'max-content', 'auto');
   title.style ??= {};
   title.style.color = '#0f172a';
   title.style.fontSize = parseFontSizeValue('20px');
@@ -760,7 +760,7 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
   const subtitle = createUniqueTextNode(document, header.id);
   subtitle.name = 'Product Subtitle';
   setNodePlainText(subtitle, 'Model, preview, and validate sticky behavior before implementation.');
-  subtitle.rect = createDefaultRect('61px', '60px', 'fit-content', 'auto');
+  subtitle.rect = createDefaultRect('61px', '60px', 'max-content', 'auto');
   subtitle.style ??= {};
   subtitle.style.color = '#516174';
   subtitle.style.fontSize = parseFontSizeValue('14px');
@@ -768,12 +768,12 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
   const templatesLink = createUniqueLinkTextNode(document, header.id);
   templatesLink.name = 'Templates Link';
   setNodePlainText(templatesLink, 'Templates');
-  templatesLink.rect = createDefaultRect('836px', '48px', 'fit-content', 'auto');
+  templatesLink.rect = createDefaultRect('836px', '48px', 'max-content', 'auto');
 
   const stickyLink = createUniqueLinkTextNode(document, header.id);
   stickyLink.name = 'Sticky Demos Link';
   setNodePlainText(stickyLink, 'Sticky Demos');
-  stickyLink.rect = createDefaultRect('947px', '48px', 'fit-content', 'auto');
+  stickyLink.rect = createDefaultRect('947px', '48px', 'max-content', 'auto');
 
   const testPlanLink = createUniqueLinkTextNode(document, header.id);
   testPlanLink.name = 'Test Plan Link';
@@ -807,7 +807,7 @@ function applyModernFooter(document: DocumentModel, footer: ContainerNode) {
   const title = createUniqueTextNode(document, footer.id);
   title.name = 'Footer Title';
   setNodePlainText(title, 'Sticky Playground');
-  title.rect = createDefaultRect('67px', '28px', 'fit-content', 'auto');
+  title.rect = createDefaultRect('67px', '28px', 'max-content', 'auto');
   title.style ??= {};
   title.style.color = '#0f172a';
   title.style.fontSize = parseFontSizeValue('16px');

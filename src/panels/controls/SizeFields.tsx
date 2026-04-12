@@ -6,7 +6,7 @@ import { LabeledControlRow, ValuePill } from '@/components/ui/settings-panel';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
-import type { SizeFieldAxis, SizeFieldMode } from '../inspector/stageConversions';
+import type { SizeFieldAxis, SizeFieldMode, WidthKeywordFamily } from '../inspector/stageConversions';
 import {
   buildSizeFieldValue,
   clamp,
@@ -46,9 +46,9 @@ export function resolveSizeMeasurementInput({
 
 function buildSizeModeFieldOptions(
   axis: SizeFieldAxis,
-  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+  { isSectionHeight = false, widthKeywordFamily }: { isSectionHeight?: boolean; widthKeywordFamily?: WidthKeywordFamily } = {},
 ): ValueWithUnitOption[] {
-  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis, { isSectionHeight });
+  const { scalarUnits, viewportUnits, keywords } = getSizeModeOptions(axis, { isSectionHeight, widthKeywordFamily });
   const hasKeywords = Boolean(keywords?.length);
   const hasViewportUnits = viewportUnits.length > 0;
   const options: ValueWithUnitOption[] = [];
@@ -119,6 +119,7 @@ export const SizeInlineField = memo(function SizeInlineField({
   value,
   onChange,
   isSectionHeight = false,
+  widthKeywordFamily,
   disabled = false,
   resolveMeasurementInput,
 }: {
@@ -128,11 +129,12 @@ export const SizeInlineField = memo(function SizeInlineField({
   value: string;
   onChange: (value: string) => void;
   isSectionHeight?: boolean;
+  widthKeywordFamily?: WidthKeywordFamily;
   disabled?: boolean;
   resolveMeasurementInput?: (mode: NumericSizeFieldMode) => string | null;
 }) {
   const fieldId = useId();
-  const modeOptions = getSizeModeOptions(axis, { isSectionHeight });
+  const modeOptions = getSizeModeOptions(axis, { isSectionHeight, widthKeywordFamily });
   const [mode, setMode] = useState<SizeFieldMode>(() => getInitialSizeFieldMode(value, axis, isSectionHeight));
   const [numericDraft, setNumericDraft] = useState(() => getInitialNumericDraft(value, axis, nodeId, isSectionHeight));
   const [aspectDraft, setAspectDraft] = useState(() => getInitialAspectDraft(value));
@@ -159,11 +161,11 @@ export const SizeInlineField = memo(function SizeInlineField({
   const shellClass = invalid
     ? 'editor-inline-field editor-inline-field-invalid focus-within:border-red-400'
     : 'editor-inline-field focus-within:border-[color:var(--editor-accent)]';
-  const fieldOptions = buildSizeModeFieldOptions(axis, { isSectionHeight });
+  const fieldOptions = buildSizeModeFieldOptions(axis, { isSectionHeight, widthKeywordFamily });
 
   function commitDraft(nextMode: SizeFieldMode, nextInput?: string) {
     const candidateInput = nextInput ?? (nextMode === 'aspect-ratio' ? aspectDraft : numericDraft);
-    const nextRaw = buildSizeFieldValue(axis, nextMode, candidateInput, { isSectionHeight });
+    const nextRaw = buildSizeFieldValue(axis, nextMode, candidateInput, { isSectionHeight, widthKeywordFamily });
     if (!nextRaw) {
       setInvalid(true);
       return false;
@@ -220,7 +222,7 @@ export const SizeInlineField = memo(function SizeInlineField({
     if (resolvedMode === 'aspect-ratio') {
       const nextAspect = descriptor.kind === 'aspect-ratio' ? descriptor.input : aspectDraft || '16/9';
       setAspectDraft(nextAspect);
-      const nextRaw = buildSizeFieldValue(axis, resolvedMode, nextAspect, { isSectionHeight });
+      const nextRaw = buildSizeFieldValue(axis, resolvedMode, nextAspect, { isSectionHeight, widthKeywordFamily });
       if (!nextRaw) {
         setInvalid(true);
         return null;
@@ -236,7 +238,7 @@ export const SizeInlineField = memo(function SizeInlineField({
       resolvedMode === 'min-content' ||
       resolvedMode === 'max-content'
     ) {
-      const nextRaw = buildSizeFieldValue(axis, resolvedMode, '', { isSectionHeight });
+      const nextRaw = buildSizeFieldValue(axis, resolvedMode, '', { isSectionHeight, widthKeywordFamily });
       if (!nextRaw) {
         setInvalid(true);
         return null;

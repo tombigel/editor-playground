@@ -38,11 +38,23 @@ export type SizeFieldDescriptor =
 // Constants
 // ---------------------------------------------------------------------------
 
+export type WidthKeywordFamily = 'container' | 'text' | 'media';
+
+const WIDTH_KEYWORDS_BY_FAMILY: Record<WidthKeywordFamily, Extract<SizeFieldMode, 'fit-content' | 'min-content' | 'max-content'>[]> = {
+  container: ['fit-content'],
+  text: ['min-content', 'max-content'],
+  media: [],
+};
+
 export const WIDTH_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'fit-content' | 'min-content' | 'max-content'>[] = [
   'fit-content',
   'min-content',
   'max-content',
 ];
+
+export function getWidthKeywordsForFamily(family?: WidthKeywordFamily) {
+  return family ? WIDTH_KEYWORDS_BY_FAMILY[family] : WIDTH_KEYWORD_OPTIONS;
+}
 export const HEIGHT_KEYWORD_OPTIONS: Extract<SizeFieldMode, 'auto' | 'aspect-ratio'>[] = ['auto', 'aspect-ratio'];
 export const FONT_SIZE_UNIT_OPTIONS: FontSizeMode[] = ['px', 'em', 'rem'];
 export const FONT_SIZE_SUGGESTIONS_BY_UNIT: Record<FontSizeMode, number[]> = {
@@ -120,7 +132,7 @@ export function buildSizeFieldValue(
   axis: SizeFieldAxis,
   mode: SizeFieldMode,
   input: string,
-  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+  { isSectionHeight = false, widthKeywordFamily }: { isSectionHeight?: boolean; widthKeywordFamily?: WidthKeywordFamily } = {},
 ) {
   const allowedNumericModes = getAllowedNumericSizeModes(axis, isSectionHeight);
 
@@ -146,7 +158,11 @@ export function buildSizeFieldValue(
   }
 
   if (mode === 'fit-content' || mode === 'min-content' || mode === 'max-content') {
-    return axis === 'width' ? mode : null;
+    if (axis !== 'width') {
+      return null;
+    }
+    const allowedKeywords = getWidthKeywordsForFamily(widthKeywordFamily);
+    return allowedKeywords.includes(mode) ? mode : null;
   }
   if (mode === 'auto') {
     return axis === 'height' ? mode : null;
@@ -211,13 +227,14 @@ export function extractAspectRatioExpression(raw: string) {
 
 export function getSizeModeOptions(
   axis: SizeFieldAxis,
-  { isSectionHeight = false }: { isSectionHeight?: boolean } = {},
+  { isSectionHeight = false, widthKeywordFamily }: { isSectionHeight?: boolean; widthKeywordFamily?: WidthKeywordFamily } = {},
 ) {
   const scalarUnits: NumericSizeFieldMode[] = axis === 'x' || axis === 'y' ? ['px'] : ['px', '%'];
   const viewportUnits: NumericSizeFieldMode[] = axis === 'height' && isSectionHeight ? ['vh', 'vmin', 'vmax'] : [];
+  const widthKeywords = getWidthKeywordsForFamily(widthKeywordFamily);
   const keywords =
     axis === 'width'
-      ? WIDTH_KEYWORD_OPTIONS
+      ? widthKeywords
       : axis === 'height'
         ? HEIGHT_KEYWORD_OPTIONS
         : null;
@@ -235,8 +252,8 @@ export function isNumericSizeFieldMode(mode: SizeFieldMode): mode is NumericSize
   return mode === 'px' || mode === '%' || mode === 'vw' || mode === 'vh' || mode === 'vmin' || mode === 'vmax';
 }
 
-export function getAllowedNumericSizeModes(axis: SizeFieldAxis, isSectionHeight: boolean): NumericSizeFieldMode[] {
-  const { scalarUnits, viewportUnits } = getSizeModeOptions(axis, { isSectionHeight });
+export function getAllowedNumericSizeModes(axis: SizeFieldAxis, isSectionHeight: boolean, widthKeywordFamily?: WidthKeywordFamily): NumericSizeFieldMode[] {
+  const { scalarUnits, viewportUnits } = getSizeModeOptions(axis, { isSectionHeight, widthKeywordFamily });
   return [...scalarUnits, ...viewportUnits];
 }
 

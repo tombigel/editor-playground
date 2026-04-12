@@ -152,7 +152,7 @@ function createPostSection(parentId: NodeId): TemplateBuild {
     label: 'Open playground spec',
     x: '549px',
     y: '350.40625px',
-    width: 'fit-content',
+    width: 'max-content',
   });
   link.style ??= {};
   link.style.fontFamily = EDITORIAL_BODY_FONT;

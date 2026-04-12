@@ -28,12 +28,14 @@ import {
 import { getTopLevelWrapperVisibilityState, isEligibleTopLevelWrapper } from '../../model/topLevelWrapperVisibility';
 import type { PageId } from '../../model/types/site';
 import { isContainerNode } from '../../model/types';
+import { getChildren } from '../../model/selectors';
+import type { WidthKeywordFamily } from './stageConversions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
-import { ValuePill } from '@/components/ui/settings-panel';
+import { InlineNotice, ValuePill } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { cn, DARK_TOOLTIP_CLASS } from '@/lib/utils';
 import type { InspectorActionHandlers, InspectorNode, InspectorOrderState, WrapperInspectorNode } from './types';
@@ -251,6 +253,18 @@ export function NodeBasicsSection({
     isContainerNode(node) &&
     (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer');
   const isSectionHeight = isContainerNode(node) && node.subtype === 'section';
+  const widthKeywordFamily: WidthKeywordFamily | undefined =
+    node.contentType === 'container' ? 'container'
+      : node.contentType === 'text' ? 'text'
+        : node.contentType === 'media' ? 'media'
+          : undefined;
+  const fitContentPercentChildrenWarning =
+    isContainerNode(node) &&
+    !('unit' in node.rect.width.base.parsed) &&
+    node.rect.width.base.parsed.keyword === 'fit-content' &&
+    getChildren(document, node.id).some((child) =>
+      child.contentType !== 'site' && 'unit' in child.rect.width.base.parsed && child.rect.width.base.parsed.unit === '%',
+    );
   const wrapperPaddingNode: WrapperInspectorNode | null =
     isContainerNode(node) &&
     (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer' || node.subtype === 'container')
@@ -294,6 +308,7 @@ export function NodeBasicsSection({
             value={node.rect.width.base.raw}
             onChange={(value) => actions.onRectChange('width', value)}
             axis="width"
+            widthKeywordFamily={widthKeywordFamily}
             disabled={topLevelWidthLocked}
           />
           <SizeInlineField
@@ -305,6 +320,15 @@ export function NodeBasicsSection({
             isSectionHeight={isSectionHeight}
           />
         </div>
+      ) : null}
+      {fitContentPercentChildrenWarning ? (
+        <PopoverTooltip
+          content={<><b>Percentage-width children inside a fit-content container have no definite size to resolve against.</b><br /><br />This may collapse their width to zero, or cause the container to grow unexpectedly.</>}
+          side="bottom"
+          className={cn(DARK_TOOLTIP_CLASS, 'max-w-56 text-left')}
+        >
+          <InlineNotice>Percentage width in fit-content</InlineNotice>
+        </PopoverTooltip>
       ) : null}
       {wrapperPaddingNode ? (
         <div className="space-y-1.5">
