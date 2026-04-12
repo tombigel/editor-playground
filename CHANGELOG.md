@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - update version to 0.6.0 and document changes in changelog
+- update version to 0.6.1 in package-lock.json
 
 ---
 
