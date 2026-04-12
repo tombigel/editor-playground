@@ -16,6 +16,7 @@ import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { updateUnreleasedChangelog } from './commit-msg-changelog-lib.mjs';
 
 if (process.env.CHANGELOG_HOOK_AMEND) {
   process.exit(0);
@@ -25,21 +26,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 const changelogFile = resolve(root, 'CHANGELOG.md');
 const commitMsgFile = resolve(root, '.git', 'COMMIT_EDITMSG');
-
-// Prefix → changelog heading mapping
-const CATEGORY_MAP = {
-  feat: '### Added',
-  fix: '### Fixed',
-  refactor: '### Changed',
-  style: '### Changed',
-  perf: '### Changed',
-  docs: '### Changed',
-  test: '### Changed',
-  build: '### Changed',
-  ci: '### Changed',
-  chore: '### Changed',
-};
-const DEFAULT_CATEGORY = '### Changed';
 
 let rawMsg;
 try {
@@ -53,73 +39,19 @@ if (!firstLine) {
   process.exit(0);
 }
 
-// Parse conventional commit: type(scope)!: description
-const conventionalMatch = firstLine.match(/^(\w+)(?:\([^)]*\))?!?:\s*(.+)$/);
-const category = conventionalMatch
-  ? (CATEGORY_MAP[conventionalMatch[1]] ?? DEFAULT_CATEGORY)
-  : DEFAULT_CATEGORY;
-const description = conventionalMatch ? conventionalMatch[2] : firstLine;
-
 const changelog = readFileSync(changelogFile, 'utf8');
-const unreleasedHeading = '## [Unreleased]';
-const headingIndex = changelog.indexOf(unreleasedHeading);
+const result = updateUnreleasedChangelog(changelog, rawMsg);
 
-if (headingIndex === -1) {
+if (result.missingUnreleasedHeading) {
   console.error('CHANGELOG.md: no [Unreleased] section found, skipping.');
   process.exit(0);
 }
 
-const afterHeading = headingIndex + unreleasedHeading.length;
-const nextSeparator = changelog.indexOf('\n---\n', afterHeading);
-const sectionEnd = nextSeparator !== -1 ? nextSeparator : changelog.length;
-
-// Parse existing section content into category buckets
-const sectionContent = changelog.slice(afterHeading, sectionEnd);
-const buckets = new Map();
-let currentBucket = null;
-
-for (const line of sectionContent.split('\n')) {
-  const trimmed = line.trim();
-  if (trimmed.startsWith('### ')) {
-    currentBucket = trimmed;
-    if (!buckets.has(currentBucket)) {
-      buckets.set(currentBucket, []);
-    }
-  } else if (trimmed.startsWith('- ') && currentBucket) {
-    buckets.get(currentBucket).push(trimmed);
-  }
+if (!result.changed) {
+  process.exit(0);
 }
 
-// Add the new bullet to its category
-if (!buckets.has(category)) {
-  buckets.set(category, []);
-}
-buckets.get(category).push(`- ${description}`);
-
-// Rebuild section with deterministic heading order
-const headingOrder = ['### Added', '### Changed', '### Fixed'];
-const sortedHeadings = [...buckets.keys()].sort(
-  (a, b) => (headingOrder.indexOf(a) === -1 ? 99 : headingOrder.indexOf(a)) -
-            (headingOrder.indexOf(b) === -1 ? 99 : headingOrder.indexOf(b)),
-);
-
-const lines = [];
-for (const heading of sortedHeadings) {
-  const bullets = buckets.get(heading);
-  if (bullets.length > 0) {
-    lines.push(heading);
-    lines.push(...bullets);
-    lines.push('');
-  }
-}
-
-const updated =
-  changelog.slice(0, afterHeading) +
-  '\n\n' +
-  lines.join('\n') +
-  changelog.slice(sectionEnd);
-
-writeFileSync(changelogFile, updated, 'utf8');
+writeFileSync(changelogFile, result.updatedChangelog, 'utf8');
 
 try {
   execSync('git add CHANGELOG.md', { cwd: root, stdio: 'inherit' });

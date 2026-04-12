@@ -11,25 +11,33 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- implement changelog update functionality and tests for commit messages
+
 ### Fixed
+
 - simplify range parameter handling in PresetParamControl
 - allow all text node subtypes to merge into rich text
 - mark owner section for selected nodes
 - preserve drag preview position on release
-- restrict width keywords per node type and break measurement loop
-- set previewSticky to true for consistent behavior
+- restrict width keywords per node type and break measurement loop for fit-content
+- set previewSticky to always be true in site preview
 
 ---
 
 ## [0.5.1] — 2026-04-11
+
 Document: 1.4.1 · API: 1.4.1 · Editor: 0.12.0
 
 ---
 
 ## [0.5.0] — 2026-04-11
+
 Document: 1.4.0 · API: 1.4.0 · Editor: 0.11.0
 
 ### Added
+
 - add commitlint and automatic changelog categorization
 - add commit message guidelines and enforce Conventional Commits format
 - add grouped option headers and height cap to SearchableSelect
@@ -37,6 +45,7 @@ Document: 1.4.0 · API: 1.4.0 · Editor: 0.11.0
 - improve add-page button styling and simplify page focus logic
 
 ### Changed
+
 - update expected titles for section:reference to include 'Changelog'
 - add axe accessibility e2e check
 - add Select size variants and bordered slider demos
@@ -48,6 +57,7 @@ Document: 1.4.0 · API: 1.4.0 · Editor: 0.11.0
 - add inspector action button demo, update spec and roadmap
 
 ### Fixed
+
 - initialize animation runtime in preview mode and fix grid layout
 - improve editor accessibility semantics
 - add interact-element display:contents and remove animation DOM indicators
@@ -59,10 +69,12 @@ Document: 1.4.0 · API: 1.4.0 · Editor: 0.11.0
 Document: 1.3.0 · API: 1.3.0 · Editor: 0.10.0
 
 ### Added
+
 - FormField layout system with four modes: stack, inline, inline-start, inline-group.
 - FormField layout modes added to design system showcase and menu.
 
 ### Changed
+
 - Inspector audit: all ad-hoc inline rows replaced with FormField composites.
 - Inspector row variants extended (inline-start, inline-group).
 - Visibility trigger styling restored.
@@ -76,24 +88,30 @@ Document: 1.3.0 · API: 1.3.0 · Editor: 0.10.0
 Document: 1.3.0 · API: 1.3.0 · Editor: 0.10.0
 
 ### Added
+
 - Animation authoring Phase 1: selection model, animation reducer, node handlers, focused animation panel.
 - Animation authoring Phase 2: inspector section with trigger, presets, and controls; preset picker with dynamic options; on-stage animation indicators for non-selected nodes.
 - Shortcut registry expansion — Phase 1 and Phase 2 wiring and handlers.
 
 ### Changed
+
 - Shortcut help content and key bindings refined.
 
 ### Fixed
+
 - `outAction` read path corrected to read from `node.animation`.
 - Removed unused `trigger` parameter from `PresetOptions`.
 
 ### Changed (Document 1.2.0 → 1.3.0)
+
 - Animation settings extended for authoring triggers and presets.
 
 ### Changed (API 1.2.0 → 1.3.0)
+
 - Animation authoring functions added to `documentApi`.
 
 ### Changed (Editor 0.9.0 → 0.10.0)
+
 - Focused animation panel, animation inspector section, shortcut expansion.
 
 ---
@@ -103,6 +121,7 @@ Document: 1.3.0 · API: 1.3.0 · Editor: 0.10.0
 Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0
 
 ### Added
+
 - Help browser information architecture refresh with hierarchical navigation.
 - Version-bump skill and enhanced audit skills documentation.
 - Archived documentation workstream docs.
@@ -114,6 +133,7 @@ Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0
 Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0
 
 ### Added
+
 - Introduced four independently-tracked semver versions: Project, Document Model, API, and Editor, defined in `src/lib/version.ts`.
 - `schemaVersion` field stamped on exported document JSON; mismatch warning on import.
 - Pre-commit hook (via `simple-git-hooks`) that auto-bumps all four versions at patch level on every commit.
@@ -122,6 +142,7 @@ Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0
 - `/version-bump` skill documenting when to use minor vs major for each subsystem.
 
 ### Changed
+
 - Project version baseline moved from `0.0.1` to `0.3.3` to reflect actual development history.
 
 ---
@@ -131,6 +152,7 @@ Document: 1.2.0 · API: 1.2.0 · Editor: 0.9.0
 Document: 1.2.0 · API: 1.2.0 · Editor: 0.8.1
 
 ### Added
+
 - Code blocks: Prism syntax highlighting, language selector, light/dark theme toggle.
 - Standalone list text subtype with per-item controls.
 - Headless markdown import API for text nodes.
@@ -138,9 +160,11 @@ Document: 1.2.0 · API: 1.2.0 · Editor: 0.8.1
 - Rich stage toolbar polish and stabilization (phase 1.8 closeout).
 
 ### Changed (Document 1.1.0 → 1.2.0)
+
 - `TextNode` gains `subtype: 'code'` and `subtype: 'list'` variants with associated fields (`codeLanguage`, `codeTheme`, list content model).
 
 ### Changed (API 1.1.0 → 1.2.0)
+
 - Text conversion, split/merge, and markdown import functions added to `documentApi`.
 
 ---
@@ -150,6 +174,7 @@ Document: 1.2.0 · API: 1.2.0 · Editor: 0.8.1
 Document: 1.1.0 · API: 1.1.0 · Editor: 0.8.0
 
 ### Changed
+
 - Design system convergence waves A–F: shared inspector composites, shared panel primitives, topbar and focused-panel chrome unified, help and font panels converged.
 - Shortcut execution pipeline refactored; `useEscapeKey` and `useClickOutside` hooks extracted to `src/lib/`.
 - Dark tooltip class deduplicated across 15 occurrences in 8 files.
@@ -161,6 +186,7 @@ Document: 1.1.0 · API: 1.1.0 · Editor: 0.8.0
 Document: 1.1.0 · API: 1.1.0 · Editor: 0.7.0
 
 ### Added
+
 - Rich text content type (Slate-based) with inline link support.
 - Rich content rendered in both the stage and the exported site.
 - On-stage double-click to enter rich text edit mode.
@@ -168,9 +194,11 @@ Document: 1.1.0 · API: 1.1.0 · Editor: 0.7.0
 - Draggable rich text toolbar.
 
 ### Changed (Document 1.0.0 → 1.1.0)
+
 - `TextNode` gains `subtype: 'rich'` with a Slate-subset content model.
 
 ### Changed (API 1.0.0 → 1.1.0)
+
 - Rich text mutation functions added to `documentApi`.
 
 ---
@@ -180,9 +208,11 @@ Document: 1.1.0 · API: 1.1.0 · Editor: 0.7.0
 Document: 1.0.0 · API: 1.0.0 · Editor: 0.6.0
 
 ### Changed (Document 0.6.0 → 1.0.0 — breaking)
+
 - All nodes now use a `contentType` + `subtype` discriminator pair (`ContainerNode`, `TextNode`, `MediaNode`) replacing the old `type` / `role` fields. Documents saved in the old format are automatically migrated on load via `migration.ts`.
 
 ### Changed (API 0.8.0 → 1.0.0 — breaking)
+
 - Factory functions and type names renamed to match the new node model. Old aliases removed.
 
 ---
@@ -192,6 +222,7 @@ Document: 1.0.0 · API: 1.0.0 · Editor: 0.6.0
 Document: 0.6.0 · API: 0.8.0 · Editor: 0.6.0
 
 ### Added
+
 - Full multi-page support (MPA): page model with hierarchy, slugs, and aliases.
 - Page API (CRUD) exposed through `editorApi` and `siteApi`.
 - Editor page switching via four entry points (topbar switcher, pages panel, inspector, and command bar).
@@ -203,9 +234,11 @@ Document: 0.6.0 · API: 0.8.0 · Editor: 0.6.0
 - Topbar overhaul with integrated page switcher.
 
 ### Changed (Document 0.5.0 → 0.6.0)
+
 - `DocumentModel` gains `pages`, `siteSettings`, and `sharedRegionIds` fields; new `DocumentPage` type.
 
 ### Changed (API 0.7.0 → 0.8.0)
+
 - `pageApi` and all page mutations added to `editorApi`.
 
 ---
@@ -215,14 +248,17 @@ Document: 0.6.0 · API: 0.8.0 · Editor: 0.6.0
 Document: 0.5.0 · API: 0.7.0 · Editor: 0.5.1
 
 ### Added
+
 - Sticky elevation control (global and per-node override).
 - Animated-state on-stage indicator (simple on/off badge).
 - Debug info panel for multiselect navigation.
 
 ### Changed (Document 0.4.0 → 0.5.0)
+
 - Sticky definition gains an elevation field.
 
 ### Changed (API 0.6.0 → 0.7.0)
+
 - Elevation get/set functions added to `documentApi`.
 
 ---
@@ -232,6 +268,7 @@ Document: 0.5.0 · API: 0.7.0 · Editor: 0.5.1
 Document: 0.4.0 · API: 0.6.0 · Editor: 0.5.0
 
 ### Added
+
 - Unified docs-backed help browser with markdown rendering and collapsible sidebar, replacing the shortcut dialog.
 - Animation presets preloaded at startup.
 - Lazy-loading for the Google Fonts catalog and the Layers panel.
@@ -243,15 +280,18 @@ Document: 0.4.0 · API: 0.6.0 · Editor: 0.5.0
 Document: 0.4.0 · API: 0.6.0 · Editor: 0.4.1
 
 ### Added
+
 - Animation API and runtime tests.
 - Animation trigger canonicalization (hover/click aliases resolved).
 - Settings panel refactored into focused section modules with shared primitives.
 - Initial Playground Roadmap document.
 
 ### Changed (Document 0.3.0 → 0.4.0)
+
 - `DocumentModel` gains `animationSettings` field.
 
 ### Changed (API 0.5.0 → 0.6.0)
+
 - Animation API surface added to `documentApi`.
 
 ---
@@ -261,6 +301,7 @@ Document: 0.4.0 · API: 0.6.0 · Editor: 0.4.1
 Document: 0.3.0 · API: 0.5.0 · Editor: 0.4.0
 
 ### Added
+
 - Layers panel with full drag-and-drop reordering.
 - Reparent-selection API for moving nodes across containers.
 - Drag-drop engine extracted into its own module.
@@ -268,6 +309,7 @@ Document: 0.3.0 · API: 0.5.0 · Editor: 0.4.0
 - Performance-optimized drag (no React re-renders during drag).
 
 ### Changed (API 0.4.0 → 0.5.0)
+
 - `reparentSelection` added to `editorApi`.
 
 ---
@@ -277,6 +319,7 @@ Document: 0.3.0 · API: 0.5.0 · Editor: 0.4.0
 Document: 0.3.0 · API: 0.4.0 · Editor: 0.3.1
 
 ### Added
+
 - Design system showcase with hash routing.
 - `InspectorControls` split into focused component family modules.
 - Font picker refactored with chevron and side-effect extraction.
@@ -288,12 +331,14 @@ Document: 0.3.0 · API: 0.4.0 · Editor: 0.3.1
 Document: 0.3.0 · API: 0.4.0 · Editor: 0.3.0
 
 ### Added
+
 - Full technical improvement sweep: API-first document mutations, accessibility improvements, performance memoization, visual regression baselines, test quality pass, component splits.
 - Toolchain upgraded: Node 22, React 19, Vite 8, TypeScript 5.9, Biome.
 - Draggable focused panels with configurable editor palettes and accent colors.
 - Shared panel chrome extracted.
 
 ### Changed (API 0.3.0 → 0.4.0)
+
 - API-first mutation functions added to `documentApi`.
 
 ---
@@ -303,6 +348,7 @@ Document: 0.3.0 · API: 0.4.0 · Editor: 0.3.0
 Document: 0.3.0 · API: 0.3.0 · Editor: 0.2.0
 
 ### Added
+
 - Google Fonts catalog bundled and font management panel introduced.
 - Font picker with preview loading.
 - Inspector typography controls.
@@ -311,9 +357,11 @@ Document: 0.3.0 · API: 0.3.0 · Editor: 0.2.0
 - Stage resize knob for structural wrappers.
 
 ### Changed (Document 0.2.0 → 0.3.0)
+
 - `FontLibrary` extended with font family entries and favorite tracking.
 
 ### Changed (API 0.2.0 → 0.3.0)
+
 - Font management functions added to `documentApi`.
 
 ---
@@ -323,6 +371,7 @@ Document: 0.3.0 · API: 0.3.0 · Editor: 0.2.0
 Document: 0.2.0 · API: 0.2.0 · Editor: 0.1.1
 
 ### Added
+
 - Dual-edge sticky model (top + bottom simultaneously).
 - Sticky preview overlays on stage.
 - Inspector size and typography controls.
@@ -330,9 +379,11 @@ Document: 0.2.0 · API: 0.2.0 · Editor: 0.1.1
 - Architecture boundary enforcement.
 
 ### Changed (Document 0.1.0 → 0.2.0)
+
 - `StickyDefinition` extended with dual-edge semantics.
 
 ### Changed (API 0.1.0 → 0.2.0)
+
 - Sticky API extended to support dual-edge configuration.
 
 ---
@@ -342,6 +393,7 @@ Document: 0.2.0 · API: 0.2.0 · Editor: 0.1.1
 Document: 0.1.0 · API: 0.1.0 · Editor: 0.1.0
 
 ### Added
+
 - Initial working editor: sticky model, stage rendering, inspector, undo/redo, drag, resize, and basic static-site export.
 - `DocumentModel` with sticky nodes, layout, and font library.
 - `documentApi` and `editorApi` initial surfaces.
