@@ -647,7 +647,7 @@ export function AppShell({
 				css={previewCss}
 				fontHref={previewFontHref}
 				document={state.document}
-				previewSticky={state.ui.previewSticky}
+				previewSticky={true}
 				pageId={state.activePageId ?? undefined}
 			/>
 		);

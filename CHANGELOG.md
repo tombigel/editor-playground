@@ -17,6 +17,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - mark owner section for selected nodes
 - preserve drag preview position on release
 - restrict width keywords per node type and break measurement loop
+- set previewSticky to true for consistent behavior
 
 ---
 
