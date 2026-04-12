@@ -444,8 +444,10 @@ describe('stage/Stage', () => {
     expect(sectionSelectedMarkup).toContain('class="wrapper-padding-overlay"');
     expect(sectionSelectedMarkup).toContain('class="wrapper-padding-overlay-boundary"');
     expect(sectionSelectedMarkup).toContain('top:64px;right:72px;bottom:72px;left:72px');
+    expect(sectionSelectedMarkup).not.toContain('data-selection-context="descendant"');
     expect(childSelectedMarkup).toContain('class="wrapper-padding-overlay"');
     expect(childSelectedMarkup).toContain('top:64px;right:72px;bottom:72px;left:72px');
+    expect(childSelectedMarkup).toContain('data-selection-context="descendant"');
   });
 
   it('shows the container padding boundary when the container or one of its children is selected', () => {

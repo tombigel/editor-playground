@@ -65,8 +65,12 @@ export function renderContainer({
   const hiddenStyle = getStageHiddenStyle(plan.hiddenState);
   const meshLayout = plan.meshLayout;
   const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
+  const hasSelectedDescendant = selectedIds.some((selectedId) =>
+    isNodeDescendantOf(document, selectedId, node.id),
+  );
   const showWrapperSpacerVisuals = shouldShowSpacerVisuals(spacerVisibility, selectedIds, node.id);
   const isHighlightedDropTarget = highlightedDropId === node.id;
+  const showSectionSelectionContext = node.subtype === 'section' && !selectedIds.includes(node.id) && hasSelectedDescendant;
   const isStickyContentWrapper = plan.contentSticky;
   const isSelfStickyTrack = Boolean(
     selfRegistration &&
@@ -123,9 +127,11 @@ export function renderContainer({
         plan.hiddenState.isEffectivelyHidden ? 'is-effectively-hidden' : ''
       } ${plan.hiddenState.isGhostVisible ? 'is-hidden-ghost' : ''} ${
         plan.hiddenState.isHiddenSelected ? 'is-hidden-selected' : ''
+      } ${showSectionSelectionContext ? 'selected-context' : ''
       }`}
       data-hidden={plan.hiddenState.isEffectivelyHidden ? 'true' : 'false'}
       data-ghost-visible={plan.hiddenState.isGhostVisible ? 'true' : 'false'}
+      data-selection-context={showSectionSelectionContext ? 'descendant' : undefined}
       aria-label={getNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,

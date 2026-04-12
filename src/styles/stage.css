@@ -81,9 +81,9 @@
   border-radius: inherit;
 }
 
-.stage-wrapper.role-header,
-.stage-wrapper.role-footer,
-.stage-wrapper.role-section {
+.stage-wrapper.subtype-header,
+.stage-wrapper.subtype-footer,
+.stage-wrapper.subtype-section {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -99,6 +99,15 @@
   position: relative;
   outline: none;
   box-shadow: none;
+}
+
+.stage-wrapper.subtype-section.selected-context > .content-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--editor-accent) 65%, transparent);
+  pointer-events: none;
 }
 
 .stage-marquee-selection {

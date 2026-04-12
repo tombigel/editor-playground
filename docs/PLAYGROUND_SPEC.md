@@ -1303,6 +1303,7 @@ State persistence:
 - Pointer selection does not commit drag or reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not trigger drag remeasurement.
 - Intrinsic-height leaf nodes align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy.
 - Auto-height wrapper sizing in the stage is measured from the inner content box so dragging or repositioning selected nodes does not inflate surrounding header or section height through wrapper borders.
+- Single-selection inside a section keeps the node as the primary target but also marks the owning section border box, while the section padding guide continues to show authored padding bounds.
 - Button focus states use a stronger visible ring across editor controls.
 - When `Show Hidden` is enabled, hidden nodes render on stage as editor-only ghosts with reduced opacity and a faint diagonal-stripe overlay while preserving their authored layout footprint.
 - When `Show Hidden` is disabled, hidden nodes stay out of normal stage navigation and pointer targeting, but selecting them from Components reveals the selected hidden chain as ghosts for context.

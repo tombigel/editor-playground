@@ -663,6 +663,19 @@ export function MiscDemos() {
 					</div>
 					<div>
 						<div className="editor-text-muted mb-6 text-[11px] font-medium">
+							Section context
+						</div>
+						<div className="stage-wrapper subtype-section selected-context relative" style={{ width: 180, height: 80 }}>
+							<div className="content-wrapper h-full w-full">
+								<div
+									className="wrapper-padding-overlay-boundary"
+									style={{ top: 14, right: 18, bottom: 18, left: 18 }}
+								/>
+							</div>
+						</div>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-6 text-[11px] font-medium">
 							Multi selection
 						</div>
 						<div className="relative" style={{ width: 180, height: 80 }}>
