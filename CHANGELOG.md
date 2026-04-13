@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- update version to 0.6.2 and enhance version bump scripts
+
 ### Changed
 
 - update version to 0.6.0 and document changes in changelog
@@ -19,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ---
 
 ## [0.6.0] — 2026-04-12
+
 Document: 1.5.0 · API: 1.5.0 · Editor: 0.13.0
 
 ### Added

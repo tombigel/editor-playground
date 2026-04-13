@@ -55,49 +55,50 @@ Priority and status use emoji color markers so the table stays plain markdown:
 - `🟣` partially present
 - `🟢` in progress
 
-| Raw intake id | Short name | Priority | Type | Status | Owner lane | Notes / dependencies |
+| Raw intake id | Status | Short name | Priority | Type | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-01` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | `✅ Done` | Shared | Audited; 5 reducer actions with undo support |
-| `RI-02` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | `✅ Done` | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
-| `RI-03` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `✅ Done` | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
-| `RI-04` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | `⚪ Not started` | LLM | Deferred to next phase |
-| `RI-05` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | `⚪ Not started` | Human | Dep: `RI-03`, `RI-04` |
-| `RI-06` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | `🟣 Partially present` | Shared | Dep: `RI-05` |
-| `RI-29` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | `⚪ Not started` | Shared | Dep: `RI-06` |
-| `RI-07` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | `✅ Done` | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
-| `RI-33` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: `RI-07` |
-| `RI-11` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | `⚪ Not started` | Shared | - |
-| `RI-12A` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | `🟣 Partially present` | Shared | - |
-| `RI-12B` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | `🟣 Partially present` | Shared | - |
-| `RI-40` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: `RI-11`, `RI-12B` |
-| `RI-09` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | `🟣 Partially present` | Shared | - |
-| `RI-10` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-09` |
-| `RI-25` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | `🟢 In progress` | Shared | - |
-| `RI-27` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | `🟣 Partially present` | Shared | - |
-| `RI-13` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | `⚪ Not started` | Human | - |
-| `RI-14` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | `🟣 Partially present` | Shared | - |
-| `RI-16` | [User management](#user-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
-| `RI-18` | [Project management](#project-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
-| `RI-19` | [Assets management](#assets-management) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
-| `RI-20` | [CMS](#cms) | `🔵 Low` | Platform | `⚪ Not started` | Human | - |
-| `RI-28` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | `✅ Done` | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
-| `RI-30` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | `✅ Done` | Shared | Four semver versions in `src/lib/version.ts`; pre-commit patch bump; `schemaVersion` on export |
-| `RI-31` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | `⚪ Not started` | Shared | Dep: `RI-07` |
-| `RI-32` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | `🟢 In progress` | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
-| `RI-34` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | `⚪ Not started` | Shared | Dep: Phase 1.8 (closed). See `TEXT_COMPONENT_PHASE_2_0_BRIEF.md` |
-| `RI-35` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | `✅ Done` | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
-| `RI-36` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | `✅ Done` | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
-| `RI-37` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | `✅ Done` | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
-| `RI-38` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | `🟢 In progress` | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
-| `RI-39` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | `✅ Done` | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
-| `RI-08` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | `⚪ Not started` | Human | - |
-| `RI-15` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | `⚪ Not started` | Shared | - |
-| `RI-17` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
-| `RI-21` | [Connect to external CMS](#connect-to-external-cms) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
-| `RI-22` | [Connect to Wix services](#connect-to-wix-services) | `⚪ Optional` | Platform | `⚪ Not started` | Human | - |
-| `RI-23` | [Arbitrary code support for components](#arbitrary-code-support-for-components) | `⚪ Optional` | Research | `⚪ Not started` | Human | - |
-| `RI-24` | [Arbitrary CSS support for components](#arbitrary-css-support-for-components) | `⚪ Optional` | Research | `⚪ Not started` | Human | - |
-| `RI-26` | [Interact custom effects support](#interact-custom-effects-support) | `⚪ Optional` | Feature | `🟤 Needs audit` | Shared | Dep: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06` |
+| `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
+| `RI-02` | `✅ Done` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
+| `RI-03` | `✅ Done` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
+| `RI-04` | `⚪ Not started` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Deferred to next phase |
+| `RI-05` | `⚪ Not started` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | Human | Dep: `RI-03`, `RI-04` |
+| `RI-06` | `🟣 Partially present` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | Shared | Dep: `RI-05` |
+| `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | Shared | Dep: `RI-06` |
+| `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
+| `RI-33` | `⚪ Not started` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Dep: `RI-07` |
+| `RI-11` | `⚪ Not started` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | - |
+| `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
+| `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
+| `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
+| `RI-09` | `🟣 Partially present` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | Shared | - |
+| `RI-10` | `🟤 Needs audit` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | Shared | Dep: `RI-09` |
+| `RI-25` | `🟢 In progress` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | - |
+| `RI-27` | `🟣 Partially present` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | Shared | - |
+| `RI-13` | `⚪ Not started` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | Human | - |
+| `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | - |
+| `RI-16` | `⚪ Not started` | [User management](#user-management) | `🔵 Low` | Platform | Human | - |
+| `RI-18` | `⚪ Not started` | [Project management](#project-management) | `🔵 Low` | Platform | Human | - |
+| `RI-19` | `⚪ Not started` | [Assets management](#assets-management) | `🔵 Low` | Platform | Human | - |
+| `RI-20` | `⚪ Not started` | [CMS](#cms) | `🔵 Low` | Platform | Human | - |
+| `RI-28` | `✅ Done` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
+| `RI-30` | `✅ Done` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | Shared | Four semver versions in `src/lib/version.ts`; pre-commit patch bump; `schemaVersion` on export |
+| `RI-31` | `⚪ Not started` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | Dep: `RI-07` |
+| `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
+| `RI-34` | `⚪ Not started` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | Dep: Phase 1.8 (closed). See `TEXT_COMPONENT_PHASE_2_0_BRIEF.md` |
+| `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
+| `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
+| `RI-37` | `✅ Done` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
+| `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
+| `RI-39` | `✅ Done` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
+| `RI-08` | `⚪ Not started` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | Human | - |
+| `RI-15` | `⚪ Not started` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | Shared | - |
+| `RI-17` | `⚪ Not started` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | Human | - |
+| `RI-21` | `⚪ Not started` | [Connect to external CMS](#connect-to-external-cms) | `⚪ Optional` | Platform | Human | - |
+| `RI-22` | `⚪ Not started` | [Connect to Wix services](#connect-to-wix-services) | `⚪ Optional` | Platform | Human | - |
+| `RI-23` | `⚪ Not started` | [Arbitrary code support for components](#arbitrary-code-support-for-components) | `⚪ Optional` | Research | Human | - |
+| `RI-24` | `⚪ Not started` | [Arbitrary CSS support for components](#arbitrary-css-support-for-components) | `⚪ Optional` | Research | Human | - |
+| `RI-26` | `🟤 Needs audit` | [Interact custom effects support](#interact-custom-effects-support) | `⚪ Optional` | Feature | Shared | Dep: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06` |
+| `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
 
 ## Active Stage
 
@@ -152,6 +153,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-38` interaction pattern unification — escape key, click-outside, pointer drag, popover positioning, and focus management each have multiple ad-hoc implementations; extract shared hooks and composite design system components
 - `RI-39` hidden ghost mode — hidden nodes (and hidden-targeted top-level wrappers) should render as semi-transparent ghost overlays in the editor stage so authors can see and select hidden content without cluttering the live layout; selection, inspector, and export should handle hidden nodes consistently
 - `RI-40` table component support — add two table directions under components/wrappers: a simple markdown-backed table for fast authoring/export, and a more robust designable table where each cell can host nodes and participate in wrapper/layout semantics
+- `RI-41` document view API and architecture boundary enforcement — all UI model reads should route through a dedicated `documentViewApi` layer rather than reaching into editor state directly; an automated architecture check script should enforce the boundary at CI time
 
 ## Structured Roadmap
 
@@ -218,7 +220,7 @@ None yet.
 - `Status`: `Done` (RI-03 presets); `Not started` (RI-04 keyframes)
 - `Source`: `RI-03`, `RI-04`
 - `Why it matters`: The animation subsystem needs a functional authoring surface that is good enough for development, testing, and iteration before the designed product UI is ready.
-- `Current state`: **RI-03 complete** — `AnimationSection` inspector component with: enable/disable toggle, trigger type selector (6 types with smart defaults), searchable preset picker (64 presets), dynamic preset parameter controls from schema, hover out-action selector, requires-sticky toggle with warning, reduced-motion toggle, clear button. Wired into all 8 inspector configs. Animation focused mode. Delivered across sha: f56e9c8, 65b379e. **RI-04 (keyframes) deferred** — keyframe list editor, property editor, and CSS import are planned for the next phase.
+- `Current state`: **RI-03 complete** — `AnimationSection` inspector component with: enable/disable toggle, trigger type selector (6 types with smart defaults), searchable preset picker (64 presets, with grouped option headers and capped dropdown height), dynamic preset parameter controls from schema, timing controls (duration, delay) and named easing selector (preserves timing values across preset changes), hover out-action selector, requires-sticky toggle with warning, reduced-motion toggle, clear button. Wired into all 8 inspector configs. Animation focused mode. Delivered across sha: f56e9c8, 65b379e, 52b0a4b. **RI-04 (keyframes) deferred** — keyframe list editor, property editor, and CSS import are planned for the next phase.
 - `Next move`: Implement RI-04 keyframe authoring UI.
 
 ##### Animation authoring UI with real product/UX design
@@ -425,7 +427,7 @@ None yet.
 
 - `Type`: `Refactor`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `In progress`
 - `Source`: `RI-38`
 - `Why it matters`: Escape key handling (6+ implementations), click-outside detection (3+ patterns), pointer drag tracking (3+ implementations), and popover positioning (4+ implementations) are each reimplemented ad-hoc in every consumer. This makes behavior inconsistent and requires re-explaining expected behavior for each new panel, dropdown, or dialog.
 - `Current state`: `useEscapeKey` and `useClickOutside` hooks extracted to `src/lib/` and migrated to 4 consumers (FontControls, ValueWithUnit, TopLevelWrapperVisibilityControl, SearchableSelect). `DARK_TOOLTIP_CLASS` constant extracted and deduplicated across 15 occurrences in 8 files. Popover positioning and pointer drag hooks assessed and deferred — the positioning strategies are fundamentally different per component (tooltip side-based, select viewport-smart, menu fixed-offset) making a shared abstraction a poor fit.
@@ -541,6 +543,15 @@ None yet.
 - `Next move`: Add a storage size warning in the editor when the model approaches the localStorage limit. Plan the IndexedDB migration as a discrete platform task once multi-page sites make the constraint real. Migration is straightforward — same model, different persistence backend.
 
 #### Refactor
+
+##### Document view API and architecture boundary enforcement
+
+- `Type`: `Refactor`
+- `Owner lane`: `LLM`
+- `Status`: `Done`
+- `Source`: `RI-41`
+- `Why it matters`: Panels and controls were reading directly from editor state rather than through the API layer, violating the architecture boundary and making UI code hard to replace or test independently.
+- `Current state`: **Complete** — `src/api/documentViewApi.ts` introduced as the single read surface for all UI model queries. All 47 affected panel and inspector files migrated to read through this layer. `scripts/check-architecture.mjs` added to enforce the boundary at CI time. Delivered sha: 10b8d75.
 
 ##### Wave F CSS cleanup
 

@@ -6,18 +6,21 @@
  *   subsystem: project | document | api | editor | all
  *   level:     patch | minor | major
  *
- * Updates src/lib/version.ts and (when project/all) package.json.
+ * Updates src/lib/version.ts and (when project/all) package.json/package-lock.json.
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { execSync } from 'child_process';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import semver from 'semver';
+import { getPackageLockSyncCommand, syncPackageJsonVersion } from './bump-version-lib.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 const versionFile = resolve(root, 'src/lib/version.ts');
 const packageFile = resolve(root, 'package.json');
+const packageLockFile = resolve(root, 'package-lock.json');
 
 const SUBSYSTEM_MAP = {
   project: 'PROJECT_VERSION',
@@ -94,9 +97,18 @@ if (levelArg !== 'patch') {
 if (targets.includes('project')) {
   const match = content.match(/export const PROJECT_VERSION = '([^']+)';/);
   if (match) {
-    const pkg = JSON.parse(readFileSync(packageFile, 'utf8'));
-    pkg.version = match[1];
-    writeFileSync(packageFile, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-    console.log(`package.json version → ${match[1]}`);
+    const projectVersion = match[1];
+
+    writeFileSync(
+      packageFile,
+      syncPackageJsonVersion(readFileSync(packageFile, 'utf8'), projectVersion),
+      'utf8',
+    );
+    console.log(`package.json version → ${projectVersion}`);
+
+    if (existsSync(packageLockFile)) {
+      execSync(getPackageLockSyncCommand(), { cwd: root, stdio: 'inherit' });
+      console.log(`package-lock.json refreshed via npm for ${projectVersion}`);
+    }
   }
 }

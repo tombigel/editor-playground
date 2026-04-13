@@ -930,7 +930,7 @@ Sticky Playground tracks four independent semver versions, all defined in `src/l
 
 | Level | Trigger | How |
 | --- | --- | --- |
-| **Patch** | Every commit | Automatic — pre-commit hook runs `node scripts/bump-version.mjs all patch` and stages the result as part of the same commit |
+| **Patch** | Every commit | Automatic — pre-commit hook runs `node scripts/bump-version.mjs all patch`; that script updates `package.json`, refreshes `package-lock.json` via `npm install --package-lock-only --ignore-scripts`, and stages `src/lib/version.ts`, `package.json`, `package-lock.json`, and `CHANGELOG.md` as part of the same commit |
 | **Minor** | Small migratable breaking change, significant new feature | Manual — `node scripts/bump-version.mjs [subsystem] minor` |
 | **Major** | Unrecoverable breaking change, project-wide feature shift | Manual — `node scripts/bump-version.mjs [subsystem] major` |
 

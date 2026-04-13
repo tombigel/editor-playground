@@ -21,7 +21,10 @@ const root = resolve(__dirname, '..');
 
 try {
   execSync('node scripts/bump-version.mjs all patch', { cwd: root, stdio: 'inherit' });
-  execSync('git add src/lib/version.ts package.json CHANGELOG.md', { cwd: root, stdio: 'inherit' });
+  execSync('git add src/lib/version.ts package.json package-lock.json CHANGELOG.md', {
+    cwd: root,
+    stdio: 'inherit',
+  });
 } catch (err) {
   console.error('pre-commit version bump failed:', err.message);
   process.exit(1);

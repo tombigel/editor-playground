@@ -131,8 +131,17 @@ describe('panels/helpDocs', () => {
 
   it('keeps the roadmap summary table in markdown so help docs do not need raw html rendering', () => {
     const roadmap = readFileSync(resolve(process.cwd(), 'docs/PLAYGROUND_ROADMAP.md'), 'utf8');
+    const summaryHeaderLine = roadmap
+      .split('\n')
+      .find((line) => line.startsWith('| Raw intake id |'));
 
-    expect(roadmap).toContain('| Raw intake id | Short name | Priority | Type | Status | Owner lane | Notes / dependencies |');
+    expect(summaryHeaderLine).toBeDefined();
+    expect(summaryHeaderLine).toContain('Short name');
+    expect(summaryHeaderLine).toContain('Priority');
+    expect(summaryHeaderLine).toContain('Type');
+    expect(summaryHeaderLine).toContain('Status');
+    expect(summaryHeaderLine).toContain('Owner lane');
+    expect(summaryHeaderLine).toContain('Notes / dependencies');
     expect(roadmap).not.toContain('<table>');
     expect(roadmap).not.toContain('<span style=');
   });
