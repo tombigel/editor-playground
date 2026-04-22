@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Added
 
 - update version to 0.6.2 and enhance version bump scripts
+- add source exclusions for agents and Claude in styles.css
 
 ### Changed
 

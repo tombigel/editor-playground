@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@source not "../.agents/**";
+@source not "../.claude/**";
 @import "./styles/variables.css";
 @import "./styles/editor-chrome.css";
 @import "./styles/layers-panel.css";
