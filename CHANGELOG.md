@@ -21,6 +21,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - update version to 0.6.0 and document changes in changelog
 - update version to 0.6.1 in package-lock.json
 
+### Fixed
+
+- resolve PrismJS "Prism is not defined" error in production bundle
+
 ---
 
 ## [0.6.0] — 2026-04-12

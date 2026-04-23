@@ -1,14 +1,33 @@
 import path from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+
+// PrismJS language component files reference `Prism` as a bare global, but
+// when Rollup bundles them into an ESM chunk they have no in-scope `Prism`
+// variable. This plugin injects `import Prism from 'prismjs'` at the top of
+// each component file so Rollup can resolve the reference correctly.
+function prismGlobalsPlugin(): Plugin {
+  return {
+    name: 'inject-prism-global',
+    transform(code, id) {
+      if (
+        id.includes('node_modules/prismjs/components/') &&
+        !id.endsWith('prism-core.js') &&
+        !code.startsWith("import Prism")
+      ) {
+        return { code: `import Prism from 'prismjs';\n${code}`, map: null };
+      }
+    },
+  };
+}
 
 const devHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), prismGlobalsPlugin()],
   server: {
     headers: devHeaders,
   },
