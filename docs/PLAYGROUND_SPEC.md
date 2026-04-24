@@ -633,7 +633,7 @@ Rules:
 - Stage code editing keeps the node as `subtype: 'code'` and persists exactly one `code-block` in `TextDocumentContent.blocks`.
 - `Enter` and `Shift+Enter` insert newline text. `Tab` and `Shift+Tab` indent or unindent the current line or selected lines with literal tab characters; tab width is visual CSS `tab-size`, not text rewriting.
 - The floating stage toolbar for code is code-only: language plus `Auto` / `Light` / `Dark` theme. Bold, italic, color, link, and other rich inline controls are intentionally absent.
-- Code style overrides sit above Prism highlighting and remain inspector-owned. The inspector exposes theme, tab width, typography/design overrides, a reset action that preserves raw code plus language, and a code-focused mono font picker with a `More monospace fonts` entry into Manage Fonts.
+- Code style overrides sit above Prism highlighting and remain inspector-owned. The inspector exposes theme, tab width, typography/design overrides, and a code-focused mono font picker with a `More monospace fonts` entry into Manage Fonts.
 - Seeded templates use semantic heading tags for primary titles:
   - the default post title is `h1`
   - the primary titles in the sticky demo sections are seeded as `h2`

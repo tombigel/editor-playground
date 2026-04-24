@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Settings2 } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { listDocumentFontsForPicker } from "../../../api/fontApi";
 import type { EditorTextField } from "../../../api/documentApi";
 import type { DocumentModel } from "../../../api/documentViewApi";
@@ -73,7 +73,6 @@ export function CodeTextStyleSection({
 	document,
 	node,
 	onTextChange,
-	onResetCodeBlockStyle,
 	onOpenManageFonts,
 	focusedMode,
 	onEnterFocusedMode,
@@ -84,7 +83,6 @@ export function CodeTextStyleSection({
 	document: DocumentModel;
 	node: TextInspectorNode;
 	onTextChange: (field: EditorTextField, value: string) => void;
-	onResetCodeBlockStyle?: () => void;
 	onOpenManageFonts?: (options?: { category?: string }) => void;
 } & FocusModeCardProps) {
 	const theme = node.code?.theme ?? "auto";
@@ -285,18 +283,6 @@ export function CodeTextStyleSection({
 					onChange={(value) => onTextChange("tabSize", String(value))}
 				/>
 			</FormField>
-			{onResetCodeBlockStyle ? (
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					className="h-8 w-full justify-start rounded-sm text-[11px]"
-					onClick={onResetCodeBlockStyle}
-				>
-					<RotateCcw className="h-3.5 w-3.5" />
-					Reset code styling
-				</Button>
-			) : null}
 		</InspectorSectionCard>
 	);
 }

@@ -53,7 +53,6 @@ const textTextStyleSection: InspectorSectionDefinition = {
           document={document}
           node={node}
           onTextChange={actions.onTextChange}
-          onResetCodeBlockStyle={() => actions.onResetCodeBlockStyle?.(node.id)}
           onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}

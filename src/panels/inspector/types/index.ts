@@ -38,7 +38,6 @@ export type InspectorActionHandlers = {
   onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
-  onResetCodeBlockStyle?: (nodeId: string) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;
   onAnimationKeyframeChange: (trigger: AnimationTriggerType, effect: KeyframeAnimationEffect) => void;

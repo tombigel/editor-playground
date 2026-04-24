@@ -41,7 +41,6 @@ describe("panels/inspector/content section rows", () => {
 				document={document}
 				node={codeNode}
 				onTextChange={() => {}}
-				onResetCodeBlockStyle={() => {}}
 				onOpenManageFonts={() => {}}
 			/>,
 		);
@@ -54,7 +53,7 @@ describe("panels/inspector/content section rows", () => {
 		expect(markup).toContain(">Tab<");
 		expect(markup).toContain('style="width:2.5em"');
 		expect(markup).toContain('type="number"');
-		expect(markup).toContain("Reset code styling");
+		expect(markup).not.toContain("Reset code styling");
 	});
 
 	it("uses FormField for shared navigation fields and open-in-new-tab rows", () => {

@@ -39,7 +39,6 @@ import {
 } from '../api/editorApi';
 import {
   mergeTextNodesToRichDoc,
-  resetCodeBlockStyleDoc,
   setSiteNodeStickyElevation,
   setTextDocumentBlockGapDoc,
   setTextDocumentContentDoc,
@@ -148,8 +147,6 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTextDocumentContentDoc(state.document, action.id, action.content, action.options) };
     case 'setTextDocumentBlockGap':
       return { ...state, document: setTextDocumentBlockGapDoc(state.document, action.id, action.value) };
-    case 'resetCodeBlockStyle':
-      return { ...state, document: resetCodeBlockStyleDoc(state.document, action.id) };
     case 'switchTextSubtype':
       return {
         ...state,

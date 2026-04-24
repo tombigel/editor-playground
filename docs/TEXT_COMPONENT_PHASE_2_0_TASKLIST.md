@@ -97,7 +97,7 @@ Execution rules:
   - Code edit mode is raw text, not Slate rich text.
   - `Enter` and `Shift+Enter` insert newline text; `Tab` / `Shift+Tab` indent with literal tabs.
   - Tab width is visual `tab-size` metadata and does not rewrite stored code.
-  - Code style overrides are inspector-owned and reset preserves raw code plus language.
+  - Code style overrides are inspector-owned; no inspector reset button is shown because code editing has no inline styling layer.
   - Code font selection offers System Mono and available mono/code font families, with Manage Fonts prefiltered to `monospace`.
 - Verification commands:
   - `npm run test:run -- src/api/tests/documentApi.test.ts src/model/tests/richContent.test.ts src/model/tests/defaults.test.ts`
@@ -113,7 +113,8 @@ Execution rules:
   - `f8638bc` focused code stage activation
   - `39d681a` code indentation keys
   - `00f4a89` focused code toolbar
-  - `b4f9d13` inspector tab width and reset controls
+  - `b4f9d13` inspector tab width controls
+  - code inspector reset button removed after simplifying code styling scope
   - `f50c506` mono font workflow
 - Open follow-ups carried forward:
   - None yet.

@@ -163,7 +163,6 @@ export type EditorAction =
   | { type: 'applyTextNodeMarkdown'; id: NodeId; markdown: string }
   | { type: 'setTextDocumentContent'; id: NodeId; content: TextDocumentContent; options?: SetTextDocumentContentOptions }
   | { type: 'setTextDocumentBlockGap'; id: NodeId; value: number }
-  | { type: 'resetCodeBlockStyle'; id: NodeId }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
   | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
 

@@ -251,9 +251,6 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onSetTextDocumentBlockGap={(nodeId, value) =>
 							dispatch({ type: "setTextDocumentBlockGap", id: nodeId, value })
 						}
-						onResetCodeBlockStyle={(nodeId) =>
-							dispatch({ type: "resetCodeBlockStyle", id: nodeId })
-						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })
 						}
