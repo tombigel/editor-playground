@@ -1,13 +1,10 @@
-import { useState } from "react";
-import { DARK_TOOLTIP_CLASS } from '@/lib/utils';
-import { CodeXml, Layers2, List, PencilLine, Pin, Rocket, TextInitial } from "lucide-react";
+import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
+import { Layers2, Pin, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
-import { OptionsSelector } from "@/components/ui/options-selector";
 import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
-import { ListCard } from "@/components/ui/list-card";
 import {
 	Menubar,
 	MenubarCheckboxItem,
@@ -22,380 +19,34 @@ import {
 	MenubarTrigger,
 } from "@/components/ui/menubar";
 import { PopoverTooltip } from "@/components/ui/popover";
-import { Pager } from "@/components/ui/pager";
 import { InlineNotice, NoticeSurface } from "@/components/ui/settings-panel";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ResizeHandleView } from "../../../stage/stageRenderers/resizeHandles";
 import { MultiSelectionOutline } from "../../../stage/stageRenderers/selectionVisuals";
 import { ComponentPreview } from "../../previews/ComponentPreview";
-import { VariationsGrid } from "../../previews/VariationsGrid";
-import type { PropDefinition } from "../../types";
-
-// ---------------------------------------------------------------------------
-// Prop definitions
-// ---------------------------------------------------------------------------
-
-const INPUT_PROPS: PropDefinition[] = [
-	{
-		name: "type",
-		type: "string",
-		default: "'text'",
-		description: "HTML input type.",
-	},
-	{ name: "value", type: "string", description: "Controlled value." },
-	{ name: "placeholder", type: "string", description: "Placeholder text." },
-	{
-		name: "disabled",
-		type: "boolean",
-		default: "false",
-		description: "Disabled state.",
-	},
-];
-
-const SWITCH_PROPS: PropDefinition[] = [
-	{ name: "checked", type: "boolean", description: "Checked state." },
-	{
-		name: "onCheckedChange",
-		type: "(checked: boolean) => void",
-		description: "Change handler.",
-	},
-	{
-		name: "disabled",
-		type: "boolean",
-		default: "false",
-		description: "Disabled state.",
-	},
-];
-
-const OPTIONS_SELECTOR_PROPS: PropDefinition[] = [
-	{
-		name: "value",
-		type: "string",
-		description: "Currently selected option value.",
-	},
-	{
-		name: "options",
-		type: "OptionsSelectorOption[]",
-		description: "Mutually exclusive choices with labels, optional icons, and optional per-option tooltips.",
-	},
-	{
-		name: "onValueChange",
-		type: "(value: string) => void",
-		description: "Selection change handler.",
-	},
-	{
-		name: "display",
-		type: "'label' | 'icon' | 'icon-label'",
-		default: "'label'",
-		description: "Whether options show labels only, icons only, or both.",
-	},
-];
-
-const TEXTAREA_PROPS: PropDefinition[] = [
-	{ name: "value", type: "string", description: "Controlled value." },
-	{ name: "placeholder", type: "string", description: "Placeholder text." },
-	{
-		name: "disabled",
-		type: "boolean",
-		default: "false",
-		description: "Disabled state.",
-	},
-];
-
-const LIST_CARD_PROPS: PropDefinition[] = [
-	{ name: "title", type: "ReactNode", description: "Primary list-card title." },
-	{ name: "description", type: "ReactNode", description: "Secondary supporting copy." },
-	{ name: "meta", type: "ReactNode", description: "Compact right-aligned metadata slot." },
-	{ name: "actions", type: "ReactNode", description: "Trailing action cluster." },
-	{
-		name: "tone",
-		type: "'default' | 'subtle'",
-		default: "'default'",
-		description: "Surface emphasis variant.",
-	},
-];
-
-const SEARCHABLE_MULTI_SELECT_PROPS: PropDefinition[] = [
-	{ name: "values", type: "string[]", description: "Currently selected option values." },
-	{ name: "options", type: "SearchableMultiSelectOption[]", description: "Fixed option set with optional descriptions and search keywords." },
-	{ name: "placeholder", type: "string", description: "Trigger text when nothing is selected." },
-	{ name: "searchPlaceholder", type: "string", description: "Filter input placeholder text." },
-	{ name: "onValuesChange", type: "(values: string[]) => void", description: "Selection change handler." },
-];
-
-const SELECTION_CHROME_PROPS: PropDefinition[] = [
-	{
-		name: "className",
-		type: "string",
-		description: "Additional CSS classes for the selection outline wrapper.",
-	},
-];
-
-const WARNING_INFO_PROPS: PropDefinition[] = [
-	{
-		name: "tone",
-		type: "'muted' | 'info' | 'success' | 'danger' | 'warning'",
-		description: "Visual state for a shared notice surface.",
-	},
-	{
-		name: "children",
-		type: "ReactNode",
-		description: "Notice content.",
-	},
-];
-
-const TOOLTIP_PROPS: PropDefinition[] = [
-	{ name: "content", type: "ReactNode", description: "Tooltip content." },
-	{
-		name: "side",
-		type: "'top' | 'bottom' | 'right'",
-		default: "'top'",
-		description: "Preferred side.",
-	},
-	{
-		name: "align",
-		type: "'start' | 'center' | 'end'",
-		default: "'center'",
-		description: "Alignment.",
-	},
-	{
-		name: "offset",
-		type: "number",
-		default: "12",
-		description: "Offset in px.",
-	},
-];
-
-const PAGER_PROPS: PropDefinition[] = [
-	{
-		name: "page",
-		type: "number",
-		description: "Current page number.",
-	},
-	{
-		name: "totalPages",
-		type: "number",
-		description: "Total number of pages.",
-	},
-];
-
-const MENUBAR_PROPS: PropDefinition[] = [
-	{ name: "id", type: "string", description: "Stable menu id used for active/open state management." },
-	{ name: "children", type: "ReactNode", description: "Menu triggers, panels, and row primitives." },
-];
-
-const PAGE_SWITCHER_PROPS: PropDefinition[] = [
-	{ name: "value", type: "string | null", description: "Currently selected page id." },
-	{ name: "options", type: "PageSwitcherOption[]", description: "Ordered page options with optional nesting depth." },
-	{ name: "placeholder", type: "string", default: "'Untitled'", description: "Fallback label when no active page is selected." },
-	{ name: "onValueChange", type: "(value: string) => void", description: "Called when a page option is selected." },
-	{ name: "onCreatePage", type: "() => void", description: "Called when the create-page row is chosen." },
-	{ name: "triggerClassName", type: "string", description: "Optional trigger class overrides." },
-	{ name: "contentClassName", type: "string", description: "Optional menu content class overrides." },
-	{ name: "defaultOpen", type: "boolean", default: "false", description: "Demo/test helper for opening the menu initially." },
-];
-
-const TABS_PROPS: PropDefinition[] = [
-	{ name: "value", type: "string", description: "Controlled selected tab value." },
-	{ name: "variant", type: "'default' | 'segmented'", description: "List and trigger visual variant." },
-	{ name: "size", type: "'default' | 'compact'", description: "Trigger density variant." },
-];
-
-const SEARCHABLE_SELECT_PROPS: PropDefinition[] = [
-	{ name: "value", type: "string | undefined", description: "Currently selected option value." },
-	{ name: "options", type: "SearchableSelectOption[]", description: "Fixed option set with optional descriptions and keywords." },
-	{ name: "placeholder", type: "string", description: "Trigger placeholder text." },
-	{ name: "searchPlaceholder", type: "string", description: "Search input placeholder text." },
-	{ name: "onValueChange", type: "(value: string | undefined) => void", description: "Selection change handler." },
-	{ name: "disabled", type: "boolean", default: "false", description: "Disables the trigger and menu." },
-];
-
-// ---------------------------------------------------------------------------
-// Interactive preview wrappers
-// ---------------------------------------------------------------------------
-
-function SwitchDemo() {
-	const [checked, setChecked] = useState(false);
-	return (
-		<VariationsGrid
-			variations={[
-				{
-					label: "Unchecked",
-					render: () => <Switch checked={false} onCheckedChange={() => {}} />,
-				},
-				{
-					label: "Checked",
-					render: () => <Switch checked onCheckedChange={() => {}} />,
-				},
-				{
-					label: "Disabled",
-					render: () => (
-						<Switch checked={false} disabled onCheckedChange={() => {}} />
-					),
-				},
-				{
-					label: "Mixed / Intermediate",
-					render: () => (
-						<Switch
-							checked={false}
-							onCheckedChange={() => {}}
-							className="bg-slate-400 data-[state=unchecked]:bg-slate-400 [&>[data-ui=switch-thumb]]:translate-x-[9px]"
-						/>
-					),
-				},
-				{
-					label: "Interactive (click)",
-					render: () => (
-						<Switch checked={checked} onCheckedChange={setChecked} />
-					),
-				},
-			]}
-		/>
-	);
-}
-
-function OptionsSelectorDemo() {
-	const [twoOption, setTwoOption] = useState("left");
-	const [threeOption, setThreeOption] = useState("center");
-	const [textSubtype, setTextSubtype] = useState("block");
-	return (
-		<div className="space-y-4">
-			<div>
-				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					2-option selector
-				</div>
-				<OptionsSelector
-					ariaLabel="Alignment"
-					value={twoOption}
-					onValueChange={setTwoOption}
-					options={[
-						{ value: "left", label: "Left" },
-						{ value: "right", label: "Right" },
-					]}
-				/>
-			</div>
-			<div>
-				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					3-option selector
-				</div>
-				<OptionsSelector
-					ariaLabel="Alignment"
-					value={threeOption}
-					onValueChange={setThreeOption}
-					options={[
-						{ value: "left", label: "Left" },
-						{ value: "center", label: "Center" },
-						{ value: "right", label: "Right" },
-					]}
-				/>
-			</div>
-			<div>
-				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					Icon-only selector
-				</div>
-				<OptionsSelector
-					ariaLabel="Text subtype"
-					display="icon"
-					size="compact"
-					value={textSubtype}
-					onValueChange={setTextSubtype}
-					options={[
-						{
-							value: "rich",
-							label: "Rich text",
-							icon: <PencilLine className="h-3.5 w-3.5" />,
-							tooltip: <div className="leading-3.5 font-medium">Rich text</div>,
-						},
-						{
-							value: "block",
-							label: "Text",
-							icon: <TextInitial className="h-3.5 w-3.5" />,
-							tooltip: <div className="leading-3.5 font-medium">Text</div>,
-						},
-						{
-							value: "list",
-							label: "List",
-							icon: <List className="h-3.5 w-3.5" />,
-							tooltip: <div className="leading-3.5 font-medium">List</div>,
-						},
-						{
-							value: "code",
-							label: "Code",
-							icon: <CodeXml className="h-3.5 w-3.5" />,
-							tooltip: <div className="leading-3.5 font-medium">Code</div>,
-						},
-					]}
-				/>
-			</div>
-			{/* Multi-select (mixed) */}
-			<div>
-				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
-					Multi-select
-				</div>
-				<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border border-dashed p-1">
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-7 rounded-md border border-dashed px-2.5 text-[11px]"
-					>
-						Left
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-					>
-						Center
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-					>
-						Right
-					</Button>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function PagerDemo() {
-	const [page, setPage] = useState(1);
-	const totalPages = 5;
-	return (
-		<Pager
-			currentPage={page}
-			totalPages={totalPages}
-			onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-			onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-			hideWhenSinglePage={false}
-		/>
-	);
-}
-
-function ListCardDemo() {
-	return (
-		<ListCard
-			title="Inter"
-			description="Hamburgefonstiv 123"
-			meta="sans-serif · Western · 12 used"
-			tone="subtle"
-			actions={
-				<>
-					<Button variant="outline" size="sm" className="h-8 w-8 p-0">
-						F
-					</Button>
-					<Button variant="outline" size="sm" className="h-8 w-8 p-0">
-						+
-					</Button>
-				</>
-			}
-		/>
-	);
-}
+import {
+	ListCardDemo,
+	OptionsSelectorDemo,
+	PagerDemo,
+	SwitchDemo,
+} from "./MiscDemoComponents";
+import {
+	INPUT_PROPS,
+	LIST_CARD_PROPS,
+	MENUBAR_PROPS,
+	OPTIONS_SELECTOR_PROPS,
+	PAGER_PROPS,
+	PAGE_SWITCHER_PROPS,
+	SEARCHABLE_MULTI_SELECT_PROPS,
+	SEARCHABLE_SELECT_PROPS,
+	SELECTION_CHROME_PROPS,
+	SWITCH_PROPS,
+	TABS_PROPS,
+	TEXTAREA_PROPS,
+	TOOLTIP_PROPS,
+	WARNING_INFO_PROPS,
+} from "./MiscDemos.props";
 
 // ---------------------------------------------------------------------------
 // Demos
@@ -432,7 +83,11 @@ export function MiscDemos() {
 									<MenubarGroupLabel>Dark</MenubarGroupLabel>
 									<MenubarItem>Ink</MenubarItem>
 								</MenubarSubmenu>
-								<MenubarCheckboxItem checked onCheckedChange={() => {}} shortcut="Shift + P">
+								<MenubarCheckboxItem
+									checked
+									onCheckedChange={() => {}}
+									shortcut="Shift + P"
+								>
 									Sticky preview
 								</MenubarCheckboxItem>
 								<MenubarToggleWithMoreItem
@@ -443,7 +98,9 @@ export function MiscDemos() {
 								>
 									Snap
 								</MenubarToggleWithMoreItem>
-								<MenubarPanelLinkItem shortcut="Shift + L">Components panel</MenubarPanelLinkItem>
+								<MenubarPanelLinkItem shortcut="Shift + L">
+									Components panel
+								</MenubarPanelLinkItem>
 							</MenubarContent>
 						</MenubarMenu>
 					</Menubar>
@@ -484,13 +141,23 @@ export function MiscDemos() {
 				<div className="max-w-[360px] space-y-3">
 					<Tabs value="page">
 						<TabsList variant="segmented">
-							<TabsTrigger value="page" variant="segmented" size="compact">Page</TabsTrigger>
-							<TabsTrigger value="settings" variant="segmented" size="compact">Settings</TabsTrigger>
+							<TabsTrigger value="page" variant="segmented" size="compact">
+								Page
+							</TabsTrigger>
+							<TabsTrigger value="settings" variant="segmented" size="compact">
+								Settings
+							</TabsTrigger>
 						</TabsList>
-						<TabsContent value="page" className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm">
+						<TabsContent
+							value="page"
+							className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm"
+						>
 							Embedded page editor content
 						</TabsContent>
-						<TabsContent value="settings" className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm">
+						<TabsContent
+							value="settings"
+							className="editor-border-subtle mt-3 rounded-lg border p-3 text-sm"
+						>
 							Site page settings
 						</TabsContent>
 					</Tabs>
@@ -509,7 +176,11 @@ export function MiscDemos() {
 						value="en-US"
 						options={[
 							{ value: "__site__", label: "Site language" },
-							{ value: "en-US", label: "English (United States)", description: "en-US" },
+							{
+								value: "en-US",
+								label: "English (United States)",
+								description: "en-US",
+							},
 							{ value: "fr", label: "French", description: "fr" },
 							{ value: "he", label: "Hebrew", description: "he" },
 						]}
@@ -612,9 +283,7 @@ export function MiscDemos() {
 							Single selection
 						</div>
 						<div className="relative" style={{ width: 180, height: 80 }}>
-							<div className="stage-single-selection-label">
-								Text
-							</div>
+							<div className="stage-single-selection-label">Text</div>
 							<div
 								className="h-full w-full rounded-none"
 								style={{ border: "2px solid var(--editor-accent)" }}
@@ -647,9 +316,7 @@ export function MiscDemos() {
 							Section / header / footer
 						</div>
 						<div className="relative" style={{ width: 180, height: 80 }}>
-							<div className="stage-single-selection-label">
-								Section
-							</div>
+							<div className="stage-single-selection-label">Section</div>
 							<div
 								className="h-full w-full rounded-none"
 								style={{ border: "2px solid var(--editor-accent)" }}
@@ -665,7 +332,10 @@ export function MiscDemos() {
 						<div className="editor-text-muted mb-6 text-[11px] font-medium">
 							Section context
 						</div>
-						<div className="stage-wrapper subtype-section selected-context relative" style={{ width: 180, height: 80 }}>
+						<div
+							className="stage-wrapper subtype-section selected-context relative"
+							style={{ width: 180, height: 80 }}
+						>
 							<div className="content-wrapper h-full w-full">
 								<div
 									className="wrapper-padding-overlay-boundary"

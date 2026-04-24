@@ -20,6 +20,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - complete reference coverage
 - archive closed text phase docs
 - replace hardcoded chrome colors
+- split oversized source files
 
 ---
 
