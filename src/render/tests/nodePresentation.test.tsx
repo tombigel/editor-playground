@@ -179,6 +179,51 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('dir="rtl"');
   });
 
+  it('renders standalone list inline content and depth from the canonical rich block', () => {
+    const list = createTextNode('list', 'root');
+    list.content = createTextDocumentContent([
+      {
+        type: 'ul',
+        markerStyle: 'square',
+        children: [
+          {
+            type: 'list-item',
+            depth: 1,
+            children: [
+              { text: 'Styled ', bold: true, fontSize: '20px', color: '#d62246', backgroundColor: '#fff59d' },
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com/one',
+                children: [{ text: 'one', underline: true }],
+              },
+              { text: ' and ' },
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com/two',
+                children: [{ text: 'two', italic: true }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(list));
+
+    expect(markup).toContain('<ul');
+    expect(markup.match(/<ul/g)).toHaveLength(1);
+    expect(markup).toContain('<li dir="ltr" style="margin-inline-start:1.25em">');
+    expect(markup).toContain('font-weight:bold');
+    expect(markup).toContain('font-size:20px');
+    expect(markup).toContain('color:#d62246');
+    expect(markup).toContain('background-color:#fff59d');
+    expect(markup.match(/<a /g)).toHaveLength(2);
+    expect(markup).toContain('href="https://example.com/one"');
+    expect(markup).toContain('href="https://example.com/two"');
+  });
+
   it('labels every text subtype explicitly', () => {
     const block = createTextNode('block', 'root');
     const rich = createTextNode('rich', 'root');

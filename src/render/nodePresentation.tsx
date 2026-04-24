@@ -166,19 +166,33 @@ function renderRichListBlock(
   block: RichListBlock,
   path: string,
   document?: DocumentModel,
+  options: {
+    style?: CSSProperties;
+    className?: string;
+    dataNodeId?: string;
+    tabIndex?: number;
+  } = {},
 ): ReactNode {
-  const sharedStyle = getRichBlockRenderStyle(block);
+  const { style, className, dataNodeId, tabIndex } = options;
+  const sharedStyle = { ...getRichBlockRenderStyle(block), ...style };
 
   if (block.type === 'ol') {
     return (
       <ol
         key={path}
+        className={className}
+        data-node-id={dataNodeId}
         dir={block.direction ?? 'ltr'}
         start={block.start}
         style={sharedStyle}
       >
         {mapWithRenderPaths(block.children, `${path}.item`, (item, itemPath) => (
-          <li key={itemPath} dir={item.direction ?? block.direction ?? 'ltr'}>
+          <li
+            key={itemPath}
+            dir={item.direction ?? block.direction ?? 'ltr'}
+            tabIndex={tabIndex}
+            style={getRichListItemRenderStyle(item)}
+          >
             {renderRichListItemContent(item, document, itemPath)}
           </li>
         ))}
@@ -189,16 +203,29 @@ function renderRichListBlock(
   return (
     <ul
       key={path}
+      className={className}
+      data-node-id={dataNodeId}
       dir={block.direction ?? 'ltr'}
       style={sharedStyle}
     >
       {mapWithRenderPaths(block.children, `${path}.item`, (item, itemPath) => (
-        <li key={itemPath} dir={item.direction ?? block.direction ?? 'ltr'}>
+        <li
+          key={itemPath}
+          dir={item.direction ?? block.direction ?? 'ltr'}
+          tabIndex={tabIndex}
+          style={getRichListItemRenderStyle(item)}
+        >
           {renderRichListItemContent(item, document, itemPath)}
         </li>
       ))}
     </ul>
   );
+}
+
+function getRichListItemRenderStyle(item: RichListItem): CSSProperties | undefined {
+  return item.depth && item.depth > 0
+    ? { marginInlineStart: `${item.depth * 1.25}em` }
+    : undefined;
 }
 
 export function getDefaultListContainerStyle(): CSSProperties {
@@ -392,7 +419,12 @@ export function renderListContent(
         style={{ ...getDefaultListContainerStyle(), listStyleType: content.markerStyle, ...style }}
       >
         {mapWithRenderPaths(content.items, 'ol-item', (item, path) => (
-          <li key={path} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+          <li
+            key={path}
+            dir={item.direction ?? 'ltr'}
+            tabIndex={tabIndex}
+            style={'depth' in item && item.depth ? { marginInlineStart: `${item.depth * 1.25}em` } : undefined}
+          >
             {renderListItemText(item.text, item.link, document)}
           </li>
         ))}
@@ -407,7 +439,12 @@ export function renderListContent(
       style={{ ...getDefaultListContainerStyle(), listStyleType: content.markerStyle, ...style }}
     >
       {mapWithRenderPaths(content.items, 'ul-item', (item, path) => (
-        <li key={path} dir={item.direction ?? 'ltr'} tabIndex={tabIndex}>
+        <li
+          key={path}
+          dir={item.direction ?? 'ltr'}
+          tabIndex={tabIndex}
+          style={'depth' in item && item.depth ? { marginInlineStart: `${item.depth * 1.25}em` } : undefined}
+        >
           {renderListItemText(item.text, item.link, document)}
         </li>
       ))}
@@ -560,9 +597,8 @@ export function renderLeafContent(
   if (isTextNode(node) && node.subtype === 'list') {
     const listBlock = getSingleListBlockContent(node.content);
     return listBlock
-      ? renderListContent(richListBlockToListContent(listBlock), {
-          document,
-          style: { ...contentStyle, ...richBlockStyleToCss(listBlock.style) },
+      ? renderRichListBlock(listBlock, 'standalone-list', document, {
+          style: contentStyle,
           className: leafClassName,
           dataNodeId,
           tabIndex,

@@ -208,14 +208,27 @@ describe('site/SiteRenderer', () => {
 
     const list = createTextNode('list', section.id);
     list.content = createTextDocumentContent([
-      listContentToRichListBlock({
+      {
         type: 'ul',
         markerStyle: 'square',
-        items: [
-          { text: 'Alpha', direction: 'ltr' },
-          { text: 'Beta', direction: 'rtl' },
+        children: [
+          { type: 'list-item', children: [{ text: 'Alpha' }] },
+          {
+            type: 'list-item',
+            direction: 'rtl',
+            depth: 1,
+            children: [
+              { text: 'Beta ', fontSize: '22px' },
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com',
+                children: [{ text: 'link', color: '#d62246' }],
+              },
+            ],
+          },
         ],
-      }),
+      },
     ]);
     document.nodes[list.id] = list;
     section.children.push(list.id);
@@ -225,7 +238,10 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain(`data-node-id="${list.id}"`);
     expect(markup).toContain('<ul');
     expect(markup).toContain('list-style-type:square');
-    expect(markup).toContain('<li dir="rtl">Beta</li>');
+    expect(markup).toContain('<li dir="rtl" style="margin-inline-start:1.25em">');
+    expect(markup).toContain('font-size:22px');
+    expect(markup).toContain('href="https://example.com"');
+    expect(markup).toContain('color:#d62246');
   });
 
   it('reuses shared code rendering semantics in site output', () => {
