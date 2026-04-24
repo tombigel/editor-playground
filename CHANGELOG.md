@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - skip changelog-only release notes
 - record Slate table planning findings
 - cover on-stage block text editing
+- document on-stage block text editing
 
 ---
 

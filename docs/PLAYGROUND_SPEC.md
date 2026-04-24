@@ -616,6 +616,13 @@ Rules:
 
 - Changing the tag updates semantics only.
 - Renderer and stage styling normalize native tag defaults so browser heading and blockquote styles do not override authored styles.
+- Standalone block text can be edited directly on the stage. The first plain click selects the block; a second plain click on the already selected block enters edit mode.
+- Stage block editing keeps the node as `subtype: 'block'` and persists exactly one text block in `TextDocumentContent.blocks`.
+- The floating stage toolbar for standalone blocks is inline-only: bold, italic, underline, strikethrough, link, font family, font weight, font size, text color, and highlight color.
+- Block-level controls remain in the inspector for this phase: HTML tag, alignment, direction/RTL, language, and whole-block/default typography.
+- `Enter` and `Shift+Enter` both insert newline text inside the current block. The model does not add a `<br>` element; rendering preserves the soft break through `white-space: pre-wrap`.
+- Outside click or `Cmd/Ctrl+Enter` commits the Slate state through `setTextDocumentContentDoc()`. `Escape` discards local Slate edits without mutating the document.
+- Standalone list on-stage editing remains deferred to text phase 2.0 P2-C.
 - Seeded templates use semantic heading tags for primary titles:
   - the default post title is `h1`
   - the primary titles in the sticky demo sections are seeded as `h2`
@@ -631,6 +638,7 @@ Content and styling:
 - Link wrap defaults to `single-line`; enabling `Wrap` switches the link to multi-line wrapping.
 - Standalone linked text renders and exports as semantic wrapper markup: `<Tag><a href="...">text</a></Tag>`.
 - The Add-rail `Link` default therefore exports as `<div><a href="...">Read more</a></div>`.
+- When a whole-node linked standalone block enters on-stage edit mode, the editor promotes the whole-node link to an inline rich-text link that wraps the current block text. On commit, the legacy node-level `link` is cleared so the edited block can hold multiple inline links without nested anchors. Button-like linked blocks keep their whole-node link behavior.
 
 Destination behavior:
 
@@ -1414,6 +1422,7 @@ Naming and title behavior:
 - Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setTextNodeContentDoc()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - Text subtype conversion is also API-first: `convertTextNodeDoc()` owns the conversion policy, `switchTextSubtypeDoc()` is the thin entrypoint, and editor actions only choose the target subtype plus an optional conversion mode.
 - Rich split and multi-node merge are also API-first: `splitRichTextNodeDoc()` and `mergeTextNodesToRichDoc()` live in the pure API layer, so conversion and merge semantics do not depend on editor-only selection or stage-edit code.
+- Standalone block stage edits are API-first: the stage commits canonical `TextDocumentContent` through `setTextDocumentContentDoc()`, including inline marks, inline links, soft-break newline text, and the optional `clearBlockNodeLink` transition for promoted whole-node links.
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.

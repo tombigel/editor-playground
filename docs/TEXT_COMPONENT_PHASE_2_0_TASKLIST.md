@@ -36,22 +36,42 @@ Execution rules:
   - Add second-click edit entry for standalone block text.
   - Allow inline marks and multiple links during editing.
   - Persist back through pure APIs.
-- Status: `planned`
+- Status: `implemented`
 - Allowed files:
-  - Planned during execution
+  - `src/api/documentApi/text.ts`
+  - `src/model/richContent.ts`
+  - `src/model/richContent/selectorsConverters.ts`
+  - `src/render/nodePresentation.tsx`
+  - `src/stage/Stage.tsx`
+  - `src/stage/useRichTextEditMode.ts`
+  - `src/stage/richEditContext.tsx`
+  - `src/stage/stageRenderers/leafRenderer.tsx`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/stage/stageRenderers/richTextEditOverlay/RichTextToolbar.tsx`
+  - `src/stage/tests/Stage.e2e.test.ts`
+  - `src/stage/tests/e2eServer.ts`
+  - focused API/model/render/stage tests
 - Read-first files and target lines:
-  - Planned during execution
+  - Current implementation files above
 - Implementation notes:
   - Reuse the phase 1.5 text-edit lifecycle where possible.
   - Use canonical `TextDocumentContent` for standalone block persistence and editing.
+  - `Enter` and `Shift+Enter` insert newline text inside the single block; no `<br>` node is added to the model.
+  - The floating toolbar is inline-only for block mode. Block type, alignment, direction/RTL, language, and default typography remain inspector-owned.
+  - Legacy whole-node block links promote to inline links on stage-edit commit, except button-like linked blocks.
 - Verification commands:
-  - Planned during execution
+  - `npm run test:run -- src/api/tests/documentApi.test.ts src/model/tests/richContent.test.ts src/render/tests/nodePresentation.test.tsx src/stage/tests/RichTextEditOverlay.test.tsx src/panels/tests/helpDocs.test.ts`
+  - `npm run typecheck`
+  - `npm run test:e2e -- src/stage/tests/Stage.e2e.test.ts`
+  - `npm run build`
 - Verification result:
-  - Not started
+  - Passed. Focused API/model/render/overlay/help-doc tests passed (`107` tests). Full `Stage.e2e.test.ts` passed (`43` tests). `npm run build` passed, including lint, typecheck, coverage (`119` files / `1448` tests), API docs check, architecture check, and production bundle build.
 - Commit SHA:
-  - Not started
+  - `5817ef9` API/render contract
+  - `23516e4` stage edit shell
+  - `3847594` stage E2E coverage and canonical test fixtures
 - Open follow-ups carried forward:
-  - None yet.
+  - P2-C owns standalone list on-stage editing, including `Enter` as new list item and `Shift+Enter` as same-item soft break.
 
 ## P2-B: On-stage editing for standalone code blocks
 
