@@ -69,8 +69,15 @@ async function warmViteOptimizeDeps() {
 
 async function findAvailablePort(startPort: number) {
   let port = startPort;
+  const maxPort = 65_535;
+  if (port < 0 || port > maxPort) {
+    throw new Error(`Invalid E2E server start port ${port}`);
+  }
   while (!(await isPortAvailable(port))) {
     port += 1;
+    if (port > maxPort) {
+      throw new Error(`No available E2E server port found at or above ${startPort}`);
+    }
   }
   return port;
 }

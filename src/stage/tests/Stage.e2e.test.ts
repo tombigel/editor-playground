@@ -7,6 +7,7 @@ import {
 import {
 	createDefaultRect,
 	createContainerNode,
+	createLinkTextNode,
 	createMediaNode,
 	createTextNode,
 } from "../../model/defaultFactories";
@@ -174,6 +175,17 @@ describe("stage/Stage e2e", () => {
 		);
 	}
 
+	async function readPersistedTextNode(nodeId: string): Promise<TextNode> {
+		const persistedState = await readPersistedState();
+		return persistedState.document.nodes[nodeId] as TextNode;
+	}
+
+	function expectStandaloneBlockNode(node: TextNode) {
+		expect(node.contentType).toBe("text");
+		expect(node.subtype).toBe("block");
+		expect(node.content.blocks).toHaveLength(1);
+	}
+
 	async function enterRichEditMode(nodeId: string) {
 		const richLeaf = page.locator(`#stage-node-${nodeId}`).first();
 		await richLeaf.waitFor({ state: "attached", timeout: 10_000 });
@@ -312,6 +324,44 @@ describe("stage/Stage e2e", () => {
 	}
 
 	async function saveRichEdit() {
+		await page
+			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
+			.first()
+			.click();
+		await page.keyboard.press("ControlOrMeta+Enter");
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+	}
+
+	async function enterBlockEditMode(nodeId: string) {
+		const blockLeaf = page.locator(`#stage-node-${nodeId}`).first();
+		await blockLeaf.waitFor({ state: "attached", timeout: 10_000 });
+		await blockLeaf.scrollIntoViewIfNeeded();
+		await blockLeaf.click();
+		await blockLeaf.click();
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			timeout: 2_000,
+		});
+		return {
+			blockLeaf,
+			editable: page
+				.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
+				.first(),
+		};
+	}
+
+	async function replaceBlockEditText(text: string) {
+		const editable = page
+			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
+			.first();
+		await editable.click();
+		await page.keyboard.press("ControlOrMeta+A");
+		await page.keyboard.type(text);
+	}
+
+	async function saveBlockEdit() {
 		await page
 			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
 			.first()
@@ -722,9 +772,8 @@ describe("stage/Stage e2e", () => {
 			.getByText("Type", { exact: true })
 			.waitFor();
 
-		await page.locator('[aria-label="Link type"]').click();
-		await chooseOpenSelectItem("Internal");
-		await page.getByRole("button", { name: "Apply" }).click();
+		await page.getByRole("button", { name: "Internal" }).click();
+		await page.keyboard.press("Escape");
 		await saveRichEdit();
 
 		const persistedState = await readPersistedState();
@@ -762,9 +811,8 @@ describe("stage/Stage e2e", () => {
 
 		const toolbar = page.locator('[data-stage-rich-toolbar="true"]').first();
 		await toolbar.getByRole("button", { name: "Link" }).click();
-		await page.locator('[aria-label="Link type"]').click();
-		await chooseOpenSelectItem("Internal");
-		await page.getByRole("button", { name: "Apply" }).click();
+		await page.getByRole("button", { name: "Internal" }).click();
+		await page.keyboard.press("Escape");
 		await saveRichEdit();
 
 		const persistedState = await readPersistedState();
@@ -906,15 +954,16 @@ describe("stage/Stage e2e", () => {
 		await page.waitForSelector('[data-stage-rich-link-popover="true"]', {
 			timeout: 2_000,
 		});
-		await page.locator('[aria-label="Link type"]').click();
+		await page.getByRole("button", { name: "Internal" }).click();
+		await page.locator('[aria-label="Section target"]').click();
 		await page.waitForSelector(
-			'[data-ui="select-content"][data-stage-rich-select-id="link-type"]',
+			'[data-ui="select-content"][data-stage-rich-select-id="section-target"]',
 			{ timeout: 2_000 },
 		);
 
 		await page.mouse.click(16, 16);
 		await page.waitForSelector(
-			'[data-ui="select-content"][data-stage-rich-select-id="link-type"]',
+			'[data-ui="select-content"][data-stage-rich-select-id="section-target"]',
 			{
 				state: "detached",
 				timeout: 2_000,
@@ -962,15 +1011,16 @@ describe("stage/Stage e2e", () => {
 		await page.waitForSelector('[data-stage-rich-link-popover="true"]', {
 			timeout: 2_000,
 		});
-		await page.locator('[aria-label="Link type"]').click();
+		await page.getByRole("button", { name: "Internal" }).click();
+		await page.locator('[aria-label="Section target"]').click();
 		await page.waitForSelector(
-			'[data-ui="select-content"][data-stage-rich-select-id="link-type"]',
+			'[data-ui="select-content"][data-stage-rich-select-id="section-target"]',
 			{ timeout: 2_000 },
 		);
 
 		await page.keyboard.press("Escape");
 		await page.waitForSelector(
-			'[data-ui="select-content"][data-stage-rich-select-id="link-type"]',
+			'[data-ui="select-content"][data-stage-rich-select-id="section-target"]',
 			{
 				state: "detached",
 				timeout: 2_000,
@@ -1362,6 +1412,213 @@ describe("stage/Stage e2e", () => {
 			{ type: "paragraph", children: [{ text: "Second line" }] },
 			{ type: "paragraph", children: [{ text: "Third line" }] },
 		]);
+
+		await closeEditor();
+	}, 30_000);
+
+	it("enters standalone block edit mode on second click and commits typed changes on outside click", async () => {
+		const { document, blockTextId } = createBlockTextEditE2EDocument(
+			"Block edit",
+		);
+		await openEditor({ document });
+
+		await enterBlockEditMode(blockTextId);
+		await replaceBlockEditText("Block edit updated");
+		await page.mouse.click(16, 16);
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+
+		const node = await readPersistedTextNode(blockTextId);
+		expectStandaloneBlockNode(node);
+		expect(node.content.blocks[0]).toMatchObject({
+			type: "paragraph",
+			children: [{ text: "Block edit updated" }],
+		});
+
+		await closeEditor();
+	}, 30_000);
+
+	it("commits standalone block edits with Cmd/Ctrl+Enter and discards them with Escape", async () => {
+		const first = createBlockTextEditE2EDocument("Shortcut commit");
+		await openEditor({ document: first.document });
+
+		await enterBlockEditMode(first.blockTextId);
+		await replaceBlockEditText("Shortcut commit saved");
+		await saveBlockEdit();
+
+		const committedNode = await readPersistedTextNode(first.blockTextId);
+		expectStandaloneBlockNode(committedNode);
+		expect(committedNode.content.blocks[0]).toMatchObject({
+			children: [{ text: "Shortcut commit saved" }],
+		});
+
+		await closeEditor();
+
+		const second = createBlockTextEditE2EDocument("Escape discard");
+		await openEditor({ document: second.document });
+
+		await enterBlockEditMode(second.blockTextId);
+		await replaceBlockEditText("Escape discard discarded");
+		await page.keyboard.press("Escape");
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+
+		const discardedNode = await readPersistedTextNode(second.blockTextId);
+		expectStandaloneBlockNode(discardedNode);
+		expect(discardedNode.content.blocks[0]).toMatchObject({
+			children: [{ text: "Escape discard" }],
+		});
+
+		await closeEditor();
+	}, 30_000);
+
+	it("keeps Enter and Shift+Enter as soft breaks inside one standalone text block", async () => {
+		const { document, blockTextId } = createBlockTextEditE2EDocument("First");
+		await openEditor({ document });
+
+		await enterBlockEditMode(blockTextId);
+		await replaceBlockEditText("First");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("Second");
+		await page.keyboard.press("Shift+Enter");
+		await page.keyboard.type("Third");
+		await saveBlockEdit();
+
+		const node = await readPersistedTextNode(blockTextId);
+		expectStandaloneBlockNode(node);
+		expect(node.content.blocks[0]).toMatchObject({
+			type: "paragraph",
+			children: [{ text: "First\nSecond\nThird" }],
+		});
+
+		await closeEditor();
+	}, 30_000);
+
+	it("preserves standalone block inline marks, font size, text color, and highlight through commit", async () => {
+		const { document, blockTextId } =
+			createBlockTextEditE2EDocument("Styled block");
+		(document.nodes[blockTextId] as TextNode).content = createTextDocumentContent([
+			{
+				type: "paragraph",
+				direction: "ltr",
+				children: [
+					{
+						text: "Styled block",
+						fontWeight: 700,
+						italic: true,
+						underline: true,
+						fontSize: "30px",
+						color: "#d62246",
+						backgroundColor: "#ffe680",
+					},
+				],
+			},
+		]);
+		await openEditor({ document });
+
+		await enterBlockEditMode(blockTextId);
+		await saveBlockEdit();
+
+		const node = await readPersistedTextNode(blockTextId);
+		expectStandaloneBlockNode(node);
+		expect(node.content.blocks[0]).toMatchObject({
+			children: [
+				{
+					text: "Styled block",
+					fontWeight: 700,
+					italic: true,
+					underline: true,
+					fontSize: "30px",
+					color: "#d62246",
+					backgroundColor: "#ffe680",
+				},
+			],
+		});
+
+		await closeEditor();
+	}, 30_000);
+
+	it("persists two inline links in one standalone text block", async () => {
+		const { document, blockTextId } =
+			createBlockTextEditE2EDocument("one two three");
+		(document.nodes[blockTextId] as TextNode).content = createTextDocumentContent([
+			{
+				type: "paragraph",
+				direction: "ltr",
+				children: [
+					{
+						type: "link",
+						linkType: "external",
+						href: "https://example.com/one",
+						children: [{ text: "one" }],
+					},
+					{ text: " " },
+					{
+						type: "link",
+						linkType: "external",
+						href: "https://example.com/two",
+						children: [{ text: "two" }],
+					},
+					{ text: " three" },
+				],
+			},
+		]);
+		await openEditor({ document });
+
+		await enterBlockEditMode(blockTextId);
+		await saveBlockEdit();
+
+		const node = await readPersistedTextNode(blockTextId);
+		expectStandaloneBlockNode(node);
+		expect(node.content.blocks[0]).toMatchObject({
+			children: [
+				{
+					type: "link",
+					linkType: "external",
+					href: "https://example.com/one",
+					children: [{ text: "one" }],
+				},
+				{ text: " " },
+				{
+					type: "link",
+					linkType: "external",
+					href: "https://example.com/two",
+					children: [{ text: "two" }],
+				},
+				{ text: " three" },
+			],
+		});
+
+		await closeEditor();
+	}, 30_000);
+
+	it("promotes whole-node block links to inline links and clears node.link on commit", async () => {
+		const { document, blockTextId } = createBlockTextEditE2EDocument(
+			"Promoted link",
+			{ wholeNodeLink: "https://example.com/promoted" },
+		);
+		await openEditor({ document });
+
+		await enterBlockEditMode(blockTextId);
+		await saveBlockEdit();
+
+		const node = await readPersistedTextNode(blockTextId);
+		expectStandaloneBlockNode(node);
+		expect(node.link).toBeUndefined();
+		expect(node.content.blocks[0]).toMatchObject({
+			children: [
+				{
+					type: "link",
+					linkType: "external",
+					href: "https://example.com/promoted",
+					children: [{ text: "Promoted link" }],
+				},
+			],
+		});
 
 		await closeEditor();
 	}, 30_000);
@@ -1930,12 +2187,16 @@ function createE2EDocument(): {
 
 	const reparentLeaf = createTextNode("block", sourceContainer.id) as TextNode;
 	reparentLeaf.name = "Reparent Leaf";
-	reparentLeaf.content = "Reparent me";
+	reparentLeaf.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Reparent me" }] },
+	]);
 	reparentLeaf.rect = createDefaultRect("188px", "36px", "160px", "auto");
 
 	const siblingLeaf = createTextNode("block", sourceContainer.id) as TextNode;
 	siblingLeaf.name = "Sibling Group Leaf";
-	siblingLeaf.content = "Group drag me too";
+	siblingLeaf.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Group drag me too" }] },
+	]);
 	siblingLeaf.rect = createDefaultRect("52px", "160px", "160px", "auto");
 
 	const otherContainerLeaf = createTextNode(
@@ -1943,17 +2204,23 @@ function createE2EDocument(): {
 		targetContainer.id,
 	) as TextNode;
 	otherContainerLeaf.name = "Other Container Leaf";
-	otherContainerLeaf.content = "Different parent";
+	otherContainerLeaf.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Different parent" }] },
+	]);
 	otherContainerLeaf.rect = createDefaultRect("36px", "44px", "160px", "auto");
 
 	const axisLeaf = createTextNode("block", section.id) as TextNode;
 	axisLeaf.name = "Axis Lock Leaf";
-	axisLeaf.content = "Shift drag me";
+	axisLeaf.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Shift drag me" }] },
+	]);
 	axisLeaf.rect = createDefaultRect("120px", "470px", "180px", "auto");
 
 	const snapLeaf = createTextNode("block", section.id) as TextNode;
 	snapLeaf.name = "Snap Leaf";
-	snapLeaf.content = "Snap me";
+	snapLeaf.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Snap me" }] },
+	]);
 	snapLeaf.rect = createDefaultRect("160px", "620px", "180px", "auto");
 
 	sourceContainer.children = [
@@ -2031,12 +2298,16 @@ function createStructuralResizeE2EDocument(): DocumentModel {
 
 	const sectionAText = createTextNode("block", sectionA.id) as TextNode;
 	sectionAText.name = "Resize Section A Text";
-	sectionAText.content = "Section A";
+	sectionAText.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Section A" }] },
+	]);
 	sectionAText.rect = createDefaultRect("32px", "32px", "240px", "auto");
 
 	const sectionBText = createTextNode("block", sectionB.id) as TextNode;
 	sectionBText.name = "Resize Section B Text";
-	sectionBText.content = "Section B";
+	sectionBText.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Section B" }] },
+	]);
 	sectionBText.rect = createDefaultRect("32px", "32px", "240px", "auto");
 
 	header.children = [];
@@ -2121,6 +2392,56 @@ function createRichTextEditE2EDocument(
 	};
 }
 
+function createBlockTextEditE2EDocument(
+	text: string,
+	options?: { wholeNodeLink?: string },
+): { document: DocumentModel; blockTextId: string; sectionId: string } {
+	const siteId = "site_block_text_regression_e2e";
+	const section = createContainerNode("section", siteId);
+	section.name = "Block Edit Regression Section";
+	section.slug = "block-edit-regression-section";
+	section.rect = createDefaultRect("0px", "0px", "100%", "320px");
+
+	const blockText = options?.wholeNodeLink
+		? (createLinkTextNode(section.id) as TextNode)
+		: (createTextNode("block", section.id) as TextNode);
+	blockText.name = "Block Edit Regression Copy";
+	blockText.content = createTextDocumentContent([
+		{ type: "paragraph", direction: "ltr", children: [{ text }] },
+	]);
+	blockText.rect = createDefaultRect("72px", "88px", "320px", "auto");
+	if (options?.wholeNodeLink) {
+		blockText.link = {
+			linkType: "external",
+			href: options.wholeNodeLink,
+		};
+	}
+
+	section.children = [blockText.id];
+
+	return {
+		document: {
+			rootId: siteId,
+			nodes: {
+				[siteId]: {
+					id: siteId,
+					contentType: "site",
+					type: "site",
+					parentId: null,
+					children: [section.id],
+					name: "Site",
+					visible: true,
+					locked: false,
+				},
+				[section.id]: section,
+				[blockText.id]: blockText,
+			},
+		},
+		blockTextId: blockText.id,
+		sectionId: section.id,
+	};
+}
+
 function createDragSuppressionE2EDocument(): DocumentModel {
 	const siteId = "site_drag_suppression_e2e";
 	const section = createContainerNode("section", siteId);
@@ -2129,7 +2450,9 @@ function createDragSuppressionE2EDocument(): DocumentModel {
 
 	const text = createTextNode("block", section.id) as TextNode;
 	text.name = "Drag Suppression Text";
-	text.content = "Drag suppression text";
+	text.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Drag suppression text" }] },
+	]);
 	text.rect = createDefaultRect("72px", "88px", "220px", "auto");
 
 	const image = createMediaNode("image", section.id);
