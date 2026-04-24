@@ -1,10 +1,15 @@
 import { createContext, useContext } from 'react';
 import type { NodeId, TextDocumentContent } from '../model/types';
+import type { RichEditCommitOptions } from './useRichTextEditMode';
 
 export type RichEditContextValue = {
   editingId: NodeId | null;
   activateEdit: (id: NodeId) => void;
-  commitEdit: (id: NodeId, content: TextDocumentContent) => void;
+  commitEdit: (
+    id: NodeId,
+    content: TextDocumentContent,
+    options?: RichEditCommitOptions,
+  ) => void;
   updateBlockGap: (id: NodeId, value: number) => void;
   discardEdit: () => void;
   onOpenManageFonts: () => void;

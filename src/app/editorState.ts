@@ -144,7 +144,7 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     case 'applyTextNodeMarkdown':
       return applyTextNodeMarkdown(state, action.id, action.markdown);
     case 'setTextDocumentContent':
-      return { ...state, document: setTextDocumentContentDoc(state.document, action.id, action.content) };
+      return { ...state, document: setTextDocumentContentDoc(state.document, action.id, action.content, action.options) };
     case 'setTextDocumentBlockGap':
       return { ...state, document: setTextDocumentBlockGapDoc(state.document, action.id, action.value) };
     case 'switchTextSubtype':

@@ -137,4 +137,40 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain('value="18"');
 		expect(markup).not.toContain('placeholder="18"');
 	});
+
+	it("restricts the toolbar to inline controls in block mode", () => {
+		const markup = renderToStaticMarkup(
+			<RichTextEditOverlay
+				nodeId="block-node"
+				mode="block"
+				content={CONTENT}
+				minHeight="96px"
+				onCommit={() => {}}
+				onUpdateBlockGap={() => {}}
+				onDiscard={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain('data-stage-rich-toolbar="true"');
+		expect(markup).toContain('aria-label="Font size"');
+		expect(markup).toContain('aria-label="Bold"');
+		expect(markup).toContain('aria-label="Italic"');
+		expect(markup).toContain('aria-label="Underline"');
+		expect(markup).toContain('aria-label="Strikethrough"');
+		expect(markup).toContain('aria-label="Text color"');
+		expect(markup).toContain('aria-label="Highlight color"');
+		expect(markup).toContain('aria-label="Link"');
+		expect(markup).toContain("Inherit");
+		expect(markup).not.toContain('aria-label="Manage fonts"');
+		expect(markup).not.toContain('aria-label="Align left"');
+		expect(markup).not.toContain('aria-label="Align center"');
+		expect(markup).not.toContain('aria-label="Align right"');
+		expect(markup).not.toContain('aria-label="Switch to RTL"');
+		expect(markup).not.toContain('aria-label="Use text block"');
+		expect(markup).not.toContain('aria-label="Use code block"');
+		expect(markup).not.toContain('aria-label="Use ordered list"');
+		expect(markup).not.toContain('aria-label="Use unordered list"');
+		expect(markup).not.toContain('aria-label="Line height"');
+		expect(markup).not.toContain('aria-label="Block spacing"');
+	});
 });

@@ -40,6 +40,7 @@ import type {
 	ResizeState,
 	StageProps,
 } from "./types";
+import type { RichEditCommitOptions } from "./useRichTextEditMode";
 
 export type { StageProps } from "./types";
 
@@ -117,8 +118,8 @@ export function Stage({
 	useStageAnimations(document, animationPreview ?? defaultAnimationPreview);
 
 	const handleRichCommit = useCallback(
-		(id: string, content: TextDocumentContent) => {
-			onUpdateTextDocumentContent?.(id, content);
+		(id: string, content: TextDocumentContent, options?: RichEditCommitOptions) => {
+			onUpdateTextDocumentContent?.(id, content, options);
 		},
 		[onUpdateTextDocumentContent],
 	);
@@ -331,7 +332,7 @@ export function Stage({
 				if (
 					node &&
 					isTextNode(node) &&
-					node.subtype === 'rich' &&
+					isEditableTextSubtype(node.subtype) &&
 					pendingRichEditIdRef.current === node.id &&
 					!editingId &&
 					!event.metaKey &&
@@ -371,7 +372,7 @@ export function Stage({
 				pendingRichEditIdRef.current =
 					node &&
 					isTextNode(node) &&
-					node.subtype === 'rich' &&
+					isEditableTextSubtype(node.subtype) &&
 					selectedId === node.id &&
 					selectedIds.length === 1 &&
 					mode === 'replace' &&
@@ -590,6 +591,10 @@ export function Stage({
 			</RichEditContext.Provider>
 		</div>
 	);
+}
+
+function isEditableTextSubtype(subtype: string): subtype is "rich" | "block" {
+	return subtype === "rich" || subtype === "block";
 }
 
 function collectMarqueeSelectionIds(

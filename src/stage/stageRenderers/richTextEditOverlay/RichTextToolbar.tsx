@@ -54,6 +54,7 @@ import {
 } from "./types";
 
 export function RichTextToolbar({
+	mode = "rich",
 	toolbarRef,
 	toolbarPosition,
 	toolbarDragging,
@@ -87,6 +88,7 @@ export function RichTextToolbar({
 	onBlockSpacingCommit,
 	resolveSpacingUnitValue,
 }: {
+	mode?: "rich" | "block";
 	toolbarRef: Ref<HTMLDivElement>;
 	toolbarPosition: { top: number; left: number };
 	toolbarDragging: boolean;
@@ -157,6 +159,7 @@ export function RichTextToolbar({
 		currentTextColor,
 		currentHighlightColor,
 	} = toolbarState;
+	const showBlockControls = mode === "rich";
 
 	return (
 		<FloatingPanelShell
@@ -212,25 +215,27 @@ export function RichTextToolbar({
 									className="w-full"
 								/>
 							</div>
-							<PopoverTooltip
-								side="top"
-								align="center"
-								className={DARK_TOOLTIP_CLASS}
-								content={
-									<div className="leading-3.5 font-medium">Manage fonts</div>
-								}
-							>
-								<Button
-									type="button"
-									variant="outline"
-									size="icon"
-									className="h-8 w-8 rounded-sm"
-									aria-label="Manage fonts"
-									onClick={onOpenManageFonts}
+							{showBlockControls ? (
+								<PopoverTooltip
+									side="top"
+									align="center"
+									className={DARK_TOOLTIP_CLASS}
+									content={
+										<div className="leading-3.5 font-medium">Manage fonts</div>
+									}
 								>
-									<Settings2 className="h-3.5 w-3.5" />
-								</Button>
-							</PopoverTooltip>
+									<Button
+										type="button"
+										variant="outline"
+										size="icon"
+										className="h-8 w-8 rounded-sm"
+										aria-label="Manage fonts"
+										onClick={onOpenManageFonts}
+									>
+										<Settings2 className="h-3.5 w-3.5" />
+									</Button>
+								</PopoverTooltip>
+							) : null}
 						</div>
 						<CompactFontSizeField
 							label="Font size"
@@ -283,29 +288,41 @@ export function RichTextToolbar({
 							icon={<Highlighter size={14} />}
 							onChange={(value) => onValueMark("backgroundColor", value)}
 						/>
-						<TextAlignButton
-							label="Align left"
-							active={selectedTextAlign === "left"}
-							onActivate={() => onTextAlignChange("left")}
+						<ToolbarButton
+							label="Link"
+							active={linkActive}
+							onActivate={onLinkAction}
 						>
-							<AlignLeft size={14} />
-						</TextAlignButton>
-						<TextAlignButton
-							label="Align center"
-							active={selectedTextAlign === "center"}
-							onActivate={() => onTextAlignChange("center")}
-						>
-							<AlignCenter size={14} />
-						</TextAlignButton>
-						<TextAlignButton
-							label="Align right"
-							active={selectedTextAlign === "right"}
-							onActivate={() => onTextAlignChange("right")}
-						>
-							<AlignRight size={14} />
-						</TextAlignButton>
+							<Link2 size={14} />
+						</ToolbarButton>
+						{showBlockControls ? (
+							<>
+								<TextAlignButton
+									label="Align left"
+									active={selectedTextAlign === "left"}
+									onActivate={() => onTextAlignChange("left")}
+								>
+									<AlignLeft size={14} />
+								</TextAlignButton>
+								<TextAlignButton
+									label="Align center"
+									active={selectedTextAlign === "center"}
+									onActivate={() => onTextAlignChange("center")}
+								>
+									<AlignCenter size={14} />
+								</TextAlignButton>
+								<TextAlignButton
+									label="Align right"
+									active={selectedTextAlign === "right"}
+									onActivate={() => onTextAlignChange("right")}
+								>
+									<AlignRight size={14} />
+								</TextAlignButton>
+							</>
+						) : null}
 					</div>
-					<div className="flex items-center gap-1.5">
+					{showBlockControls ? (
+						<div className="flex items-center gap-1.5">
 						<ToolbarButton
 							label={
 								selectedDirection === "rtl" ? "Switch to LTR" : "Switch to RTL"
@@ -318,13 +335,6 @@ export function RichTextToolbar({
 							) : (
 								<PilcrowRight size={14} />
 							)}
-						</ToolbarButton>
-						<ToolbarButton
-							label="Link"
-							active={linkActive}
-							onActivate={onLinkAction}
-						>
-							<Link2 size={14} />
 						</ToolbarButton>
 						<ToolbarButton
 							label="Use text block"
@@ -452,7 +462,8 @@ export function RichTextToolbar({
 							onCommit={onBlockSpacingCommit}
 							resolveUnitValue={resolveSpacingUnitValue}
 						/>
-					</div>
+						</div>
+					) : null}
 				</div>
 			</div>
 		</FloatingPanelShell>

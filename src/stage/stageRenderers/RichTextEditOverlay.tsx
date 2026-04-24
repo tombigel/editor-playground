@@ -38,11 +38,17 @@ import {
 import {
 	createTextDocumentContent,
 	getTextDocumentBlockGap,
+	isTextBlockContent,
 } from "../../model/richContent";
 import type {
 	DocumentModel,
 	NodeId,
+	RichInlineNode,
+	RichTextBlock,
+	RichTextLink,
+	RichTextLeaf,
 	RichTextBlockType,
+	TextDocumentBlock,
 	TextDocumentContent,
 } from "../../model/types";
 import {
@@ -98,6 +104,7 @@ import { useRichToolbarPosition } from "./richTextEditOverlay/useRichToolbarPosi
 
 export function RichTextEditOverlay({
 	nodeId,
+	mode,
 	content,
 	contentStyle,
 	minHeight,
@@ -108,15 +115,21 @@ export function RichTextEditOverlay({
 	onOpenManageFonts = () => undefined,
 }: {
 	nodeId: NodeId;
+	mode?: "rich" | "block";
 	content: TextDocumentContent;
 	contentStyle?: CSSProperties;
 	minHeight?: string;
 	document?: DocumentModel;
-	onCommit: (id: NodeId, content: TextDocumentContent) => void;
+	onCommit: (
+		id: NodeId,
+		content: TextDocumentContent,
+		options?: { clearBlockNodeLink?: boolean },
+	) => void;
 	onUpdateBlockGap: (id: NodeId, value: number) => void;
 	onDiscard: () => void;
 	onOpenManageFonts?: () => void;
 }) {
+	const editMode = mode ?? "rich";
 	const editor = useMemo(() => createRichEditor(), []);
 	const initialValue = useMemo(() => toSlateValue(content.blocks), [content]);
 	const rootRef = useRef<HTMLDivElement | null>(null);
@@ -153,13 +166,20 @@ export function RichTextEditOverlay({
 	}, [editor]);
 
 	const commitCurrentContent = useCallback(() => {
+		const nextBlocks = fromSlateValue(editor.children);
+		const nextContent =
+			editMode === "block"
+				? createTextDocumentContent([ensureSingleTextBlock(nextBlocks)], {
+						blockGap: getTextDocumentBlockGap(content),
+					})
+				: createTextDocumentContent(nextBlocks, {
+						blockGap: getTextDocumentBlockGap(content),
+					});
 		onCommit(
 			nodeId,
-			createTextDocumentContent(fromSlateValue(editor.children), {
-				blockGap: getTextDocumentBlockGap(content),
-			}),
+			nextContent,
 		);
-	}, [content, editor, nodeId, onCommit]);
+	}, [content, editMode, editor, nodeId, onCommit]);
 
 	const closeOpenSelect = useCallback(() => setOpenSelectId(null), []);
 	const closeOpenValueField = useCallback(() => setOpenValueFieldId(null), []);
@@ -387,6 +407,13 @@ export function RichTextEditOverlay({
 				commitCurrentContent();
 				return;
 			}
+			if (editMode === "block" && event.key === "Enter") {
+				event.preventDefault();
+				Editor.insertText(editor, "\n");
+				syncToolbarState();
+				setSelectionRevision((revision) => revision + 1);
+				return;
+			}
 			if (isMod && event.key === "b") {
 				event.preventDefault();
 				toggleMark(editor, "bold");
@@ -406,7 +433,7 @@ export function RichTextEditOverlay({
 				openLinkPopover();
 			}
 		},
-		[commitCurrentContent, editor, openLinkPopover, syncToolbarState],
+		[commitCurrentContent, editMode, editor, openLinkPopover, syncToolbarState],
 	);
 
 	const restoreToolbarSelection = useCallback(() => {
@@ -586,6 +613,7 @@ export function RichTextEditOverlay({
 	const toolbarChrome = (
 		<>
 			<RichTextToolbar
+				mode={editMode}
 				toolbarRef={toolbarRef}
 				toolbarPosition={toolbarPosition}
 				toolbarDragging={toolbarDragging}
@@ -791,4 +819,60 @@ export function RichTextEditOverlay({
 			</div>
 		</Slate>
 	);
+}
+
+function ensureSingleTextBlock(blocks: TextDocumentBlock[]): RichTextBlock {
+	const firstTextBlock = blocks.find(isTextBlockContent);
+	const children = blocks.flatMap((block, index) => [
+		...(index === 0 ? [] : [{ text: "\n" } satisfies RichTextLeaf]),
+		...textDocumentBlockToInlineChildren(block),
+	]);
+
+	return {
+		type: firstTextBlock?.type ?? "paragraph",
+		...(firstTextBlock?.direction ? { direction: firstTextBlock.direction } : {}),
+		...(firstTextBlock?.lineHeight
+			? { lineHeight: firstTextBlock.lineHeight }
+			: {}),
+		...(firstTextBlock?.style ? { style: firstTextBlock.style } : {}),
+		children: children.length > 0 ? children : [{ text: "" }],
+	};
+}
+
+function textDocumentBlockToInlineChildren(
+	block: TextDocumentBlock,
+): RichInlineNode[] {
+	if (isTextBlockContent(block)) {
+		return block.children.map(cloneInlineNode);
+	}
+
+	if (block.type === "code-block") {
+		return block.children.flatMap((line, lineIndex) => [
+			...(lineIndex === 0 ? [] : [{ text: "\n" } satisfies RichTextLeaf]),
+			...line.children.map(cloneTextLeaf),
+		]);
+	}
+
+	return block.children.flatMap((item, itemIndex) => [
+		...(itemIndex === 0 ? [] : [{ text: "\n" } satisfies RichTextLeaf]),
+		...item.children.map(cloneInlineNode),
+	]);
+}
+
+function cloneInlineNode(node: RichInlineNode): RichInlineNode {
+	if (isInlineLink(node)) {
+		return {
+			...node,
+			children: node.children.map(cloneTextLeaf),
+		};
+	}
+	return cloneTextLeaf(node);
+}
+
+function cloneTextLeaf(leaf: RichTextLeaf): RichTextLeaf {
+	return { ...leaf };
+}
+
+function isInlineLink(node: RichInlineNode): node is RichTextLink {
+	return (node as { type?: string }).type === "link";
 }

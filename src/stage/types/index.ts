@@ -18,6 +18,10 @@ import type {
 	StickyMeasuredNodeSizes,
 } from "../../sticky/types";
 
+export type TextDocumentContentUpdateOptions = {
+	clearBlockNodeLink?: boolean;
+};
+
 export type FollowLinkPopupData = {
 	node: TextNode;
 	document: DocumentModel;
@@ -53,7 +57,11 @@ export type StageProps = {
 	onResizeStart: (id: NodeId) => void;
 	onResizeEnd: (id: NodeId) => void;
 	onStickyGeometryChange?: (geometry: StickyGeometrySnapshot) => void;
-	onUpdateTextDocumentContent?: (id: NodeId, content: TextDocumentContent) => void;
+	onUpdateTextDocumentContent?: (
+		id: NodeId,
+		content: TextDocumentContent,
+		options?: TextDocumentContentUpdateOptions,
+	) => void;
 	onUpdateTextDocumentBlockGap?: (id: NodeId, value: number) => void;
 	onRegisterActivateRichEdit?: (fn: (id: NodeId) => void) => void;
 	onOpenManageFonts?: () => void;

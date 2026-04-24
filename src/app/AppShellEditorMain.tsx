@@ -373,8 +373,8 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						}
 						onResizeStart={(id) => dispatch({ type: "beginResize", id })}
 						onResizeEnd={(id) => dispatch({ type: "endResize", id })}
-						onUpdateTextDocumentContent={(id, content) =>
-							dispatch({ type: "setTextDocumentContent", id, content })
+						onUpdateTextDocumentContent={(id, content, options) =>
+							dispatch({ type: "setTextDocumentContent", id, content, options })
 						}
 						onUpdateTextDocumentBlockGap={(id, value) =>
 							dispatch({ type: "setTextDocumentBlockGap", id, value })

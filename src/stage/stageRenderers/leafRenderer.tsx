@@ -4,10 +4,12 @@ import type {
   DocumentModel,
   NodeId,
   TextDocumentContent,
+  TextNode,
   ViewportMeasurement,
 } from '../../model/types';
 import { formatValue } from '../../model/units';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
+import { prepareStandaloneBlockEditContent } from '../../model/richContent';
 import {
   formatNodeLabel,
   getNodeAriaLabel,
@@ -127,8 +129,8 @@ function StageLeaf({
   const intrinsicHeightLeaf = usesIntrinsicHeight(child);
   const trackWidth = getTrackCssWidth(child);
   const isImageNode = child.contentType === 'media' && child.subtype === 'image';
-  const isRichTextNode = child.contentType === 'text' && child.subtype === 'rich';
-  const isEditingRichTextNode = isRichTextNode && editingId === child.id;
+  const isEditableTextNode = child.contentType === 'text' && isEditableTextSubtype(child.subtype);
+  const isEditingTextNode = isEditableTextNode && editingId === child.id;
   const contentPresentationStyle = styleRecordToReactStyle(getLeafInlineStyle(child));
   const leafBodyStyle = isImageNode ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined;
   const leafBody = (
@@ -160,15 +162,15 @@ function StageLeaf({
               alignSelf: intrinsicHeightLeaf ? 'start' : meshPlacement?.alignSelf,
               width: leafBaseWidth,
             }),
-        height: isEditingRichTextNode ? 'auto' : leafBaseHeight,
-        minHeight: isEditingRichTextNode ? leafBaseHeight : undefined,
+        height: isEditingTextNode ? 'auto' : leafBaseHeight,
+        minHeight: isEditingTextNode ? leafBaseHeight : undefined,
         aspectRatio:
           !('unit' in child.rect.height.base.parsed) &&
           child.rect.height.base.parsed.keyword === 'aspect-ratio'
             ? String(child.rect.height.base.parsed.ratio)
             : undefined,
         position: previewSticky && (isSelfStickyTrack || isAutoSticky) ? 'sticky' : 'relative',
-        ...(isEditingRichTextNode ? { zIndex: STICKY_LAYER_Z_INDEX + 1 } : {}),
+        ...(isEditingTextNode ? { zIndex: STICKY_LAYER_Z_INDEX + 1 } : {}),
         ...(previewSticky && child.sticky?.enabled
           ? getStageStickyCssProperties(child.sticky, { includeZIndex: true })
           : {}),
@@ -179,7 +181,7 @@ function StageLeaf({
         className="stage-leaf-body"
         style={{
           ...(leafBodyStyle ?? {}),
-          ...(isEditingRichTextNode
+          ...(isEditingTextNode
             ? {
                 height: 'auto',
                 minHeight: leafBaseHeight,
@@ -187,12 +189,12 @@ function StageLeaf({
             : {}),
         }}
       >
-        {isRichTextNode
+        {isEditableTextNode
           ? (
-            <LeafRichBody
-              child={child}
+            <LeafTextEditBody
+              child={child as TextNode}
               contentStyle={contentPresentationStyle}
-              isEditing={isEditingRichTextNode}
+              isEditing={isEditingTextNode}
               document={document}
               minHeight={leafBaseHeight}
               onCommit={commitEdit}
@@ -248,7 +250,7 @@ function getStageHiddenStyle(hiddenState: RenderLeafPlanNode['hiddenState']): CS
   };
 }
 
-function LeafRichBody({
+function LeafTextEditBody({
   child,
   contentStyle,
   isEditing,
@@ -259,25 +261,43 @@ function LeafRichBody({
   onDiscard,
   onOpenManageFonts,
 }: {
-  child: { id: NodeId; contentType: string; subtype: string; content: unknown; htmlTag?: string };
+  child: TextNode;
   contentStyle?: CSSProperties;
   isEditing: boolean;
   document: DocumentModel;
   minHeight: string;
-  onCommit: (id: NodeId, content: TextDocumentContent) => void;
+  onCommit: (
+    id: NodeId,
+    content: TextDocumentContent,
+    options?: { clearBlockNodeLink?: boolean },
+  ) => void;
   onUpdateBlockGap: (id: NodeId, value: number) => void;
   onDiscard: () => void;
   onOpenManageFonts: () => void;
 }) {
   if (isEditing) {
+    const mode = child.subtype === 'block' ? 'block' : 'rich';
+    const editableContent =
+      mode === 'block'
+        ? prepareStandaloneBlockEditContent(child)
+        : { content: child.content, promotedNodeLink: false };
     return (
       <RichTextEditOverlay
         nodeId={child.id}
-        content={child.content as TextDocumentContent}
+        mode={mode}
+        content={editableContent.content}
         contentStyle={contentStyle}
         minHeight={minHeight}
         document={document}
-        onCommit={onCommit}
+        onCommit={(id, content, options) =>
+          onCommit(id, content, {
+            ...options,
+            clearBlockNodeLink:
+              mode === 'block' && editableContent.promotedNodeLink
+                ? true
+                : options?.clearBlockNodeLink,
+          })
+        }
         onUpdateBlockGap={onUpdateBlockGap}
         onDiscard={onDiscard}
         onOpenManageFonts={onOpenManageFonts}
@@ -288,6 +308,10 @@ function LeafRichBody({
     child as Parameters<typeof renderLeafContent>[0],
     { contentStyle, disableTabNavigation: true },
   );
+}
+
+function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' {
+  return subtype === 'rich' || subtype === 'block';
 }
 
 export function renderLeafSpacerOverlay({

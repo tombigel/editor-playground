@@ -14,6 +14,7 @@ import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, Animat
 import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewApi';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
+import type { SetTextDocumentContentOptions } from '../../api/documentApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
 
 export type { SnapSettings, AnimationPreviewState };
@@ -160,7 +161,7 @@ export type EditorAction =
   | { type: 'addPageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'removePageSlugAlias'; pageId: PageId; alias: string }
   | { type: 'applyTextNodeMarkdown'; id: NodeId; markdown: string }
-  | { type: 'setTextDocumentContent'; id: NodeId; content: TextDocumentContent }
+  | { type: 'setTextDocumentContent'; id: NodeId; content: TextDocumentContent; options?: SetTextDocumentContentOptions }
   | { type: 'setTextDocumentBlockGap'; id: NodeId; value: number }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
   | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };

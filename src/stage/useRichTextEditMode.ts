@@ -1,8 +1,16 @@
 import { useCallback, useState } from 'react';
 import type { NodeId, TextDocumentContent } from '../model/types';
 
+export type RichEditCommitOptions = {
+  clearBlockNodeLink?: boolean;
+};
+
 export type RichEditCallbacks = {
-  onCommit: (id: NodeId, content: TextDocumentContent) => void;
+  onCommit: (
+    id: NodeId,
+    content: TextDocumentContent,
+    options?: RichEditCommitOptions,
+  ) => void;
 };
 
 export function useRichTextEditMode({ onCommit }: RichEditCallbacks) {
@@ -13,9 +21,9 @@ export function useRichTextEditMode({ onCommit }: RichEditCallbacks) {
   }, []);
 
   const commitEdit = useCallback(
-    (id: NodeId, content: TextDocumentContent) => {
+    (id: NodeId, content: TextDocumentContent, options?: RichEditCommitOptions) => {
       setEditingId(null);
-      onCommit(id, content);
+      onCommit(id, content, options);
     },
     [onCommit],
   );
