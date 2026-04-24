@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.6.9",
+  "version": "0.6.10",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -22,7 +22,7 @@
     "lint:a11y": "vitest run --config vitest.e2e.config.ts src/app/tests/axe.e2e.test.ts",
     "typecheck": "tsc -b",
     "test:coverage": "vitest run --coverage",
-    "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run check:architecture",
+    "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run check:api-docs && npm run check:architecture",
     "build": "npm run check && vite build",
     "deploy": "npm run build && node scripts/deploy-webdav.mjs",
     "refresh:google-fonts": "node scripts/refresh-google-fonts-catalog.mjs",
@@ -30,7 +30,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "check:architecture": "node scripts/check-architecture.mjs"
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:api-docs": "node scripts/check-api-docs.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

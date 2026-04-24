@@ -940,6 +940,51 @@ Run `/version-bump` for guidance on which level to use for each subsystem.
 
 `insertLeafDoc(document, role, parentId)` is now the single API-first leaf insertion surface for all editor leaf roles. Deprecated insertion aliases were removed instead of retained as compatibility shims.
 
+---
+
+## Export Coverage Index
+
+This index keeps the split API reference synchronized with the public export surface. Narrative usage details live in the topic pages above; names listed here are intentionally terse so `npm run check:api-docs` can catch undocumented public exports.
+
+### Document and Editor API
+
+- `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createSectionFromTemplate`
+- `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`
+- `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
+- `setPageAsHomeDoc`, `normalizeSlug`
+- `FocusedMode`, `LinkValidationError`, `StageProps`, `SiteRendererProps`, `SiteExportOptions`
+
+### Font API
+
+- `DEFAULT_DOCUMENT_FONT_FAMILIES`, `createDefaultFontLibrary`, `getDefaultDocumentFontFamily`, `getDocumentDefaultFontFamily`
+- `getDocumentFontUsageMap`, `GoogleFontsFetchOptions`, `normalizeDocumentFontState`
+
+### Drag and Drop API Types
+
+- `DragDropTarget`, `DragGeometrySnapshot`, `DragGuide`, `DragMotion`, `DragMotionSample`, `DragPreviewItem`
+
+### Animation API Types and Constants
+
+- `NAMED_EASINGS`, `TriggerMetadata`
+- `AnimationInvokeAction`, `AnimationTimingOptions`, `OngoingTimingOptions`
+- `NamedEntranceEffect`, `NamedOngoingEffect`, `NamedScrollEffect`, `NamedMouseEffect`, `NamedAnimationEffect`, `KeyframeAnimationEffect`
+- `HoverOutAction`, `DocumentAnimationA11y`, `PerTriggerReducedMotionSettings`
+- `PresetParamType`, `PresetParamSchema`
+
+### Model Factory Exports
+
+- `nextId`, `syncIdCountersWithDocument`
+
+### Model Type Exports
+
+- `BreakpointId`, `FontSizeUnit`, `SpacingUnit`, `FontSource`, `DocumentFontOrigin`, `FontAxis`
+- `LeafTypographyField`, `TextWrapField`, `TextStyleField`, `LinkStyleField`, `ImageStyleField`, `ButtonStyleField`
+- `LinkKind`, `ListDirection`, `ListContentType`, `StickyEdges`, `StickyTarget`, `ViewportMeasurement`
+- `RichTextLeaf`, `RichTextLink`, `RichInlineNode`, `RichBlockStyle`, `StandaloneTextNodeSnapshot`
+- `RichCodeLine`, `RichCodeBlock`, `RichListItem`, `RichUnorderedListBlock`, `RichOrderedListBlock`, `RichListBlock`
+- `TextDocumentBlocks`, `TemplateBuild`, `TemplateNode`, `TextStyleOptions`, `BoxPadding`
+- `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
+
 ### `schemaVersion` in exported documents
 
 `serializeDocumentJson()` stamps the current `DOCUMENT_MODEL_VERSION` into the top-level `schemaVersion` field of the serialized JSON. On import, `parseImportedDocumentJson()` emits a `console.warn` if the stored version differs from the current one, but still attempts to load the document through the normal normalization and validation pipeline. A version mismatch is informational — structural invalidity is the hard-error condition.

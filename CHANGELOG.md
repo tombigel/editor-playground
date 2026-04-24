@@ -15,6 +15,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - make leaf insertion api first
 
+### Changed
+
+- complete reference coverage
+
 ---
 
 ## [0.6.8] — 2026-04-24
