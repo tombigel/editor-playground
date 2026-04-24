@@ -64,7 +64,7 @@ export type StageProps = {
 	) => void;
 	onUpdateTextDocumentBlockGap?: (id: NodeId, value: number) => void;
 	onRegisterActivateRichEdit?: (fn: (id: NodeId) => void) => void;
-	onOpenManageFonts?: () => void;
+	onOpenManageFonts?: (options?: { category?: string }) => void;
 	followLinkPopup?: FollowLinkPopupData | null;
 };
 

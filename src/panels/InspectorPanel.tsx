@@ -91,7 +91,7 @@ export type InspectorPanelProps = {
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
-  onOpenManageFonts?: () => void;
+  onOpenManageFonts?: (options?: { category?: string }) => void;
   showDebugInfo?: boolean;
 };
 

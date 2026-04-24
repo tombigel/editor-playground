@@ -28,6 +28,7 @@ import {
 	SettingsPanel,
 } from "./AppShell.lazyPanels";
 import { SectionTemplatePopover, TextTypePopover } from "./AppChrome";
+import { openManageFontsWithOptions } from "./manageFontsActions";
 
 type AppShellOverlaysProps = {
 	// The shell owns the state and handlers; this view helper keeps render ownership separate.
@@ -257,7 +258,9 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 							dispatch({ type: "setFocusedMode", value })
 						}
 						onActivateRichEdit={(nodeId) => activateRichEditRef.current(nodeId)}
-						onOpenManageFonts={() => onManageFontsOpenChange(true)}
+						onOpenManageFonts={(options) =>
+							openManageFontsWithOptions(onManageFontsOpenChange, options)
+						}
 						onExitFocusedMode={() =>
 							dispatch({ type: "setFocusedMode", value: null })
 						}

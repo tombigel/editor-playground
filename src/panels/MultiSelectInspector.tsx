@@ -365,7 +365,7 @@ export function MultiSelectInspector({
                     size="icon"
                     className="h-8 w-8 rounded-sm"
                     aria-label="Manage fonts"
-                    onClick={actions.onOpenManageFonts}
+                    onClick={() => actions.onOpenManageFonts?.()}
                   >
                     <Settings2 className="h-3.5 w-3.5" />
                   </Button>

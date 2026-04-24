@@ -281,7 +281,7 @@ function LeafTextEditBody({
   ) => void;
   onUpdateBlockGap: (id: NodeId, value: number) => void;
   onDiscard: () => void;
-  onOpenManageFonts: () => void;
+  onOpenManageFonts: (options?: { category?: string }) => void;
 }) {
   if (isEditing) {
     if (child.subtype === 'code') {

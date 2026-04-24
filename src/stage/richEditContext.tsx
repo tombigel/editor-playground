@@ -12,7 +12,7 @@ export type RichEditContextValue = {
   ) => void;
   updateBlockGap: (id: NodeId, value: number) => void;
   discardEdit: () => void;
-  onOpenManageFonts: () => void;
+  onOpenManageFonts: (options?: { category?: string }) => void;
 };
 
 export const RichEditContext = createContext<RichEditContextValue>({

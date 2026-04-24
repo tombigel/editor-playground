@@ -47,7 +47,7 @@ export type InspectorActionHandlers = {
   onAnimationDocSettingsChange: (settings: DocumentAnimationSettings) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
-  onOpenManageFonts?: () => void;
+  onOpenManageFonts?: (options?: { category?: string }) => void;
 };
 
 export type InspectorOrderState = {

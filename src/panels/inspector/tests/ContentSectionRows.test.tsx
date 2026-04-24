@@ -34,15 +34,20 @@ describe("panels/inspector/content section rows", () => {
 	});
 
 	it("renders code theme, tab width, and reset controls", () => {
+		const document = createInitialDocument();
 		const codeNode = createTextNode("code", "root");
 		const markup = renderToStaticMarkup(
 			<CodeTextStyleSection
+				document={document}
 				node={codeNode}
 				onTextChange={() => {}}
 				onResetCodeBlockStyle={() => {}}
+				onOpenManageFonts={() => {}}
 			/>,
 		);
 
+		expect(markup).toContain("System Mono");
+		expect(markup).toContain('aria-label="More monospace fonts"');
 		expect(markup).toContain(">auto<");
 		expect(markup).toContain(">light<");
 		expect(markup).toContain(">dark<");

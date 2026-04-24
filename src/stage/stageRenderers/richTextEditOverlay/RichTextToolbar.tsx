@@ -98,7 +98,7 @@ export function RichTextToolbar({
 	documentFonts: ReturnType<typeof listDocumentFontsForPicker>;
 	currentFontFamily: string;
 	currentFontWeight: number;
-	onOpenManageFonts: () => void;
+	onOpenManageFonts: (options?: { category?: string }) => void;
 	resolvedToolbarFontSizeValue: string;
 	openValueFieldId: RichEditValueFieldId | null;
 	onValueFieldOpenChange: (
@@ -226,7 +226,7 @@ export function RichTextToolbar({
 										size="icon"
 										className="h-7 w-7 rounded-sm"
 										aria-label="Manage fonts"
-										onClick={onOpenManageFonts}
+										onClick={() => onOpenManageFonts()}
 									>
 										<Settings2 className="h-3.5 w-3.5" />
 									</Button>

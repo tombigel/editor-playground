@@ -42,6 +42,7 @@ type StoredBrowseState = {
 };
 
 const MANAGE_FONTS_STORAGE_KEY = 'sticky-playground.manage-fonts.filters';
+export const MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY = 'sticky-playground.manage-fonts.initial-category';
 export const DEFAULT_MANAGE_FONTS_LANGUAGE_FILTER = 'western';
 
 type LanguageFilterOption = {
@@ -143,10 +144,10 @@ export function ManageFontsPanel({
   }, [subset, subsetOptions]);
 
   useEffect(() => {
-    if (category !== 'all' && !categoryOptions.includes(category)) {
+    if (status === 'ready' && category !== 'all' && !categoryOptions.includes(category)) {
       setFilters((current) => ({ ...current, category: 'all' }));
     }
-  }, [category, categoryOptions]);
+  }, [category, categoryOptions, status]);
 
   const catalogFamilies = useMemo(() => {
     if (!catalog) {
@@ -502,12 +503,19 @@ function readStoredBrowseState(): StoredBrowseState {
   }
 
   try {
+    const initialCategory = window.sessionStorage.getItem(MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY);
+    if (initialCategory) {
+      window.sessionStorage.removeItem(MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY);
+    }
     const raw = window.localStorage.getItem(MANAGE_FONTS_STORAGE_KEY);
     if (!raw) {
-      return createDefaultBrowseState();
+      return { ...createDefaultBrowseState(), ...(initialCategory ? { category: initialCategory } : {}) };
     }
 
-    return sanitizeStoredBrowseState(JSON.parse(raw));
+    return {
+      ...sanitizeStoredBrowseState(JSON.parse(raw)),
+      ...(initialCategory ? { category: initialCategory } : {}),
+    };
   } catch {
     return createDefaultBrowseState();
   }

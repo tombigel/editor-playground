@@ -50,9 +50,11 @@ const textTextStyleSection: InspectorSectionDefinition = {
     if (node.subtype === 'code') {
       return (
         <CodeTextStyleSection
+          document={document}
           node={node}
           onTextChange={actions.onTextChange}
           onResetCodeBlockStyle={() => actions.onResetCodeBlockStyle?.(node.id)}
+          onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
         />

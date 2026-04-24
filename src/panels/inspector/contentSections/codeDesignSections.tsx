@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Settings2 } from "lucide-react";
+import { listDocumentFontsForPicker } from "../../../api/fontApi";
 import type { EditorTextField } from "../../../api/documentApi";
+import type { DocumentModel } from "../../../model/types";
 import {
 	DEFAULT_SHADOW_BLUR_PX,
 	DEFAULT_SHADOW_COLOR,
@@ -45,6 +47,8 @@ import {
 	fontSizeFieldValueFromNode,
 	lineHeightValue,
 	TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX,
+	TYPOGRAPHY_FONT_PICKER_WIDTH_PX,
+	TYPOGRAPHY_FONT_ROW_WIDTH_PX,
 	TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX,
 	TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX,
 	TYPOGRAPHY_SIZE_ROW_WIDTH_PX,
@@ -52,20 +56,35 @@ import {
 	textDecorationHasUnderline,
 	toggleTextDecorationLine,
 } from "./shared";
+import { FontPickerPopover } from "../../controls/FontControls";
+
+const SYSTEM_MONO_FONT_VALUE = "__system_mono__";
+const CODE_FONT_FAMILY_NAMES = new Set([
+	"JetBrains Mono",
+	"Fira Code",
+	"Source Code Pro",
+	"IBM Plex Mono",
+	"Roboto Mono",
+	"Cascadia Code",
+]);
 
 export function CodeTextStyleSection({
+	document,
 	node,
 	onTextChange,
 	onResetCodeBlockStyle,
+	onOpenManageFonts,
 	focusedMode,
 	onEnterFocusedMode,
 	headerContent,
 	headerAction,
 	contentClassName = "space-y-2.5 px-3 pt-1.5 pb-3",
 }: {
+	document: DocumentModel;
 	node: TextInspectorNode;
 	onTextChange: (field: EditorTextField, value: string) => void;
 	onResetCodeBlockStyle?: () => void;
+	onOpenManageFonts?: (options?: { category?: string }) => void;
 } & FocusModeCardProps) {
 	const theme = node.code?.theme ?? "auto";
 	const codeBlock =
@@ -73,6 +92,15 @@ export function CodeTextStyleSection({
 			? node.content.blocks[0]
 			: undefined;
 	const tabSize = node.style?.tabSize ?? codeBlock?.style?.tabSize ?? 2;
+	const currentFamily = node.style?.fontFamily ?? SYSTEM_MONO_FONT_VALUE;
+	const documentFonts = listDocumentFontsForPicker(document);
+	const codeFonts = documentFonts.filter(
+		(family) =>
+			CODE_FONT_FAMILY_NAMES.has(family.family) ||
+			family.category === "monospace" ||
+			family.family === node.style?.fontFamily,
+	);
+	const currentWeight = node.style?.fontWeight ?? DEFAULT_FONT_WEIGHT;
 	return (
 		<InspectorSectionCard
 			title="Text style"
@@ -85,6 +113,43 @@ export function CodeTextStyleSection({
 				onEnterFocusedMode,
 			)}
 		>
+			<FormField
+				label="Font"
+				layout="inline-group"
+				controlWidth={`${TYPOGRAPHY_FONT_ROW_WIDTH_PX}px`}
+				controlClassName="gap-1"
+			>
+				<div
+					className="shrink-0"
+					style={{ width: `${TYPOGRAPHY_FONT_PICKER_WIDTH_PX}px` }}
+				>
+					<FontPickerPopover
+						familyValue={currentFamily}
+						weightValue={currentWeight}
+						families={codeFonts}
+						systemOptionValue={SYSTEM_MONO_FONT_VALUE}
+						systemLabel="System Mono"
+						onFamilyChange={(value) =>
+							onTextChange(
+								"fontFamily",
+								value === SYSTEM_MONO_FONT_VALUE ? "" : value,
+							)
+						}
+						onWeightChange={(value) => onTextChange("fontWeight", value)}
+						className="w-full"
+					/>
+				</div>
+				<Button
+					type="button"
+					variant="outline"
+					size="icon"
+					className="h-8 w-8 rounded-sm"
+					aria-label="More monospace fonts"
+					onClick={() => onOpenManageFonts?.({ category: "monospace" })}
+				>
+					<Settings2 className="h-3.5 w-3.5" />
+				</Button>
+			</FormField>
 			<FormField
 				label="Size"
 				layout="inline-group"

@@ -134,7 +134,7 @@ export function RichTextEditOverlay({
 	) => void;
 	onUpdateBlockGap: (id: NodeId, value: number) => void;
 	onDiscard: () => void;
-	onOpenManageFonts?: () => void;
+	onOpenManageFonts?: (options?: { category?: string }) => void;
 }) {
 	const editMode = mode ?? "rich";
 	const editor = useMemo(() => createRichEditor(), []);

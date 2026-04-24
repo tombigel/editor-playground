@@ -8,6 +8,7 @@ import { Stage } from "../api/editorViewApi";
 import { EditorSidebar } from "./AppShell.lazyPanels";
 import { EditorTopbar } from "./EditorTopbar";
 import { RailToggleButton, SpacerIcon } from "./AppChrome";
+import { openManageFontsWithOptions } from "./manageFontsActions";
 
 type AppShellEditorMainProps = {
 	// The shell owns the state and handlers; this view helper keeps render ownership separate.
@@ -157,7 +158,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				}
 				onToggleLayersPanel={() => onLayersOpenChange(!layersOpen)}
 				onTogglePagesPanel={() => onPagesOpenChange(!pagesOpen)}
-				onOpenManageFonts={() => onManageFontsOpenChange(true)}
+				onOpenManageFonts={() =>
+					openManageFontsWithOptions(onManageFontsOpenChange)
+				}
 				onOpenShortcuts={() => onShortcutsOpenChange(true)}
 				onOpenDocumentation={(entryId) => {
 					setHelpEntryTarget(entryId);
@@ -382,7 +385,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onRegisterActivateRichEdit={(fn) => {
 							activateRichEditRef.current = fn;
 						}}
-						onOpenManageFonts={() => onManageFontsOpenChange(true)}
+						onOpenManageFonts={(options) =>
+							openManageFontsWithOptions(onManageFontsOpenChange, options)
+						}
 						onStickyGeometryChange={onStickyGeometryChange}
 						followLinkPopup={
 							linkPopupVisible && selectedLinkNode
@@ -571,7 +576,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 							dispatch({ type: "setFocusedMode", value })
 						}
 						onActivateRichEdit={(nodeId) => activateRichEditRef.current(nodeId)}
-						onOpenManageFonts={() => onManageFontsOpenChange(true)}
+						onOpenManageFonts={(options) =>
+							openManageFontsWithOptions(onManageFontsOpenChange, options)
+						}
 						onInspectorCollapsedChange={(value) =>
 							dispatch({ type: "setInspectorCollapsed", value })
 						}
