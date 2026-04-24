@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - skip changelog-only release notes
+- record Slate table planning findings
 
 ---
 
