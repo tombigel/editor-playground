@@ -8,6 +8,7 @@ import {
   isTextDocumentContent,
 } from './guards';
 import { isObjectRecord, normalizeBlockGap } from './shared';
+import { MAX_LIST_ITEM_DEPTH } from './shared';
 
 export function validateRichContentStructure(content: unknown): string[] {
   if (!Array.isArray(content)) {
@@ -96,10 +97,26 @@ export function validateRichContentStructure(content: unknown): string[] {
         errors.push(`Rich ordered list block ${blockIndex} start must be a positive number.`);
       }
 
+      let previousDepth = 0;
       block.children.forEach((child, childIndex) => {
         if (!isObjectRecord(child) || child.type !== 'list-item' || !Array.isArray(child.children)) {
           errors.push(`Rich list block ${blockIndex} child ${childIndex} must be a list-item element.`);
           return;
+        }
+
+        const childDepth = child.depth === undefined ? 0 : child.depth;
+        if (
+          typeof childDepth !== 'number'
+          || !Number.isFinite(childDepth)
+          || Math.trunc(childDepth) !== childDepth
+          || childDepth < 0
+          || childDepth > MAX_LIST_ITEM_DEPTH
+        ) {
+          errors.push(`Rich list item ${blockIndex}.${childIndex} depth must be an integer from 0 to ${MAX_LIST_ITEM_DEPTH}.`);
+        } else if (childDepth > previousDepth + 1) {
+          errors.push(`Rich list item ${blockIndex}.${childIndex} depth cannot increase by more than one level.`);
+        } else {
+          previousDepth = childDepth;
         }
 
         child.children.forEach((itemChild, itemChildIndex) => {

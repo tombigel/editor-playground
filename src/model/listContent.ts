@@ -10,6 +10,7 @@ import type {
   UnorderedListContent,
   UnorderedListMarkerStyle,
 } from './types';
+import { MAX_LIST_ITEM_DEPTH, normalizeListItemDepth } from './richContent/shared';
 
 const UNORDERED_MARKER_STYLES = new Set<UnorderedListMarkerStyle>(['disc', 'circle', 'square']);
 const ORDERED_MARKER_STYLES = new Set<OrderedListMarkerStyle>([
@@ -58,9 +59,11 @@ export function createListTextItem(
   text = '',
   overrides: Partial<ListTextItem> = {},
 ): ListTextItem {
+  const depth = normalizeListItemDepth(overrides.depth);
   return {
     text,
     direction: normalizeDirection(overrides.direction),
+    ...(depth ? { depth } : {}),
     ...(overrides.link ? { link: normalizeLinkExtension(overrides.link) } : {}),
   };
 }
@@ -86,14 +89,16 @@ export function createDefaultListContent(): ListContent {
   };
 }
 
-function normalizeTextListItem(item: unknown): ListTextItem {
+function normalizeTextListItem(item: unknown, previousDepth: number): ListTextItem {
   if (!isObjectRecord(item)) {
     return createListTextItem('');
   }
 
+  const depth = normalizeListItemDepth(item.depth, previousDepth);
   return {
     text: typeof item.text === 'string' ? item.text : '',
     direction: normalizeDirection(item.direction),
+    ...(depth ? { depth } : {}),
     ...(normalizeLinkExtension(item.link) ? { link: normalizeLinkExtension(item.link) } : {}),
   };
 }
@@ -120,7 +125,13 @@ function normalizeListTextItems(items: unknown): ListTextItem[] {
     return [createListTextItem('')];
   }
 
-  const normalized = items.map((item) => normalizeTextListItem(item));
+  const normalized: ListTextItem[] = [];
+  let previousDepth = 0;
+  for (const item of items) {
+    const normalizedItem = normalizeTextListItem(item, previousDepth);
+    previousDepth = normalizedItem.depth ?? 0;
+    normalized.push(normalizedItem);
+  }
   return normalized.length > 0 ? normalized : [createListTextItem('')];
 }
 
@@ -236,6 +247,7 @@ export function validateListContentStructure(content: unknown): string[] {
   }
 
   const errors: string[] = [];
+  let previousDepth = 0;
   content.items.forEach((item, index) => {
     if (!isObjectRecord(item)) {
       errors.push(`List item ${index} must be an object.`);
@@ -255,6 +267,24 @@ export function validateListContentStructure(content: unknown): string[] {
 
     if (item.direction !== undefined && item.direction !== 'ltr' && item.direction !== 'rtl') {
       errors.push(`List item ${index} direction must be ltr or rtl.`);
+    }
+
+    if (type !== 'dl' && item.depth !== undefined) {
+      if (
+        typeof item.depth !== 'number'
+        || !Number.isFinite(item.depth)
+        || Math.trunc(item.depth) !== item.depth
+        || item.depth < 0
+        || item.depth > MAX_LIST_ITEM_DEPTH
+      ) {
+        errors.push(`List item ${index} depth must be an integer from 0 to ${MAX_LIST_ITEM_DEPTH}.`);
+      } else if (item.depth > previousDepth + 1) {
+        errors.push(`List item ${index} depth cannot increase by more than one level.`);
+      } else {
+        previousDepth = item.depth;
+      }
+    } else if (type !== 'dl') {
+      previousDepth = 0;
     }
 
     if (item.link !== undefined && normalizeLinkExtension(item.link) == null) {

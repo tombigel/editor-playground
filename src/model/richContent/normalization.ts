@@ -23,6 +23,7 @@ import {
   normalizeBlockGap,
   normalizeDirection,
   normalizeLineHeight,
+  normalizeListItemDepth,
   normalizeLinkKind,
   normalizeListItemDirection,
   normalizeRichBlockStyle,
@@ -160,14 +161,16 @@ function normalizeCodeLines(children: unknown): RichCodeLine[] {
   return normalized.length > 0 ? normalized : [createRichCodeLine('')];
 }
 
-function normalizeListItem(node: unknown): RichListItem | null {
+function normalizeListItem(node: unknown, previousDepth: number): RichListItem | null {
   if (!isObjectRecord(node) || node.type !== 'list-item') {
     return null;
   }
 
+  const depth = normalizeListItemDepth(node.depth, previousDepth);
   return {
     type: 'list-item',
     ...(normalizeListItemDirection(node.direction) ? { direction: normalizeListItemDirection(node.direction) } : {}),
+    ...(depth ? { depth } : {}),
     children: normalizeInlineChildren(node.children),
   };
 }
@@ -177,9 +180,16 @@ function normalizeListItems(children: unknown): RichListItem[] {
     return [createRichListItem('')];
   }
 
-  const normalized = children
-    .map((child) => normalizeListItem(child))
-    .filter((child): child is RichListItem => child !== null);
+  const normalized: RichListItem[] = [];
+  let previousDepth = 0;
+  for (const child of children) {
+    const normalizedItem = normalizeListItem(child, previousDepth);
+    if (!normalizedItem) {
+      continue;
+    }
+    previousDepth = normalizedItem.depth ?? 0;
+    normalized.push(normalizedItem);
+  }
 
   return normalized.length > 0 ? normalized : [createRichListItem('')];
 }

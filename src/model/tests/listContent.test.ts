@@ -21,12 +21,33 @@ describe('model/listContent', () => {
       type: 'ol',
       start: 3,
       markerStyle: 'upper-roman',
-      items: [{ text: 'Third', direction: 'rtl', link: { linkType: 'external', href: 'https://example.com' } }],
+      items: [{ text: 'Third', direction: 'rtl', depth: 1, link: { linkType: 'external', href: 'https://example.com' } }],
     })).toEqual({
       type: 'ol',
       start: 3,
       markerStyle: 'upper-roman',
-      items: [{ text: 'Third', direction: 'rtl', link: { linkType: 'external', href: 'https://example.com' } }],
+      items: [{ text: 'Third', direction: 'rtl', depth: 1, link: { linkType: 'external', href: 'https://example.com' } }],
+    });
+  });
+
+  it('normalizes list item depth with clamp and one-level jumps', () => {
+    expect(normalizeListContent({
+      type: 'ul',
+      items: [
+        { text: 'First', depth: 4 },
+        { text: 'Second', depth: 8.9 },
+        { text: 'Third', depth: -1 },
+        { text: 'Fourth', depth: 99 },
+      ],
+    })).toEqual({
+      type: 'ul',
+      markerStyle: 'disc',
+      items: [
+        { text: 'First', direction: 'ltr', depth: 1 },
+        { text: 'Second', direction: 'ltr', depth: 2 },
+        { text: 'Third', direction: 'ltr' },
+        { text: 'Fourth', direction: 'ltr', depth: 1 },
+      ],
     });
   });
 
@@ -57,6 +78,20 @@ describe('model/listContent', () => {
       items: [{ value: 'missing-text' }],
     })).toEqual([
       'List item 0 must define a string text value.',
+    ]);
+  });
+
+  it('reports invalid list item depth', () => {
+    expect(validateListContentStructure({
+      type: 'ul',
+      items: [
+        { text: 'First' },
+        { text: 'Invalid jump', depth: 3 },
+        { text: 'Invalid depth', depth: 9 },
+      ],
+    })).toEqual([
+      'List item 1 depth cannot increase by more than one level.',
+      'List item 2 depth must be an integer from 0 to 8.',
     ]);
   });
 });

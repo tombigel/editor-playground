@@ -280,6 +280,30 @@ describe('model/richContent', () => {
       ]);
     });
 
+    it('normalizes rich list item depth with clamp and one-level jumps', () => {
+      expect(normalizeRichContent([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', depth: 3, children: [makeLeaf('First')] },
+            { type: 'list-item', depth: 8.9, children: [makeLeaf('Second')] },
+            { type: 'list-item', depth: -1, children: [makeLeaf('Third')] },
+            { type: 'list-item', depth: 99, children: [makeLeaf('Fourth')] },
+          ],
+        },
+      ])).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', depth: 1, children: [makeLeaf('First')] },
+            { type: 'list-item', depth: 2, children: [makeLeaf('Second')] },
+            { type: 'list-item', children: [makeLeaf('Third')] },
+            { type: 'list-item', depth: 1, children: [makeLeaf('Fourth')] },
+          ],
+        },
+      ]);
+    });
+
     it('preserves standalone merge snapshots on canonical blocks', () => {
       expect(normalizeRichContent([
         {
@@ -389,6 +413,22 @@ describe('model/richContent', () => {
         },
       ])).toEqual([
         'Rich list item 0.0 child 0 must be a text leaf or link.',
+      ]);
+    });
+
+    it('reports invalid rich list item depth', () => {
+      expect(validateRichContentStructure([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [makeLeaf('First')] },
+            { type: 'list-item', depth: 3, children: [makeLeaf('Invalid jump')] },
+            { type: 'list-item', depth: 9, children: [makeLeaf('Invalid depth')] },
+          ],
+        },
+      ])).toEqual([
+        'Rich list item 0.1 depth cannot increase by more than one level.',
+        'Rich list item 0.2 depth must be an integer from 0 to 8.',
       ]);
     });
   });

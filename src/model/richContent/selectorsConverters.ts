@@ -77,6 +77,7 @@ export function listContentToRichListBlock(
   if (content.type === 'ol') {
     return createRichListBlock('ol', content.items.map((item) => createRichListItemFromText(item.text, {
       direction: item.direction,
+      depth: item.depth,
       link: item.link,
     })), {
       direction: options.direction,
@@ -88,6 +89,7 @@ export function listContentToRichListBlock(
 
   return createRichListBlock('ul', content.items.map((item) => createRichListItemFromText('text' in item ? item.text : `${item.term}${item.description ? `: ${item.description}` : ''}`, {
     direction: item.direction,
+    depth: 'depth' in item ? item.depth : undefined,
     link: item.link,
   })), {
     direction: options.direction,
@@ -243,6 +245,7 @@ export function richListBlockToListContent(block: RichListBlock): ListContent {
         return {
           text: flattenRichInlineChildren(item.children),
           direction: item.direction ?? 'ltr',
+          ...(item.depth ? { depth: item.depth } : {}),
           ...(linkNode ? {
             link: {
               linkType: linkNode.linkType,
@@ -266,6 +269,7 @@ export function richListBlockToListContent(block: RichListBlock): ListContent {
       return {
         text: flattenRichInlineChildren(item.children),
         direction: item.direction ?? 'ltr',
+        ...(item.depth ? { depth: item.depth } : {}),
         ...(linkNode ? {
           link: {
             linkType: linkNode.linkType,

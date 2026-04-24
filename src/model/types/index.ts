@@ -196,6 +196,7 @@ export interface RichCodeBlock extends SlateElement {
 export interface RichListItem extends SlateElement {
   type: 'list-item';
   direction?: 'ltr' | 'rtl';
+  depth?: number;
   children: RichInlineNode[];
 }
 
@@ -407,6 +408,7 @@ export type ListContentType = 'ul' | 'ol' | 'dl';
 export type ListTextItem = {
   text: string;
   direction?: ListDirection;
+  depth?: number;
   link?: LinkExtension;
 };
 

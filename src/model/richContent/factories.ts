@@ -17,7 +17,7 @@ import type {
   TextDocumentContent,
   UnorderedListMarkerStyle,
 } from '../types';
-import { ORDERED_MARKER_STYLES, UNORDERED_MARKER_STYLES } from './shared';
+import { normalizeListItemDepth, ORDERED_MARKER_STYLES, UNORDERED_MARKER_STYLES } from './shared';
 
 export function createRichTextLeaf(text: string, marks?: Partial<RichTextLeaf>): RichTextLeaf {
   return {
@@ -96,14 +96,36 @@ export function createRichListItemFromText(
   text = '',
   options: {
     direction?: ListDirection;
+    depth?: number;
     link?: LinkExtension;
   } = {},
 ): RichListItem {
   return {
     type: 'list-item',
     ...(options.direction ? { direction: options.direction } : {}),
+    ...(normalizeListItemDepth(options.depth) ? { depth: normalizeListItemDepth(options.depth) } : {}),
     children: options.link ? [createInlineLinkFromExtension(options.link, text)] : [createRichTextLeaf(text)],
   };
+}
+
+function normalizeRichListItems(items: RichListItem[]): RichListItem[] {
+  const source = items.length > 0 ? items : [createRichListItem('')];
+  let previousDepth = 0;
+  return source.map((item) => {
+    const depth = normalizeListItemDepth(item.depth, previousDepth);
+    previousDepth = depth ?? 0;
+    return {
+      ...item,
+      ...(depth ? { depth } : {}),
+      ...(!depth && item.depth !== undefined ? { depth: undefined } : {}),
+    };
+  }).map((item) => {
+    if (item.depth === undefined) {
+      const { depth: _depth, ...rest } = item;
+      return rest;
+    }
+    return item;
+  });
 }
 
 export function createRichListBlock(
@@ -121,7 +143,7 @@ export function createRichListBlock(
       ...(typeof options.markerStyle === 'string' && ORDERED_MARKER_STYLES.has(options.markerStyle as OrderedListMarkerStyle)
         ? { markerStyle: options.markerStyle as OrderedListMarkerStyle }
         : {}),
-      children: items.length > 0 ? items : [createRichListItem('')],
+      children: normalizeRichListItems(items),
     };
   }
 
@@ -133,7 +155,7 @@ export function createRichListBlock(
     ...(typeof options.markerStyle === 'string' && UNORDERED_MARKER_STYLES.has(options.markerStyle as UnorderedListMarkerStyle)
       ? { markerStyle: options.markerStyle as UnorderedListMarkerStyle }
       : {}),
-    children: items.length > 0 ? items : [createRichListItem('')],
+    children: normalizeRichListItems(items),
   };
 }
 

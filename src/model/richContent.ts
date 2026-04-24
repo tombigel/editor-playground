@@ -44,6 +44,10 @@ export {
   textBlockTypeToHtmlTag,
 } from './richContent/selectorsConverters';
 export {
+  MAX_LIST_ITEM_DEPTH,
+  normalizeListItemDepth,
+} from './richContent/shared';
+export {
   validateRichContentStructure,
   validateTextDocumentContentStructure,
   validateTextSubtypeContentStructure,

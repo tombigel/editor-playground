@@ -28,6 +28,7 @@ export const RICH_TEXT_BLOCK_TYPES = new Set<RichTextBlockType>([
 
 export const RICH_LIST_BLOCK_TYPES = new Set<RichListBlock['type']>(['ul', 'ol']);
 export const RICH_TEXT_LINK_TYPES = new Set<LinkKind>(['external', 'page', 'anchor']);
+export const MAX_LIST_ITEM_DEPTH = 8;
 
 export const ORDERED_MARKER_STYLES = new Set<OrderedListMarkerStyle>([
   'decimal',
@@ -74,6 +75,15 @@ export function normalizeListItemDirection(value: unknown): ListDirection | unde
     return value;
   }
   return undefined;
+}
+
+export function normalizeListItemDepth(value: unknown, previousDepth = 0): number | undefined {
+  const rawDepth = typeof value === 'number' && Number.isFinite(value)
+    ? Math.trunc(value)
+    : 0;
+  const maxDepth = Math.min(MAX_LIST_ITEM_DEPTH, Math.max(0, previousDepth) + 1);
+  const depth = Math.min(maxDepth, Math.max(0, rawDepth));
+  return depth > 0 ? depth : undefined;
 }
 
 export function normalizeLineHeight(value: unknown): number | undefined {
