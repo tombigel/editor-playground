@@ -1,4 +1,4 @@
-import { MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY } from "../panels/fontManagement/ManageFontsPanel";
+import { MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY } from "../panels/fontManagement/constants";
 
 export type OpenManageFontsOptions = {
 	category?: string;

@@ -21,6 +21,10 @@ import { Pager } from '@/components/ui/pager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LabeledControlRow, LabeledFieldStack, NoticeSurface } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
+import {
+  MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY,
+  MANAGE_FONTS_STORAGE_KEY,
+} from './constants';
 import { FONT_CATALOG_PAGE_SIZE, FONT_CATALOG_PAGE_SIZE_OPTIONS, paginateCatalogFamilies } from './pagination';
 
 type Props = {
@@ -41,8 +45,6 @@ type StoredBrowseState = {
   pageSize: number;
 };
 
-const MANAGE_FONTS_STORAGE_KEY = 'sticky-playground.manage-fonts.filters';
-export const MANAGE_FONTS_INITIAL_CATEGORY_STORAGE_KEY = 'sticky-playground.manage-fonts.initial-category';
 export const DEFAULT_MANAGE_FONTS_LANGUAGE_FILTER = 'western';
 
 type LanguageFilterOption = {
