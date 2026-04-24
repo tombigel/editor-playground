@@ -4,6 +4,7 @@ import {
   createTextDocumentFromCode,
   createTextDocumentFromText,
   createRichCodeBlock,
+  createRichListBlock,
   createRichTextBlock,
   createRichTextLeaf,
   getSingleCodeBlockContent,
@@ -29,6 +30,9 @@ import type {
   RichBlock,
   RichContent,
   RichInlineNode,
+  RichListBlock,
+  RichListItem,
+  RichTextLeaf,
   RichTextBlock,
   TextNode,
   TextDocumentContent,
@@ -133,6 +137,13 @@ function convertTextContent(
   _mode: TextConversionMode,
 ): TextDocumentContent {
   if (targetSubtype === 'list') {
+    const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
+    if (richContent.length === 1) {
+      const richListBlock = convertSingleRichBlockToList(richContent[0], source.style?.direction);
+      if (richListBlock) {
+        return createTextDocumentContent([richListBlock]);
+      }
+    }
     return createTextDocumentContent([listContentToRichListBlock(convertToListContent(source))]);
   }
 
@@ -312,7 +323,9 @@ function convertSingleRichBlock(
   targetSubtype: Exclude<TextSubtype, 'rich'>,
 ): TextDocumentContent {
   if (targetSubtype === 'list') {
-    return createTextDocumentContent([listContentToRichListBlock(richBlockToListContent(block))]);
+    return createTextDocumentContent([
+      convertSingleRichBlockToList(block) ?? listContentToRichListBlock(richBlockToListContent(block)),
+    ]);
   }
 
   if (targetSubtype === 'code') {
@@ -364,6 +377,87 @@ function flattenListBlockInlineChildren(block: Extract<RichBlock, { type: 'ul' |
     ...(index > 0 ? [createRichTextLeaf('\n')] : []),
     ...cloneInlineNodes(item.children),
   ]);
+}
+
+function convertSingleRichBlockToList(
+  block: RichBlock,
+  fallbackDirection?: RichListItem['direction'],
+): RichListBlock | null {
+  if (block.type === 'ul' || block.type === 'ol') {
+    return structuredClone(block);
+  }
+
+  if (!isRichTextBlockForStandaloneBlock(block)) {
+    return null;
+  }
+
+  return createRichListBlock(
+    'ul',
+    splitInlineChildrenIntoListItems(block.children, block.direction),
+    { direction: fallbackDirection ?? block.direction, markerStyle: 'disc' },
+  );
+}
+
+function splitInlineChildrenIntoListItems(
+  children: RichInlineNode[],
+  direction?: RichListItem['direction'],
+): RichListItem[] {
+  const items: RichInlineNode[][] = [[]];
+  const currentChildren = () => items[items.length - 1];
+  const startNextItem = () => {
+    items.push([]);
+  };
+
+  for (const child of children) {
+    if (isRichTextLinkNode(child)) {
+      for (const leaf of child.children) {
+        appendLeafSegments(leaf, startNextItem, (segment) => {
+          currentChildren().push(createSplitRichTextLink(child, [segment]));
+        });
+      }
+      continue;
+    }
+
+    appendLeafSegments(child, startNextItem, (segment) => {
+      currentChildren().push(segment);
+    });
+  }
+
+  return items.map((itemChildren) => ({
+    type: 'list-item',
+    ...(direction ? { direction } : {}),
+    children: itemChildren.length > 0 ? itemChildren : [createRichTextLeaf('')],
+  }));
+}
+
+function appendLeafSegments(
+  leaf: RichTextLeaf,
+  startNextItem: () => void,
+  appendSegment: (segment: RichTextLeaf) => void,
+): void {
+  const segments = leaf.text.split(/\r?\n/);
+  segments.forEach((segment, index) => {
+    if (index > 0) {
+      startNextItem();
+    }
+    if (segment.length > 0) {
+      appendSegment({ ...leaf, text: segment });
+    }
+  });
+}
+
+function isRichTextLinkNode(node: RichInlineNode): node is Extract<RichInlineNode, { type: 'link' }> {
+  return 'type' in node && node.type === 'link';
+}
+
+function createSplitRichTextLink(
+  link: Extract<RichInlineNode, { type: 'link' }>,
+  children: RichTextLeaf[],
+): Extract<RichInlineNode, { type: 'link' }> {
+  return {
+    ...link,
+    children,
+  };
 }
 
 function splitLinesForListItems(text: string): string[] {
