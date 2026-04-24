@@ -27,6 +27,8 @@ describe("stage/CodeTextEditOverlay", () => {
 
 		expect(markup).toContain('data-stage-code-edit-root="true"');
 		expect(markup).toContain('data-stage-code-toolbar="true"');
+		expect(markup).toContain("width:min(360px, 100%, calc(100vw - 32px))");
+		expect(markup).toContain("flex-wrap");
 		expect(markup).toContain('aria-label="Code language"');
 		expect(markup).toContain('aria-label="Code theme auto"');
 		expect(markup).toContain('aria-label="Code theme light"');

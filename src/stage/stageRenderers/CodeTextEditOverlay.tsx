@@ -291,14 +291,14 @@ function CodeEditToolbar({
 			positionMode="absolute"
 			data-stage-code-toolbar="true"
 			style={{
-				top: "-44px",
+				bottom: "calc(100% + 8px)",
 				left: 0,
 				zIndex: 220,
-				width: "max-content",
+				width: "min(360px, 100%, calc(100vw - 32px))",
 				maxWidth: "calc(100vw - 32px)",
 				pointerEvents: "auto",
 			}}
-			bodyClassName="px-2 py-1"
+			bodyClassName="px-1.5 py-1"
 			bodyStyle={{
 				pointerEvents: "auto",
 				overflow: "visible",
@@ -307,11 +307,11 @@ function CodeEditToolbar({
 				event.stopPropagation();
 			}}
 		>
-			<ToolbarControlRow>
-				<ToolbarControlGroup>
+			<ToolbarControlRow className="min-w-0 flex-wrap gap-1">
+				<ToolbarControlGroup className="min-w-0 flex-1">
 					<Select value={language} onValueChange={onLanguageChange}>
 						<SelectTrigger
-							className="h-7 w-[132px] rounded-sm text-[11px]"
+							className="h-7 w-full min-w-0 rounded-sm text-[11px]"
 							aria-label="Code language"
 							data-stage-code-toolbar="true"
 						>
@@ -326,14 +326,17 @@ function CodeEditToolbar({
 						</SelectContent>
 					</Select>
 				</ToolbarControlGroup>
-				<ToolbarControlGroup withDividerBefore>
+				<ToolbarControlGroup
+					className="min-w-0 flex-1 flex-wrap justify-end"
+					withDividerBefore
+				>
 					{(["auto", "light", "dark"] as const).map((option) => (
 						<Button
 							key={option}
 							type="button"
 							variant={theme === option ? "default" : "ghost"}
 							size="sm"
-							className="h-7 rounded-sm px-2 text-[11px] capitalize"
+							className="h-7 flex-1 rounded-sm px-1.5 text-[11px] capitalize"
 							aria-label={`Code theme ${option}`}
 							onClick={() => onThemeChange(option)}
 						>

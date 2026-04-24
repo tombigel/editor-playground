@@ -53,6 +53,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - keep code inspector on API type surface
 - keep manage fonts constants lightweight
 - compact code tab width control
+- make code toolbar responsive
 
 ---
 
