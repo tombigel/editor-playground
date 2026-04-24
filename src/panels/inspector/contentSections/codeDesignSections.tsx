@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 import type { EditorTextField } from "../../../api/documentApi";
 import {
 	DEFAULT_SHADOW_BLUR_PX,
@@ -55,6 +56,7 @@ import {
 export function CodeTextStyleSection({
 	node,
 	onTextChange,
+	onResetCodeBlockStyle,
 	focusedMode,
 	onEnterFocusedMode,
 	headerContent,
@@ -63,8 +65,14 @@ export function CodeTextStyleSection({
 }: {
 	node: TextInspectorNode;
 	onTextChange: (field: EditorTextField, value: string) => void;
+	onResetCodeBlockStyle?: () => void;
 } & FocusModeCardProps) {
-	const theme = node.code?.theme ?? "light";
+	const theme = node.code?.theme ?? "auto";
+	const codeBlock =
+		node.content.blocks[0]?.type === "code-block"
+			? node.content.blocks[0]
+			: undefined;
+	const tabSize = node.style?.tabSize ?? codeBlock?.style?.tabSize ?? 2;
 	return (
 		<InspectorSectionCard
 			title="Text style"
@@ -183,7 +191,7 @@ export function CodeTextStyleSection({
 				controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
 			>
 				<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-					{(["light", "dark"] as const).map((t) => (
+					{(["auto", "light", "dark"] as const).map((t) => (
 						<Button
 							key={t}
 							type="button"
@@ -197,6 +205,31 @@ export function CodeTextStyleSection({
 					))}
 				</div>
 			</FormField>
+			<FormField
+				label="Tab"
+				layout="inline"
+				controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+			>
+				<NumberInput
+					value={tabSize}
+					min={1}
+					max={8}
+					step={1}
+					onChange={(value) => onTextChange("tabSize", String(value))}
+				/>
+			</FormField>
+			{onResetCodeBlockStyle ? (
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					className="h-8 w-full justify-start rounded-sm text-[11px]"
+					onClick={onResetCodeBlockStyle}
+				>
+					<RotateCcw className="h-3.5 w-3.5" />
+					Reset code styling
+				</Button>
+			) : null}
 		</InspectorSectionCard>
 	);
 }

@@ -6,7 +6,10 @@ import {
 	createTextNode,
 } from "../../../model/defaults";
 import { ButtonDesignSection } from "../contentSections/buttonSections";
-import { CodeDesignSection } from "../contentSections/textSections";
+import {
+	CodeDesignSection,
+	CodeTextStyleSection,
+} from "../contentSections/textSections";
 import {
 	NavigationFields,
 	OpenInNewTabField,
@@ -28,6 +31,24 @@ describe("panels/inspector/content section rows", () => {
 		expect(buttonMarkup).toContain(">Border<");
 		expect(codeMarkup).toContain('data-layout="inline"');
 		expect(codeMarkup).toContain(">Border<");
+	});
+
+	it("renders code theme, tab width, and reset controls", () => {
+		const codeNode = createTextNode("code", "root");
+		const markup = renderToStaticMarkup(
+			<CodeTextStyleSection
+				node={codeNode}
+				onTextChange={() => {}}
+				onResetCodeBlockStyle={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain(">auto<");
+		expect(markup).toContain(">light<");
+		expect(markup).toContain(">dark<");
+		expect(markup).toContain(">Tab<");
+		expect(markup).toContain('type="number"');
+		expect(markup).toContain("Reset code styling");
 	});
 
 	it("uses FormField for shared navigation fields and open-in-new-tab rows", () => {

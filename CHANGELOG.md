@@ -28,6 +28,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - activate focused code editing
 - support code editor indentation keys
 - add focused code editor toolbar
+- add code tab width and reset controls
 
 ### Changed
 

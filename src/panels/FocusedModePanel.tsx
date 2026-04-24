@@ -66,6 +66,7 @@ type Props = Pick<
   | 'onApplyTextNodeMarkdown'
   | 'onSetTextDocumentContent'
   | 'onSetTextDocumentBlockGap'
+  | 'onResetCodeBlockStyle'
   | 'onEnterFocusedMode'
   | 'onActivateRichEdit'
   | 'onOpenManageFonts'

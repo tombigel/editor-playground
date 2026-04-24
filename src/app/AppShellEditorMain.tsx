@@ -561,6 +561,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onSetTextDocumentBlockGap={(nodeId, value) =>
 							dispatch({ type: "setTextDocumentBlockGap", id: nodeId, value })
 						}
+						onResetCodeBlockStyle={(nodeId) =>
+							dispatch({ type: "resetCodeBlockStyle", id: nodeId })
+						}
 						onMergeTextSelectionToRich={(nodeIds) =>
 							dispatch({ type: "mergeTextSelectionToRich", nodeIds })
 						}

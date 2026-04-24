@@ -87,6 +87,7 @@ export type InspectorPanelProps = {
   onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
+  onResetCodeBlockStyle?: (nodeId: string) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
@@ -149,6 +150,7 @@ export function InspectorPanel({
   onApplyTextNodeMarkdown,
   onSetTextDocumentContent,
   onSetTextDocumentBlockGap,
+  onResetCodeBlockStyle,
   onMergeTextSelectionToRich,
   onEnterFocusedMode,
   onActivateRichEdit,
@@ -194,6 +196,7 @@ export function InspectorPanel({
       onApplyTextNodeMarkdown,
       onSetTextDocumentContent,
       onSetTextDocumentBlockGap,
+      onResetCodeBlockStyle,
       onMergeTextSelectionToRich,
       onEnterFocusedMode,
       onActivateRichEdit,
@@ -208,7 +211,7 @@ export function InspectorPanel({
       onStickyElevation, onStickyElevated,
       onAnimationPresetChange, onAnimationKeyframeChange, onAnimationOptionsChange,
       onAnimationClear, onAnimationDocSettingsChange,
-      onSwitchTextSubtype, onSetTextDocumentContent,
+    onSwitchTextSubtype, onSetTextDocumentContent, onResetCodeBlockStyle,
       onApplyTextNodeMarkdown,
       onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
