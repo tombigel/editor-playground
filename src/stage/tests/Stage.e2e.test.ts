@@ -186,6 +186,13 @@ describe("stage/Stage e2e", () => {
 		expect(node.content.blocks).toHaveLength(1);
 	}
 
+	function expectStandaloneListNode(node: TextNode) {
+		expect(node.contentType).toBe("text");
+		expect(node.subtype).toBe("list");
+		expect(node.content.blocks).toHaveLength(1);
+		expect(node.content.blocks[0].type === "ul" || node.content.blocks[0].type === "ol").toBe(true);
+	}
+
 	async function enterRichEditMode(nodeId: string) {
 		const richLeaf = page.locator(`#stage-node-${nodeId}`).first();
 		await richLeaf.waitFor({ state: "attached", timeout: 10_000 });
@@ -352,6 +359,23 @@ describe("stage/Stage e2e", () => {
 		};
 	}
 
+	async function enterListEditMode(nodeId: string) {
+		const listLeaf = page.locator(`#stage-node-${nodeId}`).first();
+		await listLeaf.waitFor({ state: "attached", timeout: 10_000 });
+		await listLeaf.scrollIntoViewIfNeeded();
+		await listLeaf.click();
+		await listLeaf.click();
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			timeout: 2_000,
+		});
+		return {
+			listLeaf,
+			editable: page
+				.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
+				.first(),
+		};
+	}
+
 	async function replaceBlockEditText(text: string) {
 		const editable = page
 			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
@@ -362,6 +386,18 @@ describe("stage/Stage e2e", () => {
 	}
 
 	async function saveBlockEdit() {
+		await page
+			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
+			.first()
+			.click();
+		await page.keyboard.press("ControlOrMeta+Enter");
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+	}
+
+	async function saveListEdit() {
 		await page
 			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
 			.first()
@@ -2047,6 +2083,209 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
+	it("edits standalone lists on stage with Enter and Shift+Enter list behavior", async () => {
+		const { document, listTextId } = createListTextEditE2EDocument();
+		(document.nodes[listTextId] as TextNode).content = createTextDocumentContent([
+			{
+				type: "ul",
+				markerStyle: "square",
+				children: [
+					{ type: "list-item", depth: 1, children: [{ text: "" }] },
+				],
+			},
+		]);
+		await openEditor({ document });
+
+		await enterListEditMode(listTextId);
+		await page.keyboard.type("First");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("Second");
+		await page.keyboard.press("Shift+Enter");
+		await page.keyboard.type("Soft");
+		await page.mouse.click(16, 16);
+		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+
+		const node = await readPersistedTextNode(listTextId);
+		expectStandaloneListNode(node);
+		expect(node.content.blocks).toMatchObject([
+			{
+				type: "ul",
+				markerStyle: "square",
+				children: [
+					{ type: "list-item", depth: 1, children: [{ text: "First" }] },
+					{ type: "list-item", depth: 1, children: [{ text: "Second\nSoft" }] },
+				],
+			},
+		]);
+
+		await closeEditor();
+	}, 30_000);
+
+	it("handles standalone list Tab, Shift+Tab, and Backspace at item start", async () => {
+		const { document, listTextId } = createListTextEditE2EDocument();
+		(document.nodes[listTextId] as TextNode).content = createTextDocumentContent([
+			{
+				type: "ul",
+				children: [
+					{ type: "list-item", children: [{ text: "Root" }] },
+					{ type: "list-item", children: [{ text: "Child" }] },
+					{ type: "list-item", children: [{ text: "Third" }] },
+				],
+			},
+		]);
+		await openEditor({ document });
+
+		await enterListEditMode(listTextId);
+		await selectRichTextRange(1, 0, 1, 0);
+		await page.keyboard.press("Tab");
+		await page.keyboard.press("Shift+Tab");
+		await selectRichTextRange(2, 0, 2, 0);
+		await page.keyboard.press("Backspace");
+		await saveListEdit();
+
+		const node = await readPersistedTextNode(listTextId);
+		expectStandaloneListNode(node);
+		expect(node.content.blocks).toMatchObject([
+			{
+				type: "ul",
+				children: [
+					{ type: "list-item", children: [{ text: "Root" }] },
+					{
+						type: "list-item",
+						children: [{ text: "Child\nThird" }],
+					},
+				],
+			},
+		]);
+
+		await closeEditor();
+	}, 30_000);
+
+	it("keeps inline standalone list content intact through stage edit commit", async () => {
+		const { document, listTextId } = createListTextEditE2EDocument();
+		(document.nodes[listTextId] as TextNode).content = createTextDocumentContent([
+			{
+				type: "ol",
+				start: 4,
+				markerStyle: "upper-roman",
+				children: [
+					{
+						type: "list-item",
+						depth: 1,
+						children: [
+							{
+								text: "Styled ",
+								fontWeight: 700,
+								fontSize: "30px",
+								color: "#d62246",
+								backgroundColor: "#ffe680",
+							},
+							{
+								type: "link",
+								linkType: "external",
+								href: "https://example.com/one",
+								children: [{ text: "one", underline: true }],
+							},
+							{ text: " " },
+							{
+								type: "link",
+								linkType: "external",
+								href: "https://example.com/two",
+								children: [{ text: "two", italic: true }],
+							},
+						],
+					},
+				],
+			},
+		]);
+		await openEditor({ document });
+
+		await enterListEditMode(listTextId);
+		await saveListEdit();
+
+		const node = await readPersistedTextNode(listTextId);
+		expectStandaloneListNode(node);
+		expect(node.content.blocks).toMatchObject([
+			{
+				type: "ol",
+				start: 4,
+				markerStyle: "upper-roman",
+				children: [
+					{
+						type: "list-item",
+						depth: 1,
+						children: [
+							{
+								text: "Styled ",
+								fontWeight: 700,
+								fontSize: "30px",
+								color: "#d62246",
+								backgroundColor: "#ffe680",
+							},
+							{
+								type: "link",
+								linkType: "external",
+								href: "https://example.com/one",
+								children: [{ text: "one", underline: true }],
+							},
+							{ text: " " },
+							{
+								type: "link",
+								linkType: "external",
+								href: "https://example.com/two",
+								children: [{ text: "two", italic: true }],
+							},
+						],
+					},
+				],
+			},
+		]);
+
+		await closeEditor();
+	}, 30_000);
+
+	it("uses the same Enter and Tab behavior inside rich text list blocks", async () => {
+		const { document, richTextId } = createRichTextEditE2EDocument([
+			{
+				type: "ul",
+				children: [
+					{ type: "list-item", children: [{ text: "Alpha" }] },
+					{ type: "list-item", children: [{ text: "Beta" }] },
+				],
+			},
+		]);
+		await openEditor({
+			document,
+			selectedId: richTextId,
+			selectedIds: [richTextId],
+		});
+
+		await enterRichEditMode(richTextId);
+		await selectRichTextRange(0, "Alpha".length, 0, "Alpha".length);
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("Inserted");
+		await selectRichTextRange(2, 0, 2, 0);
+		await page.keyboard.press("Tab");
+		await saveRichEdit();
+
+		const node = await readPersistedTextNode(richTextId);
+		expect(node.content.blocks).toMatchObject([
+			{
+				type: "ul",
+				children: [
+					{ type: "list-item", children: [{ text: "Alpha" }] },
+					{ type: "list-item", children: [{ text: "Inserted" }] },
+					{ type: "list-item", depth: 1, children: [{ text: "Beta" }] },
+				],
+			},
+		]);
+
+		await closeEditor();
+	}, 30_000);
+
 	it("drags only the parent when a parent and child are both selected", async () => {
 		const { document, ids } = createE2EDocument();
 		await openEditor({ document, snapEnabled: false });
@@ -2446,6 +2685,49 @@ function createBlockTextEditE2EDocument(
 			},
 		},
 		blockTextId: blockText.id,
+		sectionId: section.id,
+	};
+}
+
+function createListTextEditE2EDocument(): { document: DocumentModel; listTextId: string; sectionId: string } {
+	const siteId = "site_list_text_regression_e2e";
+	const section = createContainerNode("section", siteId);
+	section.name = "List Edit Regression Section";
+	section.slug = "list-edit-regression-section";
+	section.rect = createDefaultRect("0px", "0px", "100%", "320px");
+
+	const listText = createTextNode("list", section.id) as TextNode;
+	listText.name = "List Edit Regression Copy";
+	listText.content = createTextDocumentContent([
+		{
+			type: "ul",
+			markerStyle: "disc",
+			children: [{ type: "list-item", children: [{ text: "List item" }] }],
+		},
+	]);
+	listText.rect = createDefaultRect("72px", "88px", "320px", "auto");
+
+	section.children = [listText.id];
+
+	return {
+		document: {
+			rootId: siteId,
+			nodes: {
+				[siteId]: {
+					id: siteId,
+					contentType: "site",
+					type: "site",
+					parentId: null,
+					children: [section.id],
+					name: "Site",
+					visible: true,
+					locked: false,
+				},
+				[section.id]: section,
+				[listText.id]: listText,
+			},
+		},
+		listTextId: listText.id,
 		sectionId: section.id,
 	};
 }
