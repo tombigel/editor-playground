@@ -5,17 +5,13 @@ This file is the planned-only backlog for the text-system phase 2.0 workstream.
 Source documents:
 
 - [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_8_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_8_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_8_TASKLIST.md)
-- [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md)
-- [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
 - [`TEXT_COMPONENT_MASTER_BRIEF.md`](./TEXT_COMPONENT_MASTER_BRIEF.md)
+- Closed phase 1.5, 1.7, and 1.8 milestone status in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones)
 
 Execution rules:
 
 - Planned only.
-- Do not execute until phase 1.8 is explicitly closed or superseded.
+- Phase 1.8 is closed; do not execute phase 2.0 until it is explicitly started.
 - Phase 2.0 assumes the canonical text-model refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8 are complete before execution starts.
 - When phase 2.0 execution starts, each quantum should be converted into the same execution ledger format used by phase 1.0 and phase 1.5.
 

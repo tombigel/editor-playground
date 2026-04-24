@@ -18,7 +18,7 @@ Execution rules:
 - Next quantum after current: `none`
 - Historical note:
   - Phase 1.0 is complete as originally executed.
-  - Remaining text roadmap work has been split into [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md), [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md), [`TEXT_COMPONENT_PHASE_1_8_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_8_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_8_TASKLIST.md), [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md), and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
+  - Remaining text roadmap work was split into archived phase 1.5, 1.7, and 1.8 milestone docs, plus the active [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md) and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md). Closed milestone status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
 - Locked assumptions:
   - API-first overrides UI convenience.
   - Rich text remains Slate-backed as an implementation detail.
@@ -277,7 +277,7 @@ Execution rules:
   - Q6 should reuse the block-root rich helpers when introducing list blocks so list semantics do not get reimplemented in the editor only.
   - Stage rich editing still suppresses `Enter`; authoring new blocks remains deferred to the later stage-edit UX quantum.
   - Historical deferral note:
-    - Remaining rich block-authoring and richer rich-stage editing scope now lives in [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - Remaining rich block-authoring and richer rich-stage editing scope moved into later text milestones; closed phase status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
 
 ## Q6: Add standalone list subtype
 
@@ -339,7 +339,7 @@ Execution rules:
   - Inspector exposure for `list` remains intentionally deferred to Q9; Q6 only widened inspector types enough to keep the API-first subtype model compiling.
   - Rich text still does not persist list blocks internally, so `list -> rich` remains a flattening conversion until a later rich-list phase is explicitly designed.
   - Historical deferral note:
-    - Remaining rich list-block persistence and later list UX follow-up scope is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - Remaining rich list-block persistence and later list UX follow-up scope moved into later text milestones; closed phase status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
 
 ## Q7: Add headless split and merge
 
@@ -385,7 +385,7 @@ Execution rules:
   - Split currently stacks newly created sibling nodes using a deterministic estimated vertical offset; later stage/editor work can replace that with measured layout logic without changing the pure API contract.
   - Rich split currently emits standalone block text nodes only because embedded rich code/list blocks are still deferred.
   - Historical deferral note:
-    - Remaining rich split and conversion follow-up scope is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - Remaining rich split and conversion follow-up scope moved into later text milestones; closed phase status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
 
 ## Q8: Update renderers and labels to consume canonical model
 
@@ -479,7 +479,7 @@ Execution rules:
   - List item direction and link metadata now survive API-driven edits, but inspector controls still expose only the phase-1 line editor; richer per-item controls remain future UI work.
   - Rich `split` mode still performs the pure API rich-block split instead of converting each resulting sibling to the requested target subtype; that behavior is intentional until a richer conversion contract is designed.
   - Historical deferral note:
-    - Richer list inspector UX is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - Richer list inspector UX moved into later text milestones; closed phase status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
     - Standalone list linking/per-item direction UI and granular rich-to-simple split preservation are deferred to [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md) and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
 
 ## Q10: Stage editing UX
@@ -531,7 +531,7 @@ Execution rules:
   - Add stable stage e2e coverage for the select-then-edit rich-text lifecycle once the Playwright stage click path is less timing-sensitive.
   - Reuse the richer link-type picker UI inside the stage overlay instead of the localized URL-only popover.
   - Historical deferral note:
-    - These follow-ups are deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - These follow-ups moved into later text milestones; closed phase status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
 
 ## Q11: Rich stage regression coverage
 
@@ -596,7 +596,7 @@ Execution rules:
 - Open follow-ups carried forward:
   - Add broader stable e2e coverage for the full select-then-edit lifecycle once the rest of the older stage-e2e failures are addressed.
   - Historical deferral note:
-    - This follow-up is deferred to [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md) and [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md).
+    - This follow-up moved into later text milestones; closed phase status is summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones).
 
 ## Q13: Rich stage visual polish
 
@@ -631,4 +631,4 @@ Execution rules:
 - Open follow-ups carried forward:
   - Pending
   - Historical deferral note:
-    - Remaining post-1.0 text roadmap work now continues in [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md), [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md), [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md), and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
+    - Remaining post-1.0 text roadmap work continued through closed milestones summarized in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones) and now continues in [`TEXT_COMPONENT_PHASE_2_0_BRIEF.md`](./TEXT_COMPONENT_PHASE_2_0_BRIEF.md) and [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).

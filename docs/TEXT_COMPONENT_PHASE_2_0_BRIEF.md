@@ -5,17 +5,12 @@ This document is the planned-only brief for the text-system phase 2.0 workstream
 Source documents:
 
 - [`TEXT_COMPONENT_MASTER_BRIEF.md`](./TEXT_COMPONENT_MASTER_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_8_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_8_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_8_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_8_TASKLIST.md)
-- [`TEXT_COMPONENT_PHASE_1_7_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_7_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_7_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_7_TASKLIST.md)
-- [`TEXT_COMPONENT_PHASE_1_5_BRIEF.md`](./TEXT_COMPONENT_PHASE_1_5_BRIEF.md)
-- [`TEXT_COMPONENT_PHASE_1_5_TASKLIST.md`](./TEXT_COMPONENT_PHASE_1_5_TASKLIST.md)
+- Closed phase 1.5, 1.7, and 1.8 milestone status in [`PLAYGROUND_ROADMAP.md`](./PLAYGROUND_ROADMAP.md#completed-milestones)
 
 Execution status:
 
 - This file is planned-only.
-- Do not execute phase 2.0 quanta until phase 1.8 is explicitly closed or superseded.
+- Phase 1.8 is closed; phase 2.0 remains planned-only until explicitly started.
 - Phase 2.0 depends on the canonical all-text storage refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8.
 
 ## Locked Phase 2 Scope
@@ -42,7 +37,7 @@ Before phase 2.0 execution starts, phase 1.7 should complete the canonical text-
 - inspector/editor bindings stop depending on legacy standalone text storage
 - defaults and saved templates emit canonical text content
 
-Before phase 2.0 execution starts, phase 1.8 should stabilize the rich-stage editing surface enough that phase 2 can safely reuse it as the interaction baseline:
+Phase 1.8 closed the rich-stage editing stabilization baseline that phase 2 can safely reuse:
 
 - dropdown and popover flows preserve the authored selection
 - toolbar interactions do not accidentally commit, discard, or retarget edits

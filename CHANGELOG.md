@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - complete reference coverage
+- archive closed text phase docs
 
 ---
 

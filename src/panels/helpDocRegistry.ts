@@ -300,22 +300,6 @@ export const HELP_DOC_REGISTRY: readonly HelpDocRegistryEntry[] = [
     navVisibility: 'secondary',
   },
   {
-    id: 'doc:docs/TEXT_COMPONENT_PHASE_1_8_BRIEF.md',
-    kind: 'markdown',
-    sourcePath: 'docs/TEXT_COMPONENT_PHASE_1_8_BRIEF.md',
-    parentId: 'section:developers-planning',
-    order: 60,
-    navVisibility: 'secondary',
-  },
-  {
-    id: 'doc:docs/TEXT_COMPONENT_PHASE_1_8_TASKLIST.md',
-    kind: 'markdown',
-    sourcePath: 'docs/TEXT_COMPONENT_PHASE_1_8_TASKLIST.md',
-    parentId: 'section:developers-planning',
-    order: 70,
-    navVisibility: 'secondary',
-  },
-  {
     id: 'doc:docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md',
     kind: 'markdown',
     sourcePath: 'docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md',
