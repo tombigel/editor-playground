@@ -593,8 +593,8 @@ export function Stage({
 	);
 }
 
-function isEditableTextSubtype(subtype: string): subtype is "rich" | "block" | "list" {
-	return subtype === "rich" || subtype === "block" || subtype === "list";
+function isEditableTextSubtype(subtype: string): subtype is "rich" | "block" | "list" | "code" {
+	return subtype === "rich" || subtype === "block" || subtype === "list" || subtype === "code";
 }
 
 function collectMarqueeSelectionIds(

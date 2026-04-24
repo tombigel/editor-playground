@@ -13,6 +13,7 @@ import {
   createRichListBlock,
   createRichListItem,
   createTextDocumentContent,
+  getSingleCodeBlockContent,
   getSingleListBlockContent,
   prepareStandaloneBlockEditContent,
 } from '../../model/richContent';
@@ -23,6 +24,7 @@ import {
   renderLeafContent,
 } from '../../render/nodePresentation';
 import { useRichEditContext } from '../richEditContext';
+import { CodeTextEditOverlay } from './CodeTextEditOverlay';
 import { RichTextEditOverlay } from './RichTextEditOverlay';
 import {
   getLeafCssHeight,
@@ -282,6 +284,20 @@ function LeafTextEditBody({
   onOpenManageFonts: () => void;
 }) {
   if (isEditing) {
+    if (child.subtype === 'code') {
+      const codeBlock = getSingleCodeBlockContent(child.content);
+      return (
+        <CodeTextEditOverlay
+          nodeId={child.id}
+          content={child.content}
+          contentStyle={contentStyle}
+          minHeight={minHeight}
+          tabSize={codeBlock?.style?.tabSize ?? child.style?.tabSize ?? 2}
+          onCommit={onCommit}
+          onDiscard={onDiscard}
+        />
+      );
+    }
     const mode = child.subtype === 'block' ? 'block' : child.subtype === 'list' ? 'list' : 'rich';
     const editableContent =
       mode === 'block'
@@ -318,8 +334,8 @@ function LeafTextEditBody({
   );
 }
 
-function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' | 'list' {
-  return subtype === 'rich' || subtype === 'block' || subtype === 'list';
+function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' | 'list' | 'code' {
+  return subtype === 'rich' || subtype === 'block' || subtype === 'list' || subtype === 'code';
 }
 
 function prepareStandaloneListEditContent(node: TextNode) {
