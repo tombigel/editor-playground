@@ -26,12 +26,19 @@ describe("stage/CodeTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain('data-stage-code-edit-root="true"');
+		expect(markup).toContain('data-stage-code-toolbar="true"');
+		expect(markup).toContain('aria-label="Code language"');
+		expect(markup).toContain('aria-label="Code theme auto"');
+		expect(markup).toContain('aria-label="Code theme light"');
+		expect(markup).toContain('aria-label="Code theme dark"');
 		expect(markup).toContain('data-stage-code-edit-textarea="true"');
 		expect(markup).toContain('aria-label="Code editor"');
 		expect(markup).toContain("min-height:120px");
 		expect(markup).toContain("tab-size:4");
 		expect(markup).toContain("const value = 1;");
 		expect(markup).not.toContain('data-stage-rich-toolbar="true"');
+		expect(markup).not.toContain('aria-label="Bold"');
+		expect(markup).not.toContain('aria-label="Link"');
 	});
 
 	it("indents and unindents the current line with literal tabs", () => {

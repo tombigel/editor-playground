@@ -1,5 +1,18 @@
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
+	ToolbarControlGroup,
+	ToolbarControlRow,
+} from "@/components/ui/toolbar-control-group";
 import {
 	createTextDocumentFromCode,
 	getSingleCodeBlockContent,
@@ -10,7 +23,11 @@ import type {
 	NodeId,
 	TextDocumentContent,
 } from "../../model/types";
-import { highlightCode, normalizeCodeLanguage } from "../../render/codeHighlight";
+import {
+	CODE_LANGUAGE_OPTIONS,
+	highlightCode,
+	normalizeCodeLanguage,
+} from "../../render/codeHighlight";
 
 type CodeTextEditOverlayProps = {
 	nodeId: NodeId;
@@ -108,8 +125,10 @@ export function CodeTextEditOverlay({
 		[content],
 	);
 	const [codeText, setCodeText] = useState(initialText);
-	const language = normalizeCodeLanguage(codeBlock?.language ?? "plaintext");
-	const theme: CodeTheme = codeBlock?.theme ?? "auto";
+	const [language, setLanguage] = useState(() =>
+		normalizeCodeLanguage(codeBlock?.language ?? "plaintext"),
+	);
+	const [theme, setTheme] = useState<CodeTheme>(codeBlock?.theme ?? "auto");
 	const preservedStyle = codeBlock?.style;
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -140,7 +159,14 @@ export function CodeTextEditOverlay({
 		function handlePointerDown(event: PointerEvent) {
 			const root = rootRef.current;
 			const target = event.target;
-			if (!root || !(target instanceof Node) || root.contains(target)) {
+			if (!root || !(target instanceof Node)) {
+				return;
+			}
+			if (
+				root.contains(target) ||
+				(target instanceof Element &&
+					target.closest('[data-stage-code-toolbar="true"]'))
+			) {
 				return;
 			}
 			commitCurrentContent();
@@ -203,6 +229,12 @@ export function CodeTextEditOverlay({
 			onClick={(event) => event.stopPropagation()}
 			onDoubleClick={(event) => event.stopPropagation()}
 		>
+			<CodeEditToolbar
+				language={language}
+				theme={theme}
+				onLanguageChange={setLanguage}
+				onThemeChange={setTheme}
+			/>
 			<textarea
 				ref={textareaRef}
 				data-stage-code-edit-textarea="true"
@@ -238,5 +270,78 @@ export function CodeTextEditOverlay({
 				aria-label="Code editor"
 			/>
 		</div>
+	);
+}
+
+function CodeEditToolbar({
+	language,
+	theme,
+	onLanguageChange,
+	onThemeChange,
+}: {
+	language: string;
+	theme: CodeTheme;
+	onLanguageChange: (language: string) => void;
+	onThemeChange: (theme: CodeTheme) => void;
+}) {
+	return (
+		<FloatingPanelShell
+			suppressPopover
+			open
+			positionMode="absolute"
+			data-stage-code-toolbar="true"
+			style={{
+				top: "-44px",
+				left: 0,
+				zIndex: 220,
+				width: "max-content",
+				maxWidth: "calc(100vw - 32px)",
+				pointerEvents: "auto",
+			}}
+			bodyClassName="px-2 py-1"
+			bodyStyle={{
+				pointerEvents: "auto",
+				overflow: "visible",
+			}}
+			onPointerDown={(event) => {
+				event.stopPropagation();
+			}}
+		>
+			<ToolbarControlRow>
+				<ToolbarControlGroup>
+					<Select value={language} onValueChange={onLanguageChange}>
+						<SelectTrigger
+							className="h-7 w-[132px] rounded-sm text-[11px]"
+							aria-label="Code language"
+							data-stage-code-toolbar="true"
+						>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent data-stage-code-toolbar="true">
+							{CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
+								<SelectItem key={value} value={value}>
+									{label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</ToolbarControlGroup>
+				<ToolbarControlGroup withDividerBefore>
+					{(["auto", "light", "dark"] as const).map((option) => (
+						<Button
+							key={option}
+							type="button"
+							variant={theme === option ? "default" : "ghost"}
+							size="sm"
+							className="h-7 rounded-sm px-2 text-[11px] capitalize"
+							aria-label={`Code theme ${option}`}
+							onClick={() => onThemeChange(option)}
+						>
+							{option}
+						</Button>
+					))}
+				</ToolbarControlGroup>
+			</ToolbarControlRow>
+		</FloatingPanelShell>
 	);
 }
