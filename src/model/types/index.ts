@@ -38,7 +38,8 @@ export type NodeTextField =
   | 'targetPageId'
   | 'pageAnchorId'
   | 'codeLanguage'
-  | 'codeTheme';
+  | 'codeTheme'
+  | 'tabSize';
 export type BorderColorField =
   | 'borderColor'
   | 'borderTopColor'
@@ -523,6 +524,7 @@ export type TextNode = BaseNode & {
   style?: ShadowStyle & TypographyStyle & {
     textWrap?: TextWrapMode;
     background?: string;
+    tabSize?: number;
     paddingBlock?: ParsedValue<SpacingValue>;
     paddingInline?: ParsedValue<SpacingValue>;
   } & BorderStyle;

@@ -17,6 +17,8 @@ import {
   isRichTextLink,
   listContentToRichListBlock,
   normalizeRichContent,
+  normalizeCodeTabSize,
+  normalizeCodeTheme,
   normalizeTextDocumentContent,
   replaceTextDocumentBlocks,
   setTextDocumentBlockGap,
@@ -89,6 +91,41 @@ function normalizeTextDocumentContentForSubtype(
   const candidate =
     subtype === 'rich' ? normalized : setTextDocumentBlockGap(normalized, undefined);
   return validateTextSubtypeContentStructure(subtype, candidate).length === 0 ? candidate : null;
+}
+
+type CodeThemeValue = ReturnType<typeof normalizeCodeTheme>;
+
+function isCodeThemeSurfaceValue(value: string | undefined, key: 'background' | 'color'): boolean {
+  return value === CODE_THEME_SURFACE.light[key] || value === CODE_THEME_SURFACE.dark[key];
+}
+
+function applyCodeThemePresentation(
+  node: TextNode,
+  currentTheme: CodeThemeValue,
+  nextTheme: CodeThemeValue,
+): void {
+  node.style ??= {};
+  const currentBackground = node.style.background;
+  const currentColor = node.style.color;
+  const currentSurface = currentTheme === 'auto' ? undefined : CODE_THEME_SURFACE[currentTheme];
+
+  if (nextTheme === 'auto') {
+    if (currentBackground == null || currentBackground === currentSurface?.background || isCodeThemeSurfaceValue(currentBackground, 'background')) {
+      node.style.background = undefined;
+    }
+    if (currentColor == null || currentColor === currentSurface?.color || isCodeThemeSurfaceValue(currentColor, 'color')) {
+      node.style.color = undefined;
+    }
+    return;
+  }
+
+  const nextSurface = CODE_THEME_SURFACE[nextTheme];
+  if (currentBackground == null || currentBackground === currentSurface?.background || isCodeThemeSurfaceValue(currentBackground, 'background')) {
+    node.style.background = nextSurface.background;
+  }
+  if (currentColor == null || currentColor === currentSurface?.color || isCodeThemeSurfaceValue(currentColor, 'color')) {
+    node.style.color = nextSurface.color;
+  }
 }
 
 type InlineTextStyleField =
@@ -225,22 +262,11 @@ export function setTextNodeContentDoc(
   }
 
   if (field === 'codeTheme' && isTextNode(node) && node.subtype === 'code') {
-    const currentTheme = node.code?.theme ?? 'light';
-    const nextTheme = value === 'dark' ? 'dark' : 'light';
-    const currentSurface = CODE_THEME_SURFACE[currentTheme];
-    const nextSurface = CODE_THEME_SURFACE[nextTheme];
-    const currentBackground = node.style?.background;
-    const currentColor = node.style?.color;
-
-    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: nextTheme };
-    node.style ??= {};
-    if (currentBackground == null || currentBackground === currentSurface.background) {
-      node.style.background = nextSurface.background;
-    }
-    if (currentColor == null || currentColor === currentSurface.color) {
-      node.style.color = nextSurface.color;
-    }
     const codeBlock = getSingleCodeBlockContent(node.content);
+    const currentTheme = normalizeCodeTheme(codeBlock?.theme ?? node.code?.theme);
+    const nextTheme = normalizeCodeTheme(value);
+    node.code = { ...(node.code ?? { language: 'plaintext' }), theme: nextTheme };
+    applyCodeThemePresentation(node, currentTheme, nextTheme);
     if (codeBlock) {
       node.content = createTextDocumentFromCode(getTextContent(node.content.blocks, { blockSeparator: '\n' }), {
         direction: 'ltr',
@@ -248,6 +274,29 @@ export function setTextNodeContentDoc(
         theme: nextTheme,
         highlightedHtml: codeBlock.highlightedHtml,
         style: codeBlock.style,
+      });
+    }
+    return next;
+  }
+
+  if (field === 'tabSize' && isTextNode(node) && node.subtype === 'code') {
+    const tabSize = normalizeCodeTabSize(Number.parseFloat(value));
+    node.style ??= {};
+    node.style.tabSize = tabSize;
+    const codeBlock = getSingleCodeBlockContent(node.content);
+    if (codeBlock) {
+      const style = { ...(codeBlock.style ?? {}) };
+      if (tabSize === undefined) {
+        delete style.tabSize;
+      } else {
+        style.tabSize = tabSize;
+      }
+      node.content = createTextDocumentFromCode(getTextContent(node.content.blocks, { blockSeparator: '\n' }), {
+        direction: 'ltr',
+        language: codeBlock.language,
+        theme: codeBlock.theme ?? node.code?.theme,
+        highlightedHtml: codeBlock.highlightedHtml,
+        style: Object.keys(style).length > 0 ? style : undefined,
       });
     }
     return next;
@@ -592,6 +641,43 @@ export function setCodeBlockThemeDoc(
   return setTextNodeContentDoc(document, nodeId, 'codeTheme', theme);
 }
 
+export function setCodeBlockTabSizeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  tabSize: number,
+): DocumentModel {
+  return setTextNodeContentDoc(document, nodeId, 'tabSize', String(tabSize));
+}
+
+export function resetCodeBlockStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'code') {
+    return document;
+  }
+
+  const codeBlock = getSingleCodeBlockContent(node.content);
+  const language = normalizeCodeLanguage(codeBlock?.language ?? node.code?.language ?? 'plaintext');
+  const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
+  const highlightedHtml = highlightCode(codeText, language);
+  node.content = createTextDocumentFromCode(codeText, {
+    direction: 'ltr',
+    language,
+    theme: 'auto',
+    highlightedHtml,
+  });
+  node.code = { language, theme: 'auto', highlightedHtml };
+  node.style = {
+    direction: 'ltr',
+    textAlign: 'left',
+  };
+  delete node.htmlTag;
+  return next;
+}
+
 export function setTextDirectionDoc(
   document: DocumentModel,
   nodeId: NodeId,
@@ -684,7 +770,7 @@ export function normalizeTextNodeDoc(
   if (node.subtype === 'code') {
     const codeBlock = getSingleCodeBlockContent(node.content);
     const language = normalizeCodeLanguage(codeBlock?.language ?? node.code?.language ?? 'plaintext');
-    const theme = (codeBlock?.theme ?? node.code?.theme) === 'dark' ? 'dark' : 'light';
+    const theme = normalizeCodeTheme(codeBlock?.theme ?? node.code?.theme);
     const content = getTextContent(node.content.blocks, { blockSeparator: '\n' });
     node.content = createTextDocumentFromCode(content, {
       direction: 'ltr',

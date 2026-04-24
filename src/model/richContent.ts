@@ -45,6 +45,8 @@ export {
 } from './richContent/selectorsConverters';
 export {
   MAX_LIST_ITEM_DEPTH,
+  normalizeCodeTabSize,
+  normalizeCodeTheme,
   normalizeListItemDepth,
 } from './richContent/shared';
 export {

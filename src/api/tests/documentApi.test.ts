@@ -6,6 +6,7 @@ import {
   createTextDocumentContent,
   createTextDocumentFromText,
   createTextDocumentFromCode,
+  getSingleCodeBlockContent,
   getSingleListBlockContent,
   getSingleTextBlockContent,
   getTextContent,
@@ -23,6 +24,8 @@ import {
   serializeDocumentJson,
   normalizeTextNodeDoc,
   setCodeBlockLanguageDoc,
+  resetCodeBlockStyleDoc,
+  setCodeBlockTabSizeDoc,
   setCodeBlockThemeDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
@@ -418,6 +421,62 @@ describe('api/documentApi', () => {
     expect(darkNode.style?.color).toBe('#f8f8f2');
     expect(lightNode.style?.background).toBe('#123456');
     expect(lightNode.style?.color).toBe('#16202a');
+  });
+
+  it('supports auto code theme, tab size, and style reset without changing code text or language', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    document.nodes[code.id] = code;
+    document.nodes[section.id].children.push(code.id);
+
+    let next = setTextNodeContentDoc(document, code.id, 'content', 'const value = 1;');
+    next = setCodeBlockLanguageDoc(next, code.id, 'typescript');
+    next = setCodeBlockThemeDoc(next, code.id, 'dark');
+    next = setCodeBlockTabSizeDoc(next, code.id, 12);
+    next = setTextNodeContentDoc(next, code.id, 'fontFamily', 'JetBrains Mono');
+    next = setTextNodeContentDoc(next, code.id, 'fontSize', '18px');
+    next = setTextNodeContentDoc(next, code.id, 'color', '#ffcc00');
+    next = setTextNodeContentDoc(next, code.id, 'background', '#101418');
+
+    const styled = next.nodes[code.id];
+    if (styled.contentType !== 'text' || styled.subtype !== 'code') {
+      throw new Error('Expected styled code node');
+    }
+    expect(styled.code?.theme).toBe('dark');
+    expect(styled.style?.tabSize).toBe(8);
+    expect(styled.style?.fontFamily).toBe('JetBrains Mono');
+    expect(getSingleCodeBlockContent(styled.content)?.style?.tabSize).toBe(8);
+
+    const auto = setCodeBlockThemeDoc(next, code.id, 'auto');
+    const autoNode = auto.nodes[code.id];
+    if (autoNode.contentType !== 'text' || autoNode.subtype !== 'code') {
+      throw new Error('Expected auto code node');
+    }
+    expect(autoNode.code?.theme).toBe('auto');
+    expect(getSingleCodeBlockContent(autoNode.content)?.theme).toBe('auto');
+    expect(autoNode.style?.background).toBe('#101418');
+    expect(autoNode.style?.color).toBe('#ffcc00');
+
+    const reset = resetCodeBlockStyleDoc(auto, code.id);
+    const resetNode = reset.nodes[code.id];
+    if (resetNode.contentType !== 'text' || resetNode.subtype !== 'code') {
+      throw new Error('Expected reset code node');
+    }
+    const resetBlock = getSingleCodeBlockContent(resetNode.content);
+    expect(getTextContent(resetNode.content.blocks, { blockSeparator: '\n' })).toBe('const value = 1;');
+    expect(resetNode.code?.language).toBe('typescript');
+    expect(resetNode.code?.theme).toBe('auto');
+    expect(resetNode.style).toEqual({ direction: 'ltr', textAlign: 'left' });
+    expect(resetBlock?.language).toBe('typescript');
+    expect(resetBlock?.theme).toBe('auto');
+    expect(resetBlock?.style).toBeUndefined();
   });
 
   it('updates navigation fields for links and buttons through API helpers', () => {

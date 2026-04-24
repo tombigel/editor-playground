@@ -59,8 +59,10 @@ export { cloneDocument } from './documentApi/shared';
 export {
   applyMarkdownToTextNodeDoc,
   normalizeTextNodeDoc,
+  resetCodeBlockStyleDoc,
   serializeTextNodeMarkdownDoc,
   setCodeBlockLanguageDoc,
+  setCodeBlockTabSizeDoc,
   setCodeBlockThemeDoc,
   setListContentDoc,
   setRichBlockLineHeightDoc,
