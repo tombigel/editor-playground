@@ -31,7 +31,18 @@ import {
 	highlightCode,
 	normalizeCodeLanguage,
 } from "../../render/codeHighlight";
+import {
+	isTargetWithinSelectLayer,
+	isTargetWithinSelector,
+} from "./richTextEditOverlay/helpers";
+import {
+	preserveRichSelectionPointerDown,
+} from "./richTextEditOverlay/controls";
 import { ToolbarDragHandle } from "./richTextEditOverlay/RichTextToolbarParts";
+import {
+	RICH_SELECT_IDS,
+	type RichEditSelectId,
+} from "./richTextEditOverlay/types";
 import { useRichToolbarPosition } from "./richTextEditOverlay/useRichToolbarPosition";
 
 type CodeTextEditOverlayProps = {
@@ -116,12 +127,6 @@ function getSelectedLineRange(text: string, selectionStart: number, selectionEnd
 	return { rangeStart, rangeEnd };
 }
 
-function stopCodeToolbarPointerDown(event: {
-	stopPropagation: () => void;
-}) {
-	event.stopPropagation();
-}
-
 export function CodeTextEditOverlay({
 	nodeId,
 	content,
@@ -141,7 +146,9 @@ export function CodeTextEditOverlay({
 	const [language, setLanguage] = useState(() =>
 		normalizeCodeLanguage(codeBlock?.language ?? "plaintext"),
 	);
-	const [languageSelectOpen, setLanguageSelectOpen] = useState(false);
+	const [openSelectId, setOpenSelectId] = useState<RichEditSelectId | null>(
+		null,
+	);
 	const [theme, setTheme] = useState<CodeTheme>(codeBlock?.theme ?? "auto");
 	const preservedStyle = codeBlock?.style;
 	const editContentStyle = useMemo(
@@ -174,6 +181,19 @@ export function CodeTextEditOverlay({
 		);
 	}, [codeText, language, nodeId, onCommit, preservedStyle, theme]);
 
+	const closeOpenSelect = useCallback(() => setOpenSelectId(null), []);
+	const handleSelectOpenChange = useCallback(
+		(selectId: RichEditSelectId, open: boolean) => {
+			setOpenSelectId((current) => {
+				if (open) {
+					return selectId;
+				}
+				return current === selectId ? null : current;
+			});
+		},
+		[],
+	);
+
 	useEffect(() => {
 		const id = requestAnimationFrame(() => {
 			textareaRef.current?.focus();
@@ -190,12 +210,19 @@ export function CodeTextEditOverlay({
 			if (!root || !(target instanceof Node)) {
 				return;
 			}
-			if (
-				languageSelectOpen ||
-				root.contains(target) ||
-				(target instanceof Element &&
-					target.closest('[data-stage-code-toolbar="true"]'))
-			) {
+			if (openSelectId) {
+				if (isTargetWithinSelectLayer(target, openSelectId)) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				closeOpenSelect();
+				return;
+			}
+			if (isTargetWithinCodeToolbar(target)) {
+				return;
+			}
+			if (root.contains(target)) {
 				return;
 			}
 			commitCurrentContent();
@@ -205,11 +232,17 @@ export function CodeTextEditOverlay({
 		return () => {
 			globalThis.document?.removeEventListener("pointerdown", handlePointerDown, true);
 		};
-	}, [commitCurrentContent, languageSelectOpen]);
+	}, [closeOpenSelect, commitCurrentContent, openSelectId]);
 
 	useEffect(() => {
 		function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
 			if (event.key !== "Escape") {
+				return;
+			}
+			if (openSelectId) {
+				event.preventDefault();
+				event.stopPropagation();
+				closeOpenSelect();
 				return;
 			}
 			event.preventDefault();
@@ -221,7 +254,7 @@ export function CodeTextEditOverlay({
 		return () => {
 			globalThis.document?.removeEventListener("keydown", handleGlobalKeyDown, true);
 		};
-	}, [onDiscard]);
+	}, [closeOpenSelect, onDiscard, openSelectId]);
 
 	function handleKeyDown(event: ReactKeyboardEvent<HTMLTextAreaElement>) {
 		if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
@@ -264,10 +297,10 @@ export function CodeTextEditOverlay({
 				toolbarDragging={toolbarDragging}
 				onToolbarDragPointerDown={handleToolbarDragPointerDown}
 				language={language}
-				languageSelectOpen={languageSelectOpen}
+				openSelectId={openSelectId}
 				theme={theme}
 				onLanguageChange={setLanguage}
-				onLanguageSelectOpenChange={setLanguageSelectOpen}
+				onSelectOpenChange={handleSelectOpenChange}
 				onThemeChange={setTheme}
 			/>
 			<textarea
@@ -316,10 +349,10 @@ function CodeEditToolbar({
 	toolbarDragging,
 	onToolbarDragPointerDown,
 	language,
-	languageSelectOpen,
+	openSelectId,
 	theme,
 	onLanguageChange,
-	onLanguageSelectOpenChange,
+	onSelectOpenChange,
 	onThemeChange,
 }: {
 	toolbarRef: Ref<HTMLDivElement>;
@@ -329,10 +362,10 @@ function CodeEditToolbar({
 		typeof ToolbarDragHandle
 	>["onPointerDown"];
 	language: string;
-	languageSelectOpen: boolean;
+	openSelectId: RichEditSelectId | null;
 	theme: CodeTheme;
 	onLanguageChange: (language: string) => void;
-	onLanguageSelectOpenChange: (open: boolean) => void;
+	onSelectOpenChange: (selectId: RichEditSelectId, open: boolean) => void;
 	onThemeChange: (theme: CodeTheme) => void;
 }) {
 	return (
@@ -346,7 +379,7 @@ function CodeEditToolbar({
 				top: `${toolbarPosition.top}px`,
 				left: `${toolbarPosition.left}px`,
 				zIndex: 220,
-				width: "min(360px, calc(100vw - 32px))",
+				width: "max-content",
 				maxWidth: "calc(100vw - 32px)",
 				pointerEvents: "auto",
 			}}
@@ -365,13 +398,15 @@ function CodeEditToolbar({
 					dragging={toolbarDragging}
 					onPointerDown={onToolbarDragPointerDown}
 				/>
-				<ToolbarControlRow className="min-w-0 flex-1 flex-wrap gap-1">
-					<ToolbarControlGroup className="min-w-[112px] flex-1">
+				<ToolbarControlRow>
+					<ToolbarControlGroup>
 						<CodeToolbarLanguageSelect
+							open={openSelectId === RICH_SELECT_IDS.codeLanguage}
+							onOpenChange={(open) =>
+								onSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)
+							}
 							language={language}
-							open={languageSelectOpen}
 							onLanguageChange={onLanguageChange}
-							onOpenChange={onLanguageSelectOpenChange}
 						/>
 					</ToolbarControlGroup>
 					<ToolbarControlGroup withDividerBefore>
@@ -386,7 +421,7 @@ function CodeEditToolbar({
 									style={{ pointerEvents: "auto" }}
 									aria-label={`Code theme ${option}`}
 									aria-pressed={theme === option}
-									onPointerDown={stopCodeToolbarPointerDown}
+									onPointerDown={preserveRichSelectionPointerDown}
 									onClick={() => onThemeChange(option)}
 								>
 									{option}
@@ -425,24 +460,27 @@ function CodeToolbarLanguageSelect({
 				onValueChange={onLanguageChange}
 			>
 				<SelectTrigger
+					data-stage-rich-select-id={RICH_SELECT_IDS.codeLanguage}
 					aria-label="Code language"
 					size="compact"
-					className="pointer-events-auto h-7 w-full min-w-0 rounded-sm text-xs"
-					style={{ pointerEvents: "auto" }}
-					data-stage-code-toolbar="true"
-					onPointerDown={stopCodeToolbarPointerDown}
+					className="pointer-events-auto h-7 shrink-0 rounded-sm text-xs"
+					style={{ width: 136, pointerEvents: "auto" }}
+					onPointerDown={preserveRichSelectionPointerDown}
 				>
 					<span className="truncate text-left">
 						{CODE_LANGUAGE_OPTIONS.find((option) => option.value === language)
 							?.label ?? "Code language"}
 					</span>
 				</SelectTrigger>
-				<SelectContent data-stage-code-toolbar="true">
+				<SelectContent
+					data-stage-rich-select-id={RICH_SELECT_IDS.codeLanguage}
+					data-stage-code-toolbar-select="true"
+				>
 					{CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
 						<SelectItem
 							key={value}
 							value={value}
-							data-stage-code-toolbar="true"
+							style={{ pointerEvents: "auto" }}
 						>
 							{label}
 						</SelectItem>
@@ -482,6 +520,10 @@ function getCodeEditContentStyle({
 	}
 
 	return nextStyle;
+}
+
+function isTargetWithinCodeToolbar(target: EventTarget | null): boolean {
+	return isTargetWithinSelector(target, '[data-stage-code-toolbar="true"]');
 }
 
 function isAuthoredCodeSurfaceValue(value: unknown): value is string {

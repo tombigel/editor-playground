@@ -21,11 +21,12 @@ export function ToolbarDragHandle({
 			data-dragging={dragging ? "true" : "false"}
 			className={
 				dragging
-					? "editor-text-muted flex shrink-0 cursor-grabbing select-none touch-none self-center rounded-md px-1 py-2.5"
-					: "editor-text-muted flex shrink-0 cursor-grab touch-none self-center rounded-md px-1 py-2.5"
+					? "editor-text-muted pointer-events-auto flex shrink-0 cursor-grabbing select-none touch-none self-center rounded-md px-1 py-2.5"
+					: "editor-text-muted pointer-events-auto flex shrink-0 cursor-grab touch-none self-center rounded-md px-1 py-2.5"
 			}
 			onClick={(event) => event.preventDefault()}
 			onPointerDown={onPointerDown}
+			style={{ pointerEvents: "auto" }}
 		>
 			<GripVertical size={16} />
 		</button>

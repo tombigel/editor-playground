@@ -11,7 +11,10 @@ import {
 	createMediaNode,
 	createTextNode,
 } from "../../model/defaultFactories";
-import { createTextDocumentContent } from "../../model/richContent";
+import {
+	createTextDocumentContent,
+	createTextDocumentFromCode,
+} from "../../model/richContent";
 import type { DocumentModel, RichContent, TextNode } from "../../model/types";
 import { DEFAULT_SNAP_SETTINGS } from "../../editor/types";
 import { startViteE2EServer, type StartedServer } from "./e2eServer";
@@ -376,6 +379,21 @@ describe("stage/Stage e2e", () => {
 		};
 	}
 
+	async function enterCodeEditMode(nodeId: string) {
+		const codeLeaf = page.locator(`#stage-node-${nodeId}`).first();
+		await codeLeaf.waitFor({ state: "attached", timeout: 10_000 });
+		await codeLeaf.scrollIntoViewIfNeeded();
+		await codeLeaf.click();
+		await codeLeaf.click();
+		await page.waitForSelector('[data-stage-code-toolbar="true"]', {
+			timeout: 2_000,
+		});
+		return {
+			codeLeaf,
+			textarea: page.locator('[data-stage-code-edit-textarea="true"]').first(),
+		};
+	}
+
 	async function replaceBlockEditText(text: string) {
 		const editable = page
 			.locator('[data-stage-rich-edit-box="true"] [contenteditable="true"]')
@@ -404,6 +422,15 @@ describe("stage/Stage e2e", () => {
 			.click();
 		await page.keyboard.press("ControlOrMeta+Enter");
 		await page.waitForSelector('[data-stage-rich-toolbar="true"]', {
+			state: "detached",
+			timeout: 2_000,
+		});
+	}
+
+	async function saveCodeEdit() {
+		await page.locator('[data-stage-code-edit-textarea="true"]').first().click();
+		await page.keyboard.press("ControlOrMeta+Enter");
+		await page.waitForSelector('[data-stage-code-toolbar="true"]', {
 			state: "detached",
 			timeout: 2_000,
 		});
@@ -1417,6 +1444,82 @@ describe("stage/Stage e2e", () => {
 				],
 			},
 		]);
+
+		await closeEditor();
+	}, 30_000);
+
+	it("keeps the standalone code toolbar draggable and its language menu selectable", async () => {
+		const { document, codeTextId } = createCodeTextEditE2EDocument();
+		await openEditor({
+			document,
+			selectedId: codeTextId,
+			selectedIds: [codeTextId],
+		});
+
+		const { textarea } = await enterCodeEditMode(codeTextId);
+		const toolbar = page.locator('[data-stage-code-toolbar="true"]').first();
+		const before = await toolbar.boundingBox();
+		expect(before).not.toBeNull();
+
+		await toolbar.locator('[aria-label="Code language"]').click();
+		const languageMenu = page.locator(
+			'[data-ui="select-content"][data-stage-rich-select-id="code-language"]',
+		);
+		await languageMenu.waitFor({ state: "visible", timeout: 2_000 });
+		await languageMenu.locator('[data-ui="select-item"]', { hasText: "Markdown" }).click();
+		await page.waitForFunction(() => {
+			const trigger = window.document.querySelector(
+				'[data-stage-code-toolbar="true"] [aria-label="Code language"]',
+			);
+			return trigger?.textContent?.includes("Markdown") ?? false;
+		});
+		expect(await toolbar.count()).toBe(1);
+
+		await toolbar.getByRole("button", { name: "Code theme dark" }).click();
+		expect(await textarea.getAttribute("data-code-theme")).toBe("dark");
+
+		const handle = toolbar.locator('[data-stage-rich-toolbar-drag-handle="true"]');
+		const handleBox = await handle.boundingBox();
+		expect(handleBox).not.toBeNull();
+		const startX = (handleBox?.x ?? 0) + (handleBox?.width ?? 0) / 2;
+		const startY = (handleBox?.y ?? 0) + (handleBox?.height ?? 0) / 2;
+		await page.mouse.move(startX, startY);
+		await page.mouse.down();
+		await page.waitForFunction(() => {
+			const handleEl = window.document.querySelector(
+				'[data-stage-code-toolbar="true"] [data-stage-rich-toolbar-drag-handle="true"]',
+			);
+			return handleEl?.getAttribute("data-dragging") === "true";
+		});
+		await page.mouse.move(startX + 128, startY + 64, { steps: 12 });
+		await page.mouse.up();
+
+		await page.waitForFunction(
+			({ beforeX, beforeY }) => {
+				const toolbarEl = window.document.querySelector(
+					'[data-stage-code-toolbar="true"]',
+				);
+				if (!(toolbarEl instanceof HTMLElement)) {
+					return false;
+				}
+				const rect = toolbarEl.getBoundingClientRect();
+				return (
+					Math.abs(rect.left - beforeX) > 64 &&
+					Math.abs(rect.top - beforeY) > 32
+				);
+			},
+			{ beforeX: before?.x ?? 0, beforeY: before?.y ?? 0 },
+		);
+
+		await saveCodeEdit();
+		const node = await readPersistedTextNode(codeTextId);
+		expect(node.subtype).toBe("code");
+		expect(node.content.blocks).toHaveLength(1);
+		expect(node.content.blocks[0]).toMatchObject({
+			type: "code-block",
+			language: "markdown",
+			theme: "dark",
+		});
 
 		await closeEditor();
 	}, 30_000);
@@ -2728,6 +2831,46 @@ function createListTextEditE2EDocument(): { document: DocumentModel; listTextId:
 			},
 		},
 		listTextId: listText.id,
+		sectionId: section.id,
+	};
+}
+
+function createCodeTextEditE2EDocument(): { document: DocumentModel; codeTextId: string; sectionId: string } {
+	const siteId = "site_code_text_regression_e2e";
+	const section = createContainerNode("section", siteId);
+	section.name = "Code Edit Regression Section";
+	section.slug = "code-edit-regression-section";
+	section.rect = createDefaultRect("0px", "0px", "100%", "320px");
+
+	const codeText = createTextNode("code", section.id) as TextNode;
+	codeText.name = "Code Edit Regression Copy";
+	codeText.content = createTextDocumentFromCode("const value = 1;", {
+		language: "typescript",
+		theme: "auto",
+	});
+	codeText.rect = createDefaultRect("72px", "88px", "420px", "auto");
+
+	section.children = [codeText.id];
+
+	return {
+		document: {
+			rootId: siteId,
+			nodes: {
+				[siteId]: {
+					id: siteId,
+					contentType: "site",
+					type: "site",
+					parentId: null,
+					children: [section.id],
+					name: "Site",
+					visible: true,
+					locked: false,
+				},
+				[section.id]: section,
+				[codeText.id]: codeText,
+			},
+		},
+		codeTextId: codeText.id,
 		sectionId: section.id,
 	};
 }
