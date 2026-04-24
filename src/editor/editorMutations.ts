@@ -217,7 +217,7 @@ export function updateRectField(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.contentType === 'site') {
+  if (!node || node.contentType === 'site') {
     return state;
   }
   const rect = node.rect;
@@ -240,7 +240,7 @@ export function updateStickyField(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.contentType === 'site') {
+  if (!node || node.contentType === 'site') {
     return state;
   }
   node.sticky = {
@@ -367,7 +367,7 @@ export function moveNode(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.contentType === 'site') {
+  if (!node || node.contentType === 'site') {
     return state;
   }
   if (patch.x) {
@@ -434,7 +434,7 @@ export function resizeNode(
 ): EditorState {
   const document = cloneDocument(state.document);
   const node = document.nodes[nodeId];
-  if (node.contentType === 'site') {
+  if (!node || node.contentType === 'site') {
     return state;
   }
   if (patch.width) {

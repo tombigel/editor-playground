@@ -836,6 +836,12 @@ describe('editor/editorMutations', () => {
       const next = updateRectField(state, state.document.rootId, 'x', '10px');
       expect(next).toBe(state);
     });
+
+    it('returns unchanged state for a stale node id', () => {
+      const state = createInitialState();
+      const next = updateRectField(state, 'missing_node', 'x', '10px');
+      expect(next).toBe(state);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -876,6 +882,12 @@ describe('editor/editorMutations', () => {
     it('returns unchanged state for site node', () => {
       const state = createInitialState();
       const next = updateStickyField(state, state.document.rootId, { enabled: true });
+      expect(next).toBe(state);
+    });
+
+    it('returns unchanged state for a stale node id', () => {
+      const state = createInitialState();
+      const next = updateStickyField(state, 'missing_node', { enabled: true });
       expect(next).toBe(state);
     });
 
@@ -1068,6 +1080,12 @@ describe('editor/editorMutations', () => {
       const next = moveNode(state, state.document.rootId, { x: '10px' });
       expect(next).toBe(state);
     });
+
+    it('returns unchanged state for a stale node id', () => {
+      const state = createInitialState();
+      const next = moveNode(state, 'missing_node', { x: '10px' });
+      expect(next).toBe(state);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -1245,6 +1263,12 @@ describe('editor/editorMutations', () => {
     it('returns unchanged state for site node', () => {
       const state = createInitialState();
       const next = resizeNode(state, state.document.rootId, { width: '500px' });
+      expect(next).toBe(state);
+    });
+
+    it('returns unchanged state for a stale node id', () => {
+      const state = createInitialState();
+      const next = resizeNode(state, 'missing_node', { width: '500px' });
       expect(next).toBe(state);
     });
   });

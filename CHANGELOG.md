@@ -24,6 +24,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - resolve PrismJS "Prism is not defined" error in production bundle
+- guard stale node mutation targets
 
 ---
 
