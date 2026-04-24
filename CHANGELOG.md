@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - preserve inline typography controls
+- address list editing verification issues
 
 ---
 

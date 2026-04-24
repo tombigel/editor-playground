@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createInitialDocument, createSectionFromTemplate, createTextNode } from '../../model/defaults';
-import { createTextDocumentContent, createTextDocumentFromCode, listContentToRichListBlock } from '../../model/richContent';
+import { createTextDocumentContent, createTextDocumentFromCode } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import { SiteRenderer } from '../SiteRenderer';
 

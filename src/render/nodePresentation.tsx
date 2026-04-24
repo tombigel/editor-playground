@@ -7,7 +7,6 @@ import {
   getSingleTextBlockContent,
   getTextContent,
   isRichTextLink,
-  richListBlockToListContent,
 } from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
 import type {
