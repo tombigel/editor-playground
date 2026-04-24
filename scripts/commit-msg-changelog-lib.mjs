@@ -16,6 +16,20 @@ export const DEFAULT_CATEGORY = '### Changed';
 export const UNRELEASED_HEADING = '## [Unreleased]';
 export const SECTION_SEPARATOR = '\n---\n';
 export const HEADING_ORDER = ['### Added', '### Changed', '### Fixed'];
+export const RELEASE_BOOKKEEPING_FILES = new Set([
+  'CHANGELOG.md',
+  'package-lock.json',
+  'package.json',
+  'src/lib/version.ts',
+]);
+
+export function isReleaseBookkeepingOnly(files) {
+  return files.length > 0 && files.every((file) => RELEASE_BOOKKEEPING_FILES.has(file));
+}
+
+export function isChangelogOnly(files) {
+  return files.length > 0 && files.every((file) => file === 'CHANGELOG.md');
+}
 
 export function parseCommitMessage(rawMsg) {
   const firstLine = rawMsg.split('\n')[0]?.trim() ?? '';

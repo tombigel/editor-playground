@@ -13,7 +13,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Changed
 
-- bump project to 0.7.0
+- skip changelog-only release notes
 
 ---
 

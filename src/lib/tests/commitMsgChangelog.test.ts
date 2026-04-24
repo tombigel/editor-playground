@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 // @ts-expect-error Script helper is exercised directly from the test.
-const { updateUnreleasedChangelog } = await import('../../../scripts/commit-msg-changelog-lib.mjs');
+const changelogLib = await import('../../../scripts/commit-msg-changelog-lib.mjs');
+const { isChangelogOnly, isReleaseBookkeepingOnly, updateUnreleasedChangelog } = changelogLib;
 
 describe('updateUnreleasedChangelog', () => {
   it('formats unreleased categories with markdownlint-safe spacing', () => {
@@ -53,5 +54,23 @@ describe('updateUnreleasedChangelog', () => {
 - tighten changelog formatting
 
 ---`);
+  });
+
+  it('identifies changelog-only commits for patch-bump skips', () => {
+    expect(isChangelogOnly(['CHANGELOG.md'])).toBe(true);
+    expect(isChangelogOnly(['CHANGELOG.md', 'src/lib/version.ts'])).toBe(false);
+    expect(isChangelogOnly([])).toBe(false);
+  });
+
+  it('identifies release bookkeeping commits for changelog skips', () => {
+    expect(isReleaseBookkeepingOnly([
+      'CHANGELOG.md',
+      'package-lock.json',
+      'package.json',
+      'src/lib/version.ts',
+    ])).toBe(true);
+    expect(isReleaseBookkeepingOnly(['CHANGELOG.md'])).toBe(true);
+    expect(isReleaseBookkeepingOnly(['CHANGELOG.md', 'src/api/documentApi.ts'])).toBe(false);
+    expect(isReleaseBookkeepingOnly([])).toBe(false);
   });
 });
