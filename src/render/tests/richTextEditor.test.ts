@@ -293,12 +293,14 @@ describe('render/richTextEditor', () => {
         {
           type: 'code-block',
           language: 'markdown',
+          theme: 'auto',
           highlightedHtml: expect.any(String),
           children: [{ type: 'code-line', children: [{ text: 'alpha' }] }],
         },
         {
           type: 'code-block',
           language: 'markdown',
+          theme: 'auto',
           highlightedHtml: expect.any(String),
           children: [{ type: 'code-line', children: [{ text: 'beta' }] }],
         },

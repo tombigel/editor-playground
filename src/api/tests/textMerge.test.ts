@@ -268,7 +268,7 @@ describe('api/textMerge', () => {
       {
         type: 'code-block',
         language: 'plaintext',
-        theme: 'light',
+        theme: 'auto',
         highlightedHtml: 'const value = 1;',
         children: [{ type: 'code-line', children: [{ text: 'const value = 1;' }] }],
       },

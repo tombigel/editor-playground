@@ -48,6 +48,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - preserve list inline styles on subtype conversion
 - preserve inline styles when converting to lists
 - preserve rich list styles across conversions
+- update code auto theme test expectations
 
 ---
 
