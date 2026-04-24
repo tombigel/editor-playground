@@ -29,6 +29,7 @@ import type {
   RichBlock,
   RichContent,
   RichInlineNode,
+  RichTextBlock,
   TextNode,
   TextDocumentContent,
   TextSubtype,
@@ -84,6 +85,7 @@ export function convertTextNodeDoc(
     visible: textSource.visible,
     locked: textSource.locked,
     rect: textSource.rect,
+    style: structuredClone(textSource.style),
     ...(textSource.sticky !== undefined ? { sticky: textSource.sticky } : {}),
     ...(textSource.animation !== undefined ? { animation: textSource.animation } : {}),
     content,
@@ -316,16 +318,30 @@ function convertSingleRichBlock(
     });
   }
 
+  if (isRichTextBlockForStandaloneBlock(block)) {
+    return createTextDocumentContent([{
+      ...block,
+      children: cloneInlineNodes(block.children),
+    }]);
+  }
+
   return createTextDocumentFromText(getTextContent([block]), {
-    type: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? 'paragraph' : block.type,
+    type: 'paragraph',
     direction: block.direction,
-    lineHeight: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.lineHeight,
-    style: block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? undefined : block.style,
   });
+}
+
+function isRichTextBlockForStandaloneBlock(block: RichBlock): block is RichTextBlock {
+  return block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol';
 }
 
 function flattenRichInlineChildren(children: RichInlineNode[]): string {
   return children.flatMap((node) => ('type' in node ? node.children.map((leaf) => leaf.text) : [node.text ?? ''])).join('');
+}
+
+function cloneInlineNodes(nodes: RichInlineNode[]): RichInlineNode[] {
+  const cloned = structuredClone(nodes) as RichInlineNode[];
+  return cloned.length > 0 ? cloned : [createRichTextLeaf('')];
 }
 
 function splitLinesForListItems(text: string): string[] {

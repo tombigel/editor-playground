@@ -177,21 +177,25 @@ export function CompactFontSizeField({
 		setInvalid(false);
 	}, [value]);
 
-	const commitDraft = useCallback(() => {
-		if (!draft.draft.trim()) {
+	const commitFontSizeDraft = useCallback((nextDraft: string, unit: ToolbarFontUnit) => {
+		if (!nextDraft.trim()) {
 			onCommit("");
 			setInvalid(false);
 			return;
 		}
 		try {
-			const parsed = parseFontSizeValue(`${draft.draft}${draft.unit}`);
-			onCommit(`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`);
+			const parsed = parseFontSizeValue(`${nextDraft}${unit}`);
+			onCommit(`${formatDisplayValue(parsed.parsed.value)}${unit}`);
 			setInvalid(false);
 		} catch {
 			setDraft(readFontSizeDraftState(value));
 			setInvalid(false);
 		}
-	}, [draft, onCommit, value]);
+	}, [onCommit, value]);
+
+	const commitDraft = useCallback(() => {
+		commitFontSizeDraft(draft.draft, draft.unit);
+	}, [commitFontSizeDraft, draft]);
 
 	return (
 		<PopoverTooltip
@@ -264,6 +268,9 @@ export function CompactFontSizeField({
 					onSuggestionsOpenChange={onSuggestionsOpenChange}
 					includeDisabledStyles={false}
 					onInputBlur={commitDraft}
+					onSuggestionSelect={(nextDraft) => {
+						commitFontSizeDraft(nextDraft, draft.unit);
+					}}
 					onInputValueChange={(nextDraft) => {
 						setDraft((current) => ({ ...current, draft: nextDraft }));
 						if (!nextDraft.trim()) {
@@ -271,8 +278,9 @@ export function CompactFontSizeField({
 							return;
 						}
 						try {
-							parseFontSizeValue(`${nextDraft}${draft.unit}`);
+							const parsed = parseFontSizeValue(`${nextDraft}${draft.unit}`);
 							setInvalid(false);
+							onCommit(`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`);
 						} catch {
 							setInvalid(true);
 						}

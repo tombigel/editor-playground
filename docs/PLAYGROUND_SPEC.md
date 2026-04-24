@@ -620,6 +620,7 @@ Rules:
 - Stage block editing keeps the node as `subtype: 'block'` and persists exactly one text block in `TextDocumentContent.blocks`.
 - The floating stage toolbar for standalone blocks is inline-only: bold, italic, underline, strikethrough, link, font family, font weight, font size, text color, and highlight color.
 - Block-level controls remain in the inspector for this phase: HTML tag, alignment, direction/RTL, language, and whole-block/default typography.
+- Inspector typography controls show a mixed state when the text content contains inline overrides for that style type. Choosing an inspector value resets matching inline overrides while preserving unrelated inline styles and links.
 - `Enter` and `Shift+Enter` both insert newline text inside the current block. The model does not add a `<br>` element; rendering preserves the soft break through `white-space: pre-wrap`.
 - Outside click or `Cmd/Ctrl+Enter` commits the Slate state through `setTextDocumentContentDoc()`. `Escape` discards local Slate edits without mutating the document.
 - Standalone list on-stage editing remains deferred to text phase 2.0 P2-C.
@@ -1421,6 +1422,7 @@ Naming and title behavior:
 - `src/api/documentApi.ts` provides editor-agnostic document operations for non-editor contexts such as scripts.
 - Text field mutations are canonical in `src/api/documentApi.ts`; the editor mutation layer delegates to the same pure `setTextNodeContentDoc()` implementation instead of maintaining separate code paths for code styling or page-link fields.
 - Text subtype conversion is also API-first: `convertTextNodeDoc()` owns the conversion policy, `switchTextSubtypeDoc()` is the thin entrypoint, and editor actions only choose the target subtype plus an optional conversion mode.
+- Text subtype conversion preserves compatible typography and inline content: standalone block to rich keeps node style and rich inline children, while single-block rich to standalone block keeps compatible inline marks and links.
 - Rich split and multi-node merge are also API-first: `splitRichTextNodeDoc()` and `mergeTextNodesToRichDoc()` live in the pure API layer, so conversion and merge semantics do not depend on editor-only selection or stage-edit code.
 - Standalone block stage edits are API-first: the stage commits canonical `TextDocumentContent` through `setTextDocumentContentDoc()`, including inline marks, inline links, soft-break newline text, and the optional `clearBlockNodeLink` transition for promoted whole-node links.
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.

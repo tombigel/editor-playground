@@ -24,6 +24,10 @@ Soft breaks inside a standalone block are persisted as newline text in a `RichTe
 
 When stage editing promotes a legacy whole-node block link to inline content, callers pass `{ clearBlockNodeLink: true }` to `setTextDocumentContentDoc()` so the node-level `link` is cleared atomically with the content update.
 
+Node-level typography writes such as `fontSize`, `fontFamily`, `fontWeight`, `fontStyle`, `textDecorationLine`, and `color` clear matching inline rich-text overrides in the same text node. This lets inspector-level controls intentionally reset inline selections of the same style type while preserving unrelated inline marks and links.
+
+Subtype conversion preserves compatible typography and inline structure. Converting a standalone block to rich text carries node style and rich inline children forward; converting a single rich text block to standalone block text preserves compatible inline marks and links instead of flattening them.
+
 ## Rich Text
 
 Rich text persists through the canonical text-document wrapper and should remain convertible through pure APIs. Editor UI is a consumer of that model, not the owner of it.

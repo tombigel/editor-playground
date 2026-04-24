@@ -47,7 +47,13 @@ import type {
 } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import type { FocusedMode } from '../../../api/editorApi';
-import { getSectionAnchorOptions, isValidSectionAnchorTarget } from '../../../api/documentViewApi';
+import {
+  getSectionAnchorOptions,
+  isRichTextLink,
+  isValidSectionAnchorTarget,
+  type RichInlineNode,
+  type RichTextLeaf,
+} from '../../../api/documentViewApi';
 import {
   applyLeafShadowPatch,
 } from '../styleFields';
@@ -123,6 +129,70 @@ export function fontSizeFieldValueFromNode(node: TypographyInspectorNode) {
   return node.style?.fontSize?.raw ?? '18px';
 }
 
+type InlineTypographyMixedState = {
+  color: boolean;
+  backgroundColor: boolean;
+  fontFamily: boolean;
+  fontSize: boolean;
+  fontWeight: boolean;
+  fontStyle: boolean;
+  textDecorationLine: boolean;
+};
+
+const EMPTY_INLINE_TYPOGRAPHY_MIXED_STATE: InlineTypographyMixedState = {
+  color: false,
+  backgroundColor: false,
+  fontFamily: false,
+  fontSize: false,
+  fontWeight: false,
+  fontStyle: false,
+  textDecorationLine: false,
+};
+
+export function readInlineTypographyMixedState(node: TypographyInspectorNode): InlineTypographyMixedState {
+  const state = { ...EMPTY_INLINE_TYPOGRAPHY_MIXED_STATE };
+
+  function visitLeaf(leaf: RichTextLeaf) {
+    state.color ||= leaf.color !== undefined;
+    state.backgroundColor ||= leaf.backgroundColor !== undefined;
+    state.fontFamily ||= leaf.fontFamily !== undefined;
+    state.fontSize ||= leaf.fontSize !== undefined;
+    state.fontWeight ||= leaf.fontWeight !== undefined || leaf.bold === true;
+    state.fontStyle ||= leaf.italic === true;
+    state.textDecorationLine ||= leaf.underline === true || leaf.strikethrough === true;
+  }
+
+  function visitInlineNodes(nodes: RichInlineNode[]) {
+    for (const child of nodes) {
+      if (isRichTextLink(child)) {
+        for (const leaf of child.children) {
+          visitLeaf(leaf);
+        }
+      } else {
+        visitLeaf(child);
+      }
+    }
+  }
+
+  for (const block of node.content.blocks) {
+    if (block.type === 'code-block') {
+      for (const line of block.children) {
+        for (const leaf of line.children) {
+          visitLeaf(leaf);
+        }
+      }
+    } else if (block.type === 'ul' || block.type === 'ol') {
+      for (const item of block.children) {
+        visitInlineNodes(item.children);
+      }
+    } else {
+      visitInlineNodes(block.children);
+    }
+  }
+
+  return state;
+}
+
 export function readTextWrapMode(node: TypographyInspectorNode) {
   return node.link !== undefined ? node.style?.textWrap : undefined;
 }
@@ -144,6 +214,7 @@ export function TypographyTextStyleFields({
 }) {
   const wrapEnabled = supportsWrap && readTextWrapMode(node) === 'wrap';
   const documentFonts = listDocumentFontsForPicker(document);
+  const inlineMixed = readInlineTypographyMixedState(node);
   const currentFamily = node.style?.fontFamily ?? SYSTEM_FONT_VALUE;
   const selectedFamily = node.style?.fontFamily ? getDocumentFontFamily(document, node.style.fontFamily) : undefined;
 
@@ -182,6 +253,8 @@ export function TypographyTextStyleFields({
               systemOptionValue={SYSTEM_FONT_VALUE}
               onFamilyChange={(value) => onTextChange('fontFamily', value === SYSTEM_FONT_VALUE ? '' : value)}
               onWeightChange={(value) => onTextChange('fontWeight', value)}
+              mixedFamily={inlineMixed.fontFamily}
+              mixedWeight={inlineMixed.fontWeight}
               className="w-full"
               recentFamilyNames={recentFamilyNames}
               onRecentFamiliesChange={handleRecentFamiliesChange}
@@ -213,7 +286,12 @@ export function TypographyTextStyleFields({
       >
         <div className="grid w-full items-center gap-1" style={{ gridTemplateColumns: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px ${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
           <div className="shrink-0" style={{ width: `${TYPOGRAPHY_FONT_SIZE_FIELD_WIDTH_PX}px` }}>
-            <FontSizeField nodeId={node.id} value={fontSizeFieldValueFromNode(node)} onChange={(value) => onTextChange('fontSize', value)} />
+            <FontSizeField
+              nodeId={node.id}
+              value={fontSizeFieldValueFromNode(node)}
+              onChange={(value) => onTextChange('fontSize', value)}
+              mixed={inlineMixed.fontSize}
+            />
           </div>
           <div className="shrink-0" style={{ width: `${TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX}px` }}>
             <NumberInput
@@ -234,7 +312,8 @@ export function TypographyTextStyleFields({
       >
           <TextStyleIconButton
             label="Bold"
-            active={isBoldFontWeight(node.style?.fontWeight)}
+            active={isBoldFontWeight(node.style?.fontWeight) && !inlineMixed.fontWeight}
+            mixed={inlineMixed.fontWeight}
             onClick={() =>
               onTextChange(
                 'fontWeight',
@@ -251,21 +330,24 @@ export function TypographyTextStyleFields({
           </TextStyleIconButton>
           <TextStyleIconButton
             label="Italic"
-            active={node.style?.fontStyle === 'italic'}
+            active={node.style?.fontStyle === 'italic' && !inlineMixed.fontStyle}
+            mixed={inlineMixed.fontStyle}
             onClick={() => onTextChange('fontStyle', node.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
           >
             <span className="font-medium italic">I</span>
           </TextStyleIconButton>
           <TextStyleIconButton
             label="Underline"
-            active={textDecorationHasUnderline(node)}
+            active={textDecorationHasUnderline(node) && !inlineMixed.textDecorationLine}
+            mixed={inlineMixed.textDecorationLine}
             onClick={() => onTextChange('textDecorationLine', toggleTextDecorationLine(node.style?.textDecorationLine, 'underline'))}
           >
             <span className="underline">U</span>
           </TextStyleIconButton>
           <TextStyleIconButton
             label="Strikethrough"
-            active={textDecorationHasLineThrough(node)}
+            active={textDecorationHasLineThrough(node) && !inlineMixed.textDecorationLine}
+            mixed={inlineMixed.textDecorationLine}
             onClick={() =>
               onTextChange('textDecorationLine', toggleTextDecorationLine(node.style?.textDecorationLine, 'line-through'))
             }
@@ -345,6 +427,7 @@ export function TypographyDesignFields({
   shadow: ReturnType<typeof readShadowFieldValues>;
   shadowFallback: ReturnType<typeof createShadowFallback>;
 }) {
+  const inlineMixed = readInlineTypographyMixedState(node);
   return (
     <>
       <FormField label="Color" layout="inline" controlClassName="gap-2">
@@ -353,6 +436,7 @@ export function TypographyDesignFields({
           onChange={(value) => onTextChange('color', value)}
           ariaLabel="Text color"
           fallback={colorFallback}
+          mixed={inlineMixed.color}
         />
       </FormField>
       <div className="space-y-1.5">

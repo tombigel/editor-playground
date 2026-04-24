@@ -13,6 +13,7 @@ import {
   getTextContent,
   getTextDocumentBlocks,
   htmlTagToTextBlockType,
+  isRichTextLink,
   listContentToRichListBlock,
   normalizeRichContent,
   normalizeTextDocumentContent,
@@ -32,7 +33,10 @@ import type {
   ListContent,
   NodeId,
   RichContent,
+  RichInlineNode,
   RichTextBlockType,
+  RichTextLeaf,
+  RichTextLink,
   ShadowStyleField,
   TextDocumentContent,
   TextNode,
@@ -83,6 +87,87 @@ function normalizeTextDocumentContentForSubtype(
   const candidate =
     subtype === 'rich' ? normalized : setTextDocumentBlockGap(normalized, undefined);
   return validateTextSubtypeContentStructure(subtype, candidate).length === 0 ? candidate : null;
+}
+
+type InlineTextStyleField =
+  | 'color'
+  | 'backgroundColor'
+  | 'fontFamily'
+  | 'fontSize'
+  | 'fontWeight'
+  | 'fontStyle'
+  | 'textDecorationLine';
+
+function clearInlineStyleOverridesForField(
+  content: TextDocumentContent,
+  field: InlineTextStyleField,
+): TextDocumentContent {
+  return createTextDocumentContent(content.blocks.map((block) => {
+    if (block.type === 'code-block') {
+      return {
+        ...block,
+        children: block.children.map((line) => ({
+          ...line,
+          children: line.children.map((leaf) => clearLeafStyleOverride(leaf, field)),
+        })),
+      };
+    }
+
+    if (block.type === 'ul' || block.type === 'ol') {
+      return {
+        ...block,
+        children: block.children.map((item) => ({
+          ...item,
+          children: clearInlineNodesStyleOverride(item.children, field),
+        })),
+      };
+    }
+
+    return {
+      ...block,
+      children: clearInlineNodesStyleOverride(block.children, field),
+    };
+  }), { blockGap: content.blockGap });
+}
+
+function clearInlineNodesStyleOverride(
+  nodes: RichInlineNode[],
+  field: InlineTextStyleField,
+): RichInlineNode[] {
+  return nodes.map((node) => {
+    if (isRichTextLink(node)) {
+      return {
+        ...node,
+        children: node.children.map((leaf) => clearLeafStyleOverride(leaf, field)),
+      } satisfies RichTextLink;
+    }
+    return clearLeafStyleOverride(node, field);
+  });
+}
+
+function clearLeafStyleOverride(
+  leaf: RichTextLeaf,
+  field: InlineTextStyleField,
+): RichTextLeaf {
+  const next = { ...leaf };
+  if (field === 'color') {
+    delete next.color;
+  } else if (field === 'backgroundColor') {
+    delete next.backgroundColor;
+  } else if (field === 'fontFamily') {
+    delete next.fontFamily;
+  } else if (field === 'fontSize') {
+    delete next.fontSize;
+  } else if (field === 'fontWeight') {
+    delete next.fontWeight;
+    delete next.bold;
+  } else if (field === 'fontStyle') {
+    delete next.italic;
+  } else if (field === 'textDecorationLine') {
+    delete next.underline;
+    delete next.strikethrough;
+  }
+  return next;
 }
 
 export function setTextNodeContentDoc(
@@ -250,12 +335,14 @@ export function setTextNodeContentDoc(
   if (field === 'color' && isTextNode(node)) {
     node.style ??= {};
     node.style.color = value || undefined;
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     return next;
   }
 
   if (field === 'backgroundColor' && isTextNode(node)) {
     node.style ??= {};
     node.style.background = value || undefined;
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     return next;
   }
 
@@ -263,6 +350,7 @@ export function setTextNodeContentDoc(
     node.style ??= {};
     const trimmedValue = extractPrimaryFontFamily(value);
     node.style.fontFamily = trimmedValue || undefined;
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     if (trimmedValue) {
       next = ensureDocumentFontFamilyByName(next, trimmedValue);
     }
@@ -290,6 +378,7 @@ export function setTextNodeContentDoc(
   if (field === 'fontSize' && isTextNode(node)) {
     node.style ??= {};
     node.style.fontSize = value ? parseFontSizeValue(value) : undefined;
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     return next;
   }
 
@@ -300,12 +389,14 @@ export function setTextNodeContentDoc(
     }
     node.style ??= {};
     node.style.fontWeight = Math.min(900, Math.max(100, Math.round(parsed)));
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     return next;
   }
 
   if (field === 'fontStyle' && isTextNode(node)) {
     node.style ??= {};
     node.style.fontStyle = value === 'italic' ? 'italic' : 'normal';
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     return next;
   }
 
@@ -315,6 +406,7 @@ export function setTextNodeContentDoc(
   ) {
     node.style ??= {};
     node.style.textDecorationLine = normalizeTextDecorationLine(value);
+    node.content = clearInlineStyleOverridesForField(node.content, field);
     return next;
   }
 

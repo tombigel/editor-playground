@@ -607,6 +607,52 @@ describe('api/documentApi', () => {
     expect(node.htmlTag).toBeUndefined();
   });
 
+  it('preserves standalone block typography and inline leaves when converting to rich text', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const block = createTextNode('block', section.id);
+    block.style = {
+      ...(block.style ?? {}),
+      fontSize: { raw: '28px', parsed: { value: 28, unit: 'px' } },
+      fontStyle: 'italic',
+    };
+    block.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Styled ' },
+          { text: 'inline', fontSize: '18px', underline: true },
+        ],
+      },
+    ]);
+    document.nodes[block.id] = block;
+    section.children.push(block.id);
+
+    const next = convertTextNodeDoc(document, block.id, 'rich');
+    const node = next.nodes[block.id];
+    if (node.contentType !== 'text' || node.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+
+    expect(node.style?.fontSize?.raw).toBe('28px');
+    expect(node.style?.fontStyle).toBe('italic');
+    expect(node.content.blocks).toMatchObject([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Styled ' },
+          { text: 'inline', fontSize: '18px', underline: true },
+        ],
+      },
+    ]);
+  });
+
   it('converts code blocks to rich code blocks through the explicit text conversion API', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -816,6 +862,119 @@ describe('api/documentApi', () => {
     expect(node.code?.language).toBe('plaintext');
     expect(node.code?.highlightedHtml).toContain('const');
     expect(node.htmlTag).toBeUndefined();
+  });
+
+  it('preserves compatible inline styling when converting one rich text block to standalone block text', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const rich = createTextNode('rich', section.id);
+    rich.style = {
+      ...(rich.style ?? {}),
+      fontSize: { raw: '24px', parsed: { value: 24, unit: 'px' } },
+    };
+    rich.content = createTextDocumentContent([
+      {
+        type: 'h2',
+        direction: 'rtl',
+        lineHeight: 1.7,
+        style: { textAlign: 'right' },
+        children: [
+          { text: 'Hello ', italic: true },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com',
+            children: [{ text: 'world', color: '#d62246' }],
+          },
+        ],
+      },
+    ]);
+    document.nodes[rich.id] = rich;
+    section.children.push(rich.id);
+
+    const next = switchTextSubtypeDoc(document, rich.id, 'block', { mode: 'flatten' });
+    const node = next.nodes[rich.id];
+    if (node.contentType !== 'text' || node.subtype !== 'block') {
+      throw new Error('Expected block text node');
+    }
+
+    expect(node.style?.fontSize?.raw).toBe('24px');
+    expect(node.content.blocks).toMatchObject([
+      {
+        type: 'h2',
+        direction: 'rtl',
+        lineHeight: 1.7,
+        style: { textAlign: 'right' },
+        children: [
+          { text: 'Hello ', italic: true },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com',
+            children: [{ text: 'world', color: '#d62246' }],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('clears matching inline overrides when inspector typography writes node-level text styles', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const block = createTextNode('block', section.id);
+    block.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [{
+          text: 'Styled',
+          fontSize: '18px',
+          color: '#d62246',
+          backgroundColor: '#ffe680',
+          fontWeight: 700,
+          italic: true,
+          underline: true,
+        }],
+      },
+    ]);
+    document.nodes[block.id] = block;
+    section.children.push(block.id);
+
+    const resized = setTextNodeContentDoc(document, block.id, 'fontSize', '32px');
+    const resizedNode = resized.nodes[block.id];
+    if (resizedNode.contentType !== 'text') {
+      throw new Error('Expected text node');
+    }
+    expect(resizedNode.content.blocks[0]).toMatchObject({
+      children: [{
+        text: 'Styled',
+        color: '#d62246',
+        backgroundColor: '#ffe680',
+        fontWeight: 700,
+        italic: true,
+        underline: true,
+      }],
+    });
+    expect(resizedNode.content.blocks[0].children[0]).not.toHaveProperty('fontSize');
+
+    const weighted = setTextNodeContentDoc(resized, block.id, 'fontWeight', '400');
+    const weightedNode = weighted.nodes[block.id];
+    if (weightedNode.contentType !== 'text') {
+      throw new Error('Expected text node');
+    }
+    expect(weightedNode.content.blocks[0].children[0]).not.toHaveProperty('fontWeight');
+    expect(weightedNode.content.blocks[0].children[0]).toHaveProperty('color', '#d62246');
   });
 
   it('drops list markers when converting standalone lists to code', () => {

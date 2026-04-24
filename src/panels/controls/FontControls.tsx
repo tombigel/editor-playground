@@ -624,6 +624,13 @@ export function FontSizeField({
         setDraft(mixed ? '' : String(parsed.parsed.value));
         setInvalid(false);
       }}
+      onSuggestionSelect={(nextDraft) => {
+        const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);
+        setInvalid(!validation.isValid);
+        if (validation.nextValue != null) {
+          onChange(`${validation.nextValue}${parsed.parsed.unit}`);
+        }
+      }}
       onInputValueChange={(nextDraft) => {
         setDraft(nextDraft);
         const validation = validateNumberInputDraft(nextDraft, 0.0000001, Number.POSITIVE_INFINITY);

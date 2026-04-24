@@ -547,6 +547,46 @@ describe('panels/InspectorPanel', () => {
     expect(buttonMarkup.indexOf('>Shadow<')).toBeLessThan(buttonMarkup.indexOf('>Padding<'));
   });
 
+  it('shows mixed inspector typography controls when standalone text has inline overrides', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section');
+    }
+
+    const textNode = createTextNode('block', section.id);
+    textNode.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          {
+            text: 'Styled inline',
+            fontFamily: 'Assistant',
+            fontSize: '22px',
+            fontWeight: 700,
+            italic: true,
+            underline: true,
+            color: '#d62246',
+          },
+        ],
+      },
+    ]);
+    document.nodes[textNode.id] = textNode;
+    section.children.push(textNode.id);
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: textNode })} />,
+    );
+
+    expect(markup).toContain('>Mixed<');
+    expect(markup).toContain('value-with-unit-mixed');
+    expect(markup).toContain('aria-pressed="mixed"');
+    expect(markup).toContain('aria-label="Text color"');
+    expect(markup).toContain('pointer-events-none absolute inset-0');
+  });
+
   it('shows link destination controls only when text or image linking is enabled', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(

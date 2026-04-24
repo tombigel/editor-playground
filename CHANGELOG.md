@@ -23,6 +23,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - cover on-stage block text editing
 - document on-stage block text editing
 
+### Fixed
+
+- preserve inline typography controls
+
 ---
 
 ## [0.7.0] — 2026-04-24

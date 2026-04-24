@@ -39,6 +39,8 @@ export type {
   ListTextItem,
   MediaNode,
   NodeId,
+  RichInlineNode,
+  RichTextLeaf,
   ShadowStyle,
   SiteNode,
   StickyDefinition,

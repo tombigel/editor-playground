@@ -1220,7 +1220,7 @@ describe("stage/Stage e2e", () => {
 		await closeEditor();
 	}, 30_000);
 
-	it("applies font size changes after the toolbar input takes focus", async () => {
+	it("applies font size changes immediately while the toolbar input keeps focus", async () => {
 		const { document, richTextId } = createRichTextEditE2EDocument();
 		await openEditor({
 			document,
@@ -1230,8 +1230,16 @@ describe("stage/Stage e2e", () => {
 
 		await enterRichEditMode(richTextId);
 		await selectRichTextRange(0, 0, 0, "Edit me on stage".length);
-		await page.getByLabel("Font size", { exact: true }).fill("32");
-		await page.keyboard.press("Tab");
+		await page
+			.locator('[data-stage-rich-value-field-id="font-size"] input')
+			.fill("32");
+		await expect
+			.poll(async () =>
+				page
+					.locator('[data-stage-rich-edit-box="true"] [style*="font-size: 32px"]')
+					.count(),
+			)
+			.toBeGreaterThan(0);
 		await saveRichEdit();
 
 		const persistedState = await readPersistedState();
