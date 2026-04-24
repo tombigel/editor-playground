@@ -17,6 +17,7 @@ export type { StickyGeometrySnapshot, StickyLayoutState } from '../sticky/resolv
 export type { DocumentCommand } from './types/index';
 export type { TextConversionMode, TextConversionOptions } from './textConversion';
 export type { MergeTextNodesOptions } from './textMerge';
+export type { SetTextDocumentContentOptions } from './documentApi/text';
 export type {
   LeafInsertionRole,
   NodeOrderAction,

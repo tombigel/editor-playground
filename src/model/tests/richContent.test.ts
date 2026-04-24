@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Element as SlateElement, Text as SlateText } from 'slate';
+import { createButtonTextNode, createLinkTextNode } from '../defaults';
 import type {
   CodeBlockContent,
   ListBlockContent,
@@ -25,6 +26,7 @@ import {
   mapLinks,
   normalizeTextDocumentContent,
   normalizeRichContent,
+  prepareStandaloneBlockEditContent,
   validateTextDocumentContentStructure,
   validateTextSubtypeContentStructure,
   validateRichContentStructure,
@@ -73,6 +75,72 @@ describe('model/richContent', () => {
       expect(isTextDocumentContent(wrapped)).toBe(true);
       expect(getTextDocumentBlocks(wrapped)).toEqual([paragraph]);
       expect(getTextDocumentBlocks([paragraph])).toEqual([paragraph]);
+    });
+  });
+
+  describe('prepareStandaloneBlockEditContent', () => {
+    it('promotes a whole-node link into inline editable content while preserving marks', () => {
+      const node = createLinkTextNode('section_1');
+      node.link = { linkType: 'external', href: 'https://example.com/root', openInNewTab: true };
+      node.content = {
+        blocks: [
+          {
+            type: 'paragraph',
+            children: [
+              { text: 'Bold ', bold: true },
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com/inline',
+                children: [{ text: 'inline', italic: true }],
+              },
+            ],
+          },
+        ],
+      };
+
+      const prepared = prepareStandaloneBlockEditContent(node);
+
+      expect(prepared.promotedNodeLink).toBe(true);
+      expect(prepared.content).toEqual({
+        blocks: [
+          {
+            type: 'paragraph',
+            children: [
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com/root',
+                openInNewTab: true,
+                children: [
+                  { text: 'Bold ', bold: true },
+                  { text: 'inline', italic: true },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('leaves button-like whole-node links unpromoted', () => {
+      const node = createButtonTextNode('section_1');
+      node.content = {
+        blocks: [
+          {
+            type: 'paragraph',
+            children: [{ text: 'Button', bold: true }],
+          },
+        ],
+      };
+
+      const prepared = prepareStandaloneBlockEditContent(node);
+
+      expect(prepared.promotedNodeLink).toBe(false);
+      expect(prepared.content.blocks[0]).toMatchObject({
+        type: 'paragraph',
+        children: [{ text: 'Button', bold: true }],
+      });
     });
   });
 

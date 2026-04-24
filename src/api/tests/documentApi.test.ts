@@ -28,6 +28,7 @@ import {
   setNodeRect,
   setNodeSticky,
   setPageTopLevelWrapperPlacement,
+  setTextDocumentContentDoc,
   setTextDirectionDoc,
   setTextNodeContentDoc,
   setTopLevelWrapperVisibility,
@@ -187,6 +188,112 @@ describe('api/documentApi', () => {
     }
 
     expect(node.htmlTag).toBe('blockquote');
+  });
+
+  it('sets standalone block content with inline marks and links through the document API', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const text = createTextNode('block', section.id);
+    document.nodes[text.id] = text;
+    document.nodes[section.id].children.push(text.id);
+
+    const content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Marked ', bold: true },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com/docs',
+            children: [{ text: 'docs', italic: true }],
+          },
+        ],
+      },
+    ]);
+
+    const next = setTextDocumentContentDoc(document, text.id, content);
+    const node = next.nodes[text.id];
+    if (node.contentType !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    expect(node.content.blocks[0]).toMatchObject(content.blocks[0]);
+    expect(node.content.blocks[0]).toMatchObject({ direction: 'ltr' });
+    expect(node.htmlTag).toBe('p');
+  });
+
+  it('rejects multi-block content for standalone block text nodes', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const text = createTextNode('block', section.id);
+    document.nodes[text.id] = text;
+    document.nodes[section.id].children.push(text.id);
+
+    const next = setTextDocumentContentDoc(document, text.id, createTextDocumentContent([
+      { type: 'paragraph', children: [{ text: 'One' }] },
+      { type: 'paragraph', children: [{ text: 'Two' }] },
+    ]));
+
+    expect(next).toBe(document);
+  });
+
+  it('clears whole-node links for standalone block text content when requested', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const link = createLinkTextNode(section.id);
+    document.nodes[link.id] = link;
+    document.nodes[section.id].children.push(link.id);
+
+    const next = setTextDocumentContentDoc(
+      document,
+      link.id,
+      createTextDocumentContent([
+        {
+          type: 'paragraph',
+          children: [
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com/promoted',
+              children: [{ text: 'Promoted', underline: true }],
+            },
+          ],
+        },
+      ]),
+      { clearBlockNodeLink: true },
+    );
+    const node = next.nodes[link.id];
+    if (node.contentType !== 'text') {
+      throw new Error('Expected text node');
+    }
+
+    expect(node.link).toBeUndefined();
+    expect(node.content.blocks[0]).toMatchObject({
+      type: 'paragraph',
+      children: [
+        {
+          type: 'link',
+          href: 'https://example.com/promoted',
+          children: [{ text: 'Promoted', underline: true }],
+        },
+      ],
+    });
   });
 
   it('updates design fields for leaves through API helpers', () => {

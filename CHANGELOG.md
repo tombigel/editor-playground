@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- support standalone block edit commits
+
 ### Changed
 
 - skip changelog-only release notes

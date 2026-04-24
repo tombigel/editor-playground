@@ -44,6 +44,10 @@ import { highlightCode, normalizeCodeLanguage } from '../../render/codeHighlight
 import { parseMarkdownForTextSubtype, serializeTextNodeToMarkdown } from '../textMarkdown';
 import { cloneDocument } from './shared';
 
+export type SetTextDocumentContentOptions = {
+  clearBlockNodeLink?: boolean;
+};
+
 function syncTransitionalTextNodeFields(node: TextNode): void {
   if (node.subtype === 'block') {
     const block = getSingleTextBlockContent(node.content);
@@ -427,6 +431,7 @@ export function setTextDocumentContentDoc(
   document: DocumentModel,
   nodeId: NodeId,
   content: TextDocumentContent,
+  options: SetTextDocumentContentOptions = {},
 ): DocumentModel {
   const next = cloneDocument(document);
   const node = next.nodes[nodeId];
@@ -440,6 +445,9 @@ export function setTextDocumentContentDoc(
   }
 
   node.content = normalized;
+  if (options.clearBlockNodeLink === true && node.subtype === 'block') {
+    node.link = undefined;
+  }
   syncTransitionalTextNodeFields(node);
   return normalizeTextNodeDoc(next, nodeId);
 }

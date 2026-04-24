@@ -58,7 +58,7 @@ describe('render/nodePresentation', () => {
 
     expect(imageMarkup).toContain('class="image-placeholder"');
     expect(linkMarkup).toContain('tabindex="-1"');
-    expect(linkMarkup).toContain('style="color:#1d4ed8"');
+    expect(linkMarkup).toContain('color:#1d4ed8');
   });
 
   it('keeps block links on a single anchor wrapper', () => {
@@ -72,6 +72,32 @@ describe('render/nodePresentation', () => {
     expect(linkMarkup).toContain('<a');
     expect(linkMarkup).toContain('Read more');
     expect(linkMarkup).toContain('</a></h2>');
+  });
+
+  it('avoids nested anchors for legacy whole-node block links with inline links', () => {
+    const link = createLinkTextNode('root');
+    link.link = { linkType: 'external', href: 'https://example.com/root' };
+    link.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Root ' },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com/inline',
+            children: [{ text: 'inline' }],
+          },
+        ],
+      },
+    ]);
+
+    const linkMarkup = renderToStaticMarkup(renderLeafContent(link));
+
+    expect(linkMarkup.match(/<a\b/g)).toHaveLength(1);
+    expect(linkMarkup).toContain('href="https://example.com/root"');
+    expect(linkMarkup).not.toContain('href="https://example.com/inline"');
+    expect(linkMarkup).toContain('Root inline');
   });
 
   it('wraps linked images in an anchor while keeping the image element inside', () => {
@@ -222,6 +248,32 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('href="https://example.com/docs"');
     expect(markup).toContain('text-decoration:underline');
     expect(markup).toContain('color:#172033');
+  });
+
+  it('renders standalone block inline marks and links without inserting line breaks', () => {
+    const block = createTextNode('block', 'root');
+    block.content = createTextDocumentContent([
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Line 1\n', bold: true },
+          {
+            type: 'link',
+            linkType: 'external',
+            href: 'https://example.com/docs',
+            children: [{ text: 'docs', underline: true }],
+          },
+        ],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(block));
+
+    expect(markup).toContain('white-space:pre-wrap');
+    expect(markup).toContain('font-weight:bold');
+    expect(markup).toContain('href="https://example.com/docs"');
+    expect(markup).toContain('Line 1\n');
+    expect(markup).not.toContain('<br');
   });
 
   it('renders repeated rich inline nodes without React key warnings', () => {

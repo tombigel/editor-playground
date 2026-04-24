@@ -37,6 +37,7 @@ export {
   htmlTagToTextBlockType,
   isEmpty,
   listContentToRichListBlock,
+  prepareStandaloneBlockEditContent,
   replaceTextDocumentBlocks,
   richListBlockToListContent,
   setTextDocumentBlockGap,

@@ -1,5 +1,6 @@
 import type {
   CodeBlockContent,
+  LinkExtension,
   ListBlockContent,
   ListContent,
   RichBlock,
@@ -8,6 +9,7 @@ import type {
   RichListBlock,
   RichTextBlockType,
   RichTextLeaf,
+  RichTextLink,
   TextBlockContent,
   TextDocumentBlock,
   TextDocumentBlocks,
@@ -17,7 +19,9 @@ import type {
 import {
   createRichListBlock,
   createRichListItemFromText,
+  createRichTextBlock,
   createRichTextLeaf,
+  createTextDocumentContent,
 } from './factories';
 import { isCodeBlockContent, isListBlockContent, isRichTextLink, isTextBlockContent, isTextDocumentContent } from './guards';
 import type { NormalizeTextContentOptions } from './shared';
@@ -133,6 +137,75 @@ export function replaceTextDocumentBlocks(content: TextDocumentContent, blocks: 
   return {
     blocks,
     ...(typeof content.blockGap === 'number' ? { blockGap: content.blockGap } : {}),
+  };
+}
+
+export type StandaloneBlockEditContent = {
+  content: TextDocumentContent;
+  promotedNodeLink: boolean;
+};
+
+function cloneRichTextLeaf(leaf: RichTextLeaf): RichTextLeaf {
+  return { ...leaf };
+}
+
+function flattenInlineChildrenToLeaves(children: RichInlineNode[]): RichTextLeaf[] {
+  return children.flatMap((child) => (
+    isRichTextLink(child)
+      ? child.children.map(cloneRichTextLeaf)
+      : [cloneRichTextLeaf(child)]
+  ));
+}
+
+function createRichTextLinkFromExtension(
+  link: LinkExtension,
+  children: RichTextLeaf[],
+): RichTextLink {
+  return {
+    type: 'link',
+    linkType: link.linkType,
+    ...(typeof link.href === 'string' ? { href: link.href } : {}),
+    ...(typeof link.targetPageId === 'string' ? { targetPageId: link.targetPageId } : {}),
+    ...(typeof link.pageAnchorId === 'string' ? { pageAnchorId: link.pageAnchorId } : {}),
+    ...(typeof link.anchorTargetId === 'string' ? { anchorTargetId: link.anchorTargetId } : {}),
+    ...(typeof link.openInNewTab === 'boolean' ? { openInNewTab: link.openInNewTab } : {}),
+    children: children.length > 0 ? children : [createRichTextLeaf('')],
+  };
+}
+
+export function prepareStandaloneBlockEditContent(node: TextNode): StandaloneBlockEditContent {
+  if (node.subtype !== 'block') {
+    return {
+      content: createTextDocumentContent([
+        createRichTextBlock('paragraph', [createRichTextLeaf('')]),
+      ]),
+      promotedNodeLink: false,
+    };
+  }
+
+  const block = getSingleTextBlockContent(node.content);
+  const editableBlock = block
+    ? structuredClone(block)
+    : createRichTextBlock('paragraph', [createRichTextLeaf('')]);
+
+  if (!node.link || node.style?.background !== undefined) {
+    return {
+      content: createTextDocumentContent([editableBlock]),
+      promotedNodeLink: false,
+    };
+  }
+
+  return {
+    content: createTextDocumentContent([{
+      ...editableBlock,
+      children: [
+        createRichTextLinkFromExtension(
+          node.link,
+          flattenInlineChildrenToLeaves(editableBlock.children),
+        ),
+      ],
+    }]),
+    promotedNodeLink: true,
   };
 }
 

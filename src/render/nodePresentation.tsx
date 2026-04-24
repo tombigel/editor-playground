@@ -578,6 +578,7 @@ export function renderLeafContent(
     const Tag = getRichTextBlockTag(blockType === 'paragraph' ? 'paragraph' : blockType);
     const blockStyle = {
       ...contentStyle,
+      whiteSpace: 'pre-wrap' as const,
       ...(typeof textBlock?.lineHeight === 'number' ? { lineHeight: textBlock.lineHeight } : {}),
       ...richBlockStyleToCss(textBlock?.style),
     };
@@ -631,7 +632,9 @@ export function renderLeafContent(
         data-node-id={dataNodeId}
         style={blockStyle}
       >
-        {text}
+        {textBlock
+          ? renderRichInlineContent(textBlock.children, document, 'block.inline')
+          : text}
       </Tag>
     );
   }
