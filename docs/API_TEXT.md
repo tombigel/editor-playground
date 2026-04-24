@@ -60,13 +60,13 @@ Code block handling stays text-model aware but uses syntax highlighting and lang
 Examples:
 
 - `setCodeBlockLanguageDoc(document, nodeId, language)`
-- `setCodeBlockThemeDoc(document, nodeId, theme)` where `theme` is `auto`, `light`, or `dark`
+- `setCodeBlockThemeDoc(document, nodeId, theme)` where `theme` is `auto`, `light`, or `dark`; `auto` follows the viewer's system color scheme via `prefers-color-scheme`
 - `setCodeBlockTabSizeDoc(document, nodeId, tabSize)` stores visual tab width as CSS `tab-size` metadata
 - `setCodeBlockWrapDoc(document, nodeId, wrap)` toggles soft wrapping; unwrapped code keeps literal text and scrolls horizontally
 - `resetCodeBlockStyleDoc(document, nodeId)` preserves raw code text and language while clearing presentation overrides and returning theme to `auto`
 - markdown import/export support for fenced code
 
-On-stage code editing commits raw text back as exactly one `code-block`. `Enter` and `Shift+Enter` store `\n`; `Tab` and `Shift+Tab` store or remove literal `\t` indentation on the current or selected lines. Tab width and wrap changes do not rewrite text.
+On-stage code editing commits raw text back as exactly one `code-block`. `Enter` and `Shift+Enter` store `\n`; `Tab` and `Shift+Tab` store or remove literal `\t` indentation on the current or selected lines. Tab width and wrap changes do not rewrite text. The code edit surface mirrors user-facing `auto` theme behavior and is not coupled to the editor chrome theme.
 
 ## Read Next
 

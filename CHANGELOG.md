@@ -11,6 +11,15 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Changed
+
+- release focused text editing updates
+
+---
+
+## [0.7.47] — 2026-04-24
+Document: 1.5.60 · API: 2.0.52 · Editor: 0.14.0
+
 ### Added
 
 - support standalone block edit commits

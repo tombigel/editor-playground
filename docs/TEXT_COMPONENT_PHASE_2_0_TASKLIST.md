@@ -99,14 +99,17 @@ Execution rules:
   - Tab width is visual `tab-size` metadata and does not rewrite stored code.
   - Code style overrides are inspector-owned; no inspector reset button is shown because code editing has no inline styling layer.
   - Code font selection offers System Mono and available mono/code font families, with Manage Fonts prefiltered to `monospace`.
+  - Code theme `auto` follows the viewer/system color scheme through `prefers-color-scheme`; it does not follow the editor chrome theme.
 - Verification commands:
   - `npm run test:run -- src/api/tests/documentApi.test.ts src/model/tests/richContent.test.ts src/model/tests/defaults.test.ts`
   - `npm run test:run -- src/render/tests/nodePresentation.test.tsx src/site/tests/SiteRenderer.test.tsx src/site/tests/siteExport.test.tsx`
   - `npm run test:run -- src/stage/tests/CodeTextEditOverlay.test.tsx`
+  - `npm run test:e2e -- src/stage/tests/Stage.e2e.test.ts -t "standalone code toolbar|drags the rich toolbar"`
   - `npm run test:run -- src/panels/inspector/tests/ContentSectionRows.test.tsx src/panels/tests/ManageFontsPanel.test.tsx`
   - `npm run typecheck`
+  - `npm run build`
 - Verification result:
-  - Focused API/model/render/site/stage/panel/font tests passed. `npm run typecheck` passed after each implementation slice. Final `npm run build` is tracked in the final P2-D verification handoff.
+  - Focused API/model/render/site/stage/panel/font tests passed. Code toolbar dropdown and drag-handle regressions are covered by e2e. `npm run typecheck` and `npm run build` passed after final cleanup.
 - Commit SHA:
   - `d36a228` model/render auto theme and tab size
   - `a446741` API reset and tab size controls
@@ -114,7 +117,9 @@ Execution rules:
   - `39d681a` code indentation keys
   - `00f4a89` focused code toolbar
   - `b4f9d13` inspector tab width controls
-  - code inspector reset button removed after simplifying code styling scope
+  - `ec906a9` code inspector reset button removed after simplifying code styling scope
+  - `a8ca31d` code toolbar dropdown and drag-handle alignment
+  - `d331c54` auto code theme follows system preference
   - `f50c506` mono font workflow
 - Open follow-ups carried forward:
   - None yet.
