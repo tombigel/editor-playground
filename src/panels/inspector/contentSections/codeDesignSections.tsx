@@ -67,6 +67,7 @@ const CODE_FONT_FAMILY_NAMES = new Set([
 	"Roboto Mono",
 	"Cascadia Code",
 ]);
+const CODE_TAB_WIDTH_CONTROL_WIDTH = "2.5em";
 
 export function CodeTextStyleSection({
 	document,
@@ -273,13 +274,14 @@ export function CodeTextStyleSection({
 			<FormField
 				label="Tab"
 				layout="inline"
-				controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+				controlWidth={CODE_TAB_WIDTH_CONTROL_WIDTH}
 			>
 				<NumberInput
 					value={tabSize}
 					min={1}
 					max={8}
 					step={1}
+					inputClassName="px-1"
 					onChange={(value) => onTextChange("tabSize", String(value))}
 				/>
 			</FormField>

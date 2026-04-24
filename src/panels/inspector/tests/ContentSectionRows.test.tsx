@@ -52,6 +52,7 @@ describe("panels/inspector/content section rows", () => {
 		expect(markup).toContain(">light<");
 		expect(markup).toContain(">dark<");
 		expect(markup).toContain(">Tab<");
+		expect(markup).toContain('style="width:2.5em"');
 		expect(markup).toContain('type="number"');
 		expect(markup).toContain("Reset code styling");
 	});
