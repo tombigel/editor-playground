@@ -22,6 +22,77 @@ type CodeTextEditOverlayProps = {
 	onDiscard: () => void;
 };
 
+type CodeSelectionEdit = {
+	text: string;
+	selectionStart: number;
+	selectionEnd: number;
+};
+
+export function indentCodeTextSelection(
+	text: string,
+	selectionStart: number,
+	selectionEnd: number,
+): CodeSelectionEdit {
+	const { rangeStart, rangeEnd } = getSelectedLineRange(text, selectionStart, selectionEnd);
+	const segment = text.slice(rangeStart, rangeEnd);
+	const lineCount = segment.split("\n").length;
+	const nextSegment = segment.split("\n").map((line) => `\t${line}`).join("\n");
+	const nextSelectionStart = selectionStart + 1;
+	const nextSelectionEnd =
+		selectionStart === selectionEnd ? nextSelectionStart : selectionEnd + lineCount;
+
+	return {
+		text: `${text.slice(0, rangeStart)}${nextSegment}${text.slice(rangeEnd)}`,
+		selectionStart: nextSelectionStart,
+		selectionEnd: nextSelectionEnd,
+	};
+}
+
+export function unindentCodeTextSelection(
+	text: string,
+	selectionStart: number,
+	selectionEnd: number,
+): CodeSelectionEdit {
+	const { rangeStart, rangeEnd } = getSelectedLineRange(text, selectionStart, selectionEnd);
+	const segment = text.slice(rangeStart, rangeEnd);
+	const lines = segment.split("\n");
+	let cursor = rangeStart;
+	let removedBeforeStart = 0;
+	let removedBeforeEnd = 0;
+	const nextLines = lines.map((line) => {
+		const lineStart = cursor;
+		cursor += line.length + 1;
+		if (!line.startsWith("\t")) {
+			return line;
+		}
+		if (lineStart < selectionStart) {
+			removedBeforeStart += 1;
+		}
+		if (lineStart < selectionEnd) {
+			removedBeforeEnd += 1;
+		}
+		return line.slice(1);
+	});
+	const nextSegment = nextLines.join("\n");
+
+	return {
+		text: `${text.slice(0, rangeStart)}${nextSegment}${text.slice(rangeEnd)}`,
+		selectionStart: Math.max(rangeStart, selectionStart - removedBeforeStart),
+		selectionEnd: Math.max(rangeStart, selectionEnd - removedBeforeEnd),
+	};
+}
+
+function getSelectedLineRange(text: string, selectionStart: number, selectionEnd: number) {
+	const rangeStart = text.lastIndexOf("\n", Math.max(0, selectionStart - 1)) + 1;
+	const effectiveEnd =
+		selectionEnd > selectionStart && text[selectionEnd - 1] === "\n"
+			? selectionEnd - 1
+			: selectionEnd;
+	const nextBreak = text.indexOf("\n", effectiveEnd);
+	const rangeEnd = nextBreak === -1 ? text.length : nextBreak;
+	return { rangeStart, rangeEnd };
+}
+
 export function CodeTextEditOverlay({
 	nodeId,
 	content,
@@ -101,6 +172,18 @@ export function CodeTextEditOverlay({
 		if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
 			event.preventDefault();
 			commitCurrentContent();
+			return;
+		}
+		if (event.key === "Tab") {
+			event.preventDefault();
+			const target = event.currentTarget;
+			const edit = event.shiftKey
+				? unindentCodeTextSelection(codeText, target.selectionStart, target.selectionEnd)
+				: indentCodeTextSelection(codeText, target.selectionStart, target.selectionEnd);
+			setCodeText(edit.text);
+			requestAnimationFrame(() => {
+				textareaRef.current?.setSelectionRange(edit.selectionStart, edit.selectionEnd);
+			});
 		}
 	}
 

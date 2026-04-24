@@ -26,6 +26,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - support auto code theme and tab size
 - add code style reset and tab size controls
 - activate focused code editing
+- support code editor indentation keys
 
 ### Changed
 

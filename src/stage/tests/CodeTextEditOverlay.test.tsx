@@ -1,7 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { createTextDocumentFromCode } from "../../model/richContent";
-import { CodeTextEditOverlay } from "../stageRenderers/CodeTextEditOverlay";
+import {
+	CodeTextEditOverlay,
+	indentCodeTextSelection,
+	unindentCodeTextSelection,
+} from "../stageRenderers/CodeTextEditOverlay";
 
 describe("stage/CodeTextEditOverlay", () => {
 	it("renders a raw code textarea with authored tab width and minimum height", () => {
@@ -28,5 +32,35 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).toContain("tab-size:4");
 		expect(markup).toContain("const value = 1;");
 		expect(markup).not.toContain('data-stage-rich-toolbar="true"');
+	});
+
+	it("indents and unindents the current line with literal tabs", () => {
+		const indented = indentCodeTextSelection("one\ntwo", 5, 5);
+		expect(indented).toEqual({
+			text: "one\n\ttwo",
+			selectionStart: 6,
+			selectionEnd: 6,
+		});
+
+		expect(unindentCodeTextSelection(indented.text, 6, 6)).toEqual({
+			text: "one\ntwo",
+			selectionStart: 5,
+			selectionEnd: 5,
+		});
+	});
+
+	it("indents and unindents every selected line", () => {
+		const indented = indentCodeTextSelection("one\ntwo\nthree", 1, 9);
+		expect(indented).toEqual({
+			text: "\tone\n\ttwo\n\tthree",
+			selectionStart: 2,
+			selectionEnd: 12,
+		});
+
+		expect(unindentCodeTextSelection(indented.text, 2, 12)).toEqual({
+			text: "one\ntwo\nthree",
+			selectionStart: 1,
+			selectionEnd: 9,
+		});
 	});
 });
