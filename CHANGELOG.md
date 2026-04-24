@@ -11,16 +11,30 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Changed
+
+- bump project to 0.7.0
+
+---
+
+## [0.7.0] — 2026-04-24
+Document: 1.5.13 · API: 2.0.5 · Editor: 0.13.13
+
 ### Added
 
-- make leaf insertion api first
+- API-first leaf insertion now supports all leaf roles through `insertLeafDoc`.
+- API reference coverage checks now guard the documented public export surface.
 
 ### Changed
 
-- complete reference coverage
-- archive closed text phase docs
-- replace hardcoded chrome colors
-- split oversized source files
+- Completed the split API reference for the current public API surface.
+- Archived closed Text Component Phase 1.8 planning docs out of the active docs surface.
+- Replaced hardcoded editor chrome colors with design tokens.
+- Split oversized source files across API, editor, model, stage, app shell, panels, and design-system modules.
+
+### Fixed
+
+- Guarded stale editor node mutation targets so delayed drag, resize, and inspector commands return state instead of throwing.
 
 ---
 
