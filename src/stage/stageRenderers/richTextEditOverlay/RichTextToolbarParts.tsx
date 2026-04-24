@@ -4,16 +4,19 @@ import { GripVertical } from "lucide-react";
 import { ToolbarButton } from "./controls";
 
 export function ToolbarDragHandle({
+	ariaLabel = "Drag text toolbar",
 	dragging,
 	onPointerDown,
 }: {
+	ariaLabel?: string;
 	dragging: boolean;
 	onPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void;
 }) {
 	return (
 		<button
 			type="button"
-			aria-label="Drag text toolbar"
+			aria-label={ariaLabel}
+			data-stage-toolbar-drag-handle="true"
 			data-stage-rich-toolbar-drag-handle="true"
 			data-dragging={dragging ? "true" : "false"}
 			className={

@@ -27,12 +27,21 @@ describe("stage/CodeTextEditOverlay", () => {
 
 		expect(markup).toContain('data-stage-code-edit-root="true"');
 		expect(markup).toContain('data-stage-code-toolbar="true"');
-		expect(markup).toContain("width:min(360px, 100%, calc(100vw - 32px))");
+		expect(markup).toContain("position");
+		expect(markup).toContain("fixed");
+		expect(markup).toContain("width:max-content");
 		expect(markup).toContain("flex-wrap");
+		expect(markup).toContain('data-ui="toolbar-control-row"');
+		expect(markup).toContain('data-ui="toolbar-control-group"');
+		expect(markup).toContain('data-ui="toolbar-control-divider"');
+		expect(markup).toContain('data-stage-toolbar-drag-handle="true"');
+		expect(markup).toContain('aria-label="Drag code toolbar"');
+		expect(markup).toContain("cursor-grab");
 		expect(markup).toContain('aria-label="Code language"');
 		expect(markup).toContain('aria-label="Code theme auto"');
 		expect(markup).toContain('aria-label="Code theme light"');
 		expect(markup).toContain('aria-label="Code theme dark"');
+		expect(markup).toContain('aria-pressed="true"');
 		expect(markup).toContain('data-stage-code-edit-textarea="true"');
 		expect(markup).toContain('aria-label="Code editor"');
 		expect(markup).toContain("min-height:120px");

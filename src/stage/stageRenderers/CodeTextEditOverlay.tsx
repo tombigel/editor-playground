@@ -1,13 +1,15 @@
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { ComponentProps, Ref } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
+import { PopoverTooltip } from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
-	SelectValue,
 } from "@/components/ui/select";
 import {
 	ToolbarControlGroup,
@@ -28,6 +30,9 @@ import {
 	highlightCode,
 	normalizeCodeLanguage,
 } from "../../render/codeHighlight";
+import { preserveRichSelectionPointerDown } from "./richTextEditOverlay/controls";
+import { ToolbarDragHandle } from "./richTextEditOverlay/RichTextToolbarParts";
+import { useRichToolbarPosition } from "./richTextEditOverlay/useRichToolbarPosition";
 
 type CodeTextEditOverlayProps = {
 	nodeId: NodeId;
@@ -132,6 +137,12 @@ export function CodeTextEditOverlay({
 	const preservedStyle = codeBlock?.style;
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+	const {
+		toolbarRef,
+		toolbarDragging,
+		toolbarPosition,
+		handleToolbarDragPointerDown,
+	} = useRichToolbarPosition({ rootRef, selectionRevision: 0 });
 
 	const commitCurrentContent = useCallback(() => {
 		onCommit(
@@ -230,6 +241,10 @@ export function CodeTextEditOverlay({
 			onDoubleClick={(event) => event.stopPropagation()}
 		>
 			<CodeEditToolbar
+				toolbarRef={toolbarRef}
+				toolbarPosition={toolbarPosition}
+				toolbarDragging={toolbarDragging}
+				onToolbarDragPointerDown={handleToolbarDragPointerDown}
 				language={language}
 				theme={theme}
 				onLanguageChange={setLanguage}
@@ -274,11 +289,21 @@ export function CodeTextEditOverlay({
 }
 
 function CodeEditToolbar({
+	toolbarRef,
+	toolbarPosition,
+	toolbarDragging,
+	onToolbarDragPointerDown,
 	language,
 	theme,
 	onLanguageChange,
 	onThemeChange,
 }: {
+	toolbarRef: Ref<HTMLDivElement>;
+	toolbarPosition: { top: number; left: number };
+	toolbarDragging: boolean;
+	onToolbarDragPointerDown: ComponentProps<
+		typeof ToolbarDragHandle
+	>["onPointerDown"];
 	language: string;
 	theme: CodeTheme;
 	onLanguageChange: (language: string) => void;
@@ -286,19 +311,20 @@ function CodeEditToolbar({
 }) {
 	return (
 		<FloatingPanelShell
+			ref={toolbarRef}
 			suppressPopover
 			open
-			positionMode="absolute"
+			positionMode="fixed"
 			data-stage-code-toolbar="true"
 			style={{
-				bottom: "calc(100% + 8px)",
-				left: 0,
+				top: `${toolbarPosition.top}px`,
+				left: `${toolbarPosition.left}px`,
 				zIndex: 220,
-				width: "min(360px, 100%, calc(100vw - 32px))",
+				width: "max-content",
 				maxWidth: "calc(100vw - 32px)",
 				pointerEvents: "auto",
 			}}
-			bodyClassName="px-1.5 py-1"
+			bodyClassName="px-2 py-1"
 			bodyStyle={{
 				pointerEvents: "auto",
 				overflow: "visible",
@@ -307,44 +333,79 @@ function CodeEditToolbar({
 				event.stopPropagation();
 			}}
 		>
-			<ToolbarControlRow className="min-w-0 flex-wrap gap-1">
-				<ToolbarControlGroup className="min-w-0 flex-1">
-					<Select value={language} onValueChange={onLanguageChange}>
-						<SelectTrigger
-							className="h-7 w-full min-w-0 rounded-sm text-[11px]"
-							aria-label="Code language"
-							data-stage-code-toolbar="true"
-						>
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent data-stage-code-toolbar="true">
-							{CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
-								<SelectItem key={value} value={value}>
-									{label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</ToolbarControlGroup>
-				<ToolbarControlGroup
-					className="min-w-0 flex-1 flex-wrap justify-end"
-					withDividerBefore
-				>
-					{(["auto", "light", "dark"] as const).map((option) => (
-						<Button
-							key={option}
-							type="button"
-							variant={theme === option ? "default" : "ghost"}
-							size="sm"
-							className="h-7 flex-1 rounded-sm px-1.5 text-[11px] capitalize"
-							aria-label={`Code theme ${option}`}
-							onClick={() => onThemeChange(option)}
-						>
-							{option}
-						</Button>
-					))}
-				</ToolbarControlGroup>
-			</ToolbarControlRow>
+			<div className="flex items-center gap-2">
+				<ToolbarDragHandle
+					ariaLabel="Drag code toolbar"
+					dragging={toolbarDragging}
+					onPointerDown={onToolbarDragPointerDown}
+				/>
+				<ToolbarControlRow className="min-w-0 flex-wrap gap-1">
+					<ToolbarControlGroup className="min-w-0">
+						<CodeToolbarLanguageSelect
+							language={language}
+							onLanguageChange={onLanguageChange}
+						/>
+					</ToolbarControlGroup>
+					<ToolbarControlGroup withDividerBefore>
+						{(["auto", "light", "dark"] as const).map((option) => (
+							<Button
+								key={option}
+								type="button"
+								variant={theme === option ? "default" : "outline"}
+								size="sm"
+								className="pointer-events-auto h-7 shrink-0 rounded-sm px-2 text-[11px] capitalize"
+								style={{ pointerEvents: "auto" }}
+								aria-label={`Code theme ${option}`}
+								aria-pressed={theme === option}
+								onPointerDown={preserveRichSelectionPointerDown}
+								onClick={() => onThemeChange(option)}
+							>
+								{option}
+							</Button>
+						))}
+					</ToolbarControlGroup>
+				</ToolbarControlRow>
+			</div>
 		</FloatingPanelShell>
+	);
+}
+
+function CodeToolbarLanguageSelect({
+	language,
+	onLanguageChange,
+}: {
+	language: string;
+	onLanguageChange: (language: string) => void;
+}) {
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className={DARK_TOOLTIP_CLASS}
+			content={<div className="leading-3.5 font-medium">Code language</div>}
+		>
+			<Select value={language} onValueChange={onLanguageChange}>
+				<SelectTrigger
+					aria-label="Code language"
+					size="compact"
+					className="pointer-events-auto h-7 w-[132px] shrink-0 rounded-sm text-xs"
+					style={{ pointerEvents: "auto" }}
+					data-stage-code-toolbar="true"
+					onPointerDown={preserveRichSelectionPointerDown}
+				>
+					<span className="truncate text-left">
+						{CODE_LANGUAGE_OPTIONS.find((option) => option.value === language)
+							?.label ?? "Code language"}
+					</span>
+				</SelectTrigger>
+				<SelectContent data-stage-code-toolbar="true">
+					{CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
+						<SelectItem key={value} value={value}>
+							{label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</PopoverTooltip>
 	);
 }
