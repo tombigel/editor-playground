@@ -20,7 +20,6 @@ export {
   normalizeDocument,
   normalizeTextHtmlTag,
   isStructuralWrapper,
-  createUniqueLeaf,
 } from './editorPersistence';
 
 // --- Document mutations ---

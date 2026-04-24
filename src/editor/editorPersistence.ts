@@ -4,9 +4,7 @@ import {
   createDefaultHeader,
   createInitialDocument,
   createTextNode,
-  createMediaNode,
   createLinkTextNode,
-  createButtonTextNode,
   createSectionFromTemplate,
   syncIdCountersWithDocument,
 } from '../model/defaults';
@@ -26,7 +24,6 @@ import type {
 } from '../model/types';
 import { isSiteNode, isContainerNode, isTextNode, isMediaNode } from '../model/types';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from '../model/units';
-import { TEXT_NODE_DEFAULTS } from '../model/textNodeDefaults';
 import { highlightCode } from '../render/codeHighlight';
 import { forceOpaqueColorValue } from '../model/colors';
 import {
@@ -471,53 +468,6 @@ function setNodePlainText(node: TextNode, text: string) {
   node.content = createTextDocumentFromText(text, {
     type: htmlTagToBlockType(node.htmlTag),
   });
-}
-
-export function createUniqueLeaf(document: DocumentModel, role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button', parentId: NodeId) {
-  const make = () => {
-    if (role === 'heading') {
-      const node = createTextNode('block', parentId);
-      const h = TEXT_NODE_DEFAULTS.heading;
-      return {
-        ...node,
-        htmlTag: 'h2' as const,
-        content: createTextDocumentFromText(h.content, { type: 'h2' }),
-        style: { ...node.style, ...h.style },
-      };
-    }
-    if (role === 'richtext') return createTextNode('rich', parentId);
-    if (role === 'list') return createTextNode('list', parentId);
-    if (role === 'code') {
-      const node = createTextNode('code', parentId);
-      const content = getNodePlainText(node);
-      const { code } = node;
-      const language = code?.language ?? 'plaintext';
-      return {
-        ...node,
-        code: {
-          language,
-          ...(code?.theme !== undefined ? { theme: code.theme } : {}),
-          highlightedHtml: highlightCode(content as string, language),
-        },
-      };
-    }
-    if (role === 'text') return createTextNode('block', parentId);
-    if (role === 'image') return createMediaNode('image', parentId);
-    if (role === 'link') {
-      const node = createLinkTextNode(parentId);
-      return {
-        ...node,
-        htmlTag: 'div' as const,
-        content: createTextDocumentFromText(getNodePlainText(node), { type: 'div' }),
-      };
-    }
-    return createButtonTextNode(parentId);
-  };
-  let node = make();
-  while (document.nodes[node.id]) {
-    node = make();
-  }
-  return node;
 }
 
 function createUniqueTextNode(document: DocumentModel, parentId: NodeId) {

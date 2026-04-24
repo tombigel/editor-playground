@@ -24,14 +24,16 @@ import { parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } 
 import { forceOpaqueColorValue } from '../model/colors';
 import {
   applyMarkdownToTextNodeDoc,
+  insertLeafDoc,
   insertSectionTemplateDoc,
   moveNodeInTreeDoc,
   setTextNodeContentDoc,
   setNodeVisibilityDoc,
+  type LeafInsertionRole,
 } from '../api/documentApi';
 import type { EditorState, NodeOrderAction } from './types';
 import { getTopLevelSelectedIds, normalizeSelectedIds } from './selection';
-import { cloneDocument, normalizeDocument, isStructuralWrapper, createUniqueLeaf } from './editorPersistence';
+import { cloneDocument, normalizeDocument, isStructuralWrapper } from './editorPersistence';
 
 type SelectionRect = {
   left: number;
@@ -129,16 +131,21 @@ export function insertSectionTemplate(state: EditorState, templateId: SectionTem
   return applySelectionToDocument(state, document, [insertedId]);
 }
 
-export function insertLeaf(state: EditorState, role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button'): EditorState {
-  const document = cloneDocument(state.document);
-  syncIdCountersWithDocument(document);
+export function insertLeaf(state: EditorState, role: LeafInsertionRole): EditorState {
   const parentId = state.selectedId
-    ? getInsertionParent(document, state.selectedId, 'leaf')
-    : findFirstSection(document) ?? document.rootId;
-  const node = createUniqueLeaf(document, role, parentId);
-  document.nodes[node.id] = node;
-  document.nodes[parentId].children.push(node.id);
-  return applySelectionToDocument(state, document, [node.id]);
+    ? getInsertionParent(state.document, state.selectedId, 'leaf')
+    : findFirstSection(state.document) ?? state.document.rootId;
+  const document = insertLeafDoc(state.document, role, parentId);
+  if (document === state.document) {
+    return state;
+  }
+
+  const insertedId = Object.keys(document.nodes).find((nodeId) => !state.document.nodes[nodeId]);
+  if (!insertedId) {
+    return state;
+  }
+
+  return applySelectionToDocument(state, document, [insertedId]);
 }
 
 function findFirstSection(document: DocumentModel): NodeId | null {

@@ -936,6 +936,10 @@ Sticky Playground tracks four independent semver versions, all defined in `src/l
 
 Run `/version-bump` for guidance on which level to use for each subsystem.
 
+### API 2.0.0 breaking insertion cleanup
+
+`insertLeafDoc(document, role, parentId)` is now the single API-first leaf insertion surface for all editor leaf roles. Deprecated insertion aliases were removed instead of retained as compatibility shims.
+
 ### `schemaVersion` in exported documents
 
 `serializeDocumentJson()` stamps the current `DOCUMENT_MODEL_VERSION` into the top-level `schemaVersion` field of the serialized JSON. On import, `parseImportedDocumentJson()` emits a `console.warn` if the stored version differs from the current one, but still attempts to load the document through the normal normalization and validation pipeline. A version mismatch is informational — structural invalidity is the hard-error condition.

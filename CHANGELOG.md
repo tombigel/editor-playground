@@ -13,11 +13,21 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Added
 
+- make leaf insertion api first
+
+---
+
+## [0.6.8] — 2026-04-24
+Document: 1.5.8 · API: 2.0.0 · Editor: 0.13.8
+
+### Added
+
 - update version to 0.6.2 and enhance version bump scripts
 - add source exclusions for agents and Claude in styles.css
 
 ### Changed
 
+- API 2.0.0 makes `insertLeafDoc` the single API-first leaf insertion surface and removes deprecated insertion aliases.
 - update version to 0.6.0 and document changes in changelog
 - update version to 0.6.1 in package-lock.json
 

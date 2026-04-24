@@ -15,8 +15,8 @@ import {
   applyDocumentCommands,
   convertTextNodeDoc,
   createInitialDocument,
+  insertLeafDoc,
   insertSectionTemplateDoc,
-  insertSectionTemplateBeforeFooter,
   moveNodeInTreeDoc,
   parseDocumentJson,
   serializeDocumentJson,
@@ -33,6 +33,7 @@ import {
   setTopLevelWrapperVisibility,
   getTopLevelWrapperVisibilityState,
   switchTextSubtypeDoc,
+  type LeafInsertionRole,
 } from '../documentApi';
 
 function firstEditableNodeId(document: ReturnType<typeof createInitialDocument>) {
@@ -52,6 +53,84 @@ function getRoot(document: ReturnType<typeof createInitialDocument>) {
 }
 
 describe('api/documentApi', () => {
+  describe('insertLeafDoc', () => {
+    function firstSectionId(document: ReturnType<typeof createInitialDocument>) {
+      const root = getRoot(document);
+      const sectionId = root.children.find((childId) => {
+        const node = document.nodes[childId];
+        return node?.contentType === 'container' && node.subtype === 'section';
+      });
+      if (!sectionId) {
+        throw new Error('Expected section');
+      }
+      return sectionId;
+    }
+
+    it('inserts every leaf role through the pure API', () => {
+      const cases: Array<{
+        role: LeafInsertionRole;
+        expectedContentType: 'text' | 'media';
+        expectedSubtype: string;
+      }> = [
+        { role: 'text', expectedContentType: 'text', expectedSubtype: 'block' },
+        { role: 'heading', expectedContentType: 'text', expectedSubtype: 'block' },
+        { role: 'list', expectedContentType: 'text', expectedSubtype: 'list' },
+        { role: 'richtext', expectedContentType: 'text', expectedSubtype: 'rich' },
+        { role: 'code', expectedContentType: 'text', expectedSubtype: 'code' },
+        { role: 'image', expectedContentType: 'media', expectedSubtype: 'image' },
+        { role: 'link', expectedContentType: 'text', expectedSubtype: 'block' },
+        { role: 'button', expectedContentType: 'text', expectedSubtype: 'block' },
+      ];
+
+      for (const { role, expectedContentType, expectedSubtype } of cases) {
+        const document = createInitialDocument();
+        const sectionId = firstSectionId(document);
+        const next = insertLeafDoc(document, role, sectionId);
+        const insertedId = Object.keys(next.nodes).find((nodeId) => !document.nodes[nodeId]);
+        if (!insertedId) {
+          throw new Error(`Expected inserted ${role} node`);
+        }
+        const inserted = next.nodes[insertedId];
+        if (inserted.contentType === 'site') {
+          throw new Error(`Expected inserted ${role} leaf`);
+        }
+
+        expect(inserted.parentId).toBe(sectionId);
+        expect(inserted.contentType).toBe(expectedContentType);
+        expect(inserted.subtype).toBe(expectedSubtype);
+
+        if (role === 'heading' && inserted.contentType === 'text') {
+          expect(inserted.htmlTag).toBe('h2');
+          expect(getTextContent(inserted.content.blocks)).toBe("I'm a Header Text");
+        }
+        if (role === 'link' && inserted.contentType === 'text') {
+          expect(inserted.link).toMatchObject({ linkType: 'anchor', href: '#' });
+          expect(inserted.htmlTag).toBe('div');
+        }
+        if (role === 'code' && inserted.contentType === 'text') {
+          expect(inserted.code?.language).toBe('plaintext');
+          expect(inserted.code?.highlightedHtml).toBeTruthy();
+        }
+      }
+    });
+
+    it('returns the original document for a missing parent', () => {
+      const document = createInitialDocument();
+      expect(insertLeafDoc(document, 'text', 'missing_parent')).toBe(document);
+    });
+
+    it('generates unique ids when inserting repeatedly', () => {
+      const document = createInitialDocument();
+      const sectionId = firstSectionId(document);
+      const withFirst = insertLeafDoc(document, 'text', sectionId);
+      const withSecond = insertLeafDoc(withFirst, 'text', sectionId);
+
+      const insertedIds = Object.keys(withSecond.nodes).filter((nodeId) => !document.nodes[nodeId]);
+      expect(insertedIds).toHaveLength(2);
+      expect(new Set(insertedIds).size).toBe(2);
+    });
+  });
+
   it('updates rect fields immutably', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
@@ -1118,17 +1197,6 @@ describe('api/documentApi', () => {
 
     expect(nextRoot.children.indexOf(insertedId)).toBe(root.children.indexOf(footer.id));
     expect(next.pages?.[0]?.sectionIds).toEqual([section.id, insertedId]);
-  });
-
-  it('keeps the legacy before-footer helper behavior', () => {
-    const document = createInitialDocument();
-    const root = getRoot(document);
-    const footerId = root.children[root.children.length - 1];
-
-    const next = insertSectionTemplateBeforeFooter(document, 'blank');
-    const nextRoot = getRoot(next);
-
-    expect(nextRoot.children[nextRoot.children.length - 1]).toBe(footerId);
   });
 
   it('seeds the default post link with product documentation copy', () => {

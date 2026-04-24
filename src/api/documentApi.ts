@@ -1,9 +1,11 @@
 import { DOCUMENT_MODEL_VERSION } from '../lib/version';
 import {
   SECTION_TEMPLATES,
+  createButtonTextNode,
   createContainerNode,
   createDefaultLinkExtension,
   createInitialDocument,
+  createLinkTextNode,
   createMediaNode,
   createSectionFromTemplate,
   createTextNode,
@@ -23,7 +25,7 @@ import {
   removeDocumentFontFamily,
   toggleDocumentFontFavorite,
 } from '../fonts';
-import { CODE_THEME_SURFACE } from '../model/textNodeDefaults';
+import { CODE_THEME_SURFACE, TEXT_NODE_DEFAULTS } from '../model/textNodeDefaults';
 import { getLinkHref, normalizeNavigationKind, shouldOpenNavigationInNewTab } from '../model/links';
 import { getChildren, getNode } from '../model/selectors';
 import { setPageAsHome as setPageAsHomeDoc } from './pageApi';
@@ -104,6 +106,7 @@ export type TopLevelWrapperPlacement = 'currentPage' | 'global';
 export type TopLevelWrapperVisibilityMode = TopLevelWrapperVisibilityModeModel;
 export type TopLevelWrapperVisibilityState = TopLevelWrapperVisibilityStateModel;
 export type TopLevelWrapperVisibility = TopLevelWrapperVisibilityModeModel;
+export type LeafInsertionRole = 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button';
 export type SectionTemplateInsertionOptions = {
   selectedId?: NodeId | null;
   pageId?: PageId | null;
@@ -1147,18 +1150,6 @@ export function insertContainerDoc(
 }
 
 /**
- * @deprecated Use insertContainerDoc instead.
- * Legacy alias kept for Phase 2 compatibility.
- */
-export function insertWrapperDoc(
-  document: DocumentModel,
-  subtype: ContainerSubtype,
-  parentId: NodeId,
-): DocumentModel {
-  return insertContainerDoc(document, subtype, parentId);
-}
-
-/**
  * Insert a text node into the document without requiring EditorState.
  * The text node is appended as the last child of `parentId`.
  */
@@ -1210,19 +1201,81 @@ export function insertMediaDoc(
   return next;
 }
 
-/**
- * @deprecated Use insertTextDoc / insertMediaDoc instead.
- * Legacy alias kept for Phase 2 compatibility.
- */
 export function insertLeafDoc(
   document: DocumentModel,
-  role: 'text' | 'image' | 'link' | 'button',
+  role: LeafInsertionRole,
   parentId: NodeId,
 ): DocumentModel {
-  if (role === 'image') {
-    return insertMediaDoc(document, parentId);
+  const next = cloneDocument(document);
+  syncIdCountersWithDocument(next);
+
+  const parent = next.nodes[parentId];
+  if (!parent) {
+    return document;
   }
-  return insertTextDoc(document, parentId);
+
+  let node = createLeafNode(role, parentId);
+  while (next.nodes[node.id]) {
+    node = createLeafNode(role, parentId);
+  }
+
+  next.nodes[node.id] = node;
+  parent.children.push(node.id);
+  return next;
+}
+
+function createLeafNode(role: LeafInsertionRole, parentId: NodeId): TextNode | ReturnType<typeof createMediaNode> {
+  if (role === 'heading') {
+    const node = createTextNode('block', parentId);
+    const heading = TEXT_NODE_DEFAULTS.heading;
+    return {
+      ...node,
+      htmlTag: 'h2',
+      content: createTextDocumentFromText(heading.content, { type: 'h2' }),
+      style: { ...node.style, ...heading.style },
+    };
+  }
+
+  if (role === 'richtext') {
+    return createTextNode('rich', parentId);
+  }
+
+  if (role === 'list') {
+    return createTextNode('list', parentId);
+  }
+
+  if (role === 'code') {
+    const node = createTextNode('code', parentId);
+    const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
+    const language = normalizeCodeLanguage(node.code?.language ?? 'plaintext');
+    return {
+      ...node,
+      code: {
+        language,
+        ...(node.code?.theme !== undefined ? { theme: node.code.theme } : {}),
+        highlightedHtml: highlightCode(codeText, language),
+      },
+    };
+  }
+
+  if (role === 'image') {
+    return createMediaNode('image', parentId);
+  }
+
+  if (role === 'link') {
+    const node = createLinkTextNode(parentId);
+    return {
+      ...node,
+      htmlTag: 'div',
+      content: createTextDocumentFromText(getTextContent(node.content.blocks, { blockSeparator: '\n' }), { type: 'div' }),
+    };
+  }
+
+  if (role === 'button') {
+    return createButtonTextNode(parentId);
+  }
+
+  return createTextNode('block', parentId);
 }
 
 /**
@@ -1763,15 +1816,4 @@ export function insertSectionTemplateDoc(
   next.pages = insertSectionIntoPage(next.pages, options.pageId, build.wrapper.id, referenceWrapper);
 
   return normalizeDocumentFontState(next);
-}
-
-/**
- * @deprecated Use insertSectionTemplateDoc instead.
- * Legacy alias kept for compatibility with callers that insert before footer by default.
- */
-export function insertSectionTemplateBeforeFooter(
-  document: DocumentModel,
-  templateId: SectionTemplateId,
-): DocumentModel {
-  return insertSectionTemplateDoc(document, templateId);
 }

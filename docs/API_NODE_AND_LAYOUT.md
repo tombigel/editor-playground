@@ -7,9 +7,13 @@ Primary source: `src/api/documentApi.ts`
 ### Insert Operations
 
 - `insertContainerDoc(document, subtype, parentId)`
+- `insertLeafDoc(document, role, parentId)`
 - `insertTextDoc(document, parentId)`
 - `insertMediaDoc(document, parentId)`
-- `insertSectionTemplateBeforeFooter(document, templateId)`
+- `insertSectionTemplateDoc(document, templateId, options?)`
+
+`insertLeafDoc` is the API-first insertion surface for editor leaf roles:
+`text`, `heading`, `list`, `richtext`, `code`, `image`, `link`, and `button`.
 
 ### Delete Operations
 

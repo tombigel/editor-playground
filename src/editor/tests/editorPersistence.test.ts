@@ -17,7 +17,6 @@ import {
   clearSessionState,
   createFactoryResetState,
   createInitialState,
-  createUniqueLeaf,
   DEFAULT_DOCUMENT_STORAGE_KEY,
   isStructuralWrapper,
   loadPersistedState,
@@ -756,69 +755,6 @@ describe('editor/editorPersistence', () => {
         if (migrated?.contentType === 'text' && migrated.subtype === 'block') {
           expect(getTextContent(migrated.content.blocks)).toBe('github.com/tombigel/sticky-playground');
           expect(migrated.link?.href).toBe('https://github.com/tombigel/sticky-playground');
-        }
-      }
-    });
-  });
-
-  // ─── createUniqueLeaf ─────────────────────────────────────────────
-
-  describe('createUniqueLeaf', () => {
-    it('creates a leaf node with the correct role and parentId', () => {
-      const doc = buildMinimalDocument();
-      const root = getRoot(doc);
-      const sectionId = root.children.find((id) => {
-        const node = doc.nodes[id];
-        return node?.contentType === 'container' && node.subtype === 'section';
-      });
-      if (!sectionId) {
-        throw new Error('Expected section');
-      }
-
-      const leaf = createUniqueLeaf(doc, 'text', sectionId);
-      expect(leaf.contentType).not.toBe('container');
-      expect(leaf.subtype).toBe('block');
-      expect(leaf.parentId).toBe(sectionId);
-    });
-
-    it('returns a node with an id not already in the document', () => {
-      const doc = buildMinimalDocument();
-      const root = getRoot(doc);
-      const sectionId = root.children[0];
-
-      const leaf = createUniqueLeaf(doc, 'text', sectionId);
-      expect(doc.nodes[leaf.id]).toBeUndefined();
-    });
-
-    it('generates different ids on repeated calls', () => {
-      const doc = buildMinimalDocument();
-      const root = getRoot(doc);
-      const sectionId = root.children[0];
-
-      const leaf1 = createUniqueLeaf(doc, 'text', sectionId);
-      const leaf2 = createUniqueLeaf(doc, 'text', sectionId);
-      expect(leaf1.id).not.toBe(leaf2.id);
-    });
-
-    it('works for all leaf roles', () => {
-      const doc = buildMinimalDocument();
-      const root = getRoot(doc);
-      const sectionId = root.children[0];
-
-      const cases = [
-        { role: 'text' as const, expectedSubtype: 'block', expectedContentType: 'text' },
-        { role: 'list' as const, expectedSubtype: 'list', expectedContentType: 'text' },
-        { role: 'image' as const, expectedSubtype: 'image', expectedContentType: 'media' },
-        { role: 'link' as const, expectedSubtype: 'block', expectedContentType: 'text' },
-        { role: 'button' as const, expectedSubtype: 'block', expectedContentType: 'text' },
-      ] as const;
-      for (const { role, expectedSubtype, expectedContentType } of cases) {
-        const leaf = createUniqueLeaf(doc, role, sectionId);
-        expect(leaf.subtype).toBe(expectedSubtype);
-        expect(leaf.contentType).toBe(expectedContentType);
-        if (role === 'link' && leaf.contentType === 'text') {
-          expect(leaf.htmlTag).toBe('div');
-          expect(leaf.content.blocks[0]).toMatchObject({ type: 'div' });
         }
       }
     });
