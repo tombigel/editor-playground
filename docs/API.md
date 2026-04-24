@@ -126,7 +126,9 @@ Source: `src/api/documentApi.ts`
 | Function | Signature | Description |
 | --- | --- | --- |
 | `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) -> DocumentModel` | Set the programming language for syntax highlighting |
-| `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) -> DocumentModel` | Set the color theme (`'light'` or `'dark'`) |
+| `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) -> DocumentModel` | Set the color theme (`'auto'`, `'light'`, or `'dark'`) |
+| `setCodeBlockTabSizeDoc` | `(document, nodeId, tabSize: number) -> DocumentModel` | Set visual code tab width (`1..8`) without rewriting text |
+| `resetCodeBlockStyleDoc` | `(document, nodeId) -> DocumentModel` | Reset code presentation overrides while preserving raw code and language |
 
 ---
 
@@ -700,7 +702,7 @@ type TextNode = BaseNode & {
   lang?: string;
   htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';  // @deprecated transitional
   link?: LinkExtension;
-  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };  // @deprecated transitional
+  code?: { language: string; theme?: 'auto' | 'light' | 'dark'; highlightedHtml?: string };  // @deprecated transitional
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
@@ -804,7 +806,7 @@ type EditorTextField =
   // Link fields
   | 'linkEnabled' | 'linkType' | 'anchorTargetId' | 'href' | 'openInNewTab' | 'src' | 'alt' | 'targetPageId' | 'pageAnchorId'
   // Code fields
-  | 'codeLanguage' | 'codeTheme'
+  | 'codeLanguage' | 'codeTheme' | 'tabSize'
   // Typography
   | 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize' | 'fontWeight' | 'fontStyle'
   | 'textDecorationLine' | 'lineHeight' | 'direction' | 'textAlign'

@@ -73,26 +73,48 @@ Execution rules:
 - Open follow-ups carried forward:
   - P2-C owns standalone list on-stage editing, including `Enter` as new list item and `Shift+Enter` as same-item soft break.
 
-## P2-B: On-stage editing for standalone code blocks
+## P2-B: Focused code editing for standalone code blocks
 
 - Objective:
   - Add second-click edit entry for standalone code blocks.
   - Support direct editing, language mode including `auto` and `markdown`, and theme controls from the stage toolbar.
-- Status: `planned`
+- Status: `implemented`
 - Allowed files:
-  - Planned during execution
+  - `src/model/types/index.ts`
+  - `src/model/richContent/*`
+  - `src/api/documentApi/text.ts`
+  - `src/render/nodePresentation.tsx`
+  - `src/stage/**`
+  - `src/panels/inspector/contentSections/codeDesignSections.tsx`
+  - `src/panels/fontManagement/ManageFontsPanel.tsx`
+  - focused API/model/render/stage/panel/font tests and docs
 - Read-first files and target lines:
   - Planned during execution
 - Implementation notes:
   - Keep code-theme/background behavior API-owned.
   - Keep code `markdown` mode as highlighted code, not parsed markdown content.
   - Use canonical `TextDocumentContent` for standalone code persistence and editing.
+  - Code edit mode is raw text, not Slate rich text.
+  - `Enter` and `Shift+Enter` insert newline text; `Tab` / `Shift+Tab` indent with literal tabs.
+  - Tab width is visual `tab-size` metadata and does not rewrite stored code.
+  - Code style overrides are inspector-owned and reset preserves raw code plus language.
+  - Code font selection offers System Mono and available mono/code font families, with Manage Fonts prefiltered to `monospace`.
 - Verification commands:
-  - Planned during execution
+  - `npm run test:run -- src/api/tests/documentApi.test.ts src/model/tests/richContent.test.ts src/model/tests/defaults.test.ts`
+  - `npm run test:run -- src/render/tests/nodePresentation.test.tsx src/site/tests/SiteRenderer.test.tsx src/site/tests/siteExport.test.tsx`
+  - `npm run test:run -- src/stage/tests/CodeTextEditOverlay.test.tsx`
+  - `npm run test:run -- src/panels/inspector/tests/ContentSectionRows.test.tsx src/panels/tests/ManageFontsPanel.test.tsx`
+  - `npm run typecheck`
 - Verification result:
-  - Not started
+  - Focused API/model/render/site/stage/panel/font tests passed. `npm run typecheck` passed after each implementation slice. Final `npm run build` is tracked in the final P2-D verification handoff.
 - Commit SHA:
-  - Not started
+  - `d36a228` model/render auto theme and tab size
+  - `a446741` API reset and tab size controls
+  - `f8638bc` focused code stage activation
+  - `39d681a` code indentation keys
+  - `00f4a89` focused code toolbar
+  - `b4f9d13` inspector tab width and reset controls
+  - `f50c506` mono font workflow
 - Open follow-ups carried forward:
   - None yet.
 

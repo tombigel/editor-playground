@@ -39,6 +39,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - document on-stage block text editing
 - cover on-stage list editing
 - document on-stage list editing
+- document focused code editing
 
 ### Fixed
 

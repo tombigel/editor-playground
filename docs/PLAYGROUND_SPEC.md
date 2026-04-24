@@ -629,6 +629,11 @@ Rules:
 - List item `depth` is item-level visual indentation, not recursive nested list schema. The direct children below `ul` / `ol` remain `li` items, and inline styling that spans item boundaries is split per item.
 - Newline text inside a list item preserves indentation because it remains inside the same `li`.
 - The floating stage toolbar for standalone lists is inline-only. List type, bullet/marker style, and ordered-list start remain inspector-owned block-level controls.
+- Standalone code blocks can be edited directly on the stage with the same first-click select, second-click edit lifecycle. Code edit mode is a raw textarea-like editor, not Slate rich text.
+- Stage code editing keeps the node as `subtype: 'code'` and persists exactly one `code-block` in `TextDocumentContent.blocks`.
+- `Enter` and `Shift+Enter` insert newline text. `Tab` and `Shift+Tab` indent or unindent the current line or selected lines with literal tab characters; tab width is visual CSS `tab-size`, not text rewriting.
+- The floating stage toolbar for code is code-only: language plus `Auto` / `Light` / `Dark` theme. Bold, italic, color, link, and other rich inline controls are intentionally absent.
+- Code style overrides sit above Prism highlighting and remain inspector-owned. The inspector exposes theme, tab width, typography/design overrides, a reset action that preserves raw code plus language, and a code-focused mono font picker with a `More monospace fonts` entry into Manage Fonts.
 - Seeded templates use semantic heading tags for primary titles:
   - the default post title is `h1`
   - the primary titles in the sticky demo sections are seeded as `h2`
@@ -1432,7 +1437,7 @@ Naming and title behavior:
 - Standalone block stage edits are API-first: the stage commits canonical `TextDocumentContent` through `setTextDocumentContentDoc()`, including inline marks, inline links, soft-break newline text, and the optional `clearBlockNodeLink` transition for promoted whole-node links.
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
-- Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them.
+- Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching auto/light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them. `auto` follows editor/site light-dark mode and exported CSS falls back to `prefers-color-scheme`.
 - Shared code-block rendering keeps authored leaf width on an outer wrapper while the visible code chrome stays on the inner `<pre><code>` surface. The code surface uses `white-space: pre-wrap` plus break-word wrapping, and standalone code nodes use only `box-shadow` for authored shadows instead of stacking a duplicate `filter: drop-shadow(...)`.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
@@ -1774,7 +1779,7 @@ type RichCodeBlock = {
   type: 'code-block'
   direction?: 'ltr' | 'rtl'
   language?: string
-  theme?: 'light' | 'dark'
+  theme?: 'auto' | 'light' | 'dark'
   highlightedHtml?: string
   children: Array<{
     type: 'code-line'
