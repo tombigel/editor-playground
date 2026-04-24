@@ -30,7 +30,7 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).toContain('data-stage-code-toolbar="true"');
 		expect(markup).toContain("position");
 		expect(markup).toContain("fixed");
-		expect(markup).toContain("width:max-content");
+		expect(markup).toContain("width:min(360px, calc(100vw - 32px))");
 		expect(markup).toContain("flex-wrap");
 		expect(markup).toContain('data-ui="toolbar-control-row"');
 		expect(markup).toContain('data-ui="toolbar-control-group"');
@@ -43,7 +43,10 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).toContain('aria-label="Code theme light"');
 		expect(markup).toContain('aria-label="Code theme dark"');
 		expect(markup).toContain('aria-pressed="true"');
+		expect(markup).toContain("editor-bg-subtle");
+		expect(markup).toContain('data-variant="ghost"');
 		expect(markup).toContain('data-stage-code-edit-textarea="true"');
+		expect(markup).toContain('data-code-theme="auto"');
 		expect(markup).toContain('aria-label="Code editor"');
 		expect(markup).toContain("min-height:120px");
 		expect(markup).toContain("tab-size:4");
@@ -54,6 +57,25 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).not.toContain('data-stage-rich-toolbar="true"');
 		expect(markup).not.toContain('aria-label="Bold"');
 		expect(markup).not.toContain('aria-label="Link"');
+	});
+
+	it("applies selected code theme to the live editor surface", () => {
+		const markup = renderToStaticMarkup(
+			<CodeTextEditOverlay
+				nodeId="code-node"
+				content={createTextDocumentFromCode("const value = 1;", {
+					language: "typescript",
+					theme: "dark",
+				})}
+				contentStyle={{ fontFamily: "monospace" }}
+				onCommit={() => {}}
+				onDiscard={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain('data-code-theme="dark"');
+		expect(markup).toContain("background:#272822");
+		expect(markup).toContain("color:#f8f8f2");
 	});
 
 	it("indents and unindents the current line with literal tabs", () => {

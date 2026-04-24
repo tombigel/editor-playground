@@ -61,6 +61,18 @@ pre[data-code-theme="dark"] code[class*="language-"],
   text-shadow: 0 1px rgba(0, 0, 0, 0.3);
 }
 
+textarea[data-stage-code-edit-textarea="true"][data-code-theme="light"],
+textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"] {
+  color: #172033;
+  background: #f5f2f0;
+}
+
+textarea[data-stage-code-edit-textarea="true"][data-code-theme="dark"],
+:is(body, .editor-shell)[data-editor-theme="dark"] textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"] {
+  color: #f8f8f2;
+  background: #272822;
+}
+
 pre[data-code-theme="dark"] .token.comment,
 pre[data-code-theme="dark"] .token.prolog,
 pre[data-code-theme="dark"] .token.doctype,

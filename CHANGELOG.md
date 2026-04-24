@@ -57,6 +57,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - make code toolbar responsive
 - remove code styling reset button
 - align code toolbar interactions
+- clean up code toolbar interactions
 
 ---
 

@@ -20,6 +20,7 @@ import {
 	getSingleCodeBlockContent,
 	getTextContent,
 } from "../../model/richContent";
+import { CODE_THEME_SURFACE } from "../../model/textNodeDefaults";
 import type {
 	CodeTheme,
 	NodeId,
@@ -30,7 +31,6 @@ import {
 	highlightCode,
 	normalizeCodeLanguage,
 } from "../../render/codeHighlight";
-import { preserveRichSelectionPointerDown } from "./richTextEditOverlay/controls";
 import { ToolbarDragHandle } from "./richTextEditOverlay/RichTextToolbarParts";
 import { useRichToolbarPosition } from "./richTextEditOverlay/useRichToolbarPosition";
 
@@ -116,6 +116,12 @@ function getSelectedLineRange(text: string, selectionStart: number, selectionEnd
 	return { rangeStart, rangeEnd };
 }
 
+function stopCodeToolbarPointerDown(event: {
+	stopPropagation: () => void;
+}) {
+	event.stopPropagation();
+}
+
 export function CodeTextEditOverlay({
 	nodeId,
 	content,
@@ -135,8 +141,17 @@ export function CodeTextEditOverlay({
 	const [language, setLanguage] = useState(() =>
 		normalizeCodeLanguage(codeBlock?.language ?? "plaintext"),
 	);
+	const [languageSelectOpen, setLanguageSelectOpen] = useState(false);
 	const [theme, setTheme] = useState<CodeTheme>(codeBlock?.theme ?? "auto");
 	const preservedStyle = codeBlock?.style;
+	const editContentStyle = useMemo(
+		() =>
+			getCodeEditContentStyle({
+				contentStyle,
+				theme,
+			}),
+		[contentStyle, theme],
+	);
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 	const {
@@ -176,6 +191,7 @@ export function CodeTextEditOverlay({
 				return;
 			}
 			if (
+				languageSelectOpen ||
 				root.contains(target) ||
 				(target instanceof Element &&
 					target.closest('[data-stage-code-toolbar="true"]'))
@@ -189,7 +205,7 @@ export function CodeTextEditOverlay({
 		return () => {
 			globalThis.document?.removeEventListener("pointerdown", handlePointerDown, true);
 		};
-	}, [commitCurrentContent]);
+	}, [commitCurrentContent, languageSelectOpen]);
 
 	useEffect(() => {
 		function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
@@ -248,8 +264,10 @@ export function CodeTextEditOverlay({
 				toolbarDragging={toolbarDragging}
 				onToolbarDragPointerDown={handleToolbarDragPointerDown}
 				language={language}
+				languageSelectOpen={languageSelectOpen}
 				theme={theme}
 				onLanguageChange={setLanguage}
+				onLanguageSelectOpenChange={setLanguageSelectOpen}
 				onThemeChange={setTheme}
 			/>
 			<textarea
@@ -264,7 +282,7 @@ export function CodeTextEditOverlay({
 				onChange={(event) => setCodeText(event.target.value)}
 				onKeyDown={handleKeyDown}
 				style={{
-					...contentStyle,
+					...editContentStyle,
 					display: "block",
 					width: "100%",
 					minHeight,
@@ -272,7 +290,6 @@ export function CodeTextEditOverlay({
 					padding: 0,
 					border: 0,
 					borderRadius: 0,
-					background: "transparent",
 					boxShadow: "none",
 					outline: "none",
 					resize: "none",
@@ -286,6 +303,7 @@ export function CodeTextEditOverlay({
 					userSelect: "text",
 					WebkitUserSelect: "text",
 				}}
+				data-code-theme={theme}
 				aria-label="Code editor"
 			/>
 		</div>
@@ -298,8 +316,10 @@ function CodeEditToolbar({
 	toolbarDragging,
 	onToolbarDragPointerDown,
 	language,
+	languageSelectOpen,
 	theme,
 	onLanguageChange,
+	onLanguageSelectOpenChange,
 	onThemeChange,
 }: {
 	toolbarRef: Ref<HTMLDivElement>;
@@ -309,8 +329,10 @@ function CodeEditToolbar({
 		typeof ToolbarDragHandle
 	>["onPointerDown"];
 	language: string;
+	languageSelectOpen: boolean;
 	theme: CodeTheme;
 	onLanguageChange: (language: string) => void;
+	onLanguageSelectOpenChange: (open: boolean) => void;
 	onThemeChange: (theme: CodeTheme) => void;
 }) {
 	return (
@@ -324,7 +346,7 @@ function CodeEditToolbar({
 				top: `${toolbarPosition.top}px`,
 				left: `${toolbarPosition.left}px`,
 				zIndex: 220,
-				width: "max-content",
+				width: "min(360px, calc(100vw - 32px))",
 				maxWidth: "calc(100vw - 32px)",
 				pointerEvents: "auto",
 			}}
@@ -343,30 +365,34 @@ function CodeEditToolbar({
 					dragging={toolbarDragging}
 					onPointerDown={onToolbarDragPointerDown}
 				/>
-				<ToolbarControlRow className="min-w-0 flex-wrap gap-1">
-					<ToolbarControlGroup className="min-w-0">
+				<ToolbarControlRow className="min-w-0 flex-1 flex-wrap gap-1">
+					<ToolbarControlGroup className="min-w-[112px] flex-1">
 						<CodeToolbarLanguageSelect
 							language={language}
+							open={languageSelectOpen}
 							onLanguageChange={onLanguageChange}
+							onOpenChange={onLanguageSelectOpenChange}
 						/>
 					</ToolbarControlGroup>
 					<ToolbarControlGroup withDividerBefore>
-						{(["auto", "light", "dark"] as const).map((option) => (
-							<Button
-								key={option}
-								type="button"
-								variant={theme === option ? "default" : "outline"}
-								size="sm"
-								className="pointer-events-auto h-7 shrink-0 rounded-sm px-2 text-[11px] capitalize"
-								style={{ pointerEvents: "auto" }}
-								aria-label={`Code theme ${option}`}
-								aria-pressed={theme === option}
-								onPointerDown={preserveRichSelectionPointerDown}
-								onClick={() => onThemeChange(option)}
-							>
-								{option}
-							</Button>
-						))}
+						<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
+							{(["auto", "light", "dark"] as const).map((option) => (
+								<Button
+									key={option}
+									type="button"
+									variant={theme === option ? "default" : "ghost"}
+									size="sm"
+									className="pointer-events-auto h-6 shrink-0 rounded-md px-2 text-[11px] capitalize"
+									style={{ pointerEvents: "auto" }}
+									aria-label={`Code theme ${option}`}
+									aria-pressed={theme === option}
+									onPointerDown={stopCodeToolbarPointerDown}
+									onClick={() => onThemeChange(option)}
+								>
+									{option}
+								</Button>
+							))}
+						</div>
 					</ToolbarControlGroup>
 				</ToolbarControlRow>
 			</div>
@@ -376,10 +402,14 @@ function CodeEditToolbar({
 
 function CodeToolbarLanguageSelect({
 	language,
+	open,
 	onLanguageChange,
+	onOpenChange,
 }: {
 	language: string;
+	open: boolean;
 	onLanguageChange: (language: string) => void;
+	onOpenChange: (open: boolean) => void;
 }) {
 	return (
 		<PopoverTooltip
@@ -388,14 +418,19 @@ function CodeToolbarLanguageSelect({
 			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">Code language</div>}
 		>
-			<Select value={language} onValueChange={onLanguageChange}>
+			<Select
+				open={open}
+				onOpenChange={onOpenChange}
+				value={language}
+				onValueChange={onLanguageChange}
+			>
 				<SelectTrigger
 					aria-label="Code language"
 					size="compact"
-					className="pointer-events-auto h-7 w-[132px] shrink-0 rounded-sm text-xs"
+					className="pointer-events-auto h-7 w-full min-w-0 rounded-sm text-xs"
 					style={{ pointerEvents: "auto" }}
 					data-stage-code-toolbar="true"
-					onPointerDown={preserveRichSelectionPointerDown}
+					onPointerDown={stopCodeToolbarPointerDown}
 				>
 					<span className="truncate text-left">
 						{CODE_LANGUAGE_OPTIONS.find((option) => option.value === language)
@@ -404,12 +439,57 @@ function CodeToolbarLanguageSelect({
 				</SelectTrigger>
 				<SelectContent data-stage-code-toolbar="true">
 					{CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
-						<SelectItem key={value} value={value}>
+						<SelectItem
+							key={value}
+							value={value}
+							data-stage-code-toolbar="true"
+						>
 							{label}
 						</SelectItem>
 					))}
 				</SelectContent>
 			</Select>
 		</PopoverTooltip>
+	);
+}
+
+function getCodeEditContentStyle({
+	contentStyle,
+	theme,
+}: {
+	contentStyle: CSSProperties | undefined;
+	theme: CodeTheme;
+}): CSSProperties {
+	const {
+		background: currentBackground,
+		backgroundColor: currentBackgroundColor,
+		color: currentColor,
+		...rest
+	} = contentStyle ?? {};
+	const nextStyle: CSSProperties = { ...rest };
+	const background = currentBackground ?? currentBackgroundColor;
+
+	if (isAuthoredCodeSurfaceValue(background)) {
+		nextStyle.background = background;
+	} else if (theme !== "auto") {
+		nextStyle.background = CODE_THEME_SURFACE[theme].background;
+	}
+
+	if (isAuthoredCodeSurfaceValue(currentColor)) {
+		nextStyle.color = currentColor;
+	} else if (theme !== "auto") {
+		nextStyle.color = CODE_THEME_SURFACE[theme].color;
+	}
+
+	return nextStyle;
+}
+
+function isAuthoredCodeSurfaceValue(value: unknown): value is string {
+	return typeof value === "string" && !isCodeThemeSurfaceValue(value);
+}
+
+function isCodeThemeSurfaceValue(value: string) {
+	return Object.values(CODE_THEME_SURFACE).some(
+		(surface) => surface.background === value || surface.color === value,
 	);
 }
