@@ -1,4 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createTextDocumentFromCode } from "../../model/richContent";
 import {
@@ -76,6 +78,21 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).toContain('data-code-theme="dark"');
 		expect(markup).toContain("background:#272822");
 		expect(markup).toContain("color:#f8f8f2");
+	});
+
+	it("keeps auto code theme tied to the viewer system preference instead of editor theme", () => {
+		const css = readFileSync(resolve("src/styles.css"), "utf8");
+		expect(css).toContain("@media (prefers-color-scheme: dark)");
+		expect(css).toContain('pre[data-code-theme="auto"]');
+		expect(css).toContain(
+			'textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"]',
+		);
+		expect(css).not.toContain(
+			'[data-editor-theme="dark"] pre[data-code-theme="auto"]',
+		);
+		expect(css).not.toContain(
+			'[data-editor-theme="dark"] textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"]',
+		);
 	});
 
 	it("indents and unindents the current line with literal tabs", () => {

@@ -51,11 +51,9 @@ body {
   background: var(--app-background);
 }
 
-/* Code node dark theme - Okaidia by ocodia, scoped to explicit dark or editor auto-dark. */
+/* Code node dark theme - Okaidia by ocodia. Auto follows the viewer's system scheme. */
 pre[data-code-theme="dark"],
-pre[data-code-theme="dark"] code[class*="language-"],
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"],
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] code[class*="language-"] {
+pre[data-code-theme="dark"] code[class*="language-"] {
   color: #f8f8f2;
   background: #272822;
   text-shadow: 0 1px rgba(0, 0, 0, 0.3);
@@ -67,8 +65,7 @@ textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"] {
   background: #f5f2f0;
 }
 
-textarea[data-stage-code-edit-textarea="true"][data-code-theme="dark"],
-:is(body, .editor-shell)[data-editor-theme="dark"] textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"] {
+textarea[data-stage-code-edit-textarea="true"][data-code-theme="dark"] {
   color: #f8f8f2;
   background: #272822;
 }
@@ -76,16 +73,11 @@ textarea[data-stage-code-edit-textarea="true"][data-code-theme="dark"],
 pre[data-code-theme="dark"] .token.comment,
 pre[data-code-theme="dark"] .token.prolog,
 pre[data-code-theme="dark"] .token.doctype,
-pre[data-code-theme="dark"] .token.cdata,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.comment,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.prolog,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.doctype,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.cdata {
+pre[data-code-theme="dark"] .token.cdata {
   color: #8292a2;
 }
 
-pre[data-code-theme="dark"] .token.punctuation,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.punctuation {
+pre[data-code-theme="dark"] .token.punctuation {
   color: #f8f8f2;
 }
 
@@ -93,19 +85,12 @@ pre[data-code-theme="dark"] .token.property,
 pre[data-code-theme="dark"] .token.tag,
 pre[data-code-theme="dark"] .token.constant,
 pre[data-code-theme="dark"] .token.symbol,
-pre[data-code-theme="dark"] .token.deleted,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.property,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.tag,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.constant,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.symbol,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.deleted {
+pre[data-code-theme="dark"] .token.deleted {
   color: #f92672;
 }
 
 pre[data-code-theme="dark"] .token.boolean,
-pre[data-code-theme="dark"] .token.number,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.boolean,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.number {
+pre[data-code-theme="dark"] .token.number {
   color: #ae81ff;
 }
 
@@ -114,48 +99,101 @@ pre[data-code-theme="dark"] .token.attr-name,
 pre[data-code-theme="dark"] .token.string,
 pre[data-code-theme="dark"] .token.char,
 pre[data-code-theme="dark"] .token.builtin,
-pre[data-code-theme="dark"] .token.inserted,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.selector,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.attr-name,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.string,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.char,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.builtin,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.inserted {
+pre[data-code-theme="dark"] .token.inserted {
   color: #a6e22e;
 }
 
 pre[data-code-theme="dark"] .token.operator,
 pre[data-code-theme="dark"] .token.entity,
 pre[data-code-theme="dark"] .token.url,
-pre[data-code-theme="dark"] .token.variable,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.operator,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.entity,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.url,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.variable {
+pre[data-code-theme="dark"] .token.variable {
   color: #f8f8f2;
 }
 
 pre[data-code-theme="dark"] .token.atrule,
 pre[data-code-theme="dark"] .token.attr-value,
 pre[data-code-theme="dark"] .token.function,
-pre[data-code-theme="dark"] .token.class-name,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.atrule,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.attr-value,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.function,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.class-name {
+pre[data-code-theme="dark"] .token.class-name {
   color: #e6db74;
 }
 
-pre[data-code-theme="dark"] .token.keyword,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.keyword {
+pre[data-code-theme="dark"] .token.keyword {
   color: #66d9ef;
 }
 
 pre[data-code-theme="dark"] .token.regex,
-pre[data-code-theme="dark"] .token.important,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.regex,
-:is(body, .editor-shell)[data-editor-theme="dark"] pre[data-code-theme="auto"] .token.important {
+pre[data-code-theme="dark"] .token.important {
   color: #fd971f;
+}
+
+@media (prefers-color-scheme: dark) {
+  pre[data-code-theme="auto"],
+  pre[data-code-theme="auto"] code[class*="language-"] {
+    color: #f8f8f2;
+    background: #272822;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+  }
+
+  textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"] {
+    color: #f8f8f2;
+    background: #272822;
+  }
+
+  pre[data-code-theme="auto"] .token.comment,
+  pre[data-code-theme="auto"] .token.prolog,
+  pre[data-code-theme="auto"] .token.doctype,
+  pre[data-code-theme="auto"] .token.cdata {
+    color: #8292a2;
+  }
+
+  pre[data-code-theme="auto"] .token.punctuation {
+    color: #f8f8f2;
+  }
+
+  pre[data-code-theme="auto"] .token.property,
+  pre[data-code-theme="auto"] .token.tag,
+  pre[data-code-theme="auto"] .token.constant,
+  pre[data-code-theme="auto"] .token.symbol,
+  pre[data-code-theme="auto"] .token.deleted {
+    color: #f92672;
+  }
+
+  pre[data-code-theme="auto"] .token.boolean,
+  pre[data-code-theme="auto"] .token.number {
+    color: #ae81ff;
+  }
+
+  pre[data-code-theme="auto"] .token.selector,
+  pre[data-code-theme="auto"] .token.attr-name,
+  pre[data-code-theme="auto"] .token.string,
+  pre[data-code-theme="auto"] .token.char,
+  pre[data-code-theme="auto"] .token.builtin,
+  pre[data-code-theme="auto"] .token.inserted {
+    color: #a6e22e;
+  }
+
+  pre[data-code-theme="auto"] .token.operator,
+  pre[data-code-theme="auto"] .token.entity,
+  pre[data-code-theme="auto"] .token.url,
+  pre[data-code-theme="auto"] .token.variable {
+    color: #f8f8f2;
+  }
+
+  pre[data-code-theme="auto"] .token.atrule,
+  pre[data-code-theme="auto"] .token.attr-value,
+  pre[data-code-theme="auto"] .token.function,
+  pre[data-code-theme="auto"] .token.class-name {
+    color: #e6db74;
+  }
+
+  pre[data-code-theme="auto"] .token.keyword {
+    color: #66d9ef;
+  }
+
+  pre[data-code-theme="auto"] .token.regex,
+  pre[data-code-theme="auto"] .token.important {
+    color: #fd971f;
+  }
 }
 
 pre[data-code-color="author"] code[class*="language-"] .token {
