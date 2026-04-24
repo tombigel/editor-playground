@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw, Settings2 } from "lucide-react";
 import { listDocumentFontsForPicker } from "../../../api/fontApi";
 import type { EditorTextField } from "../../../api/documentApi";
-import type { DocumentModel } from "../../../model/types";
+import type { DocumentModel } from "../../../api/documentViewApi";
 import {
 	DEFAULT_SHADOW_BLUR_PX,
 	DEFAULT_SHADOW_COLOR,

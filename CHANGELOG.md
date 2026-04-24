@@ -50,6 +50,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - preserve rich list styles across conversions
 - update code auto theme test expectations
 - document code theme type export
+- keep code inspector on API type surface
 
 ---
 
