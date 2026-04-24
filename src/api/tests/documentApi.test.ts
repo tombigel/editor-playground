@@ -7,6 +7,7 @@ import {
   createTextDocumentFromText,
   createTextDocumentFromCode,
   getSingleListBlockContent,
+  getSingleTextBlockContent,
   getTextContent,
   listContentToRichListBlock,
   richListBlockToListContent,
@@ -873,7 +874,7 @@ describe('api/documentApi', () => {
     });
   });
 
-  it('converts standalone lists to rich list blocks when the list kind is supported', () => {
+  it('converts standalone lists to rich list blocks without flattening inline content', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(
       (node) => node.contentType === 'container' && node.subtype === 'section',
@@ -884,15 +885,34 @@ describe('api/documentApi', () => {
 
     const list = createTextNode('list', section.id);
     list.content = createTextDocumentContent([
-      listContentToRichListBlock({
+      {
         type: 'ol',
         start: 3,
         markerStyle: 'upper-alpha',
-        items: [
-          { text: 'Third', direction: 'ltr' },
-          { text: 'Fourth', direction: 'ltr' },
+        children: [
+          {
+            type: 'list-item',
+            direction: 'ltr',
+            depth: 0,
+            children: [
+              { text: 'Third', bold: true, fontSize: '24px', color: '#123456' },
+            ],
+          },
+          {
+            type: 'list-item',
+            direction: 'rtl',
+            depth: 1,
+            children: [
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com',
+                children: [{ text: 'Fourth', italic: true, backgroundColor: '#ffeeaa' }],
+              },
+            ],
+          },
         ],
-      }),
+      },
     ]);
     document.nodes[list.id] = list;
     document.nodes[section.id].children.push(list.id);
@@ -909,11 +929,81 @@ describe('api/documentApi', () => {
         start: 3,
         markerStyle: 'upper-alpha',
         children: [
-          { type: 'list-item', children: [{ text: 'Third' }] },
-          { type: 'list-item', children: [{ text: 'Fourth' }] },
+          { type: 'list-item', children: [{ text: 'Third', bold: true, fontSize: '24px', color: '#123456' }] },
+          {
+            type: 'list-item',
+            direction: 'rtl',
+            depth: 1,
+            children: [
+              {
+                type: 'link',
+                href: 'https://example.com',
+                children: [{ text: 'Fourth', italic: true, backgroundColor: '#ffeeaa' }],
+              },
+            ],
+          },
         ],
       },
     ]);
+  });
+
+  it('converts standalone lists to text blocks without flattening inline item content', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const list = createTextNode('list', section.id);
+    list.content = createTextDocumentContent([
+      {
+        type: 'ul',
+        markerStyle: 'square',
+        children: [
+          {
+            type: 'list-item',
+            children: [
+              { text: 'Styled', bold: true, fontFamily: 'Inter', fontSize: '20px' },
+            ],
+          },
+          {
+            type: 'list-item',
+            children: [
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com',
+                children: [{ text: 'Linked', underline: true, color: '#0044ff' }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    document.nodes[list.id] = list;
+    document.nodes[section.id].children.push(list.id);
+
+    const next = convertTextNodeDoc(document, list.id, 'block');
+    const node = next.nodes[list.id];
+    if (node.contentType !== 'text' || node.subtype !== 'block') {
+      throw new Error('Expected block text node');
+    }
+
+    const block = getSingleTextBlockContent(node.content);
+    expect(block).toMatchObject({
+      type: 'paragraph',
+      children: [
+        { text: 'Styled', bold: true, fontFamily: 'Inter', fontSize: '20px' },
+        { text: '\n' },
+        {
+          type: 'link',
+          href: 'https://example.com',
+          children: [{ text: 'Linked', underline: true, color: '#0044ff' }],
+        },
+      ],
+    });
   });
 
   it('flattens rich text to code through the explicit text conversion API', () => {

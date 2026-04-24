@@ -138,7 +138,12 @@ function convertTextContent(
 
   if (targetSubtype === 'rich') {
     if (source.subtype === 'list') {
-      return createTextDocumentContent(listContentToRichContent(convertToListContent(source)));
+      const listBlock = getSingleListBlockContent(source.content);
+      return createTextDocumentContent(
+        listBlock
+          ? [structuredClone(listBlock)]
+          : listContentToRichContent(convertToListContent(source)),
+      );
     }
 
     if (source.subtype === 'code') {
@@ -155,6 +160,7 @@ function convertTextContent(
   }
 
   if (source.subtype === 'list') {
+    const listBlock = getSingleListBlockContent(source.content);
     const listContent = convertToListContent(source);
     if (targetSubtype === 'code') {
       const plainText = getListTextContent(listContent);
@@ -163,6 +169,15 @@ function convertTextContent(
         language: source.code?.language ?? 'plaintext',
         highlightedHtml: highlightCode(plainText, source.code?.language ?? 'plaintext'),
       });
+    }
+    if (listBlock) {
+      return createTextDocumentContent([
+        createRichTextBlock(
+          getRichBlockTypeForTextNode(source),
+          flattenListBlockInlineChildren(listBlock),
+          { direction: source.style?.direction },
+        ),
+      ]);
     }
     return createTextDocumentFromText(getListTextContent(listContent), {
       type: getRichBlockTypeForTextNode(source),
@@ -342,6 +357,13 @@ function flattenRichInlineChildren(children: RichInlineNode[]): string {
 function cloneInlineNodes(nodes: RichInlineNode[]): RichInlineNode[] {
   const cloned = structuredClone(nodes) as RichInlineNode[];
   return cloned.length > 0 ? cloned : [createRichTextLeaf('')];
+}
+
+function flattenListBlockInlineChildren(block: Extract<RichBlock, { type: 'ul' | 'ol' }>): RichInlineNode[] {
+  return block.children.flatMap((item, index) => [
+    ...(index > 0 ? [createRichTextLeaf('\n')] : []),
+    ...cloneInlineNodes(item.children),
+  ]);
 }
 
 function splitLinesForListItems(text: string): string[] {
