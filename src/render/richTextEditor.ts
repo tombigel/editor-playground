@@ -1,4 +1,15 @@
-import { createEditor, Editor, Element, Transforms, type BaseEditor, type Descendant } from 'slate';
+import {
+  createEditor,
+  Editor,
+  Element,
+  Path,
+  Point,
+  Range,
+  Transforms,
+  type BaseEditor,
+  type Descendant,
+  type NodeEntry,
+} from 'slate';
 import { withHistory } from 'slate-history';
 import { type ReactEditor, withReact } from 'slate-react';
 import { parseFontWeightInput } from '../api/fontApi';
@@ -20,6 +31,7 @@ import {
   createRichListBlock,
   createRichTextBlock,
   createRichTextLeaf,
+  normalizeListItemDepth,
   normalizeRichContent,
 } from '../model/richContent';
 import { highlightCode } from './codeHighlight';
@@ -49,6 +61,118 @@ export function toSlateValue(content: RichContent): Descendant[] {
 
 export function fromSlateValue(value: Descendant[]): RichContent {
   return normalizeRichContent(value);
+}
+
+export function isSelectionInListItem(editor: BaseEditor): boolean {
+  return findSelectedListItemEntry(editor) !== null;
+}
+
+export function isSelectionAtListItemStart(editor: BaseEditor): boolean {
+  if (!editor.selection || !Range.isCollapsed(editor.selection)) {
+    return false;
+  }
+
+  const entry = findSelectedListItemEntry(editor);
+  if (!entry) {
+    return false;
+  }
+
+  return Point.equals(editor.selection.anchor, Editor.start(editor, entry[1]));
+}
+
+export function insertListItemBreak(editor: BaseEditor): boolean {
+  if (!isSelectionInListItem(editor)) {
+    return false;
+  }
+
+  if (editor.selection && !Range.isCollapsed(editor.selection)) {
+    Transforms.delete(editor);
+  }
+
+  const entry = findSelectedListItemEntry(editor);
+  if (!entry) {
+    return false;
+  }
+
+  const [, listItemPath] = entry;
+  const nextListItemPath = Path.next(listItemPath);
+  const depth = getListItemDepth(entry[0]);
+  Transforms.splitNodes(editor, {
+    always: true,
+    match: isListItemElement,
+  });
+  setListItemDepthAtPath(editor, nextListItemPath, depth);
+  return true;
+}
+
+export function insertListSoftBreak(editor: BaseEditor): boolean {
+  if (!isSelectionInListItem(editor)) {
+    return false;
+  }
+
+  Editor.insertText(editor, '\n');
+  return true;
+}
+
+export function mergeListItemBackward(editor: BaseEditor): boolean {
+  if (!isSelectionAtListItemStart(editor)) {
+    return false;
+  }
+
+  const entry = findSelectedListItemEntry(editor);
+  if (!entry || !Path.hasPrevious(entry[1])) {
+    return false;
+  }
+
+  const [listItem, listItemPath] = entry;
+  const previousListItemPath = Path.previous(listItemPath);
+  const previousNode = Editor.node(editor, previousListItemPath)[0];
+  if (!isListItemElement(previousNode)) {
+    return false;
+  }
+
+  const previousChildrenCount = previousNode.children.length;
+  const mergedListItem: RichListItem = {
+    ...previousNode,
+    children: [
+      ...cloneInlineNodes(previousNode.children),
+      createRichTextLeaf('\n'),
+      ...cloneInlineNodes(listItem.children),
+    ],
+  };
+
+  Editor.withoutNormalizing(editor, () => {
+    Transforms.removeNodes(editor, { at: listItemPath });
+    Transforms.removeNodes(editor, { at: previousListItemPath });
+    Transforms.insertNodes(editor, mergedListItem as unknown as Descendant, {
+      at: previousListItemPath,
+    });
+    Transforms.select(
+      editor,
+      Editor.start(editor, [...previousListItemPath, previousChildrenCount + 1]),
+    );
+  });
+  return true;
+}
+
+export function changeSelectedListItemDepth(editor: BaseEditor, delta: number): boolean {
+  if (!Number.isFinite(delta) || !isSelectionAtListItemStart(editor)) {
+    return false;
+  }
+
+  const entry = findSelectedListItemEntry(editor);
+  if (!entry) {
+    return false;
+  }
+
+  const [listItem, listItemPath] = entry;
+  const currentDepth = getListItemDepth(listItem);
+  const previousDepth = getPreviousListItemDepth(editor, listItemPath);
+  const nextDepth = clampListItemDepth(currentDepth + Math.trunc(delta), previousDepth);
+  if (nextDepth !== currentDepth) {
+    setListItemDepthAtPath(editor, listItemPath, nextDepth);
+  }
+  return true;
 }
 
 export function isMarkActive(editor: BaseEditor, mark: RichMarkName): boolean {
@@ -559,6 +683,66 @@ function flattenInlineNodes(nodes: RichInlineNode[]): string {
 
 function isLinkNode(node: RichInlineNode): node is RichTextLink {
   return Element.isElement(node) && node.type === 'link';
+}
+
+function findSelectedListItemEntry(editor: BaseEditor): NodeEntry<RichListItem> | null {
+  if (!editor.selection) {
+    return null;
+  }
+
+  const [entry] = Editor.nodes(editor, {
+    at: editor.selection,
+    mode: 'lowest',
+    match: isListItemElement,
+  });
+  if (!entry) {
+    return null;
+  }
+
+  const [, path] = entry;
+  try {
+    const [parent] = Editor.parent(editor, path);
+    if (!isListBlockElement(parent)) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  return entry as NodeEntry<RichListItem>;
+}
+
+function isListItemElement(node: unknown): node is RichListItem {
+  return !Editor.isEditor(node) && Element.isElement(node) && node.type === 'list-item';
+}
+
+function isListBlockElement(node: unknown): node is RichListBlock {
+  return !Editor.isEditor(node) && Element.isElement(node) && (node.type === 'ul' || node.type === 'ol');
+}
+
+function getListItemDepth(item: RichListItem): number {
+  return normalizeListItemDepth(item.depth) ?? 0;
+}
+
+function getPreviousListItemDepth(editor: BaseEditor, listItemPath: number[]): number {
+  if (!Path.hasPrevious(listItemPath)) {
+    return 0;
+  }
+
+  const previousNode = Editor.node(editor, Path.previous(listItemPath))[0];
+  return isListItemElement(previousNode) ? getListItemDepth(previousNode) : 0;
+}
+
+function clampListItemDepth(depth: number, previousDepth: number): number {
+  return normalizeListItemDepth(depth, previousDepth) ?? 0;
+}
+
+function setListItemDepthAtPath(editor: BaseEditor, path: number[], depth: number): void {
+  if (depth > 0) {
+    Transforms.setNodes(editor, { depth } as Partial<RichListItem>, { at: path });
+    return;
+  }
+  Transforms.unsetNodes(editor, 'depth', { at: path });
 }
 
 function isNonListTextBlock(block: RichBlock): block is RichTextBlock {

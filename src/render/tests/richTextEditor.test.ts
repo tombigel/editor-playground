@@ -4,13 +4,19 @@ import {
   convertSelectionToCodeBlock,
   convertSelectionToList,
   createRichEditor,
+  changeSelectedListItemDepth,
   fromSlateValue,
   getMarkValue,
   getSelectedCodeLanguage,
   getSelectedStructureMode,
+  insertListItemBreak,
+  insertListSoftBreak,
   insertLink,
   isLinkActive,
   isMarkActive,
+  isSelectionAtListItemStart,
+  isSelectionInListItem,
+  mergeListItemBackward,
   removeLink,
   setMarkValue,
   setSelectedCodeBlockLanguage,
@@ -386,6 +392,184 @@ describe('render/richTextEditor', () => {
       expect(isLinkActive(editor)).toBe(true);
       removeLink(editor);
       expect(isLinkActive(editor)).toBe(false);
+    });
+  });
+
+  describe('list item editing helpers', () => {
+    it('detects whether the selection is inside a list item and at the item start', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'First' }] },
+          ],
+        },
+      ]);
+
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 0 },
+        focus: { path: [0, 0, 0], offset: 0 },
+      });
+      expect(isSelectionInListItem(editor)).toBe(true);
+      expect(isSelectionAtListItemStart(editor)).toBe(true);
+
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 2 },
+        focus: { path: [0, 0, 0], offset: 2 },
+      });
+      expect(isSelectionInListItem(editor)).toBe(true);
+      expect(isSelectionAtListItemStart(editor)).toBe(false);
+    });
+
+    it('splits a list item at the selection and keeps the same depth', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Root' }] },
+            { type: 'list-item', depth: 1, children: [{ text: 'Alpha' }] },
+          ],
+        },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 1, 0], offset: 2 },
+        focus: { path: [0, 1, 0], offset: 2 },
+      });
+
+      expect(insertListItemBreak(editor)).toBe(true);
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Root' }] },
+            { type: 'list-item', depth: 1, children: [{ text: 'Al' }] },
+            { type: 'list-item', depth: 1, children: [{ text: 'pha' }] },
+          ],
+        },
+      ]);
+    });
+
+    it('inserts a soft line break inside the selected list item', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'ol',
+          children: [{ type: 'list-item', children: [{ text: 'Line' }] }],
+        },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 2 },
+        focus: { path: [0, 0, 0], offset: 2 },
+      });
+
+      expect(insertListSoftBreak(editor)).toBe(true);
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ol',
+          children: [{ type: 'list-item', children: [{ text: 'Li\nne' }] }],
+        },
+      ]);
+    });
+
+    it('merges the current list item into the previous item with a newline', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'First' }] },
+            {
+              type: 'list-item',
+              children: [
+                {
+                  type: 'link',
+                  linkType: 'external',
+                  href: 'https://example.com',
+                  openInNewTab: false,
+                  children: [{ text: 'Second' }],
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 1, 0, 0], offset: 0 },
+        focus: { path: [0, 1, 0, 0], offset: 0 },
+      });
+
+      expect(mergeListItemBackward(editor)).toBe(true);
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            {
+              type: 'list-item',
+              children: [
+                { text: 'First\n' },
+                {
+                  type: 'link',
+                  linkType: 'external',
+                  href: 'https://example.com',
+                  openInNewTab: false,
+                  children: [{ text: 'Second' }],
+                },
+                { text: '' },
+              ],
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('changes list depth only at the start of an item and clamps against the previous item', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Root' }] },
+            { type: 'list-item', children: [{ text: 'Child' }] },
+          ],
+        },
+      ]);
+
+      Transforms.select(editor, {
+        anchor: { path: [0, 1, 0], offset: 2 },
+        focus: { path: [0, 1, 0], offset: 2 },
+      });
+      expect(changeSelectedListItemDepth(editor, 1)).toBe(false);
+
+      Transforms.select(editor, {
+        anchor: { path: [0, 1, 0], offset: 0 },
+        focus: { path: [0, 1, 0], offset: 0 },
+      });
+      expect(changeSelectedListItemDepth(editor, 8)).toBe(true);
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Root' }] },
+            { type: 'list-item', depth: 1, children: [{ text: 'Child' }] },
+          ],
+        },
+      ]);
+
+      expect(changeSelectedListItemDepth(editor, -1)).toBe(true);
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Root' }] },
+            { type: 'list-item', children: [{ text: 'Child' }] },
+          ],
+        },
+      ]);
     });
   });
 });
