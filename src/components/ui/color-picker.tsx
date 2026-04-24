@@ -1,38 +1,50 @@
-import * as React from 'react';
-import type { ChangeDetail, ColorInput as HdrColorInputElement } from 'hdr-color-input';
+import * as React from "react";
+import type {
+	ChangeDetail,
+	ColorInput as HdrColorInputElement,
+} from "hdr-color-input";
 
-import { cn } from '@/lib/utils';
-import type { ReactNode } from 'react';
+import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
-type EditorTheme = 'auto' | 'light' | 'dark';
-export type ColorPickerVariant = 'default' | 'swatch';
+type EditorTheme = "auto" | "light" | "dark";
+export type ColorPickerVariant = "default" | "swatch";
 
 function readEditorTheme(): EditorTheme {
-  if (typeof document === 'undefined') {
-    return 'auto';
-  }
+	if (typeof document === "undefined") {
+		return "auto";
+	}
 
-  const candidates = [document.body.dataset.editorTheme, document.documentElement.dataset.editorTheme];
-  const resolvedTheme = candidates.find((value): value is Exclude<EditorTheme, 'auto'> => value === 'light' || value === 'dark');
+	const candidates = [
+		document.body.dataset.editorTheme,
+		document.documentElement.dataset.editorTheme,
+	];
+	const resolvedTheme = candidates.find(
+		(value): value is Exclude<EditorTheme, "auto"> =>
+			value === "light" || value === "dark",
+	);
 
-  return resolvedTheme ?? 'auto';
+	return resolvedTheme ?? "auto";
 }
 
 const loadHdrColorInput =
-  typeof window === 'undefined'
-    ? null
-    : (() => {
-        let promise: Promise<unknown> | null = null;
+	typeof window === "undefined"
+		? null
+		: (() => {
+				let promise: Promise<unknown> | null = null;
 
-        return () => {
-          if (typeof customElements !== 'undefined' && customElements.get('color-input')) {
-            return Promise.resolve();
-          }
+				return () => {
+					if (
+						typeof customElements !== "undefined" &&
+						customElements.get("color-input")
+					) {
+						return Promise.resolve();
+					}
 
-          promise ??= import('hdr-color-input');
-          return promise;
-        };
-      })();
+					promise ??= import("hdr-color-input");
+					return promise;
+				};
+			})();
 
 const EDITOR_COLOR_PICKER_SHADOW_STYLE = `
   .preview {
@@ -214,322 +226,349 @@ const EDITOR_COLOR_PICKER_SHADOW_STYLE = `
 `;
 
 function ColorPickerImpl({
-  value,
-  fallback = '#ffffff',
-  allowAlpha = true,
-  ariaLabel,
-  variant = 'default',
-  className,
-  icon,
-  onChange,
+	value,
+	fallback = "#ffffff",
+	allowAlpha = true,
+	ariaLabel,
+	variant = "default",
+	className,
+	icon,
+	onChange,
 }: {
-  value: string | undefined;
-  fallback?: string;
-  allowAlpha?: boolean;
-  ariaLabel: string;
-  variant?: ColorPickerVariant;
-  className?: string;
-  icon?: ReactNode;
-  onChange: (value: string) => void;
+	value: string | undefined;
+	fallback?: string;
+	allowAlpha?: boolean;
+	ariaLabel: string;
+	variant?: ColorPickerVariant;
+	className?: string;
+	icon?: ReactNode;
+	onChange: (value: string) => void;
 }) {
-  const elementRef = React.useRef<HdrColorInputElement | null>(null);
-  const [isReady, setIsReady] = React.useState(() => (
-    typeof customElements !== 'undefined' && Boolean(customElements.get('color-input'))
-  ));
-  const [theme, setTheme] = React.useState<EditorTheme>(() => readEditorTheme());
-  const resolvedValue = value?.trim() ? value : fallback;
-  const onChangeRef = React.useRef(onChange);
-  const resolvedValueRef = React.useRef(resolvedValue);
-  const frameRef = React.useRef<number | null>(null);
-  const pendingValueRef = React.useRef<string | null>(null);
-  const isOpenRef = React.useRef(false);
+	const elementRef = React.useRef<HdrColorInputElement | null>(null);
+	const [isReady, setIsReady] = React.useState(
+		() =>
+			typeof customElements !== "undefined" &&
+			Boolean(customElements.get("color-input")),
+	);
+	const [theme, setTheme] = React.useState<EditorTheme>(() =>
+		readEditorTheme(),
+	);
+	const resolvedValue = value?.trim() ? value : fallback;
+	const onChangeRef = React.useRef(onChange);
+	const resolvedValueRef = React.useRef(resolvedValue);
+	const frameRef = React.useRef<number | null>(null);
+	const pendingValueRef = React.useRef<string | null>(null);
+	const isOpenRef = React.useRef(false);
 
-  React.useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
+	React.useEffect(() => {
+		onChangeRef.current = onChange;
+	}, [onChange]);
 
-  React.useEffect(() => {
-    resolvedValueRef.current = resolvedValue;
-  }, [resolvedValue]);
+	React.useEffect(() => {
+		resolvedValueRef.current = resolvedValue;
+	}, [resolvedValue]);
 
-  React.useEffect(() => {
-    if (!loadHdrColorInput) {
-      return;
-    }
+	React.useEffect(() => {
+		if (!loadHdrColorInput) {
+			return;
+		}
 
-    void loadHdrColorInput().then(() => setIsReady(true));
-  }, []);
+		void loadHdrColorInput().then(() => setIsReady(true));
+	}, []);
 
-  React.useEffect(() => {
-    if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {
-      return;
-    }
+	React.useEffect(() => {
+		if (
+			typeof document === "undefined" ||
+			typeof MutationObserver === "undefined"
+		) {
+			return;
+		}
 
-    const updateTheme = () => setTheme(readEditorTheme());
-    updateTheme();
+		const updateTheme = () => setTheme(readEditorTheme());
+		updateTheme();
 
-    const observer = new MutationObserver(updateTheme);
+		const observer = new MutationObserver(updateTheme);
 
-    if (document.body) {
-      observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ['data-editor-theme'],
-      });
-    }
+		if (document.body) {
+			observer.observe(document.body, {
+				attributes: true,
+				attributeFilter: ["data-editor-theme"],
+			});
+		}
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-editor-theme'],
-    });
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["data-editor-theme"],
+		});
 
-    return () => observer.disconnect();
-  }, []);
+		return () => observer.disconnect();
+	}, []);
 
-  React.useEffect(() => {
-    const element = elementRef.current;
-    if (!element) {
-      return;
-    }
+	React.useEffect(() => {
+		const element = elementRef.current;
+		if (!element) {
+			return;
+		}
 
-    const forceControlsRefresh = () => {
-      if (element.hasAttribute('no-alpha')) {
-        element.removeAttribute('no-alpha');
-        element.setAttribute('no-alpha', '');
-        return;
-      }
+		const forceControlsRefresh = () => {
+			if (element.hasAttribute("no-alpha")) {
+				element.removeAttribute("no-alpha");
+				element.setAttribute("no-alpha", "");
+				return;
+			}
 
-      element.setAttribute('no-alpha', '');
-      element.removeAttribute('no-alpha');
-    };
+			element.setAttribute("no-alpha", "");
+			element.removeAttribute("no-alpha");
+		};
 
-    const syncValueBeforeOpen = () => {
-      if (isOpenRef.current) {
-        return;
-      }
+		const syncValueBeforeOpen = () => {
+			if (isOpenRef.current) {
+				return;
+			}
 
-      const nextValue = resolvedValueRef.current;
-      if (element.getAttribute('value') === nextValue) {
-        element.removeAttribute('value');
-      }
+			const nextValue = resolvedValueRef.current;
+			if (element.getAttribute("value") === nextValue) {
+				element.removeAttribute("value");
+			}
 
-      element.setAttribute('value', nextValue);
-      forceControlsRefresh();
-    };
+			element.setAttribute("value", nextValue);
+			forceControlsRefresh();
+		};
 
-    const handleChange = (event: Event) => {
-      const detail = (event as CustomEvent<ChangeDetail>).detail;
-      if (detail?.value) {
-        pendingValueRef.current = detail.value;
+		const handleChange = (event: Event) => {
+			const detail = (event as CustomEvent<ChangeDetail>).detail;
+			if (detail?.value) {
+				pendingValueRef.current = detail.value;
 
-        if (frameRef.current !== null || typeof window === 'undefined') {
-          return;
-        }
+				if (frameRef.current !== null || typeof window === "undefined") {
+					return;
+				}
 
-        frameRef.current = window.requestAnimationFrame(() => {
-          frameRef.current = null;
-          const nextValue = pendingValueRef.current;
-          pendingValueRef.current = null;
+				frameRef.current = window.requestAnimationFrame(() => {
+					frameRef.current = null;
+					const nextValue = pendingValueRef.current;
+					pendingValueRef.current = null;
 
-          if (nextValue) {
-            onChangeRef.current(nextValue);
-          }
-        });
-      }
-    };
+					if (nextValue) {
+						onChangeRef.current(nextValue);
+					}
+				});
+			}
+		};
 
-    const handleOpen = () => {
-      isOpenRef.current = true;
-    };
+		const handleOpen = () => {
+			isOpenRef.current = true;
+		};
 
-    const handleClose = () => {
-      isOpenRef.current = false;
-    };
+		const handleClose = () => {
+			isOpenRef.current = false;
+		};
 
-    const handleTriggerClick = (event: Event) => {
-      if (!isOpenRef.current) {
-        return;
-      }
+		const handleTriggerClick = (event: Event) => {
+			if (!isOpenRef.current) {
+				return;
+			}
 
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      element.close();
-    };
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			element.close();
+		};
 
-    const handleHostClick = (event: Event) => {
-      if (!isOpenRef.current) {
-        return;
-      }
+		const handleHostClick = (event: Event) => {
+			if (!isOpenRef.current) {
+				return;
+			}
 
-      const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-      const clickedTrigger = path.some((node) => {
-        if (!(node instanceof HTMLElement)) {
-          return false;
-        }
+			const path =
+				typeof event.composedPath === "function" ? event.composedPath() : [];
+			const clickedTrigger = path.some((node) => {
+				if (!(node instanceof HTMLElement)) {
+					return false;
+				}
 
-        const part = node.getAttribute('part');
-        return node.classList.contains('trigger') || part?.split(/\s+/).includes('trigger') === true;
-      });
+				const part = node.getAttribute("part");
+				return (
+					node.classList.contains("trigger") ||
+					part?.split(/\s+/).includes("trigger") === true
+				);
+			});
 
-      if (!clickedTrigger) {
-        return;
-      }
+			if (!clickedTrigger) {
+				return;
+			}
 
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      element.close();
-    };
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			element.close();
+		};
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.key === 'ArrowDown') {
-        syncValueBeforeOpen();
-      }
-    };
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (
+				event.key === "Enter" ||
+				event.key === " " ||
+				event.key === "Spacebar" ||
+				event.key === "ArrowDown"
+			) {
+				syncValueBeforeOpen();
+			}
+		};
 
-    const trigger = element.shadowRoot?.querySelector<HTMLElement>('[part~="trigger"]');
+		const trigger =
+			element.shadowRoot?.querySelector<HTMLElement>('[part~="trigger"]');
 
-    element.addEventListener('change', handleChange as EventListener);
-    element.addEventListener('open', handleOpen as EventListener);
-    element.addEventListener('close', handleClose as EventListener);
-    element.addEventListener('pointerdown', syncValueBeforeOpen);
-    element.addEventListener('keydown', handleKeyDown);
-    element.addEventListener('click', handleHostClick, { capture: true });
-    trigger?.addEventListener('click', handleTriggerClick, { capture: true });
+		element.addEventListener("change", handleChange as EventListener);
+		element.addEventListener("open", handleOpen as EventListener);
+		element.addEventListener("close", handleClose as EventListener);
+		element.addEventListener("pointerdown", syncValueBeforeOpen);
+		element.addEventListener("keydown", handleKeyDown);
+		element.addEventListener("click", handleHostClick, { capture: true });
+		trigger?.addEventListener("click", handleTriggerClick, { capture: true });
 
-    return () => {
-      element.removeEventListener('change', handleChange as EventListener);
-      element.removeEventListener('open', handleOpen as EventListener);
-      element.removeEventListener('close', handleClose as EventListener);
-      element.removeEventListener('pointerdown', syncValueBeforeOpen);
-      element.removeEventListener('keydown', handleKeyDown);
-      element.removeEventListener('click', handleHostClick, { capture: true });
-      trigger?.removeEventListener('click', handleTriggerClick, { capture: true });
-      if (frameRef.current !== null && typeof window !== 'undefined') {
-        window.cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-      }
-      const nextValue = pendingValueRef.current;
-      pendingValueRef.current = null;
-      if (nextValue) {
-        onChangeRef.current(nextValue);
-      }
-    };
-  }, []);
+		return () => {
+			element.removeEventListener("change", handleChange as EventListener);
+			element.removeEventListener("open", handleOpen as EventListener);
+			element.removeEventListener("close", handleClose as EventListener);
+			element.removeEventListener("pointerdown", syncValueBeforeOpen);
+			element.removeEventListener("keydown", handleKeyDown);
+			element.removeEventListener("click", handleHostClick, { capture: true });
+			trigger?.removeEventListener("click", handleTriggerClick, {
+				capture: true,
+			});
+			if (frameRef.current !== null && typeof window !== "undefined") {
+				window.cancelAnimationFrame(frameRef.current);
+				frameRef.current = null;
+			}
+			const nextValue = pendingValueRef.current;
+			pendingValueRef.current = null;
+			if (nextValue) {
+				onChangeRef.current(nextValue);
+			}
+		};
+	}, []);
 
-  React.useEffect(() => {
-    if (!isReady) {
-      return;
-    }
+	React.useEffect(() => {
+		if (!isReady) {
+			return;
+		}
 
-    const element = elementRef.current;
-    if (!element) {
-      return;
-    }
+		const element = elementRef.current;
+		if (!element) {
+			return;
+		}
 
-    if (element.getAttribute('value') !== resolvedValue) {
-      element.setAttribute('value', resolvedValue);
-    }
-  }, [isReady, resolvedValue]);
+		if (element.getAttribute("value") !== resolvedValue) {
+			element.setAttribute("value", resolvedValue);
+		}
+	}, [isReady, resolvedValue]);
 
-  React.useEffect(() => {
-    if (!isReady) {
-      return;
-    }
+	React.useEffect(() => {
+		if (!isReady) {
+			return;
+		}
 
-    const element = elementRef.current;
-    if (!element) {
-      return;
-    }
+		const element = elementRef.current;
+		if (!element) {
+			return;
+		}
 
-    element.theme = theme;
-  }, [isReady, theme]);
+		element.theme = theme;
+	}, [isReady, theme]);
 
-  React.useEffect(() => {
-    if (!isReady) {
-      return;
-    }
+	React.useEffect(() => {
+		if (!isReady) {
+			return;
+		}
 
-    const element = elementRef.current;
-    if (!element) {
-      return;
-    }
+		const element = elementRef.current;
+		if (!element) {
+			return;
+		}
 
-    element.noAlpha = !allowAlpha;
-  }, [allowAlpha, isReady]);
+		element.noAlpha = !allowAlpha;
+	}, [allowAlpha, isReady]);
 
-  React.useEffect(() => {
-    if (!isReady) {
-      return;
-    }
+	React.useEffect(() => {
+		if (!isReady) {
+			return;
+		}
 
-    const element = elementRef.current;
-    const root = element?.shadowRoot;
-    if (!root || typeof document === 'undefined') {
-      return;
-    }
+		const element = elementRef.current;
+		const root = element?.shadowRoot;
+		if (!root || typeof document === "undefined") {
+			return;
+		}
 
-    const styleSelector = 'style[data-editor-color-picker-shadow-style]';
-    let styleElement = root.querySelector<HTMLStyleElement>(styleSelector);
+		const styleSelector = "style[data-editor-color-picker-shadow-style]";
+		let styleElement = root.querySelector<HTMLStyleElement>(styleSelector);
 
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.setAttribute('data-editor-color-picker-shadow-style', 'true');
-      root.appendChild(styleElement);
-    }
+		if (!styleElement) {
+			styleElement = document.createElement("style");
+			styleElement.setAttribute(
+				"data-editor-color-picker-shadow-style",
+				"true",
+			);
+			root.appendChild(styleElement);
+		}
 
-    if (styleElement.textContent !== EDITOR_COLOR_PICKER_SHADOW_STYLE) {
-      styleElement.textContent = EDITOR_COLOR_PICKER_SHADOW_STYLE;
-    }
-  }, [isReady]);
+		if (styleElement.textContent !== EDITOR_COLOR_PICKER_SHADOW_STYLE) {
+			styleElement.textContent = EDITOR_COLOR_PICKER_SHADOW_STYLE;
+		}
+	}, [isReady]);
 
-  const colorInput = (
-    <color-input
-      ref={elementRef}
-      class={cn(
-        'block min-w-0',
-        variant === 'default' ? 'w-full' : null,
-        variant === 'swatch'
-          ? 'editor-color-picker editor-icon-button-subtle inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-md border p-0 align-top shadow-sm'
-          : null,
-        className,
-      )}
-      data-ui="color-picker"
-      data-variant={variant}
-      data-allow-alpha={allowAlpha ? 'true' : 'false'}
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      value={isReady ? undefined : resolvedValue}
-      theme={!isReady && theme !== 'auto' ? theme : undefined}
-      no-alpha={!isReady && !allowAlpha ? '' : undefined}
-      suppressHydrationWarning
-    />
-  );
+	const colorInput = (
+		<color-input
+			ref={elementRef}
+			class={cn(
+				"block min-w-0",
+				variant === "default" ? "w-full" : null,
+				variant === "swatch"
+					? "editor-color-picker editor-icon-button-subtle inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-md border p-0 align-top shadow-sm"
+					: null,
+				className,
+			)}
+			data-ui="color-picker"
+			data-variant={variant}
+			data-allow-alpha={allowAlpha ? "true" : "false"}
+			aria-label={ariaLabel}
+			title={ariaLabel}
+			value={isReady ? undefined : resolvedValue}
+			theme={!isReady && theme !== "auto" ? theme : undefined}
+			no-alpha={!isReady && !allowAlpha ? "" : undefined}
+			suppressHydrationWarning
+		/>
+	);
 
-  if (icon && variant === 'swatch') {
-    return (
-      <span className="relative inline-flex h-8 w-8 shrink-0 align-top">
-        {colorInput}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          style={{ color: `oklch(from ${resolvedValue} calc(1.21 - L) 0 0)` }}
-        >
-          {icon}
-        </span>
-      </span>
-    );
-  }
+	if (icon && variant === "swatch") {
+		return (
+			<span
+				className={cn(
+					"relative inline-flex h-8 w-8 shrink-0 align-top",
+					className,
+				)}
+			>
+				{colorInput}
+				<span
+					aria-hidden="true"
+					className="pointer-events-none absolute inset-0 flex items-center justify-center"
+					style={{ color: `oklch(from ${resolvedValue} calc(1.21 - L) 0 0)` }}
+				>
+					{icon}
+				</span>
+			</span>
+		);
+	}
 
-  return colorInput;
+	return colorInput;
 }
 
 export const ColorPicker = React.memo(
-  ColorPickerImpl,
-  (prev, next) =>
-    prev.value === next.value &&
-    prev.fallback === next.fallback &&
-    prev.allowAlpha === next.allowAlpha &&
-    prev.ariaLabel === next.ariaLabel &&
-    prev.variant === next.variant &&
-    prev.className === next.className &&
-    prev.icon === next.icon,
+	ColorPickerImpl,
+	(prev, next) =>
+		prev.value === next.value &&
+		prev.fallback === next.fallback &&
+		prev.allowAlpha === next.allowAlpha &&
+		prev.ariaLabel === next.ariaLabel &&
+		prev.variant === next.variant &&
+		prev.className === next.className &&
+		prev.icon === next.icon,
 );

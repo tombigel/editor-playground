@@ -1900,6 +1900,7 @@ While editing, the rich node gets visible stage chrome:
 
 - a floating toolbar built from the shared floating panel shell plus compact shared inputs/selects and inspector-style icon buttons
 - the floating toolbar is arranged as a fixed two-row editor bar rather than a wrapping chip cloud
+- the floating toolbar uses shared horizontal toolbar groups: controls inside each group use tighter spacing, visible groups use wider spacing and subtle token-backed vertical dividers; font family, manage fonts, and font size are one typography group, and compact toolbar controls use a 28px height with 28px square icon buttons
 - the base toolbar is a UI-flow floating panel with a slim integrated left-side drag rail, rendered outside the edited node flow
 - toolbar drag is owned by the rich-edit host using the same pointer-driven lifecycle pattern as the focused panel, uses cached drag geometry instead of remeasuring on every move, clamps inside the viewport below the top bar, and remembers a session-local offset when rich edit is reopened later in the same browser session
 - the stage selection outline is hidden while the rich node is actively being edited
@@ -1911,6 +1912,7 @@ While editing, the rich node gets visible stage chrome:
 - authored text remains directly mouse-selectable inside the stage edit surface
 - the edit surface itself stays visually minimal: no extra padding, no rounded edit frame, and no separate boxed shell around the authored text
 - the toolbar now exposes the shared family-and-weight font picker plus an adjacent manage-fonts action, bold, italic, underline, strikethrough, text color, highlight color, link, block/list/code mode buttons, and compact typography/layout controls, with a visible left grip rail for dragging
+- the same grouped toolbar treatment applies to rich, standalone block, and standalone list edit modes; block and list modes show only their inline control groups and do not reserve space for unavailable rich-only controls
 - text color and highlight color reuse the shared `ColorPicker` swatch control instead of a stage-local native color input
 - text and highlight swatches share the same framed swatch treatment so light and dark colors read as the same visual size in the toolbar
 - font size uses the shared `ValueWithUnit` contract with font-size units, resolves inherited font size into a real field value instead of gray placeholder text, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome

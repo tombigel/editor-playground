@@ -60,7 +60,7 @@ export function ToolbarButton({
 				size="sm"
 				aria-label={label}
 				aria-pressed={active}
-				className="pointer-events-auto h-8 w-8 shrink-0 rounded-sm p-0 text-xs"
+				className="pointer-events-auto h-7 w-7 shrink-0 rounded-sm p-0 text-[11px]"
 				style={{ pointerEvents: "auto" }}
 				onPointerDown={(event) => {
 					event.preventDefault();
@@ -118,7 +118,7 @@ export function CompactSelect({
 					data-stage-rich-select-id={selectId}
 					aria-label={label}
 					size="compact"
-					className="pointer-events-auto h-8 shrink-0 rounded-sm text-xs"
+					className="pointer-events-auto h-7 shrink-0 rounded-sm text-xs"
 					style={{ width, pointerEvents: "auto" }}
 					onPointerDown={preserveRichSelectionPointerDown}
 				>
@@ -160,38 +160,44 @@ export function CompactFontSizeField({
 }) {
 	const [draft, setDraft] = useState(readFontSizeDraftState(value));
 	const [invalid, setInvalid] = useState(false);
-	const options: ValueWithUnitOption[] = FONT_SIZE_UNIT_OPTIONS.map((option) => ({
-		type: "option",
-		value: option,
-		label: option,
-		inputMode: "numeric",
+	const options: ValueWithUnitOption[] = FONT_SIZE_UNIT_OPTIONS.map(
+		(option) => ({
+			type: "option",
+			value: option,
+			label: option,
+			inputMode: "numeric",
+		}),
+	);
+	const suggestions: ValueWithUnitSuggestion[] = FONT_SIZE_SUGGESTIONS_BY_UNIT[
+		draft.unit
+	].map((option) => ({
+		value: formatDisplayValue(option),
+		label: `${formatDisplayValue(option)}${draft.unit}`,
 	}));
-	const suggestions: ValueWithUnitSuggestion[] =
-		FONT_SIZE_SUGGESTIONS_BY_UNIT[draft.unit].map((option) => ({
-			value: formatDisplayValue(option),
-			label: `${formatDisplayValue(option)}${draft.unit}`,
-		}));
 
 	useEffect(() => {
 		setDraft(readFontSizeDraftState(value));
 		setInvalid(false);
 	}, [value]);
 
-	const commitFontSizeDraft = useCallback((nextDraft: string, unit: ToolbarFontUnit) => {
-		if (!nextDraft.trim()) {
-			onCommit("");
-			setInvalid(false);
-			return;
-		}
-		try {
-			const parsed = parseFontSizeValue(`${nextDraft}${unit}`);
-			onCommit(`${formatDisplayValue(parsed.parsed.value)}${unit}`);
-			setInvalid(false);
-		} catch {
-			setDraft(readFontSizeDraftState(value));
-			setInvalid(false);
-		}
-	}, [onCommit, value]);
+	const commitFontSizeDraft = useCallback(
+		(nextDraft: string, unit: ToolbarFontUnit) => {
+			if (!nextDraft.trim()) {
+				onCommit("");
+				setInvalid(false);
+				return;
+			}
+			try {
+				const parsed = parseFontSizeValue(`${nextDraft}${unit}`);
+				onCommit(`${formatDisplayValue(parsed.parsed.value)}${unit}`);
+				setInvalid(false);
+			} catch {
+				setDraft(readFontSizeDraftState(value));
+				setInvalid(false);
+			}
+		},
+		[onCommit, value],
+	);
 
 	const commitDraft = useCallback(() => {
 		commitFontSizeDraft(draft.draft, draft.unit);
@@ -213,7 +219,9 @@ export function CompactFontSizeField({
 					event.stopPropagation();
 				}}
 				onBlur={(event: ReactFocusEvent<HTMLDivElement>) => {
-					if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+					if (
+						event.currentTarget.contains(event.relatedTarget as Node | null)
+					) {
 						return;
 					}
 					commitDraft();
@@ -246,7 +254,9 @@ export function CompactFontSizeField({
 								`${formatDisplayValue(parsed.parsed.value)}${parsed.parsed.unit}`,
 							);
 						} catch {
-							if (FONT_SIZE_UNIT_OPTIONS.includes(nextValue as ToolbarFontUnit)) {
+							if (
+								FONT_SIZE_UNIT_OPTIONS.includes(nextValue as ToolbarFontUnit)
+							) {
 								setDraft((current) => ({
 									...current,
 									unit: nextValue as ToolbarFontUnit,
@@ -263,6 +273,7 @@ export function CompactFontSizeField({
 					ariaLabel={label}
 					invalid={invalid}
 					segmentWidth={36}
+					controlClassName="h-7"
 					suggestions={suggestions}
 					suggestionsOpen={suggestionsOpen}
 					onSuggestionsOpenChange={onSuggestionsOpenChange}
@@ -280,7 +291,9 @@ export function CompactFontSizeField({
 						try {
 							const parsed = parseFontSizeValue(`${nextDraft}${draft.unit}`);
 							setInvalid(false);
-							onCommit(`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`);
+							onCommit(
+								`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`,
+							);
 						} catch {
 							setInvalid(true);
 						}
@@ -315,7 +328,7 @@ export function CompactLineHeightField({
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
 			<div
-				className="pointer-events-auto flex h-8 shrink-0 items-center gap-1"
+				className="pointer-events-auto flex h-7 shrink-0 items-center gap-1"
 				style={{ width, pointerEvents: "auto" }}
 				onPointerDown={(event) => {
 					event.stopPropagation();
@@ -334,7 +347,7 @@ export function CompactLineHeightField({
 						onChange={onChange}
 						placeholder="1.2"
 						includeDisabledStyles={false}
-						inputClassName="min-w-0"
+						inputClassName="h-7 min-w-0 text-[11px]"
 					/>
 				</div>
 			</div>
@@ -407,7 +420,9 @@ export function CompactSpacingField({
 					event.stopPropagation();
 				}}
 				onBlur={(event: ReactFocusEvent<HTMLDivElement>) => {
-					if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+					if (
+						event.currentTarget.contains(event.relatedTarget as Node | null)
+					) {
 						return;
 					}
 					commitDraft();
@@ -424,7 +439,7 @@ export function CompactSpacingField({
 					event.target.blur();
 				}}
 			>
-				<span className="editor-text-muted flex h-8 shrink-0 items-center">
+				<span className="editor-text-muted flex h-7 shrink-0 items-center">
 					{icon}
 				</span>
 				<ValueWithUnit
@@ -465,6 +480,7 @@ export function CompactSpacingField({
 					invalid={invalid}
 					segmentWidth={36}
 					className="min-w-0 flex-1"
+					controlClassName="h-7"
 					includeDisabledStyles={false}
 					onInputBlur={commitDraft}
 					onInputValueChange={(nextDraft) => {
@@ -519,6 +535,7 @@ export function CompactColorField({
 					ariaLabel={label}
 					variant="swatch"
 					icon={icon}
+					className="h-7 w-7 rounded-sm"
 					onChange={onChange}
 				/>
 			</div>

@@ -1,15 +1,10 @@
-import type {
-	PointerEvent as ReactPointerEvent,
-	ReactNode,
-	Ref,
-} from "react";
+import type { PointerEvent as ReactPointerEvent, Ref } from "react";
 import {
 	AlignCenter,
 	AlignLeft,
 	AlignRight,
 	Baseline,
 	Code2,
-	GripVertical,
 	Highlighter,
 	Link2,
 	List,
@@ -26,6 +21,10 @@ import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { PopoverTooltip } from "@/components/ui/popover";
+import {
+	ToolbarControlGroup,
+	ToolbarControlRow,
+} from "@/components/ui/toolbar-control-group";
 
 import type { listDocumentFontsForPicker } from "../../../api/fontApi";
 import type { RichTextBlockType } from "../../../model/types";
@@ -52,6 +51,7 @@ import {
 	type ToolbarFontUnit,
 	type ToolbarSpacingUnit,
 } from "./types";
+import { TextAlignButton, ToolbarDragHandle } from "./RichTextToolbarParts";
 
 export function RichTextToolbar({
 	mode = "rich",
@@ -92,14 +92,19 @@ export function RichTextToolbar({
 	toolbarRef: Ref<HTMLDivElement>;
 	toolbarPosition: { top: number; left: number };
 	toolbarDragging: boolean;
-	onToolbarDragPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+	onToolbarDragPointerDown: (
+		event: ReactPointerEvent<HTMLButtonElement>,
+	) => void;
 	documentFonts: ReturnType<typeof listDocumentFontsForPicker>;
 	currentFontFamily: string;
 	currentFontWeight: number;
 	onOpenManageFonts: () => void;
 	resolvedToolbarFontSizeValue: string;
 	openValueFieldId: RichEditValueFieldId | null;
-	onValueFieldOpenChange: (valueFieldId: RichEditValueFieldId, open: boolean) => void;
+	onValueFieldOpenChange: (
+		valueFieldId: RichEditValueFieldId,
+		open: boolean,
+	) => void;
 	resolveFontSizeUnitValue: (
 		nextUnit: ToolbarFontUnit,
 		currentValue: string,
@@ -176,7 +181,7 @@ export function RichTextToolbar({
 				maxWidth: "calc(100vw - 32px)",
 				pointerEvents: "auto",
 			}}
-			bodyClassName="px-2 py-2"
+			bodyClassName={mode === "rich" ? "px-2 py-1.5" : "px-2 py-1"}
 			bodyStyle={{
 				pointerEvents: "auto",
 				overflow: "visible",
@@ -185,25 +190,14 @@ export function RichTextToolbar({
 				event.stopPropagation();
 			}}
 		>
-			<div className="flex items-stretch gap-2">
-				<button
-					type="button"
-					aria-label="Drag text toolbar"
-					data-stage-rich-toolbar-drag-handle="true"
-					data-dragging={toolbarDragging ? "true" : "false"}
-					className={
-						toolbarDragging
-							? "editor-text-muted flex shrink-0 cursor-grabbing select-none touch-none self-center rounded-md px-1 py-2.5"
-							: "editor-text-muted flex shrink-0 cursor-grab touch-none self-center rounded-md px-1 py-2.5"
-					}
-					onClick={(event) => event.preventDefault()}
+			<div className="flex items-center gap-2">
+				<ToolbarDragHandle
+					dragging={toolbarDragging}
 					onPointerDown={onToolbarDragPointerDown}
-				>
-					<GripVertical size={16} />
-				</button>
+				/>
 				<div className="space-y-1.5">
-					<div className="flex items-center gap-1.5">
-						<div className="flex items-center gap-1">
+					<ToolbarControlRow>
+						<ToolbarControlGroup>
 							<div className="w-[136px] shrink-0">
 								<FontPickerPopover
 									familyValue={currentFontFamily}
@@ -214,6 +208,7 @@ export function RichTextToolbar({
 									onFamilyChange={(value) => onValueMark("fontFamily", value)}
 									onWeightChange={(value) => onValueMark("fontWeight", value)}
 									className="w-full"
+									triggerClassName="h-7 text-[12px] [&>svg]:size-3.5"
 								/>
 							</div>
 							{showBlockControls ? (
@@ -229,7 +224,7 @@ export function RichTextToolbar({
 										type="button"
 										variant="outline"
 										size="icon"
-										className="h-8 w-8 rounded-sm"
+										className="h-7 w-7 rounded-sm"
 										aria-label="Manage fonts"
 										onClick={onOpenManageFonts}
 									>
@@ -237,67 +232,75 @@ export function RichTextToolbar({
 									</Button>
 								</PopoverTooltip>
 							) : null}
-						</div>
-						<CompactFontSizeField
-							label="Font size"
-							value={resolvedToolbarFontSizeValue}
-							width={90}
-							onCommit={(value) => onValueMark("fontSize", value)}
-							suggestionsOpen={openValueFieldId === RICH_VALUE_FIELD_IDS.fontSize}
-							onSuggestionsOpenChange={(open) =>
-								onValueFieldOpenChange(RICH_VALUE_FIELD_IDS.fontSize, open)
-							}
-							resolveUnitValue={resolveFontSizeUnitValue}
-						/>
-						<ToolbarButton
-							label="Bold"
-							active={boldActive}
-							onActivate={() => onBooleanMark("bold")}
-						>
-							<span className="font-black tracking-[-0.02em]">B</span>
-						</ToolbarButton>
-						<ToolbarButton
-							label="Italic"
-							active={italicActive}
-							onActivate={() => onBooleanMark("italic")}
-						>
-							<span className="font-medium italic">I</span>
-						</ToolbarButton>
-						<ToolbarButton
-							label="Underline"
-							active={underlineActive}
-							onActivate={() => onBooleanMark("underline")}
-						>
-							<span className="underline">U</span>
-						</ToolbarButton>
-						<ToolbarButton
-							label="Strikethrough"
-							active={strikethroughActive}
-							onActivate={() => onBooleanMark("strikethrough")}
-						>
-							<span className="line-through">S</span>
-						</ToolbarButton>
-						<CompactColorField
-							label="Text color"
-							value={currentTextColor}
-							icon={<Baseline size={14} />}
-							onChange={(value) => onValueMark("color", value)}
-						/>
-						<CompactColorField
-							label="Highlight color"
-							value={currentHighlightColor}
-							icon={<Highlighter size={14} />}
-							onChange={(value) => onValueMark("backgroundColor", value)}
-						/>
-						<ToolbarButton
-							label="Link"
-							active={linkActive}
-							onActivate={onLinkAction}
-						>
-							<Link2 size={14} />
-						</ToolbarButton>
+							<CompactFontSizeField
+								label="Font size"
+								value={resolvedToolbarFontSizeValue}
+								width={90}
+								onCommit={(value) => onValueMark("fontSize", value)}
+								suggestionsOpen={
+									openValueFieldId === RICH_VALUE_FIELD_IDS.fontSize
+								}
+								onSuggestionsOpenChange={(open) =>
+									onValueFieldOpenChange(RICH_VALUE_FIELD_IDS.fontSize, open)
+								}
+								resolveUnitValue={resolveFontSizeUnitValue}
+							/>
+						</ToolbarControlGroup>
+						<ToolbarControlGroup withDividerBefore>
+							<ToolbarButton
+								label="Bold"
+								active={boldActive}
+								onActivate={() => onBooleanMark("bold")}
+							>
+								<span className="font-black tracking-[-0.02em]">B</span>
+							</ToolbarButton>
+							<ToolbarButton
+								label="Italic"
+								active={italicActive}
+								onActivate={() => onBooleanMark("italic")}
+							>
+								<span className="font-medium italic">I</span>
+							</ToolbarButton>
+							<ToolbarButton
+								label="Underline"
+								active={underlineActive}
+								onActivate={() => onBooleanMark("underline")}
+							>
+								<span className="underline">U</span>
+							</ToolbarButton>
+							<ToolbarButton
+								label="Strikethrough"
+								active={strikethroughActive}
+								onActivate={() => onBooleanMark("strikethrough")}
+							>
+								<span className="line-through">S</span>
+							</ToolbarButton>
+						</ToolbarControlGroup>
+						<ToolbarControlGroup withDividerBefore>
+							<CompactColorField
+								label="Text color"
+								value={currentTextColor}
+								icon={<Baseline size={14} />}
+								onChange={(value) => onValueMark("color", value)}
+							/>
+							<CompactColorField
+								label="Highlight color"
+								value={currentHighlightColor}
+								icon={<Highlighter size={14} />}
+								onChange={(value) => onValueMark("backgroundColor", value)}
+							/>
+						</ToolbarControlGroup>
+						<ToolbarControlGroup withDividerBefore>
+							<ToolbarButton
+								label="Link"
+								active={linkActive}
+								onActivate={onLinkAction}
+							>
+								<Link2 size={14} />
+							</ToolbarButton>
+						</ToolbarControlGroup>
 						{showBlockControls ? (
-							<>
+							<ToolbarControlGroup withDividerBefore>
 								<TextAlignButton
 									label="Align left"
 									active={selectedTextAlign === "left"}
@@ -319,16 +322,18 @@ export function RichTextToolbar({
 								>
 									<AlignRight size={14} />
 								</TextAlignButton>
-							</>
+							</ToolbarControlGroup>
 						) : null}
-					</div>
+					</ToolbarControlRow>
 					{showBlockControls || showListControls ? (
-						<div className="flex items-center gap-1.5">
+						<ToolbarControlRow>
 							{showBlockControls ? (
-								<>
+								<ToolbarControlGroup>
 									<ToolbarButton
 										label={
-											selectedDirection === "rtl" ? "Switch to LTR" : "Switch to RTL"
+											selectedDirection === "rtl"
+												? "Switch to LTR"
+												: "Switch to RTL"
 										}
 										active={selectedDirection === "rtl"}
 										onActivate={onDirectionToggle}
@@ -386,10 +391,10 @@ export function RichTextToolbar({
 											width={110}
 										/>
 									) : null}
-								</>
+								</ToolbarControlGroup>
 							) : null}
 							{showListControls ? (
-								<>
+								<ToolbarControlGroup withDividerBefore={showBlockControls}>
 									<ToolbarButton
 										label="Use ordered list"
 										active={selectedListKind === "ol"}
@@ -402,7 +407,10 @@ export function RichTextToolbar({
 											selectId={RICH_SELECT_IDS.orderedListMarker}
 											open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
 											onOpenChange={(open) =>
-												onSelectOpenChange(RICH_SELECT_IDS.orderedListMarker, open)
+												onSelectOpenChange(
+													RICH_SELECT_IDS.orderedListMarker,
+													open,
+												)
 											}
 											label="Ordered list marker"
 											value={
@@ -432,9 +440,14 @@ export function RichTextToolbar({
 									{structureMode === "ul" ? (
 										<CompactSelect
 											selectId={RICH_SELECT_IDS.unorderedListMarker}
-											open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
+											open={
+												openSelectId === RICH_SELECT_IDS.unorderedListMarker
+											}
 											onOpenChange={(open) =>
-												onSelectOpenChange(RICH_SELECT_IDS.unorderedListMarker, open)
+												onSelectOpenChange(
+													RICH_SELECT_IDS.unorderedListMarker,
+													open,
+												)
 											}
 											label="Unordered list marker"
 											value={
@@ -454,10 +467,10 @@ export function RichTextToolbar({
 											width={92}
 										/>
 									) : null}
-								</>
+								</ToolbarControlGroup>
 							) : null}
 							{showBlockControls ? (
-								<>
+								<ToolbarControlGroup withDividerBefore>
 									<CompactLineHeightField
 										label="Line height"
 										icon={<MoveVertical size={14} />}
@@ -473,30 +486,12 @@ export function RichTextToolbar({
 										onCommit={onBlockSpacingCommit}
 										resolveUnitValue={resolveSpacingUnitValue}
 									/>
-								</>
+								</ToolbarControlGroup>
 							) : null}
-						</div>
+						</ToolbarControlRow>
 					) : null}
 				</div>
 			</div>
 		</FloatingPanelShell>
-	);
-}
-
-function TextAlignButton({
-	label,
-	active,
-	onActivate,
-	children,
-}: {
-	label: string;
-	active: boolean;
-	onActivate: () => void;
-	children: ReactNode;
-}) {
-	return (
-		<ToolbarButton label={label} active={active} onActivate={onActivate}>
-			{children}
-		</ToolbarButton>
 	);
 }

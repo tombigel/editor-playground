@@ -23,10 +23,14 @@ import {
 	TYPOGRAPHY_LINE_HEIGHT_FIELD_WIDTH_PX,
 	TYPOGRAPHY_SIZE_ROW_WIDTH_PX,
 } from "@/panels/inspector/contentSections/shared";
-import { convertRenderedPxToFontSizeValue, formatFieldNumber } from "@/panels/inspector/stageConversions";
+import {
+	convertRenderedPxToFontSizeValue,
+	formatFieldNumber,
+} from "@/panels/inspector/stageConversions";
 import { mockFontFamilies } from "../../mocks";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
+import { TypographyToolbarGroupingDemo } from "./TypographyToolbarGroupingDemo";
 
 function resolveDemoFontSizeMeasurement(mode: "px" | "em" | "rem") {
 	const converted = convertRenderedPxToFontSizeValue(18, mode, {
@@ -37,9 +41,22 @@ function resolveDemoFontSizeMeasurement(mode: "px" | "em" | "rem") {
 }
 
 const TEXT_STYLE_PROPS: PropDefinition[] = [
-	{ name: "node", type: "TextInspectorNode", description: "Current text node supplying typography values." },
-	{ name: "actions", type: "InspectorActionHandlers", description: "Typography mutation handlers for text styles and color." },
-	{ name: "mixed", type: "boolean", description: "Mixed-selection state reflected by shared pills and controls." },
+	{
+		name: "node",
+		type: "TextInspectorNode",
+		description: "Current text node supplying typography values.",
+	},
+	{
+		name: "actions",
+		type: "InspectorActionHandlers",
+		description: "Typography mutation handlers for text styles and color.",
+	},
+	{
+		name: "mixed",
+		type: "boolean",
+		description:
+			"Mixed-selection state reflected by shared pills and controls.",
+	},
 ];
 
 // ---------------------------------------------------------------------------
@@ -391,15 +408,23 @@ export function TypographyDemos() {
 			<ComponentPreview
 				id="composite-text-style"
 				name="Text Style"
-				description="Inspector typography control rail: font picker + manage button, size + line-height, style (B/I/U/S), alignment + direction, and text color. Each row uses InspectorInlineRow."
+				description="Inspector typography control rail and floating toolbar grouping: font picker + manage button, size + line-height, style (B/I/U/S), alignment + direction, text color, and grouped text-editing toolbar clusters."
 				sourceFile="src/panels/inspector/contentSections/shared.tsx"
 				props={TEXT_STYLE_PROPS}
 			>
 				<div className="space-y-8">
 					<TextStyleFieldsDemo />
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+							Floating toolbar groups
+						</div>
+						<TypographyToolbarGroupingDemo />
+					</div>
 					{/* Multi-select (mixed) */}
 					<div>
-						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+							Multi-select
+						</div>
 						<TextStyleMixedDemo />
 					</div>
 				</div>

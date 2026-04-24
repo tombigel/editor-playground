@@ -825,7 +825,23 @@ Rules:
 - use `FormField` only for true label/control rows; keep dense composite controls like `X/Y/W/H`, padding matrices, reorder clusters, and border/shadow assemblies custom
 - the `layout` prop is on `FormField` only; `LabeledControlRow` and `LabeledFieldStack` remain available as lower-level primitives for non-inspector contexts
 
-### 13.2 Color Picker Note
+### 13.3 Horizontal Toolbar Groups
+
+Implementation reference: [src/components/ui/toolbar-control-group.tsx](../src/components/ui/toolbar-control-group.tsx)
+
+Use `ToolbarControlRow` and `ToolbarControlGroup` for dense horizontal editor toolbars, including the floating text editing toolbar.
+
+Rules:
+
+- internal spacing inside a toolbar group is tight (`4px`)
+- spacing between groups is wider (`8px`)
+- compact floating toolbar controls use `28px` height, with icon buttons also using `28px` width
+- compact floating toolbar shells use tighter vertical padding: rich two-row toolbars use `6px`, single-line block/list toolbars use `4px`
+- optional vertical dividers are allowed between visible groups and must use `editor-border-subtle`
+- dividers are visual only (`aria-hidden`) and must not add focus targets
+- hidden mode-specific toolbar groups must not leave stray dividers or extra spacing
+
+### 13.4 Color Picker Note
 
 Implementation reference:
 

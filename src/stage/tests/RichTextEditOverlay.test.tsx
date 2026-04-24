@@ -24,6 +24,12 @@ describe("stage/RichTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain('data-stage-rich-toolbar="true"');
+		expect(markup).toContain("h-7");
+		expect(markup).toContain("w-7");
+		expect(markup).toContain('data-ui="toolbar-control-row"');
+		expect(markup).toContain('data-ui="toolbar-control-group"');
+		expect(markup).toContain('data-ui="toolbar-control-divider"');
+		expect(markup.match(/data-ui="toolbar-control-divider"/g)?.length).toBe(6);
 		expect(markup).not.toContain(
 			'data-stage-rich-toolbar="true" popover="manual"',
 		);
@@ -51,9 +57,13 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain('type="number"');
 		expect(markup).toContain("editor-text-strong");
 		expect(markup).toContain("editor-border-subtle");
-		expect(markup).toContain("focus-visible:outline-[color:var(--editor-focus-ring-strong)]");
+		expect(markup).toContain(
+			"focus-visible:outline-[color:var(--editor-focus-ring-strong)]",
+		);
 		expect(markup).toContain("Inherit");
-		expect(markup).not.toContain('aria-label="Font size unit" class="editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center rounded-sm outline-none disabled:cursor-not-allowed');
+		expect(markup).not.toContain(
+			'aria-label="Font size unit" class="editor-bg-surface editor-border-subtle editor-text-strong flex w-full items-center rounded-sm outline-none disabled:cursor-not-allowed',
+		);
 		expect(markup).not.toContain("Rich text edit");
 		expect(markup).not.toContain("Cmd/Ctrl+Enter saves");
 		expect(markup).toContain("min-height:96px");
@@ -90,21 +100,24 @@ describe("stage/RichTextEditOverlay", () => {
 		const markup = renderToStaticMarkup(
 			<RichTextEditOverlay
 				nodeId="rich-node"
-				content={createTextDocumentContent([
-					{
-						type: "paragraph",
-						lineHeight: 1.8,
-						style: { textAlign: "center" },
-						children: [
-							{
-								type: "link",
-								linkType: "external",
-								href: "https://example.com",
-								children: [{ text: "Live rich styling" }],
-							},
-						],
-					},
-				], { blockGap: 24 })}
+				content={createTextDocumentContent(
+					[
+						{
+							type: "paragraph",
+							lineHeight: 1.8,
+							style: { textAlign: "center" },
+							children: [
+								{
+									type: "link",
+									linkType: "external",
+									href: "https://example.com",
+									children: [{ text: "Live rich styling" }],
+								},
+							],
+						},
+					],
+					{ blockGap: 24 },
+				)}
 				minHeight="96px"
 				onCommit={() => {}}
 				onUpdateBlockGap={() => {}}
@@ -152,6 +165,8 @@ describe("stage/RichTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain('data-stage-rich-toolbar="true"');
+		expect(markup).toContain('data-ui="toolbar-control-group"');
+		expect(markup.match(/data-ui="toolbar-control-divider"/g)?.length).toBe(3);
 		expect(markup).toContain('aria-label="Font size"');
 		expect(markup).toContain('aria-label="Bold"');
 		expect(markup).toContain('aria-label="Italic"');
@@ -194,6 +209,8 @@ describe("stage/RichTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain('data-stage-rich-toolbar="true"');
+		expect(markup).toContain('data-ui="toolbar-control-group"');
+		expect(markup.match(/data-ui="toolbar-control-divider"/g)?.length).toBe(3);
 		expect(markup).toContain('aria-label="Font size"');
 		expect(markup).toContain('aria-label="Bold"');
 		expect(markup).toContain('aria-label="Italic"');
