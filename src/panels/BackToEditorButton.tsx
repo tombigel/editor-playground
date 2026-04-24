@@ -29,7 +29,7 @@ export function BackToEditorButton() {
         onClick={handleClick}
         variant="outline"
         size="sm"
-        className="border-slate-900/15 bg-white/40 text-slate-900 shadow-lg"
+        className="border-[var(--editor-back-to-editor-button-border)] bg-[var(--editor-back-to-editor-button-background)] text-[var(--editor-back-to-editor-button-text)] shadow-[var(--editor-back-to-editor-button-shadow)] hover:bg-[var(--editor-back-to-editor-button-hover-background)]"
       >
         Back to Editor
         <span aria-hidden="true">←</span>

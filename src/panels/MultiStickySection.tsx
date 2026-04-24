@@ -11,6 +11,8 @@ import type { InspectorActionHandlers } from './inspector/types';
 import { resolveSharedBoolean, resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
 
 const MIXED_SELECT_VALUE = '__mixed__';
+const MIXED_SWITCH_CLASS = '!bg-[var(--editor-switch-background-mixed)] data-[state=unchecked]:!bg-[var(--editor-switch-background-mixed)]';
+const MIXED_SWITCH_INDICATOR_CLASS = 'h-0.5 w-3 rounded-full bg-[var(--editor-switch-mixed-indicator)]';
 
 type Props = {
   selectedNodes: DocumentNode[];
@@ -89,11 +91,11 @@ export function MultiStickySection({
           <Switch
             checked={stickyEnabledState.mixed ? false : stickyEnabledState.value}
             onCheckedChange={actions.onStickyEnabled}
-            className={stickyEnabledState.mixed ? 'bg-slate-400 data-[state=unchecked]:bg-slate-400' : undefined}
+            className={stickyEnabledState.mixed ? MIXED_SWITCH_CLASS : undefined}
           />
           {stickyEnabledState.mixed ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <span className="h-0.5 w-3 rounded-full bg-white" />
+              <span className={MIXED_SWITCH_INDICATOR_CLASS} />
             </div>
           ) : null}
         </div>
@@ -242,11 +244,11 @@ export function MultiStickySection({
                   <Switch
                     checked={stickyElevatedState.mixed ? false : stickyElevatedState.value}
                     onCheckedChange={actions.onStickyElevated}
-                    className={stickyElevatedState.mixed ? 'bg-slate-400 data-[state=unchecked]:bg-slate-400' : undefined}
+                    className={stickyElevatedState.mixed ? MIXED_SWITCH_CLASS : undefined}
                   />
                   {stickyElevatedState.mixed ? (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                      <span className="h-0.5 w-3 rounded-full bg-white" />
+                      <span className={MIXED_SWITCH_INDICATOR_CLASS} />
                     </div>
                   ) : null}
                 </div>

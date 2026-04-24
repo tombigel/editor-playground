@@ -387,6 +387,13 @@ Approved interaction colors:
 
 Snap guides are 1px overlay lines that appear during drag to indicate alignment. Each source role uses a distinct hue, and center/middle guides use a dashed style to distinguish from edge guides.
 
+Grid lane and snap fallback tokens:
+
+| Role | Token |
+| --- | --- |
+| Grid lane overlay | `--editor-grid-lane-background` |
+| Default snap guide | `--editor-snap-guide-default` |
+
 Snap guide color tokens:
 
 | Role | Token | Color |
@@ -552,6 +559,8 @@ Spec:
 - track radius: full
 - unchecked track: `--editor-switch-background`
 - checked track: accent blue
+- mixed-value track: `--editor-switch-background-mixed`
+- mixed-value indicator: `--editor-switch-mixed-indicator`
 - thumb: white, circular, small shadow
 
 ### 11.7 Cards
@@ -861,6 +870,8 @@ Sticky guide overlays use dedicated CSS tokens so they stay readable across acce
 Rules:
 
 - do not hard-code guide colors in stage components; always use the tokens above
+- hidden-node ghost overlays use `--editor-hidden-ghost-stripe` and `--editor-hidden-ghost-border`
+- site preview return affordances use `--editor-back-to-editor-button-*` tokens so they stay legible across light and dark editor themes
 - token values are resolved by `resolveStickyGuideColors` and `resolveAccentSurfaceColors` in `src/lib/theme.ts` and injected as CSS custom properties on the root shell element
 - the elevation inspector controls (Elevation toggle, Elevate this node toggle) follow the same Switch styling as all other boolean inspector controls — no custom accent or one-off color treatment
 

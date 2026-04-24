@@ -74,10 +74,10 @@
   pointer-events: none;
   background-image: repeating-linear-gradient(
     135deg,
-    rgba(128, 128, 128, 0.22) 0 10px,
-    rgba(128, 128, 128, 0) 10px 20px
+    var(--editor-hidden-ghost-stripe) 0 10px,
+    transparent 10px 20px
   );
-  border: 1px solid rgba(128, 128, 128, 0.28);
+  border: 1px solid var(--editor-hidden-ghost-border);
   border-radius: inherit;
 }
 
@@ -240,7 +240,7 @@
 
 .grid-lane {
   position: absolute;
-  background: rgba(55, 114, 255, 0.14);
+  background: var(--editor-grid-lane-background);
 }
 
 .grid-lane-vertical {
@@ -267,10 +267,10 @@
   width: 1px;
   background: linear-gradient(
     to bottom,
-    rgba(22, 104, 255, 0),
-    rgba(22, 104, 255, 0.7) 20%,
-    rgba(22, 104, 255, 0.7) 80%,
-    rgba(22, 104, 255, 0)
+    transparent,
+    var(--editor-snap-guide-default) 20%,
+    var(--editor-snap-guide-default) 80%,
+    transparent
   );
 }
 
@@ -338,7 +338,7 @@
 
 .stage-wrapper.role-header .content-wrapper,
 .stage-wrapper.role-footer .content-wrapper {
-  background: #fff;
+  background: var(--editor-content-background);
 }
 
 .sticky-spacer-layer {

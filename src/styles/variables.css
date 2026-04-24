@@ -51,6 +51,8 @@
   --editor-select-highlight-background: #eff6ff;
   --editor-switch-background: #cbd5e1;
   --editor-switch-background-checked: var(--editor-accent);
+  --editor-switch-background-mixed: #94a3b8;
+  --editor-switch-mixed-indicator: #ffffff;
   --editor-slider-track-background: #dbe5f0;
   --editor-slider-range-background: var(--editor-accent);
   --editor-slider-thumb-background: #ffffff;
@@ -90,6 +92,17 @@
   --editor-focus-ring-offset: var(--editor-surface-background);
   --editor-button-destructive-text: #b42318;
   --editor-button-destructive-text-hover: #b42318;
+  --editor-back-to-editor-button-background: color-mix(in srgb, var(--editor-surface-background) 72%, transparent);
+  --editor-back-to-editor-button-hover-background: color-mix(in srgb, var(--editor-surface-background) 92%, transparent);
+  --editor-back-to-editor-button-border: color-mix(in srgb, var(--editor-utility-text-strong) 15%, transparent);
+  --editor-back-to-editor-button-text: var(--editor-utility-text-strong);
+  --editor-back-to-editor-button-shadow:
+    0 10px 15px -3px rgba(18, 32, 51, 0.1),
+    0 4px 6px -4px rgba(18, 32, 51, 0.1);
+  --editor-hidden-ghost-stripe: color-mix(in srgb, var(--editor-utility-text-muted) 22%, transparent);
+  --editor-hidden-ghost-border: color-mix(in srgb, var(--editor-utility-text-muted) 28%, transparent);
+  --editor-grid-lane-background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
+  --editor-snap-guide-default: color-mix(in srgb, var(--editor-accent) 70%, transparent);
   --editor-snap-guide-component: rgba(20, 184, 166, 0.75);
   --editor-snap-guide-page: rgba(217, 70, 239, 0.78);
   --editor-snap-guide-section: rgba(245, 158, 11, 0.78);
@@ -307,6 +320,8 @@ body[data-editor-theme='dark'] {
   );
   --editor-switch-background: #334155;
   --editor-switch-background-checked: var(--editor-accent);
+  --editor-switch-background-mixed: color-mix(in srgb, var(--editor-accent) 16%, #64748b);
+  --editor-switch-mixed-indicator: #f8fafc;
   --editor-slider-track-background: #263244;
   --editor-slider-range-background: color-mix(in srgb, var(--editor-accent) 68%, #c6d4ff);
   --editor-slider-thumb-background: color-mix(
@@ -341,6 +356,17 @@ body[data-editor-theme='dark'] {
   --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 18%, transparent);
   --editor-button-destructive-text: rgba(255, 255, 255, 0.94);
   --editor-button-destructive-text-hover: #ffffff;
+  --editor-back-to-editor-button-background: color-mix(in srgb, var(--editor-surface-background) 82%, transparent);
+  --editor-back-to-editor-button-hover-background: color-mix(in srgb, var(--editor-surface-background) 96%, transparent);
+  --editor-back-to-editor-button-border: color-mix(in srgb, var(--editor-utility-text-strong) 16%, transparent);
+  --editor-back-to-editor-button-text: var(--editor-utility-text-strong);
+  --editor-back-to-editor-button-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.22),
+    0 4px 6px -4px rgba(0, 0, 0, 0.22);
+  --editor-hidden-ghost-stripe: color-mix(in srgb, var(--editor-utility-text-muted) 24%, transparent);
+  --editor-hidden-ghost-border: color-mix(in srgb, var(--editor-utility-text-muted) 34%, transparent);
+  --editor-grid-lane-background: color-mix(in srgb, var(--editor-accent) 22%, transparent);
+  --editor-snap-guide-default: color-mix(in srgb, var(--editor-accent) 76%, transparent);
   --editor-template-tag-background: rgba(16, 185, 129, 0.14);
   --editor-template-tag-text: #86efc5;
   --editor-template-tag-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.14);

@@ -108,4 +108,52 @@ describe('panels/sticky sections', () => {
     expect(markup).toContain('>Auto<');
     expect(markup).toContain('>Custom<');
   });
+
+  it('uses editor tokens for mixed multi-select switch styling', () => {
+    const document = createInitialDocument();
+    const nodes = Object.values(document.nodes).filter((candidate) => candidate.contentType === 'text').slice(0, 2);
+
+    const [firstNode, secondNode] = nodes;
+
+    if (!firstNode || !secondNode || firstNode.contentType !== 'text' || secondNode.contentType !== 'text') {
+      throw new Error('Expected two text nodes');
+    }
+
+    firstNode.sticky = {
+      enabled: true,
+      elevated: true,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'auto',
+      duration: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      durationTop: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      durationBottom: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      offsetTop: { raw: '0vh', parsed: { value: 0, unit: 'vh' } },
+    };
+    secondNode.sticky = {
+      enabled: false,
+      elevated: false,
+      target: 'self',
+      edges: { top: true, bottom: false },
+      durationMode: 'auto',
+      duration: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      durationTop: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      durationBottom: { raw: '100vh', parsed: { value: 100, unit: 'vh' } },
+      offsetTop: { raw: '0vh', parsed: { value: 0, unit: 'vh' } },
+    };
+
+    const markup = renderToStaticMarkup(
+      <MultiStickySection
+        selectedNodes={nodes}
+        actions={ACTIONS}
+        focusedMode={null}
+        globalStickyElevation={false}
+      />,
+    );
+
+    expect(markup).toContain('--editor-switch-background-mixed');
+    expect(markup).toContain('--editor-switch-mixed-indicator');
+    expect(markup).not.toContain('bg-slate-400');
+    expect(markup).not.toContain('h-0.5 w-3 rounded-full bg-white');
+  });
 });

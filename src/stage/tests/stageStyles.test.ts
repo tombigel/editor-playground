@@ -23,6 +23,18 @@ describe('stage/stage styles', () => {
     expect(styles).toContain('background: var(--editor-sticky-auto-label-background);');
   });
 
+  it('uses editor tokens for stage snap and grid overlays', () => {
+    expect(styles).toContain('--editor-grid-lane-background: color-mix(in srgb, var(--editor-accent) 14%, transparent);');
+    expect(styles).toContain('--editor-snap-guide-default: color-mix(in srgb, var(--editor-accent) 70%, transparent);');
+    expect(styles).toContain('background: var(--editor-grid-lane-background);');
+    expect(styles).toContain('var(--editor-snap-guide-default) 20%');
+    expect(styles).toContain('--editor-hidden-ghost-stripe');
+    expect(styles).toContain('--editor-hidden-ghost-border');
+    expect(styles).not.toContain('rgba(55, 114, 255, 0.14)');
+    expect(styles).not.toContain('rgba(22, 104, 255, 0.7)');
+    expect(styles).not.toContain('rgba(128, 128, 128, 0.22)');
+  });
+
   it('scopes inspector control tokens to the floating focused panel', () => {
     expect(styles).toContain('.editor-focused-panel');
     expect(styles).toContain("[data-ui='button'][data-variant='default']");
