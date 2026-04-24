@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Settings2 } from "lucide-react";
+import { Settings2, TextWrap } from "lucide-react";
 import { listDocumentFontsForPicker } from "../../../api/fontApi";
 import type { EditorTextField } from "../../../api/documentApi";
 import type { DocumentModel } from "../../../api/documentViewApi";
@@ -91,6 +91,7 @@ export function CodeTextStyleSection({
 			? node.content.blocks[0]
 			: undefined;
 	const tabSize = node.style?.tabSize ?? codeBlock?.style?.tabSize ?? 2;
+	const wrapEnabled = (node.style?.textWrap ?? codeBlock?.style?.textWrap) !== "single-line";
 	const currentFamily = node.style?.fontFamily ?? SYSTEM_MONO_FONT_VALUE;
 	const documentFonts = listDocumentFontsForPicker(document);
 	const codeFonts = documentFonts.filter(
@@ -282,6 +283,21 @@ export function CodeTextStyleSection({
 					inputClassName="px-1"
 					onChange={(value) => onTextChange("tabSize", String(value))}
 				/>
+			</FormField>
+			<FormField
+				label="Wrap"
+				layout="inline"
+				controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
+			>
+				<TextStyleIconButton
+					label={wrapEnabled ? "Wrapped code" : "Horizontal scroll"}
+					active={wrapEnabled}
+					onClick={() =>
+						onTextChange("textWrap", wrapEnabled ? "single-line" : "wrap")
+					}
+				>
+					<TextWrap className="h-4 w-4" />
+				</TextStyleIconButton>
 			</FormField>
 		</InspectorSectionCard>
 	);

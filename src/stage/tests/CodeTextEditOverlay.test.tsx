@@ -20,6 +20,7 @@ describe("stage/CodeTextEditOverlay", () => {
 				contentStyle={{ fontFamily: "monospace" }}
 				minHeight="120px"
 				tabSize={4}
+				wrap={false}
 				onCommit={() => {}}
 				onDiscard={() => {}}
 			/>,
@@ -46,6 +47,9 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).toContain('aria-label="Code editor"');
 		expect(markup).toContain("min-height:120px");
 		expect(markup).toContain("tab-size:4");
+		expect(markup).toContain('wrap="off"');
+		expect(markup).toContain("white-space:pre");
+		expect(markup).toContain("overflow-x:auto");
 		expect(markup).toContain("const value = 1;");
 		expect(markup).not.toContain('data-stage-rich-toolbar="true"');
 		expect(markup).not.toContain('aria-label="Bold"');

@@ -632,6 +632,7 @@ Rules:
 - Standalone code blocks can be edited directly on the stage with the same first-click select, second-click edit lifecycle. Code edit mode is a raw textarea-like editor, not Slate rich text.
 - Stage code editing keeps the node as `subtype: 'code'` and persists exactly one `code-block` in `TextDocumentContent.blocks`.
 - `Enter` and `Shift+Enter` insert newline text. `Tab` and `Shift+Tab` indent or unindent the current line or selected lines with literal tab characters; tab width is visual CSS `tab-size`, not text rewriting.
+- Code wrap is inspector-owned presentation metadata. Wrapped code soft-wraps long lines; unwrapped code keeps literal text unchanged and exposes horizontal overflow with `overflow-x: auto`.
 - The floating stage toolbar for code uses the common draggable toolbar chrome and is code-only: language plus `Auto` / `Light` / `Dark` theme. Bold, italic, color, link, and other rich inline controls are intentionally absent.
 - Code style overrides sit above Prism highlighting and remain inspector-owned. The inspector exposes theme, tab width, typography/design overrides, and a code-focused mono font picker with a `More monospace fonts` entry into Manage Fonts.
 - Seeded templates use semantic heading tags for primary titles:

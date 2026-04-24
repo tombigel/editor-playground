@@ -30,6 +30,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add focused code editor toolbar
 - add code tab width and reset controls
 - add code-focused mono font workflow
+- add wrap presentation control
 
 ### Changed
 

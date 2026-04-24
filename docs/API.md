@@ -128,6 +128,7 @@ Source: `src/api/documentApi.ts`
 | `setCodeBlockLanguageDoc` | `(document, nodeId, language: string) -> DocumentModel` | Set the programming language for syntax highlighting |
 | `setCodeBlockThemeDoc` | `(document, nodeId, theme: string) -> DocumentModel` | Set the color theme (`'auto'`, `'light'`, or `'dark'`) |
 | `setCodeBlockTabSizeDoc` | `(document, nodeId, tabSize: number) -> DocumentModel` | Set visual code tab width (`1..8`) without rewriting text |
+| `setCodeBlockWrapDoc` | `(document, nodeId, wrap: boolean) -> DocumentModel` | Toggle soft wrapping for code lines; disabled code scrolls horizontally |
 | `resetCodeBlockStyleDoc` | `(document, nodeId) -> DocumentModel` | Reset code presentation overrides while preserving raw code and language |
 
 ---

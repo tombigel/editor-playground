@@ -40,6 +40,7 @@ type CodeTextEditOverlayProps = {
 	contentStyle?: CSSProperties;
 	minHeight?: string;
 	tabSize?: number;
+	wrap?: boolean;
 	onCommit: (id: NodeId, content: TextDocumentContent) => void;
 	onDiscard: () => void;
 };
@@ -121,6 +122,7 @@ export function CodeTextEditOverlay({
 	contentStyle,
 	minHeight,
 	tabSize = 2,
+	wrap = true,
 	onCommit,
 	onDiscard,
 }: CodeTextEditOverlayProps) {
@@ -258,6 +260,7 @@ export function CodeTextEditOverlay({
 				autoCapitalize="off"
 				autoComplete="off"
 				autoCorrect="off"
+				wrap={wrap ? "soft" : "off"}
 				onChange={(event) => setCodeText(event.target.value)}
 				onKeyDown={handleKeyDown}
 				style={{
@@ -273,9 +276,10 @@ export function CodeTextEditOverlay({
 					boxShadow: "none",
 					outline: "none",
 					resize: "none",
-					overflow: "hidden",
-					whiteSpace: "pre-wrap",
-					wordBreak: "break-word",
+					overflowX: wrap ? "hidden" : "auto",
+					overflowY: "hidden",
+					whiteSpace: wrap ? "pre-wrap" : "pre",
+					wordBreak: wrap ? "break-word" : "normal",
 					tabSize,
 					pointerEvents: "auto",
 					cursor: "text",

@@ -338,10 +338,12 @@ function richCodeBlockWrapperStyleToCss(style: RichBlockStyle | undefined): CSSP
 }
 
 function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
+  const wrap = style?.textWrap !== 'single-line';
   const css: CSSProperties = {
     margin: 0,
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
+    whiteSpace: wrap ? 'pre-wrap' : 'pre',
+    wordBreak: wrap ? 'break-word' : 'normal',
+    overflowX: wrap ? 'hidden' : 'auto',
     ...richCodeBlockTypographyStyleToCss(style),
     ...richCodeBlockTabStyleToCss(style),
     ...(style?.background ? { background: style.background } : {}),

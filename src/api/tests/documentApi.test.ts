@@ -27,6 +27,7 @@ import {
   resetCodeBlockStyleDoc,
   setCodeBlockTabSizeDoc,
   setCodeBlockThemeDoc,
+  setCodeBlockWrapDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
   setNodeRect,
@@ -440,6 +441,7 @@ describe('api/documentApi', () => {
     next = setCodeBlockLanguageDoc(next, code.id, 'typescript');
     next = setCodeBlockThemeDoc(next, code.id, 'dark');
     next = setCodeBlockTabSizeDoc(next, code.id, 12);
+    next = setCodeBlockWrapDoc(next, code.id, false);
     next = setTextNodeContentDoc(next, code.id, 'fontFamily', 'JetBrains Mono');
     next = setTextNodeContentDoc(next, code.id, 'fontSize', '18px');
     next = setTextNodeContentDoc(next, code.id, 'color', '#ffcc00');
@@ -451,8 +453,10 @@ describe('api/documentApi', () => {
     }
     expect(styled.code?.theme).toBe('dark');
     expect(styled.style?.tabSize).toBe(8);
+    expect(styled.style?.textWrap).toBe('single-line');
     expect(styled.style?.fontFamily).toBe('JetBrains Mono');
     expect(getSingleCodeBlockContent(styled.content)?.style?.tabSize).toBe(8);
+    expect(getSingleCodeBlockContent(styled.content)?.style?.textWrap).toBe('single-line');
 
     const auto = setCodeBlockThemeDoc(next, code.id, 'auto');
     const autoNode = auto.nodes[code.id];
@@ -463,6 +467,14 @@ describe('api/documentApi', () => {
     expect(getSingleCodeBlockContent(autoNode.content)?.theme).toBe('auto');
     expect(autoNode.style?.background).toBe('#101418');
     expect(autoNode.style?.color).toBe('#ffcc00');
+
+    const wrapped = setCodeBlockWrapDoc(auto, code.id, true);
+    const wrappedNode = wrapped.nodes[code.id];
+    if (wrappedNode.contentType !== 'text' || wrappedNode.subtype !== 'code') {
+      throw new Error('Expected wrapped code node');
+    }
+    expect(wrappedNode.style?.textWrap).toBe('wrap');
+    expect(getSingleCodeBlockContent(wrappedNode.content)?.style?.textWrap).toBe('wrap');
 
     const reset = resetCodeBlockStyleDoc(auto, code.id);
     const resetNode = reset.nodes[code.id];

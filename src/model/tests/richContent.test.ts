@@ -258,42 +258,43 @@ describe('model/richContent', () => {
       ]);
     });
 
-    it('normalizes code themes and clamps tab size overrides', () => {
+    it('normalizes code themes, wraps, and clamps tab size overrides', () => {
       expect(normalizeRichContent([
         {
           type: 'code-block',
           theme: 'light',
-          style: { tabSize: 0 },
+          style: { tabSize: 0, textWrap: 'single-line' },
           children: [{ type: 'code-line', children: [makeLeaf('light')] }],
         },
         {
           type: 'code-block',
           theme: 'dark',
-          style: { tabSize: 99 },
+          style: { tabSize: 99, textWrap: 'wrap' },
           children: [{ type: 'code-line', children: [makeLeaf('dark')] }],
         },
         {
           type: 'code-block',
           theme: 'solarized',
-          style: { tabSize: Number.NaN },
+          style: { tabSize: Number.NaN, textWrap: 'sideways' },
           children: [{ type: 'code-line', children: [makeLeaf('invalid')] }],
         },
       ])).toEqual([
         {
           type: 'code-block',
           theme: 'light',
-          style: { tabSize: 1 },
+          style: { tabSize: 1, textWrap: 'single-line' },
           children: [{ type: 'code-line', children: [makeLeaf('light')] }],
         },
         {
           type: 'code-block',
           theme: 'dark',
-          style: { tabSize: 8 },
+          style: { tabSize: 8, textWrap: 'wrap' },
           children: [{ type: 'code-line', children: [makeLeaf('dark')] }],
         },
         {
           type: 'code-block',
           theme: 'auto',
+          style: { textWrap: 'wrap' },
           children: [{ type: 'code-line', children: [makeLeaf('invalid')] }],
         },
       ]);

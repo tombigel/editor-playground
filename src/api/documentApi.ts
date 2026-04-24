@@ -64,6 +64,7 @@ export {
   setCodeBlockLanguageDoc,
   setCodeBlockTabSizeDoc,
   setCodeBlockThemeDoc,
+  setCodeBlockWrapDoc,
   setListContentDoc,
   setRichBlockLineHeightDoc,
   setRichBlockSpacingDoc,

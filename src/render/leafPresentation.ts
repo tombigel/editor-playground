@@ -52,10 +52,12 @@ export function getCodeLeafStyle(node: TextNode): StyleRecord {
 }
 
 export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
+  const wrap = node.style?.textWrap !== 'single-line';
   const style: StyleRecord = {
     margin: 0,
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
+    whiteSpace: wrap ? 'pre-wrap' : 'pre',
+    wordBreak: wrap ? 'break-word' : 'normal',
+    overflowX: wrap ? 'hidden' : 'auto',
     ...(node.style?.background ? { background: node.style.background } : {}),
   };
   Object.assign(style, buildBorderStyle(node.style));

@@ -293,6 +293,7 @@ function LeafTextEditBody({
           contentStyle={contentStyle}
           minHeight={minHeight}
           tabSize={codeBlock?.style?.tabSize ?? child.style?.tabSize ?? 2}
+          wrap={(codeBlock?.style?.textWrap ?? child.style?.textWrap) !== 'single-line'}
           onCommit={onCommit}
           onDiscard={onDiscard}
         />

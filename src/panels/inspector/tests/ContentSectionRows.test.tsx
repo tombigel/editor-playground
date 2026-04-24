@@ -33,7 +33,7 @@ describe("panels/inspector/content section rows", () => {
 		expect(codeMarkup).toContain(">Border<");
 	});
 
-	it("renders code theme, tab width, and reset controls", () => {
+	it("renders code theme, tab width, wrap, and mono font controls", () => {
 		const document = createInitialDocument();
 		const codeNode = createTextNode("code", "root");
 		const markup = renderToStaticMarkup(
@@ -53,6 +53,8 @@ describe("panels/inspector/content section rows", () => {
 		expect(markup).toContain(">Tab<");
 		expect(markup).toContain('style="width:2.5em"');
 		expect(markup).toContain('type="number"');
+		expect(markup).toContain(">Wrap<");
+		expect(markup).toContain('aria-label="Wrapped code"');
 		expect(markup).not.toContain("Reset code styling");
 	});
 

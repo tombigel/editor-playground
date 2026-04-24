@@ -494,6 +494,26 @@ export function setTextNodeContentDoc(
     return next;
   }
 
+  if (field === 'textWrap' && isTextNode(node) && node.subtype === 'code') {
+    const textWrap = value === 'single-line' ? 'single-line' : 'wrap';
+    node.style ??= {};
+    node.style.textWrap = textWrap;
+    const codeBlock = getSingleCodeBlockContent(node.content);
+    if (codeBlock) {
+      node.content = createTextDocumentFromCode(getTextContent(node.content.blocks, { blockSeparator: '\n' }), {
+        direction: 'ltr',
+        language: codeBlock.language,
+        theme: codeBlock.theme ?? node.code?.theme,
+        highlightedHtml: codeBlock.highlightedHtml,
+        style: {
+          ...(codeBlock.style ?? {}),
+          textWrap,
+        },
+      });
+    }
+    return next;
+  }
+
   if (field === 'textWrap' && isTextNode(node) && node.subtype === 'block' && node.link !== undefined) {
     node.style ??= {};
     node.style.textWrap = value === 'wrap' ? 'wrap' : 'single-line';
@@ -647,6 +667,14 @@ export function setCodeBlockTabSizeDoc(
   tabSize: number,
 ): DocumentModel {
   return setTextNodeContentDoc(document, nodeId, 'tabSize', String(tabSize));
+}
+
+export function setCodeBlockWrapDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  wrap: boolean,
+): DocumentModel {
+  return setTextNodeContentDoc(document, nodeId, 'textWrap', wrap ? 'wrap' : 'single-line');
 }
 
 export function resetCodeBlockStyleDoc(

@@ -154,6 +154,23 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('word-break:break-word');
   });
 
+  it('renders non-wrapped code blocks with horizontal overflow', () => {
+    const code = createTextNode('code', 'root');
+    code.style = { ...code.style, textWrap: 'single-line' };
+    code.content = createTextDocumentFromCode('const answer = someVeryLongExpression();', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const answer = someVeryLongExpression();',
+      style: { textWrap: 'single-line' },
+    });
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('white-space:pre');
+    expect(markup).toContain('word-break:normal');
+    expect(markup).toContain('overflow-x:auto');
+  });
+
   it('renders auto themed code block markup', () => {
     const code = createTextNode('code', 'root');
     code.content = createTextDocumentFromCode('const answer = 42;', {
@@ -216,6 +233,7 @@ describe('render/nodePresentation', () => {
         textDecorationLine: 'underline',
         lineHeight: 1.6,
         tabSize: 4,
+        textWrap: 'single-line',
       } as never,
     });
 
@@ -230,6 +248,7 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('font-style:italic');
     expect(markup).toContain('text-decoration-line:underline');
     expect(markup).toContain('line-height:1.6');
+    expect(markup).toContain('overflow-x:auto');
     expect(markup).toContain('<code class="language-typescript" style="color:#123456');
   });
 

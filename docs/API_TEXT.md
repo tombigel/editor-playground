@@ -62,10 +62,11 @@ Examples:
 - `setCodeBlockLanguageDoc(document, nodeId, language)`
 - `setCodeBlockThemeDoc(document, nodeId, theme)` where `theme` is `auto`, `light`, or `dark`
 - `setCodeBlockTabSizeDoc(document, nodeId, tabSize)` stores visual tab width as CSS `tab-size` metadata
+- `setCodeBlockWrapDoc(document, nodeId, wrap)` toggles soft wrapping; unwrapped code keeps literal text and scrolls horizontally
 - `resetCodeBlockStyleDoc(document, nodeId)` preserves raw code text and language while clearing presentation overrides and returning theme to `auto`
 - markdown import/export support for fenced code
 
-On-stage code editing commits raw text back as exactly one `code-block`. `Enter` and `Shift+Enter` store `\n`; `Tab` and `Shift+Tab` store or remove literal `\t` indentation on the current or selected lines. Tab width changes do not rewrite text.
+On-stage code editing commits raw text back as exactly one `code-block`. `Enter` and `Shift+Enter` store `\n`; `Tab` and `Shift+Tab` store or remove literal `\t` indentation on the current or selected lines. Tab width and wrap changes do not rewrite text.
 
 ## Read Next
 

@@ -153,6 +153,7 @@ export type RichBlockStyle = {
   backgroundClip?: 'padding-box';
   boxShadow?: string;
   tabSize?: number;
+  textWrap?: TextWrapMode;
 };
 
 export type StandaloneTextNodeSnapshot = {

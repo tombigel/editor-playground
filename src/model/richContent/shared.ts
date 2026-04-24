@@ -60,6 +60,7 @@ const RICH_BLOCK_STYLE_KEYS = new Set<keyof RichBlockStyle>([
   'backgroundClip',
   'boxShadow',
   'tabSize',
+  'textWrap',
 ]);
 
 export function isObjectRecord(value: unknown): value is UnknownRecord {
@@ -131,6 +132,10 @@ export function normalizeRichBlockStyle(value: unknown): RichBlockStyle | undefi
       if (tabSize !== undefined) {
         style.tabSize = tabSize;
       }
+      continue;
+    }
+    if (key === 'textWrap') {
+      style.textWrap = rawValue === 'single-line' ? 'single-line' : 'wrap';
       continue;
     }
     if (typeof rawValue === 'string' || typeof rawValue === 'number') {
