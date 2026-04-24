@@ -12,9 +12,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type {
 	ListContent,
+	RichListBlock,
 	TextDocumentContent,
 } from "../../../api/documentViewApi";
 import {
+	createRichListBlock,
 	createTextDocumentContent,
 	getSingleListBlockContent,
 	listContentToLines,
@@ -206,6 +208,49 @@ function createStructuredListItemKeys(
 	return content.items.map((_, index) => `${nodeId}-list-item-${index}`);
 }
 
+export function createListBlockWithKind(
+	block: RichListBlock,
+	listKind: "ul" | "ol",
+): RichListBlock {
+	return createRichListBlock(listKind, structuredClone(block.children), {
+		direction: block.direction,
+		style: block.style,
+		standalone: block.standalone,
+		markerStyle: block.markerStyle,
+		...(listKind === "ol" && block.type === "ol" ? { start: block.start } : {}),
+	});
+}
+
+export function createListBlockWithMarkerStyle(
+	block: RichListBlock,
+	markerStyle: string,
+): RichListBlock {
+	return createRichListBlock(block.type, structuredClone(block.children), {
+		direction: block.direction,
+		style: block.style,
+		standalone: block.standalone,
+		markerStyle,
+		...(block.type === "ol" ? { start: block.start } : {}),
+	});
+}
+
+export function createOrderedListBlockWithStart(
+	block: RichListBlock,
+	start: number,
+): RichListBlock {
+	if (block.type !== "ol") {
+		return block;
+	}
+
+	return createRichListBlock("ol", structuredClone(block.children), {
+		direction: block.direction,
+		style: block.style,
+		standalone: block.standalone,
+		markerStyle: block.markerStyle,
+		start: Math.max(1, Math.trunc(start)),
+	});
+}
+
 export function ListContentSection({
 	node,
 	onSetTextDocumentContent,
@@ -251,6 +296,10 @@ export function ListContentSection({
 		);
 	}
 
+	function commitListBlock(nextBlock: RichListBlock) {
+		onSetTextDocumentContent(createTextDocumentContent([nextBlock]));
+	}
+
 	return (
 		<InspectorSectionCard
 			title="Content"
@@ -273,9 +322,11 @@ export function ListContentSection({
 						<Select
 							value={structuredListContent.type}
 							onValueChange={(value: StructuredListContent["type"]) =>
-								commitListContent(
-									buildListContentFromLines(itemsValue, listContent, value),
-								)
+								listBlock
+									? commitListBlock(createListBlockWithKind(listBlock, value))
+									: commitListContent(
+											buildListContentFromLines(itemsValue, listContent, value),
+										)
 							}
 						>
 							<SelectTrigger className="h-8 text-[11px]">
@@ -305,11 +356,13 @@ export function ListContentSection({
 						<Select
 							value={structuredListContent.markerStyle ?? "disc"}
 							onValueChange={(value) =>
-								commitListContent({
-									...structuredListContent,
-									markerStyle:
-										value as typeof structuredListContent.markerStyle,
-								})
+								listBlock
+									? commitListBlock(createListBlockWithMarkerStyle(listBlock, value))
+									: commitListContent({
+											...structuredListContent,
+											markerStyle:
+												value as typeof structuredListContent.markerStyle,
+										})
 							}
 						>
 							<SelectTrigger className="h-8 text-[11px]">
@@ -334,10 +387,12 @@ export function ListContentSection({
 								max={999}
 								step={1}
 								onChange={(value) =>
-									commitListContent({
-										...structuredListContent,
-										start: Math.max(1, Math.trunc(value)),
-									})
+									listBlock
+										? commitListBlock(createOrderedListBlockWithStart(listBlock, value))
+										: commitListContent({
+												...structuredListContent,
+												start: Math.max(1, Math.trunc(value)),
+											})
 								}
 							/>
 						</FormField>
@@ -349,11 +404,13 @@ export function ListContentSection({
 							<Select
 								value={structuredListContent.markerStyle ?? "decimal"}
 								onValueChange={(value) =>
-									commitListContent({
-										...structuredListContent,
-										markerStyle:
-											value as typeof structuredListContent.markerStyle,
-									})
+									listBlock
+										? commitListBlock(createListBlockWithMarkerStyle(listBlock, value))
+										: commitListContent({
+												...structuredListContent,
+												markerStyle:
+													value as typeof structuredListContent.markerStyle,
+											})
 								}
 							>
 								<SelectTrigger className="h-8 text-[11px]">

@@ -5,6 +5,11 @@ import { createInitialDocument, createTextNode, createButtonTextNode, createCont
 import { createDefaultListContent } from '../../model/listContent';
 import { createTextDocumentContent, listContentToRichListBlock } from '../../model/richContent';
 import { getTextSubtypeIcon } from '../inspector/config.text';
+import {
+  createListBlockWithKind,
+  createListBlockWithMarkerStyle,
+  createOrderedListBlockWithStart,
+} from '../inspector/contentSections/listContentSection';
 import { resolveSizeMeasurementInput } from '../controls/SizeFields';
 import {
   buildSizeFieldValue,
@@ -302,6 +307,55 @@ describe('panels/InspectorPanel', () => {
     expect(markup).not.toContain('grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-sm border px-2 py-2');
     expect(markup).not.toContain('data-ui="control-group" data-separated="true"');
     expect(markup).toContain('space-y-2.5 mt-2.5');
+  });
+
+  it('preserves inline list item content when inspector block controls change list metadata', () => {
+    const block = {
+      type: 'ul' as const,
+      markerStyle: 'square' as const,
+      children: [
+        {
+          type: 'list-item' as const,
+          direction: 'rtl' as const,
+          depth: 1,
+          children: [
+            { text: 'Styled ', bold: true, fontSize: '22px' },
+            {
+              type: 'link' as const,
+              linkType: 'external' as const,
+              href: 'https://example.com',
+              children: [{ text: 'link', color: '#d62246' }],
+            },
+          ],
+        },
+      ],
+    };
+
+    const ordered = createListBlockWithKind(block, 'ol');
+    const marked = createListBlockWithMarkerStyle(ordered, 'upper-roman');
+    const started = createOrderedListBlockWithStart(marked, 4);
+
+    expect(started).toMatchObject({
+      type: 'ol',
+      start: 4,
+      markerStyle: 'upper-roman',
+      children: [
+        {
+          type: 'list-item',
+          direction: 'rtl',
+          depth: 1,
+          children: [
+            { text: 'Styled ', bold: true, fontSize: '22px' },
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com',
+              children: [{ text: 'link', color: '#d62246' }],
+            },
+          ],
+        },
+      ],
+    });
   });
 
   it('falls back to default structured list controls when canonical list content is missing', () => {

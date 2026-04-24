@@ -40,6 +40,7 @@ export type {
   MediaNode,
   NodeId,
   RichInlineNode,
+  RichListBlock,
   RichTextLeaf,
   ShadowStyle,
   SiteNode,
