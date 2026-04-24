@@ -100,24 +100,45 @@ Execution rules:
 
 - Objective:
   - Add second-click edit entry for standalone lists.
-  - Support direct item editing, inline styling, multiple links per item, per-item direction UI, nesting, and indent levels.
-- Status: `planned`
+  - Support direct item editing, inline styling, multiple links per item, nesting, and indent levels.
+- Status: `completed`
 - Allowed files:
-  - Planned during execution
+  - `src/model/types/index.ts`
+  - `src/model/richContent/*`
+  - `src/model/listContent.ts`
+  - `src/api/documentApi/text.ts`
+  - `src/render/richTextEditor.ts`
+  - `src/render/nodePresentation.tsx`
+  - `src/stage/**`
+  - `src/panels/inspector/contentSections/listContentSection.tsx`
+  - focused tests and docs for those surfaces
 - Read-first files and target lines:
-  - Planned during execution
+  - `src/model/richContent/shared.ts`
+  - `src/render/richTextEditor.ts`
+  - `src/stage/stageRenderers/RichTextEditOverlay.tsx`
+  - `src/render/nodePresentation.tsx`
+  - `src/panels/inspector/contentSections/listContentSection.tsx`
 - Implementation notes:
-  - Finish standalone list linking UX here.
-  - Resolve `dl` authoring UX for standalone lists here if still needed.
   - Use canonical `TextDocumentContent` for standalone list persistence and editing.
+  - Item nesting uses `depth?: number` on `list-item`, not recursive nested list nodes.
+  - Standalone and rich-text list blocks share the same Slate keyboard helpers.
+  - List type, marker/bullet style, and ordered-list start remain inspector-owned.
 - Verification commands:
-  - Planned during execution
+  - `npm run test:run -- src/model/tests/richContent.test.ts src/model/tests/listContent.test.ts`
+  - `npm run test:run -- src/api/tests/documentApi.test.ts`
+  - `npm run test:run -- src/render/tests/richTextEditor.test.ts`
+  - `npm run test:run -- src/stage/tests/RichTextEditOverlay.test.tsx`
+  - `npm run test:run -- src/render/tests/nodePresentation.test.tsx src/site/tests/SiteRenderer.test.tsx`
+  - `npm run test:run -- src/panels/tests/InspectorPanel.test.tsx`
+  - `npm run test:e2e -- src/stage/tests/Stage.e2e.test.ts -t "standalone lists|standalone list Tab|inline standalone list|rich text list blocks"`
 - Verification result:
-  - Not started
+  - Focused P2-C tests passed. Final full build verification is tracked by the follow-up verification commit.
 - Commit SHA:
-  - Not started
+  - `f83e17d`, `36be703`, `678546e`, `49fc58d`, `dfced1e`, `64c0333`, `408f5ca`
 - Open follow-ups carried forward:
-  - None yet.
+  - Add explicit per-item direction UI.
+  - Finish standalone list linking UI.
+  - Resolve `dl` authoring in P2-E.
 
 ## P2-D: Granular rich-to-simple split conversion
 

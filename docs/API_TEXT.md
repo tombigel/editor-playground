@@ -28,6 +28,12 @@ Node-level typography writes such as `fontSize`, `fontFamily`, `fontWeight`, `fo
 
 Subtype conversion preserves compatible typography and inline structure. Converting a standalone block to rich text carries node style and rich inline children forward; converting a single rich text block to standalone block text preserves compatible inline marks and links instead of flattening them.
 
+Standalone list text also uses the canonical text-document wrapper. A list node accepts exactly one `ul` or `ol` block in `content.blocks`, and that block may contain marked leaves, multiple inline links, and newline text inside each list item.
+
+List item nesting is represented by `depth?: number` on the item, not by recursive nested list blocks. Depth is normalized to an integer from `0` to `8` and cannot increase by more than one level from the previous item.
+
+Stage list editing and rich-text list editing share keyboard semantics: `Enter` creates a same-depth item, `Shift+Enter` inserts newline text in the same item, `Backspace` at item offset `0` merges into the previous item with a newline separator, and `Tab` / `Shift+Tab` adjust item depth only at item offset `0`.
+
 ## Rich Text
 
 Rich text persists through the canonical text-document wrapper and should remain convertible through pure APIs. Editor UI is a consumer of that model, not the owner of it.

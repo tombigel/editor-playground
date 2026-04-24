@@ -623,7 +623,12 @@ Rules:
 - Inspector typography controls show a mixed state when the text content contains inline overrides for that style type. Choosing an inspector value resets matching inline overrides while preserving unrelated inline styles and links.
 - `Enter` and `Shift+Enter` both insert newline text inside the current block. The model does not add a `<br>` element; rendering preserves the soft break through `white-space: pre-wrap`.
 - Outside click or `Cmd/Ctrl+Enter` commits the Slate state through `setTextDocumentContentDoc()`. `Escape` discards local Slate edits without mutating the document.
-- Standalone list on-stage editing remains deferred to text phase 2.0 P2-C.
+- Standalone lists can be edited directly on stage with the same first-click select, second-click edit lifecycle.
+- Stage list editing keeps the node as `subtype: 'list'` and persists exactly one `ul` or `ol` block in `TextDocumentContent.blocks`.
+- Standalone and rich-text list blocks share keyboard behavior: `Enter` creates a same-depth `li`, `Shift+Enter` inserts newline text in the current `li`, `Backspace` at item offset `0` merges into the previous item with a newline separator, and `Tab` / `Shift+Tab` change item `depth` only at item offset `0`.
+- List item `depth` is item-level visual indentation, not recursive nested list schema. The direct children below `ul` / `ol` remain `li` items, and inline styling that spans item boundaries is split per item.
+- Newline text inside a list item preserves indentation because it remains inside the same `li`.
+- The floating stage toolbar for standalone lists is inline-only. List type, bullet/marker style, and ordered-list start remain inspector-owned block-level controls.
 - Seeded templates use semantic heading tags for primary titles:
   - the default post title is `h1`
   - the primary titles in the sticky demo sections are seeded as `h2`
@@ -1539,10 +1544,11 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
 ### Canonical structure
 
 - Standalone list nodes persist one canonical top-level list block inside `TextDocumentContent.blocks`.
-- Supported canonical wrappers are `ul` and `ol`; nested lists are not part of phase 1.7.
+- Supported canonical wrappers are `ul` and `ol`; recursive nested list blocks are not part of phase 2.0 P2-C.
 - Per-item writing direction is supported via `direction: 'ltr' | 'rtl'`.
 - Per-item links are supported.
-- Styling remains block-level in canonical content; mixed inline styling inside list items is deferred.
+- Inline styling, multiple links, and newline text are supported inside list item `children`.
+- Item nesting is represented by `depth?: number` on each `list-item`, clamped to `0..8` with at most a one-level increase from the previous item. Renderers show `depth` as visual indentation on the `li` without emitting recursive nested lists.
 
 ### API and validation
 
@@ -1573,6 +1579,7 @@ Text nodes with `subtype: 'list'` are first-class document nodes, not rich-text 
   - ordered-list start
   - per-item add / reorder / remove
   - one inline text field per item
+- List type, marker, and ordered-list start changes preserve canonical item children, inline marks, links, direction, and depth. Per-item text and bulk-edit controls remain plain-text editing surfaces and may flatten inline item content when explicitly used.
 - The line-based textarea remains as an advanced bulk-edit / paste-import helper, not the primary editing surface.
 - Per-item links and per-item direction are deferred from the standalone inspector to the later on-stage editing phase.
 
