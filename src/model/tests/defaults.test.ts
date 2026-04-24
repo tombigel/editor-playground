@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSingleListBlockContent, richListBlockToListContent } from '../richContent';
+import { getSingleCodeBlockContent, getSingleListBlockContent, richListBlockToListContent } from '../richContent';
 import type { TextNode } from '../types';
 import {
   createDefaultFooter,
@@ -59,6 +59,31 @@ describe('model/defaults', () => {
       items: [{ text: 'List item', direction: 'ltr' }],
     });
     expect(list.style?.direction).toBe('ltr');
+  });
+
+  it('creates code text nodes with auto themed plaintext defaults', () => {
+    const code = createTextNode('code', 'section_1');
+
+    if (code.contentType !== 'text' || code.subtype !== 'code') {
+      throw new Error('Expected code text node');
+    }
+
+    const block = getSingleCodeBlockContent(code.content);
+    expect(code.code).toMatchObject({
+      language: 'plaintext',
+      theme: 'auto',
+      highlightedHtml: '// your code here',
+    });
+    expect(block).toMatchObject({
+      type: 'code-block',
+      direction: 'ltr',
+      language: 'plaintext',
+      theme: 'auto',
+      highlightedHtml: '// your code here',
+    });
+    expect(block?.style?.tabSize).toBeUndefined();
+    expect(code.style?.fontFamily).toBe('monospace');
+    expect(code.style?.direction).toBe('ltr');
   });
 
   it('seeds pinned cards with auto lead sticky and top-edge narrative cards', () => {

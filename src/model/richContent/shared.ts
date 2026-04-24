@@ -1,4 +1,5 @@
 import type {
+  CodeTheme,
   LinkKind,
   ListDirection,
   OrderedListMarkerStyle,
@@ -28,6 +29,7 @@ export const RICH_TEXT_BLOCK_TYPES = new Set<RichTextBlockType>([
 
 export const RICH_LIST_BLOCK_TYPES = new Set<RichListBlock['type']>(['ul', 'ol']);
 export const RICH_TEXT_LINK_TYPES = new Set<LinkKind>(['external', 'page', 'anchor']);
+export const CODE_THEMES = new Set<CodeTheme>(['auto', 'light', 'dark']);
 export const MAX_LIST_ITEM_DEPTH = 8;
 
 export const ORDERED_MARKER_STYLES = new Set<OrderedListMarkerStyle>([
@@ -57,6 +59,7 @@ const RICH_BLOCK_STYLE_KEYS = new Set<keyof RichBlockStyle>([
   'boxSizing',
   'backgroundClip',
   'boxShadow',
+  'tabSize',
 ]);
 
 export function isObjectRecord(value: unknown): value is UnknownRecord {
@@ -100,6 +103,19 @@ export function normalizeLinkKind(value: unknown): LinkKind {
     : 'external';
 }
 
+export function normalizeCodeTheme(value: unknown): CodeTheme {
+  return typeof value === 'string' && CODE_THEMES.has(value as CodeTheme)
+    ? value as CodeTheme
+    : 'auto';
+}
+
+export function normalizeCodeTabSize(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return undefined;
+  }
+  return Math.min(8, Math.max(1, Math.trunc(value)));
+}
+
 export function normalizeRichBlockStyle(value: unknown): RichBlockStyle | undefined {
   if (!isObjectRecord(value)) {
     return undefined;
@@ -108,6 +124,13 @@ export function normalizeRichBlockStyle(value: unknown): RichBlockStyle | undefi
   const style: RichBlockStyle = {};
   for (const [key, rawValue] of Object.entries(value)) {
     if (!RICH_BLOCK_STYLE_KEYS.has(key as keyof RichBlockStyle)) {
+      continue;
+    }
+    if (key === 'tabSize') {
+      const tabSize = normalizeCodeTabSize(rawValue);
+      if (tabSize !== undefined) {
+        style.tabSize = tabSize;
+      }
       continue;
     }
     if (typeof rawValue === 'string' || typeof rawValue === 'number') {

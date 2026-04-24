@@ -275,6 +275,45 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain('data-code-theme="dark"');
   });
 
+  it('renders auto themed code blocks and code surface overrides in site output', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const code = createTextNode('code', section.id);
+    code.content = createTextDocumentFromCode('const total = 3;', {
+      language: 'typescript',
+      theme: 'auto' as never,
+      highlightedHtml: '<span class="token keyword">const</span> total = 3;',
+      style: {
+        color: '#123456',
+        fontFamily: 'JetBrains Mono',
+        fontSize: '15px',
+        fontWeight: 600,
+        fontStyle: 'italic',
+        textDecorationLine: 'underline',
+        lineHeight: 1.6,
+        tabSize: 4,
+      } as never,
+    });
+    document.nodes[code.id] = code;
+    section.children.push(code.id);
+
+    const markup = renderToStaticMarkup(<SiteRenderer document={document} />);
+
+    expect(markup).toContain(`data-node-id="${code.id}"`);
+    expect(markup).toContain('data-code-theme="auto"');
+    expect(markup).toContain('data-code-color="author"');
+    expect(markup).toContain('tab-size:4');
+    expect(markup).toContain('font-family:JetBrains Mono');
+    expect(markup).toContain('<code class="language-typescript" style="color:#123456');
+  });
+
   it('renders rich code and list blocks with the shared rich-content semantics', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

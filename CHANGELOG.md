@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - render inline standalone lists
 - preserve list item depth in controls
 - add grouped text editing toolbar
+- support auto code theme and tab size
 
 ### Changed
 

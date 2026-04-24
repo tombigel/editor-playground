@@ -6,7 +6,7 @@ import type { DocumentModel } from '../model/types';
 import type { PageId } from '../model/types/site';
 import { styleRecordToCssDeclarations } from '../render/leafPresentation';
 import { SiteRenderer } from './SiteRenderer';
-import { buildSiteCssRules, buildSiteViewTransitionCss } from './siteStylePlan';
+import { buildSiteCodeThemeCss, buildSiteCssRules, buildSiteViewTransitionCss } from './siteStylePlan';
 import type { SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteManifest } from './types';
 
 export type { SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteManifest } from './types';
@@ -35,8 +35,9 @@ export function renderSiteCss(
   const rulesCss = buildSiteCssRules(document, previewSticky)
     .map((entry) => rule(entry.selector, styleRecordToCssDeclarations(entry.style)))
     .join('\n\n');
+  const codeThemeCss = buildSiteCodeThemeCss();
   const viewTransitionCss = buildSiteViewTransitionCss(document);
-  return viewTransitionCss ? `${rulesCss}\n\n${viewTransitionCss}\n` : `${rulesCss}\n`;
+  return `${[rulesCss, codeThemeCss, viewTransitionCss].filter(Boolean).join('\n\n')}\n`;
 }
 
 export function renderSiteHtmlDocument(

@@ -237,7 +237,8 @@ describe('model/richContent', () => {
         {
           type: 'code-block',
           language: 'typescript',
-          theme: 'dark',
+          theme: 'auto',
+          style: { tabSize: 4.9 },
           children: [
             { type: 'code-line', children: [makeLeaf('const value = 1;')] },
             { type: 'code-line', children: [makeLeaf('console.log(value);')] },
@@ -247,11 +248,53 @@ describe('model/richContent', () => {
         {
           type: 'code-block',
           language: 'typescript',
-          theme: 'dark',
+          theme: 'auto',
+          style: { tabSize: 4 },
           children: [
             { type: 'code-line', children: [makeLeaf('const value = 1;')] },
             { type: 'code-line', children: [makeLeaf('console.log(value);')] },
           ],
+        },
+      ]);
+    });
+
+    it('normalizes code themes and clamps tab size overrides', () => {
+      expect(normalizeRichContent([
+        {
+          type: 'code-block',
+          theme: 'light',
+          style: { tabSize: 0 },
+          children: [{ type: 'code-line', children: [makeLeaf('light')] }],
+        },
+        {
+          type: 'code-block',
+          theme: 'dark',
+          style: { tabSize: 99 },
+          children: [{ type: 'code-line', children: [makeLeaf('dark')] }],
+        },
+        {
+          type: 'code-block',
+          theme: 'solarized',
+          style: { tabSize: Number.NaN },
+          children: [{ type: 'code-line', children: [makeLeaf('invalid')] }],
+        },
+      ])).toEqual([
+        {
+          type: 'code-block',
+          theme: 'light',
+          style: { tabSize: 1 },
+          children: [{ type: 'code-line', children: [makeLeaf('light')] }],
+        },
+        {
+          type: 'code-block',
+          theme: 'dark',
+          style: { tabSize: 8 },
+          children: [{ type: 'code-line', children: [makeLeaf('dark')] }],
+        },
+        {
+          type: 'code-block',
+          theme: 'auto',
+          children: [{ type: 'code-line', children: [makeLeaf('invalid')] }],
         },
       ]);
     });

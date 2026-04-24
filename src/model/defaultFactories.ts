@@ -175,9 +175,14 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
           direction: 'ltr',
           language: TEXT_NODE_DEFAULTS.code.language,
           theme: TEXT_NODE_DEFAULTS.code.theme,
+          highlightedHtml: TEXT_NODE_DEFAULTS.code.highlightedHtml,
         }),
       ]),
-      code: { language: TEXT_NODE_DEFAULTS.code.language, theme: TEXT_NODE_DEFAULTS.code.theme },
+      code: {
+        language: TEXT_NODE_DEFAULTS.code.language,
+        theme: TEXT_NODE_DEFAULTS.code.theme,
+        highlightedHtml: TEXT_NODE_DEFAULTS.code.highlightedHtml,
+      },
       style: {
         ...TEXT_NODE_DEFAULTS.code.style,
         direction: 'ltr',

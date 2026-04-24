@@ -17,7 +17,7 @@ import type {
   TextDocumentContent,
   UnorderedListMarkerStyle,
 } from '../types';
-import { normalizeListItemDepth, ORDERED_MARKER_STYLES, UNORDERED_MARKER_STYLES } from './shared';
+import { normalizeCodeTheme, normalizeListItemDepth, ORDERED_MARKER_STYLES, UNORDERED_MARKER_STYLES } from './shared';
 
 export function createRichTextLeaf(text: string, marks?: Partial<RichTextLeaf>): RichTextLeaf {
   return {
@@ -64,7 +64,7 @@ export function createRichCodeBlock(
     type: 'code-block',
     ...(options.direction ? { direction: options.direction } : {}),
     ...(typeof options.language === 'string' ? { language: options.language } : {}),
-    ...(options.theme === 'light' || options.theme === 'dark' ? { theme: options.theme } : {}),
+    ...(options.theme ? { theme: normalizeCodeTheme(options.theme) } : {}),
     ...(typeof options.highlightedHtml === 'string' ? { highlightedHtml: options.highlightedHtml } : {}),
     ...(options.style ? { style: options.style } : {}),
     ...(options.standalone ? { standalone: options.standalone } : {}),

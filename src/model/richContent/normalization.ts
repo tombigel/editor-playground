@@ -21,6 +21,7 @@ import { isRichListBlockType, isRichTextBlockType, isRichTextLink, isTextDocumen
 import {
   isObjectRecord,
   normalizeBlockGap,
+  normalizeCodeTheme,
   normalizeDirection,
   normalizeLineHeight,
   normalizeListItemDepth,
@@ -126,7 +127,7 @@ function normalizeStandaloneTextNodeSnapshot(value: unknown): StandaloneTextNode
       ? {
           code: {
             language: value.code.language,
-            ...(value.code.theme === 'light' || value.code.theme === 'dark' ? { theme: value.code.theme } : {}),
+            theme: normalizeCodeTheme(value.code.theme),
             ...(typeof value.code.highlightedHtml === 'string' ? { highlightedHtml: value.code.highlightedHtml } : {}),
           },
         }
@@ -209,14 +210,16 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
   }
 
   if (node.type === 'code-block') {
+    const style = normalizeRichBlockStyle(node.style);
+    const standalone = normalizeStandaloneTextNodeSnapshot(node.standalone);
     return {
       type: 'code-block',
       ...(normalizeDirection(node.direction) ? { direction: normalizeDirection(node.direction) } : {}),
       ...(typeof node.language === 'string' ? { language: node.language } : {}),
-      ...(node.theme === 'light' || node.theme === 'dark' ? { theme: node.theme } : {}),
+      theme: normalizeCodeTheme(node.theme),
       ...(typeof node.highlightedHtml === 'string' ? { highlightedHtml: node.highlightedHtml } : {}),
-      ...(normalizeRichBlockStyle(node.style) ? { style: normalizeRichBlockStyle(node.style) } : {}),
-      ...(normalizeStandaloneTextNodeSnapshot(node.standalone) ? { standalone: normalizeStandaloneTextNodeSnapshot(node.standalone) } : {}),
+      ...(style ? { style } : {}),
+      ...(standalone ? { standalone } : {}),
       children: normalizeCodeLines(node.children),
     };
   }

@@ -55,11 +55,21 @@ describe('site/siteExport', () => {
 
     const html = renderSiteHtmlDocument(document);
 
-    expect(html).toContain(`class="sp-node sp-node-${standaloneCode.id} sp-role-button sp-leaf"`);
+    expect(html).toContain(`class="sp-node sp-node-${standaloneCode.id} sp-role-text sp-leaf"`);
     expect(html).toContain(`data-node-id="${standaloneCode.id}"`);
     expect(html).toContain('<pre class="language-typescript"');
     expect(html).toContain('white-space:pre-wrap');
     expect(html).toContain('word-break:break-word');
+  });
+
+  it('exports code theme css for auto dark mode and authored token color inheritance', () => {
+    const css = renderSiteCss(createInitialDocument());
+
+    expect(css).toContain('@media (prefers-color-scheme: dark)');
+    expect(css).toContain('pre[data-code-theme="auto"]');
+    expect(css).toContain('pre[data-code-theme="dark"]');
+    expect(css).toContain('pre[data-code-color="author"] code[class*="language-"] .token');
+    expect(css).toContain('color: inherit;');
   });
 
   it('links the seeded Google Fonts needed by the default typography pairings', () => {

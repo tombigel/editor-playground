@@ -30,13 +30,13 @@ export const TEXT_NODE_DEFAULTS = {
   code: {
     content: '// your code here',
     language: 'plaintext',
-    theme: 'light' as 'light' | 'dark',
+    theme: 'auto' as const,
+    highlightedHtml: '// your code here',
     style: {
       fontFamily: 'monospace',
       fontSize: parseFontSizeValue('14px'),
       lineHeight: 1.6,
-      background: CODE_THEME_SURFACE.light.background,
-      color: CODE_THEME_SURFACE.light.color,
+      direction: 'ltr' as const,
     },
   },
 };

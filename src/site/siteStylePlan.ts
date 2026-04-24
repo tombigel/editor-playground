@@ -48,6 +48,20 @@ export function buildSiteViewTransitionCss(document: DocumentModel): string | nu
   return null;
 }
 
+export function buildSiteCodeThemeCss(): string {
+  const explicitDarkCss = buildCodeDarkThemeCss('pre[data-code-theme="dark"]');
+  const autoDarkCss = buildCodeDarkThemeCss('pre[data-code-theme="auto"]', 2);
+  return [
+    explicitDarkCss,
+    '@media (prefers-color-scheme: dark) {',
+    autoDarkCss,
+    '}',
+    'pre[data-code-color="author"] code[class*="language-"] .token {',
+    '  color: inherit;',
+    '}',
+  ].join('\n');
+}
+
 export function buildSiteCssRules(document: DocumentModel, previewSticky = true): SharedCssRule[] {
   const rules = [
     ...getBaseSiteCssRules(document),
@@ -319,4 +333,73 @@ function declarationsToStyleRecord(declarations: string[]) {
 
 function selectorFromClassName(className: string) {
   return `.${className.trim().split(/\s+/).join('.')}`;
+}
+
+function buildCodeDarkThemeCss(selector: string, indentSpaces = 0): string {
+  const indent = ' '.repeat(indentSpaces);
+  const declarations = [
+    `${selector},`,
+    `${selector} code[class*="language-"] {`,
+    '  color: #f8f8f2;',
+    '  background: #272822;',
+    '  text-shadow: 0 1px rgba(0, 0, 0, 0.3);',
+    '}',
+    '',
+    `${selector} .token.comment,`,
+    `${selector} .token.prolog,`,
+    `${selector} .token.doctype,`,
+    `${selector} .token.cdata {`,
+    '  color: #8292a2;',
+    '}',
+    '',
+    `${selector} .token.punctuation {`,
+    '  color: #f8f8f2;',
+    '}',
+    '',
+    `${selector} .token.property,`,
+    `${selector} .token.tag,`,
+    `${selector} .token.constant,`,
+    `${selector} .token.symbol,`,
+    `${selector} .token.deleted {`,
+    '  color: #f92672;',
+    '}',
+    '',
+    `${selector} .token.boolean,`,
+    `${selector} .token.number {`,
+    '  color: #ae81ff;',
+    '}',
+    '',
+    `${selector} .token.selector,`,
+    `${selector} .token.attr-name,`,
+    `${selector} .token.string,`,
+    `${selector} .token.char,`,
+    `${selector} .token.builtin,`,
+    `${selector} .token.inserted {`,
+    '  color: #a6e22e;',
+    '}',
+    '',
+    `${selector} .token.operator,`,
+    `${selector} .token.entity,`,
+    `${selector} .token.url,`,
+    `${selector} .token.variable {`,
+    '  color: #f8f8f2;',
+    '}',
+    '',
+    `${selector} .token.atrule,`,
+    `${selector} .token.attr-value,`,
+    `${selector} .token.function,`,
+    `${selector} .token.class-name {`,
+    '  color: #e6db74;',
+    '}',
+    '',
+    `${selector} .token.keyword {`,
+    '  color: #66d9ef;',
+    '}',
+    '',
+    `${selector} .token.regex,`,
+    `${selector} .token.important {`,
+    '  color: #fd971f;',
+    '}',
+  ];
+  return declarations.map((line) => line ? `${indent}${line}` : line).join('\n');
 }

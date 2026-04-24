@@ -21,6 +21,7 @@ export type BreakpointId = 'base' | 'tablet' | 'mobile';
 export type Unit = 'px' | '%' | 'vw' | 'vh' | 'vmin' | 'vmax';
 export type FontSizeUnit = 'px' | 'em' | 'rem';
 export type SpacingUnit = 'px' | 'em' | 'rem';
+export type CodeTheme = 'auto' | 'light' | 'dark';
 export type NodeTextField =
   | 'name'
   | 'content'
@@ -150,6 +151,7 @@ export type RichBlockStyle = {
   boxSizing?: 'border-box';
   backgroundClip?: 'padding-box';
   boxShadow?: string;
+  tabSize?: number;
 };
 
 export type StandaloneTextNodeSnapshot = {
@@ -163,7 +165,7 @@ export type StandaloneTextNodeSnapshot = {
   lang?: string;
   htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';
   link?: LinkExtension;
-  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };
+  code?: { language: string; theme?: CodeTheme; highlightedHtml?: string };
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
 };
@@ -186,7 +188,7 @@ export interface RichCodeBlock extends SlateElement {
   type: 'code-block';
   direction?: 'ltr' | 'rtl';
   language?: string;
-  theme?: 'light' | 'dark';
+  theme?: CodeTheme;
   highlightedHtml?: string;
   style?: RichBlockStyle;
   standalone?: StandaloneTextNodeSnapshot;
@@ -514,7 +516,7 @@ export type TextNode = BaseNode & {
   htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';
   link?: LinkExtension;       // block only
   /** @deprecated transitional field during phase 1.7 migration; canonical code metadata lives in content */
-  code?: { language: string; theme?: 'light' | 'dark'; highlightedHtml?: string };
+  code?: { language: string; theme?: CodeTheme; highlightedHtml?: string };
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;

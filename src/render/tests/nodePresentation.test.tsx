@@ -154,6 +154,85 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('word-break:break-word');
   });
 
+  it('renders auto themed code block markup', () => {
+    const code = createTextNode('code', 'root');
+    code.content = createTextDocumentFromCode('const answer = 42;', {
+      language: 'typescript',
+      theme: 'auto' as never,
+      highlightedHtml: '<span class="token keyword">const</span> answer = 42;',
+    });
+    code.code = {
+      language: 'typescript',
+      theme: 'auto' as never,
+      highlightedHtml: '<span class="token keyword">const</span> answer = 42;',
+    };
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('data-code-theme="auto"');
+  });
+
+  it('keeps explicit light and dark code block themes in markup', () => {
+    const light = createTextNode('code', 'root');
+    light.content = createTextDocumentFromCode('const light = true;', {
+      language: 'typescript',
+      theme: 'light',
+      highlightedHtml: 'const light = true;',
+    });
+    light.code = {
+      language: 'typescript',
+      theme: 'light',
+      highlightedHtml: 'const light = true;',
+    };
+
+    const dark = createTextNode('code', 'root');
+    dark.content = createTextDocumentFromCode('const dark = true;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const dark = true;',
+    });
+    dark.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: 'const dark = true;',
+    };
+
+    expect(renderToStaticMarkup(renderLeafContent(light))).toContain('data-code-theme="light"');
+    expect(renderToStaticMarkup(renderLeafContent(dark))).toContain('data-code-theme="dark"');
+  });
+
+  it('applies code tab size, typography, and authored color to the visible code surface', () => {
+    const code = createTextNode('code', 'root');
+    code.content = createTextDocumentFromCode('const answer = 42;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: '<span class="token keyword">const</span> answer = 42;',
+      style: {
+        color: '#123456',
+        fontFamily: 'JetBrains Mono',
+        fontSize: '15px',
+        fontWeight: 600,
+        fontStyle: 'italic',
+        textDecorationLine: 'underline',
+        lineHeight: 1.6,
+        tabSize: 4,
+      } as never,
+    });
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('data-code-color="author"');
+    expect(markup).toContain('tab-size:4');
+    expect(markup).toContain('color:#123456');
+    expect(markup).toContain('font-family:JetBrains Mono');
+    expect(markup).toContain('font-size:15px');
+    expect(markup).toContain('font-weight:600');
+    expect(markup).toContain('font-style:italic');
+    expect(markup).toContain('text-decoration-line:underline');
+    expect(markup).toContain('line-height:1.6');
+    expect(markup).toContain('<code class="language-typescript" style="color:#123456');
+  });
+
   it('renders semantic ordered lists and flattens them for labels', () => {
     const list = createTextNode('list', 'root');
     list.content = createTextDocumentContent([

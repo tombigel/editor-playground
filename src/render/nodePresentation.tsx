@@ -22,6 +22,7 @@ import type {
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
+  TextNode,
 } from '../model/types';
 import { highlightCode } from './codeHighlight';
 import type {
@@ -29,7 +30,7 @@ import type {
   RenderLeafContentOptions,
   StageOrSiteNode,
 } from './types';
-import { getStandaloneCodePreStyle, styleRecordToReactStyle } from './leafPresentation';
+import { getCodeLeafStyle, getStandaloneCodePreStyle, styleRecordToReactStyle } from './leafPresentation';
 export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
@@ -139,6 +140,7 @@ function renderRichCodeBlock(block: RichCodeBlock, path: string): ReactNode {
     .map((line) => line.children.map((leaf) => leaf.text).join(''))
     .join('\n');
   const html = block.highlightedHtml ?? highlightCode(rawText, language);
+  const hasColorOverride = hasCodeColorOverride(block.style);
 
   return (
     <div
@@ -149,10 +151,12 @@ function renderRichCodeBlock(block: RichCodeBlock, path: string): ReactNode {
       <pre
         className={`language-${language}`}
         data-code-theme={block.theme ?? 'light'}
+        data-code-color={hasColorOverride ? 'author' : undefined}
         style={richCodeBlockPreStyleToCss(block.style)}
       >
         <code
           className={`language-${language}`}
+          style={richCodeBlockCodeStyleToCss(block.style)}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor/model layer
           dangerouslySetInnerHTML={{ __html: html }}
         />
@@ -338,6 +342,8 @@ function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSPrope
     margin: 0,
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
+    ...richCodeBlockTypographyStyleToCss(style),
+    ...richCodeBlockTabStyleToCss(style),
     ...(style?.background ? { background: style.background } : {}),
   };
 
@@ -350,6 +356,34 @@ function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSPrope
   if (style?.boxShadow) css.boxShadow = style.boxShadow;
 
   return css;
+}
+
+function richCodeBlockCodeStyleToCss(style: RichBlockStyle | undefined): CSSProperties | undefined {
+  const css = richCodeBlockTypographyStyleToCss(style);
+  return Object.keys(css).length > 0 ? css : undefined;
+}
+
+function richCodeBlockTypographyStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
+  return {
+    ...(style?.color ? { color: style.color } : {}),
+    ...(style?.fontFamily ? { fontFamily: style.fontFamily } : {}),
+    ...(style?.fontSize ? { fontSize: style.fontSize } : {}),
+    ...(style?.fontWeight != null ? { fontWeight: style.fontWeight } : {}),
+    ...(style?.fontStyle ? { fontStyle: style.fontStyle } : {}),
+    ...(style?.textDecorationLine ? { textDecorationLine: style.textDecorationLine } : {}),
+    ...((style as (RichBlockStyle & { lineHeight?: number }) | undefined)?.lineHeight != null
+      ? { lineHeight: (style as RichBlockStyle & { lineHeight?: number }).lineHeight }
+      : {}),
+  };
+}
+
+function richCodeBlockTabStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
+  const tabSize = (style as (RichBlockStyle & { tabSize?: number }) | undefined)?.tabSize;
+  return tabSize != null ? { tabSize } : {};
+}
+
+function hasCodeColorOverride(style: RichBlockStyle | undefined): boolean {
+  return Boolean(style?.color);
 }
 
 function getExternalLinkProps(link: LinkExtension | undefined) {
@@ -571,7 +605,11 @@ export function renderLeafContent(
     const html = codeBlock?.highlightedHtml ?? node.code?.highlightedHtml ?? escapeHtml(codeText);
     const codeStyle = codeBlock?.style
       ? richCodeBlockPreStyleToCss(codeBlock.style)
-      : styleRecordToReactStyle(getStandaloneCodePreStyle(node));
+      : getStandaloneCodePreStyleToCss(node);
+    const codeElementStyle = codeBlock?.style
+      ? richCodeBlockCodeStyleToCss(codeBlock.style)
+      : getStandaloneCodeElementStyleToCss(node);
+    const hasColorOverride = hasCodeColorOverride(codeBlock?.style) || Boolean(node.style?.color);
     return (
       <div
         className={leafClassName}
@@ -581,10 +619,12 @@ export function renderLeafContent(
         <pre
           className={`language-${lang}`}
           data-code-theme={theme}
+          data-code-color={hasColorOverride ? 'author' : undefined}
           style={codeStyle}
         >
           <code
             className={`language-${lang}`}
+            style={codeElementStyle}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer
             dangerouslySetInnerHTML={{ __html: html }}
           />
@@ -675,4 +715,17 @@ export function renderLeafContent(
   }
 
   return null;
+}
+
+function getStandaloneCodePreStyleToCss(node: TextNode): CSSProperties {
+  return styleRecordToReactStyle({
+    ...getCodeLeafStyle(node),
+    ...getStandaloneCodePreStyle(node),
+  });
+}
+
+function getStandaloneCodeElementStyleToCss(node: TextNode): CSSProperties | undefined {
+  const { display: _display, margin: _margin, maxWidth: _maxWidth, whiteSpace: _whiteSpace, ...style } = getCodeLeafStyle(node);
+  const css = styleRecordToReactStyle(style);
+  return Object.keys(css).length > 0 ? css : undefined;
 }
