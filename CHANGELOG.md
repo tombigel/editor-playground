@@ -38,6 +38,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - address list editing verification issues
 - preserve list inline styles on subtype conversion
 - preserve inline styles when converting to lists
+- preserve rich list styles across conversions
 
 ---
 

@@ -138,11 +138,9 @@ function convertTextContent(
 ): TextDocumentContent {
   if (targetSubtype === 'list') {
     const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
-    if (richContent.length === 1) {
-      const richListBlock = convertSingleRichBlockToList(richContent[0], source.style?.direction);
-      if (richListBlock) {
-        return createTextDocumentContent([richListBlock]);
-      }
+    const richListBlock = convertRichBlocksToListBlock(richContent, source.style?.direction);
+    if (richListBlock) {
+      return createTextDocumentContent([richListBlock]);
     }
     return createTextDocumentContent([listContentToRichListBlock(convertToListContent(source))]);
   }
@@ -200,6 +198,15 @@ function convertTextContent(
     const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
     if (richContent.length === 1) {
       return convertSingleRichBlock(richContent[0], targetSubtype);
+    }
+    if (targetSubtype === 'block') {
+      return createTextDocumentContent([
+        createRichTextBlock(
+          'paragraph',
+          flattenRichBlocksInlineChildren(richContent),
+          { direction: source.style?.direction },
+        ),
+      ]);
     }
   }
 
@@ -353,6 +360,12 @@ function convertSingleRichBlock(
     }]);
   }
 
+  if (block.type === 'ul' || block.type === 'ol') {
+    return createTextDocumentContent([
+      createRichTextBlock('paragraph', flattenListBlockInlineChildren(block), { direction: block.direction }),
+    ]);
+  }
+
   return createTextDocumentFromText(getTextContent([block]), {
     type: 'paragraph',
     direction: block.direction,
@@ -377,6 +390,48 @@ function flattenListBlockInlineChildren(block: Extract<RichBlock, { type: 'ul' |
     ...(index > 0 ? [createRichTextLeaf('\n')] : []),
     ...cloneInlineNodes(item.children),
   ]);
+}
+
+function flattenRichBlockInlineChildren(block: RichBlock): RichInlineNode[] {
+  if (isRichTextBlockForStandaloneBlock(block)) {
+    return cloneInlineNodes(block.children);
+  }
+
+  if (block.type === 'ul' || block.type === 'ol') {
+    return flattenListBlockInlineChildren(block);
+  }
+
+  return block.children.flatMap((line, index) => [
+    ...(index > 0 ? [createRichTextLeaf('\n')] : []),
+    ...cloneInlineNodes(line.children),
+  ]);
+}
+
+function flattenRichBlocksInlineChildren(blocks: RichBlock[]): RichInlineNode[] {
+  const children = blocks.flatMap((block, index) => [
+    ...(index > 0 ? [createRichTextLeaf('\n')] : []),
+    ...flattenRichBlockInlineChildren(block),
+  ]);
+  return children.length > 0 ? children : [createRichTextLeaf('')];
+}
+
+function convertRichBlocksToListBlock(
+  blocks: RichBlock[],
+  fallbackDirection?: RichListItem['direction'],
+): RichListBlock | null {
+  if (blocks.length === 0) {
+    return null;
+  }
+
+  if (blocks.length === 1) {
+    return convertSingleRichBlockToList(blocks[0], fallbackDirection);
+  }
+
+  return createRichListBlock(
+    'ul',
+    splitInlineChildrenIntoListItems(flattenRichBlocksInlineChildren(blocks), fallbackDirection),
+    { direction: fallbackDirection, markerStyle: 'disc' },
+  );
 }
 
 function convertSingleRichBlockToList(
