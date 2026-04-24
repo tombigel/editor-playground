@@ -88,7 +88,7 @@ export function RichTextToolbar({
 	onBlockSpacingCommit,
 	resolveSpacingUnitValue,
 }: {
-	mode?: "rich" | "block";
+	mode?: "rich" | "block" | "list";
 	toolbarRef: Ref<HTMLDivElement>;
 	toolbarPosition: { top: number; left: number };
 	toolbarDragging: boolean;
@@ -160,6 +160,7 @@ export function RichTextToolbar({
 		currentHighlightColor,
 	} = toolbarState;
 	const showBlockControls = mode === "rich";
+	const showListControls = mode === "rich";
 
 	return (
 		<FloatingPanelShell
@@ -321,147 +322,159 @@ export function RichTextToolbar({
 							</>
 						) : null}
 					</div>
-					{showBlockControls ? (
+					{showBlockControls || showListControls ? (
 						<div className="flex items-center gap-1.5">
-						<ToolbarButton
-							label={
-								selectedDirection === "rtl" ? "Switch to LTR" : "Switch to RTL"
-							}
-							active={selectedDirection === "rtl"}
-							onActivate={onDirectionToggle}
-						>
-							{selectedDirection === "rtl" ? (
-								<PilcrowLeft size={14} />
-							) : (
-								<PilcrowRight size={14} />
-							)}
-						</ToolbarButton>
-						<ToolbarButton
-							label="Use text block"
-							active={structureMode === "block"}
-							onActivate={onUseTextBlock}
-						>
-							<Type size={14} />
-						</ToolbarButton>
-						{structureMode === "block" ? (
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.blockType}
-								open={openSelectId === RICH_SELECT_IDS.blockType}
-								onOpenChange={(open) =>
-									onSelectOpenChange(RICH_SELECT_IDS.blockType, open)
-								}
-								label="Block type"
-								value={selectedBlockType}
-								onValueChange={(value) =>
-									onBlockTypeChange(value as RichTextBlockType)
-								}
-								options={BLOCK_TYPE_OPTIONS.map((option) => ({
-									value: option.value,
-									label: option.label,
-								}))}
-								width={112}
-							/>
-						) : null}
-						<ToolbarButton
-							label="Use code block"
-							active={structureMode === "code-block"}
-							onActivate={onUseCodeBlock}
-						>
-							<Code2 size={14} />
-						</ToolbarButton>
-						{structureMode === "code-block" ? (
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.codeLanguage}
-								open={openSelectId === RICH_SELECT_IDS.codeLanguage}
-								onOpenChange={(open) =>
-									onSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)
-								}
-								label="Code language"
-								value={selectedCodeLanguage || "plaintext"}
-								onValueChange={onCodeLanguageChange}
-								options={CODE_LANGUAGE_OPTIONS}
-								width={110}
-							/>
-						) : null}
-						<ToolbarButton
-							label="Use ordered list"
-							active={selectedListKind === "ol"}
-							onActivate={onUseOrderedList}
-						>
-							<ListOrdered size={14} />
-						</ToolbarButton>
-						{structureMode === "ol" ? (
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.orderedListMarker}
-								open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
-								onOpenChange={(open) =>
-									onSelectOpenChange(RICH_SELECT_IDS.orderedListMarker, open)
-								}
-								label="Ordered list marker"
-								value={
-									selectedListKind === "ol"
-										? selectedListMarkerStyle || "decimal"
-										: "decimal"
-								}
-								onValueChange={(value) =>
-									onOrderedMarkerChange(
-										value as (typeof ORDERED_MARKER_OPTIONS)[number]["value"],
-									)
-								}
-								options={ORDERED_MARKER_OPTIONS.map((option) => ({
-									value: option.value,
-									label: option.label,
-								}))}
-								width={88}
-							/>
-						) : null}
-						<ToolbarButton
-							label="Use unordered list"
-							active={selectedListKind === "ul"}
-							onActivate={onUseUnorderedList}
-						>
-							<List size={14} />
-						</ToolbarButton>
-						{structureMode === "ul" ? (
-							<CompactSelect
-								selectId={RICH_SELECT_IDS.unorderedListMarker}
-								open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
-								onOpenChange={(open) =>
-									onSelectOpenChange(RICH_SELECT_IDS.unorderedListMarker, open)
-								}
-								label="Unordered list marker"
-								value={
-									selectedListKind === "ul"
-										? selectedListMarkerStyle || "disc"
-										: "disc"
-								}
-								onValueChange={(value) =>
-									onUnorderedMarkerChange(
-										value as (typeof UNORDERED_MARKER_OPTIONS)[number]["value"],
-									)
-								}
-								options={UNORDERED_MARKER_OPTIONS.map((option) => ({
-									value: option.value,
-									label: option.label,
-								}))}
-								width={92}
-							/>
-						) : null}
-						<CompactLineHeightField
-							label="Line height"
-							icon={<MoveVertical size={14} />}
-							value={selectedLineHeight}
-							width={72}
-							onChange={onLineHeightChange}
-						/>
-						<CompactSpacingField
-							label="Block spacing"
-							icon={<UnfoldVertical size={14} />}
-							value={currentBlockSpacingValue}
-							width={104}
-							onCommit={onBlockSpacingCommit}
-							resolveUnitValue={resolveSpacingUnitValue}
-						/>
+							{showBlockControls ? (
+								<>
+									<ToolbarButton
+										label={
+											selectedDirection === "rtl" ? "Switch to LTR" : "Switch to RTL"
+										}
+										active={selectedDirection === "rtl"}
+										onActivate={onDirectionToggle}
+									>
+										{selectedDirection === "rtl" ? (
+											<PilcrowLeft size={14} />
+										) : (
+											<PilcrowRight size={14} />
+										)}
+									</ToolbarButton>
+									<ToolbarButton
+										label="Use text block"
+										active={structureMode === "block"}
+										onActivate={onUseTextBlock}
+									>
+										<Type size={14} />
+									</ToolbarButton>
+									{structureMode === "block" ? (
+										<CompactSelect
+											selectId={RICH_SELECT_IDS.blockType}
+											open={openSelectId === RICH_SELECT_IDS.blockType}
+											onOpenChange={(open) =>
+												onSelectOpenChange(RICH_SELECT_IDS.blockType, open)
+											}
+											label="Block type"
+											value={selectedBlockType}
+											onValueChange={(value) =>
+												onBlockTypeChange(value as RichTextBlockType)
+											}
+											options={BLOCK_TYPE_OPTIONS.map((option) => ({
+												value: option.value,
+												label: option.label,
+											}))}
+											width={112}
+										/>
+									) : null}
+									<ToolbarButton
+										label="Use code block"
+										active={structureMode === "code-block"}
+										onActivate={onUseCodeBlock}
+									>
+										<Code2 size={14} />
+									</ToolbarButton>
+									{structureMode === "code-block" ? (
+										<CompactSelect
+											selectId={RICH_SELECT_IDS.codeLanguage}
+											open={openSelectId === RICH_SELECT_IDS.codeLanguage}
+											onOpenChange={(open) =>
+												onSelectOpenChange(RICH_SELECT_IDS.codeLanguage, open)
+											}
+											label="Code language"
+											value={selectedCodeLanguage || "plaintext"}
+											onValueChange={onCodeLanguageChange}
+											options={CODE_LANGUAGE_OPTIONS}
+											width={110}
+										/>
+									) : null}
+								</>
+							) : null}
+							{showListControls ? (
+								<>
+									<ToolbarButton
+										label="Use ordered list"
+										active={selectedListKind === "ol"}
+										onActivate={onUseOrderedList}
+									>
+										<ListOrdered size={14} />
+									</ToolbarButton>
+									{structureMode === "ol" ? (
+										<CompactSelect
+											selectId={RICH_SELECT_IDS.orderedListMarker}
+											open={openSelectId === RICH_SELECT_IDS.orderedListMarker}
+											onOpenChange={(open) =>
+												onSelectOpenChange(RICH_SELECT_IDS.orderedListMarker, open)
+											}
+											label="Ordered list marker"
+											value={
+												selectedListKind === "ol"
+													? selectedListMarkerStyle || "decimal"
+													: "decimal"
+											}
+											onValueChange={(value) =>
+												onOrderedMarkerChange(
+													value as (typeof ORDERED_MARKER_OPTIONS)[number]["value"],
+												)
+											}
+											options={ORDERED_MARKER_OPTIONS.map((option) => ({
+												value: option.value,
+												label: option.label,
+											}))}
+											width={88}
+										/>
+									) : null}
+									<ToolbarButton
+										label="Use unordered list"
+										active={selectedListKind === "ul"}
+										onActivate={onUseUnorderedList}
+									>
+										<List size={14} />
+									</ToolbarButton>
+									{structureMode === "ul" ? (
+										<CompactSelect
+											selectId={RICH_SELECT_IDS.unorderedListMarker}
+											open={openSelectId === RICH_SELECT_IDS.unorderedListMarker}
+											onOpenChange={(open) =>
+												onSelectOpenChange(RICH_SELECT_IDS.unorderedListMarker, open)
+											}
+											label="Unordered list marker"
+											value={
+												selectedListKind === "ul"
+													? selectedListMarkerStyle || "disc"
+													: "disc"
+											}
+											onValueChange={(value) =>
+												onUnorderedMarkerChange(
+													value as (typeof UNORDERED_MARKER_OPTIONS)[number]["value"],
+												)
+											}
+											options={UNORDERED_MARKER_OPTIONS.map((option) => ({
+												value: option.value,
+												label: option.label,
+											}))}
+											width={92}
+										/>
+									) : null}
+								</>
+							) : null}
+							{showBlockControls ? (
+								<>
+									<CompactLineHeightField
+										label="Line height"
+										icon={<MoveVertical size={14} />}
+										value={selectedLineHeight}
+										width={72}
+										onChange={onLineHeightChange}
+									/>
+									<CompactSpacingField
+										label="Block spacing"
+										icon={<UnfoldVertical size={14} />}
+										value={currentBlockSpacingValue}
+										width={104}
+										onCommit={onBlockSpacingCommit}
+										resolveUnitValue={resolveSpacingUnitValue}
+									/>
+								</>
+							) : null}
 						</div>
 					) : null}
 				</div>

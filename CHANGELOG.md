@@ -18,6 +18,8 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add list item depth
 - preserve rich list item content
 - add shared list editing helpers
+- edit standalone lists on stage
+- draft shared list editing helpers
 
 ### Changed
 

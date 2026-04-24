@@ -9,7 +9,13 @@ import type {
 } from '../../model/types';
 import { formatValue } from '../../model/units';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
-import { prepareStandaloneBlockEditContent } from '../../model/richContent';
+import {
+  createRichListBlock,
+  createRichListItem,
+  createTextDocumentContent,
+  getSingleListBlockContent,
+  prepareStandaloneBlockEditContent,
+} from '../../model/richContent';
 import {
   formatNodeLabel,
   getNodeAriaLabel,
@@ -276,10 +282,12 @@ function LeafTextEditBody({
   onOpenManageFonts: () => void;
 }) {
   if (isEditing) {
-    const mode = child.subtype === 'block' ? 'block' : 'rich';
+    const mode = child.subtype === 'block' ? 'block' : child.subtype === 'list' ? 'list' : 'rich';
     const editableContent =
       mode === 'block'
         ? prepareStandaloneBlockEditContent(child)
+        : mode === 'list'
+          ? prepareStandaloneListEditContent(child)
         : { content: child.content, promotedNodeLink: false };
     return (
       <RichTextEditOverlay
@@ -310,8 +318,29 @@ function LeafTextEditBody({
   );
 }
 
-function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' {
-  return subtype === 'rich' || subtype === 'block';
+function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' | 'list' {
+  return subtype === 'rich' || subtype === 'block' || subtype === 'list';
+}
+
+function prepareStandaloneListEditContent(node: TextNode) {
+  if (node.subtype !== 'list') {
+    return {
+      content: createTextDocumentContent([
+        createRichListBlock('ul', [createRichListItem('')]),
+      ]),
+      promotedNodeLink: false,
+    };
+  }
+
+  const listBlock = getSingleListBlockContent(node.content);
+  return {
+    content: createTextDocumentContent([
+      listBlock
+        ? structuredClone(listBlock)
+        : createRichListBlock('ul', [createRichListItem('')]),
+    ]),
+    promotedNodeLink: false,
+  };
 }
 
 export function renderLeafSpacerOverlay({

@@ -713,11 +713,14 @@ function findSelectedListItemEntry(editor: BaseEditor): NodeEntry<RichListItem> 
 }
 
 function isListItemElement(node: unknown): node is RichListItem {
-  return !Editor.isEditor(node) && Element.isElement(node) && node.type === 'list-item';
+  return !Editor.isEditor(node) && Element.isElement(node) && (node as { type?: string }).type === 'list-item';
 }
 
 function isListBlockElement(node: unknown): node is RichListBlock {
-  return !Editor.isEditor(node) && Element.isElement(node) && (node.type === 'ul' || node.type === 'ol');
+  const nodeType = !Editor.isEditor(node) && Element.isElement(node)
+    ? (node as { type?: string }).type
+    : undefined;
+  return nodeType === 'ul' || nodeType === 'ol';
 }
 
 function getListItemDepth(item: RichListItem): number {

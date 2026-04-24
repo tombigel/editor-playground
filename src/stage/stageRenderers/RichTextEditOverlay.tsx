@@ -62,9 +62,14 @@ import {
 	convertSelectionToCodeBlock,
 	convertSelectionToList,
 	createRichEditor,
+	changeSelectedListItemDepth,
 	fromSlateValue,
 	getActiveLinkNode,
+	insertListItemBreak,
+	insertListSoftBreak,
 	insertLink,
+	isSelectionInListItem,
+	mergeListItemBackward,
 	removeLink,
 	setMarkValue,
 	setSelectedBlocksDirection,
@@ -102,6 +107,8 @@ import {
 } from "./richTextEditOverlay/types";
 import { useRichToolbarPosition } from "./richTextEditOverlay/useRichToolbarPosition";
 
+type RichTextEditMode = "rich" | "block" | "list";
+
 export function RichTextEditOverlay({
 	nodeId,
 	mode,
@@ -115,7 +122,7 @@ export function RichTextEditOverlay({
 	onOpenManageFonts = () => undefined,
 }: {
 	nodeId: NodeId;
-	mode?: "rich" | "block";
+	mode?: RichTextEditMode;
 	content: TextDocumentContent;
 	contentStyle?: CSSProperties;
 	minHeight?: string;
@@ -402,6 +409,10 @@ export function RichTextEditOverlay({
 			}
 
 			const isMod = event.metaKey || event.ctrlKey;
+			const refreshKeyboardEdit = () => {
+				syncToolbarState();
+				setSelectionRevision((revision) => revision + 1);
+			};
 			if (isMod && event.key === "Enter") {
 				event.preventDefault();
 				commitCurrentContent();
@@ -412,6 +423,29 @@ export function RichTextEditOverlay({
 				Editor.insertText(editor, "\n");
 				syncToolbarState();
 				setSelectionRevision((revision) => revision + 1);
+				return;
+			}
+			if (event.key === "Enter" && isSelectionInListItem(editor)) {
+				event.preventDefault();
+				if (event.shiftKey) {
+					insertListSoftBreak(editor);
+				} else {
+					insertListItemBreak(editor);
+				}
+				refreshKeyboardEdit();
+				return;
+			}
+			if (event.key === "Backspace" && mergeListItemBackward(editor)) {
+				event.preventDefault();
+				refreshKeyboardEdit();
+				return;
+			}
+			if (event.key === "Tab") {
+				event.preventDefault();
+				if (!changeSelectedListItemDepth(editor, event.shiftKey ? -1 : 1) && !event.shiftKey) {
+					Editor.insertText(editor, "\t");
+				}
+				refreshKeyboardEdit();
 				return;
 			}
 			if (isMod && event.key === "b") {
