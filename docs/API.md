@@ -980,6 +980,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Model Type Exports
 
 - `BreakpointId`, `FontSizeUnit`, `SpacingUnit`, `FontSource`, `DocumentFontOrigin`, `FontAxis`
+- `CodeTheme`
 - `LeafTypographyField`, `TextWrapField`, `TextStyleField`, `LinkStyleField`, `ImageStyleField`, `ButtonStyleField`
 - `LinkKind`, `ListDirection`, `ListContentType`, `StickyEdges`, `StickyTarget`, `ViewportMeasurement`
 - `RichTextLeaf`, `RichTextLink`, `RichInlineNode`, `RichBlockStyle`, `StandaloneTextNodeSnapshot`
