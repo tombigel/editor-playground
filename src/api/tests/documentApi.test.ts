@@ -28,6 +28,8 @@ import {
   setNodeRect,
   setNodeSticky,
   setPageTopLevelWrapperPlacement,
+  setRichListKindDoc,
+  setRichListMarkerStyleDoc,
   setTextDocumentContentDoc,
   setTextDirectionDoc,
   setTextNodeContentDoc,
@@ -719,6 +721,96 @@ describe('api/documentApi', () => {
       markerStyle: 'upper-alpha',
       items: [{ text: 'First', direction: 'rtl' }],
     });
+  });
+
+  it('rejects multi-block content for standalone list nodes', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const list = createTextNode('list', section.id);
+    list.content = createTextDocumentContent([
+      listContentToRichListBlock({ type: 'ul', markerStyle: 'disc', items: [{ text: 'First', direction: 'ltr' }] }),
+    ]);
+    document.nodes[list.id] = list;
+    document.nodes[section.id].children.push(list.id);
+
+    const next = setTextDocumentContentDoc(document, list.id, createTextDocumentContent([
+      listContentToRichListBlock({ type: 'ul', markerStyle: 'disc', items: [{ text: 'First', direction: 'ltr' }] }),
+      listContentToRichListBlock({ type: 'ul', markerStyle: 'disc', items: [{ text: 'Second', direction: 'ltr' }] }),
+    ]));
+
+    expect(next).toBe(document);
+  });
+
+  it('preserves rich list inline content when changing list kind and marker style', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const rich = createTextNode('rich', section.id);
+    rich.content = createTextDocumentContent([
+      {
+        type: 'ul',
+        markerStyle: 'square',
+        children: [
+          {
+            type: 'list-item',
+            direction: 'rtl',
+            depth: 1,
+            children: [
+              { text: 'Styled ', bold: true, fontSize: '20px' },
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com',
+                children: [{ text: 'link', color: '#d62246' }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    document.nodes[rich.id] = rich;
+    document.nodes[section.id].children.push(rich.id);
+
+    const ordered = setRichListKindDoc(document, rich.id, 0, 'ol');
+    const marked = setRichListMarkerStyleDoc(ordered, rich.id, 0, 'upper-roman');
+    const node = marked.nodes[rich.id];
+    if (node.contentType !== 'text' || node.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+
+    expect(node.content.blocks).toMatchObject([
+      {
+        type: 'ol',
+        markerStyle: 'upper-roman',
+        children: [
+          {
+            type: 'list-item',
+            direction: 'rtl',
+            depth: 1,
+            children: [
+              { text: 'Styled ', bold: true, fontSize: '20px' },
+              {
+                type: 'link',
+                linkType: 'external',
+                href: 'https://example.com',
+                children: [{ text: 'link', color: '#d62246' }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
   });
 
   it('converts block text to list through the explicit text conversion API', () => {

@@ -3,6 +3,7 @@ import { createDefaultLinkExtension } from '../../model/defaults';
 import { normalizeNavigationKind } from '../../model/links';
 import { normalizeListContent } from '../../model/listContent';
 import {
+  createRichListBlock,
   createRichTextBlock,
   createRichTextLeaf,
   createTextDocumentContent,
@@ -34,6 +35,7 @@ import type {
   NodeId,
   RichContent,
   RichInlineNode,
+  RichListBlock,
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
@@ -743,20 +745,60 @@ export function setRichBlockTypeDoc(
 
 export function setRichListKindDoc(
   document: DocumentModel,
-  _nodeId: NodeId,
-  _blockIndex: number,
-  _listKind: 'ul' | 'ol',
+  nodeId: NodeId,
+  blockIndex: number,
+  listKind: 'ul' | 'ol',
 ): DocumentModel {
-  return document;
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'rich') {
+    return document;
+  }
+
+  const content = normalizeRichContent(getTextDocumentBlocks(node.content));
+  const block = content[blockIndex];
+  if (!block || (block.type !== 'ul' && block.type !== 'ol')) {
+    return document;
+  }
+
+  content[blockIndex] = createRichListBlock(listKind, structuredClone(block.children), {
+    direction: block.direction,
+    style: block.style,
+    standalone: block.standalone,
+    markerStyle: block.markerStyle,
+    ...(listKind === 'ol' && block.type === 'ol' ? { start: block.start } : {}),
+  });
+  node.content = replaceTextDocumentBlocks(node.content, content);
+  return next;
 }
 
 export function setRichListMarkerStyleDoc(
   document: DocumentModel,
-  _nodeId: NodeId,
-  _blockIndex: number,
-  _markerStyle: string,
+  nodeId: NodeId,
+  blockIndex: number,
+  markerStyle: string,
 ): DocumentModel {
-  return document;
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  if (!node || !isTextNode(node) || node.subtype !== 'rich') {
+    return document;
+  }
+
+  const content = normalizeRichContent(getTextDocumentBlocks(node.content));
+  const block = content[blockIndex];
+  if (!block || (block.type !== 'ul' && block.type !== 'ol')) {
+    return document;
+  }
+
+  content[blockIndex] = createRichListBlock(block.type, structuredClone(block.children), {
+    direction: block.direction,
+    style: block.style,
+    standalone: block.standalone,
+    markerStyle,
+    ...(block.type === 'ol' ? { start: block.start } : {}),
+  }) satisfies RichListBlock;
+  node.content = replaceTextDocumentBlocks(node.content, content);
+  return next;
 }
 
 export function setRichBlockLineHeightDoc(
