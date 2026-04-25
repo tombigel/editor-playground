@@ -205,10 +205,10 @@ export function PagesPanel({
           actions={(
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'page' | 'settings')}>
               <TabsList variant="segmented">
-                <TabsTrigger value="page" variant="segmented" size="compact" className="min-w-[76px]">
+                <TabsTrigger value="page" variant="segmented" size="compact">
                   Page
                 </TabsTrigger>
-                <TabsTrigger value="settings" variant="segmented" size="compact" className="min-w-[76px]">
+                <TabsTrigger value="settings" variant="segmented" size="compact">
                   Settings
                 </TabsTrigger>
               </TabsList>

@@ -690,7 +690,8 @@ Spec:
 - tabs list uses a subtle token-backed background with a `rounded-md` shell
 - floating panel tab shells may reuse the subtle pill surface with the same radius and token set, using compact `2px` padding
 - when a floating panel has only 2 short tabs, place the tab shell in the header actions area before introducing a second row
-- triggers use `28px` height, compact `12px` medium text, and `rounded-[6px]`
+- default triggers use `28px` height, `12px` medium text, and `rounded-[6px]`
+- compact triggers use `24px` height, `11px` medium text, `rounded-sm`, and intrinsic text width instead of panel-side minimum width overrides
 - active trigger swaps to the surface background and strong text with a small surface shadow
 - tab content spacing should come from the host panel, not from the primitive itself
 

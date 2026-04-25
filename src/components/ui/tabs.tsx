@@ -29,7 +29,7 @@ const tabsTriggerVariants = cva('font-medium transition-colors', {
     },
     size: {
       default: 'h-7 rounded-[6px] px-2.5 text-xs',
-      compact: 'h-7 rounded-md px-3 text-xs',
+      compact: 'h-6 rounded-sm px-2.5 text-[11px]',
       small: 'h-7 rounded-sm px-2 text-[11px]',
     },
     selected: {
