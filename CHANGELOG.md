@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - collapse small-chunk fragmentation
+- split heavy vendors into dedicated chunks
 
 ### Fixed
 

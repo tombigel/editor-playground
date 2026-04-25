@@ -45,17 +45,47 @@ export default defineConfig({
       output: {
         experimentalMinChunkSize: 10_000,
         manualChunks: (id) => {
+          if (!id.includes('node_modules')) return;
+
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('/node_modules/scheduler/')
+          ) {
+            return 'react-vendor';
+          }
+
+          if (id.includes('/node_modules/@radix-ui/')) {
+            return 'radix-vendor';
+          }
+
           if (id.includes('/node_modules/lucide-react/')) {
             return 'icons-vendor';
           }
+
+          if (id.includes('/node_modules/prismjs/')) {
+            return 'prism-vendor';
+          }
+
           if (
-            id.includes('@radix-ui/react-dialog') ||
-            id.includes('@radix-ui/react-select') ||
-            id.includes('@radix-ui/react-slider') ||
-            id.includes('@radix-ui/react-slot') ||
-            id.includes('@radix-ui/react-switch')
+            id.includes('/node_modules/slate/') ||
+            id.includes('/node_modules/slate-react/') ||
+            id.includes('/node_modules/slate-history/') ||
+            id.includes('/node_modules/is-plain-object/') ||
+            id.includes('/node_modules/immer/')
           ) {
-            return 'radix-vendor';
+            return 'slate-vendor';
+          }
+
+          if (
+            id.includes('/node_modules/react-markdown/') ||
+            id.includes('/node_modules/remark-') ||
+            id.includes('/node_modules/micromark') ||
+            id.includes('/node_modules/mdast-') ||
+            id.includes('/node_modules/unified/') ||
+            id.includes('/node_modules/unist-')
+          ) {
+            return 'markdown-vendor';
           }
         },
       },
