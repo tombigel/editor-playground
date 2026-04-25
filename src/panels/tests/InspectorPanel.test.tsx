@@ -3,7 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { CodeXml, ListOrdered, PencilLine, TextInitial } from 'lucide-react';
 import { createInitialDocument, createTextNode, createButtonTextNode, createContainerNode } from '../../model/defaults';
 import { createDefaultListContent } from '../../model/listContent';
-import { createTextDocumentContent, listContentToRichListBlock } from '../../model/richContent';
+import {
+  createRichTextBlock,
+  createRichTextLeaf,
+  createTextDocumentContent,
+  listContentToRichListBlock,
+} from '../../model/richContent';
 import { getTextSubtypeIcon } from '../inspector/config.text';
 import {
   createListBlockWithKind,
@@ -308,6 +313,35 @@ describe('panels/InspectorPanel', () => {
     expect(markup).not.toContain('grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-sm border px-2 py-2');
     expect(markup).not.toContain('data-ui="control-group" data-separated="true"');
     expect(markup).toContain('space-y-2.5 mt-2.5');
+  });
+
+  it('renders a direct split action for multi-block rich text nodes', () => {
+    const richNode = createTextNode('rich', 'section_1');
+    richNode.content = createTextDocumentContent([
+      createRichTextBlock('h2', [createRichTextLeaf('Heading')]),
+      createRichTextBlock('paragraph', [createRichTextLeaf('Body')]),
+    ]);
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ node: richNode, onSplitRichTextNode: () => {} })} />,
+    );
+
+    expect(markup).toContain('Split this rich text into sibling text, code, and list nodes.');
+    expect(markup).toContain('>Split into text nodes<');
+  });
+
+  it('does not render the direct split action for single-block rich text nodes', () => {
+    const richNode = createTextNode('rich', 'section_1');
+    richNode.content = createTextDocumentContent([
+      createRichTextBlock('paragraph', [createRichTextLeaf('Only block')]),
+    ]);
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ node: richNode, onSplitRichTextNode: () => {} })} />,
+    );
+
+    expect(markup).not.toContain('Split this rich text into sibling text, code, and list nodes.');
+    expect(markup).not.toContain('>Split into text nodes<');
   });
 
   it('preserves inline list item content when inspector block controls change list metadata', () => {

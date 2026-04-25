@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- add rich text split action
+
 ### Changed
 
 - collapse small-chunk fragmentation

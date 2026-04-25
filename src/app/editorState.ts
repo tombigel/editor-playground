@@ -42,6 +42,7 @@ import {
   setSiteNodeStickyElevation,
   setTextDocumentBlockGapDoc,
   setTextDocumentContentDoc,
+  splitRichTextNodeDoc,
   switchTextSubtypeDoc,
 } from '../api/documentApi';
 import {
@@ -171,6 +172,45 @@ export function editorReducer(state: EditorState, action: EditorAction) {
         document: nextDocument,
         selectedId: survivorNodeId,
         selectedIds: [survivorNodeId],
+      };
+    }
+    case 'splitRichTextNode': {
+      const nodeId = action.nodeId ?? selectedId;
+      if (!nodeId) {
+        return state;
+      }
+
+      const source = state.document.nodes[nodeId];
+      if (!source || source.contentType !== 'text' || source.subtype !== 'rich' || !source.parentId || source.content.blocks.length <= 1) {
+        return state;
+      }
+
+      const parent = state.document.nodes[source.parentId];
+      if (!parent) {
+        return state;
+      }
+
+      const anchorIndex = parent.children.indexOf(nodeId);
+      if (anchorIndex === -1) {
+        return state;
+      }
+
+      const nextDocument = splitRichTextNodeDoc(state.document, nodeId);
+      if (nextDocument === state.document) {
+        return state;
+      }
+
+      const nextParent = nextDocument.nodes[source.parentId];
+      if (!nextParent) {
+        return state;
+      }
+
+      const splitNodeIds = nextParent.children.slice(anchorIndex, anchorIndex + source.content.blocks.length);
+      return {
+        ...state,
+        document: nextDocument,
+        selectedId: nodeId,
+        selectedIds: splitNodeIds,
       };
     }
     case 'setNodeVisibility':

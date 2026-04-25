@@ -569,6 +569,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onMergeTextSelectionToRich={(nodeIds) =>
 							dispatch({ type: "mergeTextSelectionToRich", nodeIds })
 						}
+						onSplitRichTextNode={(nodeId) =>
+							dispatch({ type: "splitRichTextNode", nodeId })
+						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })
 						}

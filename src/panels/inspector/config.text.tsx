@@ -207,12 +207,15 @@ const textContentSection: InspectorSectionDefinition = {
       );
     }
     if (node.subtype === 'rich') {
+      const richBlockCount = getTextDocumentBlocks(node.content).length;
       return (
         <RichTextContentSection
           node={node}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           onActivateRichEdit={actions.onActivateRichEdit}
+          onSplitRichTextNode={actions.onSplitRichTextNode}
+          showSplitAction={richBlockCount > 1}
           headerContent={switcher}
         />
       );

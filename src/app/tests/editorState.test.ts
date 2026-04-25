@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, distributeNodes, insertLeaf, insertWrapper, parseUnitValue } from '../../api/editorApi';
-import { createTextDocumentContent, getSingleListBlockContent, listContentToRichListBlock, richListBlockToListContent } from '../../model/richContent';
+import {
+  createRichTextBlock,
+  createRichTextLeaf,
+  createTextDocumentContent,
+  getSingleListBlockContent,
+  getTextContent,
+  listContentToRichListBlock,
+  richListBlockToListContent,
+} from '../../model/richContent';
 import { editorReducer, historyReducer, type HistoryState } from '../editorState';
 
 function createTestHistoryState(): HistoryState {
@@ -311,6 +319,58 @@ describe('app/editorState', () => {
     expect(merged.selectedIds).toEqual([firstId]);
     expect(mergedNode).toMatchObject({ contentType: 'text', subtype: 'rich' });
     expect(merged.document.nodes[secondId]).toBeUndefined();
+  });
+
+  it('splits a rich text node into sibling nodes and selects the split set', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'richtext');
+    const nodeId = state.selectedId;
+    if (!nodeId) {
+      throw new Error('Expected inserted rich node');
+    }
+    const node = state.document.nodes[nodeId];
+    if (node.contentType !== 'text' || node.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    node.content = createTextDocumentContent([
+      createRichTextBlock('h2', [createRichTextLeaf('Heading')]),
+      createRichTextBlock('paragraph', [createRichTextLeaf('Body')]),
+    ]);
+
+    const split = editorReducer(state, { type: 'splitRichTextNode', nodeId });
+    const parentId = node.parentId;
+    if (!parentId) {
+      throw new Error('Expected rich text parent');
+    }
+    const parent = split.document.nodes[parentId];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const splitIds = parent.children.slice(-2);
+    expect(split.selectedId).toBe(nodeId);
+    expect(split.selectedIds).toEqual(splitIds);
+    expect(splitIds[0]).toBe(nodeId);
+    expect(split.document.nodes[splitIds[0]]).toMatchObject({ contentType: 'text', subtype: 'block' });
+    expect(split.document.nodes[splitIds[1]]).toMatchObject({ contentType: 'text', subtype: 'block' });
+    const second = split.document.nodes[splitIds[1]];
+    if (second.contentType !== 'text') {
+      throw new Error('Expected split text node');
+    }
+    expect(getTextContent(second.content.blocks)).toBe('Body');
+  });
+
+  it('does not split single-block rich text nodes', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'richtext');
+    const nodeId = state.selectedId;
+    if (!nodeId) {
+      throw new Error('Expected inserted rich node');
+    }
+
+    const split = editorReducer(state, { type: 'splitRichTextNode', nodeId });
+
+    expect(split).toBe(state);
   });
 
   it('updates list content through the reducer using the pure document api', () => {

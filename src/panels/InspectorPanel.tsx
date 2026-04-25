@@ -88,6 +88,7 @@ export type InspectorPanelProps = {
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
+  onSplitRichTextNode?: (nodeId: string) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
   onActivateRichEdit?: (nodeId: string) => void;
   onOpenManageFonts?: (options?: { category?: string }) => void;
@@ -150,6 +151,7 @@ export function InspectorPanel({
   onSetTextDocumentContent,
   onSetTextDocumentBlockGap,
   onMergeTextSelectionToRich,
+  onSplitRichTextNode,
   onEnterFocusedMode,
   onActivateRichEdit,
   onOpenManageFonts = () => undefined,
@@ -195,6 +197,7 @@ export function InspectorPanel({
       onSetTextDocumentContent,
       onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich,
+      onSplitRichTextNode,
       onEnterFocusedMode,
       onActivateRichEdit,
       onOpenManageFonts,
@@ -211,7 +214,7 @@ export function InspectorPanel({
     onSwitchTextSubtype, onSetTextDocumentContent,
       onApplyTextNodeMarkdown,
       onSetTextDocumentBlockGap,
-      onMergeTextSelectionToRich, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
+      onMergeTextSelectionToRich, onSplitRichTextNode, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
     ],
   );
   const orderState = useMemo<InspectorOrderState>(

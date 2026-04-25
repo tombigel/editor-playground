@@ -39,6 +39,7 @@ export type InspectorActionHandlers = {
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
+  onSplitRichTextNode?: (nodeId: string) => void;
   onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;
   onAnimationKeyframeChange: (trigger: AnimationTriggerType, effect: KeyframeAnimationEffect) => void;
   onAnimationOptionsChange: (options: { outAction?: HoverOutAction; timing?: AnimationTimingOptions | OngoingTimingOptions; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean }) => void;

@@ -87,6 +87,7 @@ export type EditorAction =
   | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
+  | { type: 'splitRichTextNode'; nodeId?: NodeId }
   | { type: 'move'; id: string; x: string; y: string }
   | { type: 'moveSelection'; moves: BulkMoveOperation[] }
   | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
