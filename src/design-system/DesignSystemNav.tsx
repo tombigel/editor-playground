@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SettingsNavItem } from "@/components/ui/settings-panel";
-import { scrollDesignSystemSectionIntoView } from "./navigationScroll";
+import {
+	getDesignSystemAnchorFromHash,
+	scrollDesignSystemSectionIntoView,
+	writeDesignSystemAnchorToUrl,
+} from "./navigationScroll";
 import type { DSSection } from "./types";
 
 export function DesignSystemNav({
@@ -14,16 +18,42 @@ export function DesignSystemNav({
 		() => sections[0]?.subsections[0]?.id ?? "",
 	);
 	const isScrollingRef = useRef(false);
+	const hasAppliedInitialAnchorRef = useRef(false);
+	const allIds = useMemo(
+		() =>
+			sections.flatMap((section) =>
+				section.subsections.map((subsection) => subsection.id),
+			),
+		[sections],
+	);
 
 	useEffect(() => {
 		if (!scrollContainer) {
 			return;
 		}
 		const container = scrollContainer;
+		const initialAnchor = hasAppliedInitialAnchorRef.current
+			? null
+			: getDesignSystemAnchorFromHash(window.location.hash, allIds);
+		let didScrollToInitialAnchor = false;
 
-		const allIds = sections.flatMap((section) =>
-			section.subsections.map((subsection) => subsection.id),
-		);
+		if (initialAnchor) {
+			const el = container.querySelector<HTMLElement>(
+				`#${CSS.escape(initialAnchor)}`,
+			);
+			if (el) {
+				hasAppliedInitialAnchorRef.current = true;
+				didScrollToInitialAnchor = true;
+				isScrollingRef.current = true;
+				setActiveId(initialAnchor);
+				scrollDesignSystemSectionIntoView(container, el);
+				setTimeout(() => {
+					isScrollingRef.current = false;
+				}, 600);
+			}
+		} else {
+			hasAppliedInitialAnchorRef.current = true;
+		}
 
 		function updateActiveId() {
 			if (isScrollingRef.current) {
@@ -65,7 +95,9 @@ export function DesignSystemNav({
 			setActiveId(nextActiveId);
 		}
 
-		updateActiveId();
+		if (!didScrollToInitialAnchor) {
+			updateActiveId();
+		}
 		container.addEventListener("scroll", updateActiveId, {
 			passive: true,
 		});
@@ -74,7 +106,7 @@ export function DesignSystemNav({
 			container.removeEventListener("scroll", updateActiveId);
 			window.removeEventListener("resize", updateActiveId);
 		};
-	}, [scrollContainer, sections]);
+	}, [allIds, scrollContainer]);
 
 	const handleClick = useCallback(
 		(id: string) => {
@@ -89,6 +121,7 @@ export function DesignSystemNav({
 			}
 			isScrollingRef.current = true;
 			setActiveId(id);
+			writeDesignSystemAnchorToUrl(id);
 			scrollDesignSystemSectionIntoView(scrollContainer, el);
 			setTimeout(() => {
 				isScrollingRef.current = false;

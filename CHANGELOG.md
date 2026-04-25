@@ -17,6 +17,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - make switch compact by default
 - add notice icons and variants
 - add missing showcase variants
+- make showcase nav anchorable
 
 ### Changed
 
