@@ -19,6 +19,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - lazy-load rich text edit overlay
 - add ANALYZE=1 visualizer and build:fast script
 - drop dead experimentalMinChunkSize option
+- consolidate src/components/ui into ui-shared chunk
 
 ### Fixed
 

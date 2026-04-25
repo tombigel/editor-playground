@@ -60,6 +60,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          if (id.includes('/src/components/ui/')) {
+            return 'ui-shared';
+          }
+
           if (!id.includes('node_modules')) return;
 
           if (
