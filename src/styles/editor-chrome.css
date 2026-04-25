@@ -475,6 +475,24 @@ a.editor-pill-subtle:focus-visible {
   color: var(--editor-warning-text);
 }
 
+.editor-danger-surface {
+  background: var(--editor-danger-background);
+  border-color: var(--editor-danger-border);
+}
+
+.editor-danger-text {
+  color: var(--editor-danger-text);
+}
+
+.editor-success-surface {
+  background: var(--editor-success-background);
+  border-color: var(--editor-success-border);
+}
+
+.editor-success-text {
+  color: var(--editor-success-text);
+}
+
 .editor-kbd {
   background-color: var(--editor-surface-background);
   border-color: var(--editor-utility-border);

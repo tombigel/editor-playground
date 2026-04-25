@@ -557,7 +557,8 @@ Implementation reference:
 
 Spec:
 
-- track size: `20px x 36px`
+- default size: compact, `16px x 28px`, for inspector/settings rows and dense editor chrome
+- large size: opt in with `size="large"` for roomier surfaces; track size `20px x 36px`
 - track radius: full
 - unchecked track: `--editor-switch-background`
 - checked track: accent blue
@@ -672,6 +673,7 @@ Rules:
 
 - use for fixed option sets that benefit from free-text filtering
 - use searchable multi-select for checklist-style filtered sets, including custom page visibility targeting
+- the design-system showcase exposes `Searchable Select` and `Searchable Multi Select` as adjacent base demos so registry navigation can verify both filtered menu variants
 - do not use for arbitrary value entry
 - page and text language selectors prepend a `Site language` option that stores `undefined`
 - language options are sourced from `src/i18n/languages.json`, sorted by `order` first and then alphabetically
@@ -779,6 +781,10 @@ Spec:
 - compact pills: `10px`, medium
 - notice and inline warning surfaces use the same token-backed border/background roles across inspector and settings
 - grouped inspector/settings rows share one composition layer for label slots, inline controls, and mixed-value summaries
+- `NoticeSurface` defaults to the `info` tone and resolves its icon from tone; pass a custom `icon` to override, or `icon={null}` to suppress the marker slot
+- `NoticeSurface tone="warning"` uses the shared warning surface tokens; `tone="error"` and `tone="danger"` intentionally share the same visual treatment for backward-compatible danger aliases
+- `InlineNotice` supports `info`, `warning`, `danger`, and `error` tones, with `danger` and `error` sharing the validation/error treatment
+- success, danger, and error notice tones use editor token-backed surface/text utilities, not hard-coded color classes
 
 Rules:
 

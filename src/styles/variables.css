@@ -75,6 +75,12 @@
   --editor-warning-background: #fff7e6;
   --editor-warning-border: #d7b24c;
   --editor-warning-text: #8a6200;
+  --editor-danger-background: #fff1f0;
+  --editor-danger-border: #f1a7a1;
+  --editor-danger-text: #b42318;
+  --editor-success-background: #ecfdf3;
+  --editor-success-border: #a6e4c0;
+  --editor-success-text: #047857;
   --editor-utility-text-strong: #0f172a;
   --editor-utility-text-muted: #64748b;
   --editor-utility-bg-subtle: #f8fafc;
@@ -373,6 +379,12 @@ body[data-editor-theme='dark'] {
   --editor-warning-background: rgba(143, 99, 10, 0.18);
   --editor-warning-border: #9c7420;
   --editor-warning-text: #f0bf76;
+  --editor-danger-background: rgba(180, 35, 24, 0.2);
+  --editor-danger-border: #9f3a35;
+  --editor-danger-text: #f7a39d;
+  --editor-success-background: rgba(4, 120, 87, 0.2);
+  --editor-success-border: #2f7f66;
+  --editor-success-text: #86efc5;
   --editor-utility-text-strong: #e6edf5;
   --editor-utility-text-muted: #94a5b8;
   --editor-utility-bg-subtle: color-mix(

@@ -122,9 +122,9 @@ export function ValuePill({
 const NOTICE_TONE_CLASSES = {
   muted: 'editor-text-muted',
   info: 'editor-bg-subtle editor-border-subtle editor-text-muted rounded-lg border',
-  success: 'rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700',
-  danger: 'rounded-lg border border-red-200 bg-red-50 text-red-700',
-  error: 'rounded-lg border border-red-200 bg-red-50 text-red-700',
+  success: 'editor-success-surface editor-success-text rounded-lg border',
+  danger: 'editor-danger-surface editor-danger-text rounded-lg border',
+  error: 'editor-danger-surface editor-danger-text rounded-lg border',
   warning: 'editor-warning-surface editor-border-subtle editor-warning-text rounded-lg border',
 } as const;
 
@@ -191,7 +191,7 @@ export function InlineNotice({
         tone === 'muted'
           ? 'editor-text-muted'
           : tone === 'danger' || tone === 'error'
-            ? 'text-red-700'
+            ? 'editor-danger-text'
             : tone === 'info'
               ? 'editor-text-muted'
               : 'editor-warning-text',

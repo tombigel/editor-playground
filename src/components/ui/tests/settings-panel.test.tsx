@@ -64,8 +64,11 @@ describe('components/ui/settings-panel', () => {
     expect(infoMarkup).toContain('lucide-info');
     expect(warningMarkup).toContain('lucide-triangle-alert');
     expect(dangerMarkup).toContain('lucide-shield-alert');
+    expect(dangerMarkup).toContain('editor-danger-surface');
+    expect(dangerMarkup).toContain('editor-danger-text');
     expect(errorMarkup).toContain('data-tone="error"');
     expect(errorMarkup).toContain('lucide-shield-alert');
+    expect(errorMarkup).not.toContain('text-red-700');
     expect(customMarkup).toContain('data-testid="custom-icon"');
     expect(customMarkup).not.toContain('lucide-info');
     expect(suppressedMarkup).not.toContain('data-ui="notice-icon"');
@@ -83,8 +86,10 @@ describe('components/ui/settings-panel', () => {
     expect(warningMarkup).toContain('lucide-triangle-alert');
     expect(dangerMarkup).toContain('data-tone="danger"');
     expect(dangerMarkup).toContain('lucide-shield-alert');
+    expect(dangerMarkup).toContain('editor-danger-text');
     expect(errorMarkup).toContain('data-tone="error"');
     expect(errorMarkup).toContain('lucide-shield-alert');
+    expect(errorMarkup).not.toContain('text-red-700');
   });
 
   it('renders stacked field and compact value pill contracts', () => {

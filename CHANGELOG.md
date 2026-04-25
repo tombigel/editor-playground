@@ -22,6 +22,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - release focused text editing updates
+- document showcase fixes
 
 ### Fixed
 
