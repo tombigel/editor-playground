@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Fixed
+
+- update skills path to relative reference
+
 ---
 
 ## [0.8.0] — 2026-04-25
