@@ -25,11 +25,11 @@ const Switch = React.forwardRef<
     <SwitchPrimitive.Thumb
       data-ui="switch-thumb"
       className={cn(
-        'pointer-events-none block rounded-full bg-white shadow-sm ring-0 transition-transform data-[state=unchecked]:translate-x-0.5',
+        'pointer-events-none absolute left-0 top-1/2 block rounded-full bg-white shadow-sm ring-0 transition-transform -translate-y-1/2 data-[state=unchecked]:translate-x-0.5',
         size === 'large'
-          ? 'size-4 data-[state=checked]:translate-x-4'
-          : 'size-3 data-[state=checked]:translate-x-3.5',
-        mixed && (size === 'large' ? 'data-[state=unchecked]:translate-x-[9px]' : 'data-[state=unchecked]:translate-x-2'),
+          ? 'size-4 data-[state=checked]:translate-x-[18px]'
+          : 'size-3 data-[state=checked]:translate-x-[14px]',
+        mixed && (size === 'large' ? 'data-[state=unchecked]:translate-x-[10px]' : 'data-[state=unchecked]:translate-x-[8px]'),
       )}
     />
   </SwitchPrimitive.Root>

@@ -9,6 +9,7 @@ import { VariationsGrid } from "../../previews/VariationsGrid";
 
 export function SwitchDemo() {
 	const [checked, setChecked] = useState(false);
+	const [largeChecked, setLargeChecked] = useState(false);
 	return (
 		<div className="space-y-6">
 			<div>
@@ -54,7 +55,52 @@ export function SwitchDemo() {
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
 					Large opt-in
 				</div>
-				<Switch size="large" checked onCheckedChange={() => {}} />
+				<VariationsGrid
+					variations={[
+						{
+							label: "Unchecked",
+							render: () => (
+								<Switch size="large" checked={false} onCheckedChange={() => {}} />
+							),
+						},
+						{
+							label: "Checked",
+							render: () => <Switch size="large" checked onCheckedChange={() => {}} />,
+						},
+						{
+							label: "Disabled",
+							render: () => (
+								<Switch
+									size="large"
+									checked={false}
+									disabled
+									onCheckedChange={() => {}}
+								/>
+							),
+						},
+						{
+							label: "Mixed / Intermediate",
+							render: () => (
+								<Switch
+									size="large"
+									checked={false}
+									onCheckedChange={() => {}}
+									mixed
+								/>
+							),
+						},
+						{
+							label: "Interactive (click)",
+							render: () => (
+								<Switch
+									size="large"
+									checked={largeChecked}
+									onCheckedChange={setLargeChecked}
+								/>
+							),
+						},
+					]}
+				/>
 			</div>
 		</div>
 	);
