@@ -673,7 +673,7 @@ Rules:
 
 - use for fixed option sets that benefit from free-text filtering
 - use searchable multi-select for checklist-style filtered sets, including custom page visibility targeting
-- the design-system showcase exposes `Searchable Select` and `Searchable Multi Select` as adjacent base demos so registry navigation can verify both filtered menu variants
+- the design-system showcase exposes `Searchable Select` and `Searchable Multi Select` as adjacent base demos immediately after `Dropdown (Select)` so registry navigation can verify both filtered menu variants
 - do not use for arbitrary value entry
 - page and text language selectors prepend a `Site language` option that stores `undefined`
 - language options are sourced from `src/i18n/languages.json`, sorted by `order` first and then alphabetically

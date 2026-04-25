@@ -2,8 +2,6 @@ import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import { Layers2, Pin, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
-import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select";
-import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import {
 	Menubar,
@@ -38,8 +36,6 @@ import {
 	OPTIONS_SELECTOR_PROPS,
 	PAGER_PROPS,
 	PAGE_SWITCHER_PROPS,
-	SEARCHABLE_MULTI_SELECT_PROPS,
-	SEARCHABLE_SELECT_PROPS,
 	SELECTION_CHROME_PROPS,
 	SWITCH_PROPS,
 	TABS_PROPS,
@@ -161,55 +157,6 @@ export function MiscDemos() {
 							Site page settings
 						</TabsContent>
 					</Tabs>
-				</div>
-			</ComponentPreview>
-
-			<ComponentPreview
-				id="base-searchable-select"
-				name="Searchable Select"
-				description="Searchable fixed-option selector for site, page, and text language overrides."
-				sourceFile="src/components/ui/searchable-select.tsx"
-				props={SEARCHABLE_SELECT_PROPS}
-			>
-				<div className="max-w-[320px] space-y-3">
-					<SearchableSelect
-						value="en-US"
-						options={[
-							{ value: "__site__", label: "Site language" },
-							{
-								value: "en-US",
-								label: "English (United States)",
-								description: "en-US",
-							},
-							{ value: "fr", label: "French", description: "fr" },
-							{ value: "he", label: "Hebrew", description: "he" },
-						]}
-						placeholder="Site language"
-						searchPlaceholder="Search languages"
-						onValueChange={() => {}}
-					/>
-				</div>
-			</ComponentPreview>
-
-			<ComponentPreview
-				id="base-searchable-multi-select"
-				name="Searchable Multi Select"
-				description="Searchable multi-select menu for page targeting and other checklist-style dropdown workflows."
-				sourceFile="src/components/ui/searchable-multi-select.tsx"
-				props={SEARCHABLE_MULTI_SELECT_PROPS}
-			>
-				<div className="max-w-[320px] space-y-3">
-					<SearchableMultiSelect
-						values={["home", "about"]}
-						options={[
-							{ value: "home", label: "Home", description: "/home" },
-							{ value: "about", label: "About", description: "/about" },
-							{ value: "contact", label: "Contact", description: "/contact" },
-						]}
-						placeholder="Choose pages"
-						searchPlaceholder="Search pages"
-						onValuesChange={() => {}}
-					/>
 				</div>
 			</ComponentPreview>
 

@@ -39,25 +39,23 @@ describe("design-system/registry", () => {
 		});
 	});
 
-	it("keeps searchable select, searchable multi-select, and text input ordered with the rendered base demos", () => {
+	it("keeps text input before the standard dropdown demo", () => {
 		const ids = getBaseSubsectionIds();
 
+		expect(ids.indexOf("base-input")).toBeLessThan(ids.indexOf("base-select"));
+	});
+
+	it("keeps searchable menu variants after the standard dropdown demo", () => {
+		const ids = getBaseSubsectionIds();
+
+		expect(ids.indexOf("base-select")).toBeLessThan(
+			ids.indexOf("base-searchable-select"),
+		);
 		expect(ids.indexOf("base-searchable-select")).toBeLessThan(
 			ids.indexOf("base-searchable-multi-select"),
 		);
 		expect(ids.indexOf("base-searchable-multi-select")).toBeLessThan(
-			ids.indexOf("base-input"),
-		);
-	});
-
-	it("keeps searchable menu variants before the standard dropdown demo", () => {
-		const ids = getBaseSubsectionIds();
-
-		expect(ids.indexOf("base-searchable-select")).toBeLessThan(
-			ids.indexOf("base-select"),
-		);
-		expect(ids.indexOf("base-searchable-multi-select")).toBeLessThan(
-			ids.indexOf("base-select"),
+			ids.indexOf("base-color"),
 		);
 	});
 });

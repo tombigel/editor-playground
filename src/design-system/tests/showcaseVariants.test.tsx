@@ -13,12 +13,18 @@ describe("design-system/showcase variants", () => {
 		expect(markup).toContain('data-hidden="true"');
 	});
 
-	it("shows the searchable dropdown variant inside Dropdown (Select)", () => {
+	it("renders searchable select sections after Dropdown (Select)", () => {
 		const markup = renderToStaticMarkup(<FontControlDemos />);
+		const selectIndex = markup.indexOf('id="base-select"');
+		const searchableSelectIndex = markup.indexOf('id="base-searchable-select"');
+		const searchableMultiSelectIndex = markup.indexOf(
+			'id="base-searchable-multi-select"',
+		);
 
-		expect(markup).toContain("Searchable dropdown");
-		expect(markup).toContain('data-ui="select-trigger"');
-		expect(markup).toContain("Search pages");
+		expect(markup).not.toContain("Searchable dropdown");
+		expect(selectIndex).toBeGreaterThan(-1);
+		expect(searchableSelectIndex).toBeGreaterThan(selectIndex);
+		expect(searchableMultiSelectIndex).toBeGreaterThan(searchableSelectIndex);
 	});
 
 	it("shows the notice surface no-icon variant", () => {

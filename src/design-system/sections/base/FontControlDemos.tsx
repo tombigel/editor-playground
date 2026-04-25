@@ -8,11 +8,16 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { FontPickerPopover } from "@/panels/InspectorControls";
 import type { DocumentFontFamily } from "../../../model/types";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
+import {
+	SEARCHABLE_MULTI_SELECT_PROPS,
+	SEARCHABLE_SELECT_PROPS,
+} from "./MiscDemos.props";
 
 // ---------------------------------------------------------------------------
 // Prop definitions
@@ -152,7 +157,6 @@ function SelectDemo() {
 	const [value, setValue] = useState("currentPage");
 	const [compactValue, setCompactValue] = useState("entrance");
 	const [smallValue, setSmallValue] = useState("fade");
-	const [searchableValue, setSearchableValue] = useState("home");
 	const options = [
 		{ value: "currentPage", label: "Current page", icon: <File className="h-3.5 w-3.5" /> },
 		{ value: "allPages", label: "All pages", icon: <Files className="h-3.5 w-3.5" /> },
@@ -263,26 +267,6 @@ function SelectDemo() {
 				</div>
 			</div>
 
-			{/* Searchable dropdown */}
-			<div>
-				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					Searchable dropdown
-				</div>
-				<div className="w-[240px]">
-					<SearchableSelect
-						value={searchableValue}
-						options={[
-							{ value: "home", label: "Home", description: "/home" },
-							{ value: "about", label: "About", description: "/about" },
-							{ value: "contact", label: "Contact", description: "/contact" },
-						]}
-						placeholder="Choose page"
-						searchPlaceholder="Search pages"
-						onValueChange={setSearchableValue}
-					/>
-				</div>
-			</div>
-
 			{/* Multi-select (mixed) */}
 			<div>
 				<div className="editor-text-muted mb-1.5 text-[11px] font-medium">
@@ -337,6 +321,55 @@ export function FontControlDemos() {
 				props={SELECT_PROPS}
 			>
 				<SelectDemo />
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="base-searchable-select"
+				name="Searchable Select"
+				description="Searchable fixed-option selector for site, page, and text language overrides."
+				sourceFile="src/components/ui/searchable-select.tsx"
+				props={SEARCHABLE_SELECT_PROPS}
+			>
+				<div className="max-w-[320px] space-y-3">
+					<SearchableSelect
+						value="en-US"
+						options={[
+							{ value: "__site__", label: "Site language" },
+							{
+								value: "en-US",
+								label: "English (United States)",
+								description: "en-US",
+							},
+							{ value: "fr", label: "French", description: "fr" },
+							{ value: "he", label: "Hebrew", description: "he" },
+						]}
+						placeholder="Site language"
+						searchPlaceholder="Search languages"
+						onValueChange={() => {}}
+					/>
+				</div>
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="base-searchable-multi-select"
+				name="Searchable Multi Select"
+				description="Searchable multi-select menu for page targeting and other checklist-style dropdown workflows."
+				sourceFile="src/components/ui/searchable-multi-select.tsx"
+				props={SEARCHABLE_MULTI_SELECT_PROPS}
+			>
+				<div className="max-w-[320px] space-y-3">
+					<SearchableMultiSelect
+						values={["home", "about"]}
+						options={[
+							{ value: "home", label: "Home", description: "/home" },
+							{ value: "about", label: "About", description: "/about" },
+							{ value: "contact", label: "Contact", description: "/contact" },
+						]}
+						placeholder="Choose pages"
+						searchPlaceholder="Search pages"
+						onValuesChange={() => {}}
+					/>
+				</div>
 			</ComponentPreview>
 		</>
 	);

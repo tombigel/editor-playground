@@ -1256,7 +1256,7 @@ Language behavior:
 - `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Components and Pages
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Design system showcase left-navigation jumps use URL-addressable hashes in the form `#/design-system#section-id`; they scroll only the main showcase pane and keep the top bar/back-to-editor affordance visible.
-- The showcase navigation stays aligned to the rendered base demos, including adjacent `Searchable Select` and `Searchable Multi Select` entries, the hidden selection chrome variant, and the searchable dropdown variant under `Dropdown (Select)`.
+- The showcase navigation stays aligned to the rendered base demos, including adjacent `Searchable Select` and `Searchable Multi Select` entries immediately after `Dropdown (Select)` and the hidden selection chrome variant.
 - Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
 - Pages panel entry toggles a dedicated panel for multi-page management.
 - The main Settings panel `Pages` section reuses the same site-wide page settings content as the Pages panel `Settings` tab.
