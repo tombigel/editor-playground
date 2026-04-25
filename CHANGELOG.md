@@ -26,6 +26,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - document showcase fixes
 - show notice no-icon variant
 - move searchable select after select
+- simplify switch styling
 
 ### Fixed
 

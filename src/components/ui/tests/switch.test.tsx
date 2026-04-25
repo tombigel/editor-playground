@@ -13,6 +13,9 @@ describe('components/ui/switch', () => {
     expect(markup).toContain('size-3');
     expect(markup).toContain('top-1/2');
     expect(markup).toContain('-translate-y-1/2');
+    expect(markup).toContain('--editor-switch-background');
+    expect(markup).toContain('--editor-switch-background-checked');
+    expect(markup).toContain('data-[state=unchecked]:translate-x-[1px]');
     expect(markup).toContain('data-[state=checked]:translate-x-[13px]');
   });
 
@@ -23,6 +26,7 @@ describe('components/ui/switch', () => {
     expect(markup).toContain('h-5');
     expect(markup).toContain('w-9');
     expect(markup).toContain('size-4');
+    expect(markup).toContain('data-[state=unchecked]:translate-x-0.5');
     expect(markup).toContain('data-[state=checked]:translate-x-[17px]');
   });
 
@@ -30,9 +34,12 @@ describe('components/ui/switch', () => {
     const markup = renderToStaticMarkup(<Switch checked={false} mixed onCheckedChange={() => {}} />);
 
     expect(markup).toContain('data-mixed="true"');
+    expect(markup).toContain('--editor-switch-background-mixed');
+    expect(markup).toContain('--editor-surface-border');
     expect(markup).toContain('data-[state=unchecked]:translate-x-[7px]');
+    expect(markup).toContain('border-dashed');
+    expect(markup).toContain('--editor-switch-mixed-indicator');
     expect(markup).not.toContain('data-ui="switch-mixed-indicator"');
-    expect(markup).not.toContain('--editor-switch-mixed-indicator');
     expect(markup).not.toContain('!');
     expect(markup).not.toContain('var(--editor-accent)_50%');
     expect(markup).not.toContain('bg-slate-400');

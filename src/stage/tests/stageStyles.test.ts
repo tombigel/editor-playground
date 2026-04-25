@@ -41,20 +41,19 @@ describe('stage/stage styles', () => {
     expect(styles).toContain(".editor-font-picker-trigger:is(:focus-visible, [aria-expanded='true'])");
     expect(styles).toContain("[data-ui='button'][data-variant='ghost']");
     expect(styles).toContain("[data-ui='switch']");
-    expect(styles).toContain("[data-ui='switch'][data-state='checked']");
     expect(styles).toContain("[data-ui='slider-track']");
     expect(styles).toContain("[data-ui='slider-range']");
     expect(styles).toContain("[data-ui='slider-thumb']");
   });
 
-  it('owns mixed switch chrome in shared CSS without important utility overrides', () => {
+  it('keeps mixed switch chrome tokenized without stylesheet state overrides', () => {
+    expect(styles).toContain('--editor-switch-background-mixed: #94a3b8;');
+    expect(styles).toContain('--editor-switch-background-mixed: color-mix(in srgb, var(--editor-accent) 16%, #64748b);');
     expect(styles).toContain("--editor-switch-mixed-indicator: #334155;");
     expect(styles).toContain("--editor-switch-mixed-indicator: #e2e8f0;");
-    expect(styles).toContain("[data-ui='switch'][data-mixed='true']");
-    expect(styles).toContain("border-color: var(--editor-surface-border);");
-    expect(styles).toContain("background: color-mix(in srgb, var(--editor-surface-background) 72%, transparent);");
-    expect(styles).toContain("[data-ui='switch'][data-mixed='true'] [data-ui='switch-thumb']");
-    expect(styles).toContain("border: 1px dashed var(--editor-switch-mixed-indicator);");
+    expect(styles).not.toContain("[data-ui='switch'][data-mixed='true']");
+    expect(styles).not.toContain("[data-ui='switch'][data-state='checked']");
+    expect(styles).not.toContain("border: 1px dashed var(--editor-switch-mixed-indicator);");
   });
 
   it('uses simpler high-contrast chrome for clarity and ink', () => {
