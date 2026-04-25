@@ -40,9 +40,14 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
+        experimentalMinChunkSize: 10_000,
         manualChunks: (id) => {
+          if (id.includes('/node_modules/lucide-react/')) {
+            return 'icons-vendor';
+          }
           if (
             id.includes('@radix-ui/react-dialog') ||
             id.includes('@radix-ui/react-select') ||
