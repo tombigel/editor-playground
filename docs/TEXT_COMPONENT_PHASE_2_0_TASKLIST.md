@@ -172,22 +172,30 @@ Execution rules:
 
 - Objective:
   - Refine multi-block `rich -> simple` split conversion so unsupported blocks remain one-block rich nodes.
-- Status: `planned`
+- Status: `completed`
 - Allowed files:
-  - Planned during execution
+  - `src/api/textConversion.ts`
+  - `src/api/tests/textMerge.test.ts`
+  - `docs/PLAYGROUND_SPEC.md`
+  - `docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`
 - Read-first files and target lines:
-  - Planned during execution
+  - `src/api/textConversion.ts`
+  - `src/api/textMerge.ts`
+  - `src/api/tests/textMerge.test.ts`
 - Implementation notes:
   - For multi-block rich nodes converting to a simple subtype:
     - convert each block to the requested simple subtype only if supported by that subtype’s phase-2 contract
     - otherwise keep it as a one-block rich node
   - Keep single-block rich flattening behavior from phase 1.5.
+  - No new public API, schema, or exported type was added; the existing split-mode conversion behavior changed.
 - Verification commands:
-  - Planned during execution
+  - `npm run test:run -- src/api/tests/textMerge.test.ts src/api/tests/documentApi.test.ts`
+  - `npm run test:run -- src/panels/tests/helpDocs.test.ts`
+  - `npm run build`
 - Verification result:
-  - Not started
+  - Focused API tests passed (`73` tests). Help-doc test passed (`10` tests). Build verification is tracked by the final gate.
 - Commit SHA:
-  - Not started
+  - `fba898f`
 - Open follow-ups carried forward:
   - None yet.
 

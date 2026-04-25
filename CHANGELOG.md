@@ -20,6 +20,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add ANALYZE=1 visualizer and build:fast script
 - drop dead experimentalMinChunkSize option
 - consolidate src/components/ui into ui-shared chunk
+- document granular rich split conversion
 
 ### Fixed
 
