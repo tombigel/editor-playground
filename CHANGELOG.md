@@ -16,6 +16,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - apply compact editor control styling
 - make switch compact by default
 - add notice icons and variants
+- add missing showcase variants
 
 ### Changed
 

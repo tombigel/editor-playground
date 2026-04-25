@@ -330,6 +330,22 @@ export function MiscDemos() {
 					</div>
 					<div>
 						<div className="editor-text-muted mb-6 text-[11px] font-medium">
+							Hidden
+						</div>
+						<div className="relative" style={{ width: 180, height: 80 }}>
+							<div
+								className="stage-single-selection-overlay"
+								data-hidden="true"
+								style={{ left: 0, top: 0, width: 180, height: 80 }}
+							>
+								<div className="stage-single-selection-label">Hidden</div>
+								<div className="stage-single-selection-outline" />
+								<ResizeHandleView onHandleMouseDown={() => {}} />
+							</div>
+						</div>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-6 text-[11px] font-medium">
 							Section context
 						</div>
 						<div

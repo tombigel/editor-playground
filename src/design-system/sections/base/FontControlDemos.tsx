@@ -8,6 +8,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { FontPickerPopover } from "@/panels/InspectorControls";
 import type { DocumentFontFamily } from "../../../model/types";
 import { ComponentPreview } from "../../previews/ComponentPreview";
@@ -151,6 +152,7 @@ function SelectDemo() {
 	const [value, setValue] = useState("currentPage");
 	const [compactValue, setCompactValue] = useState("entrance");
 	const [smallValue, setSmallValue] = useState("fade");
+	const [searchableValue, setSearchableValue] = useState("home");
 	const options = [
 		{ value: "currentPage", label: "Current page", icon: <File className="h-3.5 w-3.5" /> },
 		{ value: "allPages", label: "All pages", icon: <Files className="h-3.5 w-3.5" /> },
@@ -258,6 +260,26 @@ function SelectDemo() {
 							))}
 						</SelectContent>
 					</Select>
+				</div>
+			</div>
+
+			{/* Searchable dropdown */}
+			<div>
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
+					Searchable dropdown
+				</div>
+				<div className="w-[240px]">
+					<SearchableSelect
+						value={searchableValue}
+						options={[
+							{ value: "home", label: "Home", description: "/home" },
+							{ value: "about", label: "About", description: "/about" },
+							{ value: "contact", label: "Contact", description: "/contact" },
+						]}
+						placeholder="Choose page"
+						searchPlaceholder="Search pages"
+						onValueChange={setSearchableValue}
+					/>
 				</div>
 			</div>
 
