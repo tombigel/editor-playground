@@ -33,6 +33,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - align idle code wrapping
 - align compact switch thumb
 - nudge compact switch offsets
+- fine tune switch thumb offsets
 
 ---
 

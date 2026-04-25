@@ -27,9 +27,9 @@ const Switch = React.forwardRef<
       className={cn(
         'pointer-events-none absolute left-0 top-1/2 block rounded-full bg-white shadow-sm ring-0 transition-transform -translate-y-1/2 data-[state=unchecked]:translate-x-0.5',
         size === 'large'
-          ? 'size-4 data-[state=checked]:translate-x-[18px]'
+          ? 'size-4 data-[state=checked]:translate-x-[17px]'
           : 'size-3 data-[state=checked]:translate-x-[13px]',
-        mixed && (size === 'large' ? 'data-[state=unchecked]:translate-x-[10px]' : 'data-[state=unchecked]:translate-x-[6px]'),
+        mixed && (size === 'large' ? 'data-[state=unchecked]:translate-x-[9px]' : 'data-[state=unchecked]:translate-x-[7px]'),
       )}
     />
   </SwitchPrimitive.Root>
