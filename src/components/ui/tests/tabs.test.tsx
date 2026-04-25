@@ -41,6 +41,7 @@ describe('components/ui/tabs', () => {
     expect(markup).toContain('data-ui="tabs-list"');
     expect(markup).toContain('data-variant="segmented"');
     expect(markup).toContain('data-size="compact"');
+    expect(markup).toContain('gap-0.5');
     expect(markup).toContain('h-6');
     expect(markup).toContain('rounded-sm');
     expect(markup).toContain('text-[11px]');

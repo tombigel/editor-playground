@@ -12,8 +12,8 @@ const TabsContext = React.createContext<TabsContextValue | null>(null);
 const tabsListVariants = cva('inline-flex border', {
   variants: {
     variant: {
-      default: 'editor-bg-subtle rounded-md p-0.5',
-      segmented: 'editor-pill-subtle editor-border-subtle rounded-lg p-0.5',
+      default: 'editor-bg-subtle gap-0.5 rounded-md p-0.5',
+      segmented: 'editor-pill-subtle editor-border-subtle gap-0.5 rounded-lg p-0.5',
     },
   },
   defaultVariants: {

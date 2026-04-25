@@ -38,6 +38,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - fine tune switch thumb offsets
 - keep mixed switch track transparent
 - compact panel tabs
+- space tab triggers
 
 ---
 
