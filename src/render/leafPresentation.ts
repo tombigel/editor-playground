@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { CODE_THEME_SURFACE } from '../model/textNodeDefaults';
 import type { MediaNode, TextNode, TypographyStyle } from '../model/types';
 import { isMediaNode, isTextNode } from '../model/types';
 import { buildFontFamilyStack, DEFAULT_FONT_FALLBACK_STACK } from '../fonts';
@@ -40,7 +41,7 @@ export function getTextLeafStyle(node: TextNode): StyleRecord {
 }
 
 export function getCodeLeafStyle(node: TextNode): StyleRecord {
-  return {
+  const style: StyleRecord = {
     display: 'block',
     maxWidth: '100%',
     ...getTypographyStyle(node.style, {
@@ -49,6 +50,10 @@ export function getCodeLeafStyle(node: TextNode): StyleRecord {
       fontFamily: 'monospace',
     }, { includeFilter: false }),
   };
+  if (isCodeThemeSurfaceValue(style.color)) {
+    delete style.color;
+  }
+  return style;
 }
 
 export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
@@ -59,8 +64,11 @@ export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
     margin: 0,
     whiteSpace: wrap ? 'pre-wrap' : 'pre',
     wordBreak: wrap ? 'break-word' : 'normal',
+    overflowWrap: wrap ? 'anywhere' : 'normal',
+    wordWrap: wrap ? 'break-word' : 'normal',
     overflowX: wrap ? 'hidden' : 'auto',
-    ...(node.style?.background ? { background: node.style.background } : {}),
+    ...(node.style?.tabSize != null ? { tabSize: node.style.tabSize } : {}),
+    ...(isAuthoredCodeSurfaceValue(node.style?.background) ? { background: node.style.background } : {}),
   };
   Object.assign(style, buildBorderStyle(node.style));
   const boxShadow = buildBoxShadow(node.style);
@@ -68,6 +76,16 @@ export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
     style.boxShadow = boxShadow;
   }
   return style;
+}
+
+export function isAuthoredCodeSurfaceValue(value: unknown): value is string {
+  return typeof value === 'string' && !isCodeThemeSurfaceValue(value);
+}
+
+function isCodeThemeSurfaceValue(value: unknown): value is string {
+  return typeof value === 'string' && Object.values(CODE_THEME_SURFACE).some(
+    (surface) => surface.background === value || surface.color === value,
+  );
 }
 
 export function getLinkLeafStyle(node: TextNode): StyleRecord {

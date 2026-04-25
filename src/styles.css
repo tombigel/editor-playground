@@ -51,6 +51,17 @@ body {
   background: var(--app-background);
 }
 
+pre[data-code-theme] code[class*="language-"] {
+  display: block;
+  width: 100%;
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
+  word-wrap: inherit;
+  tab-size: inherit;
+  font: inherit;
+}
+
 /* Code node dark theme - Okaidia by ocodia. Auto follows the viewer's system scheme. */
 pre[data-code-theme="dark"],
 pre[data-code-theme="dark"] code[class*="language-"] {

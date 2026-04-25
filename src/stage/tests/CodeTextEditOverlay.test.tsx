@@ -55,6 +55,7 @@ describe("stage/CodeTextEditOverlay", () => {
 		expect(markup).toContain('wrap="off"');
 		expect(markup).toContain("white-space:pre");
 		expect(markup).toContain("overflow-x:auto");
+		expect(markup).toContain("overflow-wrap:normal");
 		expect(markup).toContain("const value = 1;");
 		expect(markup).not.toContain('data-stage-rich-toolbar="true"');
 		expect(markup).not.toContain('aria-label="Bold"');
@@ -82,8 +83,16 @@ describe("stage/CodeTextEditOverlay", () => {
 
 	it("keeps auto code theme tied to the viewer system preference instead of editor theme", () => {
 		const css = readFileSync(resolve("src/styles.css"), "utf8");
+		const main = readFileSync(resolve("src/main.tsx"), "utf8");
 		expect(css).toContain("@media (prefers-color-scheme: dark)");
 		expect(css).toContain('pre[data-code-theme="auto"]');
+		expect(css).toContain('pre[data-code-theme] code[class*="language-"]');
+		expect(css).toContain("white-space: inherit;");
+		expect(css).toContain("tab-size: inherit;");
+		expect(css).toContain("word-wrap: inherit;");
+		expect(main.indexOf('import "prismjs/themes/prism.css";')).toBeLessThan(
+			main.indexOf('import "./styles.css";'),
+		);
 		expect(css).toContain(
 			'textarea[data-stage-code-edit-textarea="true"][data-code-theme="auto"]',
 		);

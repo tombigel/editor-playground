@@ -15,6 +15,7 @@ export type PresentationLeafNode = TextNode | MediaNode;
 
 export type RenderLeafContentOptions = {
   contentStyle?: CSSProperties;
+  codeSurfaceMinHeight?: string;
   imageClassName?: string;
   imagePlaceholderClassName?: string;
   imageDraggable?: boolean;

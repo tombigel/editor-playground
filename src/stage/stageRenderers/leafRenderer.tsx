@@ -292,8 +292,8 @@ function LeafTextEditBody({
           content={child.content}
           contentStyle={contentStyle}
           minHeight={minHeight}
-          tabSize={codeBlock?.style?.tabSize ?? child.style?.tabSize ?? 2}
-          wrap={(codeBlock?.style?.textWrap ?? child.style?.textWrap) !== 'single-line'}
+          tabSize={child.style?.tabSize ?? codeBlock?.style?.tabSize ?? 2}
+          wrap={(child.style?.textWrap ?? codeBlock?.style?.textWrap) !== 'single-line'}
           onCommit={onCommit}
           onDiscard={onDiscard}
         />
@@ -331,7 +331,11 @@ function LeafTextEditBody({
   }
   return renderLeafContent(
     child as Parameters<typeof renderLeafContent>[0],
-    { contentStyle, disableTabNavigation: true },
+    {
+      contentStyle,
+      codeSurfaceMinHeight: child.subtype === 'code' ? minHeight : undefined,
+      disableTabNavigation: true,
+    },
   );
 }
 

@@ -1,6 +1,7 @@
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { getLinkHref, shouldOpenNavigationInNewTab } from '../model/links';
 import { DEFAULT_LINK_COLOR } from '../model/styleDefaults';
+import { CODE_THEME_SURFACE, TEXT_NODE_DEFAULTS } from '../model/textNodeDefaults';
 import {
   getSingleCodeBlockContent,
   getSingleListBlockContent,
@@ -30,7 +31,12 @@ import type {
   RenderLeafContentOptions,
   StageOrSiteNode,
 } from './types';
-import { getCodeLeafStyle, getStandaloneCodePreStyle, styleRecordToReactStyle } from './leafPresentation';
+import {
+  getCodeLeafStyle,
+  getStandaloneCodePreStyle,
+  isAuthoredCodeSurfaceValue,
+  styleRecordToReactStyle,
+} from './leafPresentation';
 export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
@@ -345,10 +351,12 @@ function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSPrope
     margin: 0,
     whiteSpace: wrap ? 'pre-wrap' : 'pre',
     wordBreak: wrap ? 'break-word' : 'normal',
+    overflowWrap: wrap ? 'anywhere' : 'normal',
+    wordWrap: wrap ? 'break-word' : 'normal',
     overflowX: wrap ? 'hidden' : 'auto',
     ...richCodeBlockTypographyStyleToCss(style),
     ...richCodeBlockTabStyleToCss(style),
-    ...(style?.background ? { background: style.background } : {}),
+    ...(isAuthoredCodeSurfaceValue(style?.background) ? { background: style.background } : {}),
   };
 
   if (style?.borderStyle) css.borderStyle = style.borderStyle;
@@ -369,7 +377,7 @@ function richCodeBlockCodeStyleToCss(style: RichBlockStyle | undefined): CSSProp
 
 function richCodeBlockTypographyStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
   return {
-    ...(style?.color ? { color: style.color } : {}),
+    ...(isAuthoredCodeSurfaceValue(style?.color) ? { color: style.color } : {}),
     ...(style?.fontFamily ? { fontFamily: style.fontFamily } : {}),
     ...(style?.fontSize ? { fontSize: style.fontSize } : {}),
     ...(style?.fontWeight != null ? { fontWeight: style.fontWeight } : {}),
@@ -387,7 +395,7 @@ function richCodeBlockTabStyleToCss(style: RichBlockStyle | undefined): CSSPrope
 }
 
 function hasCodeColorOverride(style: RichBlockStyle | undefined): boolean {
-  return Boolean(style?.color);
+  return isAuthoredCodeSurfaceValue(style?.color);
 }
 
 function getExternalLinkProps(link: LinkExtension | undefined) {
@@ -534,6 +542,7 @@ export function renderLeafContent(
     imageDraggable = true,
     disableTabNavigation = false,
     document,
+    codeSurfaceMinHeight,
     leafClassName,
     dataNodeId,
     currentPageId,
@@ -604,16 +613,21 @@ export function renderLeafContent(
   if (isTextNode(node) && node.subtype === 'code') {
     const codeBlock = getSingleCodeBlockContent(node.content);
     const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
-    const lang = codeBlock?.language ?? node.code?.language ?? 'plaintext';
-    const theme = codeBlock?.theme ?? node.code?.theme ?? 'light';
+    const lang = getStandaloneCodeLanguage(node, codeBlock);
+    const theme = getStandaloneCodeTheme(node, codeBlock);
     const html = codeBlock?.highlightedHtml ?? node.code?.highlightedHtml ?? escapeHtml(codeText);
-    const codeStyle = codeBlock?.style
-      ? richCodeBlockPreStyleToCss(codeBlock.style)
-      : getStandaloneCodePreStyleToCss(node);
-    const codeElementStyle = codeBlock?.style
-      ? richCodeBlockCodeStyleToCss(codeBlock.style)
-      : getStandaloneCodeElementStyleToCss(node);
-    const hasColorOverride = hasCodeColorOverride(codeBlock?.style) || Boolean(node.style?.color);
+    const codeStyle = {
+      ...(codeBlock?.style ? richCodeBlockPreStyleToCss(codeBlock.style) : {}),
+      ...getStandaloneCodeOverrideStyleToCss(node, codeBlock?.style != null),
+      ...(codeSurfaceMinHeight ? { minHeight: codeSurfaceMinHeight } : {}),
+    };
+    const codeElementStyle = mergeOptionalStyles(
+      codeBlock?.style ? richCodeBlockCodeStyleToCss(codeBlock.style) : undefined,
+      getStandaloneCodeElementOverrideStyleToCss(node, codeBlock?.style != null),
+    );
+    applyExplicitCodeThemeSurface(codeStyle, codeElementStyle, theme);
+    const hasColorOverride =
+      isAuthoredCodeSurfaceValue(node.style?.color) || hasCodeColorOverride(codeBlock?.style);
     return (
       <div
         className={leafClassName}
@@ -728,8 +742,102 @@ function getStandaloneCodePreStyleToCss(node: TextNode): CSSProperties {
   });
 }
 
+function getStandaloneCodeOverrideStyleToCss(
+  node: TextNode,
+  stripDefaults: boolean,
+): CSSProperties {
+  const css = getStandaloneCodePreStyleToCss(node);
+  return stripDefaults ? stripDefaultCodeTypography(css, node) : css;
+}
+
 function getStandaloneCodeElementStyleToCss(node: TextNode): CSSProperties | undefined {
   const { display: _display, margin: _margin, maxWidth: _maxWidth, whiteSpace: _whiteSpace, ...style } = getCodeLeafStyle(node);
   const css = styleRecordToReactStyle(style);
   return Object.keys(css).length > 0 ? css : undefined;
+}
+
+function getStandaloneCodeElementOverrideStyleToCss(
+  node: TextNode,
+  stripDefaults: boolean,
+): CSSProperties | undefined {
+  const css = getStandaloneCodeElementStyleToCss(node);
+  if (!css) {
+    return undefined;
+  }
+  const next = stripDefaults ? stripDefaultCodeTypography(css, node) : css;
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+function getStandaloneCodeLanguage(
+  node: TextNode,
+  codeBlock: RichCodeBlock | undefined,
+): string {
+  const defaultLanguage = TEXT_NODE_DEFAULTS.code.language;
+  return node.code?.language && node.code.language !== defaultLanguage
+    ? node.code.language
+    : codeBlock?.language ?? node.code?.language ?? defaultLanguage;
+}
+
+function getStandaloneCodeTheme(
+  node: TextNode,
+  codeBlock: RichCodeBlock | undefined,
+): string {
+  const defaultTheme = TEXT_NODE_DEFAULTS.code.theme;
+  return node.code?.theme && node.code.theme !== defaultTheme
+    ? node.code.theme
+    : codeBlock?.theme ?? node.code?.theme ?? defaultTheme;
+}
+
+function stripDefaultCodeTypography(style: CSSProperties, node: TextNode): CSSProperties {
+  const next = { ...style };
+  const defaults = TEXT_NODE_DEFAULTS.code.style;
+  if (node.style?.fontFamily === defaults.fontFamily) {
+    delete next.fontFamily;
+  }
+  if (node.style?.fontSize?.raw === defaults.fontSize.raw) {
+    delete next.fontSize;
+  }
+  if (node.style?.lineHeight === defaults.lineHeight) {
+    delete next.lineHeight;
+  }
+  if (node.style?.direction === defaults.direction) {
+    delete next.direction;
+  }
+  if (node.style?.textWrap === undefined) {
+    delete next.whiteSpace;
+    delete next.wordBreak;
+    delete next.overflowX;
+  }
+  return next;
+}
+
+function mergeOptionalStyles(
+  base: CSSProperties | undefined,
+  override: CSSProperties | undefined,
+): CSSProperties | undefined {
+  const css = {
+    ...(base ?? {}),
+    ...(override ?? {}),
+  };
+  return Object.keys(css).length > 0 ? css : undefined;
+}
+
+function applyExplicitCodeThemeSurface(
+  preStyle: CSSProperties,
+  codeStyle: CSSProperties | undefined,
+  theme: string,
+): void {
+  if (theme !== 'light' && theme !== 'dark') {
+    return;
+  }
+  const surface = CODE_THEME_SURFACE[theme];
+  if (!isAuthoredCodeSurfaceValue(preStyle.background)) {
+    preStyle.background = surface.background;
+  }
+  if (!isAuthoredCodeSurfaceValue(preStyle.color)) {
+    preStyle.color = surface.color;
+  }
+  if (codeStyle && !isAuthoredCodeSurfaceValue(codeStyle.color)) {
+    codeStyle.color = surface.color;
+  }
 }

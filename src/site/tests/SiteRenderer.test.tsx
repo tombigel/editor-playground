@@ -311,7 +311,8 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain('data-code-color="author"');
     expect(markup).toContain('tab-size:4');
     expect(markup).toContain('font-family:JetBrains Mono');
-    expect(markup).toContain('<code class="language-typescript" style="color:#123456');
+    expect(markup).toContain('<code class="language-typescript" style="');
+    expect(markup).toContain('color:#123456');
   });
 
   it('renders rich code and list blocks with the shared rich-content semantics', () => {
@@ -353,6 +354,8 @@ describe('site/SiteRenderer', () => {
     expect(markup).toContain('data-code-theme="dark"');
     expect(markup).toContain('white-space:pre-wrap');
     expect(markup).toContain('word-break:break-word');
+    expect(markup).toContain('overflow-wrap:anywhere');
+    expect(markup).toContain('word-wrap:break-word');
     expect(markup).toContain('<ol');
     expect(markup).toContain('start="4"');
     expect(markup).toContain('list-style-type:upper-alpha');

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createButtonTextNode, createMediaNode, createTextNode } from '../../model/defaults';
+import { CODE_THEME_SURFACE } from '../../model/textNodeDefaults';
 import { parseUnitValue } from '../../model/units';
 import { getButtonLeafStyle, getCodeLeafStyle, getImageLeafStyle, getLeafInlineStyle, getStandaloneCodePreStyle } from '../leafPresentation';
 
@@ -127,7 +128,24 @@ describe('render/leafPresentation', () => {
     expect(preStyle.margin).toBe(0);
     expect(preStyle.whiteSpace).toBe('pre-wrap');
     expect(preStyle.wordBreak).toBe('break-word');
+    expect(preStyle.overflowWrap).toBe('anywhere');
+    expect(preStyle.wordWrap).toBe('break-word');
     expect(preStyle.background).toBe(code.style?.background);
+  });
+
+  it('keeps theme-owned code surfaces out of idle inline styles', () => {
+    const code = createTextNode('code', 'root');
+    code.style = {
+      ...code.style,
+      color: CODE_THEME_SURFACE.light.color,
+      background: CODE_THEME_SURFACE.light.background,
+    };
+
+    const wrapperStyle = getCodeLeafStyle(code);
+    const preStyle = getStandaloneCodePreStyle(code);
+
+    expect(wrapperStyle.color).toBeUndefined();
+    expect(preStyle.background).toBeUndefined();
   });
 
   it('keeps code node shadows on box-shadow without adding a duplicate filter shadow', () => {

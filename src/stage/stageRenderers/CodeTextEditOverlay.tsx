@@ -330,6 +330,8 @@ export function CodeTextEditOverlay({
 					overflowY: "hidden",
 					whiteSpace: wrap ? "pre-wrap" : "pre",
 					wordBreak: wrap ? "break-word" : "normal",
+					overflowWrap: wrap ? "anywhere" : "normal",
+					wordWrap: wrap ? "break-word" : "normal",
 					tabSize,
 					pointerEvents: "auto",
 					cursor: "text",

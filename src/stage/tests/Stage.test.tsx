@@ -148,6 +148,8 @@ describe('stage/Stage', () => {
     expect(markup).toContain('class="language-typescript"');
     expect(markup).toContain('white-space:pre-wrap');
     expect(markup).toContain('word-break:break-word');
+    expect(markup).toContain('overflow-wrap:anywhere');
+    expect(markup).toContain('word-wrap:break-word');
   });
 
   it('renders text leaves using their configured html tag in the stage', () => {

@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - fill idle code theme surface
+- align idle code wrapping
 
 ---
 

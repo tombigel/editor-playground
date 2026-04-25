@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createLinkTextNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentContent, createTextDocumentFromCode, createTextDocumentFromText, getTextContent, listContentToRichListBlock } from '../../model/richContent';
+import { CODE_THEME_SURFACE } from '../../model/textNodeDefaults';
+import { parseFontSizeValue } from '../../model/units';
 import {
   formatNodeLabel,
   getNodeAriaLabel,
@@ -154,6 +156,8 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('width:100%');
     expect(markup).toContain('white-space:pre-wrap');
     expect(markup).toContain('word-break:break-word');
+    expect(markup).toContain('overflow-wrap:anywhere');
+    expect(markup).toContain('word-wrap:break-word');
   });
 
   it('renders non-wrapped code blocks with horizontal overflow', () => {
@@ -251,7 +255,76 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('text-decoration-line:underline');
     expect(markup).toContain('line-height:1.6');
     expect(markup).toContain('overflow-x:auto');
-    expect(markup).toContain('<code class="language-typescript" style="color:#123456');
+    expect(markup).toContain('<code class="language-typescript" style="');
+  });
+
+  it('keeps standalone code node styling when canonical code block style is partial', () => {
+    const code = createTextNode('code', 'root');
+    code.style = {
+      ...code.style,
+      color: CODE_THEME_SURFACE.light.color,
+      background: '#101418',
+      fontFamily: 'JetBrains Mono',
+      fontSize: parseFontSizeValue('22px'),
+      tabSize: 6,
+      textWrap: 'single-line',
+    };
+    code.content = createTextDocumentFromCode('const answer = 42;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: '<span class="token keyword">const</span> answer = 42;',
+      style: {
+        tabSize: 4,
+        textWrap: 'wrap',
+      } as never,
+    });
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).not.toContain('background:#f5f2f0');
+    expect(markup).not.toContain('color:#16202a');
+    expect(markup).not.toContain('data-code-color="author"');
+    expect(markup).toContain('background:#101418');
+    expect(markup).toContain('JetBrains Mono');
+    expect(markup).toContain('font-size:22px');
+    expect(markup).toContain('tab-size:6');
+    expect(markup).toContain('white-space:pre');
+    expect(markup).toContain('overflow-x:auto');
+  });
+
+  it('lets standalone code theme, wrap, and tabs override stale embedded block style', () => {
+    const code = createTextNode('code', 'root');
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: '<span class="token keyword">const</span> answer = 42;',
+    };
+    code.style = {
+      ...code.style,
+      background: CODE_THEME_SURFACE.light.background,
+      tabSize: 6,
+      textWrap: 'single-line',
+    };
+    code.content = createTextDocumentFromCode('const answer = 42;', {
+      language: 'typescript',
+      theme: 'light',
+      highlightedHtml: '<span class="token keyword">const</span> answer = 42;',
+      style: {
+        background: CODE_THEME_SURFACE.light.background,
+        tabSize: 2,
+        textWrap: 'wrap',
+      } as never,
+    });
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('background:#272822');
+    expect(markup).not.toContain('background:#f5f2f0');
+    expect(markup).toContain('tab-size:6');
+    expect(markup).toContain('white-space:pre');
+    expect(markup).toContain('overflow-x:auto');
   });
 
   it('renders semantic ordered lists and flattens them for labels', () => {
@@ -363,6 +436,8 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('data-code-theme="dark"');
     expect(markup).toContain('white-space:pre-wrap');
     expect(markup).toContain('word-break:break-word');
+    expect(markup).toContain('overflow-wrap:anywhere');
+    expect(markup).toContain('word-wrap:break-word');
     expect(markup).toContain('<ul');
     expect(markup).toContain('list-style-type:square');
     expect(markup).toContain('list-style-position:outside');
