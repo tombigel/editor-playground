@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { lazy, Suspense, type CSSProperties } from 'react';
 import type {
   ContainerNode,
   DocumentModel,
@@ -25,7 +25,10 @@ import {
 } from '../../render/nodePresentation';
 import { useRichEditContext } from '../richEditContext';
 import { CodeTextEditOverlay } from './CodeTextEditOverlay';
-import { RichTextEditOverlay } from './RichTextEditOverlay';
+
+const RichTextEditOverlay = lazy(() =>
+  import('./RichTextEditOverlay').then((m) => ({ default: m.RichTextEditOverlay })),
+);
 import {
   getLeafCssHeight,
   getNodeHeight,
@@ -307,26 +310,28 @@ function LeafTextEditBody({
           ? prepareStandaloneListEditContent(child)
         : { content: child.content, promotedNodeLink: false };
     return (
-      <RichTextEditOverlay
-        nodeId={child.id}
-        mode={mode}
-        content={editableContent.content}
-        contentStyle={contentStyle}
-        minHeight={minHeight}
-        document={document}
-        onCommit={(id, content, options) =>
-          onCommit(id, content, {
-            ...options,
-            clearBlockNodeLink:
-              mode === 'block' && editableContent.promotedNodeLink
-                ? true
-                : options?.clearBlockNodeLink,
-          })
-        }
-        onUpdateBlockGap={onUpdateBlockGap}
-        onDiscard={onDiscard}
-        onOpenManageFonts={onOpenManageFonts}
-      />
+      <Suspense fallback={null}>
+        <RichTextEditOverlay
+          nodeId={child.id}
+          mode={mode}
+          content={editableContent.content}
+          contentStyle={contentStyle}
+          minHeight={minHeight}
+          document={document}
+          onCommit={(id, content, options) =>
+            onCommit(id, content, {
+              ...options,
+              clearBlockNodeLink:
+                mode === 'block' && editableContent.promotedNodeLink
+                  ? true
+                  : options?.clearBlockNodeLink,
+            })
+          }
+          onUpdateBlockGap={onUpdateBlockGap}
+          onDiscard={onDiscard}
+          onOpenManageFonts={onOpenManageFonts}
+        />
+      </Suspense>
     );
   }
   return renderLeafContent(
