@@ -11,34 +11,35 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+---
+
+## [0.8.0] — 2026-04-25
+Document: 1.5.84 · API: 2.0.76 · Editor: 0.15.0
+
+Design refresh release. Project and Editor received minor version bumps; Document and API remain patch-level because this work did not change document schema or public API contracts.
+
 ### Added
 
-- apply compact editor control styling
-- make switch compact by default
-- add notice icons and variants
-- add missing showcase variants
-- make showcase nav anchorable
-- split notice message and info tones
+- Compact editor control density across shared primitives and panel chrome, including compact switches and compact segmented tabs.
+- Notice surface icon defaults, custom icon support, no-icon rendering, a warning surface tone, inline notice tone coverage, and separate neutral `message` vs green `info` treatments.
+- Missing design-system showcase coverage for hidden selection chrome, searchable selects, compact/large switch lineups, notice variants, and URL-addressable showcase sections.
+- Showcase navigation anchors that keep the left menu aligned with rendered sections and update the URL when a section is selected.
+- A reusable implementation-planning skill for clean task lists, simple subagent roles, parallel prep/verification waves, and sequential task commits.
 
 ### Changed
 
-- release focused text editing updates
-- document showcase fixes
-- show notice no-icon variant
-- move searchable select after select
-- simplify switch styling
-- add implementation planning workflow
+- Reworked switch styling so size, tone, mixed-state chrome, and thumb offsets are owned by the shared `Switch` component instead of layered stylesheet overrides.
+- Moved `Searchable Select` directly after `Dropdown (Select)` in the showcase and menu order, keeping searchable variants discoverable without duplicating them inside the regular select demo.
+- Updated the editor style guide and playground spec for the refreshed switch, notice, dropdown, selection chrome, tabs, and showcase navigation contracts.
+- Tightened compact tab presentation in floating panels with intrinsic label widths and a small internal gap between selected and hovered tab triggers.
+- Released the focused text editing updates accumulated before this refresh.
 
 ### Fixed
 
-- fill idle code theme surface
-- align idle code wrapping
-- align compact switch thumb
-- nudge compact switch offsets
-- fine tune switch thumb offsets
-- keep mixed switch track transparent
-- compact panel tabs
-- space tab triggers
+- Fine-tuned compact and large switch thumb offsets for unchecked, checked, and mixed states.
+- Kept mixed switch tracks transparent while preserving the dashed thumb indicator and token-backed border.
+- Removed duplicate switch state overrides from `editor-chrome.css` to avoid override-on-override styling.
+- Aligned idle code theme surfaces and wrapping behavior from the focused text editing work.
 
 ---
 
