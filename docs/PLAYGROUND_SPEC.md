@@ -1602,6 +1602,9 @@ The text system supports structure-changing operations without depending on edit
 - A single rich block is converted in place to the matching standalone text node.
 - Multiple rich blocks keep the original node id as the first split node and append additional sibling text nodes immediately after it.
 - Rich text blocks split to standalone block nodes, rich `code-block` nodes split to standalone code nodes, and rich `ul` / `ol` blocks split to standalone list nodes.
+- Split nodes preserve the source rich node typography/design as their default standalone styling, then apply each rich block's local style, direction, and line-height overrides.
+- Split siblings keep the source x-position and width and are stacked in block order using the rich document block gap.
+- The editor inspector exposes a direct `Split into text nodes` action for multi-block rich text nodes; this action calls `splitRichTextNodeDoc()` without choosing a target subtype.
 - When a rich block originated from a standalone text node merge, split restores that node's canonical block content plus its standalone metadata snapshot instead of rebuilding it from flattened text.
 - `convertTextNodeDoc(..., targetSubtype, { mode: 'split' })` on multi-block rich content splits first, then preserves only split blocks whose natural standalone subtype matches the requested subtype.
 - Split blocks whose natural subtype does not match the requested subtype become one-block rich nodes, preserving unsupported structure instead of forcing a lossy downgrade.

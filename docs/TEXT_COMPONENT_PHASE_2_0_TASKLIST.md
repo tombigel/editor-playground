@@ -175,7 +175,11 @@ Execution rules:
 - Status: `completed`
 - Allowed files:
   - `src/api/textConversion.ts`
+  - `src/api/textMerge.ts`
   - `src/api/tests/textMerge.test.ts`
+  - `src/app/editorState.ts`
+  - `src/panels/inspector/contentSections/richTextContentSection.tsx`
+  - focused app/panel wiring and tests
   - `docs/PLAYGROUND_SPEC.md`
   - `docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`
 - Read-first files and target lines:
@@ -188,14 +192,20 @@ Execution rules:
     - otherwise keep it as a one-block rich node
   - Keep single-block rich flattening behavior from phase 1.5.
   - No new public API, schema, or exported type was added; the existing split-mode conversion behavior changed.
+  - Follow-up split fidelity pass preserves source rich node typography/design as split-child defaults, applies block-local overrides, and stacks split siblings using the rich document block gap.
+  - The inspector exposes a direct `Split into text nodes` action for multi-block rich nodes; it performs natural split only and selects the produced sibling set.
 - Verification commands:
   - `npm run test:run -- src/api/tests/textMerge.test.ts src/api/tests/documentApi.test.ts`
+  - `npm run test:run -- src/app/tests/editorState.test.ts src/panels/tests/InspectorPanel.test.tsx`
   - `npm run test:run -- src/panels/tests/helpDocs.test.ts`
+  - `npm run test:run -- src/api/tests/textMerge.test.ts src/api/tests/documentApi.test.ts src/app/tests/editorState.test.ts src/panels/tests/InspectorPanel.test.tsx src/panels/tests/helpDocs.test.ts`
   - `npm run build`
 - Verification result:
-  - Focused API tests passed (`73` tests). Help-doc test passed (`10` tests). Build verification is tracked by the final gate.
+  - Initial P2-D focused API tests passed (`73` tests). Help-doc test passed (`10` tests). Follow-up API split styling tests passed (`74` tests). Follow-up editor/panel tests passed (`63` tests). Final focused suite passed (`147` tests). `npm run build` passed, including lint, typecheck, coverage (`126` files / `1519` tests), API docs check, architecture check, and production bundle build.
 - Commit SHA:
   - `fba898f`
+  - `0a1d225`
+  - `115118a`
 - Open follow-ups carried forward:
   - None yet.
 
