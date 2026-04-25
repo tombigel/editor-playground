@@ -20,4 +20,17 @@ describe("design-system/showcase variants", () => {
 		expect(markup).toContain('data-ui="select-trigger"');
 		expect(markup).toContain("Search pages");
 	});
+
+	it("shows the notice surface no-icon variant", () => {
+		const markup = renderToStaticMarkup(<MiscDemos />);
+		const noIconLabelIndex = markup.indexOf("NoticeSurface (no icon)");
+		const noIconTextIndex = markup.indexOf(
+			"Compact helper copy without a leading marker.",
+		);
+		const noIconSlice = markup.slice(noIconLabelIndex, noIconTextIndex);
+
+		expect(noIconLabelIndex).toBeGreaterThan(-1);
+		expect(noIconTextIndex).toBeGreaterThan(noIconLabelIndex);
+		expect(noIconSlice).not.toContain('data-ui="notice-icon"');
+	});
 });

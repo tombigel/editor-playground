@@ -433,6 +433,14 @@ export function MiscDemos() {
 							Animation settings are inherited from the preset.
 						</NoticeSurface>
 					</div>
+					<div>
+						<div className="editor-text-muted mb-1 text-[11px] font-medium">
+							NoticeSurface (no icon)
+						</div>
+						<NoticeSurface tone="message" icon={null}>
+							Compact helper copy without a leading marker.
+						</NoticeSurface>
+					</div>
 					<div className="space-y-2">
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
 							InlineNotice variants
