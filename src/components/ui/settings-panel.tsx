@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Info, TriangleAlert } from 'lucide-react';
+import { Info, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
@@ -124,8 +124,25 @@ const NOTICE_TONE_CLASSES = {
   info: 'editor-bg-subtle editor-border-subtle editor-text-muted rounded-lg border',
   success: 'rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700',
   danger: 'rounded-lg border border-red-200 bg-red-50 text-red-700',
+  error: 'rounded-lg border border-red-200 bg-red-50 text-red-700',
   warning: 'editor-warning-surface editor-border-subtle editor-warning-text rounded-lg border',
 } as const;
+
+type NoticeTone = keyof typeof NOTICE_TONE_CLASSES;
+type InlineNoticeTone = 'muted' | 'info' | 'warning' | 'danger' | 'error';
+
+function getNoticeIcon(tone: NoticeTone | InlineNoticeTone) {
+  if (tone === 'info') {
+    return <Info className="h-3.5 w-3.5" />;
+  }
+  if (tone === 'danger' || tone === 'error') {
+    return <ShieldAlert className="h-3.5 w-3.5" />;
+  }
+  if (tone === 'warning') {
+    return <TriangleAlert className="h-3.5 w-3.5" />;
+  }
+  return null;
+}
 
 export function NoticeSurface({
   children,
@@ -134,17 +151,22 @@ export function NoticeSurface({
   icon,
 }: {
   children: ReactNode;
-  tone?: keyof typeof NOTICE_TONE_CLASSES;
+  tone?: NoticeTone;
   className?: string;
   icon?: ReactNode;
 }) {
+  const resolvedIcon = icon === undefined ? getNoticeIcon(tone) : icon;
   return (
     <div
       className={cn('flex items-start gap-2 px-3 py-2 text-xs leading-5', NOTICE_TONE_CLASSES[tone], className)}
       data-ui="notice-surface"
       data-tone={tone}
     >
-      {icon}
+      {resolvedIcon ? (
+        <span className="mt-0.5 flex shrink-0 items-center justify-center" data-ui="notice-icon">
+          {resolvedIcon}
+        </span>
+      ) : null}
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
@@ -154,24 +176,35 @@ export function InlineNotice({
   children,
   tone = 'warning',
   className,
-  icon = <TriangleAlert className="h-3 w-3 shrink-0" />,
+  icon,
 }: {
   children: ReactNode;
-  tone?: 'muted' | 'warning' | 'danger';
+  tone?: InlineNoticeTone;
   className?: string;
   icon?: ReactNode;
 }) {
+  const resolvedIcon = icon === undefined ? getNoticeIcon(tone) : icon;
   return (
     <div
       className={cn(
         'flex items-center gap-1 text-[11px]',
-        tone === 'muted' ? 'editor-text-muted' : tone === 'danger' ? 'text-red-700' : 'editor-warning-text',
+        tone === 'muted'
+          ? 'editor-text-muted'
+          : tone === 'danger' || tone === 'error'
+            ? 'text-red-700'
+            : tone === 'info'
+              ? 'editor-text-muted'
+              : 'editor-warning-text',
         className,
       )}
       data-ui="inline-notice"
       data-tone={tone}
     >
-      {icon}
+      {resolvedIcon ? (
+        <span className="flex shrink-0 items-center justify-center" data-ui="notice-icon">
+          {resolvedIcon}
+        </span>
+      ) : null}
       <span>{children}</span>
     </div>
   );

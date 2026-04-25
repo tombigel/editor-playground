@@ -153,8 +153,14 @@ export const SELECTION_CHROME_PROPS: PropDefinition[] = [
 export const WARNING_INFO_PROPS: PropDefinition[] = [
 	{
 		name: "tone",
-		type: "'muted' | 'info' | 'success' | 'danger' | 'warning'",
+		type: "'muted' | 'info' | 'success' | 'danger' | 'error' | 'warning'",
 		description: "Visual state for a shared notice surface.",
+	},
+	{
+		name: "icon",
+		type: "ReactNode | null",
+		description:
+			"Optional leading icon override. Pass null to suppress the default tone icon.",
 	},
 	{
 		name: "children",

@@ -45,6 +45,48 @@ describe('components/ui/settings-panel', () => {
     expect(inlineMarkup).toContain('Broken anchor');
   });
 
+  it('renders default notice icons by tone with custom and suppressed icon support', () => {
+    const infoMarkup = renderToStaticMarkup(<NoticeSurface tone="info">Helpful context</NoticeSurface>);
+    const warningMarkup = renderToStaticMarkup(<NoticeSurface tone="warning">Check this</NoticeSurface>);
+    const dangerMarkup = renderToStaticMarkup(<NoticeSurface tone="danger">Failed</NoticeSurface>);
+    const errorMarkup = renderToStaticMarkup(<NoticeSurface tone="error">Failed</NoticeSurface>);
+    const customMarkup = renderToStaticMarkup(
+      <NoticeSurface tone="info" icon={<span data-testid="custom-icon" />}>
+        Custom
+      </NoticeSurface>,
+    );
+    const suppressedMarkup = renderToStaticMarkup(
+      <NoticeSurface tone="info" icon={null}>
+        No icon
+      </NoticeSurface>,
+    );
+
+    expect(infoMarkup).toContain('lucide-info');
+    expect(warningMarkup).toContain('lucide-triangle-alert');
+    expect(dangerMarkup).toContain('lucide-shield-alert');
+    expect(errorMarkup).toContain('data-tone="error"');
+    expect(errorMarkup).toContain('lucide-shield-alert');
+    expect(customMarkup).toContain('data-testid="custom-icon"');
+    expect(customMarkup).not.toContain('lucide-info');
+    expect(suppressedMarkup).not.toContain('data-ui="notice-icon"');
+  });
+
+  it('renders inline notice tone variants', () => {
+    const infoMarkup = renderToStaticMarkup(<InlineNotice tone="info">Useful note</InlineNotice>);
+    const warningMarkup = renderToStaticMarkup(<InlineNotice tone="warning">Broken anchor</InlineNotice>);
+    const dangerMarkup = renderToStaticMarkup(<InlineNotice tone="danger">Invalid setting</InlineNotice>);
+    const errorMarkup = renderToStaticMarkup(<InlineNotice tone="error">Invalid setting</InlineNotice>);
+
+    expect(infoMarkup).toContain('data-tone="info"');
+    expect(infoMarkup).toContain('lucide-info');
+    expect(warningMarkup).toContain('data-tone="warning"');
+    expect(warningMarkup).toContain('lucide-triangle-alert');
+    expect(dangerMarkup).toContain('data-tone="danger"');
+    expect(dangerMarkup).toContain('lucide-shield-alert');
+    expect(errorMarkup).toContain('data-tone="error"');
+    expect(errorMarkup).toContain('lucide-shield-alert');
+  });
+
   it('renders stacked field and compact value pill contracts', () => {
     const stackMarkup = renderToStaticMarkup(
       <LabeledFieldStack label="Width">

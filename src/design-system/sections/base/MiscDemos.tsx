@@ -368,25 +368,55 @@ export function MiscDemos() {
 				<div className="max-w-[400px] space-y-4">
 					<div>
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
-							NoticeSurface (success)
+							NoticeSurface (info)
 						</div>
-						<NoticeSurface tone="success">
-							Settings saved successfully.
+						<NoticeSurface tone="info">
+							Changes apply to the selected component only.
 						</NoticeSurface>
 					</div>
 					<div>
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
-							NoticeSurface (danger)
+							NoticeSurface (warning)
 						</div>
-						<NoticeSurface tone="danger">
+						<NoticeSurface tone="warning">
+							Broken anchors remain visible until the target is restored.
+						</NoticeSurface>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1 text-[11px] font-medium">
+							NoticeSurface (error)
+						</div>
+						<NoticeSurface tone="error">
 							Failed to export document. File may be locked.
 						</NoticeSurface>
 					</div>
 					<div>
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
-							InlineNotice (warning)
+							NoticeSurface (danger alias)
 						</div>
-						<InlineNotice>Broken anchor</InlineNotice>
+						<NoticeSurface tone="danger">
+							Export validation failed.
+						</NoticeSurface>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1 text-[11px] font-medium">
+							NoticeSurface (custom icon)
+						</div>
+						<NoticeSurface
+							tone="info"
+							icon={<Rocket className="h-3.5 w-3.5" />}
+						>
+							Animation settings are inherited from the preset.
+						</NoticeSurface>
+					</div>
+					<div className="space-y-2">
+						<div className="editor-text-muted mb-1 text-[11px] font-medium">
+							InlineNotice variants
+						</div>
+						<InlineNotice tone="info">Uses the site language.</InlineNotice>
+						<InlineNotice tone="warning">Broken anchor</InlineNotice>
+						<InlineNotice tone="danger">Export validation failed</InlineNotice>
+						<InlineNotice tone="error">Invalid export target</InlineNotice>
 					</div>
 				</div>
 			</ComponentPreview>
