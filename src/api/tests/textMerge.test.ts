@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createContainerNode, createTextNode } from '../../model/defaults';
+import { parseFontSizeValue } from '../../model/units';
 import {
   createTextDocumentContent,
   createRichTextBlock,
@@ -230,6 +231,99 @@ describe('api/textMerge', () => {
     expect(secondMarkup).toContain('font-weight:400');
     expect(secondMarkup).toContain('line-height:1.45');
     expect(secondMarkup).toContain('text-align:left');
+  });
+
+  it('preserves source rich styling with block-local overrides when splitting', () => {
+    const document = createInitialDocument();
+    const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
+    const richNode = document.nodes[richId];
+    if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    richNode.rect.y.base.raw = '40px';
+    richNode.rect.y.base.parsed.value = 40;
+    richNode.style = {
+      ...richNode.style,
+      color: '#112233',
+      fontFamily: 'Inter',
+      fontSize: parseFontSizeValue('22px'),
+      fontWeight: 500,
+      lineHeight: 1.6,
+      textAlign: 'center',
+      textDecorationLine: 'underline',
+    };
+    richNode.content = createTextDocumentContent([
+      createRichTextBlock('h2', [createRichTextLeaf('Heading')], {
+        lineHeight: 1.1,
+        style: {
+          fontSize: '34px',
+          fontWeight: 800,
+          textAlign: 'left',
+        },
+      }),
+      createRichTextBlock('paragraph', [createRichTextLeaf('Body\nCopy')]),
+      {
+        type: 'ul',
+        children: [
+          { type: 'list-item', children: [{ text: 'First' }] },
+          { type: 'list-item', children: [{ text: 'Second\nSoft' }] },
+        ],
+      },
+      {
+        type: 'code-block',
+        language: 'typescript',
+        children: [
+          { type: 'code-line', children: [{ text: 'const first = 1;' }] },
+          { type: 'code-line', children: [{ text: 'const second = 2;' }] },
+        ],
+      },
+    ], { blockGap: 24 });
+
+    const split = splitRichTextNodeDoc(document, richId);
+    const parent = split.nodes[sectionId(split)];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const splitChildren = parent.children.slice(-4);
+    const [heading, paragraph, list, code] = splitChildren.map((childId) => split.nodes[childId]);
+    if (
+      heading.contentType !== 'text' ||
+      paragraph.contentType !== 'text' ||
+      list.contentType !== 'text' ||
+      code.contentType !== 'text'
+    ) {
+      throw new Error('Expected split text nodes');
+    }
+
+    expect(heading.style).toMatchObject({
+      color: '#112233',
+      fontFamily: 'Inter',
+      fontWeight: 800,
+      lineHeight: 1.1,
+      textAlign: 'left',
+      textDecorationLine: 'underline',
+    });
+    expect(heading.style?.fontSize?.raw).toBe('34px');
+    expect(paragraph.style).toMatchObject({
+      color: '#112233',
+      fontFamily: 'Inter',
+      fontWeight: 500,
+      lineHeight: 1.6,
+      textAlign: 'center',
+      textDecorationLine: 'underline',
+    });
+    expect(paragraph.style?.fontSize?.raw).toBe('22px');
+    expect(list.style?.fontFamily).toBe('Inter');
+    expect(list.style?.textDecorationLine).toBe('underline');
+    expect(code.style?.fontFamily).toBe('Inter');
+    expect(code.style?.textDecorationLine).toBe('underline');
+    expect(splitChildren[0]).toBe(richId);
+    expect(paragraph.rect.x.base.raw).toBe(heading.rect.x.base.raw);
+    expect(paragraph.rect.width.base.raw).toBe(heading.rect.width.base.raw);
+    expect(Number.parseFloat(paragraph.rect.y.base.raw)).toBeGreaterThan(Number.parseFloat(heading.rect.y.base.raw));
+    expect(Number.parseFloat(list.rect.y.base.raw)).toBeGreaterThan(Number.parseFloat(paragraph.rect.y.base.raw));
+    expect(Number.parseFloat(code.rect.y.base.raw)).toBeGreaterThan(Number.parseFloat(list.rect.y.base.raw));
   });
 
   it('merges sibling text nodes into one rich node using tree order for content', () => {

@@ -13,7 +13,7 @@ import {
 import {
   listContentToLines,
 } from '../model/listContent';
-import { formatValue, parseFontSizeValue, parseHeightValue, parseUnitValue } from '../model/units';
+import { formatValue, parseFontSizeValue, parseHeightValue, parseUnitValue, resolveFontSizePx } from '../model/units';
 import type {
   DocumentModel,
   ListContent,
@@ -21,6 +21,7 @@ import type {
   RichBlock,
   RichBlockStyle,
   RichContent,
+  RichInlineNode,
   RichTextBlock,
   StandaloneTextNodeSnapshot,
   TextNode,
@@ -32,6 +33,7 @@ import { buildFontFamilyStack, extractPrimaryFontFamily } from '../fonts';
 const DEFAULT_SPLIT_FONT_SIZE_PX = 18;
 const DEFAULT_SPLIT_LINE_HEIGHT = 1.45;
 const SPLIT_STACK_GAP_PX = 12;
+const DEFAULT_ROOT_FONT_SIZE_PX = 16;
 
 export type MergeTextNodesOptions = {
   survivorNodeId?: NodeId;
@@ -91,7 +93,7 @@ export function splitRichTextNodeDoc(
   let yOffsetPx = 0;
   let previousBlock = blocks[0];
   for (let index = 1; index < blocks.length; index += 1) {
-    yOffsetPx += estimateSplitAdvancePx(current, previousBlock);
+    yOffsetPx += estimateSplitAdvancePx(current, previousBlock, current.content.blockGap);
     const sibling = createSplitSiblingNodeFromRichBlock(current, blocks[index], index, yOffsetPx);
     next.nodes[sibling.id] = sibling;
     replacementIds.push(sibling.id);
@@ -498,10 +500,11 @@ function stripStandaloneSnapshot<T extends RichBlock>(block: T): T {
 }
 
 function deriveStandaloneStyleFromRichBlock(
+  source: TextNode,
   block: RichBlock,
 ): TextNode['style'] | undefined {
   const style = block.style;
-  const nextStyle: TextNode['style'] = {
+  const blockStyle: TextNode['style'] = {
     ...(block.direction ? { direction: block.direction } : {}),
     ...(style?.color ? { color: style.color } : {}),
     ...(style?.fontFamily ? { fontFamily: extractPrimaryFontFamily(style.fontFamily) } : {}),
@@ -512,6 +515,11 @@ function deriveStandaloneStyleFromRichBlock(
     ...(style?.textAlign ? { textAlign: style.textAlign } : {}),
     ...(block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol' && typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
     ...(block.type === 'code-block' && style?.background ? { background: style.background } : {}),
+  };
+  const sourceStyle = source.style ? structuredClone(source.style) : undefined;
+  const nextStyle: TextNode['style'] = {
+    ...(sourceStyle ?? {}),
+    ...blockStyle,
   };
 
   return Object.keys(nextStyle).length > 0 ? nextStyle : undefined;
@@ -540,7 +548,7 @@ function buildStandaloneNodeFromRichBlock(
   const htmlTag = snapshot?.htmlTag ?? (subtype === 'block' ? richBlockToHtmlTag(block) : undefined);
   const style = snapshot?.style
     ? structuredClone(snapshot.style)
-    : deriveStandaloneStyleFromRichBlock(block) ?? structuredClone(base.style);
+    : deriveStandaloneStyleFromRichBlock(baseNode, block) ?? structuredClone(base.style);
 
   return {
     ...base,
@@ -606,14 +614,54 @@ function createSplitSiblingNodeFromRichBlock(
   });
 }
 
-function estimateSplitAdvancePx(source: TextNode, block: RichBlock): number {
-  const fontSize = source.style?.fontSize?.parsed;
-  const fontSizePx = fontSize && 'unit' in fontSize && fontSize.unit === 'px'
-    ? fontSize.value
-    : DEFAULT_SPLIT_FONT_SIZE_PX;
-  const lineHeight = source.style?.lineHeight ?? DEFAULT_SPLIT_LINE_HEIGHT;
-  const blockText = getTextContent([block]);
-  const explicitLineCount = Math.max(1, blockText.split(/\r?\n/).length);
+function estimateSplitAdvancePx(
+  source: TextNode,
+  block: RichBlock,
+  blockGap: number | undefined,
+): number {
+  const effectiveStyle = deriveStandaloneStyleFromRichBlock(source, block) ?? source.style;
+  const inheritedFontSizePx = resolveTextStyleFontSizePx(source.style, DEFAULT_SPLIT_FONT_SIZE_PX);
+  const fontSizePx = resolveTextStyleFontSizePx(effectiveStyle, inheritedFontSizePx);
+  const lineHeight = effectiveStyle?.lineHeight ?? DEFAULT_SPLIT_LINE_HEIGHT;
+  const explicitLineCount = countExplicitBlockLines(block);
   const contentHeightPx = Math.ceil(fontSizePx * lineHeight * explicitLineCount);
-  return Math.max(36, contentHeightPx + SPLIT_STACK_GAP_PX);
+  return Math.max(36, contentHeightPx + (blockGap ?? SPLIT_STACK_GAP_PX));
+}
+
+function resolveTextStyleFontSizePx(
+  style: TextNode['style'] | undefined,
+  inheritedFontSizePx: number,
+): number {
+  const fontSize = style?.fontSize?.parsed;
+  return fontSize && 'unit' in fontSize
+    ? resolveFontSizePx(fontSize, {
+        rootFontSizePx: DEFAULT_ROOT_FONT_SIZE_PX,
+        inheritedFontSizePx,
+      })
+    : inheritedFontSizePx;
+}
+
+function countExplicitBlockLines(block: RichBlock): number {
+  if (block.type === 'code-block') {
+    return Math.max(1, block.children.length);
+  }
+
+  if (block.type === 'ul' || block.type === 'ol') {
+    return Math.max(
+      1,
+      block.children.reduce((count, item) => count + countExplicitTextLines(flattenRichInlineChildren(item.children)), 0),
+    );
+  }
+
+  return countExplicitTextLines(getTextContent([block]));
+}
+
+function countExplicitTextLines(text: string): number {
+  return Math.max(1, text.split(/\r?\n/).length);
+}
+
+function flattenRichInlineChildren(children: RichInlineNode[]): string {
+  return children
+    .flatMap((node) => ('type' in node ? node.children.map((leaf) => leaf.text) : [node.text ?? '']))
+    .join('');
 }
