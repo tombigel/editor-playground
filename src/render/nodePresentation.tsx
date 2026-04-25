@@ -340,6 +340,8 @@ function richCodeBlockWrapperStyleToCss(style: RichBlockStyle | undefined): CSSP
 function richCodeBlockPreStyleToCss(style: RichBlockStyle | undefined): CSSProperties {
   const wrap = style?.textWrap !== 'single-line';
   const css: CSSProperties = {
+    display: 'block',
+    width: '100%',
     margin: 0,
     whiteSpace: wrap ? 'pre-wrap' : 'pre',
     wordBreak: wrap ? 'break-word' : 'normal',

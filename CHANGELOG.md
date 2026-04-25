@@ -15,6 +15,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - release focused text editing updates
 
+### Fixed
+
+- fill idle code theme surface
+
 ---
 
 ## [0.7.47] — 2026-04-24

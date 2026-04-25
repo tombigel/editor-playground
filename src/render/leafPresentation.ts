@@ -54,6 +54,8 @@ export function getCodeLeafStyle(node: TextNode): StyleRecord {
 export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
   const wrap = node.style?.textWrap !== 'single-line';
   const style: StyleRecord = {
+    display: 'block',
+    width: '100%',
     margin: 0,
     whiteSpace: wrap ? 'pre-wrap' : 'pre',
     wordBreak: wrap ? 'break-word' : 'normal',

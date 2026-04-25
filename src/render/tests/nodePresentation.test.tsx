@@ -150,6 +150,8 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('<pre');
     expect(markup).toContain('class="language-typescript"');
     expect(markup).toContain('data-code-theme="dark"');
+    expect(markup).toContain('display:block');
+    expect(markup).toContain('width:100%');
     expect(markup).toContain('white-space:pre-wrap');
     expect(markup).toContain('word-break:break-word');
   });

@@ -122,6 +122,8 @@ describe('render/leafPresentation', () => {
     expect(wrapperStyle.maxWidth).toBe('100%');
     expect(wrapperStyle.fontFamily).toContain('monospace');
     expect(wrapperStyle.filter).toBeUndefined();
+    expect(preStyle.display).toBe('block');
+    expect(preStyle.width).toBe('100%');
     expect(preStyle.margin).toBe(0);
     expect(preStyle.whiteSpace).toBe('pre-wrap');
     expect(preStyle.wordBreak).toBe('break-word');
