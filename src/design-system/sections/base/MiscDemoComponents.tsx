@@ -10,40 +10,53 @@ import { VariationsGrid } from "../../previews/VariationsGrid";
 export function SwitchDemo() {
 	const [checked, setChecked] = useState(false);
 	return (
-		<VariationsGrid
-			variations={[
-				{
-					label: "Unchecked",
-					render: () => <Switch checked={false} onCheckedChange={() => {}} />,
-				},
-				{
-					label: "Checked",
-					render: () => <Switch checked onCheckedChange={() => {}} />,
-				},
-				{
-					label: "Disabled",
-					render: () => (
-						<Switch checked={false} disabled onCheckedChange={() => {}} />
-					),
-				},
-				{
-					label: "Mixed / Intermediate",
-					render: () => (
-						<Switch
-							checked={false}
-							onCheckedChange={() => {}}
-							mixed
-						/>
-					),
-				},
-				{
-					label: "Interactive (click)",
-					render: () => (
-						<Switch checked={checked} onCheckedChange={setChecked} />
-					),
-				},
-			]}
-		/>
+		<div className="space-y-6">
+			<div>
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
+					Compact default
+				</div>
+				<VariationsGrid
+					variations={[
+						{
+							label: "Unchecked",
+							render: () => <Switch checked={false} onCheckedChange={() => {}} />,
+						},
+						{
+							label: "Checked",
+							render: () => <Switch checked onCheckedChange={() => {}} />,
+						},
+						{
+							label: "Disabled",
+							render: () => (
+								<Switch checked={false} disabled onCheckedChange={() => {}} />
+							),
+						},
+						{
+							label: "Mixed / Intermediate",
+							render: () => (
+								<Switch
+									checked={false}
+									onCheckedChange={() => {}}
+									mixed
+								/>
+							),
+						},
+						{
+							label: "Interactive (click)",
+							render: () => (
+								<Switch checked={checked} onCheckedChange={setChecked} />
+							),
+						},
+					]}
+				/>
+			</div>
+			<div>
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
+					Large opt-in
+				</div>
+				<Switch size="large" checked onCheckedChange={() => {}} />
+			</div>
+		</div>
 	);
 }
 

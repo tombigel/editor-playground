@@ -29,7 +29,13 @@ export const SWITCH_PROPS: PropDefinition[] = [
 		type: "boolean",
 		default: "false",
 		description:
-			"Shows the shared mixed multi-select switch state with a dashed thumb border.",
+			"Shows the shared mixed multi-select switch state with a centered thumb.",
+	},
+	{
+		name: "size",
+		type: "'compact' | 'large'",
+		default: "'compact'",
+		description: "Switch density. Compact is the default editor control size.",
 	},
 	{
 		name: "disabled",
