@@ -11,8 +11,7 @@ const switchRootSizeClasses = {
 const switchRootToneClasses = {
   default:
     'border-transparent bg-[var(--editor-switch-background)] data-[state=checked]:bg-[var(--editor-switch-background-checked)]',
-  mixed:
-    'border-[var(--editor-surface-border)] bg-[var(--editor-switch-background-mixed)] data-[state=checked]:bg-[var(--editor-switch-background-mixed)] data-[state=unchecked]:bg-[var(--editor-switch-background-mixed)]',
+  mixed: 'border-[var(--editor-surface-border)] bg-transparent data-[state=checked]:bg-transparent data-[state=unchecked]:bg-transparent',
 } as const;
 
 const switchThumbSizeClasses = {

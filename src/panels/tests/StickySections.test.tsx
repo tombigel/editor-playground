@@ -156,7 +156,8 @@ describe('panels/sticky sections', () => {
     );
 
     expect(markup).toContain('data-mixed="true"');
-    expect(markup).toContain('--editor-switch-background-mixed');
+    expect(markup).toContain('bg-transparent');
+    expect(markup).not.toContain('--editor-switch-background-mixed');
     expect(markup).toContain('--editor-switch-mixed-indicator');
     expect(markup).toContain('border-dashed');
     expect(markup).not.toContain('!');

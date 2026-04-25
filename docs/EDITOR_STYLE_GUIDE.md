@@ -562,7 +562,7 @@ Spec:
 - track radius: full
 - unchecked track: `--editor-switch-background`
 - checked track: accent blue
-- mixed-value track: no accent fill; use a weak neutral surface fill and `--editor-surface-border` so the form control remains distinct
+- mixed-value track: transparent fill with `--editor-surface-border` so the state reads as indeterminate without adding a third filled track
 - mixed-value thumb border: dashed `--editor-switch-mixed-indicator`; this token must contrast against the white thumb in light mode and the dark editor chrome in dark mode
 - mixed switch presentation is owned by the shared `Switch` `mixed` prop; showcase and panel consumers should not recreate it with local class overrides
 - thumb: white, circular, small shadow

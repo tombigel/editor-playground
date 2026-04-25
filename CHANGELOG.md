@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - align compact switch thumb
 - nudge compact switch offsets
 - fine tune switch thumb offsets
+- keep mixed switch track transparent
 
 ---
 

@@ -34,7 +34,8 @@ describe('components/ui/switch', () => {
     const markup = renderToStaticMarkup(<Switch checked={false} mixed onCheckedChange={() => {}} />);
 
     expect(markup).toContain('data-mixed="true"');
-    expect(markup).toContain('--editor-switch-background-mixed');
+    expect(markup).toContain('bg-transparent');
+    expect(markup).not.toContain('--editor-switch-background-mixed');
     expect(markup).toContain('--editor-surface-border');
     expect(markup).toContain('data-[state=unchecked]:translate-x-[7px]');
     expect(markup).toContain('border-dashed');
