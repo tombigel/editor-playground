@@ -46,6 +46,8 @@ describe('components/ui/settings-panel', () => {
   });
 
   it('renders default notice icons by tone with custom and suppressed icon support', () => {
+    const defaultMarkup = renderToStaticMarkup(<NoticeSurface>Neutral message</NoticeSurface>);
+    const messageMarkup = renderToStaticMarkup(<NoticeSurface tone="message">Neutral message</NoticeSurface>);
     const infoMarkup = renderToStaticMarkup(<NoticeSurface tone="info">Helpful context</NoticeSurface>);
     const warningMarkup = renderToStaticMarkup(<NoticeSurface tone="warning">Check this</NoticeSurface>);
     const dangerMarkup = renderToStaticMarkup(<NoticeSurface tone="danger">Failed</NoticeSurface>);
@@ -61,6 +63,12 @@ describe('components/ui/settings-panel', () => {
       </NoticeSurface>,
     );
 
+    expect(defaultMarkup).toContain('data-tone="message"');
+    expect(messageMarkup).toContain('editor-bg-subtle');
+    expect(messageMarkup).toContain('editor-text-muted');
+    expect(messageMarkup).toContain('lucide-info');
+    expect(infoMarkup).toContain('editor-success-surface');
+    expect(infoMarkup).toContain('editor-success-text');
     expect(infoMarkup).toContain('lucide-info');
     expect(warningMarkup).toContain('lucide-triangle-alert');
     expect(dangerMarkup).toContain('lucide-shield-alert');
@@ -75,12 +83,16 @@ describe('components/ui/settings-panel', () => {
   });
 
   it('renders inline notice tone variants', () => {
+    const messageMarkup = renderToStaticMarkup(<InlineNotice tone="message">Neutral note</InlineNotice>);
     const infoMarkup = renderToStaticMarkup(<InlineNotice tone="info">Useful note</InlineNotice>);
     const warningMarkup = renderToStaticMarkup(<InlineNotice tone="warning">Broken anchor</InlineNotice>);
     const dangerMarkup = renderToStaticMarkup(<InlineNotice tone="danger">Invalid setting</InlineNotice>);
     const errorMarkup = renderToStaticMarkup(<InlineNotice tone="error">Invalid setting</InlineNotice>);
 
+    expect(messageMarkup).toContain('data-tone="message"');
+    expect(messageMarkup).toContain('editor-text-muted');
     expect(infoMarkup).toContain('data-tone="info"');
+    expect(infoMarkup).toContain('editor-success-text');
     expect(infoMarkup).toContain('lucide-info');
     expect(warningMarkup).toContain('data-tone="warning"');
     expect(warningMarkup).toContain('lucide-triangle-alert');

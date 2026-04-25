@@ -121,7 +121,8 @@ export function ValuePill({
 
 const NOTICE_TONE_CLASSES = {
   muted: 'editor-text-muted',
-  info: 'editor-bg-subtle editor-border-subtle editor-text-muted rounded-lg border',
+  message: 'editor-bg-subtle editor-border-subtle editor-text-muted rounded-lg border',
+  info: 'editor-success-surface editor-success-text rounded-lg border',
   success: 'editor-success-surface editor-success-text rounded-lg border',
   danger: 'editor-danger-surface editor-danger-text rounded-lg border',
   error: 'editor-danger-surface editor-danger-text rounded-lg border',
@@ -129,10 +130,10 @@ const NOTICE_TONE_CLASSES = {
 } as const;
 
 type NoticeTone = keyof typeof NOTICE_TONE_CLASSES;
-type InlineNoticeTone = 'muted' | 'info' | 'warning' | 'danger' | 'error';
+type InlineNoticeTone = 'muted' | 'message' | 'info' | 'warning' | 'danger' | 'error';
 
 function getNoticeIcon(tone: NoticeTone | InlineNoticeTone) {
-  if (tone === 'info') {
+  if (tone === 'message' || tone === 'info') {
     return <Info className="h-3.5 w-3.5" />;
   }
   if (tone === 'danger' || tone === 'error') {
@@ -144,9 +145,22 @@ function getNoticeIcon(tone: NoticeTone | InlineNoticeTone) {
   return null;
 }
 
+function getInlineNoticeToneClass(tone: InlineNoticeTone) {
+  if (tone === 'danger' || tone === 'error') {
+    return 'editor-danger-text';
+  }
+  if (tone === 'info') {
+    return 'editor-success-text';
+  }
+  if (tone === 'warning') {
+    return 'editor-warning-text';
+  }
+  return 'editor-text-muted';
+}
+
 export function NoticeSurface({
   children,
-  tone = 'info',
+  tone = 'message',
   className,
   icon,
 }: {
@@ -188,13 +202,7 @@ export function InlineNotice({
     <div
       className={cn(
         'flex items-center gap-1 text-[11px]',
-        tone === 'muted'
-          ? 'editor-text-muted'
-          : tone === 'danger' || tone === 'error'
-            ? 'editor-danger-text'
-            : tone === 'info'
-              ? 'editor-text-muted'
-              : 'editor-warning-text',
+        getInlineNoticeToneClass(tone),
         className,
       )}
       data-ui="inline-notice"

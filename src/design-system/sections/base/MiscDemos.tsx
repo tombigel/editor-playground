@@ -384,10 +384,18 @@ export function MiscDemos() {
 				<div className="max-w-[400px] space-y-4">
 					<div>
 						<div className="editor-text-muted mb-1 text-[11px] font-medium">
+							NoticeSurface (message)
+						</div>
+						<NoticeSurface tone="message">
+							Changes apply to the selected component only.
+						</NoticeSurface>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1 text-[11px] font-medium">
 							NoticeSurface (info)
 						</div>
 						<NoticeSurface tone="info">
-							Changes apply to the selected component only.
+							Settings saved successfully.
 						</NoticeSurface>
 					</div>
 					<div>
@@ -430,6 +438,7 @@ export function MiscDemos() {
 							InlineNotice variants
 						</div>
 						<InlineNotice tone="info">Uses the site language.</InlineNotice>
+						<InlineNotice tone="message">Neutral helper message</InlineNotice>
 						<InlineNotice tone="warning">Broken anchor</InlineNotice>
 						<InlineNotice tone="danger">Export validation failed</InlineNotice>
 						<InlineNotice tone="error">Invalid export target</InlineNotice>

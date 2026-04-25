@@ -781,9 +781,10 @@ Spec:
 - compact pills: `10px`, medium
 - notice and inline warning surfaces use the same token-backed border/background roles across inspector and settings
 - grouped inspector/settings rows share one composition layer for label slots, inline controls, and mixed-value summaries
-- `NoticeSurface` defaults to the `info` tone and resolves its icon from tone; pass a custom `icon` to override, or `icon={null}` to suppress the marker slot
+- `NoticeSurface` defaults to the neutral gray `message` tone and resolves its icon from tone; pass a custom `icon` to override, or `icon={null}` to suppress the marker slot
+- `NoticeSurface tone="info"` uses the green informational/success treatment; `tone="success"` remains available as the explicit success alias
 - `NoticeSurface tone="warning"` uses the shared warning surface tokens; `tone="error"` and `tone="danger"` intentionally share the same visual treatment for backward-compatible danger aliases
-- `InlineNotice` supports `info`, `warning`, `danger`, and `error` tones, with `danger` and `error` sharing the validation/error treatment
+- `InlineNotice` supports `message`, `info`, `warning`, `danger`, and `error` tones, with `danger` and `error` sharing the validation/error treatment
 - success, danger, and error notice tones use editor token-backed surface/text utilities, not hard-coded color classes
 
 Rules:
