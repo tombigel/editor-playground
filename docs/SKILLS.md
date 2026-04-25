@@ -93,6 +93,18 @@ Provides the checklist and available primitives for building new interactive UI 
 
 **Run:** before building any new interactive component
 
+### `/implementation-plan` — Clean Task Planning
+
+Turns a medium or large request into an execution-ready plan with bounded tasks, optional clean-context subagents, parallel read-only waves, focused verification, and one commit per code task.
+
+**What it provides:**
+
+- A repeatable plan format with execution strategy, prep wave, code tasks, verification wave, and final acceptance
+- Guidance for when to use `explorer` vs `worker` agents
+- Sequential commit hygiene: focused tests, stage only task files, commit, then continue
+
+**Run:** when a request needs a detailed task list, clean commits, subagents, or parallel prep/verification
+
 ## Composite Skills
 
 ### `/maintenance` — Full Maintenance Pass
