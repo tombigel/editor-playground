@@ -276,8 +276,8 @@
 }
 
 .editor-accent-swatch {
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 0.375rem;
   border: 1px solid color-mix(in srgb, var(--editor-utility-border) 88%, #000000 5%);
   background: var(--swatch-color);

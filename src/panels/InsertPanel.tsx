@@ -120,7 +120,7 @@ export function InsertPanel({
 							variant="outline"
 							size="icon"
 							title={`${item.label} · ${item.hint}`}
-							className="editor-insert-button h-8 w-8 rounded-md p-0"
+							className="editor-insert-button h-7 w-7 rounded-md p-0"
 							onClick={(event) => {
 								if (item.kind === "wrapper") {
 									if (item.role === "section") {

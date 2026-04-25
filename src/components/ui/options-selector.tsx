@@ -19,6 +19,7 @@ type OptionsSelectorProps = {
   onValueChange: (value: string) => void;
   display?: 'label' | 'icon' | 'icon-label';
   size?: 'compact' | 'default';
+  mixed?: boolean;
   ariaLabel?: string;
   className?: string;
 };
@@ -31,6 +32,7 @@ export function OptionsSelector({
   onValueChange,
   display = 'label',
   size = 'default',
+  mixed = false,
   ariaLabel,
   className,
 }: OptionsSelectorProps) {
@@ -38,11 +40,18 @@ export function OptionsSelector({
     <fieldset
       data-ui="options-selector"
       data-display={display}
-      className={cn('editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5', className)}
+      data-mixed={mixed ? 'true' : 'false'}
+      className={cn(
+        'editor-bg-subtle editor-border-subtle inline-flex rounded-lg border',
+        mixed && 'border-dashed',
+        display === 'icon' ? 'p-px' : 'p-0.5',
+        className,
+      )}
     >
       {ariaLabel ? <legend className="sr-only">{ariaLabel}</legend> : null}
       {options.map((option) => {
-        const active = option.value === value;
+        const active = option.value === value && !mixed;
+        const mixedOption = option.value === value && mixed;
         const iconOnly = display === 'icon';
         const button = (
           <Button
@@ -52,6 +61,7 @@ export function OptionsSelector({
             size="sm"
             data-ui="options-selector-option"
             data-selected={active ? 'true' : 'false'}
+            data-mixed={mixedOption ? 'true' : 'false'}
             aria-label={option.ariaLabel ?? option.label}
             aria-pressed={active}
             disabled={option.disabled}
@@ -59,6 +69,7 @@ export function OptionsSelector({
               'rounded-md text-[11px]',
               active &&
                 'border-transparent bg-[color:var(--editor-accent)] text-[color:var(--editor-accent-foreground)] shadow-[var(--editor-accent-shadow)] hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_88%,#0f172a)]',
+              mixedOption && 'border border-dashed',
               size === 'compact'
                 ? iconOnly
                   ? 'h-6 w-6 p-0'
@@ -66,10 +77,10 @@ export function OptionsSelector({
                     ? 'h-6 gap-1.5 px-2'
                     : 'h-6 px-2'
                 : iconOnly
-                  ? 'h-8 w-8 p-0'
+                  ? 'h-6 w-6 p-0'
                   : display === 'icon-label'
-                    ? 'h-7 gap-1.5 px-2.5'
-                    : 'h-7 px-2.5',
+                    ? 'h-6 gap-1.5 px-2.5'
+                    : 'h-6 px-2.5',
             )}
             onClick={() => onValueChange(option.value)}
           >

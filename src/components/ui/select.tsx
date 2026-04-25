@@ -19,8 +19,8 @@ const selectTriggerVariants = cva(
   {
     variants: {
       size: {
-        default: 'h-8 py-2 text-sm',
-        compact: 'h-8 py-2 text-xs',
+        default: 'h-7 py-1.5 text-sm',
+        compact: 'h-7 py-1.5 text-xs',
         small: 'h-7 py-1.5 text-[11px]',
       },
     },

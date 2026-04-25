@@ -172,7 +172,7 @@ export function AccentSwatchRow({
             />
           );
         })}
-        <div className="relative h-8 w-8 shrink-0">
+        <div className="relative h-7 w-7 shrink-0">
           <ColorPicker
             value={value}
             fallback={isCustom ? value : '#1668ff'}

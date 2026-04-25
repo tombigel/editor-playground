@@ -25,6 +25,13 @@ export const SWITCH_PROPS: PropDefinition[] = [
 		description: "Change handler.",
 	},
 	{
+		name: "mixed",
+		type: "boolean",
+		default: "false",
+		description:
+			"Shows the shared mixed multi-select switch state with a dashed thumb border.",
+	},
+	{
 		name: "disabled",
 		type: "boolean",
 		default: "false",
@@ -54,6 +61,13 @@ export const OPTIONS_SELECTOR_PROPS: PropDefinition[] = [
 		type: "'label' | 'icon' | 'icon-label'",
 		default: "'label'",
 		description: "Whether options show labels only, icons only, or both.",
+	},
+	{
+		name: "mixed",
+		type: "boolean",
+		default: "false",
+		description:
+			"Shows the dashed mixed-state presentation for multi-select inspector values.",
 	},
 ];
 

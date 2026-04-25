@@ -13,7 +13,7 @@ const tabsListVariants = cva('inline-flex border', {
   variants: {
     variant: {
       default: 'editor-bg-subtle rounded-md p-0.5',
-      segmented: 'editor-pill-subtle editor-border-subtle rounded-lg p-1',
+      segmented: 'editor-pill-subtle editor-border-subtle rounded-lg p-0.5',
     },
   },
   defaultVariants: {
@@ -28,9 +28,9 @@ const tabsTriggerVariants = cva('font-medium transition-colors', {
       segmented: 'editor-text-muted',
     },
     size: {
-      default: 'rounded-[6px] px-2.5 py-1 text-xs',
-      compact: 'rounded-md px-3 py-1.5 text-xs',
-      small: 'rounded-sm px-2 py-1 text-[11px]',
+      default: 'h-7 rounded-[6px] px-2.5 text-xs',
+      compact: 'h-7 rounded-md px-3 text-xs',
+      small: 'h-7 rounded-sm px-2 text-[11px]',
     },
     selected: {
       true: 'editor-bg-surface editor-text-strong shadow-sm',

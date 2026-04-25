@@ -35,7 +35,7 @@ export function HtmlTagInlineField({
 			controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
 		>
 			<Select value={value} onValueChange={onValueChange}>
-				<SelectTrigger className="h-8 w-24 rounded-sm text-[11px]">
+				<SelectTrigger className="h-7 w-24 rounded-sm text-[11px]">
 					<SelectValue />
 				</SelectTrigger>
 				<SelectContent>

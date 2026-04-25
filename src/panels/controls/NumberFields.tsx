@@ -221,7 +221,7 @@ export function LabeledImplicitUnitField({
             onChange(`${nextValue}${resolvedUnit}`);
           }
         }}
-        className="h-8 rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="h-7 rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
     </LabeledFieldStack>
   );

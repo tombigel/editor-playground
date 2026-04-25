@@ -271,7 +271,7 @@ export function TypographyTextStyleFields({
               type="button"
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-sm"
+              className="h-7 w-7 rounded-sm"
               aria-label="Manage fonts"
               onClick={onOpenManageFonts}
             >
@@ -568,7 +568,7 @@ export function NavigationFields({
             type="button"
             variant={linkType === 'anchor' ? 'default' : 'ghost'}
             size="sm"
-            className="h-7 px-2.5 text-[11px]"
+            className="h-6 px-2.5 text-[11px]"
             onClick={() => handleLinkTypeChange('anchor')}
           >
             Internal
@@ -577,7 +577,7 @@ export function NavigationFields({
             type="button"
             variant={linkType === 'external' ? 'default' : 'ghost'}
             size="sm"
-            className="h-7 px-2.5 text-[11px]"
+            className="h-6 px-2.5 text-[11px]"
             onClick={() => handleLinkTypeChange('external')}
           >
             External
@@ -587,7 +587,7 @@ export function NavigationFields({
               type="button"
               variant={linkType === 'page' ? 'default' : 'ghost'}
               size="sm"
-              className="h-7 px-2.5 text-[11px]"
+              className="h-6 px-2.5 text-[11px]"
               onClick={() => handleLinkTypeChange('page')}
             >
               Page

@@ -313,7 +313,7 @@ export function MultiSelectInspector({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 w-full justify-center text-[11px]"
+                className="h-7 w-full justify-center text-[11px]"
                 disabled={!canMergeTextSelectionToRich || !actions.onMergeTextSelectionToRich}
                 onClick={() => actions.onMergeTextSelectionToRich?.(standaloneTextNodes.map((node) => node.id))}
               >
@@ -363,7 +363,7 @@ export function MultiSelectInspector({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-sm"
+                    className="h-7 w-7 rounded-sm"
                     aria-label="Manage fonts"
                     onClick={() => actions.onOpenManageFonts?.()}
                   >
@@ -456,7 +456,7 @@ export function MultiSelectInspector({
                     options={languageOptions}
                     placeholder={textLanguageState.mixed ? 'Mixed values' : 'Site language'}
                     searchPlaceholder="Search languages"
-                    triggerClassName="h-8 text-[11px]"
+                    triggerClassName="h-7 text-[11px]"
                     onValueChange={(value) =>
                       onBulkEdit([
                         {

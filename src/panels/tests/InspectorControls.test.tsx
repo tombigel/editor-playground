@@ -37,7 +37,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('aria-label="Text color"');
     expect(markup).toContain('value="oklch(62% 0.18 252 / 0.8)"');
     expect(markup).toContain('editor-color-picker');
-    expect(markup).toContain('h-8 w-8');
+    expect(markup).toContain('h-7 w-7');
   });
 
   it('renders shadow numeric controls with compact fixed unit suffixes', () => {

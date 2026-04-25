@@ -283,6 +283,7 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('>Text Merge<');
     expect(markup).toContain('>Merge into rich text<');
     expect(markup).not.toContain('class="h-8 rounded-sm text-[11px] w-[72px]"');
+    expect(markup).toContain('h-7');
   });
 
   it('renders list content controls for standalone list text nodes', () => {

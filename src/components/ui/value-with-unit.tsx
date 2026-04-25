@@ -361,7 +361,7 @@ export function ValueWithUnit({
 		>
 			<div
 				className={cn(
-					"value-with-unit group/valuewithunit relative flex h-8 min-w-0 rounded-sm border shadow-sm outline-none transition-[border-color,box-shadow,outline-color]",
+					"value-with-unit group/valuewithunit relative flex h-7 min-w-0 rounded-sm border shadow-sm outline-none transition-[border-color,box-shadow,outline-color]",
 					invalid
 						? "value-with-unit-invalid focus-within:border-red-400"
 						: "focus-within:border-[color:var(--editor-accent)]",

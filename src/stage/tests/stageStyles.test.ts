@@ -47,6 +47,16 @@ describe('stage/stage styles', () => {
     expect(styles).toContain("[data-ui='slider-thumb']");
   });
 
+  it('owns mixed switch chrome in shared CSS without important utility overrides', () => {
+    expect(styles).toContain("--editor-switch-mixed-indicator: #334155;");
+    expect(styles).toContain("--editor-switch-mixed-indicator: #e2e8f0;");
+    expect(styles).toContain("[data-ui='switch'][data-mixed='true']");
+    expect(styles).toContain("border-color: var(--editor-surface-border);");
+    expect(styles).toContain("background: color-mix(in srgb, var(--editor-surface-background) 72%, transparent);");
+    expect(styles).toContain("[data-ui='switch'][data-mixed='true'] [data-ui='switch-thumb']");
+    expect(styles).toContain("border: 1px dashed var(--editor-switch-mixed-indicator);");
+  });
+
   it('uses simpler high-contrast chrome for clarity and ink', () => {
     expect(styles).toContain("body[data-editor-theme='light'][data-editor-light-theme='clarity']");
     expect(styles).toContain("body[data-editor-theme='dark'][data-editor-dark-theme='ink']");

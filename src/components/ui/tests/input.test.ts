@@ -58,10 +58,12 @@ describe('components/ui/input', () => {
     ).toBeUndefined();
   });
 
-  it('uses the shared compact control radius in markup', () => {
+  it('uses the shared 28px compact control contract in markup', () => {
     const markup = renderToStaticMarkup(React.createElement(Input, { value: '16', onChange: () => {} }));
 
+    expect(markup).toContain('h-7');
     expect(markup).toContain('rounded-sm');
     expect(markup).not.toContain('rounded-md');
+    expect(markup).not.toContain('h-8');
   });
 });

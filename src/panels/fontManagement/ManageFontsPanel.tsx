@@ -273,7 +273,7 @@ export function ManageFontsPanel({
                         type="button"
                         variant={family.favorite ? 'default' : 'outline'}
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-7 w-7 p-0"
                         aria-label={family.favorite ? `Unfavorite ${family.family}` : `Favorite ${family.family}`}
                         onClick={() => onToggleFavorite(family.family)}
                       >
@@ -285,7 +285,7 @@ export function ManageFontsPanel({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-7 w-7 p-0"
                         aria-label={`Remove ${family.family}`}
                         onClick={() => onRemoveFont(family.family)}
                         disabled={!removable}
@@ -401,7 +401,7 @@ export function ManageFontsPanel({
                         setFilters((current) => ({ ...current, pageSize: normalizeCatalogPageSize(Number.parseInt(value, 10)) }))
                       }
                     >
-                      <SelectTrigger className="h-8 w-[72px] text-[11px]">
+                      <SelectTrigger className="h-7 w-[72px] text-[11px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -441,7 +441,7 @@ export function ManageFontsPanel({
                           type="button"
                           variant={existing?.favorite ? 'default' : 'outline'}
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0"
                           aria-label={existing?.favorite ? `Unfavorite ${family.family}` : `Favorite ${family.family}`}
                           onClick={() =>
                             existing
@@ -458,7 +458,7 @@ export function ManageFontsPanel({
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-8 w-8 p-0"
+                            className="h-7 w-7 p-0"
                             aria-label={`Add ${family.family}`}
                             onClick={() => onAddFont({ ...family, favorite: false, origin: 'added' })}
                           >

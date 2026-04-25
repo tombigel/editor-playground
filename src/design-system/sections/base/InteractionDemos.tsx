@@ -100,7 +100,7 @@ function TextButtonDemo() {
 						{
 							label: "Menu",
 							render: () => (
-								<Button variant="menu" size="sm" className="gap-1.5 rounded-sm px-2.5">
+								<Button variant="menu" size="sm">
 									<Settings className="h-4 w-4" /> Actions
 								</Button>
 							),
@@ -183,7 +183,7 @@ function TextButtonDemo() {
 						{
 							label: "Ghost + icon",
 							render: () => (
-								<Button variant="ghost" size="sm" className="gap-1.5">
+								<Button variant="ghost" size="sm">
 									<ArrowLeft className="h-4 w-4" /> Back
 								</Button>
 							),
@@ -191,7 +191,7 @@ function TextButtonDemo() {
 						{
 							label: "Default + icon",
 							render: () => (
-								<Button variant="default" size="sm" className="gap-1.5">
+								<Button variant="default" size="sm">
 									<Settings className="h-4 w-4" /> Settings
 								</Button>
 							),
@@ -237,7 +237,7 @@ function IconButtonDemo() {
 					{
 						label: "Menu",
 						render: () => (
-							<Button size="icon" variant="menu" className="h-7 w-7 rounded-sm" data-selected="true">
+							<Button size="icon" variant="menu" data-selected="true">
 								<Settings className="h-3.5 w-3.5" />
 							</Button>
 						),

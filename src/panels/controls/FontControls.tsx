@@ -543,7 +543,7 @@ export const FontPickerPopover = memo(function FontPickerPopover({
 				variant="outline"
 				size="sm"
 				className={cn(
-					"editor-font-picker-trigger h-8 w-full justify-between overflow-hidden rounded-sm px-2 text-[13px]",
+					"editor-font-picker-trigger h-7 w-full justify-between overflow-hidden rounded-sm px-2 text-[13px]",
 					triggerClassName,
 				)}
 				onClick={() => setOpen((current) => !current)}

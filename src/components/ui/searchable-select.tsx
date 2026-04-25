@@ -167,7 +167,7 @@ export function SearchableSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full items-center justify-between rounded-sm border px-3 text-sm shadow-sm',
+          'editor-bg-surface editor-border-subtle editor-text-strong flex h-7 w-full items-center justify-between rounded-sm border px-2.5 text-sm shadow-sm',
           triggerClassName,
         )}
         onClick={() => {
@@ -203,7 +203,7 @@ export function SearchableSelect({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 text-xs"
+              className="h-7 text-xs"
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && filteredOptions[0]) {
                   onValueChange(filteredOptions[0].value);

@@ -55,7 +55,7 @@ export function TransferSettingsSection({
                 type="button"
                 variant={status === 'draft' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-7 px-2.5 text-[11px]"
+                className="h-6 px-2.5 text-[11px]"
                 onClick={() => onSiteSettingsChange?.({ status: 'draft' })}
               >
                 Draft
@@ -64,7 +64,7 @@ export function TransferSettingsSection({
                 type="button"
                 variant={status === 'published' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-7 px-2.5 text-[11px]"
+                className="h-6 px-2.5 text-[11px]"
                 onClick={() => onSiteSettingsChange?.({ status: 'published' })}
               >
                 Published

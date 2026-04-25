@@ -174,6 +174,7 @@ const COLOR_TOKEN_GROUPS: Array<{ title: string; tokens: string[] }> = [
 		tokens: [
 			"--editor-switch-background",
 			"--editor-switch-background-checked",
+			"--editor-switch-mixed-indicator",
 			"--editor-slider-track-background",
 			"--editor-slider-range-background",
 			"--editor-slider-thumb-background",

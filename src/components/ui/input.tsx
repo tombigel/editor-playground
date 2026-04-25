@@ -85,7 +85,7 @@ const Input = React.forwardRef<
           onChange?.(event);
         }}
         className={cn(
-          'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full min-w-0 rounded-sm border px-3 py-1 text-sm shadow-sm transition-[color,box-shadow,border-color,outline-color] outline-none placeholder:text-[color:var(--editor-input-placeholder)] focus-visible:border-[color:var(--editor-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--editor-focus-ring-strong)]',
+          'editor-bg-surface editor-border-subtle editor-text-strong flex h-7 w-full min-w-0 rounded-sm border px-2.5 py-1 text-sm shadow-sm transition-[color,box-shadow,border-color,outline-color] outline-none placeholder:text-[color:var(--editor-input-placeholder)] focus-visible:border-[color:var(--editor-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--editor-focus-ring-strong)]',
           includeDisabledStyles ? 'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50' : null,
           className,
         )}

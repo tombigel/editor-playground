@@ -522,7 +522,7 @@ function ColorPickerImpl({
 				"block min-w-0",
 				variant === "default" ? "w-full" : null,
 				variant === "swatch"
-					? "editor-color-picker editor-icon-button-subtle inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-md border p-0 align-top shadow-sm"
+					? "editor-color-picker editor-icon-button-subtle inline-flex h-7 w-7 shrink-0 overflow-hidden rounded-md border p-0 align-top shadow-sm"
 					: null,
 				className,
 			)}
@@ -542,7 +542,7 @@ function ColorPickerImpl({
 		return (
 			<span
 				className={cn(
-					"relative inline-flex h-8 w-8 shrink-0 align-top",
+					"relative inline-flex h-7 w-7 shrink-0 align-top",
 					className,
 				)}
 			>

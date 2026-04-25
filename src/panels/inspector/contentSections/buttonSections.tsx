@@ -356,7 +356,7 @@ function ButtonPaddingField({
 }) {
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] items-center gap-1">
-      <div className="editor-text-muted flex h-8 items-center justify-center">
+      <div className="editor-text-muted flex h-7 items-center justify-center">
         {icon}
       </div>
       <SpacingField nodeId={nodeId} axis={axis} value={value} onChange={onChange} />

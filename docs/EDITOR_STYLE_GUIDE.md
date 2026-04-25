@@ -274,6 +274,7 @@ Required baseline:
 --editor-select-highlight-background: #eff6ff;
 --editor-switch-background: #cbd5e1;
 --editor-switch-background-checked: #3b82f6;
+--editor-switch-mixed-indicator: #334155;
 --editor-tooltip-background: #ffffff;
 --editor-tooltip-border: #dbe5f0;
 --editor-tooltip-text: #475569;
@@ -325,6 +326,7 @@ Required baseline:
 --editor-select-highlight-background: color-mix(in srgb, var(--editor-accent) 22%, #2a3850);
 --editor-switch-background: #334155;
 --editor-switch-background-checked: var(--editor-accent);
+--editor-switch-mixed-indicator: #e2e8f0;
 --editor-tooltip-background: color-mix(in srgb, var(--editor-accent) 6%, #0f1722);
 --editor-tooltip-border: color-mix(in srgb, var(--editor-accent) 11%, #36495f);
 --editor-tooltip-text: #d6e0ea;
@@ -559,8 +561,9 @@ Spec:
 - track radius: full
 - unchecked track: `--editor-switch-background`
 - checked track: accent blue
-- mixed-value track: `--editor-switch-background-mixed`
-- mixed-value indicator: `--editor-switch-mixed-indicator`
+- mixed-value track: no accent fill; use a weak neutral surface fill and `--editor-surface-border` so the form control remains distinct
+- mixed-value thumb border: dashed `--editor-switch-mixed-indicator`; this token must contrast against the white thumb in light mode and the dark editor chrome in dark mode
+- mixed switch presentation is owned by the shared `Switch` `mixed` prop; showcase and panel consumers should not recreate it with local class overrides
 - thumb: white, circular, small shadow
 
 ### 11.7 Cards
@@ -645,27 +648,30 @@ Rules:
 - top-level menus open on click first, then switch on hover while the menubar is active
 - submenu surfaces should overlap their parent menu slightly to avoid hover gaps
 
-### 11.11 Searchable Select
+### 11.11 Searchable Select And Multi-Select
 
 Implementation references:
 
 - [src/components/ui/searchable-select.tsx](../src/components/ui/searchable-select.tsx)
+- [src/components/ui/searchable-multi-select.tsx](../src/components/ui/searchable-multi-select.tsx)
 - [src/i18n/languages.ts](../src/i18n/languages.ts)
 
 Spec:
 
-- trigger height: `32px`
+- trigger height: `28px`
 - trigger radius: `rounded-sm`
 - trigger typography: `12-14px` depending on host surface
 - content surface uses editor surface tokens with compact list density
 - popup width tracks the trigger but clamps to the viewport and flips above when needed
 - option rows reserve one tight leading slot for the selected-state check
 - search input sits in a bordered header row above the options list
+- searchable multi-select uses the same `28px` trigger and embedded search input contract, and its checklist option rows use a compact `28px` minimum instead of menubar row sizing
 - option rows may show a secondary muted description line for codes or native names
 
 Rules:
 
 - use for fixed option sets that benefit from free-text filtering
+- use searchable multi-select for checklist-style filtered sets, including custom page visibility targeting
 - do not use for arbitrary value entry
 - page and text language selectors prepend a `Site language` option that stores `undefined`
 - language options are sourced from `src/i18n/languages.json`, sorted by `order` first and then alphabetically
@@ -680,9 +686,9 @@ Implementation references:
 Spec:
 
 - tabs list uses a subtle token-backed background with a `rounded-md` shell
-- floating panel tab shells may reuse the subtle pill surface with the same radius and token set
+- floating panel tab shells may reuse the subtle pill surface with the same radius and token set, using compact `2px` padding
 - when a floating panel has only 2 short tabs, place the tab shell in the header actions area before introducing a second row
-- triggers use compact `12px` medium text with `rounded-[6px]`
+- triggers use `28px` height, compact `12px` medium text, and `rounded-[6px]`
 - active trigger swaps to the surface background and strong text with a small surface shadow
 - tab content spacing should come from the host panel, not from the primitive itself
 
@@ -766,7 +772,7 @@ Implementation references:
 
 Spec:
 
-- compact field height: `32px`
+- compact field height: `28px`
 - compact field radius: `rounded-sm`
 - labels: `11px`, medium
 - inline unit triggers: `10px`

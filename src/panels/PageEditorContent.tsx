@@ -172,7 +172,7 @@ export function PageEditorContent({
             type="button"
             variant={isHomePage ? 'secondary' : 'outline'}
             size="sm"
-            className="h-8 px-2 text-xs"
+            className="h-7 px-2 text-xs"
             disabled={isHomePage}
             onClick={() => onSetHomePage(page.id)}
           >
@@ -249,7 +249,7 @@ export function PageEditorContent({
                 }
               }}
             />
-            <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={onValidateLinks}>
+            <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={onValidateLinks}>
               Validate links
             </Button>
           </div>
@@ -326,7 +326,7 @@ export function PageEditorContent({
                 }
               }}
             />
-            <Button type="button" variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={handleAddAlias}>
+            <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={handleAddAlias}>
               Add
             </Button>
           </div>
@@ -341,7 +341,7 @@ export function PageEditorContent({
               options={languageOptions}
               placeholder="Site language"
               searchPlaceholder="Search languages"
-              triggerClassName="h-8 text-xs"
+              triggerClassName="h-7 text-xs"
               onValueChange={(value) => onSetLang(page.id, value === '__site__' ? undefined : value)}
             />
           </LabeledFieldStack>
@@ -361,7 +361,7 @@ export function PageEditorContent({
                 onSetViewTransition(page.id, value === '__inherit__' ? undefined : (value as DocumentPage['viewTransition']))
               }
             >
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -378,7 +378,7 @@ export function PageEditorContent({
               value={page.parentPageId ?? '__top__'}
               onValueChange={(value) => onSetParent(page.id, value === '__top__' ? null : value)}
             >
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

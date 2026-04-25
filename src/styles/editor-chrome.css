@@ -327,6 +327,52 @@
 }
 
 :is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='switch'][data-mixed='true'] {
+  border-color: var(--editor-surface-border);
+  background: color-mix(in srgb, var(--editor-surface-background) 72%, transparent);
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='switch'][data-mixed='true'][data-state='checked'],
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='switch'][data-mixed='true'][data-state='unchecked'] {
+  background: color-mix(in srgb, var(--editor-surface-background) 72%, transparent);
+}
+
+:is(.editor-shell, body) :is(
+  .editor-rail-shell,
+  .editor-inspector-shell,
+  .editor-focused-panel,
+  .editor-settings-panel,
+  .editor-section-templates,
+  .editor-shortcut-help,
+  .ui-dialog-popover > div
+) [data-ui='switch'][data-mixed='true'] [data-ui='switch-thumb'] {
+  border: 1px dashed var(--editor-switch-mixed-indicator);
+}
+
+:is(.editor-shell, body) :is(
   .editor-inspector-shell,
   .editor-focused-panel,
   .editor-settings-panel,
@@ -479,8 +525,8 @@ a.editor-pill-subtle:focus-visible {
 
 .editor-topbar-icon-button {
   padding: 0;
-  height: 2rem;
-  width: 2rem;
+  height: 1.75rem;
+  width: 1.75rem;
   border-width: 1px;
   border-style: solid;
   border-radius: 0.375rem;
@@ -596,6 +642,31 @@ a.editor-pill-subtle:focus-visible {
   justify-content: center;
 }
 
+.editor-searchable-multi-select-item {
+  display: flex;
+  width: 100%;
+  min-height: 1.75rem;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--editor-utility-text-strong);
+  text-align: left;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.editor-searchable-multi-select-item:hover,
+.editor-searchable-multi-select-item:focus-visible,
+.editor-searchable-multi-select-item[data-selected='true'] {
+  background: color-mix(in srgb, var(--editor-accent) 10%, var(--editor-surface-background));
+  color: var(--editor-accent);
+}
+
 .editor-menubar-shortcut {
   color: var(--editor-utility-text-muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -667,7 +738,7 @@ a.editor-pill-subtle:focus-visible {
   width: fit-content;
   min-width: 0;
   max-width: 18rem;
-  height: 2rem;
+  height: 1.75rem;
   justify-content: flex-start;
   gap: 0.35rem;
   border: 1px solid color-mix(in srgb, var(--editor-surface-border) 82%, #000000 12%);
@@ -755,8 +826,8 @@ a.editor-pill-subtle:focus-visible {
 }
 
 .editor-panel-header-close {
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   flex-shrink: 0;
 }
@@ -856,8 +927,8 @@ a.editor-pill-subtle:focus-visible {
 
 .editor-rail-toggle-button {
   display: flex;
-  height: 2rem;
-  width: 2rem;
+  height: 1.75rem;
+  width: 1.75rem;
   align-items: center;
   justify-content: center;
   border-radius: 0.375rem;
@@ -897,8 +968,8 @@ a.editor-pill-subtle:focus-visible {
 
 .editor-rail-entry-button {
   display: flex;
-  height: 2rem;
-  width: 2rem;
+  height: 1.75rem;
+  width: 1.75rem;
   align-items: center;
   justify-content: center;
   border-radius: 0.375rem;

@@ -56,7 +56,7 @@ export function PagesSiteSettingsContent({
                 })
               }
             >
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -73,7 +73,7 @@ export function PagesSiteSettingsContent({
               options={languageOptions}
               placeholder="Choose language"
               searchPlaceholder="Search languages"
-              triggerClassName="h-8 text-xs"
+              triggerClassName="h-7 text-xs"
               onValueChange={(value) => onSetSiteSettings({ lang: value })}
             />
           </FormField>

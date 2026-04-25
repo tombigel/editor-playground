@@ -33,7 +33,7 @@ export function Pager({
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 px-2"
+        className="h-7 px-2"
         onClick={onPrevious}
         disabled={currentPage <= 1}
       >
@@ -50,7 +50,7 @@ export function Pager({
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 px-2"
+        className="h-7 px-2"
         onClick={onNext}
         disabled={currentPage >= totalPages}
       >

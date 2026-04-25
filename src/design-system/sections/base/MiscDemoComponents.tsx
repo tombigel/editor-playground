@@ -32,7 +32,7 @@ export function SwitchDemo() {
 						<Switch
 							checked={false}
 							onCheckedChange={() => {}}
-							className="bg-slate-400 data-[state=unchecked]:bg-slate-400 [&>[data-ui=switch-thumb]]:translate-x-[9px]"
+							mixed
 						/>
 					),
 				},
@@ -125,29 +125,17 @@ export function OptionsSelectorDemo() {
 				<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
 					Multi-select
 				</div>
-				<div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border border-dashed p-1">
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-7 rounded-md border border-dashed px-2.5 text-[11px]"
-					>
-						Left
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-					>
-						Center
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-7 rounded-md px-2.5 text-[11px]"
-					>
-						Right
-					</Button>
-				</div>
+				<OptionsSelector
+					ariaLabel="Mixed alignment"
+					mixed
+					value="left"
+					onValueChange={() => {}}
+					options={[
+						{ value: "left", label: "Left" },
+						{ value: "center", label: "Center" },
+						{ value: "right", label: "Right" },
+					]}
+				/>
 			</div>
 		</div>
 	);
@@ -176,10 +164,10 @@ export function ListCardDemo() {
 			tone="subtle"
 			actions={
 				<>
-					<Button variant="outline" size="sm" className="h-8 w-8 p-0">
+					<Button variant="outline" size="icon">
 						F
 					</Button>
-					<Button variant="outline" size="sm" className="h-8 w-8 p-0">
+					<Button variant="outline" size="icon">
 						+
 					</Button>
 				</>

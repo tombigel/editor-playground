@@ -18,9 +18,9 @@ const buttonVariants = cva(
         destructive: 'border shadow-sm',
       },
       size: {
-        default: 'h-8 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        icon: 'size-8',
+        default: 'h-7 px-3 py-1.5',
+        sm: 'h-7 rounded-md px-2.5 text-xs',
+        icon: 'size-7',
       },
     },
     defaultVariants: {

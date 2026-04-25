@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- apply compact editor control styling
+
 ### Changed
 
 - release focused text editing updates

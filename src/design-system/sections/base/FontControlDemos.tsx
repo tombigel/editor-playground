@@ -177,7 +177,7 @@ function SelectDemo() {
 			{/* Default size */}
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					Default — h-8, text-sm
+					Default — h-7, text-sm
 				</div>
 				<div className="w-[200px]">
 					<Select value={value} onValueChange={setValue}>
@@ -206,7 +206,7 @@ function SelectDemo() {
 			{/* Compact size */}
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					Compact — h-8, text-xs (inspector controls)
+					Compact — h-7, text-xs (inspector controls)
 				</div>
 				<div className="editor-border-subtle w-full max-w-[300px] space-y-2 rounded-sm border p-3">
 					<div className="flex items-center justify-between">

@@ -142,7 +142,7 @@ export function NumberInput({
 			onBlur={handleBlur}
 			onChange={(event) => handleDraftChange(event.target.value)}
 			className={cn(
-				"h-8 w-full rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+				"h-7 w-full rounded-sm px-2 text-center text-[12px] [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
 				invalid ? "border-red-400 focus-visible:ring-red-200" : "",
 				inputClassName,
 			)}

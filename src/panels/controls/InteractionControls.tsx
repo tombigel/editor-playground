@@ -21,7 +21,6 @@ export function OrderIconButton({
   shortcut,
   onClick,
   disabled,
-  compact = false,
   children,
 }: {
   label: string;
@@ -52,7 +51,7 @@ export function OrderIconButton({
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
-        className={`${compact ? 'h-8 w-8' : 'h-8 w-8'} p-0 text-xs`}
+        className="h-7 w-7 p-0 text-xs"
       >
         {children}
       </Button>
@@ -89,7 +88,7 @@ function TypeIconButton({
         aria-label={label}
         aria-pressed={active}
         onClick={onClick}
-        className="h-8 w-8 p-0 text-xs"
+        className="h-7 w-7 p-0 text-xs"
       >
         {children}
       </Button>
@@ -131,7 +130,7 @@ export function TextStyleIconButton({
         aria-pressed={mixed ? 'mixed' : active}
         onClick={onClick}
         disabled={disabled}
-        className="h-8 w-8 p-0 text-xs"
+        className="h-7 w-7 p-0 text-xs"
       >
         {children}
       </Button>

@@ -36,6 +36,7 @@ Do not add bespoke editor markup first and “share it later”.
 - If shared UI changes, update the relevant design-system demo.
 - If shared UI behavior or workflow changes, update docs/tests in the same change.
 - Preserve light/dark parity and mixed-selection behavior where applicable.
+- Treat the design-system showcase as the canonical representation of public design options, not a place for local one-off overrides. If a showcase needs a visual state such as mixed, compact, selected, disabled, icon-only, or density-specific styling, fold that state into the shared component API or documented shared component contract first, then render that public option in the showcase.
 - Prefer DS-owned props/variants over consumer-side class overrides.
 - Prefer removing editor-only CSS overrides instead of adding new ones.
 

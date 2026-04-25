@@ -815,6 +815,7 @@ Additional geometry rules:
 
 - Composite numeric fields use a single shared shell rather than separate bordered sub-controls.
 - Shared controlled `Input` fields keep a local draft while focused so users can temporarily clear or type an invalid value without losing the text immediately.
+- Editor chrome controls use the shared compact 28px density for buttons, icon buttons, inputs, selects, searchable selects, searchable multi-selects, number/unit fields, and color swatches; non-control layout geometry and rendered site content keep their own sizing.
 - If validation rejects the draft, blur restores the last committed external value.
 - `ValueWithUnit` owns the continuous outer border, shared `focus-within` treatment, and mixed-selection dashed styling.
 - The active inner input or unit segment gets an accent-colored inner border instead of its own separate focus ring.
@@ -902,7 +903,7 @@ The inspector exposes:
 - An **Elevation** toggle (global switch) available in every sticky section. Toggling it calls `setSiteNodeStickyElevation` on the document and dispatches `stickyElevation`.
 - An **Elevate this node** toggle that appears below the global switch only when global elevation is off. It dispatches `stickyElevated` and sets `elevated` on the node's sticky definition.
 
-In multi-select mode the per-node switch uses the mixed-state indicator pattern (grey track with a dash) when selected nodes have differing `elevated` values.
+In multi-select mode the per-node switch uses the shared mixed-state pattern (neutral weak-bordered track and dashed thumb border) when selected nodes have differing `elevated` values.
 
 ### Current editor controls
 
@@ -1941,7 +1942,7 @@ While editing, the rich node gets visible stage chrome:
 
 ### Text inspector content panel
 
-- The text subtype toggle is rendered as an icon-only options selector in the content card header, aligned beside the focus-mode action and using per-subtype tooltips.
+- The text subtype toggle is rendered as an icon-only options selector in the content card header, aligned beside the focus-mode action and using per-subtype tooltips; option selector and segmented text buttons stay 24px tall, with icon-only options staying 24px square and using a 1px segmented-shell inset. Mixed multi-select segmented states use the shared `OptionsSelector` mixed presentation instead of showcase- or panel-local overrides.
 - Rich content cards no longer render a text preview under the “Edit rich text” action.
 - Standalone list content cards edit canonical `ul` / `ol` list blocks and keep advanced bulk editing collapsed by default.
 

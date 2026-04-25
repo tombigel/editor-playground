@@ -100,7 +100,7 @@ function TextStyleFieldsDemo() {
 					type="button"
 					variant="outline"
 					size="icon"
-					className="h-8 w-8 rounded-sm"
+					className="h-7 w-7 rounded-sm"
 					aria-label="Manage fonts"
 				>
 					<Settings2 className="h-3.5 w-3.5" />
@@ -262,7 +262,7 @@ function TextStyleMixedDemo() {
 					type="button"
 					variant="outline"
 					size="icon"
-					className="h-8 w-8 rounded-sm"
+					className="h-7 w-7 rounded-sm"
 					aria-label="Manage fonts"
 				>
 					<Settings2 className="h-3.5 w-3.5" />

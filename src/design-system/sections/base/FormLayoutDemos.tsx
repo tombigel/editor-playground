@@ -176,13 +176,13 @@ export function FormLayoutDemos() {
 										description="Uses the first selected node as the anchor."
 									>
 										<div className="flex flex-wrap gap-1">
-											<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+											<Button type="button" variant="outline" size="icon">
 												L
 											</Button>
-											<Button type="button" variant="default" size="sm" className="h-8 w-8 p-0 text-xs">
+											<Button type="button" variant="default" size="icon">
 												C
 											</Button>
-											<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+											<Button type="button" variant="outline" size="icon">
 												R
 											</Button>
 										</div>
@@ -254,13 +254,13 @@ export function FormLayoutDemos() {
 							render: () => (
 								<div className="editor-border-subtle w-[280px] rounded-md border p-3">
 									<FormField label="Align" layout="inline-group" controlWidth="172px" controlClassName="gap-1">
-										<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+										<Button type="button" variant="outline" size="icon">
 											L
 										</Button>
-										<Button type="button" variant="default" size="sm" className="h-8 w-8 p-0 text-xs">
+										<Button type="button" variant="default" size="icon">
 											C
 										</Button>
-										<Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+										<Button type="button" variant="outline" size="icon">
 											R
 										</Button>
 									</FormField>

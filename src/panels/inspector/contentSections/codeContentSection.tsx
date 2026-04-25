@@ -100,7 +100,7 @@ export function CodeContentSection({
 					controlWidth={`${TYPOGRAPHY_CONTROL_RAIL_WIDTH_PX}px`}
 				>
 					<Select value={language} onValueChange={onSetCodeLanguage}>
-						<SelectTrigger className="h-8 text-[11px]">
+						<SelectTrigger className="h-7 text-[11px]">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>

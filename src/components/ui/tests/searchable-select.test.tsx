@@ -30,7 +30,9 @@ describe('components/ui/searchable-select', () => {
     expect(selectedMarkup).toContain('English (United States)');
     expect(placeholderMarkup).toContain('Site language');
     expect(selectedMarkup).toContain('rounded-sm');
+    expect(selectedMarkup).toContain('h-7');
     expect(selectedMarkup).toContain('data-ui="select-trigger"');
+    expect(selectedMarkup).not.toContain('h-8');
   });
 
   it('clamps popup width and horizontal position within the viewport', () => {

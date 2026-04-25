@@ -277,7 +277,7 @@ export const SizeInlineField = memo(function SizeInlineField({
     >
       {showAspectInput ? (
         <div
-          className={`group/sizefield relative flex h-8 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
+          className={`group/sizefield relative flex h-7 overflow-hidden rounded-sm border shadow-sm transition-[border-color,box-shadow] ${shellClass}`}
         >
           <Input
             id={fieldId}

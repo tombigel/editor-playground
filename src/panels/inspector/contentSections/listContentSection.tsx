@@ -329,7 +329,7 @@ export function ListContentSection({
 										)
 							}
 						>
-							<SelectTrigger className="h-8 text-[11px]">
+							<SelectTrigger className="h-7 text-[11px]">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
@@ -365,7 +365,7 @@ export function ListContentSection({
 										})
 							}
 						>
-							<SelectTrigger className="h-8 text-[11px]">
+							<SelectTrigger className="h-7 text-[11px]">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
@@ -413,7 +413,7 @@ export function ListContentSection({
 											})
 								}
 							>
-								<SelectTrigger className="h-8 text-[11px]">
+								<SelectTrigger className="h-7 text-[11px]">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -460,7 +460,7 @@ export function ListContentSection({
 										aria-label={`List item ${index + 1}`}
 										value={item.text}
 										placeholder={`Item ${index + 1}`}
-										className="h-8 rounded-sm text-[12px]"
+										className="h-7 rounded-sm text-[12px]"
 										onChange={(event) =>
 											commitListContent(
 												setStructuredListItemText(
@@ -477,7 +477,7 @@ export function ListContentSection({
 											variant="outline"
 											size="sm"
 											aria-label={`Move list item ${index + 1} up`}
-											className="h-8 w-8 rounded-sm p-0"
+											className="h-7 w-7 rounded-sm p-0"
 											onClick={() =>
 												commitListContent(
 													moveStructuredListItem(
@@ -496,7 +496,7 @@ export function ListContentSection({
 											variant="outline"
 											size="sm"
 											aria-label={`Move list item ${index + 1} down`}
-											className="h-8 w-8 rounded-sm p-0"
+											className="h-7 w-7 rounded-sm p-0"
 											onClick={() =>
 												commitListContent(
 													moveStructuredListItem(
@@ -517,7 +517,7 @@ export function ListContentSection({
 											variant="outline"
 											size="sm"
 											aria-label={`Remove list item ${index + 1}`}
-											className="h-8 w-8 rounded-sm p-0"
+											className="h-7 w-7 rounded-sm p-0"
 											onClick={() =>
 												commitListContent(
 													removeStructuredListItem(

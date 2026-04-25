@@ -112,7 +112,7 @@ export function StickySection({
                       type="button"
                       variant="default"
                       size="sm"
-                      className="h-7 px-2.5 text-[11px]"
+                      className="h-6 px-2.5 text-[11px]"
                       disabled
                     >
                       Auto
@@ -124,7 +124,7 @@ export function StickySection({
                       type="button"
                       variant={(node.sticky?.durationMode ?? 'auto') === 'auto' ? 'default' : 'ghost'}
                       size="sm"
-                      className="h-7 px-2.5 text-[11px]"
+                      className="h-6 px-2.5 text-[11px]"
                       onClick={() => actions.onStickyDurationMode('auto')}
                     >
                       Auto
@@ -133,7 +133,7 @@ export function StickySection({
                       type="button"
                       variant={(node.sticky?.durationMode ?? 'auto') === 'custom' ? 'default' : 'ghost'}
                       size="sm"
-                      className="h-7 px-2.5 text-[11px]"
+                      className="h-6 px-2.5 text-[11px]"
                       onClick={() => actions.onStickyDurationMode('custom')}
                     >
                       Custom

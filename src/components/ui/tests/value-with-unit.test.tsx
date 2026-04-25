@@ -16,8 +16,10 @@ describe('components/ui/value-with-unit', () => {
     );
 
     expect(markup).toContain('value-with-unit');
+    expect(markup).toContain('h-7');
     expect(markup).toContain('value-with-unit-segment value-with-unit-segment-static');
     expect(markup).not.toContain('overflow-hidden');
+    expect(markup).not.toContain('h-8');
     expect(markup).toContain('>px<');
     expect(markup).not.toContain('data-ui="select-trigger"');
   });

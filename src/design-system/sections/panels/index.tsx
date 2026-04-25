@@ -146,10 +146,10 @@ function FontManagementPreview() {
               descriptionStyle={{ fontFamily: "Inter, sans-serif" }}
               actions={
                 <>
-                  <Button type="button" variant="default" size="sm" className="h-8 w-8 p-0" aria-label="Unfavorite Inter">
+                  <Button type="button" variant="default" size="icon" aria-label="Unfavorite Inter">
                     <Star className="h-4 w-4" />
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Remove Inter" disabled>
+                  <Button type="button" variant="outline" size="icon" aria-label="Remove Inter" disabled>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </>
@@ -164,10 +164,10 @@ function FontManagementPreview() {
               descriptionStyle={{ fontFamily: '"Playfair Display", serif' }}
               actions={
                 <>
-                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Favorite Playfair Display">
+                  <Button type="button" variant="outline" size="icon" aria-label="Favorite Playfair Display">
                     <Star className="h-4 w-4" />
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Remove Playfair Display">
+                  <Button type="button" variant="outline" size="icon" aria-label="Remove Playfair Display">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </>
@@ -187,7 +187,7 @@ function FontManagementPreview() {
             </LabeledFieldStack>
             <LabeledFieldStack label="Language" className="space-y-1" labelClassName="text-[11px] font-medium">
               <Select value="western" onValueChange={() => {}}>
-                <SelectTrigger className="text-[11px]">
+                <SelectTrigger size="small">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,7 +199,7 @@ function FontManagementPreview() {
             </LabeledFieldStack>
             <LabeledFieldStack label="Category" className="space-y-1" labelClassName="text-[11px] font-medium">
               <Select value="serif" onValueChange={() => {}}>
-                <SelectTrigger className="text-[11px]">
+                <SelectTrigger size="small">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -236,7 +236,7 @@ function FontManagementPreview() {
                 controlClassName="ml-0"
               >
                 <Select value="25" onValueChange={() => {}}>
-                  <SelectTrigger className="h-8 w-[72px] text-[11px]">
+                  <SelectTrigger size="small" className="w-[72px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -255,10 +255,10 @@ function FontManagementPreview() {
               descriptionStyle={{ fontFamily: '"Space Grotesk", sans-serif' }}
               actions={
                 <>
-                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Favorite Space Grotesk">
+                  <Button type="button" variant="outline" size="icon" aria-label="Favorite Space Grotesk">
                     <Star className="h-4 w-4" />
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Add Space Grotesk">
+                  <Button type="button" variant="outline" size="icon" aria-label="Add Space Grotesk">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </>
@@ -271,7 +271,7 @@ function FontManagementPreview() {
               titleStyle={{ fontFamily: '"IBM Plex Sans", sans-serif' }}
               descriptionStyle={{ fontFamily: '"IBM Plex Sans", sans-serif' }}
               actions={
-                <Button type="button" variant="default" size="sm" className="h-8 w-8 p-0" aria-label="Favorite IBM Plex Sans">
+                <Button type="button" variant="default" size="icon" aria-label="Favorite IBM Plex Sans">
                   <Star className="h-4 w-4" />
                 </Button>
               }

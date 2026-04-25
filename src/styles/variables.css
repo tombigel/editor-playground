@@ -52,7 +52,7 @@
   --editor-switch-background: #cbd5e1;
   --editor-switch-background-checked: var(--editor-accent);
   --editor-switch-background-mixed: #94a3b8;
-  --editor-switch-mixed-indicator: #ffffff;
+  --editor-switch-mixed-indicator: #334155;
   --editor-slider-track-background: #dbe5f0;
   --editor-slider-range-background: var(--editor-accent);
   --editor-slider-thumb-background: #ffffff;
@@ -321,7 +321,7 @@ body[data-editor-theme='dark'] {
   --editor-switch-background: #334155;
   --editor-switch-background-checked: var(--editor-accent);
   --editor-switch-background-mixed: color-mix(in srgb, var(--editor-accent) 16%, #64748b);
-  --editor-switch-mixed-indicator: #f8fafc;
+  --editor-switch-mixed-indicator: #e2e8f0;
   --editor-slider-track-background: #263244;
   --editor-slider-range-background: color-mix(in srgb, var(--editor-accent) 68%, #c6d4ff);
   --editor-slider-thumb-background: color-mix(

@@ -132,7 +132,7 @@ export function TextContentSection({
 						options={languageOptions}
 						placeholder="Site language"
 						searchPlaceholder="Search languages"
-						triggerClassName="h-8 text-[11px]"
+						triggerClassName="h-7 text-[11px]"
 						onValueChange={(value) =>
 							onTextChange("lang", value === "__site__" ? "" : value)
 						}

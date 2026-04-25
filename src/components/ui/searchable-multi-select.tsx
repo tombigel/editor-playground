@@ -146,7 +146,7 @@ export function SearchableMultiSelect({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder={searchPlaceholder}
-        className="h-8 text-xs"
+        className="h-7 text-xs"
         autoFocus={autoFocusInput}
       />
       <div
@@ -173,13 +173,13 @@ export function SearchableMultiSelect({
                 data-ui="searchable-multi-select-item"
                 data-selected={selected ? 'true' : 'false'}
                 className={cn(
-                  'editor-menubar-item',
+                  'editor-searchable-multi-select-item',
                   option.dividerAfter && 'editor-border-subtle mb-1 border-b pb-3',
                 )}
                 onClick={() => onValuesChange(toggleSearchableMultiSelectValue(values, option.value, options))}
               >
-                <span className="editor-menubar-item-leading items-start">
-                  <span className="editor-menubar-item-marker mt-0.5" aria-hidden="true" data-ui="searchable-multi-select-marker">
+                <span className="flex min-w-0 flex-1 items-start gap-1.5">
+                  <span className="mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center" aria-hidden="true" data-ui="searchable-multi-select-marker">
                     {selected ? <Check className="h-4 w-4" /> : null}
                   </span>
                   <SelectOptionRow
@@ -211,7 +211,7 @@ export function SearchableMultiSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'editor-bg-surface editor-border-subtle editor-text-strong flex h-8 w-full items-center justify-between rounded-sm border px-3 text-sm shadow-sm',
+          'editor-bg-surface editor-border-subtle editor-text-strong flex h-7 w-full items-center justify-between rounded-sm border px-2.5 text-sm shadow-sm',
           triggerClassName,
         )}
         onClick={() => {

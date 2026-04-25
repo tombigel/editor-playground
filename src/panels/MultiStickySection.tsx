@@ -11,8 +11,6 @@ import type { InspectorActionHandlers } from './inspector/types';
 import { resolveSharedBoolean, resolveSharedNumber, resolveSharedString } from './inspector/multiSelectHelpers';
 
 const MIXED_SELECT_VALUE = '__mixed__';
-const MIXED_SWITCH_CLASS = '!bg-[var(--editor-switch-background-mixed)] data-[state=unchecked]:!bg-[var(--editor-switch-background-mixed)]';
-const MIXED_SWITCH_INDICATOR_CLASS = 'h-0.5 w-3 rounded-full bg-[var(--editor-switch-mixed-indicator)]';
 
 type Props = {
   selectedNodes: DocumentNode[];
@@ -90,14 +88,9 @@ export function MultiStickySection({
         <div className="relative">
           <Switch
             checked={stickyEnabledState.mixed ? false : stickyEnabledState.value}
+            mixed={stickyEnabledState.mixed}
             onCheckedChange={actions.onStickyEnabled}
-            className={stickyEnabledState.mixed ? MIXED_SWITCH_CLASS : undefined}
           />
-          {stickyEnabledState.mixed ? (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <span className={MIXED_SWITCH_INDICATOR_CLASS} />
-            </div>
-          ) : null}
         </div>
       </div>
 
@@ -156,7 +149,7 @@ export function MultiStickySection({
             <FormField label="Duration" layout="inline" controlClassName="shrink-0">
               {forceAutoDuration ? (
                 <div className="editor-bg-subtle editor-border-subtle inline-flex rounded-lg border p-0.5">
-                  <Button type="button" variant="default" size="sm" className="h-7 px-2.5 text-[11px]" disabled>
+                  <Button type="button" variant="default" size="sm" className="h-6 px-2.5 text-[11px]" disabled>
                     Auto
                   </Button>
                 </div>
@@ -166,7 +159,7 @@ export function MultiStickySection({
                     type="button"
                     variant={stickyDurationModeState.value === 'auto' && !stickyDurationModeState.mixed ? 'default' : 'ghost'}
                     size="sm"
-                    className={`h-7 px-2.5 text-[11px] ${stickyDurationModeState.mixed ? 'border border-dashed' : ''}`}
+                    className={`h-6 px-2.5 text-[11px] ${stickyDurationModeState.mixed ? 'border border-dashed' : ''}`}
                     onClick={() => actions.onStickyDurationMode('auto')}
                   >
                     Auto
@@ -175,7 +168,7 @@ export function MultiStickySection({
                     type="button"
                     variant={stickyDurationModeState.value === 'custom' && !stickyDurationModeState.mixed ? 'default' : 'ghost'}
                     size="sm"
-                    className={`h-7 px-2.5 text-[11px] ${stickyDurationModeState.mixed ? 'border border-dashed' : ''}`}
+                    className={`h-6 px-2.5 text-[11px] ${stickyDurationModeState.mixed ? 'border border-dashed' : ''}`}
                     onClick={() => actions.onStickyDurationMode('custom')}
                   >
                     Custom
@@ -243,14 +236,9 @@ export function MultiStickySection({
                 <div className="relative">
                   <Switch
                     checked={stickyElevatedState.mixed ? false : stickyElevatedState.value}
+                    mixed={stickyElevatedState.mixed}
                     onCheckedChange={actions.onStickyElevated}
-                    className={stickyElevatedState.mixed ? MIXED_SWITCH_CLASS : undefined}
                   />
-                  {stickyElevatedState.mixed ? (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                      <span className={MIXED_SWITCH_INDICATOR_CLASS} />
-                    </div>
-                  ) : null}
                 </div>
               </div>
             ) : null}

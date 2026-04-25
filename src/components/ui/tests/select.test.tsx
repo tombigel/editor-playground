@@ -16,8 +16,10 @@ describe('components/ui/select', () => {
       </Select>,
     );
 
+    expect(markup).toContain('h-7');
     expect(markup).toContain('rounded-sm');
     expect(markup).not.toContain('rounded-md');
+    expect(markup).not.toContain('h-8');
   });
 
   it('supports compact and small trigger sizes without consumer-owned height classes', () => {
@@ -44,8 +46,10 @@ describe('components/ui/select', () => {
     );
 
     expect(compactMarkup).toContain('data-size="compact"');
+    expect(compactMarkup).toContain('h-7');
     expect(compactMarkup).toContain('text-xs');
     expect(smallMarkup).toContain('data-size="small"');
+    expect(smallMarkup).toContain('h-7');
     expect(smallMarkup).toContain('text-[11px]');
   });
 
