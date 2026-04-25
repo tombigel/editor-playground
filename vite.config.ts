@@ -2,6 +2,7 @@ import path from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // PrismJS language component files reference `Prism` as a bare global, but
 // when Rollup bundles them into an ESM chunk they have no in-scope `Prism`
@@ -26,8 +27,20 @@ const devHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
+const plugins: Plugin[] = [react(), tailwindcss(), prismGlobalsPlugin()];
+if (process.env.ANALYZE === '1') {
+  plugins.push(
+    visualizer({
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap',
+    }) as Plugin,
+  );
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), prismGlobalsPlugin()],
+  plugins,
   server: {
     headers: devHeaders,
   },

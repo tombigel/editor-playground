@@ -17,6 +17,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - split heavy vendors into dedicated chunks
 - align Vite output to es2022 and trim build cost
 - lazy-load rich text edit overlay
+- add ANALYZE=1 visualizer and build:fast script
 
 ### Fixed
 

@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.8.7",
+  "version": "0.8.8",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -17,6 +17,8 @@
     "pretest:run": "npm run sync:public",
     "pretest:coverage": "npm run sync:public",
     "prebuild": "npm run sync:public",
+    "prebuild:fast": "npm run sync:public",
+    "build:fast": "vite build",
     "dev": "vite",
     "lint": "biome lint ./src",
     "lint:a11y": "vitest run --config vitest.e2e.config.ts src/app/tests/axe.e2e.test.ts",
@@ -74,6 +76,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.2",
     "playwright": "^1.59.1",
+    "rollup-plugin-visualizer": "^7.0.1",
     "semver": "^7.7.2",
     "shadcn": "^4.1.2",
     "simple-git-hooks": "^2.13.0",
