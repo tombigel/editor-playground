@@ -13,7 +13,7 @@ describe('components/ui/switch', () => {
     expect(markup).toContain('size-3');
     expect(markup).toContain('top-1/2');
     expect(markup).toContain('-translate-y-1/2');
-    expect(markup).toContain('data-[state=checked]:translate-x-[14px]');
+    expect(markup).toContain('data-[state=checked]:translate-x-[13px]');
   });
 
   it('renders the large opt-in size with the previous geometry', () => {
@@ -30,7 +30,7 @@ describe('components/ui/switch', () => {
     const markup = renderToStaticMarkup(<Switch checked={false} mixed onCheckedChange={() => {}} />);
 
     expect(markup).toContain('data-mixed="true"');
-    expect(markup).toContain('data-[state=unchecked]:translate-x-[8px]');
+    expect(markup).toContain('data-[state=unchecked]:translate-x-[6px]');
     expect(markup).not.toContain('data-ui="switch-mixed-indicator"');
     expect(markup).not.toContain('--editor-switch-mixed-indicator');
     expect(markup).not.toContain('!');
