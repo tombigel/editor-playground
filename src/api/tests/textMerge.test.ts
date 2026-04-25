@@ -7,6 +7,7 @@ import {
   createRichTextLeaf,
   getSingleListBlockContent,
   getTextContent,
+  getTextDocumentBlocks,
   richListBlockToListContent,
 } from '../../model/richContent';
 import type { RichContent } from '../../model/types';
@@ -482,7 +483,7 @@ describe('api/textMerge', () => {
     expect(converted.nodes[splitChildren[1]].contentType).toBe('text');
   });
 
-  it('splits rich nodes into requested simple list nodes when split mode targets list', () => {
+  it('preserves unsupported rich blocks when split mode targets block text', () => {
     const document = createInitialDocument();
     const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
     const richNode = document.nodes[richId];
@@ -490,8 +491,105 @@ describe('api/textMerge', () => {
       throw new Error('Expected rich text node');
     }
     richNode.content = createTextDocumentContent([
-      createRichTextBlock('paragraph', [createRichTextLeaf('Alpha\nBeta')]),
-      createRichTextBlock('paragraph', [createRichTextLeaf('Gamma')]),
+      createRichTextBlock('paragraph', [createRichTextLeaf('Alpha')]),
+      {
+        type: 'code-block',
+        language: 'typescript',
+        theme: 'dark',
+        children: [{ type: 'code-line', children: [{ text: 'const value = 1;' }] }],
+      },
+      {
+        type: 'ul',
+        children: [
+          { type: 'list-item', children: [{ text: 'First item' }] },
+        ],
+      },
+    ]);
+
+    const converted = convertTextNodeDoc(document, richId, 'block', { mode: 'split' });
+    const parent = converted.nodes[sectionId(converted)];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const splitChildren = parent.children.slice(-3);
+    const [first, second, third] = splitChildren.map((childId) => converted.nodes[childId]);
+    if (first.contentType !== 'text' || second.contentType !== 'text' || third.contentType !== 'text') {
+      throw new Error('Expected text nodes');
+    }
+
+    expect(splitChildren[0]).toBe(richId);
+    expect(first.subtype).toBe('block');
+    expect(getTextContent(first.content.blocks)).toBe('Alpha');
+    expect(second.subtype).toBe('rich');
+    expect(getTextDocumentBlocks(second.content)[0]).toMatchObject({ type: 'code-block', language: 'typescript' });
+    expect(third.subtype).toBe('rich');
+    expect(getTextDocumentBlocks(third.content)[0]).toMatchObject({ type: 'ul' });
+  });
+
+  it('preserves unsupported rich blocks when split mode targets code', () => {
+    const document = createInitialDocument();
+    const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
+    const richNode = document.nodes[richId];
+    if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    richNode.content = createTextDocumentContent([
+      createRichTextBlock('paragraph', [createRichTextLeaf('Alpha')]),
+      {
+        type: 'code-block',
+        language: 'markdown',
+        children: [{ type: 'code-line', children: [{ text: '# Title' }] }],
+      },
+      {
+        type: 'ol',
+        start: 3,
+        children: [
+          { type: 'list-item', children: [{ text: 'First item' }] },
+        ],
+      },
+    ]);
+
+    const converted = convertTextNodeDoc(document, richId, 'code', { mode: 'split' });
+    const parent = converted.nodes[sectionId(converted)];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected section parent');
+    }
+
+    const [first, second, third] = parent.children.slice(-3).map((childId) => converted.nodes[childId]);
+    if (first.contentType !== 'text' || second.contentType !== 'text' || third.contentType !== 'text') {
+      throw new Error('Expected text nodes');
+    }
+
+    expect(first.subtype).toBe('rich');
+    expect(getTextDocumentBlocks(first.content)[0]).toMatchObject({ type: 'paragraph' });
+    expect(second.subtype).toBe('code');
+    expect(getTextContent(second.content.blocks, { blockSeparator: '\n' })).toBe('# Title');
+    expect(second.code).toMatchObject({ language: 'markdown' });
+    expect(third.subtype).toBe('rich');
+    expect(getTextDocumentBlocks(third.content)[0]).toMatchObject({ type: 'ol', start: 3 });
+  });
+
+  it('preserves unsupported rich blocks when split mode targets list', () => {
+    const document = createInitialDocument();
+    const richId = appendTextNode(document, createTextNode('rich', sectionId(document)));
+    const richNode = document.nodes[richId];
+    if (richNode.contentType !== 'text' || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich text node');
+    }
+    richNode.content = createTextDocumentContent([
+      createRichTextBlock('paragraph', [createRichTextLeaf('Alpha')]),
+      {
+        type: 'code-block',
+        language: 'typescript',
+        children: [{ type: 'code-line', children: [{ text: 'const value = 1;' }] }],
+      },
+      {
+        type: 'ul',
+        children: [
+          { type: 'list-item', children: [{ text: 'First item' }] },
+        ],
+      },
     ]);
 
     const converted = convertTextNodeDoc(document, richId, 'list', { mode: 'split' });
@@ -500,22 +598,19 @@ describe('api/textMerge', () => {
       throw new Error('Expected section parent');
     }
 
-    const splitChildren = parent.children.slice(-2);
-    const first = converted.nodes[splitChildren[0]];
-    const second = converted.nodes[splitChildren[1]];
-    if (first.contentType !== 'text' || second.contentType !== 'text') {
+    const [first, second, third] = parent.children.slice(-3).map((childId) => converted.nodes[childId]);
+    if (first.contentType !== 'text' || second.contentType !== 'text' || third.contentType !== 'text') {
       throw new Error('Expected text nodes');
     }
 
-    expect(first.subtype).toBe('list');
-    expect(richListBlockToListContent(getSingleListBlockContent(first.content)!)).toMatchObject({
+    expect(first.subtype).toBe('rich');
+    expect(getTextDocumentBlocks(first.content)[0]).toMatchObject({ type: 'paragraph' });
+    expect(second.subtype).toBe('rich');
+    expect(getTextDocumentBlocks(second.content)[0]).toMatchObject({ type: 'code-block', language: 'typescript' });
+    expect(third.subtype).toBe('list');
+    expect(richListBlockToListContent(getSingleListBlockContent(third.content)!)).toMatchObject({
       type: 'ul',
-      items: [{ text: 'Alpha' }, { text: 'Beta' }],
-    });
-    expect(second.subtype).toBe('list');
-    expect(richListBlockToListContent(getSingleListBlockContent(second.content)!)).toMatchObject({
-      type: 'ul',
-      items: [{ text: 'Gamma' }],
+      items: [{ text: 'First item' }],
     });
   });
 

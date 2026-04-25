@@ -24,6 +24,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - update skills path to relative reference
+- preserve unsupported rich split blocks
 
 ---
 

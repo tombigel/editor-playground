@@ -558,8 +558,17 @@ function splitRichTextNodeToSubtypeDoc(
       continue;
     }
 
-    next = convertTextNodeDoc(next, childId, targetSubtype, { mode: 'flatten' });
+    if (!isSplitChildSupportedByTargetSubtype(child, targetSubtype)) {
+      next = convertTextNodeDoc(next, childId, 'rich', { mode: 'flatten' });
+    }
   }
 
   return next;
+}
+
+function isSplitChildSupportedByTargetSubtype(
+  child: TextNode,
+  targetSubtype: Exclude<TextSubtype, 'rich'>,
+): boolean {
+  return child.subtype === targetSubtype;
 }
