@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - document granular rich split conversion
 - add drag boundary maintenance item
 - add roadmap entry skill
+- sorted roadmap
 
 ### Fixed
 
