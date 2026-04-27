@@ -90,6 +90,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-37` | `✅ Done` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
 | `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
 | `RI-39` | `✅ Done` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
+| `RI-42` | `⚪ Not started` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Default soft boundaries for snap/guides; optional hard confinement |
 | `RI-08` | `⚪ Not started` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | Human | - |
 | `RI-15` | `⚪ Not started` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | Shared | - |
 | `RI-17` | `⚪ Not started` | [Collaboration](#collaboration) | `⚪ Optional` | Platform | Human | - |
@@ -154,6 +155,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-39` hidden ghost mode — hidden nodes (and hidden-targeted top-level wrappers) should render as semi-transparent ghost overlays in the editor stage so authors can see and select hidden content without cluttering the live layout; selection, inspector, and export should handle hidden nodes consistently
 - `RI-40` table component support — add two table directions under components/wrappers: a simple markdown-backed table for fast authoring/export, and a more robust designable table where each cell can host nodes and participate in wrapper/layout semantics
 - `RI-41` document view API and architecture boundary enforcement — all UI model reads should route through a dedicated `documentViewApi` layer rather than reaching into editor state directly; an automated architecture check script should enforce the boundary at CI time
+- `RI-42` drag and drop boundary maintenance — current drag rules confine elements into the padded content area of their container; by default authors should be able to drag elements so they stick out past container boundaries, with the boundary acting as snap/alignment guidance, plus an explicit hard-confinement option for stricter layouts
 
 ## Structured Roadmap
 
@@ -275,6 +277,17 @@ None yet.
 - `Source`: `RI-39`
 - `Why it matters`: Authors need to see and edit hidden content without being blocked by its hidden state, and without hidden nodes disappearing from stage layout or accidentally affecting sibling geometry.
 - `Current state`: **Complete** — hidden nodes (and top-level wrappers with `Hidden` visibility) render as semi-transparent ghosts with a diagonal-stripe overlay on stage. Selection collapses to a single hidden node and restricts the inspector to layout-only controls. `showHidden` setting is persisted and exposed in Settings → UI and the left-rail quick actions. Export omits hidden nodes entirely. Delivered sha: 1318f22.
+
+##### Drag and drop boundary maintenance
+
+- `Type`: `UX`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-42`
+- `Why it matters`: Dragging is a core authoring operation, and strict confinement to a wrapper's padded content area prevents common overlapping, offset, and breakout layouts. Container edges should guide layout by default, not silently block expressive placement.
+- `Current state`: Drag and reparent commits clamp positions so nodes remain inside the current or target wrapper. In practice this treats padded container content bounds as hard confinement and prevents elements from intentionally sticking out beyond those bounds.
+- `Target behavior`: Default drag boundaries should behave as snap targets and alignment guides while allowing nodes to extend beyond the container content area. Hard confinement should remain available as an explicit layout/drag policy for cases that need strict containment.
+- `Next move`: Audit the drag, snap, reparent, and resize boundary paths; define where the confinement policy lives in the document/API model; then update editor controls, tests, and spec text so default soft-boundary behavior and optional hard confinement are both clear.
 
 #### Feature
 

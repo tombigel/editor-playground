@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - drop dead experimentalMinChunkSize option
 - consolidate src/components/ui into ui-shared chunk
 - document granular rich split conversion
+- add drag boundary maintenance item
 
 ### Fixed
 
