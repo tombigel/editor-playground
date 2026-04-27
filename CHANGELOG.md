@@ -26,6 +26,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - consolidate src/components/ui into ui-shared chunk
 - document granular rich split conversion
 - document rich split preservation
+- add drag boundary maintenance item
+- add roadmap entry skill
+- sorted roadmap
+- Merge branch 'master' of https://github.com/tombigel/sticky-playground
 
 ### Fixed
 
@@ -36,6 +40,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ---
 
 ## [0.8.0] — 2026-04-25
+
 Document: 1.5.84 · API: 2.0.76 · Editor: 0.15.0
 
 Design refresh release. Project and Editor received minor version bumps; Document and API remain patch-level because this work did not change document schema or public API contracts.
