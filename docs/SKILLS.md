@@ -2,7 +2,7 @@
 
 This document describes the recurring maintenance and development skills available in this project. Each skill is a repeatable checklist that any contributor (human or AI) can follow.
 
-Skills are also available as Claude Code slash commands via `.claude/skills/`. Use `/skill-name` in Claude Code to run them interactively.
+Skills are available in this repo under `.agents/skills/`. Use `/skill-name` when the current agent environment exposes project skills interactively.
 
 ## Audit Skills
 
@@ -49,6 +49,23 @@ Audits planning documents for staleness, completed phases that should be archive
 **Source of truth:** `docs/PLAYGROUND_ROADMAP.md`, git history
 
 **Run:** monthly, after completing milestones, or as part of `/maintenance`
+
+### `/roadmap-entry` — Roadmap Entry Maintenance
+
+Adds and updates `docs/PLAYGROUND_ROADMAP.md` items while keeping the summary table, raw intake, and structured roadmap entries aligned.
+
+**What it provides:**
+
+- Deterministic summary-table sorting
+- New item creation with consistent RI ids and metadata
+- Priority changes, `Next` marking, progress updates, and done closeout
+- Long-description edits that keep summary notes short
+- Split, merge, and grouping guidance for related roadmap tasks
+- Alignment checks that pair with `/doc-triage` when roadmap status may have drifted from code or docs reality
+
+**Source of truth:** `docs/PLAYGROUND_ROADMAP.md`
+
+**Run:** whenever adding or changing roadmap entries, or before/after `/doc-triage --fix` changes roadmap status
 
 ### `/file-size-check` — Component Size Limits
 
@@ -140,7 +157,7 @@ Enforces the decision order for editor-facing UI work: reuse existing shared com
 
 ## Adding New Skills
 
-1. Create a directory under `.claude/skills/<skill-name>/`
+1. Create a directory under `.agents/skills/<skill-name>/`
 2. Add a `SKILL.md` with YAML frontmatter (`name`, `description`, `user-invocable: true`)
 3. Document the skill in this file
 4. If the skill enforces a rule from `CLAUDE.md`, reference the specific section
