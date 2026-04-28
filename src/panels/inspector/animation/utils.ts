@@ -1,6 +1,8 @@
 import type { AnimationTriggerType } from '../../../api/animationApi';
 import { getPresetCategory, getPresetLabel } from '../../../api/animationApi';
 
+export const ANIMATION_DIVIDER_CLASS = 'editor-border-subtle border-t';
+
 export const TRIGGER_OPTIONS: { value: AnimationTriggerType; label: string }[] = [
   { value: 'entrance', label: 'Entrance' },
   { value: 'ongoing', label: 'Ongoing' },
@@ -63,4 +65,3 @@ export function entrancePresetOutLabel(preset: string): string {
   if (/\bIn\b/i.test(base)) return base.replace(/\bIn\b/i, 'Out');
   return `${base} Out`;
 }
-

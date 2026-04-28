@@ -35,7 +35,9 @@ export function getScrollRange(node: DocumentNode): { start: number; end: number
   const anim = getAnimation(node);
   if (anim?.trigger !== 'scroll') return { start: 0, end: 100 };
   const scroll = anim as ScrollAnimationDefinition;
-  return { start: scroll.scrollRangeStart ?? 0, end: scroll.scrollRangeEnd ?? 100 };
+  const start = Math.max(0, Math.min(100, scroll.scrollRangeStart ?? 0));
+  const end = Math.max(0, Math.min(100, scroll.scrollRangeEnd ?? 100));
+  return { start: Math.min(start, end), end: Math.max(start, end) };
 }
 
 export function getAnimatedNodeIds(doc: DocumentModel): NodeId[] {

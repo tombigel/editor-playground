@@ -1159,7 +1159,8 @@ The animation inspector section appears in the behavior bucket of all animatable
 - Activate behavior selector (`once`, `repeat`, `state`, `alternate`)
 - Interest out-action selector (`reverse`, `pause`, `reset`)
 - Mouse controls for trigger area, axis, centering, lerp duration, and lerp easing
-- Scroll controls for range start/end and reversed playback
+- Scroll controls use a single dual-handle range field for start/end, so the authored start value cannot exceed the end value
+- Scroll controls also expose reversed playback
 - Requires-sticky toggle — visible only for scroll triggers, with warning when sticky is disabled
 - Reduced-motion toggle (per-animation disable)
 

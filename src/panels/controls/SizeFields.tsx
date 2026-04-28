@@ -474,6 +474,173 @@ export function RangeField({
 }
 
 // ---------------------------------------------------------------------------
+// RangeBandField
+// ---------------------------------------------------------------------------
+
+function normalizeRangeBand(start: number, end: number, min: number, max: number): [number, number] {
+  const startValue = clamp(Number.isFinite(start) ? start : min, min, max);
+  const endValue = clamp(Number.isFinite(end) ? end : max, min, max);
+  return [Math.min(startValue, endValue), Math.max(startValue, endValue)];
+}
+
+export function RangeBandField({
+  label,
+  startLabel = 'Start',
+  endLabel = 'End',
+  startValue,
+  endValue,
+  min,
+  max,
+  step,
+  unit = '',
+  onValueChange,
+  mixed = false,
+}: {
+  label: string;
+  startLabel?: string;
+  endLabel?: string;
+  startValue: number;
+  endValue: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+  onValueChange: (start: number, end: number) => void;
+  mixed?: boolean;
+}) {
+  const effectiveStep = useMemo(() => step ?? deriveStep(min, max), [step, min, max]);
+  const [start, end] = normalizeRangeBand(startValue, endValue, min, max);
+  const [localRange, setLocalRange] = useState<[number, number]>([start, end]);
+  const dragging = useRef(false);
+  const [startDraft, setStartDraft] = useState(() => formatRangeValue(start, effectiveStep));
+  const [endDraft, setEndDraft] = useState(() => formatRangeValue(end, effectiveStep));
+  const startFocused = useRef(false);
+  const endFocused = useRef(false);
+
+  useEffect(() => {
+    if (!dragging.current) {
+      setLocalRange([start, end]);
+    }
+    if (!startFocused.current) {
+      setStartDraft(formatRangeValue(start, effectiveStep));
+    }
+    if (!endFocused.current) {
+      setEndDraft(formatRangeValue(end, effectiveStep));
+    }
+  }, [start, end, effectiveStep]);
+
+  function commitStart() {
+    startFocused.current = false;
+    const parsed = parseFloat(startDraft);
+    if (Number.isFinite(parsed)) {
+      const nextStart = clamp(parsed, min, end);
+      setStartDraft(formatRangeValue(nextStart, effectiveStep));
+      if (nextStart !== start) onValueChange(nextStart, end);
+    } else {
+      setStartDraft(formatRangeValue(start, effectiveStep));
+    }
+  }
+
+  function commitEnd() {
+    endFocused.current = false;
+    const parsed = parseFloat(endDraft);
+    if (Number.isFinite(parsed)) {
+      const nextEnd = clamp(parsed, start, max);
+      setEndDraft(formatRangeValue(nextEnd, effectiveStep));
+      if (nextEnd !== end) onValueChange(start, nextEnd);
+    } else {
+      setEndDraft(formatRangeValue(end, effectiveStep));
+    }
+  }
+
+  const CHIP_INPUT_CLASS =
+    'w-[4ch] bg-transparent text-[10px] tabular-nums [appearance:textfield] ' +
+    '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ' +
+    'focus:outline-none';
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-[11px] font-medium">{label}</Label>
+        <ValuePill mixed={mixed} value={`${formatRangeValue(start, effectiveStep)}-${formatRangeValue(end, effectiveStep)}${unit}`} />
+      </div>
+      <div className="editor-text-muted flex justify-between gap-1 text-[10px]">
+        <span className="editor-bg-subtle inline-flex items-center gap-1 rounded-md px-2 py-0.5 focus-within:ring-1 focus-within:ring-[var(--editor-accent)]">
+          <span className="shrink-0">{startLabel}</span>
+          {mixed ? <span className="tabular-nums">-</span> : (
+            <input
+              type="number"
+              value={startDraft}
+              min={min}
+              max={end}
+              step={effectiveStep}
+              aria-label={startLabel}
+              className={CHIP_INPUT_CLASS}
+              onFocus={(event) => { startFocused.current = true; event.target.select(); }}
+              onChange={(event) => setStartDraft(event.target.value)}
+              onBlur={commitStart}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur(); }
+                if (event.key === 'Escape') {
+                  setStartDraft(formatRangeValue(start, effectiveStep));
+                  startFocused.current = false;
+                  event.currentTarget.blur();
+                }
+              }}
+            />
+          )}
+          {unit ? <span className="shrink-0">{unit}</span> : null}
+        </span>
+        <span className="editor-bg-subtle inline-flex items-center justify-end gap-1 rounded-md px-2 py-0.5 focus-within:ring-1 focus-within:ring-[var(--editor-accent)]">
+          <span className="shrink-0">{endLabel}</span>
+          {mixed ? <span className="tabular-nums">-</span> : (
+            <input
+              type="number"
+              value={endDraft}
+              min={start}
+              max={max}
+              step={effectiveStep}
+              aria-label={endLabel}
+              className={CHIP_INPUT_CLASS}
+              onFocus={(event) => { endFocused.current = true; event.target.select(); }}
+              onChange={(event) => setEndDraft(event.target.value)}
+              onBlur={commitEnd}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur(); }
+                if (event.key === 'Escape') {
+                  setEndDraft(formatRangeValue(end, effectiveStep));
+                  endFocused.current = false;
+                  event.currentTarget.blur();
+                }
+              }}
+            />
+          )}
+          {unit ? <span className="shrink-0">{unit}</span> : null}
+        </span>
+      </div>
+      <Slider
+        tabIndex={-1}
+        aria-label={label}
+        value={localRange}
+        min={min}
+        max={max}
+        step={effectiveStep}
+        onValueChange={(next) => {
+          if (next.length < 2) return;
+          dragging.current = true;
+          const [nextStart, nextEnd] = normalizeRangeBand(next[0] ?? start, next[1] ?? end, min, max);
+          setLocalRange([nextStart, nextEnd]);
+          if (!startFocused.current) setStartDraft(formatRangeValue(nextStart, effectiveStep));
+          if (!endFocused.current) setEndDraft(formatRangeValue(nextEnd, effectiveStep));
+          onValueChange(nextStart, nextEnd);
+        }}
+        onValueCommit={() => { dragging.current = false; }}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // StickyOffsetBandField
 // ---------------------------------------------------------------------------
 

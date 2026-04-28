@@ -11,11 +11,17 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+---
+
+## [0.9.0] — 2026-04-28
+Document: 1.6.0 · API: 2.1.0 · Editor: 0.16.0
+
 ### Added
 
 - add rich text split action
 - expand Interact animation model
 - add full Interact animation controls
+- add shared dual-handle range control
 
 ### Changed
 
@@ -31,11 +37,12 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add drag boundary maintenance item
 - add roadmap entry skill
 - sorted roadmap
-- Merge branch 'master' of https://github.com/tombigel/sticky-playground
 - add Wix animation audit skills
 - add Wix library truth audit workflow
 - upgrade Wix animation libraries
 - document Interact authoring workflow
+- unify scroll animation range editing into a single range control
+- separate animation panel control groups with dividers
 
 ### Fixed
 
@@ -44,6 +51,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - preserve rich split styling
 - migrate legacy animation definitions
 - address migration verification issues
+- normalize inverted scroll animation ranges
 
 ---
 

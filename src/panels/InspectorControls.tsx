@@ -20,6 +20,7 @@ export {
   NumberInput,
   NumericUnitInlineField,
   OrderIconButton,
+  RangeBandField,
   RangeField,
   ShadowControlGroup,
   SizeInlineField,

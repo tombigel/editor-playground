@@ -14,4 +14,4 @@ export {
 export { HoverColorField, BorderControlGroup, ShadowControlGroup } from './ColorAndEffects';
 export { FontPickerPopover, FontSizeField, SpacingField } from './FontControls';
 export { OrderIconButton, TextStyleIconButton, WrapperActions } from './InteractionControls';
-export { SizeInlineField, RangeField, StickyOffsetBandField } from './SizeFields';
+export { SizeInlineField, RangeField, RangeBandField, StickyOffsetBandField } from './SizeFields';

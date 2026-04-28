@@ -13,7 +13,7 @@ import { AdvancedAnimationControls } from './animation/AdvancedAnimationControls
 import { PresetParamControls } from './animation/PresetParamControls';
 import { TimingControls } from './animation/TimingControls';
 import { TriggerEffectControls } from './animation/TriggerEffectControls';
-import { defaultPresetForTrigger, hasTiming } from './animation/utils';
+import { ANIMATION_DIVIDER_CLASS, defaultPresetForTrigger, hasTiming } from './animation/utils';
 
 export function AnimationSection({
   node,
@@ -84,6 +84,8 @@ export function AnimationSection({
             currentEffectParams={currentEffectParams}
             onPresetChange={actions.onAnimationPresetChange}
           />
+
+          <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
 
           {hasTiming(trigger) ? (
             <TimingControls

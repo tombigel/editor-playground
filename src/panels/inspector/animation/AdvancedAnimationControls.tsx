@@ -13,8 +13,8 @@ import type {
 import { getDefaultHoverOutActionForEffect, getPresetCategory, NAMED_EASINGS } from '../../../api/animationApi';
 import type { AnimationOptionsUpdate } from '../../../app/types';
 import type { NonSiteInspectorNode } from '../types';
-import { FormField, RangeField } from '../../InspectorControls';
-import { FILL_OPTIONS } from './utils';
+import { FormField, RangeBandField } from '../../InspectorControls';
+import { ANIMATION_DIVIDER_CLASS, FILL_OPTIONS } from './utils';
 
 function SelectField({
   value,
@@ -69,23 +69,21 @@ export function AdvancedAnimationControls({
   const fill = 'fill' in animation ? animation.fill : undefined;
 
   if (trigger === 'scroll') {
+    const scrollRangeStart = 'scrollRangeStart' in animation ? animation.scrollRangeStart ?? 0 : 0;
+    const scrollRangeEnd = 'scrollRangeEnd' in animation ? animation.scrollRangeEnd ?? 100 : 100;
     return (
       <>
-        <RangeField
-          label="Range start"
-          value={'scrollRangeStart' in animation ? animation.scrollRangeStart ?? 0 : 0}
+        <RangeBandField
+          label="Range"
+          startLabel="Start"
+          endLabel="End"
+          startValue={scrollRangeStart}
+          endValue={scrollRangeEnd}
           min={0}
           max={100}
+          step={1}
           unit="%"
-          onValueChange={(value) => onOptionsChange({ scrollRangeStart: value })}
-        />
-        <RangeField
-          label="Range end"
-          value={'scrollRangeEnd' in animation ? animation.scrollRangeEnd ?? 100 : 100}
-          min={0}
-          max={100}
-          unit="%"
-          onValueChange={(value) => onOptionsChange({ scrollRangeEnd: value })}
+          onValueChange={(start, end) => onOptionsChange({ scrollRangeStart: start, scrollRangeEnd: end })}
         />
         <FormField label="Reversed" layout="inline">
           <Switch
@@ -93,6 +91,7 @@ export function AdvancedAnimationControls({
             onCheckedChange={(checked) => onOptionsChange({ scrollReversed: checked })}
           />
         </FormField>
+        <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
         <FormField label="Fill" layout="inline">
           <FillSelect value={fill ?? 'both'} onValueChange={(value) => onOptionsChange({ scrollFill: value })} />
         </FormField>
@@ -123,6 +122,7 @@ export function AdvancedAnimationControls({
             onChange={(value) => onOptionsChange({ entranceThreshold: value })}
           />
         </FormField>
+        <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
         <FormField label="Fill" layout="inline">
           <FillSelect value={fill ?? 'both'} onValueChange={(value) => onOptionsChange({ entranceFill: value })} />
         </FormField>
@@ -132,9 +132,12 @@ export function AdvancedAnimationControls({
 
   if (trigger === 'ongoing') {
     return (
-      <FormField label="Fill" layout="inline">
-        <FillSelect value={fill ?? 'none'} onValueChange={(value) => onOptionsChange({ ongoingFill: value })} />
-      </FormField>
+      <>
+        <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
+        <FormField label="Fill" layout="inline">
+          <FillSelect value={fill ?? 'none'} onValueChange={(value) => onOptionsChange({ ongoingFill: value })} />
+        </FormField>
+      </>
     );
   }
 
@@ -155,6 +158,7 @@ export function AdvancedAnimationControls({
             onValueChange={(value) => onOptionsChange({ clickType: value as ClickType })}
           />
         </FormField>
+        <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
         <FormField label="Fill" layout="inline">
           <FillSelect value={fill ?? 'none'} onValueChange={(value) => onOptionsChange({ clickFill: value })} />
         </FormField>
@@ -178,6 +182,7 @@ export function AdvancedAnimationControls({
             onValueChange={(value) => onOptionsChange({ outAction: value as HoverOutAction })}
           />
         </FormField>
+        <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
         <FormField label="Fill" layout="inline">
           <FillSelect value={fill ?? (outAction === 'reverse' ? 'both' : 'none')} onValueChange={(value) => onOptionsChange({ hoverFill: value })} />
         </FormField>
@@ -209,6 +214,7 @@ export function AdvancedAnimationControls({
             onValueChange={(value) => onOptionsChange({ mouseAxis: value === 'both' ? undefined : value as 'x' | 'y' })}
           />
         </FormField>
+        <div aria-hidden="true" className={ANIMATION_DIVIDER_CLASS} />
         <FormField label="Centered" layout="inline">
           <Switch
             checked={'centeredToTarget' in animation ? animation.centeredToTarget ?? false : false}
@@ -238,4 +244,3 @@ export function AdvancedAnimationControls({
 
   return null;
 }
-

@@ -878,6 +878,8 @@ Per-trigger fields:
 
 Legacy persisted animation definitions are normalized on load/import: `click` becomes `activate`, `hover` becomes `interest`, hover `keep` becomes `pause`, and hover `none` becomes `reset`.
 
+Scroll ranges are normalized to `0..100` and `scrollRangeStart <= scrollRangeEnd`.
+
 ### AnimationTriggerType
 
 ```typescript

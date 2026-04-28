@@ -394,8 +394,25 @@ export function updateAnimationOptions(
   if (updates.mouseHitArea !== undefined) updated.hitArea = updates.mouseHitArea;
   if ('reducedMotion' in updates) { if (updates.reducedMotion) { updated.reducedMotion = updates.reducedMotion; } else { delete updated.reducedMotion; } }
   if (updates.requiresSticky !== undefined) updated.requiresSticky = updates.requiresSticky;
-  if (updates.scrollRangeStart !== undefined) updated.scrollRangeStart = updates.scrollRangeStart;
-  if (updates.scrollRangeEnd !== undefined) updated.scrollRangeEnd = updates.scrollRangeEnd;
+  if ('scrollRangeStart' in updates || 'scrollRangeEnd' in updates) {
+    const [currentStart, currentEnd] = normalizeScrollRangeValues(
+      typeof updated.scrollRangeStart === 'number' ? updated.scrollRangeStart : 0,
+      typeof updated.scrollRangeEnd === 'number' ? updated.scrollRangeEnd : 100,
+    );
+    const hasStartUpdate = updates.scrollRangeStart !== undefined;
+    const hasEndUpdate = updates.scrollRangeEnd !== undefined;
+    if (hasStartUpdate && hasEndUpdate) {
+      const [start, end] = normalizeScrollRangeValues(updates.scrollRangeStart ?? currentStart, updates.scrollRangeEnd ?? currentEnd);
+      updated.scrollRangeStart = start;
+      updated.scrollRangeEnd = end;
+    } else if (hasStartUpdate) {
+      updated.scrollRangeStart = Math.min(clampScrollRangePercent(updates.scrollRangeStart ?? currentStart), currentEnd);
+      updated.scrollRangeEnd = currentEnd;
+    } else if (hasEndUpdate) {
+      updated.scrollRangeStart = currentStart;
+      updated.scrollRangeEnd = Math.max(clampScrollRangePercent(updates.scrollRangeEnd ?? currentEnd), currentStart);
+    }
+  }
   if (updates.timing !== undefined) { updated.timing = { ...((updated.timing as Record<string, unknown> | undefined) ?? {}), ...updates.timing }; }
   return setNodeAnimation(doc, target, updated as AnimationDefinition);
 }
@@ -452,12 +469,24 @@ function getDefinitionTiming(animDef: AnimationDefinition): (AnimationTimingOpti
 
 function getScrollRanges(animDef: AnimationDefinition) {
   if (animDef.trigger !== 'scroll') return { rangeStart: SCROLL_DEFAULT_RANGE_START, rangeEnd: SCROLL_DEFAULT_RANGE_END };
-  const startPct = animDef.scrollRangeStart ?? 0;
-  const endPct = animDef.scrollRangeEnd ?? 100;
+  const [startPct, endPct] = normalizeScrollRangeValues(
+    animDef.scrollRangeStart ?? 0,
+    animDef.scrollRangeEnd ?? 100,
+  );
   return {
     rangeStart: { ...SCROLL_DEFAULT_RANGE_START, offset: { unit: 'percentage', value: startPct } },
     rangeEnd: { ...SCROLL_DEFAULT_RANGE_END, offset: { unit: 'percentage', value: endPct } },
   };
+}
+
+function normalizeScrollRangeValues(start: number, end: number): [number, number] {
+  const normalizedStart = clampScrollRangePercent(Number.isFinite(start) ? start : 0);
+  const normalizedEnd = clampScrollRangePercent(Number.isFinite(end) ? end : 100);
+  return [Math.min(normalizedStart, normalizedEnd), Math.max(normalizedStart, normalizedEnd)];
+}
+
+function clampScrollRangePercent(value: number): number {
+  return Math.max(0, Math.min(100, value));
 }
 
 function getTimeEffectTriggerType(animDef: AnimationDefinition): ClickType | EntranceType | 'state' | undefined {

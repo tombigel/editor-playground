@@ -297,6 +297,31 @@ describe('updateAnimationOptions', () => {
     expect(anim?.reducedMotion).toBe('disable');
   });
 
+  it('keeps scroll range start at or below end when updating one side', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const withAnim = setPresetAnimation(doc, nodeId, { trigger: 'scroll', preset: 'FadeScroll' });
+    const withEnd = updateAnimationOptions(withAnim, nodeId, { scrollRangeEnd: 40 });
+    const next = updateAnimationOptions(withEnd, nodeId, { scrollRangeStart: 80 });
+
+    const anim = getNodeAnimation(next, nodeId);
+    expect(anim?.trigger).toBe('scroll');
+    expect(anim && 'scrollRangeStart' in anim ? anim.scrollRangeStart : undefined).toBe(40);
+    expect(anim && 'scrollRangeEnd' in anim ? anim.scrollRangeEnd : undefined).toBe(40);
+  });
+
+  it('sorts and clamps scroll range when updating both sides', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const withAnim = setPresetAnimation(doc, nodeId, { trigger: 'scroll', preset: 'FadeScroll' });
+    const next = updateAnimationOptions(withAnim, nodeId, { scrollRangeStart: 120, scrollRangeEnd: -10 });
+
+    const anim = getNodeAnimation(next, nodeId);
+    expect(anim?.trigger).toBe('scroll');
+    expect(anim && 'scrollRangeStart' in anim ? anim.scrollRangeStart : undefined).toBe(0);
+    expect(anim && 'scrollRangeEnd' in anim ? anim.scrollRangeEnd : undefined).toBe(100);
+  });
+
   it('throws on node with no animation', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);

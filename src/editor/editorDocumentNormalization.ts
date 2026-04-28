@@ -116,7 +116,22 @@ function normalizeAnimation(
 		}
 	}
 
+	if (normalized.trigger === "scroll") {
+		const start = clampScrollRangePercent(
+			typeof normalized.scrollRangeStart === "number" ? normalized.scrollRangeStart : 0,
+		);
+		const end = clampScrollRangePercent(
+			typeof normalized.scrollRangeEnd === "number" ? normalized.scrollRangeEnd : 100,
+		);
+		normalized.scrollRangeStart = Math.min(start, end);
+		normalized.scrollRangeEnd = Math.max(start, end);
+	}
+
 	return normalized as AnimationDefinition;
+}
+
+function clampScrollRangePercent(value: number): number {
+	return Math.max(0, Math.min(100, value));
 }
 
 export function normalizeDocument(document: DocumentModel): DocumentModel {

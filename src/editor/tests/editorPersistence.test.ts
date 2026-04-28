@@ -265,6 +265,29 @@ describe('editor/editorPersistence', () => {
       expect(normalizedText.animation?.trigger).toBe('activate');
     });
 
+    it('normalizes inverted scroll animation ranges', () => {
+      const doc = buildMinimalDocument();
+      const textNode = Object.values(doc.nodes).find(
+        (node): node is TextNode => node.contentType === 'text',
+      );
+      if (!textNode) throw new Error('Expected text node');
+
+      textNode.animation = {
+        trigger: 'scroll',
+        effect: { kind: 'named', type: 'FadeScroll' },
+        scrollRangeStart: 120,
+        scrollRangeEnd: -10,
+      } as unknown as typeof textNode.animation;
+
+      const normalized = normalizeDocument(doc);
+      const normalizedText = normalized.nodes[textNode.id] as TextNode;
+      expect(normalizedText.animation).toMatchObject({
+        trigger: 'scroll',
+        scrollRangeStart: 0,
+        scrollRangeEnd: 100,
+      });
+    });
+
     it('forces opaque background on structural wrappers', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(

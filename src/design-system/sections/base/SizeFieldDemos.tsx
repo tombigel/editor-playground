@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+	RangeBandField,
 	RangeField,
 	StickyOffsetBandField,
 } from "@/panels/InspectorControls";
@@ -25,6 +26,8 @@ const STICKY_INDICATOR_PROPS: PropDefinition[] = [
 
 function SliderDemo() {
 	const [rangeValue, setRangeValue] = useState(75);
+	const [rangeStart, setRangeStart] = useState(20);
+	const [rangeEnd, setRangeEnd] = useState(80);
 	const [topOffset, setTopOffset] = useState(20);
 	const [bottomOffset, setBottomOffset] = useState(60);
 	return (
@@ -42,6 +45,26 @@ function SliderDemo() {
 						step={1}
 						unit="%"
 						onValueChange={setRangeValue}
+					/>
+				</div>
+			</div>
+			<div>
+				<div className="editor-text-muted mb-2 text-[11px] font-medium">
+					RangeBandField — dual-handle start/end range
+				</div>
+				<div className="editor-border-subtle w-full max-w-[300px] rounded-sm border p-3">
+					<RangeBandField
+						label="Scroll range"
+						startValue={rangeStart}
+						endValue={rangeEnd}
+						min={0}
+						max={100}
+						step={1}
+						unit="%"
+						onValueChange={(start, end) => {
+							setRangeStart(start);
+							setRangeEnd(end);
+						}}
 					/>
 				</div>
 			</div>
@@ -236,11 +259,11 @@ export function SizeFieldDemos() {
 				</div>
 			</ComponentPreview>
 
-			{/* Slider / RangeField / StickyOffsetBandField / SliderNumberField */}
+			{/* Slider / RangeField / RangeBandField / StickyOffsetBandField / SliderNumberField */}
 			<ComponentPreview
 				id="base-slider"
 				name="Slider"
-				description="Slider pattern with editable value pill header. RangeField and StickyOffsetBandField wrap Radix UI sliders with clickable pill labels. SliderNumberField is used for bounded animation parameters."
+				description="Slider pattern with editable value pill header. RangeField, RangeBandField, and StickyOffsetBandField wrap Radix UI sliders with clickable pill labels. SliderNumberField is used for bounded animation parameters."
 				sourceFile="src/components/ui/slider.tsx"
 				props={[
 					{ name: "value", type: "number[]", description: "Current value(s)." },
@@ -267,9 +290,11 @@ export function SizeFieldDemos() {
 						type: "(value: number[]) => void",
 						description: "Change handler.",
 					},
-					{ name: "label", type: "string", description: "(RangeField / SliderNumberField) Optional label shown left of the value pill." },
+					{ name: "label", type: "string", description: "(RangeField / RangeBandField / SliderNumberField) Optional label shown left of the value pill." },
+					{ name: "startValue", type: "number", description: "(RangeBandField) Start handle value; clamped so it cannot exceed endValue." },
+					{ name: "endValue", type: "number", description: "(RangeBandField) End handle value; clamped so it cannot be below startValue." },
 					{ name: "unitLabel", type: "string", description: "(SliderNumberField) Unit suffix shown in the value pill." },
-					{ name: "unit", type: "string", description: "(RangeField) Unit suffix shown in the value pill." },
+					{ name: "unit", type: "string", description: "(RangeField / RangeBandField) Unit suffix shown in the value pill." },
 					{ name: "onChange", type: "(value: number) => void", description: "(SliderNumberField) Commits on pointer-up or inline edit." },
 				]}
 			>
