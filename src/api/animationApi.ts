@@ -23,6 +23,7 @@ export {
   getPresetCategory,
   getPresetsForTrigger,
   getPresetParams,
+  getDefaultHoverOutActionForEffect,
   buildDocumentInteractConfig,
 } from '../animations/animationApi';
 
@@ -35,7 +36,12 @@ export type {
   MouseAnimationDefinition,
   ClickAnimationDefinition,
   HoverAnimationDefinition,
+  MouseHitArea,
   HoverOutAction,
+  EntranceType,
+  ClickType,
+  FillMode,
+  ScrubTransitionEasing,
   AnimationTimingOptions,
   OngoingTimingOptions,
   NamedEntranceEffect,
@@ -71,6 +77,7 @@ export {
   getAnimationSummary,
   isScrollAnimation,
   requiresStickyForAnimation,
+  getScrollRange,
   getAnimatedNodeIds,
 } from '../animations/selectors';
 

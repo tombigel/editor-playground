@@ -3,7 +3,8 @@ import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLeve
 import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../api/documentViewApi';
 import type { PageId } from '../api/documentViewApi';
-import type { AnimationTriggerType, KeyframeAnimationEffect, HoverOutAction, ReducedMotionResponse, DocumentAnimationSettings } from '../api/animationApi';
+import type { AnimationOptionsUpdate } from '../app/types';
+import type { AnimationTriggerType, KeyframeAnimationEffect, DocumentAnimationSettings } from '../api/animationApi';
 import { buildNodeDebugInfo } from '../editor/debugInfo';
 import { isNodeEffectivelyHidden } from '../api/documentViewApi';
 import { InspectorBlockList } from './InspectorBlockList';
@@ -79,7 +80,7 @@ export type InspectorPanelProps = {
   onStickyElevated: (value: boolean) => void;
   onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;
   onAnimationKeyframeChange: (trigger: AnimationTriggerType, effect: KeyframeAnimationEffect) => void;
-  onAnimationOptionsChange: (options: { outAction?: HoverOutAction; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean }) => void;
+  onAnimationOptionsChange: (options: AnimationOptionsUpdate) => void;
   onAnimationClear: () => void;
   onAnimationDocSettingsChange: (settings: DocumentAnimationSettings) => void;
   globalStickyElevation: boolean;

@@ -132,7 +132,7 @@ describe('setPresetAnimation', () => {
     const next = setPresetAnimation(doc, nodeId, { trigger: 'click', preset: 'FadeIn' });
 
     const anim = getNodeAnimation(next, nodeId);
-    expect(anim?.trigger).toBe('click');
+    expect(anim?.trigger).toBe('activate');
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'FadeIn' });
   });
 
@@ -152,7 +152,7 @@ describe('setPresetAnimation', () => {
     const next = setPresetAnimation(doc, nodeId, { trigger: 'hover', preset: 'SlideIn' });
 
     const anim = getNodeAnimation(next, nodeId);
-    expect(anim?.trigger).toBe('hover');
+    expect(anim?.trigger).toBe('interest');
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'SlideIn' });
   });
 
@@ -172,7 +172,7 @@ describe('setPresetAnimation', () => {
     const next = setPresetAnimation(doc, nodeId, { trigger: 'click', preset: 'Pulse' });
 
     const anim = getNodeAnimation(next, nodeId);
-    expect(anim?.trigger).toBe('click');
+    expect(anim?.trigger).toBe('activate');
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'Pulse' });
   });
 
@@ -182,7 +182,7 @@ describe('setPresetAnimation', () => {
     const next = setPresetAnimation(doc, nodeId, { trigger: 'hover', preset: 'Bounce' });
 
     const anim = getNodeAnimation(next, nodeId);
-    expect(anim?.trigger).toBe('hover');
+    expect(anim?.trigger).toBe('interest');
     expect(anim?.effect).toMatchObject({ kind: 'named', type: 'Bounce' });
   });
 
@@ -192,13 +192,13 @@ describe('setPresetAnimation', () => {
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'Pulse',
-      outAction: 'keep',
+      outAction: 'pause',
     });
 
     const anim = getNodeAnimation(next, nodeId);
-    expect(anim?.trigger).toBe('hover');
-    if (anim?.trigger === 'hover') {
-      expect(anim.outAction).toBe('keep');
+    expect(anim?.trigger).toBe('interest');
+    if (anim?.trigger === 'interest') {
+      expect(anim.outAction).toBe('pause');
     }
   });
 });
@@ -242,7 +242,9 @@ describe('setKeyframeAnimation', () => {
         keyframes: testKeyframes,
       });
       const anim = getNodeAnimation(next, nodeId);
-      expect(anim?.trigger).toBe(trigger);
+      expect(anim?.trigger).toBe(
+        trigger === 'click' ? 'activate' : trigger === 'hover' ? 'interest' : trigger,
+      );
       expect(anim?.effect.kind).toBe('keyframe');
     }
   });
@@ -740,27 +742,28 @@ describe('buildDocumentInteractConfig', () => {
     expect(effectsOrSequences).toBeGreaterThan(0);
   });
 
-  it('hover + ongoing with outAction keep: uses state params', () => {
+  it('hover + ongoing with outAction pause: uses state params', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'Pulse',
-      outAction: 'keep',
+      outAction: 'pause',
     });
     const config = buildDocumentInteractConfig(next);
 
     const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
-    expect(hoverInteraction?.params).toEqual({ type: 'state' });
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.triggerType).toBe('state');
   });
 
-  it('hover + ongoing with outAction keep: loops while state-controlled', () => {
+  it('hover + ongoing with outAction pause: loops while state-controlled', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'Pulse',
-      outAction: 'keep',
+      outAction: 'pause',
     });
     const config = buildDocumentInteractConfig(next);
 
@@ -790,7 +793,7 @@ describe('buildDocumentInteractConfig', () => {
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'SlideIn',
-      outAction: 'none',
+      outAction: 'reset',
     });
     const config = buildDocumentInteractConfig(next);
 
@@ -799,19 +802,20 @@ describe('buildDocumentInteractConfig', () => {
     expect(effect?.fill).toBeUndefined();
   });
 
-  it('hover + entrance with outAction none: uses repeat config', () => {
+  it('hover + entrance with outAction reset: uses repeat config', () => {
     const doc = createInitialDocument();
     const nodeId = getTextLeafId(doc);
     const next = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'SlideIn',
-      outAction: 'none',
+      outAction: 'reset',
     });
     const config = buildDocumentInteractConfig(next);
 
     const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
     expect(hoverInteraction).toBeDefined();
-    expect(hoverInteraction?.params).toEqual({ type: 'repeat' });
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.triggerType).toBe('repeat');
   });
 
   it('hover + entrance defaults to reverse outAction', () => {
@@ -824,7 +828,8 @@ describe('buildDocumentInteractConfig', () => {
     const config = buildDocumentInteractConfig(next);
 
     const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
-    expect(hoverInteraction?.params).toEqual({ type: 'alternate' });
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.triggerType).toBe('alternate');
   });
 
   it('updateAnimationOptions merges outAction onto hover animations', () => {
@@ -836,10 +841,10 @@ describe('buildDocumentInteractConfig', () => {
       outAction: 'reverse',
     });
 
-    const next = updateAnimationOptions(withAnim, nodeId, { outAction: 'none' });
+    const next = updateAnimationOptions(withAnim, nodeId, { outAction: 'reset' });
     const anim = getNodeAnimation(next, nodeId);
-    if (anim?.trigger === 'hover') {
-      expect(anim.outAction).toBe('none');
+    if (anim?.trigger === 'interest') {
+      expect(anim.outAction).toBe('reset');
     }
   });
 
@@ -857,8 +862,8 @@ describe('buildDocumentInteractConfig', () => {
     const effect = scrollInteraction!.effects![0] as Record<string, unknown>;
     expect(effect).toHaveProperty('rangeStart');
     expect(effect).toHaveProperty('rangeEnd');
-    expect(effect.rangeStart).toEqual({ name: 'entry', offset: { unit: 'percentage', value: 0 } });
-    expect(effect.rangeEnd).toEqual({ name: 'exit', offset: { unit: 'percentage', value: 100 } });
+    expect(effect.rangeStart).toEqual({ name: 'cover', offset: { unit: 'percentage', value: 0 } });
+    expect(effect.rangeEnd).toEqual({ name: 'cover', offset: { unit: 'percentage', value: 100 } });
   });
 
   it('scroll keyframe config includes rangeStart and rangeEnd defaults', () => {
@@ -881,8 +886,8 @@ describe('buildDocumentInteractConfig', () => {
     const effect = scrollInteraction!.effects![0] as Record<string, unknown>;
     expect(effect).toHaveProperty('rangeStart');
     expect(effect).toHaveProperty('rangeEnd');
-    expect(effect.rangeStart).toEqual({ name: 'entry', offset: { unit: 'percentage', value: 0 } });
-    expect(effect.rangeEnd).toEqual({ name: 'exit', offset: { unit: 'percentage', value: 100 } });
+    expect(effect.rangeStart).toEqual({ name: 'cover', offset: { unit: 'percentage', value: 0 } });
+    expect(effect.rangeEnd).toEqual({ name: 'cover', offset: { unit: 'percentage', value: 100 } });
   });
 
   it('mouse preset config includes hitArea self in interaction params', () => {

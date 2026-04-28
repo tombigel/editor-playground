@@ -373,7 +373,7 @@ describe('createAnimationPreview', () => {
     const withAnim = setPresetAnimation(doc, nodeId, {
       trigger: 'hover',
       preset: 'FadeIn',
-      outAction: 'none',
+      outAction: 'reset',
     });
     const config = buildDocumentInteractConfig(withAnim);
 

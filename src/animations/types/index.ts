@@ -1,10 +1,9 @@
 import type { NodeId } from '../../model/types';
 import type { InteractConfig } from '@wix/interact/web';
 
-// Re-export the InteractConfig from @wix/interact/web so consumers don't need a direct dependency
 export type { InteractConfig } from '@wix/interact/web';
 
-// ── Triggers ──────────────────────────────────────────────────────────────────
+// ── Triggers ─────────────────────────────────────────────────────────────────
 
 export type AnimationTriggerType =
   | 'entrance'
@@ -16,12 +15,7 @@ export type AnimationTriggerType =
   | 'interest'
   | 'mouse';
 
-// ── Named effect base types ──────────────────────────────────────────────────
-// @wix/motion-presets does not export its preset union types from the public
-// API. We define local base types that match the library's shape:
-// every preset is `{ type: string }` plus category-specific optional params.
-// The `kind: 'named'` discriminant is ours and distinguishes named effects
-// from keyframe effects in AnimationDefinition.
+// ── Named effect base types ─────────────────────────────────────────────────
 
 type PresetEffectBase = { type: string } & Record<string, unknown>;
 
@@ -35,7 +29,7 @@ export type NamedAnimationEffect =
   | NamedScrollEffect
   | NamedMouseEffect;
 
-// ── Keyframe effect (WAAPI-style, unrestricted by trigger type) ───────────────
+// ── Keyframe effect ─────────────────────────────────────────────────────────
 
 export type KeyframeAnimationEffect = {
   kind: 'keyframe';
@@ -50,29 +44,44 @@ export type KeyframeAnimationEffect = {
 };
 
 // ── Timing options ──────────────────────────────────────────────────────────
-// Timing options apply to time-based triggers (entrance, ongoing, click, hover).
-// Scroll and mouse triggers are driven by position, not time.
 
 export type AnimationTimingOptions = {
-  duration?: number;   // Animation duration in ms
-  delay?: number;      // Animation start delay in ms
-  easing?: string;     // CSS easing function
+  duration?: number;
+  delay?: number;
+  easing?: string;
 };
 
 export type OngoingTimingOptions = AnimationTimingOptions & {
-  iterations?: number;   // Number of iterations (Infinity for infinite)
-  alternate?: boolean;   // Alternate direction on each iteration
+  iterations?: number;
+  alternate?: boolean;
 };
 
-// ── Per-trigger AnimationDefinition variants ──────────────────────────────────
-// Each variant restricts which named effects are allowed while keyframe is
-// always permitted. Discriminated on `trigger`.
+// ── Per-trigger AnimationDefinition variants ─────────────────────────────────
+
+export type EntranceType = 'once' | 'repeat' | 'alternate';
+
+export type FillMode = 'none' | 'forwards' | 'backwards' | 'both';
+
+/** Valid easing names for the pointerMove lerp transition from shipped @wix/motion types. */
+export type ScrubTransitionEasing =
+  | 'linear'
+  | 'hardBackOut'
+  | 'easeOut'
+  | 'elastic'
+  | 'bounce';
 
 export type EntranceAnimationDefinition = {
   trigger: 'entrance';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | KeyframeAnimationEffect;
   timing?: AnimationTimingOptions;
+  entranceType?: EntranceType;
+  /** IntersectionObserver threshold 0–1. Default 0.2 (library default). */
+  threshold?: number;
+  /** CSS rootMargin-style string to expand (+) or shrink (−) the trigger zone. e.g. "-20% 0px". */
+  inset?: string;
+  /** Override the default fill:"both". */
+  fill?: FillMode;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
@@ -82,6 +91,10 @@ export type OngoingAnimationDefinition = {
   triggerId?: NodeId;
   effect: NamedOngoingEffect | KeyframeAnimationEffect;
   timing?: OngoingTimingOptions;
+  /** CSS rootMargin-style string to expand (+) or shrink (−) the trigger zone. e.g. "-20% 0px". */
+  inset?: string;
+  /** Override the default fill behavior for time-based ongoing effects. */
+  fill?: FillMode;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
@@ -90,35 +103,61 @@ export type ScrollAnimationDefinition = {
   trigger: 'scroll';
   triggerId?: NodeId;
   effect: NamedScrollEffect | KeyframeAnimationEffect;
+  /** rangeStart offset percentage 0–100, default 0 */
+  scrollRangeStart?: number;
+  /** rangeEnd offset percentage 0–100, default 100 */
+  scrollRangeEnd?: number;
+  /** Play the animation in reverse as scroll increases. */
+  reversed?: boolean;
+  /** Fill mode at the scroll range boundaries. */
+  fill?: FillMode;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
+
+export type MouseHitArea = 'self' | 'root';
 
 export type MouseAnimationDefinition = {
   trigger: 'mouse';
   triggerId?: NodeId;
   effect: NamedMouseEffect | KeyframeAnimationEffect;
+  hitArea?: MouseHitArea;
+  /** Pointer axis tracked: 'x' only, 'y' only, or undefined = both. */
+  mouseAxis?: 'x' | 'y';
+  /** Center the pointer range to the element's midpoint. */
+  centeredToTarget?: boolean;
+  /** Lerp smoothing duration in ms (0 = off). Interpolates toward pointer position. */
+  transitionDuration?: number;
+  /** Easing for the lerp transition from the shipped ScrubTransitionEasing union. */
+  transitionEasing?: ScrubTransitionEasing;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
+
+export type ClickType = 'once' | 'repeat' | 'state' | 'alternate';
 
 export type ClickAnimationDefinition = {
   trigger: 'click' | 'activate';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | NamedOngoingEffect | KeyframeAnimationEffect;
-  timing?: AnimationTimingOptions;
+  timing?: AnimationTimingOptions | OngoingTimingOptions;
+  clickType?: ClickType;
+  /** Override the default fill behavior for activate/click effects. */
+  fill?: FillMode;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
 
-export type HoverOutAction = 'keep' | 'reverse' | 'none';
+export type HoverOutAction = 'reverse' | 'reset' | 'pause';
 
 export type HoverAnimationDefinition = {
   trigger: 'hover' | 'interest';
   triggerId?: NodeId;
   effect: NamedEntranceEffect | NamedOngoingEffect | KeyframeAnimationEffect;
-  timing?: AnimationTimingOptions;
+  timing?: AnimationTimingOptions | OngoingTimingOptions;
   outAction?: HoverOutAction;
+  /** Override the default fill behavior for hover/interest effects. */
+  fill?: FillMode;
   reducedMotion?: ReducedMotionResponse;
   requiresSticky?: boolean;
 };
@@ -131,8 +170,7 @@ export type AnimationDefinition =
   | ClickAnimationDefinition
   | HoverAnimationDefinition;
 
-// ── A11y ──────────────────────────────────────────────────────────────────────
-// Priority chain: global -> perTrigger -> per-animation (first match wins)
+// ── A11y ────────────────────────────────────────────────────────────────────
 
 export type ReducedMotionResponse =
   | 'disable'
@@ -151,18 +189,21 @@ export type DocumentAnimationSettings = {
   a11y?: DocumentAnimationA11y;
 };
 
-// ── Preset catalog types (for editor integration) ─────────────────────────────
+// ── Preset catalog types ────────────────────────────────────────────────────
 
 export type PresetParamType = 'string' | 'number' | 'boolean';
 
 export type PresetParam = {
   name: string;
+  /** Optional display label. Falls back to name if omitted. */
+  label?: string;
   type: PresetParamType;
   required: boolean;
   default?: unknown;
   enum?: readonly (string | number)[];
   min?: number;
   max?: number;
+  step?: number;
   unit?: string;
   description?: string;
 };
@@ -179,7 +220,7 @@ export type PresetInfo = {
   params: PresetParam[];
 };
 
-// ── Animation Preview Runtime ────────────────────────────────────────────────
+// ── Animation Preview Runtime ───────────────────────────────────────────────
 
 export type AnimationInvokeAction = 'click' | 'hoverIn' | 'hoverOut';
 

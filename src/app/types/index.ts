@@ -15,7 +15,20 @@ import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewA
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
 import type { SetTextDocumentContentOptions } from '../../api/documentApi';
-import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
+import type {
+  AnimationTriggerType,
+  AnimationTimingOptions,
+  OngoingTimingOptions,
+  HoverOutAction,
+  KeyframeAnimationEffect,
+  ReducedMotionResponse,
+  DocumentAnimationSettings,
+  EntranceType,
+  FillMode,
+  ClickType,
+  MouseHitArea,
+  ScrubTransitionEasing,
+} from '../../animations/types';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -47,6 +60,33 @@ export type HistoryEntry = {
   sharedRegionIdsAfter: NodeId[] | undefined;
   activePageIdBefore: PageId | null;
   activePageIdAfter: PageId | null;
+};
+
+export type AnimationOptionsUpdate = {
+  effectOptions?: Record<string, unknown>;
+  source?: NodeId;
+  outAction?: HoverOutAction;
+  entranceType?: EntranceType;
+  entranceThreshold?: number;
+  entranceInset?: string;
+  entranceFill?: FillMode;
+  ongoingFill?: FillMode;
+  ongoingInset?: string;
+  clickType?: ClickType;
+  clickFill?: FillMode;
+  mouseHitArea?: MouseHitArea;
+  scrollReversed?: boolean;
+  scrollFill?: FillMode;
+  hoverFill?: FillMode;
+  mouseAxis?: 'x' | 'y' | undefined;
+  mouseCenteredToTarget?: boolean;
+  mouseTransitionDuration?: number;
+  mouseTransitionEasing?: ScrubTransitionEasing;
+  timing?: AnimationTimingOptions | OngoingTimingOptions;
+  reducedMotion?: ReducedMotionResponse;
+  requiresSticky?: boolean;
+  scrollRangeStart?: number;
+  scrollRangeEnd?: number;
 };
 
 export type SelectionRect = {
@@ -118,7 +158,7 @@ export type EditorAction =
   | { type: 'stickyElevated'; value: boolean }
   | { type: 'animationPreset'; trigger: AnimationTriggerType; preset: string; params?: Record<string, unknown> }
   | { type: 'animationKeyframe'; trigger: AnimationTriggerType; name: string; keyframes: KeyframeAnimationEffect['keyframes']; duration?: number; easing?: string }
-  | { type: 'animationOptions'; options: { outAction?: HoverOutAction; timing?: AnimationTimingOptions | OngoingTimingOptions; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean } }
+  | { type: 'animationOptions'; options: AnimationOptionsUpdate }
   | { type: 'animationClear' }
   | { type: 'animationDocSettings'; settings: DocumentAnimationSettings }
   | { type: 'orderBack' }

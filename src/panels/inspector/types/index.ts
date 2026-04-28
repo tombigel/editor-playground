@@ -4,7 +4,8 @@ import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId, ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../api/documentViewApi';
-import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../../animations/types';
+import type { AnimationOptionsUpdate } from '../../../app/types';
+import type { AnimationTriggerType, KeyframeAnimationEffect, DocumentAnimationSettings } from '../../../animations/types';
 
 export type InspectorNode = DocumentNode;
 export type NonSiteInspectorNode = Exclude<DocumentNode, { contentType: 'site' }>;
@@ -42,7 +43,7 @@ export type InspectorActionHandlers = {
   onSplitRichTextNode?: (nodeId: string) => void;
   onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;
   onAnimationKeyframeChange: (trigger: AnimationTriggerType, effect: KeyframeAnimationEffect) => void;
-  onAnimationOptionsChange: (options: { outAction?: HoverOutAction; timing?: AnimationTimingOptions | OngoingTimingOptions; reducedMotion?: ReducedMotionResponse; requiresSticky?: boolean }) => void;
+  onAnimationOptionsChange: (options: AnimationOptionsUpdate) => void;
   onAnimationClear: () => void;
   onAnimationDocSettingsChange: (settings: DocumentAnimationSettings) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;

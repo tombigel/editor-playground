@@ -38,6 +38,7 @@ function getLibraryPresetNames(): string[] {
 // exported as runtime modules. These are valid in the data model but
 // have no corresponding runtime preset factory.
 const TYPE_ONLY_PRESETS = ['DVD'];
+const IMPLEMENTATION_HOOK_PRESETS = ['CustomMouse'];
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,10 @@ describe('animation API ↔ @wix/motion-presets alignment', () => {
 
   it('every library preset (except background scroll) is in our catalog', () => {
     const uncovered = libraryPresets.filter(
-      (name) => !isBackgroundScrollPreset(name) && !allOurPresets.includes(name),
+      (name) =>
+        !isBackgroundScrollPreset(name) &&
+        !IMPLEMENTATION_HOOK_PRESETS.includes(name) &&
+        !allOurPresets.includes(name),
     );
     expect(uncovered).toEqual([]);
   });
