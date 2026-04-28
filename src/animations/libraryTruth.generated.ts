@@ -2,7 +2,7 @@
 // GENERATED FILE: run `npm run audit:libraries` to refresh.
 
 export const LIBRARY_TRUTH_META = {
-  "generatedAt": "2026-04-28T12:53:18.950Z",
+  "generatedAt": "2026-04-28T12:54:02.346Z",
   "trustOrder": [
     "shipped code/runtime behavior",
     "@wix/motion-presets rules",
@@ -10,9 +10,9 @@ export const LIBRARY_TRUTH_META = {
     "docs in either package"
   ],
   "packages": {
-    "interact": "2.1.4",
-    "motion": "2.1.3",
-    "motionPresets": "1.0.0"
+    "interact": "2.2.1",
+    "motion": "2.1.4",
+    "motionPresets": "1.0.1"
   },
   "motionPresetRuleFiles": [
     "https://github.com/wix/interact/blob/master/packages/motion-presets/rules/presets/presets-main.md",
@@ -54,7 +54,6 @@ export const LIBRARY_TRIGGER_TRUTH = {
   },
   "viewEnter": {
     "params": [
-      "type",
       "threshold",
       "inset",
       "useSafeViewEnter"
@@ -69,7 +68,6 @@ export const LIBRARY_TRIGGER_TRUTH = {
   },
   "viewProgress": {
     "params": [
-      "type",
       "threshold",
       "inset",
       "useSafeViewEnter"
@@ -105,9 +103,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "click.md",
       "full-lean.md",
-      "hover.md",
       "integration.md",
       "viewenter.md"
     ],
@@ -129,8 +125,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -187,7 +182,9 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -242,7 +239,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -276,8 +273,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -335,7 +331,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -370,7 +366,9 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -427,10 +425,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "click.md",
-      "full-lean.md",
-      "hover.md",
-      "viewenter.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -477,7 +472,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -533,9 +528,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "click.md",
-      "full-lean.md",
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -594,7 +587,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -636,7 +629,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -671,7 +664,9 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -704,7 +699,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -757,7 +752,9 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -793,7 +790,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "click.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -845,7 +842,9 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -880,7 +879,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -914,7 +913,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -966,13 +965,16 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
       "direction",
       "distance",
-      "perspective"
+      "perspective",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1000,6 +1002,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "default": 800,
         "min": 200,
         "max": 2000
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1009,40 +1016,6 @@ export const LIBRARY_PRESET_TRUTH = {
       "iterationDelay"
     ],
     "label": "Breathe",
-    "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
-  },
-  "Blink": {
-    "preset": "Blink",
-    "category": "ongoing",
-    "uiCategory": "ongoing",
-    "exported": false,
-    "typed": true,
-    "sourcePresent": false,
-    "motionRulesPresent": false,
-    "interactRuleRefs": [],
-    "supportStatus": "typed-but-not-exported",
-    "uiExposed": false,
-    "codeParamNames": [
-      "scale",
-      "distance"
-    ],
-    "codeParams": [
-      {
-        "name": "scale",
-        "type": "number",
-        "required": false
-      },
-      {
-        "name": "distance",
-        "type": "number",
-        "required": false
-      }
-    ],
-    "motionRuleParamNames": [],
-    "label": "Blink",
     "description": null,
     "behaviorNotes": []
   },
@@ -1055,15 +1028,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "click.md",
-      "full-lean.md",
-      "hover.md",
-      "viewenter.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "intensity"
+      "intensity",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1074,6 +1045,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "min": 0,
         "max": 1,
         "step": 0.1
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1082,9 +1058,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Pulse",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Spin": {
     "preset": "Spin",
@@ -1095,13 +1069,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "direction"
+      "direction",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1112,6 +1086,11 @@ export const LIBRARY_PRESET_TRUTH = {
           "clockwise",
           "counter-clockwise"
         ]
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1120,9 +1099,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Spin",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Poke": {
     "preset": "Poke",
@@ -1133,13 +1110,14 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
       "direction",
-      "intensity"
+      "intensity",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1161,6 +1139,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "min": 0,
         "max": 1,
         "step": 0.1
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1170,9 +1153,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Poke",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Flash": {
     "preset": "Flash",
@@ -1183,21 +1164,27 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md",
+      "full-lean.md",
       "viewenter.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
-    "codeParamNames": [],
-    "codeParams": [],
+    "codeParamNames": [
+      "iterationDelay"
+    ],
+    "codeParams": [
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
+      }
+    ],
     "motionRuleParamNames": [
       "iterationDelay"
     ],
     "label": "Flash",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Swing": {
     "preset": "Swing",
@@ -1208,13 +1195,14 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
       "swing",
-      "direction"
+      "direction",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1236,6 +1224,11 @@ export const LIBRARY_PRESET_TRUTH = {
           "bottom",
           "left"
         ]
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1245,9 +1238,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Swing",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Flip": {
     "preset": "Flip",
@@ -1257,12 +1248,15 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
       "direction",
-      "perspective"
+      "perspective",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1282,6 +1276,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "default": 800,
         "min": 200,
         "max": 2000
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1291,9 +1290,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Flip",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Rubber": {
     "preset": "Rubber",
@@ -1304,12 +1301,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "intensity"
+      "intensity",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1320,6 +1318,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "min": 0,
         "max": 1,
         "step": 0.1
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1328,9 +1331,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Rubber",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Fold": {
     "preset": "Fold",
@@ -1340,12 +1341,15 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": true,
-    "interactRuleRefs": [],
+    "interactRuleRefs": [
+      "full-lean.md"
+    ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
       "direction",
-      "angle"
+      "angle",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1367,6 +1371,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "default": 15,
         "min": 0,
         "max": 90
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1376,9 +1385,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Fold",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Jello": {
     "preset": "Jello",
@@ -1389,12 +1396,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "intensity"
+      "intensity",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1405,6 +1413,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "min": 0,
         "max": 1,
         "step": 0.05
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1413,9 +1426,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Jello",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Wiggle": {
     "preset": "Wiggle",
@@ -1426,13 +1437,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "intensity"
+      "intensity",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1443,6 +1454,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "min": 0,
         "max": 1,
         "step": 0.1
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1451,9 +1467,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Wiggle",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Bounce": {
     "preset": "Bounce",
@@ -1464,13 +1478,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "hover.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "intensity"
+      "intensity",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1481,6 +1495,11 @@ export const LIBRARY_PRESET_TRUTH = {
         "min": 0,
         "max": 1,
         "step": 0.1
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1489,9 +1508,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Bounce",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "Cross": {
     "preset": "Cross",
@@ -1502,14 +1519,13 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "hover.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
-      "direction"
+      "direction",
+      "iterationDelay"
     ],
     "codeParams": [
       {
@@ -1526,6 +1542,11 @@ export const LIBRARY_PRESET_TRUTH = {
           "bottom-right",
           "bottom-left"
         ]
+      },
+      {
+        "name": "iterationDelay",
+        "type": "number",
+        "required": false
       }
     ],
     "motionRuleParamNames": [
@@ -1534,9 +1555,7 @@ export const LIBRARY_PRESET_TRUTH = {
     ],
     "label": "Cross",
     "description": null,
-    "behaviorNotes": [
-      "Uses effect delay from animation options in shipped code."
-    ]
+    "behaviorNotes": []
   },
   "DVD": {
     "preset": "DVD",
@@ -1565,8 +1584,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1625,8 +1643,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1673,9 +1690,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1722,8 +1737,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1793,8 +1807,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1868,8 +1881,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1926,8 +1938,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -1992,9 +2003,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "motionRulesPresent": true,
     "interactRuleRefs": [
       "full-lean.md",
-      "integration.md",
-      "scroll-list.md",
-      "viewprogress.md"
+      "integration.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2041,9 +2050,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2093,8 +2100,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2156,8 +2162,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2224,8 +2229,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2299,8 +2303,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2359,8 +2362,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2410,8 +2412,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2478,8 +2479,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2549,8 +2549,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2598,9 +2597,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2670,8 +2667,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "scroll-list.md",
-      "viewprogress.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2751,7 +2747,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2813,7 +2809,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2863,8 +2859,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -2946,9 +2941,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "pointermove.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -3012,8 +3005,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -3075,7 +3067,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -3136,9 +3128,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "pointermove.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "supported",
     "uiExposed": true,
     "codeParamNames": [
@@ -3176,7 +3166,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -3243,8 +3233,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -3296,7 +3285,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -3369,8 +3358,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "sourcePresent": true,
     "motionRulesPresent": true,
     "interactRuleRefs": [
-      "full-lean.md",
-      "pointermove.md"
+      "full-lean.md"
     ],
     "supportStatus": "supported",
     "uiExposed": true,
@@ -3446,9 +3434,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "scroll-list.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "audited-not-ui-exposed",
     "uiExposed": false,
     "codeParamNames": [
@@ -3536,9 +3522,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "scroll-list.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "audited-not-ui-exposed",
     "uiExposed": false,
     "codeParamNames": [
@@ -3574,9 +3558,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "scroll-list.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "audited-not-ui-exposed",
     "uiExposed": false,
     "codeParamNames": [
@@ -3628,9 +3610,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "scroll-list.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "audited-not-ui-exposed",
     "uiExposed": false,
     "codeParamNames": [],
@@ -3720,9 +3700,7 @@ export const LIBRARY_PRESET_TRUTH = {
     "typed": true,
     "sourcePresent": true,
     "motionRulesPresent": false,
-    "interactRuleRefs": [
-      "scroll-list.md"
-    ],
+    "interactRuleRefs": [],
     "supportStatus": "audited-not-ui-exposed",
     "uiExposed": false,
     "codeParamNames": [
@@ -3870,16 +3848,6 @@ export const LIBRARY_EXPORTED_PRESET_NAMES = [
 
 export const LIBRARY_DISCREPANCIES = [
   {
-    "id": "Blink-typed-or-ruled-not-exported",
-    "classification": "typed-but-not-exported",
-    "title": "Blink appears in lower-priority sources but is not exported by shipped code",
-    "winner": "shipped code/runtime behavior",
-    "losingSources": [
-      "public @wix/motion-presets types"
-    ],
-    "preset": "Blink"
-  },
-  {
     "id": "BounceMouse-missing-in-motion-rules",
     "classification": "code-missing-in-motion-rules",
     "title": "BounceMouse exists in shipped code but is omitted from motion preset rules",
@@ -3911,33 +3879,6 @@ export const LIBRARY_DISCREPANCIES = [
     "preset": "DVD"
   },
   {
-    "id": "hover-rule-stale-glitchin",
-    "classification": "stale-interact-rule-reference",
-    "title": "interact hover rules reference non-existent GlitchIn preset",
-    "winner": "@wix/motion-presets rules",
-    "losingSources": [
-      "@wix/interact rules"
-    ]
-  },
-  {
-    "id": "hover-rule-stale-growin",
-    "classification": "stale-interact-rule-reference",
-    "title": "interact hover rules reference non-existent GrowIn preset",
-    "winner": "@wix/motion-presets rules",
-    "losingSources": [
-      "@wix/interact rules"
-    ]
-  },
-  {
-    "id": "ongoing-iteration-delay-rules-vs-code",
-    "classification": "rules-claim-not-in-code",
-    "title": "Ongoing preset rules document iterationDelay, but shipped code uses effect delay instead",
-    "winner": "shipped code/runtime behavior",
-    "losingSources": [
-      "@wix/motion-presets rules"
-    ]
-  },
-  {
     "id": "SpinMouse-missing-in-motion-rules",
     "classification": "code-missing-in-motion-rules",
     "title": "SpinMouse exists in shipped code but is omitted from motion preset rules",
@@ -3960,16 +3901,7 @@ export const LIBRARY_DISCREPANCIES = [
   }
 ] as const;
 
-export const LIBRARY_STALE_INTERACT_RULE_REFS = [
-  {
-    "preset": "GrowIn",
-    "file": "hover.md"
-  },
-  {
-    "preset": "GlitchIn",
-    "file": "hover.md"
-  }
-] as const;
+export const LIBRARY_STALE_INTERACT_RULE_REFS = [] as const;
 
 export const SUPPORTED_TRIGGER_CATEGORIES = {
   "entrance": [
