@@ -80,6 +80,39 @@ Finds source files exceeding the line count limits in CLAUDE.md (500 = consider 
 
 **Run:** after large features, during code review, or as part of `/maintenance`
 
+### `/wix-library-truth-audit` — Wix Animation Library Truth
+
+Generates and verifies the canonical support model for `@wix/interact`, `@wix/motion`, and `@wix/motion-presets`.
+
+**What it catches:**
+
+- shipped preset exports that are missing from rules
+- typed presets that are not actually exported
+- preset parameter drift between code, types, and rule documents
+- trigger semantics that differ from docs or rules
+
+**Source of truth:** shipped code/runtime behavior first, then motion-preset rules, then Interact rules, then docs.
+
+**Run:** before changing animation catalogs, after Wix animation dependency upgrades, or when adding Interact config controls.
+
+### `/wix-upgrade-impact-check` — Wix Animation Upgrade Impact
+
+Checks whether an upgrade to `@wix/interact`, `@wix/motion`, or `@wix/motion-presets` requires code, generated truth, or ledger changes.
+
+**Run:** before or immediately after upgrading any Wix animation package.
+
+### `/wix-preset-rules-compare` — Preset Rules Comparison
+
+Classifies preset-level disagreements between shipped packages, upstream `@wix/motion-presets` rules, installed `@wix/interact` rules, and docs.
+
+**Run:** when a preset or parameter appears in one source layer but not another.
+
+### `/wix-library-issues-maintainer` — Wix Animation Gap Ledger
+
+Maintains `INTERACT_MOTION_USER_FACING_GAPS.md` as the evidence-based discrepancy ledger for animation library drift.
+
+**Run:** whenever the library truth audit adds, removes, or reclassifies findings.
+
 ## Development Skills
 
 ### `/version-bump` — Semver Version Bump

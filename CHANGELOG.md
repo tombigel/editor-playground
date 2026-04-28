@@ -30,6 +30,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add roadmap entry skill
 - sorted roadmap
 - Merge branch 'master' of https://github.com/tombigel/sticky-playground
+- add Wix animation audit skills
 
 ### Fixed
 
