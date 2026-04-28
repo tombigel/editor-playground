@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add Wix animation audit skills
 - add Wix library truth audit workflow
 - upgrade Wix animation libraries
+- document Interact authoring workflow
 
 ### Fixed
 

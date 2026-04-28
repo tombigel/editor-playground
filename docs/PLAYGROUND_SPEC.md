@@ -1077,11 +1077,11 @@ Animations are configured hierarchically and can inherit accessibility behavior 
 | `entrance` | view-enter animation | Plays when the element enters the viewport. |
 | `ongoing` | looping in-view animation | Uses `viewEnter` with looping behavior. |
 | `scroll` | scroll-progress animation | Driven by `viewProgress`. |
-| `click` / `activate` | activation-driven animation | Canonicalizes to `activate` in Interact config. |
-| `hover` / `interest` | hover or interest animation | Canonicalizes to `interest`; supports `outAction`. |
+| `activate` | activation-driven animation | Canonical trigger for click/tap activation. |
+| `interest` | hover or interest animation | Canonical trigger for pointer interest; supports `outAction`. |
 | `mouse` | pointer-move animation | Driven by pointer movement. |
 
-Trigger types have preset constraints; keyframe effects bypass those preset-category constraints and work with any trigger type.
+Trigger types have preset constraints; keyframe effects bypass those preset-category constraints and work with any trigger type. Legacy persisted `click` and `hover` definitions are accepted, then normalized to `activate` and `interest`.
 
 ### Effect Types
 
@@ -1095,21 +1095,35 @@ A `triggerId` field allows one node to trigger while another animates:
 - `triggerId` references the node that owns the trigger gesture
 - if omitted, the animated node triggers itself
 
-### Hover Behavior
+### Interest Behavior
 
 | `outAction` | Interact mode | Result |
 |---|---|---|
 | `reverse` | `{ type: 'alternate' }` | Enter plays forward and leave reverses. |
-| `keep` | `{ type: 'state' }` | Hover behaves like play/pause. |
-| `none` | `{ type: 'repeat' }` | Hover-out cancels and resets. |
+| `pause` | `{ type: 'state' }` | Interest behaves like play/pause. |
+| `reset` | `{ type: 'repeat' }` | Interest-out cancels and resets. |
 
-Additional hover rules:
+Additional interest rules:
 
-- `outAction` is supported for hover entrance, hover ongoing, and hover keyframe animations.
-- Hover reverse effects emit `fill: 'both'` so alternate enter and leave hold the active state correctly.
-- Hover `keep` and `none` omit `fill`, matching Interact's native `state` and `repeat` behavior.
-- Hover ongoing named presets with `outAction: 'keep'` emit `iterations: Infinity` so they can resume naturally.
-- When `outAction` is omitted, hover defaults to `'reverse'`.
+- `outAction` is supported for interest entrance, interest ongoing, and interest keyframe animations.
+- Interest reverse effects default to `fill: 'both'` so alternate enter and leave hold the active state correctly.
+- Interest `pause` and `reset` default to Interact's native `state` and `repeat` behavior unless `fill` is explicitly authored.
+- Interest ongoing named presets with `outAction: 'pause'` emit `iterations: Infinity` so they can resume naturally.
+- When `outAction` is omitted, interest defaults to the effect-specific default from `getDefaultHoverOutActionForEffect()`.
+- Legacy persisted `keep` and `none` are normalized to `pause` and `reset`.
+
+### Interact 2.2 Config Semantics
+
+- Playback behavior is emitted as effect-level `triggerType`.
+- Trigger params keep geometry and sensor concerns: threshold, inset/root margin, scroll ranges, mouse hit area, and mouse axis.
+- Scroll animations preserve authored `scrollRangeStart`, `scrollRangeEnd`, `reversed`, and `fill`.
+- Mouse animations preserve `hitArea`, `mouseAxis`, `centeredToTarget`, `transitionDuration`, and `transitionEasing`.
+- `triggerId` continues to separate source and target nodes, and both receive stable `data-interact-key` attributes in preview/export.
+- Parent CSS perspective remains an integration-owned setup concern rather than an animation definition field.
+
+### Library Truth Audit
+
+`npm run audit:libraries` extracts the installed Wix animation package truth into `src/animations/libraryTruth.generated.ts` and updates the local preset support model used by `getMotionPresets()`, `getPresetsForTrigger()`, and `getPresetParams()`. Audit findings that affect user-facing behavior are tracked in `INTERACT_MOTION_USER_FACING_GAPS.md`.
 
 ### Sticky Requirement
 
@@ -1134,14 +1148,18 @@ The animation inspector section appears in the behavior bucket of all animatable
 **Inspector controls:**
 
 - Enable/disable toggle with Rocket icon
-- Trigger type selector (entrance, ongoing, scroll, click, hover, mouse) with smart defaults per trigger
-- Searchable preset picker populated from `getPresetsForTrigger()`, with "Entrance"/"Loop" group headers for click and hover triggers
+- Trigger type selector (entrance, ongoing, scroll, activate, interest, mouse) with smart defaults per trigger
+- Searchable preset picker populated from `getPresetsForTrigger()`, with "In", "Out", and "Loop" group headers for activate and interest triggers
 - Dynamic preset parameter controls generated from `getPresetParams()` schema (enum selects, number inputs, boolean switches)
-- Timing options (duration, delay) with ms unit — visible for entrance, ongoing, click, hover triggers
-- Easing selector with 28 named easings (Penner set) from `@wix/motion`, grouped by family — visible for entrance, ongoing, click, hover triggers
-- Iterations and alternate controls — visible only for ongoing trigger
-- Number params with defined min/max use a slider control with toggle to number input (`SliderNumberField`)
-- Hover out-action selector (reverse/keep/none) — visible only for hover/interest triggers
+- Timing options (duration, delay, iteration delay where applicable) with ms unit — visible for entrance, ongoing, activate, and interest triggers
+- Easing selector with named easings from `@wix/motion`, grouped by family — visible for entrance, ongoing, activate, and interest triggers
+- Iterations and alternate controls — visible for ongoing trigger and activate/interest ongoing effects
+- Number params with defined min/max use the shared range field; open-ended number params use compact number inputs
+- Fill-mode controls for entrance, ongoing, scroll, activate, and interest triggers
+- Activate behavior selector (`once`, `repeat`, `state`, `alternate`)
+- Interest out-action selector (`reverse`, `pause`, `reset`)
+- Mouse controls for trigger area, axis, centering, lerp duration, and lerp easing
+- Scroll controls for range start/end and reversed playback
 - Requires-sticky toggle — visible only for scroll triggers, with warning when sticky is disabled
 - Reduced-motion toggle (per-animation disable)
 
@@ -1152,7 +1170,7 @@ The animation inspector section appears in the behavior bucket of all animatable
 - Selection frame: Rocket badge icon on selected animated nodes (alongside Pin for sticky, Layers2 for elevated)
 - Layers panel: Rocket icon on animated node rows
 
-**Preset metadata:** Human-readable labels and descriptions for all 64 presets and 6 trigger types in `src/animations/presetMetadata.ts`, accessible via `getPresetLabel()` and `getTriggerLabel()`.
+**Preset metadata:** Human-readable labels and descriptions come from `src/animations/presetMetadata.ts`, while trigger support and parameter schemas come from the generated library truth. Both surfaces are accessible through `getPresetLabel()`, `getTriggerLabel()`, `getPresetsForTrigger()`, and `getPresetParams()`.
 
 ### FormField Layout Modes
 

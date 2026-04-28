@@ -93,7 +93,7 @@ Generates and verifies the canonical support model for `@wix/interact`, `@wix/mo
 
 **Source of truth:** shipped code/runtime behavior first, then motion-preset rules, then Interact rules, then docs.
 
-**Run:** before changing animation catalogs, after Wix animation dependency upgrades, or when adding Interact config controls.
+**Run:** before changing animation catalogs, after Wix animation dependency upgrades, or when adding Interact config controls. The executable workflow is `npm run audit:libraries`, which refreshes `src/animations/libraryTruth.generated.ts` and reports user-facing discrepancies.
 
 ### `/wix-upgrade-impact-check` — Wix Animation Upgrade Impact
 
@@ -112,6 +112,8 @@ Classifies preset-level disagreements between shipped packages, upstream `@wix/m
 Maintains `INTERACT_MOTION_USER_FACING_GAPS.md` as the evidence-based discrepancy ledger for animation library drift.
 
 **Run:** whenever the library truth audit adds, removes, or reclassifies findings.
+
+**Ledger:** `INTERACT_MOTION_USER_FACING_GAPS.md`
 
 ## Development Skills
 

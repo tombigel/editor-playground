@@ -321,6 +321,8 @@ setPresetAnimation(document: DocumentModel, nodeId: NodeId, trigger: AnimationTr
 
 Apply a named preset animation to a node.
 
+`trigger` accepts the legacy aliases `click` and `hover`, but writes are canonicalized to `activate` and `interest` before persistence.
+
 ```typescript
 setKeyframeAnimation(document: DocumentModel, nodeId: NodeId, trigger: AnimationTriggerType, keyframes: Keyframe[], options?: { duration?: number; easing?: string; name?: string }): DocumentModel
 ```
@@ -370,6 +372,7 @@ Source: `src/animations/selectors.ts`
 | `getAnimationSummary` | `(node) -> { trigger, effectName, effectKind } \| null` | Display summary of a node's animation |
 | `isScrollAnimation` | `(node) -> boolean` | Whether the node has a scroll-triggered animation |
 | `requiresStickyForAnimation` | `(node) -> boolean` | Whether the node's animation requires sticky |
+| `getScrollRange` | `(node) -> { start: number; end: number }` | Resolve authored scroll range with defaults |
 | `getAnimatedNodeIds` | `(document) -> NodeId[]` | All node IDs with animations |
 
 ### Preset metadata
@@ -382,7 +385,7 @@ Source: `src/animations/presetMetadata.ts`
 | `getPresetMetadata` | `(preset: string) -> PresetMetadata \| null` | Full metadata (label, description, category) |
 | `getTriggerLabel` | `(trigger: string) -> string` | Human-readable label for a trigger type |
 
-Constants: `PRESET_METADATA` (64 entries), `TRIGGER_METADATA` (6 entries).
+Constants: `PRESET_METADATA`, `TRIGGER_METADATA`.
 
 ### Preset catalog
 
@@ -391,7 +394,10 @@ Constants: `PRESET_METADATA` (64 entries), `TRIGGER_METADATA` (6 entries).
 | `getMotionPresets` | `() -> PresetInfo[]` | Get all available motion presets |
 | `getPresetCategory` | `(preset: string) -> string \| undefined` | Get category for a preset |
 | `getPresetsForTrigger` | `(trigger: AnimationTriggerType) -> PresetInfo[]` | Get presets available for a trigger type |
-| `getPresetParams` | `(preset: string) -> PresetParam[]` | Get configurable parameters for a preset |
+| `getPresetParams` | `(preset: string) -> PresetParamSchema \| null` | Get configurable parameters for a preset |
+| `getDefaultHoverOutActionForEffect` | `(effect) -> HoverOutAction` | Resolve the default `interest` leave behavior for a named or keyframe effect |
+
+The preset catalog is generated from the installed `@wix/interact`, `@wix/motion`, and `@wix/motion-presets` packages by `npm run audit:libraries`. The generated truth lives in `src/animations/libraryTruth.generated.ts`; hand-written code consumes it through `src/animations/libraryTruth.ts`.
 
 ### Interact config builder
 
@@ -400,6 +406,8 @@ buildDocumentInteractConfig(document: DocumentModel): InteractConfig
 ```
 
 Builds a complete `@wix/interact` configuration object from the document's animation definitions.
+
+The builder targets Interact 2.2 semantics: playback mode is emitted as effect-level `triggerType`, while trigger params remain responsible for thresholds, inset/root margin, mouse hit area, axis, and scroll ranges. Source and target nodes keep separate `data-interact-key` identities when `triggerId` points at a different node.
 
 ### Animation preview runtime
 
@@ -857,13 +865,26 @@ Each variant has:
 | `reducedMotion` | `ReducedMotionResponse?` | Accessibility policy |
 | `requiresSticky` | `boolean?` | Whether the animation requires sticky |
 
-`HoverAnimationDefinition` additionally has `outAction?: 'keep' | 'reverse' | 'none'`.
+Per-trigger fields:
+
+| Definition | Additional fields |
+| --- | --- |
+| `EntranceAnimationDefinition` | `entranceType?: 'once' \| 'repeat' \| 'alternate'`, `threshold?: number`, `inset?: string`, `fill?: FillMode` |
+| `OngoingAnimationDefinition` | `timing?: OngoingTimingOptions`, `inset?: string`, `fill?: FillMode` |
+| `ScrollAnimationDefinition` | `scrollRangeStart?: number`, `scrollRangeEnd?: number`, `reversed?: boolean`, `fill?: FillMode` |
+| `MouseAnimationDefinition` | `hitArea?: 'self' \| 'root'`, `mouseAxis?: 'x' \| 'y'`, `centeredToTarget?: boolean`, `transitionDuration?: number`, `transitionEasing?: ScrubTransitionEasing` |
+| `ClickAnimationDefinition` | `clickType?: 'once' \| 'repeat' \| 'state' \| 'alternate'`, `fill?: FillMode` |
+| `HoverAnimationDefinition` | `outAction?: 'reverse' \| 'reset' \| 'pause'`, `fill?: FillMode` |
+
+Legacy persisted animation definitions are normalized on load/import: `click` becomes `activate`, `hover` becomes `interest`, hover `keep` becomes `pause`, and hover `none` becomes `reset`.
 
 ### AnimationTriggerType
 
 ```typescript
 type AnimationTriggerType = 'entrance' | 'ongoing' | 'scroll' | 'click' | 'activate' | 'hover' | 'interest' | 'mouse';
 ```
+
+New writes should use canonical `activate` and `interest`. `click` and `hover` remain accepted read/import aliases for compatibility.
 
 ### DocumentPage
 
@@ -971,8 +992,10 @@ This index keeps the split API reference synchronized with the public export sur
 - `NAMED_EASINGS`, `TriggerMetadata`
 - `AnimationInvokeAction`, `AnimationTimingOptions`, `OngoingTimingOptions`
 - `NamedEntranceEffect`, `NamedOngoingEffect`, `NamedScrollEffect`, `NamedMouseEffect`, `NamedAnimationEffect`, `KeyframeAnimationEffect`
-- `HoverOutAction`, `DocumentAnimationA11y`, `PerTriggerReducedMotionSettings`
-- `PresetParamType`, `PresetParamSchema`
+- `EntranceAnimationDefinition`, `OngoingAnimationDefinition`, `ScrollAnimationDefinition`, `MouseAnimationDefinition`, `ClickAnimationDefinition`, `HoverAnimationDefinition`
+- `EntranceType`, `ClickType`, `FillMode`, `MouseHitArea`, `ScrubTransitionEasing`, `HoverOutAction`
+- `DocumentAnimationA11y`, `DocumentAnimationSettings`, `PerTriggerReducedMotionSettings`, `ReducedMotionResponse`
+- `PresetInfo`, `PresetParam`, `PresetParamType`, `PresetParamSchema`
 
 ### Model Factory Exports
 
