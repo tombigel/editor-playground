@@ -227,6 +227,44 @@ describe('editor/editorPersistence', () => {
       }
     });
 
+    it('canonicalizes legacy animation triggers and hover out actions', () => {
+      const doc = buildMinimalDocument();
+      const textNode = Object.values(doc.nodes).find(
+        (node): node is TextNode => node.contentType === 'text',
+      );
+      if (!textNode) throw new Error('Expected text node');
+
+      textNode.animation = {
+        trigger: 'hover',
+        effect: { kind: 'named', type: 'Pulse' },
+        outAction: 'keep',
+      } as unknown as typeof textNode.animation;
+
+      const normalized = normalizeDocument(doc);
+      const normalizedText = normalized.nodes[textNode.id] as TextNode;
+      expect(normalizedText.animation).toMatchObject({
+        trigger: 'interest',
+        outAction: 'pause',
+      });
+    });
+
+    it('canonicalizes legacy click animations', () => {
+      const doc = buildMinimalDocument();
+      const textNode = Object.values(doc.nodes).find(
+        (node): node is TextNode => node.contentType === 'text',
+      );
+      if (!textNode) throw new Error('Expected text node');
+
+      textNode.animation = {
+        trigger: 'click',
+        effect: { kind: 'named', type: 'FadeIn' },
+      } as unknown as typeof textNode.animation;
+
+      const normalized = normalizeDocument(doc);
+      const normalizedText = normalized.nodes[textNode.id] as TextNode;
+      expect(normalizedText.animation?.trigger).toBe('activate');
+    });
+
     it('forces opaque background on structural wrappers', () => {
       const doc = buildMinimalDocument();
       const section = Object.values(doc.nodes).find(

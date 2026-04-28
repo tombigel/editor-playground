@@ -1,4 +1,5 @@
 import { normalizeDocumentFontState } from "../fonts";
+import type { AnimationDefinition, HoverOutAction } from "../animations/types";
 import { forceOpaqueColorValue } from "../model/colors";
 import {
 	createDefaultFooter,
@@ -92,6 +93,32 @@ function normalizeSticky(
 	};
 }
 
+function normalizeAnimation(
+	animation: AnimationDefinition | undefined,
+): AnimationDefinition | undefined {
+	if (!animation) {
+		return undefined;
+	}
+
+	const normalized = { ...animation } as Record<string, unknown>;
+	if (normalized.trigger === "click") {
+		normalized.trigger = "activate";
+	} else if (normalized.trigger === "hover") {
+		normalized.trigger = "interest";
+	}
+
+	if (normalized.trigger === "interest" && "outAction" in normalized) {
+		const outAction = normalized.outAction as HoverOutAction | "keep" | "none" | undefined;
+		if (outAction === "keep") {
+			normalized.outAction = "pause";
+		} else if (outAction === "none") {
+			normalized.outAction = "reset";
+		}
+	}
+
+	return normalized as AnimationDefinition;
+}
+
 export function normalizeDocument(document: DocumentModel): DocumentModel {
 	const normalized = normalizeDocumentFontState(cloneDocument(document));
 	syncIdCountersWithDocument(normalized);
@@ -102,6 +129,7 @@ export function normalizeDocument(document: DocumentModel): DocumentModel {
 		if (isTextNode(node)) {
 			node.htmlTag = normalizeTextHtmlTag(node.htmlTag);
 		}
+		node.animation = normalizeAnimation(node.animation);
 		node.sticky = normalizeSticky(node.sticky);
 		if (
 			isContainerNode(node) &&

@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.8.20",
+  "version": "0.8.21",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
