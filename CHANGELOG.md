@@ -15,6 +15,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - add rich text split action
 - expand Interact animation model
+- add full Interact animation controls
 
 ### Changed
 
