@@ -2,7 +2,7 @@
 // GENERATED FILE: run `npm run audit:libraries` to refresh.
 
 export const LIBRARY_TRUTH_META = {
-  "generatedAt": "2026-04-28T12:54:02.346Z",
+  "generatedAt": "deterministic",
   "trustOrder": [
     "shipped code/runtime behavior",
     "@wix/motion-presets rules",

@@ -397,7 +397,7 @@ function buildAuditData() {
 
   return {
     meta: {
-      generatedAt: new Date().toISOString(),
+      generatedAt: 'deterministic',
       trustOrder: [
         'shipped code/runtime behavior',
         '@wix/motion-presets rules',

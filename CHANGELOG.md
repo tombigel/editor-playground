@@ -43,6 +43,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - preserve unsupported rich split blocks
 - preserve rich split styling
 - migrate legacy animation definitions
+- address migration verification issues
 
 ---
 
