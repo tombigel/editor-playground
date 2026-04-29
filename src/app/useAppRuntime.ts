@@ -14,6 +14,7 @@ import {
   getPresetParams,
   buildDocumentInteractConfig,
   createAnimationPreview,
+  createInteractDebugApi,
   filterInteractConfig,
   buildPreviewConfig,
 } from '../api/animationApi';
@@ -68,6 +69,7 @@ export function useAppRuntime(
       filterInteractConfig,
       buildPreviewConfig: (triggers: Parameters<typeof buildPreviewConfig>[1]) =>
         buildPreviewConfig(state.document, triggers),
+      interactDebug: createInteractDebugApi(() => buildDocumentInteractConfig(state.document)),
       setAnimationPreview: (value: Record<string, unknown>) =>
         dispatch({ type: 'setAnimationPreview', value }),
       // Apply to live editor state

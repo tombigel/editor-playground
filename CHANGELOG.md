@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Fixed
+
+- unify interact runtime parity
+
 ---
 
 ## [0.9.0] — 2026-04-28

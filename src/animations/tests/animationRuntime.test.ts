@@ -1,11 +1,18 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { Interact, add } from '@wix/interact/web';
 import { createInitialDocument } from '../../model/defaults';
 import { setPresetAnimation, buildDocumentInteractConfig } from '../animationApi';
-import { filterInteractConfig, buildPreviewConfig, createAnimationPreview } from '../animationRuntime';
+import {
+  filterInteractConfig,
+  buildPreviewConfig,
+  createAnimationPreview,
+  createInteractDebugApi,
+} from '../animationRuntime';
 import type { DocumentModel } from '../../model/types';
 // ── Mock setup ────────────────────────────────────────────────────────────────
 
 vi.mock('@wix/interact/web', () => {
+  const controllerCache = new Map();
   const mockInstance = {
     destroy: vi.fn(),
     init: vi.fn(),
@@ -15,6 +22,9 @@ vi.mock('@wix/interact/web', () => {
       create: vi.fn(() => mockInstance),
       destroy: vi.fn(),
       registerEffects: vi.fn(),
+      setup: vi.fn(),
+      getController: vi.fn((key: string) => controllerCache.get(key)),
+      controllerCache,
     },
     add: vi.fn(),
     remove: vi.fn(),
@@ -271,6 +281,7 @@ describe('buildPreviewConfig', () => {
 describe('createAnimationPreview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Interact.controllerCache.clear();
   });
 
   it('isActive returns true after creation', async () => {
@@ -285,6 +296,39 @@ describe('createAnimationPreview', () => {
     const handle = await createAnimationPreview(config);
 
     expect(handle.isActive()).toBe(true);
+    expect(Interact.setup).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers only DOM keys required by the current Interact config', async () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const withAnim = setPresetAnimation(doc, nodeId, {
+      trigger: 'entrance',
+      preset: 'FadeIn',
+    });
+    const config = buildDocumentInteractConfig(withAnim);
+    const originalDocument = globalThis.document;
+    const expectedEl = { getAttribute: vi.fn(() => nodeId) };
+    const extraEl = { getAttribute: vi.fn(() => 'unrelated') };
+
+    vi.stubGlobal('document', {
+      querySelectorAll: vi.fn(() => [expectedEl, extraEl]),
+      querySelector: vi.fn(() => null),
+    });
+
+    try {
+      await createAnimationPreview(config);
+
+      expect(add).toHaveBeenCalledTimes(1);
+      expect(add).toHaveBeenCalledWith(expectedEl, nodeId);
+    } finally {
+      if (originalDocument === undefined) {
+        // @ts-expect-error restoring deleted global in test
+        delete globalThis.document;
+      } else {
+        vi.stubGlobal('document', originalDocument);
+      }
+    }
   });
 
   it('isActive returns false after destroy', async () => {
@@ -411,6 +455,100 @@ describe('createAnimationPreview', () => {
         delete globalThis.MouseEvent;
       } else {
         vi.stubGlobal('MouseEvent', originalMouseEvent);
+      }
+    }
+  });
+});
+
+describe('createInteractDebugApi', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Interact.controllerCache.clear();
+  });
+
+  it('reports diagnostics for expected config keys and DOM keys', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const withAnim = setPresetAnimation(doc, nodeId, {
+      trigger: 'entrance',
+      preset: 'FadeIn',
+    });
+    const config = buildDocumentInteractConfig(withAnim);
+    const originalDocument = globalThis.document;
+
+    vi.stubGlobal('document', {
+      querySelectorAll: vi.fn(() => [
+        { getAttribute: vi.fn(() => nodeId) },
+      ]),
+    });
+
+    try {
+      const debug = createInteractDebugApi(() => config);
+
+      expect(debug.diagnostics()).toMatchObject({
+        expectedKeys: [nodeId],
+        domKeys: [nodeId],
+        missingKeys: [],
+        extraKeys: [],
+        interactionCount: 1,
+      });
+      expect(debug.keys()).toEqual([nodeId]);
+    } finally {
+      if (originalDocument === undefined) {
+        // @ts-expect-error restoring deleted global in test
+        delete globalThis.document;
+      } else {
+        vi.stubGlobal('document', originalDocument);
+      }
+    }
+  });
+
+  it('exposes controllers, active effects, and state effect toggles', () => {
+    const controller = {
+      connected: true,
+      getActiveEffects: vi.fn(() => ['selected']),
+      toggleEffect: vi.fn(),
+    };
+    Interact.controllerCache.set('node_1', controller as never);
+    const debug = createInteractDebugApi();
+
+    expect(debug.controllers()).toEqual([
+      { key: 'node_1', connected: true, activeEffects: ['selected'] },
+    ]);
+    expect(debug.activeEffects('node_1')).toEqual(['selected']);
+    expect(debug.toggleEffect('node_1', 'selected', 'clear')).toEqual(['selected']);
+    expect(controller.toggleEffect).toHaveBeenCalledWith('selected', 'clear');
+  });
+
+  it('controls active WAAPI animations by key', () => {
+    const animation = {
+      play: vi.fn(),
+      pause: vi.fn(),
+      cancel: vi.fn(),
+    };
+    const originalDocument = globalThis.document;
+
+    vi.stubGlobal('document', {
+      querySelectorAll: vi.fn(() => [
+        { getAttribute: vi.fn(() => 'node_1'), getAnimations: vi.fn(() => [animation]) },
+      ]),
+    });
+
+    try {
+      const debug = createInteractDebugApi();
+
+      expect(debug.pause('node_1')).toEqual({ action: 'pause', key: 'node_1', count: 1 });
+      expect(animation.pause).toHaveBeenCalledTimes(1);
+
+      expect(debug.replay('node_1')).toEqual({ action: 'replay', key: 'node_1', count: 1 });
+      expect(animation.cancel).toHaveBeenCalledTimes(1);
+      expect(animation.play).toHaveBeenCalledTimes(1);
+    } finally {
+      if (originalDocument === undefined) {
+        // @ts-expect-error restoring deleted global in test
+        delete globalThis.document;
+      } else {
+        vi.stubGlobal('document', originalDocument);
       }
     }
   });

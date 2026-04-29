@@ -1,7 +1,8 @@
 import { memo, useMemo } from 'react';
+import { collectDocumentInteractKeys } from '../animations/animationApi';
+import { INTERACT_ROOT_KEY } from '../animations/interactIntegration';
 import { buildDocumentDefaultFontStack } from '../fonts/defaults';
 import { buildStageRenderRootPlan } from '../render/renderPlan';
-import { collectInteractKeys } from '../site/siteShared';
 import type { StageSceneProps } from './types';
 export type { RenderWrapperArgs, StageSceneLeafNode, StageSceneProps, StageStickyRegistration } from './types';
 
@@ -41,12 +42,15 @@ export const StageScene = memo(function StageScene({
   );
 
   const interactKeys = useMemo(
-    () => (animationPreview?.enabled ? collectInteractKeys(document) : new Set<string>()),
+    () => (animationPreview?.enabled ? collectDocumentInteractKeys(document) : new Set<string>()),
     [document, animationPreview?.enabled],
   );
 
   return (
-      <div className="stage-frame">
+      <div
+        className="stage-frame"
+        {...(interactKeys.has(INTERACT_ROOT_KEY) ? { 'data-interact-key': INTERACT_ROOT_KEY } : {})}
+      >
         <div className="stage-canvas" style={{ fontFamily: buildDocumentDefaultFontStack(document) }}>
           {plan.header
             ? renderWrapper({

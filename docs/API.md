@@ -409,14 +409,24 @@ Builds a complete `@wix/interact` configuration object from the document's anima
 
 The builder targets Interact 2.2 semantics: playback mode is emitted as effect-level `triggerType`, while trigger params remain responsible for thresholds, inset/root margin, mouse hit area, axis, and scroll ranges. Source and target nodes keep separate `data-interact-key` identities when `triggerId` points at a different node.
 
+| Function | Signature | Description |
+| --- | --- | --- |
+| `collectDocumentInteractKeys` | `(document) -> Set<NodeId>` | Resolve every source, target, and root key required by the generated Interact config |
+| `collectInteractKeysFromConfig` | `(config) -> Set<string>` | Resolve required keys directly from an `InteractConfig` |
+| `collectDomInteractKeys` | `(root?) -> string[]` | Read live `data-interact-key` attributes from a DOM root |
+| `buildInteractDiagnostics` | `(config, root?) -> InteractDiagnostics` | Compare expected config keys with live DOM keys |
+
 ### Animation preview runtime
 
 | Function | Signature | Description |
 | --- | --- | --- |
-| `createAnimationPreview` | `(container: HTMLElement, config: InteractConfig) -> AnimationPreviewHandle` | Create a live animation preview instance |
-| `filterInteractConfig` | `(config, nodeIds: string[]) -> InteractConfig` | Filter config to specific nodes |
-| `buildPreviewConfig` | `(document, options?) -> InteractConfig` | Build preview-ready config |
-| `preloadMotionPresets` | `() -> Promise<void>` | Preload motion preset assets |
+| `ensureInteractRuntimeReady` | `() -> Promise<void>` | Register motion presets and one-time Interact runtime setup |
+| `createAnimationPreview` | `(config: InteractConfig) -> Promise<AnimationPreviewHandle>` | Create a live animation preview instance |
+| `filterInteractConfig` | `(config, triggers) -> InteractConfig` | Filter config to enabled trigger families |
+| `buildPreviewConfig` | `(document, triggers) -> InteractConfig` | Build preview-ready config |
+| `preloadMotionPresets` | `() -> void` | Preload motion preset assets |
+| `createInteractDebugApi` | `(config?) -> Interact debug helpers` | Build console helpers for diagnostics, controllers, state effects, and WAAPI playback |
+| `buildInteractExportScript` | `(config) -> string` | Generate the static export Interact module script |
 
 The `AnimationPreviewHandle` returned by `createAnimationPreview`:
 
@@ -427,7 +437,9 @@ The `AnimationPreviewHandle` returned by `createAnimationPreview`:
 | `destroy()` | Tear down and clean up |
 | `isActive()` | Whether the Interact instance is running |
 
-Constants: `INTERACT_VERSION`, `SCROLL_DEFAULT_RANGE_START`, `SCROLL_DEFAULT_RANGE_END`.
+Constants: `INTERACT_VERSION`, `INTERACT_ROOT_KEY`, `INTERACT_CDN_VERSION`, `MOTION_PRESETS_CDN_VERSION`, `INTERACT_CDN_URL`, `MOTION_PRESETS_CDN_URL`, `SCROLL_DEFAULT_RANGE_START`, `SCROLL_DEFAULT_RANGE_END`.
+
+Types: `InteractDiagnostics`.
 
 ---
 

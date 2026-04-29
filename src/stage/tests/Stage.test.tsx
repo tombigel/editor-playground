@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PencilLine } from 'lucide-react';
+import { setPresetAnimation } from '../../animations/animationApi';
+import { INTERACT_ROOT_KEY } from '../../animations/interactIntegration';
 import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentFromCode, createTextDocumentFromText } from '../../model/richContent';
 import type { DocumentModel, TextNode } from '../../model/types';
@@ -549,6 +551,58 @@ describe('stage/Stage', () => {
     expect(markup).toContain('class="wrapper-padding-overlay"');
     expect(markup).toContain('class="wrapper-padding-overlay-boundary"');
     expect(markup).toContain('top:64px;right:72px;bottom:72px;left:72px');
+  });
+
+  it('emits Interact keys only when animation preview is enabled', () => {
+    const document = createInitialDocument();
+    const textNode = Object.values(document.nodes).find((node) => node.contentType === 'text');
+    if (!textNode) {
+      throw new Error('Expected text node');
+    }
+    const animatedDocument = setPresetAnimation(document, textNode.id, {
+      trigger: 'mouse',
+      preset: 'TrackMouse',
+    });
+    const render = (enabled: boolean) =>
+      renderToStaticMarkup(
+        <StageScene
+          document={animatedDocument}
+          selectedId={null}
+          selectedIds={[]}
+          singleSelectionOverlay={null}
+          multiSelectionBounds={null}
+          previewSticky={true}
+          animationPreview={{
+            enabled,
+            mode: 'passive',
+            triggers: {
+              entrance: true,
+              ongoing: true,
+              scroll: true,
+              mouse: true,
+              click: true,
+              hover: true,
+            },
+          }}
+          spacerVisibility="selected"
+          showGridLanes={false}
+          onResizeStart={() => {}}
+          dragSourceIds={[]}
+          highlightedDropId={null}
+          registerDraggableNode={() => {}}
+          registerDropTarget={() => {}}
+          resizeState={null}
+          setResizeState={() => {}}
+          onSelectionOverlayHandleMouseDown={() => {}}
+          measuredNodeSizes={{}}
+          viewport={DEFAULT_STAGE_VIEWPORT}
+        />,
+      );
+
+    expect(render(false)).not.toContain('data-interact-key');
+    const enabledMarkup = render(true);
+    expect(enabledMarkup).toContain(`data-interact-key="${INTERACT_ROOT_KEY}"`);
+    expect(enabledMarkup).toContain(`data-interact-key="${textNode.id}"`);
   });
 
   it('does not emit React key warnings while rendering StageScene', () => {

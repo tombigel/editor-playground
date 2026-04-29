@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildDocumentInteractConfig } from '../animations/animationApi';
+import { buildInteractExportScript } from '../animations/interactIntegration';
 import { buildDocumentGoogleFontsStylesheetHref } from '../fonts';
 import { getAllPageRoutes } from '../model/pageRoutes';
 import type { DocumentModel } from '../model/types';
@@ -15,9 +16,6 @@ export { resolvePageUrl } from '../model/pageRoutes';
 const DEFAULT_SITE_TITLE = 'Sticky Playground Site';
 export const DEFAULT_SITE_HTML_FILE_NAME = 'sticky-playground-site.html';
 export const DEFAULT_SITE_CSS_FILE_NAME = 'sticky-playground-site.css';
-
-const INTERACT_CDN_URL = 'https://unpkg.com/@wix/interact@2.1.4/dist/es/web.js';
-const MOTION_PRESETS_CDN_URL = 'https://unpkg.com/@wix/motion-presets@1.0.0/dist/es/motion-presets.js';
 
 export function renderSiteBodyHtml(
   document: DocumentModel,
@@ -72,16 +70,7 @@ export function renderSiteHtmlDocument(
     '</head>',
     '<body>',
     bodyHtml,
-    ...(hasAnimations
-      ? [
-          `<script type="module">`,
-          `import { Interact } from '${INTERACT_CDN_URL}';`,
-          `import * as presets from '${MOTION_PRESETS_CDN_URL}';`,
-          `Interact.registerEffects(presets);`,
-          `Interact.create(${JSON.stringify(interactConfig)});`,
-          `</script>`,
-        ]
-      : []),
+    ...(hasAnimations ? [buildInteractExportScript(interactConfig)] : []),
     '</body>',
     '</html>',
   ].join('\n');
@@ -156,16 +145,7 @@ export function renderPageHtmlDocument(
     '</head>',
     '<body>',
     bodyHtml,
-    ...(hasAnimations
-      ? [
-          `<script type="module">`,
-          `import { Interact } from '${INTERACT_CDN_URL}';`,
-          `import * as presets from '${MOTION_PRESETS_CDN_URL}';`,
-          `Interact.registerEffects(presets);`,
-          `Interact.create(${JSON.stringify(interactConfig)});`,
-          `</script>`,
-        ]
-      : []),
+    ...(hasAnimations ? [buildInteractExportScript(interactConfig)] : []),
     '</body>',
     '</html>',
   ].join('\n');

@@ -6,6 +6,7 @@
  * and param schemas in src/animations/animationApi.ts to match.
  */
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import * as motionPresets from '@wix/motion-presets';
 import {
   getMotionPresets,
@@ -13,6 +14,10 @@ import {
   getPresetParams,
   INTERACT_VERSION,
 } from '../animationApi';
+import {
+  INTERACT_CDN_VERSION,
+  MOTION_PRESETS_CDN_VERSION,
+} from '../interactIntegration';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -39,6 +44,10 @@ function getLibraryPresetNames(): string[] {
 // have no corresponding runtime preset factory.
 const TYPE_ONLY_PRESETS = ['DVD'];
 const IMPLEMENTATION_HOOK_PRESETS = ['CustomMouse'];
+
+function readInstalledPackageVersion(packageName: string): string {
+  return JSON.parse(readFileSync(`node_modules/${packageName}/package.json`, 'utf8')).version;
+}
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -111,5 +120,11 @@ describe('animation API ↔ @wix/motion-presets alignment', () => {
 
   it('INTERACT_VERSION is a semver string', () => {
     expect(INTERACT_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it('Interact export versions match installed package versions', () => {
+    expect(INTERACT_VERSION).toBe(readInstalledPackageVersion('@wix/interact'));
+    expect(INTERACT_CDN_VERSION).toBe(readInstalledPackageVersion('@wix/interact'));
+    expect(MOTION_PRESETS_CDN_VERSION).toBe(readInstalledPackageVersion('@wix/motion-presets'));
   });
 });

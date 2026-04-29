@@ -16,7 +16,9 @@ import {
   getPresetsForTrigger,
   getPresetParams,
   buildDocumentInteractConfig,
+  collectDocumentInteractKeys,
 } from '../animationApi';
+import { INTERACT_ROOT_KEY } from '../interactIntegration';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -710,6 +712,39 @@ describe('buildDocumentInteractConfig', () => {
 
     const interaction = config.interactions.find((i) => i.trigger === 'pointerMove');
     expect(interaction).toBeDefined();
+  });
+
+  it('matches animate-ui mouse alignment by using the stable root as the default pointer source', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const next = setPresetAnimation(doc, nodeId, { trigger: 'mouse', preset: 'TrackMouse' });
+    const config = buildDocumentInteractConfig(next);
+
+    const interaction = config.interactions.find((i) => i.trigger === 'pointerMove');
+    const effect = interaction?.effects?.[0] as Record<string, unknown> | undefined;
+
+    expect(interaction?.key).toBe(INTERACT_ROOT_KEY);
+    expect(effect?.key).toBe(nodeId);
+    expect(collectDocumentInteractKeys(next)).toEqual(new Set([INTERACT_ROOT_KEY, nodeId]));
+  });
+
+  it('honors explicit mouse triggerId while keeping the animated target separate', () => {
+    const doc = createInitialDocument();
+    const nodeId = getTextLeafId(doc);
+    const sectionId = getSectionId(doc);
+    const next = setPresetAnimation(doc, nodeId, {
+      trigger: 'mouse',
+      preset: 'TrackMouse',
+      source: sectionId,
+    });
+    const config = buildDocumentInteractConfig(next);
+
+    const interaction = config.interactions.find((i) => i.trigger === 'pointerMove');
+    const effect = interaction?.effects?.[0] as Record<string, unknown> | undefined;
+
+    expect(interaction?.key).toBe(sectionId);
+    expect(effect?.key).toBe(nodeId);
+    expect(collectDocumentInteractKeys(next)).toEqual(new Set([sectionId, nodeId]));
   });
 
   it('returns interaction with activate trigger for click animation alias', () => {

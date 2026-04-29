@@ -25,6 +25,7 @@ export {
   getPresetParams,
   getDefaultHoverOutActionForEffect,
   buildDocumentInteractConfig,
+  collectDocumentInteractKeys,
 } from '../animations/animationApi';
 
 export type {
@@ -62,10 +63,28 @@ export type {
 
 export {
   createAnimationPreview,
+  createInteractDebugApi,
+  ensureInteractRuntimeReady,
   filterInteractConfig,
   buildPreviewConfig,
   preloadMotionPresets,
 } from '../animations/animationRuntime';
+
+export {
+  INTERACT_ROOT_KEY,
+  INTERACT_CDN_VERSION,
+  MOTION_PRESETS_CDN_VERSION,
+  INTERACT_CDN_URL,
+  MOTION_PRESETS_CDN_URL,
+  buildInteractDiagnostics,
+  buildInteractExportScript,
+  collectDomInteractKeys,
+  collectInteractKeysFromConfig,
+} from '../animations/interactIntegration';
+
+export type {
+  InteractDiagnostics,
+} from '../animations/interactIntegration';
 
 export type {
   AnimationInvokeAction,

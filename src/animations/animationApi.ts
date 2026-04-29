@@ -29,8 +29,9 @@ import {
   getPlayablePresetCategory,
   getUiPresetNamesByCategory,
 } from './libraryTruth';
+import { INTERACT_ROOT_KEY, collectInteractKeysFromConfig } from './interactIntegration';
 
-export const INTERACT_VERSION = '2.2.0';
+export const INTERACT_VERSION = '2.2.1';
 
 export const SCROLL_DEFAULT_RANGE_START = { name: 'cover', offset: { unit: 'percentage', value: 0 } };
 export const SCROLL_DEFAULT_RANGE_END = { name: 'cover', offset: { unit: 'percentage', value: 100 } };
@@ -641,7 +642,8 @@ export function buildDocumentInteractConfig(doc: DocumentModel): InteractConfig 
     const animDef = getNodeAnimation(doc, nodeId);
     if (!animDef) continue;
     const reducedMotion = resolveReducedMotion(doc, animDef);
-    const triggerKey = animDef.triggerId ?? nodeId;
+    const triggerKey =
+      animDef.trigger === 'mouse' ? (animDef.triggerId ?? INTERACT_ROOT_KEY) : (animDef.triggerId ?? nodeId);
     let interactionConditions: string[] | undefined;
     const effect = buildEffectFromDefinition(animDef);
     const effectTargetsSeparateElement =
@@ -685,6 +687,10 @@ export function buildDocumentInteractConfig(doc: DocumentModel): InteractConfig 
   }
 
   return { effects, interactions, ...(Object.keys(conditions).length > 0 ? { conditions } : {}) };
+}
+
+export function collectDocumentInteractKeys(doc: DocumentModel): Set<NodeId> {
+  return collectInteractKeysFromConfig(buildDocumentInteractConfig(doc));
 }
 
 // ── Internal: build AnimationDefinition variant ─────────────────────────────

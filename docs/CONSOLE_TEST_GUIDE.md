@@ -76,6 +76,31 @@ playgroundAnimationApi.buildDocumentInteractConfig()
 playgroundAnimationApi.getPresetParams('SpinIn')
 ```
 
+## Interact Runtime Debugging
+
+```js
+// Compare the current Interact config keys with the live DOM registrations
+playgroundAnimationApi.interactDebug.diagnostics()
+
+// List live data-interact-key attributes
+playgroundAnimationApi.interactDebug.keys()
+
+// Inspect registered Interact controllers
+playgroundAnimationApi.interactDebug.controllers()
+playgroundAnimationApi.interactDebug.getController(nodeId)
+playgroundAnimationApi.interactDebug.activeEffects(nodeId)
+
+// Toggle state effects when an effectId is present
+playgroundAnimationApi.interactDebug.toggleEffect(nodeId, 'selected', 'toggle')
+
+// Control currently active Web Animations under one key, or all keys when omitted
+playgroundAnimationApi.interactDebug.pause(nodeId)
+playgroundAnimationApi.interactDebug.play(nodeId)
+playgroundAnimationApi.interactDebug.replay(nodeId)
+playgroundAnimationApi.interactDebug.reset(nodeId)
+playgroundAnimationApi.interactDebug.stop()
+```
+
 ## Cleanup
 
 ```js
@@ -192,5 +217,5 @@ the final HTML with `<span>` marks and `<a>` links applied.
 ## Notes
 
 - Every mutation (`setPresetAnimation`, `setKeyframeAnimation`, `clearAnimation`, etc.) returns a **new document model**. You must call `applyDocument(doc)` to push it into the editor state.
-- Animations update the **model only** — they won't visually play in the editor stage. They render when you export the site HTML, which embeds `@wix/interact` with the config from `buildDocumentInteractConfig()`.
+- Animations update the **model only**. They play in the editor stage only when animation preview is enabled, and they render in site preview/export with the same config from `buildDocumentInteractConfig()`.
 - `playgroundAnimationApi` is only available when the dev server is running (`import.meta.env.DEV`).

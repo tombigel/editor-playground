@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/defaults';
-import { renderSiteBodyHtml, renderSiteHtmlDocument } from '../../site/siteExport';
+import { renderPageHtmlDocument, renderSiteBodyHtml, renderSiteExportBundles, renderSiteHtmlDocument } from '../../site/siteExport';
 import { buildDocumentInteractConfig, setPresetAnimation } from '../animationApi';
+import {
+  INTERACT_CDN_VERSION,
+  INTERACT_ROOT_KEY,
+  MOTION_PRESETS_CDN_VERSION,
+} from '../interactIntegration';
 
 describe('site export — animations', () => {
   it('no animations → no script tags', () => {
@@ -38,7 +43,10 @@ describe('site export — animations', () => {
     expect(bodySection).toContain('@wix/interact');
     expect(bodySection).toContain('motion-presets');
     expect(bodySection).toContain('registerEffects');
-    expect(bodySection).toContain('create(');
+    expect(bodySection).toContain('Interact.create(interactConfig, { useCustomElement: false })');
+    expect(bodySection).toContain(`@wix/interact@${INTERACT_CDN_VERSION}`);
+    expect(bodySection).toContain(`@wix/motion-presets@${MOTION_PRESETS_CDN_VERSION}`);
+    expect(bodySection).toContain('add(element, element.getAttribute("data-interact-key"))');
   });
 
   it('config round-trip — inline body script matches buildDocumentInteractConfig', () => {
@@ -59,13 +67,11 @@ describe('site export — animations', () => {
     const html = renderSiteHtmlDocument(animatedDoc);
     const expectedConfig = buildDocumentInteractConfig(animatedDoc);
 
-    // Extract the JSON config embedded in the inline init script.
-    // The implementation is expected to embed it as a JSON literal passed to create().
-    const jsonMatch = html.match(/create\((\{[\s\S]*?\})\s*\)/);
+    const jsonMatch = html.match(/const interactConfig = (\{[\s\S]*?\});/);
 
     if (!jsonMatch) {
       throw new Error(
-        'Could not find a JSON config object passed to create() in the exported HTML',
+        'Could not find a JSON config object assigned to interactConfig in the exported HTML',
       );
     }
 
@@ -90,6 +96,30 @@ describe('site export — animations', () => {
 
     const bodyHtml = renderSiteBodyHtml(animatedDoc);
 
+    expect(bodyHtml).toContain(`data-interact-key="${textNode.id}"`);
+  });
+
+  it('default mouse animation exports the stable root key and target key', () => {
+    const doc = createInitialDocument();
+    const textNode = Object.values(doc.nodes).find(
+      (n) => n.contentType === 'text',
+    );
+
+    if (!textNode) {
+      throw new Error('Expected a text leaf node in the initial document');
+    }
+
+    const animatedDoc = setPresetAnimation(doc, textNode.id, {
+      trigger: 'mouse',
+      preset: 'TrackMouse',
+    });
+
+    const bodyHtml = renderSiteBodyHtml(animatedDoc);
+    const config = buildDocumentInteractConfig(animatedDoc);
+    const mouseInteraction = config.interactions.find((i) => i.trigger === 'pointerMove');
+
+    expect(mouseInteraction?.key).toBe(INTERACT_ROOT_KEY);
+    expect(bodyHtml).toContain(`class="sp-site" data-interact-key="${INTERACT_ROOT_KEY}"`);
     expect(bodyHtml).toContain(`data-interact-key="${textNode.id}"`);
   });
 
@@ -144,5 +174,35 @@ describe('site export — animations', () => {
     const bodyHtml = renderSiteBodyHtml(animatedDoc, { includeAnimations: false });
 
     expect(bodyHtml).not.toContain('data-interact-key');
+  });
+
+  it('page html and multi-page bundles include the same Interact config and script', () => {
+    const doc = createInitialDocument();
+    const pageId = doc.pages?.[0]?.id;
+    const textNode = Object.values(doc.nodes).find(
+      (n) => n.contentType === 'text',
+    );
+
+    if (!pageId || !textNode) {
+      throw new Error('Expected an initial page and text node');
+    }
+
+    const animatedDoc = setPresetAnimation(doc, textNode.id, {
+      trigger: 'entrance',
+      preset: 'FadeIn',
+    });
+
+    const pageHtml = renderPageHtmlDocument(animatedDoc, pageId);
+    const bundles = renderSiteExportBundles(animatedDoc);
+    const htmlPages = bundles.filter((bundle) => bundle.kind !== 'redirect');
+
+    expect(pageHtml).toContain('const interactConfig = ');
+    expect(pageHtml).toContain('@wix/interact');
+    expect(htmlPages.length).toBeGreaterThan(0);
+    for (const bundle of htmlPages) {
+      expect(bundle.bodyHtml).toContain(`data-interact-key="${textNode.id}"`);
+      expect(bundle.htmlDocument).toContain('const interactConfig = ');
+      expect(bundle.htmlDocument).toContain('@wix/interact');
+    }
   });
 });

@@ -1118,8 +1118,17 @@ Additional interest rules:
 - Trigger params keep geometry and sensor concerns: threshold, inset/root margin, scroll ranges, mouse hit area, and mouse axis.
 - Scroll animations preserve authored `scrollRangeStart`, `scrollRangeEnd`, `reversed`, and `fill`.
 - Mouse animations preserve `hitArea`, `mouseAxis`, `centeredToTarget`, `transitionDuration`, and `transitionEasing`.
-- `triggerId` continues to separate source and target nodes, and both receive stable `data-interact-key` attributes in preview/export.
+- Mouse animations without an explicit `triggerId` use the stable Interact root key as the pointer source and target the animated node through the effect key.
+- `triggerId` continues to separate source and target nodes, and all required Interact source/target keys receive stable `data-interact-key` attributes in editor preview, site preview, and rendered exports.
 - Parent CSS perspective remains an integration-owned setup concern rather than an animation definition field.
+
+### Runtime and export parity
+
+- Editor-stage animations are off by default. Enabling animation preview activates the same Interact config/key model used by site preview while preserving editor-only trigger filtering.
+- Reduced-motion settings remain document/model semantics and are emitted into Interact config for preview/export; the editor preview toggle is not serialized into the document.
+- JSON document export/import serializes animation definitions, document animation settings, trigger IDs, mouse options, reduced-motion settings, and keyframe/named effects as part of the `DocumentModel`.
+- Rendered site exports initialize Interact from the generated config, register every `data-interact-key` element imperatively, and use the installed Interact and motion-presets versions for CDN module imports.
+- Dev builds expose `playgroundAnimationApi.interactDebug` for diagnostics, Interact controller inspection, state-effect toggling, and Web Animations play/pause/stop/replay/reset controls.
 
 ### Library Truth Audit
 
@@ -1135,7 +1144,7 @@ Exported HTML includes:
 
 - `data-interact-key` attributes on animated nodes and trigger nodes for runtime hookup
 - `@wix/interact` script injection for exported playback
-- `collectInteractKeys()` to gather interact keys from the document
+- `collectDocumentInteractKeys()` to gather source, target, and root interact keys from the generated Interact config
 
 ### Development Console
 

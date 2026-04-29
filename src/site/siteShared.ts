@@ -1,6 +1,5 @@
-import type { AnimationDefinition } from '../animations/types';
 import { getChildren } from '../model/selectors';
-import type { ContainerNode, ContainerSubtype, DocumentModel, NodeId, StickyDefinition } from '../model/types';
+import type { ContainerNode, ContainerSubtype, DocumentModel, StickyDefinition } from '../model/types';
 import { isContainerNode } from '../model/types';
 import type { PageId } from '../model/types/site';
 import { formatValue } from '../model/units';
@@ -184,25 +183,4 @@ export function formatNodeHeight(node: ExportableNode) {
 
 function toCssPropertyName(property: string) {
   return property.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
-}
-
-/**
- * Build the set of node IDs that need a `data-interact-key` attribute in
- * the site export. This includes:
- * - Every node that has an animation (the target)
- * - Every node referenced as a triggerId by another node's animation (the trigger)
- */
-export function collectInteractKeys(document: DocumentModel): Set<NodeId> {
-  const keys = new Set<NodeId>();
-  for (const node of Object.values(document.nodes)) {
-    if (node.contentType === 'site') continue;
-    const anim = (node as unknown as { animation?: AnimationDefinition }).animation;
-    if (anim) {
-      keys.add(node.id);
-      if (anim.triggerId) {
-        keys.add(anim.triggerId);
-      }
-    }
-  }
-  return keys;
 }

@@ -1,10 +1,12 @@
 import { cloneElement, type ReactElement } from 'react';
+import { collectDocumentInteractKeys } from '../animations/animationApi';
+import { INTERACT_ROOT_KEY } from '../animations/interactIntegration';
 import type { NodeId } from '../model/types';
 import { renderLeafContent } from '../render/nodePresentation';
 import { buildRenderRootPlan } from '../render/renderPlan';
 import { getTrackSpacerDescriptors } from '../render/renderPlanHelpers';
 import type { RenderLeafPlanNode, RenderPlanNode, RenderWrapperPlanNode } from '../render/types';
-import { collectInteractKeys, SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
+import { SITE_MAIN_CLASS, SITE_ROOT_CLASS } from './siteShared';
 import type { DocumentModel } from '../model/types';
 import type { SiteRendererProps } from './types';
 
@@ -15,26 +17,17 @@ let activeInteractKeys: Set<NodeId> = new Set();
 let renderDocument: DocumentModel | undefined;
 let renderPageId: NodeId | undefined;
 
-/** Wraps a rendered element in <interact-element> if the node has animations. */
-function wrapInteract(nodeId: NodeId, element: ReactElement): ReactElement {
-  if (activeInteractKeys.has(nodeId)) {
-    return (
-      <interact-element key={`interact-${nodeId}`} data-interact-key={nodeId}>
-        {element}
-      </interact-element>
-    );
-  }
-  return element;
-}
-
 export function SiteRenderer({ document, previewSticky = true, includeAnimations = true, pageId }: SiteRendererProps) {
   const plan = buildRenderRootPlan(document, previewSticky, {}, undefined, pageId);
-  activeInteractKeys = includeAnimations ? collectInteractKeys(document) : new Set();
+  activeInteractKeys = includeAnimations ? collectDocumentInteractKeys(document) : new Set();
   renderDocument = document;
   renderPageId = pageId;
 
   return (
-    <div className={SITE_ROOT_CLASS}>
+    <div
+      className={SITE_ROOT_CLASS}
+      {...(activeInteractKeys.has(INTERACT_ROOT_KEY) ? { 'data-interact-key': INTERACT_ROOT_KEY } : {})}
+    >
       {plan.header ? renderWrapperPlan(plan.header) : null}
       <main className={SITE_MAIN_CLASS}>
         {plan.main.map((wrapper) => renderWrapperPlan(wrapper))}
@@ -58,6 +51,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
       className={plan.nodeClassName}
       data-node-id={plan.node.id}
       data-top-level={plan.isTopLevel ? 'true' : 'false'}
+      {...(activeInteractKeys.has(plan.node.id) ? { 'data-interact-key': plan.node.id } : {})}
       {...(
         plan.node.subtype === 'header' || plan.node.subtype === 'section' || plan.node.subtype === 'footer'
           ? { id: plan.node.id }
@@ -85,7 +79,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
         {trackSpacers.before.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-before`} className={descriptor.className} aria-hidden="true" />
         ))}
-        {wrapInteract(plan.node.id, wrapper)}
+        {wrapper}
         {trackSpacers.after.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-after`} className={descriptor.className} aria-hidden="true" />
         ))}
@@ -93,7 +87,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
     );
   }
 
-  return wrapInteract(plan.node.id, wrapper);
+  return wrapper;
 }
 
 function renderLeafPlan(plan: RenderLeafPlanNode) {
@@ -107,7 +101,11 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
     imageClassName: plan.imageClassName,
     imagePlaceholderClassName: plan.imagePlaceholderClassName,
   }) as ReactElement;
-  const leaf = leafElement.key == null ? cloneElement(leafElement, { key: node.id }) : leafElement;
+  const leafProps = {
+    ...(leafElement.key == null ? { key: node.id } : {}),
+    ...(activeInteractKeys.has(node.id) ? { 'data-interact-key': node.id } : {}),
+  };
+  const leaf = cloneElement(leafElement, leafProps);
 
   if (plan.selfStickyTrack) {
     return (
@@ -115,7 +113,7 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
         {trackSpacers.before.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-before`} className={descriptor.className} aria-hidden="true" />
         ))}
-        {wrapInteract(plan.node.id, leaf)}
+        {leaf}
         {trackSpacers.after.map((descriptor) => (
           <div key={`${plan.node.id}-${descriptor.edge}-after`} className={descriptor.className} aria-hidden="true" />
         ))}
@@ -123,5 +121,5 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
     );
   }
 
-  return wrapInteract(plan.node.id, leaf);
+  return leaf;
 }

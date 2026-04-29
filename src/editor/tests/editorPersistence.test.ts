@@ -3,6 +3,14 @@ import { createInitialDocument, createTextNode } from '../../model/defaults';
 import { createTextDocumentFromText, getTextContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import type { DocumentModel, TextNode, ContainerNode } from '../../model/types';
+import { serializeDocumentJson } from '../../api/documentApi';
+import {
+  getNodeAnimation,
+  setDocumentAnimationSettings,
+  setKeyframeAnimation,
+  setPresetAnimation,
+  updateAnimationOptions,
+} from '../../animations/animationApi';
 import {
   DEFAULT_EDITOR_ACCENT_COLOR,
   DEFAULT_EDITOR_DARK_THEME,
@@ -735,6 +743,60 @@ describe('editor/editorPersistence', () => {
       expect(parsed.rootId).toBe(doc.rootId);
       expect(parsed.nodes[parsed.rootId]).toBeDefined();
       expect(parsed.nodes[parsed.rootId].contentType).toBe('site');
+    });
+
+    it('round-trips interact animation structure through JSON export and import', () => {
+      let doc = createInitialDocument();
+      const textNode = Object.values(doc.nodes).find((node) => node.contentType === 'text');
+      const sectionNode = Object.values(doc.nodes).find(
+        (node) => node.contentType === 'container' && node.subtype === 'section',
+      );
+
+      if (!textNode || !sectionNode) {
+        throw new Error('Expected initial text and section nodes');
+      }
+
+      doc = setPresetAnimation(doc, textNode.id, {
+        trigger: 'mouse',
+        preset: 'TrackMouse',
+        source: sectionNode.id,
+        reducedMotion: {
+          alternative: { kind: 'named', type: 'FadeIn' },
+        },
+      });
+      doc = updateAnimationOptions(doc, textNode.id, {
+        mouseHitArea: 'root',
+        mouseAxis: 'x',
+        mouseCenteredToTarget: true,
+        mouseTransitionDuration: 120,
+        mouseTransitionEasing: 'easeOut',
+      });
+      doc = setKeyframeAnimation(doc, sectionNode.id, {
+        trigger: 'interest',
+        name: 'ImportedDebugKeyframes',
+        keyframes: [
+          { offset: 0, opacity: 0, transform: 'translateY(12px)' },
+          { offset: 1, opacity: 1, transform: 'translateY(0px)' },
+        ],
+        timing: { duration: 450, easing: 'easeOut' },
+        outAction: 'pause',
+      });
+      doc = setDocumentAnimationSettings(doc, {
+        a11y: {
+          reducedMotion: 'disable',
+          perTrigger: {
+            mouse: {
+              alternative: { kind: 'named', type: 'TrackMouse' },
+            },
+          },
+        },
+      });
+
+      const parsed = parseImportedDocumentJson(serializeDocumentJson(doc));
+
+      expect(parsed.animationSettings).toEqual(doc.animationSettings);
+      expect(getNodeAnimation(parsed, textNode.id)).toEqual(getNodeAnimation(doc, textNode.id));
+      expect(getNodeAnimation(parsed, sectionNode.id)).toEqual(getNodeAnimation(doc, sectionNode.id));
     });
 
     it('throws on invalid JSON syntax', () => {
