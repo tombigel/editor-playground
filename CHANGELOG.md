@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- update export surface expansion and custom effects support details
+
 ### Fixed
 
 - unify interact runtime parity

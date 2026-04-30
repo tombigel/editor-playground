@@ -83,7 +83,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
 | `RI-42` | `⚪ Not started` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Default soft boundaries for snap/guides; optional hard confinement |
 | `RI-13` | `⚪ Not started` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | Human | - |
-| `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | - |
+| `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | JSON/static exports include Interact parity; new export targets still open |
 | `RI-16` | `⚪ Not started` | [User management](#user-management) | `🔵 Low` | Platform | Human | - |
 | `RI-18` | `⚪ Not started` | [Project management](#project-management) | `🔵 Low` | Platform | Human | - |
 | `RI-19` | `⚪ Not started` | [Assets management](#assets-management) | `🔵 Low` | Platform | Human | - |
@@ -99,7 +99,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-22` | `⚪ Not started` | [Connect to Wix services](#connect-to-wix-services) | `⚪ Optional` | Platform | Human | - |
 | `RI-23` | `⚪ Not started` | [Arbitrary code support for components](#arbitrary-code-support-for-components) | `⚪ Optional` | Research | Human | - |
 | `RI-24` | `⚪ Not started` | [Arbitrary CSS support for components](#arbitrary-css-support-for-components) | `⚪ Optional` | Research | Human | - |
-| `RI-26` | `🟤 Needs audit` | [Interact custom effects support](#interact-custom-effects-support) | `⚪ Optional` | Feature | Shared | Dep: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06` |
+| `RI-26` | `🟤 Needs audit` | [Interact custom effects support](#interact-custom-effects-support) | `⚪ Optional` | Feature | Shared | Runtime/debug/export parity landed; product definition still needed |
 
 ## Active Stage
 
@@ -483,7 +483,7 @@ None yet.
 - `Status`: `Partially present`
 - `Source`: `RI-14`
 - `Why it matters`: Export format breadth determines where the playground can be used and how reusable the model becomes.
-- `Current state`: JSON import/export and static rendered-site export already exist; React app, Electron, PDF, image, and presentation exports do not.
+- `Current state`: JSON import/export and static rendered-site export already exist. Interact animation structure is covered in JSON round-trip tests, and rendered full HTML, page HTML, body HTML, and multi-page bundle exports now share versioned Interact initialization semantics. React app, Electron, PDF, image, and presentation exports do not exist yet.
 - `Next move`: Rank target exports by strategic value and by how much shared render logic they can reuse.
 
 ##### Rich text component with inline styling, preferably MD-backed
@@ -626,7 +626,7 @@ None yet.
 - `Source`: `RI-26`
 - `Dependencies`: `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`
 - `Why it matters`: Custom effects could close the gap between built-in presets and advanced animation needs.
-- `Current state`: The project already supports named motion presets plus custom keyframe effects and uses `@wix/interact` for runtime wiring, but “custom effects” needs a sharper product definition.
+- `Current state`: The project supports named motion presets plus custom keyframe effects and uses `@wix/interact` for runtime wiring. Runtime/export parity, diagnostics, console debug controls, installed-version CDN generation, and editor preview gating are now covered; “custom effects” still needs a sharper product definition.
 - `Next review question`: Is this asking for richer authoring of existing keyframes, deeper Interact surface exposure, or something else?
 
 #### Platform
@@ -706,6 +706,7 @@ These milestones are closed. Their briefs and tasklists are archived in `archive
 | Help browser IA refresh | 2026-04 | Internal markdown links kept as the docs primitive; left nav regrouped into `About`, `Keyboard shortcuts`, `Guides`, `Reference`, `Developers`; `Usage` replaced by `Guides / Getting Started`; About now links into the docs surface. Closed at 1e1f49f. |
 | Design-system convergence audit | 2026-04 | Waves A-E complete (29 surfaces audited, 24 done). Follow-ups tracked in `RI-35`-`RI-38`. |
 | Hidden ghost mode (`RI-39`) | 2026-04 | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated. Closed at 1318f22. |
+| Interact runtime/export parity | 2026-04 | Editor preview gating, runtime diagnostics and console debug API, JSON round-trip coverage, and rendered export parity. Closed at 502329a. |
 
 ## Implementation Pre-Plan
 
