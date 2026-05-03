@@ -31,6 +31,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - sorted roadmap
 - Merge branch 'master' of https://github.com/tombigel/sticky-playground
 - add placeholder for low priority bug section
+- update status of Text phase 2.0 to in progress and refine execution details
 
 ### Fixed
 

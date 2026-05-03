@@ -1,6 +1,6 @@
 # Text Component Phase 2.0 Tasklist
 
-This file is the planned-only backlog for the text-system phase 2.0 workstream.
+This file is the execution backlog and progress ledger for the text-system phase 2.0 workstream.
 
 Source documents:
 
@@ -10,17 +10,17 @@ Source documents:
 
 Execution rules:
 
-- Planned only.
-- Phase 1.8 is closed; do not execute phase 2.0 until it is explicitly started.
-- Phase 2.0 assumes the canonical text-model refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8 are complete before execution starts.
-- When phase 2.0 execution starts, each quantum should be converted into the same execution ledger format used by phase 1.0 and phase 1.5.
+- Phase 2.0 is active.
+- Phase 1.8 is closed, and phase 2.0 execution has started.
+- Phase 2.0 assumes the canonical text-model refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8 are complete.
+- Each active or completed quantum should use the same execution ledger format used by phase 1.0 and phase 1.5.
 
 ## Shared Progress Summary
 
-- Overall status: `planned`
-- Current quantum: `none`
-- Last completed quantum: `none`
-- Next quantum after current: `P2-A`
+- Overall status: `in progress`
+- Current quantum: `P2-C follow-ups`
+- Last completed quantum: `P2-D`
+- Next quantum after current: `P2-E`
 - Locked assumptions:
   - Phase 2 extends, rather than bypasses, the phase 1.5 API-first contract.
   - Phase 2 also extends the phase 1.7 canonical text-model contract rather than reviving legacy standalone text storage.
@@ -28,7 +28,7 @@ Execution rules:
   - Phase 2 is where non-rich on-stage editing enters.
   - Phase 2 is where deferred list and description-list UX is resolved.
 
-## Planned Backlog
+## Phase Backlog
 
 ## P2-A: On-stage editing for standalone block text
 

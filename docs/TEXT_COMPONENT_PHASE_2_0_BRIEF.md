@@ -1,6 +1,6 @@
 # Text Component Phase 2.0 Brief
 
-This document is the planned-only brief for the text-system phase 2.0 workstream.
+This document is the brief for the text-system phase 2.0 workstream.
 
 Source documents:
 
@@ -9,9 +9,10 @@ Source documents:
 
 Execution status:
 
-- This file is planned-only.
-- Phase 1.8 is closed; phase 2.0 remains planned-only until explicitly started.
+- Phase 2.0 is active.
+- Phase 1.8 is closed; P2-A through P2-D are implemented/completed in the phase tasklist.
 - Phase 2.0 depends on the canonical all-text storage refactor tracked in phase 1.7 and the stabilization pass tracked in phase 1.8.
+- Remaining work is P2-C's carried-forward per-item direction and standalone list-linking UI, P2-E description-list authoring, and P2-F the unified all-text stage editing shell.
 
 ## Locked Phase 2 Scope
 

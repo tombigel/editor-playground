@@ -74,7 +74,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-25` | `🟢 In progress` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | - |
 | `RI-27` | `🟣 Partially present` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | Shared | - |
 | `RI-33` | `⚪ Not started` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Dep: `RI-07` |
-| `RI-34` | `⚪ Not started` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | Dep: Phase 1.8 (closed). See `TEXT_COMPONENT_PHASE_2_0_BRIEF.md` |
+| `RI-34` | `🟢 In progress` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | P2-A through P2-D done; P2-C follow-ups, P2-E, and P2-F remain |
 | `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
 | `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
 | `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
@@ -393,19 +393,19 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `In progress`
 - `Source`: `RI-34`
 - `Dependencies`: Phase 1.8 (closed as of d5b4f66)
 - `Why it matters`: On-stage text editing is the next step toward a real authoring environment. Phase 1 established the canonical text model and rich text stability; phase 2 brings direct manipulation to the stage.
-- `Current state`: Phase 1.8 stabilization is closed. The phase 2.0 brief and tasklist exist at `docs/TEXT_COMPONENT_PHASE_2_0_BRIEF.md` and `docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`.
+- `Current state`: Phase 2.0 is in progress. P2-A standalone block text editing, P2-B standalone code editing, P2-C standalone list editing, and P2-D granular rich-to-simple split conversion are implemented/completed in the phase tasklist. Remaining work is P2-C's carried-forward per-item direction and standalone list-linking UI, P2-E description lists in rich editing, and P2-F the unified all-text stage editing shell.
 - `Scope (P2-A through P2-F)`:
-  - P2-A: On-stage editing for standalone block text
-  - P2-B: On-stage editing for standalone code blocks
-  - P2-C: On-stage editing for standalone lists (per-item linking, direction, nesting, indent)
-  - P2-D: Granular rich-to-simple split conversion
-  - P2-E: Description lists in rich editing
-  - P2-F: Unified all-text stage editing shell
-- `Next move`: Begin P2-A (block text on-stage editing) as the first quantum.
+  - P2-A: On-stage editing for standalone block text - done
+  - P2-B: On-stage editing for standalone code blocks - done
+  - P2-C: On-stage editing for standalone lists - completed; per-item direction UI and standalone list-linking UI remain as follow-ups
+  - P2-D: Granular rich-to-simple split conversion - done
+  - P2-E: Description lists in rich editing - planned
+  - P2-F: Unified all-text stage editing shell - planned
+- `Next move`: Close the P2-C list UI follow-ups, then begin P2-E description-list authoring.
 
 #### Refactor
 
