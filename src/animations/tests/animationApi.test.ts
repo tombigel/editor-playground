@@ -751,7 +751,8 @@ describe('buildDocumentInteractConfig', () => {
     const config = buildDocumentInteractConfig(next);
 
     const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
-    expect(hoverInteraction?.params).toEqual({ type: 'state' });
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.triggerType).toBe('state');
   });
 
   it('hover + ongoing with outAction keep: loops while state-controlled', () => {
@@ -811,7 +812,8 @@ describe('buildDocumentInteractConfig', () => {
 
     const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
     expect(hoverInteraction).toBeDefined();
-    expect(hoverInteraction?.params).toEqual({ type: 'repeat' });
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.triggerType).toBe('repeat');
   });
 
   it('hover + entrance defaults to reverse outAction', () => {
@@ -824,7 +826,8 @@ describe('buildDocumentInteractConfig', () => {
     const config = buildDocumentInteractConfig(next);
 
     const hoverInteraction = config.interactions.find((i) => i.trigger === 'interest');
-    expect(hoverInteraction?.params).toEqual({ type: 'alternate' });
+    const effect = hoverInteraction?.effects?.[0] as Record<string, unknown> | undefined;
+    expect(effect?.triggerType).toBe('alternate');
   });
 
   it('updateAnimationOptions merges outAction onto hover animations', () => {

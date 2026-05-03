@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.8.18",
+  "version": "0.8.19",
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -42,7 +42,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
     "@types/prismjs": "^1.26.6",
-    "@wix/interact": "^2.1.4",
+    "@wix/interact": "^2.2.1",
     "@wix/motion-presets": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

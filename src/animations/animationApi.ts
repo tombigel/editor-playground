@@ -14,7 +14,7 @@ import type {
   PresetParamSchema,
   ReducedMotionResponse,
 } from './types';
-import type { Interaction, Effect, TriggerType } from '@wix/interact/web';
+import type { Interaction, Effect, TriggerType, TimeAnimationTriggerType } from '@wix/interact/web';
 import { cssEasings } from '@wix/motion';
 
 // ── Version ──────────────────────────────────────────────────────────────────
@@ -553,7 +553,7 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
       timeEffect.iterations = timing?.iterations ?? Infinity;
     }
 
-    if (timing?.alternate) timeEffect.direction = 'alternate';
+    if (timing?.alternate) timeEffect.alternate = true;
 
     return timeEffect as unknown as Effect;
   }
@@ -594,7 +594,7 @@ function buildEffectFromDefinition(animDef: AnimationDefinition): Effect {
     timeEffect.iterations = timing?.iterations ?? Infinity;
   }
 
-  if (timing?.alternate) timeEffect.direction = 'alternate';
+  if (timing?.alternate) timeEffect.alternate = true;
 
   return timeEffect as unknown as Effect;
 }
@@ -661,21 +661,22 @@ export function buildDocumentInteractConfig(doc: DocumentModel): InteractConfig 
       ...(interactionConditions ? { conditions: interactionConditions } : {}),
     };
 
-    // Add trigger params for specific types
+    // Add trigger params and effect triggerType for specific trigger kinds
+    let effectTriggerType: TimeAnimationTriggerType | undefined;
     if (animDef.trigger === 'entrance') {
-      interaction.params = { type: 'once' };
+      effectTriggerType = 'once';
     } else if (animDef.trigger === 'ongoing') {
-      interaction.params = { type: 'once', threshold: -0.1 };
+      effectTriggerType = 'once';
     } else if (isHoverLikeTrigger(animDef.trigger)) {
       const outAction = getHoverOutAction(animDef);
-      interaction.params =
-        outAction === 'reverse'
-          ? { type: 'alternate' }
-          : outAction === 'keep'
-            ? { type: 'state' }
-            : { type: 'repeat' };
+      effectTriggerType = outAction === 'reverse' ? 'alternate' : outAction === 'keep' ? 'state' : 'repeat';
     } else if (animDef.trigger === 'mouse') {
       interaction.params = { hitArea: 'self' };
+    }
+    if (effectTriggerType) {
+      for (const e of interactionEffects) {
+        (e as Record<string, unknown>).triggerType = effectTriggerType;
+      }
     }
 
     interactions.push(interaction);

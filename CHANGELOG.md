@@ -13,6 +13,15 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Added
 
+- upgrade @wix/interact to 2.2.1 and align interaction config
+
+---
+
+## [0.8.18] — 2026-05-03
+Document: 1.5.102 · API: 2.1.0 · Editor: 0.15.18
+
+### Added
+
 - add rich text split action
 
 ### Changed
