@@ -19,6 +19,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - make pnpm the canonical package manager
 
+### Fixed
+
+- restore interact type compatibility
+
 ---
 
 ## [0.8.18] — 2026-05-03

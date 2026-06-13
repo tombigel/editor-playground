@@ -14,7 +14,7 @@ import type {
   PresetParamSchema,
   ReducedMotionResponse,
 } from './types';
-import type { Interaction, Effect, TriggerType, TimeAnimationTriggerType } from '@wix/interact/web';
+import type { Interaction, Effect, TriggerType } from '@wix/interact/web';
 import { cssEasings } from '@wix/motion';
 
 // ── Version ──────────────────────────────────────────────────────────────────
@@ -22,7 +22,9 @@ import { cssEasings } from '@wix/motion';
 // If a future major version introduces breaking config changes, a v2 API
 // can coexist while the v1 config builder remains stable.
 
-export const INTERACT_VERSION = '2.1.4';
+export const INTERACT_VERSION = '2.4.0';
+
+type TimeAnimationTriggerType = 'once' | 'repeat' | 'alternate' | 'state';
 
 export const SCROLL_DEFAULT_RANGE_START = { name: 'entry', offset: { unit: 'percentage', value: 0 } };
 export const SCROLL_DEFAULT_RANGE_END = { name: 'exit', offset: { unit: 'percentage', value: 100 } };
