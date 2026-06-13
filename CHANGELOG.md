@@ -27,6 +27,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - isolate rich text stage package
 - add implementation work memory
 - define phase 1 tour map
+- record final validation
 
 ### Fixed
 

@@ -57,13 +57,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ### Final Verification And Handoff
 
-- [ ] Run focused editor navigation tests.
-- [ ] Run focused showcase tour tests.
-- [ ] Run relevant e2e smoke coverage.
-- [ ] Run `pnpm run check:api-docs`.
-- [ ] Run `pnpm run build`.
-- [ ] Confirm local commit ordering.
-- [ ] Stop and wait for Tom's validation before pushing.
+- [x] Run focused editor navigation tests.
+- [x] Run focused showcase tour tests.
+- [x] Run relevant e2e smoke coverage.
+- [x] Run `pnpm run check:api-docs`.
+- [x] Run `pnpm run build`.
+- [x] Confirm local commit ordering.
+- [x] Stop and wait for Tom's validation before pushing.
 
 ## Subagent Notes
 
@@ -116,6 +116,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run typecheck`
   - `pnpm run lint`
   - `rg -n "bg-(slate|gray|blue|purple|orange|amber|stone)|text-(slate|gray|blue|purple|orange|amber|stone)|border-(slate|gray|blue|purple|orange|amber|stone)|#[0-9a-fA-F]{3,8}|rgba\\(" src/app/showcaseTour src/app/EditorTopbar.tsx src/app/AppShellOverlays.tsx`
+- Final Verification:
+  - `pnpm run test:run -- src/api/tests/showcaseTourApi.test.ts src/api/tests/editorNavigationApi.test.ts src/api/tests/editorApi.test.ts src/app/tests/AppShell.test.tsx`
+  - `pnpm run check:api-docs`
+  - `pnpm run typecheck`
+  - `pnpm run lint`
+  - `pnpm run build`
+  - Note: `pnpm run build` first failed inside the sandbox at `test:e2e:smoke` because binding `127.0.0.1:4174` returned `EPERM`; rerunning with local server permission passed.
 
 ## Commit Log
 
@@ -123,6 +130,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Phase 1: `docs(showcase-tour): define phase 1 tour map`
 - Phase 2: `feat(api): add editor navigation intents`
 - Phase 3: `feat(showcase-tour): add non-linear tour shell`
+- Visual System: `feat(showcase-tour): add configurable tour skin`
 
 ## Unresolved Questions
 
