@@ -83,11 +83,15 @@ async function findAvailablePort(startPort: number) {
 }
 
 async function isPortAvailable(port: number) {
-  return await new Promise<boolean>((resolve) => {
+  return await new Promise<boolean>((resolve, reject) => {
     const server = createServer();
 
-    server.once('error', () => {
-      resolve(false);
+    server.once('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        resolve(false);
+        return;
+      }
+      reject(new Error(`Unable to probe E2E server port ${port}: ${error.message}`));
     });
 
     server.once('listening', () => {

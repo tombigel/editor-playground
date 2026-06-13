@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.8.25",
+  "version": "0.8.26",
   "type": "module",
   "packageManager": "pnpm@10.34.3",
   "engines": {
@@ -25,7 +25,7 @@
     "lint:a11y": "vitest run --config vitest.e2e.config.ts src/app/tests/axe.e2e.test.ts",
     "typecheck": "tsc -b",
     "test:coverage": "vitest run --coverage",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run test:coverage && pnpm run check:api-docs && pnpm run check:architecture",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test:coverage && pnpm run check:api-docs && pnpm run check:architecture && pnpm run test:e2e:smoke",
     "build": "pnpm run check && vite build",
     "deploy": "pnpm run build && node scripts/deploy-webdav.mjs",
     "refresh:google-fonts": "node scripts/refresh-google-fonts-catalog.mjs",
@@ -33,6 +33,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:e2e:smoke": "vitest run --config vitest.e2e.config.ts src/app/tests/smoke.e2e.test.ts",
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:api-docs": "node scripts/check-api-docs.mjs"
   },

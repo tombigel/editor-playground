@@ -7,6 +7,7 @@ export default defineConfig({
     environment: 'node',
     clearMocks: true,
     restoreMocks: true,
+    fileParallelism: false,
     include: ['src/**/*.e2e.test.ts', 'src/**/*.e2e.test.tsx'],
     exclude: [
       '**/node_modules/**',

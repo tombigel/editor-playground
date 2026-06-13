@@ -1430,7 +1430,7 @@ describe("stage/Stage e2e", () => {
 			{
 				type: "code-block",
 				language: "markdown",
-				highlightedHtml: expect.any(String),
+				theme: "auto",
 				children: [
 					{ type: "code-line", children: [{ text: "const one = 1;" }] },
 				],
@@ -1438,7 +1438,7 @@ describe("stage/Stage e2e", () => {
 			{
 				type: "code-block",
 				language: "markdown",
-				highlightedHtml: expect.any(String),
+				theme: "auto",
 				children: [
 					{ type: "code-line", children: [{ text: "console.log(one);" }] },
 				],
