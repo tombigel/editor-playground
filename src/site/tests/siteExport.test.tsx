@@ -4,6 +4,8 @@ import { createTextDocumentFromCode, createTextDocumentFromText } from '../../mo
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { renderSiteCss, renderSiteExportBundle, renderSiteHtmlDocument } from '../siteExport';
 
+const maliciousHighlightHtml = '<span class="token keyword">const</span><script>alert(1)</script><img src=x onerror=alert(2)><svg onload=alert(3)></svg>';
+
 describe('site/siteExport', () => {
   it('uses the document default font stack for site fallback typography', () => {
     const document = createInitialDocument();
@@ -60,6 +62,41 @@ describe('site/siteExport', () => {
     expect(html).toContain('<pre class="language-typescript"');
     expect(html).toContain('white-space:pre-wrap');
     expect(html).toContain('word-break:break-word');
+  });
+
+  it('exports recomputed code highlight HTML instead of attacker-controlled highlightedHtml', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const standaloneCode = createTextNode('code', section.id);
+    standaloneCode.id = 'code_security_test';
+    standaloneCode.content = createTextDocumentFromCode('const safe = 1;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: maliciousHighlightHtml,
+    });
+    standaloneCode.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: maliciousHighlightHtml,
+    };
+    document.nodes[standaloneCode.id] = standaloneCode;
+    section.children.push(standaloneCode.id);
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toContain('<span class="token keyword">const</span>');
+    expect(html).not.toContain('<script');
+    expect(html).not.toContain('src=x');
+    expect(html).not.toContain('onerror');
+    expect(html).not.toContain('<svg');
+    expect(html).not.toContain('onload');
   });
 
   it('exports code theme css for auto dark mode and authored token color inheritance', () => {

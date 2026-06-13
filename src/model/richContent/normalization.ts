@@ -7,6 +7,7 @@ import type {
   RichTextLeaf,
   RichTextLink,
   StandaloneTextNodeSnapshot,
+  TextNode,
   TextDocumentContent,
 } from '../types';
 import {
@@ -128,7 +129,6 @@ function normalizeStandaloneTextNodeSnapshot(value: unknown): StandaloneTextNode
           code: {
             language: value.code.language,
             theme: normalizeCodeTheme(value.code.theme),
-            ...(typeof value.code.highlightedHtml === 'string' ? { highlightedHtml: value.code.highlightedHtml } : {}),
           },
         }
       : {}),
@@ -217,7 +217,6 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
       ...(normalizeDirection(node.direction) ? { direction: normalizeDirection(node.direction) } : {}),
       ...(typeof node.language === 'string' ? { language: node.language } : {}),
       theme: normalizeCodeTheme(node.theme),
-      ...(typeof node.highlightedHtml === 'string' ? { highlightedHtml: node.highlightedHtml } : {}),
       ...(style ? { style } : {}),
       ...(standalone ? { standalone } : {}),
       children: normalizeCodeLines(node.children),
@@ -283,4 +282,14 @@ export function normalizeTextDocumentContent(content: unknown): TextDocumentCont
   return {
     blocks: normalizeRichContent(content),
   };
+}
+
+export function stripDerivedCodeHighlightsFromTextNode(node: TextNode): void {
+  node.content = normalizeTextDocumentContent(node.content);
+  if (!node.code || typeof node.code.highlightedHtml !== 'string') {
+    return;
+  }
+
+  const { highlightedHtml: _highlightedHtml, ...code } = node.code;
+  node.code = code;
 }

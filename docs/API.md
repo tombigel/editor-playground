@@ -703,7 +703,7 @@ type TextNode = BaseNode & {
   lang?: string;
   htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';  // @deprecated transitional
   link?: LinkExtension;
-  code?: { language: string; theme?: 'auto' | 'light' | 'dark'; highlightedHtml?: string };  // @deprecated transitional
+  code?: { language: string; theme?: 'auto' | 'light' | 'dark'; highlightedHtml?: string };  // @deprecated derived cache; ignored on import/render
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;

@@ -14,6 +14,7 @@ import {
 	createTextDocumentFromCode,
 	createTextDocumentFromText,
 	getTextContent,
+	stripDerivedCodeHighlightsFromTextNode,
 } from "../model/richContent";
 import type {
 	ContainerNode,
@@ -101,6 +102,7 @@ export function normalizeDocument(document: DocumentModel): DocumentModel {
 		}
 		if (isTextNode(node)) {
 			node.htmlTag = normalizeTextHtmlTag(node.htmlTag);
+			stripDerivedCodeHighlightsFromTextNode(node);
 		}
 		node.sticky = normalizeSticky(node.sticky);
 		if (

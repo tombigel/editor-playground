@@ -24,7 +24,7 @@ export {
   isTextDocumentContent,
 } from './richContent/guards';
 export { mapLinks, walkLinks } from './richContent/links';
-export { normalizeRichContent, normalizeTextDocumentContent } from './richContent/normalization';
+export { normalizeRichContent, normalizeTextDocumentContent, stripDerivedCodeHighlightsFromTextNode } from './richContent/normalization';
 export {
   createParagraphRichText,
   getFirstTextDocumentBlock,

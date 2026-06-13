@@ -25,7 +25,7 @@ import type {
   RichTextLeaf,
   TextNode,
 } from '../model/types';
-import { highlightCode } from './codeHighlight';
+import { highlightCode, normalizeCodeLanguage } from './codeHighlight';
 import type {
   PresentationLeafNode as LeafNode,
   RenderLeafContentOptions,
@@ -141,11 +141,11 @@ function renderRichListItemContent(item: RichListItem, document?: DocumentModel,
 }
 
 function renderRichCodeBlock(block: RichCodeBlock, path: string): ReactNode {
-  const language = block.language ?? 'plaintext';
+  const language = normalizeCodeLanguage(block.language ?? 'plaintext');
   const rawText = block.children
     .map((line) => line.children.map((leaf) => leaf.text).join(''))
     .join('\n');
-  const html = block.highlightedHtml ?? highlightCode(rawText, language);
+  const html = highlightCode(rawText, language);
   const hasColorOverride = hasCodeColorOverride(block.style);
 
   return (
@@ -163,7 +163,7 @@ function renderRichCodeBlock(block: RichCodeBlock, path: string): ReactNode {
         <code
           className={`language-${language}`}
           style={richCodeBlockCodeStyleToCss(block.style)}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor/model layer
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: recomputed from code text through Prism at render time
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </pre>
@@ -613,9 +613,9 @@ export function renderLeafContent(
   if (isTextNode(node) && node.subtype === 'code') {
     const codeBlock = getSingleCodeBlockContent(node.content);
     const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
-    const lang = getStandaloneCodeLanguage(node, codeBlock);
+    const lang = normalizeCodeLanguage(getStandaloneCodeLanguage(node, codeBlock));
     const theme = getStandaloneCodeTheme(node, codeBlock);
-    const html = codeBlock?.highlightedHtml ?? node.code?.highlightedHtml ?? escapeHtml(codeText);
+    const html = highlightCode(codeText, lang);
     const codeStyle = {
       ...(codeBlock?.style ? richCodeBlockPreStyleToCss(codeBlock.style) : {}),
       ...getStandaloneCodeOverrideStyleToCss(node, codeBlock?.style != null),
@@ -643,7 +643,7 @@ export function renderLeafContent(
           <code
             className={`language-${lang}`}
             style={codeElementStyle}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-baked by Prism in editor layer
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: recomputed from code text through Prism at render time
             dangerouslySetInnerHTML={{ __html: html }}
           />
         </pre>

@@ -22,6 +22,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - restore interact type compatibility
+- sanitize imported code highlight html
 
 ---
 

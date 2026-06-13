@@ -1921,6 +1921,42 @@ describe('api/documentApi', () => {
     expect(serialized.schemaVersion).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
+  it('strips imported code highlight html while parsing document JSON', () => {
+    const maliciousHighlightHtml = '<script>alert(1)</script><img src=x onerror=alert(2)><svg onload=alert(3)></svg>';
+    const document = createInitialDocument();
+    const root = getRoot(document);
+    const sectionId = root.children.find((id) => document.nodes[id]?.contentType === 'container');
+    if (!sectionId) {
+      throw new Error('Expected section');
+    }
+
+    const code = createTextNode('code', sectionId);
+    code.content = createTextDocumentFromCode('const value = 1;', {
+      language: 'typescript',
+      highlightedHtml: maliciousHighlightHtml,
+    });
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: maliciousHighlightHtml,
+    };
+    document.nodes[code.id] = code;
+    const section = document.nodes[sectionId];
+    if (section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    section.children.push(code.id);
+
+    const parsed = parseDocumentJson(JSON.stringify(document));
+    const parsedCode = parsed.nodes[code.id];
+    if (parsedCode.contentType !== 'text') {
+      throw new Error('Expected parsed code node');
+    }
+
+    expect(parsedCode.code?.highlightedHtml).toBeUndefined();
+    expect(getSingleCodeBlockContent(parsedCode.content)?.highlightedHtml).toBeUndefined();
+  });
+
   it('rejects invalid documents via parseDocumentJson', () => {
     const bad = {
       rootId: 'site_1',

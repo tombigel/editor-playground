@@ -1443,6 +1443,7 @@ Naming and title behavior:
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching auto/light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them. `auto` follows the viewer's system color scheme through `prefers-color-scheme` in the editor, preview, and exported site CSS.
 - Shared code-block rendering keeps authored leaf width on an outer wrapper while the visible code chrome stays on the inner `<pre><code>` surface. The code surface uses `white-space: pre-wrap` plus break-word wrapping, and standalone code nodes use only `box-shadow` for authored shadows instead of stacking a duplicate `filter: drop-shadow(...)`.
+- Code highlight HTML is derived from raw code text and normalized language. Imported or persisted `highlightedHtml` fields are treated as untrusted legacy cache data: normalization strips them, and stage/site rendering recomputes Prism HTML at the render boundary.
 - `src/api/editorApi.ts` is the editor-facing API boundary used by app and panels; editor UI avoids direct imports from `src/model/*`.
 - `src/api/siteApi.ts` exposes site/runtime rendering and export helpers without coupling them to editor UI.
 
@@ -1789,7 +1790,7 @@ type RichCodeBlock = {
   direction?: 'ltr' | 'rtl'
   language?: string
   theme?: 'auto' | 'light' | 'dark'
-  highlightedHtml?: string
+  highlightedHtml?: string // deprecated derived cache; ignored on import/render
   children: Array<{
     type: 'code-line'
     children: RichTextLeaf[]

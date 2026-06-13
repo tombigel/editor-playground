@@ -1,6 +1,8 @@
 import { DOCUMENT_MODEL_VERSION } from '../../lib/version';
 import { normalizeDocumentFontState } from '../../fonts';
+import { stripDerivedCodeHighlightsFromTextNode } from '../../model/richContent';
 import type { DocumentModel, NodeId, StickyDefinition } from '../../model/types';
+import { isTextNode } from '../../model/types';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { validateDocument } from '../../model/validation';
 import type { DocumentCommand } from '../types/index';
@@ -88,6 +90,11 @@ export function setSiteNodeStickyElevation(
 
 export function parseDocumentJson(raw: string): DocumentModel {
   const parsed = normalizeDocumentFontState(JSON.parse(raw) as DocumentModel);
+  for (const node of Object.values(parsed.nodes)) {
+    if (isTextNode(node)) {
+      stripDerivedCodeHighlightsFromTextNode(node);
+    }
+  }
   const errors = validateDocument(parsed);
   if (errors.length > 0) {
     throw new Error(`Invalid document: ${errors.join('; ')}`);

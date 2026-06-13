@@ -50,6 +50,8 @@ function makeLink(href: string, text: string): RichTextLink {
   };
 }
 
+const maliciousHighlightHtml = '<span class="token keyword">const</span><script>alert(1)</script><img src=x onerror=alert(2)><svg onload=alert(3)></svg>';
+
 type Assert<T extends true> = T;
 type IsAssignable<From, To> = [From] extends [To] ? true : false;
 type _TextBlockAssignableToSlate = Assert<IsAssignable<TextBlockContent, SlateElement>>;
@@ -256,6 +258,45 @@ describe('model/richContent', () => {
           ],
         },
       ]);
+    });
+
+    it('strips imported highlightedHtml from code blocks and standalone snapshots', () => {
+      const normalized = normalizeRichContent([
+        {
+          type: 'code-block',
+          language: 'typescript',
+          highlightedHtml: maliciousHighlightHtml,
+          standalone: {
+            subtype: 'code',
+            name: 'Code',
+            visible: true,
+            locked: false,
+            rect: {
+              x: { base: { raw: '24px', parsed: { value: 24, unit: 'px' } } },
+              y: { base: { raw: '48px', parsed: { value: 48, unit: 'px' } } },
+              width: { base: { raw: '320px', parsed: { value: 320, unit: 'px' } } },
+              height: { base: { raw: 'auto', parsed: { keyword: 'auto' } } },
+            },
+            contentBlock: {
+              type: 'code-block',
+              language: 'typescript',
+              highlightedHtml: maliciousHighlightHtml,
+              children: [{ type: 'code-line', children: [makeLeaf('const nested = 1;')] }],
+            },
+            code: {
+              language: 'typescript',
+              theme: 'dark',
+              highlightedHtml: maliciousHighlightHtml,
+            },
+          },
+          children: [{ type: 'code-line', children: [makeLeaf('const value = 1;')] }],
+        },
+      ]);
+
+      const codeBlock = normalized[0] as CodeBlockContent;
+      expect(codeBlock.highlightedHtml).toBeUndefined();
+      expect((codeBlock.standalone?.contentBlock as CodeBlockContent).highlightedHtml).toBeUndefined();
+      expect(codeBlock.standalone?.code?.highlightedHtml).toBeUndefined();
     });
 
     it('normalizes code themes, wraps, and clamps tab size overrides', () => {

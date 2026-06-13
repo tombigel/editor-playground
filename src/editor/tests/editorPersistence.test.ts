@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createTextNode } from '../../model/defaults';
-import { createTextDocumentFromText, getTextContent } from '../../model/richContent';
+import { createTextDocumentFromCode, createTextDocumentFromText, getSingleCodeBlockContent, getTextContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import type { DocumentModel, TextNode, ContainerNode } from '../../model/types';
 import {
@@ -178,6 +178,39 @@ describe('editor/editorPersistence', () => {
         const normalizedText = normalized.nodes[textNode.id] as TextNode;
         expect(normalizedText.htmlTag).toBe('p');
       }
+    });
+
+    it('strips imported code highlight html from text nodes', () => {
+      const maliciousHighlightHtml = '<script>alert(1)</script><img src=x onerror=alert(2)><svg onload=alert(3)></svg>';
+      const doc = buildMinimalDocument();
+      const root = getRoot(doc);
+      const sectionId = root.children.find((id) => doc.nodes[id]?.contentType === 'container');
+      if (!sectionId) {
+        throw new Error('Expected section');
+      }
+
+      const code = createTextNode('code', sectionId);
+      code.content = createTextDocumentFromCode('const value = 1;', {
+        language: 'typescript',
+        highlightedHtml: maliciousHighlightHtml,
+      });
+      code.code = {
+        language: 'typescript',
+        theme: 'dark',
+        highlightedHtml: maliciousHighlightHtml,
+      };
+      doc.nodes[code.id] = code;
+      const section = doc.nodes[sectionId];
+      if (section.contentType !== 'container') {
+        throw new Error('Expected section wrapper');
+      }
+      section.children.push(code.id);
+
+      const normalized = normalizeDocument(doc);
+      const normalizedCode = normalized.nodes[code.id] as TextNode;
+
+      expect(normalizedCode.code?.highlightedHtml).toBeUndefined();
+      expect(getSingleCodeBlockContent(normalizedCode.content)?.highlightedHtml).toBeUndefined();
     });
 
     it('normalizes container sticky target from contentWrapper to self', () => {

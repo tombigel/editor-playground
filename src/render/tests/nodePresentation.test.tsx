@@ -12,6 +12,8 @@ import {
   renderLeafContent,
 } from '../nodePresentation';
 
+const maliciousHighlightHtml = '<span class="token keyword">const</span><script>alert(1)</script><img src=x onerror=alert(2)><svg onload=alert(3)></svg>';
+
 describe('render/nodePresentation', () => {
   it('formats shared node labels and aria labels', () => {
     const document = createInitialDocument();
@@ -193,6 +195,51 @@ describe('render/nodePresentation', () => {
     const markup = renderToStaticMarkup(renderLeafContent(code));
 
     expect(markup).toContain('data-code-theme="auto"');
+  });
+
+  it('recomputes standalone code HTML instead of trusting highlightedHtml', () => {
+    const code = createTextNode('code', 'root');
+    code.content = createTextDocumentFromCode('const safe = 1;', {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: maliciousHighlightHtml,
+    });
+    code.code = {
+      language: 'typescript',
+      theme: 'dark',
+      highlightedHtml: maliciousHighlightHtml,
+    };
+
+    const markup = renderToStaticMarkup(renderLeafContent(code));
+
+    expect(markup).toContain('<span class="token keyword">const</span>');
+    expect(markup).not.toContain('<script');
+    expect(markup).not.toContain('<img');
+    expect(markup).not.toContain('onerror');
+    expect(markup).not.toContain('<svg');
+    expect(markup).not.toContain('onload');
+  });
+
+  it('recomputes rich code block HTML instead of trusting highlightedHtml', () => {
+    const rich = createTextNode('rich', 'root');
+    rich.content = createTextDocumentContent([
+      {
+        type: 'code-block',
+        language: 'typescript',
+        theme: 'dark',
+        highlightedHtml: maliciousHighlightHtml,
+        children: [{ type: 'code-line', children: [{ text: 'const safe = 1;' }] }],
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(rich));
+
+    expect(markup).toContain('<span class="token keyword">const</span>');
+    expect(markup).not.toContain('<script');
+    expect(markup).not.toContain('<img');
+    expect(markup).not.toContain('onerror');
+    expect(markup).not.toContain('<svg');
+    expect(markup).not.toContain('onload');
   });
 
   it('keeps explicit light and dark code block themes in markup', () => {
