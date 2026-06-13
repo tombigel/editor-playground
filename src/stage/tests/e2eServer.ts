@@ -11,7 +11,7 @@ export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
 
   const resolvedPort = await findAvailablePort(port);
   const url = `http://127.0.0.1:${resolvedPort}`;
-  const server = spawn('pnpm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(resolvedPort), '--strictPort', '--force'], {
+  const server = spawn('pnpm', ['run', 'dev', '--host', '127.0.0.1', '--port', String(resolvedPort), '--strictPort', '--force'], {
     cwd: process.cwd(),
     stdio: 'pipe',
     detached: true,

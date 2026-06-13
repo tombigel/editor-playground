@@ -19,6 +19,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - make pnpm the canonical package manager
 - cover malicious document imports
+- stabilize settings panel flows
 
 ### Fixed
 

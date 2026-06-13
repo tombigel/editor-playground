@@ -22,20 +22,39 @@ describe('panels/SettingsPanel e2e', () => {
     await server?.close();
   });
 
-  it('opens the startup mode dropdown inside the settings surface', async () => {
-    page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
-    await page.addInitScript(() => {
+  async function newCleanPage() {
+    const nextPage = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+    await nextPage.addInitScript(() => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
+    return nextPage;
+  }
 
-    await page.goto(server.url);
-    await page.locator('button[aria-label="Settings"]').click();
-    await page.locator('.editor-settings-panel').waitFor({ state: 'visible' });
+  async function waitForEditorReady(targetPage: Page) {
+    await targetPage.goto(server.url, { waitUntil: 'domcontentloaded' });
+    await targetPage.getByRole('toolbar', { name: 'Editor toolbar' }).waitFor({ state: 'visible' });
+    await targetPage.locator('.stage-shell').waitFor({ state: 'visible' });
+  }
 
-    await page.locator('[aria-label="Startup mode"]').click();
+  async function openSettingsPanel(targetPage: Page) {
+    await targetPage.locator('[data-ui="menubar-trigger"][data-menu-id="settings"]').click();
+    await targetPage.getByRole('menuitem', { name: 'Open Settings' }).click();
 
-    const dropdown = page.locator('.editor-settings-panel [data-ui="select-content"]');
+    const dialog = targetPage.getByRole('dialog', { name: 'Settings' });
+    await dialog.waitFor({ state: 'visible' });
+    await dialog.getByLabel('Startup mode').waitFor({ state: 'visible' });
+    return dialog;
+  }
+
+  it('opens the startup mode dropdown inside the settings surface', async () => {
+    page = await newCleanPage();
+    await waitForEditorReady(page);
+    const settings = await openSettingsPanel(page);
+
+    await settings.getByLabel('Startup mode').click();
+
+    const dropdown = settings.locator('[data-ui="select-content"]');
     await dropdown.waitFor({ state: 'visible' });
     expect(await dropdown.getByText('Normal').isVisible()).toBe(true);
     expect(await dropdown.getByText('Sticky').isVisible()).toBe(true);
@@ -43,34 +62,24 @@ describe('panels/SettingsPanel e2e', () => {
   }, 30_000);
 
   it('keeps settings open when the startup trigger is clicked again to close the dropdown', async () => {
-    page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
-    await page.addInitScript(() => {
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-    });
+    page = await newCleanPage();
+    await waitForEditorReady(page);
+    const settings = await openSettingsPanel(page);
 
-    await page.goto(server.url);
-    await page.locator('button[aria-label="Settings"]').click();
-
-    const trigger = page.locator('[aria-label="Startup mode"]');
+    const trigger = settings.getByLabel('Startup mode');
     await trigger.click();
-    await page.locator('[data-ui="select-content"]').last().waitFor({ state: 'visible' });
+    await settings.locator('[data-ui="select-content"]').waitFor({ state: 'visible' });
     const box = await trigger.boundingBox();
     expect(box).not.toBeNull();
     await page.mouse.click(box?.x + box?.width / 2, box?.y + box?.height / 2);
 
-    await page.locator('.editor-settings-panel').waitFor({ state: 'visible' });
-    expect(await page.locator('.editor-settings-panel').isVisible()).toBe(true);
+    await settings.waitFor({ state: 'visible' });
+    expect(await settings.isVisible()).toBe(true);
   }, 30_000);
 
   it('opens inspector dropdowns in the same top-layer model without body portals', async () => {
-    page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
-    await page.addInitScript(() => {
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-    });
-
-    await page.goto(server.url);
+    page = await newCleanPage();
+    await waitForEditorReady(page);
     await page.locator('.stage-leaf', { hasText: 'Plan sticky behavior before building scroll-driven animations' }).first().click();
 
     const inspector = page.locator('.editor-inspector-shell');
