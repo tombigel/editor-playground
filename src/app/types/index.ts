@@ -16,6 +16,7 @@ import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
 import type { SetTextDocumentContentOptions } from '../../api/documentApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
+import type { EditorNavigationUrlState, EditorNodeTarget } from '../../api/editorNavigationApi';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -128,6 +129,7 @@ export type EditorAction =
   | { type: 'alignSelection'; mode: AlignmentAction; rects: Record<NodeId, SelectionRect> }
   | { type: 'distributeSelection'; mode: DistributionMode; rects: Record<NodeId, SelectionRect> }
   | { type: 'bulkEdit'; operations: BulkEditOperation[] }
+  | { type: 'applyEditorNavigation'; navigation: EditorNavigationUrlState; nodeTarget?: EditorNodeTarget }
   | { type: 'nudgeSelection'; deltaX: number; deltaY: number }
   | { type: 'importDocument'; document: DocumentModel }
   | { type: 'setShowHidden'; value: boolean }

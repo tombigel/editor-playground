@@ -534,6 +534,32 @@ Navigation types:
 - `EditorSettingsSectionId`
 - `EditorPagesPanelTab`
 
+### Showcase tour API
+
+Source: `src/api/showcaseTourApi.ts`
+
+`showcaseTourApi` is a read-only helper surface for validating non-linear tour configuration and resolving topic/step state. It does not mutate the editor directly; each `ShowcaseTourStep` carries typed editor navigation and panel requests that consumers pass through `editorNavigationApi` and the app shell.
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `validateShowcaseTourConfig` | `(config) -> ShowcaseTourValidationIssue[]` | Validate duplicate ids, missing topic/step references, and topic-step mismatches |
+| `resolveShowcaseTourLocation` | `(config, location?) -> ShowcaseTourLocation` | Resolve URL-derived or partial tour state with entry/topic/step fallbacks |
+| `getShowcaseTourTopic` | `(config, topicId) -> ShowcaseTourTopic \| null` | Lookup a tour topic |
+| `getShowcaseTourStep` | `(config, stepId) -> ShowcaseTourStep \| null` | Lookup a tour step |
+| `getShowcaseTourStepsForTopic` | `(config, topicId) -> ShowcaseTourStep[]` | Return the ordered steps for a topic |
+| `getAdjacentShowcaseTourStep` | `(config, location, direction) -> ShowcaseTourLocation` | Resolve previous/next linear movement across the non-linear topic map |
+| `isLastShowcaseTourStep` | `(config, location) -> boolean` | Detect whether the current location is the final ordered step |
+
+Showcase tour types:
+
+- `ShowcaseTourAnchor`
+- `ShowcaseTourStepNavigation`
+- `ShowcaseTourStep`
+- `ShowcaseTourTopic`
+- `ShowcaseTourConfig`
+- `ShowcaseTourLocation`
+- `ShowcaseTourValidationIssue`
+
 ### Wrapper role promotion
 
 | Function | Signature | Description |

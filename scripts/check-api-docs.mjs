@@ -14,6 +14,7 @@ const auditedSourceFiles = [
   'src/api/siteApi.ts',
   'src/api/editorViewApi.ts',
   'src/api/dragDropApi.ts',
+  'src/api/showcaseTourApi.ts',
   'src/api/animationApi.ts',
   'src/api/textConversion.ts',
   'src/api/textMerge.ts',

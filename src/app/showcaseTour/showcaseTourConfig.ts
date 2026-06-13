@@ -1,0 +1,312 @@
+import type { ShowcaseTourConfig } from "@/api/showcaseTourApi";
+
+export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
+	entryTopicId: "start",
+	entryStepId: "welcome",
+	topics: [
+		{
+			id: "start",
+			label: "Start Here",
+			description: "A quick orientation before choosing a deeper path.",
+			stepIds: ["welcome", "seeded-model", "menu-is-nonlinear"],
+		},
+		{
+			id: "sticky",
+			label: "Sticky & Scroll",
+			description: "How sticky behavior becomes authorable and inspectable.",
+			stepIds: ["sticky-templates", "sticky-node", "sticky-guides", "edge-lab"],
+		},
+		{
+			id: "editor",
+			label: "Editor Craft",
+			description: "Selection, structure, progressive disclosure, and canvas UX.",
+			stepIds: [
+				"components-panel",
+				"selection-sync",
+				"direct-manipulation",
+				"focused-mode",
+			],
+		},
+		{
+			id: "api",
+			label: "API & Architecture",
+			description: "The headless model and API surface behind the editor.",
+			stepIds: ["api-docs", "model-transfer", "site-preview-export", "debug-info"],
+		},
+		{
+			id: "design",
+			label: "Design System & Motion",
+			description: "Tokenized chrome, font workflow, visual systems, and motion.",
+			stepIds: [
+				"ui-settings",
+				"font-system",
+				"design-system-route",
+				"animation-preview",
+			],
+		},
+		{
+			id: "product",
+			label: "Product Depth",
+			description: "Pages, routing, validation, docs, and maintenance depth.",
+			stepIds: ["pages-panel", "page-routing", "link-validation", "docs-history"],
+		},
+	],
+	steps: [
+		{
+			id: "welcome",
+			topicId: "start",
+			title: "This is the product, not a mockup",
+			body: "Sticky Playground is a real visual editor: document model, stage renderer, panels, preview, export, docs, and tests all working together.",
+			anchor: { type: "none" },
+			navigation: { editor: { activePageId: "page-home" } },
+		},
+		{
+			id: "seeded-model",
+			topicId: "start",
+			title: "The stage starts from a real document model",
+			body: "The first visible section is generated from the same model and API surfaces used by templates, import/export, preview, and tests.",
+			anchor: { type: "selector", selector: '[data-node-id]' },
+			navigation: {
+				nodeTarget: { name: "Post Title", contentType: "text" },
+			},
+		},
+		{
+			id: "menu-is-nonlinear",
+			topicId: "start",
+			title: "Jump by topic, follow your curiosity",
+			body: "The tour is non-linear on purpose: recruiters, designers, engineers, and product people can each jump to the proof they care about.",
+			anchor: { type: "tourMenu" },
+			navigation: {},
+		},
+		{
+			id: "sticky-templates",
+			topicId: "sticky",
+			title: "Sticky patterns are reusable authoring primitives",
+			body: "Section templates turn scroll-behavior experiments into repeatable editing primitives rather than one-off demos.",
+			anchor: { type: "selector", selector: ".editor-section-templates" },
+			navigation: {
+				editor: { panel: "sectionTemplates" },
+				panel: { type: "open", panel: "sectionTemplates" },
+			},
+		},
+		{
+			id: "sticky-node",
+			topicId: "sticky",
+			title: "Sticky controls are model-backed",
+			body: "Sticky edge, offset, duration, and elevation controls are attached to document state, not just visual overlays.",
+			anchor: { type: "selector", selector: '[data-inspector-block="sticky"]' },
+			navigation: {
+				nodeTarget: { sticky: true, selectable: true },
+			},
+		},
+		{
+			id: "sticky-guides",
+			topicId: "sticky",
+			title: "Invisible scroll physics become visible",
+			body: "Preview flags and spacer guides make sticky duration and offset behavior inspectable while editing.",
+			anchor: { type: "selector", selector: ".stage-single-selection-overlay" },
+			navigation: {
+				editor: { previewSticky: true, spacerVisibility: "all" },
+				nodeTarget: { sticky: true, selectable: true },
+			},
+		},
+		{
+			id: "edge-lab",
+			topicId: "sticky",
+			title: "Edge cases are first-class test material",
+			body: "The Sticky Edge Lab is designed to compare top, bottom, and dual-edge behavior in one controlled section.",
+			anchor: { type: "selector", selector: '[data-node-id]' },
+			navigation: {
+				nodeTarget: { nameIncludes: "Edge Card", selectable: true },
+			},
+		},
+		{
+			id: "components-panel",
+			topicId: "editor",
+			title: "Structure stays visible while editing visually",
+			body: "The Components panel keeps hierarchy, visibility, and ordering legible alongside canvas editing.",
+			anchor: { type: "selector", selector: ".editor-layers-panel" },
+			navigation: {
+				editor: { panel: "components" },
+				panel: { type: "open", panel: "components" },
+			},
+		},
+		{
+			id: "selection-sync",
+			topicId: "editor",
+			title: "Stage and tree selection stay in sync",
+			body: "A visual editor needs the canvas, layers, inspector, and keyboard model to agree about selection.",
+			anchor: { type: "selector", selector: ".stage-single-selection-overlay" },
+			navigation: {
+				editor: { panel: "components" },
+				panel: { type: "open", panel: "components" },
+				nodeTarget: { visible: true, selectable: true },
+			},
+		},
+		{
+			id: "direct-manipulation",
+			topicId: "editor",
+			title: "Selection chrome is an editor surface",
+			body: "Handles, outlines, focus behavior, and measurements are product UX, not implementation leftovers.",
+			anchor: { type: "selector", selector: ".stage-single-selection-overlay" },
+			navigation: { nodeTarget: { visible: true, selectable: true } },
+		},
+		{
+			id: "focused-mode",
+			topicId: "editor",
+			title: "Progressive disclosure for deep work",
+			body: "Focused mode turns the inspector into a task-specific floating panel while preserving the same model operations.",
+			anchor: {
+				type: "selector",
+				selector: '[role="dialog"][aria-label="Design focus mode"]',
+			},
+			navigation: {
+				editor: { focusedMode: "design" },
+				nodeTarget: { visible: true, selectable: true },
+			},
+		},
+		{
+			id: "api-docs",
+			topicId: "api",
+			title: "The UI is not the only way to use the product",
+			body: "The docs expose the API-first contract behind editor interactions and site output.",
+			anchor: { type: "selector", selector: '[data-help-entry="doc:docs/API.md"]' },
+			navigation: {
+				editor: { panel: "help", helpEntryId: "doc:docs/API.md" },
+				panel: { type: "openHelpEntry", entryId: "doc:docs/API.md" },
+			},
+		},
+		{
+			id: "model-transfer",
+			topicId: "api",
+			title: "The document can move through import/export",
+			body: "JSON transfer and site export make the document model portable and inspectable.",
+			anchor: { type: "selector", selector: '[data-settings-section="transfer"]' },
+			navigation: {
+				editor: { panel: "settings", settingsSection: "transfer" },
+				panel: { type: "openSettingsSection", section: "transfer" },
+			},
+		},
+		{
+			id: "site-preview-export",
+			topicId: "api",
+			title: "The editor model renders as a site",
+			body: "Preview and export connect the editor model to the rendered site pipeline.",
+			anchor: { type: "selector", selector: '[aria-label="Preview site"]' },
+			navigation: {},
+		},
+		{
+			id: "debug-info",
+			topicId: "api",
+			title: "Debug state is product tooling",
+			body: "Debug info is surfaced inside the inspector for real workflow diagnosis, not hidden in a console.",
+			anchor: { type: "selector", selector: '[data-inspector-block="debug-info"]' },
+			navigation: {
+				editor: { showDebugInfo: true },
+				nodeTarget: { visible: true, selectable: true },
+			},
+		},
+		{
+			id: "ui-settings",
+			topicId: "design",
+			title: "Theme and guide controls are productized",
+			body: "Settings make themes, guides, snap behavior, previews, and diagnostics explicit user controls.",
+			anchor: { type: "selector", selector: '[data-settings-section="display"]' },
+			navigation: {
+				editor: { panel: "settings", settingsSection: "display" },
+				panel: { type: "openSettingsSection", section: "display" },
+			},
+		},
+		{
+			id: "font-system",
+			topicId: "design",
+			title: "Fonts are document-level workflow",
+			body: "Font management belongs to the document and editing workflow, with favorites, usage, and cleanup.",
+			anchor: { type: "selector", selector: '[data-settings-section="fonts"]' },
+			navigation: {
+				editor: { panel: "settings", settingsSection: "fonts" },
+				panel: { type: "openSettingsSection", section: "fonts" },
+			},
+		},
+		{
+			id: "design-system-route",
+			topicId: "design",
+			title: "The design system has its own verification surface",
+			body: "The showcase keeps tokens, primitives, composites, panels, and editor chrome visually accountable.",
+			anchor: { type: "none" },
+			navigation: {},
+		},
+		{
+			id: "animation-preview",
+			topicId: "design",
+			title: "Motion is an editor workflow",
+			body: "Animation preview and inspector controls keep visual experimentation attached to editable state.",
+			anchor: { type: "selector", selector: '[data-inspector-block="animation"]' },
+			navigation: {
+				editor: { animationPreviewEnabled: true },
+				nodeTarget: { animatable: true, selectable: true },
+			},
+		},
+		{
+			id: "pages-panel",
+			topicId: "product",
+			title: "This is a multi-page site editor",
+			body: "Pages, shared regions, visibility, and transitions push the playground toward a real site tool.",
+			anchor: { type: "selector", selector: ".editor-pages-panel" },
+			navigation: {
+				editor: {
+					panel: "pages",
+					pageTargetId: "page-home",
+					pagesTab: "page",
+				},
+				panel: { type: "openPages", pageId: "page-home" },
+			},
+		},
+		{
+			id: "page-routing",
+			topicId: "product",
+			title: "Routing details are explicit UX",
+			body: "Page names, slugs, aliases, parent pages, and link sync are exposed as product controls.",
+			anchor: { type: "selector", selector: '[data-page-row-id="page-home"]' },
+			navigation: {
+				editor: {
+					panel: "pages",
+					pageTargetId: "page-home",
+					pagesTab: "page",
+				},
+				panel: { type: "openPages", pageId: "page-home", tab: "page" },
+			},
+		},
+		{
+			id: "link-validation",
+			topicId: "product",
+			title: "Maintenance workflows are built in",
+			body: "Validation and transfer workflows make long-lived documents safer to evolve.",
+			anchor: { type: "selector", selector: '[data-settings-section="transfer"]' },
+			navigation: {
+				editor: { panel: "settings", settingsSection: "transfer" },
+				panel: { type: "openSettingsSection", section: "transfer" },
+			},
+		},
+		{
+			id: "docs-history",
+			topicId: "product",
+			title: "The work is documented as carefully as the UI",
+			body: "Specs, API docs, style guidance, changelog, and task docs are part of the product's craft.",
+			anchor: {
+				type: "selector",
+				selector: '[data-help-entry="doc:docs/PLAYGROUND_SPEC.md"]',
+			},
+			navigation: {
+				editor: {
+					panel: "help",
+					helpEntryId: "doc:docs/PLAYGROUND_SPEC.md",
+				},
+				panel: {
+					type: "openHelpEntry",
+					entryId: "doc:docs/PLAYGROUND_SPEC.md",
+				},
+			},
+		},
+	],
+};

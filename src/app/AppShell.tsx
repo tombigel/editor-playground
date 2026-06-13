@@ -52,6 +52,7 @@ import type { HistoryAction, HistoryState } from "./editorState";
 import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { HelpEntry } from "../panels/helpDocs";
 import { validateLinks } from "../api/documentViewApi";
+import { useShowcaseTourController } from "./showcaseTour/useShowcaseTourController";
 
 type Props = {
 	state: EditorState;
@@ -188,6 +189,34 @@ export function AppShell({
 		null as ReturnType<typeof validateLinks> | null,
 	);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
+	const {
+		showcaseTourLocation,
+		setShowcaseTourLocation,
+		handleApplyShowcaseTourNavigation,
+		handleOpenShowcaseTour,
+		handleCloseShowcaseTour,
+	} = useShowcaseTourController({
+		searchParams,
+		dispatch,
+		layersOpen,
+		pagesOpen,
+		manageFontsOpen,
+		setRequestedPageSettingsId,
+		setPagesPanelTabTarget,
+		setSettingsSectionTarget,
+		setHelpEntryTarget,
+		onLayersOpenChange,
+		onLayersPositionChange,
+		onPagesOpenChange,
+		onPagesPositionChange,
+		onSettingsOpenChange,
+		onManageFontsOpenChange,
+		onHelpOpenChange,
+		onShortcutsOpenChange,
+		onAboutOpenChange,
+		onSectionTemplateOpenChange,
+		onTextTypeOpenChange,
+	});
 
 	const activateRichEditRef = useRef<(id: string) => void>(() => {});
 	const focusedPanelRef = useRef<HTMLDivElement | null>(null);
@@ -664,6 +693,11 @@ export function AppShell({
 		handleValidateLinks,
 		handleOpenLinkValidation,
 		handleOpenSettingsSection,
+		handleOpenShowcaseTour,
+		showcaseTourLocation,
+		setShowcaseTourLocation,
+		handleApplyShowcaseTourNavigation,
+		handleCloseShowcaseTour,
 		handleSetLightTheme,
 		handleSetDarkTheme,
 		handleImportJson,

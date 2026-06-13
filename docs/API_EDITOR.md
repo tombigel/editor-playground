@@ -42,6 +42,8 @@ Editor APIs wrap document-level operations with:
 
 The app shell should consume these APIs for URL-driven or scripted navigation before feature-specific UI, including showcase tours.
 
+`showcaseTourApi` provides the read-only tour layer on top of that contract. Tour configs validate topics and steps, resolve URL-derived `tour` / `step` state, and expose next/back/jump behavior, while every editor movement remains a typed `EditorNavigationUrlState`, `EditorNodeTarget`, or `EditorPanelRequest`.
+
 ## Editor Mutations
 
 The editor should delegate important document mutations to pure APIs first, then layer on selection/history behavior through `editorApi` and related state helpers.

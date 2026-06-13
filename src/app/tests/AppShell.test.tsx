@@ -159,10 +159,33 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
 		expect(markup).toContain("Documentation");
+		expect(markup).toContain("Showcase tour");
 		expect(markup).not.toContain("Import JSON…");
 		expect(markup).not.toContain("Customize…");
 		expect(markup.indexOf("Light")).toBeLessThan(markup.indexOf("Dark"));
 		expect(markup.indexOf("Dark")).toBeLessThan(markup.indexOf("Customize"));
+	});
+
+	it("renders the showcase tour from URL topic and step state", () => {
+		vi.stubGlobal("window", {
+			name: "",
+			location: {
+				search: "?tour=api&step=model-transfer",
+				pathname: "/",
+				hash: "",
+			},
+			history: { replaceState: vi.fn() },
+		});
+
+		try {
+			const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+
+			expect(markup).toContain('data-showcase-tour="true"');
+			expect(markup).toContain("The document can move through import/export");
+			expect(markup).toContain("API &amp; Architecture");
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 
 	it("renders the layers panel surface when the rail entry is active", () => {

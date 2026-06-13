@@ -53,6 +53,7 @@ import {
   setDocumentAnimationSettings,
   getNodeAnimation,
 } from '../api/animationApi';
+import { applyEditorNavigationState } from '../api/editorNavigationApi';
 import {
   addPage,
   addPageSlugAlias,
@@ -380,6 +381,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
           updateStickyField(draftState, nodeId, operation.patch),
         );
       }, state);
+    case 'applyEditorNavigation':
+      return applyEditorNavigationState(state, action.navigation, {
+        nodeTarget: action.nodeTarget,
+      });
     case 'nudgeSelection':
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         nudgeNode(nextState, nodeId, { x: action.deltaX, y: action.deltaY }),
@@ -712,6 +717,7 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setLightTheme' &&
     action.type !== 'setDarkTheme' &&
     action.type !== 'setFocusedMode' &&
+    action.type !== 'applyEditorNavigation' &&
     action.type !== 'setStartupFocusedMode' &&
     action.type !== 'setInspectorCollapsed' &&
     action.type !== 'setTemporaryInspectorOpen' &&

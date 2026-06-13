@@ -40,12 +40,12 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ### Phase 3: Showcase Tour Data And UI
 
-- [ ] Add read-only `showcaseTourApi`.
-- [ ] Add typed tour config from the verified Phase 1 brief.
-- [ ] Implement the non-linear overlay menu and step navigation.
-- [ ] Sync step jumps with URL state.
-- [ ] Add unavailable-anchor fallback.
-- [ ] Revalidate, update this todo, and commit.
+- [x] Add read-only `showcaseTourApi`.
+- [x] Add typed tour config from the verified Phase 1 brief.
+- [x] Implement the non-linear overlay menu and step navigation.
+- [x] Sync step jumps with URL state.
+- [x] Add unavailable-anchor fallback.
+- [x] Revalidate, update this todo, and commit.
 
 ### Visual System
 
@@ -79,6 +79,8 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Tour navigation must be API and URL driven.
 - The tour must support non-linear topic and step jumping.
 - Showcase visual differentiation must be configurable enough to finalize later.
+- Phase 3 keeps the overlay specialized because the topic/step controller is showcase-specific, while reusing shared `Button` and menubar primitives plus editor surface tokens.
+- Panel-oriented tour steps mirror their typed `EditorPanelRequest` in serializable `EditorNavigationUrlState` so URL state exposes the same editor surface intent.
 
 ## Discovered API Gaps
 
@@ -88,6 +90,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Tour steps need node target resolution by stable query/name/category instead of generated ids.
 - Design-system route steps require an intentional route navigation/return contract.
 - Step setup must resolve to declarative editor navigation intents, never showcase-only DOM clicking.
+- Phase 3 resolved initial showcase routing through `tour` / `step` URL params and typed step navigation. Remaining design-system route behavior is still a v1 content limitation rather than a navigation API gap.
 
 ## Test Commands
 
@@ -100,6 +103,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run typecheck`
   - `pnpm run lint`
 - Phase 3+: focused commands to be filled in as files are added.
+- Phase 3:
+  - `pnpm run test:run -- src/api/tests/showcaseTourApi.test.ts src/api/tests/editorNavigationApi.test.ts src/api/tests/editorApi.test.ts`
+  - `pnpm run test:run -- src/app/tests/AppShell.test.tsx`
+  - `pnpm run check:api-docs`
+  - `pnpm run typecheck`
+  - `pnpm run lint`
+  - `rg -n "bg-(slate|gray|blue|purple|orange|amber|stone)|text-(slate|gray|blue|purple|orange|amber|stone)|border-(slate|gray|blue|purple|orange|amber|stone)|#[0-9a-fA-F]{3,8}|rgba\\(" src/app/showcaseTour src/app/EditorTopbar.tsx src/app/AppShellOverlays.tsx`
 
 ## Commit Log
 
@@ -109,4 +119,5 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ## Unresolved Questions
 
-- Decide whether the design-system route step belongs in v1 despite leaving the editor route.
+- Decide whether the design-system route step should become a true editor-return flow or stay as a documented external verification surface.
+- Decide final showcase visual differentiator in the Visual System phase: color variant, type treatment, backdrop/highlight treatment, or some combination.

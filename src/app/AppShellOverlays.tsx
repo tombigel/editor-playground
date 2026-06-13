@@ -29,6 +29,8 @@ import {
 } from "./AppShell.lazyPanels";
 import { SectionTemplatePopover, TextTypePopover } from "./AppChrome";
 import { openManageFontsWithOptions } from "./manageFontsActions";
+import { ShowcaseTourOverlay } from "./showcaseTour/ShowcaseTourOverlay";
+import { SHOWCASE_TOUR_CONFIG } from "./showcaseTour/showcaseTourConfig";
 
 type AppShellOverlaysProps = {
 	// The shell owns the state and handlers; this view helper keeps render ownership separate.
@@ -103,6 +105,10 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		handlePurgeUnusedFonts,
 		handleValidateLinks,
 		handleOpenLinkValidation,
+		showcaseTourLocation,
+		setShowcaseTourLocation,
+		handleApplyShowcaseTourNavigation,
+		handleCloseShowcaseTour,
 	} = ctx;
 
 	return (
@@ -585,6 +591,15 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 					onHelpOpenChange(true);
 				}}
 			/>
+			{showcaseTourLocation ? (
+				<ShowcaseTourOverlay
+					config={SHOWCASE_TOUR_CONFIG}
+					location={showcaseTourLocation}
+					onLocationChange={setShowcaseTourLocation}
+					onClose={handleCloseShowcaseTour}
+					onApplyNavigation={handleApplyShowcaseTourNavigation}
+				/>
+			) : null}
 		</>
 	);
 }

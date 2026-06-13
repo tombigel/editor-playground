@@ -15,6 +15,7 @@ import {
 	Palette,
 	Redo2,
 	Settings,
+	Sparkles,
 	SwatchBook,
 	Trash2,
 	Type,
@@ -114,6 +115,7 @@ export function EditorTopbar({
 	onOpenManageFonts,
 	onOpenShortcuts,
 	onOpenDocumentation,
+	onOpenShowcaseTour,
 	onOpenAbout,
 }: {
 	topbarClass: string;
@@ -163,6 +165,7 @@ export function EditorTopbar({
 	onOpenManageFonts: () => void;
 	onOpenShortcuts: () => void;
 	onOpenDocumentation: (entryId: string) => void;
+	onOpenShowcaseTour: () => void;
 	onOpenAbout: () => void;
 }) {
 	const activePage =
@@ -431,6 +434,12 @@ export function EditorTopbar({
 								}}
 							>
 								Design system showcase
+							</MenubarPanelLinkItem>
+							<MenubarPanelLinkItem
+								icon={Sparkles}
+								onClick={onOpenShowcaseTour}
+							>
+								Showcase tour
 							</MenubarPanelLinkItem>
 							<MenubarPanelLinkItem icon={Info} onClick={onOpenAbout}>
 								About

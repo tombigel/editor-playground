@@ -61,6 +61,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		handleOpenCurrentPageSettings,
 		handleOpenLinkValidation,
 		handleOpenSettingsSection,
+		handleOpenShowcaseTour,
 		handleSetLightTheme,
 		handleSetDarkTheme,
 		handleImportJson,
@@ -166,6 +167,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 					setHelpEntryTarget(entryId);
 					onHelpOpenChange(true);
 				}}
+				onOpenShowcaseTour={handleOpenShowcaseTour}
 				onOpenAbout={() => onAboutOpenChange(true)}
 			/>
 			<input
