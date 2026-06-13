@@ -1483,7 +1483,10 @@ Naming and title behavior:
 - The first-phase tour map is fixed by `docs/SHOWCASE_TOUR_PHASE_1.md` and implemented as typed config in `src/app/showcaseTour/showcaseTourConfig.ts`.
 - Tour URL state uses `tour=<topicId>` and `step=<stepId>`. Loading a URL with those params opens the overlay at the resolved topic/step; invalid values fall back through `showcaseTourApi`.
 - Every step applies editor movement through `ShowcaseTourStepNavigation`, which can contain `EditorNavigationUrlState`, `EditorNodeTarget`, and/or `EditorPanelRequest`. The overlay must not click editor controls to navigate.
-- If a visual anchor is unavailable, the tour keeps the step visible in a centered/floating fallback rather than fabricating editor state locally.
+- Steps can also request an idempotent section-template insertion through the existing editor action. The request must name a template and a stable node name used to detect whether the tour already created that story surface.
+- The overlay renders in the native popover/top layer so it stays above editor panels and dialogs. It does not blur the stage, and it can be minimized to a small “Show tour” control without closing the URL-backed tour state.
+- Steps can define a visual anchor with a selector and label. When the target is present, the overlay draws a non-interactive highlight around the real editor surface; if the target is unavailable, the tour keeps the step visible and explains the intended route.
+- Steps can display route chips and an action. External actions, such as the design-system showcase, open in a new tab so the tour flow remains intact.
 - Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables.
 
 ## Text Type Picker

@@ -83,6 +83,31 @@ describe('app smoke e2e', () => {
     await tour.waitFor({ state: 'visible' });
 
     expect(await tour.textContent()).toContain('The document can move through import/export');
+    await smokePage.getByRole('button', { name: 'Hide tour panel' }).click();
+    await smokePage.getByRole('button', { name: 'Show tour' }).waitFor({ state: 'visible' });
+    await smokePage.getByRole('button', { name: 'Show tour' }).click();
+    await smokePage.getByRole('button', { name: 'Hide tour panel' }).waitFor({ state: 'visible' });
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
+  it('creates the sticky lab during the sticky tour story', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=sticky&step=sticky-templates`);
+    page = smokePage;
+
+    await smokePage.locator('[data-showcase-tour="true"]').waitFor({ state: 'visible' });
+    await smokePage.locator('.stage-shell', { hasText: 'Sticky Edge Lab' }).waitFor({ state: 'visible' });
+
+    expect(await smokePage.locator('[data-showcase-tour="true"]').textContent()).toContain('Create the sticky lab');
     expect(pageErrors).toEqual([]);
   }, 30_000);
 

@@ -9,25 +9,36 @@ import type {
 	EditorNodeTarget,
 	EditorPanelRequest,
 } from "./editorNavigationApi";
+import type { SectionTemplateId } from "../model/types";
 
 export type ShowcaseTourAnchor =
 	| { type: "none" }
-	| { type: "selector"; selector: string }
+	| { type: "selector"; selector: string; label?: string }
 	| { type: "tourMenu" };
 
 export type ShowcaseTourStepNavigation = {
 	editor?: EditorNavigationUrlState;
 	nodeTarget?: EditorNodeTarget;
 	panel?: EditorPanelRequest;
+	insertSectionTemplate?: {
+		templateId: SectionTemplateId;
+		ifMissingNodeName?: string;
+	};
 };
+
+export type ShowcaseTourStepAction =
+	| { type: "externalLink"; label: string; href: string }
+	| { type: "instruction"; label: string };
 
 export type ShowcaseTourStep = {
 	id: string;
 	topicId: string;
 	title: string;
 	body: string;
+	route?: string[];
 	anchor: ShowcaseTourAnchor;
 	navigation: ShowcaseTourStepNavigation;
+	action?: ShowcaseTourStepAction;
 };
 
 export type ShowcaseTourTopic = {

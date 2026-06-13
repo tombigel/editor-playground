@@ -17,6 +17,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add editor navigation intents
 - add non-linear tour shell
 - add configurable tour skin
+- improve guided story flow
 
 ### Changed
 

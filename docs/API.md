@@ -554,6 +554,7 @@ Showcase tour types:
 
 - `ShowcaseTourAnchor`
 - `ShowcaseTourStepNavigation`
+- `ShowcaseTourStepAction`
 - `ShowcaseTourStep`
 - `ShowcaseTourTopic`
 - `ShowcaseTourConfig`

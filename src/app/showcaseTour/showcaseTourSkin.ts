@@ -12,6 +12,7 @@ export type ShowcaseTourSkin = {
 	highlightBackground: string;
 	highlightBorder: string;
 	highlightText: string;
+	highlightShadow: string;
 	activeStepBackground: string;
 	activeStepForeground: string;
 	radius: string;
@@ -25,9 +26,8 @@ export const DEFAULT_SHOWCASE_TOUR_SKIN: ShowcaseTourSkin = {
 	accent:
 		"color-mix(in srgb, var(--editor-accent) 78%, var(--editor-utility-text-strong))",
 	accentForeground: "var(--editor-accent-foreground)",
-	backdropBackground:
-		"color-mix(in srgb, var(--editor-dialog-overlay-background) 78%, transparent)",
-	backdropBlur: "2px",
+	backdropBackground: "transparent",
+	backdropBlur: "0px",
 	surfaceBackground:
 		"linear-gradient(135deg, color-mix(in srgb, var(--editor-surface-background) 92%, var(--editor-accent) 8%), var(--editor-surface-background))",
 	surfaceBorder:
@@ -37,11 +37,13 @@ export const DEFAULT_SHOWCASE_TOUR_SKIN: ShowcaseTourSkin = {
 		"color-mix(in srgb, var(--editor-accent) 12%, transparent)",
 	highlightBorder: "var(--editor-accent)",
 	highlightText: "var(--editor-accent)",
+	highlightShadow:
+		"0 0 0 9999px color-mix(in srgb, var(--editor-dialog-overlay-background) 18%, transparent), var(--editor-accent-shadow)",
 	activeStepBackground:
 		"color-mix(in srgb, var(--editor-accent) 88%, var(--editor-utility-text-strong))",
 	activeStepForeground: "var(--editor-accent-foreground)",
 	radius: "0.75rem",
-	zIndex: 500,
+	zIndex: 2147483647,
 };
 
 export function buildShowcaseTourSkinStyle(
@@ -58,6 +60,7 @@ export function buildShowcaseTourSkinStyle(
 		"--showcase-tour-highlight-background": skin.highlightBackground,
 		"--showcase-tour-highlight-border": skin.highlightBorder,
 		"--showcase-tour-highlight-text": skin.highlightText,
+		"--showcase-tour-highlight-shadow": skin.highlightShadow,
 		"--showcase-tour-active-step-background": skin.activeStepBackground,
 		"--showcase-tour-active-step-foreground": skin.activeStepForeground,
 		"--showcase-tour-radius": skin.radius,

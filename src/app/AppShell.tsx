@@ -197,6 +197,7 @@ export function AppShell({
 		handleCloseShowcaseTour,
 	} = useShowcaseTourController({
 		searchParams,
+		state,
 		dispatch,
 		layersOpen,
 		pagesOpen,

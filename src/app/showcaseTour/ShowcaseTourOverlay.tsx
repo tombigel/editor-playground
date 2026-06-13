@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, ListTree, X } from "lucide-react";
+import {
+	Check,
+	ChevronLeft,
+	ChevronRight,
+	ExternalLink,
+	ListTree,
+	Minimize2,
+	Sparkles,
+	X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PopoverSurface } from "@/components/ui/popover";
 import { useEscapeKey } from "@/lib/useEscapeKey";
 import {
 	buildEditorNavigationSearch,
@@ -42,6 +52,7 @@ export function ShowcaseTourOverlay({
 	skin = DEFAULT_SHOWCASE_TOUR_SKIN,
 }: Props) {
 	const [menuOpen, setMenuOpen] = useState(true);
+	const [minimized, setMinimized] = useState(false);
 	const step = getShowcaseTourStep(config, location.stepId);
 	const topic = getShowcaseTourTopic(config, location.topicId);
 	const anchorState = useAnchorState(step);
@@ -55,7 +66,7 @@ export function ShowcaseTourOverlay({
 		return { index: Math.max(0, index), total: allSteps.length };
 	}, [config, location.stepId]);
 
-	useEscapeKey(onClose, true);
+	useEscapeKey(() => setMinimized(true), !minimized);
 
 	useEffect(() => {
 		latestApplyNavigationRef.current = onApplyNavigation;
@@ -72,6 +83,7 @@ export function ShowcaseTourOverlay({
 	}
 
 	function goTo(nextLocation: ShowcaseTourLocation) {
+		setMinimized(false);
 		onLocationChange(nextLocation);
 	}
 
@@ -80,21 +92,36 @@ export function ShowcaseTourOverlay({
 	}
 
 	return (
-		<div
-			className={cn("pointer-events-none fixed inset-0", skin.typographyClassName)}
+		<PopoverSurface
+			open
+			popoverMode="manual"
+			onOpenChange={() => undefined}
+			className={cn(
+				"pointer-events-none fixed inset-0 h-[100dvh] w-screen",
+				skin.typographyClassName,
+			)}
 			data-showcase-tour="true"
 			data-showcase-tour-skin={skin.id}
 			style={buildShowcaseTourSkinStyle(skin)}
 		>
-			<div className="pointer-events-auto absolute inset-0 bg-[color:var(--showcase-tour-backdrop-background)] backdrop-blur-[var(--showcase-tour-backdrop-blur)]" />
+			<div className="pointer-events-none absolute inset-0 bg-[color:var(--showcase-tour-backdrop-background)] backdrop-blur-[var(--showcase-tour-backdrop-blur)]" />
 			<div className="pointer-events-none absolute inset-0">
-				{anchorState.available ? (
-					<div className="absolute left-4 top-16 rounded-md border border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-highlight-background)] px-2 py-1 text-[11px] font-medium text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--editor-accent-shadow)]">
-						Target visible
-					</div>
+				{!minimized && anchorState.rect ? (
+					<TourTargetHighlight rect={anchorState.rect} label={anchorState.label} />
 				) : null}
 			</div>
-			<div className="pointer-events-auto absolute bottom-5 left-5 flex max-h-[calc(100vh-40px)] max-w-[calc(100vw-40px)] items-end gap-3">
+			{minimized ? (
+				<Button
+					type="button"
+					size="sm"
+					className="pointer-events-auto absolute bottom-5 left-5 shadow-[var(--showcase-tour-surface-shadow)]"
+					onClick={() => setMinimized(false)}
+				>
+					<Sparkles className="h-4 w-4" />
+					Show tour
+				</Button>
+			) : (
+				<div className="pointer-events-auto absolute bottom-5 left-5 flex max-h-[calc(100vh-40px)] max-w-[calc(100vw-40px)] items-end gap-3">
 				{menuOpen ? (
 					<nav
 						aria-label="Showcase tour topics"
@@ -114,7 +141,7 @@ export function ShowcaseTourOverlay({
 								Showcase tour
 							</div>
 							<div className="editor-text-muted mt-1 text-xs">
-								Jump by topic or step.
+								Choose a thread, then jump anywhere.
 							</div>
 						</div>
 						<div className="editor-scrollbar min-h-0 overflow-y-auto p-2">
@@ -212,6 +239,15 @@ export function ShowcaseTourOverlay({
 								type="button"
 								variant="ghost"
 								size="icon"
+								aria-label="Hide tour panel"
+								onClick={() => setMinimized(true)}
+							>
+								<Minimize2 className="h-4 w-4" />
+							</Button>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
 								aria-label="Close showcase tour"
 								onClick={onClose}
 							>
@@ -220,7 +256,20 @@ export function ShowcaseTourOverlay({
 						</div>
 					</header>
 					<div className="space-y-3 px-4 py-4">
+						{step.route && step.route.length > 0 ? (
+							<div className="flex flex-wrap items-center gap-1.5">
+								{step.route.map((item) => (
+									<span
+										key={`${step.id}-${item}`}
+										className="rounded-md border border-[color:var(--showcase-tour-surface-border)] bg-[color:var(--showcase-tour-highlight-background)] px-2 py-1 text-[11px] font-medium text-[color:var(--showcase-tour-accent)]"
+									>
+										{item}
+									</span>
+								))}
+							</div>
+						) : null}
 						<p className="editor-text-muted text-sm leading-6">{step.body}</p>
+						{step.action ? <TourStepAction action={step.action} /> : null}
 						{anchorState.message ? (
 							<div className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-2 text-xs text-[color:var(--editor-utility-text-muted)]">
 								{anchorState.message}
@@ -262,39 +311,113 @@ export function ShowcaseTourOverlay({
 						</div>
 					</footer>
 				</section>
-			</div>
-		</div>
+				</div>
+			)}
+		</PopoverSurface>
 	);
 }
 
 function useAnchorState(step: ShowcaseTourStep | null) {
 	const [available, setAvailable] = useState(false);
+	const [rect, setRect] = useState<DOMRect | null>(null);
 
 	useEffect(() => {
 		if (!step || step.anchor.type !== "selector") {
 			setAvailable(false);
+			setRect(null);
 			return;
 		}
 		if (typeof window === "undefined") {
 			setAvailable(false);
+			setRect(null);
 			return;
 		}
-		const element = window.document.querySelector(step.anchor.selector);
-		setAvailable(Boolean(element));
+		let frame = 0;
+		const selector = step.anchor.selector;
+		function updateAnchorRect() {
+			const element = window.document.querySelector(selector);
+			setAvailable(Boolean(element));
+			setRect(element ? element.getBoundingClientRect() : null);
+		}
+		function scheduleUpdate() {
+			window.cancelAnimationFrame(frame);
+			frame = window.requestAnimationFrame(updateAnchorRect);
+		}
+		updateAnchorRect();
+		window.addEventListener("resize", scheduleUpdate);
+		window.addEventListener("scroll", scheduleUpdate, true);
+		const timer = window.setTimeout(updateAnchorRect, 120);
+		return () => {
+			window.cancelAnimationFrame(frame);
+			window.clearTimeout(timer);
+			window.removeEventListener("resize", scheduleUpdate);
+			window.removeEventListener("scroll", scheduleUpdate, true);
+		};
 	}, [step]);
 
 	if (!step || step.anchor.type === "none") {
-		return { available: false, message: "This step uses a centered overview." };
+		return { available: false, rect: null, label: undefined, message: null };
 	}
 	if (step.anchor.type === "tourMenu") {
-		return { available: true, message: null };
+		return { available: true, rect: null, label: undefined, message: null };
 	}
 	return {
 		available,
+		rect,
+		label: step.anchor.label,
 		message: available
 			? null
-			: "The target surface is not visible yet; this step falls back to the overview panel.",
+			: "This step is about a surface that appears after the editor finishes moving there. Use the route chips above if you want to open it yourself.",
 	};
+}
+
+function TourTargetHighlight({
+	rect,
+	label,
+}: {
+	rect: DOMRect;
+	label?: string;
+}) {
+	const padding = 8;
+	const left = Math.max(8, rect.left - padding);
+	const top = Math.max(8, rect.top - padding);
+	const width = Math.max(24, rect.width + padding * 2);
+	const height = Math.max(24, rect.height + padding * 2);
+
+	return (
+		<div
+			className="absolute rounded-lg border-2 border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-highlight-background)] shadow-[var(--showcase-tour-highlight-shadow)]"
+			style={{ left, top, width, height }}
+			aria-hidden="true"
+		>
+			{label ? (
+				<div className="absolute -top-7 left-0 whitespace-nowrap rounded-md border border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-surface-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)]">
+					{label}
+				</div>
+			) : null}
+		</div>
+	);
+}
+
+function TourStepAction({ action }: { action: NonNullable<ShowcaseTourStep["action"]> }) {
+	if (action.type === "externalLink") {
+		return (
+			<a
+				href={action.href}
+				target="_blank"
+				rel="noreferrer"
+				className="inline-flex items-center gap-2 rounded-md border border-[color:var(--showcase-tour-surface-border)] px-3 py-1.5 text-xs font-semibold text-[color:var(--showcase-tour-accent)] hover:bg-[color:var(--showcase-tour-highlight-background)]"
+			>
+				<ExternalLink className="h-3.5 w-3.5" />
+				{action.label}
+			</a>
+		);
+	}
+	return (
+		<div className="rounded-lg border border-[color:var(--showcase-tour-surface-border)] bg-[color:var(--showcase-tour-highlight-background)] px-3 py-2 text-xs font-medium text-[color:var(--showcase-tour-accent)]">
+			{action.label}
+		</div>
+	);
 }
 
 function syncTourUrl(

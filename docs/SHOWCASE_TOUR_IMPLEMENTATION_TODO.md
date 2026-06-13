@@ -82,6 +82,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Phase 3 keeps the overlay specialized because the topic/step controller is showcase-specific, while reusing shared `Button` and menubar primitives plus editor surface tokens.
 - Panel-oriented tour steps mirror their typed `EditorPanelRequest` in serializable `EditorNavigationUrlState` so URL state exposes the same editor surface intent.
 - Visual System added a typed `ShowcaseTourSkin` layer instead of choosing the final differentiator. No shared primitive APIs changed, so no design-system demo update was required.
+- Post-validation refinement fixed the first-use tour experience: tour surfaces now render above editor popovers, stage blur is removed, the tour can be minimized without closing, target highlights point to live surfaces, design-system opens via a new-tab action, and the sticky story inserts the Sticky Edge Lab through the real editor template action.
 
 ## Discovered API Gaps
 
@@ -136,3 +137,4 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 - Decide whether the design-system route step should become a true editor-return flow or stay as a documented external verification surface.
 - Decide final showcase visual differentiator in the Visual System phase: color variant, type treatment, backdrop/highlight treatment, or some combination.
+- Decide whether route chips should become animated route playback through menubar state. Current implementation shows the route and highlights targets, but it does not open menubar dropdowns as intermediate animation states.

@@ -18,11 +18,13 @@ import {
 } from "@/api/showcaseTourApi";
 import type { HelpEntry } from "@/panels/helpDocs";
 import type { SettingsSectionId } from "@/panels/settings/settingsSections";
+import type { EditorState } from "@/api/editorApi";
 import type { HistoryAction } from "../editorState";
 import { SHOWCASE_TOUR_CONFIG } from "./showcaseTourConfig";
 
 type UseShowcaseTourControllerOptions = {
 	searchParams: URLSearchParams;
+	state: EditorState;
 	dispatch: Dispatch<HistoryAction>;
 	layersOpen: boolean;
 	pagesOpen: boolean;
@@ -48,6 +50,7 @@ type UseShowcaseTourControllerOptions = {
 
 export function useShowcaseTourController({
 	searchParams,
+	state,
 	dispatch,
 	layersOpen,
 	pagesOpen,
@@ -204,6 +207,17 @@ export function useShowcaseTourController({
 
 	const handleApplyShowcaseTourNavigation = useCallback(
 		(navigation: ShowcaseTourStepNavigation) => {
+			if (navigation.insertSectionTemplate) {
+				const { templateId, ifMissingNodeName } = navigation.insertSectionTemplate;
+				const templateAlreadyExists =
+					ifMissingNodeName &&
+					Object.values(state.document.nodes).some(
+						(node) => node.name === ifMissingNodeName,
+					);
+				if (!templateAlreadyExists) {
+					dispatch({ type: "insertSectionTemplate", templateId });
+				}
+			}
 			if (navigation.editor || navigation.nodeTarget) {
 				dispatch({
 					type: "applyEditorNavigation",
@@ -215,7 +229,7 @@ export function useShowcaseTourController({
 				applyPanelRequest(navigation.panel);
 			}
 		},
-		[applyPanelRequest, dispatch],
+		[applyPanelRequest, dispatch, state.document.nodes],
 	);
 
 	const handleOpenShowcaseTour = useCallback(() => {
