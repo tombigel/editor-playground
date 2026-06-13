@@ -509,6 +509,31 @@ setActivePage(state: EditorState, pageId: PageId): EditorState
 
 Switch the active page in the editor. This is editor-only state (no documentApi counterpart needed).
 
+### Editor navigation and deep-link state
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseEditorNavigationSearch` | `(search) -> EditorNavigationUrlState` | Parse editor URL query state for active page, selection, focused mode, panel targets, tour topic/step, and view flags |
+| `buildEditorNavigationSearch` | `(state, baseSearch?) -> string` | Serialize editor navigation state back into a query string |
+| `applyEditorNavigationState` | `(state, navigation, options?) -> EditorState` | Apply URL/navigation state through editor state helpers |
+| `applyEditorViewFlags` | `(state, flags) -> EditorState` | Apply headless editor UI flags such as focused mode, debug, grid, sticky preview, and spacer visibility |
+| `resolveEditorNodeTarget` | `(document, target, options?) -> NodeId \| null` | Resolve a stable node target query without relying on generated node IDs |
+| `createDefaultEditorPanelState` | `(options?) -> EditorPanelState` | Create typed transient editor panel state |
+| `applyEditorPanelRequest` | `(state, request) -> EditorPanelState` | Apply typed panel open/close/toggle/target requests |
+
+Navigation types:
+
+- `EditorNavigationUrlState`
+- `EditorNodeTarget`
+- `EditorViewFlags`
+- `ApplyEditorNavigationOptions`
+- `EditorPanelState`
+- `EditorPanelRequest`
+- `EditorPanelId`
+- `EditorPanelPosition`
+- `EditorSettingsSectionId`
+- `EditorPagesPanelTab`
+
 ### Wrapper role promotion
 
 | Function | Signature | Description |

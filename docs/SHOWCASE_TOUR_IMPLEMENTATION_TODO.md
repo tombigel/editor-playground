@@ -31,12 +31,12 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ### Phase 2: Editor/API/URL Capabilities
 
-- [ ] Add or extend real editor navigation APIs.
-- [ ] Add URL parse/build support for editor and tour state.
-- [ ] Route app/editor use cases through those APIs instead of showcase-only logic.
-- [ ] Add API/app tests.
-- [ ] Update `docs/API.md` and `docs/PLAYGROUND_SPEC.md`.
-- [ ] Revalidate, update this todo, and commit.
+- [x] Add or extend real editor navigation APIs.
+- [x] Add URL parse/build support for editor and tour state.
+- [x] Route app/editor use cases through those APIs instead of showcase-only logic.
+- [x] Add API/app tests.
+- [x] Update `docs/API.md` and `docs/PLAYGROUND_SPEC.md`.
+- [x] Revalidate, update this todo, and commit.
 
 ### Phase 3: Showcase Tour Data And UI
 
@@ -93,12 +93,19 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 - Step 0: `pnpm exec prettier --check docs/SHOWCASE_TOUR_IMPLEMENTATION_TODO.md` is not configured; use content review and git diff for this docs-only step.
 - Phase 1: content review and source-surface revalidation against `src/app`, `src/panels`, `src/stage`, `src/model`, `src/components/ui`, and `src/design-system`.
-- Phase 2+: focused commands to be filled in as files are added.
+- Phase 2:
+  - `pnpm run test:run -- src/api/tests/editorNavigationApi.test.ts src/api/tests/editorApi.test.ts`
+  - `pnpm run test:run -- src/app/tests/AppShell.test.tsx src/app/tests/shortcutController.test.ts`
+  - `pnpm run check:api-docs`
+  - `pnpm run typecheck`
+  - `pnpm run lint`
+- Phase 3+: focused commands to be filled in as files are added.
 
 ## Commit Log
 
 - Step 0: `docs(showcase-tour): add implementation work memory`
 - Phase 1: `docs(showcase-tour): define phase 1 tour map`
+- Phase 2: `feat(api): add editor navigation intents`
 
 ## Unresolved Questions
 

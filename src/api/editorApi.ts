@@ -84,6 +84,18 @@ export type {
   TopLevelWrapperPlacement,
 };
 export type { EditorState, FocusedMode } from '../editor/editorStore';
+export type {
+  ApplyEditorNavigationOptions,
+  EditorNavigationUrlState,
+  EditorNodeTarget,
+  EditorPagesPanelTab,
+  EditorPanelId,
+  EditorPanelPosition,
+  EditorPanelRequest,
+  EditorPanelState,
+  EditorSettingsSectionId,
+  EditorViewFlags,
+} from './editorNavigationApi';
 
 /** State lifecycle: create, load, persist, and reset editor state. */
 export const cancelPromoteWrapperRole = editorStore.cancelPromoteWrapperRole;
@@ -127,6 +139,16 @@ export const updateTextField = editorStore.updateTextField;
 export const updateWrapperStyleField = editorStore.updateWrapperStyleField;
 export const reorderNodes = editorStore.reorderNodes;
 export const setActivePage = editorStore.setActivePage;
+
+export {
+  applyEditorNavigationState,
+  applyEditorPanelRequest,
+  applyEditorViewFlags,
+  buildEditorNavigationSearch,
+  createDefaultEditorPanelState,
+  parseEditorNavigationSearch,
+  resolveEditorNodeTarget,
+} from './editorNavigationApi';
 
 export {
   addPage,

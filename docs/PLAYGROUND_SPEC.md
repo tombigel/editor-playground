@@ -1472,6 +1472,10 @@ Naming and title behavior:
 - Focused-mode state (`focusedMode`, `startupFocusedMode`, `inspectorCollapsed`, `temporaryInspectorOpen`, `focusedPanelOffset`) remains editor UI state only and does not affect document semantics, sticky math, stage rendering, or site export behavior.
 - `showHidden` is editor-only UI state; it changes stage ghost rendering and selection affordances but does not change exported site output.
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal` / `none` for no focused mode.
+- Editor navigation and deep-link state are headless API concerns in `src/api/editorNavigationApi.ts`. URL parsing/building, node target resolution, editor view flags, and transient panel requests must flow through that API before a feature-specific UI consumes them.
+- Editor URL navigation supports active page, selected node id, focused mode, panel target, settings/help/page targets, tour topic/step, sticky/debug/grid/animation preview flags, and spacer visibility. Invalid URL values are ignored instead of forcing malformed editor state.
+- Transient panel navigation uses typed panel ids (`settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes`) and panel requests. The app shell adapts those typed requests to the current floating panel implementation.
+- Feature walkthroughs and scripted navigation must not click editor DOM controls as a workaround for missing editor capabilities. If a step needs editor movement that is not expressible through `editorNavigationApi`, the editor API should be extended first.
 
 ## Text Type Picker
 

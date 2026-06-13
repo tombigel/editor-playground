@@ -1,4 +1,11 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type SetStateAction } from "react";
+import {
+	applyEditorPanelRequest,
+	createDefaultEditorPanelState,
+	type EditorPanelId,
+	type EditorPanelState,
+	type EditorPanelPosition,
+} from "@/api/editorNavigationApi";
 import { useDismissFloatingPanels } from "./useEditorEnvironment";
 
 const LEFT_FLOATING_PANEL_DEFAULT_TOP_PX = 76;
@@ -13,149 +20,144 @@ function getDefaultLeftFloatingPanelPosition() {
 }
 
 export function useAppPanels() {
-	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [manageFontsOpen, setManageFontsOpen] = useState(false);
-	const [helpOpen, setHelpOpen] = useState(false);
-	const [shortcutsOpen, setShortcutsOpen] = useState(false);
-	const [aboutOpen, setAboutOpen] = useState(false);
-	const [layersOpen, setLayersOpen] = useState(false);
-	const [pagesOpen, setPagesOpen] = useState(false);
-	const [layersPosition, setLayersPosition] = useState(
-		getDefaultLeftFloatingPanelPosition,
+	const [panelState, setPanelState] = useState(() =>
+		createDefaultEditorPanelState({
+			componentsPosition: getDefaultLeftFloatingPanelPosition(),
+			pagesPosition: {
+				top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
+				left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
+			},
+		}),
 	);
-	const [layersPositionCustomized, setLayersPositionCustomized] =
-		useState(false);
-	const [pagesPosition, setPagesPosition] = useState(() => ({
-		top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
-		left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
-	}));
-	const [pagesPositionCustomized, setPagesPositionCustomized] = useState(false);
-	const [sectionTemplateOpen, setSectionTemplateOpen] = useState(false);
-	const [textTypeOpen, setTextTypeOpen] = useState(false);
 	const settingsPanelRef = useRef<HTMLDivElement | null>(null);
 	const layersPanelRef = useRef<HTMLDivElement | null>(null);
 	const pagesPanelRef = useRef<HTMLDivElement | null>(null);
 	const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
 	const textTypePanelRef = useRef<HTMLDivElement | null>(null);
 
-	function closeLayersPanel() {
-		setLayersOpen(false);
+	function applyPanelRequest(
+		request: Parameters<typeof applyEditorPanelRequest>[1],
+	) {
+		setPanelState((state) => applyEditorPanelRequest(state, request));
 	}
 
-	function toggleLayersPanel() {
-		setLayersOpen((open) => !open);
-	}
-
-	function toggleManageFontsPanel() {
-		setManageFontsOpen((open) => !open);
-	}
-
-	function togglePagesPanel() {
-		setPagesOpen((open) => {
-			if (open) {
-				return false;
-			}
-			if (!pagesPositionCustomized) {
-				setPagesPosition({
-					top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
-					left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
-				});
-			}
-			return true;
+	function setPanelOpen(
+		panel: EditorPanelId,
+		value: SetStateAction<boolean>,
+	) {
+		setPanelState((state) => {
+			const current = getPanelOpenState(state, panel);
+			const nextValue = typeof value === "function" ? value(current) : value;
+			return applyEditorPanelRequest(state, {
+				type: nextValue ? "open" : "close",
+				panel,
+			});
 		});
 	}
 
+	function closeLayersPanel() {
+		applyPanelRequest({ type: "close", panel: "components" });
+	}
+
+	function toggleLayersPanel() {
+		applyPanelRequest({ type: "toggle", panel: "components" });
+	}
+
+	function toggleManageFontsPanel() {
+		applyPanelRequest({ type: "toggle", panel: "manageFonts" });
+	}
+
+	function togglePagesPanel() {
+		applyPanelRequest({ type: "toggle", panel: "pages" });
+	}
+
 	function openPages() {
-		if (!pagesPositionCustomized) {
-			setPagesPosition({
-				top: LEFT_FLOATING_PANEL_DEFAULT_TOP_PX,
-				left: RIGHT_FLOATING_PANEL_DEFAULT_LEFT_PX,
-			});
-		}
-		setPagesOpen(true);
+		applyPanelRequest({ type: "openPages" });
 	}
 
 	function closeSectionTemplatePopover() {
-		setSectionTemplateOpen(false);
+		applyPanelRequest({ type: "close", panel: "sectionTemplates" });
 	}
 
 	function closeTransientPanels() {
-		closeLayersPanel();
-		closeSectionTemplatePopover();
-		setSettingsOpen(false);
-		setManageFontsOpen(false);
-		setHelpOpen(false);
-		setShortcutsOpen(false);
-		setAboutOpen(false);
-		setPagesOpen(false);
+		applyPanelRequest({ type: "closeAll" });
 	}
 
 	function openLayers(_trigger: HTMLElement) {
-		if (!layersPositionCustomized) {
-			setLayersPosition(getDefaultLeftFloatingPanelPosition());
-		}
-		setLayersOpen(true);
+		applyPanelRequest({ type: "open", panel: "components" });
 	}
 
 	function handleLayersOpenChange(open: boolean) {
-		setLayersOpen(open);
+		setPanelOpen("components", open);
 	}
 
-	function handleLayersPositionChange(position: { top: number; left: number }) {
-		setLayersPosition(position);
-		setLayersPositionCustomized(true);
+	function handleLayersPositionChange(position: EditorPanelPosition) {
+		setPanelState((state) => ({
+			...state,
+			componentsPosition: position,
+			componentsPositionCustomized: true,
+		}));
 	}
 
-	function handlePagesPositionChange(position: { top: number; left: number }) {
-		setPagesPosition(position);
-		setPagesPositionCustomized(true);
+	function handlePagesPositionChange(position: EditorPanelPosition) {
+		setPanelState((state) => ({
+			...state,
+			pagesPosition: position,
+			pagesPositionCustomized: true,
+		}));
 	}
 
 	function openSectionTemplates(_trigger: HTMLElement) {
-		setSectionTemplateOpen(true);
+		applyPanelRequest({ type: "open", panel: "sectionTemplates" });
 	}
 
 	function handleSectionTemplateOpenChange(open: boolean) {
-		setSectionTemplateOpen(open);
+		setPanelOpen("sectionTemplates", open);
 	}
 
 	function openTextTypePopover(_trigger: HTMLElement) {
-		setTextTypeOpen(true);
+		applyPanelRequest({ type: "open", panel: "textTypes" });
 	}
 
 	function closeTextTypePopover() {
-		setTextTypeOpen(false);
+		applyPanelRequest({ type: "close", panel: "textTypes" });
 	}
 
 	function handleTextTypeOpenChange(open: boolean) {
-		setTextTypeOpen(open);
+		setPanelOpen("textTypes", open);
 	}
 
 	useDismissFloatingPanels({
-		settingsOpen,
+		settingsOpen: panelState.settingsOpen,
 		settingsPanelRef,
-		onCloseSettings: () => setSettingsOpen(false),
-		sectionTemplateOpen,
+		onCloseSettings: () => setPanelOpen("settings", false),
+		sectionTemplateOpen: panelState.sectionTemplateOpen,
 		sectionTemplatePanelRef,
 		onCloseSectionTemplates: closeSectionTemplatePopover,
 	});
 
 	return {
-		settingsOpen,
-		setSettingsOpen,
-		manageFontsOpen,
-		setManageFontsOpen,
-		helpOpen,
-		setHelpOpen,
-		shortcutsOpen,
-		setShortcutsOpen,
-		aboutOpen,
-		setAboutOpen,
-		layersOpen,
-		pagesOpen,
-		setPagesOpen,
-		layersPosition,
-		pagesPosition,
+		settingsOpen: panelState.settingsOpen,
+		setSettingsOpen: (value: SetStateAction<boolean>) =>
+			setPanelOpen("settings", value),
+		manageFontsOpen: panelState.manageFontsOpen,
+		setManageFontsOpen: (value: SetStateAction<boolean>) =>
+			setPanelOpen("manageFonts", value),
+		helpOpen: panelState.helpOpen,
+		setHelpOpen: (value: SetStateAction<boolean>) =>
+			setPanelOpen("help", value),
+		shortcutsOpen: panelState.shortcutsOpen,
+		setShortcutsOpen: (value: SetStateAction<boolean>) =>
+			setPanelOpen("shortcuts", value),
+		aboutOpen: panelState.aboutOpen,
+		setAboutOpen: (value: SetStateAction<boolean>) =>
+			setPanelOpen("about", value),
+		layersOpen: panelState.componentsOpen,
+		pagesOpen: panelState.pagesOpen,
+		setPagesOpen: (value: SetStateAction<boolean>) =>
+			setPanelOpen("pages", value),
+		layersPosition: panelState.componentsPosition,
+		pagesPosition: panelState.pagesPosition,
 		layersPanelRef,
 		pagesPanelRef,
 		openLayers,
@@ -167,27 +169,50 @@ export function useAppPanels() {
 		handleLayersPositionChange,
 		handlePagesPositionChange,
 		closeLayersPanel,
-		sectionTemplateOpen,
+		sectionTemplateOpen: panelState.sectionTemplateOpen,
 		settingsPanelRef,
 		sectionTemplatePanelRef,
 		openSectionTemplates,
 		handleSectionTemplateOpenChange,
 		closeSectionTemplatePopover,
-		textTypeOpen,
+		textTypeOpen: panelState.textTypeOpen,
 		textTypePanelRef,
 		openTextTypePopover,
 		closeTextTypePopover,
 		handleTextTypeOpenChange,
 		closeTransientPanels,
 		hasDismissiblePanels:
-			settingsOpen ||
-			manageFontsOpen ||
-			helpOpen ||
-			shortcutsOpen ||
-			aboutOpen ||
-			layersOpen ||
-			pagesOpen ||
-			sectionTemplateOpen ||
-			textTypeOpen,
+			panelState.settingsOpen ||
+			panelState.manageFontsOpen ||
+			panelState.helpOpen ||
+			panelState.shortcutsOpen ||
+			panelState.aboutOpen ||
+			panelState.componentsOpen ||
+			panelState.pagesOpen ||
+			panelState.sectionTemplateOpen ||
+			panelState.textTypeOpen,
 	};
+}
+
+function getPanelOpenState(state: EditorPanelState, panel: EditorPanelId) {
+	switch (panel) {
+		case "settings":
+			return state.settingsOpen;
+		case "manageFonts":
+			return state.manageFontsOpen;
+		case "help":
+			return state.helpOpen;
+		case "shortcuts":
+			return state.shortcutsOpen;
+		case "about":
+			return state.aboutOpen;
+		case "components":
+			return state.componentsOpen;
+		case "pages":
+			return state.pagesOpen;
+		case "sectionTemplates":
+			return state.sectionTemplateOpen;
+		case "textTypes":
+			return state.textTypeOpen;
+	}
 }

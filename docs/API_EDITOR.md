@@ -20,6 +20,7 @@ The drag-and-drop API is headless. It owns session lifecycle and drop-target res
 Primary sources:
 
 - `src/api/editorApi.ts`
+- `src/api/editorNavigationApi.ts`
 - `src/app/editorState.ts`
 - `src/editor/editorMutations.ts`
 
@@ -29,6 +30,17 @@ Editor APIs wrap document-level operations with:
 - undo/redo history
 - panel/view concerns
 - view-model-friendly return shapes
+
+## Editor Navigation And URL State
+
+`editorNavigationApi` is the headless navigation surface for editor deep links and scripted workflows. It keeps navigation out of DOM-click workarounds by representing editor movement as typed state:
+
+- `EditorNavigationUrlState` parses and serializes query parameters for active page, selected node, focused mode, panel target, settings/help target, tour topic/step, and view flags.
+- `EditorNodeTarget` resolves stable node queries such as name, type, sticky capability, and selectable/visible nodes instead of requiring generated ids.
+- `EditorViewFlags` applies editor-only UI flags without mutating the document model.
+- `EditorPanelState` and `EditorPanelRequest` describe transient panel operations for settings, help, components, pages, fonts, shortcuts, section templates, and text types.
+
+The app shell should consume these APIs for URL-driven or scripted navigation before feature-specific UI, including showcase tours.
 
 ## Editor Mutations
 
