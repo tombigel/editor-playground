@@ -20,7 +20,7 @@ export async function getBundledGoogleFontsCatalog(): Promise<GoogleFontsCatalog
 
 function parseBundledGoogleFontsCatalog(value: unknown): GoogleFontsCatalog {
   if (!isGoogleFontsCatalog(value)) {
-    throw new Error('Invalid bundled Google Fonts catalog. Run `npm run refresh:google-fonts`.');
+    throw new Error('Invalid bundled Google Fonts catalog. Run `pnpm run refresh:google-fonts`.');
   }
 
   return value;

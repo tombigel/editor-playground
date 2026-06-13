@@ -34,7 +34,7 @@ try {
   }
 
   execSync('node scripts/bump-version.mjs all patch', { cwd: root, stdio: 'inherit' });
-  execSync('git add src/lib/version.ts package.json package-lock.json CHANGELOG.md', {
+  execSync('git add src/lib/version.ts package.json pnpm-lock.yaml CHANGELOG.md', {
     cwd: root,
     stdio: 'inherit',
   });

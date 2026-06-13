@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 const scriptPath: string = '../../../scripts/bump-version-lib.mjs';
-const { getPackageLockSyncCommand, syncPackageJsonVersion } = (await import(scriptPath)) as {
-  getPackageLockSyncCommand: () => string;
+const { getPnpmLockSyncCommand, syncPackageJsonVersion } = (await import(scriptPath)) as {
+  getPnpmLockSyncCommand: () => string;
   syncPackageJsonVersion: (packageJsonContent: string, version: string) => string;
 };
 
@@ -29,7 +29,7 @@ describe('version bump helpers', () => {
     expect(updated.endsWith('\n')).toBe(true);
   });
 
-  it('uses npm to refresh the lockfile', () => {
-    expect(getPackageLockSyncCommand()).toBe('npm install --package-lock-only --ignore-scripts');
+  it('uses pnpm to refresh the lockfile', () => {
+    expect(getPnpmLockSyncCommand()).toBe('corepack pnpm install --lockfile-only --ignore-scripts');
   });
 });

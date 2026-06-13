@@ -11,7 +11,7 @@ export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
 
   const resolvedPort = await findAvailablePort(port);
   const url = `http://127.0.0.1:${resolvedPort}`;
-  const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(resolvedPort), '--strictPort', '--force'], {
+  const server = spawn('pnpm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(resolvedPort), '--strictPort', '--force'], {
     cwd: process.cwd(),
     stdio: 'pipe',
     detached: true,
@@ -37,7 +37,7 @@ export async function startViteE2EServer(port = 4174): Promise<StartedServer> {
 }
 
 async function warmViteOptimizeDeps() {
-  const optimizer = spawn('npx', ['vite', 'optimize', '--force'], {
+  const optimizer = spawn('pnpm', ['exec', 'vite', 'optimize', '--force'], {
     cwd: process.cwd(),
     stdio: 'pipe',
     env: {
@@ -138,7 +138,7 @@ async function stopServer(server: ChildProcessWithoutNullStreams) {
     return;
   }
 
-  // Kill the entire process group (npm + vite + esbuild children) so no orphans remain
+  // Kill the entire process group (pnpm + vite + esbuild children) so no orphans remain
   try {
     process.kill(-(server.pid as number), 'SIGTERM');
   } catch {

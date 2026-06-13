@@ -15,6 +15,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - upgrade @wix/interact to 2.2.1 and align interaction config
 
+### Changed
+
+- make pnpm the canonical package manager
+
 ---
 
 ## [0.8.18] — 2026-05-03

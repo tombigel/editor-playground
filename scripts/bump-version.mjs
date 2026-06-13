@@ -6,7 +6,7 @@
  *   subsystem: project | document | api | editor | all
  *   level:     patch | minor | major
  *
- * Updates src/lib/version.ts and (when project/all) package.json/package-lock.json.
+ * Updates src/lib/version.ts and (when project/all) package.json/pnpm-lock.yaml.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -14,13 +14,13 @@ import { execSync } from 'child_process';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import semver from 'semver';
-import { getPackageLockSyncCommand, syncPackageJsonVersion } from './bump-version-lib.mjs';
+import { getPnpmLockSyncCommand, syncPackageJsonVersion } from './bump-version-lib.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 const versionFile = resolve(root, 'src/lib/version.ts');
 const packageFile = resolve(root, 'package.json');
-const packageLockFile = resolve(root, 'package-lock.json');
+const pnpmLockFile = resolve(root, 'pnpm-lock.yaml');
 
 const SUBSYSTEM_MAP = {
   project: 'PROJECT_VERSION',
@@ -106,9 +106,9 @@ if (targets.includes('project')) {
     );
     console.log(`package.json version → ${projectVersion}`);
 
-    if (existsSync(packageLockFile)) {
-      execSync(getPackageLockSyncCommand(), { cwd: root, stdio: 'inherit' });
-      console.log(`package-lock.json refreshed via npm for ${projectVersion}`);
+    if (existsSync(pnpmLockFile)) {
+      execSync(getPnpmLockSyncCommand(), { cwd: root, stdio: 'inherit' });
+      console.log(`pnpm-lock.yaml refreshed via pnpm for ${projectVersion}`);
     }
   }
 }

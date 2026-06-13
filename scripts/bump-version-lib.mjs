@@ -4,6 +4,6 @@ export function syncPackageJsonVersion(packageJsonContent, version) {
   return `${JSON.stringify(packageJson, null, 2)}\n`;
 }
 
-export function getPackageLockSyncCommand() {
-  return 'npm install --package-lock-only --ignore-scripts';
+export function getPnpmLockSyncCommand() {
+  return 'corepack pnpm install --lockfile-only --ignore-scripts';
 }

@@ -104,14 +104,15 @@ It exposes document-level operations using `DocumentModel` only (no editor sessi
 
 ## Testing
 
-Run tests with:
+Enable the pinned pnpm version with Corepack, then run checks with pnpm:
 
-- `npm run test` for watch mode
-- `npm run test:run` for a single full run
-- `npm run test:coverage` for a single run with coverage thresholds
-- `npm run lint` for static lint checks
-- `npm run typecheck` for TypeScript checks
-- `npm run build` to run lint, typecheck, coverage, architecture checks, and the Vite production build
+- `corepack enable` to use the `pnpm` version pinned in `package.json`
+- `pnpm run test` for watch mode
+- `pnpm run test:run` for a single full run
+- `pnpm run test:coverage` for a single run with coverage thresholds
+- `pnpm run lint` for static lint checks
+- `pnpm run typecheck` for TypeScript checks
+- `pnpm run build` to run lint, typecheck, coverage, architecture checks, and the Vite production build
 
 Current automated suites:
 
@@ -136,7 +137,7 @@ You can export them in your shell or add them to `.env.local`.
 
 Deploy with:
 
-- `npm run deploy`
+- `pnpm run deploy`
 
 The deploy flow:
 

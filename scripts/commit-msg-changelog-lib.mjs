@@ -18,8 +18,8 @@ export const SECTION_SEPARATOR = '\n---\n';
 export const HEADING_ORDER = ['### Added', '### Changed', '### Fixed'];
 export const RELEASE_BOOKKEEPING_FILES = new Set([
   'CHANGELOG.md',
-  'package-lock.json',
   'package.json',
+  'pnpm-lock.yaml',
   'src/lib/version.ts',
 ]);
 

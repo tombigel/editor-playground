@@ -1990,13 +1990,14 @@ text system. Pressing `Cmd+K` on a selection that already contains a link remove
 ### Development
 
 ```bash
-npm install
-npm run dev
+corepack enable
+pnpm install
+pnpm run dev
 ```
 
 ### Production preview
 
 ```bash
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 ```

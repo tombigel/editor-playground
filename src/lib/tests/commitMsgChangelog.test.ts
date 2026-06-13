@@ -65,7 +65,7 @@ describe('updateUnreleasedChangelog', () => {
   it('identifies release bookkeeping commits for changelog skips', () => {
     expect(isReleaseBookkeepingOnly([
       'CHANGELOG.md',
-      'package-lock.json',
+      'pnpm-lock.yaml',
       'package.json',
       'src/lib/version.ts',
     ])).toBe(true);

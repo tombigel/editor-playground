@@ -75,7 +75,7 @@ When a change is not reasonably testable, explicitly confirm why in the final su
 
 ## Build Gate
 
-For every substantial or multi-file task, run `npm run build` before finishing the task.
+For every substantial or multi-file task, run `pnpm run build` before finishing the task.
 
 - treat build failures as blockers for completion
 - fix build issues introduced by the change before handing off
