@@ -33,12 +33,11 @@ export const DEFAULT_SHOWCASE_TOUR_SKIN: ShowcaseTourSkin = {
 	surfaceBorder:
 		"color-mix(in srgb, var(--editor-accent) 34%, var(--editor-utility-border))",
 	surfaceShadow: "var(--editor-surface-shadow)",
-	highlightBackground:
-		"color-mix(in srgb, var(--editor-accent) 12%, transparent)",
+	highlightBackground: "transparent",
 	highlightBorder: "var(--editor-accent)",
 	highlightText: "var(--editor-accent)",
 	highlightShadow:
-		"0 0 0 9999px color-mix(in srgb, var(--editor-dialog-overlay-background) 18%, transparent), var(--editor-accent-shadow)",
+		"0 0 0 1px color-mix(in srgb, var(--editor-accent) 58%, transparent), 0 0 18px color-mix(in srgb, var(--editor-accent) 22%, transparent)",
 	activeStepBackground:
 		"color-mix(in srgb, var(--editor-accent) 88%, var(--editor-utility-text-strong))",
 	activeStepForeground: "var(--editor-accent-foreground)",

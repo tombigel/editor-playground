@@ -76,13 +76,21 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=api&step=model-transfer`);
+    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
     page = smokePage;
 
     const tour = smokePage.locator('[data-showcase-tour="true"]');
     await tour.waitFor({ state: 'visible' });
 
-    expect(await tour.textContent()).toContain('The document can move through import/export');
+    expect(await tour.textContent()).toContain('working editor surface');
+    const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
+    await highlight.waitFor({ state: 'visible' });
+    const highlightStyle = await highlight.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return { backgroundColor: style.backgroundColor, boxShadow: style.boxShadow };
+    });
+    expect(highlightStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(highlightStyle.boxShadow).not.toContain('9999px');
     await smokePage.getByRole('button', { name: 'Hide tour panel' }).click();
     await smokePage.getByRole('button', { name: 'Show tour' }).waitFor({ state: 'visible' });
     await smokePage.getByRole('button', { name: 'Show tour' }).click();

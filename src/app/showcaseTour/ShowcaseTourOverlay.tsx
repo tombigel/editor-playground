@@ -386,8 +386,9 @@ function TourTargetHighlight({
 
 	return (
 		<div
-			className="absolute rounded-lg border-2 border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-highlight-background)] shadow-[var(--showcase-tour-highlight-shadow)]"
+			className="pointer-events-none absolute rounded-lg border-2 border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-highlight-background)] shadow-[var(--showcase-tour-highlight-shadow)]"
 			style={{ left, top, width, height }}
+			data-showcase-tour-highlight="true"
 			aria-hidden="true"
 		>
 			{label ? (
@@ -395,6 +396,10 @@ function TourTargetHighlight({
 					{label}
 				</div>
 			) : null}
+			<span className="absolute -left-0.5 -top-0.5 h-3 w-3 border-l-2 border-t-2 border-[color:var(--showcase-tour-highlight-border)]" />
+			<span className="absolute -right-0.5 -top-0.5 h-3 w-3 border-r-2 border-t-2 border-[color:var(--showcase-tour-highlight-border)]" />
+			<span className="absolute -bottom-0.5 -left-0.5 h-3 w-3 border-b-2 border-l-2 border-[color:var(--showcase-tour-highlight-border)]" />
+			<span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 border-b-2 border-r-2 border-[color:var(--showcase-tour-highlight-border)]" />
 		</div>
 	);
 }

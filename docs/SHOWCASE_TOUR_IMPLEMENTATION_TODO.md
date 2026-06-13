@@ -83,6 +83,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Panel-oriented tour steps mirror their typed `EditorPanelRequest` in serializable `EditorNavigationUrlState` so URL state exposes the same editor surface intent.
 - Visual System added a typed `ShowcaseTourSkin` layer instead of choosing the final differentiator. No shared primitive APIs changed, so no design-system demo update was required.
 - Post-validation refinement fixed the first-use tour experience: tour surfaces now render above editor popovers, stage blur is removed, the tour can be minimized without closing, target highlights point to live surfaces, design-system opens via a new-tab action, and the sticky story inserts the Sticky Edge Lab through the real editor template action.
+- Target highlights are outline-only with a small glow and corner marks. They must not fill large targets or add a full-screen spotlight spread over the editor.
 
 ## Discovered API Gaps
 
