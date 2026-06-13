@@ -28,6 +28,16 @@ Commits use [Conventional Commits](https://www.conventionalcommits.org/) format,
 
 ## Build Notes
 
+### End-to-end test lanes
+
+The default E2E lane is `pnpm run test:e2e`. It includes the stable stage, settings, smoke, and accessibility coverage that can block a release.
+
+Rich-text stage authoring coverage runs in a separate package: `pnpm run test:e2e:richtext`. This lane exercises Slate selection, floating-toolbar focus, list editing, inline links, and standalone rich text workflows that are still being hardened. Keep it visible during release prep, but do not merge those tests back into the default E2E lane until the selection and toolbar readiness hooks are deterministic.
+
+Known quarantined rich-text cases are marked with `richTextTodo` in `src/stage/tests/Stage.e2e.test.ts`: mouse text selection, multi-block block-type conversion, toolbar font-size persistence, and rich-list Enter behavior. These should be fixed before treating rich-text authoring as release-blocking.
+
+`pnpm run test:e2e:smoke` remains the fast E2E gate included in `pnpm run check`.
+
 ### PrismJS in the production bundle
 
 PrismJS language component files (`prismjs/components/prism-*.js`) reference `Prism` as a bare global with no `import` or `require`. This works when loaded via a `<script>` tag (the original design), but breaks in the Rollup production build: the components end up in an ESM chunk where `Prism` is out of scope.

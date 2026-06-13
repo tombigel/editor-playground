@@ -18,7 +18,7 @@ Execution rules:
 ## Shared Progress Summary
 
 - Overall status: `in progress`
-- Current quantum: `P2-C follow-ups`
+- Current quantum: `rich-text E2E isolation + P2-C follow-ups`
 - Last completed quantum: `P2-D`
 - Next quantum after current: `P2-E`
 - Locked assumptions:
@@ -27,6 +27,24 @@ Execution rules:
   - Phase 2 also inherits the phase 1.8 rich-stage interaction baseline rather than rebuilding known-buggy dropdown/focus behavior.
   - Phase 2 is where non-rich on-stage editing enters.
   - Phase 2 is where deferred list and description-list UX is resolved.
+  - Stable stage E2E and rich-text authoring E2E are now separate lanes: `pnpm run test:e2e` covers the clean release gate, while `pnpm run test:e2e:richtext` keeps the high-risk Slate/rich-toolbar flows isolated until deterministic selection hooks land.
+
+## Current Testing Package Split
+
+- Objective:
+  - Keep the production build and stable E2E gate clean while preserving rich-text authoring regression coverage.
+  - Isolate rich-text authoring cases that depend on browser selection, Slate focus retention, toolbar popovers, and standalone rich editing into their own E2E package.
+- Status: `implemented, stabilization open`
+- Implementation notes:
+  - `src/stage/tests/Stage.e2e.test.ts` now runs stable stage interactions by default and skips rich-text authoring cases unless `RICHTEXT_E2E=1`.
+  - `vitest.richtext.e2e.config.ts` runs the same stage file with `RICHTEXT_E2E=1`, so only rich-text authoring cases execute in that package.
+  - `pnpm run test:e2e:richtext` is the explicit command for this package.
+  - Known unstable cases are intentionally quarantined with `richTextTodo`: mouse selection, multi-block block-type conversion, toolbar font-size persistence, and rich-list Enter behavior.
+- Open follow-ups:
+  - Replace brittle browser-selection setup in rich-text E2E with deterministic test hooks or helper APIs that still exercise the real editing surface.
+  - Unskip and harden the four `richTextTodo` cases once the selection/readiness helpers are deterministic.
+  - Re-promote rich-text E2E cases to the release-blocking lane only after repeated clean runs on local and CI-like environments.
+  - Keep P2-C standalone list direction and standalone list-linking UI follow-ups tracked before starting P2-E description-list authoring.
 
 ## Phase Backlog
 

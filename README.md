@@ -112,6 +112,8 @@ Enable the pinned pnpm version with Corepack, then run checks with pnpm:
 - `pnpm run test:coverage` for a single run with coverage thresholds
 - `pnpm run lint` for static lint checks
 - `pnpm run typecheck` for TypeScript checks
+- `pnpm run test:e2e` for the stable end-to-end suite
+- `pnpm run test:e2e:richtext` for the isolated rich-text authoring end-to-end package
 - `pnpm run build` to run lint, typecheck, coverage, architecture checks, and the Vite production build
 
 Current automated suites:

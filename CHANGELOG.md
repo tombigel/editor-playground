@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - cover malicious document imports
 - stabilize settings panel flows
 - harden server harness and smoke gate
+- isolate rich text stage package
 
 ### Fixed
 

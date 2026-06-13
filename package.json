@@ -1,7 +1,7 @@
 {
   "name": "sticky-playground",
   "private": true,
-  "version": "0.8.26",
+  "version": "0.8.27",
   "type": "module",
   "packageManager": "pnpm@10.34.3",
   "engines": {
@@ -33,6 +33,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:e2e:richtext": "vitest run --config vitest.richtext.e2e.config.ts",
     "test:e2e:smoke": "vitest run --config vitest.e2e.config.ts src/app/tests/smoke.e2e.test.ts",
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:api-docs": "node scripts/check-api-docs.mjs"
