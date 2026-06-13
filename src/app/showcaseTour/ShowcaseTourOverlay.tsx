@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, ListTree, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEscapeKey } from "@/lib/useEscapeKey";
@@ -46,6 +46,7 @@ export function ShowcaseTourOverlay({
 	const topic = getShowcaseTourTopic(config, location.topicId);
 	const anchorState = useAnchorState(step);
 	const isLast = isLastShowcaseTourStep(config, location);
+	const latestApplyNavigationRef = useRef(onApplyNavigation);
 	const progress = useMemo(() => {
 		const allSteps = config.topics.flatMap((candidate) =>
 			getShowcaseTourStepsForTopic(config, candidate.id),
@@ -57,10 +58,14 @@ export function ShowcaseTourOverlay({
 	useEscapeKey(onClose, true);
 
 	useEffect(() => {
+		latestApplyNavigationRef.current = onApplyNavigation;
+	}, [onApplyNavigation]);
+
+	useEffect(() => {
 		if (!step) return;
-		onApplyNavigation(step.navigation);
+		latestApplyNavigationRef.current(step.navigation);
 		syncTourUrl(location, step.navigation.editor);
-	}, [location, onApplyNavigation, step]);
+	}, [location, step]);
 
 	if (!step || !topic) {
 		return null;

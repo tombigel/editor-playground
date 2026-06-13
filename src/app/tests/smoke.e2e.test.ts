@@ -65,6 +65,27 @@ describe('app smoke e2e', () => {
     expect(await dialog.locator('[data-ui="select-content"]').isVisible()).toBe(true);
   }, 30_000);
 
+  it('opens the showcase tour from URL state without render-loop errors', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=api&step=model-transfer`);
+    page = smokePage;
+
+    const tour = smokePage.locator('[data-showcase-tour="true"]');
+    await tour.waitFor({ state: 'visible' });
+
+    expect(await tour.textContent()).toContain('The document can move through import/export');
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
   it('has no automatically detectable editor chrome axe violations on initial load', async () => {
     const smokePage = await newSmokePage();
 
