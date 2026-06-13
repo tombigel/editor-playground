@@ -1484,6 +1484,7 @@ Naming and title behavior:
 - Tour URL state uses `tour=<topicId>` and `step=<stepId>`. Loading a URL with those params opens the overlay at the resolved topic/step; invalid values fall back through `showcaseTourApi`.
 - Every step applies editor movement through `ShowcaseTourStepNavigation`, which can contain `EditorNavigationUrlState`, `EditorNodeTarget`, and/or `EditorPanelRequest`. The overlay must not click editor controls to navigate.
 - If a visual anchor is unavailable, the tour keeps the step visible in a centered/floating fallback rather than fabricating editor state locally.
+- Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables.
 
 ## Text Type Picker
 

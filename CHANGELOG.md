@@ -16,6 +16,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - upgrade @wix/interact to 2.2.1 and align interaction config
 - add editor navigation intents
 - add non-linear tour shell
+- add configurable tour skin
 
 ### Changed
 

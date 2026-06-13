@@ -49,11 +49,11 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ### Visual System
 
-- [ ] Reuse or extend existing design-system primitives.
-- [ ] Add configurable `ShowcaseTourSkin` variables/config.
-- [ ] Provide one default showcase skin with light/dark parity.
-- [ ] Update design-system demos if shared primitives change.
-- [ ] Revalidate design-system alignment, update this todo, and commit.
+- [x] Reuse or extend existing design-system primitives.
+- [x] Add configurable `ShowcaseTourSkin` variables/config.
+- [x] Provide one default showcase skin with light/dark parity.
+- [x] Update design-system demos if shared primitives change.
+- [x] Revalidate design-system alignment, update this todo, and commit.
 
 ### Final Verification And Handoff
 
@@ -81,6 +81,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Showcase visual differentiation must be configurable enough to finalize later.
 - Phase 3 keeps the overlay specialized because the topic/step controller is showcase-specific, while reusing shared `Button` and menubar primitives plus editor surface tokens.
 - Panel-oriented tour steps mirror their typed `EditorPanelRequest` in serializable `EditorNavigationUrlState` so URL state exposes the same editor surface intent.
+- Visual System added a typed `ShowcaseTourSkin` layer instead of choosing the final differentiator. No shared primitive APIs changed, so no design-system demo update was required.
 
 ## Discovered API Gaps
 
@@ -110,12 +111,18 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run typecheck`
   - `pnpm run lint`
   - `rg -n "bg-(slate|gray|blue|purple|orange|amber|stone)|text-(slate|gray|blue|purple|orange|amber|stone)|border-(slate|gray|blue|purple|orange|amber|stone)|#[0-9a-fA-F]{3,8}|rgba\\(" src/app/showcaseTour src/app/EditorTopbar.tsx src/app/AppShellOverlays.tsx`
+- Visual System:
+  - `pnpm run test:run -- src/app/tests/AppShell.test.tsx`
+  - `pnpm run typecheck`
+  - `pnpm run lint`
+  - `rg -n "bg-(slate|gray|blue|purple|orange|amber|stone)|text-(slate|gray|blue|purple|orange|amber|stone)|border-(slate|gray|blue|purple|orange|amber|stone)|#[0-9a-fA-F]{3,8}|rgba\\(" src/app/showcaseTour src/app/EditorTopbar.tsx src/app/AppShellOverlays.tsx`
 
 ## Commit Log
 
 - Step 0: `docs(showcase-tour): add implementation work memory`
 - Phase 1: `docs(showcase-tour): define phase 1 tour map`
 - Phase 2: `feat(api): add editor navigation intents`
+- Phase 3: `feat(showcase-tour): add non-linear tour shell`
 
 ## Unresolved Questions
 

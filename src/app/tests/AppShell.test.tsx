@@ -181,6 +181,7 @@ describe("app/AppShell", () => {
 			const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
 
 			expect(markup).toContain('data-showcase-tour="true"');
+			expect(markup).toContain('data-showcase-tour-skin="showcase"');
 			expect(markup).toContain("The document can move through import/export");
 			expect(markup).toContain("API &amp; Architecture");
 		} finally {

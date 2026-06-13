@@ -18,6 +18,11 @@ import {
 	type ShowcaseTourStepNavigation,
 } from "@/api/showcaseTourApi";
 import { cn } from "@/lib/utils";
+import {
+	buildShowcaseTourSkinStyle,
+	DEFAULT_SHOWCASE_TOUR_SKIN,
+	type ShowcaseTourSkin,
+} from "./showcaseTourSkin";
 
 type Props = {
 	config: ShowcaseTourConfig;
@@ -25,6 +30,7 @@ type Props = {
 	onLocationChange: (location: ShowcaseTourLocation) => void;
 	onClose: () => void;
 	onApplyNavigation: (navigation: ShowcaseTourStepNavigation) => void;
+	skin?: ShowcaseTourSkin;
 };
 
 export function ShowcaseTourOverlay({
@@ -33,6 +39,7 @@ export function ShowcaseTourOverlay({
 	onLocationChange,
 	onClose,
 	onApplyNavigation,
+	skin = DEFAULT_SHOWCASE_TOUR_SKIN,
 }: Props) {
 	const [menuOpen, setMenuOpen] = useState(true);
 	const step = getShowcaseTourStep(config, location.stepId);
@@ -69,13 +76,15 @@ export function ShowcaseTourOverlay({
 
 	return (
 		<div
-			className="pointer-events-none fixed inset-0 z-[500]"
+			className={cn("pointer-events-none fixed inset-0", skin.typographyClassName)}
 			data-showcase-tour="true"
+			data-showcase-tour-skin={skin.id}
+			style={buildShowcaseTourSkinStyle(skin)}
 		>
-			<div className="pointer-events-auto absolute inset-0 bg-[color:var(--editor-dialog-overlay-background)] backdrop-blur-[1px]" />
+			<div className="pointer-events-auto absolute inset-0 bg-[color:var(--showcase-tour-backdrop-background)] backdrop-blur-[var(--showcase-tour-backdrop-blur)]" />
 			<div className="pointer-events-none absolute inset-0">
 				{anchorState.available ? (
-					<div className="absolute left-4 top-16 rounded-md border border-[color:var(--editor-accent)] bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,transparent)] px-2 py-1 text-[11px] font-medium text-[color:var(--editor-accent)] shadow-[var(--editor-accent-shadow)]">
+					<div className="absolute left-4 top-16 rounded-md border border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-highlight-background)] px-2 py-1 text-[11px] font-medium text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--editor-accent-shadow)]">
 						Target visible
 					</div>
 				) : null}
@@ -84,7 +93,15 @@ export function ShowcaseTourOverlay({
 				{menuOpen ? (
 					<nav
 						aria-label="Showcase tour topics"
-						className="editor-bg-surface editor-border-subtle flex max-h-[min(76vh,680px)] w-[300px] flex-col overflow-hidden rounded-xl border shadow-[var(--editor-surface-shadow)]"
+						className={cn(
+							"flex max-h-[min(76vh,680px)] w-[300px] flex-col overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+							skin.surfaceClassName,
+						)}
+						style={{
+							background: "var(--showcase-tour-surface-background)",
+							borderColor: "var(--showcase-tour-surface-border)",
+							borderRadius: "var(--showcase-tour-radius)",
+						}}
 						data-showcase-tour-menu="true"
 					>
 						<div className="editor-border-subtle border-b px-4 py-3">
@@ -105,7 +122,7 @@ export function ShowcaseTourOverlay({
 										className={cn(
 											"h-auto w-full justify-start px-2 py-2 text-left",
 											candidate.id === topic.id &&
-												"bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] text-[color:var(--editor-accent)]",
+												"bg-[color:var(--showcase-tour-highlight-background)] text-[color:var(--showcase-tour-accent)]",
 										)}
 										onClick={() =>
 											goTo({
@@ -133,7 +150,7 @@ export function ShowcaseTourOverlay({
 														className={cn(
 															"block w-full rounded-md px-2 py-1.5 text-left text-[11px] leading-4",
 															candidateStep.id === step.id
-																? "bg-[color:var(--editor-accent)] text-[color:var(--editor-accent-foreground)]"
+																? "bg-[color:var(--showcase-tour-active-step-background)] text-[color:var(--showcase-tour-active-step-foreground)]"
 																: "editor-text-muted hover:bg-[color:var(--editor-utility-bg-subtle)]",
 														)}
 														onClick={() =>
@@ -157,7 +174,15 @@ export function ShowcaseTourOverlay({
 
 				<section
 					aria-live="polite"
-					className="editor-bg-surface editor-border-subtle w-[min(440px,calc(100vw-40px))] overflow-hidden rounded-xl border shadow-[var(--editor-surface-shadow)]"
+					className={cn(
+						"w-[min(440px,calc(100vw-40px))] overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+						skin.surfaceClassName,
+					)}
+					style={{
+						background: "var(--showcase-tour-surface-background)",
+						borderColor: "var(--showcase-tour-surface-border)",
+						borderRadius: "var(--showcase-tour-radius)",
+					}}
 				>
 					<header className="editor-border-subtle flex items-start justify-between gap-3 border-b px-4 py-3">
 						<div>
