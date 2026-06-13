@@ -21,13 +21,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ### Phase 1: Research And Tour Scope
 
-- [ ] Audit editor surfaces that can demonstrate UX craft, API architecture, design-system thinking, experimentation, and documentation/product depth.
-- [ ] Create `docs/SHOWCASE_TOUR_PHASE_1.md`.
-- [ ] Define 4-5 first-phase topics with 3-5 steps each.
-- [ ] Record exact editor surface, required state, navigation intent, visual anchor, and intended URL shape for every step.
-- [ ] Revalidate the proposed tour map against current app surfaces.
-- [ ] Update this todo.
-- [ ] Pause for Tom's verification before committing Phase 1.
+- [x] Audit editor surfaces that can demonstrate UX craft, API architecture, design-system thinking, experimentation, and documentation/product depth.
+- [x] Create `docs/SHOWCASE_TOUR_PHASE_1.md`.
+- [x] Define first-phase topics with 3-5 steps each.
+- [x] Record exact editor surface, required state, navigation intent, visual anchor, and intended URL shape for every step.
+- [x] Revalidate the proposed tour map against current app surfaces.
+- [x] Update this todo.
+- [x] Pause for Tom's verification before committing Phase 1.
 
 ### Phase 2: Editor/API/URL Capabilities
 
@@ -82,18 +82,24 @@ Update it after each phase, before each commit, and whenever a decision or API g
 
 ## Discovered API Gaps
 
-- Pending Phase 1/2 research.
+- URL state currently covers preview mode and startup focused mode, not deep editor state.
+- Panel state is app-local in `useAppPanels`; Phase 2 should add a typed panel state or intent surface.
+- UI/view-state mutations such as focused mode, preview flags, grid/debug toggles, and spacer visibility need public editor/API coverage.
+- Tour steps need node target resolution by stable query/name/category instead of generated ids.
+- Design-system route steps require an intentional route navigation/return contract.
+- Step setup must resolve to declarative editor navigation intents, never showcase-only DOM clicking.
 
 ## Test Commands
 
 - Step 0: `pnpm exec prettier --check docs/SHOWCASE_TOUR_IMPLEMENTATION_TODO.md` is not configured; use content review and git diff for this docs-only step.
-- Phase 1: content review and source-surface revalidation.
+- Phase 1: content review and source-surface revalidation against `src/app`, `src/panels`, `src/stage`, `src/model`, `src/components/ui`, and `src/design-system`.
 - Phase 2+: focused commands to be filled in as files are added.
 
 ## Commit Log
 
 - Step 0: `docs(showcase-tour): add implementation work memory`
+- Phase 1: `docs(showcase-tour): define phase 1 tour map`
 
 ## Unresolved Questions
 
-- Phase 1 tour topics and steps require Tom's verification before Phase 1 commit.
+- Decide whether the design-system route step belongs in v1 despite leaving the editor route.

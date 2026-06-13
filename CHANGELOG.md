@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - harden server harness and smoke gate
 - isolate rich text stage package
 - add implementation work memory
+- define phase 1 tour map
 
 ### Fixed
 
