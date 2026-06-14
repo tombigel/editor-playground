@@ -29,6 +29,9 @@ importers:
       '@wix/interact':
         specifier: ^2.2.1
         version: 2.4.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@wix/motion':
+        specifier: ^2.1.7
+        version: 2.1.7
       '@wix/motion-presets':
         specifier: ^1.0.0
         version: 1.0.0
