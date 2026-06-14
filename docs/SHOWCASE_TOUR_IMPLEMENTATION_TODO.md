@@ -167,6 +167,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run test:e2e:smoke`
   - `pnpm run build`
   - Notes: UI settings, font workflow, transfer, and validation stories now highlight the left settings nav route instead of the settings body section or panel shell. The design-system audit found only pre-existing token exceptions/test string assertions; no new local styling was added.
+- Specialist review follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm exec vitest run src/app/showcaseTour/tests/showcaseTourConfig.test.ts src/app/showcaseTour/tests/useTransientTourDragSurface.test.ts src/lib/tests/useClickOutside.test.ts`
+  - `pnpm run test:e2e:smoke`
+  - `pnpm run build`
+  - Notes: consolidated UX/QA/senior-dev review lives in `docs/SHOWCASE_TOUR_REVIEW_TODO.md`. Obvious fixes cover tour-menu visibility, sticky deep-link setup, stale URL cleanup, top-edge highlight labels, and focused helper/test coverage.
 
 ## Commit Log
 
@@ -179,7 +186,8 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Follow-up: draggable tour panel close-reset behavior shipped in `feat(showcase-tour): make tour panel draggable`.
 - Follow-up: separately draggable tour panel and topic menu with close-reset behavior shipped in `feat(showcase-tour): drag tour menu separately`.
 - Follow-up: settings panel and transfer workflow highlight anchors shipped in `fix(showcase-tour): anchor settings highlights to stable targets`.
-- Follow-up: settings nav highlight alignment is pending commit.
+- Follow-up: settings nav highlight alignment shipped in `fix(showcase-tour): highlight settings nav workflow routes`.
+- Follow-up: specialist review obvious fixes validated and ready for commit.
 
 ## Unresolved Questions
 

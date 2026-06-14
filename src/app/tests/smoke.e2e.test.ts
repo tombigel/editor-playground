@@ -159,13 +159,15 @@ describe('app smoke e2e', () => {
     });
     page = smokePage;
 
-    for (const { step, settingsSection, navId } of [
-      { step: 'ui-settings', settingsSection: 'display', navId: 'display' },
-      { step: 'font-system', settingsSection: 'fonts', navId: 'fonts' },
+    for (const { topic, step, navId } of [
+      { topic: 'design', step: 'ui-settings', navId: 'display' },
+      { topic: 'design', step: 'font-system', navId: 'fonts' },
+      { topic: 'api', step: 'model-transfer', navId: 'transfer' },
+      { topic: 'product', step: 'link-validation', navId: 'transfer' },
     ]) {
       await expectEditorReady(
         smokePage,
-        `${server.url}/?tour=design&step=${step}&panel=settings&settings=${settingsSection}`,
+        `${server.url}/?tour=${topic}&step=${step}`,
       );
       await smokePage.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
       const navItem = smokePage.locator(`[data-settings-nav="${navId}"]`);
@@ -186,6 +188,69 @@ describe('app smoke e2e', () => {
       expect(highlightBox.y).toBeGreaterThan(100);
     }
 
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
+  it('opens and highlights the non-linear tour menu step', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=menu-is-nonlinear`);
+    page = smokePage;
+
+    const tourMenu = smokePage.getByRole('navigation', { name: 'Showcase tour topics' });
+    const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
+    await tourMenu.waitFor({ state: 'visible' });
+    await highlight.waitFor({ state: 'visible' });
+
+    expect(await tourMenu.textContent()).toContain('API & Architecture');
+    expect(await smokePage.locator('[data-showcase-tour-highlight-label="true"]').textContent()).toContain('Tour menu');
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
+  it('clears stale panel URL params when advancing to a close-panels step', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=api&step=model-transfer&panel=settings&settings=transfer&keep=1`);
+    page = smokePage;
+
+    await smokePage.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
+    const tourCard = smokePage.locator('[data-showcase-tour-card="true"]');
+    await tourCard.getByRole('button', { name: 'Next' }).click();
+    await tourCard.filter({ hasText: 'The editor model renders as a site' }).waitFor({ state: 'visible' });
+
+    const searchParams = new URL(smokePage.url()).searchParams;
+    expect(searchParams.get('keep')).toBe('1');
+    expect(searchParams.get('tour')).toBe('api');
+    expect(searchParams.get('step')).toBe('site-preview-export');
+    expect(searchParams.has('panel')).toBe(false);
+    expect(searchParams.has('settings')).toBe(false);
+
+    const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
+    const label = smokePage.locator('[data-showcase-tour-highlight-label="true"]');
+    await highlight.waitFor({ state: 'visible' });
+    await label.waitFor({ state: 'visible' });
+    const highlightBox = await highlight.boundingBox();
+    const labelBox = await label.boundingBox();
+    if (!highlightBox || !labelBox) {
+      throw new Error('Expected preview highlight and label to be measurable');
+    }
+    expect(labelBox.y).toBeGreaterThanOrEqual(highlightBox.y + highlightBox.height - 1);
     expect(pageErrors).toEqual([]);
   }, 30_000);
 
@@ -362,6 +427,27 @@ describe('app smoke e2e', () => {
     await smokePage.locator('.stage-shell', { hasText: 'Sticky Edge Lab' }).waitFor({ state: 'visible' });
 
     expect(await smokePage.locator('[data-showcase-tour="true"]').textContent()).toContain('Create the sticky lab');
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
+  it('creates the sticky lab from later sticky tour deep links', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=sticky&step=sticky-guides`);
+    page = smokePage;
+
+    await smokePage.locator('[data-showcase-tour="true"]').waitFor({ state: 'visible' });
+    await smokePage.locator('.stage-shell', { hasText: 'Sticky Edge Lab' }).waitFor({ state: 'visible' });
+
+    expect(await smokePage.locator('[data-showcase-tour="true"]').textContent()).toContain('Turn on sticky preview');
     expect(pageErrors).toEqual([]);
   }, 30_000);
 

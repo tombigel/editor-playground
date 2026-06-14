@@ -52,6 +52,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - exempt tour from floating panel dismiss
 - anchor settings highlights to stable targets
 - highlight settings nav workflow routes
+- resolve specialist review follow-ups
 
 ---
 

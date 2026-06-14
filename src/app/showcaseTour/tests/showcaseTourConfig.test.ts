@@ -35,4 +35,20 @@ describe("showcase tour config", () => {
 			});
 		}
 	});
+
+	it("makes sticky story deep links self-contained", () => {
+		for (const stepId of [
+			"sticky-templates",
+			"sticky-node",
+			"sticky-guides",
+			"edge-lab",
+		]) {
+			const step = SHOWCASE_TOUR_CONFIG.steps.find((item) => item.id === stepId);
+
+			expect(step?.navigation.insertSectionTemplate).toEqual({
+				templateId: "stickySteps",
+				ifMissingNodeName: "Sticky Edge Lab",
+			});
+		}
+	});
 });

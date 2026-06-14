@@ -51,6 +51,25 @@ type Props = {
 const TOUR_MENU_WIDTH = 300;
 const TOUR_SURFACE_GAP = 12;
 const TOUR_MENU_FALLBACK_HEIGHT = 500;
+const TOUR_MENU_ANCHOR_SELECTOR = '[data-showcase-tour-menu="true"]';
+const EDITOR_NAVIGATION_SEARCH_KEYS = [
+	"page",
+	"select",
+	"focus-mode",
+	"panel",
+	"settings",
+	"help",
+	"page-target",
+	"pages-tab",
+	"show-hidden",
+	"sticky-preview",
+	"animation-preview",
+	"grid",
+	"debug",
+	"spacers",
+	"tour",
+	"step",
+] as const;
 
 export function ShowcaseTourOverlay({
 	config,
@@ -84,6 +103,7 @@ export function ShowcaseTourOverlay({
 	const anchorState = useAnchorState(step);
 	const isLast = isLastShowcaseTourStep(config, location);
 	const latestApplyNavigationRef = useRef(onApplyNavigation);
+	const autoOpenedMenuRef = useRef(false);
 	const tourTopLayerKey = [
 		location.topicId,
 		location.stepId,
@@ -116,6 +136,21 @@ export function ShowcaseTourOverlay({
 		latestApplyNavigationRef.current(step.navigation);
 		syncTourUrl(location, step.navigation.editor);
 	}, [location, step]);
+
+	useEffect(() => {
+		if (step?.anchor.type === "tourMenu") {
+			autoOpenedMenuRef.current = true;
+			if (!menuPosition) {
+				setMenuPosition(getDefaultTourMenuPosition(panelRef.current));
+			}
+			setMenuOpen(true);
+			return;
+		}
+		if (autoOpenedMenuRef.current) {
+			autoOpenedMenuRef.current = false;
+			setMenuOpen(false);
+		}
+	}, [menuPosition, panelRef, setMenuPosition, step?.anchor.type]);
 
 	useEffect(() => {
 		if (!menuOpen || menuPosition) return;
@@ -405,7 +440,8 @@ function useAnchorState(step: ShowcaseTourStep | null) {
 	const [rect, setRect] = useState<DOMRect | null>(null);
 
 	useEffect(() => {
-		if (!step || step.anchor.type !== "selector") {
+		const selector = getAnchorSelector(step);
+		if (!selector) {
 			setAvailable(false);
 			setRect(null);
 			return;
@@ -415,10 +451,10 @@ function useAnchorState(step: ShowcaseTourStep | null) {
 			setRect(null);
 			return;
 		}
+		const anchorSelector = selector;
 		let frame = 0;
-		const selector = step.anchor.selector;
 		function updateAnchorRect() {
-			const element = window.document.querySelector(selector);
+			const element = window.document.querySelector(anchorSelector);
 			const nextAvailable = Boolean(element);
 			const nextRect = element ? element.getBoundingClientRect() : null;
 			setAvailable((current) =>
@@ -448,17 +484,27 @@ function useAnchorState(step: ShowcaseTourStep | null) {
 	if (!step || step.anchor.type === "none") {
 		return { available: false, rect: null, label: undefined, message: null };
 	}
-	if (step.anchor.type === "tourMenu") {
-		return { available: true, rect: null, label: undefined, message: null };
-	}
 	return {
 		available,
 		rect,
-		label: step.anchor.label,
+		label: getAnchorLabel(step),
 		message: available
 			? null
 			: "This step is about a surface that appears after the editor finishes moving there. Use the route chips above if you want to open it yourself.",
 	};
+}
+
+function getAnchorSelector(step: ShowcaseTourStep | null) {
+	if (!step) return null;
+	if (step.anchor.type === "selector") return step.anchor.selector;
+	if (step.anchor.type === "tourMenu") return TOUR_MENU_ANCHOR_SELECTOR;
+	return null;
+}
+
+function getAnchorLabel(step: ShowcaseTourStep) {
+	if (step.anchor.type === "selector") return step.anchor.label;
+	if (step.anchor.type === "tourMenu") return "Tour menu";
+	return undefined;
 }
 
 function areRectsEqual(left: DOMRect | null, right: DOMRect | null) {
@@ -485,6 +531,11 @@ function TourTargetHighlight({
 	const top = Math.max(8, rect.top - padding);
 	const width = Math.max(24, rect.width + padding * 2);
 	const height = Math.max(24, rect.height + padding * 2);
+	const labelBelow = rect.top - padding < 40;
+	const labelMaxWidth =
+		typeof window === "undefined"
+			? undefined
+			: `${Math.max(96, window.innerWidth - left - 16)}px`;
 
 	return (
 		<div
@@ -495,8 +546,14 @@ function TourTargetHighlight({
 		>
 			{label ? (
 				<div
-					className="absolute -top-8 left-0 whitespace-nowrap rounded-md border bg-[color:var(--showcase-tour-highlight-label-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)]"
-					style={{ borderColor: "var(--showcase-tour-highlight-label-border)" }}
+					className={cn(
+						"absolute left-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border bg-[color:var(--showcase-tour-highlight-label-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)]",
+						labelBelow ? "top-full mt-2" : "bottom-full mb-2",
+					)}
+					style={{
+						borderColor: "var(--showcase-tour-highlight-label-border)",
+						maxWidth: labelMaxWidth,
+					}}
 					data-showcase-tour-highlight-label="true"
 				>
 					{label}
@@ -573,13 +630,21 @@ function syncTourUrl(
 			tourTopic: location.topicId,
 			tourStep: location.stepId,
 		},
-		window.location.search,
+		getSanitizedTourBaseSearch(window.location.search),
 	);
 	window.history.replaceState(
 		null,
 		"",
 		`${window.location.pathname}${nextSearch}${window.location.hash}`,
 	);
+}
+
+function getSanitizedTourBaseSearch(search: string) {
+	const params = new URLSearchParams(search);
+	for (const key of EDITOR_NAVIGATION_SEARCH_KEYS) {
+		params.delete(key);
+	}
+	return params;
 }
 
 function getDefaultTourMenuPosition(panel: HTMLElement | null) {

@@ -15,6 +15,11 @@ const openPanels = (
 	...requests: EditorPanelRequest[]
 ): EditorPanelRequest[] => [{ type: "closeAll" }, ...requests];
 
+const ensureStickyEdgeLab = () => ({
+	templateId: "stickySteps" as const,
+	ifMissingNodeName: "Sticky Edge Lab",
+});
+
 export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 	entryTopicId: "start",
 	entryStepId: "welcome",
@@ -141,10 +146,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			},
 			navigation: {
 				editor: editorState({ panel: "sectionTemplates" }),
-				insertSectionTemplate: {
-					templateId: "stickySteps",
-					ifMissingNodeName: "Sticky Edge Lab",
-				},
+				insertSectionTemplate: ensureStickyEdgeLab(),
 				panels: openPanels({ type: "open", panel: "sectionTemplates" }),
 			},
 		},
@@ -161,6 +163,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			},
 			navigation: {
 				editor: editorState(),
+				insertSectionTemplate: ensureStickyEdgeLab(),
 				nodeTarget: {
 					name: "Top Edge Card Container",
 					sticky: true,
@@ -183,6 +186,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			},
 			navigation: {
 				editor: editorState({ previewSticky: true, spacerVisibility: "all" }),
+				insertSectionTemplate: ensureStickyEdgeLab(),
 				nodeTarget: {
 					name: "Top Edge Card Container",
 					sticky: true,
@@ -209,6 +213,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			},
 			navigation: {
 				editor: editorState(),
+				insertSectionTemplate: ensureStickyEdgeLab(),
 				nodeTarget: {
 					name: "Bottom Edge Card Container",
 					sticky: true,
