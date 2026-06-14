@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
 	Check,
 	ChevronLeft,
@@ -10,7 +10,7 @@ import {
 	X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PopoverSurface } from "@/components/ui/popover";
+import { PopoverSurface, PopoverTooltip } from "@/components/ui/popover";
 import { useEscapeKey } from "@/lib/useEscapeKey";
 import {
 	buildEditorNavigationSearch,
@@ -27,7 +27,7 @@ import {
 	type ShowcaseTourStep,
 	type ShowcaseTourStepNavigation,
 } from "@/api/showcaseTourApi";
-import { cn } from "@/lib/utils";
+import { cn, DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import {
 	buildShowcaseTourSkinStyle,
 	DEFAULT_SHOWCASE_TOUR_SKIN,
@@ -242,33 +242,21 @@ export function ShowcaseTourOverlay({
 								</h2>
 							</div>
 							<div className="flex gap-1">
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									aria-label={menuOpen ? "Hide tour menu" : "Show tour menu"}
+								<TourIconButton
+									label={menuOpen ? "Hide tour menu" : "Show tour menu"}
 									onClick={() => setMenuOpen((open) => !open)}
 								>
 									<ListTree className="h-4 w-4" />
-								</Button>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									aria-label="Hide tour panel"
+								</TourIconButton>
+								<TourIconButton
+									label="Hide tour panel"
 									onClick={() => setMinimized(true)}
 								>
 									<Minimize2 className="h-4 w-4" />
-								</Button>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									aria-label="Close showcase tour"
-									onClick={onClose}
-								>
+								</TourIconButton>
+								<TourIconButton label="Close showcase tour" onClick={onClose}>
 									<X className="h-4 w-4" />
-								</Button>
+								</TourIconButton>
 							</div>
 						</header>
 						<div className="space-y-3 px-4 py-4">
@@ -422,6 +410,35 @@ function TourTargetHighlight({
 				</div>
 			) : null}
 		</div>
+	);
+}
+
+function TourIconButton({
+	label,
+	onClick,
+	children,
+}: {
+	label: string;
+	onClick: () => void;
+	children: ReactNode;
+}) {
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className={DARK_TOOLTIP_CLASS}
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			<Button
+				type="button"
+				variant="ghost"
+				size="icon"
+				aria-label={label}
+				onClick={onClick}
+			>
+				{children}
+			</Button>
+		</PopoverTooltip>
 	);
 }
 

@@ -104,6 +104,8 @@ describe('app smoke e2e', () => {
     const showMenuButton = smokePage.getByRole('button', { name: 'Show tour menu' });
     expect(await tourMenu.count()).toBe(0);
     expect(await showMenuButton.isVisible()).toBe(true);
+    await showMenuButton.hover();
+    await smokePage.getByRole('tooltip', { name: 'Show tour menu' }).waitFor({ state: 'visible' });
     await showMenuButton.click();
     await tourMenu.waitFor({ state: 'visible' });
     const tourStyle = await tour.evaluate((element) => {

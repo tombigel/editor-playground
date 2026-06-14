@@ -45,6 +45,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - improve target highlight affordance
 - encapsulate step state
 - wrap topic menu text
+- add icon button tooltips
 
 ---
 
