@@ -132,6 +132,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Insert text");
 		expect(markup).toContain(">List<");
 		expect(markup).toContain("Standalone list block");
+		expect(markup).toContain('data-text-type-role="richtext"');
 	});
 
 	it("renders the top bar as a single-row menubar with a centered pages switcher", () => {

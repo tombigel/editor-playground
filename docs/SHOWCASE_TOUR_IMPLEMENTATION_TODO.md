@@ -181,6 +181,12 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run test:e2e:smoke`
   - `pnpm run build`
   - Notes: step 14 (`site-preview-export`) now exposes the same new-tab preview route as the topbar preview workflow through the existing tour external-link action slot.
+- Text editor and animation follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm exec vitest run src/app/showcaseTour/tests/showcaseTourConfig.test.ts src/app/tests/AppShell.test.tsx`
+  - `pnpm run build`
+  - Notes: added an editor-topic Rich text step that opens the typed `textTypes` panel and anchors the Rich text option, and retitled/re-anchored the animation step to the real `animation-behavior` inspector block.
 
 ## Commit Log
 
@@ -196,6 +202,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Follow-up: settings nav highlight alignment shipped in `fix(showcase-tour): highlight settings nav workflow routes`.
 - Follow-up: specialist review obvious fixes validated and ready for commit.
 - Follow-up: preview new-tab action validated and ready for commit.
+- Follow-up: text editor and animation tour steps validated and ready for commit.
 
 ## Unresolved Questions
 

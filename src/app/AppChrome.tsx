@@ -222,6 +222,7 @@ export function TextTypePopover({
           <button
             key={role}
             type="button"
+            data-text-type-role={role}
             className="editor-template-card flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--editor-focus-ring-offset)]"
             onClick={() => {
               onInsert(role);

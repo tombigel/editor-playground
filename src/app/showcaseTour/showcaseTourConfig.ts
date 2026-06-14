@@ -47,6 +47,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 				"components-panel",
 				"selection-sync",
 				"direct-manipulation",
+				"slate-text-editor",
 				"focused-mode",
 			],
 		},
@@ -275,6 +276,27 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			},
 		},
 		{
+			id: "slate-text-editor",
+			topicId: "editor",
+			title: "Rich text editing",
+			body: "The rich text editor is built on Slate. It supports formatted blocks, inline editing, merging sibling text nodes into one rich text node, and splitting multi-block rich text back into separate nodes.",
+			route: ["Add", "Rich text", "Merge / split"],
+			anchor: {
+				type: "selector",
+				selector: '[data-text-type-role="richtext"]',
+				label: "Rich text option",
+			},
+			navigation: {
+				editor: editorState({ panel: "textTypes" }),
+				panels: openPanels({ type: "open", panel: "textTypes" }),
+			},
+			action: {
+				type: "instruction",
+				label:
+					"Try it: insert rich text, edit it on the stage, then use merge/split from text selection workflows.",
+			},
+		},
+		{
 			id: "focused-mode",
 			topicId: "editor",
 			title: "Focus mode",
@@ -422,12 +444,12 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "animation-preview",
 			topicId: "design",
-			title: "Motion is an editor workflow",
-			body: "Animation is treated as editable product state. Preview lets motion become something to tune, test, and explain instead of a hidden implementation detail.",
+			title: "Explore animations",
+			body: "Animations are editable on the selected element. The inspector exposes trigger, preset, timing, reduced-motion, and preview controls in the same document workflow.",
 			route: ["View", "Animation preview", "Inspector"],
 			anchor: {
 				type: "selector",
-				selector: '[data-inspector-block="animation"]',
+				selector: '[data-inspector-block="animation-behavior"]',
 				label: "Animation controls",
 			},
 			navigation: {

@@ -63,4 +63,37 @@ describe("showcase tour config", () => {
 			href: "?mode=preview",
 		});
 	});
+
+	it("adds a rich text editor story step to the editor topic", () => {
+		const topic = SHOWCASE_TOUR_CONFIG.topics.find(
+			(item) => item.id === "editor",
+		);
+		const step = SHOWCASE_TOUR_CONFIG.steps.find(
+			(item) => item.id === "slate-text-editor",
+		);
+
+		expect(topic?.stepIds).toContain("slate-text-editor");
+		expect(step?.anchor).toEqual({
+			type: "selector",
+			selector: '[data-text-type-role="richtext"]',
+			label: "Rich text option",
+		});
+		expect(step?.navigation).toMatchObject({
+			editor: { focusedMode: null, panel: "textTypes" },
+			panels: [{ type: "closeAll" }, { type: "open", panel: "textTypes" }],
+		});
+	});
+
+	it("anchors the animation story to the real inspector block", () => {
+		const step = SHOWCASE_TOUR_CONFIG.steps.find(
+			(item) => item.id === "animation-preview",
+		);
+
+		expect(step?.title).toBe("Explore animations");
+		expect(step?.anchor).toEqual({
+			type: "selector",
+			selector: '[data-inspector-block="animation-behavior"]',
+			label: "Animation controls",
+		});
+	});
 });
