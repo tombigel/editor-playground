@@ -50,6 +50,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add icon button tooltips
 - preserve outside-click panels while dragging
 - exempt tour from floating panel dismiss
+- anchor settings highlights to stable targets
 
 ---
 

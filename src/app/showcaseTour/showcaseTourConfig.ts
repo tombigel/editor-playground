@@ -310,7 +310,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			route: ["Settings", "Import / Export"],
 			anchor: {
 				type: "selector",
-				selector: '[data-settings-section="transfer"]',
+				selector: '[data-settings-nav="transfer"]',
 				label: "Transfer workflow",
 			},
 			navigation: {
@@ -362,7 +362,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			route: ["Settings", "UI"],
 			anchor: {
 				type: "selector",
-				selector: '[data-settings-section="display"]',
+				selector: '[data-showcase-tour-anchor="settings-panel"]',
 				label: "UI settings",
 			},
 			navigation: {
@@ -476,7 +476,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			route: ["Settings", "Import / Export", "Validate links"],
 			anchor: {
 				type: "selector",
-				selector: '[data-settings-section="transfer"]',
+				selector: '[data-settings-nav="transfer"]',
 				label: "Validation workflow",
 			},
 			navigation: {

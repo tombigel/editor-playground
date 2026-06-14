@@ -419,8 +419,12 @@ function useAnchorState(step: ShowcaseTourStep | null) {
 		const selector = step.anchor.selector;
 		function updateAnchorRect() {
 			const element = window.document.querySelector(selector);
-			setAvailable(Boolean(element));
-			setRect(element ? element.getBoundingClientRect() : null);
+			const nextAvailable = Boolean(element);
+			const nextRect = element ? element.getBoundingClientRect() : null;
+			setAvailable((current) =>
+				current === nextAvailable ? current : nextAvailable,
+			);
+			setRect((current) => (areRectsEqual(current, nextRect) ? current : nextRect));
 		}
 		function scheduleUpdate() {
 			window.cancelAnimationFrame(frame);
@@ -429,10 +433,13 @@ function useAnchorState(step: ShowcaseTourStep | null) {
 		updateAnchorRect();
 		window.addEventListener("resize", scheduleUpdate);
 		window.addEventListener("scroll", scheduleUpdate, true);
+		const observer = new MutationObserver(scheduleUpdate);
+		observer.observe(window.document.body, { childList: true, subtree: true });
 		const timer = window.setTimeout(updateAnchorRect, 120);
 		return () => {
 			window.cancelAnimationFrame(frame);
 			window.clearTimeout(timer);
+			observer.disconnect();
 			window.removeEventListener("resize", scheduleUpdate);
 			window.removeEventListener("scroll", scheduleUpdate, true);
 		};
@@ -452,6 +459,18 @@ function useAnchorState(step: ShowcaseTourStep | null) {
 			? null
 			: "This step is about a surface that appears after the editor finishes moving there. Use the route chips above if you want to open it yourself.",
 	};
+}
+
+function areRectsEqual(left: DOMRect | null, right: DOMRect | null) {
+	if (!left || !right) {
+		return left === right;
+	}
+	return (
+		Math.abs(left.left - right.left) < 0.5 &&
+		Math.abs(left.top - right.top) < 0.5 &&
+		Math.abs(left.width - right.width) < 0.5 &&
+		Math.abs(left.height - right.height) < 0.5
+	);
 }
 
 function TourTargetHighlight({

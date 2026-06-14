@@ -152,6 +152,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run test:e2e:smoke`
   - `pnpm run build`
   - Notes: `useEditorEnvironment` now consumes the same outside-click exemption predicate as `useClickOutside`, so Settings, section templates, and layers treat tour clicks/drags as neutral interactions. Sandboxed smoke/build again failed only at localhost server binding (`EPERM` on `127.0.0.1:4174`). Escalated reruns passed.
+- Settings highlight anchor follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm exec vitest run src/panels/tests/SettingsPanel.test.tsx src/app/showcaseTour/tests/showcaseTourConfig.test.ts`
+  - `pnpm run test:e2e:smoke`
+  - `pnpm run build`
+  - Notes: UI settings now highlights a stable Settings panel shell target, transfer and validation stories highlight the left Import / Export settings nav route, and tour highlights observe DOM changes so lazy/API-opened panels can resolve anchors after mounting. Sandboxed build again failed only at localhost server binding (`EPERM` on `127.0.0.1:4174`); escalated smoke/build passed.
 
 ## Commit Log
 
@@ -162,7 +169,8 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Visual System: `feat(showcase-tour): add configurable tour skin`
 - Follow-up: tour step state encapsulation now uses explicit focused-mode state and panel scenes. Validation passed with focused showcase tests, lint/type/API-doc checks, full build, smoke e2e, and browser spot checks for focused-mode and panel reset transitions.
 - Follow-up: draggable tour panel close-reset behavior shipped in `feat(showcase-tour): make tour panel draggable`.
-- Follow-up: pending commit for separately draggable tour panel and topic menu with close-reset behavior.
+- Follow-up: separately draggable tour panel and topic menu with close-reset behavior shipped in `feat(showcase-tour): drag tour menu separately`.
+- Follow-up: settings panel and transfer workflow highlight anchors are pending commit.
 
 ## Unresolved Questions
 
