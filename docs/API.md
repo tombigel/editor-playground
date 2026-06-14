@@ -534,6 +534,27 @@ Navigation types:
 - `EditorSettingsSectionId`
 - `EditorPagesPanelTab`
 
+Supported editor URL query params:
+
+| Param | State field | Notes |
+| --- | --- | --- |
+| `page` | `activePageId` | Active editor page id |
+| `select` | `selectedNodeId` | Selected node id |
+| `focus-mode` | `focusedMode` | Active focused mode id; `none` or `normal` clears focused mode |
+| `panel` | `panel` | One of `settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes` |
+| `settings` | `settingsSection` | One of `display`, `pages`, `defaults`, `fonts`, `transfer`, `advanced`, `shortcuts` |
+| `help` | `helpEntryId` | Help/documentation entry id |
+| `page-target` | `pageTargetId` | Target page id for page panel flows |
+| `pages-tab` | `pagesTab` | `page` or `settings` |
+| `tour` | `tourTopic` | Showcase tour topic id |
+| `step` | `tourStep` | Showcase tour step id |
+| `show-hidden` | `showHidden` | Boolean: `1`, `true`, `yes`, `on`; or `0`, `false`, `no`, `off` |
+| `sticky-preview` | `previewSticky` | Boolean |
+| `animation-preview` | `animationPreviewEnabled` | Boolean |
+| `grid` | `showGridLanes` | Boolean |
+| `debug` | `showDebugInfo` | Boolean |
+| `spacers` | `spacerVisibility` | `all` or `selected` |
+
 ### Showcase tour API
 
 Source: `src/api/showcaseTourApi.ts`

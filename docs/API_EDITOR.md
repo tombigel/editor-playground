@@ -35,7 +35,7 @@ Editor APIs wrap document-level operations with:
 
 `editorNavigationApi` is the headless navigation surface for editor deep links and scripted workflows. It keeps navigation out of DOM-click workarounds by representing editor movement as typed state:
 
-- `EditorNavigationUrlState` parses and serializes query parameters for active page, selected node, focused mode, panel target, settings/help target, tour topic/step, and view flags.
+- `EditorNavigationUrlState` parses and serializes query parameters for active page, selected node, focused mode, panel target, settings/help target, tour topic/step, and view flags. Supported URL keys are `page`, `select`, `focus-mode`, `panel`, `settings`, `help`, `page-target`, `pages-tab`, `tour`, `step`, `show-hidden`, `sticky-preview`, `animation-preview`, `grid`, `debug`, and `spacers`.
 - `EditorNodeTarget` resolves stable node queries such as name, type, sticky capability, and selectable/visible nodes instead of requiring generated ids.
 - `EditorViewFlags` applies editor-only UI flags without mutating the document model.
 - `EditorPanelState` and `EditorPanelRequest` describe transient panel operations for settings, help, components, pages, fonts, shortcuts, section templates, and text types.
