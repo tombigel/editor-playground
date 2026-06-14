@@ -15,6 +15,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - wrap showcase tour phase
 - set up pnpm before node cache
+- install playwright chromium
 
 ---
 
