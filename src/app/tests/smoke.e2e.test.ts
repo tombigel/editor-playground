@@ -110,10 +110,27 @@ describe('app smoke e2e', () => {
     await highlight.waitFor({ state: 'visible' });
     const highlightStyle = await highlight.evaluate((element) => {
       const style = window.getComputedStyle(element);
-      return { backgroundColor: style.backgroundColor, boxShadow: style.boxShadow };
+      return {
+        backgroundColor: style.backgroundColor,
+        borderWidth: style.borderWidth,
+        boxShadow: style.boxShadow,
+        outlineStyle: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+      };
     });
     expect(highlightStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(highlightStyle.borderWidth).toBe('0px');
+    expect(highlightStyle.outlineStyle).toBe('solid');
+    expect(highlightStyle.outlineWidth).toBe('4px');
     expect(highlightStyle.boxShadow).not.toContain('9999px');
+    expect(highlightStyle.boxShadow).toContain('inset');
+    const highlightLabel = smokePage.locator('[data-showcase-tour-highlight-label="true"]');
+    await highlightLabel.waitFor({ state: 'visible' });
+    const highlightLabelStyle = await highlightLabel.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return { backgroundColor: style.backgroundColor };
+    });
+    expect(highlightLabelStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     await smokePage.getByRole('button', { name: 'Hide tour panel' }).click();
     await smokePage.getByRole('button', { name: 'Show tour' }).waitFor({ state: 'visible' });
     await smokePage.getByRole('button', { name: 'Show tour' }).click();

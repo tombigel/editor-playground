@@ -40,6 +40,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - reset popover surface paint
 - scope showcase popover reset
 - keep tour above editor popovers
+- improve target highlight affordance
 
 ---
 

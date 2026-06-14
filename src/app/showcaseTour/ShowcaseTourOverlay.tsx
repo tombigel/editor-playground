@@ -397,20 +397,20 @@ function TourTargetHighlight({
 
 	return (
 		<div
-			className="pointer-events-none absolute rounded-lg border-2 border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-highlight-background)] shadow-[var(--showcase-tour-highlight-shadow)]"
+			className="pointer-events-none absolute rounded-[15px] border-0 bg-[color:var(--showcase-tour-highlight-background)] outline outline-4 outline-[color:var(--showcase-tour-highlight-border)] shadow-[var(--showcase-tour-highlight-shadow)]"
 			style={{ left, top, width, height }}
 			data-showcase-tour-highlight="true"
 			aria-hidden="true"
 		>
 			{label ? (
-				<div className="absolute -top-7 left-0 whitespace-nowrap rounded-md border border-[color:var(--showcase-tour-highlight-border)] bg-[color:var(--showcase-tour-surface-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)]">
+				<div
+					className="absolute -top-8 left-0 whitespace-nowrap rounded-md border bg-[color:var(--showcase-tour-highlight-label-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)]"
+					style={{ borderColor: "var(--showcase-tour-highlight-label-border)" }}
+					data-showcase-tour-highlight-label="true"
+				>
 					{label}
 				</div>
 			) : null}
-			<span className="absolute -left-0.5 -top-0.5 h-3 w-3 border-l-2 border-t-2 border-[color:var(--showcase-tour-highlight-border)]" />
-			<span className="absolute -right-0.5 -top-0.5 h-3 w-3 border-r-2 border-t-2 border-[color:var(--showcase-tour-highlight-border)]" />
-			<span className="absolute -bottom-0.5 -left-0.5 h-3 w-3 border-b-2 border-l-2 border-[color:var(--showcase-tour-highlight-border)]" />
-			<span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 border-b-2 border-r-2 border-[color:var(--showcase-tour-highlight-border)]" />
 		</div>
 	);
 }
