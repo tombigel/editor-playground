@@ -71,7 +71,9 @@ export function ShowcaseTourOverlay({
 		const allSteps = config.topics.flatMap((candidate) =>
 			getShowcaseTourStepsForTopic(config, candidate.id),
 		);
-		const index = allSteps.findIndex((candidate) => candidate.id === location.stepId);
+		const index = allSteps.findIndex(
+			(candidate) => candidate.id === location.stepId,
+		);
 		return { index: Math.max(0, index), total: allSteps.length };
 	}, [config, location.stepId]);
 
@@ -118,7 +120,10 @@ export function ShowcaseTourOverlay({
 			<div className="pointer-events-none absolute inset-0 bg-[color:var(--showcase-tour-backdrop-background)] backdrop-blur-[var(--showcase-tour-backdrop-blur)]" />
 			<div className="pointer-events-none absolute inset-0">
 				{!minimized && anchorState.rect ? (
-					<TourTargetHighlight rect={anchorState.rect} label={anchorState.label} />
+					<TourTargetHighlight
+						rect={anchorState.rect}
+						label={anchorState.label}
+					/>
 				) : null}
 			</div>
 			{minimized ? (
@@ -133,11 +138,92 @@ export function ShowcaseTourOverlay({
 				</Button>
 			) : (
 				<div className="pointer-events-auto absolute bottom-5 left-5 flex max-h-[calc(100vh-40px)] max-w-[calc(100vw-40px)] items-end gap-3">
-				{menuOpen ? (
-					<nav
-						aria-label="Showcase tour topics"
+					{menuOpen ? (
+						<nav
+							aria-label="Showcase tour topics"
+							className={cn(
+								"flex max-h-[min(76vh,680px)] w-[300px] flex-col overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+								skin.surfaceClassName,
+							)}
+							style={{
+								background: "var(--showcase-tour-surface-background)",
+								borderColor: "var(--showcase-tour-surface-border)",
+								borderRadius: "var(--showcase-tour-radius)",
+							}}
+							data-showcase-tour-menu="true"
+						>
+							<div className="editor-border-subtle border-b px-4 py-3">
+								<div className="editor-text-strong text-sm font-semibold">
+									Showcase tour
+								</div>
+								<div className="editor-text-muted mt-1 text-xs">
+									Choose a thread, then jump anywhere.
+								</div>
+							</div>
+							<div className="editor-scrollbar min-h-0 overflow-y-auto p-2">
+								{config.topics.map((candidate) => (
+									<div key={candidate.id} className="mb-1">
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className={cn(
+												"h-auto w-full justify-start px-2 py-2 text-left",
+												candidate.id === topic.id &&
+													"bg-[color:var(--showcase-tour-highlight-background)] text-[color:var(--showcase-tour-accent)]",
+											)}
+											onClick={() =>
+												goTo({
+													topicId: candidate.id,
+													stepId: candidate.stepIds[0],
+												})
+											}
+										>
+											<span className="min-w-0">
+												<span className="block text-xs font-semibold leading-4 [overflow-wrap:anywhere]">
+													{candidate.label}
+												</span>
+												<span className="editor-text-muted mt-0.5 block whitespace-normal break-words text-[11px] leading-4">
+													{candidate.description}
+												</span>
+											</span>
+										</Button>
+										{candidate.id === topic.id ? (
+											<div className="ml-3 border-l border-[color:var(--editor-utility-border)] py-1 pl-2">
+												{getShowcaseTourStepsForTopic(config, candidate.id).map(
+													(candidateStep) => (
+														<button
+															key={candidateStep.id}
+															type="button"
+															className={cn(
+																"block w-full rounded-md px-2 py-1.5 text-left text-[11px] leading-4 [overflow-wrap:anywhere]",
+																candidateStep.id === step.id
+																	? "bg-[color:var(--showcase-tour-active-step-background)] text-[color:var(--showcase-tour-active-step-foreground)]"
+																	: "editor-text-muted hover:bg-[color:var(--editor-utility-bg-subtle)]",
+															)}
+															onClick={() =>
+																goTo({
+																	topicId: candidate.id,
+																	stepId: candidateStep.id,
+																})
+															}
+														>
+															{candidateStep.title}
+														</button>
+													),
+												)}
+											</div>
+										) : null}
+									</div>
+								))}
+							</div>
+						</nav>
+					) : null}
+
+					<section
+						aria-live="polite"
 						className={cn(
-							"flex max-h-[min(76vh,680px)] w-[300px] flex-col overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+							"w-[min(440px,calc(100vw-40px))] overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
 							skin.surfaceClassName,
 						)}
 						style={{
@@ -145,183 +231,107 @@ export function ShowcaseTourOverlay({
 							borderColor: "var(--showcase-tour-surface-border)",
 							borderRadius: "var(--showcase-tour-radius)",
 						}}
-						data-showcase-tour-menu="true"
 					>
-						<div className="editor-border-subtle border-b px-4 py-3">
-							<div className="editor-text-strong text-sm font-semibold">
-								Showcase tour
-							</div>
-							<div className="editor-text-muted mt-1 text-xs">
-								Choose a thread, then jump anywhere.
-							</div>
-						</div>
-						<div className="editor-scrollbar min-h-0 overflow-y-auto p-2">
-							{config.topics.map((candidate) => (
-								<div key={candidate.id} className="mb-1">
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										className={cn(
-											"h-auto w-full justify-start px-2 py-2 text-left",
-											candidate.id === topic.id &&
-												"bg-[color:var(--showcase-tour-highlight-background)] text-[color:var(--showcase-tour-accent)]",
-										)}
-										onClick={() =>
-											goTo({
-												topicId: candidate.id,
-												stepId: candidate.stepIds[0],
-											})
-										}
-									>
-										<span>
-											<span className="block text-xs font-semibold">
-												{candidate.label}
-											</span>
-											<span className="editor-text-muted mt-0.5 block text-[11px] leading-4">
-												{candidate.description}
-											</span>
-										</span>
-									</Button>
-									{candidate.id === topic.id ? (
-										<div className="ml-3 border-l border-[color:var(--editor-utility-border)] py-1 pl-2">
-											{getShowcaseTourStepsForTopic(config, candidate.id).map(
-												(candidateStep) => (
-													<button
-														key={candidateStep.id}
-														type="button"
-														className={cn(
-															"block w-full rounded-md px-2 py-1.5 text-left text-[11px] leading-4",
-															candidateStep.id === step.id
-																? "bg-[color:var(--showcase-tour-active-step-background)] text-[color:var(--showcase-tour-active-step-foreground)]"
-																: "editor-text-muted hover:bg-[color:var(--editor-utility-bg-subtle)]",
-														)}
-														onClick={() =>
-															goTo({
-																topicId: candidate.id,
-																stepId: candidateStep.id,
-															})
-														}
-													>
-														{candidateStep.title}
-													</button>
-												),
-											)}
-										</div>
-									) : null}
+						<header className="editor-border-subtle flex items-start justify-between gap-3 border-b px-4 py-3">
+							<div>
+								<div className="editor-text-muted text-[11px] font-medium">
+									{topic.label} · {progress.index + 1}/{progress.total}
 								</div>
-							))}
-						</div>
-					</nav>
-				) : null}
-
-				<section
-					aria-live="polite"
-					className={cn(
-						"w-[min(440px,calc(100vw-40px))] overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
-						skin.surfaceClassName,
-					)}
-					style={{
-						background: "var(--showcase-tour-surface-background)",
-						borderColor: "var(--showcase-tour-surface-border)",
-						borderRadius: "var(--showcase-tour-radius)",
-					}}
-				>
-					<header className="editor-border-subtle flex items-start justify-between gap-3 border-b px-4 py-3">
-						<div>
-							<div className="editor-text-muted text-[11px] font-medium">
-								{topic.label} · {progress.index + 1}/{progress.total}
+								<h2 className="editor-text-strong mt-1 text-base font-semibold">
+									{step.title}
+								</h2>
 							</div>
-							<h2 className="editor-text-strong mt-1 text-base font-semibold">
-								{step.title}
-							</h2>
+							<div className="flex gap-1">
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									aria-label={menuOpen ? "Hide tour menu" : "Show tour menu"}
+									onClick={() => setMenuOpen((open) => !open)}
+								>
+									<ListTree className="h-4 w-4" />
+								</Button>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									aria-label="Hide tour panel"
+									onClick={() => setMinimized(true)}
+								>
+									<Minimize2 className="h-4 w-4" />
+								</Button>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									aria-label="Close showcase tour"
+									onClick={onClose}
+								>
+									<X className="h-4 w-4" />
+								</Button>
+							</div>
+						</header>
+						<div className="space-y-3 px-4 py-4">
+							{step.route && step.route.length > 0 ? (
+								<div className="flex flex-wrap items-center gap-1.5">
+									{step.route.map((item) => (
+										<span
+											key={`${step.id}-${item}`}
+											className="rounded-md border border-[color:var(--showcase-tour-surface-border)] bg-[color:var(--showcase-tour-highlight-background)] px-2 py-1 text-[11px] font-medium text-[color:var(--showcase-tour-accent)]"
+										>
+											{item}
+										</span>
+									))}
+								</div>
+							) : null}
+							<p className="editor-text-muted text-sm leading-6">{step.body}</p>
+							{step.action ? <TourStepAction action={step.action} /> : null}
+							{anchorState.message ? (
+								<div className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-2 text-xs text-[color:var(--editor-utility-text-muted)]">
+									{anchorState.message}
+								</div>
+							) : null}
 						</div>
-						<div className="flex gap-1">
+						<footer className="editor-border-subtle flex items-center justify-between gap-2 border-t px-4 py-3">
 							<Button
 								type="button"
 								variant="ghost"
-								size="icon"
-								aria-label={menuOpen ? "Hide tour menu" : "Show tour menu"}
-								onClick={() => setMenuOpen((open) => !open)}
-							>
-								<ListTree className="h-4 w-4" />
-							</Button>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon"
-								aria-label="Hide tour panel"
-								onClick={() => setMinimized(true)}
-							>
-								<Minimize2 className="h-4 w-4" />
-							</Button>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon"
-								aria-label="Close showcase tour"
-								onClick={onClose}
-							>
-								<X className="h-4 w-4" />
-							</Button>
-						</div>
-					</header>
-					<div className="space-y-3 px-4 py-4">
-						{step.route && step.route.length > 0 ? (
-							<div className="flex flex-wrap items-center gap-1.5">
-								{step.route.map((item) => (
-									<span
-										key={`${step.id}-${item}`}
-										className="rounded-md border border-[color:var(--showcase-tour-surface-border)] bg-[color:var(--showcase-tour-highlight-background)] px-2 py-1 text-[11px] font-medium text-[color:var(--showcase-tour-accent)]"
-									>
-										{item}
-									</span>
-								))}
-							</div>
-						) : null}
-						<p className="editor-text-muted text-sm leading-6">{step.body}</p>
-						{step.action ? <TourStepAction action={step.action} /> : null}
-						{anchorState.message ? (
-							<div className="editor-bg-subtle editor-border-subtle rounded-lg border px-3 py-2 text-xs text-[color:var(--editor-utility-text-muted)]">
-								{anchorState.message}
-							</div>
-						) : null}
-					</div>
-					<footer className="editor-border-subtle flex items-center justify-between gap-2 border-t px-4 py-3">
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							onClick={() => goAdjacent("previous")}
-							disabled={progress.index === 0}
-						>
-							<ChevronLeft className="h-4 w-4" />
-							Back
-						</Button>
-						<div className="flex gap-2">
-							<Button type="button" variant="ghost" size="sm" onClick={onClose}>
-								Skip
-							</Button>
-							<Button
-								type="button"
 								size="sm"
-								onClick={() => (isLast ? onClose() : goAdjacent("next"))}
+								onClick={() => goAdjacent("previous")}
+								disabled={progress.index === 0}
 							>
-								{isLast ? (
-									<>
-										<Check className="h-4 w-4" />
-										Done
-									</>
-								) : (
-									<>
-										Next
-										<ChevronRight className="h-4 w-4" />
-									</>
-								)}
+								<ChevronLeft className="h-4 w-4" />
+								Back
 							</Button>
-						</div>
-					</footer>
-				</section>
+							<div className="flex gap-2">
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={onClose}
+								>
+									Skip
+								</Button>
+								<Button
+									type="button"
+									size="sm"
+									onClick={() => (isLast ? onClose() : goAdjacent("next"))}
+								>
+									{isLast ? (
+										<>
+											<Check className="h-4 w-4" />
+											Done
+										</>
+									) : (
+										<>
+											Next
+											<ChevronRight className="h-4 w-4" />
+										</>
+									)}
+								</Button>
+							</div>
+						</footer>
+					</section>
 				</div>
 			)}
 		</PopoverSurface>
@@ -415,7 +425,11 @@ function TourTargetHighlight({
 	);
 }
 
-function TourStepAction({ action }: { action: NonNullable<ShowcaseTourStep["action"]> }) {
+function TourStepAction({
+	action,
+}: {
+	action: NonNullable<ShowcaseTourStep["action"]>;
+}) {
 	if (action.type === "externalLink") {
 		return (
 			<a
@@ -443,11 +457,14 @@ function syncTourUrl(
 	if (typeof window === "undefined") {
 		return;
 	}
-	const nextSearch = buildEditorNavigationSearch({
-		...(editorState ?? {}),
-		tourTopic: location.topicId,
-		tourStep: location.stepId,
-	}, window.location.search);
+	const nextSearch = buildEditorNavigationSearch(
+		{
+			...(editorState ?? {}),
+			tourTopic: location.topicId,
+			tourStep: location.stepId,
+		},
+		window.location.search,
+	);
 	window.history.replaceState(
 		null,
 		"",
