@@ -539,7 +539,7 @@ function TourTargetHighlight({
 
 	return (
 		<div
-			className="pointer-events-none absolute rounded-[15px] border-0 bg-[color:var(--showcase-tour-highlight-background)] outline outline-4 outline-[color:var(--showcase-tour-highlight-border)] shadow-[var(--showcase-tour-highlight-shadow)]"
+			className="pointer-events-none absolute rounded-[15px] border-0 bg-[color:var(--showcase-tour-highlight-background)] outline outline-4 outline-[color:var(--showcase-tour-highlight-border)] shadow-[var(--showcase-tour-highlight-shadow)] transition-[left,top,width,height,box-shadow,outline-color] duration-200 ease-out"
 			style={{ left, top, width, height }}
 			data-showcase-tour-highlight="true"
 			aria-hidden="true"
@@ -547,7 +547,7 @@ function TourTargetHighlight({
 			{label ? (
 				<div
 					className={cn(
-						"absolute left-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border bg-[color:var(--showcase-tour-highlight-label-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)]",
+						"absolute left-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border bg-[color:var(--showcase-tour-highlight-label-background)] px-2 py-1 text-[11px] font-semibold text-[color:var(--showcase-tour-highlight-text)] shadow-[var(--showcase-tour-surface-shadow)] transition-[border-color,background-color,color,transform,opacity] duration-200 ease-out",
 						labelBelow ? "top-full mt-2" : "bottom-full mb-2",
 					)}
 					style={{
