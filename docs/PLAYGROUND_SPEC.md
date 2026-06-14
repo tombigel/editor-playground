@@ -742,7 +742,7 @@ Google Fonts support is split between a headless data layer and editor-facing do
 |---|---|
 | `ManageFontsPanel` | Available both as a standalone dialog and inside Settings. |
 | Browsing | Supports Google catalog pagination, search, language/category/favorite/used filters, and bundled-catalog timestamps. |
-| Library management | Supports add, remove unused, favorite/unfavorite, and purge-unused operations. |
+| Library management | Supports add, remove unused, favorite/unfavorite, and purge-unused operations. Installed font rows show inline usage-count pills at the end of the metadata line: subtle green for fonts with one or more uses and subtle red for fonts with zero uses. |
 | Preview | Shows document-library previews inline and uses language-appropriate samples when possible. |
 | Persistence | Keeps browse search and filter state in browser storage so the panel reopens in the same state. |
 

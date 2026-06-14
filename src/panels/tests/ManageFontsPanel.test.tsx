@@ -79,4 +79,28 @@ describe('panels/ManageFontsPanel', () => {
     expect(markup).toContain('data-ui="list-card"');
     expect(markup).toContain('data-ui="pager"');
   });
+
+  it('renders installed font usage as subtle success and danger pills', () => {
+    const document = createInitialDocument();
+    const seedFamily = document.fontLibrary.usedFamilies[0];
+    document.fontLibrary.usedFamilies.push({
+      ...seedFamily,
+      family: 'Unused Sans',
+      favorite: false,
+      origin: 'added',
+    });
+    const markup = renderToStaticMarkup(
+      <ManageFontsPanel
+        document={document}
+        onAddFont={() => {}}
+        onRemoveFont={() => {}}
+        onToggleFavorite={() => {}}
+        onPurgeUnused={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('editor-success-text');
+    expect(markup).toContain('editor-danger-text');
+    expect(markup).toContain('0 uses</span>');
+  });
 });

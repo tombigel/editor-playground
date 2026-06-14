@@ -262,7 +262,7 @@ export function ManageFontsPanel({
                 key={family.family}
                 title={family.family}
                 description={getFontPreviewText(family, subset)}
-                meta={formatFontMeta(family, usageCount)}
+                meta={<InstalledFontMeta family={family} usageCount={usageCount} />}
                 tone="subtle"
                 titleStyle={buildPreviewStyle(family)}
                 descriptionStyle={buildPreviewStyle(family)}
@@ -425,13 +425,12 @@ export function ManageFontsPanel({
             </div>
             {visibleCatalogFamilies.map((family) => {
               const existing = getDocumentFontFamily(document, family.family);
-              const usageCount = usageMap[family.family] ?? 0;
               return (
                 <ListCard
                   key={family.family}
                   title={family.family}
                   description={getFontPreviewText(family, subset)}
-                  meta={formatFontMeta(family, usageCount)}
+                  meta={formatFontMeta(family)}
                   titleStyle={buildPreviewStyle(family)}
                   descriptionStyle={buildPreviewStyle(family)}
                   actions={
@@ -597,13 +596,35 @@ function getFontPreviewText(family: DocumentFontFamily, activeSubset: string) {
   return LANGUAGE_GROUP_DEFINITIONS.find((group) => group.subsets.includes(previewSubset))?.previewText ?? 'Hamburgefonstiv 123';
 }
 
-function formatFontMeta(family: DocumentFontFamily, usageCount: number) {
+function formatFontMeta(family: DocumentFontFamily) {
   return [
     family.category,
     getPrimaryLanguageLabel(family),
-    `${usageCount} used`,
     family.isVariable ? 'variable' : `${family.variants.length} styles`,
   ].join(' · ');
+}
+
+function InstalledFontMeta({ family, usageCount }: { family: DocumentFontFamily; usageCount: number }) {
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-x-1.5 gap-y-1">
+      <span>{family.category}</span>
+      <span aria-hidden="true">·</span>
+      <span>{getPrimaryLanguageLabel(family)}</span>
+      <span aria-hidden="true">·</span>
+      <span>{family.isVariable ? 'variable' : `${family.variants.length} styles`}</span>
+      <span aria-hidden="true">·</span>
+      <span
+        className={[
+          usageCount > 0
+            ? 'editor-success-text bg-[color:color-mix(in_srgb,var(--editor-success-background)_54%,transparent)] border-[color:color-mix(in_srgb,var(--editor-success-border)_54%,transparent)]'
+            : 'editor-danger-text bg-[color:color-mix(in_srgb,var(--editor-danger-background)_54%,transparent)] border-[color:color-mix(in_srgb,var(--editor-danger-border)_54%,transparent)]',
+          'inline-flex rounded-full border px-1.5 py-0 text-[10px] font-medium leading-4',
+        ].join(' ')}
+      >
+        {usageCount} uses
+      </span>
+    </div>
+  );
 }
 
 export function buildLanguageFilterOptions(families: Array<Pick<DocumentFontFamily, 'subsets'>>): LanguageFilterOption[] {
