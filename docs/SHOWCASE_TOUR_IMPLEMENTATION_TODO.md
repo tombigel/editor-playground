@@ -85,6 +85,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Post-validation refinement fixed the first-use tour experience: tour surfaces now render above editor popovers, stage blur is removed, the tour can be minimized without closing, target highlights point to live surfaces, design-system opens via a new-tab action, and the sticky story inserts the Sticky Edge Lab through the real editor template action.
 - Target highlights are outline-only with a small glow and corner marks. They must not fill large targets or add a full-screen spotlight spread over the editor.
 - The expanded showcase tour panel and topic menu are separately draggable through local overlay state only. They intentionally do not use persistent editor panel positioning, so closing the tour clears both dragged positions and reopening starts from the default compact placement.
+- Tour overlay surfaces opt into the shared editor outside-click exemption contract so tour clicks/drags are neutral to unrelated panels and popovers that use `useClickOutside`.
 
 ## Discovered API Gaps
 
@@ -134,6 +135,12 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run build`
   - Notes: the sandboxed `pnpm run test:e2e:smoke` and first sandboxed `pnpm run build` both failed only at localhost server binding (`EPERM` on `127.0.0.1:4174`). Escalated reruns passed.
 - Separately draggable tour surfaces follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm run test:e2e:smoke`
+  - `pnpm run build`
+  - Notes: sandboxed smoke/build again failed only at localhost server binding (`EPERM` on `127.0.0.1:4174`). Escalated reruns passed.
+- Outside-click exemption follow-up:
   - `pnpm run lint`
   - `pnpm run typecheck`
   - `pnpm run test:e2e:smoke`

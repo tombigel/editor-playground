@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PopoverSurface, PopoverTooltip } from "@/components/ui/popover";
+import { OUTSIDE_CLICK_EXEMPT_ATTR } from "@/lib/useClickOutside";
 import { useEscapeKey } from "@/lib/useEscapeKey";
 import {
 	buildEditorNavigationSearch,
@@ -172,6 +173,7 @@ export function ShowcaseTourOverlay({
 			)}
 			data-showcase-tour="true"
 			data-showcase-tour-skin={skin.id}
+			{...{ [OUTSIDE_CLICK_EXEMPT_ATTR]: "true" }}
 			style={buildShowcaseTourSkinStyle(skin)}
 		>
 			<div className="pointer-events-none absolute inset-0 bg-[color:var(--showcase-tour-backdrop-background)] backdrop-blur-[var(--showcase-tour-backdrop-blur)]" />
