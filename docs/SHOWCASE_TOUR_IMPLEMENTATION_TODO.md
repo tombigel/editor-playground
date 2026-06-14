@@ -84,6 +84,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Visual System added a typed `ShowcaseTourSkin` layer instead of choosing the final differentiator. No shared primitive APIs changed, so no design-system demo update was required.
 - Post-validation refinement fixed the first-use tour experience: tour surfaces now render above editor popovers, stage blur is removed, the tour can be minimized without closing, target highlights point to live surfaces, design-system opens via a new-tab action, and the sticky story inserts the Sticky Edge Lab through the real editor template action.
 - Target highlights are outline-only with a small glow and corner marks. They must not fill large targets or add a full-screen spotlight spread over the editor.
+- The expanded showcase tour panel group is draggable through local overlay state only. It intentionally does not use persistent editor panel positioning, so closing the tour clears the dragged position and reopening starts from the default compact placement.
 
 ## Discovered API Gaps
 
@@ -126,6 +127,12 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run lint`
   - `pnpm run build`
   - Note: `pnpm run build` first failed inside the sandbox at `test:e2e:smoke` because binding `127.0.0.1:4174` returned `EPERM`; rerunning with local server permission passed.
+- Draggable tour panel follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm run test:e2e:smoke`
+  - `pnpm run build`
+  - Notes: the sandboxed `pnpm run test:e2e:smoke` and first sandboxed `pnpm run build` both failed only at localhost server binding (`EPERM` on `127.0.0.1:4174`). Escalated reruns passed.
 
 ## Commit Log
 
@@ -135,6 +142,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Phase 3: `feat(showcase-tour): add non-linear tour shell`
 - Visual System: `feat(showcase-tour): add configurable tour skin`
 - Follow-up: tour step state encapsulation now uses explicit focused-mode state and panel scenes. Validation passed with focused showcase tests, lint/type/API-doc checks, full build, smoke e2e, and browser spot checks for focused-mode and panel reset transitions.
+- Follow-up: pending commit for draggable tour panel with close-reset behavior.
 
 ## Unresolved Questions
 

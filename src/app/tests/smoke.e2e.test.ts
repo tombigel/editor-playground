@@ -146,6 +146,56 @@ describe('app smoke e2e', () => {
     expect(pageErrors).toEqual([]);
   }, 30_000);
 
+  it('drags the showcase tour panel without remembering position after close', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
+    page = smokePage;
+
+    const tourCard = smokePage.locator('[data-showcase-tour-card="true"]');
+    const dragHandle = smokePage.locator('[data-showcase-tour-drag-handle="true"]');
+    await tourCard.waitFor({ state: 'visible' });
+    const initialBox = await tourCard.boundingBox();
+    const handleBox = await dragHandle.boundingBox();
+    if (!initialBox || !handleBox) {
+      throw new Error('Expected showcase tour card and drag handle to be measurable');
+    }
+
+    await smokePage.mouse.move(handleBox.x + 80, handleBox.y + 18);
+    await smokePage.mouse.down();
+    await smokePage.mouse.move(handleBox.x + 280, handleBox.y - 140, { steps: 8 });
+    await smokePage.mouse.up();
+
+    const draggedBox = await tourCard.boundingBox();
+    if (!draggedBox) {
+      throw new Error('Expected dragged showcase tour card to be measurable');
+    }
+    expect(draggedBox.x).toBeGreaterThan(initialBox.x + 120);
+    expect(draggedBox.y).toBeLessThan(initialBox.y - 80);
+
+    await smokePage.getByRole('button', { name: 'Close showcase tour' }).click();
+    await smokePage.locator('[data-showcase-tour="true"]').waitFor({ state: 'hidden' });
+    await smokePage.locator('[data-ui="menubar-trigger"][data-menu-id="help"]').click();
+    await smokePage.getByRole('menuitem', { name: 'Showcase tour' }).click();
+    await tourCard.waitFor({ state: 'visible' });
+
+    const reopenedBox = await tourCard.boundingBox();
+    if (!reopenedBox) {
+      throw new Error('Expected reopened showcase tour card to be measurable');
+    }
+    expect(reopenedBox.x).toBeLessThan(80);
+    expect(reopenedBox.y).toBeGreaterThan(600);
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
   it('creates the sticky lab during the sticky tour story', async () => {
     context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
     const smokePage = await context.newPage();

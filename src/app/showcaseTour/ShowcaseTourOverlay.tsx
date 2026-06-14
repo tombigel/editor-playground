@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	type PointerEvent as ReactPointerEvent,
+	type ReactNode,
+} from "react";
 import {
 	Check,
 	ChevronLeft,
@@ -43,6 +50,23 @@ type Props = {
 	skin?: ShowcaseTourSkin;
 };
 
+const TOUR_PANEL_VIEWPORT_MARGIN = 12;
+
+type TourPanelPosition = {
+	left: number;
+	top: number;
+};
+
+type TourPanelDragState = {
+	pointerId: number;
+	originX: number;
+	originY: number;
+	originLeft: number;
+	originTop: number;
+	panelWidth: number;
+	panelHeight: number;
+};
+
 export function ShowcaseTourOverlay({
 	config,
 	location,
@@ -53,11 +77,17 @@ export function ShowcaseTourOverlay({
 }: Props) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [minimized, setMinimized] = useState(false);
+	const [panelPosition, setPanelPosition] = useState<TourPanelPosition | null>(
+		null,
+	);
+	const [panelDragState, setPanelDragState] =
+		useState<TourPanelDragState | null>(null);
 	const step = getShowcaseTourStep(config, location.stepId);
 	const topic = getShowcaseTourTopic(config, location.topicId);
 	const anchorState = useAnchorState(step);
 	const isLast = isLastShowcaseTourStep(config, location);
 	const latestApplyNavigationRef = useRef(onApplyNavigation);
+	const panelGroupRef = useRef<HTMLDivElement | null>(null);
 	const tourTopLayerKey = [
 		location.topicId,
 		location.stepId,
@@ -89,6 +119,58 @@ export function ShowcaseTourOverlay({
 		syncTourUrl(location, step.navigation.editor);
 	}, [location, step]);
 
+	// The showcase panel is deliberately local drag state: unlike editor panels,
+	// its position must not persist after the URL-backed tour is closed.
+	useEffect(() => {
+		if (!panelDragState) return;
+		const originalCursor = document.body.style.cursor;
+		const originalUserSelect = document.body.style.userSelect;
+		document.body.style.cursor = "grabbing";
+		document.body.style.userSelect = "none";
+		return () => {
+			document.body.style.cursor = originalCursor;
+			document.body.style.userSelect = originalUserSelect;
+		};
+	}, [panelDragState]);
+
+	useEffect(() => {
+		if (!panelDragState) return;
+		const dragState = panelDragState;
+
+		function handlePointerMove(event: PointerEvent) {
+			if (event.pointerId !== dragState.pointerId) return;
+			event.preventDefault();
+			setPanelPosition({
+				left: clampTourPanelPosition(
+					dragState.originLeft + event.clientX - dragState.originX,
+					dragState.panelWidth,
+					window.innerWidth,
+				),
+				top: clampTourPanelPosition(
+					dragState.originTop + event.clientY - dragState.originY,
+					dragState.panelHeight,
+					window.innerHeight,
+				),
+			});
+		}
+
+		function handlePointerEnd(event: PointerEvent) {
+			if (event.pointerId !== dragState.pointerId) return;
+			setPanelDragState(null);
+		}
+
+		window.addEventListener("pointermove", handlePointerMove, {
+			passive: false,
+		});
+		window.addEventListener("pointerup", handlePointerEnd);
+		window.addEventListener("pointercancel", handlePointerEnd);
+		return () => {
+			window.removeEventListener("pointermove", handlePointerMove);
+			window.removeEventListener("pointerup", handlePointerEnd);
+			window.removeEventListener("pointercancel", handlePointerEnd);
+		};
+	}, [panelDragState]);
+
 	if (!step || !topic) {
 		return null;
 	}
@@ -100,6 +182,30 @@ export function ShowcaseTourOverlay({
 
 	function goAdjacent(direction: "next" | "previous") {
 		goTo(getAdjacentShowcaseTourStep(config, location, direction));
+	}
+
+	function handlePanelDragStart(event: ReactPointerEvent<HTMLElement>) {
+		const target = event.target;
+		if (
+			target instanceof HTMLElement &&
+			target.closest("button, a, input, textarea, select")
+		) {
+			return;
+		}
+		const panelGroup = panelGroupRef.current;
+		if (!panelGroup) return;
+		const rect = panelGroup.getBoundingClientRect();
+		event.preventDefault();
+		setPanelPosition({ left: rect.left, top: rect.top });
+		setPanelDragState({
+			pointerId: event.pointerId,
+			originX: event.clientX,
+			originY: event.clientY,
+			originLeft: rect.left,
+			originTop: rect.top,
+			panelWidth: rect.width,
+			panelHeight: rect.height,
+		});
 	}
 
 	return (
@@ -137,7 +243,19 @@ export function ShowcaseTourOverlay({
 					Show tour
 				</Button>
 			) : (
-				<div className="pointer-events-auto absolute bottom-5 left-5 flex max-h-[calc(100vh-40px)] max-w-[calc(100vw-40px)] items-end gap-3">
+				<div
+					ref={panelGroupRef}
+					className={cn(
+						"pointer-events-auto absolute flex max-h-[calc(100vh-40px)] max-w-[calc(100vw-40px)] items-end gap-3",
+						panelPosition ? null : "bottom-5 left-5",
+					)}
+					style={
+						panelPosition
+							? { left: panelPosition.left, top: panelPosition.top }
+							: undefined
+					}
+					data-showcase-tour-panel-group="true"
+				>
 					{menuOpen ? (
 						<nav
 							aria-label="Showcase tour topics"
@@ -231,8 +349,13 @@ export function ShowcaseTourOverlay({
 							borderColor: "var(--showcase-tour-surface-border)",
 							borderRadius: "var(--showcase-tour-radius)",
 						}}
+						data-showcase-tour-card="true"
 					>
-						<header className="editor-border-subtle flex items-start justify-between gap-3 border-b px-4 py-3">
+						<header
+							className="editor-border-subtle flex cursor-grab touch-none select-none items-start justify-between gap-3 border-b px-4 py-3 active:cursor-grabbing"
+							onPointerDown={handlePanelDragStart}
+							data-showcase-tour-drag-handle="true"
+						>
 							<div>
 								<div className="editor-text-muted text-[11px] font-medium">
 									{topic.label} · {progress.index + 1}/{progress.total}
@@ -487,4 +610,16 @@ function syncTourUrl(
 		"",
 		`${window.location.pathname}${nextSearch}${window.location.hash}`,
 	);
+}
+
+function clampTourPanelPosition(
+	value: number,
+	panelSize: number,
+	viewportSize: number,
+) {
+	const max = Math.max(
+		TOUR_PANEL_VIEWPORT_MARGIN,
+		viewportSize - panelSize - TOUR_PANEL_VIEWPORT_MARGIN,
+	);
+	return Math.min(max, Math.max(TOUR_PANEL_VIEWPORT_MARGIN, value));
 }
