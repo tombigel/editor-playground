@@ -385,8 +385,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "font-system",
 			topicId: "design",
-			title: "Fonts are document-level workflow",
-			body: "Fonts are part of the document workflow. Favorites, usage, and cleanup live with the site instead of being hidden as incidental styling.",
+			title: "Choose document fonts",
+			body: "The font panel is a working Google Fonts explorer. Each document can define its own font set, preview families and weights, and keep only the fonts it actually uses.",
 			route: ["Settings", "Fonts"],
 			anchor: {
 				type: "selector",

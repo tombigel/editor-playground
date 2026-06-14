@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - record final validation
 - list editor navigation url params
 - refine focus mode step copy
+- refine font step copy
 
 ### Fixed
 
