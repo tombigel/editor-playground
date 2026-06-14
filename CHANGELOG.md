@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - wrap showcase tour phase
+- set up pnpm before node cache
 
 ---
 
