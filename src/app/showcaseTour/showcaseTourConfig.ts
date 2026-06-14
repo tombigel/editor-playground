@@ -1,5 +1,19 @@
 import type { ShowcaseTourConfig } from "@/api/showcaseTourApi";
+import type {
+	EditorNavigationUrlState,
+	EditorPanelRequest,
+} from "@/api/editorNavigationApi";
 import { DESIGN_SYSTEM_ROUTE_HASH } from "@/lib/designSystem";
+
+const editorState = (
+	navigation: EditorNavigationUrlState = {},
+): EditorNavigationUrlState => ({ focusedMode: null, ...navigation });
+
+const closePanels = (): EditorPanelRequest[] => [{ type: "closeAll" }];
+
+const openPanels = (
+	...requests: EditorPanelRequest[]
+): EditorPanelRequest[] => [{ type: "closeAll" }, ...requests];
 
 export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 	entryTopicId: "start",
@@ -20,7 +34,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "editor",
 			label: "Editor Craft",
-			description: "Selection, structure, progressive disclosure, and canvas UX.",
+			description:
+				"Selection, structure, progressive disclosure, and canvas UX.",
 			stepIds: [
 				"components-panel",
 				"selection-sync",
@@ -32,12 +47,18 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "api",
 			label: "API & Architecture",
 			description: "The headless model and API surface behind the editor.",
-			stepIds: ["api-docs", "model-transfer", "site-preview-export", "debug-info"],
+			stepIds: [
+				"api-docs",
+				"model-transfer",
+				"site-preview-export",
+				"debug-info",
+			],
 		},
 		{
 			id: "design",
 			label: "Design System & Motion",
-			description: "Tokenized chrome, font workflow, visual systems, and motion.",
+			description:
+				"Tokenized chrome, font workflow, visual systems, and motion.",
 			stepIds: [
 				"ui-settings",
 				"font-system",
@@ -49,7 +70,12 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "product",
 			label: "Product Depth",
 			description: "Pages, routing, validation, docs, and maintenance depth.",
-			stepIds: ["pages-panel", "page-routing", "link-validation", "docs-history"],
+			stepIds: [
+				"pages-panel",
+				"page-routing",
+				"link-validation",
+				"docs-history",
+			],
 		},
 	],
 	steps: [
@@ -59,18 +85,35 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "This is the product, not a mockup",
 			body: "Start with the stage: this is a working editor surface, not a slide. The tour will move through model-backed panels, live selection, preview flags, export, docs, and the design system.",
 			route: ["Stage", "Panels", "Preview", "Export"],
-			anchor: { type: "selector", selector: ".stage-shell", label: "Live editor stage" },
-			navigation: { editor: { activePageId: "page-home" } },
+			anchor: {
+				type: "selector",
+				selector: ".stage-shell",
+				label: "Live editor stage",
+			},
+			navigation: {
+				editor: editorState({ activePageId: "page-home" }),
+				panels: closePanels(),
+			},
 		},
 		{
 			id: "seeded-model",
 			topicId: "start",
 			title: "The stage starts from a real document model",
 			body: "The selected title is ordinary document state. The same model powers templates, import/export, preview rendering, and tests, which is why the editor can be scripted instead of manually driven.",
-			route: ["API selects node", "Stage reflects selection", "Inspector follows"],
-			anchor: { type: "selector", selector: ".stage-single-selection-overlay", label: "Selected model node" },
+			route: [
+				"API selects node",
+				"Stage reflects selection",
+				"Inspector follows",
+			],
+			anchor: {
+				type: "selector",
+				selector: ".stage-single-selection-overlay",
+				label: "Selected model node",
+			},
 			navigation: {
+				editor: editorState(),
 				nodeTarget: { name: "Post Title", contentType: "text" },
+				panels: closePanels(),
 			},
 		},
 		{
@@ -80,7 +123,10 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			body: "The tour is intentionally non-linear. A designer can jump to interaction craft, an engineer can jump to API and URL state, and a product lead can jump to documentation and maintenance workflows.",
 			route: ["Tour menu", "Topic", "Step"],
 			anchor: { type: "tourMenu" },
-			navigation: {},
+			navigation: {
+				editor: editorState(),
+				panels: closePanels(),
+			},
 		},
 		{
 			id: "sticky-templates",
@@ -94,12 +140,12 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 				label: "Template entry point",
 			},
 			navigation: {
-				editor: { panel: "sectionTemplates" },
+				editor: editorState({ panel: "sectionTemplates" }),
 				insertSectionTemplate: {
 					templateId: "stickySteps",
 					ifMissingNodeName: "Sticky Edge Lab",
 				},
-				panel: { type: "open", panel: "sectionTemplates" },
+				panels: openPanels({ type: "open", panel: "sectionTemplates" }),
 			},
 		},
 		{
@@ -114,7 +160,13 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 				label: "Sticky controls",
 			},
 			navigation: {
-				nodeTarget: { name: "Top Edge Card Container", sticky: true, selectable: true },
+				editor: editorState(),
+				nodeTarget: {
+					name: "Top Edge Card Container",
+					sticky: true,
+					selectable: true,
+				},
+				panels: closePanels(),
 			},
 		},
 		{
@@ -125,14 +177,24 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			route: ["View", "Sticky preview", "Show spacers"],
 			anchor: {
 				type: "selector",
-				selector: '[aria-label="Sticky preview on"], [aria-label="Sticky preview off"]',
+				selector:
+					'[aria-label="Sticky preview on"], [aria-label="Sticky preview off"]',
 				label: "Preview toggle",
 			},
 			navigation: {
-				editor: { previewSticky: true, spacerVisibility: "all" },
-				nodeTarget: { name: "Top Edge Card Container", sticky: true, selectable: true },
+				editor: editorState({ previewSticky: true, spacerVisibility: "all" }),
+				nodeTarget: {
+					name: "Top Edge Card Container",
+					sticky: true,
+					selectable: true,
+				},
+				panels: closePanels(),
 			},
-			action: { type: "instruction", label: "Try it: scroll the stage, then change offset or duration in the sticky panel." },
+			action: {
+				type: "instruction",
+				label:
+					"Try it: scroll the stage, then change offset or duration in the sticky panel.",
+			},
 		},
 		{
 			id: "edge-lab",
@@ -140,9 +202,19 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Compare top, both, and bottom edges",
 			body: "The lab keeps the variables controlled: same section, same viewport, different sticky edge definitions. It makes edge cases visible enough to design, test, and explain.",
 			route: ["Sticky Edge Lab", "Top", "Both", "Bottom"],
-			anchor: { type: "selector", selector: ".stage-single-selection-overlay", label: "Sticky edge case" },
+			anchor: {
+				type: "selector",
+				selector: ".stage-single-selection-overlay",
+				label: "Sticky edge case",
+			},
 			navigation: {
-				nodeTarget: { name: "Bottom Edge Card Container", sticky: true, selectable: true },
+				editor: editorState(),
+				nodeTarget: {
+					name: "Bottom Edge Card Container",
+					sticky: true,
+					selectable: true,
+				},
+				panels: closePanels(),
 			},
 		},
 		{
@@ -151,10 +223,14 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Structure stays visible while editing visually",
 			body: "Visual editing needs a second view of structure. The Components panel lets a visitor see hierarchy, visibility, and order while the stage stays direct-manipulation friendly.",
 			route: ["Left rail", "Components"],
-			anchor: { type: "selector", selector: ".editor-layers-panel", label: "Document hierarchy" },
+			anchor: {
+				type: "selector",
+				selector: ".editor-layers-panel",
+				label: "Document hierarchy",
+			},
 			navigation: {
-				editor: { panel: "components" },
-				panel: { type: "open", panel: "components" },
+				editor: editorState({ panel: "components" }),
+				panels: openPanels({ type: "open", panel: "components" }),
 			},
 		},
 		{
@@ -163,10 +239,14 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Stage and tree selection stay in sync",
 			body: "The selected node is one concept shared by the stage, tree, inspector, keyboard shortcuts, and URL state. That agreement is what makes the editor feel coherent.",
 			route: ["Stage selection", "Components selection", "Inspector"],
-			anchor: { type: "selector", selector: ".stage-single-selection-overlay", label: "Shared selection" },
+			anchor: {
+				type: "selector",
+				selector: ".stage-single-selection-overlay",
+				label: "Shared selection",
+			},
 			navigation: {
-				editor: { panel: "components" },
-				panel: { type: "open", panel: "components" },
+				editor: editorState({ panel: "components" }),
+				panels: openPanels({ type: "open", panel: "components" }),
 				nodeTarget: { visible: true, selectable: true },
 			},
 		},
@@ -176,8 +256,16 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Selection chrome is an editor surface",
 			body: "Handles, outlines, labels, focus behavior, and measurements are product UX. They turn raw model state into something a person can confidently manipulate.",
 			route: ["Canvas", "Selection overlay", "Inspector"],
-			anchor: { type: "selector", selector: ".stage-single-selection-overlay", label: "Selection chrome" },
-			navigation: { nodeTarget: { visible: true, selectable: true } },
+			anchor: {
+				type: "selector",
+				selector: ".stage-single-selection-overlay",
+				label: "Selection chrome",
+			},
+			navigation: {
+				editor: editorState(),
+				nodeTarget: { visible: true, selectable: true },
+				panels: closePanels(),
+			},
 		},
 		{
 			id: "focused-mode",
@@ -190,8 +278,9 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 				selector: '[role="dialog"][aria-label="Design focus mode"]',
 			},
 			navigation: {
-				editor: { focusedMode: "design" },
+				editor: editorState({ focusedMode: "design" }),
 				nodeTarget: { visible: true, selectable: true },
+				panels: closePanels(),
 			},
 		},
 		{
@@ -200,10 +289,17 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "The UI is not the only way to use the product",
 			body: "The API docs are part of the product promise: important editor movement and document changes can be expressed without clicking through the UI.",
 			route: ["Help", "Documentation", "API Reference"],
-			anchor: { type: "selector", selector: '[data-help-entry="doc:docs/API.md"]', label: "API docs" },
+			anchor: {
+				type: "selector",
+				selector: '[data-help-entry="doc:docs/API.md"]',
+				label: "API docs",
+			},
 			navigation: {
-				editor: { panel: "help", helpEntryId: "doc:docs/API.md" },
-				panel: { type: "openHelpEntry", entryId: "doc:docs/API.md" },
+				editor: editorState({ panel: "help", helpEntryId: "doc:docs/API.md" }),
+				panels: openPanels({
+					type: "openHelpEntry",
+					entryId: "doc:docs/API.md",
+				}),
 			},
 		},
 		{
@@ -212,10 +308,17 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "The document can move through import/export",
 			body: "Import/export is a trust feature. The model is portable JSON, and the same document can become a rendered site bundle.",
 			route: ["Settings", "Import / Export"],
-			anchor: { type: "selector", selector: '[data-settings-section="transfer"]', label: "Transfer workflow" },
+			anchor: {
+				type: "selector",
+				selector: '[data-settings-section="transfer"]',
+				label: "Transfer workflow",
+			},
 			navigation: {
-				editor: { panel: "settings", settingsSection: "transfer" },
-				panel: { type: "openSettingsSection", section: "transfer" },
+				editor: editorState({ panel: "settings", settingsSection: "transfer" }),
+				panels: openPanels({
+					type: "openSettingsSection",
+					section: "transfer",
+				}),
 			},
 		},
 		{
@@ -224,8 +327,15 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "The editor model renders as a site",
 			body: "Preview is the bridge from editor model to site renderer. It is deliberately one click away because the product is about authoring behavior, then seeing it as a real page.",
 			route: ["Top bar", "Preview"],
-			anchor: { type: "selector", selector: '[aria-label="Preview site"]', label: "Preview site" },
-			navigation: {},
+			anchor: {
+				type: "selector",
+				selector: '[aria-label="Preview site"]',
+				label: "Preview site",
+			},
+			navigation: {
+				editor: editorState(),
+				panels: closePanels(),
+			},
 		},
 		{
 			id: "debug-info",
@@ -233,10 +343,15 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Debug state is product tooling",
 			body: "Debug info is surfaced in the inspector so the model, selection, sticky state, and render assumptions are inspectable during real work.",
 			route: ["View", "Show debug info", "Inspector"],
-			anchor: { type: "selector", selector: '[data-inspector-block="debug-info"]', label: "Debug state" },
+			anchor: {
+				type: "selector",
+				selector: '[data-inspector-block="debug-info"]',
+				label: "Debug state",
+			},
 			navigation: {
-				editor: { showDebugInfo: true },
+				editor: editorState({ showDebugInfo: true }),
 				nodeTarget: { visible: true, selectable: true },
+				panels: closePanels(),
 			},
 		},
 		{
@@ -245,10 +360,14 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Theme and guide controls are productized",
 			body: "The editor chrome is configurable without becoming arbitrary. Themes, guides, snap behavior, preview, and diagnostics are exposed as product controls.",
 			route: ["Settings", "UI"],
-			anchor: { type: "selector", selector: '[data-settings-section="display"]', label: "UI settings" },
+			anchor: {
+				type: "selector",
+				selector: '[data-settings-section="display"]',
+				label: "UI settings",
+			},
 			navigation: {
-				editor: { panel: "settings", settingsSection: "display" },
-				panel: { type: "openSettingsSection", section: "display" },
+				editor: editorState({ panel: "settings", settingsSection: "display" }),
+				panels: openPanels({ type: "openSettingsSection", section: "display" }),
 			},
 		},
 		{
@@ -257,10 +376,14 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Fonts are document-level workflow",
 			body: "Fonts are part of the document workflow. Favorites, usage, and cleanup live with the site instead of being hidden as incidental styling.",
 			route: ["Settings", "Fonts"],
-			anchor: { type: "selector", selector: '[data-settings-section="fonts"]', label: "Font workflow" },
+			anchor: {
+				type: "selector",
+				selector: '[data-settings-section="fonts"]',
+				label: "Font workflow",
+			},
 			navigation: {
-				editor: { panel: "settings", settingsSection: "fonts" },
-				panel: { type: "openSettingsSection", section: "fonts" },
+				editor: editorState({ panel: "settings", settingsSection: "fonts" }),
+				panels: openPanels({ type: "openSettingsSection", section: "fonts" }),
 			},
 		},
 		{
@@ -269,8 +392,15 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "The design system has its own verification surface",
 			body: "The design system is not just documentation. It is a living verification surface for tokens, primitives, composites, panels, and editor chrome.",
 			route: ["Help", "Design system showcase"],
-			anchor: { type: "selector", selector: '[data-ui="menubar-trigger"][data-menu-id="help"]', label: "Help menu" },
-			navigation: {},
+			anchor: {
+				type: "selector",
+				selector: '[data-ui="menubar-trigger"][data-menu-id="help"]',
+				label: "Help menu",
+			},
+			navigation: {
+				editor: editorState(),
+				panels: closePanels(),
+			},
 			action: {
 				type: "externalLink",
 				label: "Open design system in a new tab",
@@ -283,10 +413,15 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Motion is an editor workflow",
 			body: "Animation is treated as editable product state. Preview lets motion become something to tune, test, and explain instead of a hidden implementation detail.",
 			route: ["View", "Animation preview", "Inspector"],
-			anchor: { type: "selector", selector: '[data-inspector-block="animation"]', label: "Animation controls" },
+			anchor: {
+				type: "selector",
+				selector: '[data-inspector-block="animation"]',
+				label: "Animation controls",
+			},
 			navigation: {
-				editor: { animationPreviewEnabled: true },
+				editor: editorState({ animationPreviewEnabled: true }),
 				nodeTarget: { animatable: true, selectable: true },
+				panels: closePanels(),
 			},
 		},
 		{
@@ -295,14 +430,18 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "This is a multi-page site editor",
 			body: "Pages, shared regions, visibility, and routing move the playground beyond a canvas demo and toward a real site authoring tool.",
 			route: ["Left rail", "Pages"],
-			anchor: { type: "selector", selector: ".editor-pages-panel", label: "Pages panel" },
+			anchor: {
+				type: "selector",
+				selector: ".editor-pages-panel",
+				label: "Pages panel",
+			},
 			navigation: {
-				editor: {
+				editor: editorState({
 					panel: "pages",
 					pageTargetId: "page-home",
 					pagesTab: "page",
-				},
-				panel: { type: "openPages", pageId: "page-home" },
+				}),
+				panels: openPanels({ type: "openPages", pageId: "page-home" }),
 			},
 		},
 		{
@@ -311,14 +450,22 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Routing details are explicit UX",
 			body: "Page names, slugs, aliases, parent pages, and link sync are visible controls. Routing is treated as UX, not as a deployment afterthought.",
 			route: ["Pages", "Home", "Route controls"],
-			anchor: { type: "selector", selector: '[data-page-row-id="page-home"]', label: "Home page route" },
+			anchor: {
+				type: "selector",
+				selector: '[data-page-row-id="page-home"]',
+				label: "Home page route",
+			},
 			navigation: {
-				editor: {
+				editor: editorState({
 					panel: "pages",
 					pageTargetId: "page-home",
 					pagesTab: "page",
-				},
-				panel: { type: "openPages", pageId: "page-home", tab: "page" },
+				}),
+				panels: openPanels({
+					type: "openPages",
+					pageId: "page-home",
+					tab: "page",
+				}),
 			},
 		},
 		{
@@ -327,10 +474,17 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			title: "Maintenance workflows are built in",
 			body: "Validation and transfer workflows make long-lived documents safer to evolve. The editor helps find broken links before the site leaves the tool.",
 			route: ["Settings", "Import / Export", "Validate links"],
-			anchor: { type: "selector", selector: '[data-settings-section="transfer"]', label: "Validation workflow" },
+			anchor: {
+				type: "selector",
+				selector: '[data-settings-section="transfer"]',
+				label: "Validation workflow",
+			},
 			navigation: {
-				editor: { panel: "settings", settingsSection: "transfer" },
-				panel: { type: "openSettingsSection", section: "transfer" },
+				editor: editorState({ panel: "settings", settingsSection: "transfer" }),
+				panels: openPanels({
+					type: "openSettingsSection",
+					section: "transfer",
+				}),
 			},
 		},
 		{
@@ -345,14 +499,14 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 				label: "Product spec",
 			},
 			navigation: {
-				editor: {
+				editor: editorState({
 					panel: "help",
 					helpEntryId: "doc:docs/PLAYGROUND_SPEC.md",
-				},
-				panel: {
+				}),
+				panels: openPanels({
 					type: "openHelpEntry",
 					entryId: "doc:docs/PLAYGROUND_SPEC.md",
-				},
+				}),
 			},
 		},
 	],

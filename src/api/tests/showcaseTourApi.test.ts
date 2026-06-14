@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	getAdjacentShowcaseTourStep,
+	getShowcaseTourPanelRequests,
 	getShowcaseTourStep,
 	getShowcaseTourStepsForTopic,
 	isLastShowcaseTourStep,
@@ -128,8 +129,9 @@ describe("showcaseTourApi", () => {
 	});
 
 	it("returns topic steps and detects the final step", () => {
-		expect(getShowcaseTourStepsForTopic(config, "start").map((step) => step.id))
-			.toEqual(["welcome", "jump"]);
+		expect(
+			getShowcaseTourStepsForTopic(config, "start").map((step) => step.id),
+		).toEqual(["welcome", "jump"]);
 		expect(getShowcaseTourStep(config, "url-state")?.navigation.panel).toEqual({
 			type: "openHelpEntry",
 			entryId: "doc:docs/API.md",
@@ -140,5 +142,26 @@ describe("showcaseTourApi", () => {
 				stepId: "url-state",
 			}),
 		).toBe(true);
+	});
+
+	it("resolves panel requests as a complete step scene", () => {
+		expect(getShowcaseTourPanelRequests({})).toEqual([{ type: "closeAll" }]);
+		expect(
+			getShowcaseTourPanelRequests({
+				panel: { type: "open", panel: "components" },
+			}),
+		).toEqual([{ type: "closeAll" }, { type: "open", panel: "components" }]);
+		expect(
+			getShowcaseTourPanelRequests({
+				panels: [
+					{ type: "closeAll" },
+					{ type: "openHelpEntry", entryId: "doc:docs/API.md" },
+				],
+				panel: { type: "open", panel: "components" },
+			}),
+		).toEqual([
+			{ type: "closeAll" },
+			{ type: "openHelpEntry", entryId: "doc:docs/API.md" },
+		]);
 	});
 });

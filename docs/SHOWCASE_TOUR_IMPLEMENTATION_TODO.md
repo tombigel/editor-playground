@@ -109,6 +109,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Phase 3:
   - `pnpm run test:run -- src/api/tests/showcaseTourApi.test.ts src/api/tests/editorNavigationApi.test.ts src/api/tests/editorApi.test.ts`
   - `pnpm run test:run -- src/app/tests/AppShell.test.tsx`
+  - `pnpm run test:run -- src/api/tests/showcaseTourApi.test.ts src/app/showcaseTour/tests/showcaseTourConfig.test.ts`
   - `pnpm run check:api-docs`
   - `pnpm run typecheck`
   - `pnpm run lint`
@@ -133,6 +134,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Phase 2: `feat(api): add editor navigation intents`
 - Phase 3: `feat(showcase-tour): add non-linear tour shell`
 - Visual System: `feat(showcase-tour): add configurable tour skin`
+- Follow-up: tour step state encapsulation now uses explicit focused-mode state and panel scenes. Validation passed with focused showcase tests, lint/type/API-doc checks, full build, smoke e2e, and browser spot checks for focused-mode and panel reset transitions.
 
 ## Unresolved Questions
 

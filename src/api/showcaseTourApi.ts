@@ -19,6 +19,7 @@ export type ShowcaseTourAnchor =
 export type ShowcaseTourStepNavigation = {
 	editor?: EditorNavigationUrlState;
 	nodeTarget?: EditorNodeTarget;
+	panels?: EditorPanelRequest[];
 	panel?: EditorPanelRequest;
 	insertSectionTemplate?: {
 		templateId: SectionTemplateId;
@@ -61,7 +62,11 @@ export type ShowcaseTourLocation = {
 };
 
 export type ShowcaseTourValidationIssue = {
-	kind: "missing-topic" | "missing-step" | "topic-step-mismatch" | "duplicate-id";
+	kind:
+		| "missing-topic"
+		| "missing-step"
+		| "topic-step-mismatch"
+		| "duplicate-id";
 	id: string;
 };
 
@@ -110,6 +115,17 @@ export function validateShowcaseTourConfig(
 	return issues;
 }
 
+export function getShowcaseTourPanelRequests(
+	navigation: ShowcaseTourStepNavigation,
+): EditorPanelRequest[] {
+	if (navigation.panels) {
+		return navigation.panels;
+	}
+	return navigation.panel
+		? [{ type: "closeAll" }, navigation.panel]
+		: [{ type: "closeAll" }];
+}
+
 export function resolveShowcaseTourLocation(
 	config: ShowcaseTourConfig,
 	location: Partial<ShowcaseTourLocation> | null | undefined,
@@ -125,7 +141,10 @@ export function resolveShowcaseTourLocation(
 		return { topicId: topic.id, stepId: step.id };
 	}
 	if (topic) {
-		return { topicId: topic.id, stepId: topic.stepIds[0] ?? config.entryStepId };
+		return {
+			topicId: topic.id,
+			stepId: topic.stepIds[0] ?? config.entryStepId,
+		};
 	}
 	if (step) {
 		return { topicId: step.topicId, stepId: step.id };
@@ -140,7 +159,10 @@ export function getShowcaseTourTopic(
 	return config.topics.find((topic) => topic.id === topicId) ?? null;
 }
 
-export function getShowcaseTourStep(config: ShowcaseTourConfig, stepId: string) {
+export function getShowcaseTourStep(
+	config: ShowcaseTourConfig,
+	stepId: string,
+) {
 	return config.steps.find((step) => step.id === stepId) ?? null;
 }
 
@@ -164,7 +186,9 @@ export function getAdjacentShowcaseTourStep(
 	const orderedSteps = config.topics.flatMap((topic) =>
 		getShowcaseTourStepsForTopic(config, topic.id),
 	);
-	const currentIndex = orderedSteps.findIndex((step) => step.id === location.stepId);
+	const currentIndex = orderedSteps.findIndex(
+		(step) => step.id === location.stepId,
+	);
 	if (currentIndex === -1) {
 		return resolveShowcaseTourLocation(config, null);
 	}

@@ -544,6 +544,7 @@ Source: `src/api/showcaseTourApi.ts`
 | --- | --- | --- |
 | `validateShowcaseTourConfig` | `(config) -> ShowcaseTourValidationIssue[]` | Validate duplicate ids, missing topic/step references, and topic-step mismatches |
 | `resolveShowcaseTourLocation` | `(config, location?) -> ShowcaseTourLocation` | Resolve URL-derived or partial tour state with entry/topic/step fallbacks |
+| `getShowcaseTourPanelRequests` | `(navigation) -> EditorPanelRequest[]` | Resolve the complete transient panel scene for a step; explicit `panels` win, legacy singular `panel` requests are prefixed with `closeAll`, and empty navigation closes all panels |
 | `getShowcaseTourTopic` | `(config, topicId) -> ShowcaseTourTopic \| null` | Lookup a tour topic |
 | `getShowcaseTourStep` | `(config, stepId) -> ShowcaseTourStep \| null` | Lookup a tour step |
 | `getShowcaseTourStepsForTopic` | `(config, topicId) -> ShowcaseTourStep[]` | Return the ordered steps for a topic |

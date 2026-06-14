@@ -12,6 +12,7 @@ import {
 	type EditorPanelRequest,
 } from "@/api/editorNavigationApi";
 import {
+	getShowcaseTourPanelRequests,
 	resolveShowcaseTourLocation,
 	type ShowcaseTourLocation,
 	type ShowcaseTourStepNavigation,
@@ -208,7 +209,8 @@ export function useShowcaseTourController({
 	const handleApplyShowcaseTourNavigation = useCallback(
 		(navigation: ShowcaseTourStepNavigation) => {
 			if (navigation.insertSectionTemplate) {
-				const { templateId, ifMissingNodeName } = navigation.insertSectionTemplate;
+				const { templateId, ifMissingNodeName } =
+					navigation.insertSectionTemplate;
 				const templateAlreadyExists =
 					ifMissingNodeName &&
 					Object.values(state.document.nodes).some(
@@ -225,8 +227,8 @@ export function useShowcaseTourController({
 					nodeTarget: navigation.nodeTarget,
 				});
 			}
-			if (navigation.panel) {
-				applyPanelRequest(navigation.panel);
+			for (const panelRequest of getShowcaseTourPanelRequests(navigation)) {
+				applyPanelRequest(panelRequest);
 			}
 		},
 		[applyPanelRequest, dispatch, state.document.nodes],
