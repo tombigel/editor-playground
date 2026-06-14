@@ -8,6 +8,7 @@ import {
 	resolveEditorAccentColor,
 	resolveStickyGuideColors,
 } from "@/lib/theme";
+import { isOutsideClickExemptTarget } from "@/lib/useClickOutside";
 import { scrollSelectedStageNodeIntoView } from "./selectionScroll";
 
 export { useSystemThemePreference } from "@/lib/useSystemThemePreference";
@@ -285,6 +286,9 @@ export function useDismissFloatingPanels({
 		function handlePointerDown(event: PointerEvent) {
 			const target = event.target as HTMLElement | null;
 			if (!target) {
+				return;
+			}
+			if (isOutsideClickExemptTarget(event.target)) {
 				return;
 			}
 			const hasOpenSelect = Boolean(

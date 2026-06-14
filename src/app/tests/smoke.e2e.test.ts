@@ -265,6 +265,42 @@ describe('app smoke e2e', () => {
     expect(pageErrors).toEqual([]);
   }, 30_000);
 
+  it('does not dismiss the settings panel when interacting with the showcase tour', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
+    page = smokePage;
+
+    await smokePage.locator('[data-ui="menubar-trigger"][data-menu-id="settings"]').click();
+    await smokePage.getByRole('menuitem', { name: 'Open Settings' }).click();
+    const settingsPanel = smokePage.getByRole('dialog', { name: 'Settings' });
+    await settingsPanel.waitFor({ state: 'visible' });
+
+    const dragHandle = smokePage.locator('[data-showcase-tour-drag-handle="true"]');
+    const handleBox = await dragHandle.boundingBox();
+    if (!handleBox) {
+      throw new Error('Expected showcase tour drag handle to be measurable');
+    }
+    await smokePage.mouse.click(handleBox.x + 80, handleBox.y + 18);
+    expect(await settingsPanel.isVisible()).toBe(true);
+
+    await smokePage.mouse.move(handleBox.x + 80, handleBox.y + 18);
+    await smokePage.mouse.down();
+    await smokePage.mouse.move(handleBox.x + 260, handleBox.y - 120, { steps: 8 });
+    await smokePage.mouse.up();
+
+    expect(await settingsPanel.isVisible()).toBe(true);
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
   it('creates the sticky lab during the sticky tour story', async () => {
     context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
     const smokePage = await context.newPage();
