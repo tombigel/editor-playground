@@ -1,11 +1,4 @@
-import {
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	type PointerEvent as ReactPointerEvent,
-	type ReactNode,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
 	Check,
 	ChevronLeft,
@@ -40,6 +33,10 @@ import {
 	DEFAULT_SHOWCASE_TOUR_SKIN,
 	type ShowcaseTourSkin,
 } from "./showcaseTourSkin";
+import {
+	clampTourSurfacePosition,
+	useTransientTourDragSurface,
+} from "./useTransientTourDragSurface";
 
 type Props = {
 	config: ShowcaseTourConfig;
@@ -50,22 +47,9 @@ type Props = {
 	skin?: ShowcaseTourSkin;
 };
 
-const TOUR_PANEL_VIEWPORT_MARGIN = 12;
-
-type TourPanelPosition = {
-	left: number;
-	top: number;
-};
-
-type TourPanelDragState = {
-	pointerId: number;
-	originX: number;
-	originY: number;
-	originLeft: number;
-	originTop: number;
-	panelWidth: number;
-	panelHeight: number;
-};
+const TOUR_MENU_WIDTH = 300;
+const TOUR_SURFACE_GAP = 12;
+const TOUR_MENU_FALLBACK_HEIGHT = 500;
 
 export function ShowcaseTourOverlay({
 	config,
@@ -77,23 +61,36 @@ export function ShowcaseTourOverlay({
 }: Props) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [minimized, setMinimized] = useState(false);
-	const [panelPosition, setPanelPosition] = useState<TourPanelPosition | null>(
-		null,
-	);
-	const [panelDragState, setPanelDragState] =
-		useState<TourPanelDragState | null>(null);
+	const panelDrag = useTransientTourDragSurface<HTMLElement>();
+	const menuDrag = useTransientTourDragSurface<HTMLElement>();
+	const {
+		isDragging: isPanelDragging,
+		position: panelPosition,
+		startDrag: startPanelDrag,
+		style: panelStyle,
+		surfaceRef: panelRef,
+	} = panelDrag;
+	const {
+		isDragging: isMenuDragging,
+		position: menuPosition,
+		setPosition: setMenuPosition,
+		startDrag: startMenuDrag,
+		style: menuStyle,
+		surfaceRef: menuRef,
+	} = menuDrag;
 	const step = getShowcaseTourStep(config, location.stepId);
 	const topic = getShowcaseTourTopic(config, location.topicId);
 	const anchorState = useAnchorState(step);
 	const isLast = isLastShowcaseTourStep(config, location);
 	const latestApplyNavigationRef = useRef(onApplyNavigation);
-	const panelGroupRef = useRef<HTMLDivElement | null>(null);
 	const tourTopLayerKey = [
 		location.topicId,
 		location.stepId,
 		menuOpen ? "menu" : "card",
 		minimized ? "minimized" : "expanded",
 		anchorState.available ? "anchored" : "unanchored",
+		isPanelDragging ? "panel-dragging" : "panel-resting",
+		isMenuDragging ? "menu-dragging" : "menu-resting",
 		anchorState.rect ? Math.round(anchorState.rect.left) : "none",
 		anchorState.rect ? Math.round(anchorState.rect.top) : "none",
 	].join(":");
@@ -119,57 +116,28 @@ export function ShowcaseTourOverlay({
 		syncTourUrl(location, step.navigation.editor);
 	}, [location, step]);
 
-	// The showcase panel is deliberately local drag state: unlike editor panels,
-	// its position must not persist after the URL-backed tour is closed.
 	useEffect(() => {
-		if (!panelDragState) return;
-		const originalCursor = document.body.style.cursor;
-		const originalUserSelect = document.body.style.userSelect;
-		document.body.style.cursor = "grabbing";
-		document.body.style.userSelect = "none";
-		return () => {
-			document.body.style.cursor = originalCursor;
-			document.body.style.userSelect = originalUserSelect;
-		};
-	}, [panelDragState]);
+		if (!menuOpen || menuPosition) return;
+		setMenuPosition(getDefaultTourMenuPosition(panelRef.current));
+	}, [menuOpen, menuPosition, panelRef, setMenuPosition]);
 
 	useEffect(() => {
-		if (!panelDragState) return;
-		const dragState = panelDragState;
-
-		function handlePointerMove(event: PointerEvent) {
-			if (event.pointerId !== dragState.pointerId) return;
-			event.preventDefault();
-			setPanelPosition({
-				left: clampTourPanelPosition(
-					dragState.originLeft + event.clientX - dragState.originX,
-					dragState.panelWidth,
-					window.innerWidth,
-				),
-				top: clampTourPanelPosition(
-					dragState.originTop + event.clientY - dragState.originY,
-					dragState.panelHeight,
-					window.innerHeight,
-				),
-			});
+		if (!menuOpen || !menuPosition || isMenuDragging) return;
+		const tunedPosition = tuneTourMenuPositionToMeasuredHeight(menuRef.current);
+		if (!tunedPosition) return;
+		if (
+			Math.abs(tunedPosition.left - menuPosition.left) > 0.5 ||
+			Math.abs(tunedPosition.top - menuPosition.top) > 0.5
+		) {
+			setMenuPosition(tunedPosition);
 		}
-
-		function handlePointerEnd(event: PointerEvent) {
-			if (event.pointerId !== dragState.pointerId) return;
-			setPanelDragState(null);
-		}
-
-		window.addEventListener("pointermove", handlePointerMove, {
-			passive: false,
-		});
-		window.addEventListener("pointerup", handlePointerEnd);
-		window.addEventListener("pointercancel", handlePointerEnd);
-		return () => {
-			window.removeEventListener("pointermove", handlePointerMove);
-			window.removeEventListener("pointerup", handlePointerEnd);
-			window.removeEventListener("pointercancel", handlePointerEnd);
-		};
-	}, [panelDragState]);
+	}, [
+		isMenuDragging,
+		menuOpen,
+		menuPosition,
+		menuRef,
+		setMenuPosition,
+	]);
 
 	if (!step || !topic) {
 		return null;
@@ -184,28 +152,11 @@ export function ShowcaseTourOverlay({
 		goTo(getAdjacentShowcaseTourStep(config, location, direction));
 	}
 
-	function handlePanelDragStart(event: ReactPointerEvent<HTMLElement>) {
-		const target = event.target;
-		if (
-			target instanceof HTMLElement &&
-			target.closest("button, a, input, textarea, select")
-		) {
-			return;
+	function toggleMenu() {
+		if (!menuOpen && !menuPosition) {
+			setMenuPosition(getDefaultTourMenuPosition(panelRef.current));
 		}
-		const panelGroup = panelGroupRef.current;
-		if (!panelGroup) return;
-		const rect = panelGroup.getBoundingClientRect();
-		event.preventDefault();
-		setPanelPosition({ left: rect.left, top: rect.top });
-		setPanelDragState({
-			pointerId: event.pointerId,
-			originX: event.clientX,
-			originY: event.clientY,
-			originLeft: rect.left,
-			originTop: rect.top,
-			panelWidth: rect.width,
-			panelHeight: rect.height,
-		});
+		setMenuOpen((open) => !open);
 	}
 
 	return (
@@ -243,34 +194,29 @@ export function ShowcaseTourOverlay({
 					Show tour
 				</Button>
 			) : (
-				<div
-					ref={panelGroupRef}
-					className={cn(
-						"pointer-events-auto absolute flex max-h-[calc(100vh-40px)] max-w-[calc(100vw-40px)] items-end gap-3",
-						panelPosition ? null : "bottom-5 left-5",
-					)}
-					style={
-						panelPosition
-							? { left: panelPosition.left, top: panelPosition.top }
-							: undefined
-					}
-					data-showcase-tour-panel-group="true"
-				>
+				<>
 					{menuOpen ? (
 						<nav
+							ref={menuRef}
 							aria-label="Showcase tour topics"
 							className={cn(
-								"flex max-h-[min(76vh,680px)] w-[300px] flex-col overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+								"pointer-events-auto absolute flex max-h-[min(76vh,680px)] w-[300px] flex-col overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+								menuPosition ? null : "bottom-5 left-5",
 								skin.surfaceClassName,
 							)}
 							style={{
+								...menuStyle,
 								background: "var(--showcase-tour-surface-background)",
 								borderColor: "var(--showcase-tour-surface-border)",
 								borderRadius: "var(--showcase-tour-radius)",
 							}}
 							data-showcase-tour-menu="true"
 						>
-							<div className="editor-border-subtle border-b px-4 py-3">
+							<div
+								className="editor-border-subtle cursor-grab touch-none select-none border-b px-4 py-3 active:cursor-grabbing"
+								onPointerDown={startMenuDrag}
+								data-showcase-tour-menu-drag-handle="true"
+							>
 								<div className="editor-text-strong text-sm font-semibold">
 									Showcase tour
 								</div>
@@ -339,12 +285,15 @@ export function ShowcaseTourOverlay({
 					) : null}
 
 					<section
+						ref={panelRef}
 						aria-live="polite"
 						className={cn(
-							"w-[min(440px,calc(100vw-40px))] overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+							"pointer-events-auto absolute w-[min(440px,calc(100vw-40px))] overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+							panelPosition ? null : "bottom-5 left-5",
 							skin.surfaceClassName,
 						)}
 						style={{
+							...panelStyle,
 							background: "var(--showcase-tour-surface-background)",
 							borderColor: "var(--showcase-tour-surface-border)",
 							borderRadius: "var(--showcase-tour-radius)",
@@ -353,7 +302,7 @@ export function ShowcaseTourOverlay({
 					>
 						<header
 							className="editor-border-subtle flex cursor-grab touch-none select-none items-start justify-between gap-3 border-b px-4 py-3 active:cursor-grabbing"
-							onPointerDown={handlePanelDragStart}
+							onPointerDown={startPanelDrag}
 							data-showcase-tour-drag-handle="true"
 						>
 							<div>
@@ -367,7 +316,7 @@ export function ShowcaseTourOverlay({
 							<div className="flex gap-1">
 								<TourIconButton
 									label={menuOpen ? "Hide tour menu" : "Show tour menu"}
-									onClick={() => setMenuOpen((open) => !open)}
+									onClick={toggleMenu}
 								>
 									<ListTree className="h-4 w-4" />
 								</TourIconButton>
@@ -443,7 +392,7 @@ export function ShowcaseTourOverlay({
 							</div>
 						</footer>
 					</section>
-				</div>
+				</>
 			)}
 		</PopoverSurface>
 	);
@@ -612,14 +561,42 @@ function syncTourUrl(
 	);
 }
 
-function clampTourPanelPosition(
-	value: number,
-	panelSize: number,
-	viewportSize: number,
-) {
-	const max = Math.max(
-		TOUR_PANEL_VIEWPORT_MARGIN,
-		viewportSize - panelSize - TOUR_PANEL_VIEWPORT_MARGIN,
-	);
-	return Math.min(max, Math.max(TOUR_PANEL_VIEWPORT_MARGIN, value));
+function getDefaultTourMenuPosition(panel: HTMLElement | null) {
+	if (typeof window === "undefined") {
+		return { left: 20, top: 20 };
+	}
+	const panelRect = panel?.getBoundingClientRect();
+	const fallbackPanelLeft = 20;
+	const fallbackPanelRight = fallbackPanelLeft + 440;
+	const fallbackPanelBottom = window.innerHeight - 20;
+	const leftEdge = panelRect?.left ?? fallbackPanelLeft;
+	const rightEdge = panelRect?.right ?? fallbackPanelRight;
+	const bottomEdge = panelRect?.bottom ?? fallbackPanelBottom;
+	const rightCandidate = rightEdge + TOUR_SURFACE_GAP;
+	const leftCandidate = leftEdge - TOUR_MENU_WIDTH - TOUR_SURFACE_GAP;
+	const hasRoomOnRight =
+		rightCandidate + TOUR_MENU_WIDTH <=
+		window.innerWidth - TOUR_SURFACE_GAP;
+	const left = hasRoomOnRight ? rightCandidate : leftCandidate;
+	return {
+		left: clampTourSurfacePosition(
+			left,
+			TOUR_MENU_WIDTH,
+			window.innerWidth,
+		),
+		top: clampTourSurfacePosition(
+			bottomEdge - TOUR_MENU_FALLBACK_HEIGHT,
+			TOUR_MENU_FALLBACK_HEIGHT,
+			window.innerHeight,
+		),
+	};
+}
+
+function tuneTourMenuPositionToMeasuredHeight(menu: HTMLElement | null) {
+	if (!menu || typeof window === "undefined") return null;
+	const rect = menu.getBoundingClientRect();
+	return {
+		left: clampTourSurfacePosition(rect.left, rect.width, window.innerWidth),
+		top: clampTourSurfacePosition(rect.top, rect.height, window.innerHeight),
+	};
 }
