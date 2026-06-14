@@ -37,6 +37,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - remove stale code escaping helper
 - prevent step navigation render loop
 - keep target highlight transparent
+- reset popover surface paint
 
 ---
 

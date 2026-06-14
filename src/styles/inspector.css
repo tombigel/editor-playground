@@ -203,8 +203,20 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 
 .ui-popover-surface,
 .ui-popover-tooltip {
+  max-width: none;
+  max-height: none;
   inset: auto;
   margin: 0;
+  padding: 0;
+  overflow: visible;
+  color: inherit;
+  background: transparent;
+  border: 0;
+}
+
+.ui-popover-surface::backdrop {
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .ui-dialog-popover {

@@ -97,7 +97,7 @@ export function ShowcaseTourOverlay({
 			popoverMode="manual"
 			onOpenChange={() => undefined}
 			className={cn(
-				"pointer-events-none fixed inset-0 h-[100dvh] w-screen",
+				"pointer-events-none fixed inset-0 h-[100dvh] w-screen border-0 bg-transparent p-0",
 				skin.typographyClassName,
 			)}
 			data-showcase-tour="true"

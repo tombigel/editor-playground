@@ -83,6 +83,12 @@ describe('app smoke e2e', () => {
     await tour.waitFor({ state: 'visible' });
 
     expect(await tour.textContent()).toContain('working editor surface');
+    const tourStyle = await tour.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return { backgroundColor: style.backgroundColor, borderStyle: style.borderStyle };
+    });
+    expect(tourStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(tourStyle.borderStyle).toBe('none');
     const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
     await highlight.waitFor({ state: 'visible' });
     const highlightStyle = await highlight.evaluate((element) => {
