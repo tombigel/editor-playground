@@ -100,6 +100,12 @@ describe('app smoke e2e', () => {
     await tour.waitFor({ state: 'visible' });
 
     expect(await tour.textContent()).toContain('working editor surface');
+    const tourMenu = smokePage.getByRole('navigation', { name: 'Showcase tour topics' });
+    const showMenuButton = smokePage.getByRole('button', { name: 'Show tour menu' });
+    expect(await tourMenu.count()).toBe(0);
+    expect(await showMenuButton.isVisible()).toBe(true);
+    await showMenuButton.click();
+    await tourMenu.waitFor({ state: 'visible' });
     const tourStyle = await tour.evaluate((element) => {
       const style = window.getComputedStyle(element);
       return { backgroundColor: style.backgroundColor, borderStyle: style.borderStyle };

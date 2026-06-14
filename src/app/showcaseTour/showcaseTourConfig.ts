@@ -83,7 +83,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "welcome",
 			topicId: "start",
 			title: "This is the product, not a mockup",
-			body: "Start with the stage: this is a working editor surface, not a slide. The tour will move through model-backed panels, live selection, preview flags, export, docs, and the design system.",
+			body: "Start with the stage: this is a working editor surface, not a slide. Use Next for the guided path, or open the tour menu when you want to jump by topic.",
 			route: ["Stage", "Panels", "Preview", "Export"],
 			anchor: {
 				type: "selector",

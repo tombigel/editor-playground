@@ -51,7 +51,7 @@ export function ShowcaseTourOverlay({
 	onApplyNavigation,
 	skin = DEFAULT_SHOWCASE_TOUR_SKIN,
 }: Props) {
-	const [menuOpen, setMenuOpen] = useState(true);
+	const [menuOpen, setMenuOpen] = useState(false);
 	const [minimized, setMinimized] = useState(false);
 	const step = getShowcaseTourStep(config, location.stepId);
 	const topic = getShowcaseTourTopic(config, location.topicId);

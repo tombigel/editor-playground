@@ -4,6 +4,12 @@ This project is a local playground for defining and testing a sticky layout mode
 
 It started from a conceptual sticky document and evolved into a more robust structural spec. This README keeps only the sticky behavior itself. The editor, data model, and playground implementation details are documented separately in [PLAYGROUND_SPEC.md](./docs/PLAYGROUND_SPEC.md).
 
+## Guided Showcase Tour
+
+The editor includes a guided showcase tour for portfolio and job-search demos. It opens as an overlay on the real editor, highlights live surfaces, and moves through the app with URL-backed navigation rather than scripted DOM clicks.
+
+Start it from the editor Help menu, or deep link directly with `?tour=start&step=welcome`. The tour begins with a compact linear card; use the menu button in the tour header to jump non-linearly by topic.
+
 ## Core Principles
 
 1. Sticky is used for both layout and scroll experience.
