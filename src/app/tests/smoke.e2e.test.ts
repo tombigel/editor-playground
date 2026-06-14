@@ -249,6 +249,7 @@ describe('app smoke e2e', () => {
     const label = smokePage.locator('[data-showcase-tour-highlight-label="true"]');
     await highlight.waitFor({ state: 'visible' });
     await label.waitFor({ state: 'visible' });
+    await smokePage.waitForTimeout(250);
     const highlightBox = await highlight.boundingBox();
     const labelBox = await label.boundingBox();
     if (!highlightBox || !labelBox) {

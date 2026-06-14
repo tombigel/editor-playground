@@ -187,6 +187,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm exec vitest run src/app/showcaseTour/tests/showcaseTourConfig.test.ts src/app/tests/AppShell.test.tsx`
   - `pnpm run build`
   - Notes: added an editor-topic Rich text step that opens the typed `textTypes` panel and anchors the Rich text option, and retitled/re-anchored the animation step to the real `animation-behavior` inspector block.
+- Wrap and release-prep follow-up:
+  - `node .agents/skills/roadmap-entry/scripts/sort-summary-table.mjs --check`
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm exec vitest run src/app/showcaseTour/tests/showcaseTourConfig.test.ts src/app/tests/AppShell.test.tsx`
+  - `pnpm run build`
+  - Notes: roadmap, README, AI contributor docs, phase brief, spec, changelog, and version entries were aligned before pushing the tour phase.
 
 ## Commit Log
 
@@ -200,9 +207,11 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Follow-up: separately draggable tour panel and topic menu with close-reset behavior shipped in `feat(showcase-tour): drag tour menu separately`.
 - Follow-up: settings panel and transfer workflow highlight anchors shipped in `fix(showcase-tour): anchor settings highlights to stable targets`.
 - Follow-up: settings nav highlight alignment shipped in `fix(showcase-tour): highlight settings nav workflow routes`.
-- Follow-up: specialist review obvious fixes validated and ready for commit.
-- Follow-up: preview new-tab action validated and ready for commit.
-- Follow-up: text editor and animation tour steps validated and ready for commit.
+- Follow-up: specialist review obvious fixes shipped in `fix(showcase-tour): resolve specialist review follow-ups`.
+- Follow-up: preview new-tab action shipped in `feat(showcase-tour): add preview step action`.
+- Follow-up: text editor and animation tour steps shipped in `feat(showcase-tour): add text and animation story steps`.
+- Follow-up: CSS-only highlight transition shipped in `style(showcase-tour): transition highlight movement`.
+- Follow-up: wrap and release-prep docs/version bump validated and ready for commit.
 
 ## Unresolved Questions
 

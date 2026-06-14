@@ -75,7 +75,7 @@ When a change is not reasonably testable, explicitly confirm why in the final su
 
 ## Project Skills
 
-Recurring audit and development skills are defined in `.claude/skills/` and documented in [docs/SKILLS.md](./docs/SKILLS.md).
+Recurring audit and development skills are defined in `.agents/skills/` and documented in [docs/SKILLS.md](./docs/SKILLS.md).
 
 Key skills:
 
@@ -85,6 +85,8 @@ Key skills:
 - `/doc-triage` — planning document freshness check
 - `/file-size-check` — component size limit enforcement
 - `/interaction-pattern` — guide for building new interactive components
+- `/roadmap-entry` — roadmap item creation, status, priority, and sorting
+- `/version-bump` — manual minor/major version bump workflow
 
 Run `/maintenance` periodically to catch drift. Run `/interaction-pattern <type>` before building new interactive UI.
 

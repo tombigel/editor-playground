@@ -68,6 +68,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
 | `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | Shared | Dep: `RI-06` |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
+| `RI-43` | `✅ Done` | [Guided showcase tour for editor portfolio](#guided-showcase-tour-for-editor-portfolio) | `🔴 Next` | UX | Shared | Unplanned; needed to make the editor understandable as portfolio evidence |
 | `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
 | `RI-09` | `🟣 Partially present` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | Shared | - |
 | `RI-10` | `🟤 Needs audit` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | Shared | Dep: `RI-09` |
@@ -107,7 +108,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 Extended product vision, feature requests, UX ideas, and open questions for this stage live in [NEXT_STAGE_BRIEF.md](./NEXT_STAGE_BRIEF.md).
 
-Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`
+Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`, `RI-43`
 
 ## Raw Intake
 
@@ -156,6 +157,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-40` table component support — add two table directions under components/wrappers: a simple markdown-backed table for fast authoring/export, and a more robust designable table where each cell can host nodes and participate in wrapper/layout semantics
 - `RI-41` document view API and architecture boundary enforcement — all UI model reads should route through a dedicated `documentViewApi` layer rather than reaching into editor state directly; an automated architecture check script should enforce the boundary at CI time
 - `RI-42` drag and drop boundary maintenance — current drag rules confine elements into the padded content area of their container; by default authors should be able to drag elements so they stick out past container boundaries, with the boundary acting as snap/alignment guidance, plus an explicit hard-confinement option for stricter layouts
+- `RI-43` unplanned showcase tour phase — add a guided, non-linear overlay that makes the editor understandable as job-search/portfolio evidence and exposes sticky, editor craft, API, design-system, text, animation, pages, validation, and docs surfaces
 
 ## Structured Roadmap
 
@@ -258,6 +260,15 @@ None yet.
 - `Why it matters`: Sticky indicators are already part of the editor’s trust model, but they should better explain sticky motion over scroll, support direct manipulation on stage, and avoid obscuring the viewport when documents get dense.
 - `Current state`: Sticky guides and labels are visible in the stage, but they are still mostly passive overlays inside the main viewport and are not yet described as a direct on-stage editing surface or as motion-aware representations of sticky behavior.
 - `Next move`: Define a first interaction model that covers motion-aware indicator states, direct on-stage stickiness editing, and an alternate sideline presentation that keeps the viewport readable while preserving clear mapping back to the node.
+
+##### Guided showcase tour for editor portfolio
+
+- `Type`: `UX`
+- `Owner lane`: `Shared`
+- `Status`: `Done`
+- `Source`: `RI-43`
+- `Why it matters`: The editor had enough product depth to show, but visitors needed a guided path through live surfaces rather than a loose demo. This unplanned step became necessary to make the editor legible as portfolio evidence for job search conversations.
+- `Current state`: **Complete** — shipped a non-linear showcase overlay with URL-backed topic/step state, API-first editor navigation, typed tour config, target highlights, draggable/minimizable tour surfaces, outside-click-safe overlay behavior, compact default menu, new-tab preview/design-system actions, and story steps for sticky behavior, editor structure, focus mode, Slate rich text, API docs, import/export, preview, Google Fonts, animation, pages, routing, validation, and documentation. Covered by focused API/config/component tests, smoke e2e, docs, and build validation. Delivered across the showcase-tour commit series ending at `7386f18`.
 
 ##### Variable fonts as an authoring workflow
 

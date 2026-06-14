@@ -11,53 +11,39 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Changed
+
+- wrap showcase tour phase
+
+---
+
+## [0.9.0] — 2026-06-14
+Document: 1.5.142 · API: 2.2.0 · Editor: 0.16.0
+
 ### Added
 
-- upgrade @wix/interact to 2.2.1 and align interaction config
-- add editor navigation intents
-- add non-linear tour shell
-- add configurable tour skin
-- improve guided story flow
-- start with compact menu
-- make tour panel draggable
-- drag tour menu separately
-- add preview step action
-- add text and animation story steps
+- Guided showcase tour overlay for portfolio/job-search demos, with non-linear topic navigation, URL-backed `tour` / `step` state, typed tour config, target highlighting, draggable/minimizable tour surfaces, compact default menu, and new-tab preview/design-system actions.
+- Showcase story steps for sticky authoring, editor structure, focus mode, Slate rich-text merge/split workflows, API docs, import/export, rendered preview, Google Fonts selection, animation preview, pages, routing, validation, and documentation.
+- Editor navigation intents and URL state for active page, selection, focused mode, panel targets, settings/help/page targets, tour topic/step, sticky/debug/grid/animation preview flags, and spacer visibility.
+- Configurable showcase tour skin and highlight styling that stay aligned with editor tokens.
+- @wix/interact 2.2.1 alignment for the interaction runtime.
 
 ### Changed
 
-- make pnpm the canonical package manager
-- cover malicious document imports
-- stabilize settings panel flows
-- harden server harness and smoke gate
-- isolate rich text stage package
-- add implementation work memory
-- define phase 1 tour map
-- record final validation
-- list editor navigation url params
-- refine focus mode step copy
-- refine font step copy
-- transition highlight movement
+- Made pnpm the canonical package manager and hardened the server harness / smoke gate.
+- Isolated the rich-text stage package to keep the Slate authoring bundle boundary explicit.
+- Added and maintained showcase-tour implementation memory, phase brief, review todo, API docs, playground spec notes, README guidance, and roadmap status.
+- Refined showcase copy for Focus Mode and the Google Fonts explorer to be more descriptive and less marketing-led.
+- Made the tour highlight movement a simple CSS-only transition.
 
 ### Fixed
 
-- restore interact type compatibility
-- sanitize imported code highlight html
-- remove stale code escaping helper
-- prevent step navigation render loop
-- keep target highlight transparent
-- reset popover surface paint
-- scope showcase popover reset
-- keep tour above editor popovers
-- improve target highlight affordance
-- encapsulate step state
-- wrap topic menu text
-- add icon button tooltips
-- preserve outside-click panels while dragging
-- exempt tour from floating panel dismiss
-- anchor settings highlights to stable targets
-- highlight settings nav workflow routes
-- resolve specialist review follow-ups
+- Restored interact type compatibility and removed stale code escaping helpers.
+- Sanitized imported code highlight HTML and added coverage for malicious document imports.
+- Stabilized Settings panel workflows and tour-driven panel navigation.
+- Fixed showcase tour render-loop, popover ordering, target highlight opacity, topic-menu wrapping, icon-button tooltips, and stale URL parameter drift between steps.
+- Kept tour surfaces above editor popovers and made tour clicks/drags neutral to outside-click dismissal.
+- Anchored Settings, transfer, validation, text, and animation story highlights to stable UI targets.
 
 ---
 

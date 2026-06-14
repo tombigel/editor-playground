@@ -66,7 +66,8 @@ Purpose: show hands-on UX craft: structure, selection, focused work, and direct 
 | `components-panel` | Structure stays visible while editing visually | Components panel | Components panel open, current page active | `[data-panel-trigger="components"]`, `.editor-layers-panel` | `?tour=editor&step=components-panel` |
 | `selection-sync` | Stage selection and tree selection stay in sync | Stage + Components row | Select a visible stage node by target query, Components panel open | `[data-node-id="<resolved-node>"]`, `[data-layers-row-id="<resolved-node>"]` | `?tour=editor&step=selection-sync` |
 | `direct-manipulation` | Selection chrome is an editor surface | Stage selection overlay | Single node selected, inspector visible | `.stage-single-selection-overlay`, `[data-stage-resize-handle]` | `?tour=editor&step=direct-manipulation` |
-| `focused-mode` | Progressive disclosure for deep work | Focused mode panel | Select node, set focused mode to `design` or `sticky` | `[role="dialog"][aria-label="Design focus mode"]`, `[data-focused-panel-drag-zone]` | `?tour=editor&step=focused-mode` |
+| `slate-text-editor` | Rich text editing | Text type picker + rich text workflows | Open text type panel through typed panel request | `[data-text-type-role="richtext"]` | `?tour=editor&step=slate-text-editor` |
+| `focused-mode` | Focus mode | Focused mode panel | Select node, set focused mode to `design` | `[role="dialog"][aria-label="Design focus mode"]`, `[data-focused-panel-drag-zone]` | `?tour=editor&step=focused-mode` |
 
 ### Topic 3: API And Product Architecture
 
@@ -75,7 +76,7 @@ Purpose: show API-first thinking and the architecture boundary behind the editor
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
 | `api-docs` | The UI is not the only way to use the product | Help dialog API docs | Help open to `doc:docs/API.md` or a specific API child doc | `[data-help-entry="doc:docs/API.md"]` | `?tour=api&step=api-docs` |
-| `model-transfer` | The document can move through import/export | Settings Transfer section | Settings open to `transfer` section | `[data-settings-section="transfer"]` | `?tour=api&step=model-transfer` |
+| `model-transfer` | The document can move through import/export | Settings Transfer section | Settings open to `transfer` section | `[data-settings-nav="transfer"]` | `?tour=api&step=model-transfer` |
 | `site-preview-export` | The editor model renders as a site | Preview/export controls | Topbar visible, optionally Settings menu opened to export | `[aria-label="Preview site"]`, `[data-menu-id="settings"]` | `?tour=api&step=site-preview-export` |
 | `debug-info` | Debug state is exposed as product tooling | Inspector debug block | Show debug info on, select a node | `[data-inspector-block="debug-info"]` | `?tour=api&step=debug-info` |
 
@@ -85,10 +86,10 @@ Purpose: show that the editor UI is governed by a design system while still allo
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `ui-settings` | Theme and guide controls are productized | Settings UI section | Settings open to `display` section | `[data-settings-section="display"]` | `?tour=design&step=ui-settings` |
-| `font-system` | Fonts are document-level workflow, not global clutter | Manage Fonts dialog or Settings Fonts | Fonts panel open, or Settings open to `fonts` | Manage Fonts dialog / `[data-settings-section="fonts"]` | `?tour=design&step=font-system` |
+| `ui-settings` | Theme and guide controls are productized | Settings UI section | Settings open to `display` section | `[data-settings-nav="display"]` | `?tour=design&step=ui-settings` |
+| `font-system` | Choose document fonts | Settings Fonts | Settings open to `fonts`; Google Fonts explorer available from document font workflow | `[data-settings-nav="fonts"]` | `?tour=design&step=font-system` |
 | `design-system-route` | The design system has its own verification surface | Design-system showcase | Navigate to `#/design-system`, target tokens or panels section | `#tokens-colors`, `#composite-focused-panel`, `#composite-floating-panel-shell` | `?tour=design&step=design-system-route` |
-| `animation-preview` | Motion is an editor workflow, not just decoration | Animation inspector + preview toggle | Select animatable node, inspector animation block visible, animation preview enabled | `[data-inspector-block="animation"]`, rail animation toggle | `?tour=design&step=animation-preview` |
+| `animation-preview` | Explore animations | Animation inspector + preview toggle | Select animatable node, inspector animation block visible, animation preview enabled | `[data-inspector-block="animation-behavior"]`, rail animation toggle | `?tour=design&step=animation-preview` |
 
 ### Topic 5: Pages, Routing, And Documentation Depth
 
@@ -98,7 +99,7 @@ Purpose: show product maturity: pages, URL semantics, validation, documentation,
 | --- | --- | --- | --- | --- | --- |
 | `pages-panel` | This is a multi-page site editor | Pages panel | Pages panel open on active page | `[data-panel-trigger="pages"]`, `.editor-pages-panel` | `?tour=product&step=pages-panel` |
 | `page-routing` | Routing details are explicit UX | Page settings tab | Pages panel open to page settings for Home | `[data-page-row-id="page-home"]`, page settings fields | `?tour=product&step=page-routing` |
-| `link-validation` | Maintenance workflows are built in | Settings Transfer or Pages validation action | Settings transfer section open after link validation, or Pages panel validation entry | `[data-settings-section="transfer"]` | `?tour=product&step=link-validation` |
+| `link-validation` | Maintenance workflows are built in | Settings Transfer or Pages validation action | Settings transfer section open after link validation, or Pages panel validation entry | `[data-settings-nav="transfer"]` | `?tour=product&step=link-validation` |
 | `docs-history` | The work is documented as carefully as the UI | Help/About docs | Help open to Playground Spec, Style Guide, or Changelog | `[data-help-entry="doc:docs/PLAYGROUND_SPEC.md"]`, `[data-help-entry="doc:CHANGELOG.md"]` | `?tour=product&step=docs-history` |
 
 ## Step Navigation Intents
@@ -117,15 +118,16 @@ These are the API-backed intents Phase 2 must be able to express before showcase
 | `components-panel` | `openPanel("components")` |
 | `selection-sync` | `openPanel("components")` + `selectNodeTarget({ visible: true, selectable: true })` |
 | `direct-manipulation` | `selectNodeTarget({ visible: true, selectable: true })` |
+| `slate-text-editor` | `openPanel("textTypes")` + anchor `data-text-type-role="richtext"` |
 | `focused-mode` | `selectNodeTarget({ visible: true, selectable: true })` + `setFocusedMode("design")` |
 | `api-docs` | `openHelpEntry("doc:docs/API.md")` |
 | `model-transfer` | `openSettingsSection("transfer")` |
 | `site-preview-export` | `focusTopbarAction("preview")` or `openMenu("settings")` |
 | `debug-info` | `selectNodeTarget({ visible: true, selectable: true })` + `setEditorViewFlags({ showDebugInfo: true })` |
 | `ui-settings` | `openSettingsSection("display")` |
-| `font-system` | `openPanel("manageFonts")` or `openSettingsSection("fonts")` |
+| `font-system` | `openSettingsSection("fonts")` |
 | `design-system-route` | `openDesignSystemSection("tokens-colors" | "composite-focused-panel")` + preserve return route |
-| `animation-preview` | `selectNodeTarget({ animatable: true })` + `openInspectorBlock("animation")` + `setEditorViewFlags({ animationPreview: true })` |
+| `animation-preview` | `selectNodeTarget({ animatable: true })` + `openInspectorBlock("animation-behavior")` + `setEditorViewFlags({ animationPreview: true })` |
 | `pages-panel` | `openPanel("pages")` |
 | `page-routing` | `openPanel("pages", { tab: "page", pageId: "home" })` |
 | `link-validation` | `runLinkValidation()` + `openSettingsSection("transfer")` |
