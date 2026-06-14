@@ -137,6 +137,7 @@ export function EditorSidebar({
 				<div className="editor-border-subtle relative h-[61px] shrink-0 border-b">
 					<div
 						aria-hidden={!showCollapsedHandle}
+						inert={!showCollapsedHandle ? true : undefined}
 						className={`absolute inset-0 flex items-center justify-end px-3 py-3 transition-opacity duration-150 ease-out ${collapsedLayerClass}`}
 					>
 						<Button
@@ -156,6 +157,7 @@ export function EditorSidebar({
 					</div>
 					<div
 						aria-hidden={showCollapsedHandle}
+						inert={showCollapsedHandle ? true : undefined}
 						className={`absolute inset-0 flex items-center justify-between gap-3 px-3 py-3 transition-opacity duration-150 ease-out ${expandedLayerClass}`}
 					>
 						<PanelHeader
@@ -213,6 +215,7 @@ export function EditorSidebar({
 				<div className="editor-bg-surface relative min-h-0 flex-1 overflow-hidden">
 					<div
 						aria-hidden={showCollapsedHandle}
+						inert={showCollapsedHandle ? true : undefined}
 						className={`absolute inset-0 overflow-hidden transition-opacity duration-150 ease-out ${expandedLayerClass}`}
 					>
 						<div

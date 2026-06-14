@@ -17,6 +17,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - set up pnpm before node cache
 - install playwright chromium
 
+### Fixed
+
+- inert hidden inspector layers
+
 ---
 
 ## [0.9.0] — 2026-06-14
