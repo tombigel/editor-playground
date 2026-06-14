@@ -585,13 +585,15 @@ export function InspectorSectionCard({
   hideHeader?: boolean;
   hideTitle?: boolean;
 }) {
+  const shouldHideTitle = hideTitle || Boolean(headerContent && headerAction);
+
   return (
     <Card className={borderless ? 'border-0 bg-transparent shadow-none' : 'editor-border-subtle rounded-lg shadow-none'}>
       {!hideHeader ? (
         <CardHeader className="flex flex-row items-start justify-between gap-2 px-3 pt-3 pb-1">
-          {!hideTitle ? <CardTitle className="text-xs">{title}</CardTitle> : null}
+          {!shouldHideTitle ? <CardTitle className="text-xs">{title}</CardTitle> : null}
           {headerContent ? (
-            <div className="min-w-0 flex-1 flex justify-end">{headerContent}</div>
+            <div className={cn('min-w-0 flex-1 flex', shouldHideTitle ? 'justify-start' : 'justify-end')}>{headerContent}</div>
           ) : null}
           {headerAction ? (
             <InspectorSectionActionButton

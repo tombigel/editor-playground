@@ -57,7 +57,24 @@ describe('app smoke e2e', () => {
     const smokePage = await newSmokePage();
 
     await smokePage.locator('[data-ui="menubar-trigger"][data-menu-id="settings"]').click();
-    await smokePage.getByRole('menuitem', { name: 'Open Settings' }).click();
+    const openSettingsItem = smokePage.getByRole('menuitem', { name: 'Open Settings' });
+    await openSettingsItem.waitFor({ state: 'visible' });
+    const menuStyle = await openSettingsItem.evaluate((element) => {
+      const menu = element.closest('.editor-menubar-content');
+      if (!menu) {
+        throw new Error('Expected opened menu item to be inside a menubar surface');
+      }
+      const style = window.getComputedStyle(menu);
+      return {
+        backgroundColor: style.backgroundColor,
+        borderStyle: style.borderStyle,
+        paddingTop: style.paddingTop,
+      };
+    });
+    expect(menuStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(menuStyle.borderStyle).not.toBe('none');
+    expect(Number.parseFloat(menuStyle.paddingTop)).toBeGreaterThan(0);
+    await openSettingsItem.click();
     const dialog = smokePage.getByRole('dialog', { name: 'Settings' });
     await dialog.waitFor({ state: 'visible' });
     await dialog.getByLabel('Startup mode').click();

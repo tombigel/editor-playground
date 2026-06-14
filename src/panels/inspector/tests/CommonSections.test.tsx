@@ -28,6 +28,22 @@ describe('panels/inspector/CommonSections', () => {
     expect(onEnter).toHaveBeenCalledWith('sticky');
   });
 
+  it('lets focused-mode header content own the section title row', () => {
+    const markup = renderToStaticMarkup(
+      <InspectorSectionCard
+        title="Design"
+        headerContent={<div>Design</div>}
+        headerAction={{ ariaLabel: 'Close design focus mode', icon: null, onClick: () => {} }}
+      >
+        <div>Focused controls</div>
+      </InspectorSectionCard>,
+    );
+
+    expect(markup.match(/>Design</g)?.length ?? 0).toBe(1);
+    expect(markup).toContain('justify-start');
+    expect(markup).not.toContain('justify-end');
+  });
+
   it('shows the top-level width field as disabled when the wrapper is locked to 100%', () => {
     const document = createInitialDocument();
     const headerNode = Object.values(document.nodes).find(

@@ -203,10 +203,13 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
 
 .ui-popover-surface,
 .ui-popover-tooltip {
-  max-width: none;
-  max-height: none;
   inset: auto;
   margin: 0;
+}
+
+.ui-popover-surface[data-showcase-tour='true'] {
+  max-width: none;
+  max-height: none;
   padding: 0;
   overflow: visible;
   color: inherit;
@@ -214,7 +217,7 @@ color-input[data-ui='color-picker'].editor-color-picker::part(gamut) {
   border: 0;
 }
 
-.ui-popover-surface::backdrop {
+.ui-popover-surface[data-showcase-tour='true']::backdrop {
   background: transparent;
   backdrop-filter: none;
 }
