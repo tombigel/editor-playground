@@ -948,6 +948,7 @@ Rules:
 - prefer DOM order and local stacking contexts first
 - only use explicit layers for editor chrome where unavoidable
 - do not introduce a new z-index without a named editor role
+- native popovers are ordered by show order, not z-index; only priority overlays such as the showcase tour should re-enter the top layer after other popovers open
 
 ## 16. Token Authoring Rules
 

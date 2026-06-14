@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PopoverSurface, getTooltipDelayBypassUntil, getTooltipHoverDelay, shouldBypassTooltipDelay } from '../popover';
+import {
+  PopoverSurface,
+  bringPopoverSurfaceToFront,
+  getTooltipDelayBypassUntil,
+  getTooltipHoverDelay,
+  shouldBypassTooltipDelay,
+} from '../popover';
 
 describe('components/ui/popover', () => {
   it('marks closed surfaces hidden so unopened editor popovers do not remain in the accessibility tree', () => {
@@ -23,6 +29,19 @@ describe('components/ui/popover', () => {
     expect(shouldBypassTooltipDelay(false, now + 100, graceUntil)).toBe(true);
     expect(shouldBypassTooltipDelay(false, graceUntil, graceUntil)).toBe(false);
     expect(shouldBypassTooltipDelay(false, graceUntil + 1, graceUntil)).toBe(false);
+  });
+
+  it('re-enters an already-open popover to move it to the top layer front', () => {
+    const calls: string[] = [];
+    const element = {
+      matches: () => true,
+      hidePopover: () => calls.push('hide'),
+      showPopover: () => calls.push('show'),
+    };
+
+    bringPopoverSurfaceToFront(element as never);
+
+    expect(calls).toEqual(['hide', 'show']);
   });
 
   it('uses the full hover delay only when no tooltip is visible and no close grace period is active', () => {

@@ -58,6 +58,15 @@ export function ShowcaseTourOverlay({
 	const anchorState = useAnchorState(step);
 	const isLast = isLastShowcaseTourStep(config, location);
 	const latestApplyNavigationRef = useRef(onApplyNavigation);
+	const tourTopLayerKey = [
+		location.topicId,
+		location.stepId,
+		menuOpen ? "menu" : "card",
+		minimized ? "minimized" : "expanded",
+		anchorState.available ? "anchored" : "unanchored",
+		anchorState.rect ? Math.round(anchorState.rect.left) : "none",
+		anchorState.rect ? Math.round(anchorState.rect.top) : "none",
+	].join(":");
 	const progress = useMemo(() => {
 		const allSteps = config.topics.flatMap((candidate) =>
 			getShowcaseTourStepsForTopic(config, candidate.id),
@@ -95,6 +104,8 @@ export function ShowcaseTourOverlay({
 		<PopoverSurface
 			open
 			popoverMode="manual"
+			bringToFrontKey={tourTopLayerKey}
+			keepTopLayer
 			onOpenChange={() => undefined}
 			className={cn(
 				"pointer-events-none fixed inset-0 h-[100dvh] w-screen border-0 bg-transparent p-0",

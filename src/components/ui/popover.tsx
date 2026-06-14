@@ -20,10 +20,31 @@ type PopoverSurfaceProps = React.ComponentProps<'div'> & {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
   popoverMode?: 'auto' | 'manual';
+  bringToFrontKey?: React.Key;
+  keepTopLayer?: boolean;
 };
 
+export function bringPopoverSurfaceToFront(element: NativePopoverElement) {
+  if (element.matches(':popover-open')) {
+    element.hidePopover();
+  }
+  element.showPopover();
+}
+
 export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfaceProps>(
-  ({ open, onOpenChange, popoverMode = 'manual', className, children, ...props }, forwardedRef) => {
+  (
+    {
+      open,
+      onOpenChange,
+      popoverMode = 'manual',
+      bringToFrontKey,
+      keepTopLayer = false,
+      className,
+      children,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const localRef = React.useRef<NativePopoverElement | null>(null);
     const surfaceProps: PopoverAttributeProps = {
       ...props,
@@ -58,6 +79,50 @@ export const PopoverSurface = React.forwardRef<HTMLDivElement, PopoverSurfacePro
         element.hidePopover();
       }
     }, [open]);
+
+    React.useEffect(() => {
+      const element = localRef.current;
+      if (!element || !open || bringToFrontKey == null) {
+        return;
+      }
+
+      let innerFrame = 0;
+      const outerFrame = window.requestAnimationFrame(() => {
+        innerFrame = window.requestAnimationFrame(() => {
+          bringPopoverSurfaceToFront(element);
+        });
+      });
+
+      return () => {
+        window.cancelAnimationFrame(outerFrame);
+        window.cancelAnimationFrame(innerFrame);
+      };
+    }, [bringToFrontKey, open]);
+
+    React.useEffect(() => {
+      const element = localRef.current;
+      if (!element || !open || !keepTopLayer) {
+        return;
+      }
+
+      let frame = 0;
+      const handleToggle = (event: Event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement) || target === element || !target.matches(':popover-open')) {
+          return;
+        }
+        window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(() => {
+          bringPopoverSurfaceToFront(element);
+        });
+      };
+
+      document.addEventListener('toggle', handleToggle, true);
+      return () => {
+        window.cancelAnimationFrame(frame);
+        document.removeEventListener('toggle', handleToggle, true);
+      };
+    }, [keepTopLayer, open]);
 
     React.useEffect(() => {
       const element = localRef.current;

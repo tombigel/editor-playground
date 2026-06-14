@@ -1261,6 +1261,7 @@ Language behavior:
 - Pages panel entry toggles a dedicated panel for multi-page management.
 - The main Settings panel `Pages` section reuses the same site-wide page settings content as the Pages panel `Settings` tab.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
+- Native popover ordering is show-order based. Shared `PopoverSurface` supports explicit top-layer re-entry for rare priority overlays, but normal menus, tooltips, selects, and panels should not opt into that behavior.
 - Left-rail pop panels open from a shared resting position near the top-left workspace edge below the top bar rather than vertically following the trigger button.
 - Section templates keep outside-click and `Esc` dismissal and stay above stage selection overlays.
 - The Components panel stays open on outside click and closes only through its own close affordance, toggle action, or keyboard dismissal.
@@ -1484,7 +1485,7 @@ Naming and title behavior:
 - Tour URL state uses `tour=<topicId>` and `step=<stepId>`. Loading a URL with those params opens the overlay at the resolved topic/step; invalid values fall back through `showcaseTourApi`.
 - Every step applies editor movement through `ShowcaseTourStepNavigation`, which can contain `EditorNavigationUrlState`, `EditorNodeTarget`, and/or `EditorPanelRequest`. The overlay must not click editor controls to navigate.
 - Steps can also request an idempotent section-template insertion through the existing editor action. The request must name a template and a stable node name used to detect whether the tour already created that story surface.
-- The overlay renders in the native popover/top layer so it stays above editor panels and dialogs. It does not blur the stage, and it can be minimized to a small “Show tour” control without closing the URL-backed tour state.
+- The overlay renders in the native popover/top layer and opts into top-layer re-entry so it stays above editor panels and dialogs even when tour navigation opens those surfaces later. It does not blur the stage, and it can be minimized to a small “Show tour” control without closing the URL-backed tour state.
 - Steps can define a visual anchor with a selector and label. When the target is present, the overlay draws a non-interactive outline-only highlight around the real editor surface; it must not tint or dim large editor areas. If the target is unavailable, the tour keeps the step visible and explains the intended route.
 - Steps can display route chips and an action. External actions, such as the design-system showcase, open in a new tab so the tour flow remains intact.
 - Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables.
