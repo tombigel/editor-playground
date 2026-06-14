@@ -240,6 +240,10 @@ describe('app smoke e2e', () => {
     expect(searchParams.get('step')).toBe('site-preview-export');
     expect(searchParams.has('panel')).toBe(false);
     expect(searchParams.has('settings')).toBe(false);
+    const previewAction = tourCard.getByRole('link', { name: 'Open preview in a new tab' });
+    await previewAction.waitFor({ state: 'visible' });
+    expect(await previewAction.getAttribute('href')).toBe('?mode=preview');
+    expect(await previewAction.getAttribute('target')).toBe('_blank');
 
     const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
     const label = smokePage.locator('[data-showcase-tour-highlight-label="true"]');

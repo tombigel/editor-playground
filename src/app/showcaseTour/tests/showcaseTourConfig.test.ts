@@ -51,4 +51,16 @@ describe("showcase tour config", () => {
 			});
 		}
 	});
+
+	it("offers the preview step as a new-tab action", () => {
+		const step = SHOWCASE_TOUR_CONFIG.steps.find(
+			(item) => item.id === "site-preview-export",
+		);
+
+		expect(step?.action).toEqual({
+			type: "externalLink",
+			label: "Open preview in a new tab",
+			href: "?mode=preview",
+		});
+	});
 });

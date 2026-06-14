@@ -20,6 +20,8 @@ const ensureStickyEdgeLab = () => ({
 	ifMissingNodeName: "Sticky Edge Lab",
 });
 
+const PREVIEW_SITE_HREF = "?mode=preview";
+
 export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 	entryTopicId: "start",
 	entryStepId: "welcome",
@@ -340,6 +342,11 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			navigation: {
 				editor: editorState(),
 				panels: closePanels(),
+			},
+			action: {
+				type: "externalLink",
+				label: "Open preview in a new tab",
+				href: PREVIEW_SITE_HREF,
 			},
 		},
 		{

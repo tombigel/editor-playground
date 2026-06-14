@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - start with compact menu
 - make tour panel draggable
 - drag tour menu separately
+- add preview step action
 
 ### Changed
 

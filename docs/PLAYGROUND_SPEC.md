@@ -1493,7 +1493,7 @@ Naming and title behavior:
 - Highlight labels flip below top-edge targets and clamp their max width so target labels stay visible in the viewport.
 - Settings workflow story steps highlight left settings nav routes such as `data-settings-nav="display"`, `data-settings-nav="fonts"`, or `data-settings-nav="transfer"` instead of the settings body section, because the body can scroll while the nav item remains a stable wayfinding target.
 - Tour URL sync rewrites known editor-navigation params for the active step instead of preserving stale panel/help/page/view params from prior steps; unrelated query params remain intact.
-- Steps can display route chips and an action. External actions, such as the design-system showcase, open in a new tab so the tour flow remains intact.
+- Steps can display route chips and an action. External actions, such as the design-system showcase and preview mode, open in a new tab so the tour flow remains intact.
 - Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables.
 
 ## Text Type Picker

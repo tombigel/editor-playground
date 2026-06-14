@@ -174,6 +174,13 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm run test:e2e:smoke`
   - `pnpm run build`
   - Notes: consolidated UX/QA/senior-dev review lives in `docs/SHOWCASE_TOUR_REVIEW_TODO.md`. Obvious fixes cover tour-menu visibility, sticky deep-link setup, stale URL cleanup, top-edge highlight labels, and focused helper/test coverage.
+- Preview action follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm exec vitest run src/app/showcaseTour/tests/showcaseTourConfig.test.ts`
+  - `pnpm run test:e2e:smoke`
+  - `pnpm run build`
+  - Notes: step 14 (`site-preview-export`) now exposes the same new-tab preview route as the topbar preview workflow through the existing tour external-link action slot.
 
 ## Commit Log
 
@@ -188,6 +195,7 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Follow-up: settings panel and transfer workflow highlight anchors shipped in `fix(showcase-tour): anchor settings highlights to stable targets`.
 - Follow-up: settings nav highlight alignment shipped in `fix(showcase-tour): highlight settings nav workflow routes`.
 - Follow-up: specialist review obvious fixes validated and ready for commit.
+- Follow-up: preview new-tab action validated and ready for commit.
 
 ## Unresolved Questions
 
