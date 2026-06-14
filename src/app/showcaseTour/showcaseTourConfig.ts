@@ -277,8 +277,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "focused-mode",
 			topicId: "editor",
-			title: "Progressive disclosure for deep work",
-			body: "Focused mode narrows the interface to the task at hand. It feels like a different workflow, but it still runs the same editor API operations under the hood.",
+			title: "Focus mode",
+			body: "Focus mode narrows the editor to one kind of task at a time. The same pattern can later support collaboration, permissions, and role-specific document workflows.",
 			route: ["View", "Focus mode", "Design"],
 			anchor: {
 				type: "selector",
