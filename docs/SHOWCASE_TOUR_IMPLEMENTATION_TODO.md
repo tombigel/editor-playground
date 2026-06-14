@@ -158,7 +158,15 @@ Update it after each phase, before each commit, and whenever a decision or API g
   - `pnpm exec vitest run src/panels/tests/SettingsPanel.test.tsx src/app/showcaseTour/tests/showcaseTourConfig.test.ts`
   - `pnpm run test:e2e:smoke`
   - `pnpm run build`
-  - Notes: UI settings now highlights a stable Settings panel shell target, transfer and validation stories highlight the left Import / Export settings nav route, and tour highlights observe DOM changes so lazy/API-opened panels can resolve anchors after mounting. Sandboxed build again failed only at localhost server binding (`EPERM` on `127.0.0.1:4174`); escalated smoke/build passed.
+  - Notes: tour highlights observe DOM changes so lazy/API-opened panels can resolve anchors after mounting; transfer and validation stories were moved to stable settings nav anchors.
+- Settings nav highlight follow-up:
+  - `pnpm run lint`
+  - `pnpm run typecheck`
+  - `pnpm exec vitest run src/panels/tests/SettingsPanel.test.tsx src/app/showcaseTour/tests/showcaseTourConfig.test.ts`
+  - `rg -n "(bg|text|border)-(slate|gray)-|#[0-9a-fA-F]{3,8}|rgba\\(" src/app/showcaseTour src/panels/SettingsPanel.tsx src/app/tests/smoke.e2e.test.ts`
+  - `pnpm run test:e2e:smoke`
+  - `pnpm run build`
+  - Notes: UI settings, font workflow, transfer, and validation stories now highlight the left settings nav route instead of the settings body section or panel shell. The design-system audit found only pre-existing token exceptions/test string assertions; no new local styling was added.
 
 ## Commit Log
 
@@ -170,7 +178,8 @@ Update it after each phase, before each commit, and whenever a decision or API g
 - Follow-up: tour step state encapsulation now uses explicit focused-mode state and panel scenes. Validation passed with focused showcase tests, lint/type/API-doc checks, full build, smoke e2e, and browser spot checks for focused-mode and panel reset transitions.
 - Follow-up: draggable tour panel close-reset behavior shipped in `feat(showcase-tour): make tour panel draggable`.
 - Follow-up: separately draggable tour panel and topic menu with close-reset behavior shipped in `feat(showcase-tour): drag tour menu separately`.
-- Follow-up: settings panel and transfer workflow highlight anchors are pending commit.
+- Follow-up: settings panel and transfer workflow highlight anchors shipped in `fix(showcase-tour): anchor settings highlights to stable targets`.
+- Follow-up: settings nav highlight alignment is pending commit.
 
 ## Unresolved Questions
 

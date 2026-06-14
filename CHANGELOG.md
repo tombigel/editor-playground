@@ -51,6 +51,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - preserve outside-click panels while dragging
 - exempt tour from floating panel dismiss
 - anchor settings highlights to stable targets
+- highlight settings nav workflow routes
 
 ---
 

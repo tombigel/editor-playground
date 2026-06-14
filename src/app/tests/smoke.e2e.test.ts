@@ -146,7 +146,7 @@ describe('app smoke e2e', () => {
     expect(pageErrors).toEqual([]);
   }, 30_000);
 
-  it('anchors the UI settings tour highlight to the settings panel', async () => {
+  it('anchors settings workflow tour highlights to left nav items', async () => {
     context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
     const smokePage = await context.newPage();
     const pageErrors: string[] = [];
@@ -157,28 +157,35 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(
-      smokePage,
-      `${server.url}/?tour=design&step=ui-settings&panel=settings&settings=display`,
-    );
     page = smokePage;
 
-    const settingsPanel = smokePage.getByRole('dialog', { name: 'Settings' });
-    await settingsPanel.waitFor({ state: 'visible' });
-    const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
-    await highlight.waitFor({ state: 'visible' });
+    for (const { step, settingsSection, navId } of [
+      { step: 'ui-settings', settingsSection: 'display', navId: 'display' },
+      { step: 'font-system', settingsSection: 'fonts', navId: 'fonts' },
+    ]) {
+      await expectEditorReady(
+        smokePage,
+        `${server.url}/?tour=design&step=${step}&panel=settings&settings=${settingsSection}`,
+      );
+      await smokePage.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
+      const navItem = smokePage.locator(`[data-settings-nav="${navId}"]`);
+      const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
+      await navItem.waitFor({ state: 'visible' });
+      await highlight.waitFor({ state: 'visible' });
 
-    const panelBox = await settingsPanel.boundingBox();
-    const highlightBox = await highlight.boundingBox();
-    if (!panelBox || !highlightBox) {
-      throw new Error('Expected settings panel and showcase highlight to be measurable');
+      const navBox = await navItem.boundingBox();
+      const highlightBox = await highlight.boundingBox();
+      if (!navBox || !highlightBox) {
+        throw new Error('Expected settings nav item and showcase highlight to be measurable');
+      }
+
+      expect(Math.abs(highlightBox.x - (navBox.x - 8))).toBeLessThanOrEqual(3);
+      expect(Math.abs(highlightBox.y - (navBox.y - 8))).toBeLessThanOrEqual(3);
+      expect(Math.abs(highlightBox.width - (navBox.width + 16))).toBeLessThanOrEqual(6);
+      expect(Math.abs(highlightBox.height - (navBox.height + 16))).toBeLessThanOrEqual(6);
+      expect(highlightBox.y).toBeGreaterThan(100);
     }
 
-    expect(Math.abs(highlightBox.x - (panelBox.x - 8))).toBeLessThanOrEqual(3);
-    expect(Math.abs(highlightBox.y - (panelBox.y - 8))).toBeLessThanOrEqual(3);
-    expect(Math.abs(highlightBox.width - (panelBox.width + 16))).toBeLessThanOrEqual(6);
-    expect(Math.abs(highlightBox.height - (panelBox.height + 16))).toBeLessThanOrEqual(6);
-    expect(highlightBox.y).toBeGreaterThan(100);
     expect(pageErrors).toEqual([]);
   }, 30_000);
 

@@ -362,7 +362,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			route: ["Settings", "UI"],
 			anchor: {
 				type: "selector",
-				selector: '[data-showcase-tour-anchor="settings-panel"]',
+				selector: '[data-settings-nav="display"]',
 				label: "UI settings",
 			},
 			navigation: {
@@ -378,7 +378,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			route: ["Settings", "Fonts"],
 			anchor: {
 				type: "selector",
-				selector: '[data-settings-section="fonts"]',
+				selector: '[data-settings-nav="fonts"]',
 				label: "Font workflow",
 			},
 			navigation: {

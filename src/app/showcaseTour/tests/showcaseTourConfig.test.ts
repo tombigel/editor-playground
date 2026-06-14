@@ -19,24 +19,19 @@ describe("showcase tour config", () => {
 		}
 	});
 
-	it("anchors the UI settings story to the settings panel shell", () => {
-		const step = SHOWCASE_TOUR_CONFIG.steps.find((item) => item.id === "ui-settings");
-
-		expect(step?.anchor).toEqual({
-			type: "selector",
-			selector: '[data-showcase-tour-anchor="settings-panel"]',
-			label: "UI settings",
-		});
-	});
-
-	it("anchors transfer stories to the settings nav route", () => {
-		for (const stepId of ["model-transfer", "link-validation"]) {
+	it("anchors settings stories to settings nav routes", () => {
+		for (const [stepId, navId, label] of [
+			["ui-settings", "display", "UI settings"],
+			["font-system", "fonts", "Font workflow"],
+			["model-transfer", "transfer", "Transfer workflow"],
+			["link-validation", "transfer", "Validation workflow"],
+		]) {
 			const step = SHOWCASE_TOUR_CONFIG.steps.find((item) => item.id === stepId);
 
 			expect(step?.anchor).toEqual({
 				type: "selector",
-				selector: '[data-settings-nav="transfer"]',
-				label: stepId === "model-transfer" ? "Transfer workflow" : "Validation workflow",
+				selector: `[data-settings-nav="${navId}"]`,
+				label,
 			});
 		}
 	});

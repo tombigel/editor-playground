@@ -205,7 +205,6 @@ export function SettingsPanel({
     <div
       role="dialog"
       aria-label="Settings"
-      data-showcase-tour-anchor="settings-panel"
       className="editor-settings-panel fixed left-1/2 top-1/2 w-[min(760px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl shadow-[0_22px_64px_rgba(15,23,42,0.18)]"
     >
       <div className="editor-bg-surface editor-border-subtle overflow-hidden rounded-2xl border">
