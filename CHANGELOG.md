@@ -17,6 +17,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - set up pnpm before node cache
 - install playwright chromium
 - refine manage fonts usage metadata
+- skip listener re-registration on every pointermove
 
 ### Fixed
 
