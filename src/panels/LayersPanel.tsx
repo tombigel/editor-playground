@@ -247,6 +247,7 @@ export function LayersPanelContent({
 	);
 	const [editingId, setEditingId] = useState<NodeId | null>(null);
 	const [dragState, setDragState] = useState<DragState | null>(null);
+	const activeDragPointerId = dragState?.pointerId ?? null;
 	const dragStateRef = useRef<DragState | null>(null);
 	const rowElementsRef = useRef(new Map<NodeId, HTMLDivElement>());
 	const dragJustEndedRef = useRef(false);
@@ -295,6 +296,9 @@ export function LayersPanelContent({
 		() => buildLayersTreeRows(document, selectedIds, expandedIds),
 		[document, expandedIds, selectedIds],
 	);
+	const documentRef = useRef(document);
+	const rowsRef = useRef(rows);
+	const onMoveNodeInTreeRef = useRef(onMoveNodeInTree);
 	const draggedRow = dragState
 		? (rows.find((row) => row.id === dragState.nodeId) ?? null)
 		: null;
@@ -307,6 +311,16 @@ export function LayersPanelContent({
 					dragState.dropTarget.targetIndex,
 				)
 			: null;
+
+	useEffect(() => {
+		dragStateRef.current = dragState;
+	}, [dragState]);
+
+	useEffect(() => {
+		documentRef.current = document;
+		rowsRef.current = rows;
+		onMoveNodeInTreeRef.current = onMoveNodeInTree;
+	}, [document, onMoveNodeInTree, rows]);
 
 	useEffect(() => {
 		if (!editingId || document.nodes[editingId]) {
@@ -332,11 +346,10 @@ export function LayersPanelContent({
 	}, [dragState?.active]);
 
 	useEffect(() => {
-		if (!dragState) {
+		if (activeDragPointerId == null) {
 			return;
 		}
-		dragStateRef.current = dragState;
-		const pointerId = dragState.pointerId;
+		const pointerId = activeDragPointerId;
 
 		function clearDragState(didDrag: boolean) {
 			updateDragState(null);
@@ -369,7 +382,7 @@ export function LayersPanelContent({
 			}
 
 			event.preventDefault();
-			const hoveredRow = rows.find((row) => {
+			const hoveredRow = rowsRef.current.find((row) => {
 				const element = rowElementsRef.current.get(row.id);
 				if (!element) {
 					return false;
@@ -408,7 +421,7 @@ export function LayersPanelContent({
 				hoveredRow.node.contentType === "container",
 			);
 			const nextTarget = resolveLayersDropTarget(
-				document,
+				documentRef.current,
 				currentDrag.nodeId,
 				hoveredRow.id,
 				position,
@@ -444,7 +457,7 @@ export function LayersPanelContent({
 
 			const currentDrag = dragStateRef.current;
 			if (currentDrag?.active && currentDrag.dropTarget) {
-				onMoveNodeInTree(
+				onMoveNodeInTreeRef.current(
 					currentDrag.nodeId,
 					currentDrag.dropTarget.targetParentId,
 					currentDrag.dropTarget.targetIndex,
@@ -465,7 +478,7 @@ export function LayersPanelContent({
 			window.removeEventListener("pointerup", handlePointerEnd);
 			window.removeEventListener("pointercancel", handlePointerEnd);
 		};
-	}, [document, dragState, onMoveNodeInTree, rows, updateDragState]);
+	}, [activeDragPointerId, updateDragState]);
 
 	function handleToggleExpanded(nodeId: NodeId) {
 		setExpandedIds((current) => {

@@ -64,13 +64,18 @@ export function PageTreeContent({
 	onSetPageVisibility,
 }: PageTreeContentProps) {
 	const [expandedIds, setExpandedIds] = useState<Set<PageId>>(new Set());
+	const pages = document.pages ?? [];
+	const rows = buildPageTreeRows(pages, activePageId, expandedIds);
 	const [dragState, setDragState] = useState<DragState | null>(null);
+	const activeDragPointerId = dragState?.pointerId ?? null;
 	const dragStateRef = useRef<DragState | null>(null);
+	const pagesRef = useRef(pages);
+	const rowsRef = useRef(rows);
+	const onReorderPageRef = useRef(onReorderPage);
+	const onSetPageParentRef = useRef(onSetPageParent);
 	const rowRefs = useRef(new Map<PageId, HTMLDivElement>());
 	const dragJustEndedRef = useRef(false);
 
-	const pages = document.pages ?? [];
-	const rows = buildPageTreeRows(pages, activePageId, expandedIds);
 	const draggedPage = dragState
 		? (pages.find((page) => page.id === dragState.pageId) ?? null)
 		: null;
@@ -78,6 +83,13 @@ export function PageTreeContent({
 	useEffect(() => {
 		dragStateRef.current = dragState;
 	}, [dragState]);
+
+	useEffect(() => {
+		pagesRef.current = pages;
+		rowsRef.current = rows;
+		onReorderPageRef.current = onReorderPage;
+		onSetPageParentRef.current = onSetPageParent;
+	}, [onReorderPage, onSetPageParent, pages, rows]);
 
 	useEffect(() => {
 		if (!dragState?.active) {
@@ -95,11 +107,11 @@ export function PageTreeContent({
 	}, [dragState?.active]);
 
 	useEffect(() => {
-		if (!dragState) {
+		if (activeDragPointerId == null) {
 			return;
 		}
 
-		const pointerId = dragState.pointerId;
+		const pointerId = activeDragPointerId;
 
 		function finishDrag(didDrag: boolean) {
 			setDragState(null);
@@ -136,7 +148,7 @@ export function PageTreeContent({
 			let nextDropTarget: PageDropTarget | null = null;
 			let invalidDrop = false;
 
-			for (const row of rows) {
+			for (const row of rowsRef.current) {
 				const element = rowRefs.current.get(row.page.id);
 				if (!element) {
 					continue;
@@ -152,7 +164,7 @@ export function PageTreeContent({
 					event.clientY - rect.top,
 				);
 				nextDropTarget = resolvePageDropTarget(
-					pages,
+					pagesRef.current,
 					currentDrag.pageId,
 					row.page.id,
 					position,
@@ -183,13 +195,14 @@ export function PageTreeContent({
 
 			const currentDrag = dragStateRef.current;
 			const currentPage = currentDrag
-				? (pages.find((page) => page.id === currentDrag.pageId) ?? null)
+				? (pagesRef.current.find((page) => page.id === currentDrag.pageId) ??
+					null)
 				: null;
 			const dropTarget = currentDrag?.dropTarget ?? null;
 
 			if (currentDrag?.active && currentPage && dropTarget) {
 				if (dropTarget.newParentId !== (currentPage.parentPageId ?? null)) {
-					onSetPageParent(currentPage.id, dropTarget.newParentId);
+					onSetPageParentRef.current(currentPage.id, dropTarget.newParentId);
 					if (dropTarget.newParentId !== null) {
 						setExpandedIds((current) => {
 							const next = new Set(current);
@@ -198,7 +211,7 @@ export function PageTreeContent({
 						});
 					}
 				} else if (dropTarget.orderChange) {
-					onReorderPage(currentPage.id, dropTarget.orderChange);
+					onReorderPageRef.current(currentPage.id, dropTarget.orderChange);
 				}
 			}
 
@@ -216,7 +229,7 @@ export function PageTreeContent({
 			window.removeEventListener("pointerup", handlePointerEnd);
 			window.removeEventListener("pointercancel", handlePointerEnd);
 		};
-	}, [dragState, onReorderPage, onSetPageParent, pages, rows]);
+	}, [activeDragPointerId]);
 
 	function toggleExpand(pageId: PageId) {
 		setExpandedIds((current) => {
