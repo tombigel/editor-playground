@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - skip listener re-registration on every pointermove
 - skip structuredClone for unchanged metadata fields
 - short-circuit node deep-compare on reference equality
+- restore drag listener dep arrays in LayersPanel and PageTreeContent
 
 ### Fixed
 

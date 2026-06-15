@@ -465,7 +465,7 @@ export function LayersPanelContent({
 			window.removeEventListener("pointerup", handlePointerEnd);
 			window.removeEventListener("pointercancel", handlePointerEnd);
 		};
-	}, [document, dragState?.pointerId ?? null, onMoveNodeInTree, rows, updateDragState]);
+	}, [document, dragState, onMoveNodeInTree, rows, updateDragState]);
 
 	function handleToggleExpanded(nodeId: NodeId) {
 		setExpandedIds((current) => {
