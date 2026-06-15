@@ -50,8 +50,11 @@ export function buildHistoryEntry(
       patches.push({ id, before: beforeNode, after: undefined });
       continue;
     }
-    if (beforeNode && afterNode && !nodesEqual(beforeNode, afterNode)) {
-      patches.push({ id, before: beforeNode, after: afterNode });
+    if (beforeNode && afterNode) {
+      if (beforeNode === afterNode) continue;
+      if (!nodesEqual(beforeNode, afterNode)) {
+        patches.push({ id, before: beforeNode, after: afterNode });
+      }
     }
   }
 
