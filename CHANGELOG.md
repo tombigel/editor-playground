@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - install playwright chromium
 - refine manage fonts usage metadata
 - skip listener re-registration on every pointermove
+- skip listener re-registration on every pointermove
 
 ### Fixed
 

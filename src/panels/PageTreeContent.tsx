@@ -1,6 +1,7 @@
 import { Ban, File, Plus, Trash2 } from "lucide-react";
 import {
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 	type KeyboardEvent as ReactKeyboardEvent,
@@ -70,7 +71,10 @@ export function PageTreeContent({
 	const dragJustEndedRef = useRef(false);
 
 	const pages = document.pages ?? [];
-	const rows = buildPageTreeRows(pages, activePageId, expandedIds);
+	const rows = useMemo(
+		() => buildPageTreeRows(pages, activePageId, expandedIds),
+		[pages, activePageId, expandedIds],
+	);
 	const draggedPage = dragState
 		? (pages.find((page) => page.id === dragState.pageId) ?? null)
 		: null;
@@ -216,7 +220,7 @@ export function PageTreeContent({
 			window.removeEventListener("pointerup", handlePointerEnd);
 			window.removeEventListener("pointercancel", handlePointerEnd);
 		};
-	}, [dragState, onReorderPage, onSetPageParent, pages, rows]);
+	}, [dragState?.pointerId ?? null, onReorderPage, onSetPageParent, pages, rows]);
 
 	function toggleExpand(pageId: PageId) {
 		setExpandedIds((current) => {
