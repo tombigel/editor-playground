@@ -27,6 +27,9 @@ export function expandParentHeightDoc(
 
   const nextHeightPx = Math.max(0, Math.ceil(parentExpansion.minHeightPx));
   const currentHeight = parent.rect.height.base.parsed;
+  if (!('unit' in currentHeight) && currentHeight.keyword === 'auto') {
+    return document;
+  }
   const currentHeightPx = 'unit' in currentHeight && currentHeight.unit === 'px'
     ? currentHeight.value
     : 0;

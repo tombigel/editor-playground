@@ -2314,4 +2314,37 @@ describe('api/documentApi', () => {
     const invalid = expandParentHeightDoc(batchReparented, { parentId: leafA.id, minHeightPx: 400 });
     expect(invalid).toBe(batchReparented);
   });
+
+  it('preserves auto parent height when expansion is requested', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section');
+    }
+    const parent = createContainerNode('container', section.id);
+    parent.rect = createDefaultRect('0px', '0px', '240px', 'auto');
+    const leaf = createTextNode('block', parent.id);
+    parent.children = [leaf.id];
+    section.children.push(parent.id);
+    document.nodes[parent.id] = parent;
+    document.nodes[leaf.id] = leaf;
+
+    const expanded = expandParentHeightDoc(document, { parentId: parent.id, minHeightPx: 320 });
+    expect(expanded).toBe(document);
+
+    const moved = moveNodeDoc(
+      document,
+      leaf.id,
+      { x: '20px', y: '280px' },
+      { parentExpansion: { parentId: parent.id, minHeightPx: 320 } },
+    );
+    expectContainerHeight(moved, parent.id, 'auto');
+    const movedLeaf = moved.nodes[leaf.id];
+    if (!movedLeaf || movedLeaf.contentType === 'site') {
+      throw new Error('Expected moved leaf');
+    }
+    expect(movedLeaf.rect.y.base.raw).toBe('280px');
+  });
 });

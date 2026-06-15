@@ -36,9 +36,9 @@ Primary source: `src/api/documentApi.ts`
 
 - `moveNodeDoc(document, nodeId, { x?, y? }, options?)` updates authored `x` / `y` coordinates without editor state.
 - `moveNodesDoc(document, moves, options?)` applies multiple authored `x` / `y` coordinate updates in one pure document mutation.
-- `expandParentHeightDoc(document, { parentId, minHeightPx })` grows a container height without moving children.
+- `expandParentHeightDoc(document, { parentId, minHeightPx })` grows a container height without moving children. Authored `auto` height is preserved.
 
-The move and reparent-at-position helpers accept `options.parentExpansion?: { parentId, minHeightPx }`. Drag/drop uses this to commit child placement and parent height growth together for default anchor-boundary downward drops.
+The move and reparent-at-position helpers accept `options.parentExpansion?: { parentId, minHeightPx }`. Drag/drop uses this to commit child placement and parent height growth together for default anchor-boundary downward drops. When the parent height is authored as `auto`, the movement still commits and the height remains `auto`.
 
 ### Container Child Boundaries
 

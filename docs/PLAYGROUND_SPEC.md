@@ -313,13 +313,13 @@ Drag preview and drop targeting:
 - While dragging a child inside its current parent, that source parent and its ancestors are not highlighted as drop targets.
 - When dragging a `container` wrapper, its structural source parent (`section`, `header`, `footer`) may still highlight.
 - Each wrapper has a child-boundary policy. The default `anchor` policy keeps the child origin (`x`,`y`) inside the target content box while allowing the child body to peek outside. The optional `box` policy keeps the full child box inside the target content box.
-- With the default `anchor` child-boundary policy, dragging below the target wrapper's bottom edge commits the resolved child position and grows the parent height enough to contain the preview bottom. The optional `box` policy keeps the full child box inside the target content box instead.
+- With the default `anchor` child-boundary policy, dragging below the target wrapper's bottom edge commits the resolved child position and grows the parent height enough to contain the preview bottom. Parents authored with `auto` height preserve `auto` instead of receiving a generated pixel height. The optional `box` policy keeps the full child box inside the target content box instead.
 
 ### Drag implementation details
 
 - Drag preview placement resolves from the pointer grab offset captured at drag start, with an additional visual-shift correction path for sticky-shifted nodes.
 - Drag update resolves the exact placement that the preview displays; pointer-up commits that resolved placement without running snap or drop-target resolution a second time.
-- Parent expansion is part of the resolved placement for anchor-boundary drops. Commit applies the move/reparent and parent height growth as one document mutation.
+- Parent expansion is part of the resolved placement for anchor-boundary drops. Commit applies the move/reparent and parent height growth as one document mutation, except authored `auto` parent height remains `auto`.
 - Grouped drag commits as a single bulk move action, but only for the subset of the selection that shares the clicked node's parent wrapper.
 - Grouped same-parent drag preserves relative offsets. Grouped reparent can move the same-parent selection into a valid target wrapper while preserving relative offsets.
 - Marquee selection started from a top-level structural wrapper (`section`, `header`, `footer`) filters hits to direct children of that wrapper.

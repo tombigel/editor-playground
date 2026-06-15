@@ -25,7 +25,7 @@ Drag modifiers follow design-tool conventions:
 
 Boundary rules remain model/API-owned. Missing container policy resolves to `anchor`, which keeps the child origin inside the wrapper content box while allowing overflow. `box` keeps the full child box inside the content box.
 
-For default `anchor` child boundaries, the resolver can place the child below the current bottom edge and records `resolvedPlacement.parentExpansion` with the required parent height. `finishDragSession()` includes that request on the move/reparent intent so editor callers can apply movement and height growth in one document mutation. `box` boundaries keep the full child box inside the content box instead.
+For default `anchor` child boundaries, the resolver can place the child below the current bottom edge and records `resolvedPlacement.parentExpansion` with the required parent height. `finishDragSession()` includes that request on the move/reparent intent so editor callers can apply movement and height growth in one document mutation. Parents authored with `auto` height keep `auto` when this request is applied. `box` boundaries keep the full child box inside the content box instead.
 
 ## Editor State
 

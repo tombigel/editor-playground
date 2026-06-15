@@ -5,6 +5,7 @@ import {
   finishDragSession,
   updateDragSession,
 } from '../dragDropApi';
+import { moveNodeDoc } from '../documentApi';
 import type { DragGeometrySnapshot, DragUpdateInput } from '../types';
 import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
 import type { DocumentModel, NodeId, TextNode, ContainerNode } from '../../model/types';
@@ -635,6 +636,59 @@ describe('api/dragDropApi', () => {
       x: '40px',
       y: '40px',
     });
+  });
+
+  it('preserves auto parent height when applying a drag expansion request', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const parent = document.nodes[containerAId];
+    if (parent?.contentType !== 'container') {
+      throw new Error('Expected container');
+    }
+    parent.rect.height = createDefaultRect('0px', '0px', '0px', 'auto').height;
+    const commit = finishUpdatedDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 140,
+        startClientY: 120,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          sourceContentBox: { left: 100, top: 100, width: 120, height: 80 },
+          dropTargets: [
+            { id: containerAId, contentBox: { left: 100, top: 100, width: 120, height: 80 }, depth: 0, order: 1 },
+          ],
+        }),
+      }),
+      makeDragInput({
+        clientX: 180,
+        clientY: 260,
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
+    );
+
+    expect(commit).toMatchObject({
+      type: 'move',
+      id: leafAId,
+      x: '40px',
+      y: '140px',
+      parentExpansion: {
+        parentId: containerAId,
+        minHeightPx: 180,
+      },
+    });
+    if (commit.type !== 'move') {
+      throw new Error('Expected move commit');
+    }
+    const moved = moveNodeDoc(document, commit.id, { x: commit.x, y: commit.y }, {
+      parentExpansion: commit.parentExpansion,
+    });
+    const movedParent = moved.nodes[containerAId];
+    expect(movedParent?.contentType === 'container' ? movedParent.rect.height.base.raw : null).toBe('auto');
   });
 
   it('keeps sticky-shifted drags aligned to the visual rect', () => {

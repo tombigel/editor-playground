@@ -31,6 +31,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - inert hidden inspector layers
 - avoid panel drag listener churn
+- preserve auto parent height expansion
 
 ---
 

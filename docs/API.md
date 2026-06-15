@@ -433,11 +433,11 @@ Source: `src/api/documentApi.ts`
 | `moveNodesDoc` | `(document, moves, options?) -> DocumentModel` | Move multiple nodes to authored coordinates, optionally growing a parent |
 | `reparentNodeAtDoc` | `(document, nodeId, parentId, { x, y }, options?) -> DocumentModel` | Reparent a node and set local authored coordinates, optionally growing the target parent |
 | `reparentNodesAtDoc` | `(document, parentId, moves, options?) -> DocumentModel` | Reparent multiple nodes and set local authored coordinates, optionally growing the target parent |
-| `expandParentHeightDoc` | `(document, { parentId, minHeightPx }) -> DocumentModel` | Grow a container height to at least the requested px size |
+| `expandParentHeightDoc` | `(document, { parentId, minHeightPx }) -> DocumentModel` | Grow a container height to at least the requested px size, preserving authored `auto` height |
 | `resolveContainerChildBoundary` | `(document, containerId) -> ContainerChildBoundary` | Resolve a wrapper policy, defaulting to `anchor` |
 | `setContainerChildBoundaryDoc` | `(document, containerId, childBoundary) -> DocumentModel` | Set wrapper child-boundary policy |
 
-These helpers are the API-first surface used by editor drag/drop and keyboard movement. They keep movement and reparent placement deterministic without depending on stage DOM state. Movement and reparent helpers accept `options.parentExpansion?: { parentId, minHeightPx }` so an anchor-boundary drag commit can move the child and grow the parent in one model mutation.
+These helpers are the API-first surface used by editor drag/drop and keyboard movement. They keep movement and reparent placement deterministic without depending on stage DOM state. Movement and reparent helpers accept `options.parentExpansion?: { parentId, minHeightPx }` so an anchor-boundary drag commit can move the child and grow the parent in one model mutation. Parents with authored `auto` height ignore expansion requests and keep their authored height value.
 
 ---
 
@@ -803,6 +803,8 @@ type ParentExpansionRequest = {
   minHeightPx: number;
 };
 ```
+
+`auto` parent heights are preserved when expansion is requested; the child placement still commits, but the parent height stays authored as `auto`.
 
 ### TextNode
 
