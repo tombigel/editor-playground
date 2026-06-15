@@ -24,6 +24,7 @@ import {
   requestPromoteWrapperRole,
   resizeNode,
   reorderNodes,
+  setContainerChildBoundary,
   setNodeVisibility,
   setPageTopLevelWrapperPlacement,
   setTopLevelWrapperVisibility,
@@ -110,13 +111,13 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     case 'insertLeaf':
       return insertLeaf(state, action.role);
     case 'move':
-      return moveNode(state, action.id, { x: action.x, y: action.y });
+      return moveNode(state, action.id, { x: action.x, y: action.y }, action.options);
     case 'moveSelection':
-      return moveNodes(state, action.moves);
+      return moveNodes(state, action.moves, action.options);
     case 'reparent':
-      return reparentNode(state, action.id, action.parentId, action.x, action.y);
+      return reparentNode(state, action.id, action.parentId, action.x, action.y, action.options);
     case 'reparentSelection':
-      return reparentNodes(state, action.moves, action.parentId);
+      return reparentNodes(state, action.moves, action.parentId, action.options);
     case 'moveNodeInTree':
       return moveNodeInTree(state, action.id, action.targetParentId, action.targetIndex);
     case 'resize':
@@ -128,6 +129,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     case 'wrapperStyle':
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         updateWrapperStyleField(nextState, nodeId, action.field, action.value),
+      );
+    case 'containerChildBoundary':
+      return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
+        setContainerChildBoundary(nextState, nodeId, action.value),
       );
     case 'rect':
       return selectedId ? updateRectField(state, selectedId, action.field, action.value) : state;

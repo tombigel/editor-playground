@@ -489,6 +489,7 @@ export type ContainerNode = BaseNode & {
   subtype: ContainerSubtype;
   children: NodeId[];
   rect: RectModel;
+  layout?: ContainerLayout;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   pageTargetIds?: PageId[];
@@ -504,6 +505,12 @@ export type ContainerNode = BaseNode & {
     paddingBottom?: ParsedValue<SpacingValue>;
     paddingLeft?: ParsedValue<SpacingValue>;
   };
+};
+
+export type ContainerChildBoundary = 'anchor' | 'box';
+
+export type ContainerLayout = {
+  childBoundary?: ContainerChildBoundary;
 };
 
 // ---------------------------------------------------------------------------

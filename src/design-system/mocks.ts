@@ -12,6 +12,7 @@ const noop = () => {};
 export const noopActions: InspectorActionHandlers = {
 	onTextChange: noop,
 	onWrapperStyleChange: noop,
+	onContainerChildBoundaryChange: noop,
 	onRectChange: noop,
 	onSetNodeVisibility: noop,
 	onSetTopLevelWrapperVisibility: noop,

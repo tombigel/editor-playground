@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledGoogleFontsCatalog } from '../../fonts';
-import { createMediaNode, createButtonTextNode, createTextNode, createLinkTextNode, createContainerNode, createSectionFromTemplate } from '../../model/defaults';
+import { createMediaNode, createButtonTextNode, createTextNode, createLinkTextNode, createContainerNode, createDefaultRect, createSectionFromTemplate } from '../../model/defaults';
 import { createPage } from '../../model/pageDefaults';
 import {
   createTextDocumentContent,
@@ -20,9 +20,15 @@ import {
   insertLeafDoc,
   insertSectionTemplateDoc,
   moveNodeInTreeDoc,
+  moveNodeDoc,
+  moveNodesDoc,
   parseDocumentJson,
+  reparentNodeAtDoc,
+  reparentNodesAtDoc,
+  resolveContainerChildBoundary,
   serializeDocumentJson,
   normalizeTextNodeDoc,
+  setContainerChildBoundaryDoc,
   setCodeBlockLanguageDoc,
   resetCodeBlockStyleDoc,
   setCodeBlockTabSizeDoc,
@@ -40,6 +46,7 @@ import {
   setTextNodeContentDoc,
   setTopLevelWrapperVisibility,
   getTopLevelWrapperVisibilityState,
+  expandParentHeightDoc,
   switchTextSubtypeDoc,
   type LeafInsertionRole,
 } from '../documentApi';
@@ -61,6 +68,14 @@ function getRoot(document: ReturnType<typeof createInitialDocument>) {
 }
 
 describe('api/documentApi', () => {
+  function expectContainerHeight(document: ReturnType<typeof createInitialDocument>, nodeId: string, raw: string) {
+    const node = document.nodes[nodeId];
+    if (!node || node.contentType !== 'container') {
+      throw new Error(`Expected container ${nodeId}`);
+    }
+    expect(node.rect.height.base.raw).toBe(raw);
+  }
+
   describe('insertLeafDoc', () => {
     function firstSectionId(document: ReturnType<typeof createInitialDocument>) {
       const root = getRoot(document);
@@ -2172,5 +2187,131 @@ describe('api/documentApi', () => {
 
     expect(getTextContent(repoLink.content.blocks)).toBe('github.com/tombigel/sticky-playground');
     expect(repoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
+  });
+
+  it('moves and reparents positioned nodes through pure document APIs', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section');
+    }
+
+    const containerA = createContainerNode('container', section.id);
+    const containerB = createContainerNode('container', section.id);
+    const leafA = createTextNode('block', containerA.id);
+    const leafB = createTextNode('block', containerA.id);
+    containerA.children = [leafA.id, leafB.id];
+    section.children.push(containerA.id, containerB.id);
+    document.nodes[containerA.id] = containerA;
+    document.nodes[containerB.id] = containerB;
+    document.nodes[leafA.id] = leafA;
+    document.nodes[leafB.id] = leafB;
+
+    const moved = moveNodeDoc(document, leafA.id, { x: '40px', y: '48px' });
+    const movedLeafA = moved.nodes[leafA.id];
+    if (!movedLeafA || movedLeafA.contentType === 'site') {
+      throw new Error('Expected moved leaf');
+    }
+    expect(movedLeafA.rect.x.base.raw).toBe('40px');
+    expect(leafA.rect.x.base.raw).not.toBe('40px');
+
+    const batchMoved = moveNodesDoc(moved, [
+      { id: leafA.id, x: '50px', y: '58px' },
+      { id: leafB.id, x: '140px', y: '58px' },
+    ]);
+    const batchMovedLeafA = batchMoved.nodes[leafA.id];
+    const batchMovedLeafB = batchMoved.nodes[leafB.id];
+    if (!batchMovedLeafA || batchMovedLeafA.contentType === 'site' || !batchMovedLeafB || batchMovedLeafB.contentType === 'site') {
+      throw new Error('Expected batch moved leaves');
+    }
+    expect(batchMovedLeafA.rect.x.base.raw).toBe('50px');
+    expect(batchMovedLeafB.rect.x.base.raw).toBe('140px');
+
+    const reparented = reparentNodeAtDoc(batchMoved, leafA.id, containerB.id, { x: '12px', y: '16px' });
+    expect(reparented.nodes[leafA.id].parentId).toBe(containerB.id);
+    const reparentedLeafA = reparented.nodes[leafA.id];
+    if (!reparentedLeafA || reparentedLeafA.contentType === 'site') {
+      throw new Error('Expected reparented leaf');
+    }
+    expect(reparentedLeafA.rect.x.base.raw).toBe('12px');
+    expect(reparented.nodes[containerA.id].children).not.toContain(leafA.id);
+    expect(reparented.nodes[containerB.id].children).toContain(leafA.id);
+
+    const batchReparented = reparentNodesAtDoc(reparented, containerB.id, [
+      { id: leafB.id, x: '30px', y: '36px' },
+    ]);
+    expect(batchReparented.nodes[leafB.id].parentId).toBe(containerB.id);
+    const batchReparentedLeafB = batchReparented.nodes[leafB.id];
+    if (!batchReparentedLeafB || batchReparentedLeafB.contentType === 'site') {
+      throw new Error('Expected batch reparented leaf');
+    }
+    expect(batchReparentedLeafB.rect.y.base.raw).toBe('36px');
+
+    expect(resolveContainerChildBoundary(batchReparented, containerB.id)).toBe('anchor');
+    const constrained = setContainerChildBoundaryDoc(batchReparented, containerB.id, 'box');
+    expect(resolveContainerChildBoundary(constrained, containerB.id)).toBe('box');
+    const unchangedContainerB = batchReparented.nodes[containerB.id];
+    expect(unchangedContainerB.contentType === 'container' ? unchangedContainerB.layout : null).toBeUndefined();
+  });
+
+  it('can grow a parent in the same pure move or reparent operation', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section');
+    }
+
+    const containerA = createContainerNode('container', section.id);
+    containerA.rect = createDefaultRect('0px', '0px', '240px', '120px');
+    const containerB = createContainerNode('container', section.id);
+    containerB.rect = createDefaultRect('260px', '0px', '240px', '100px');
+    const leafA = createTextNode('block', containerA.id);
+    const leafB = createTextNode('block', containerA.id);
+    containerA.children = [leafA.id, leafB.id];
+    section.children.push(containerA.id, containerB.id);
+    document.nodes[containerA.id] = containerA;
+    document.nodes[containerB.id] = containerB;
+    document.nodes[leafA.id] = leafA;
+    document.nodes[leafB.id] = leafB;
+
+    const moved = moveNodeDoc(
+      document,
+      leafA.id,
+      { x: '20px', y: '140px' },
+      { parentExpansion: { parentId: containerA.id, minHeightPx: 188 } },
+    );
+    expectContainerHeight(moved, containerA.id, '188px');
+    expectContainerHeight(document, containerA.id, '120px');
+
+    const batchMoved = moveNodesDoc(
+      moved,
+      [{ id: leafB.id, x: '30px', y: '150px' }],
+      { parentExpansion: { parentId: containerA.id, minHeightPx: 176 } },
+    );
+    expectContainerHeight(batchMoved, containerA.id, '188px');
+
+    const reparented = reparentNodeAtDoc(
+      batchMoved,
+      leafA.id,
+      containerB.id,
+      { x: '12px', y: '130px' },
+      { parentExpansion: { parentId: containerB.id, minHeightPx: 171 } },
+    );
+    expectContainerHeight(reparented, containerB.id, '171px');
+
+    const batchReparented = reparentNodesAtDoc(
+      reparented,
+      containerB.id,
+      [{ id: leafB.id, x: '20px', y: '160px' }],
+      { parentExpansion: { parentId: containerB.id, minHeightPx: 205 } },
+    );
+    expectContainerHeight(batchReparented, containerB.id, '205px');
+
+    const invalid = expandParentHeightDoc(batchReparented, { parentId: leafA.id, minHeightPx: 400 });
+    expect(invalid).toBe(batchReparented);
   });
 });

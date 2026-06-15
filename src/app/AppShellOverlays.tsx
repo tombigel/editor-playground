@@ -162,6 +162,9 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onWrapperStyleChange={(field, value) =>
 							dispatch({ type: "wrapperStyle", field, value })
 						}
+						onContainerChildBoundaryChange={(value) =>
+							dispatch({ type: "containerChildBoundary", value })
+						}
 						onRectChange={(field, value) =>
 							dispatch({ type: "rect", field, value })
 						}

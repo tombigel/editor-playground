@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getSingleTextBlockContent, getTextContent } from '../../model/richContent';
+import { createContainerNode, createDefaultRect, createTextNode } from '../../model/defaults';
 import { createInitialState } from '../editorPersistence';
 import {
   alignNodes,
@@ -37,6 +38,32 @@ function getRoot(document: EditorState['document']) {
     throw new Error('Expected site root');
   }
   return root;
+}
+
+function createKeyboardNudgeExpansionState() {
+  const state = createInitialState();
+  const document = structuredClone(state.document);
+  const root = getRoot(document);
+  const sectionId = root.children.find((id) => {
+    const node = document.nodes[id];
+    return node?.contentType === 'container' && node.subtype === 'section';
+  });
+  if (!sectionId) {
+    throw new Error('Expected section');
+  }
+  const parent = createContainerNode('container', sectionId);
+  parent.rect = createDefaultRect('40px', '40px', '240px', '120px');
+  const leaf = createTextNode('block', parent.id);
+  leaf.rect = createDefaultRect('20px', '110px', '80px', '40px');
+  parent.children = [leaf.id];
+  document.nodes[parent.id] = parent;
+  document.nodes[leaf.id] = leaf;
+  document.nodes[sectionId].children.push(parent.id);
+  return {
+    state: { ...state, document },
+    parentId: parent.id,
+    leafId: leaf.id,
+  };
 }
 
 function findNodeByRole(state: EditorState, type: string, role: string) {
@@ -1194,6 +1221,37 @@ describe('editor/editorMutations', () => {
       if (node.contentType !== 'site') {
         expect(node.rect.x.base.raw).toBe('0px');
       }
+    });
+
+    it('expands anchor-boundary parents when keyboard nudging moves below the bottom edge', () => {
+      const { state, parentId, leafId } = createKeyboardNudgeExpansionState();
+
+      const expanded = nudgeNode(state, leafId, { x: 0, y: 20 });
+      const expandedLeaf = expanded.document.nodes[leafId];
+      const expandedParent = expanded.document.nodes[parentId];
+      if (expandedLeaf.contentType === 'site' || expandedParent.contentType !== 'container') {
+        throw new Error('Expected leaf and container');
+      }
+      expect(expandedLeaf.rect.y.base.raw).toBe('130px');
+      expect(expandedParent.rect.height.base.raw).toBe('170px');
+
+      const boxState = {
+        ...state,
+        document: structuredClone(state.document),
+      };
+      const boxParent = boxState.document.nodes[parentId];
+      if (boxParent.contentType !== 'container') {
+        throw new Error('Expected parent container');
+      }
+      boxParent.layout = { childBoundary: 'box' };
+      const clamped = nudgeNode(boxState, leafId, { x: 0, y: 20 });
+      const clampedLeaf = clamped.document.nodes[leafId];
+      const clampedParent = clamped.document.nodes[parentId];
+      if (clampedLeaf.contentType === 'site' || clampedParent.contentType !== 'container') {
+        throw new Error('Expected leaf and container');
+      }
+      expect(clampedLeaf.rect.y.base.raw).toBe('80px');
+      expect(clampedParent.rect.height.base.raw).toBe('120px');
     });
 
     it('returns unchanged state for root-level section (parentId === rootId)', () => {

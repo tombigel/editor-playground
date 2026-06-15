@@ -9,12 +9,13 @@ import type {
   TextDocumentContent,
   TextSubtype,
   WrapperStyleField,
+  ContainerChildBoundary,
 } from '../../api/documentViewApi';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
 import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewApi';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
-import type { SetTextDocumentContentOptions } from '../../api/documentApi';
+import type { ParentExpansionRequest, SetTextDocumentContentOptions } from '../../api/documentApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
 import type { EditorNavigationUrlState, EditorNodeTarget } from '../../api/editorNavigationApi';
 
@@ -78,6 +79,10 @@ export type BulkMoveOperation = {
   y: string;
 };
 
+export type DragCommitOptions = {
+  parentExpansion?: ParentExpansionRequest;
+};
+
 export type EditorAction =
   | { type: 'select'; id: string | null }
   | { type: 'toggleSelect'; id: string }
@@ -89,14 +94,15 @@ export type EditorAction =
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }
-  | { type: 'move'; id: string; x: string; y: string }
-  | { type: 'moveSelection'; moves: BulkMoveOperation[] }
-  | { type: 'reparent'; id: string; parentId: string; x: string; y: string }
-  | { type: 'reparentSelection'; parentId: string; moves: BulkMoveOperation[] }
+  | { type: 'move'; id: string; x: string; y: string; options?: DragCommitOptions }
+  | { type: 'moveSelection'; moves: BulkMoveOperation[]; options?: DragCommitOptions }
+  | { type: 'reparent'; id: string; parentId: string; x: string; y: string; options?: DragCommitOptions }
+  | { type: 'reparentSelection'; parentId: string; moves: BulkMoveOperation[]; options?: DragCommitOptions }
   | { type: 'moveNodeInTree'; id: string; targetParentId: string; targetIndex: number }
   | { type: 'resize'; id: string; width: string; height: string }
   | { type: 'text'; field: EditorTextField; value: string; id?: string }
   | { type: 'wrapperStyle'; field: WrapperStyleField; value: string }
+  | { type: 'containerChildBoundary'; value: ContainerChildBoundary }
   | { type: 'rect'; field: 'x' | 'y' | 'width' | 'height'; value: string }
   | { type: 'promote'; role: 'header' | 'footer' }
   | { type: 'confirmPromote' }

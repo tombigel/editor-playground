@@ -52,6 +52,7 @@ function createInspectorProps() {
     onSectionForward: () => {},
     onTextChange: () => {},
     onWrapperStyleChange: () => {},
+    onContainerChildBoundaryChange: () => {},
     onRectChange: () => {},
     onSetNodeVisibility: () => {},
     onSetTopLevelWrapperVisibility: () => {},

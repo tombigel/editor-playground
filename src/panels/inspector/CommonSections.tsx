@@ -26,13 +26,14 @@ import {
   DEFAULT_SHADOW_OFFSET_Y_PX,
 } from '../../api/documentViewApi';
 import { getTopLevelWrapperVisibilityState, isEligibleTopLevelWrapper, isContainerNode, getChildren } from '../../api/documentViewApi';
-import type { PageId } from '../../api/documentViewApi';
+import type { ContainerChildBoundary, PageId } from '../../api/documentViewApi';
 import type { WidthKeywordFamily } from './stageConversions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PopoverTooltip } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InlineNotice, ValuePill } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { cn, DARK_TOOLTIP_CLASS } from '@/lib/utils';
@@ -234,6 +235,7 @@ export function NodeBasicsSection({
     | 'onPromote'
     | 'onDemote'
     | 'onWrapperStyleChange'
+    | 'onContainerChildBoundaryChange'
     | 'onSetNodeVisibility'
     | 'onSetTopLevelWrapperVisibility'
   > & {
@@ -366,6 +368,24 @@ export function NodeBasicsSection({
             />
           </div>
         </div>
+      ) : null}
+
+      {wrapperPaddingNode ? (
+        <FormField label="Child bounds" layout="inline">
+          <Select
+            size="compact"
+            value={wrapperPaddingNode.layout?.childBoundary ?? 'anchor'}
+            onValueChange={(value) => actions.onContainerChildBoundaryChange(value as ContainerChildBoundary)}
+          >
+            <SelectTrigger size="compact" aria-label="Child bounds">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="anchor">Origin inside</SelectItem>
+              <SelectItem value="box">Box inside</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
       ) : null}
 
       {orderState.showOrderControls ? (

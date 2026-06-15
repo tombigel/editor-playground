@@ -83,6 +83,7 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onWrapperStyleChange: () => {},
+          onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
@@ -132,6 +133,7 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onWrapperStyleChange: () => {},
+          onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
@@ -183,6 +185,7 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onWrapperStyleChange: () => {},
+          onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
@@ -233,6 +236,7 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onWrapperStyleChange: () => {},
+          onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
@@ -296,6 +300,7 @@ describe('panels/inspector/CommonSections', () => {
         }}
         actions={{
           onWrapperStyleChange: () => {},
+          onContainerChildBoundaryChange: () => {},
           onRectChange: () => {},
           onPromote: () => {},
           onDemote: () => {},

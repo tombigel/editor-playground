@@ -1,6 +1,7 @@
 export type {
   ComputedWrapperStickyState,
   ContainerNode,
+  ContainerChildBoundary,
   ContainerSubtype,
   DocumentModel,
   DocumentNode,
@@ -18,6 +19,7 @@ export type { DocumentCommand } from './types/index';
 export type { TextConversionMode, TextConversionOptions } from './textConversion';
 export type { MergeTextNodesOptions } from './textMerge';
 export type { SetTextDocumentContentOptions } from './documentApi/text';
+export type { ParentExpansionOptions, ParentExpansionRequest } from './documentApi/parentExpansion';
 export type {
   LeafInsertionRole,
   NodeOrderAction,
@@ -54,8 +56,20 @@ export { validateDocument, validateLinks } from '../model/validation';
 export { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolve';
 export { getTopLevelWrapperVisibilityState } from '../model/topLevelWrapperVisibility';
 export { setPageAsHome as setPageAsHomeDoc } from './pageApi';
-export { applyDocumentCommands, parseDocumentJson, serializeDocumentJson, setNodeRect, setNodeSticky, setSiteNodeStickyElevation } from './documentApi/basic';
+export {
+  applyDocumentCommands,
+  moveNodeDoc,
+  moveNodesDoc,
+  parseDocumentJson,
+  resolveContainerChildBoundary,
+  serializeDocumentJson,
+  setContainerChildBoundaryDoc,
+  setNodeRect,
+  setNodeSticky,
+  setSiteNodeStickyElevation,
+} from './documentApi/basic';
 export { cloneDocument } from './documentApi/shared';
+export { expandParentHeightDoc } from './documentApi/parentExpansion';
 export {
   applyMarkdownToTextNodeDoc,
   normalizeTextNodeDoc,
@@ -87,6 +101,8 @@ export {
   moveNodeInTreeDoc,
   reorderNodeDoc,
   reparentNodeDoc,
+  reparentNodeAtDoc,
+  reparentNodesAtDoc,
   splitRichTextNodeDoc,
   switchSubtypeDoc,
   switchTextSubtypeDoc,

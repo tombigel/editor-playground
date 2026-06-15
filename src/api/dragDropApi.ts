@@ -10,6 +10,7 @@ import type {
   DragCommitIntent,
   DragDropTarget,
   DragGeometrySnapshot,
+  DragParentExpansion,
   DragSession,
   DragSnapTarget,
   DragStartContext,
@@ -19,6 +20,7 @@ import type {
 } from './types';
 import { isContainerNode, isLeafNode } from '../model/types';
 import { DRAG_COMMIT_THRESHOLD_PX } from '../lib/dragConstants';
+import { resolveContainerChildBoundary } from './documentApi/basic';
 
 export type {
   DocumentModel,
@@ -29,7 +31,9 @@ export type {
   DragGuide,
   DragMotion,
   DragMotionSample,
+  DragParentExpansion,
   DragPreviewItem,
+  DragResolvedPlacement,
   DragSession,
   DragStartContext,
   DragUpdateInput,
@@ -73,6 +77,10 @@ export function beginDragSession(context: DragStartContext): DragSession {
     guideX: null,
     guideY: null,
     highlightedDropId: null,
+    axisLock: null,
+    snapBypassed: false,
+    duplicateRequested: false,
+    resolvedPlacement: null,
     geometry: context.geometry,
   };
 }
@@ -108,9 +116,8 @@ export function updateDragSession(
     };
   }
 
-  const guideSnapEnabled = input.altKey
-    ? !input.guideSnap.enabled
-    : input.guideSnap.enabled;
+  const snapBypassed = Boolean(input.metaKey || input.ctrlKey);
+  const guideSnapEnabled = snapBypassed ? false : input.guideSnap.enabled;
   const shouldGuideSnap =
     guideSnapEnabled &&
     nextMotion.motion.speedPxPerSecond <= input.guideSnap.maxSpeedPxPerSecond;
@@ -135,13 +142,35 @@ export function updateDragSession(
   const contentBox = highlightedDropId
     ? getDropTargetById(session.geometry.dropTargets, highlightedDropId)?.contentBox
     : session.geometry.sourceContentBox;
+  const targetParentId = highlightedDropId ?? session.geometry.sourceParentId;
+  const childBoundary = resolveContainerChildBoundary(session.document, targetParentId);
   const clamped = resolveContainerSnappedPosition(
     session.geometry,
     snapped.clientX,
     snapped.clientY,
     contentBox,
     input.containerSnap,
+    childBoundary,
+    snapBypassed,
+    childBoundary === 'anchor',
   );
+  const resolvedPlacement = targetParentId && contentBox
+    ? {
+        targetParentId,
+        localX: clamped.localX,
+        localY: clamped.localY,
+        previewLeft: clamped.previewLeft,
+        previewTop: clamped.previewTop,
+        clientX: clamped.clientX,
+        clientY: clamped.clientY,
+        parentExpansion: clamped.parentExpansion
+          ? {
+              parentId: targetParentId,
+              minHeightPx: clamped.parentExpansion.minHeightPx,
+            }
+          : null,
+      }
+    : null;
 
   return {
     ...session,
@@ -155,15 +184,19 @@ export function updateDragSession(
     guideX: snapped.guideX,
     guideY: snapped.guideY,
     highlightedDropId,
+    axisLock: input.shiftKey ? resolveAxisLock(session, input.clientX, input.clientY) : null,
+    snapBypassed,
+    duplicateRequested: input.altKey,
+    resolvedPlacement,
   };
 }
 
 export function finishDragSession(
   session: DragSession,
-  input: DragUpdateInput,
+  _input: DragUpdateInput,
 ): DragCommitIntent {
-  const resolved = updateDragSession(session, input);
-  if (resolved.phase !== 'dragging') {
+  const resolved = session;
+  if (resolved.phase !== 'dragging' || !resolved.resolvedPlacement) {
     return { type: 'none' };
   }
 
@@ -174,26 +207,17 @@ export function finishDragSession(
 
   if (resolved.dragIds.length > 1) {
     const anchorNode = resolved.geometry.nodes.find((node) => node.id === resolved.anchorId);
-    const targetId = resolved.highlightedDropId ?? sourceParentId;
-    const target = getDropTargetById(resolved.geometry.dropTargets, targetId);
-    const contentBox = target?.contentBox ?? resolved.geometry.sourceContentBox;
-    if (!anchorNode || !contentBox) {
+    const targetId = resolved.resolvedPlacement.targetParentId;
+    if (!anchorNode) {
       return { type: 'none' };
     }
 
-    const localPosition = resolveLocalPosition(
-      resolved.geometry,
-      contentBox,
-      resolved.currentClientX,
-      resolved.currentClientY,
-      input.containerSnap.threshold,
-      input.containerSnap.power,
-    );
-    const anchorLocalX = localPosition.localX;
-    const anchorLocalY = localPosition.localY;
+    const anchorLocalX = resolved.resolvedPlacement.localX;
+    const anchorLocalY = resolved.resolvedPlacement.localY;
     const draggedNodes = resolved.geometry.nodes.filter((node) => resolved.dragIds.includes(node.id));
 
     if (targetId !== sourceParentId) {
+      const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
       return {
         type: 'reparentSelection',
         parentId: targetId,
@@ -202,52 +226,45 @@ export function finishDragSession(
           x: `${Math.round(anchorLocalX + (node.originX - anchorNode.originX))}px`,
           y: `${Math.round(anchorLocalY + (node.originY - anchorNode.originY))}px`,
         })),
+        ...(parentExpansion ? { parentExpansion } : {}),
       };
     }
 
-    const deltaX = resolved.currentClientX - resolved.startClientX;
-    const deltaY = resolved.currentClientY - resolved.startClientY;
+    const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
     return {
       type: 'moveSelection',
       moves: draggedNodes.map((node) => ({
           id: node.id,
-          x: `${Math.max(0, Math.round(node.originX + deltaX))}px`,
-          y: `${Math.max(0, Math.round(node.originY + deltaY))}px`,
+          x: `${Math.max(0, Math.round(anchorLocalX + (node.originX - anchorNode.originX)))}px`,
+          y: `${Math.max(0, Math.round(anchorLocalY + (node.originY - anchorNode.originY)))}px`,
         })),
+      ...(parentExpansion ? { parentExpansion } : {}),
     };
   }
 
-  const targetId = resolved.highlightedDropId ?? sourceParentId;
-  const target = getDropTargetById(resolved.geometry.dropTargets, targetId);
-  const contentBox = target?.contentBox ?? resolved.geometry.sourceContentBox;
-  if (!contentBox) {
-    return { type: 'none' };
-  }
-
-  const localPosition = resolveLocalPosition(
-    resolved.geometry,
-    contentBox,
-    resolved.currentClientX,
-    resolved.currentClientY,
-    input.containerSnap.threshold,
-    input.containerSnap.power,
-  );
+  const targetId = resolved.resolvedPlacement.targetParentId;
+  const localX = Math.round(resolved.resolvedPlacement.localX);
+  const localY = Math.round(resolved.resolvedPlacement.localY);
 
   if (targetId !== sourceParentId) {
+    const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
     return {
       type: 'reparent',
       id: resolved.anchorId,
       parentId: targetId,
-      x: `${Math.round(localPosition.localX)}px`,
-      y: `${Math.round(localPosition.localY)}px`,
+      x: `${localX}px`,
+      y: `${localY}px`,
+      ...(parentExpansion ? { parentExpansion } : {}),
     };
   }
 
+  const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
   return {
     type: 'move',
     id: resolved.anchorId,
-    x: `${Math.round(localPosition.localX)}px`,
-    y: `${Math.round(localPosition.localY)}px`,
+    x: `${localX}px`,
+    y: `${localY}px`,
+    ...(parentExpansion ? { parentExpansion } : {}),
   };
 }
 
@@ -393,6 +410,16 @@ function getShiftLockedPointer(
     clientX: session.startClientX,
     clientY,
   };
+}
+
+function resolveAxisLock(
+  session: Pick<DragSession, 'startClientX' | 'startClientY'>,
+  clientX: number,
+  clientY: number,
+): DragSession['axisLock'] {
+  const deltaX = clientX - session.startClientX;
+  const deltaY = clientY - session.startClientY;
+  return Math.abs(deltaX) >= Math.abs(deltaY) ? 'horizontal' : 'vertical';
 }
 
 function createStationaryMotion(): DragSession['motion'] {
@@ -574,22 +601,17 @@ function resolveHighlightedDropId(
     draggedId,
     sourceParentId,
   );
-  const sourceParentTarget = sourceParentId
-    ? getDropTargetById(targets, sourceParentId)
-    : undefined;
-  const pointerInsideSourceParent = Boolean(
-    sourceParentTarget && pointInRect(clientX, clientY, sourceParentTarget.contentBox),
-  );
   const validTargets = targets
     .filter((target) => pointInRect(clientX, clientY, target.contentBox))
     .filter((target) => isValidDropParentSelection(document, draggedIds, target.id))
     // Keep source-parent visual noise down by default, except for
     // structural wrapper drags that intentionally surface section/header/footer.
     .filter((target) => target.id !== sourceParentId || allowSourceParentHighlight)
-    // While still inside the source parent, do not promote ancestor wrappers
-    // (for example section) as drop highlights for in-place child drags.
+    // Do not promote ancestor wrappers (for example section) as drop
+    // highlights for in-place child drags. This keeps edge drags that allow
+    // child overflow from silently reparenting to the surrounding structure.
     .filter((target) => {
-      if (!pointerInsideSourceParent || !sourceParentId || allowSourceParentHighlight) {
+      if (!sourceParentId || allowSourceParentHighlight) {
         return true;
       }
       return !isNodeDescendantOf(document, sourceParentId, target.id);
@@ -610,13 +632,42 @@ function resolveContainerSnappedPosition(
   clientY: number,
   contentBox: Rect | undefined,
   containerSnap: { enabled: boolean; threshold: number; power: number },
+  childBoundary: 'anchor' | 'box',
+  snapBypassed: boolean,
+  parentExpansionEnabled: boolean,
 ) {
-  if (!contentBox || !containerSnap.enabled) {
+  if (!contentBox) {
     return {
       clientX,
       clientY,
       previewLeft: clientX - geometry.grabOffsetX,
       previewTop: clientY - geometry.grabOffsetY,
+      localX: 0,
+      localY: 0,
+      parentExpansion: null,
+    };
+  }
+
+  if (!containerSnap.enabled) {
+    const rawLocalPosition = resolveLocalPosition(
+      geometry,
+      contentBox,
+      clientX,
+      clientY,
+      0,
+      0,
+      childBoundary,
+      true,
+      parentExpansionEnabled,
+    );
+    return {
+      clientX: rawLocalPosition.previewLeft + geometry.grabOffsetX,
+      clientY: rawLocalPosition.previewTop + geometry.grabOffsetY,
+      previewLeft: rawLocalPosition.previewLeft,
+      previewTop: rawLocalPosition.previewTop,
+      localX: rawLocalPosition.localX,
+      localY: rawLocalPosition.localY,
+      parentExpansion: rawLocalPosition.parentExpansion,
     };
   }
 
@@ -627,17 +678,21 @@ function resolveContainerSnappedPosition(
     clientY,
     containerSnap.threshold,
     containerSnap.power,
+    childBoundary,
+    snapBypassed,
+    parentExpansionEnabled,
   );
-  const visualShiftX = geometry.useVisualOffset ? geometry.modelShiftX : 0;
-  const visualShiftY = geometry.useVisualOffset ? geometry.modelShiftY : 0;
-  const previewLeft = contentBox.left + localPosition.localX + visualShiftX;
-  const previewTop = contentBox.top + localPosition.localY + visualShiftY;
+  const previewLeft = localPosition.previewLeft;
+  const previewTop = localPosition.previewTop;
 
   return {
     clientX: previewLeft + geometry.grabOffsetX,
     clientY: previewTop + geometry.grabOffsetY,
     previewLeft,
     previewTop,
+    localX: localPosition.localX,
+    localY: localPosition.localY,
+    parentExpansion: localPosition.parentExpansion,
   };
 }
 
@@ -648,20 +703,60 @@ function resolveLocalPosition(
   clientY: number,
   threshold: number,
   power: number,
+  childBoundary: 'anchor' | 'box',
+  snapBypassed: boolean,
+  parentExpansionEnabled: boolean,
 ) {
   const visualShiftX = geometry.useVisualOffset ? geometry.modelShiftX : 0;
   const visualShiftY = geometry.useVisualOffset ? geometry.modelShiftY : 0;
   const rawLocalX = clientX - contentBox.left - geometry.grabOffsetX - visualShiftX;
   const rawLocalY = clientY - contentBox.top - geometry.grabOffsetY - visualShiftY;
 
-  const minX = threshold;
-  const minY = threshold;
-  const maxX = Math.max(threshold, contentBox.width - geometry.previewWidth - threshold);
-  const maxY = Math.max(threshold, contentBox.height - geometry.previewHeight - threshold);
+  const minX = 0;
+  const minY = 0;
+  const maxX = childBoundary === 'box'
+    ? Math.max(0, contentBox.width - geometry.previewWidth)
+    : Math.max(0, contentBox.width);
+  const currentMaxY = childBoundary === 'box'
+    ? Math.max(0, contentBox.height - geometry.previewHeight)
+    : Math.max(0, contentBox.height);
+  const maxY = parentExpansionEnabled ? Number.POSITIVE_INFINITY : currentMaxY;
+  const snapMinX = Math.min(maxX, threshold);
+  const snapMinY = parentExpansionEnabled ? threshold : Math.min(maxY, threshold);
+  const snapMaxX = Math.max(snapMinX, maxX - threshold);
+  const snapMaxY = parentExpansionEnabled ? Number.POSITIVE_INFINITY : Math.max(snapMinY, maxY - threshold);
 
-  const localX = magneticClamp(rawLocalX, minX, maxX, power);
-  const localY = magneticClamp(rawLocalY, minY, maxY, power);
-  return { localX, localY };
+  const magneticX = snapBypassed ? rawLocalX : magneticClamp(rawLocalX, snapMinX, snapMaxX, power);
+  const magneticY = snapBypassed ? rawLocalY : magneticClamp(rawLocalY, snapMinY, snapMaxY, power);
+  const localX = clampNumber(magneticX, minX, maxX);
+  const localY = clampNumber(magneticY, minY, maxY);
+  const requiredHeightPx = localY + geometry.previewHeight;
+  const parentExpansion = parentExpansionEnabled && requiredHeightPx > contentBox.height
+    ? { minHeightPx: requiredHeightPx }
+    : null;
+  return {
+    localX,
+    localY,
+    previewLeft: contentBox.left + localX + visualShiftX,
+    previewTop: contentBox.top + localY + visualShiftY,
+    parentExpansion,
+  };
+}
+
+function resolveCommitParentExpansion(
+  parentExpansion: DragParentExpansion | null,
+): DragParentExpansion | undefined {
+  if (!parentExpansion || !Number.isFinite(parentExpansion.minHeightPx)) {
+    return undefined;
+  }
+  return {
+    parentId: parentExpansion.parentId,
+    minHeightPx: Math.ceil(parentExpansion.minHeightPx),
+  };
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function magneticClamp(value: number, min: number, max: number, power: number) {

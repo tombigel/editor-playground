@@ -107,6 +107,19 @@ export function useStageDragDrop({
     return sessionRef.current;
   }, [publishSession]);
 
+  const commitSession = useCallback((session: DragSession, input: DragUpdateInput) => {
+    const commit = finishDragSession(session, input);
+    if (commit.type === 'move') {
+      onMove(commit.id, commit.x, commit.y, { parentExpansion: commit.parentExpansion });
+    } else if (commit.type === 'moveSelection') {
+      onMoveSelection?.(commit.moves, { parentExpansion: commit.parentExpansion });
+    } else if (commit.type === 'reparent') {
+      onReparent(commit.id, commit.parentId, commit.x, commit.y, { parentExpansion: commit.parentExpansion });
+    } else if (commit.type === 'reparentSelection') {
+      onReparentSelection?.(commit.parentId, commit.moves, { parentExpansion: commit.parentExpansion });
+    }
+  }, [onMove, onMoveSelection, onReparent, onReparentSelection]);
+
   const cleanupInteraction = useCallback((releaseCapture = false) => {
     pendingInteractionRef.current = null;
     latestInputRef.current = null;
@@ -265,6 +278,8 @@ export function useStageDragDrop({
       timestampMs: event.timeStamp,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
+      metaKey: event.metaKey,
+      ctrlKey: event.ctrlKey,
       guideSnap: snapSettings.guideSnap,
       containerSnap: snapSettings.containerSnap,
     };
@@ -284,6 +299,8 @@ export function useStageDragDrop({
       timestampMs: event.timeStamp,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
+      metaKey: event.metaKey,
+      ctrlKey: event.ctrlKey,
       guideSnap: snapSettings.guideSnap,
       containerSnap: snapSettings.containerSnap,
     };
@@ -314,6 +331,8 @@ export function useStageDragDrop({
       timestampMs: event.timeStamp,
       shiftKey: event.shiftKey,
       altKey: event.altKey,
+      metaKey: event.metaKey,
+      ctrlKey: event.ctrlKey,
       guideSnap: snapSettings.guideSnap,
       containerSnap: snapSettings.containerSnap,
     };
@@ -322,16 +341,7 @@ export function useStageDragDrop({
       latestInputRef.current = input;
       const session = flushPointerUpdate();
       if (session) {
-        const commit = finishDragSession(session, input);
-        if (commit.type === 'move') {
-          onMove(commit.id, commit.x, commit.y);
-        } else if (commit.type === 'moveSelection') {
-          onMoveSelection?.(commit.moves);
-        } else if (commit.type === 'reparent') {
-          onReparent(commit.id, commit.parentId, commit.x, commit.y);
-        } else if (commit.type === 'reparentSelection') {
-          onReparentSelection?.(commit.parentId, commit.moves);
-        }
+        commitSession(session, input);
       }
     } else if (pendingInteractionRef.current?.preservedSelection) {
       onSelect(pendingInteractionRef.current.nodeId);
@@ -339,12 +349,9 @@ export function useStageDragDrop({
 
     cleanupInteraction(true);
   }, [
+    commitSession,
     cleanupInteraction,
     flushPointerUpdate,
-    onMove,
-    onMoveSelection,
-    onReparent,
-    onReparentSelection,
     onSelect,
     snapSettings,
   ]);
@@ -360,8 +367,20 @@ export function useStageDragDrop({
     if (activePointerIdRef.current !== event.pointerId) {
       return;
     }
+
+    if (event.target !== stageElement) {
+      return;
+    }
+
+    if (sessionRef.current && latestInputRef.current) {
+      const session = flushPointerUpdate();
+      if (session) {
+        commitSession(session, latestInputRef.current);
+      }
+    }
+
     cleanupInteraction(false);
-  }, [cleanupInteraction]);
+  }, [cleanupInteraction, commitSession, flushPointerUpdate, stageElement]);
 
   const registerDraggableNode = useCallback((id: NodeId, element: HTMLElement | null) => {
     if (element) {

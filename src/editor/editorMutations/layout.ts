@@ -1,6 +1,7 @@
-import type { DocumentModel, DocumentNode, NodeId, StickyDefinition } from '../../model/types';
+import type { ContainerChildBoundary, DocumentModel, DocumentNode, NodeId, StickyDefinition } from '../../model/types';
 import { isContainerNode, isLeafNode } from '../../model/types';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
+import { moveNodeDoc, moveNodesDoc, resolveContainerChildBoundary, setContainerChildBoundaryDoc, type ParentExpansionOptions } from '../../api/documentApi';
 import type { EditorState } from '../types';
 import { normalizeSelectedIds } from '../selection';
 import { cloneDocument } from '../editorPersistence';
@@ -61,17 +62,11 @@ export function moveNode(
   state: EditorState,
   nodeId: NodeId,
   patch: Partial<Record<'x' | 'y', string>>,
+  options: ParentExpansionOptions = {},
 ): EditorState {
-  const document = cloneDocument(state.document);
-  const node = document.nodes[nodeId];
-  if (!node || node.contentType === 'site') {
+  const document = moveNodeDoc(state.document, nodeId, patch, options);
+  if (document === state.document) {
     return state;
-  }
-  if (patch.x) {
-    node.rect.x.base = parseUnitValue(patch.x);
-  }
-  if (patch.y) {
-    node.rect.y.base = parseUnitValue(patch.y);
   }
   return { ...state, document };
 }
@@ -79,33 +74,10 @@ export function moveNode(
 export function moveNodes(
   state: EditorState,
   moves: Array<{ id: NodeId; x: string; y: string }>,
+  options: ParentExpansionOptions = {},
 ): EditorState {
-  if (moves.length === 0) {
-    return state;
-  }
-
-  const document = cloneDocument(state.document);
-  let changed = false;
-
-  for (const move of moves) {
-    const node = document.nodes[move.id];
-    if (!node || node.contentType === 'site') {
-      continue;
-    }
-
-    const nextX = parseUnitValue(move.x);
-    const nextY = parseUnitValue(move.y);
-    if (node.rect.x.base.raw !== nextX.raw) {
-      node.rect.x.base = nextX;
-      changed = true;
-    }
-    if (node.rect.y.base.raw !== nextY.raw) {
-      node.rect.y.base = nextY;
-      changed = true;
-    }
-  }
-
-  return changed ? { ...state, document } : state;
+  const document = moveNodesDoc(state.document, moves, options);
+  return document === state.document ? state : { ...state, document };
 }
 
 export function nudgeNode(
@@ -118,9 +90,13 @@ export function nudgeNode(
     return state;
   }
 
-  return moveNode(state, nodeId, {
-    x: `${Math.max(0, readCoordinatePx(node.rect.x.base.raw) + delta.x)}px`,
-    y: `${Math.max(0, readCoordinatePx(node.rect.y.base.raw) + delta.y)}px`,
+  const resolved = resolveKeyboardNudgePosition(state.document, nodeId, delta);
+  if (!resolved) {
+    return state;
+  }
+
+  return moveNode(state, nodeId, resolved.position, {
+    parentExpansion: resolved.parentExpansion,
   });
 }
 
@@ -141,6 +117,15 @@ export function resizeNode(
     node.rect.height.base = parseHeightValue(patch.height);
   }
   return { ...state, document };
+}
+
+export function setContainerChildBoundary(
+  state: EditorState,
+  nodeId: NodeId,
+  childBoundary: ContainerChildBoundary,
+): EditorState {
+  const document = setContainerChildBoundaryDoc(state.document, nodeId, childBoundary);
+  return document === state.document ? state : { ...state, document };
 }
 
 export function alignNodes(
@@ -330,4 +315,89 @@ function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {
 function readCoordinatePx(raw: string) {
   const parsed = Number.parseFloat(raw);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function readAuthoredPx(value: { raw: string; parsed: unknown }) {
+  const parsed = value.parsed;
+  if (
+    parsed &&
+    typeof parsed === 'object' &&
+    'unit' in parsed &&
+    parsed.unit === 'px' &&
+    'value' in parsed &&
+    typeof parsed.value === 'number'
+  ) {
+    return parsed.value;
+  }
+  return Number.POSITIVE_INFINITY;
+}
+
+function resolveBoundaryMax(containerSize: number, childSize: number, boundary: ContainerChildBoundary) {
+  if (!Number.isFinite(containerSize)) {
+    return Number.POSITIVE_INFINITY;
+  }
+  if (boundary === 'box') {
+    return Number.isFinite(childSize) ? Math.max(0, containerSize - childSize) : Number.POSITIVE_INFINITY;
+  }
+  return Math.max(0, containerSize);
+}
+
+function resolveKeyboardNudgePosition(
+  document: DocumentModel,
+  nodeId: NodeId,
+  delta: { x: number; y: number },
+) {
+  const node = document.nodes[nodeId];
+  if (!node || node.contentType === 'site' || !node.parentId) {
+    return null;
+  }
+
+  const parent = document.nodes[node.parentId];
+  const boundary = resolveContainerChildBoundary(document, node.parentId);
+  const rawX = readCoordinatePx(node.rect.x.base.raw) + delta.x;
+  const rawY = readCoordinatePx(node.rect.y.base.raw) + delta.y;
+  const parentWidth = parent && parent.contentType !== 'site'
+    ? readAuthoredPx(parent.rect.width.base)
+    : Number.POSITIVE_INFINITY;
+  const parentHeight = parent && parent.contentType !== 'site'
+    ? readAuthoredPx(parent.rect.height.base)
+    : Number.POSITIVE_INFINITY;
+  const nodeWidth = readAuthoredPx(node.rect.width.base);
+  const nodeHeight = readAuthoredPx(node.rect.height.base);
+  const maxX = parent && parent.contentType !== 'site'
+    ? resolveBoundaryMax(parentWidth, nodeWidth, boundary)
+    : Number.POSITIVE_INFINITY;
+  const maxY = parent && parent.contentType !== 'site'
+    ? resolveBoundaryMax(parentHeight, nodeHeight, boundary)
+    : Number.POSITIVE_INFINITY;
+  const shouldExpandParent = Boolean(
+    boundary === 'anchor' &&
+      parent &&
+      parent.contentType !== 'site' &&
+      Number.isFinite(parentHeight) &&
+      delta.y > 0 &&
+      rawY > maxY,
+  );
+  const nextY = shouldExpandParent ? Math.max(0, rawY) : clampCoordinate(rawY, 0, maxY);
+  const requiredHeight = Number.isFinite(nodeHeight)
+    ? nextY + nodeHeight
+    : nextY;
+  const parentExpansion = shouldExpandParent && requiredHeight > parentHeight
+    ? {
+        parentId: node.parentId,
+        minHeightPx: requiredHeight,
+      }
+    : undefined;
+
+  return {
+    position: {
+      x: `${Math.round(clampCoordinate(rawX, 0, maxX))}px`,
+      y: `${Math.round(nextY)}px`,
+    },
+    parentExpansion,
+  };
+}
+
+function clampCoordinate(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }

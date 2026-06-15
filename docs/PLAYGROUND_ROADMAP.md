@@ -82,7 +82,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-39` | `✅ Done` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
 | `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
 | `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
-| `RI-42` | `⚪ Not started` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Default soft boundaries for snap/guides; optional hard confinement |
+| `RI-42` | `✅ Done` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Anchor/box child boundaries, deterministic drag commit, and modifier cleanup delivered |
 | `RI-13` | `⚪ Not started` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | Human | - |
 | `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | - |
 | `RI-16` | `⚪ Not started` | [User management](#user-management) | `🔵 Low` | Platform | Human | - |
@@ -293,12 +293,12 @@ None yet.
 
 - `Type`: `UX`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-42`
 - `Why it matters`: Dragging is a core authoring operation, and strict confinement to a wrapper's padded content area prevents common overlapping, offset, and breakout layouts. Container edges should guide layout by default, not silently block expressive placement.
-- `Current state`: Drag and reparent commits clamp positions so nodes remain inside the current or target wrapper. In practice this treats padded container content bounds as hard confinement and prevents elements from intentionally sticking out beyond those bounds.
-- `Target behavior`: Default drag boundaries should behave as snap targets and alignment guides while allowing nodes to extend beyond the container content area. Hard confinement should remain available as an explicit layout/drag policy for cases that need strict containment.
-- `Next move`: Audit the drag, snap, reparent, and resize boundary paths; define where the confinement policy lives in the document/API model; then update editor controls, tests, and spec text so default soft-boundary behavior and optional hard confinement are both clear.
+- `Current state`: **Complete** — wrappers now resolve a `childBoundary` policy from the document model. Missing values default to `anchor`, which keeps the child origin inside the content box while allowing the body to overflow; `box` keeps the full child box inside. Drag update stores one resolved placement for preview and commit, pointer-up no longer recomputes snap/drop/bounds, keyboard nudging uses the same boundary policy, and mesh layout preserves allowed right/bottom overflow. The inspector exposes the policy as a Layout control. Anchor-boundary downward drag and keyboard movement can grow the parent through the same resolved placement commit.
+- `Target behavior`: Delivered. Default drag boundaries behave as soft origin constraints plus snap/alignment guidance, and hard confinement remains available through the explicit `box` policy.
+- `Next move`: Implement duplicate-drag through a pure duplicate document API, then connect the existing `Alt` / `Option` duplicate-requested drag stub to that operation.
 
 #### Feature
 

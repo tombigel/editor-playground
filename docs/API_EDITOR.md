@@ -15,6 +15,18 @@ Primary source: `src/api/dragDropApi.ts`
 
 The drag-and-drop API is headless. It owns session lifecycle and drop-target resolution so the editor stage does not become the single source of truth for move semantics.
 
+Each drag update stores one resolved placement on the session: target parent, local coordinates, preview position, active guides, drop highlight, axis lock, snap-bypass state, parent-expansion request, and duplicate-requested stub state. Pointer-up commits that placement directly, so the final document mutation cannot diverge from the last visible preview because of a second snap or drop-target pass.
+
+Drag modifiers follow design-tool conventions:
+
+- `Shift`: lock the dominant drag axis while held.
+- `Cmd` on macOS / `Ctrl` elsewhere: bypass guide snapping and magnetic boundary snapping while held.
+- `Alt` / `Option`: reserve duplicate-drag intent. This phase records intent only; commit remains a normal move or reparent until duplicate document APIs exist.
+
+Boundary rules remain model/API-owned. Missing container policy resolves to `anchor`, which keeps the child origin inside the wrapper content box while allowing overflow. `box` keeps the full child box inside the content box.
+
+For default `anchor` child boundaries, the resolver can place the child below the current bottom edge and records `resolvedPlacement.parentExpansion` with the required parent height. `finishDragSession()` includes that request on the move/reparent intent so editor callers can apply movement and height growth in one document mutation. `box` boundaries keep the full child box inside the content box instead.
+
 ## Editor State
 
 Primary sources:

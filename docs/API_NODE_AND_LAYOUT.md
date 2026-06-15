@@ -24,6 +24,8 @@ Primary source: `src/api/documentApi.ts`
 
 - `reorderNodeDoc(document, nodeId, action)`
 - `reparentNodeDoc(document, nodeId, newParentId)`
+- `reparentNodeAtDoc(document, nodeId, newParentId, { x, y }, options?)`
+- `reparentNodesAtDoc(document, newParentId, moves, options?)`
 - `moveNodeInTreeDoc(document, nodeId, targetParentId, targetIndex)`
 
 ## Geometry And Layout
@@ -31,6 +33,19 @@ Primary source: `src/api/documentApi.ts`
 ### Rect Mutations
 
 `setNodeRect(document, nodeId, field, value)` updates `x`, `y`, `width`, or `height` using CSS-like values.
+
+- `moveNodeDoc(document, nodeId, { x?, y? }, options?)` updates authored `x` / `y` coordinates without editor state.
+- `moveNodesDoc(document, moves, options?)` applies multiple authored `x` / `y` coordinate updates in one pure document mutation.
+- `expandParentHeightDoc(document, { parentId, minHeightPx })` grows a container height without moving children.
+
+The move and reparent-at-position helpers accept `options.parentExpansion?: { parentId, minHeightPx }`. Drag/drop uses this to commit child placement and parent height growth together for default anchor-boundary downward drops.
+
+### Container Child Boundaries
+
+- `resolveContainerChildBoundary(document, containerId)` returns a wrapper's child-boundary policy, defaulting missing values to `'anchor'`.
+- `setContainerChildBoundaryDoc(document, containerId, childBoundary)` writes the policy for a container node.
+
+`ContainerChildBoundary` is `'anchor' | 'box'`. `anchor` keeps the child origin inside the container content box while allowing the child body to overflow. `box` keeps the full child box inside the content box.
 
 ### Sticky Behavior
 

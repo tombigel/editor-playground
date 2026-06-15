@@ -21,8 +21,13 @@ import {
   insertSectionTemplateDoc,
   insertTextDoc,
   moveNodeInTreeDoc,
+  moveNodeDoc,
+  moveNodesDoc,
   reorderNodeDoc,
   reparentNodeDoc,
+  reparentNodeAtDoc,
+  reparentNodesAtDoc,
+  resolveContainerChildBoundary,
   resolveStickyLayout,
   resolveWrapperStickyState,
   applyMarkdownToTextNodeDoc,
@@ -43,6 +48,7 @@ import {
   setTextDirectionDoc,
   setTextNodeContentDoc,
   setRichTextContentDoc,
+  setContainerChildBoundaryDoc,
   normalizeTextNodeDoc,
   resetCodeBlockStyleDoc,
   setNodeVisibilityDoc,
@@ -129,6 +135,7 @@ export const reparentNodes = editorStore.reparentNodes;
 export const reorderNode = editorStore.reorderNode;
 export const requestPromoteWrapperRole = editorStore.requestPromoteWrapperRole;
 export const resizeNode = editorStore.resizeNode;
+export const setContainerChildBoundary = editorStore.setContainerChildBoundary;
 export const selectNode = editorStore.selectNode;
 export const selectManyNodes = editorStore.selectManyNodes;
 export const setNodeVisibility = editorStore.setNodeVisibility;
@@ -198,9 +205,15 @@ export {
   insertSectionTemplateDoc,
   insertTextDoc,
   moveNodeInTreeDoc,
+  moveNodeDoc,
+  moveNodesDoc,
   parseUnitValue,
   reorderNodeDoc,
   reparentNodeDoc,
+  reparentNodeAtDoc,
+  reparentNodesAtDoc,
+  resolveContainerChildBoundary,
+  setContainerChildBoundaryDoc,
   resolveStickyLayout,
   resolveWrapperStickyState,
   applyMarkdownToTextNodeDoc,

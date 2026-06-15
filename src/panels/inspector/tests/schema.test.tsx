@@ -7,6 +7,7 @@ import type { InspectorActionHandlers, InspectorOrderState } from '../types';
 const actions: InspectorActionHandlers = {
   onTextChange: () => {},
   onWrapperStyleChange: () => {},
+  onContainerChildBoundaryChange: () => {},
   onRectChange: () => {},
   onSetNodeVisibility: () => {},
   onSetTopLevelWrapperVisibility: () => {},

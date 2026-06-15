@@ -57,6 +57,7 @@ describe('panels/InspectorPanel', () => {
       onSectionForward: () => {},
       onTextChange: () => {},
       onWrapperStyleChange: () => {},
+      onContainerChildBoundaryChange: () => {},
       onRectChange: () => {},
       onSetNodeVisibility: () => {},
       onSetTopLevelWrapperVisibility: () => {},

@@ -1,6 +1,7 @@
 import { createMediaNode } from '../../model/defaults';
 import type { ContainerNode, ContainerSubtype, DocumentModel, DocumentNode, MediaNode, MediaSubtype, NodeId, TextSubtype } from '../../model/types';
 import { isContainerNode, isLeafNode } from '../../model/types';
+import { parseUnitValue } from '../../model/units';
 import {
   convertTextNodeDoc as convertTextNodeDocHelper,
   switchTextSubtypeDoc as switchTextSubtypeDocHelper,
@@ -12,6 +13,7 @@ import {
   type MergeTextNodesOptions,
 } from '../textMerge';
 import { cloneDocument } from './shared';
+import { expandParentHeightDoc, type ParentExpansionOptions } from './parentExpansion';
 import type { NodeOrderAction } from './types';
 
 /**
@@ -168,6 +170,136 @@ export function reparentNodeDoc(
   node.parentId = newParentId;
 
   return next;
+}
+
+export function reparentNodeAtDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  newParentId: NodeId,
+  position: { x: string; y: string },
+  options: ParentExpansionOptions = {},
+): DocumentModel {
+  const next = cloneDocument(document);
+  const node = next.nodes[nodeId];
+  const newParent = next.nodes[newParentId];
+
+  if (!node || !newParent || node.contentType === 'site' || !isContainerNode(newParent)) {
+    return document;
+  }
+
+  if (newParentId === nodeId) {
+    return document;
+  }
+
+  if (node.parentId === null) {
+    return document;
+  }
+
+  if (node.parentId === newParentId) {
+    node.rect.x.base = parseUnitValue(position.x);
+    node.rect.y.base = parseUnitValue(position.y);
+    return expandParentHeightDoc(next, options.parentExpansion);
+  }
+
+  if (!canAcceptChild(newParent, node)) {
+    return document;
+  }
+
+  if (isDescendantOf(next, newParentId, nodeId)) {
+    return document;
+  }
+
+  const previousParent = next.nodes[node.parentId];
+  if (previousParent) {
+    previousParent.children = previousParent.children.filter((childId) => childId !== nodeId);
+  }
+  newParent.children.push(nodeId);
+  node.parentId = newParentId;
+  node.rect.x.base = parseUnitValue(position.x);
+  node.rect.y.base = parseUnitValue(position.y);
+
+  return expandParentHeightDoc(next, options.parentExpansion);
+}
+
+export function reparentNodesAtDoc(
+  document: DocumentModel,
+  newParentId: NodeId,
+  moves: Array<{ id: NodeId; x: string; y: string }>,
+  options: ParentExpansionOptions = {},
+): DocumentModel {
+  if (moves.length === 0) {
+    return expandParentHeightDoc(document, options.parentExpansion);
+  }
+
+  const next = cloneDocument(document);
+  const newParent = next.nodes[newParentId];
+  if (!newParent || !isContainerNode(newParent)) {
+    return document;
+  }
+
+  const moveMap = new Map(moves.map((move) => [move.id, move]));
+  const nodes = moves.map((move) => next.nodes[move.id]);
+  if (nodes.some((node) => !node || node.contentType === 'site')) {
+    return document;
+  }
+
+  const sourceParentId = nodes[0]?.parentId ?? null;
+  if (!sourceParentId || nodes.some((node) => node?.parentId !== sourceParentId)) {
+    return document;
+  }
+
+  if (sourceParentId === newParentId) {
+    let changed = false;
+    for (const move of moves) {
+      const node = next.nodes[move.id];
+      if (!node || node.contentType === 'site') {
+        continue;
+      }
+      const nextX = parseUnitValue(move.x);
+      const nextY = parseUnitValue(move.y);
+      if (node.rect.x.base.raw !== nextX.raw) {
+        node.rect.x.base = nextX;
+        changed = true;
+      }
+      if (node.rect.y.base.raw !== nextY.raw) {
+        node.rect.y.base = nextY;
+        changed = true;
+      }
+    }
+    const reparented = changed ? next : document;
+    return expandParentHeightDoc(reparented, options.parentExpansion);
+  }
+
+  for (const node of nodes) {
+    if (!node || !canAcceptChild(newParent, node)) {
+      return document;
+    }
+    if (newParentId === node.id || isDescendantOf(next, newParentId, node.id)) {
+      return document;
+    }
+  }
+
+  const sourceParent = next.nodes[sourceParentId];
+  if (!sourceParent) {
+    return document;
+  }
+
+  const movedIds = sourceParent.children.filter((childId) => moveMap.has(childId));
+  sourceParent.children = sourceParent.children.filter((childId) => !moveMap.has(childId));
+  newParent.children.push(...movedIds);
+
+  for (const nodeId of movedIds) {
+    const node = next.nodes[nodeId];
+    const move = moveMap.get(nodeId);
+    if (!node || !move || node.contentType === 'site') {
+      continue;
+    }
+    node.parentId = newParentId;
+    node.rect.x.base = parseUnitValue(move.x);
+    node.rect.y.base = parseUnitValue(move.y);
+  }
+
+  return expandParentHeightDoc(next, options.parentExpansion);
 }
 
 export function moveNodeInTreeDoc(

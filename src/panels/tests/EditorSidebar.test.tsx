@@ -37,6 +37,7 @@ function createSidebarProps() {
 		onSectionForward: () => {},
 		onTextChange: () => {},
 		onWrapperStyleChange: () => {},
+		onContainerChildBoundaryChange: () => {},
 		onRectChange: () => {},
 		onSetNodeVisibility: () => {},
 		onSetTopLevelWrapperVisibility: () => {},

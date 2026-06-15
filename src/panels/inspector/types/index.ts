@@ -4,6 +4,7 @@ import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
 import type { PageId, ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../api/documentViewApi';
+import type { ContainerChildBoundary } from '../../../api/documentViewApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../../animations/types';
 
 export type InspectorNode = DocumentNode;
@@ -17,6 +18,7 @@ export type WrapperInspectorNode = ContainerNode;
 export type InspectorActionHandlers = {
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
+  onContainerChildBoundaryChange: (value: ContainerChildBoundary) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onSetNodeVisibility: (id: string, value: boolean) => void;
   onSetTopLevelWrapperVisibility: (nodeId: string, visibility: TopLevelWrapperVisibility, pageIds?: PageId[]) => void;

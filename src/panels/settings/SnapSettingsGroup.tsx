@@ -64,7 +64,7 @@ export function SnapSettingsGroup({ snapSettings, onSnapSettingsChange }: SnapSe
         icon={Magnet}
         title="Snap to guides"
         description="Aligns to component and page edges."
-        note={guideSnap.enabled ? 'Hold Alt while dragging to invert.' : undefined}
+        note={guideSnap.enabled ? 'Hold Cmd/Ctrl while dragging to bypass.' : undefined}
         checked={guideSnap.enabled}
         onCheckedChange={(enabled) =>
           onSnapSettingsChange({ guideSnap: { ...guideSnap, enabled } })

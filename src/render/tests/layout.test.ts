@@ -241,4 +241,30 @@ describe('render/layout', () => {
     expect(plan.meshLayout.rowTemplate).toContain('24px');
     expect(plan.meshLayout.rowTemplate).not.toContain('640px');
   });
+
+  it('preserves mesh lines for children that overflow the wrapper on the right and bottom', () => {
+    const section = createContainerNode('section', 'root');
+    section.rect = createDefaultRect('0px', '0px', '200px', '120px');
+    const text = createTextNode('block', section.id);
+    text.rect = createDefaultRect('180px', '100px', '80px', '50px');
+    section.children = [text.id];
+
+    const document = {
+      rootId: section.id,
+      nodes: {
+        [section.id]: section,
+        [text.id]: text,
+      },
+      fontLibrary: createInitialDocument().fontLibrary,
+    };
+
+    const plan = resolveWrapperRenderPlan(document, section);
+
+    expect(plan.meshLayout.columnLines).toContain(260);
+    expect(plan.meshLayout.rowLines).toContain(150);
+    expect(plan.meshLayout.childPlacements[text.id]).toMatchObject({
+      gridColumn: expect.any(String),
+      gridRow: expect.any(String),
+    });
+  });
 });

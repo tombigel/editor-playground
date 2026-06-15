@@ -423,6 +423,24 @@ Constants: `INTERACT_VERSION`, `SCROLL_DEFAULT_RANGE_START`, `SCROLL_DEFAULT_RAN
 
 ---
 
+## Node and Layout Document APIs
+
+Source: `src/api/documentApi.ts`
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `moveNodeDoc` | `(document, nodeId, { x?, y? }, options?) -> DocumentModel` | Move a node to authored coordinates, optionally growing a parent |
+| `moveNodesDoc` | `(document, moves, options?) -> DocumentModel` | Move multiple nodes to authored coordinates, optionally growing a parent |
+| `reparentNodeAtDoc` | `(document, nodeId, parentId, { x, y }, options?) -> DocumentModel` | Reparent a node and set local authored coordinates, optionally growing the target parent |
+| `reparentNodesAtDoc` | `(document, parentId, moves, options?) -> DocumentModel` | Reparent multiple nodes and set local authored coordinates, optionally growing the target parent |
+| `expandParentHeightDoc` | `(document, { parentId, minHeightPx }) -> DocumentModel` | Grow a container height to at least the requested px size |
+| `resolveContainerChildBoundary` | `(document, containerId) -> ContainerChildBoundary` | Resolve a wrapper policy, defaulting to `anchor` |
+| `setContainerChildBoundaryDoc` | `(document, containerId, childBoundary) -> DocumentModel` | Set wrapper child-boundary policy |
+
+These helpers are the API-first surface used by editor drag/drop and keyboard movement. They keep movement and reparent placement deterministic without depending on stage DOM state. Movement and reparent helpers accept `options.parentExpansion?: { parentId, minHeightPx }` so an anchor-boundary drag commit can move the child and grow the parent in one model mutation.
+
+---
+
 ## Drag and Drop
 
 Source: `src/api/dragDropApi.ts`
@@ -441,13 +459,13 @@ Start a new drag session from a pointer-down event.
 updateDragSession(session: DragSession, input: DragUpdateInput): DragSession
 ```
 
-Update the session with new pointer position; recalculates guides, snaps, and drop targets. Stationary updates preserve the prior snap state so a pointer-up without movement commits the same visible preview position.
+Update the session with new pointer position; resolves the target parent, local placement, preview placement, guides, drop highlight, axis lock, snap-bypass state, parent-expansion request, and duplicate-requested stub state. The resolved placement on the session is the single source of truth for both preview and commit.
 
 ```typescript
 finishDragSession(session: DragSession, input: DragUpdateInput): DragCommitIntent
 ```
 
-Finalize the drag and return the commit intent (what to move/reparent).
+Finalize the drag and return the commit intent (what to move/reparent, plus optional parent expansion). Finish uses the already-resolved session placement and does not re-run snapping, drop-target detection, or boundary resolution on pointer-up.
 
 ```typescript
 cancelDragSession(session: DragSession | null): null
@@ -457,7 +475,7 @@ Cancel and clean up.
 
 ### Types
 
-See [`DragSession`](#dragsession), [`DragStartContext`](#dragstartcontext), [`DragUpdateInput`](#dragupdateinput), [`DragCommitIntent`](#dragcommitintent) in the type reference.
+See [`DragSession`](#dragsession), [`DragResolvedPlacement`](#dragresolvedplacement), [`DragStartContext`](#dragstartcontext), [`DragUpdateInput`](#dragupdateinput), [`DragCommitIntent`](#dragcommitintent) in the type reference.
 
 ---
 
@@ -614,10 +632,11 @@ These wrap `documentApi` functions with editor state, selection, and history man
 
 | Function | Signature | Description |
 | --- | --- | --- |
-| `moveNode` | `(state, nodeId, dx, dy) -> EditorState` | Move a node by delta |
-| `moveNodes` | `(state, nodeIds, dx, dy) -> EditorState` | Move multiple nodes |
-| `nudgeNode` | `(state, nodeId, dx, dy) -> EditorState` | Nudge (small move, usually keyboard) |
-| `resizeNode` | `(state, nodeId, dw, dh) -> EditorState` | Resize by delta |
+| `moveNode` | `(state, nodeId, { x?, y? }) -> EditorState` | Move a node to absolute authored coordinates |
+| `moveNodes` | `(state, moves) -> EditorState` | Move multiple nodes to absolute authored coordinates |
+| `nudgeNode` | `(state, nodeId, { x, y }) -> EditorState` | Nudge by keyboard delta through the same child-boundary and parent-expansion policy as drag/drop |
+| `resizeNode` | `(state, nodeId, { width?, height? }) -> EditorState` | Resize by authored size patch |
+| `setContainerChildBoundary` | `(state, nodeId, childBoundary) -> EditorState` | Set wrapper child-boundary policy |
 
 ### Reorder and reparent
 
@@ -625,8 +644,8 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | --- | --- | --- |
 | `reorderNode` | `(state, nodeId, action) -> EditorState` | Reorder among siblings |
 | `reorderNodes` | `(state, nodeIds, action) -> EditorState` | Reorder multiple nodes |
-| `reparentNode` | `(state, nodeId, newParentId) -> EditorState` | Reparent a node |
-| `reparentNodes` | `(state, nodeIds, newParentId) -> EditorState` | Reparent multiple nodes |
+| `reparentNode` | `(state, nodeId, newParentId, x, y) -> EditorState` | Reparent a node at a local position |
+| `reparentNodes` | `(state, moves, newParentId) -> EditorState` | Reparent multiple nodes at local positions |
 | `moveNodeInTree` | `(state, nodeId, targetParentId, targetIndex) -> EditorState` | Move to specific tree position |
 
 ### Alignment and distribution
@@ -756,6 +775,7 @@ type ContainerNode = BaseNode & {
   contentType: 'container';
   subtype: ContainerSubtype;  // 'section' | 'header' | 'footer' | 'container' | 'group'
   rect: RectModel;
+  layout?: ContainerLayout;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   pageTargetIds?: PageId[];
@@ -764,6 +784,23 @@ type ContainerNode = BaseNode & {
     sectionBorderBottomColor?: string;
     sectionBorderBottomWidth?: ParsedValue<UnitValue>;
   };
+};
+
+type ContainerLayout = {
+  childBoundary?: ContainerChildBoundary;
+};
+
+type ContainerChildBoundary = 'anchor' | 'box';
+```
+
+Missing `childBoundary` resolves to `'anchor'`. `anchor` keeps a child's `x`,`y` origin inside the wrapper content box while allowing the child body to overflow. `box` keeps the full child box inside the content box.
+
+Drag/drop may also request parent height growth through:
+
+```typescript
+type ParentExpansionRequest = {
+  parentId: NodeId;
+  minHeightPx: number;
 };
 ```
 
@@ -1026,7 +1063,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Document and Editor API
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createSectionFromTemplate`
-- `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`
+- `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
 - `setPageAsHomeDoc`, `normalizeSlug`
 - `FocusedMode`, `LinkValidationError`, `StageProps`, `SiteRendererProps`, `SiteExportOptions`
@@ -1038,7 +1075,7 @@ This index keeps the split API reference synchronized with the public export sur
 
 ### Drag and Drop API Types
 
-- `DragDropTarget`, `DragGeometrySnapshot`, `DragGuide`, `DragMotion`, `DragMotionSample`, `DragPreviewItem`
+- `DragDropTarget`, `DragGeometrySnapshot`, `DragGuide`, `DragMotion`, `DragMotionSample`, `DragParentExpansion`, `DragPreviewItem`, `DragResolvedPlacement`
 
 ### Animation API Types and Constants
 
@@ -1061,7 +1098,7 @@ This index keeps the split API reference synchronized with the public export sur
 - `RichTextLeaf`, `RichTextLink`, `RichInlineNode`, `RichBlockStyle`, `StandaloneTextNodeSnapshot`
 - `RichCodeLine`, `RichCodeBlock`, `RichListItem`, `RichUnorderedListBlock`, `RichOrderedListBlock`, `RichListBlock`
 - `TextDocumentBlocks`, `TemplateBuild`, `TemplateNode`, `TextStyleOptions`, `BoxPadding`
-- `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
+- `ContainerLayout`, `ContainerChildBoundary`, `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
 
 ### `schemaVersion` in exported documents
 

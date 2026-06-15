@@ -231,6 +231,8 @@ export function resolveDragPointerPosition(
 	{
 		shiftKey,
 		altKey,
+		metaKey,
+		ctrlKey,
 		snapSettings,
 		snapTargets,
 		documentRef = window.document,
@@ -244,7 +246,7 @@ export function resolveDragPointerPosition(
 		shiftKey,
 	);
 	const guideSnapEnabled = snapSettings.guideSnap.enabled;
-	const shouldSnap = altKey ? !guideSnapEnabled : guideSnapEnabled;
+	const shouldSnap = guideSnapEnabled && !metaKey && !ctrlKey;
 	if (!shouldSnap) {
 		return {
 			clientX: axisLocked.clientX,
@@ -253,15 +255,19 @@ export function resolveDragPointerPosition(
 			guideXSource: null,
 			guideY: null,
 			guideYSource: null,
+			duplicateRequested: altKey,
 		};
 	}
 
-	return getSnappedDragPosition(
+	return {
+		...getSnappedDragPosition(
 		dragState,
 		axisLocked.clientX,
 		axisLocked.clientY,
 		documentRef,
 		windowRef,
 		snapTargets,
-	);
+		),
+		duplicateRequested: altKey,
+	};
 }

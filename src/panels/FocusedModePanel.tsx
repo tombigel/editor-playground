@@ -39,6 +39,7 @@ type Props = Pick<
   | 'activePageId'
   | 'onTextChange'
   | 'onWrapperStyleChange'
+  | 'onContainerChildBoundaryChange'
   | 'onRectChange'
   | 'onSetNodeVisibility'
   | 'onSetTopLevelWrapperVisibility'
@@ -101,6 +102,7 @@ export function FocusedModePanel({
   activePageId,
   onTextChange,
   onWrapperStyleChange,
+  onContainerChildBoundaryChange,
   onRectChange,
   onSetNodeVisibility,
   onSetTopLevelWrapperVisibility,
@@ -141,6 +143,7 @@ export function FocusedModePanel({
   const actions: InspectorActionHandlers = {
     onTextChange,
     onWrapperStyleChange,
+    onContainerChildBoundaryChange,
     onRectChange,
     onSetNodeVisibility,
     onSetTopLevelWrapperVisibility: (nodeId, visibility, pageIds) => {

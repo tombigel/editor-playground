@@ -1,12 +1,10 @@
-import type { ContainerSubtype, DocumentModel, DocumentNode, NodeId } from '../../model/types';
+import type { DocumentModel, DocumentNode, NodeId } from '../../model/types';
 import { isContainerNode, isLeafNode } from '../../model/types';
-import { parseUnitValue } from '../../model/units';
-import { moveNodeInTreeDoc } from '../../api/documentApi';
+import { moveNodeInTreeDoc, reparentNodeAtDoc, reparentNodesAtDoc, type ParentExpansionOptions } from '../../api/documentApi';
 import type { EditorState, NodeOrderAction } from '../types';
 import { normalizeSelectedIds } from '../selection';
 import { cloneDocument } from '../editorPersistence';
 import { applySelectionToDocument, assertWrapper } from './shared';
-import { moveNode, moveNodes } from './layout';
 
 export function reorderNode(
   state: EditorState,
@@ -169,149 +167,26 @@ function findSiblingSectionIndex(
   return -1;
 }
 
-function isSiteSectionRole(subtype: ContainerSubtype) {
-  return subtype === 'section' || subtype === 'header' || subtype === 'footer';
-}
-
-function canParentNode(parent: DocumentNode, child: DocumentNode): boolean {
-  if (!isContainerNode(parent)) {
-    return false;
-  }
-
-  if (isLeafNode(child)) {
-    return true;
-  }
-
-  if (!isContainerNode(child)) {
-    return false;
-  }
-
-  if (child.subtype !== 'container') {
-    return false;
-  }
-
-  if (parent.subtype === 'container') {
-    return true;
-  }
-
-  return isSiteSectionRole(parent.subtype);
-}
-
-function isDescendant(document: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {
-  if (candidateId === targetAncestorId) {
-    return true;
-  }
-
-  let current: DocumentNode | undefined = document.nodes[candidateId];
-  while (current?.parentId) {
-    if (current.parentId === targetAncestorId) {
-      return true;
-    }
-    current = document.nodes[current.parentId];
-  }
-  return false;
-}
-
 export function reparentNode(
   state: EditorState,
   nodeId: NodeId,
   parentId: NodeId,
   x: string,
   y: string,
+  options: ParentExpansionOptions = {},
 ): EditorState {
-  const document = cloneDocument(state.document);
-  const node = document.nodes[nodeId];
-  const nextParent = document.nodes[parentId];
-
-  if (!node || !nextParent || node.contentType === 'site' || !isContainerNode(nextParent)) {
-    return state;
-  }
-
-  if (parentId === nodeId) {
-    return state;
-  }
-
-  if (node.parentId === null || node.parentId === parentId) {
-    return moveNode(state, nodeId, { x, y });
-  }
-
-  if (!canParentNode(nextParent, node)) {
-    return state;
-  }
-
-  if (isDescendant(document, parentId, nodeId)) {
-    return state;
-  }
-
-  const previousParent = document.nodes[node.parentId];
-  previousParent.children = previousParent.children.filter((childId) => childId !== nodeId);
-  nextParent.children.push(nodeId);
-  node.parentId = parentId;
-  node.rect.x.base = parseUnitValue(x);
-  node.rect.y.base = parseUnitValue(y);
-
-  return { ...state, document };
+  const document = reparentNodeAtDoc(state.document, nodeId, parentId, { x, y }, options);
+  return document === state.document ? state : { ...state, document };
 }
 
 export function reparentNodes(
   state: EditorState,
   moves: Array<{ id: NodeId; x: string; y: string }>,
   parentId: NodeId,
+  options: ParentExpansionOptions = {},
 ): EditorState {
-  if (moves.length === 0) {
-    return state;
-  }
-
-  const document = cloneDocument(state.document);
-  const nextParent = document.nodes[parentId];
-  if (!nextParent || !isContainerNode(nextParent)) {
-    return state;
-  }
-
-  const moveMap = new Map(moves.map((move) => [move.id, move]));
-  const nodes = moves.map((move) => document.nodes[move.id]);
-  if (nodes.some((node) => !node || node.contentType === 'site')) {
-    return state;
-  }
-
-  const sourceParentId = nodes[0]?.parentId ?? null;
-  if (!sourceParentId || nodes.some((node) => node?.parentId !== sourceParentId)) {
-    return state;
-  }
-  if (sourceParentId === parentId) {
-    return moveNodes(state, moves);
-  }
-
-  for (const node of nodes) {
-    if (!node || !canParentNode(nextParent, node)) {
-      return state;
-    }
-    if (parentId === node.id || isDescendant(document, parentId, node.id)) {
-      return state;
-    }
-  }
-
-  const sourceParent = document.nodes[sourceParentId];
-  if (!sourceParent) {
-    return state;
-  }
-
-  const movedIds = sourceParent.children.filter((childId) => moveMap.has(childId));
-  sourceParent.children = sourceParent.children.filter((childId) => !moveMap.has(childId));
-  nextParent.children.push(...movedIds);
-
-  for (const nodeId of movedIds) {
-    const node = document.nodes[nodeId];
-    const move = moveMap.get(nodeId);
-    if (!node || !move || node.contentType === 'site') {
-      continue;
-    }
-    node.parentId = parentId;
-    node.rect.x.base = parseUnitValue(move.x);
-    node.rect.y.base = parseUnitValue(move.y);
-  }
-
-  return { ...state, document };
+  const document = reparentNodesAtDoc(state.document, parentId, moves, options);
+  return document === state.document ? state : { ...state, document };
 }
 
 export function moveNodeInTree(

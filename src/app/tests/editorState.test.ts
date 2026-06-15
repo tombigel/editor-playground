@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, distributeNodes, insertLeaf, insertWrapper, parseUnitValue } from '../../api/editorApi';
+import { createContainerNode, createDefaultRect, createTextNode } from '../../model/defaults';
 import {
   createRichTextBlock,
   createRichTextLeaf,
@@ -10,6 +11,7 @@ import {
   richListBlockToListContent,
 } from '../../model/richContent';
 import { editorReducer, historyReducer, type HistoryState } from '../editorState';
+import type { EditorState } from '../../editor/types';
 
 function createTestHistoryState(): HistoryState {
   return {
@@ -21,7 +23,63 @@ function createTestHistoryState(): HistoryState {
   };
 }
 
+function createKeyboardNudgeExpansionState(): { state: EditorState; parentId: string; leafId: string } {
+  const state = createInitialState();
+  const document = structuredClone(state.document);
+  const root = document.nodes[document.rootId];
+  if (!root || root.contentType !== 'site') {
+    throw new Error('Expected site root');
+  }
+  const sectionId = root.children.find((id) => {
+    const node = document.nodes[id];
+    return node?.contentType === 'container' && node.subtype === 'section';
+  });
+  if (!sectionId) {
+    throw new Error('Expected section');
+  }
+  const parent = createContainerNode('container', sectionId);
+  parent.rect = createDefaultRect('40px', '40px', '240px', '120px');
+  const leaf = createTextNode('block', parent.id);
+  leaf.rect = createDefaultRect('20px', '110px', '80px', '40px');
+  parent.children = [leaf.id];
+  document.nodes[parent.id] = parent;
+  document.nodes[leaf.id] = leaf;
+  document.nodes[sectionId].children.push(parent.id);
+  return {
+    state: {
+      ...state,
+      document,
+      selectedId: leaf.id,
+      selectedIds: [leaf.id],
+      ui: {
+        ...state.ui,
+      },
+    },
+    parentId: parent.id,
+    leafId: leaf.id,
+  };
+}
+
+function getRectNode(document: EditorState['document'], nodeId: string) {
+  const node = document.nodes[nodeId];
+  if (!node || node.contentType === 'site') {
+    throw new Error(`Expected rect node ${nodeId}`);
+  }
+  return node;
+}
+
 describe('app/editorState', () => {
+  it('expands the parent when keyboard nudging moves below its bottom edge', () => {
+    const enabled = createKeyboardNudgeExpansionState();
+    const expanded = editorReducer(enabled.state, {
+      type: 'nudgeSelection',
+      deltaX: 0,
+      deltaY: 20,
+    });
+    expect(getRectNode(expanded.document, enabled.leafId).rect.y.base.raw).toBe('130px');
+    expect(getRectNode(expanded.document, enabled.parentId).rect.height.base.raw).toBe('170px');
+  });
+
   it('keeps preview toggles out of undo history', () => {
     const initial = createTestHistoryState();
 

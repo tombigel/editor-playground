@@ -93,16 +93,34 @@ export type DragUpdateInput = {
   timestampMs: number;
   shiftKey: boolean;
   altKey: boolean;
+  metaKey?: boolean;
+  ctrlKey?: boolean;
   guideSnap: { enabled: boolean; threshold: number; power: number; maxSpeedPxPerSecond: number };
   containerSnap: { enabled: boolean; threshold: number; power: number };
 };
 
+export type DragParentExpansion = {
+  parentId: NodeId;
+  minHeightPx: number;
+};
+
+export type DragResolvedPlacement = {
+  targetParentId: NodeId;
+  localX: number;
+  localY: number;
+  previewLeft: number;
+  previewTop: number;
+  clientX: number;
+  clientY: number;
+  parentExpansion: DragParentExpansion | null;
+};
+
 export type DragCommitIntent =
   | { type: 'none' }
-  | { type: 'move'; id: NodeId; x: string; y: string }
-  | { type: 'moveSelection'; moves: Array<{ id: NodeId; x: string; y: string }> }
-  | { type: 'reparent'; id: NodeId; parentId: NodeId; x: string; y: string }
-  | { type: 'reparentSelection'; parentId: NodeId; moves: Array<{ id: NodeId; x: string; y: string }> };
+  | { type: 'move'; id: NodeId; x: string; y: string; parentExpansion?: DragParentExpansion }
+  | { type: 'moveSelection'; moves: Array<{ id: NodeId; x: string; y: string }>; parentExpansion?: DragParentExpansion }
+  | { type: 'reparent'; id: NodeId; parentId: NodeId; x: string; y: string; parentExpansion?: DragParentExpansion }
+  | { type: 'reparentSelection'; parentId: NodeId; moves: Array<{ id: NodeId; x: string; y: string }>; parentExpansion?: DragParentExpansion };
 
 export type DragSession = {
   phase: 'pending' | 'dragging';
@@ -121,5 +139,9 @@ export type DragSession = {
   guideX: DragGuide | null;
   guideY: DragGuide | null;
   highlightedDropId: NodeId | null;
+  axisLock: 'horizontal' | 'vertical' | null;
+  snapBypassed: boolean;
+  duplicateRequested: boolean;
+  resolvedPlacement: DragResolvedPlacement | null;
   geometry: DragGeometrySnapshot;
 };

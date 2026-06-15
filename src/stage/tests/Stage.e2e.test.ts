@@ -16,6 +16,7 @@ import {
 	createMediaNode,
 	createTextNode,
 } from "../../model/defaultFactories";
+import { createInitialDocument } from "../../model/initialDocument";
 import {
 	createTextDocumentContent,
 	createTextDocumentFromCode,
@@ -172,18 +173,29 @@ describe("stage/Stage e2e", () => {
 		locatorSelector: string,
 		targetX: number,
 		targetY: number,
-		options?: { shiftKey?: boolean; altKey?: boolean },
+		options?: {
+			shiftKey?: boolean;
+			altKey?: boolean;
+			metaKey?: boolean;
+			ctrlKey?: boolean;
+		},
 	) {
 		const locator = page.locator(locatorSelector).first();
 		const box = await locator.boundingBox();
 		expect(box).not.toBeNull();
 
-		const modifiers: Array<"Shift" | "Alt"> = [];
+		const modifiers: Array<"Shift" | "Alt" | "Meta" | "Control"> = [];
 		if (options?.shiftKey) {
 			modifiers.push("Shift");
 		}
 		if (options?.altKey) {
 			modifiers.push("Alt");
+		}
+		if (options?.metaKey) {
+			modifiers.push("Meta");
+		}
+		if (options?.ctrlKey) {
+			modifiers.push("Control");
 		}
 
 		for (const modifier of modifiers) {
@@ -2238,7 +2250,337 @@ describe("stage/Stage e2e", () => {
 	);
 
 	stageIt(
-		"disables snapping while Alt is held",
+		"expands the parent when keyboard nudging moves below its bottom edge",
+		async () => {
+			const { document, ids } = createE2EDocument();
+			const parent = document.nodes[ids.sourceContainerId];
+			const leafNode = document.nodes[ids.reparentLeafId];
+			if (parent?.contentType !== "container" || leafNode?.contentType === "site") {
+				throw new Error("Expected source container and nudged child");
+			}
+			parent.rect.height = createDefaultRect("0px", "0px", "0px", "260px").height;
+			leafNode.rect.y = createDefaultRect("0px", "250px", "0px", "0px").y;
+			leafNode.rect.height = createDefaultRect("0px", "0px", "0px", "40px").height;
+			await openEditor({ document, snapEnabled: false });
+
+			const leaf = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+			await leaf.click();
+			await page.locator(".stage-shell").focus();
+
+			await page.keyboard.press("Shift+ArrowDown");
+			await page.keyboard.press("Shift+ArrowDown");
+
+			await page.waitForFunction(
+				({ storageKey, nodeId }) => {
+					const state = JSON.parse(
+						window.localStorage.getItem(storageKey) ?? "null",
+					);
+					return (
+						state?.document?.nodes?.[nodeId]?.rect?.y?.base?.raw === "270px"
+					);
+				},
+				{
+					storageKey: STORAGE_KEY,
+					nodeId: ids.reparentLeafId,
+				},
+			);
+
+			const state = await readPersistedState();
+			expect(state.document.nodes[ids.reparentLeafId].rect.y.base.raw).toBe(
+				"270px",
+			);
+			expect(state.document.nodes[ids.sourceContainerId].rect.height.base.raw).toBe(
+				"310px",
+			);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"ignores descendant lost pointer capture during default image drag",
+		async () => {
+			const document = structuredClone(createInitialDocument());
+			const image = Object.values(document.nodes).find(
+				(node) => node.contentType === "media",
+			);
+			if (!image || image.contentType !== "media") {
+				throw new Error("Expected default media node");
+			}
+
+			await openEditor({ document, snapEnabled: false });
+
+			const imageNode = page.locator(`[data-node-id="${image.id}"]`).first();
+			const before = await imageNode.boundingBox();
+			expect(before).not.toBeNull();
+
+			await page.mouse.move(
+				(before?.x ?? 0) + (before?.width ?? 0) / 2,
+				(before?.y ?? 0) + (before?.height ?? 0) / 2,
+			);
+			await page.mouse.down();
+			await page.mouse.move(
+				(before?.x ?? 0) + (before?.width ?? 0) / 2 + 180,
+				(before?.y ?? 0) + (before?.height ?? 0) / 2 + 45,
+				{ steps: 14 },
+			);
+
+			await imageNode.evaluate((node) => {
+				node.dispatchEvent(
+					new PointerEvent("lostpointercapture", {
+						bubbles: true,
+						pointerId: 1,
+					}),
+				);
+			});
+
+			await page.mouse.up();
+
+			const state = await readPersistedState();
+			expect(parseFloat(state.document.nodes[image.id].rect.x.base.raw)).toBeGreaterThan(120);
+			expect(parseFloat(state.document.nodes[image.id].rect.y.base.raw)).toBeGreaterThan(20);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"commits the default image drag when stage pointer capture is lost before pointerup",
+		async () => {
+			const document = structuredClone(createInitialDocument());
+			const image = Object.values(document.nodes).find(
+				(node) => node.contentType === "media",
+			);
+			if (!image || image.contentType !== "media") {
+				throw new Error("Expected default media node");
+			}
+
+			await openEditor({ document, snapEnabled: false });
+
+			const imageNode = page.locator(`[data-node-id="${image.id}"]`).first();
+			const before = await imageNode.boundingBox();
+			expect(before).not.toBeNull();
+
+			await page.mouse.move(
+				(before?.x ?? 0) + (before?.width ?? 0) / 2,
+				(before?.y ?? 0) + (before?.height ?? 0) / 2,
+			);
+			await page.mouse.down();
+			await page.mouse.move(
+				(before?.x ?? 0) + (before?.width ?? 0) / 2 + 180,
+				(before?.y ?? 0) + (before?.height ?? 0) / 2 + 45,
+				{ steps: 14 },
+			);
+
+			await page.locator(".stage-shell").evaluate((stageShell) => {
+				stageShell.dispatchEvent(
+					new PointerEvent("lostpointercapture", {
+						bubbles: true,
+						pointerId: 1,
+					}),
+				);
+			});
+
+			await page.waitForFunction(
+				({ storageKey, nodeId }) => {
+					const state = JSON.parse(
+						window.localStorage.getItem(storageKey) ?? "null",
+					);
+					const rawX = state?.document?.nodes?.[nodeId]?.rect?.x?.base?.raw;
+					return typeof rawX === "string" && rawX !== "0px";
+				},
+				{
+					storageKey: STORAGE_KEY,
+					nodeId: image.id,
+				},
+			);
+
+			await page.mouse.up();
+
+			const state = await readPersistedState();
+			expect(parseFloat(state.document.nodes[image.id].rect.x.base.raw)).toBeGreaterThan(120);
+			expect(parseFloat(state.document.nodes[image.id].rect.y.base.raw)).toBeGreaterThan(20);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"keeps the child origin in bounds while allowing default anchor overflow",
+		async () => {
+			const { document, ids } = createE2EDocument();
+			await openEditor({ document, snapEnabled: false });
+
+			const sourceContainer = page
+				.locator(`[data-drop-wrapper-id="${ids.sourceContainerId}"]`)
+				.first();
+			const sourceBox = await sourceContainer.boundingBox();
+			expect(sourceBox).not.toBeNull();
+
+			const leaf = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+			const before = await leaf.boundingBox();
+			expect(before).not.toBeNull();
+
+			await dragLocatorToPoint(
+				`[data-node-id="${ids.reparentLeafId}"]`,
+				(sourceBox?.x ?? 0) + (sourceBox?.width ?? 0) - 5,
+				(before?.y ?? 0) + (before?.height ?? 0) / 2,
+			);
+
+			const state = await readPersistedState();
+			expect(state.document.nodes[ids.reparentLeafId].parentId).toBe(
+				ids.sourceContainerId,
+			);
+			const localX = parseFloat(
+				state.document.nodes[ids.reparentLeafId].rect.x.base.raw,
+			);
+			expect(localX).toBeGreaterThanOrEqual(0);
+			expect(localX).toBeLessThanOrEqual(300);
+
+			const after = await leaf.boundingBox();
+			expect(after).not.toBeNull();
+			expect((after?.x ?? 0) + (after?.width ?? 0)).toBeGreaterThan(
+				(sourceBox?.x ?? 0) + (sourceBox?.width ?? 0) + 20,
+			);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"keeps the full child box inside a box-boundary container",
+		async () => {
+			const { document, ids } = createE2EDocument();
+			const sourceNode = document.nodes[ids.sourceContainerId];
+			if (sourceNode?.contentType !== "container") {
+				throw new Error("Expected source container");
+			}
+			sourceNode.layout = { childBoundary: "box" };
+			await openEditor({ document, snapEnabled: false });
+
+			const sourceContainer = page
+				.locator(`[data-drop-wrapper-id="${ids.sourceContainerId}"]`)
+				.first();
+			const sourceBox = await sourceContainer.boundingBox();
+			expect(sourceBox).not.toBeNull();
+
+			const leaf = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+			const before = await leaf.boundingBox();
+			expect(before).not.toBeNull();
+
+			await dragLocatorToPoint(
+				`[data-node-id="${ids.reparentLeafId}"]`,
+				(sourceBox?.x ?? 0) + (sourceBox?.width ?? 0) - 5,
+				(before?.y ?? 0) + (before?.height ?? 0) / 2,
+			);
+
+			const state = await readPersistedState();
+			const localX = parseFloat(
+				state.document.nodes[ids.reparentLeafId].rect.x.base.raw,
+			);
+			expect(localX).toBeLessThanOrEqual(141);
+
+			const after = await leaf.boundingBox();
+			expect(after).not.toBeNull();
+			expect((after?.x ?? 0) + (after?.width ?? 0)).toBeLessThanOrEqual(
+				(sourceBox?.x ?? 0) + (sourceBox?.width ?? 0) + 3,
+			);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"expands the parent down when a drag lands below its bottom edge",
+		async () => {
+			const { document, ids } = createE2EDocument();
+			await openEditor({ document, snapEnabled: false });
+
+			const sourceContainer = page
+				.locator(`[data-drop-wrapper-id="${ids.sourceContainerId}"]`)
+				.first();
+			const sourceBox = await sourceContainer.boundingBox();
+			expect(sourceBox).not.toBeNull();
+
+			const leaf = page.locator(`[data-node-id="${ids.reparentLeafId}"]`).first();
+			const leafBox = await leaf.boundingBox();
+			expect(leafBox).not.toBeNull();
+
+			await dragLocatorToPoint(
+				`[data-node-id="${ids.reparentLeafId}"]`,
+				(leafBox?.x ?? 0) + (leafBox?.width ?? 0) / 2,
+				(sourceBox?.y ?? 0) + (sourceBox?.height ?? 0) + 90,
+			);
+
+			const state = await readPersistedState();
+			const childY = parseFloat(
+				state.document.nodes[ids.reparentLeafId].rect.y.base.raw,
+			);
+			const parentHeight = parseFloat(
+				state.document.nodes[ids.sourceContainerId].rect.height.base.raw,
+			);
+			expect(childY).toBeGreaterThan(260);
+			expect(parentHeight).toBeGreaterThan(300);
+			expect(state.document.nodes[ids.reparentLeafId].parentId).toBe(
+				ids.sourceContainerId,
+			);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"keeps parent size fixed for a box-boundary container",
+		async () => {
+			const { document, ids } = createE2EDocument();
+			const sourceNode = document.nodes[ids.sourceContainerId];
+			if (sourceNode?.contentType !== "container") {
+				throw new Error("Expected source container");
+			}
+			sourceNode.layout = { childBoundary: "box" };
+			await openEditor({ document, snapEnabled: false });
+
+			const sourceContainer = page
+				.locator(`[data-drop-wrapper-id="${ids.sourceContainerId}"]`)
+				.first();
+			const sourceBox = await sourceContainer.boundingBox();
+			expect(sourceBox).not.toBeNull();
+			const leaf = page
+				.locator(`[data-node-id="${ids.reparentLeafId}"]`)
+				.first();
+			const leafBox = await leaf.boundingBox();
+			expect(leafBox).not.toBeNull();
+
+			await dragLocatorToPoint(
+				`[data-node-id="${ids.reparentLeafId}"]`,
+				(leafBox?.x ?? 0) + (leafBox?.width ?? 0) / 2,
+				(sourceBox?.y ?? 0) + (sourceBox?.height ?? 0) + 90,
+			);
+
+			const state = await readPersistedState();
+			expect(state.document.nodes[ids.sourceContainerId].rect.height.base.raw).toBe(
+				"260px",
+			);
+			const renderedSourceBox = await sourceContainer.boundingBox();
+			expect(renderedSourceBox).not.toBeNull();
+			expect(Math.round(renderedSourceBox?.height ?? 0)).toBe(260);
+			expect(
+				parseFloat(state.document.nodes[ids.reparentLeafId].rect.y.base.raw),
+			).toBeLessThanOrEqual(220);
+
+			await closeEditor();
+		},
+		30_000,
+	);
+
+	stageIt(
+		"disables snapping while Cmd/Ctrl is held",
 		async () => {
 			const { document, ids } = createE2EDocument();
 			await openEditor({ document, snapEnabled: true });
@@ -2286,7 +2628,7 @@ describe("stage/Stage e2e", () => {
 				`[data-node-id="${second.ids.snapLeafId}"]`,
 				secondFrameBox?.x + secondFrameBox?.width / 2 + 6,
 				secondBefore?.y + secondBefore?.height / 2,
-				{ altKey: true },
+				{ metaKey: true },
 			);
 
 			const unsnapped = await secondTarget.boundingBox();

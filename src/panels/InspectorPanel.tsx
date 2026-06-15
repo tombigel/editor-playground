@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../api/editorApi';
 import type { WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../api/documentViewApi';
-import type { PageId } from '../api/documentViewApi';
+import type { ContainerChildBoundary, PageId } from '../api/documentViewApi';
 import type { AnimationTriggerType, KeyframeAnimationEffect, HoverOutAction, ReducedMotionResponse, DocumentAnimationSettings } from '../api/animationApi';
 import { buildNodeDebugInfo } from '../editor/debugInfo';
 import { isNodeEffectivelyHidden } from '../api/documentViewApi';
@@ -55,6 +55,7 @@ export type InspectorPanelProps = {
   onBulkEdit?: (operations: BulkEditOperation[]) => void;
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
+  onContainerChildBoundaryChange: (value: ContainerChildBoundary) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onSetNodeVisibility: (id: string, value: boolean) => void;
   onSetTopLevelWrapperVisibility: (
@@ -123,6 +124,7 @@ export function InspectorPanel({
   onBulkEdit = () => undefined,
   onTextChange,
   onWrapperStyleChange,
+  onContainerChildBoundaryChange,
   onRectChange,
   onSetNodeVisibility,
   onSetTopLevelWrapperVisibility,
@@ -166,6 +168,7 @@ export function InspectorPanel({
     () => ({
       onTextChange,
       onWrapperStyleChange,
+      onContainerChildBoundaryChange,
       onRectChange,
       onSetNodeVisibility,
       onSetTopLevelWrapperVisibility: (nodeId, visibility, pageIds) => {
@@ -203,7 +206,7 @@ export function InspectorPanel({
       onOpenManageFonts,
     }),
     [
-      onTextChange, onWrapperStyleChange, onRectChange, onPromote, onDemote,
+      onTextChange, onWrapperStyleChange, onContainerChildBoundaryChange, onRectChange, onPromote, onDemote,
       onSetNodeVisibility, onSetTopLevelWrapperVisibility, resolvedActivePageId,
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,

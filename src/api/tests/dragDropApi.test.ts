@@ -145,6 +145,8 @@ function makeDragInput(
     timestampMs: overrides.timestampMs ?? 16,
     shiftKey: overrides.shiftKey ?? false,
     altKey: overrides.altKey ?? false,
+    metaKey: overrides.metaKey ?? false,
+    ctrlKey: overrides.ctrlKey ?? false,
     guideSnap: {
       enabled: true,
       threshold: 8,
@@ -159,6 +161,13 @@ function makeDragInput(
       ...(overrides.containerSnap ?? {}),
     },
   };
+}
+
+function finishUpdatedDragSession(
+  session: ReturnType<typeof beginDragSession>,
+  input: DragUpdateInput,
+) {
+  return finishDragSession(updateDragSession(session, input), input);
 }
 
 describe('api/dragDropApi', () => {
@@ -221,7 +230,7 @@ describe('api/dragDropApi', () => {
 
   it('moves same-parent multi-selection as a group', () => {
     const { document, leafAId, leafBId, containerAId } = createDragDocument();
-    const commit = finishDragSession(
+    const commit = finishUpdatedDragSession(
       beginDragSession({
         document,
         anchorId: leafAId,
@@ -244,8 +253,8 @@ describe('api/dragDropApi', () => {
         }),
       }),
       makeDragInput({
-        clientX: 190,
-        clientY: 150,
+        clientX: 210,
+        clientY: 180,
         timestampMs: 40,
         guideSnap: { enabled: false },
       }),
@@ -281,7 +290,7 @@ describe('api/dragDropApi', () => {
 
   it('returns a reparent commit for a valid drop target', () => {
     const { document, leafAId, containerAId, containerBId } = createDragDocument();
-    const commit = finishDragSession(
+    const commit = finishUpdatedDragSession(
       beginDragSession({
         document,
         anchorId: leafAId,
@@ -318,7 +327,7 @@ describe('api/dragDropApi', () => {
 
   it('returns a reparentSelection commit for a valid multi-drop target', () => {
     const { document, leafAId, leafBId, containerAId, containerBId } = createDragDocument();
-    const commit = finishDragSession(
+    const commit = finishUpdatedDragSession(
       beginDragSession({
         document,
         anchorId: leafAId,
@@ -364,7 +373,7 @@ describe('api/dragDropApi', () => {
 
   it('falls back to moving inside the current parent when the hovered drop target is invalid', () => {
     const { document, containerAId, childContainerId, sectionId } = createDragDocument();
-    const commit = finishDragSession(
+    const commit = finishUpdatedDragSession(
       beginDragSession({
         document,
         anchorId: containerAId,
@@ -465,9 +474,55 @@ describe('api/dragDropApi', () => {
     expect(session.highlightedDropId).toBe(sectionId);
   });
 
-  it('clamps movement inside the parent content box on the right and bottom edges', () => {
+  it('keeps the origin inside the parent content box while allowing right and bottom overflow by default', () => {
     const { document, leafAId, containerAId } = createDragDocument();
-    const commit = finishDragSession(
+    const commit = finishUpdatedDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 140,
+        startClientY: 120,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          sourceContentBox: { left: 100, top: 100, width: 120, height: 80 },
+          dropTargets: [
+            { id: containerAId, contentBox: { left: 100, top: 100, width: 120, height: 80 }, depth: 0, order: 1 },
+          ],
+        }),
+      }),
+      makeDragInput({
+        clientX: 260,
+        clientY: 220,
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
+    );
+
+    expect(commit).toEqual({
+      type: 'move',
+      id: leafAId,
+      x: '120px',
+      y: '100px',
+      parentExpansion: {
+        parentId: containerAId,
+        minHeightPx: 140,
+      },
+    });
+  });
+
+  it('keeps the full dragged box inside parents with box child-boundary policy', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const parent = document.nodes[containerAId];
+    if (!parent || parent.contentType !== 'container') {
+      throw new Error('Expected container parent');
+    }
+    parent.layout = { childBoundary: 'box' };
+
+    const commit = finishUpdatedDragSession(
       beginDragSession({
         document,
         anchorId: leafAId,
@@ -501,9 +556,90 @@ describe('api/dragDropApi', () => {
     });
   });
 
+  it('allows a drag below the parent bottom and requests parent expansion when enabled', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const commit = finishUpdatedDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 140,
+        startClientY: 120,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          sourceContentBox: { left: 100, top: 100, width: 120, height: 80 },
+          dropTargets: [
+            { id: containerAId, contentBox: { left: 100, top: 100, width: 120, height: 80 }, depth: 0, order: 1 },
+          ],
+        }),
+      }),
+      makeDragInput({
+        clientX: 180,
+        clientY: 260,
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
+    );
+
+    expect(commit).toEqual({
+      type: 'move',
+      id: leafAId,
+      x: '40px',
+      y: '140px',
+      parentExpansion: {
+        parentId: containerAId,
+        minHeightPx: 180,
+      },
+    });
+  });
+
+  it('keeps full-box boundary containers clamped instead of expanding parent height', () => {
+    const { document, leafAId, containerAId } = createDragDocument();
+    const container = document.nodes[containerAId];
+    if (container?.contentType !== 'container') {
+      throw new Error('Expected container');
+    }
+    container.layout = { childBoundary: 'box' };
+    const commit = finishUpdatedDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 140,
+        startClientY: 120,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          sourceContentBox: { left: 100, top: 100, width: 120, height: 80 },
+          dropTargets: [
+            { id: containerAId, contentBox: { left: 100, top: 100, width: 120, height: 80 }, depth: 0, order: 1 },
+          ],
+        }),
+      }),
+      makeDragInput({
+        clientX: 180,
+        clientY: 260,
+        timestampMs: 48,
+        guideSnap: { enabled: false },
+      }),
+    );
+
+    expect(commit).toEqual({
+      type: 'move',
+      id: leafAId,
+      x: '40px',
+      y: '40px',
+    });
+  });
+
   it('keeps sticky-shifted drags aligned to the visual rect', () => {
     const { document, leafAId, containerAId } = createDragDocument();
-    const commit = finishDragSession(
+    const commit = finishUpdatedDragSession(
       beginDragSession({
         document,
         anchorId: leafAId,
@@ -576,7 +712,7 @@ describe('api/dragDropApi', () => {
     expect(session.guideY).toEqual({ value: 150, source: 'component', anchor: 'edge' });
   });
 
-  it('locks to the dominant axis before snapping and inverts snapping with Alt', () => {
+  it('locks to the dominant axis, bypasses snapping with Cmd/Ctrl, and records Alt duplicate intent', () => {
     const { document, leafAId, containerAId } = createDragDocument();
     const baseSession = beginDragSession({
       document,
@@ -603,14 +739,24 @@ describe('api/dragDropApi', () => {
     }));
     expect(shifted.currentClientY).toBe(120);
 
-    const altDisabled = updateDragSession(baseSession, makeDragInput({
+    const snapBypassed = updateDragSession(baseSession, makeDragInput({
+      clientX: 160,
+      clientY: 120,
+      timestampMs: 48,
+      metaKey: true,
+    }));
+    expect(snapBypassed.guideX).toBeNull();
+    expect(snapBypassed.guideY).toBeNull();
+    expect(snapBypassed.snapBypassed).toBe(true);
+
+    const duplicateRequested = updateDragSession(baseSession, makeDragInput({
       clientX: 160,
       clientY: 120,
       timestampMs: 48,
       altKey: true,
     }));
-    expect(altDisabled.guideX).toBeNull();
-    expect(altDisabled.guideY).toBeNull();
+    expect(duplicateRequested.duplicateRequested).toBe(true);
+    expect(duplicateRequested.guideX).toEqual({ value: 160, source: 'page', anchor: 'edge' });
   });
 
   it('computes smoothed drag motion from timestamped pointer updates', () => {

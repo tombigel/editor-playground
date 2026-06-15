@@ -2064,7 +2064,7 @@ describe('stage/Stage', () => {
     });
   });
 
-  it('inverts snapping with Alt while dragging', () => {
+  it('reserves Alt for duplicate intent and bypasses snapping with Cmd/Ctrl while dragging', () => {
     const dragState = {
       nodeId: 'leaf_1',
       startClientX: 104,
@@ -2111,6 +2111,7 @@ describe('stage/Stage', () => {
       clientX: 100,
       guideX: 100,
       guideXSource: 'page',
+      duplicateRequested: false,
     });
 
     expect(
@@ -2122,9 +2123,26 @@ describe('stage/Stage', () => {
         windowRef,
       }),
     ).toMatchObject({
+      clientX: 100,
+      guideX: 100,
+      guideXSource: 'page',
+      duplicateRequested: true,
+    });
+
+    expect(
+      resolveDragPointerPosition(dragState, 104, 77, {
+        shiftKey: false,
+        altKey: false,
+        metaKey: true,
+        snapSettings: DEFAULT_SNAP_SETTINGS,
+        documentRef,
+        windowRef,
+      }),
+    ).toMatchObject({
       clientX: 104,
       guideX: null,
       guideY: null,
+      duplicateRequested: false,
     });
   });
 

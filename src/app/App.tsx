@@ -183,7 +183,11 @@ export function App() {
     },
     selection: {
       nudgeSelection: (deltaX, deltaY) =>
-        dispatch({ type: "nudgeSelection", deltaX, deltaY }),
+        dispatch({
+          type: "nudgeSelection",
+          deltaX,
+          deltaY,
+        }),
       deleteSelection: () => dispatch({ type: "delete" }),
       toggleBoldSelection: () => dispatchBoldToggleSelection(),
       toggleItalicSelection: () =>

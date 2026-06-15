@@ -26,6 +26,8 @@ export {
 
 export type {
   BorderStyle,
+  ContainerChildBoundary,
+  ContainerLayout,
   ContainerNode,
   DescriptionListItem,
   DocumentFontFamily,

@@ -323,18 +323,34 @@ describe('stage/drag', () => {
       expect(result.guideY).toBeNull();
     });
 
-    it('inverts snap behavior with altKey', () => {
+    it('reserves Alt for duplicate intent and bypasses snap with Cmd/Ctrl', () => {
       const state = makeDragState();
-      // guideSnap.enabled = true, altKey = true -> should disable snap -> no guides
-      const result = resolveDragPointerPosition(state, 150, 120, {
+      const snapTargets = {
+        horizontal: [{ value: 140, source: 'page' as const, anchor: 'edge' as const }],
+        vertical: [],
+      };
+      const duplicateResult = resolveDragPointerPosition(state, 150, 120, {
         shiftKey: false,
         altKey: true,
         snapSettings: DEFAULT_SNAP_SETTINGS,
+        snapTargets,
         documentRef: { querySelectorAll: () => [] } as unknown as Document,
         windowRef: { getComputedStyle: () => ({}) } as unknown as Window,
       });
-      expect(result.guideX).toBeNull();
-      expect(result.guideY).toBeNull();
+      expect(duplicateResult.guideX).toBe(140);
+      expect(duplicateResult.duplicateRequested).toBe(true);
+
+      const bypassResult = resolveDragPointerPosition(state, 150, 120, {
+        shiftKey: false,
+        altKey: false,
+        metaKey: true,
+        snapSettings: DEFAULT_SNAP_SETTINGS,
+        snapTargets,
+        documentRef: { querySelectorAll: () => [] } as unknown as Document,
+        windowRef: { getComputedStyle: () => ({}) } as unknown as Window,
+      });
+      expect(bypassResult.guideX).toBeNull();
+      expect(bypassResult.guideY).toBeNull();
     });
 
     it('applies shift-lock before snapping', () => {

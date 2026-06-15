@@ -5,6 +5,7 @@ import type {
 	TextNode,
 	ViewportMeasurement,
 } from "../../model/types";
+import type { ParentExpansionRequest } from "../../api/documentApi";
 import type { AnimationPreviewState, SnapSettings } from "../../editor/types";
 import type { PageId } from "../../model/types/site";
 export type { AnimationPreviewState, SnapSettings };
@@ -44,14 +45,16 @@ export type StageProps = {
 	onSelect: (id: NodeId, mode?: "replace" | "toggle") => void;
 	onSelectMany?: (ids: NodeId[], mode: "replace" | "toggle") => void;
 	onClearSelection?: () => void;
-	onMove: (id: NodeId, x: string, y: string) => void;
+	onMove: (id: NodeId, x: string, y: string, options?: { parentExpansion?: ParentExpansionRequest }) => void;
 	onMoveSelection?: (
 		moves: Array<{ id: NodeId; x: string; y: string }>,
+		options?: { parentExpansion?: ParentExpansionRequest },
 	) => void;
-	onReparent: (id: NodeId, parentId: NodeId, x: string, y: string) => void;
+	onReparent: (id: NodeId, parentId: NodeId, x: string, y: string, options?: { parentExpansion?: ParentExpansionRequest }) => void;
 	onReparentSelection?: (
 		parentId: NodeId,
 		moves: Array<{ id: NodeId; x: string; y: string }>,
+		options?: { parentExpansion?: ParentExpansionRequest },
 	) => void;
 	onResize: (id: NodeId, width: string, height: string) => void;
 	onResizeStart: (id: NodeId) => void;
@@ -157,6 +160,8 @@ export type CachedSnapTargets = {
 export type DragResolutionOptions = {
 	shiftKey: boolean;
 	altKey: boolean;
+	metaKey?: boolean;
+	ctrlKey?: boolean;
 	snapSettings: SnapSettings;
 	snapTargets?: CachedSnapTargets;
 	documentRef?: Pick<Document, "querySelector" | "querySelectorAll">;

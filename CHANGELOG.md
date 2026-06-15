@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- revise stage drag placement model
+
 ### Changed
 
 - wrap showcase tour phase

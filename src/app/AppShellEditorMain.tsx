@@ -294,7 +294,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 										"toggleSnapEnabled",
 										shortcutPlatform,
 									)}
-									detail="Alt reverses while dragging"
+									detail="Cmd/Ctrl bypasses while dragging"
 									onClick={() =>
 										dispatch({
 											type: "setSnapSettings",
@@ -360,18 +360,18 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 							dispatch({ type: "selectMany", ids, mode })
 						}
 						onClearSelection={() => dispatch({ type: "clearSelection" })}
-						onMove={(id, x, y) => {
+						onMove={(id, x, y, options) => {
 							setLinkPopupVisible(false);
-							dispatch({ type: "move", id, x, y });
+							dispatch({ type: "move", id, x, y, options });
 						}}
-						onMoveSelection={(moves) =>
-							dispatch({ type: "moveSelection", moves })
+						onMoveSelection={(moves, options) =>
+							dispatch({ type: "moveSelection", moves, options })
 						}
-						onReparent={(id, parentId, x, y) =>
-							dispatch({ type: "reparent", id, parentId, x, y })
+						onReparent={(id, parentId, x, y, options) =>
+							dispatch({ type: "reparent", id, parentId, x, y, options })
 						}
-						onReparentSelection={(parentId, moves) =>
-							dispatch({ type: "reparentSelection", parentId, moves })
+						onReparentSelection={(parentId, moves, options) =>
+							dispatch({ type: "reparentSelection", parentId, moves, options })
 						}
 						onResize={(id, width, height) =>
 							dispatch({ type: "resize", id, width, height })
@@ -472,6 +472,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						}
 						onWrapperStyleChange={(field, value) =>
 							dispatch({ type: "wrapperStyle", field, value })
+						}
+						onContainerChildBoundaryChange={(value) =>
+							dispatch({ type: "containerChildBoundary", value })
 						}
 						onRectChange={(field, value) =>
 							dispatch({ type: "rect", field, value })

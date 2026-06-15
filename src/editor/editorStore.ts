@@ -39,6 +39,7 @@ export {
   moveNodeInTree,
   nudgeNode,
   resizeNode,
+  setContainerChildBoundary,
   reorderNode,
   reorderNodes,
   setNodeVisibility,

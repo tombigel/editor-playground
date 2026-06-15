@@ -530,8 +530,16 @@ export function getShortcutGestures(platform = getShortcutPlatform()): ShortcutG
       description: 'Keep ratio',
     },
     {
+      label: `${modLabel} + Drag`,
+      description: 'Bypass snap and parent expand',
+    },
+    {
+      label: `${modLabel} + Arrow`,
+      description: 'Nudge without parent expand',
+    },
+    {
       label: 'Alt + Drag',
-      description: 'Invert snap',
+      description: 'Duplicate (reserved)',
     },
   ];
 }
