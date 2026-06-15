@@ -2,6 +2,19 @@
 
 These rules apply to all AI assistants and human contributors working on this codebase.
 
+## Planning Extension
+
+These project rules extend any global planning defaults.
+
+When planning work in this repo:
+
+- Use the `implementation-plan` skill when a plan, task list, phased breakdown, or implementation roadmap is requested.
+- Include API-first boundaries in the plan: model/document API work before editor API work, and editor UI only after the core operation is available through `src/api/`.
+- For editor-facing UI changes, include design-system/style-guide review and prefer the `design-system-first` skill when available.
+- For important functional changes, include the matching `docs/PLAYGROUND_SPEC.md` and automated test updates in the same task.
+- Keep tasks scoped so each implementation task can be verified and committed independently.
+- End substantial or multi-file implementation plans with `pnpm run build` as the final gate.
+
 ## Architecture Boundary
 
 Maintain strict separation between the model, API, editor state, stage renderer, and site renderer so each layer can be replaced independently without requiring changes to the others.

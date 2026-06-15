@@ -1,6 +1,6 @@
 ---
 name: implementation-plan
-description: Use when a user asks for a detailed implementation plan, task list, clean-context subagents, parallel prep or verification waves, sequential commits, or a commit-after-each-task execution plan. Produces repo-aware plans with bounded tasks, agent types, verification gates, and clean commit boundaries.
+description: Use whenever the user asks for a plan, implementation plan, task list, roadmap, phased breakdown, prep wave, verification wave, clean-context subagents, parallelized work, or commit-by-task workflow. Produces repo-aware plans with bounded tasks, agent types, verification gates, and clean commit boundaries.
 user-invocable: true
 argument-hint: "[feature or fix request]"
 ---
@@ -21,7 +21,7 @@ Every plan should be concrete enough to execute without re-planning:
 
 ## Agent Use
 
-Only include subagents when the user asks for agents, delegation, clean contexts, or parallel agent work.
+For this repo, `AGENTS.md` planning defaults are standing authorization to include subagents when they materially improve the plan. Use them deliberately, not reflexively.
 
 Prefer simple agents:
 
