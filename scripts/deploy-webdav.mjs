@@ -34,6 +34,10 @@ async function uploadDirectory(localDir, remoteRelativePath) {
   const entries = await readdir(localDir, { withFileTypes: true });
 
   for (const entry of entries) {
+    if (shouldSkipDeployEntry(entry.name)) {
+      continue;
+    }
+
     const localEntryPath = path.join(localDir, entry.name);
     const remoteEntryPath = remoteRelativePath
       ? `${remoteRelativePath}/${entry.name}`
@@ -60,6 +64,10 @@ async function uploadDirectory(localDir, remoteRelativePath) {
 
     console.log(`Uploaded ${remoteEntryPath}`);
   }
+}
+
+function shouldSkipDeployEntry(name) {
+  return name === '.DS_Store';
 }
 
 async function deleteRemoteContents(collectionUrl) {
