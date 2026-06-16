@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - avoid panel drag listener churn
 - preserve auto parent height expansion
 - skip mac metadata files
+- keep local server rooted at slash
 
 ---
 

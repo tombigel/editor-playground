@@ -142,9 +142,10 @@ Required environment variables:
 - `WEBDAV_USER`: the WebDAV username
 - `WEBDAV_PASS`: the WebDAV password
 - `WEBDAV_BUILD_DIR`: optional, defaults to `dist`
-- `VITE_BASE_PATH`: set to `/editor/` for the Fastmail editor endpoint
+- `VITE_BASE_PATH`: set to `/editor/` for the Fastmail editor endpoint production build
 
-You can export them in your shell or add them to `.env.local`.
+You can export them in your shell or add them to `.env.local`. The dev server
+still serves the app at `/` even when `VITE_BASE_PATH` is configured.
 
 Deploy with:
 

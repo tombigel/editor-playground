@@ -40,11 +40,11 @@ if (process.env.ANALYZE === '1') {
   );
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    base: env.VITE_BASE_PATH || '/',
+    base: command === 'serve' ? '/' : env.VITE_BASE_PATH || '/',
     plugins,
     server: {
       headers: devHeaders,
