@@ -79,15 +79,18 @@ describe('panels/helpDocs', () => {
       anchor: 'placeholder',
     });
 
-    expect(resolveHelpLink('docs/API.md', '/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css', docPaths)).toEqual({
+    expect(resolveHelpLink('docs/API.md', '/Users/tombigel/Dev/Wix/editor-playground/src/styles.css', docPaths)).toEqual({
       kind: 'inert',
-      href: '/Users/tombigel/Dev/Wix/sticky-playground/src/styles.css',
+      href: '/Users/tombigel/Dev/Wix/editor-playground/src/styles.css',
     });
   });
 
   it('resolves docs assets relative to markdown paths', () => {
     expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', './assets/help-browser-overview.svg')).toBe(
       '/assets/help-docs/assets/help-browser-overview.svg',
+    );
+    expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', './assets/help-browser-overview.svg', '/editor/')).toBe(
+      '/editor/assets/help-docs/assets/help-browser-overview.svg',
     );
     expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', 'https://example.com/demo.png')).toBe(
       'https://example.com/demo.png',

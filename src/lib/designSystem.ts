@@ -18,8 +18,8 @@ export type DesignSystemThemeConfig = {
   accentColor: string;
 };
 
-export const DESIGN_SYSTEM_THEME_STORAGE_KEY = 'sticky-playground.design-system-theme.v1';
-export const DESIGN_SYSTEM_THEME_HANDOFF_KEY = 'sticky-playground.design-system-theme.handoff.v1';
+export const DESIGN_SYSTEM_THEME_STORAGE_KEY = 'editor-playground.design-system-theme.v1';
+export const DESIGN_SYSTEM_THEME_HANDOFF_KEY = 'editor-playground.design-system-theme.handoff.v1';
 export const DESIGN_SYSTEM_ROUTE_HASH = '#/design-system';
 
 export function normalizeDesignSystemThemeConfig(

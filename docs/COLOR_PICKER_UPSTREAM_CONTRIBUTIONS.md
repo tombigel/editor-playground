@@ -1,6 +1,6 @@
 # Color Picker Upstream Contribution Plan
 
-This document records the interfaces missing from the external `hdr-color-input` component that currently force Sticky Playground to rely on implementation details.
+This document records the interfaces missing from the external `hdr-color-input` component that currently force Editor Playground to rely on implementation details.
 
 It is a companion to [`DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`](./DESIGN_SYSTEM_CONVERGENCE_AUDIT.md), focused specifically on the shared color-picker primitive.
 

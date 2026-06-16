@@ -24,7 +24,7 @@ export const RICH_TOOLBAR_TOPBAR_HEIGHT_PX = 56;
 export const RICH_TOOLBAR_TOPBAR_GAP_PX = 8;
 export const RICH_TOOLBAR_ANCHOR_GAP_PX = 10;
 export const RICH_TOOLBAR_SESSION_KEY =
-	"sticky-playground.rich-toolbar-offset.v1";
+	"editor-playground.rich-toolbar-offset.v1";
 export const DEFAULT_RICH_TOOLBAR_OFFSET: RichToolbarOffset = { x: 0, y: 0 };
 
 export function normalizeRichToolbarOffset(

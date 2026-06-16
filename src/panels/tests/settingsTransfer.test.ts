@@ -11,10 +11,10 @@ import {
 
 describe('panels/settingsTransfer', () => {
   it('normalizes fallback file names for prompt-based export', () => {
-    expect(normalizeFileName('landing-page', 'sticky-playground-document.json')).toBe('landing-page.json');
-    expect(normalizeFileName(' report.json ', 'sticky-playground-document.json')).toBe('report.json');
-    expect(normalizeFileName('   ', 'sticky-playground-document.json')).toBe('sticky-playground-document.json');
-    expect(normalizeFileName('landing-page', 'sticky-playground-site.zip')).toBe('landing-page.zip');
+    expect(normalizeFileName('landing-page', 'editor-playground-document.json')).toBe('landing-page.json');
+    expect(normalizeFileName(' report.json ', 'editor-playground-document.json')).toBe('report.json');
+    expect(normalizeFileName('   ', 'editor-playground-document.json')).toBe('editor-playground-document.json');
+    expect(normalizeFileName('landing-page', 'editor-playground-site.zip')).toBe('landing-page.zip');
   });
 
   it('uses the save picker when it is available', async () => {

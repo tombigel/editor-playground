@@ -19,7 +19,7 @@ export function AboutContent({ onOpenHelpEntry }: { onOpenHelpEntry?: (entryId: 
   return (
     <div className="space-y-5 p-6">
       <div className="space-y-2">
-        <div className="editor-text-strong text-sm font-semibold">Sticky Playground</div>
+        <div className="editor-text-strong text-sm font-semibold">Editor Playground</div>
         <p className="editor-text-muted text-sm leading-6">
           A multi-page visual editor for sticky behavior, page authoring, preview, and export.
         </p>

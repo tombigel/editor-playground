@@ -1,4 +1,4 @@
-# Sticky Playground
+# Editor Playground
 
 This project is a local playground for defining and testing a sticky layout model.
 
@@ -138,10 +138,11 @@ This project includes a manual deploy command for replacing the contents of a We
 
 Required environment variables:
 
-- `WEBDAV_URL`: the full WebDAV URL of the deployed site directory
+- `WEBDAV_URL`: the full WebDAV URL of the deployed site directory, ending in `/editor/` for the Fastmail editor endpoint
 - `WEBDAV_USER`: the WebDAV username
 - `WEBDAV_PASS`: the WebDAV password
 - `WEBDAV_BUILD_DIR`: optional, defaults to `dist`
+- `VITE_BASE_PATH`: set to `/editor/` for the Fastmail editor endpoint
 
 You can export them in your shell or add them to `.env.local`.
 

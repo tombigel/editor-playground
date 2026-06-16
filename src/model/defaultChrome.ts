@@ -17,7 +17,7 @@ export function createDefaultHeader(parentId: NodeId) {
 
   const headerLogo = createTextNode(header.id, {
     name: 'Product Title',
-    content: 'Sticky Playground',
+    content: 'Editor Playground',
     x: '62px',
     y: '25.5px',
     width: 'max-content',
@@ -91,7 +91,7 @@ export function createDefaultFooter(parentId: NodeId) {
 
   const footerTitle = createTextNode(footer.id, {
     name: 'Footer Title',
-    content: 'Sticky Playground',
+    content: 'Editor Playground',
     x: '67px',
     y: '28px',
     width: 'max-content',
@@ -122,8 +122,8 @@ export function createDefaultFooter(parentId: NodeId) {
 
   const footerLink = createLinkNode(footer.id, {
     name: 'Repository Link',
-    label: 'github.com/tombigel/sticky-playground',
-    href: 'https://github.com/tombigel/sticky-playground',
+    label: 'github.com/tombigel/editor-playground',
+    href: 'https://github.com/tombigel/editor-playground',
     x: '866px',
     y: '48px',
     width: '322px',

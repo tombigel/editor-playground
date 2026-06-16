@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createTextNode } from '../../model/defaults';
-import { createTextDocumentFromCode, createTextDocumentFromText, getSingleCodeBlockContent, getTextContent } from '../../model/richContent';
+import { createTextDocumentFromCode, getSingleCodeBlockContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import type { DocumentModel, TextNode, ContainerNode } from '../../model/types';
 import {
@@ -771,26 +771,6 @@ describe('editor/editorPersistence', () => {
       expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
     });
 
-    it('migrates legacy repository links in imported documents', () => {
-      const doc = buildMinimalDocument();
-      // Find a link node and set legacy href
-      const linkNode = Object.values(doc.nodes).find(
-        (n) => n.contentType === 'text' && n.link != null,
-      );
-      if (linkNode && linkNode.contentType === 'text' && linkNode.link != null) {
-        linkNode.content = createTextDocumentFromText('github.com/tombigel/codex-playground');
-        linkNode.link = { ...(linkNode.link ?? { linkType: 'external' }), href: 'https://github.com/tombigel/codex-playground' };
-      }
-
-      const parsed = parseImportedDocumentJson(JSON.stringify(doc));
-      if (linkNode) {
-        const migrated = parsed.nodes[linkNode.id];
-        if (migrated?.contentType === 'text' && migrated.subtype === 'block') {
-          expect(getTextContent(migrated.content.blocks)).toBe('github.com/tombigel/sticky-playground');
-          expect(migrated.link?.href).toBe('https://github.com/tombigel/sticky-playground');
-        }
-      }
-    });
   });
 
   // ─── loadPersistedState edge cases ────────────────────────────────
@@ -1004,7 +984,7 @@ describe('parseImportedDocumentJson — schemaVersion checking', () => {
     const raw = JSON.stringify(doc);
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(() => parseImportedDocumentJson(raw)).not.toThrow();
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[sticky-playground]'));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[editor-playground]'));
     consoleSpy.mockRestore();
   });
 });

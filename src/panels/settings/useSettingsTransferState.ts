@@ -9,7 +9,7 @@ import {
   saveExportSiteZip,
 } from '../settingsTransfer';
 
-const DEFAULT_EXPORT_BASENAME = 'sticky-playground';
+const DEFAULT_EXPORT_BASENAME = 'editor-playground';
 
 type UseSettingsTransferStateParams = {
   document: DocumentModel;
@@ -151,7 +151,7 @@ async function loadSiteExportBundle(document: DocumentModel, exportFileName: str
 function getSiteTitle(fileName: string) {
   const trimmed = fileName.trim();
   if (!trimmed) {
-    return 'Sticky Playground Site';
+    return 'Editor Playground Site';
   }
-  return trimmed.replace(/\.[a-z0-9]+$/i, '') || 'Sticky Playground Site';
+  return trimmed.replace(/\.[a-z0-9]+$/i, '') || 'Editor Playground Site';
 }

@@ -2175,7 +2175,7 @@ describe('api/documentApi', () => {
     ).toBe('h2');
   });
 
-  it('seeds the default footer repository link with the sticky-playground repo url', () => {
+  it('seeds the default footer repository link with the editor-playground repo url', () => {
     const document = createInitialDocument();
     const repoLink = Object.values(document.nodes).find(
       (node) => node.contentType === 'text' && node.link != null && node.name === 'Repository Link',
@@ -2185,8 +2185,8 @@ describe('api/documentApi', () => {
       throw new Error('Expected repository link node');
     }
 
-    expect(getTextContent(repoLink.content.blocks)).toBe('github.com/tombigel/sticky-playground');
-    expect(repoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
+    expect(getTextContent(repoLink.content.blocks)).toBe('github.com/tombigel/editor-playground');
+    expect(repoLink.link?.href).toBe('https://github.com/tombigel/editor-playground');
   });
 
   it('moves and reparents positioned nodes through pure document APIs', () => {

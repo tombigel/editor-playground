@@ -1,6 +1,6 @@
 # Getting Started
 
-This is the beginning of the editor guide for Sticky Playground.
+This is the beginning of the editor guide for Editor Playground.
 
 The goal of this section is to grow into task-oriented documentation for real authoring work: creating pages, structuring content, editing on stage, previewing behavior, and exporting the result.
 

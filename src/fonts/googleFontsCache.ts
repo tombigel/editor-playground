@@ -1,7 +1,7 @@
 import type { GoogleFontsCatalog } from './types';
 import { isGoogleFontsCatalog } from './googleFontsValidation';
 
-export const GOOGLE_FONTS_CATALOG_CACHE_KEY = 'sticky-playground.google-fonts.catalog';
+export const GOOGLE_FONTS_CATALOG_CACHE_KEY = 'editor-playground.google-fonts.catalog';
 export const GOOGLE_FONTS_CATALOG_CACHE_VERSION = 1;
 export const GOOGLE_FONTS_CATALOG_REFRESH_AFTER_MS = 1000 * 60 * 60 * 24;
 

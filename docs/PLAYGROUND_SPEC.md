@@ -1,6 +1,6 @@
 # Playground Spec
 
-This document captures the editor and implementation model used by the sticky playground.
+This document captures the editor and implementation model used by the editor playground.
 
 Related documentation:
 

@@ -23,7 +23,7 @@ export function AboutDialog({
         <EditorPanelHeader
           icon={Info}
           title="About"
-          description="Sticky Playground editor shell."
+          description="Editor Playground editor shell."
           closeLabel="Close about"
           onClose={() => onOpenChange(false)}
         />

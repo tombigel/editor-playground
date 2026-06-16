@@ -18,7 +18,7 @@ describe('panels/HelpDialog', () => {
     expect(markup).toContain('Close help');
     expect(markup).toContain('data-help-entry="shortcuts"');
     expect(markup).toContain('About');
-    expect(markup).toContain('Sticky Playground');
+    expect(markup).toContain('Editor Playground');
     expect(markup).toContain('Guides');
     expect(markup).toContain('Reference');
     expect(markup).toContain('Developers');
@@ -38,7 +38,7 @@ describe('panels/HelpDialog', () => {
   it('defaults the documentation browser to the about page when no entry is requested', () => {
     const markup = renderToStaticMarkup(<HelpDialog open onOpenChange={() => {}} />);
 
-    expect(markup).toContain('Sticky Playground');
+    expect(markup).toContain('Editor Playground');
     expect(markup).toContain('data-help-entry-target="doc:docs/GETTING_STARTED.md"');
   });
 

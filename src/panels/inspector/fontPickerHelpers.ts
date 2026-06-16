@@ -18,7 +18,7 @@ export type OrderedFontFamilyGroups = {
 // Constants
 // ---------------------------------------------------------------------------
 
-export const RECENT_FONT_FAMILIES_STORAGE_KEY = 'sticky-playground.recent-font-families';
+export const RECENT_FONT_FAMILIES_STORAGE_KEY = 'editor-playground.recent-font-families';
 export const RECENT_FONT_FAMILIES_LIMIT = 8;
 
 // ---------------------------------------------------------------------------

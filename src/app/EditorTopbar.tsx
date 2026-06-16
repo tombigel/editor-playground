@@ -46,6 +46,7 @@ import {
 import type { DocumentPage, PageId } from "@/api/editorApi";
 import type { FocusedMode } from "@/editor/types";
 import { openDesignSystemShowcase } from "@/lib/designSystem";
+import { resolvePublicAssetUrl } from "@/lib/publicAssets";
 import type { ThemeMode } from "@/lib/theme";
 
 const DOCUMENTATION_ENTRY_ID = "about";
@@ -183,11 +184,13 @@ export function EditorTopbar({
 	return (
 		<div className={topbarClass} role="toolbar" aria-label="Editor toolbar">
 			<div className="editor-topbar-menubar-row">
-				<img
-					src="/sticky_512.png"
-					alt=""
-					className="h-8 w-8 shrink-0 object-contain"
-				/>
+				<div className="editor-topbar-brand" aria-hidden="true">
+					<img
+						src={resolvePublicAssetUrl("editor-playground-wordmark-stacked.png")}
+						alt=""
+						className="h-full w-full object-contain"
+					/>
+				</div>
 
 				<Menubar className="min-w-0 flex-1">
 					<MenubarMenu id="settings">

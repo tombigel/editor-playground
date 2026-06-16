@@ -236,7 +236,7 @@ describe("app/AppShell", () => {
 
 		expect(markup).toContain('data-help-entry="shortcuts"');
 		expect(markup).toContain("Browse docs");
-		expect(markup).toContain("Sticky Playground");
+		expect(markup).toContain("Editor Playground");
 		expect(markup).toContain("Keyboard shortcuts");
 		expect(markup).toContain("Guides");
 		expect(markup).toContain("Getting Started");
@@ -246,7 +246,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Workflows");
 		expect(markup).toContain("Close shortcuts");
 		expect(markup).toContain("Close about");
-		expect(markup).toContain("Sticky Playground");
+		expect(markup).toContain("Editor Playground");
 	});
 
 	it("renders the focused panel at its stored viewport offset from the workspace-aligned default", () => {

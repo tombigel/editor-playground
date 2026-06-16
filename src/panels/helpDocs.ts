@@ -1,5 +1,6 @@
 import helpDocsManifest from './generated/helpDocsManifest.json';
 import { HELP_DOC_REGISTRY, type HelpDocAlias, type HelpDocRegistryEntry } from './helpDocRegistry';
+import { resolvePublicAssetUrl } from '../lib/publicAssets';
 
 type HelpDocManifestEntry = {
   path: string;
@@ -242,7 +243,7 @@ export function resolveHelpLink(currentPath: string, href: string, availableDocP
   };
 }
 
-export function resolveHelpAssetUrl(currentPath: string, src: string) {
+export function resolveHelpAssetUrl(currentPath: string, src: string, baseUrl = import.meta.env.BASE_URL) {
   const trimmedSrc = src.trim();
   if (!trimmedSrc) {
     return null;
@@ -258,7 +259,7 @@ export function resolveHelpAssetUrl(currentPath: string, src: string) {
     return null;
   }
 
-  return `/assets/help-docs/${resolvedPath.slice(prefix)}`;
+  return resolvePublicAssetUrl(`assets/help-docs/${resolvedPath.slice(prefix)}`, baseUrl);
 }
 
 export function extractMarkdownHeadings(raw: string): HelpHeading[] {
@@ -340,7 +341,7 @@ function getMaterializedHelpData(): MaterializedHelpData {
       navVisibility: 'secondary',
       path: manifestEntry.path,
       fileName: manifestEntry.fileName,
-      assetUrl: manifestEntry.assetUrl,
+      assetUrl: resolvePublicAssetUrl(manifestEntry.assetUrl),
       aliases: [],
     });
   }
@@ -419,7 +420,7 @@ function materializeRegistryEntry(
     navVisibility: entry.navVisibility ?? 'primary',
     path: manifestEntry.path,
     fileName: manifestEntry.fileName,
-    assetUrl: manifestEntry.assetUrl,
+    assetUrl: resolvePublicAssetUrl(manifestEntry.assetUrl),
     aliases: entry.aliases ?? [],
   };
 }

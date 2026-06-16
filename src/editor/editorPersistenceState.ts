@@ -24,9 +24,9 @@ import { normalizeSelectedIds } from "./selection";
 import type { EditorState } from "./types";
 import { DEFAULT_SNAP_SETTINGS } from "./types";
 
-export const STORAGE_KEY = "sticky-playground.editor-state.v2";
+export const STORAGE_KEY = "editor-playground.editor-state.v2";
 export const DEFAULT_DOCUMENT_STORAGE_KEY =
-	"sticky-playground.default-document.v1";
+	"editor-playground.default-document.v1";
 
 export function createInitialState(): EditorState {
 	const ui = createDefaultUiState();
@@ -275,7 +275,7 @@ export function parseImportedDocumentJson(raw: string): DocumentModel {
 		storedVersion !== DOCUMENT_MODEL_VERSION
 	) {
 		console.warn(
-			`[sticky-playground] Document schema version mismatch: stored ${storedVersion}, current ${DOCUMENT_MODEL_VERSION}. Attempting import anyway.`,
+			`[editor-playground] Document schema version mismatch: stored ${storedVersion}, current ${DOCUMENT_MODEL_VERSION}. Attempting import anyway.`,
 		);
 	}
 

@@ -11,7 +11,7 @@ describe('version bump helpers', () => {
     const updated = syncPackageJsonVersion(
       JSON.stringify(
         {
-          name: 'sticky-playground',
+          name: 'editor-playground',
           private: true,
           version: '0.6.1',
         },
@@ -22,7 +22,7 @@ describe('version bump helpers', () => {
     );
 
     expect(JSON.parse(updated)).toMatchObject({
-      name: 'sticky-playground',
+      name: 'editor-playground',
       private: true,
       version: '0.6.2',
     });

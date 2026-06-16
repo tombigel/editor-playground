@@ -2,8 +2,8 @@ import type { ActionResult, SavePickerWindow } from './types';
 
 export type { ActionResult, SaveFilePickerHandle, SavePickerWindow } from './types';
 
-export const DEFAULT_EXPORT_FILE_NAME = 'sticky-playground-document.json';
-export const DEFAULT_SITE_EXPORT_ZIP_FILE_NAME = 'sticky-playground-site.zip';
+export const DEFAULT_EXPORT_FILE_NAME = 'editor-playground-document.json';
+export const DEFAULT_SITE_EXPORT_ZIP_FILE_NAME = 'editor-playground-site.zip';
 
 
 export function normalizeFileName(input: string, fallback: string) {

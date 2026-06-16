@@ -41,5 +41,8 @@ describe('panels/HelpMarkdownDocument', () => {
     expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', './assets/help-browser-overview.svg')).toBe(
       '/assets/help-docs/assets/help-browser-overview.svg',
     );
+    expect(resolveHelpAssetUrl('docs/GETTING_STARTED.md', './assets/help-browser-overview.svg', '/editor/')).toBe(
+      '/editor/assets/help-docs/assets/help-browser-overview.svg',
+    );
   });
 });

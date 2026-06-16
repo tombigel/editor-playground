@@ -9,7 +9,6 @@ import {
 	createTextNode,
 	syncIdCountersWithDocument,
 } from "../model/defaults";
-import { getLinkHref } from "../model/links";
 import {
 	createTextDocumentFromCode,
 	createTextDocumentFromText,
@@ -124,7 +123,6 @@ export function normalizeDocument(document: DocumentModel): DocumentModel {
 	upgradeLegacyStarterSection(normalized);
 	upgradeLegacyStarterShell(normalized);
 	normalizeStarterShellTextTags(normalized);
-	renameRepositoryLinks(normalized);
 	return normalized;
 }
 
@@ -197,25 +195,6 @@ function createUniqueLinkTextNode(document: DocumentModel, parentId: NodeId) {
 	return node;
 }
 
-function renameRepositoryLinks(document: DocumentModel) {
-	for (const node of Object.values(document.nodes)) {
-		if (!isTextNode(node) || !node.link) {
-			continue;
-		}
-
-		if (getNodePlainText(node) === "github.com/tombigel/codex-playground") {
-			setNodePlainText(node, "github.com/tombigel/sticky-playground");
-		}
-
-		if (
-			node.link &&
-			getLinkHref(node.link) === "https://github.com/tombigel/codex-playground"
-		) {
-			node.link.href = "https://github.com/tombigel/sticky-playground";
-		}
-	}
-}
-
 function upgradeLegacyStarterShell(document: DocumentModel) {
 	const root = document.nodes[document.rootId];
 	if (!root || !isSiteNode(root)) {
@@ -248,14 +227,14 @@ function normalizeStarterShellTextTags(document: DocumentModel) {
 
 		if (
 			node.name === "Product Title" &&
-			getNodePlainText(node) === "Sticky Playground"
+			getNodePlainText(node) === "Editor Playground"
 		) {
 			node.htmlTag = "h1";
 		}
 
 		if (
 			node.name === "Footer Title" &&
-			getNodePlainText(node) === "Sticky Playground"
+			getNodePlainText(node) === "Editor Playground"
 		) {
 			node.htmlTag = "h2";
 		}
@@ -372,7 +351,7 @@ function isLegacyHeader(document: DocumentModel, header: ContainerNode) {
 			isTextNode(node) &&
 			!node.link &&
 			node.name === "Product Title" &&
-			getNodePlainText(node) === "Sticky Playground",
+			getNodePlainText(node) === "Editor Playground",
 	);
 	if (hasLegacyModernMark && hasStarterTitle) {
 		return true;
@@ -383,7 +362,7 @@ function isLegacyHeader(document: DocumentModel, header: ContainerNode) {
 			isTextNode(node) &&
 			!node.link &&
 			node.name === "Product Title" &&
-			getNodePlainText(node) === "Sticky Playground",
+			getNodePlainText(node) === "Editor Playground",
 	);
 	const titleX = textOnlyStarterTitle
 		? parseFloat(textOnlyStarterTitle.rect.x.base.raw) || 0
@@ -446,7 +425,7 @@ function applyModernHeader(document: DocumentModel, header: ContainerNode) {
 
 	const title = createUniqueTextNode(document, header.id);
 	title.name = "Product Title";
-	setNodePlainText(title, "Sticky Playground");
+	setNodePlainText(title, "Editor Playground");
 	title.rect = createDefaultRect("62px", "25.5px", "max-content", "auto");
 	title.style ??= {};
 	title.style.color = "#0f172a";
@@ -517,7 +496,7 @@ function applyModernFooter(document: DocumentModel, footer: ContainerNode) {
 
 	const title = createUniqueTextNode(document, footer.id);
 	title.name = "Footer Title";
-	setNodePlainText(title, "Sticky Playground");
+	setNodePlainText(title, "Editor Playground");
 	title.rect = createDefaultRect("67px", "28px", "max-content", "auto");
 	title.style ??= {};
 	title.style.color = "#0f172a";
@@ -540,10 +519,10 @@ function applyModernFooter(document: DocumentModel, footer: ContainerNode) {
 
 	const repoLink = createUniqueLinkTextNode(document, footer.id);
 	repoLink.name = "Repository Link";
-	setNodePlainText(repoLink, "github.com/tombigel/sticky-playground");
+	setNodePlainText(repoLink, "github.com/tombigel/editor-playground");
 	repoLink.link = {
 		linkType: "external",
-		href: "https://github.com/tombigel/sticky-playground",
+		href: "https://github.com/tombigel/editor-playground",
 		openInNewTab: true,
 	};
 	repoLink.rect = createDefaultRect("866px", "48px", "322px", "24px");

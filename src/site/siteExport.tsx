@@ -12,9 +12,9 @@ import type { SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteMa
 export type { SiteExportBundle, SiteExportOptions, SitePageExportBundle, RouteManifest } from './types';
 export { resolvePageUrl } from '../model/pageRoutes';
 
-const DEFAULT_SITE_TITLE = 'Sticky Playground Site';
-export const DEFAULT_SITE_HTML_FILE_NAME = 'sticky-playground-site.html';
-export const DEFAULT_SITE_CSS_FILE_NAME = 'sticky-playground-site.css';
+const DEFAULT_SITE_TITLE = 'Editor Playground Site';
+export const DEFAULT_SITE_HTML_FILE_NAME = 'editor-playground-site.html';
+export const DEFAULT_SITE_CSS_FILE_NAME = 'editor-playground-site.css';
 
 const INTERACT_CDN_URL = 'https://unpkg.com/@wix/interact@2.1.4/dist/es/web.js';
 const MOTION_PRESETS_CDN_URL = 'https://unpkg.com/@wix/motion-presets@1.0.0/dist/es/motion-presets.js';

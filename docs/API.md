@@ -1033,7 +1033,7 @@ type ResponsiveValue<T> = { base: T; tablet?: T; mobile?: T };
 
 ## Versioning
 
-Sticky Playground tracks four independent semver versions, all defined in `src/lib/version.ts`.
+Editor Playground tracks four independent semver versions, all defined in `src/lib/version.ts`.
 
 | Constant | Tracks |
 | --- | --- |

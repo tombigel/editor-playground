@@ -83,7 +83,7 @@ export function TransferSettingsSection({
               <Input
                 value={transfer.exportFileName}
                 onChange={(event) => transfer.setExportFileName(event.target.value)}
-                placeholder="sticky-playground"
+                placeholder="editor-playground"
                 className="text-sm"
               />
             </div>

@@ -541,44 +541,6 @@ describe('editor/editorStore integration', () => {
     }
   });
 
-  it('migrates persisted repository links to the sticky-playground repo', () => {
-    const windowStub = createWindowStorageStub();
-    vi.stubGlobal('window', windowStub);
-    const { localStorage } = windowStub;
-
-    const state = createInitialState();
-    const nextDocument = structuredClone(state.document);
-    const repoLink = Object.values(nextDocument.nodes).find(
-      (node) => node.contentType === 'text' && node.link != null && node.name === 'Repository Link',
-    );
-    if (!repoLink || repoLink.contentType !== 'text' || repoLink.link == null) {
-      throw new Error('Expected repository link');
-    }
-
-    repoLink.content = createTextDocumentFromText('github.com/tombigel/codex-playground');
-    repoLink.link = { ...(repoLink.link ?? { linkType: 'external' }), href: 'https://github.com/tombigel/codex-playground' };
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        ...state,
-        document: nextDocument,
-      }),
-    );
-
-    const loaded = loadPersistedState();
-    const migratedRepoLink = Object.values(loaded.document.nodes).find(
-      (node) => node.contentType === 'text' && node.link != null && node.name === 'Repository Link',
-    );
-
-    if (!migratedRepoLink || migratedRepoLink.contentType !== 'text' || migratedRepoLink.link == null) {
-      throw new Error('Expected migrated repository link node');
-    }
-
-    expect(getTextContent(migratedRepoLink.content.blocks)).toBe('github.com/tombigel/sticky-playground');
-    expect(migratedRepoLink.link?.href).toBe('https://github.com/tombigel/sticky-playground');
-  });
-
   it('migrates legacy header and footer text tags to semantic defaults', () => {
     const windowStub = createWindowStorageStub();
     vi.stubGlobal('window', windowStub);

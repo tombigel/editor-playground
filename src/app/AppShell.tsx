@@ -577,7 +577,7 @@ export function AppShell({
 		for (const bundle of bundles) {
 			files[bundle.path] = bundle.htmlDocument;
 		}
-		await saveExportSiteZip(files, { fileName: "sticky-playground-site.zip" });
+		await saveExportSiteZip(files, { fileName: "editor-playground-site.zip" });
 	}
 
 	const selectedLinkNode = (() => {

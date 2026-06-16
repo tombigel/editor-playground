@@ -22,7 +22,7 @@ import { buildEditorGoogleFontsStylesheetHref } from '../api/fontApi';
 import type { HistoryAction } from './types';
 import { useApplyEditorTheme, useScrollSelectedNodeIntoView } from './useEditorEnvironment';
 
-const EDITOR_FONT_LINK_ID = 'sticky-playground-google-fonts';
+const EDITOR_FONT_LINK_ID = 'editor-playground-google-fonts';
 
 export function useAppRuntime(
   state: EditorState,

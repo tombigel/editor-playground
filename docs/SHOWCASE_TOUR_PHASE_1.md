@@ -5,7 +5,7 @@ It is intentionally written before implementation so Tom can verify the story an
 
 ## Goal
 
-The tour should help a job-search visitor understand Sticky Playground as portfolio evidence for a Design Engineer / Creative Technologist:
+The tour should help a job-search visitor understand Editor Playground as portfolio evidence for a Design Engineer / Creative Technologist:
 
 - UX and editor craft: direct manipulation, progressive disclosure, useful chrome, and workflow ergonomics.
 - API and architecture: model/API/editor/stage/site separation, import/export, and documented contracts.

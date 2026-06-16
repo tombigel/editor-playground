@@ -27,6 +27,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - short-circuit node deep-compare on reference equality
 - restore drag listener dep arrays in LayersPanel and PageTreeContent
 - clarify child overflow naming
+- rename to editor playground
 
 ### Fixed
 
