@@ -435,9 +435,9 @@ Source: `src/api/documentApi.ts`
 | `reparentNodesAtDoc` | `(document, parentId, moves, options?) -> DocumentModel` | Reparent multiple nodes and set local authored coordinates, optionally growing the target parent |
 | `expandParentHeightDoc` | `(document, { parentId, minHeightPx }) -> DocumentModel` | Grow a container height to at least the requested px size, preserving authored `auto` height |
 | `resolveContainerChildBoundary` | `(document, containerId) -> ContainerChildBoundary` | Resolve a wrapper policy, defaulting to `anchor` |
-| `setContainerChildBoundaryDoc` | `(document, containerId, childBoundary) -> DocumentModel` | Set wrapper child-boundary policy |
+| `setContainerChildBoundaryDoc` | `(document, containerId, childBoundary) -> DocumentModel` | Set wrapper child overflow policy |
 
-These helpers are the API-first surface used by editor drag/drop and keyboard movement. They keep movement and reparent placement deterministic without depending on stage DOM state. Movement and reparent helpers accept `options.parentExpansion?: { parentId, minHeightPx }` so an anchor-boundary drag commit can move the child and grow the parent in one model mutation. Parents with authored `auto` height ignore expansion requests and keep their authored height value.
+These helpers are the API-first surface used by editor drag/drop and keyboard movement. They keep movement and reparent placement deterministic without depending on stage DOM state. Movement and reparent helpers accept `options.parentExpansion?: { parentId, minHeightPx }` so an `anchor` / Allow overflow drag commit can move the child and grow the parent in one model mutation. Parents with authored `auto` height ignore expansion requests and keep their authored height value.
 
 ---
 
@@ -634,9 +634,9 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | --- | --- | --- |
 | `moveNode` | `(state, nodeId, { x?, y? }) -> EditorState` | Move a node to absolute authored coordinates |
 | `moveNodes` | `(state, moves) -> EditorState` | Move multiple nodes to absolute authored coordinates |
-| `nudgeNode` | `(state, nodeId, { x, y }) -> EditorState` | Nudge by keyboard delta through the same child-boundary and parent-expansion policy as drag/drop |
+| `nudgeNode` | `(state, nodeId, { x, y }) -> EditorState` | Nudge by keyboard delta through the same child overflow and parent-expansion policy as drag/drop |
 | `resizeNode` | `(state, nodeId, { width?, height? }) -> EditorState` | Resize by authored size patch |
-| `setContainerChildBoundary` | `(state, nodeId, childBoundary) -> EditorState` | Set wrapper child-boundary policy |
+| `setContainerChildBoundary` | `(state, nodeId, childBoundary) -> EditorState` | Set wrapper child overflow policy |
 
 ### Reorder and reparent
 
@@ -793,7 +793,7 @@ type ContainerLayout = {
 type ContainerChildBoundary = 'anchor' | 'box';
 ```
 
-Missing `childBoundary` resolves to `'anchor'`. `anchor` keeps a child's `x`,`y` origin inside the wrapper content box while allowing the child body to overflow. `box` keeps the full child box inside the content box.
+Missing `childBoundary` resolves to `'anchor'`. The inspector labels this policy as **Child overflow**: `anchor` is shown as **Allow overflow** and keeps a child's `x`,`y` origin inside the wrapper content box while allowing the child body to overflow; `box` is shown as **Keep inside** and keeps the full child box inside the content box.
 
 Drag/drop may also request parent height growth through:
 

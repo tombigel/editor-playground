@@ -143,6 +143,9 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).toContain('>X<');
     expect(markup).toContain('>Y<');
     expect(markup).toContain('>Padding<');
+    expect(markup).toContain('>Child overflow<');
+    expect(markup).toContain('aria-label="Child overflow"');
+    expect(markup).not.toContain('Child bounds');
     expect(markup).toContain('value="16"');
   });
 

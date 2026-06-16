@@ -371,18 +371,18 @@ export function NodeBasicsSection({
       ) : null}
 
       {wrapperPaddingNode ? (
-        <FormField label="Child bounds" layout="inline">
+        <FormField label="Child overflow" layout="inline">
           <Select
             size="compact"
             value={wrapperPaddingNode.layout?.childBoundary ?? 'anchor'}
             onValueChange={(value) => actions.onContainerChildBoundaryChange(value as ContainerChildBoundary)}
           >
-            <SelectTrigger size="compact" aria-label="Child bounds">
+            <SelectTrigger size="compact" aria-label="Child overflow">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="anchor">Origin inside</SelectItem>
-              <SelectItem value="box">Box inside</SelectItem>
+              <SelectItem value="anchor">Allow overflow</SelectItem>
+              <SelectItem value="box">Keep inside</SelectItem>
             </SelectContent>
           </Select>
         </FormField>

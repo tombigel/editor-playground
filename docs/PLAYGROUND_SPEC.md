@@ -312,20 +312,20 @@ Drag preview and drop targeting:
 - Highlighted drop targets with non-zero wrapper padding also render the padding boundary line so the drop inset is visible.
 - While dragging a child inside its current parent, that source parent and its ancestors are not highlighted as drop targets.
 - When dragging a `container` wrapper, its structural source parent (`section`, `header`, `footer`) may still highlight.
-- Each wrapper has a child-boundary policy. The default `anchor` policy keeps the child origin (`x`,`y`) inside the target content box while allowing the child body to peek outside. The optional `box` policy keeps the full child box inside the target content box.
-- With the default `anchor` child-boundary policy, dragging below the target wrapper's bottom edge commits the resolved child position and grows the parent height enough to contain the preview bottom. Parents authored with `auto` height preserve `auto` instead of receiving a generated pixel height. The optional `box` policy keeps the full child box inside the target content box instead.
+- Each wrapper has a **Child overflow** policy. The default **Allow overflow** option maps to `anchor`: the child origin (`x`,`y`) stays inside the target content box while the child body may peek outside. **Keep inside** maps to `box`: the full child box stays inside the target content box.
+- With the default **Allow overflow** / `anchor` policy, dragging below the target wrapper's bottom edge commits the resolved child position and grows the parent height enough to contain the preview bottom. Parents authored with `auto` height preserve `auto` instead of receiving a generated pixel height. **Keep inside** / `box` keeps the full child box inside the target content box instead.
 
 ### Drag implementation details
 
 - Drag preview placement resolves from the pointer grab offset captured at drag start, with an additional visual-shift correction path for sticky-shifted nodes.
 - Drag update resolves the exact placement that the preview displays; pointer-up commits that resolved placement without running snap or drop-target resolution a second time.
-- Parent expansion is part of the resolved placement for anchor-boundary drops. Commit applies the move/reparent and parent height growth as one document mutation, except authored `auto` parent height remains `auto`.
+- Parent expansion is part of the resolved placement for **Allow overflow** / `anchor` drops. Commit applies the move/reparent and parent height growth as one document mutation, except authored `auto` parent height remains `auto`.
 - Grouped drag commits as a single bulk move action, but only for the subset of the selection that shares the clicked node's parent wrapper.
 - Grouped same-parent drag preserves relative offsets. Grouped reparent can move the same-parent selection into a valid target wrapper while preserving relative offsets.
 - Marquee selection started from a top-level structural wrapper (`section`, `header`, `footer`) filters hits to direct children of that wrapper.
 - Drop target detection resolves from `elementFromPoint(...)` and walks ancestor `data-drop-wrapper-id` markers until it finds a valid wrapper parent.
 - Drop target highlighting prefers the deepest valid hovered target and suppresses ancestor promotion while the pointer remains inside the current source parent during child drags.
-- Reparent commit position derives from the highlighted wrapper's content box, the captured drag grab offset, and the wrapper child-boundary policy.
+- Reparent commit position derives from the highlighted wrapper's content box, the captured drag grab offset, and the wrapper child overflow policy.
 - Valid drop targets receive a transient `drop-target` class on hover, and that class clears on drag end or pointer leave.
 
 ### Resize behavior
@@ -1326,7 +1326,7 @@ State persistence:
 
 ### Stage interaction
 
-- The stage is one keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current primary selection scrolls into view when needed, and arrow keys nudge positioned components. Keyboard nudging uses the same child-boundary policy as drag/drop; nudging an anchor-boundary child downward past a fixed parent bottom grows the parent, while a `box` boundary clamps the full child box inside.
+- The stage is one keyboard focus scope: `Tab` walks selectable nodes in DOM order, the current primary selection scrolls into view when needed, and arrow keys nudge positioned components. Keyboard nudging uses the same child overflow policy as drag/drop; nudging an **Allow overflow** / `anchor` child downward past a fixed parent bottom grows the parent, while **Keep inside** / `box` clamps the full child box inside.
 - The stage suppresses native browser drag and drop plus text-selection drag initiation so component moves always route through the editor drag system.
 - Pointer selection does not commit drag or reparent work until the pointer moves beyond click jitter, so repeated clicks on auto-sized content do not trigger drag remeasurement.
 - Intrinsic-height leaf nodes align to the start of their mesh slot instead of stretching to the full row span, so text selection boxes hug rendered copy.

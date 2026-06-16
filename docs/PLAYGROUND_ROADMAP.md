@@ -83,6 +83,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
 | `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
 | `RI-42` | `✅ Done` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Anchor/box child boundaries, deterministic drag commit, and modifier cleanup delivered |
+| `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
 | `RI-13` | `⚪ Not started` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | Human | - |
 | `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | - |
 | `RI-16` | `⚪ Not started` | [User management](#user-management) | `🔵 Low` | Platform | Human | - |
@@ -158,6 +159,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-41` document view API and architecture boundary enforcement — all UI model reads should route through a dedicated `documentViewApi` layer rather than reaching into editor state directly; an automated architecture check script should enforce the boundary at CI time
 - `RI-42` drag and drop boundary maintenance — current drag rules confine elements into the padded content area of their container; by default authors should be able to drag elements so they stick out past container boundaries, with the boundary acting as snap/alignment guidance, plus an explicit hard-confinement option for stricter layouts
 - `RI-43` unplanned showcase tour phase — add a guided, non-linear overlay that makes the editor understandable as job-search/portfolio evidence and exposes sticky, editor craft, API, design-system, text, animation, pages, validation, and docs surfaces
+- `RI-44` parent expansion height unit policy — decide how API/editor parent expansion should handle authored height units beyond px and auto, especially aspect-ratio and viewport/percentage units, without silently rewriting user-authored sizing intent
 
 ## Structured Roadmap
 
@@ -296,7 +298,7 @@ None yet.
 - `Status`: `Done`
 - `Source`: `RI-42`
 - `Why it matters`: Dragging is a core authoring operation, and strict confinement to a wrapper's padded content area prevents common overlapping, offset, and breakout layouts. Container edges should guide layout by default, not silently block expressive placement.
-- `Current state`: **Complete** — wrappers now resolve a `childBoundary` policy from the document model. Missing values default to `anchor`, which keeps the child origin inside the content box while allowing the body to overflow; `box` keeps the full child box inside. Drag update stores one resolved placement for preview and commit, pointer-up no longer recomputes snap/drop/bounds, keyboard nudging uses the same boundary policy, and mesh layout preserves allowed right/bottom overflow. The inspector exposes the policy as a Layout control. Anchor-boundary downward drag and keyboard movement can grow the parent through the same resolved placement commit.
+- `Current state`: **Complete** — wrappers now resolve a `childBoundary` policy from the document model. The inspector labels it **Child overflow**: `anchor` / **Allow overflow** keeps the child origin inside the content box while allowing the body to overflow; `box` / **Keep inside** keeps the full child box inside. Drag update stores one resolved placement for preview and commit, pointer-up no longer recomputes snap/drop/bounds, keyboard nudging uses the same boundary policy, and mesh layout preserves allowed right/bottom overflow. Allow overflow downward drag and keyboard movement can grow the parent through the same resolved placement commit.
 - `Target behavior`: Delivered. Default drag boundaries behave as soft origin constraints plus snap/alignment guidance, and hard confinement remains available through the explicit `box` policy.
 - `Next move`: Implement duplicate-drag through a pure duplicate document API, then connect the existing `Alt` / `Option` duplicate-requested drag stub to that operation.
 
@@ -466,7 +468,18 @@ None yet.
 
 #### Research
 
-None yet.
+##### Parent expansion height unit policy
+
+- `Type`: `Research`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-44`
+- `Dependencies`: `RI-42`
+- `Why it matters`: Parent expansion is now an API-level effect used by drag/drop and keyboard nudging, so height-unit behavior must be deterministic and explainable. Silently converting authored units such as `%`, `vh`, `vmin`, `vmax`, or `aspect-ratio(...)` into pixels can surprise authors and break responsive or ratio-based intent.
+- `Current state`: `px` parents can expand, and authored `auto` parent height is preserved. Other non-px height modes still need an explicit policy.
+- `Recommendation to evaluate`: Current engineering recommendation is: keep `px` expansion as-is; preserve `auto`; do not auto-expand `aspect-ratio(...)` because writing a pixel height destroys the ratio contract; do not silently convert `%`, `vh`, `vmin`, or `vmax` to px. Prefer either no-op expansion for those units or an explicit API result/policy that tells the caller expansion was not applied.
+- `Alternative approaches`: This does not have to be solved only by no-op expansion. Evaluate whether `min-height` / `max-height`, an authored overflow policy, a parent auto-sizing mode, or another explicit model field would better preserve user intent while still allowing drag/drop and keyboard movement to feel predictable.
+- `Next move`: Decide the canonical document/API contract first, then update editor behavior, renderer parity, docs, and tests around that contract.
 
 ### Priority: Low
 

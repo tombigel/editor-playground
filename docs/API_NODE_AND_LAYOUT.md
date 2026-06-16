@@ -38,14 +38,14 @@ Primary source: `src/api/documentApi.ts`
 - `moveNodesDoc(document, moves, options?)` applies multiple authored `x` / `y` coordinate updates in one pure document mutation.
 - `expandParentHeightDoc(document, { parentId, minHeightPx })` grows a container height without moving children. Authored `auto` height is preserved.
 
-The move and reparent-at-position helpers accept `options.parentExpansion?: { parentId, minHeightPx }`. Drag/drop uses this to commit child placement and parent height growth together for default anchor-boundary downward drops. When the parent height is authored as `auto`, the movement still commits and the height remains `auto`.
+The move and reparent-at-position helpers accept `options.parentExpansion?: { parentId, minHeightPx }`. Drag/drop uses this to commit child placement and parent height growth together for default `anchor` / Allow overflow downward drops. When the parent height is authored as `auto`, the movement still commits and the height remains `auto`.
 
 ### Container Child Boundaries
 
-- `resolveContainerChildBoundary(document, containerId)` returns a wrapper's child-boundary policy, defaulting missing values to `'anchor'`.
+- `resolveContainerChildBoundary(document, containerId)` returns a wrapper's child overflow policy, defaulting missing values to `'anchor'`.
 - `setContainerChildBoundaryDoc(document, containerId, childBoundary)` writes the policy for a container node.
 
-`ContainerChildBoundary` is `'anchor' | 'box'`. `anchor` keeps the child origin inside the container content box while allowing the child body to overflow. `box` keeps the full child box inside the content box.
+`ContainerChildBoundary` is `'anchor' | 'box'`. The inspector labels this setting **Child overflow**: `anchor` is shown as **Allow overflow** and keeps the child origin inside the container content box while allowing the child body to overflow; `box` is shown as **Keep inside** and keeps the full child box inside the content box.
 
 ### Sticky Behavior
 
