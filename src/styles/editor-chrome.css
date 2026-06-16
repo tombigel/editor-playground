@@ -461,15 +461,26 @@ a.editor-pill-subtle:focus-visible {
 
 .editor-topbar-brand {
   display: flex;
-  width: 116px;
-  height: 40px;
-  flex: 0 0 116px;
+  width: 96px;
+  height: 42px;
+  flex: 0 0 96px;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--editor-topbar-button-border) 55%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--editor-topbar-text) 92%, transparent);
-  padding: 4px 8px;
+  color: var(--editor-topbar-text);
+  padding: 2px 0;
+}
+
+.editor-topbar-brand-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
 }
 
 .editor-topbar-actions {

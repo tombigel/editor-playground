@@ -13,6 +13,18 @@ describe("design-system/showcase variants", () => {
 		expect(markup).toContain('data-hidden="true"');
 	});
 
+	it("shows all Editor Playground logo asset variants", () => {
+		const markup = renderToStaticMarkup(<MiscDemos />);
+
+		expect(markup).toContain('id="base-logo-assets"');
+		expect(markup).toContain("editor-playground-logo-favicon.svg");
+		expect(markup).toContain("editor-playground-logo-favicon-monochrome.svg");
+		expect(markup).toContain("editor-playground-logo-one-line.svg");
+		expect(markup).toContain("editor-playground-logo-one-line-monochrome.svg");
+		expect(markup).toContain("editor-playground-logo-two-lines.svg");
+		expect(markup).toContain("editor-playground-logo-two-lines-monochrome.svg");
+	});
+
 	it("renders searchable select sections after Dropdown (Select)", () => {
 		const markup = renderToStaticMarkup(<FontControlDemos />);
 		const selectIndex = markup.indexOf('id="base-select"');

@@ -185,10 +185,12 @@ export function EditorTopbar({
 		<div className={topbarClass} role="toolbar" aria-label="Editor toolbar">
 			<div className="editor-topbar-menubar-row">
 				<div className="editor-topbar-brand" aria-hidden="true">
-					<img
-						src={resolvePublicAssetUrl("editor-playground-wordmark-stacked.png")}
-						alt=""
-						className="h-full w-full object-contain"
+					<span
+						className="editor-topbar-brand-mark"
+						style={{
+							WebkitMaskImage: `url("${resolvePublicAssetUrl("editor-playground-logo-two-lines-monochrome.svg")}")`,
+							maskImage: `url("${resolvePublicAssetUrl("editor-playground-logo-two-lines-monochrome.svg")}")`,
+						}}
 					/>
 				</div>
 

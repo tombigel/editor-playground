@@ -17,9 +17,28 @@ describe("design-system/registry", () => {
 			.toEqual({ id: "base-form-field", label: "FormField" });
 	});
 
+	it("includes the logo asset demo in the Base Components menu", () => {
+		const baseSection = DS_SECTIONS.find((section) => section.id === "base");
+
+		expect(
+			baseSection?.subsections.find(
+				(subsection) => subsection.id === "base-logo-assets",
+			),
+		).toEqual({
+			id: "base-logo-assets",
+			label: "Logo Assets",
+		});
+	});
+
 	it("keeps the FormField entry ordered with the rendered base demos", () => {
 		const ids = getBaseSubsectionIds();
 
+		expect(ids.indexOf("base-title")).toBeLessThan(
+			ids.indexOf("base-logo-assets"),
+		);
+		expect(ids.indexOf("base-logo-assets")).toBeLessThan(
+			ids.indexOf("base-badge"),
+		);
 		expect(ids.indexOf("base-label")).toBeLessThan(ids.indexOf("base-form-field"));
 		expect(ids.indexOf("base-form-field")).toBeLessThan(
 			ids.indexOf("base-text-button"),

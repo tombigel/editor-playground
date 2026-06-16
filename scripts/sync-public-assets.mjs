@@ -11,12 +11,13 @@ const rootAssetDir = publicDir;
 const helpDocAssetDir = path.join(publicDir, 'assets', 'help-docs');
 const helpDocDocsAssetDir = path.join(helpDocAssetDir, 'assets');
 const manifestPath = path.join(rootDir, 'src', 'panels', 'generated', 'helpDocsManifest.json');
+const rootAssetExtensions = new Set(['.png', '.svg']);
 
 const docFiles = (await readdir(docsDir))
   .filter((fileName) => fileName.toLowerCase().endsWith('.md'))
   .sort((left, right) => left.localeCompare(right));
 const rootAssetFiles = (await readdir(staticAssetSourceDir))
-  .filter((fileName) => fileName.toLowerCase().endsWith('.png'))
+  .filter((fileName) => rootAssetExtensions.has(path.extname(fileName).toLowerCase()))
   .sort((left, right) => left.localeCompare(right));
 
 await mkdir(rootAssetDir, { recursive: true });

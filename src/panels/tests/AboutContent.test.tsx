@@ -6,6 +6,8 @@ describe('panels/AboutContent', () => {
   it('renders documentation links as entry-targeted buttons', () => {
     const markup = renderToStaticMarkup(<AboutContent />);
 
+    expect(markup).toContain('editor-playground-logo-one-line.svg');
+    expect(markup).toContain('alt="Editor Playground"');
     expect(markup).toContain('Getting Started');
     expect(markup).toContain('Reference Overview');
     expect(markup).toContain('API Reference');

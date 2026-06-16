@@ -138,14 +138,12 @@ This project includes a manual deploy command for replacing the contents of a We
 
 Required environment variables:
 
-- `WEBDAV_URL`: the full WebDAV URL of the deployed site directory, ending in `/editor/` for the Fastmail editor endpoint
+- `WEBDAV_URL`: the full WebDAV URL of the deployed site directory. For the Fastmail editor endpoint this may end in `/editor/`, but that is the backing WebDAV folder, not the public asset path.
 - `WEBDAV_USER`: the WebDAV username
 - `WEBDAV_PASS`: the WebDAV password
 - `WEBDAV_BUILD_DIR`: optional, defaults to `dist`
-- `VITE_BASE_PATH`: set to `/editor/` for the Fastmail editor endpoint production build
 
-You can export them in your shell or add them to `.env.local`. The dev server
-still serves the app at `/` even when `VITE_BASE_PATH` is configured.
+You can export them in your shell or add them to `.env.local`.
 
 Deploy with:
 

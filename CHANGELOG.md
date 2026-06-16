@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Added
 
 - revise stage drag placement model
+- add svg logo variants
 
 ### Changed
 

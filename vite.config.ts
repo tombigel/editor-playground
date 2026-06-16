@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
-import { loadEnv, type Plugin } from 'vite';
+import type { Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -40,11 +40,7 @@ if (process.env.ANALYZE === '1') {
   );
 }
 
-export default defineConfig(({ command, mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-
-  return {
-    base: command === 'serve' ? '/' : env.VITE_BASE_PATH || '/',
+export default defineConfig({
     plugins,
     server: {
       headers: devHeaders,
@@ -161,5 +157,4 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
-  };
 });

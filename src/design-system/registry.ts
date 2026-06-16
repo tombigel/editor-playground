@@ -20,6 +20,7 @@ export const DS_SECTIONS: DSSection[] = [
 		icon: Cuboid,
 		subsections: [
 			{ id: "base-title", label: "Title" },
+			{ id: "base-logo-assets", label: "Logo Assets" },
 			{ id: "base-badge", label: "Component Badges" },
 			{ id: "base-label", label: "Label" },
 			{ id: "base-form-field", label: "FormField" },
