@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	type ReactNode,
+} from "react";
 import {
 	Check,
 	ChevronLeft,
@@ -124,6 +130,10 @@ export function ShowcaseTourOverlay({
 		);
 		return { index: Math.max(0, index), total: allSteps.length };
 	}, [config, location.stepId]);
+	const anchoredPanelStyle =
+		panelPosition?.bottom === undefined
+			? panelStyle
+			: { left: panelPosition.left, bottom: panelPosition.bottom };
 
 	useEscapeKey(() => setMinimized(true), !minimized);
 
@@ -325,12 +335,12 @@ export function ShowcaseTourOverlay({
 						ref={panelRef}
 						aria-live="polite"
 						className={cn(
-							"pointer-events-auto absolute w-[min(440px,calc(100vw-40px))] overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
+							"pointer-events-auto absolute flex max-h-[calc(100dvh-40px)] w-[min(440px,calc(100vw-40px))] flex-col overflow-hidden border shadow-[var(--showcase-tour-surface-shadow)]",
 							panelPosition ? null : "bottom-5 left-5",
 							skin.surfaceClassName,
 						)}
 						style={{
-							...panelStyle,
+							...anchoredPanelStyle,
 							background: "var(--showcase-tour-surface-background)",
 							borderColor: "var(--showcase-tour-surface-border)",
 							borderRadius: "var(--showcase-tour-radius)",
@@ -338,7 +348,7 @@ export function ShowcaseTourOverlay({
 						data-showcase-tour-card="true"
 					>
 						<header
-							className="editor-border-subtle flex cursor-grab touch-none select-none items-start justify-between gap-3 border-b px-4 py-3 active:cursor-grabbing"
+							className="editor-border-subtle flex shrink-0 cursor-grab touch-none select-none items-start justify-between gap-3 border-b px-4 py-3 active:cursor-grabbing"
 							onPointerDown={startPanelDrag}
 							data-showcase-tour-drag-handle="true"
 						>
@@ -368,7 +378,7 @@ export function ShowcaseTourOverlay({
 								</TourIconButton>
 							</div>
 						</header>
-						<div className="space-y-3 px-4 py-4">
+						<div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
 							{step.route && step.route.length > 0 ? (
 								<div className="flex flex-wrap items-center gap-1.5">
 									{step.route.map((item) => (
@@ -389,7 +399,10 @@ export function ShowcaseTourOverlay({
 								</div>
 							) : null}
 						</div>
-						<footer className="editor-border-subtle flex items-center justify-between gap-2 border-t px-4 py-3">
+						<footer
+							className="editor-border-subtle flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3"
+							data-showcase-tour-footer="true"
+						>
 							<Button
 								type="button"
 								variant="ghost"

@@ -99,7 +99,7 @@ describe('app smoke e2e', () => {
     const tour = smokePage.locator('[data-showcase-tour="true"]');
     await tour.waitFor({ state: 'visible' });
 
-    expect(await tour.textContent()).toContain('working editor surface');
+    expect(await tour.textContent()).toContain('real editor surfaces');
     const tourMenu = smokePage.getByRole('navigation', { name: 'Showcase tour topics' });
     const showMenuButton = smokePage.getByRole('button', { name: 'Show tour menu' });
     expect(await tourMenu.count()).toBe(0);
@@ -259,6 +259,48 @@ describe('app smoke e2e', () => {
     expect(pageErrors).toEqual([]);
   }, 30_000);
 
+  it('restores tour-applied view flags and URL params on close', async () => {
+    context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    const smokePage = await context.newPage();
+    const pageErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    await smokePage.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+    await expectEditorReady(smokePage, `${server.url}/?tour=api&step=debug-info&keep=1`);
+    page = smokePage;
+
+    const tour = smokePage.locator('[data-showcase-tour="true"]');
+    await tour.waitFor({ state: 'visible' });
+    await tour.filter({ hasText: 'Inspect debug state' }).waitFor({ state: 'visible' });
+
+    const tourSearchParams = new URL(smokePage.url()).searchParams;
+    expect(tourSearchParams.get('tour')).toBe('api');
+    expect(tourSearchParams.get('step')).toBe('debug-info');
+    expect(tourSearchParams.get('debug')).toBe('1');
+
+    await smokePage.getByRole('button', { name: 'Close showcase tour' }).click();
+    await tour.waitFor({ state: 'hidden' });
+
+    const cleanSearchParams = new URL(smokePage.url()).searchParams;
+    expect(cleanSearchParams.get('keep')).toBe('1');
+    expect(cleanSearchParams.has('tour')).toBe(false);
+    expect(cleanSearchParams.has('step')).toBe(false);
+    expect(cleanSearchParams.has('debug')).toBe(false);
+    expect(cleanSearchParams.has('sticky-preview')).toBe(false);
+    expect(cleanSearchParams.has('animation-preview')).toBe(false);
+    expect(cleanSearchParams.has('spacers')).toBe(false);
+
+    await smokePage.locator('[data-ui="menubar-trigger"][data-menu-id="view"]').click();
+    const debugMenuItem = smokePage.getByRole('menuitemcheckbox', { name: 'Show debug info' });
+    await debugMenuItem.waitFor({ state: 'visible' });
+    expect(await debugMenuItem.getAttribute('aria-checked')).toBe('false');
+    expect(pageErrors).toEqual([]);
+  }, 30_000);
+
   it('drags the showcase tour panel and menu separately without remembering position after close', async () => {
     context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
     const smokePage = await context.newPage();
@@ -294,6 +336,29 @@ describe('app smoke e2e', () => {
     expect(draggedBox.x).toBeGreaterThan(initialBox.x + 120);
     expect(draggedBox.y).toBeLessThan(initialBox.y - 80);
 
+    const tourFooter = tourCard.locator('[data-showcase-tour-footer="true"]');
+    const footerBeforeStepChange = await tourFooter.boundingBox();
+    if (!footerBeforeStepChange) {
+      throw new Error('Expected dragged showcase tour footer to be measurable');
+    }
+    await tourCard.getByRole('button', { name: 'Next' }).click();
+    await tourCard.filter({ hasText: 'The stage uses document state' }).waitFor({ state: 'visible' });
+    const footerAfterStepChange = await tourFooter.boundingBox();
+    if (!footerAfterStepChange) {
+      throw new Error('Expected showcase tour footer after step change to be measurable');
+    }
+    expect(
+      Math.abs(
+        footerAfterStepChange.y +
+          footerAfterStepChange.height -
+          (footerBeforeStepChange.y + footerBeforeStepChange.height),
+      ),
+    ).toBeLessThan(3);
+    const panelBeforeMenuDragBox = await tourCard.boundingBox();
+    if (!panelBeforeMenuDragBox) {
+      throw new Error('Expected showcase tour card before menu drag to be measurable');
+    }
+
     await smokePage.getByRole('button', { name: 'Show tour menu' }).click();
     const tourMenu = smokePage.locator('[data-showcase-tour-menu="true"]');
     const menuDragHandle = smokePage.locator('[data-showcase-tour-menu-drag-handle="true"]');
@@ -316,8 +381,8 @@ describe('app smoke e2e', () => {
     }
     expect(menuDraggedBox.x).toBeLessThan(menuInitialBox.x - 80);
     expect(menuDraggedBox.y).toBeLessThan(menuInitialBox.y - 50);
-    expect(Math.abs(panelAfterMenuDragBox.x - draggedBox.x)).toBeLessThan(5);
-    expect(Math.abs(panelAfterMenuDragBox.y - draggedBox.y)).toBeLessThan(5);
+    expect(Math.abs(panelAfterMenuDragBox.x - panelBeforeMenuDragBox.x)).toBeLessThan(5);
+    expect(Math.abs(panelAfterMenuDragBox.y - panelBeforeMenuDragBox.y)).toBeLessThan(5);
 
     await smokePage.getByRole('button', { name: 'Close showcase tour' }).click();
     await smokePage.locator('[data-showcase-tour="true"]').waitFor({ state: 'hidden' });

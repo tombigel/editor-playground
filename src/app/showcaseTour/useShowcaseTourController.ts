@@ -1,6 +1,7 @@
 import {
 	useCallback,
 	useMemo,
+	useRef,
 	useState,
 	type Dispatch,
 	type SetStateAction,
@@ -22,6 +23,25 @@ import type { SettingsSectionId } from "@/panels/settings/settingsSections";
 import type { EditorState } from "@/api/editorApi";
 import type { HistoryAction } from "../editorState";
 import { SHOWCASE_TOUR_CONFIG } from "./showcaseTourConfig";
+
+const EDITOR_NAVIGATION_SEARCH_KEYS = [
+	"page",
+	"select",
+	"focus-mode",
+	"panel",
+	"settings",
+	"help",
+	"page-target",
+	"pages-tab",
+	"show-hidden",
+	"sticky-preview",
+	"animation-preview",
+	"grid",
+	"debug",
+	"spacers",
+	"tour",
+	"step",
+] as const;
 
 type UseShowcaseTourControllerOptions = {
 	searchParams: URLSearchParams;
@@ -47,6 +67,21 @@ type UseShowcaseTourControllerOptions = {
 	onAboutOpenChange: (open: boolean) => void;
 	onSectionTemplateOpenChange: (open: boolean) => void;
 	onTextTypeOpenChange: (open: boolean) => void;
+};
+
+type ShowcaseTourReturnState = {
+	search: string;
+	navigation: {
+		activePageId?: string;
+		selectedNodeId?: string;
+		focusedMode: EditorState["ui"]["focusedMode"];
+		showHidden: boolean;
+		previewSticky: boolean;
+		animationPreviewEnabled: boolean;
+		spacerVisibility: EditorState["ui"]["spacerVisibility"];
+		showGridLanes: boolean;
+		showDebugInfo: boolean;
+	};
 };
 
 export function useShowcaseTourController({
@@ -84,6 +119,11 @@ export function useShowcaseTourController({
 	}, [searchParams]);
 	const [showcaseTourLocation, setShowcaseTourLocation] =
 		useState<ShowcaseTourLocation | null>(initialTourLocation);
+	const tourReturnStateRef = useRef<ShowcaseTourReturnState | null>(
+		initialTourLocation
+			? createShowcaseTourReturnState(state, searchParams, "clean")
+			: null,
+	);
 
 	const applyPanelOpen = useCallback(
 		(panel: EditorPanelId, open: boolean) => {
@@ -236,6 +276,11 @@ export function useShowcaseTourController({
 
 	const handleOpenShowcaseTour = useCallback(() => {
 		const location = resolveShowcaseTourLocation(SHOWCASE_TOUR_CONFIG, null);
+		tourReturnStateRef.current = createShowcaseTourReturnState(
+			state,
+			typeof window === "undefined" ? searchParams : window.location.search,
+			"preserve",
+		);
 		setShowcaseTourLocation(location);
 		if (typeof window === "undefined") return;
 		const nextSearch = buildEditorNavigationSearch(
@@ -247,23 +292,27 @@ export function useShowcaseTourController({
 			"",
 			`${window.location.pathname}${nextSearch}${window.location.hash}`,
 		);
-	}, []);
+	}, [searchParams, state]);
 
 	const handleCloseShowcaseTour = useCallback(() => {
+		const returnState = tourReturnStateRef.current;
+		tourReturnStateRef.current = null;
 		setShowcaseTourLocation(null);
+		if (returnState) {
+			dispatch({
+				type: "applyEditorNavigation",
+				navigation: returnState.navigation,
+			});
+		}
 		if (typeof window === "undefined") return;
-		const params = new URLSearchParams(window.location.search);
-		params.delete("tour");
-		params.delete("step");
-		const nextSearch = params.toString();
 		window.history.replaceState(
 			null,
 			"",
-			`${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${
+			`${window.location.pathname}${returnState?.search ?? ""}${
 				window.location.hash
 			}`,
 		);
-	}, []);
+	}, [dispatch]);
 
 	return {
 		showcaseTourLocation,
@@ -272,4 +321,49 @@ export function useShowcaseTourController({
 		handleOpenShowcaseTour,
 		handleCloseShowcaseTour,
 	};
+}
+
+export function createShowcaseTourReturnState(
+	state: EditorState,
+	search: string | URLSearchParams,
+	mode: "preserve" | "clean",
+): ShowcaseTourReturnState {
+	return {
+		search:
+			mode === "preserve"
+				? normalizeSearch(search)
+				: getSearchWithoutEditorNavigation(search),
+		navigation: {
+			activePageId: state.activePageId ?? undefined,
+			selectedNodeId: state.selectedId ?? undefined,
+			focusedMode: state.ui.focusedMode,
+			showHidden: state.ui.showHidden,
+			previewSticky: state.ui.previewSticky,
+			animationPreviewEnabled: state.ui.animationPreview.enabled,
+			spacerVisibility: state.ui.spacerVisibility,
+			showGridLanes: state.ui.showGridLanes,
+			showDebugInfo: state.ui.showDebugInfo,
+		},
+	};
+}
+
+function getSearchWithoutEditorNavigation(search: string | URLSearchParams) {
+	const params =
+		search instanceof URLSearchParams
+			? new URLSearchParams(search)
+			: new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+	for (const key of EDITOR_NAVIGATION_SEARCH_KEYS) {
+		params.delete(key);
+	}
+	return normalizeSearch(params);
+}
+
+function normalizeSearch(search: string | URLSearchParams) {
+	const serialized =
+		search instanceof URLSearchParams
+			? search.toString()
+			: search.startsWith("?")
+				? search.slice(1)
+				: search;
+	return serialized ? `?${serialized}` : "";
 }

@@ -12,6 +12,7 @@ const TOUR_SURFACE_INTERACTIVE_SELECTOR = "button, a, input, textarea, select";
 export type TourSurfacePosition = {
 	left: number;
 	top: number;
+	bottom?: number;
 };
 
 type TourSurfaceDragState = {
@@ -50,6 +51,11 @@ export function useTransientTourDragSurface<TElement extends HTMLElement>() {
 		function handlePointerMove(event: PointerEvent) {
 			if (event.pointerId !== currentDragState.pointerId) return;
 			event.preventDefault();
+			const top = clampTourSurfacePosition(
+				currentDragState.originTop + event.clientY - currentDragState.originY,
+				currentDragState.surfaceHeight,
+				window.innerHeight,
+			);
 			setPosition({
 				left: clampTourSurfacePosition(
 					currentDragState.originLeft +
@@ -58,11 +64,8 @@ export function useTransientTourDragSurface<TElement extends HTMLElement>() {
 					currentDragState.surfaceWidth,
 					window.innerWidth,
 				),
-				top: clampTourSurfacePosition(
-					currentDragState.originTop + event.clientY - currentDragState.originY,
-					currentDragState.surfaceHeight,
-					window.innerHeight,
-				),
+				top,
+				bottom: window.innerHeight - top - currentDragState.surfaceHeight,
 			});
 		}
 
@@ -95,7 +98,11 @@ export function useTransientTourDragSurface<TElement extends HTMLElement>() {
 		if (!surface) return;
 		const rect = surface.getBoundingClientRect();
 		event.preventDefault();
-		setPosition({ left: rect.left, top: rect.top });
+		setPosition({
+			left: rect.left,
+			top: rect.top,
+			bottom: window.innerHeight - rect.bottom,
+		});
 		setDragState({
 			pointerId: event.pointerId,
 			originX: event.clientX,

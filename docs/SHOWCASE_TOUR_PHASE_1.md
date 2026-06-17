@@ -42,7 +42,7 @@ Purpose: orient a visitor quickly and frame the app as a solo-built editor/produ
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `welcome` | This is the product, not a mockup | Initial editor shell and stage | Home page active, no selection, all default panels closed | Centered fallback panel, stage shell behind it | `?tour=start&step=welcome` |
+| `welcome` | Start with the editor | Initial editor shell and stage | Home page active, no selection, all default panels closed | Centered fallback panel, stage shell behind it | `?tour=start&step=welcome` |
 | `seeded-model` | The stage starts from a real document model | Seeded Post section | Home page active, select the initial "Post Title" text node by API target query | `[data-node-id="<resolved-post-title>"]` | `?tour=start&step=seeded-model` |
 | `menu-is-nonlinear` | Jump by topic, follow your curiosity | Tour topic/step menu | Tour open, menu expanded | Tour menu itself | `?tour=start&step=menu-is-nonlinear` |
 

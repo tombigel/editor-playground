@@ -29,7 +29,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "start",
 			label: "Start Here",
-			description: "The product, model, and non-linear tour mechanics.",
+			description: "Basic editor state and tour controls.",
 			stepIds: ["welcome", "seeded-model", "menu-is-nonlinear"],
 		},
 		{
@@ -41,8 +41,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "editor",
 			label: "Editor Craft",
-			description:
-				"Selection, structure, progressive disclosure, and canvas UX.",
+			description: "Selection, structure, text, and focused editing.",
 			stepIds: [
 				"components-panel",
 				"selection-sync",
@@ -77,7 +76,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "product",
 			label: "Product Depth",
-			description: "Pages, routing, validation, docs, and maintenance depth.",
+			description: "Pages, routing, validation, and docs.",
 			stepIds: [
 				"pages-panel",
 				"page-routing",
@@ -90,8 +89,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "welcome",
 			topicId: "start",
-			title: "This is the product, not a mockup",
-			body: "Start with the stage: this is a working editor surface, not a slide. Use Next for the guided path, or open the tour menu when you want to jump by topic.",
+			title: "Start with the editor",
+			body: "This tour opens real editor surfaces. Use Next to follow the path, or open the menu to jump to a topic.",
 			route: ["Stage", "Panels", "Preview", "Export"],
 			anchor: {
 				type: "selector",
@@ -106,8 +105,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "seeded-model",
 			topicId: "start",
-			title: "The stage starts from a real document model",
-			body: "The selected title is ordinary document state. The same model powers templates, import/export, preview rendering, and tests, which is why the editor can be scripted instead of manually driven.",
+			title: "The stage uses document state",
+			body: "The selected title is a document node. Templates, import/export, preview, and tests all use the same model, so editor flows can be scripted through the API.",
 			route: [
 				"API selects node",
 				"Stage reflects selection",
@@ -127,8 +126,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "menu-is-nonlinear",
 			topicId: "start",
-			title: "Jump by topic, follow your curiosity",
-			body: "The tour is intentionally non-linear. A designer can jump to interaction craft, an engineer can jump to API and URL state, and a product lead can jump to documentation and maintenance workflows.",
+			title: "Jump to any topic",
+			body: "The menu lets you skip around. Use it to inspect sticky behavior, editor structure, API state, design-system surfaces, pages, or docs in any order.",
 			route: ["Tour menu", "Topic", "Step"],
 			anchor: { type: "tourMenu" },
 			navigation: {
@@ -140,7 +139,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "sticky-templates",
 			topicId: "sticky",
 			title: "Create the sticky lab from the editor",
-			body: "A sticky demo should not be hand-waved. This step inserts the Sticky Edge Lab through the same editor action the template picker uses, then opens the template surface so the route is visible.",
+			body: "This step inserts the Sticky Edge Lab through the same editor action used by the template picker, then opens the template panel.",
 			route: ["Left rail", "Templates", "Sticky Edge Lab"],
 			anchor: {
 				type: "selector",
@@ -157,7 +156,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "sticky-node",
 			topicId: "sticky",
 			title: "Select a sticky card and inspect the behavior",
-			body: "Now the tour selects a real sticky card. The inspector is showing editable model state: edge, offset, duration, and elevation, not a screenshot annotation.",
+			body: "The selected sticky card exposes its behavior in the inspector: edge, offset, duration, and elevation.",
 			route: ["API selects sticky card", "Inspector", "Sticky behavior"],
 			anchor: {
 				type: "selector",
@@ -179,7 +178,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "sticky-guides",
 			topicId: "sticky",
 			title: "Turn on sticky preview and spacer guides",
-			body: "This is where the experience becomes tangible. Sticky preview applies the behavior on the stage, and spacer guides reveal the invisible scroll distance. Scroll the stage, then tweak the sticky panel.",
+			body: "Sticky preview applies the behavior on the stage. Spacer guides show the scroll distance that drives it.",
 			route: ["View", "Sticky preview", "Show spacers"],
 			anchor: {
 				type: "selector",
@@ -207,7 +206,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "edge-lab",
 			topicId: "sticky",
 			title: "Compare top, both, and bottom edges",
-			body: "The lab keeps the variables controlled: same section, same viewport, different sticky edge definitions. It makes edge cases visible enough to design, test, and explain.",
+			body: "The lab keeps the section and viewport fixed while changing the sticky edge definition. That makes edge cases easier to compare.",
 			route: ["Sticky Edge Lab", "Top", "Both", "Bottom"],
 			anchor: {
 				type: "selector",
@@ -229,7 +228,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "components-panel",
 			topicId: "editor",
 			title: "Structure stays visible while editing visually",
-			body: "Visual editing needs a second view of structure. The Components panel lets a visitor see hierarchy, visibility, and order while the stage stays direct-manipulation friendly.",
+			body: "The Components panel shows hierarchy, visibility, and order while the stage stays available for direct manipulation.",
 			route: ["Left rail", "Components"],
 			anchor: {
 				type: "selector",
@@ -245,7 +244,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "selection-sync",
 			topicId: "editor",
 			title: "Stage and tree selection stay in sync",
-			body: "The selected node is one concept shared by the stage, tree, inspector, keyboard shortcuts, and URL state. That agreement is what makes the editor feel coherent.",
+			body: "Selection is shared by the stage, tree, inspector, keyboard shortcuts, and URL state.",
 			route: ["Stage selection", "Components selection", "Inspector"],
 			anchor: {
 				type: "selector",
@@ -261,8 +260,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "direct-manipulation",
 			topicId: "editor",
-			title: "Selection chrome is an editor surface",
-			body: "Handles, outlines, labels, focus behavior, and measurements are product UX. They turn raw model state into something a person can confidently manipulate.",
+			title: "Use the selection controls",
+			body: "Handles, outlines, labels, focus behavior, and measurements expose the selected node in a form you can edit.",
 			route: ["Canvas", "Selection overlay", "Inspector"],
 			anchor: {
 				type: "selector",
@@ -300,7 +299,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "focused-mode",
 			topicId: "editor",
 			title: "Focus mode",
-			body: "Focus mode narrows the editor to one kind of task at a time. The same pattern can later support collaboration, permissions, and role-specific document workflows.",
+			body: "Focus mode narrows the editor to one task type. This step opens the design-focused panel for the selected node.",
 			route: ["View", "Focus mode", "Design"],
 			anchor: {
 				type: "selector",
@@ -315,8 +314,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "api-docs",
 			topicId: "api",
-			title: "The UI is not the only way to use the product",
-			body: "The API docs are part of the product promise: important editor movement and document changes can be expressed without clicking through the UI.",
+			title: "Use the API without the UI",
+			body: "The API docs list the document and navigation operations that can run without clicking through the editor.",
 			route: ["Help", "Documentation", "API Reference"],
 			anchor: {
 				type: "selector",
@@ -335,7 +334,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "model-transfer",
 			topicId: "api",
 			title: "The document can move through import/export",
-			body: "Import/export is a trust feature. The model is portable JSON, and the same document can become a rendered site bundle.",
+			body: "Import/export uses portable JSON. The same document model can also render as a site bundle.",
 			route: ["Settings", "Import / Export"],
 			anchor: {
 				type: "selector",
@@ -354,7 +353,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "site-preview-export",
 			topicId: "api",
 			title: "The editor model renders as a site",
-			body: "Preview is the bridge from editor model to site renderer. It is deliberately one click away because the product is about authoring behavior, then seeing it as a real page.",
+			body: "Preview sends the current document model through the site renderer so you can inspect it as a page.",
 			route: ["Top bar", "Preview"],
 			anchor: {
 				type: "selector",
@@ -374,8 +373,8 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 		{
 			id: "debug-info",
 			topicId: "api",
-			title: "Debug state is product tooling",
-			body: "Debug info is surfaced in the inspector so the model, selection, sticky state, and render assumptions are inspectable during real work.",
+			title: "Inspect debug state",
+			body: "Debug info appears in the inspector so model, selection, sticky state, and render assumptions are visible while editing.",
 			route: ["View", "Show debug info", "Inspector"],
 			anchor: {
 				type: "selector",
@@ -392,7 +391,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "ui-settings",
 			topicId: "design",
 			title: "Theme and guide controls are productized",
-			body: "The editor chrome is configurable without becoming arbitrary. Themes, guides, snap behavior, preview, and diagnostics are exposed as product controls.",
+			body: "Themes, guides, snap behavior, preview, and diagnostics are editable from the UI settings panel.",
 			route: ["Settings", "UI"],
 			anchor: {
 				type: "selector",
@@ -408,7 +407,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "font-system",
 			topicId: "design",
 			title: "Choose document fonts",
-			body: "The font panel is a working Google Fonts explorer. Each document can define its own font set, preview families and weights, and keep only the fonts it actually uses.",
+			body: "The font panel lets each document choose Google Fonts, preview families and weights, and keep only the fonts it uses.",
 			route: ["Settings", "Fonts"],
 			anchor: {
 				type: "selector",
@@ -424,7 +423,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "design-system-route",
 			topicId: "design",
 			title: "The design system has its own verification surface",
-			body: "The design system is not just documentation. It is a living verification surface for tokens, primitives, composites, panels, and editor chrome.",
+			body: "The design-system route shows tokens, primitives, composites, panels, and editor chrome in one place.",
 			route: ["Help", "Design system showcase"],
 			anchor: {
 				type: "selector",
@@ -462,7 +461,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "pages-panel",
 			topicId: "product",
 			title: "This is a multi-page site editor",
-			body: "Pages, shared regions, visibility, and routing move the playground beyond a canvas demo and toward a real site authoring tool.",
+			body: "The Pages panel manages pages, shared regions, visibility, and routing.",
 			route: ["Left rail", "Pages"],
 			anchor: {
 				type: "selector",
@@ -482,7 +481,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "page-routing",
 			topicId: "product",
 			title: "Routing details are explicit UX",
-			body: "Page names, slugs, aliases, parent pages, and link sync are visible controls. Routing is treated as UX, not as a deployment afterthought.",
+			body: "Page names, slugs, aliases, parent pages, and link sync are visible controls.",
 			route: ["Pages", "Home", "Route controls"],
 			anchor: {
 				type: "selector",
@@ -506,7 +505,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "link-validation",
 			topicId: "product",
 			title: "Maintenance workflows are built in",
-			body: "Validation and transfer workflows make long-lived documents safer to evolve. The editor helps find broken links before the site leaves the tool.",
+			body: "Validation helps find broken links before exporting or previewing the site.",
 			route: ["Settings", "Import / Export", "Validate links"],
 			anchor: {
 				type: "selector",
@@ -525,7 +524,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "docs-history",
 			topicId: "product",
 			title: "The work is documented as carefully as the UI",
-			body: "Specs, API docs, style guidance, changelog, and implementation notes are part of the product craft. The documentation tells the same story as the interface.",
+			body: "Specs, API docs, style guidance, changelog, and implementation notes are available from Help.",
 			route: ["Help", "Documentation", "Spec"],
 			anchor: {
 				type: "selector",
