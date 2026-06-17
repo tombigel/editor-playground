@@ -30,7 +30,7 @@ export type {
   TopLevelWrapperVisibilityState,
 } from './documentApi/types';
 
-export { SECTION_TEMPLATES, createInitialDocument, createSectionFromTemplate } from '../model/defaults';
+export { SECTION_TEMPLATES, createBlankInitialDocument, createInitialDocument, createSectionFromTemplate } from '../model/defaults';
 export {
   addDocumentFontFamily,
   getDocumentFontLibrary,

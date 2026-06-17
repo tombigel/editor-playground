@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createBlankInitialDocument,
   createInitialState,
   getValidationErrors,
   parseUnitValue,
@@ -21,6 +22,7 @@ describe('api/editorApi', () => {
     });
     expect(SECTION_TEMPLATES.length).toBeGreaterThan(0);
     expect(getValidationErrors(state)).toEqual([]);
+    expect(createBlankInitialDocument().rootId).toBeDefined();
     expect(serialized.rootId).toBe(state.document.rootId);
     expect(serialized.nodes).toHaveProperty(state.document.rootId);
     expect(state.document.rootId).toBeDefined();

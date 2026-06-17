@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getSingleCodeBlockContent, getSingleListBlockContent, richListBlockToListContent } from '../richContent';
 import type { TextNode } from '../types';
 import {
+  createBlankInitialDocument,
   createDefaultFooter,
   createDefaultHeader,
   createTextNode,
@@ -11,8 +12,29 @@ import {
   createSectionFromTemplate,
   SECTION_TEMPLATES,
 } from '../defaults';
+import { validateDocument } from '../validation';
 
 describe('model/defaults', () => {
+  it('creates a blank starter document with header, footer, and one blank section', () => {
+    const document = createBlankInitialDocument();
+    const root = document.nodes[document.rootId];
+
+    if (!root || root.contentType !== 'site') {
+      throw new Error('Expected site root');
+    }
+
+    const children = root.children.map((id) => document.nodes[id]);
+    const sections = children.filter((node) => node?.contentType === 'container' && node.subtype === 'section');
+
+    expect(validateDocument(document)).toEqual([]);
+    expect(document.pages).toHaveLength(1);
+    expect(document.pages?.[0]?.sectionIds).toEqual(sections.map((node) => node.id));
+    expect(document.sharedRegionIds).toHaveLength(2);
+    expect(children.map((node) => node?.subtype)).toEqual(['header', 'section', 'footer']);
+    expect(sections).toHaveLength(1);
+    expect(sections[0]).toMatchObject({ name: 'Blank Section', children: [] });
+  });
+
   it('builds all published section templates and default chrome surfaces', () => {
     const document = createInitialDocument();
 

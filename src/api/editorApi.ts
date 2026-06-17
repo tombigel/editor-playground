@@ -12,6 +12,7 @@ import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
 import { getNode } from '../model/selectors';
 import { parseUnitValue } from '../model/units';
 import {
+  createBlankInitialDocument,
   deleteNodeDoc,
   deleteNodesDoc,
   getTopLevelWrapperVisibilityState,
@@ -196,6 +197,7 @@ export const getStageSelectableNodeIds = stageNavigation.getStageSelectableNodeI
 /** documentApi pass-throughs: pure model utilities re-exported for consumer convenience. */
 export {
   SECTION_TEMPLATES,
+  createBlankInitialDocument,
   deleteNodeDoc,
   deleteNodesDoc,
   getNode,

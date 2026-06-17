@@ -13,5 +13,5 @@ export {
   nextId,
   syncIdCountersWithDocument,
 } from './defaultFactories';
-export { createInitialDocument } from './initialDocument';
+export { createBlankInitialDocument, createInitialDocument } from './initialDocument';
 export { createSectionFromTemplate, SECTION_TEMPLATES } from './sectionTemplates';

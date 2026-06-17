@@ -6,9 +6,17 @@ import { createDefaultFontLibrary } from '../fonts/defaults';
 import { createPage, createInitialSiteSettings } from './pageDefaults';
 
 export function createInitialDocument(): DocumentModel {
+  return createStarterDocument('post');
+}
+
+export function createBlankInitialDocument(): DocumentModel {
+  return createStarterDocument('blank');
+}
+
+function createStarterDocument(templateId: 'post' | 'blank'): DocumentModel {
   const siteId = nextId('site');
   const { wrapper: header, nodes: headerNodes } = createDefaultHeader(siteId);
-  const { wrapper: starterSection, nodes: starterSectionNodes } = createSectionFromTemplate('post', siteId);
+  const { wrapper: starterSection, nodes: starterSectionNodes } = createSectionFromTemplate(templateId, siteId);
   const { wrapper: footer, nodes: footerNodes } = createDefaultFooter(siteId);
 
   return {
