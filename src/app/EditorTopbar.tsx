@@ -8,6 +8,7 @@ import {
 	Eye,
 	FileDown,
 	FileJson,
+	FilePlus2,
 	FileUp,
 	Info,
 	Keyboard,
@@ -96,6 +97,7 @@ export function EditorTopbar({
 	onUndo,
 	onRedo,
 	onPreview,
+	onStartFresh,
 	onImportJson,
 	onExportJson,
 	onExportSite,
@@ -144,6 +146,7 @@ export function EditorTopbar({
 	onUndo: () => void;
 	onRedo: () => void;
 	onPreview: () => void;
+	onStartFresh: () => void;
 	onImportJson: () => void;
 	onExportJson: () => void;
 	onExportSite: () => void;
@@ -198,6 +201,10 @@ export function EditorTopbar({
 					<MenubarMenu id="settings">
 						<MenubarTrigger>Settings</MenubarTrigger>
 						<MenubarContent>
+							<MenubarItem icon={FilePlus2} onClick={onStartFresh}>
+								Start fresh...
+							</MenubarItem>
+							<MenubarSeparator />
 							<MenubarItem icon={FileUp} onClick={onImportJson}>
 								Import JSON
 							</MenubarItem>

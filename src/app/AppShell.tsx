@@ -53,7 +53,7 @@ import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { HelpEntry } from "../panels/helpDocs";
 import { validateLinks } from "../api/documentViewApi";
 import { useShowcaseTourController } from "./showcaseTour/useShowcaseTourController";
-import type { AppMode, AppStartupAction } from "./appRouting";
+import { HOME_ROUTE_HASH, type AppMode, type AppStartupAction } from "./appRouting";
 
 type Props = {
 	state: EditorState;
@@ -568,6 +568,13 @@ export function AppShell({
 		importInputRef.current?.click();
 	}
 
+	function handleStartFresh() {
+		if (typeof window === "undefined") {
+			return;
+		}
+		window.location.hash = HOME_ROUTE_HASH;
+	}
+
 	async function handleImportJsonFile(event: ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
 		event.target.value = "";
@@ -718,6 +725,7 @@ export function AppShell({
 		handleOpenLinkValidation,
 		handleOpenSettingsSection,
 		handleOpenShowcaseTour,
+		handleStartFresh,
 		showcaseTourLocation,
 		setShowcaseTourLocation,
 		handleApplyShowcaseTourNavigation,

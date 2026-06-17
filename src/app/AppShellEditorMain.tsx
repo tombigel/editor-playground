@@ -62,6 +62,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		handleOpenLinkValidation,
 		handleOpenSettingsSection,
 		handleOpenShowcaseTour,
+		handleStartFresh,
 		handleSetLightTheme,
 		handleSetDarkTheme,
 		handleImportJson,
@@ -102,6 +103,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				onPreview={() => {
 					openPreviewSiteWindow(editorWindowId);
 				}}
+				onStartFresh={handleStartFresh}
 				onImportJson={handleImportJson}
 				onExportJson={handleExportJson}
 				onExportSite={handleExportSite}

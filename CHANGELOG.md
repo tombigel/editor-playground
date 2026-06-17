@@ -19,6 +19,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - route app modes through hash paths
 - update preview and tour hash URLs
 - add onboarding home for app modes
+- add start fresh menu action
 
 ### Changed
 

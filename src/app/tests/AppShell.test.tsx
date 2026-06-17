@@ -144,6 +144,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("View");
 		expect(markup).toContain("Pages");
 		expect(markup).toContain("Help");
+		expect(markup).toContain("Start fresh...");
 		expect(markup).toContain("editor-topbar-menubar-row");
 		expect(markup).toContain("editor-topbar-brand-mark");
 		expect(markup).toContain("editor-playground-logo-two-lines-monochrome.svg");
