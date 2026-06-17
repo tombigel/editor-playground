@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Changed
+
+- archive hash routing implementation plan
+
 ---
 
 ## [0.10.0] — 2026-06-17
