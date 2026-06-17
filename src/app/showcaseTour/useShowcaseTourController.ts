@@ -136,8 +136,16 @@ export function useShowcaseTourController({
 			stepId: navigation.tourStep,
 		});
 	}, [searchParams]);
+	const searchTourKey = searchTourLocation
+		? `${searchTourLocation.topicId}:${searchTourLocation.stepId}`
+		: "";
+	const lastSearchTourKeyRef = useRef(searchTourKey);
 
 	useEffect(() => {
+		if (lastSearchTourKeyRef.current === searchTourKey) {
+			return;
+		}
+		lastSearchTourKeyRef.current = searchTourKey;
 		if (!searchTourLocation) {
 			if (showcaseTourLocation) {
 				setShowcaseTourLocation(null);

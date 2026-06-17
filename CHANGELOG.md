@@ -20,6 +20,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - satisfy hash routing build checks
 - sync tour state from hash route search
+- avoid resetting active tour steps
 
 ---
 
