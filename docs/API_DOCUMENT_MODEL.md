@@ -12,7 +12,8 @@ Source modules:
 
 | Function | Description |
 | --- | --- |
-| `createInitialDocument()` | Creates a blank document with default site/page structure |
+| `createInitialDocument()` | Creates the non-blank starter document with default site/page structure |
+| `createBlankInitialDocument()` | Creates a starter document with header, footer, and one blank section |
 | `cloneDocument(document)` | Deep-clones a document |
 | `parseDocumentJson(raw)` | Parses and validates JSON into a `DocumentModel` |
 | `serializeDocumentJson(document)` | Serializes a document to formatted JSON |
