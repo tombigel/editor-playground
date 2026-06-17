@@ -14,6 +14,7 @@ import {
 	resolveNearestSupportedFontWeight,
 } from "../api/fontApi";
 import { getShortcutPlatform } from "@/lib/shortcuts";
+import type { ThemeMode } from "@/lib/theme";
 import { AppShell } from "./AppShell";
 import type { AppMode, AppStartupAction } from "./appRouting";
 import {
@@ -35,14 +36,18 @@ type AppProps = {
 	mode?: Extract<AppMode, "edit" | "preview">;
 	routeSearchParams?: URLSearchParams;
 	startupAction?: AppStartupAction | null;
+	startupThemeMode?: ThemeMode | null;
 	onStartupActionHandled?: (id: number) => void;
+	onStartupThemeModeHandled?: () => void;
 };
 
 export function App({
 	mode = "edit",
 	routeSearchParams,
 	startupAction = null,
+	startupThemeMode = null,
 	onStartupActionHandled = () => undefined,
+	onStartupThemeModeHandled = () => undefined,
 }: AppProps) {
 	const [historyState, dispatch] = useReducer(
 		historyReducer,
@@ -192,6 +197,14 @@ export function App({
 			onStartupActionHandled(startupAction.id);
 		}
 	}, [onStartupActionHandled, startupAction]);
+
+	useEffect(() => {
+		if (!startupThemeMode) {
+			return;
+		}
+		dispatch({ type: "setThemeMode", value: startupThemeMode });
+		onStartupThemeModeHandled();
+	}, [onStartupThemeModeHandled, startupThemeMode]);
 
   const shortcutHandlers: ShortcutExecutionHandlers = {
     app: {

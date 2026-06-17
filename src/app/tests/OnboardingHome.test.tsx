@@ -12,6 +12,11 @@ function renderHome(hasCurrentSite: boolean) {
 	return renderToStaticMarkup(
 		<OnboardingHome
 			hasCurrentSite={hasCurrentSite}
+			themeMode="auto"
+			resolvedTheme="light"
+			lightTheme="air"
+			darkTheme="graphite"
+			onThemeModeChange={() => undefined}
 			onContinueCurrentSite={() => undefined}
 			onStartBlank={() => undefined}
 			onLoadJson={() => undefined}
@@ -25,6 +30,27 @@ describe("app/OnboardingHome", () => {
 	it("renders the logo, versions, and startup actions", () => {
 		const markup = renderHome(false);
 
+		expect(markup).toContain('aria-labelledby="onboarding-title"');
+		expect(markup).toContain('data-editor-theme="light"');
+		expect(markup).toContain('data-theme-mode="auto"');
+		expect(markup).toContain('data-editor-light-theme="air"');
+		expect(markup).toContain('data-editor-dark-theme="graphite"');
+		expect(markup).toContain('data-ui="options-selector"');
+		expect(markup).toContain("Welcome theme");
+		expect(markup).toContain("Auto");
+		expect(markup).toContain("Light");
+		expect(markup).toContain("Dark");
+		expect(markup).toContain('aria-label="Welcome actions"');
+		expect(markup).toContain('id="onboarding-title"');
+		expect(markup).toContain("Welcome to Editor Playground");
+		expect(markup).toContain('data-onboarding-action="Start blank"');
+		expect(markup).toContain("focus-visible:outline-2");
+		expect(markup).toContain("var(--editor-focus-ring-strong)");
+		expect(markup).toContain("Design and validate document-model sites");
+		expect(markup).toContain("Built by Tom Bigelajzen 2026");
+		expect(markup).toContain("Project GitHub");
+		expect(markup).toContain("https://github.com/tombigel/editor-playground");
+		expect(markup).toContain('data-display="icon"');
 		expect(markup).toContain("editor-playground-logo-one-line.svg");
 		expect(markup).toContain(PROJECT_VERSION);
 		expect(markup).toContain(DOCUMENT_MODEL_VERSION);

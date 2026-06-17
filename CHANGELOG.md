@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- refine onboarding welcome flow
+
 ### Changed
 
 - archive hash routing implementation plan

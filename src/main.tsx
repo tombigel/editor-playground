@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./app/App";
 import {
@@ -9,9 +9,18 @@ import {
 } from "./app/appRouting";
 import { OnboardingHome } from "./app/OnboardingHome";
 import {
+	useApplyEditorTheme,
+	useSystemThemePreference,
+} from "./app/useEditorEnvironment";
+import {
 	DEFAULT_DOCUMENT_STORAGE_KEY,
 	STORAGE_KEY,
 } from "./editor/editorPersistence";
+import {
+	getInitialOnboardingThemeConfig,
+	writeStoredEditorThemeMode,
+} from "./app/onboardingTheme";
+import { resolveThemeMode, type ThemeMode } from "./lib/theme";
 import "prismjs/themes/prism.css";
 import "./styles.css";
 
@@ -22,6 +31,9 @@ const DesignSystemApp = React.lazy(
 function Root() {
 	const [route, setRoute] = useState(() => parseAppRoute(window.location.hash));
 	const [startupAction, setStartupAction] = useState<AppStartupAction | null>(
+		null,
+	);
+	const [startupThemeMode, setStartupThemeMode] = useState<ThemeMode | null>(
 		null,
 	);
 	const nextStartupActionId = useRef(1);
@@ -61,9 +73,11 @@ function Root() {
 				mode="preview"
 				routeSearchParams={route.search}
 				startupAction={startupAction}
+				startupThemeMode={startupThemeMode}
 				onStartupActionHandled={(id) => {
 					setStartupAction((current) => (current?.id === id ? null : current));
 				}}
+				onStartupThemeModeHandled={() => setStartupThemeMode(null)}
 			/>
 		);
 	}
@@ -74,15 +88,17 @@ function Root() {
 				mode="edit"
 				routeSearchParams={route.search}
 				startupAction={startupAction}
+				startupThemeMode={startupThemeMode}
 				onStartupActionHandled={(id) => {
 					setStartupAction((current) => (current?.id === id ? null : current));
 				}}
+				onStartupThemeModeHandled={() => setStartupThemeMode(null)}
 			/>
 		);
 	}
 
 	return (
-		<OnboardingHome
+		<OnboardingRoute
 			hasCurrentSite={hasStoredEditorSite()}
 			onContinueCurrentSite={() => navigateTo(buildAppHash("edit"))}
 			onStartBlank={() => {
@@ -98,6 +114,55 @@ function Root() {
 				navigateTo(buildAppHash("edit", "tour=start&step=welcome"));
 			}}
 			onOpenDesignSystem={() => navigateTo(DESIGN_SYSTEM_ROUTE_HASH)}
+			onThemeModeForEditorChange={setStartupThemeMode}
+		/>
+	);
+}
+
+type OnboardingRouteProps = {
+	hasCurrentSite: boolean;
+	onContinueCurrentSite: () => void;
+	onStartBlank: () => void;
+	onLoadJson: () => void;
+	onStartTour: () => void;
+	onOpenDesignSystem: () => void;
+	onThemeModeForEditorChange: (themeMode: ThemeMode) => void;
+};
+
+function OnboardingRoute({
+	onThemeModeForEditorChange,
+	...props
+}: OnboardingRouteProps) {
+	const [themeConfig, setThemeConfig] = useState(
+		getInitialOnboardingThemeConfig,
+	);
+	const systemPrefersDark = useSystemThemePreference();
+	const resolvedTheme = useMemo(
+		() => resolveThemeMode(themeConfig.themeMode, systemPrefersDark),
+		[systemPrefersDark, themeConfig.themeMode],
+	);
+
+	useApplyEditorTheme(
+		resolvedTheme,
+		themeConfig.accentColor,
+		themeConfig.lightTheme,
+		themeConfig.darkTheme,
+	);
+
+	function handleThemeModeChange(themeMode: ThemeMode) {
+		setThemeConfig((current) => ({ ...current, themeMode }));
+		writeStoredEditorThemeMode(themeMode);
+		onThemeModeForEditorChange(themeMode);
+	}
+
+	return (
+		<OnboardingHome
+			{...props}
+			themeMode={themeConfig.themeMode}
+			resolvedTheme={resolvedTheme}
+			lightTheme={themeConfig.lightTheme}
+			darkTheme={themeConfig.darkTheme}
+			onThemeModeChange={handleThemeModeChange}
 		/>
 	);
 }

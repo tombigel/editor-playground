@@ -1013,6 +1013,18 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 - Editor navigation state lives in the `#/edit` route search, for example `#/edit?tour=start&step=welcome`.
 - Legacy root query mode URLs such as `?mode=preview` and root-query tour links are not supported mode routes.
 
+### Onboarding home
+
+- The onboarding home is a centered welcome surface, not a full-screen editor shell.
+- It displays the product logo, current project/document/API/editor versions, a short product purpose statement, and a footer with author/project links.
+- Actions are keyboard-focusable list items with visible focus treatment:
+  - `Continue current site` appears only when valid editor data exists in localStorage and navigates to `#/edit` without replacing data.
+  - `Start blank` navigates to `#/edit` and starts from header, footer, and one blank section.
+  - `Load JSON` navigates to `#/edit` and opens the existing import picker.
+  - `Start tour` navigates to `#/edit?tour=start&step=welcome` and starts from the non-blank starter document.
+  - `Design system` navigates to `#/design-system`.
+- The footer includes an icon-only `Auto` / `Light` / `Dark` theme-mode selector with tooltips. On a clean onboarding load it defaults to `Auto` and uses Air for light and Graphite for dark. If a saved editor state exists, onboarding uses the saved editor accent and light/dark palettes. Changing the selector syncs only the editor theme mode and preserves the saved light/dark palettes.
+
 ## Preview Model
 
 The preview surface allows viewing the rendered site at full width without editor controls.
@@ -1298,6 +1310,7 @@ Additional rules:
 - Selecting `Paper` resets the shared editor accent to its warm default.
 - Selecting `Monokai` resets the shared editor accent to its magenta default.
 - Dark palettes keep neutral shells and use the accent on active chrome instead of tinting the full shell.
+- The onboarding theme selector controls only `Light`, `Dark`, and `Auto`. It does not overwrite saved light/dark palette selections such as Paper, Clarity, Monokai, or Ink.
 - Startup mode determines the focused mode on editor load; the previous session's transient focused-mode state does not override it.
 
 ### Help surfaces

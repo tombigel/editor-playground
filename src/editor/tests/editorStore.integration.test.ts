@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveStickyLayout } from '../../sticky/resolve';
-import { createInitialDocument, createContainerNode } from '../../model/defaults';
+import { createBlankInitialDocument, createInitialDocument, createContainerNode } from '../../model/defaults';
 import { createTextDocumentFromText, getTextContent } from '../../model/richContent';
 import { parseUnitValue } from '../../model/units';
 import { DEFAULT_SNAP_SETTINGS } from '../types';
@@ -1028,6 +1028,23 @@ describe('editor/editorStore integration', () => {
     expect(next.selectedId).toBeNull();
     expect(topLevelWrappers.some((node) => node.contentType === 'container' && node.subtype === 'header')).toBe(true);
     expect(topLevelWrappers.some((node) => node.contentType === 'container' && node.subtype === 'footer')).toBe(true);
+  });
+
+  it('activates the imported document first page so blank starters can add sections', () => {
+    const state = {
+      ...createInitialState(),
+      activePageId: 'stale-page',
+    };
+    const imported = importDocument(state, createBlankInitialDocument());
+    const importedPage = imported.document.pages?.[0];
+
+    expect(imported.activePageId).toBe(importedPage?.id);
+
+    const next = insertSectionTemplate(imported, 'blank');
+    const insertedSectionId = next.selectedId;
+
+    expect(insertedSectionId).toBeTruthy();
+    expect(next.document.pages?.[0]?.sectionIds).toContain(insertedSectionId);
   });
 
   it('rejects editor session payloads as imported documents', () => {

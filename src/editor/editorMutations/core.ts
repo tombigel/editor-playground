@@ -11,12 +11,13 @@ export function importDocument(state: EditorState, document: DocumentModel): Edi
     throw new Error(`Import failed: ${errors.join('; ')}`);
   }
 
-  return {
-    ...state,
-    document: normalized,
-    selectedId: null,
-    selectedIds: [],
-    pendingRoleSwap: null,
+	  return {
+	    ...state,
+	    document: normalized,
+	    activePageId: normalized.pages?.[0]?.id ?? null,
+	    selectedId: null,
+	    selectedIds: [],
+	    pendingRoleSwap: null,
   };
 }
 
