@@ -42,9 +42,9 @@ Purpose: orient a visitor quickly and frame the app as a solo-built editor/produ
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `welcome` | Start with the editor | Initial editor shell and stage | Home page active, no selection, all default panels closed | Centered fallback panel, stage shell behind it | `?tour=start&step=welcome` |
-| `seeded-model` | The stage starts from a real document model | Seeded Post section | Home page active, select the initial "Post Title" text node by API target query | `[data-node-id="<resolved-post-title>"]` | `?tour=start&step=seeded-model` |
-| `menu-is-nonlinear` | Jump by topic, follow your curiosity | Tour topic/step menu | Tour open, menu expanded | Tour menu itself | `?tour=start&step=menu-is-nonlinear` |
+| `welcome` | Start with the editor | Initial editor shell and stage | Home page active, no selection, all default panels closed | Centered fallback panel, stage shell behind it | `#/edit?tour=start&step=welcome` |
+| `seeded-model` | The stage starts from a real document model | Seeded Post section | Home page active, select the initial "Post Title" text node by API target query | `[data-node-id="<resolved-post-title>"]` | `#/edit?tour=start&step=seeded-model` |
+| `menu-is-nonlinear` | Jump by topic, follow your curiosity | Tour topic/step menu | Tour open, menu expanded | Tour menu itself | `#/edit?tour=start&step=menu-is-nonlinear` |
 
 ### Topic 1: Sticky And Scroll Prototyping
 
@@ -52,10 +52,10 @@ Purpose: show the original technical/product problem: making sticky behavior aut
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `sticky-templates` | Sticky patterns are reusable authoring primitives | Section Templates panel | Open section templates panel | `[data-panel-trigger="section-templates"]`, `.editor-section-templates` | `?tour=sticky&step=sticky-templates` |
-| `sticky-node` | Sticky controls are model-backed, not visual-only | Stage + Inspector sticky block | Insert or load a sticky template, select a sticky card/image, inspector open | `[data-node-id="<resolved-sticky-node>"]`, `[data-inspector-block="sticky"]` | `?tour=sticky&step=sticky-node` |
-| `sticky-guides` | Invisible scroll physics become visible guides | Stage overlays | Sticky node selected, sticky preview on, spacer visibility `all` | `.stage-single-selection-overlay`, sticky/spacer visual classes | `?tour=sticky&step=sticky-guides` |
-| `edge-lab` | Edge cases are first-class test material | Sticky Edge Lab template | Active document contains Sticky Edge Lab, select top/both/bottom card by target query | `[data-node-id="<resolved-edge-card>"]` | `?tour=sticky&step=edge-lab` |
+| `sticky-templates` | Sticky patterns are reusable authoring primitives | Section Templates panel | Open section templates panel | `[data-panel-trigger="section-templates"]`, `.editor-section-templates` | `#/edit?tour=sticky&step=sticky-templates` |
+| `sticky-node` | Sticky controls are model-backed, not visual-only | Stage + Inspector sticky block | Insert or load a sticky template, select a sticky card/image, inspector open | `[data-node-id="<resolved-sticky-node>"]`, `[data-inspector-block="sticky"]` | `#/edit?tour=sticky&step=sticky-node` |
+| `sticky-guides` | Invisible scroll physics become visible guides | Stage overlays | Sticky node selected, sticky preview on, spacer visibility `all` | `.stage-single-selection-overlay`, sticky/spacer visual classes | `#/edit?tour=sticky&step=sticky-guides` |
+| `edge-lab` | Edge cases are first-class test material | Sticky Edge Lab template | Active document contains Sticky Edge Lab, select top/both/bottom card by target query | `[data-node-id="<resolved-edge-card>"]` | `#/edit?tour=sticky&step=edge-lab` |
 
 ### Topic 2: Editor Craft
 
@@ -63,11 +63,11 @@ Purpose: show hands-on UX craft: structure, selection, focused work, and direct 
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `components-panel` | Structure stays visible while editing visually | Components panel | Components panel open, current page active | `[data-panel-trigger="components"]`, `.editor-layers-panel` | `?tour=editor&step=components-panel` |
-| `selection-sync` | Stage selection and tree selection stay in sync | Stage + Components row | Select a visible stage node by target query, Components panel open | `[data-node-id="<resolved-node>"]`, `[data-layers-row-id="<resolved-node>"]` | `?tour=editor&step=selection-sync` |
-| `direct-manipulation` | Selection chrome is an editor surface | Stage selection overlay | Single node selected, inspector visible | `.stage-single-selection-overlay`, `[data-stage-resize-handle]` | `?tour=editor&step=direct-manipulation` |
-| `slate-text-editor` | Rich text editing | Text type picker + rich text workflows | Open text type panel through typed panel request | `[data-text-type-role="richtext"]` | `?tour=editor&step=slate-text-editor` |
-| `focused-mode` | Focus mode | Focused mode panel | Select node, set focused mode to `design` | `[role="dialog"][aria-label="Design focus mode"]`, `[data-focused-panel-drag-zone]` | `?tour=editor&step=focused-mode` |
+| `components-panel` | Structure stays visible while editing visually | Components panel | Components panel open, current page active | `[data-panel-trigger="components"]`, `.editor-layers-panel` | `#/edit?tour=editor&step=components-panel` |
+| `selection-sync` | Stage selection and tree selection stay in sync | Stage + Components row | Select a visible stage node by target query, Components panel open | `[data-node-id="<resolved-node>"]`, `[data-layers-row-id="<resolved-node>"]` | `#/edit?tour=editor&step=selection-sync` |
+| `direct-manipulation` | Selection chrome is an editor surface | Stage selection overlay | Single node selected, inspector visible | `.stage-single-selection-overlay`, `[data-stage-resize-handle]` | `#/edit?tour=editor&step=direct-manipulation` |
+| `slate-text-editor` | Rich text editing | Text type picker + rich text workflows | Open text type panel through typed panel request | `[data-text-type-role="richtext"]` | `#/edit?tour=editor&step=slate-text-editor` |
+| `focused-mode` | Focus mode | Focused mode panel | Select node, set focused mode to `design` | `[role="dialog"][aria-label="Design focus mode"]`, `[data-focused-panel-drag-zone]` | `#/edit?tour=editor&step=focused-mode` |
 
 ### Topic 3: API And Product Architecture
 
@@ -75,10 +75,10 @@ Purpose: show API-first thinking and the architecture boundary behind the editor
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `api-docs` | The UI is not the only way to use the product | Help dialog API docs | Help open to `doc:docs/API.md` or a specific API child doc | `[data-help-entry="doc:docs/API.md"]` | `?tour=api&step=api-docs` |
-| `model-transfer` | The document can move through import/export | Settings Transfer section | Settings open to `transfer` section | `[data-settings-nav="transfer"]` | `?tour=api&step=model-transfer` |
-| `site-preview-export` | The editor model renders as a site | Preview/export controls | Topbar visible, optionally Settings menu opened to export | `[aria-label="Preview site"]`, `[data-menu-id="settings"]` | `?tour=api&step=site-preview-export` |
-| `debug-info` | Debug state is exposed as product tooling | Inspector debug block | Show debug info on, select a node | `[data-inspector-block="debug-info"]` | `?tour=api&step=debug-info` |
+| `api-docs` | The UI is not the only way to use the product | Help dialog API docs | Help open to `doc:docs/API.md` or a specific API child doc | `[data-help-entry="doc:docs/API.md"]` | `#/edit?tour=api&step=api-docs` |
+| `model-transfer` | The document can move through import/export | Settings Transfer section | Settings open to `transfer` section | `[data-settings-nav="transfer"]` | `#/edit?tour=api&step=model-transfer` |
+| `site-preview-export` | The editor model renders as a site | Preview/export controls | Topbar visible, optionally Settings menu opened to export | `[aria-label="Preview site"]`, `[data-menu-id="settings"]` | `#/edit?tour=api&step=site-preview-export` |
+| `debug-info` | Debug state is exposed as product tooling | Inspector debug block | Show debug info on, select a node | `[data-inspector-block="debug-info"]` | `#/edit?tour=api&step=debug-info` |
 
 ### Topic 4: Design System And Visual Experimentation
 
@@ -86,10 +86,10 @@ Purpose: show that the editor UI is governed by a design system while still allo
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `ui-settings` | Theme and guide controls are productized | Settings UI section | Settings open to `display` section | `[data-settings-nav="display"]` | `?tour=design&step=ui-settings` |
-| `font-system` | Choose document fonts | Settings Fonts | Settings open to `fonts`; Google Fonts explorer available from document font workflow | `[data-settings-nav="fonts"]` | `?tour=design&step=font-system` |
-| `design-system-route` | The design system has its own verification surface | Design-system showcase | Navigate to `#/design-system`, target tokens or panels section | `#tokens-colors`, `#composite-focused-panel`, `#composite-floating-panel-shell` | `?tour=design&step=design-system-route` |
-| `animation-preview` | Explore animations | Animation inspector + preview toggle | Select animatable node, inspector animation block visible, animation preview enabled | `[data-inspector-block="animation-behavior"]`, rail animation toggle | `?tour=design&step=animation-preview` |
+| `ui-settings` | Theme and guide controls are productized | Settings UI section | Settings open to `display` section | `[data-settings-nav="display"]` | `#/edit?tour=design&step=ui-settings` |
+| `font-system` | Choose document fonts | Settings Fonts | Settings open to `fonts`; Google Fonts explorer available from document font workflow | `[data-settings-nav="fonts"]` | `#/edit?tour=design&step=font-system` |
+| `design-system-route` | The design system has its own verification surface | Design-system showcase | Navigate to `#/design-system`, target tokens or panels section | `#tokens-colors`, `#composite-focused-panel`, `#composite-floating-panel-shell` | `#/edit?tour=design&step=design-system-route` |
+| `animation-preview` | Explore animations | Animation inspector + preview toggle | Select animatable node, inspector animation block visible, animation preview enabled | `[data-inspector-block="animation-behavior"]`, rail animation toggle | `#/edit?tour=design&step=animation-preview` |
 
 ### Topic 5: Pages, Routing, And Documentation Depth
 
@@ -97,10 +97,10 @@ Purpose: show product maturity: pages, URL semantics, validation, documentation,
 
 | Step | Title | Surface | Required editor state | Visual anchor | Proposed URL |
 | --- | --- | --- | --- | --- | --- |
-| `pages-panel` | This is a multi-page site editor | Pages panel | Pages panel open on active page | `[data-panel-trigger="pages"]`, `.editor-pages-panel` | `?tour=product&step=pages-panel` |
-| `page-routing` | Routing details are explicit UX | Page settings tab | Pages panel open to page settings for Home | `[data-page-row-id="page-home"]`, page settings fields | `?tour=product&step=page-routing` |
-| `link-validation` | Maintenance workflows are built in | Settings Transfer or Pages validation action | Settings transfer section open after link validation, or Pages panel validation entry | `[data-settings-nav="transfer"]` | `?tour=product&step=link-validation` |
-| `docs-history` | The work is documented as carefully as the UI | Help/About docs | Help open to Playground Spec, Style Guide, or Changelog | `[data-help-entry="doc:docs/PLAYGROUND_SPEC.md"]`, `[data-help-entry="doc:CHANGELOG.md"]` | `?tour=product&step=docs-history` |
+| `pages-panel` | This is a multi-page site editor | Pages panel | Pages panel open on active page | `[data-panel-trigger="pages"]`, `.editor-pages-panel` | `#/edit?tour=product&step=pages-panel` |
+| `page-routing` | Routing details are explicit UX | Page settings tab | Pages panel open to page settings for Home | `[data-page-row-id="page-home"]`, page settings fields | `#/edit?tour=product&step=page-routing` |
+| `link-validation` | Maintenance workflows are built in | Settings Transfer or Pages validation action | Settings transfer section open after link validation, or Pages panel validation entry | `[data-settings-nav="transfer"]` | `#/edit?tour=product&step=link-validation` |
+| `docs-history` | The work is documented as carefully as the UI | Help/About docs | Help open to Playground Spec, Style Guide, or Changelog | `[data-help-entry="doc:docs/PLAYGROUND_SPEC.md"]`, `[data-help-entry="doc:CHANGELOG.md"]` | `#/edit?tour=product&step=docs-history` |
 
 ## Step Navigation Intents
 

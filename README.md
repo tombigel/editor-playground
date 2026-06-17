@@ -8,7 +8,7 @@ It started from a conceptual sticky document and evolved into a more robust stru
 
 The editor includes a guided showcase tour for portfolio and job-search demos. It opens as an overlay on the real editor, highlights live surfaces, and moves through the app with URL-backed navigation rather than scripted DOM clicks.
 
-Start it from the editor Help menu, or deep link directly with `?tour=start&step=welcome`. The tour begins with a compact linear card; use the menu button in the tour header to jump non-linearly by topic.
+Start it from the editor Help menu, or deep link directly with `#/edit?tour=start&step=welcome`. The tour begins with a compact linear card; use the menu button in the tour header to jump non-linearly by topic.
 
 Current tour topics cover sticky authoring, editor structure and focus mode, API/navigation surfaces, the Google Fonts explorer, Slate rich-text editing, animation preview, pages, routing, validation, and documentation.
 

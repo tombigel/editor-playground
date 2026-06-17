@@ -124,7 +124,7 @@ As a site, a basic requirement is to have multiple pages. We choose to go the MP
 * **Routing in the editor preview — resolved:**
   1. On-stage: Google Docs model — clicking a link selects it; an interactive tooltip allows navigating to the target page. No routing inside the stage.
   2. Editor URL space is sacred: the editor's own hash routing (`#/design-system` etc.) must never collide with the authored site's page routing. The site uses static file output (not hash-based routing), so there is no collision risk in the editor — site routing only activates in preview/export mode.
-  3. URL-based editor modes: same app, different modes driven by URL parameter (e.g. `?mode=preview`). Preview mode strips editor chrome and renders the site fullscreen — openable in a new tab.
+  3. URL-based editor modes: same app, different modes driven by hash routes (e.g. `#/preview`). Preview mode strips editor chrome and renders the site fullscreen — openable in a new tab.
   4. Local dev: a `/preview` route on the local server renders the site with real routing outside editor chrome.
   5. Deployed (`sticky.tombigel.com`): a `preview.html` that loads the current site from localStorage in fullscreen mode. Subdomain option deferred.
 

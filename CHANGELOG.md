@@ -34,6 +34,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - restore drag listener dep arrays in LayersPanel and PageTreeContent
 - clarify child overflow naming
 - rename to editor playground
+- document hash-routed app modes
 
 ### Fixed
 

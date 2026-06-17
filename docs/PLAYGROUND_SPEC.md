@@ -1003,22 +1003,32 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 | `buildRouteManifest(document, options)` | Builds a manifest mapping page slugs to file paths and URLs. Respects `outputStructure` ('directory' or 'flat') from options. |
 | `buildHostingConfigs(document, options)` | Returns a `Record<string, string>` of hosting config files (Netlify `_redirects`, Vercel `vercel.json`, Nginx `nginx.conf`, and a README) keyed by their ZIP path under `hosting/`. Content adapts to `outputStructure`. |
 
+## App URL Modes
+
+- `/` and `#/` render the onboarding home.
+- Unknown hash routes fall back to the onboarding home.
+- `#/edit` opens the editor and continues the current localStorage-backed site.
+- `#/preview` opens the fullscreen rendered-site preview.
+- `#/design-system` opens the design-system showcase; section jumps use `#/design-system#section-id`.
+- Editor navigation state lives in the `#/edit` route search, for example `#/edit?tour=start&step=welcome`.
+- Legacy root query mode URLs such as `?mode=preview` and root-query tour links are not supported mode routes.
+
 ## Preview Model
 
 The preview surface allows viewing the rendered site at full width without editor controls.
 
 ### Preview mode activation
 
-- `?mode=preview` URL parameter opens preview mode
+- `#/preview` hash route opens preview mode
 - Preview-mode tab label displays the current page name
-- Floating "Back to Editor" button returns to the editor UI
+- Floating "Back to Editor" button returns to `#/edit`
 - Preview renders the full multi-page site with navigation
 - Sticky behavior is CSS-native in preview as in the editor
 
 ### Preview rendering
 
 - Sticky movement in preview is CSS-native.
-- `?mode=preview` injects the same generated site CSS and document font stylesheet that site export uses, so preview layout and typography match exported output.
+- `#/preview` injects the same generated site CSS and document font stylesheet that site export uses, so preview layout and typography match exported output.
 - Sticky layering uses one shared low z-index baseline across the editor stage and exported site rather than renderer-specific stacks.
 - Editor-only layering still prefers DOM order and local stacking contexts first; explicit layers are limited to a small named stack for selected nodes, sticky labels, and resize handles.
 
@@ -1254,13 +1264,13 @@ Language behavior:
   - once one top-level menu is open, hovering a sibling trigger switches to that menu
   - the open menu chain stays active until an item is chosen, `Esc` is pressed, or an outside click occurs
   - nested submenus open on hover/focus and overlap their parent menu slightly so there is no dead hover gap
-- `Settings` menu routes to `Import JSON`, `Export JSON`, `Export site`, and deep-links into `UI`, `Defaults`, `Fonts`, and `Advanced`
+- `Settings` menu routes to `Start fresh...`, `Import JSON`, `Export JSON`, `Export site`, and deep-links into `UI`, `Defaults`, `Fonts`, and `Advanced`
 - `Edit` menu exposes undo/redo plus placeholder copy/duplicate/paste entries and contextual delete
 - `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Components and Pages
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Design system showcase left-navigation jumps use URL-addressable hashes in the form `#/design-system#section-id`; they scroll only the main showcase pane and keep the top bar/back-to-editor affordance visible.
 - The showcase navigation stays aligned to the rendered base demos, including adjacent `Searchable Select` and `Searchable Multi Select` entries immediately after `Dropdown (Select)` and the hidden selection chrome variant.
-- Preview mode button (`?mode=preview`) opens the full-width preview in a new tab/window.
+- Preview mode button (`#/preview`) opens the full-width preview in a new tab/window.
 - Pages panel entry toggles a dedicated panel for multi-page management.
 - The main Settings panel `Pages` section reuses the same site-wide page settings content as the Pages panel `Settings` tab.
 - Editor popups, panels, dialogs, and tooltips use the native CSS Popover API so they render in the browser top layer.
@@ -1477,7 +1487,7 @@ Naming and title behavior:
 - `showHidden` is editor-only UI state; it changes stage ghost rendering and selection affordances but does not change exported site output.
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal` / `none` for no focused mode.
 - Editor navigation and deep-link state are headless API concerns in `src/api/editorNavigationApi.ts`. URL parsing/building, node target resolution, editor view flags, and transient panel requests must flow through that API before a feature-specific UI consumes them.
-- Editor URL navigation supports active page, selected node id, focused mode, panel target, settings/help/page targets, tour topic/step, sticky/debug/grid/animation preview flags, and spacer visibility. Invalid URL values are ignored instead of forcing malformed editor state.
+- Editor URL navigation uses `#/edit?...` and supports active page, selected node id, focused mode, panel target, settings/help/page targets, tour topic/step, sticky/debug/grid/animation preview flags, and spacer visibility. Invalid URL values are ignored instead of forcing malformed editor state.
 - Transient panel navigation uses typed panel ids (`settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes`) and panel requests. The app shell adapts those typed requests to the current floating panel implementation.
 - Feature walkthroughs and scripted navigation must not click editor DOM controls as a workaround for missing editor capabilities. If a step needs editor movement that is not expressible through `editorNavigationApi`, the editor API should be extended first.
 
@@ -1485,7 +1495,7 @@ Naming and title behavior:
 
 - The showcase tour is an editor overlay for portfolio/recruiting demos. It is non-linear: visitors can use Back/Next or jump by topic and step from the tour menu.
 - The first-phase tour map is fixed by `docs/SHOWCASE_TOUR_PHASE_1.md` and implemented as typed config in `src/app/showcaseTour/showcaseTourConfig.ts`.
-- Tour URL state uses `tour=<topicId>` and `step=<stepId>`. Loading a URL with those params opens the overlay at the resolved topic/step; invalid values fall back through `showcaseTourApi`.
+- Tour URL state uses `tour=<topicId>` and `step=<stepId>` in the `#/edit` route search. Loading a URL such as `#/edit?tour=start&step=welcome` opens the overlay at the resolved topic/step; invalid values fall back through `showcaseTourApi`.
 - Every step applies editor movement through `ShowcaseTourStepNavigation`, which can contain `EditorNavigationUrlState`, `EditorNodeTarget`, and/or `EditorPanelRequest` values. The overlay must not click editor controls to navigate. Steps should be complete scenes: focused mode is explicit (`null` clears it), and the panel scene starts by closing transient panels before opening only the panels required by that step.
 - Steps can also request an idempotent section-template insertion through the existing editor action. The request must name a template and a stable node name used to detect whether the tour already created that story surface.
 - The overlay renders in the native popover/top layer and opts into top-layer re-entry so it stays above editor panels and dialogs even when tour navigation opens those surfaces later. It does not blur the stage, and it can be minimized to a small “Show tour” control without closing the URL-backed tour state. The expanded tour panel and topic menu can be dragged separately by their headers during the current tour session; closing the tour clears both local positions and reopening returns them to the default compact placement.
