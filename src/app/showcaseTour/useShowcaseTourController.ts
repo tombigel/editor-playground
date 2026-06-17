@@ -1,5 +1,6 @@
 import {
 	useCallback,
+	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -125,6 +126,37 @@ export function useShowcaseTourController({
 			? createShowcaseTourReturnState(state, searchParams, "clean")
 			: null,
 	);
+	const searchTourLocation = useMemo<ShowcaseTourLocation | null>(() => {
+		const navigation = parseEditorNavigationSearch(searchParams);
+		if (!navigation.tourTopic && !navigation.tourStep) {
+			return null;
+		}
+		return resolveShowcaseTourLocation(SHOWCASE_TOUR_CONFIG, {
+			topicId: navigation.tourTopic,
+			stepId: navigation.tourStep,
+		});
+	}, [searchParams]);
+
+	useEffect(() => {
+		if (!searchTourLocation) {
+			if (showcaseTourLocation) {
+				setShowcaseTourLocation(null);
+			}
+			return;
+		}
+		if (
+			showcaseTourLocation?.topicId === searchTourLocation.topicId &&
+			showcaseTourLocation.stepId === searchTourLocation.stepId
+		) {
+			return;
+		}
+		tourReturnStateRef.current = createShowcaseTourReturnState(
+			state,
+			searchParams,
+			"clean",
+		);
+		setShowcaseTourLocation(searchTourLocation);
+	}, [searchParams, searchTourLocation, showcaseTourLocation, state]);
 
 	const applyPanelOpen = useCallback(
 		(panel: EditorPanelId, open: boolean) => {

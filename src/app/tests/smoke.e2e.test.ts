@@ -185,17 +185,22 @@ describe('app smoke e2e', () => {
       await navItem.waitFor({ state: 'visible' });
       await highlight.waitFor({ state: 'visible' });
 
-      const navBox = await navItem.boundingBox();
-      const highlightBox = await highlight.boundingBox();
-      if (!navBox || !highlightBox) {
-        throw new Error('Expected settings nav item and showcase highlight to be measurable');
-      }
-
-      expect(Math.abs(highlightBox.x - (navBox.x - 8))).toBeLessThanOrEqual(3);
-      expect(Math.abs(highlightBox.y - (navBox.y - 8))).toBeLessThanOrEqual(3);
-      expect(Math.abs(highlightBox.width - (navBox.width + 16))).toBeLessThanOrEqual(6);
-      expect(Math.abs(highlightBox.height - (navBox.height + 16))).toBeLessThanOrEqual(6);
-      expect(highlightBox.y).toBeGreaterThan(100);
+      await expect
+        .poll(async () => {
+          const navBox = await navItem.boundingBox();
+          const highlightBox = await highlight.boundingBox();
+          if (!navBox || !highlightBox) {
+            return false;
+          }
+          return (
+            Math.abs(highlightBox.x - (navBox.x - 8)) <= 3 &&
+            Math.abs(highlightBox.y - (navBox.y - 8)) <= 3 &&
+            Math.abs(highlightBox.width - (navBox.width + 16)) <= 6 &&
+            Math.abs(highlightBox.height - (navBox.height + 16)) <= 6 &&
+            highlightBox.y > 100
+          );
+        })
+        .toBe(true);
     }
 
     expect(pageErrors).toEqual([]);
