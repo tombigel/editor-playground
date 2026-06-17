@@ -30,7 +30,11 @@ describe('model/defaults', () => {
     expect(document.pages).toHaveLength(1);
     expect(document.pages?.[0]?.sectionIds).toEqual(sections.map((node) => node.id));
     expect(document.sharedRegionIds).toHaveLength(2);
-    expect(children.map((node) => node?.subtype)).toEqual(['header', 'section', 'footer']);
+    expect(children.map((node) => (node?.contentType === 'container' ? node.subtype : node?.contentType))).toEqual([
+      'header',
+      'section',
+      'footer',
+    ]);
     expect(sections).toHaveLength(1);
     expect(sections[0]).toMatchObject({ name: 'Blank Section', children: [] });
   });

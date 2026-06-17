@@ -421,7 +421,7 @@ export function AppShell({
 			return;
 		}
 		handledStartupActionIdRef.current = startupAction.id;
-		handleImportJson();
+		importInputRef.current?.click();
 		onStartupActionHandled(startupAction.id);
 	}, [onStartupActionHandled, startupAction]);
 

@@ -13,6 +13,7 @@ import { getNode } from '../model/selectors';
 import { parseUnitValue } from '../model/units';
 import {
   createBlankInitialDocument,
+  createInitialDocument,
   deleteNodeDoc,
   deleteNodesDoc,
   getTopLevelWrapperVisibilityState,
@@ -198,6 +199,7 @@ export const getStageSelectableNodeIds = stageNavigation.getStageSelectableNodeI
 export {
   SECTION_TEMPLATES,
   createBlankInitialDocument,
+  createInitialDocument,
   deleteNodeDoc,
   deleteNodesDoc,
   getNode,
