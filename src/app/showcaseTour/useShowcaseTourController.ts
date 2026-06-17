@@ -164,7 +164,13 @@ export function useShowcaseTourController({
 			"clean",
 		);
 		setShowcaseTourLocation(searchTourLocation);
-	}, [searchParams, searchTourLocation, showcaseTourLocation, state]);
+	}, [
+		searchParams,
+		searchTourKey,
+		searchTourLocation,
+		showcaseTourLocation,
+		state,
+	]);
 
 	const applyPanelOpen = useCallback(
 		(panel: EditorPanelId, open: boolean) => {
