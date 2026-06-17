@@ -11,6 +11,7 @@ import {
 } from "../api/fontApi";
 import { getShortcutPlatform } from "@/lib/shortcuts";
 import { AppShell } from "./AppShell";
+import type { AppMode } from "./appRouting";
 import {
 	importSettingsDocument,
 	resetEditorData,
@@ -26,7 +27,12 @@ import { useEditorKeyboardShortcuts } from "./useEditorKeyboardShortcuts";
 import { openPreviewSiteWindow } from "./previewWindow";
 import type { ShortcutExecutionHandlers } from "./types";
 
-export function App() {
+type AppProps = {
+	mode?: Extract<AppMode, "edit" | "preview">;
+	routeSearchParams?: URLSearchParams;
+};
+
+export function App({ mode = "edit", routeSearchParams }: AppProps) {
 	const [historyState, dispatch] = useReducer(
 		historyReducer,
 		undefined,
@@ -329,6 +335,8 @@ export function App() {
 			onImportDocument={handleImportDocument}
 			onResetData={handleResetData}
 			onResetAll={handleResetAll}
+			appMode={mode}
+			routeSearchParams={routeSearchParams}
 		/>
 	);
 }

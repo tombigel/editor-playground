@@ -53,6 +53,7 @@ import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { HelpEntry } from "../panels/helpDocs";
 import { validateLinks } from "../api/documentViewApi";
 import { useShowcaseTourController } from "./showcaseTour/useShowcaseTourController";
+import type { AppMode } from "./appRouting";
 
 type Props = {
 	state: EditorState;
@@ -106,6 +107,8 @@ type Props = {
 	onImportDocument: (raw: string) => Promise<ActionResult>;
 	onResetData: () => void;
 	onResetAll: () => void;
+	appMode?: Extract<AppMode, "edit" | "preview">;
+	routeSearchParams?: URLSearchParams;
 };
 
 export function AppShell({
@@ -160,15 +163,17 @@ export function AppShell({
 	onImportDocument,
 	onResetData,
 	onResetAll,
+	appMode = "edit",
+	routeSearchParams,
 }: Props) {
 	const searchParams = useMemo(
 		() =>
-			typeof window !== "undefined"
-				? new URLSearchParams(window.location.search)
+			routeSearchParams
+				? new URLSearchParams(routeSearchParams)
 				: new URLSearchParams(),
-		[],
+		[routeSearchParams],
 	);
-	const isPreview = searchParams.get("mode") === "preview";
+	const isPreview = appMode === "preview";
 	const editorWindowId = useMemo(() => getOrCreateEditorWindowId(), []);
 
 	const [showStorageWarning, setShowStorageWarning] = useState(false);

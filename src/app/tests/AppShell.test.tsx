@@ -55,11 +55,12 @@ function createProps(): ComponentProps<typeof AppShell> {
 describe("app/AppShell", () => {
 	it("injects exported site css into preview mode", () => {
 		vi.stubGlobal("window", {
-			location: { search: "?mode=preview" },
+			location: { origin: "http://localhost", pathname: "/" },
+			localStorage: { getItem: () => null, setItem: () => undefined },
 		});
 
 		try {
-			const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+			const markup = renderToStaticMarkup(<AppShell {...createProps()} appMode="preview" />);
 
 			expect(markup).toContain('data-preview-site-css="true"');
 			expect(markup).toContain(".sp-site");
@@ -181,7 +182,12 @@ describe("app/AppShell", () => {
 		});
 
 		try {
-			const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+			const markup = renderToStaticMarkup(
+				<AppShell
+					{...createProps()}
+					routeSearchParams={new URLSearchParams("tour=api&step=model-transfer")}
+				/>,
+			);
 
 			expect(markup).toContain('data-showcase-tour="true"');
 			expect(markup).toContain('data-showcase-tour-skin="showcase"');
