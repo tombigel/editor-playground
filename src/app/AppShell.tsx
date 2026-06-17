@@ -53,7 +53,7 @@ import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { HelpEntry } from "../panels/helpDocs";
 import { validateLinks } from "../api/documentViewApi";
 import { useShowcaseTourController } from "./showcaseTour/useShowcaseTourController";
-import type { AppMode } from "./appRouting";
+import type { AppMode, AppStartupAction } from "./appRouting";
 
 type Props = {
 	state: EditorState;
@@ -109,6 +109,8 @@ type Props = {
 	onResetAll: () => void;
 	appMode?: Extract<AppMode, "edit" | "preview">;
 	routeSearchParams?: URLSearchParams;
+	startupAction?: AppStartupAction | null;
+	onStartupActionHandled?: (id: number) => void;
 };
 
 export function AppShell({
@@ -165,6 +167,8 @@ export function AppShell({
 	onResetAll,
 	appMode = "edit",
 	routeSearchParams,
+	startupAction = null,
+	onStartupActionHandled = () => undefined,
 }: Props) {
 	const searchParams = useMemo(
 		() =>
@@ -194,6 +198,7 @@ export function AppShell({
 		null as ReturnType<typeof validateLinks> | null,
 	);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
+	const handledStartupActionIdRef = useRef<number | null>(null);
 	const {
 		showcaseTourLocation,
 		setShowcaseTourLocation,
@@ -406,6 +411,19 @@ export function AppShell({
 			setHelpEntryTarget(undefined);
 		}
 	}, [helpOpen]);
+
+	useEffect(() => {
+		if (
+			!startupAction ||
+			startupAction.type !== "loadJson" ||
+			handledStartupActionIdRef.current === startupAction.id
+		) {
+			return;
+		}
+		handledStartupActionIdRef.current = startupAction.id;
+		handleImportJson();
+		onStartupActionHandled(startupAction.id);
+	}, [onStartupActionHandled, startupAction]);
 
 	function handleStageSelect(
 		id: string,

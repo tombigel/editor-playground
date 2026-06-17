@@ -1,5 +1,9 @@
-import { useReducer, useState } from "react";
-import type { StickyGeometrySnapshot } from "../api/editorApi";
+import { useEffect, useReducer, useRef, useState } from "react";
+import {
+	createBlankInitialDocument,
+	createInitialDocument,
+	type StickyGeometrySnapshot,
+} from "../api/editorApi";
 import { isTextNode } from "../api/documentViewApi";
 import {
 	BOLD_FONT_WEIGHT,
@@ -11,7 +15,7 @@ import {
 } from "../api/fontApi";
 import { getShortcutPlatform } from "@/lib/shortcuts";
 import { AppShell } from "./AppShell";
-import type { AppMode } from "./appRouting";
+import type { AppMode, AppStartupAction } from "./appRouting";
 import {
 	importSettingsDocument,
 	resetEditorData,
@@ -30,14 +34,22 @@ import type { ShortcutExecutionHandlers } from "./types";
 type AppProps = {
 	mode?: Extract<AppMode, "edit" | "preview">;
 	routeSearchParams?: URLSearchParams;
+	startupAction?: AppStartupAction | null;
+	onStartupActionHandled?: (id: number) => void;
 };
 
-export function App({ mode = "edit", routeSearchParams }: AppProps) {
+export function App({
+	mode = "edit",
+	routeSearchParams,
+	startupAction = null,
+	onStartupActionHandled = () => undefined,
+}: AppProps) {
 	const [historyState, dispatch] = useReducer(
 		historyReducer,
 		undefined,
 		createHistoryState,
 	);
+	const handledStartupActionIdRef = useRef<number | null>(null);
 	const state = historyState.present;
 	const [stickyGeometry, setStickyGeometry] = useState<StickyGeometrySnapshot>(
 		{},
@@ -155,6 +167,31 @@ export function App({ mode = "edit", routeSearchParams }: AppProps) {
   }
 
   useAppRuntime(state, viewModel.resolvedTheme, dispatch);
+
+	useEffect(() => {
+		if (
+			!startupAction ||
+			handledStartupActionIdRef.current === startupAction.id
+		) {
+			return;
+		}
+		if (startupAction.type === "startBlank") {
+			dispatch({
+				type: "importDocument",
+				document: createBlankInitialDocument(),
+			});
+			handledStartupActionIdRef.current = startupAction.id;
+			onStartupActionHandled(startupAction.id);
+		}
+		if (startupAction.type === "startTour") {
+			dispatch({
+				type: "importDocument",
+				document: createInitialDocument(),
+			});
+			handledStartupActionIdRef.current = startupAction.id;
+			onStartupActionHandled(startupAction.id);
+		}
+	}, [onStartupActionHandled, startupAction]);
 
   const shortcutHandlers: ShortcutExecutionHandlers = {
     app: {
@@ -337,6 +374,8 @@ export function App({ mode = "edit", routeSearchParams }: AppProps) {
 			onResetAll={handleResetAll}
 			appMode={mode}
 			routeSearchParams={routeSearchParams}
+			startupAction={startupAction}
+			onStartupActionHandled={onStartupActionHandled}
 		/>
 	);
 }

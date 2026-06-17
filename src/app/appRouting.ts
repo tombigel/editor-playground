@@ -6,6 +6,11 @@ export type AppRoute = {
 	rawHash: string;
 };
 
+export type AppStartupAction = {
+	id: number;
+	type: "startBlank" | "loadJson" | "startTour";
+};
+
 export const EDIT_ROUTE_HASH = "#/edit";
 export const HOME_ROUTE_HASH = "#/";
 export const PREVIEW_ROUTE_HASH = "#/preview";
