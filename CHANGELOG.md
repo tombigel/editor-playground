@@ -11,6 +11,11 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+---
+
+## [0.10.0] — 2026-06-17
+Document: 1.6.0 · API: 2.3.0 · Editor: 0.17.0
+
 ### Added
 
 - revise stage drag placement model
