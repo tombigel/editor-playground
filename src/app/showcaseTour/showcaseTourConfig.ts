@@ -20,7 +20,7 @@ const ensureStickyEdgeLab = () => ({
 	ifMissingNodeName: "Sticky Edge Lab",
 });
 
-const PREVIEW_SITE_HREF = "?mode=preview";
+const PREVIEW_SITE_HREF = "#/preview";
 
 export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 	entryTopicId: "start",

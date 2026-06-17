@@ -22,6 +22,7 @@ import type { HelpEntry } from "@/panels/helpDocs";
 import type { SettingsSectionId } from "@/panels/settings/settingsSections";
 import type { EditorState } from "@/api/editorApi";
 import type { HistoryAction } from "../editorState";
+import { buildAppHash, parseAppRoute } from "../appRouting";
 import { SHOWCASE_TOUR_CONFIG } from "./showcaseTourConfig";
 
 const EDITOR_NAVIGATION_SEARCH_KEYS = [
@@ -278,19 +279,21 @@ export function useShowcaseTourController({
 		const location = resolveShowcaseTourLocation(SHOWCASE_TOUR_CONFIG, null);
 		tourReturnStateRef.current = createShowcaseTourReturnState(
 			state,
-			typeof window === "undefined" ? searchParams : window.location.search,
+			typeof window === "undefined"
+				? searchParams
+				: parseAppRoute(window.location.hash).search,
 			"preserve",
 		);
 		setShowcaseTourLocation(location);
 		if (typeof window === "undefined") return;
 		const nextSearch = buildEditorNavigationSearch(
 			{ tourTopic: location.topicId, tourStep: location.stepId },
-			window.location.search,
+			parseAppRoute(window.location.hash).search,
 		);
 		window.history.replaceState(
 			null,
 			"",
-			`${window.location.pathname}${nextSearch}${window.location.hash}`,
+			`${window.location.pathname}${buildAppHash("edit", nextSearch)}`,
 		);
 	}, [searchParams, state]);
 
@@ -308,9 +311,7 @@ export function useShowcaseTourController({
 		window.history.replaceState(
 			null,
 			"",
-			`${window.location.pathname}${returnState?.search ?? ""}${
-				window.location.hash
-			}`,
+			`${window.location.pathname}${buildAppHash("edit", returnState?.search)}`,
 		);
 	}, [dispatch]);
 

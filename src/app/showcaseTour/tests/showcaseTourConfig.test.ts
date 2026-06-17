@@ -60,7 +60,7 @@ describe("showcase tour config", () => {
 		expect(step?.action).toEqual({
 			type: "externalLink",
 			label: "Open preview in a new tab",
-			href: "?mode=preview",
+			href: "#/preview",
 		});
 	});
 

@@ -23,6 +23,7 @@ import {
 	buildEditorNavigationSearch,
 	type EditorNavigationUrlState,
 } from "@/api/editorNavigationApi";
+import { buildAppHash, parseAppRoute } from "../appRouting";
 import {
 	getAdjacentShowcaseTourStep,
 	getShowcaseTourStep,
@@ -643,16 +644,16 @@ function syncTourUrl(
 			tourTopic: location.topicId,
 			tourStep: location.stepId,
 		},
-		getSanitizedTourBaseSearch(window.location.search),
+		getSanitizedTourBaseSearch(parseAppRoute(window.location.hash).search),
 	);
 	window.history.replaceState(
 		null,
 		"",
-		`${window.location.pathname}${nextSearch}${window.location.hash}`,
+		`${window.location.pathname}${buildAppHash("edit", nextSearch)}`,
 	);
 }
 
-function getSanitizedTourBaseSearch(search: string) {
+function getSanitizedTourBaseSearch(search: string | URLSearchParams) {
 	const params = new URLSearchParams(search);
 	for (const key of EDITOR_NAVIGATION_SEARCH_KEYS) {
 		params.delete(key);

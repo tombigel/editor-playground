@@ -9,6 +9,16 @@ async function expectEditorReady(page: Page, url: string) {
   await page.locator('.stage-shell').waitFor({ state: 'visible' });
 }
 
+function getHashSearchParams(url: string) {
+  const hash = new URL(url).hash;
+  const queryStart = hash.indexOf('?');
+  const queryEnd = hash.indexOf('#', queryStart);
+  if (queryStart === -1) {
+    return new URLSearchParams();
+  }
+  return new URLSearchParams(hash.slice(queryStart + 1, queryEnd === -1 ? undefined : queryEnd));
+}
+
 describe('app smoke e2e', () => {
   let server: StartedServer;
   let browser: Browser;
@@ -39,7 +49,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(nextPage, server.url);
+    await expectEditorReady(nextPage, `${server.url}/#/edit`);
     page = nextPage;
     return nextPage;
   }
@@ -93,7 +103,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=start&step=welcome`);
     page = smokePage;
 
     const tour = smokePage.locator('[data-showcase-tour="true"]');
@@ -167,7 +177,7 @@ describe('app smoke e2e', () => {
     ]) {
       await expectEditorReady(
         smokePage,
-        `${server.url}/?tour=${topic}&step=${step}`,
+        `${server.url}/#/edit?tour=${topic}&step=${step}`,
       );
       await smokePage.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
       const navItem = smokePage.locator(`[data-settings-nav="${navId}"]`);
@@ -202,7 +212,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=menu-is-nonlinear`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=start&step=menu-is-nonlinear`);
     page = smokePage;
 
     const tourMenu = smokePage.getByRole('navigation', { name: 'Showcase tour topics' });
@@ -226,7 +236,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=api&step=model-transfer&panel=settings&settings=transfer&keep=1`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=api&step=model-transfer&panel=settings&settings=transfer&keep=1`);
     page = smokePage;
 
     await smokePage.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
@@ -234,7 +244,7 @@ describe('app smoke e2e', () => {
     await tourCard.getByRole('button', { name: 'Next' }).click();
     await tourCard.filter({ hasText: 'The editor model renders as a site' }).waitFor({ state: 'visible' });
 
-    const searchParams = new URL(smokePage.url()).searchParams;
+    const searchParams = getHashSearchParams(smokePage.url());
     expect(searchParams.get('keep')).toBe('1');
     expect(searchParams.get('tour')).toBe('api');
     expect(searchParams.get('step')).toBe('site-preview-export');
@@ -242,7 +252,7 @@ describe('app smoke e2e', () => {
     expect(searchParams.has('settings')).toBe(false);
     const previewAction = tourCard.getByRole('link', { name: 'Open preview in a new tab' });
     await previewAction.waitFor({ state: 'visible' });
-    expect(await previewAction.getAttribute('href')).toBe('?mode=preview');
+    expect(await previewAction.getAttribute('href')).toBe('#/preview');
     expect(await previewAction.getAttribute('target')).toBe('_blank');
 
     const highlight = smokePage.locator('[data-showcase-tour-highlight="true"]');
@@ -270,14 +280,14 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=api&step=debug-info&keep=1`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=api&step=debug-info&keep=1`);
     page = smokePage;
 
     const tour = smokePage.locator('[data-showcase-tour="true"]');
     await tour.waitFor({ state: 'visible' });
     await tour.filter({ hasText: 'Inspect debug state' }).waitFor({ state: 'visible' });
 
-    const tourSearchParams = new URL(smokePage.url()).searchParams;
+    const tourSearchParams = getHashSearchParams(smokePage.url());
     expect(tourSearchParams.get('tour')).toBe('api');
     expect(tourSearchParams.get('step')).toBe('debug-info');
     expect(tourSearchParams.get('debug')).toBe('1');
@@ -285,7 +295,7 @@ describe('app smoke e2e', () => {
     await smokePage.getByRole('button', { name: 'Close showcase tour' }).click();
     await tour.waitFor({ state: 'hidden' });
 
-    const cleanSearchParams = new URL(smokePage.url()).searchParams;
+    const cleanSearchParams = getHashSearchParams(smokePage.url());
     expect(cleanSearchParams.get('keep')).toBe('1');
     expect(cleanSearchParams.has('tour')).toBe(false);
     expect(cleanSearchParams.has('step')).toBe(false);
@@ -312,7 +322,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=start&step=welcome`);
     page = smokePage;
 
     const tourCard = smokePage.locator('[data-showcase-tour-card="true"]');
@@ -418,7 +428,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=start&step=welcome`);
     page = smokePage;
 
     await smokePage.locator('[data-ui="menubar-trigger"][data-menu-id="view"]').click();
@@ -454,7 +464,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=start&step=welcome`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=start&step=welcome`);
     page = smokePage;
 
     await smokePage.locator('[data-ui="menubar-trigger"][data-menu-id="settings"]').click();
@@ -490,7 +500,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=sticky&step=sticky-templates`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=sticky&step=sticky-templates`);
     page = smokePage;
 
     await smokePage.locator('[data-showcase-tour="true"]').waitFor({ state: 'visible' });
@@ -511,7 +521,7 @@ describe('app smoke e2e', () => {
       window.localStorage.clear();
       window.sessionStorage.clear();
     });
-    await expectEditorReady(smokePage, `${server.url}/?tour=sticky&step=sticky-guides`);
+    await expectEditorReady(smokePage, `${server.url}/#/edit?tour=sticky&step=sticky-guides`);
     page = smokePage;
 
     await smokePage.locator('[data-showcase-tour="true"]').waitFor({ state: 'visible' });

@@ -174,9 +174,9 @@ describe("app/AppShell", () => {
 		vi.stubGlobal("window", {
 			name: "",
 			location: {
-				search: "?tour=api&step=model-transfer",
+				search: "",
+				hash: "#/edit?tour=api&step=model-transfer",
 				pathname: "/",
-				hash: "",
 			},
 			history: { replaceState: vi.fn() },
 		});

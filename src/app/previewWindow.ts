@@ -1,4 +1,5 @@
-const PREVIEW_MODE_PARAM = 'preview';
+import { buildAppHash } from "./appRouting";
+
 const WINDOW_GROUP_STORAGE_KEY = 'sticky-window-group-id';
 
 export function getOrCreateEditorWindowId() {
@@ -26,6 +27,6 @@ export function openPreviewSiteWindow(editorWindowId = getOrCreateEditorWindowId
   }
 
   const previewUrl = new URL(window.location.pathname, window.location.origin);
-  previewUrl.searchParams.set('mode', PREVIEW_MODE_PARAM);
+  previewUrl.hash = buildAppHash('preview');
   window.open(previewUrl.toString(), `sticky-preview-${editorWindowId}`);
 }

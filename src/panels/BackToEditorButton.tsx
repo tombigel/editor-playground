@@ -1,7 +1,8 @@
 import { Button } from '../components/ui/button';
+import { buildAppHash } from '../app/appRouting';
 
 export function BackToEditorButton() {
-  const editorUrl = `${window.location.origin}${window.location.pathname}`;
+  const editorUrl = `${window.location.origin}${window.location.pathname}${buildAppHash('edit')}`;
   const editorWindowId =
     'localStorage' in window ? window.localStorage.getItem('sticky-window-group-id') : null;
 

@@ -17,6 +17,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add svg logo variants
 - add blank starter document factory
 - route app modes through hash paths
+- update preview and tour hash URLs
 
 ### Changed
 
