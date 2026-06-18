@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Added
 
 - add stage copy paste duplicate
+- preserve rich html paste content
 
 ### Fixed
 

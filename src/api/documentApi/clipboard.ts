@@ -1,5 +1,8 @@
 import { createLinkTextNode, createMediaNode, createTextNode, syncIdCountersWithDocument } from '../../model/defaults';
+import { extractPrimaryFontFamily, getDocumentFontFamily } from '../../fonts';
 import {
+  createRichListBlock,
+  createRichListItem,
   createRichTextBlock,
   createRichTextLeaf,
   createTextDocumentContent,
@@ -12,8 +15,13 @@ import type {
   DocumentNode,
   LeafNode,
   NodeId,
+  RichBlock,
+  RichBlockStyle,
   RichInlineNode,
+  RichListItem,
+  RichTextBlockType,
   RichTextLeaf,
+  TextDocumentContent,
 } from '../../model/types';
 import { isContainerNode, isLeafNode } from '../../model/types';
 import type { PageId } from '../../model/types/site';
@@ -45,6 +53,24 @@ export type PasteNodesResult = {
 export type ExternalClipboardData = {
   text?: string;
   html?: string;
+};
+
+type HtmlElementNode = {
+  type: 'element';
+  tagName: string;
+  attributes: Record<string, string>;
+  children: HtmlNode[];
+};
+
+type HtmlTextNode = {
+  type: 'text';
+  text: string;
+};
+
+type HtmlNode = HtmlElementNode | HtmlTextNode;
+
+type HtmlConversionContext = {
+  document: DocumentModel;
 };
 
 export function serializeNodesForClipboardDoc(
@@ -182,6 +208,13 @@ export function createNodeClipboardJson(payload: EditorNodeClipboardPayload) {
   return JSON.stringify(payload);
 }
 
+export function createTextDocumentContentFromClipboardHtml(
+  document: DocumentModel,
+  data: ExternalClipboardData,
+): TextDocumentContent {
+  return createRichTextContentFromHtml(document, data.html ?? '', data.text);
+}
+
 export function createNodeFromExternalClipboardDoc(
   document: DocumentModel,
   data: ExternalClipboardData,
@@ -202,7 +235,7 @@ export function createNodeFromExternalClipboardDoc(
   }
 
   const content = data.html
-    ? createRichTextContentFromHtml(data.html, data.text)
+    ? createTextDocumentContentFromClipboardHtml(document, data)
     : createTextDocumentFromText(data.text ?? '');
   const node = createTextNode('rich', targetParentId);
   node.name = 'Pasted Text';
@@ -248,93 +281,319 @@ function createExternalLinkNode(parentId: NodeId, url: string) {
   return node;
 }
 
-function createRichTextContentFromHtml(html: string, fallbackText = '') {
-  if (typeof DOMParser === 'undefined') {
-    return createTextDocumentFromText(fallbackText);
-  }
-
-  const parsed = new DOMParser().parseFromString(html, 'text/html');
-  const blockElements = Array.from(
-    parsed.body.querySelectorAll('h1,h2,h3,h4,h5,h6,p,blockquote,div,li'),
-  );
-  const sources = blockElements.length > 0 ? blockElements : [parsed.body];
-  const blocks = sources
-    .map((element) => {
-      const children = inlineNodesFromDom(element);
-      if (children.length === 0 || getInlineText(children).trim().length === 0) {
-        return null;
-      }
-      return createRichTextBlock(resolveHtmlBlockType(element), children);
-    })
-    .filter((block): block is NonNullable<typeof block> => Boolean(block));
+function createRichTextContentFromHtml(
+  document: DocumentModel,
+  html: string,
+  fallbackText = '',
+) {
+  const roots = parseClipboardHtml(html);
+  const context: HtmlConversionContext = { document };
+  const blocks = roots.flatMap((node) => htmlNodeToBlocks(node, context));
 
   return createTextDocumentContent(
     blocks.length > 0
       ? blocks
-      : [createRichTextBlock('paragraph', [createRichTextLeaf(fallbackText)])],
+      : [createRichTextBlock('paragraph', [createRichTextLeaf(fallbackText ?? '')])],
   );
 }
 
-function inlineNodesFromDom(root: Element): RichInlineNode[] {
-  const leaves: RichInlineNode[] = [];
-  root.childNodes.forEach((child) => {
-    leaves.push(...inlineNodesFromChild(child, {}));
-  });
-  return leaves.length > 0 ? leaves : [createRichTextLeaf(root.textContent ?? '')];
-}
-
-function inlineNodesFromChild(node: ChildNode, inherited: Partial<RichTextLeaf>): RichInlineNode[] {
-  if (node.nodeType === Node.TEXT_NODE) {
-    const text = node.textContent ?? '';
-    return text ? [createRichTextLeaf(text, inherited)] : [];
-  }
-  if (node.nodeType !== Node.ELEMENT_NODE) {
+function parseClipboardHtml(html: string): HtmlNode[] {
+  if (!html.trim()) {
     return [];
   }
+  if (typeof DOMParser !== 'undefined') {
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    return Array.from(parsed.body.childNodes).map(domNodeToHtmlNode).filter((node): node is HtmlNode => node !== null);
+  }
+  return parseClipboardHtmlFallback(html);
+}
 
+function domNodeToHtmlNode(node: ChildNode): HtmlNode | null {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return { type: 'text', text: node.textContent ?? '' };
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return null;
+  }
   const element = node as HTMLElement;
-  const marks = resolveElementMarks(element, inherited);
-  const children = Array.from(element.childNodes).flatMap((child) => inlineNodesFromChild(child, marks));
-  if (element.tagName.toLowerCase() === 'a') {
-    const href = element.getAttribute('href') ?? undefined;
+  return {
+    type: 'element',
+    tagName: element.tagName.toLowerCase(),
+    attributes: Object.fromEntries(Array.from(element.attributes).map((attribute) => [attribute.name.toLowerCase(), attribute.value])),
+    children: Array.from(element.childNodes).map(domNodeToHtmlNode).filter((child): child is HtmlNode => child !== null),
+  };
+}
+
+function parseClipboardHtmlFallback(html: string): HtmlNode[] {
+  const root: HtmlElementNode = { type: 'element', tagName: 'body', attributes: {}, children: [] };
+  const stack: HtmlElementNode[] = [root];
+  const tokenPattern = /<\/?[^>]+>|[^<]+/g;
+  const voidTags = new Set(['br', 'img', 'meta', 'link', 'input', 'hr']);
+  for (const token of html.match(tokenPattern) ?? []) {
+    if (token.startsWith('</')) {
+      const tagName = token.slice(2, -1).trim().toLowerCase();
+      let index = -1;
+      for (let stackIndex = stack.length - 1; stackIndex >= 0; stackIndex -= 1) {
+        if (stack[stackIndex].tagName === tagName) {
+          index = stackIndex;
+          break;
+        }
+      }
+      if (index > 0) {
+        stack.length = index;
+      }
+      continue;
+    }
+    if (token.startsWith('<')) {
+      const selfClosing = token.endsWith('/>');
+      const tagSource = token.slice(1, selfClosing ? -2 : -1).trim();
+      const [rawTagName = ''] = tagSource.split(/\s+/, 1);
+      const tagName = rawTagName.toLowerCase();
+      if (!tagName || tagName.startsWith('!')) {
+        continue;
+      }
+      const element: HtmlElementNode = {
+        type: 'element',
+        tagName,
+        attributes: parseHtmlAttributes(tagSource.slice(rawTagName.length)),
+        children: [],
+      };
+      stack[stack.length - 1].children.push(element);
+      if (!selfClosing && !voidTags.has(tagName)) {
+        stack.push(element);
+      }
+      continue;
+    }
+    stack[stack.length - 1].children.push({ type: 'text', text: decodeHtmlEntities(token) });
+  }
+  return root.children;
+}
+
+function parseHtmlAttributes(source: string) {
+  const attributes: Record<string, string> = {};
+  const attributePattern = /([^\s"'=<>`]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  for (const match of source.matchAll(attributePattern)) {
+    attributes[match[1].toLowerCase()] = decodeHtmlEntities(match[2] ?? match[3] ?? match[4] ?? '');
+  }
+  return attributes;
+}
+
+function decodeHtmlEntities(value: string) {
+  return value
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function htmlNodeToBlocks(node: HtmlNode, context: HtmlConversionContext): RichBlock[] {
+  if (node.type === 'text') {
+    const text = node.text;
+    return text.trim() ? [createRichTextBlock('paragraph', [createRichTextLeaf(text)])] : [];
+  }
+
+  const tagName = node.tagName;
+  if (tagName === 'ul' || tagName === 'ol') {
+    const items = node.children.flatMap((child) => listItemsFromHtmlNode(child, context, {}));
+    if (items.length === 0) {
+      return [];
+    }
+    return [createRichListBlock(tagName, items, {
+      start: tagName === 'ol' ? Number.parseInt(node.attributes.start, 10) || undefined : undefined,
+      markerStyle: resolveListMarkerStyle(node),
+      style: resolveBlockStyle(node, context),
+    })];
+  }
+
+  if (isHtmlBlockTag(tagName)) {
+    const children = inlineNodesFromHtmlChildren(node.children, context, resolveElementMarks(node, {}, context));
+    if (children.length === 0 || getInlineText(children).trim().length === 0) {
+      return [];
+    }
+    return [createRichTextBlock(resolveHtmlBlockType(tagName), children, {
+      style: resolveBlockStyle(node, context),
+    })];
+  }
+
+  return node.children.flatMap((child) => htmlNodeToBlocks(child, context));
+}
+
+function listItemsFromHtmlNode(
+  node: HtmlNode,
+  context: HtmlConversionContext,
+  inherited: Partial<RichTextLeaf>,
+): RichListItem[] {
+  if (node.type !== 'element' || node.tagName !== 'li') {
+    return [];
+  }
+  const marks = resolveElementMarks(node, inherited, context);
+  const children = inlineNodesFromHtmlChildren(node.children, context, marks);
+  return [createRichListItemFromChildren(children.length > 0 ? children : [createRichTextLeaf('')])];
+}
+
+function createRichListItemFromChildren(children: RichInlineNode[]): RichListItem {
+  return {
+    ...createRichListItem(''),
+    children,
+  };
+}
+
+function inlineNodesFromHtmlChildren(
+  nodes: HtmlNode[],
+  context: HtmlConversionContext,
+  inherited: Partial<RichTextLeaf>,
+): RichInlineNode[] {
+  return nodes.flatMap((node) => inlineNodesFromHtmlNode(node, context, inherited));
+}
+
+function inlineNodesFromHtmlNode(
+  node: HtmlNode,
+  context: HtmlConversionContext,
+  inherited: Partial<RichTextLeaf>,
+): RichInlineNode[] {
+  if (node.type === 'text') {
+    return node.text ? [createRichTextLeaf(node.text, inherited)] : [];
+  }
+
+  if (node.tagName === 'br') {
+    return [createRichTextLeaf('\n', inherited)];
+  }
+
+  const marks = resolveElementMarks(node, inherited, context);
+  const children = inlineNodesFromHtmlChildren(node.children, context, marks);
+  if (node.tagName === 'a') {
+    const href = node.attributes.href;
     return [{
       type: 'link',
       linkType: 'external',
       ...(href ? { href } : {}),
       openInNewTab: true,
-      children: children.filter((child): child is RichTextLeaf => 'text' in child),
+      children: children.flatMap((child) => ('text' in child ? [child] : child.children)),
     }];
   }
+
+  if (isHtmlBlockTag(node.tagName) || node.tagName === 'li') {
+    return children.length > 0 ? children : [createRichTextLeaf(getHtmlText(node), marks)];
+  }
+
   return children;
 }
 
-function resolveElementMarks(element: HTMLElement, inherited: Partial<RichTextLeaf>) {
-  const tagName = element.tagName.toLowerCase();
-  const style = element.style;
+function resolveElementMarks(
+  element: HtmlElementNode,
+  inherited: Partial<RichTextLeaf>,
+  context: HtmlConversionContext,
+): Partial<RichTextLeaf> {
+  const tagName = element.tagName;
+  const style = parseCssStyle(element.attributes.style ?? '');
+  const textDecoration = `${style['text-decoration'] ?? ''} ${style['text-decoration-line'] ?? ''}`;
+  const fontWeight = parseFontWeight(style['font-weight']);
+  const fontFamily = resolvePastedFontFamily(style['font-family'], context.document);
+
   return {
     ...inherited,
     ...(tagName === 'strong' || tagName === 'b' ? { bold: true } : {}),
     ...(tagName === 'em' || tagName === 'i' ? { italic: true } : {}),
     ...(tagName === 'u' ? { underline: true } : {}),
     ...(tagName === 's' || tagName === 'strike' || tagName === 'del' ? { strikethrough: true } : {}),
-    ...(style.fontWeight === 'bold' || Number.parseInt(style.fontWeight, 10) >= 700 ? { bold: true, fontWeight: 700 } : {}),
-    ...(style.fontStyle === 'italic' ? { italic: true } : {}),
-    ...(style.textDecorationLine.includes('underline') ? { underline: true } : {}),
-    ...(style.textDecorationLine.includes('line-through') ? { strikethrough: true } : {}),
+    ...(fontWeight !== undefined ? { fontWeight, ...(fontWeight >= 600 ? { bold: true } : {}) } : {}),
+    ...(style['font-style'] === 'italic' ? { italic: true } : {}),
+    ...(textDecoration.includes('underline') ? { underline: true } : {}),
+    ...(textDecoration.includes('line-through') ? { strikethrough: true } : {}),
     ...(style.color ? { color: style.color } : {}),
-    ...(style.backgroundColor ? { backgroundColor: style.backgroundColor } : {}),
-    ...(style.fontFamily ? { fontFamily: style.fontFamily } : {}),
-    ...(style.fontSize ? { fontSize: style.fontSize } : {}),
+    ...(style['background-color'] ? { backgroundColor: style['background-color'] } : {}),
+    ...(fontFamily ? { fontFamily } : {}),
+    ...(style['font-size'] ? { fontSize: style['font-size'] } : {}),
   };
 }
 
-function resolveHtmlBlockType(element: Element) {
-  const tagName = element.tagName.toLowerCase();
+function resolveBlockStyle(element: HtmlElementNode, context: HtmlConversionContext): RichBlockStyle | undefined {
+  const marks = resolveElementMarks(element, {}, context);
+  const style = parseCssStyle(element.attributes.style ?? '');
+  const textAlign = resolveTextAlign(style['text-align']);
+  return {
+    ...(marks.color ? { color: marks.color } : {}),
+    ...(marks.backgroundColor ? { background: marks.backgroundColor } : {}),
+    ...(marks.fontFamily ? { fontFamily: marks.fontFamily } : {}),
+    ...(marks.fontSize ? { fontSize: marks.fontSize } : {}),
+    ...(marks.fontWeight ? { fontWeight: marks.fontWeight } : {}),
+    ...(marks.italic ? { fontStyle: 'italic' as const } : {}),
+    ...(textAlign ? { textAlign } : {}),
+  };
+}
+
+function resolveTextAlign(value: string | undefined): RichBlockStyle['textAlign'] | undefined {
+  return value === 'left' || value === 'center' || value === 'right' ? value : undefined;
+}
+
+function parseCssStyle(style: string) {
+  return Object.fromEntries(
+    style
+      .split(';')
+      .map((declaration) => declaration.split(':'))
+      .filter((parts): parts is [string, string] => parts.length >= 2 && parts[0].trim().length > 0)
+      .map(([property, ...value]) => [property.trim().toLowerCase(), value.join(':').trim()]),
+  );
+}
+
+function parseFontWeight(value: string | undefined) {
+  if (!value) {
+    return undefined;
+  }
+  if (value === 'bold') {
+    return 700;
+  }
+  if (value === 'normal') {
+    return 400;
+  }
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function resolvePastedFontFamily(fontFamily: string | undefined, document: DocumentModel) {
+  if (!fontFamily) {
+    return undefined;
+  }
+  const primaryFamily = extractPrimaryFontFamily(fontFamily);
+  if (!primaryFamily) {
+    return undefined;
+  }
+  return getDocumentFontFamily(document, primaryFamily)?.family;
+}
+
+function resolveListMarkerStyle(element: HtmlElementNode) {
+  const style = parseCssStyle(element.attributes.style ?? '');
+  return style['list-style-type'] ?? undefined;
+}
+
+function isHtmlBlockTag(tagName: string) {
+  return tagName === 'p'
+    || tagName === 'div'
+    || tagName === 'blockquote'
+    || tagName === 'h1'
+    || tagName === 'h2'
+    || tagName === 'h3'
+    || tagName === 'h4'
+    || tagName === 'h5'
+    || tagName === 'h6';
+}
+
+function resolveHtmlBlockType(tagName: string): RichTextBlockType {
   if (tagName === 'blockquote') return 'blockquote';
   if (tagName === 'h1' || tagName === 'h2' || tagName === 'h3' || tagName === 'h4' || tagName === 'h5' || tagName === 'h6') {
     return tagName;
   }
+  if (tagName === 'div') return 'div';
   return 'paragraph';
+}
+
+function getHtmlText(node: HtmlNode): string {
+  if (node.type === 'text') {
+    return node.text;
+  }
+  return node.children.map(getHtmlText).join('');
 }
 
 function getInlineText(nodes: RichInlineNode[]): string {

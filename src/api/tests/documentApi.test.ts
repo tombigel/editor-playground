@@ -16,6 +16,7 @@ import {
 import {
   applyDocumentCommands,
   createNodeFromExternalClipboardDoc,
+  createTextDocumentContentFromClipboardHtml,
   convertTextNodeDoc,
   createInitialDocument,
   duplicateNodesDoc,
@@ -271,6 +272,86 @@ describe('api/documentApi', () => {
       if (imageNode?.contentType === 'media') {
         expect(imageNode.src).toBe('https://example.com/image.png');
       }
+    });
+
+    it('converts styled clipboard HTML into rich text content', () => {
+      const document = createInitialDocument();
+      const content = createTextDocumentContentFromClipboardHtml(document, {
+        html: `
+          <h2 style="color: rgb(10, 20, 30); font-family: Inter; text-align: center;">Title</h2>
+          <blockquote><strong>Bold</strong> <em>Italic</em> <a href="https://example.com">Link</a></blockquote>
+          <p><span style="background-color: #fff000; font-size: 20px; font-weight: 700; text-decoration: underline line-through;">Styled</span></p>
+        `,
+        text: 'Fallback',
+      });
+
+      expect(content.blocks).toHaveLength(3);
+      expect(content.blocks[0]).toMatchObject({
+        type: 'h2',
+        style: { color: 'rgb(10, 20, 30)', fontFamily: 'Inter', textAlign: 'center' },
+      });
+      expect(content.blocks[1]).toMatchObject({ type: 'blockquote' });
+      const quote = content.blocks[1];
+      if (quote.type === 'code-block' || quote.type === 'ul' || quote.type === 'ol') {
+        throw new Error('Expected text block');
+      }
+      expect(quote.children[0]).toMatchObject({ text: 'Bold', bold: true });
+      expect(quote.children[2]).toMatchObject({ text: 'Italic', italic: true });
+      expect(quote.children[4]).toMatchObject({
+        type: 'link',
+        href: 'https://example.com',
+        children: [{ text: 'Link' }],
+      });
+      const paragraph = content.blocks[2];
+      if (paragraph.type === 'code-block' || paragraph.type === 'ul' || paragraph.type === 'ol') {
+        throw new Error('Expected paragraph block');
+      }
+      expect(paragraph.children[0]).toMatchObject({
+        text: 'Styled',
+        backgroundColor: '#fff000',
+        fontSize: '20px',
+        fontWeight: 700,
+        bold: true,
+        underline: true,
+        strikethrough: true,
+      });
+    });
+
+    it('converts clipboard HTML lists into native rich list blocks', () => {
+      const document = createInitialDocument();
+      const content = createTextDocumentContentFromClipboardHtml(document, {
+        html: '<ul style="list-style-type: square;"><li><strong>One</strong></li><li>Two</li></ul><ol start="3"><li>Three</li></ol>',
+      });
+
+      expect(content.blocks).toHaveLength(2);
+      expect(content.blocks[0]).toMatchObject({
+        type: 'ul',
+        markerStyle: 'square',
+        children: [
+          { type: 'list-item', children: [{ text: 'One', bold: true }] },
+          { type: 'list-item', children: [{ text: 'Two' }] },
+        ],
+      });
+      expect(content.blocks[1]).toMatchObject({
+        type: 'ol',
+        start: 3,
+        children: [{ type: 'list-item', children: [{ text: 'Three' }] }],
+      });
+    });
+
+    it('preserves only installed pasted font families', () => {
+      const document = createInitialDocument();
+      const content = createTextDocumentContentFromClipboardHtml(document, {
+        html: '<p><span style="font-family: Inter, sans-serif;">Installed</span><span style="font-family: Missing Font, serif;">Missing</span></p>',
+      });
+      const block = content.blocks[0];
+      if (block.type === 'code-block' || block.type === 'ul' || block.type === 'ol') {
+        throw new Error('Expected text block');
+      }
+
+      expect(block.children[0]).toMatchObject({ text: 'Installed', fontFamily: 'Inter' });
+      expect(block.children[1]).toMatchObject({ text: 'Missing' });
+      expect('fontFamily' in block.children[1]).toBe(false);
     });
   });
 

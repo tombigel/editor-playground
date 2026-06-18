@@ -102,6 +102,7 @@ export { insertContainerDoc, insertLeafDoc, insertMediaDoc, insertSectionTemplat
 export {
   createNodeClipboardJson,
   createNodeFromExternalClipboardDoc,
+  createTextDocumentContentFromClipboardHtml,
   duplicateNodesDoc,
   EDITOR_NODE_CLIPBOARD_MIME,
   EDITOR_NODE_CLIPBOARD_VERSION,
