@@ -51,6 +51,7 @@ Source: `src/api/documentApi.ts`
 | `serializeNodesForClipboardDoc` | `(document, nodeIds) -> EditorNodeClipboardPayload \| null` | Serialize selected top-level nodes and descendants |
 | `parseNodeClipboardPayloadDoc` | `(raw) -> EditorNodeClipboardPayload \| null` | Parse a custom editor clipboard payload |
 | `createNodeClipboardJson` | `(payload) -> string` | Serialize an editor clipboard payload as JSON for custom clipboard MIME or hidden HTML fallback storage |
+| `createTextDocumentContentFromClipboardHtml` | `(document, { text?, html? }) -> TextDocumentContent` | Convert clipboard HTML to the Slate-backed text document model, preserving supported styling and installed font families |
 | `pasteNodesFromClipboardDoc` | `(document, payload, options?) -> PasteNodesResult` | Paste serialized nodes with remapped ids, target-parent resolution, and optional offset |
 | `duplicateNodesDoc` | `(document, nodeIds, options?) -> PasteNodesResult` | Duplicate selected nodes through the same clipboard payload path |
 | `createNodeFromExternalClipboardDoc` | `(document, { text?, html? }, options?) -> PasteNodesResult` | Create a rich text, link, or image node from external clipboard data |
@@ -650,6 +651,7 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | `deleteNode` | `(state, nodeId) -> EditorState` | Delete a node |
 | `deleteNodes` | `(state, nodeIds) -> EditorState` | Delete multiple nodes |
 | `createNodeClipboardJson` | `(payload) -> string` | Re-exported clipboard JSON helper for editor consumers |
+| `createTextDocumentContentFromClipboardHtml` | `(document, data) -> TextDocumentContent` | Re-exported styled HTML clipboard converter for editor paste surfaces |
 | `duplicateSelection` | `(state, nodeIds?) -> EditorState` | Duplicate the current selection and select the duplicated roots |
 | `pasteClipboardNodes` | `(state, payload) -> EditorState` | Paste editor clipboard nodes and select pasted roots |
 | `pasteExternalClipboard` | `(state, data) -> EditorState` | Paste external text/html/link/image clipboard data as a new node |

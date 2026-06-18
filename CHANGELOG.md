@@ -18,6 +18,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - create styled rich nodes from html paste
 - insert styled html in text edit mode
 
+### Changed
+
+- describe styled html paste behavior
+
 ### Fixed
 
 - keep editor payload out of plain text
