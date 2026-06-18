@@ -1,5 +1,6 @@
 import {
 	type CSSProperties,
+	type ClipboardEvent as ReactClipboardEvent,
 	type KeyboardEvent as ReactKeyboardEvent,
 	useCallback,
 	useEffect,
@@ -18,6 +19,7 @@ import {
 } from "slate";
 import { Editable, ReactEditor, Slate } from "slate-react";
 
+import { createTextDocumentContentFromClipboardHtml } from "../../api/documentApi";
 import {
 	BOLD_FONT_WEIGHT,
 	DEFAULT_FONT_WEIGHT,
@@ -37,6 +39,7 @@ import {
 } from "../../model/links";
 import {
 	createTextDocumentContent,
+	createTextDocumentFromText,
 	getTextDocumentBlockGap,
 	isTextBlockContent,
 } from "../../model/richContent";
@@ -68,6 +71,7 @@ import {
 	insertListItemBreak,
 	insertListSoftBreak,
 	insertLink,
+	insertClipboardContent,
 	isSelectionInListItem,
 	mergeListItemBackward,
 	removeLink,
@@ -470,6 +474,24 @@ export function RichTextEditOverlay({
 		[commitCurrentContent, editMode, editor, openLinkPopover, syncToolbarState],
 	);
 
+	const handlePaste = useCallback(
+		(event: ReactClipboardEvent<HTMLDivElement>) => {
+			const html = event.clipboardData.getData("text/html");
+			if (!html) {
+				return;
+			}
+			event.preventDefault();
+			const text = event.clipboardData.getData("text/plain");
+			const content = html && documentModel
+				? createTextDocumentContentFromClipboardHtml(documentModel, { html, text })
+				: createTextDocumentFromText(text);
+			insertClipboardContent(editor, content, editMode);
+			syncToolbarState();
+			setSelectionRevision((revision) => revision + 1);
+		},
+		[documentModel, editMode, editor, syncToolbarState],
+	);
+
 	const restoreToolbarSelection = useCallback(() => {
 		const selectionToRestore = linkSelection ?? toolbarSelection;
 		if (!selectionToRestore) {
@@ -829,6 +851,7 @@ export function RichTextEditOverlay({
 						renderLeaf={renderEditLeaf}
 						renderElement={(props) => renderEditElement(props, documentModel)}
 						onKeyDown={handleKeyDown}
+						onPaste={handlePaste}
 						onFocus={() => {
 							setEditorFocused(true);
 						}}

@@ -24,6 +24,8 @@ import type {
   RichTextBlock,
   RichTextBlockType,
   RichTextLink,
+  TextDocumentBlock,
+  TextDocumentContent,
   UnorderedListMarkerStyle,
 } from '../model/types';
 import {
@@ -38,6 +40,7 @@ import { highlightCode } from './codeHighlight';
 
 type RichMarkName = 'bold' | 'italic' | 'underline' | 'strikethrough';
 type RichValueMarkName = 'color' | 'backgroundColor' | 'fontFamily' | 'fontSize' | 'fontWeight';
+export type RichTextPasteMode = 'rich' | 'block' | 'list' | 'code';
 
 const DEFAULT_LINE_HEIGHT = 1.2;
 
@@ -61,6 +64,54 @@ export function toSlateValue(content: RichContent): Descendant[] {
 
 export function fromSlateValue(value: Descendant[]): RichContent {
   return normalizeRichContent(value);
+}
+
+export function insertClipboardContent(
+  editor: BaseEditor,
+  content: TextDocumentContent,
+  mode: RichTextPasteMode,
+): void {
+  if (mode === 'code') {
+    Editor.insertText(editor, content.blocks.map(blockToPlainText).join('\n'));
+    return;
+  }
+
+  if (mode === 'rich') {
+    if (editor.selection) {
+      if (!Range.isCollapsed(editor.selection)) {
+        Transforms.delete(editor);
+      }
+      const insertIndex = (editor.selection.anchor.path[0] ?? editor.children.length - 1) + 1;
+      Transforms.insertNodes(editor, toSlateValue(content.blocks), { at: [insertIndex] });
+      return;
+    }
+    editor.insertFragment(toSlateValue(content.blocks));
+    return;
+  }
+
+  if (mode === 'list') {
+    const listItemEntry = findSelectedListItemEntry(editor);
+    const pastedItems = content.blocks.flatMap((block) => blockToListItems(block));
+    if (listItemEntry && pastedItems.length > 0) {
+      if (editor.selection && !Range.isCollapsed(editor.selection)) {
+        Transforms.delete(editor);
+      }
+      Transforms.insertNodes(editor, pastedItems as unknown as Descendant[], {
+        at: Path.next(listItemEntry[1]),
+      });
+      return;
+    }
+    if (content.blocks.length > 0 && content.blocks.every(isListBlockElement)) {
+      editor.insertFragment(structuredClone(content.blocks) as unknown as Descendant[]);
+      return;
+    }
+  }
+
+  const inlineChildren = content.blocks.flatMap((block, index) => [
+    ...(index === 0 ? [] : [createRichTextLeaf('\n')]),
+    ...textDocumentBlockToInlineChildren(block),
+  ]);
+  editor.insertFragment(inlineChildren as unknown as Descendant[]);
 }
 
 export function isSelectionInListItem(editor: BaseEditor): boolean {
@@ -668,6 +719,24 @@ function blockToPlainTextLines(block: RichBlock): string[] {
 
 function blockToPlainText(block: RichBlock): string {
   return blockToPlainTextLines(block).join('\n');
+}
+
+function textDocumentBlockToInlineChildren(block: TextDocumentBlock): RichInlineNode[] {
+  if (isNonListTextBlock(block)) {
+    return cloneInlineNodes(block.children);
+  }
+
+  if (block.type === 'code-block') {
+    return block.children.flatMap((line, lineIndex) => [
+      ...(lineIndex === 0 ? [] : [createRichTextLeaf('\n')]),
+      ...line.children.map((leaf) => ({ ...leaf })),
+    ]);
+  }
+
+  return block.children.flatMap((item, itemIndex) => [
+    ...(itemIndex === 0 ? [] : [createRichTextLeaf('\n')]),
+    ...cloneInlineNodes(item.children),
+  ]);
 }
 
 function cloneInlineNodes(nodes: RichInlineNode[]): RichInlineNode[] {

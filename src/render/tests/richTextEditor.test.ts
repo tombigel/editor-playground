@@ -9,6 +9,7 @@ import {
   getMarkValue,
   getSelectedCodeLanguage,
   getSelectedStructureMode,
+  insertClipboardContent,
   insertListItemBreak,
   insertListSoftBreak,
   insertLink,
@@ -24,6 +25,7 @@ import {
   toggleMark,
 } from '../richTextEditor';
 import type { RichContent } from '../../model/types';
+import { createTextDocumentContent, createRichListBlock, createRichListItem, createRichTextBlock } from '../../model/richContent';
 import { Transforms } from 'slate';
 
 function makeEditor() {
@@ -569,6 +571,92 @@ describe('render/richTextEditor', () => {
             { type: 'list-item', children: [{ text: 'Child' }] },
           ],
         },
+      ]);
+    });
+
+    it('inserts clipboard blocks in rich paste mode', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'Before' }] }]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0], offset: 6 },
+        focus: { path: [0, 0], offset: 6 },
+      });
+
+      insertClipboardContent(editor, createTextDocumentContent([
+        createRichTextBlock('h2', [{ text: 'Heading', bold: true }]),
+        createRichListBlock('ul', [createRichListItem('Item')]),
+      ]), 'rich');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        { type: 'paragraph', children: [{ text: 'Before' }] },
+        { type: 'h2', children: [{ text: 'Heading', bold: true }] },
+        { type: 'ul', children: [{ type: 'list-item', children: [{ text: 'Item' }] }] },
+      ]);
+    });
+
+    it('flattens clipboard blocks to inline content in block paste mode', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([{ type: 'h1', children: [{ text: 'Title ' }] }]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0], offset: 6 },
+        focus: { path: [0, 0], offset: 6 },
+      });
+
+      insertClipboardContent(editor, createTextDocumentContent([
+        createRichTextBlock('h2', [{ text: 'Styled', italic: true }]),
+        createRichListBlock('ul', [createRichListItem('Item')]),
+      ]), 'block');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'h1',
+          children: [
+            { text: 'Title ' },
+            { text: 'Styled', italic: true },
+            { text: '\nItem' },
+          ],
+        },
+      ]);
+    });
+
+    it('inserts pasted list items into the active list in list paste mode', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([createRichListBlock('ul', [createRichListItem('Before')])]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 6 },
+        focus: { path: [0, 0, 0], offset: 6 },
+      });
+
+      insertClipboardContent(editor, createTextDocumentContent([
+        createRichListBlock('ol', [createRichListItem('One'), createRichListItem('Two')], { start: 3 }),
+      ]), 'list');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Before' }] },
+            { type: 'list-item', children: [{ text: 'One' }] },
+            { type: 'list-item', children: [{ text: 'Two' }] },
+          ],
+        },
+      ]);
+    });
+
+    it('keeps code paste as plain text', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'code:' }] }]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0], offset: 5 },
+        focus: { path: [0, 0], offset: 5 },
+      });
+
+      insertClipboardContent(editor, createTextDocumentContent([
+        createRichTextBlock('h2', [{ text: 'const value = 1;', bold: true }]),
+      ]), 'code');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        { type: 'paragraph', children: [{ text: 'code:const value = 1;' }] },
       ]);
     });
   });
