@@ -37,6 +37,28 @@ Lower-level markdown utilities (from `textMarkdown.ts`):
 
 ---
 
+## Clipboard
+
+Source: `src/api/documentApi.ts`
+
+| Function / export | Signature | Description |
+| --- | --- | --- |
+| `EDITOR_NODE_CLIPBOARD_MIME` | string | Custom MIME type for editor node clipboard payloads |
+| `EDITOR_NODE_CLIPBOARD_VERSION` | number | Current version for editor node clipboard payloads |
+| `EditorNodeClipboardPayload` | type | Serializable selected-node clipboard payload |
+| `ExternalClipboardData` | type | External clipboard text/html input for fallback paste |
+| `PasteNodesOptions` | type | Selected node, active page, and offset options for paste/duplicate |
+| `serializeNodesForClipboardDoc` | `(document, nodeIds) -> EditorNodeClipboardPayload \| null` | Serialize selected top-level nodes and descendants |
+| `parseNodeClipboardPayloadDoc` | `(raw) -> EditorNodeClipboardPayload \| null` | Parse a custom editor clipboard payload |
+| `createNodeClipboardJson` | `(payload) -> string` | Serialize an editor clipboard payload as JSON for clipboard text fallbacks |
+| `pasteNodesFromClipboardDoc` | `(document, payload, options?) -> PasteNodesResult` | Paste serialized nodes with remapped ids, target-parent resolution, and optional offset |
+| `duplicateNodesDoc` | `(document, nodeIds, options?) -> PasteNodesResult` | Duplicate selected nodes through the same clipboard payload path |
+| `createNodeFromExternalClipboardDoc` | `(document, { text?, html? }, options?) -> PasteNodesResult` | Create a rich text, link, or image node from external clipboard data |
+
+`PasteNodesResult` returns the next document and pasted root ids so editor wrappers can select the pasted nodes and track history.
+
+---
+
 ## Rich Text
 
 Source: `src/api/documentApi.ts`
@@ -627,6 +649,10 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | `insertSectionTemplate` | `(state, templateId) -> EditorState` | Insert a section template relative to the selected top-level wrapper when present |
 | `deleteNode` | `(state, nodeId) -> EditorState` | Delete a node |
 | `deleteNodes` | `(state, nodeIds) -> EditorState` | Delete multiple nodes |
+| `createNodeClipboardJson` | `(payload) -> string` | Re-exported clipboard JSON helper for editor consumers |
+| `duplicateSelection` | `(state, nodeIds?) -> EditorState` | Duplicate the current selection and select the duplicated roots |
+| `pasteClipboardNodes` | `(state, payload) -> EditorState` | Paste editor clipboard nodes and select pasted roots |
+| `pasteExternalClipboard` | `(state, data) -> EditorState` | Paste external text/html/link/image clipboard data as a new node |
 
 ### Movement and resize
 

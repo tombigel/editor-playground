@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialState, distributeNodes, insertLeaf, insertWrapper, parseUnitValue } from '../../api/editorApi';
+import { createInitialState, distributeNodes, insertLeaf, insertWrapper, parseUnitValue, serializeNodesForClipboardDoc } from '../../api/editorApi';
 import { createContainerNode, createDefaultRect, createTextNode } from '../../model/defaults';
 import {
   createRichTextBlock,
@@ -195,6 +195,61 @@ describe('app/editorState', () => {
     expect(duringResize.past).toHaveLength(0);
     expect(completed.activeResize).toBeNull();
     expect(completed.past).toHaveLength(1);
+  });
+
+  it('duplicates the selected node, selects the duplicate, and tracks undo history', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'text');
+    const sourceId = present.selectedId;
+    if (!sourceId) {
+      throw new Error('Expected selected text');
+    }
+    const initial = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const duplicated = historyReducer(initial, { type: 'duplicateSelection' });
+
+    expect(duplicated.past).toHaveLength(1);
+    expect(duplicated.present.selectedId).not.toBe(sourceId);
+    expect(duplicated.present.selectedIds).toEqual([duplicated.present.selectedId]);
+    expect(Object.keys(duplicated.present.document.nodes).length).toBe(
+      Object.keys(present.document.nodes).length + 1,
+    );
+
+    const undone = historyReducer(duplicated, { type: 'undo' });
+    expect(undone.present.selectedId).toBe(sourceId);
+    expect(undone.present.document.nodes[sourceId]).toBeTruthy();
+  });
+
+  it('pastes a clipboard node payload into the selected container parent', () => {
+    let source = createInitialState();
+    source = insertLeaf(source, 'text');
+    const sourceId = source.selectedId;
+    if (!sourceId) {
+      throw new Error('Expected copied text');
+    }
+    const payload = serializeNodesForClipboardDoc(source.document, [sourceId]);
+    if (!payload) {
+      throw new Error('Expected clipboard payload');
+    }
+
+    let target = createInitialState();
+    target = insertWrapper(target, 'container');
+    const containerId = target.selectedId;
+    if (!containerId) {
+      throw new Error('Expected target container');
+    }
+
+    const pasted = editorReducer(target, { type: 'pasteClipboardNodes', payload });
+
+    expect(pasted.selectedId).not.toBe(sourceId);
+    expect(pasted.selectedId).toBeTruthy();
+    expect(pasted.selectedId ? pasted.document.nodes[pasted.selectedId]?.parentId : null).toBe(containerId);
   });
 
   it('forces container wrappers to keep self sticky targeting', () => {

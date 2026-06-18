@@ -8,6 +8,7 @@ import {
   deleteNode,
   deleteNodes,
   demoteWrapperRole,
+  duplicateSelection,
   distributeNodes,
   importDocument as importEditorDocument,
   insertLeaf,
@@ -19,6 +20,8 @@ import {
   moveNodes,
   nudgeNode,
   parseUnitValue,
+  pasteClipboardNodes,
+  pasteExternalClipboard,
   reparentNode,
   reparentNodes,
   requestPromoteWrapperRole,
@@ -148,6 +151,12 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return selectedIds.length > 0 ? deleteNodes(state, selectedIds) : state;
     case 'deleteNode':
       return deleteNode(state, action.id);
+    case 'duplicateSelection':
+      return selectedIds.length > 0 ? duplicateSelection(state, action.nodeIds) : state;
+    case 'pasteClipboardNodes':
+      return pasteClipboardNodes(state, action.payload);
+    case 'pasteExternalClipboard':
+      return pasteExternalClipboard(state, action.data);
     case 'applyTextNodeMarkdown':
       return applyTextNodeMarkdown(state, action.id, action.markdown);
     case 'setTextDocumentContent':

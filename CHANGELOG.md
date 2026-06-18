@@ -13,12 +13,23 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Added
 
+- add stage copy paste duplicate
+
+---
+
+## [0.10.8] — 2026-06-18
+Document: 1.6.8 · API: 2.4.0 · Editor: 0.18.0
+
+### Added
+
 - refine onboarding welcome flow
+- add stage node copy, paste, and duplicate commands with API-first clipboard payloads, Edit menu actions, shortcuts, and external text/link/image paste fallback
 
 ### Changed
 
 - archive hash routing implementation plan
 - document blank starter export
+- document stage clipboard API, shortcuts, and RI-33 roadmap progress
 
 ### Fixed
 

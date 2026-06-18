@@ -208,6 +208,41 @@ describe('shortcut registry', () => {
     expect(getShortcutLabel('openDocumentation', 'other')).toBe('Shift + H');
   });
 
+  it('matches and labels copy, paste, and duplicate shortcuts outside text editing', () => {
+    const context = {
+      interactiveFocus: false,
+      hasSelection: true,
+      hasDismissiblePanels: false,
+      hasStageFocus: false,
+    };
+
+    expect(findMatchingShortcut({
+      code: 'KeyC',
+      metaKey: false,
+      ctrlKey: true,
+      shiftKey: false,
+      altKey: false,
+    }, context, 'other')?.id).toBe('copySelection');
+    expect(findMatchingShortcut({
+      code: 'KeyV',
+      metaKey: false,
+      ctrlKey: true,
+      shiftKey: false,
+      altKey: false,
+    }, context, 'other')?.id).toBe('pasteClipboard');
+    expect(findMatchingShortcut({
+      code: 'KeyD',
+      metaKey: false,
+      ctrlKey: true,
+      shiftKey: false,
+      altKey: false,
+    }, context, 'other')?.id).toBe('duplicateSelection');
+
+    expect(getShortcutLabel('copySelection', 'mac')).toBe('Cmd + C');
+    expect(getShortcutLabel('pasteClipboard', 'other')).toBe('Ctrl + V');
+    expect(getShortcutLabel('duplicateSelection', 'mac')).toBe('Cmd + D');
+  });
+
   it('matches and labels the snap-to-guides shortcut', () => {
     const snap = findMatchingShortcut(
       {

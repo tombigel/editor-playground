@@ -15,8 +15,10 @@ import {
 } from '../../model/richContent';
 import {
   applyDocumentCommands,
+  createNodeFromExternalClipboardDoc,
   convertTextNodeDoc,
   createInitialDocument,
+  duplicateNodesDoc,
   insertLeafDoc,
   insertSectionTemplateDoc,
   moveNodeInTreeDoc,
@@ -47,6 +49,8 @@ import {
   setTopLevelWrapperVisibility,
   getTopLevelWrapperVisibilityState,
   expandParentHeightDoc,
+  pasteNodesFromClipboardDoc,
+  serializeNodesForClipboardDoc,
   switchTextSubtypeDoc,
   type LeafInsertionRole,
 } from '../documentApi';
@@ -151,6 +155,122 @@ describe('api/documentApi', () => {
       const insertedIds = Object.keys(withSecond.nodes).filter((nodeId) => !document.nodes[nodeId]);
       expect(insertedIds).toHaveLength(2);
       expect(new Set(insertedIds).size).toBe(2);
+    });
+  });
+
+  describe('clipboard document API', () => {
+    function firstSectionId(document: ReturnType<typeof createInitialDocument>) {
+      const root = getRoot(document);
+      const sectionId = root.children.find((childId) => {
+        const node = document.nodes[childId];
+        return node?.contentType === 'container' && node.subtype === 'section';
+      });
+      if (!sectionId) {
+        throw new Error('Expected section');
+      }
+      return sectionId;
+    }
+
+    it('serializes top-level selected nodes with container descendants', () => {
+      const document = createInitialDocument();
+      const sectionId = firstSectionId(document);
+      const container = createContainerNode('container', sectionId);
+      const text = createTextNode('block', container.id);
+      container.children = [text.id];
+      document.nodes[container.id] = container;
+      document.nodes[text.id] = text;
+      document.nodes[sectionId].children.push(container.id);
+
+      const payload = serializeNodesForClipboardDoc(document, [container.id, text.id]);
+
+      expect(payload?.rootIds).toEqual([container.id]);
+      expect(payload?.nodes[container.id]).toBeTruthy();
+      expect(payload?.nodes[text.id]).toBeTruthy();
+    });
+
+    it('pastes a subtree with remapped ids and offsets the pasted root', () => {
+      const document = createInitialDocument();
+      const sectionId = firstSectionId(document);
+      const container = createContainerNode('container', sectionId);
+      const text = createTextNode('block', container.id);
+      container.children = [text.id];
+      document.nodes[container.id] = container;
+      document.nodes[text.id] = text;
+      document.nodes[sectionId].children.push(container.id);
+      const payload = serializeNodesForClipboardDoc(document, [container.id]);
+      if (!payload) throw new Error('Expected payload');
+
+      const result = pasteNodesFromClipboardDoc(document, payload, { selectedId: sectionId, offset: true });
+      const pasted = result.document.nodes[result.pastedIds[0]];
+      if (!pasted || pasted.contentType !== 'container') throw new Error('Expected pasted container');
+      const pastedChildId = pasted.children[0];
+
+      expect(result.pastedIds).toHaveLength(1);
+      expect(result.pastedIds[0]).not.toBe(container.id);
+      expect(pasted.parentId).toBe(sectionId);
+      expect(pasted.rect.x.base.raw).toBe('72px');
+      expect(result.document.nodes[pastedChildId]?.parentId).toBe(pasted.id);
+    });
+
+    it('pastes structural wrappers at root as active-page sections', () => {
+      const document = createInitialDocument();
+      const root = getRoot(document);
+      const headerId = root.children.find((childId) => {
+        const node = document.nodes[childId];
+        return node?.contentType === 'container' && node.subtype === 'header';
+      });
+      const pageId = document.pages?.[0]?.id;
+      if (!headerId || !pageId) throw new Error('Expected header and page');
+      const payload = serializeNodesForClipboardDoc(document, [headerId]);
+      if (!payload) throw new Error('Expected payload');
+
+      const result = pasteNodesFromClipboardDoc(document, payload, {
+        selectedId: headerId,
+        activePageId: pageId,
+      });
+      const pasted = result.document.nodes[result.pastedIds[0]];
+
+      expect(pasted?.parentId).toBe(document.rootId);
+      expect(pasted?.contentType).toBe('container');
+      if (pasted?.contentType === 'container') {
+        expect(pasted.subtype).toBe('section');
+      }
+      expect(result.document.pages?.[0]?.sectionIds).toContain(result.pastedIds[0]);
+    });
+
+    it('duplicates selected nodes with fresh ids and undoable selection target data', () => {
+      const document = createInitialDocument();
+      const sectionId = firstSectionId(document);
+      const withText = insertLeafDoc(document, 'text', sectionId);
+      const textId = Object.keys(withText.nodes).find((nodeId) => !document.nodes[nodeId]);
+      if (!textId) throw new Error('Expected inserted text');
+
+      const result = duplicateNodesDoc(withText, [textId], { activePageId: withText.pages?.[0]?.id });
+      const pasted = result.document.nodes[result.pastedIds[0]];
+
+      expect(result.pastedIds[0]).not.toBe(textId);
+      expect(pasted?.parentId).toBe(sectionId);
+      expect(result.document.nodes[textId]).toBeTruthy();
+    });
+
+    it('creates link and image nodes from external clipboard URLs', () => {
+      const document = createInitialDocument();
+      const sectionId = firstSectionId(document);
+
+      const linkResult = createNodeFromExternalClipboardDoc(document, { text: 'https://example.com' }, { selectedId: sectionId });
+      const linkNode = linkResult.document.nodes[linkResult.pastedIds[0]];
+      expect(linkNode?.contentType).toBe('text');
+      if (linkNode?.contentType === 'text') {
+        expect(linkNode.htmlTag).toBe('div');
+        expect(linkNode.link).toMatchObject({ linkType: 'external', href: 'https://example.com' });
+      }
+
+      const imageResult = createNodeFromExternalClipboardDoc(document, { text: 'https://example.com/image.png' }, { selectedId: sectionId });
+      const imageNode = imageResult.document.nodes[imageResult.pastedIds[0]];
+      expect(imageNode?.contentType).toBe('media');
+      if (imageNode?.contentType === 'media') {
+        expect(imageNode.src).toBe('https://example.com/image.png');
+      }
     });
   });
 

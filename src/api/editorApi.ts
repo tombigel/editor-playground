@@ -33,6 +33,7 @@ import {
   resolveStickyLayout,
   resolveWrapperStickyState,
   applyMarkdownToTextNodeDoc,
+  createNodeClipboardJson,
   serializeDocumentJson,
   serializeTextNodeMarkdownDoc,
   setCodeBlockLanguageDoc,
@@ -57,6 +58,9 @@ import {
   setTopLevelWrapperVisibility,
   setPageTopLevelWrapperPlacement,
   validateLinks,
+  EDITOR_NODE_CLIPBOARD_MIME,
+  parseNodeClipboardPayloadDoc,
+  serializeNodesForClipboardDoc,
   type ContainerNode,
   type ContainerSubtype,
   type DocumentModel,
@@ -71,6 +75,7 @@ import {
   type TopLevelWrapperVisibilityMode,
   type TopLevelWrapperVisibilityState,
   type TopLevelWrapperPlacement,
+  type EditorNodeClipboardPayload,
 } from './documentApi';
 
 /** Types shared between documentApi and editorApi, plus editor-specific types. */
@@ -90,6 +95,7 @@ export type {
   TopLevelWrapperVisibilityMode,
   TopLevelWrapperVisibilityState,
   TopLevelWrapperPlacement,
+  EditorNodeClipboardPayload,
 };
 export type { EditorState, FocusedMode } from '../editor/editorStore';
 export type {
@@ -116,6 +122,7 @@ export const createInitialState = editorStore.createInitialState;
 export const deleteNode = editorStore.deleteNode;
 export const deleteNodes = editorStore.deleteNodes;
 export const demoteWrapperRole = editorStore.demoteWrapperRole;
+export const duplicateSelection = editorStore.duplicateSelection;
 export const distributeNodes = editorStore.distributeNodes;
 export const importDocument = editorStore.importDocument;
 export const getValidationErrors = editorStore.getValidationErrors;
@@ -132,6 +139,8 @@ export const nudgeNode = editorStore.nudgeNode;
 export const persistDefaultDocument = editorStore.persistDefaultDocument;
 export const persistState = editorStore.persistState;
 export const parseImportedDocumentJson = editorStore.parseImportedDocumentJson;
+export const pasteClipboardNodes = editorStore.pasteClipboardNodes;
+export const pasteExternalClipboard = editorStore.pasteExternalClipboard;
 export const reparentNode = editorStore.reparentNode;
 export const reparentNodes = editorStore.reparentNodes;
 export const reorderNode = editorStore.reorderNode;
@@ -221,6 +230,7 @@ export {
   resolveStickyLayout,
   resolveWrapperStickyState,
   applyMarkdownToTextNodeDoc,
+  createNodeClipboardJson,
   serializeDocumentJson,
   serializeTextNodeMarkdownDoc,
   setCodeBlockLanguageDoc,
@@ -245,4 +255,7 @@ export {
   setPageTopLevelWrapperPlacement,
   getTopLevelWrapperVisibilityState,
   validateLinks,
+  EDITOR_NODE_CLIPBOARD_MIME,
+  parseNodeClipboardPayloadDoc,
+  serializeNodesForClipboardDoc,
 };

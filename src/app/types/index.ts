@@ -15,7 +15,12 @@ import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, Animat
 import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewApi';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
 import type { TextConversionMode } from '../../api/textConversion';
-import type { ParentExpansionRequest, SetTextDocumentContentOptions } from '../../api/documentApi';
+import type {
+  EditorNodeClipboardPayload,
+  ExternalClipboardData,
+  ParentExpansionRequest,
+  SetTextDocumentContentOptions,
+} from '../../api/documentApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
 import type { EditorNavigationUrlState, EditorNodeTarget } from '../../api/editorNavigationApi';
 
@@ -110,6 +115,9 @@ export type EditorAction =
   | { type: 'demote' }
   | { type: 'delete' }
   | { type: 'deleteNode'; id: string }
+  | { type: 'duplicateSelection'; nodeIds?: NodeId[] }
+  | { type: 'pasteClipboardNodes'; payload: EditorNodeClipboardPayload }
+  | { type: 'pasteExternalClipboard'; data: ExternalClipboardData }
   | { type: 'setNodeVisibility'; id: string; value: boolean }
   | { type: 'stickyEnabled'; value: boolean }
   | { type: 'stickyTarget'; value: 'self' | 'contentWrapper' }
@@ -238,6 +246,9 @@ export type ShortcutExecutionHandlers = {
   selection: {
     nudgeSelection: (deltaX: number, deltaY: number) => void;
     deleteSelection: () => void;
+    copySelection: () => void;
+    pasteClipboard: () => void;
+    duplicateSelection: () => void;
     toggleBoldSelection: () => void;
     toggleItalicSelection: () => void;
     toggleUnderlineSelection: () => void;

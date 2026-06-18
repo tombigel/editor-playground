@@ -224,6 +224,34 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     execution: { actionId: 'nudgeSelectionDown' },
   },
   {
+    id: 'copySelection',
+    category: 'Edit',
+    description: 'Copy selection',
+    combos: [{ code: 'KeyC', keyLabel: 'C', mod: true }],
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'copySelection' },
+  },
+  {
+    id: 'pasteClipboard',
+    category: 'Edit',
+    description: 'Paste',
+    combos: [{ code: 'KeyV', keyLabel: 'V', mod: true }],
+    context: {},
+    execution: { actionId: 'pasteClipboard' },
+  },
+  {
+    id: 'duplicateSelection',
+    category: 'Edit',
+    description: 'Duplicate selection',
+    combos: [{ code: 'KeyD', keyLabel: 'D', mod: true }],
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'duplicateSelection' },
+  },
+  {
     id: 'deleteSelection',
     category: 'Edit',
     description: 'Delete selection',

@@ -21,7 +21,7 @@ Drag modifiers follow design-tool conventions:
 
 - `Shift`: lock the dominant drag axis while held.
 - `Cmd` on macOS / `Ctrl` elsewhere: bypass guide snapping and magnetic boundary snapping while held.
-- `Alt` / `Option`: reserve duplicate-drag intent. This phase records intent only; commit remains a normal move or reparent until duplicate document APIs exist.
+- `Alt` / `Option`: records duplicate-drag intent for a future drag-to-duplicate handoff. Keyboard/menu duplication now uses the duplicate document APIs; drag commit remains a normal move or reparent until that handoff is wired.
 
 Boundary rules remain model/API-owned. The inspector labels this control **Child overflow**. Missing container policy resolves to `anchor` / **Allow overflow**, which keeps the child origin inside the wrapper content box while allowing overflow. `box` / **Keep inside** keeps the full child box inside the content box.
 

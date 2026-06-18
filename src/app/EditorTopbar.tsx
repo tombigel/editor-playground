@@ -90,6 +90,7 @@ export function EditorTopbar({
 	darkTheme,
 	historyState,
 	canDeleteSelection,
+	canCopySelection,
 	layersOpen,
 	pagesOpen,
 	onSetActivePage,
@@ -103,6 +104,9 @@ export function EditorTopbar({
 	onExportSite,
 	onOpenSettingsSection,
 	onDeleteSelection,
+	onCopySelection,
+	onPasteClipboard,
+	onDuplicateSelection,
 	onSetLightTheme,
 	onSetDarkTheme,
 	onTogglePreviewSticky,
@@ -139,6 +143,7 @@ export function EditorTopbar({
 	darkTheme: EditorDarkTheme;
 	historyState: { past: unknown[]; future: unknown[] };
 	canDeleteSelection: boolean;
+	canCopySelection: boolean;
 	layersOpen: boolean;
 	pagesOpen: boolean;
 	onSetActivePage: (pageId: PageId) => void;
@@ -154,6 +159,9 @@ export function EditorTopbar({
 		section: "display" | "defaults" | "fonts" | "advanced",
 	) => void;
 	onDeleteSelection: () => void;
+	onCopySelection: () => void;
+	onPasteClipboard: () => void;
+	onDuplicateSelection: () => void;
 	onSetLightTheme: (theme: EditorLightTheme) => void;
 	onSetDarkTheme: (theme: EditorDarkTheme) => void;
 	onTogglePreviewSticky: () => void;
@@ -245,9 +253,29 @@ export function EditorTopbar({
 								Redo
 							</MenubarItem>
 							<MenubarSeparator />
-							<MenubarItem icon={Copy} disabled>Copy</MenubarItem>
-							<MenubarItem icon={CopyPlus} disabled>Duplicate</MenubarItem>
-							<MenubarItem icon={ClipboardPaste} disabled>Paste</MenubarItem>
+							<MenubarItem
+								icon={Copy}
+								shortcut={getShortcutLabel("copySelection", shortcutPlatform)}
+								disabled={!canCopySelection}
+								onClick={onCopySelection}
+							>
+								Copy
+							</MenubarItem>
+							<MenubarItem
+								icon={CopyPlus}
+								shortcut={getShortcutLabel("duplicateSelection", shortcutPlatform)}
+								disabled={!canCopySelection}
+								onClick={onDuplicateSelection}
+							>
+								Duplicate
+							</MenubarItem>
+							<MenubarItem
+								icon={ClipboardPaste}
+								shortcut={getShortcutLabel("pasteClipboard", shortcutPlatform)}
+								onClick={onPasteClipboard}
+							>
+								Paste
+							</MenubarItem>
 							<MenubarItem
 								icon={Trash2}
 								shortcut={getShortcutLabel("deleteSelection", shortcutPlatform)}

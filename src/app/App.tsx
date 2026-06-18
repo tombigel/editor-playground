@@ -1,7 +1,12 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import {
 	createBlankInitialDocument,
 	createInitialDocument,
+	createNodeClipboardJson,
+	EDITOR_NODE_CLIPBOARD_MIME,
+	parseNodeClipboardPayloadDoc,
+	serializeNodesForClipboardDoc,
+	type EditorNodeClipboardPayload,
 	type StickyGeometrySnapshot,
 } from "../api/editorApi";
 import { isTextNode } from "../api/documentViewApi";
@@ -29,6 +34,7 @@ import { useAppPanels } from "./useAppPanels";
 import { useAppRuntime } from "./useAppRuntime";
 import { useAppViewModel } from "./useAppViewModel";
 import { useEditorKeyboardShortcuts } from "./useEditorKeyboardShortcuts";
+import { getShortcutFocusContext } from "./useEditorEnvironment";
 import { openPreviewSiteWindow } from "./previewWindow";
 import type { ShortcutExecutionHandlers } from "./types";
 
@@ -55,6 +61,7 @@ export function App({
 		createHistoryState,
 	);
 	const handledStartupActionIdRef = useRef<number | null>(null);
+	const nodeClipboardRef = useRef<EditorNodeClipboardPayload | null>(null);
 	const state = historyState.present;
 	const [stickyGeometry, setStickyGeometry] = useState<StickyGeometrySnapshot>(
 		{},
@@ -173,6 +180,176 @@ export function App({
 
   useAppRuntime(state, viewModel.resolvedTheme, dispatch);
 
+	const getSelectedClipboardPayload = useCallback(() => {
+		return serializeNodesForClipboardDoc(state.document, state.selectedIds);
+	}, [state.document, state.selectedIds]);
+
+	const writeNodePayloadToSystemClipboard = useCallback(async (payload: EditorNodeClipboardPayload) => {
+		const json = createNodeClipboardJson(payload);
+		const clipboard = navigator.clipboard as Clipboard & {
+			write?: (items: ClipboardItem[]) => Promise<void>;
+		};
+		if (clipboard?.write && typeof ClipboardItem !== "undefined") {
+			try {
+				await clipboard.write([
+					new ClipboardItem({
+						[EDITOR_NODE_CLIPBOARD_MIME]: new Blob([json], {
+							type: EDITOR_NODE_CLIPBOARD_MIME,
+						}),
+						"text/plain": new Blob([json], { type: "text/plain" }),
+					}),
+				]);
+				return;
+			} catch {
+				// Fall through to writeText for browsers that block custom MIME writes.
+			}
+		}
+		await navigator.clipboard?.writeText(json);
+	}, []);
+
+	const copySelectionToEventClipboard = useCallback((event: ClipboardEvent) => {
+		const payload = getSelectedClipboardPayload();
+		if (!payload || !event.clipboardData) {
+			return false;
+		}
+		const json = createNodeClipboardJson(payload);
+		nodeClipboardRef.current = payload;
+		event.clipboardData.setData(EDITOR_NODE_CLIPBOARD_MIME, json);
+		event.clipboardData.setData("text/plain", json);
+		event.preventDefault();
+		return true;
+	}, [getSelectedClipboardPayload]);
+
+	const copySelectionToClipboard = useCallback(async () => {
+		const payload = getSelectedClipboardPayload();
+		if (!payload) {
+			return;
+		}
+		nodeClipboardRef.current = payload;
+		try {
+			await writeNodePayloadToSystemClipboard(payload);
+		} catch {
+			// The in-memory stack still enables paste in this app session.
+		}
+	}, [getSelectedClipboardPayload, writeNodePayloadToSystemClipboard]);
+
+	const pasteClipboardPayload = useCallback((payload: EditorNodeClipboardPayload) => {
+		dispatch({ type: "pasteClipboardNodes", payload });
+	}, []);
+
+	const pasteExternalClipboardData = useCallback((data: { text?: string; html?: string }) => {
+		if (!data.text && !data.html) {
+			return;
+		}
+		dispatch({ type: "pasteExternalClipboard", data });
+	}, []);
+
+	const pasteFromEventClipboard = useCallback((event: ClipboardEvent) => {
+		if (nodeClipboardRef.current) {
+			event.preventDefault();
+			pasteClipboardPayload(nodeClipboardRef.current);
+			return true;
+		}
+		const customPayload = event.clipboardData
+			? parseNodeClipboardPayloadDoc(
+					event.clipboardData.getData(EDITOR_NODE_CLIPBOARD_MIME),
+				)
+			: null;
+		if (customPayload) {
+			nodeClipboardRef.current = customPayload;
+			event.preventDefault();
+			pasteClipboardPayload(customPayload);
+			return true;
+		}
+		const text = event.clipboardData?.getData("text/plain") ?? "";
+		const html = event.clipboardData?.getData("text/html") ?? "";
+		if (text || html) {
+			event.preventDefault();
+			pasteExternalClipboardData({ text, html });
+			return true;
+		}
+		return false;
+	}, [pasteClipboardPayload, pasteExternalClipboardData]);
+
+	const readNodePayloadFromSystemClipboard = useCallback(async () => {
+		const clipboard = navigator.clipboard as Clipboard & {
+			read?: () => Promise<ClipboardItem[]>;
+		};
+		if (clipboard?.read) {
+			try {
+				const items = await clipboard.read();
+				for (const item of items) {
+					if (item.types.includes(EDITOR_NODE_CLIPBOARD_MIME)) {
+						const blob = await item.getType(EDITOR_NODE_CLIPBOARD_MIME);
+						const payload = parseNodeClipboardPayloadDoc(await blob.text());
+						if (payload) {
+							return payload;
+						}
+					}
+				}
+			} catch {
+				// readText fallback below handles browsers without async custom MIME access.
+			}
+		}
+		try {
+			const text = await navigator.clipboard?.readText();
+			return text ? parseNodeClipboardPayloadDoc(text) : null;
+		} catch {
+			return null;
+		}
+	}, []);
+
+	const pasteClipboard = useCallback(async () => {
+		if (nodeClipboardRef.current) {
+			pasteClipboardPayload(nodeClipboardRef.current);
+			return;
+		}
+		const payload = await readNodePayloadFromSystemClipboard();
+		if (payload) {
+			nodeClipboardRef.current = payload;
+			pasteClipboardPayload(payload);
+			return;
+		}
+		try {
+			const text = await navigator.clipboard?.readText();
+			pasteExternalClipboardData({ text });
+		} catch {
+			// Clipboard permission denial leaves paste as a no-op.
+		}
+	}, [pasteClipboardPayload, pasteExternalClipboardData, readNodePayloadFromSystemClipboard]);
+
+	const duplicateSelection = useCallback(() => {
+		dispatch({ type: "duplicateSelection" });
+	}, []);
+
+	useEffect(() => {
+		function shouldUseEditorClipboard() {
+			const activeElement = window.document.activeElement as HTMLElement | null;
+			return !getShortcutFocusContext(activeElement).textInputFocus;
+		}
+
+		function handleCopy(event: ClipboardEvent) {
+			if (state.selectedIds.length === 0 || !shouldUseEditorClipboard()) {
+				return;
+			}
+			copySelectionToEventClipboard(event);
+		}
+
+		function handlePaste(event: ClipboardEvent) {
+			if (!shouldUseEditorClipboard()) {
+				return;
+			}
+			pasteFromEventClipboard(event);
+		}
+
+		window.addEventListener("copy", handleCopy);
+		window.addEventListener("paste", handlePaste);
+		return () => {
+			window.removeEventListener("copy", handleCopy);
+			window.removeEventListener("paste", handlePaste);
+		};
+	}, [copySelectionToEventClipboard, pasteFromEventClipboard, state.selectedIds.length]);
+
 	useEffect(() => {
 		if (
 			!startupAction ||
@@ -245,6 +422,13 @@ export function App({
           deltaY,
         }),
       deleteSelection: () => dispatch({ type: "delete" }),
+      copySelection: () => {
+        void copySelectionToClipboard();
+      },
+      pasteClipboard: () => {
+        void pasteClipboard();
+      },
+      duplicateSelection,
       toggleBoldSelection: () => dispatchBoldToggleSelection(),
       toggleItalicSelection: () =>
         dispatchSelectedTextEdit("fontStyle", (nodes) =>
@@ -385,6 +569,9 @@ export function App({
 			onImportDocument={handleImportDocument}
 			onResetData={handleResetData}
 			onResetAll={handleResetAll}
+			onCopySelection={copySelectionToClipboard}
+			onPasteClipboard={pasteClipboard}
+			onDuplicateSelection={duplicateSelection}
 			appMode={mode}
 			routeSearchParams={routeSearchParams}
 			startupAction={startupAction}

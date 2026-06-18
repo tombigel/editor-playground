@@ -51,8 +51,11 @@ export {
   confirmPromoteWrapperRole,
   cancelPromoteWrapperRole,
   demoteWrapperRole,
+  duplicateSelection,
   deleteNode,
   deleteNodes,
+  pasteClipboardNodes,
+  pasteExternalClipboard,
   getValidationErrors,
 } from './editorMutations';
 

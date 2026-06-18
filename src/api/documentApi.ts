@@ -21,6 +21,12 @@ export type { MergeTextNodesOptions } from './textMerge';
 export type { SetTextDocumentContentOptions } from './documentApi/text';
 export type { ParentExpansionOptions, ParentExpansionRequest } from './documentApi/parentExpansion';
 export type {
+  EditorNodeClipboardPayload,
+  ExternalClipboardData,
+  PasteNodesOptions,
+  PasteNodesResult,
+} from './documentApi/clipboard';
+export type {
   LeafInsertionRole,
   NodeOrderAction,
   SectionTemplateInsertionOptions,
@@ -93,6 +99,16 @@ export {
 } from './documentApi/text';
 export { setNodeVisibilityDoc, setPageTopLevelWrapperPlacement, setTopLevelWrapperVisibility } from './documentApi/visibility';
 export { insertContainerDoc, insertLeafDoc, insertMediaDoc, insertSectionTemplateDoc, insertTextDoc } from './documentApi/insertion';
+export {
+  createNodeClipboardJson,
+  createNodeFromExternalClipboardDoc,
+  duplicateNodesDoc,
+  EDITOR_NODE_CLIPBOARD_MIME,
+  EDITOR_NODE_CLIPBOARD_VERSION,
+  parseNodeClipboardPayloadDoc,
+  pasteNodesFromClipboardDoc,
+  serializeNodesForClipboardDoc,
+} from './documentApi/clipboard';
 export {
   convertTextNodeDoc,
   deleteNodeDoc,

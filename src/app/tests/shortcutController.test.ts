@@ -33,6 +33,9 @@ function createHandlers() {
     selection: {
       nudgeSelection: vi.fn(),
       deleteSelection: vi.fn(),
+      copySelection: vi.fn(),
+      pasteClipboard: vi.fn(),
+      duplicateSelection: vi.fn(),
       toggleBoldSelection: vi.fn(),
       toggleItalicSelection: vi.fn(),
       toggleUnderlineSelection: vi.fn(),
@@ -117,6 +120,9 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('toggleComponentsPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('togglePagesPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleBoldSelection'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('copySelection'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('pasteClipboard'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('duplicateSelection'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleUnderlineSelection'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('alignSelectionLeft'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('distributeSelectionBottom'), baseState, false, handlers);
@@ -131,6 +137,9 @@ describe('app/shortcutController', () => {
     expect(handlers.panels.toggleComponentsPanel).toHaveBeenCalledOnce();
     expect(handlers.panels.togglePagesPanel).toHaveBeenCalledOnce();
     expect(handlers.selection.toggleBoldSelection).toHaveBeenCalledOnce();
+    expect(handlers.selection.copySelection).toHaveBeenCalledOnce();
+    expect(handlers.selection.pasteClipboard).toHaveBeenCalledOnce();
+    expect(handlers.selection.duplicateSelection).toHaveBeenCalledOnce();
     expect(handlers.selection.toggleUnderlineSelection).toHaveBeenCalledOnce();
     expect(handlers.selection.alignSelection).toHaveBeenCalledWith('left');
     expect(handlers.selection.distributeSelection).toHaveBeenCalledWith('bottom');

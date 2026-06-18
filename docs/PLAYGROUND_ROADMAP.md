@@ -74,7 +74,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-10` | `🟤 Needs audit` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | Shared | Dep: `RI-09` |
 | `RI-25` | `🟢 In progress` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | - |
 | `RI-27` | `🟣 Partially present` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | Shared | - |
-| `RI-33` | `⚪ Not started` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Dep: `RI-07` |
+| `RI-33` | `🟣 Partially present` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Stage node copy/paste/duplicate v1 done; page duplication deferred |
 | `RI-34` | `🟢 In progress` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | P2-A through P2-D done; rich E2E isolated; four rich authoring cases quarantined; P2-C follow-ups, P2-E, and P2-F remain |
 | `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
 | `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
@@ -300,7 +300,7 @@ None yet.
 - `Why it matters`: Dragging is a core authoring operation, and strict confinement to a wrapper's padded content area prevents common overlapping, offset, and breakout layouts. Container edges should guide layout by default, not silently block expressive placement.
 - `Current state`: **Complete** — wrappers now resolve a `childBoundary` policy from the document model. The inspector labels it **Child overflow**: `anchor` / **Allow overflow** keeps the child origin inside the content box while allowing the body to overflow; `box` / **Keep inside** keeps the full child box inside. Drag update stores one resolved placement for preview and commit, pointer-up no longer recomputes snap/drop/bounds, keyboard nudging uses the same boundary policy, and mesh layout preserves allowed right/bottom overflow. Allow overflow downward drag and keyboard movement can grow the parent through the same resolved placement commit.
 - `Target behavior`: Delivered. Default drag boundaries behave as soft origin constraints plus snap/alignment guidance, and hard confinement remains available through the explicit `box` policy.
-- `Next move`: Implement duplicate-drag through a pure duplicate document API, then connect the existing `Alt` / `Option` duplicate-requested drag stub to that operation.
+- `Next move`: Connect the existing `Alt` / `Option` duplicate-requested drag stub to the duplicate document API, keeping drag preview and commit semantics aligned.
 
 #### Feature
 
@@ -339,12 +339,12 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Partially present`
 - `Source`: `RI-33`
 - `Dependencies`: `RI-07`
 - `Why it matters`: Once the editor supports more than one page, authors need reusable editing workflows for moving or cloning content without rebuilding it manually. Copy/paste of components and sections, cross-page paste targets, and duplicate-page actions are part of the baseline trust model for authoring at page/site scope.
-- `Current state`: The roadmap identifies multi-page support as a core workstream, but there is no explicit task yet for clipboard-style editing flows across page boundaries or for whole-page duplication semantics.
-- `Next move`: Define the first supported transfer units and behaviors: single component, subtree/section, same-page paste, cross-page paste, and duplicate page. Clarify whether these flows are backed by an internal clipboard model, browser clipboard integration, or both, and how IDs, links, selection, and history behave after duplication.
+- `Current state`: **Partially present** — stage node copy/paste/duplicate v1 is implemented through API-first clipboard payloads, shared shortcuts, active Edit menu entries, undoable editor actions, and docs/tests. Supported v1 transfer units are selected stage nodes, multi-selection top-level filtering, containers with descendants, section/subtree paste, in-memory/system clipboard payloads, and external text/html/link/image fallback paste.
+- `Next move`: Add whole-page duplication and decide whether duplicate-drag should commit through the new duplicate document API or remain a separate follow-up interaction.
 
 ##### More components: SVG, video, gradients
 

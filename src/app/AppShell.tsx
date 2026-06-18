@@ -107,6 +107,9 @@ type Props = {
 	onImportDocument: (raw: string) => Promise<ActionResult>;
 	onResetData: () => void;
 	onResetAll: () => void;
+	onCopySelection: () => void | Promise<void>;
+	onPasteClipboard: () => void | Promise<void>;
+	onDuplicateSelection: () => void;
 	appMode?: Extract<AppMode, "edit" | "preview">;
 	routeSearchParams?: URLSearchParams;
 	startupAction?: AppStartupAction | null;
@@ -165,6 +168,9 @@ export function AppShell({
 	onImportDocument,
 	onResetData,
 	onResetAll,
+	onCopySelection,
+	onPasteClipboard,
+	onDuplicateSelection,
 	appMode = "edit",
 	routeSearchParams,
 	startupAction = null,
@@ -690,6 +696,9 @@ export function AppShell({
 		onImportDocument,
 		onResetData,
 		onResetAll,
+		onCopySelection,
+		onPasteClipboard,
+		onDuplicateSelection,
 		showStorageWarning,
 		setShowStorageWarning,
 		requestedPageSettingsId,

@@ -87,6 +87,15 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
   deleteSelection: (_state, _shiftKey, handlers) => {
     handlers.selection.deleteSelection();
   },
+  copySelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.copySelection();
+  },
+  pasteClipboard: (_state, _shiftKey, handlers) => {
+    handlers.selection.pasteClipboard();
+  },
+  duplicateSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.duplicateSelection();
+  },
   toggleBoldSelection: (_state, _shiftKey, handlers) => {
     handlers.selection.toggleBoldSelection();
   },

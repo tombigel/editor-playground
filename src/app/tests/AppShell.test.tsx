@@ -49,6 +49,9 @@ function createProps(): ComponentProps<typeof AppShell> {
 		onImportDocument: async () => ({ ok: true, message: "Imported." }),
 		onResetData: () => undefined,
 		onResetAll: () => undefined,
+		onCopySelection: () => undefined,
+		onPasteClipboard: () => undefined,
+		onDuplicateSelection: () => undefined,
 	};
 }
 
@@ -141,6 +144,12 @@ describe("app/AppShell", () => {
 
 		expect(markup).toContain("Settings");
 		expect(markup).toContain("Edit");
+		expect(markup).toContain("Copy");
+		expect(markup).toContain("Duplicate");
+		expect(markup).toContain("Paste");
+		expect(markup).toContain("Cmd + C");
+		expect(markup).toContain("Cmd + D");
+		expect(markup).toContain("Cmd + V");
 		expect(markup).toContain("View");
 		expect(markup).toContain("Pages");
 		expect(markup).toContain("Help");

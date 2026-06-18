@@ -301,7 +301,7 @@ Drag modifiers:
 
 - `Shift` locks drag movement to a single axis.
 - `Cmd` on macOS and `Ctrl` on Windows/Linux temporarily bypass guide snapping and magnetic boundary snap during drag.
-- `Alt` / `Option` is reserved for duplicate-drag. In this phase it records duplicate intent only; the commit still performs the normal move or reparent.
+- `Alt` / `Option` records duplicate-drag intent for a future drag-to-duplicate handoff. `Mod + D` and **Edit → Duplicate** already use the duplicate document API; drag commit still performs the normal move or reparent until that handoff is wired.
 
 Drag preview and drop targeting:
 
@@ -374,6 +374,9 @@ Ordering:
 
 Text styling:
 
+- `Mod + C`: copy the selected stage node payload when a stage element is selected; rich-text edit mode keeps native text copy
+- `Mod + V`: paste the editor clipboard payload, or paste external clipboard text/html/link/image data as a new stage node
+- `Mod + D`: duplicate the selected stage node payload
 - `Mod + B`: toggle bold on selected text-capable nodes when no input field is focused
   - bold is active at effective weight `>= 700`
   - toggle targets `400` and `800`
@@ -440,6 +443,7 @@ Text-entry behavior:
 
 - The shortcut matcher distinguishes text-entry focus from generic interactive chrome.
 - `Cmd + Z` / `Cmd + Shift + Z` fall through to the browser in text fields and other editable content.
+- `Cmd/Ctrl + C`, `Cmd/Ctrl + V`, and `Cmd/Ctrl + D` are editor commands only outside text-entry and rich-text edit contexts.
 - Rich-text edit mode owns text-editor-standard shortcuts before the global shortcut registry can act.
 - Settings stays available from non-text interactive chrome, while panel shortcuts stay blocked in text-entry contexts.
 - Stage-only nudges still require a stage-focused selection.
@@ -1277,7 +1281,7 @@ Language behavior:
   - the open menu chain stays active until an item is chosen, `Esc` is pressed, or an outside click occurs
   - nested submenus open on hover/focus and overlap their parent menu slightly so there is no dead hover gap
 - `Settings` menu routes to `Start fresh...`, `Import JSON`, `Export JSON`, `Export site`, and deep-links into `UI`, `Defaults`, `Fonts`, and `Advanced`
-- `Edit` menu exposes undo/redo plus placeholder copy/duplicate/paste entries and contextual delete
+- `Edit` menu exposes undo/redo, active copy/duplicate/paste entries, and contextual delete
 - `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Components and Pages
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Design system showcase left-navigation jumps use URL-addressable hashes in the form `#/design-system#section-id`; they scroll only the main showcase pane and keep the top bar/back-to-editor affordance visible.
@@ -1466,6 +1470,8 @@ Naming and title behavior:
 - Text subtype conversion preserves compatible typography and inline content: standalone block to rich keeps node style and rich inline children, while single-block rich to standalone block keeps compatible inline marks and links.
 - Rich split and multi-node merge are also API-first: `splitRichTextNodeDoc()` and `mergeTextNodesToRichDoc()` live in the pure API layer, so conversion and merge semantics do not depend on editor-only selection or stage-edit code.
 - Standalone block stage edits are API-first: the stage commits canonical `TextDocumentContent` through `setTextDocumentContentDoc()`, including inline marks, inline links, soft-break newline text, and the optional `clearBlockNodeLink` transition for promoted whole-node links.
+- Stage copy/paste/duplicate is API-first: `serializeNodesForClipboardDoc()` writes selected top-level stage nodes and descendants to `application/x-editor-playground-node+json`, `pasteNodesFromClipboardDoc()` remaps ids and resolves the selected container or nearest parent container as the paste target, structural wrappers paste as page sections, and `duplicateNodesDoc()` uses the same payload path with a small authored-coordinate offset.
+- External clipboard fallback is also pure API behavior: `createNodeFromExternalClipboardDoc()` converts clipboard text/html into rich text, website URLs into external link text nodes, and image URLs into image media nodes. App paste precedence is in-memory editor copy stack, custom editor clipboard MIME, then external text/html fallback.
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching auto/light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them. `auto` follows the viewer's system color scheme through `prefers-color-scheme` in the editor, preview, and exported site CSS.

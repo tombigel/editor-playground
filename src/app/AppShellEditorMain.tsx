@@ -69,6 +69,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		handleImportJsonFile,
 		handleExportJson,
 		handleExportSite,
+		onCopySelection,
+		onPasteClipboard,
+		onDuplicateSelection,
 	} = ctx;
 
 	return (
@@ -92,6 +95,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				darkTheme={state.ui.darkTheme}
 				historyState={historyState}
 				canDeleteSelection={selectedNodes.length > 0}
+				canCopySelection={selectedNodes.length > 0}
 				layersOpen={layersOpen}
 				pagesOpen={pagesOpen}
 				onSetActivePage={(pageId) =>
@@ -109,6 +113,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				onExportSite={handleExportSite}
 				onOpenSettingsSection={handleOpenSettingsSection}
 				onDeleteSelection={() => dispatch({ type: "delete" })}
+				onCopySelection={() => void onCopySelection()}
+				onPasteClipboard={() => void onPasteClipboard()}
+				onDuplicateSelection={onDuplicateSelection}
 				onSetLightTheme={handleSetLightTheme}
 				onSetDarkTheme={handleSetDarkTheme}
 				onTogglePreviewSticky={() =>
