@@ -252,6 +252,68 @@ describe('app/editorState', () => {
     expect(pasted.selectedId ? pasted.document.nodes[pasted.selectedId]?.parentId : null).toBe(containerId);
   });
 
+  it('pastes external styled HTML as a new rich node without replacing the selected text node', () => {
+    let state = createInitialState();
+    state = insertLeaf(state, 'text');
+    const selectedTextId = state.selectedId;
+    if (!selectedTextId) {
+      throw new Error('Expected selected text node');
+    }
+    const beforeNodeCount = Object.keys(state.document.nodes).length;
+    const selectedBefore = structuredClone(state.document.nodes[selectedTextId]);
+
+    const pasted = editorReducer(state, {
+      type: 'pasteExternalClipboard',
+      data: {
+        html: '<h2><strong>Styled heading</strong></h2><ul><li><em>List item</em></li></ul>',
+        text: 'Styled heading\nList item',
+      },
+    });
+
+    expect(Object.keys(pasted.document.nodes)).toHaveLength(beforeNodeCount + 1);
+    expect(pasted.document.nodes[selectedTextId]).toEqual(selectedBefore);
+    expect(pasted.selectedId).not.toBe(selectedTextId);
+    const pastedNode = pasted.selectedId ? pasted.document.nodes[pasted.selectedId] : null;
+    expect(pastedNode).toMatchObject({ contentType: 'text', subtype: 'rich' });
+    if (!pastedNode || pastedNode.contentType !== 'text') {
+      throw new Error('Expected pasted text node');
+    }
+    expect(pastedNode.content.blocks[0]).toMatchObject({
+      type: 'h2',
+      children: [{ text: 'Styled heading', bold: true }],
+    });
+    expect(pastedNode.content.blocks[1]).toMatchObject({
+      type: 'ul',
+      children: [{ type: 'list-item', children: [{ text: 'List item', italic: true }] }],
+    });
+  });
+
+  it('keeps external URL and image URL paste precedence through the reducer', () => {
+    const state = createInitialState();
+
+    const linkState = editorReducer(state, {
+      type: 'pasteExternalClipboard',
+      data: { text: 'https://example.com' },
+    });
+    const linkNode = linkState.selectedId ? linkState.document.nodes[linkState.selectedId] : null;
+    expect(linkNode).toMatchObject({
+      contentType: 'text',
+      subtype: 'block',
+      link: { linkType: 'external', href: 'https://example.com' },
+    });
+
+    const imageState = editorReducer(state, {
+      type: 'pasteExternalClipboard',
+      data: { text: 'https://example.com/image.png' },
+    });
+    const imageNode = imageState.selectedId ? imageState.document.nodes[imageState.selectedId] : null;
+    expect(imageNode).toMatchObject({
+      contentType: 'media',
+      subtype: 'image',
+      src: 'https://example.com/image.png',
+    });
+  });
+
   it('forces container wrappers to keep self sticky targeting', () => {
     let state = createInitialState();
     state = insertWrapper(state, 'section');
