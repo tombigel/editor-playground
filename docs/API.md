@@ -50,7 +50,7 @@ Source: `src/api/documentApi.ts`
 | `PasteNodesOptions` | type | Selected node, active page, and offset options for paste/duplicate |
 | `serializeNodesForClipboardDoc` | `(document, nodeIds) -> EditorNodeClipboardPayload \| null` | Serialize selected top-level nodes and descendants |
 | `parseNodeClipboardPayloadDoc` | `(raw) -> EditorNodeClipboardPayload \| null` | Parse a custom editor clipboard payload |
-| `createNodeClipboardJson` | `(payload) -> string` | Serialize an editor clipboard payload as JSON for clipboard text fallbacks |
+| `createNodeClipboardJson` | `(payload) -> string` | Serialize an editor clipboard payload as JSON for custom clipboard MIME or hidden HTML fallback storage |
 | `pasteNodesFromClipboardDoc` | `(document, payload, options?) -> PasteNodesResult` | Paste serialized nodes with remapped ids, target-parent resolution, and optional offset |
 | `duplicateNodesDoc` | `(document, nodeIds, options?) -> PasteNodesResult` | Duplicate selected nodes through the same clipboard payload path |
 | `createNodeFromExternalClipboardDoc` | `(document, { text?, html? }, options?) -> PasteNodesResult` | Create a rich text, link, or image node from external clipboard data |

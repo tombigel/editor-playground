@@ -2,9 +2,6 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import {
 	createBlankInitialDocument,
 	createInitialDocument,
-	createNodeClipboardJson,
-	EDITOR_NODE_CLIPBOARD_MIME,
-	parseNodeClipboardPayloadDoc,
 	serializeNodesForClipboardDoc,
 	type EditorNodeClipboardPayload,
 	type StickyGeometrySnapshot,
@@ -37,6 +34,12 @@ import { useEditorKeyboardShortcuts } from "./useEditorKeyboardShortcuts";
 import { getShortcutFocusContext } from "./useEditorEnvironment";
 import { openPreviewSiteWindow } from "./previewWindow";
 import type { ShortcutExecutionHandlers } from "./types";
+import {
+	readNodePayloadFromEventClipboard,
+	readNodePayloadFromSystemClipboard,
+	writeNodePayloadToEventClipboard,
+	writeNodePayloadToSystemClipboard,
+} from "./appClipboard";
 
 type AppProps = {
 	mode?: Extract<AppMode, "edit" | "preview">;
@@ -184,38 +187,13 @@ export function App({
 		return serializeNodesForClipboardDoc(state.document, state.selectedIds);
 	}, [state.document, state.selectedIds]);
 
-	const writeNodePayloadToSystemClipboard = useCallback(async (payload: EditorNodeClipboardPayload) => {
-		const json = createNodeClipboardJson(payload);
-		const clipboard = navigator.clipboard as Clipboard & {
-			write?: (items: ClipboardItem[]) => Promise<void>;
-		};
-		if (clipboard?.write && typeof ClipboardItem !== "undefined") {
-			try {
-				await clipboard.write([
-					new ClipboardItem({
-						[EDITOR_NODE_CLIPBOARD_MIME]: new Blob([json], {
-							type: EDITOR_NODE_CLIPBOARD_MIME,
-						}),
-						"text/plain": new Blob([json], { type: "text/plain" }),
-					}),
-				]);
-				return;
-			} catch {
-				// Fall through to writeText for browsers that block custom MIME writes.
-			}
-		}
-		await navigator.clipboard?.writeText(json);
-	}, []);
-
 	const copySelectionToEventClipboard = useCallback((event: ClipboardEvent) => {
 		const payload = getSelectedClipboardPayload();
 		if (!payload || !event.clipboardData) {
 			return false;
 		}
-		const json = createNodeClipboardJson(payload);
 		nodeClipboardRef.current = payload;
-		event.clipboardData.setData(EDITOR_NODE_CLIPBOARD_MIME, json);
-		event.clipboardData.setData("text/plain", json);
+		writeNodePayloadToEventClipboard(event.clipboardData, payload);
 		event.preventDefault();
 		return true;
 	}, [getSelectedClipboardPayload]);
@@ -231,7 +209,7 @@ export function App({
 		} catch {
 			// The in-memory stack still enables paste in this app session.
 		}
-	}, [getSelectedClipboardPayload, writeNodePayloadToSystemClipboard]);
+	}, [getSelectedClipboardPayload]);
 
 	const pasteClipboardPayload = useCallback((payload: EditorNodeClipboardPayload) => {
 		dispatch({ type: "pasteClipboardNodes", payload });
@@ -251,9 +229,7 @@ export function App({
 			return true;
 		}
 		const customPayload = event.clipboardData
-			? parseNodeClipboardPayloadDoc(
-					event.clipboardData.getData(EDITOR_NODE_CLIPBOARD_MIME),
-				)
+			? readNodePayloadFromEventClipboard(event.clipboardData)
 			: null;
 		if (customPayload) {
 			nodeClipboardRef.current = customPayload;
@@ -270,34 +246,6 @@ export function App({
 		}
 		return false;
 	}, [pasteClipboardPayload, pasteExternalClipboardData]);
-
-	const readNodePayloadFromSystemClipboard = useCallback(async () => {
-		const clipboard = navigator.clipboard as Clipboard & {
-			read?: () => Promise<ClipboardItem[]>;
-		};
-		if (clipboard?.read) {
-			try {
-				const items = await clipboard.read();
-				for (const item of items) {
-					if (item.types.includes(EDITOR_NODE_CLIPBOARD_MIME)) {
-						const blob = await item.getType(EDITOR_NODE_CLIPBOARD_MIME);
-						const payload = parseNodeClipboardPayloadDoc(await blob.text());
-						if (payload) {
-							return payload;
-						}
-					}
-				}
-			} catch {
-				// readText fallback below handles browsers without async custom MIME access.
-			}
-		}
-		try {
-			const text = await navigator.clipboard?.readText();
-			return text ? parseNodeClipboardPayloadDoc(text) : null;
-		} catch {
-			return null;
-		}
-	}, []);
 
 	const pasteClipboard = useCallback(async () => {
 		if (nodeClipboardRef.current) {
@@ -316,7 +264,7 @@ export function App({
 		} catch {
 			// Clipboard permission denial leaves paste as a no-op.
 		}
-	}, [pasteClipboardPayload, pasteExternalClipboardData, readNodePayloadFromSystemClipboard]);
+	}, [pasteClipboardPayload, pasteExternalClipboardData]);
 
 	const duplicateSelection = useCallback(() => {
 		dispatch({ type: "duplicateSelection" });

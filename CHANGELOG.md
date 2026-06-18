@@ -15,6 +15,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - add stage copy paste duplicate
 
+### Fixed
+
+- keep editor payload out of plain text
+
 ---
 
 ## [0.10.8] — 2026-06-18
