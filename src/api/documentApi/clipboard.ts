@@ -520,12 +520,9 @@ function resolveElementMarks(
   const style = parseCssStyle(element.attributes.style ?? '');
   const textDecoration = `${style['text-decoration'] ?? ''} ${style['text-decoration-line'] ?? ''}`;
   const fontWeight = parseFontWeight(style['font-weight']);
-  const fontFamily = resolvePastedFontFamily(
-    style['font-family'] ?? (tagName === 'font' ? element.attributes.face : undefined),
-    context.document,
-  );
-  const color = style.color ?? (tagName === 'font' ? element.attributes.color : undefined);
-  const backgroundColor = style['background-color'] ?? element.attributes.bgcolor;
+  const fontFamily = resolvePastedFontFamily(style['font-family'], context.document);
+  const color = style.color;
+  const backgroundColor = style['background-color'];
 
   return {
     ...inherited,

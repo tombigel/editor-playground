@@ -26,6 +26,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - keep editor payload out of plain text
 - cover html paste edge cases
+- keep html paste scope modern
 
 ---
 

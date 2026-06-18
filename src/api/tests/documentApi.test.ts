@@ -351,10 +351,10 @@ describe('api/documentApi', () => {
       ]);
     });
 
-    it('carries root inline marks and legacy HTML attributes into leaves', () => {
+    it('carries root inline marks into leaves', () => {
       const document = createInitialDocument();
       const content = createTextDocumentContentFromClipboardHtml(document, {
-        html: '<strong>Bold</strong><font color="#123456" face="Inter" bgcolor="#abcdef">Legacy</font>',
+        html: '<strong>Bold</strong><span style="color: #123456; background-color: #abcdef; font-family: Inter;">Styled</span>',
       });
 
       expect(content.blocks).toHaveLength(2);
@@ -365,7 +365,7 @@ describe('api/documentApi', () => {
       expect(content.blocks[1]).toMatchObject({
         type: 'paragraph',
         children: [{
-          text: 'Legacy',
+          text: 'Styled',
           color: '#123456',
           backgroundColor: '#abcdef',
           fontFamily: 'Inter',
