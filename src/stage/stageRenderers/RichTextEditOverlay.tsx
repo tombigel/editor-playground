@@ -477,11 +477,11 @@ export function RichTextEditOverlay({
 	const handlePaste = useCallback(
 		(event: ReactClipboardEvent<HTMLDivElement>) => {
 			const html = event.clipboardData.getData("text/html");
-			if (!html) {
+			const text = event.clipboardData.getData("text/plain");
+			if (!html && !text) {
 				return;
 			}
 			event.preventDefault();
-			const text = event.clipboardData.getData("text/plain");
 			const content = html && documentModel
 				? createTextDocumentContentFromClipboardHtml(documentModel, { html, text })
 				: createTextDocumentFromText(text);

@@ -288,7 +288,7 @@ function createRichTextContentFromHtml(
 ) {
   const roots = parseClipboardHtml(html);
   const context: HtmlConversionContext = { document };
-  const blocks = roots.flatMap((node) => htmlNodeToBlocks(node, context));
+  const blocks = roots.flatMap((node) => htmlNodeToBlocks(node, context, {}));
 
   return createTextDocumentContent(
     blocks.length > 0
@@ -388,15 +388,19 @@ function decodeHtmlEntities(value: string) {
     .replace(/&#39;/g, "'");
 }
 
-function htmlNodeToBlocks(node: HtmlNode, context: HtmlConversionContext): RichBlock[] {
+function htmlNodeToBlocks(
+  node: HtmlNode,
+  context: HtmlConversionContext,
+  inherited: Partial<RichTextLeaf>,
+): RichBlock[] {
   if (node.type === 'text') {
     const text = node.text;
-    return text.trim() ? [createRichTextBlock('paragraph', [createRichTextLeaf(text)])] : [];
+    return text.trim() ? [createRichTextBlock('paragraph', [createRichTextLeaf(text, inherited)])] : [];
   }
 
   const tagName = node.tagName;
   if (tagName === 'ul' || tagName === 'ol') {
-    const items = node.children.flatMap((child) => listItemsFromHtmlNode(child, context, {}));
+    const items = node.children.flatMap((child) => listItemsFromHtmlNode(child, context, inherited, 0));
     if (items.length === 0) {
       return [];
     }
@@ -408,7 +412,11 @@ function htmlNodeToBlocks(node: HtmlNode, context: HtmlConversionContext): RichB
   }
 
   if (isHtmlBlockTag(tagName)) {
-    const children = inlineNodesFromHtmlChildren(node.children, context, resolveElementMarks(node, {}, context));
+    const marks = resolveElementMarks(node, inherited, context);
+    if (hasStructuralHtmlChild(node)) {
+      return node.children.flatMap((child) => htmlNodeToBlocks(child, context, marks));
+    }
+    const children = inlineNodesFromHtmlChildren(node.children, context, marks);
     if (children.length === 0 || getInlineText(children).trim().length === 0) {
       return [];
     }
@@ -417,25 +425,47 @@ function htmlNodeToBlocks(node: HtmlNode, context: HtmlConversionContext): RichB
     })];
   }
 
-  return node.children.flatMap((child) => htmlNodeToBlocks(child, context));
+  const marks = resolveElementMarks(node, inherited, context);
+  if (hasStructuralHtmlChild(node)) {
+    return node.children.flatMap((child) => htmlNodeToBlocks(child, context, marks));
+  }
+  const children = inlineNodesFromHtmlChildren(node.children, context, marks);
+  return getInlineText(children).trim()
+    ? [createRichTextBlock('paragraph', children)]
+    : [];
 }
 
 function listItemsFromHtmlNode(
   node: HtmlNode,
   context: HtmlConversionContext,
   inherited: Partial<RichTextLeaf>,
+  depth: number,
 ): RichListItem[] {
   if (node.type !== 'element' || node.tagName !== 'li') {
     return [];
   }
   const marks = resolveElementMarks(node, inherited, context);
-  const children = inlineNodesFromHtmlChildren(node.children, context, marks);
-  return [createRichListItemFromChildren(children.length > 0 ? children : [createRichTextLeaf('')])];
+  const inlineChildren = inlineNodesFromHtmlChildren(
+    node.children.filter((child) => !isListElement(child)),
+    context,
+    marks,
+  );
+  const nestedItems = node.children
+    .filter(isListElement)
+    .flatMap((list) => list.children.flatMap((child) => listItemsFromHtmlNode(child, context, marks, depth + 1)));
+  return [
+    createRichListItemFromChildren(
+      inlineChildren.length > 0 ? inlineChildren : [createRichTextLeaf('')],
+      depth,
+    ),
+    ...nestedItems,
+  ];
 }
 
-function createRichListItemFromChildren(children: RichInlineNode[]): RichListItem {
+function createRichListItemFromChildren(children: RichInlineNode[], depth = 0): RichListItem {
   return {
     ...createRichListItem(''),
+    ...(depth > 0 ? { depth } : {}),
     children,
   };
 }
@@ -490,7 +520,12 @@ function resolveElementMarks(
   const style = parseCssStyle(element.attributes.style ?? '');
   const textDecoration = `${style['text-decoration'] ?? ''} ${style['text-decoration-line'] ?? ''}`;
   const fontWeight = parseFontWeight(style['font-weight']);
-  const fontFamily = resolvePastedFontFamily(style['font-family'], context.document);
+  const fontFamily = resolvePastedFontFamily(
+    style['font-family'] ?? (tagName === 'font' ? element.attributes.face : undefined),
+    context.document,
+  );
+  const color = style.color ?? (tagName === 'font' ? element.attributes.color : undefined);
+  const backgroundColor = style['background-color'] ?? element.attributes.bgcolor;
 
   return {
     ...inherited,
@@ -502,8 +537,8 @@ function resolveElementMarks(
     ...(style['font-style'] === 'italic' ? { italic: true } : {}),
     ...(textDecoration.includes('underline') ? { underline: true } : {}),
     ...(textDecoration.includes('line-through') ? { strikethrough: true } : {}),
-    ...(style.color ? { color: style.color } : {}),
-    ...(style['background-color'] ? { backgroundColor: style['background-color'] } : {}),
+    ...(color ? { color } : {}),
+    ...(backgroundColor ? { backgroundColor } : {}),
     ...(fontFamily ? { fontFamily } : {}),
     ...(style['font-size'] ? { fontSize: style['font-size'] } : {}),
   };
@@ -578,6 +613,14 @@ function isHtmlBlockTag(tagName: string) {
     || tagName === 'h4'
     || tagName === 'h5'
     || tagName === 'h6';
+}
+
+function hasStructuralHtmlChild(node: HtmlElementNode) {
+  return node.children.some((child) => child.type === 'element' && (isHtmlBlockTag(child.tagName) || isListElement(child)));
+}
+
+function isListElement(node: HtmlNode): node is HtmlElementNode {
+  return node.type === 'element' && (node.tagName === 'ul' || node.tagName === 'ol');
 }
 
 function resolveHtmlBlockType(tagName: string): RichTextBlockType {

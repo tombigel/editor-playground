@@ -90,13 +90,14 @@ export function insertClipboardContent(
   }
 
   if (mode === 'list') {
-    const listItemEntry = findSelectedListItemEntry(editor);
     const pastedItems = content.blocks.flatMap((block) => blockToListItems(block));
+    if (editor.selection && !Range.isCollapsed(editor.selection)) {
+      Transforms.delete(editor);
+    }
+    const listItemEntry = findSelectedListItemEntry(editor);
     if (listItemEntry && pastedItems.length > 0) {
-      if (editor.selection && !Range.isCollapsed(editor.selection)) {
-        Transforms.delete(editor);
-      }
-      Transforms.insertNodes(editor, pastedItems as unknown as Descendant[], {
+      const contextualItems = applyListItemContext(pastedItems, listItemEntry[0]);
+      Transforms.insertNodes(editor, contextualItems as unknown as Descendant[], {
         at: Path.next(listItemEntry[1]),
       });
       return;
@@ -649,6 +650,14 @@ function createRichListItemFromChildren(children: RichInlineNode[]): RichListIte
     type: 'list-item',
     children: children.length > 0 ? children : [createRichTextLeaf('')],
   };
+}
+
+function applyListItemContext(items: RichListItem[], activeItem: RichListItem): RichListItem[] {
+  return items.map((item) => ({
+    ...item,
+    ...(activeItem.depth !== undefined && item.depth === undefined ? { depth: activeItem.depth } : {}),
+    ...(activeItem.direction && !item.direction ? { direction: activeItem.direction } : {}),
+  }));
 }
 
 function splitInlineNodesToLineGroups(nodes: RichInlineNode[]): RichInlineNode[][] {

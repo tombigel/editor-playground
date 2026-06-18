@@ -643,6 +643,58 @@ describe('render/richTextEditor', () => {
       ]);
     });
 
+    it('recomputes the active list item after replacing selected list text', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([createRichListBlock('ul', [createRichListItem('Before')])]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 0, 0], offset: 2 },
+        focus: { path: [0, 0, 0], offset: 5 },
+      });
+
+      insertClipboardContent(editor, createTextDocumentContent([
+        createRichListBlock('ul', [createRichListItem('After')]),
+      ]), 'list');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Bee' }] },
+            { type: 'list-item', children: [{ text: 'After' }] },
+          ],
+        },
+      ]);
+    });
+
+    it('inherits active list item depth and direction for inline clipboard content', () => {
+      const editor = makeEditor();
+      editor.children = toSlateValue([
+        createRichListBlock('ul', [
+          { ...createRichListItem('Parent'), direction: 'rtl' },
+          { ...createRichListItem('Child'), depth: 1, direction: 'rtl' },
+        ]),
+      ]);
+      Transforms.select(editor, {
+        anchor: { path: [0, 1, 0], offset: 5 },
+        focus: { path: [0, 1, 0], offset: 5 },
+      });
+
+      insertClipboardContent(editor, createTextDocumentContent([
+        createRichTextBlock('paragraph', [{ text: 'Nested', bold: true }]),
+      ]), 'list');
+
+      expect(fromSlateValue(editor.children as never)).toEqual([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', direction: 'rtl', children: [{ text: 'Parent' }] },
+            { type: 'list-item', depth: 1, direction: 'rtl', children: [{ text: 'Child' }] },
+            { type: 'list-item', depth: 1, direction: 'rtl', children: [{ text: 'Nested', bold: true }] },
+          ],
+        },
+      ]);
+    });
+
     it('keeps code paste as plain text', () => {
       const editor = makeEditor();
       editor.children = toSlateValue([{ type: 'paragraph', children: [{ text: 'code:' }] }]);

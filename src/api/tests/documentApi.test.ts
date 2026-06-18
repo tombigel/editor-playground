@@ -339,6 +339,57 @@ describe('api/documentApi', () => {
       });
     });
 
+    it('preserves rich structure inside wrapper clipboard HTML', () => {
+      const document = createInitialDocument();
+      const content = createTextDocumentContentFromClipboardHtml(document, {
+        html: '<div><h2>Wrapped</h2><ul><li>Item</li></ul></div>',
+      });
+
+      expect(content.blocks).toMatchObject([
+        { type: 'h2', children: [{ text: 'Wrapped' }] },
+        { type: 'ul', children: [{ type: 'list-item', children: [{ text: 'Item' }] }] },
+      ]);
+    });
+
+    it('carries root inline marks and legacy HTML attributes into leaves', () => {
+      const document = createInitialDocument();
+      const content = createTextDocumentContentFromClipboardHtml(document, {
+        html: '<strong>Bold</strong><font color="#123456" face="Inter" bgcolor="#abcdef">Legacy</font>',
+      });
+
+      expect(content.blocks).toHaveLength(2);
+      expect(content.blocks[0]).toMatchObject({
+        type: 'paragraph',
+        children: [{ text: 'Bold', bold: true }],
+      });
+      expect(content.blocks[1]).toMatchObject({
+        type: 'paragraph',
+        children: [{
+          text: 'Legacy',
+          color: '#123456',
+          backgroundColor: '#abcdef',
+          fontFamily: 'Inter',
+        }],
+      });
+    });
+
+    it('flattens nested clipboard lists while preserving item depth', () => {
+      const document = createInitialDocument();
+      const content = createTextDocumentContentFromClipboardHtml(document, {
+        html: '<ul><li>Parent<ul><li><em>Child</em></li></ul></li></ul>',
+      });
+
+      expect(content.blocks).toMatchObject([
+        {
+          type: 'ul',
+          children: [
+            { type: 'list-item', children: [{ text: 'Parent' }] },
+            { type: 'list-item', depth: 1, children: [{ text: 'Child', italic: true }] },
+          ],
+        },
+      ]);
+    });
+
     it('preserves only installed pasted font families', () => {
       const document = createInitialDocument();
       const content = createTextDocumentContentFromClipboardHtml(document, {
