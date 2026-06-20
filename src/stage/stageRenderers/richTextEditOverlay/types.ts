@@ -83,9 +83,9 @@ export const UNORDERED_MARKER_OPTIONS = [
 
 export const FONT_SIZE_UNIT_OPTIONS = ["px", "em", "rem"] as const;
 export const FONT_SIZE_SUGGESTIONS_BY_UNIT = {
-	px: [12, 14, 16, 18, 20, 24, 30, 36, 48, 64, 72],
-	em: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
-	rem: [0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4],
+	px: [10, 12, 14, 16, 18, 20, 24, 30, 36, 48, 64, 72, 96, 120],
+	em: [0.625, 0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4, 6, 7.5],
+	rem: [0.625, 0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875, 2.25, 3, 4, 6, 7.5],
 } as const;
 
 export const BLOCK_SPACING_UNIT_OPTIONS = ["px", "em"] as const;

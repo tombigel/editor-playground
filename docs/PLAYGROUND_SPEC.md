@@ -828,7 +828,7 @@ Additional geometry rules:
 - The active inner input or unit segment gets an accent-colored inner border instead of its own separate focus ring.
 - Suggestion-enabled value fields switch to a validated text input with decimal-keyboard hints so the shared popup can use one styled combobox surface.
 - Suggestion-enabled value fields use a styled listbox popup instead of layering browser `datalist` UI under editor chrome.
-- The font-size suggestion list uses the same hover highlight treatment as other editor menus, slightly taller rows, a `72px` preset, and an internal scrollbar.
+- The font-size suggestion list uses the same hover highlight treatment as other editor menus, slightly taller rows, presets up to `120px`, and a compact internal scrollbar.
 - In higher-contrast palettes, compact numeric values render at `12px` minimum and suffixes or modes at `11px` minimum.
 - Numeric field displays are capped to two decimal places and trim trailing zeroes.
 
@@ -1989,7 +1989,7 @@ While editing, the rich node gets visible stage chrome:
 - the same grouped toolbar treatment applies to rich, standalone block, and standalone list edit modes; block and list modes show only their inline control groups and do not reserve space for unavailable rich-only controls
 - text color and highlight color reuse the shared `ColorPicker` swatch control instead of a stage-local native color input
 - text and highlight swatches share the same framed swatch treatment so light and dark colors read as the same visual size in the toolbar
-- font size uses the shared `ValueWithUnit` contract with font-size units, resolves inherited font size into a real field value instead of gray placeholder text, and its suggestion list can overflow the panel body instead of being clipped by toolbar chrome
+- font size uses the shared `ValueWithUnit` contract with font-size units, resolves inherited font size into a real field value instead of gray placeholder text, commits typed drafts on Enter or blur, and keeps a compact scrollable suggestion list that reaches `120px`
 - font-size suggestions participate in the rich-edit layer stack, so outside click and `Escape` close that suggestion layer before they can unwind the link panel or the base toolbar
 - line height uses the shared `NumberInput` contract as a compact spinnerless field with a leading `MoveVertical` icon
 - block spacing uses a compact `ValueWithUnit` field with `px` / `em` support and a leading `UnfoldVertical` icon while still persisting `content.blockGap` as px

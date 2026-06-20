@@ -734,6 +734,28 @@ export function FontSizeField({
 		setInvalid(false);
 	}, [mixed, parsed.parsed.value]);
 
+	const commitDraft = useCallback(
+		(nextDraft = draft) => {
+			if (mixed && !nextDraft.trim()) {
+				setDraft("");
+				setInvalid(false);
+				return;
+			}
+			const validation = validateNumberInputDraft(
+				nextDraft,
+				0.0000001,
+				Number.POSITIVE_INFINITY,
+			);
+			setInvalid(!validation.isValid);
+			if (validation.nextValue != null) {
+				onChange(`${validation.nextValue}${parsed.parsed.unit}`);
+				return;
+			}
+			setDraft(mixed ? "" : String(parsed.parsed.value));
+		},
+		[draft, mixed, onChange, parsed.parsed.unit, parsed.parsed.value],
+	);
+
 	return (
 		<ValueWithUnit
 			mode="number-select"
@@ -750,20 +772,10 @@ export function FontSizeField({
 			segmentWidth={COMPACT_UNIT_SUFFIX_WIDTH}
 			suggestions={suggestions}
 			defaultSuggestionsOpen={defaultSuggestionsOpen}
-			onInputBlur={() => {
-				setDraft(mixed ? "" : String(parsed.parsed.value));
-				setInvalid(false);
-			}}
+			onInputBlur={() => commitDraft()}
+			onInputCommit={() => commitDraft()}
 			onSuggestionSelect={(nextDraft) => {
-				const validation = validateNumberInputDraft(
-					nextDraft,
-					0.0000001,
-					Number.POSITIVE_INFINITY,
-				);
-				setInvalid(!validation.isValid);
-				if (validation.nextValue != null) {
-					onChange(`${validation.nextValue}${parsed.parsed.unit}`);
-				}
+				commitDraft(nextDraft);
 			}}
 			onInputValueChange={(nextDraft) => {
 				setDraft(nextDraft);
@@ -773,9 +785,6 @@ export function FontSizeField({
 					Number.POSITIVE_INFINITY,
 				);
 				setInvalid(!validation.isValid);
-				if (validation.nextValue != null) {
-					onChange(`${validation.nextValue}${parsed.parsed.unit}`);
-				}
 			}}
 			onResolveOptionValue={(nextUnit) => {
 				const converted = resolveFontSizeMeasurementInput({

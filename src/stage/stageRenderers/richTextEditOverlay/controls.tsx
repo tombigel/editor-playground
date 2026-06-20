@@ -289,11 +289,8 @@ export function CompactFontSizeField({
 							return;
 						}
 						try {
-							const parsed = parseFontSizeValue(`${nextDraft}${draft.unit}`);
+							parseFontSizeValue(`${nextDraft}${draft.unit}`);
 							setInvalid(false);
-							onCommit(
-								`${formatDisplayValue(parsed.parsed.value)}${draft.unit}`,
-							);
 						} catch {
 							setInvalid(true);
 						}

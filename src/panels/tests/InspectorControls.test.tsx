@@ -145,7 +145,7 @@ describe('panels/InspectorControls', () => {
   it('renders font size suggestions with shared hover treatment and combobox semantics', () => {
     const markup = renderToStaticMarkup(<FontSizeField nodeId="text_1" value="16px" onChange={() => {}} defaultSuggestionsOpen />);
 
-    expect(markup).toContain('72px');
+    expect(markup).toContain('120px');
     expect(markup).toContain('role="combobox"');
     expect(markup).toContain('role="listbox"');
     expect(markup).toContain('aria-autocomplete="list"');
@@ -153,7 +153,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
     expect(markup).toContain('leading-5');
     expect(markup).toContain('py-2');
-    expect(markup).toContain('max-h-[220px]');
+    expect(markup).toContain('max-h-[180px]');
     expect(markup).toContain('editor-scrollbar');
     expect(markup).toContain('overflow-y-auto');
   });

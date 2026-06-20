@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RichTextEditOverlay } from "../stageRenderers/RichTextEditOverlay";
+import { CompactFontSizeField } from "../stageRenderers/richTextEditOverlay/controls";
+import { FONT_SIZE_SUGGESTIONS_BY_UNIT } from "../stageRenderers/richTextEditOverlay/types";
 import {
 	createTextDocumentContent,
 	listContentToRichListBlock,
@@ -149,6 +151,26 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain('aria-label="Font size"');
 		expect(markup).toContain('value="18"');
 		expect(markup).not.toContain('placeholder="18"');
+	});
+
+	it("offers compact font size suggestions through 120px", () => {
+		expect(FONT_SIZE_SUGGESTIONS_BY_UNIT.px.at(-1)).toBe(120);
+
+		const markup = renderToStaticMarkup(
+			<CompactFontSizeField
+				label="Font size"
+				value="18px"
+				width={72}
+				onCommit={() => {}}
+				suggestionsOpen
+				onSuggestionsOpenChange={() => {}}
+				resolveUnitValue={() => null}
+			/>,
+		);
+
+		expect(markup).toContain("120px");
+		expect(markup).toContain("editor-scrollbar");
+		expect(markup).toContain("max-h-[180px]");
 	});
 
 	it("restricts the toolbar to inline controls in block mode", () => {

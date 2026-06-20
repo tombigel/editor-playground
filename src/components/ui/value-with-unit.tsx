@@ -127,6 +127,7 @@ export function ValueWithUnit({
 	onResolveOptionValue,
 	onInputValueChange,
 	onInputBlur,
+	onInputCommit,
 	suggestions,
 	suggestionListId,
 	onSuggestionSelect,
@@ -163,6 +164,7 @@ export function ValueWithUnit({
 	) => string | null;
 	onInputValueChange?: (nextInput: string) => void;
 	onInputBlur?: () => void;
+	onInputCommit?: () => void;
 	suggestions?: ValueWithUnitSuggestion[];
 	suggestionListId?: string;
 	onSuggestionSelect?: (nextSuggestion: string) => void;
@@ -413,6 +415,11 @@ export function ValueWithUnit({
 						onKeyDown={(event) => {
 							if (handleSuggestionKeyDown(event.key)) {
 								event.preventDefault();
+								return;
+							}
+							if (event.key === "Enter" && onInputCommit) {
+								event.preventDefault();
+								onInputCommit();
 							}
 						}}
 						onChange={(event) => {
@@ -539,7 +546,7 @@ export function ValueWithUnit({
 				<div
 					id={resolvedSuggestionListId}
 					role="listbox"
-					className="value-with-unit-suggestions editor-scrollbar absolute left-0 top-[calc(100%+4px)] z-30 max-h-[220px] min-w-full overflow-y-auto rounded-sm border p-1 shadow-md"
+					className="value-with-unit-suggestions editor-scrollbar absolute left-0 top-[calc(100%+4px)] z-30 max-h-[180px] min-w-full overflow-y-auto rounded-sm border p-1 shadow-md"
 				>
 					{resolvedSuggestions.map((suggestion, index) => {
 						const isActive = index === activeSuggestionIndex;
