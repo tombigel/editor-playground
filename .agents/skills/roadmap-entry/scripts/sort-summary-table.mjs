@@ -58,6 +58,13 @@ function compareRows(left, right) {
     return leftPriority - rightPriority;
   }
 
+  const leftStatus = rankStatus(cell(left, 2));
+  const rightStatus = rankStatus(cell(right, 2));
+
+  if (leftStatus !== rightStatus) {
+    return leftStatus - rightStatus;
+  }
+
   const leftId = parseRoadmapId(cell(left, 1));
   const rightId = parseRoadmapId(cell(right, 1));
 
@@ -80,6 +87,10 @@ function rankPriority(priorityCell) {
   }
 
   return Number.MAX_SAFE_INTEGER;
+}
+
+function rankStatus(statusCell) {
+  return statusCell.includes("✅ Done") ? 1 : 0;
 }
 
 function parseRoadmapId(idCell) {

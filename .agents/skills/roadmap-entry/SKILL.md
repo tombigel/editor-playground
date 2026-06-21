@@ -64,7 +64,7 @@ For a user-reported maintenance task, prefer `Type: UX` when the issue is about 
 
 - `Mark as next`: set the summary priority to `🔴 Next`; add or keep the item in `Active Stage` if it is part of the current active workstream; keep the structured entry in the appropriate priority section unless the roadmap has an explicit `Priority: Next` section.
 - `Update priority`: update the summary priority marker and move the structured entry to the matching priority section.
-- Priority order for sorting is: `🔴 Next`, `🟠 High`, `🔵 Low`, `⚪ Optional`, then unknown markers.
+- Priority order for sorting is: `🔴 Next`, `🟠 High`, `🔵 Low`, `⚪ Optional`, then unknown markers. Within each priority group, `✅ Done` items sort after non-done items.
 - If an item becomes blocked, set `Status: Blocked` and add the blocker in `Current state` or `Dependencies`.
 
 ## Marking Progress Or Done

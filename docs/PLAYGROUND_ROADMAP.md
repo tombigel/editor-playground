@@ -57,43 +57,46 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 | Raw intake id | Status | Short name | Priority | Type | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
-| `RI-02` | `✅ Done` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
-| `RI-03` | `✅ Done` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
-| `RI-04` | `⚪ Not started` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Deferred to next phase |
-| `RI-05` | `⚪ Not started` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🔴 Next` | UX | Human | Dep: `RI-03`, `RI-04` |
-| `RI-06` | `🟣 Partially present` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🔴 Next` | UX | Shared | Dep: `RI-05` |
 | `RI-11` | `⚪ Not started` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | - |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
 | `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
-| `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | Shared | Dep: `RI-06` |
+| `RI-13` | `⚪ Not started` | [AI layer for conversational editor control](#ai-layer-for-conversational-editor-control) | `🔴 Next` | Feature | Shared | Umbrella for `RI-46`, `RI-47`, `RI-48` |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
-| `RI-43` | `✅ Done` | [Guided showcase tour for editor portfolio](#guided-showcase-tour-for-editor-portfolio) | `🔴 Next` | UX | Shared | Unplanned; needed to make the editor understandable as portfolio evidence |
 | `RI-45` | `⚪ Not started` | [Form and input authoring platform](#form-and-input-authoring-platform) | `🔴 Next` | Feature | Shared | Requires behavior/backoffice/docs/a11y spec before implementation |
-| `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
+| `RI-46` | `⚪ Not started` | [AI command/interface layer over the public API](#ai-commandinterface-layer-over-the-public-api) | `🔴 Next` | Platform | Shared | Dep: `RI-13` |
+| `RI-47` | `⚪ Not started` | [Bring-your-own-model connection layer](#bring-your-own-model-connection-layer) | `🔴 Next` | Platform | Shared | Dep: `RI-46` |
+| `RI-48` | `⚪ Not started` | [Conversational editor UI with assistant-ui](#conversational-editor-ui-with-assistant-ui) | `🔴 Next` | UX | Shared | Dep: `RI-46`, `RI-47` |
+| `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
+| `RI-02` | `✅ Done` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
+| `RI-03` | `✅ Done` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
+| `RI-43` | `✅ Done` | [Guided showcase tour for editor portfolio](#guided-showcase-tour-for-editor-portfolio) | `🔴 Next` | UX | Shared | Unplanned; needed to make the editor understandable as portfolio evidence |
+| `RI-04` | `⚪ Not started` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | LLM | Deferred to next phase |
+| `RI-05` | `⚪ Not started` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🟠 High` | UX | Human | Dep: `RI-03`, `RI-04` |
+| `RI-06` | `🟣 Partially present` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | Shared | Dep: `RI-05` |
 | `RI-09` | `🟣 Partially present` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | Shared | - |
 | `RI-10` | `🟤 Needs audit` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | Shared | Dep: `RI-09` |
 | `RI-25` | `🟢 In progress` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | - |
 | `RI-27` | `🟣 Partially present` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | Shared | - |
+| `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🟠 High` | UX | Shared | Dep: `RI-06` |
 | `RI-33` | `🟣 Partially present` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Stage node copy/paste/duplicate v1 done; page duplication deferred |
 | `RI-34` | `🟢 In progress` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | P2-A through P2-D done; rich E2E isolated; four rich authoring cases quarantined; P2-C follow-ups, P2-E, and P2-F remain |
+| `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
+| `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
+| `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
+| `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
 | `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
 | `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
-| `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
 | `RI-39` | `✅ Done` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
-| `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
 | `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
 | `RI-42` | `✅ Done` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Anchor/box child boundaries, deterministic drag commit, and modifier cleanup delivered |
-| `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
-| `RI-13` | `⚪ Not started` | [AI integration for site building, animations, skills, MCPs](#ai-integration-for-site-building-animations-skills-and-mcps) | `🔵 Low` | Feature | Human | - |
 | `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | - |
 | `RI-16` | `⚪ Not started` | [User management](#user-management) | `🔵 Low` | Platform | Human | - |
 | `RI-18` | `⚪ Not started` | [Project management](#project-management) | `🔵 Low` | Platform | Human | - |
 | `RI-19` | `⚪ Not started` | [Assets management](#assets-management) | `🔵 Low` | Platform | Human | - |
 | `RI-20` | `⚪ Not started` | [CMS](#cms) | `🔵 Low` | Platform | Human | - |
+| `RI-31` | `⚪ Not started` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | Dep: `RI-07` |
 | `RI-28` | `✅ Done` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
 | `RI-30` | `✅ Done` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | Shared | Four semver versions in `src/lib/version.ts`; pre-commit patch bump; `schemaVersion` on export |
-| `RI-31` | `⚪ Not started` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | Dep: `RI-07` |
 | `RI-37` | `✅ Done` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
 | `RI-08` | `⚪ Not started` | [View transitions between pages and beyond](#view-transitions-between-pages-and-beyond) | `⚪ Optional` | Feature | Human | - |
 | `RI-15` | `⚪ Not started` | [Import from external sources](#import-from-external-sources) | `⚪ Optional` | Feature | Shared | - |
@@ -110,7 +113,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 Extended product vision, feature requests, UX ideas, and open questions for this stage live in [NEXT_STAGE_BRIEF.md](./NEXT_STAGE_BRIEF.md).
 
-Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`, `RI-43`, `RI-45`
+Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-11`, `RI-12A`, `RI-12B`, `RI-13`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`, `RI-43`, `RI-45`, `RI-46`, `RI-47`, `RI-48`
 
 ## Raw Intake
 
@@ -162,6 +165,9 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-43` unplanned showcase tour phase — add a guided, non-linear overlay that makes the editor understandable as job-search/portfolio evidence and exposes sticky, editor craft, API, design-system, text, animation, pages, validation, and docs surfaces
 - `RI-44` parent expansion height unit policy — decide how API/editor parent expansion should handle authored height units beyond px and auto, especially aspect-ratio and viewport/percentage units, without silently rewriting user-authored sizing intent
 - `RI-45` form and inputs require a real spec for behavior, backoffice connection, docs integration, accessibility, validation, submission, and generated-site runtime; important enough to track as very high priority before implementation
+- `RI-46` AI command/interface layer over the public API — model prompts as typed tools and document/editor commands over `src/api/`, not UI automation or freeform model mutation
+- `RI-47` bring-your-own-model connection layer — let users connect hosted providers, OpenRouter-style routers, local/Ollama-compatible endpoints, and future local agents with clear streaming/key/proxy boundaries
+- `RI-48` conversational editor UI with assistant-ui — add the editor-facing chat/thread/composer surface, tool-call rendering, approval/apply affordances, provider/model picker entry points, and design-system alignment
 
 ## Structured Roadmap
 
@@ -274,6 +280,17 @@ None yet.
 - `Why it matters`: The editor had enough product depth to show, but visitors needed a guided path through live surfaces rather than a loose demo. This unplanned step became necessary to make the editor legible as portfolio evidence for job search conversations.
 - `Current state`: **Complete** — shipped a non-linear showcase overlay with URL-backed topic/step state, API-first editor navigation, typed tour config, target highlights, draggable/minimizable tour surfaces, outside-click-safe overlay behavior, compact default menu, new-tab preview/design-system actions, and story steps for sticky behavior, editor structure, focus mode, Slate rich text, API docs, import/export, preview, Google Fonts, animation, pages, routing, validation, and documentation. Covered by focused API/config/component tests, smoke e2e, docs, and build validation. Delivered across the showcase-tour commit series ending at `7386f18`.
 
+##### Conversational editor UI with assistant-ui
+
+- `Type`: `UX`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-48`
+- `Dependencies`: `RI-46`, `RI-47`
+- `Why it matters`: A conversational layer needs to feel like part of the editor, not a detached chatbot; authors need to see tool calls, proposed changes, and approval/apply states in the same design language as the rest of the workspace.
+- `Current state`: No chat surface, assistant thread, provider picker, or AI approval UI exists in the editor. `assistant-ui` is the likely starting point because it can provide a customizable React chat/thread/composer surface while leaving editor-specific behavior in this codebase.
+- `Next move`: Design the first editor-integrated assistant panel around thread/composer UX, tool-call rendering, draft/approval/apply affordances, provider/model selection entry points, and alignment with `docs/EDITOR_STYLE_GUIDE.md`.
+
 ##### Variable fonts as an authoring workflow
 
 - `Type`: `UX`
@@ -305,6 +322,18 @@ None yet.
 - `Next move`: Connect the existing `Alt` / `Option` duplicate-requested drag stub to the duplicate document API, keeping drag preview and commit semantics aligned.
 
 #### Feature
+
+##### AI layer for conversational editor control
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-13`
+- `Relationship`: Umbrella for `RI-46`, `RI-47`, and `RI-48`.
+- `Why it matters`: AI-assisted generation and transformation could accelerate site authoring, animation work, and internal iteration, but only if the model operates through the same API-first boundaries as the rest of the editor.
+- `Current state`: There is no productized AI layer in the current editor flow. The current architecture already separates pure document/page APIs from editor selection/history wrappers, which makes a typed command layer possible without teaching AI to drive the UI directly.
+- `Target direction`: Build a conversational command layer over `src/api/`, where prompts produce validated tool calls or document/editor commands that can be previewed, approved, and committed as normal undoable editor actions.
+- `Next move`: Treat the first implementation wave as three heavy tasks: define the API-facing command/interface model, build bring-your-own-model connectivity, then add the conversational UI, probably with `assistant-ui`.
 
 ##### Responsive and adaptive authoring model
 
@@ -414,6 +443,28 @@ None yet.
 - `Current state`: The spec already contains some performance-minded decisions, but performance should be treated as a recurring maintenance track rather than a one-time pass.
 - `Next move`: Re-run focused perf audits every once in a while, especially after large project advancements, covering stage rendering, history pressure, export cost, and animation/runtime overhead.
 
+##### AI command/interface layer over the public API
+
+- `Type`: `Platform`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-46`
+- `Dependencies`: `RI-13`
+- `Why it matters`: AI edits must preserve the editor's API-first architecture, validation rules, and undo model. A typed command/interface layer prevents the assistant from becoming a parallel editor that mutates documents outside supported APIs.
+- `Current state`: `documentApi`, `pageApi`, `siteApi`, and `editorApi` expose the right architectural boundary, and `DocumentCommand` already exists as a small batch path, but there is no AI-oriented tool manifest or draft/apply command protocol.
+- `Next move`: Define the AI tool/command surface over public APIs, including read-only context tools, mutation commands, validation, draft preview/apply flow, and a single undoable editor commit path.
+
+##### Bring-your-own-model connection layer
+
+- `Type`: `Platform`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-47`
+- `Dependencies`: `RI-46`
+- `Why it matters`: Users should be able to choose their own model provider without coupling the editor to one hosted vendor, while the app still owns streaming, tool execution, key handling, and serverless/client proxy boundaries.
+- `Current state`: The editor has no model connection settings, provider adapter layer, streaming agent endpoint, local-model bridge, or policy for storing/sending user-provided keys.
+- `Next move`: Plan the bring-your-own-model adapter boundary for hosted providers, OpenRouter-style routers, local/Ollama-compatible endpoints, streaming/tool events, key storage modes, and when calls go direct from the browser versus through a serverless proxy.
+
 ##### Text phase 2.0: on-stage editing
 
 - `Type`: `Feature`
@@ -502,16 +553,6 @@ None yet.
 #### UX
 
 #### Feature
-
-##### AI integration for site building, animations, skills, and MCPs
-
-- `Type`: `Feature`
-- `Owner lane`: `Human`
-- `Status`: `Not started`
-- `Source`: `RI-13`
-- `Why it matters`: AI-assisted generation and tooling could accelerate both site authoring and internal iteration velocity.
-- `Current state`: There is no productized AI layer in the current editor flow.
-- `Next review question`: Which role comes first: generation, transformation, animation help, or operator tooling?
 
 ##### Export surface expansion
 
