@@ -1,6 +1,7 @@
 node_modules/
 public/
 dist/
+dist-ds/
 coverage/
 package-lock.json
 *.tsbuildinfo

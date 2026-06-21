@@ -60,6 +60,12 @@
     "assetUrl": "/assets/help-docs/COLOR_PICKER_UPSTREAM_CONTRIBUTIONS.md"
   },
   {
+    "path": "docs/COMPONENT_ROADMAP_RECOMMENDATIONS.md",
+    "fileName": "COMPONENT_ROADMAP_RECOMMENDATIONS.md",
+    "fullTitle": "Component Roadmap Recommendations",
+    "assetUrl": "/assets/help-docs/COMPONENT_ROADMAP_RECOMMENDATIONS.md"
+  },
+  {
     "path": "docs/CONSOLE_TEST_GUIDE.md",
     "fileName": "CONSOLE_TEST_GUIDE.md",
     "fullTitle": "Console Testing Guide - Animations and Rich Text",
