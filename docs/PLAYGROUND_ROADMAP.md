@@ -69,6 +69,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🔴 Next` | UX | Shared | Dep: `RI-06` |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-43` | `✅ Done` | [Guided showcase tour for editor portfolio](#guided-showcase-tour-for-editor-portfolio) | `🔴 Next` | UX | Shared | Unplanned; needed to make the editor understandable as portfolio evidence |
+| `RI-45` | `⚪ Not started` | [Form and input authoring platform](#form-and-input-authoring-platform) | `🔴 Next` | Feature | Shared | Requires behavior/backoffice/docs/a11y spec before implementation |
 | `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
 | `RI-09` | `🟣 Partially present` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | Shared | - |
 | `RI-10` | `🟤 Needs audit` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | Shared | Dep: `RI-09` |
@@ -109,7 +110,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 Extended product vision, feature requests, UX ideas, and open questions for this stage live in [NEXT_STAGE_BRIEF.md](./NEXT_STAGE_BRIEF.md).
 
-Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`, `RI-43`
+Roadmap items in scope: `RI-01`, `RI-02`, `RI-03`, `RI-04`, `RI-05`, `RI-06`, `RI-11`, `RI-12A`, `RI-12B`, `RI-29`, `RI-32`, `RI-34`, `RI-35`, `RI-36`, `RI-38`, `RI-43`, `RI-45`
 
 ## Raw Intake
 
@@ -160,6 +161,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-42` drag and drop boundary maintenance — current drag rules confine elements into the padded content area of their container; by default authors should be able to drag elements so they stick out past container boundaries, with the boundary acting as snap/alignment guidance, plus an explicit hard-confinement option for stricter layouts
 - `RI-43` unplanned showcase tour phase — add a guided, non-linear overlay that makes the editor understandable as job-search/portfolio evidence and exposes sticky, editor craft, API, design-system, text, animation, pages, validation, and docs surfaces
 - `RI-44` parent expansion height unit policy — decide how API/editor parent expansion should handle authored height units beyond px and auto, especially aspect-ratio and viewport/percentage units, without silently rewriting user-authored sizing intent
+- `RI-45` form and inputs require a real spec for behavior, backoffice connection, docs integration, accessibility, validation, submission, and generated-site runtime; important enough to track as very high priority before implementation
 
 ## Structured Roadmap
 
@@ -345,6 +347,16 @@ None yet.
 - `Why it matters`: Once the editor supports more than one page, authors need reusable editing workflows for moving or cloning content without rebuilding it manually. Copy/paste of components and sections, cross-page paste targets, and duplicate-page actions are part of the baseline trust model for authoring at page/site scope.
 - `Current state`: **Partially present** — stage node copy/paste/duplicate v1 is implemented through API-first clipboard payloads, shared shortcuts, active Edit menu entries, undoable editor actions, and docs/tests. Supported v1 transfer units are selected stage nodes, multi-selection top-level filtering, containers with descendants, section/subtree paste, in-memory/system clipboard payloads, and external text/html/link/image fallback paste.
 - `Next move`: Add whole-page duplication and decide whether duplicate-drag should commit through the new duplicate document API or remain a separate follow-up interaction.
+
+##### Form and input authoring platform
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-45`
+- `Why it matters`: Forms turn static authored pages into useful business workflows: contact, waitlist, signup, RSVP, quote request, survey, payment inquiry, and support intake. They also carry heavier product obligations than a visual component because submission behavior, validation, spam protection, accessibility, storage/notification/backoffice connection, and export/runtime behavior all need to agree.
+- `Current state`: The editor has shared internal UI form primitives for inspector/settings chrome, but authored site forms are not part of the document model, `src/api/`, stage renderer, site renderer, export surface, or documentation.
+- `Next move`: Write a dedicated form spec before implementation. The first design pass should decide the form/container model, supported field types, client/server validation split, submission connector boundary for a serverless project, spam-protection expectations, accessibility requirements, generated-site runtime behavior, docs/help integration, and whether the first slice is a third-party/action-URL form or a native submission workflow.
 
 ##### More components: SVG, video, gradients
 

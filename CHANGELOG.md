@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - describe styled html paste behavior
+- add component roadmap recommendations
 
 ### Fixed
 
