@@ -1,3 +1,8 @@
+import {
+	DESIGN_SYSTEM_ROUTE_HASH,
+	getDesignSystemRouteSearch,
+} from "@/lib/designSystem";
+
 function readScrollMarginTop(target: HTMLElement) {
 	const defaultView = target.ownerDocument?.defaultView;
 	if (!defaultView) {
@@ -9,8 +14,6 @@ function readScrollMarginTop(target: HTMLElement) {
 	);
 	return Number.isFinite(parsed) ? parsed : 0;
 }
-
-const DESIGN_SYSTEM_ROUTE_HASH = "#/design-system";
 
 export function parseDesignSystemAnchor(hash: string) {
 	if (!hash.startsWith(DESIGN_SYSTEM_ROUTE_HASH)) {
@@ -40,12 +43,21 @@ export function getDesignSystemAnchorFromHash(
 	return anchor && validIds.includes(anchor) ? anchor : null;
 }
 
-export function getDesignSystemHashWithAnchor(sectionId: string) {
-	return `${DESIGN_SYSTEM_ROUTE_HASH}#${encodeURIComponent(sectionId)}`;
+export function getDesignSystemHashWithAnchor(
+	sectionId: string,
+	currentHash?: string,
+) {
+	const search = getDesignSystemRouteSearch(currentHash);
+	const query = search.toString();
+	return `${DESIGN_SYSTEM_ROUTE_HASH}${query ? `?${query}` : ""}#${encodeURIComponent(sectionId)}`;
 }
 
 export function writeDesignSystemAnchorToUrl(sectionId: string) {
-	window.history.pushState(null, "", getDesignSystemHashWithAnchor(sectionId));
+	window.history.pushState(
+		null,
+		"",
+		getDesignSystemHashWithAnchor(sectionId, window.location.hash),
+	);
 }
 
 export function getDesignSystemSectionScrollTop(

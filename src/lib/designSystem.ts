@@ -21,6 +21,9 @@ export type DesignSystemThemeConfig = {
 export const DESIGN_SYSTEM_THEME_STORAGE_KEY = 'editor-playground.design-system-theme.v1';
 export const DESIGN_SYSTEM_THEME_HANDOFF_KEY = 'editor-playground.design-system-theme.handoff.v1';
 export const DESIGN_SYSTEM_ROUTE_HASH = '#/design-system';
+export const DESIGN_SYSTEM_EDITOR_ROUTE_HASH = `${DESIGN_SYSTEM_ROUTE_HASH}?from=editor`;
+export const DESIGN_SYSTEM_BACK_HOME_HASH = '#/';
+export const DESIGN_SYSTEM_BACK_EDITOR_HASH = '#/edit';
 
 export function normalizeDesignSystemThemeConfig(
   value: Partial<DesignSystemThemeConfig> | null | undefined,
@@ -85,7 +88,29 @@ export function consumeDesignSystemThemeHandoff(): DesignSystemThemeConfig | nul
 
 export function openDesignSystemShowcase(config: DesignSystemThemeConfig) {
   storeDesignSystemThemeHandoff(config);
-  window.location.hash = DESIGN_SYSTEM_ROUTE_HASH;
+  window.location.hash = DESIGN_SYSTEM_EDITOR_ROUTE_HASH;
+}
+
+export function getDesignSystemBackRouteHash(hash: string | null | undefined) {
+  return getDesignSystemRouteSearch(hash).get('from') === 'editor'
+    ? DESIGN_SYSTEM_BACK_EDITOR_HASH
+    : DESIGN_SYSTEM_BACK_HOME_HASH;
+}
+
+export function getDesignSystemRouteSearch(hash: string | null | undefined) {
+  const normalized = (hash ?? '').startsWith('#') ? (hash ?? '').slice(1) : (hash ?? '');
+  const queryIndex = normalized.indexOf('?');
+
+  if (!normalized.startsWith('/design-system') || queryIndex === -1) {
+    return new URLSearchParams();
+  }
+
+  const sectionHashIndex = normalized.indexOf('#', queryIndex);
+  const query = normalized.slice(
+    queryIndex + 1,
+    sectionHashIndex === -1 ? undefined : sectionHashIndex,
+  );
+  return new URLSearchParams(query);
 }
 
 export function createDefaultDesignSystemThemeConfig(): DesignSystemThemeConfig {

@@ -34,6 +34,15 @@ describe("design-system/navigationScroll", () => {
 		);
 	});
 
+	it("preserves design-system route query params when writing anchors", () => {
+		expect(
+			getDesignSystemHashWithAnchor(
+				"base-warning-info",
+				"#/design-system?from=editor",
+			),
+		).toBe("#/design-system?from=editor#base-warning-info");
+	});
+
 	it("computes container-local scroll positions using scroll margin", () => {
 		const scrollContainer = {
 			scrollTop: 320,

@@ -3,7 +3,7 @@ import type {
 	EditorNavigationUrlState,
 	EditorPanelRequest,
 } from "@/api/editorNavigationApi";
-import { DESIGN_SYSTEM_ROUTE_HASH } from "@/lib/designSystem";
+import { DESIGN_SYSTEM_EDITOR_ROUTE_HASH } from "@/lib/designSystem";
 
 const editorState = (
 	navigation: EditorNavigationUrlState = {},
@@ -437,7 +437,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			action: {
 				type: "externalLink",
 				label: "Open design system in a new tab",
-				href: DESIGN_SYSTEM_ROUTE_HASH,
+				href: DESIGN_SYSTEM_EDITOR_ROUTE_HASH,
 			},
 		},
 		{

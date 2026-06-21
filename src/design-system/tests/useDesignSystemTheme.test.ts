@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parsePersistedThemeConfig } from "../useDesignSystemTheme";
-import { parseStoredDesignSystemThemeConfig } from "@/lib/designSystem";
+import {
+	DESIGN_SYSTEM_EDITOR_ROUTE_HASH,
+	getDesignSystemBackRouteHash,
+	parseStoredDesignSystemThemeConfig,
+} from "@/lib/designSystem";
 
 describe("design-system/useDesignSystemTheme", () => {
 	it("parses the current editor theme fields from persisted state", () => {
@@ -45,5 +49,15 @@ describe("design-system/useDesignSystemTheme", () => {
 			darkTheme: "ink",
 			accentColor: "#0f766e",
 		});
+	});
+
+	it("routes the showcase back button to the editor only for editor-origin launches", () => {
+		expect(getDesignSystemBackRouteHash(DESIGN_SYSTEM_EDITOR_ROUTE_HASH)).toBe(
+			"#/edit",
+		);
+		expect(
+			getDesignSystemBackRouteHash("#/design-system?from=editor#base-switch"),
+		).toBe("#/edit");
+		expect(getDesignSystemBackRouteHash("#/design-system")).toBe("#/");
 	});
 });
