@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - describe styled html paste behavior
 - add component roadmap recommendations
 - update roadmap priorities and sorting
+- move sync-public-assets out of pre* hooks and into Vite/vitest lifecycle
 
 ### Fixed
 

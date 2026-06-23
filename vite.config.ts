@@ -28,7 +28,21 @@ const devHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
-const plugins: Plugin[] = [react(), tailwindcss(), prismGlobalsPlugin()];
+function syncPublicAssetsPlugin(): Plugin {
+  return {
+    name: 'sync-public-assets',
+    async buildStart() {
+      const { syncPublicAssets } = await import('./scripts/sync-public-assets.mjs');
+      await syncPublicAssets();
+    },
+    async configureServer() {
+      const { syncPublicAssets } = await import('./scripts/sync-public-assets.mjs');
+      await syncPublicAssets();
+    },
+  };
+}
+
+const plugins: Plugin[] = [react(), tailwindcss(), prismGlobalsPlugin(), syncPublicAssetsPlugin()];
 if (process.env.ANALYZE === '1') {
   plugins.push(
     visualizer({
@@ -112,6 +126,7 @@ export default defineConfig({
       },
     },
     test: {
+      globalSetup: ['./scripts/vitest-setup.mjs'],
       environment: 'node',
       clearMocks: true,
       restoreMocks: true,

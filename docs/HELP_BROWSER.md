@@ -8,7 +8,7 @@ Use this help browser for all editor-facing documentation that should be discove
 2. Add a first-level `#` heading. The file can stay flat even if it should appear deep in the docs tree.
 3. If the page needs images or diagrams, place them under `docs/assets/` and reference them with relative markdown paths such as `![Diagram](./assets/example.svg)`.
 4. Register the page in `src/panels/helpDocRegistry.ts` so it gets a virtual parent, explicit order, and aliases when needed.
-5. Run `pnpm run sync:public` or restart `pnpm run dev`. The help-doc manifest is regenerated and the markdown files plus docs assets are copied into the generated `public/assets/help-docs/` folder.
+5. Restart `pnpm run dev` (or run any build/test command). The sync plugin regenerates the help-doc manifest and copies the markdown files and docs assets into `public/assets/help-docs/` automatically. To trigger it without a server restart, run `pnpm run sync:public`.
 
 ## Control hierarchy and ordering
 
