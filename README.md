@@ -1,158 +1,62 @@
 # Editor Playground
 
-This project is a local playground for defining and testing a sticky layout model.
+A working editor playground for turning product, UX, design-system, frontend, and AI-prompting ideas into inspectable site-builder experiments.
 
-It started from a conceptual sticky document and evolved into a more robust structural spec. This README keeps only the sticky behavior itself. The editor, data model, and playground implementation details are documented separately in [PLAYGROUND_SPEC.md](./docs/PLAYGROUND_SPEC.md).
+It is a real editor, not a mockup: it has a document model, an inspectable stage, page and route management, rich text, animation preview, sticky layout experiments, export paths, and a growing in-app help system. I use it to test how ideas move from product questions into interface decisions, data structures, rendering behavior, documentation, and automated checks.
+
+The project began as a sticky-layout model exploration. That history still matters, but the broader purpose now is to keep a playground where I can try ambitious editor ideas end to end and learn from the friction.
 
 ## Guided Showcase Tour
 
-The editor includes a guided showcase tour for portfolio and job-search demos. It opens as an overlay on the real editor, highlights live surfaces, and moves through the app with URL-backed navigation rather than scripted DOM clicks.
+The best way to understand the current project is the guided showcase tour. It opens as an overlay on the real editor, highlights live surfaces, and moves through the app with URL-backed navigation rather than scripted DOM clicks.
 
 Start it from the editor Help menu, or deep link directly with `#/edit?tour=start&step=welcome`. The tour begins with a compact linear card; use the menu button in the tour header to jump non-linearly by topic.
 
 Current tour topics cover sticky authoring, editor structure and focus mode, API/navigation surfaces, the Google Fonts explorer, Slate rich-text editing, animation preview, pages, routing, validation, and documentation.
 
-## Core Principles
+## What This Playground Explores
 
-1. Sticky is used for both layout and scroll experience.
-2. Sticky always implies duration.
-3. Sticky should be modeled structurally, not only visually.
-4. One sticky container plus scroll effects is often better than many separate sticky elements.
-5. Multiple sticky ranges in one section do not sum. The range that ends furthest down determines the final section height.
+- Product framing: turning loose editor ideas into concrete workflows, constraints, and tradeoffs.
+- UX and interaction design: selection, inspector surfaces, focused modes, page navigation, help, and authoring feedback.
+- Design systems: reusable editor chrome, theme tokens, light/dark parity, and a design-system showcase.
+- Frontend architecture: model/API/editor boundaries, renderer separation, testable document operations, and exportable site output.
+- Content workflows: rich text, fonts, pages, internal links, templates, preview, validation, and import/export.
+- Sticky and scroll behavior: structural sticky duration, visible spacer ranges, and predictable rendered output.
+- AI prompting and collaboration: using AI agents as planning, implementation, review, and documentation partners while keeping the codebase grounded in explicit architecture rules.
 
-## Sticky = pinning + duration
+## Sticky Origin Story
 
-Sticky is defined by four properties:
+Sticky layout is still one of the clearest examples of how this playground works. The original question was not just "can something stick?" but how sticky behavior should be modeled, authored, debugged, and exported.
 
-- target
-- edge
-- offset
-- duration
+The key lesson is that sticky is more than edge plus offset. It also needs duration, and that duration is easier to reason about when it is represented structurally through real spacer-backed layout. The editor exposes spacer visuals, offset visuals, sticky preview, and computed ranges so the behavior is inspectable instead of magical.
 
-Target answers what is sticky.
-Edge answers where it sticks.
-Offset answers how far from the edge.
-Duration answers for how long.
+For the full sticky model, including the implementation correction that keeps content-wrapper sticky duration from accidentally compounding with section height, see [Sticky - Principles, Guidelines and Model](./docs/STICKY_RENDER_MODEL.md).
 
-## Duration must be structural
+## Architecture And API Boundaries
 
-The key design decision in this playground is that sticky duration is represented structurally through spacers.
+The project keeps a strict boundary between the document model, API layer, editor state, stage renderer, and exported site renderer.
 
-Users should not need to manually increase section height just to make sticky work. The containing area should gain the required scroll range automatically.
+For non-UI document automation, use `src/api/documentApi.ts`. It exposes document-level operations using `DocumentModel` only, including document creation and validation, parse/serialize helpers, rect/sticky/text mutation helpers, template insertion, sticky resolution helpers, and site export helpers.
 
-## Spacers as the duration mechanism
+Read next:
 
-Sticky duration is implemented by adding real space to the relevant container.
+- [Playground Spec](./docs/PLAYGROUND_SPEC.md) for the editor model, wrapper roles, nesting rules, units, persistence, UX, and implementation notes
+- [API Reference](./docs/API.md) for public API surfaces and module boundaries
+- [Developers](./docs/DEVELOPERS.md) for contributor workflows, build notes, skills, and deployment
+- [Getting Started](./docs/GETTING_STARTED.md) for the in-editor guide entry point
 
-- If an element becomes sticky, its duration is represented by a spacer associated with that element.
-- If a content wrapper becomes sticky, its duration is represented by space added after that wrapper inside the section or container.
-- If multiple sticky elements exist inside the same section, their spacer ranges may overlap, but they do not add together.
+## Running Locally
 
-The final section height is determined by the spacer whose end is furthest down.
+Enable the pinned pnpm version with Corepack, then run the app and checks with pnpm:
 
-## Current structural resolution
+- `corepack enable`
+- `pnpm install`
+- `pnpm run dev`
+- `pnpm run test:run`
+- `pnpm run lint`
+- `pnpm run typecheck`
+- `pnpm run build`
 
-The model validated in this playground is:
+`pnpm run build` is the full gate: lint, typecheck, coverage, architecture checks, smoke E2E, and the Vite production build.
 
-- `target = self`
-  - the sticky element lives in a sticky track
-  - the element comes first
-  - the spacer comes immediately after it
-- `target = contentWrapper`
-  - the content wrapper keeps its own intrinsic size
-  - a real flow spacer after it extends the parent
-
-This makes duration inspectable and predictable.
-
-## Important correction
-
-One important thing we learned during implementation:
-
-If the content wrapper fills the entire section and the section grows because of sticky duration, then the content wrapper grows too. That makes sticky last for section height plus spacer instead of spacer duration.
-
-The fix was:
-
-- keep the content wrapper intrinsic in normal flow
-- let the section or container remain `height: auto`
-- add a real flow spacer only where the extra sticky range is needed
-
-This preserves the intended behavior:
-
-- wrapper keeps its own size
-- parent gets extra scroll range
-- sticky duration corresponds to the spacer duration
-
-## Debuggability
-
-Because sticky is structural, the playground exposes:
-
-- spacer visuals
-- offset visuals
-- sticky preview
-- computed sticky ranges
-
-This is intentional. Sticky behavior is easier to reason about when its range is visible.
-
-## Related Docs
-
-- [PLAYGROUND_SPEC.md](./docs/PLAYGROUND_SPEC.md) for the editor model, wrapper roles, nesting rules, units, persistence, and implementation notes
-
-## API Boundaries
-
-For non-UI document automation (for example CLI scripts), use `src/api/documentApi.ts`.
-
-It exposes document-level operations using `DocumentModel` only (no editor session state), including:
-
-- document creation/validation
-- parse/serialize helpers
-- rect/sticky/text mutation helpers
-- template insertion into the document tree
-- shared sticky resolution helpers (`resolveStickyLayout`, `resolveWrapperStickyState`) that accept document data plus renderer-provided geometry
-- site export helpers that render SSR-safe site HTML and generated CSS bundles from the document model, including ZIP export packaging
-
-## Testing
-
-Enable the pinned pnpm version with Corepack, then run checks with pnpm:
-
-- `corepack enable` to use the `pnpm` version pinned in `package.json`
-- `pnpm run test` for watch mode
-- `pnpm run test:run` for a single full run
-- `pnpm run test:coverage` for a single run with coverage thresholds
-- `pnpm run lint` for static lint checks
-- `pnpm run typecheck` for TypeScript checks
-- `pnpm run test:e2e` for the stable end-to-end suite
-- `pnpm run test:e2e:richtext` for the isolated rich-text authoring end-to-end package
-- `pnpm run build` to run lint, typecheck, coverage, architecture checks, and the Vite production build
-
-Current automated suites:
-
-- `src/model/units.test.ts`
-- `src/model/validation.test.ts`
-- `src/sticky/resolve.test.ts`
-- `src/api/documentApi.test.ts`
-- `src/editor/editorStore.integration.test.ts`
-
-## Manual WebDAV Deploy
-
-This project includes a manual deploy command for replacing the contents of a WebDAV-backed static hosting folder.
-
-Required environment variables:
-
-- `WEBDAV_URL`: the full WebDAV URL of the deployed site directory. For the Fastmail editor endpoint this may end in `/editor/`, but that is the backing WebDAV folder, not the public asset path.
-- `WEBDAV_USER`: the WebDAV username
-- `WEBDAV_PASS`: the WebDAV password
-- `WEBDAV_BUILD_DIR`: optional, defaults to `dist`
-
-You can export them in your shell or add them to `.env.local`.
-
-Deploy with:
-
-- `pnpm run deploy`
-
-The deploy flow:
-
-1. runs the normal production build
-2. deletes existing files and folders under `WEBDAV_URL`
-3. uploads the fresh build output
-
-Point `WEBDAV_URL` at the exact directory you want to replace. The root directory itself is preserved; its contents are replaced.
+Deployment is intentionally manual and developer-facing; see [Deployment](./docs/DEPLOYMENT.md) for the WebDAV flow.

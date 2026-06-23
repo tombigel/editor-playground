@@ -139,9 +139,9 @@ export function OnboardingHome({
 							className="h-10 w-auto max-w-full"
 						/>
 						<p className="editor-text-muted max-w-[480px] text-sm leading-6">
-							Design and validate document-model sites in one place: compose
-							pages, inspect the generated structure, tune sticky interactions,
-							and preview the exported result.
+							A working editor playground for turning product, UX,
+							design-system, frontend, and AI-prompting ideas into inspectable
+							site-builder experiments.
 						</p>
 					</div>
 					<div className="grid min-w-[220px] gap-3">

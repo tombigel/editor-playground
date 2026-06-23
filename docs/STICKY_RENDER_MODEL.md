@@ -1,8 +1,8 @@
 # Sticky - Principles, Guidelines and Model
 
-Based on recent discussions about "sticky" in Studio 2.0, this document details our thoughts about  the evolving principles, guidelines, and proposed implementation (data model and HTML structure) for sticky data in a rendered site output.
+This document captures the sticky layout model validated in Editor Playground: sticky as pinning plus duration, represented structurally in the rendered DOM.
 
- It does not address editor-only preview, diagnostics, or interaction behavior.
+It focuses on the data model, rendered HTML structure, spacer behavior, and debugging implications for sticky output.
 
 ## Core Principles
 
@@ -19,7 +19,7 @@ They answer which edge is sticky and where the sticky element pins, but they do 
 
 Without a duration model, sticky lasts only for whatever free space already exists in the parent. That makes the result dependent on incidental layout and often forces authors to manually increase section height when they need a longer sticky range.
 
-The proposal is to treat sticky as the combination of **pinning** and **duration**
+The model treats sticky as the combination of **pinning** and **duration**.
 
 ## Auto Duration And Custom Duration
 
@@ -153,12 +153,55 @@ Sticky duration should be reflected in layout automatically.
 
 In both cases, the parent grows structurally as a result of the rendered DOM.
 
+## Validated Structural Resolution
+
+The model validated in the playground uses two related structures:
+
+- `target = self`
+  - the sticky element lives in a sticky track
+  - the element comes first for top sticky behavior
+  - the spacer comes immediately after it
+- `target = contentWrapper`
+  - the content wrapper keeps its own intrinsic size
+  - a real flow spacer after it extends the parent
+
+This keeps duration inspectable and predictable: the extra scroll range exists as real layout space rather than as an implicit side effect of parent height.
+
+## Content Wrapper Correction
+
+One important implementation lesson was that content-wrapper sizing can accidentally double-count sticky duration.
+
+If the content wrapper fills the entire section and the section grows because of sticky duration, then the content wrapper grows too. That makes sticky last for section height plus spacer instead of only the authored spacer duration.
+
+The fix is:
+
+- keep the content wrapper intrinsic in normal flow
+- let the section or container remain `height: auto`
+- add a real flow spacer only where the extra sticky range is needed
+
+This preserves the intended behavior:
+
+- wrapper keeps its own size
+- parent gets extra scroll range
+- sticky duration corresponds to the spacer duration
+
 ## Multiple Sticky Elements In One Parent
 
 When multiple sticky elements exist in the same parent, their duration should remain predictable because it is resolved structurally.
 
 The effective scroll range should be determined by the spacer that ends furthest down the content. That spacer should define the parent’s final height.
 
+## Debuggability
+
+Because sticky is structural, the playground exposes:
+
+- spacer visuals
+- offset visuals
+- sticky preview
+- computed sticky ranges
+
+This is intentional. Sticky behavior is easier to reason about when its range is visible.
+
 ## Summary
 
-In this proposal, sticky is not defined only by edge and offset. It is defined by edge, offset, duration mode, explicit duration when needed, and structural spacer output in the DOM. That is what makes sticky predictable, controllable, and extensible.
+In this model, sticky is not defined only by edge and offset. It is defined by edge, offset, duration mode, explicit duration when needed, and structural spacer output in the DOM. That is what makes sticky predictable, controllable, and extensible.

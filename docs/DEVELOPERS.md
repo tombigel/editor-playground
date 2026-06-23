@@ -13,6 +13,7 @@ This section is the development-facing subtree for architecture, workflows, plan
 
 - [How to add docs?](./HELP_BROWSER.md)
 - [Console Testing Guide - Animations and Rich Text](./CONSOLE_TEST_GUIDE.md)
+- [Deployment](./DEPLOYMENT.md)
 - [Project Skills](./SKILLS.md)
 - [Changelog](../CHANGELOG.md)
 

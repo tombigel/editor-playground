@@ -72,6 +72,12 @@
     "assetUrl": "/assets/help-docs/CONSOLE_TEST_GUIDE.md"
   },
   {
+    "path": "docs/DEPLOYMENT.md",
+    "fileName": "DEPLOYMENT.md",
+    "fullTitle": "Deployment",
+    "assetUrl": "/assets/help-docs/DEPLOYMENT.md"
+  },
+  {
     "path": "docs/DEVELOPERS.md",
     "fileName": "DEVELOPERS.md",
     "fullTitle": "Developers",

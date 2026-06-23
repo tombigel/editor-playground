@@ -46,7 +46,9 @@ describe("app/OnboardingHome", () => {
 		expect(markup).toContain('data-onboarding-action="Start blank"');
 		expect(markup).toContain("focus-visible:outline-2");
 		expect(markup).toContain("var(--editor-focus-ring-strong)");
-		expect(markup).toContain("Design and validate document-model sites");
+		expect(markup).toContain(
+			"A working editor playground for turning product, UX, design-system, frontend, and AI-prompting ideas into inspectable site-builder experiments.",
+		);
 		expect(markup).toContain("Built by Tom Bigelajzen 2026");
 		expect(markup).toContain("Project GitHub");
 		expect(markup).toContain("https://github.com/tombigel/editor-playground");
