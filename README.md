@@ -60,3 +60,5 @@ Enable the pinned pnpm version with Corepack, then run the app and checks with p
 `pnpm run build` is the full gate: lint, typecheck, coverage, architecture checks, smoke E2E, and the Vite production build.
 
 Deployment is intentionally manual and developer-facing; see [Deployment](./docs/DEPLOYMENT.md) for the WebDAV flow.
+
+Though this repo is open to all, none of the work here is open sourced (yet) so if you find parts here that you want to use/copy I'll appriciate you write me and not scrape my work.
