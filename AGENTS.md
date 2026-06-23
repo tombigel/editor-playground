@@ -94,6 +94,50 @@ For every substantial or multi-file task, run `pnpm run build` before finishing 
 - fix build issues introduced by the change before handing off
 - if a pre-existing unrelated build failure prevents completion, call it out explicitly in the final summary with the failing area
 
+## Project Skills
+
+Recurring audit and development skills are defined in `.agents/skills/` and documented in [docs/SKILLS.md](./docs/SKILLS.md).
+
+Key skills:
+
+- `/maintenance` — full maintenance pass (composes all audit skills)
+- `/api-audit` — API-first compliance check
+- `/design-system-check` — design token and CSS audit
+- `/design-system-first` — design-system workflow gate before building editor UI
+- `/doc-triage` — planning document freshness check
+- `/file-size-check` — component size limit enforcement
+- `/implementation-plan` — execution-ready plans with bounded tasks and clean commits
+- `/interaction-pattern` — guide for building new interactive components
+- `/roadmap-entry` — roadmap item creation, status, priority, and sorting
+- `/version-bump` — manual minor/major version bump workflow
+
+Run `/maintenance` periodically to catch drift. Run `/interaction-pattern <type>` before building new interactive UI.
+
+## Commit Messages
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) format. Commitlint enforces this via a `commit-msg` hook.
+
+Format: `type(optional-scope): description`
+
+Allowed types:
+
+| Type | Changelog section | When to use |
+| --- | --- | --- |
+| `feat` | Added | New feature or capability |
+| `fix` | Fixed | Bug fix |
+| `refactor` | Changed | Code restructuring, no behavior change |
+| `style` | Changed | Formatting, CSS, visual polish |
+| `perf` | Changed | Performance improvement |
+| `docs` | Changed | Documentation only |
+| `test` | Changed | Adding or updating tests |
+| `build` | Changed | Build system or dependency changes |
+| `ci` | Changed | CI/CD changes |
+| `chore` | Changed | Maintenance, tooling, config |
+
+The first line of each commit message becomes a bullet in `CHANGELOG.md` under `[Unreleased]`, categorized automatically by prefix. Write the description as a user-facing change note, not a code-level detail.
+
+When a minor or major version bump is run (`/version-bump`), the `[Unreleased]` section is converted to a versioned entry.
+
 ## Archived Documents
 
 Files under `archive/` are historical records only. Do not read, reference, or act on them unless explicitly asked. They reflect past state and may contradict current code or active plans.

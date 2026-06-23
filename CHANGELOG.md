@@ -24,6 +24,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add component roadmap recommendations
 - update roadmap priorities and sorting
 - move sync-public-assets out of pre* hooks and into Vite/vitest lifecycle
+- reconcile AGENTS.md and CONTRIBUTING_AI.md rule sets
 
 ### Fixed
 
