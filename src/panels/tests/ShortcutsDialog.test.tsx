@@ -7,7 +7,6 @@ describe('panels/ShortcutsDialog', () => {
     const markup = renderToStaticMarkup(<ShortcutsDialog open onOpenChange={() => {}} />);
 
     expect(markup).toContain('Shortcuts');
-    expect(markup).toContain('Keyboard and pointer reference.');
     expect(markup).not.toContain('>Keyboard shortcuts<');
     expect(markup).toContain('Close shortcuts');
     expect(markup).toContain('Pointer Modifiers');

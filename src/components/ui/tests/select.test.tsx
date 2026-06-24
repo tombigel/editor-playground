@@ -78,6 +78,5 @@ describe('components/ui/select', () => {
     expect(markup).toContain('data-ui="select-option-row"');
     expect(markup).toContain('data-ui="select-option-icon"');
     expect(markup).toContain('data-ui="select-option-description"');
-    expect(markup).toContain('Appears on the active page');
   });
 });

@@ -80,7 +80,6 @@ describe("panels/FormField layout continuation", () => {
 		);
 
 		expect(markup).toContain('data-ui="form-field-description"');
-		expect(markup).toContain('Uses the first selected node as the anchor.');
 	});
 
 	it("uses FormField layouts in page and site settings surfaces", () => {

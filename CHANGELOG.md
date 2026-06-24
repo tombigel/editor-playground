@@ -19,6 +19,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - update project tagline to emphasize AI-assisted development
+- relax brittle copy assertions
 
 ---
 

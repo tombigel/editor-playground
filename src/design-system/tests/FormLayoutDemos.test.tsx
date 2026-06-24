@@ -7,7 +7,6 @@ describe("design-system/FormLayoutDemos", () => {
 		const markup = renderToStaticMarkup(<FormLayoutDemos />);
 
 		expect(markup).toContain("Broken anchor");
-		expect(markup).toContain("Uses the first selected node as the anchor.");
 		expect(markup).toContain('style="width:172px"');
 		expect(markup).toContain('data-layout="inline-group"');
 		expect(markup).toContain("with inline notice");

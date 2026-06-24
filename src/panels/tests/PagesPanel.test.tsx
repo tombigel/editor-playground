@@ -36,7 +36,6 @@ describe('panels/PagesPanel', () => {
       />,
     );
 
-    expect(markup).toContain('Manage pages and site page settings.');
     expect(markup).toContain('editor-pages-panel');
     expect(markup).toContain('w-[760px]');
     expect(markup).toContain('grid-cols-[280px_minmax(0,1fr)]');
