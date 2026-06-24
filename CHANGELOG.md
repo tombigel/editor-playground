@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- feature tour on empty welcome page
+
 ---
 
 ## [0.11.0] — 2026-06-23

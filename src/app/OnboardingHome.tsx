@@ -10,6 +10,7 @@ import {
 	SwatchBook,
 } from "lucide-react";
 import { OptionsSelector } from "@/components/ui/options-selector";
+import { cn } from "@/lib/utils";
 import { resolvePublicAssetUrl } from "@/lib/publicAssets";
 import type {
 	EditorDarkTheme,
@@ -69,20 +70,30 @@ type OnboardingActionItemProps = {
 	description: string;
 	icon: LucideIcon;
 	onClick: () => void;
+	featured?: boolean;
 };
+
+type OnboardingAction = OnboardingActionItemProps;
 
 function OnboardingActionItem({
 	label,
 	description,
 	icon: Icon,
 	onClick,
+	featured = false,
 }: OnboardingActionItemProps) {
 	return (
 		<li>
 			<button
 				type="button"
-				className="group flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-left outline-none transition-[background-color,border-color,box-shadow] hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_8%,var(--editor-surface-background))] focus-visible:border-[color:var(--editor-accent)] focus-visible:bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--editor-focus-ring-strong)] focus-visible:shadow-[var(--editor-accent-shadow)]"
+				className={cn(
+					"group flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left outline-none transition-[background-color,border-color,box-shadow,transform] hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_8%,var(--editor-surface-background))] focus-visible:border-[color:var(--editor-accent)] focus-visible:bg-[color:color-mix(in_srgb,var(--editor-accent)_10%,var(--editor-surface-background))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--editor-focus-ring-strong)] focus-visible:shadow-[var(--editor-accent-shadow)]",
+					featured
+						? "border-[color:color-mix(in_srgb,var(--editor-accent)_50%,var(--editor-utility-border))] bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] shadow-[var(--editor-accent-shadow)] hover:border-[color:var(--editor-accent)]"
+						: "border-transparent",
+				)}
 				data-onboarding-action={label}
+				data-featured={featured || undefined}
 				onClick={onClick}
 			>
 				<span className="editor-bg-subtle editor-border-subtle flex size-9 shrink-0 items-center justify-center rounded-md border text-[color:var(--editor-utility-text-muted)] transition-[border-color,color] group-focus-visible:border-[color:var(--editor-accent)] group-focus-visible:text-[color:var(--editor-accent)]">
@@ -118,6 +129,67 @@ export function OnboardingHome({
 	onStartTour,
 	onOpenDesignSystem,
 }: OnboardingHomeProps) {
+	const actions: OnboardingAction[] = hasCurrentSite
+		? [
+				{
+					label: "Continue current site",
+					description: "Resume the locally stored editor document.",
+					icon: ArrowRight,
+					onClick: onContinueCurrentSite,
+				},
+				{
+					label: "Start blank",
+					description: "Header, footer, and one empty section.",
+					icon: FilePlus2,
+					onClick: onStartBlank,
+				},
+				{
+					label: "Load JSON",
+					description: "Import a document file into the editor.",
+					icon: FileUp,
+					onClick: onLoadJson,
+				},
+				{
+					label: "Start tour",
+					description: "Open the guided editor walkthrough.",
+					icon: Sparkles,
+					onClick: onStartTour,
+				},
+				{
+					label: "Design system",
+					description: "Browse tokens, primitives, and editor chrome.",
+					icon: SwatchBook,
+					onClick: onOpenDesignSystem,
+				},
+			]
+		: [
+				{
+					label: "Start tour",
+					description: "Open the guided editor walkthrough.",
+					icon: Sparkles,
+					onClick: onStartTour,
+					featured: true,
+				},
+				{
+					label: "Start blank",
+					description: "Header, footer, and one empty section.",
+					icon: FilePlus2,
+					onClick: onStartBlank,
+				},
+				{
+					label: "Load JSON",
+					description: "Import a document file into the editor.",
+					icon: FileUp,
+					onClick: onLoadJson,
+				},
+				{
+					label: "Design system",
+					description: "Browse tokens, primitives, and editor chrome.",
+					icon: SwatchBook,
+					onClick: onOpenDesignSystem,
+				},
+			];
+
 	return (
 		<main
 			aria-labelledby="onboarding-title"
@@ -166,38 +238,16 @@ export function OnboardingHome({
 					className="editor-bg-surface editor-border-subtle rounded-xl border p-2 shadow-[var(--editor-surface-shadow)]"
 				>
 					<ul className="grid gap-1">
-						{hasCurrentSite ? (
+						{actions.map((action) => (
 							<OnboardingActionItem
-								label="Continue current site"
-								description="Resume the locally stored editor document."
-								icon={ArrowRight}
-								onClick={onContinueCurrentSite}
+								key={action.label}
+								label={action.label}
+								description={action.description}
+								icon={action.icon}
+								onClick={action.onClick}
+								featured={action.featured}
 							/>
-						) : null}
-						<OnboardingActionItem
-							label="Start blank"
-							description="Header, footer, and one empty section."
-							icon={FilePlus2}
-							onClick={onStartBlank}
-						/>
-						<OnboardingActionItem
-							label="Load JSON"
-							description="Import a document file into the editor."
-							icon={FileUp}
-							onClick={onLoadJson}
-						/>
-						<OnboardingActionItem
-							label="Start tour"
-							description="Open the guided editor walkthrough."
-							icon={Sparkles}
-							onClick={onStartTour}
-						/>
-						<OnboardingActionItem
-							label="Design system"
-							description="Browse tokens, primitives, and editor chrome."
-							icon={SwatchBook}
-							onClick={onOpenDesignSystem}
-						/>
+						))}
 					</ul>
 				</nav>
 				<footer className="editor-text-muted mt-5 flex flex-col gap-3 text-left text-xs leading-5 sm:flex-row sm:items-center sm:justify-between">

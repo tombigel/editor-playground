@@ -63,11 +63,20 @@ describe("app/OnboardingHome", () => {
 		expect(markup).toContain("Start tour");
 		expect(markup).toContain("Design system");
 		expect(markup).not.toContain("Continue current site");
+		expect(markup.indexOf('data-onboarding-action="Start tour"')).toBeLessThan(
+			markup.indexOf('data-onboarding-action="Start blank"'),
+		);
+		expect(markup).toContain('data-featured="true"');
+		expect(markup).toContain("var(--editor-accent)_12%");
 	});
 
 	it("shows continue when a current site is available", () => {
 		const markup = renderHome(true);
 
 		expect(markup).toContain("Continue current site");
+		expect(markup.indexOf('data-onboarding-action="Continue current site"')).toBeLessThan(
+			markup.indexOf('data-onboarding-action="Start tour"'),
+		);
+		expect(markup).not.toContain('data-featured="true"');
 	});
 });
