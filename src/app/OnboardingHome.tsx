@@ -33,6 +33,7 @@ const VERSIONS = [
 ] as const;
 
 const PROJECT_GITHUB_URL = "https://github.com/tombigel/editor-playground";
+const TOMBIGEL_HOME = "https://tombigel.com";
 const THEME_MODE_OPTIONS = [
 	{
 		value: "auto",
@@ -254,8 +255,14 @@ export function OnboardingHome({
 				</nav>
 				<footer className="editor-text-muted mt-5 flex flex-col gap-3 text-left text-xs leading-5 sm:flex-row sm:items-center sm:justify-between">
 					<p>
-						Built by Tom Bigelajzen 2026
-						<span aria-hidden="true"> | </span>
+						Built by <a 
+							href={TOMBIGEL_HOME} 
+							rel="noopener me" 
+							target="_blank" 							
+							className="editor-text-strong rounded-sm underline decoration-[color:var(--editor-utility-border)] underline-offset-4 outline-none transition-[color,outline-color] hover:text-[color:var(--editor-accent)] focus-visible:text-[color:var(--editor-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--editor-focus-ring-strong)]"
+						>
+							Tom Bigelajzen
+						</a> 2026 <span aria-hidden="true"> | </span>
 						<a
 							href={PROJECT_GITHUB_URL}
 							target="_blank"
