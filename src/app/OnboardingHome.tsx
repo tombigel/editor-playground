@@ -211,9 +211,11 @@ export function OnboardingHome({
 							className="h-10 w-auto max-w-full"
 						/>
 						<p className="editor-text-muted max-w-[480px] text-sm leading-6">
-							A working editor playground for turning product, UX,
-							design-system, frontend, and AI-prompting ideas into inspectable
-							site-builder experiments.
+							A working website editor built in under two months through
+							developer-led, AI-assisted guided coding. It turns product, UI,
+							UX, design-system, frontend, and prompting ideas into inspectable
+							site-builder experiments, and keeps evolving against an active
+							roadmap.
 						</p>
 					</div>
 					<div className="grid min-w-[220px] gap-3">

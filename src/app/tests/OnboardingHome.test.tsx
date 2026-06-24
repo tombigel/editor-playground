@@ -47,7 +47,7 @@ describe("app/OnboardingHome", () => {
 		expect(markup).toContain("focus-visible:outline-2");
 		expect(markup).toContain("var(--editor-focus-ring-strong)");
 		expect(markup).toContain(
-			"A working editor playground for turning product, UX, design-system, frontend, and AI-prompting ideas into inspectable site-builder experiments.",
+			"A working website editor built in under two months through developer-led, AI-assisted guided coding. It turns product, UI, UX, design-system, frontend, and prompting ideas into inspectable site-builder experiments, and keeps evolving against an active roadmap.",
 		);
 		expect(markup).toContain("Built by Tom Bigelajzen 2026");
 		expect(markup).toContain("Project GitHub");

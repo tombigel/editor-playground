@@ -16,6 +16,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - feature tour on empty welcome page
 - sync WebDAV deploys incrementally
 
+### Changed
+
+- update project tagline to emphasize AI-assisted development
+
 ---
 
 ## [0.11.0] — 2026-06-23
