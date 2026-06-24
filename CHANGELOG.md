@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Added
 
 - feature tour on empty welcome page
+- sync WebDAV deploys incrementally
 
 ---
 

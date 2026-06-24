@@ -11,3 +11,4 @@ package-lock.json
 .env.*.local
 .claude/settings.local.json
 .claude/worktrees/
+.history/
