@@ -30,7 +30,7 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "start",
 			label: "Start Here",
 			description: "Basic editor state and tour controls.",
-			stepIds: ["welcome", "seeded-model", "menu-is-nonlinear"],
+			stepIds: ["welcome", "seeded-model", "menu-is-nonlinear", "ai-panel"],
 		},
 		{
 			id: "sticky",
@@ -127,12 +127,33 @@ export const SHOWCASE_TOUR_CONFIG: ShowcaseTourConfig = {
 			id: "menu-is-nonlinear",
 			topicId: "start",
 			title: "Jump to any topic",
-			body: "The menu lets you skip around. Use it to inspect sticky behavior, editor structure, API state, design-system surfaces, pages, or docs in any order.",
+			body: "The menu lets you skip around. Use it to inspect AI, sticky behavior, editor structure, API state, design-system surfaces, pages, or docs in any order.",
 			route: ["Tour menu", "Topic", "Step"],
 			anchor: { type: "tourMenu" },
 			navigation: {
 				editor: editorState(),
 				panels: closePanels(),
+			},
+		},
+		{
+			id: "ai-panel",
+			topicId: "start",
+			title: "Open the AI assistant panel",
+			body: "The AI panel is a limited MVP: a minimal harness and command set for asking about the current document and preparing reviewable edits. It currently supports only your own OpenRouter subscription, with the API key stored locally and sent directly to OpenRouter.",
+			route: ["Left rail", "AI Assistant", "OpenRouter"],
+			anchor: {
+				type: "selector",
+				selector: ".editor-ai-panel",
+				label: "AI assistant MVP",
+			},
+			navigation: {
+				editor: editorState({ panel: "ai" }),
+				panels: openPanels({ type: "open", panel: "ai" }),
+			},
+			action: {
+				type: "instruction",
+				label:
+					"Try it: add your OpenRouter key in Settings, then ask the assistant what it can inspect or draft.",
 			},
 		},
 		{

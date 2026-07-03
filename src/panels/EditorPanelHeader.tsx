@@ -8,6 +8,7 @@ type Props = {
   description?: string;
   closeLabel: string;
   onClose: () => void;
+  closeTooltip?: boolean;
   className?: string;
   actions?: ReactNode;
 };
@@ -18,6 +19,7 @@ export function EditorPanelHeader({
   description,
   closeLabel,
   onClose,
+  closeTooltip,
   className,
   actions,
 }: Props) {
@@ -28,6 +30,7 @@ export function EditorPanelHeader({
       description={description}
       closeLabel={closeLabel}
       onClose={onClose}
+      closeTooltip={closeTooltip}
       className={className}
       actions={actions}
     />

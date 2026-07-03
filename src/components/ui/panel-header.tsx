@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { PopoverTooltip } from '@/components/ui/popover';
+import { cn, DARK_TOOLTIP_CLASS } from '@/lib/utils';
 
 type PanelHeaderProps = {
   icon?: ReactNode;
@@ -9,6 +10,7 @@ type PanelHeaderProps = {
   description?: ReactNode;
   closeLabel?: string;
   onClose?: () => void;
+  closeTooltip?: boolean;
   className?: string;
   actions?: ReactNode;
 };
@@ -19,9 +21,23 @@ export function PanelHeader({
   description,
   closeLabel,
   onClose,
+  closeTooltip = false,
   className,
   actions,
 }: PanelHeaderProps) {
+  const closeButton = onClose ? (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="editor-panel-header-close editor-icon-button-subtle rounded-lg border"
+      onClick={onClose}
+      aria-label={closeLabel}
+    >
+      <X className="h-4 w-4" aria-hidden="true" />
+    </Button>
+  ) : null;
+
   return (
     <div
       data-ui="panel-header"
@@ -57,17 +73,19 @@ export function PanelHeader({
               {actions}
             </div>
           ) : null}
-          {onClose ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="editor-panel-header-close editor-icon-button-subtle rounded-lg border"
-              onClick={onClose}
-              aria-label={closeLabel}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          {closeButton ? (
+            closeTooltip ? (
+              <PopoverTooltip
+                content={closeLabel ?? 'Close'}
+                side="bottom"
+                align="end"
+                className={DARK_TOOLTIP_CLASS}
+              >
+                {closeButton}
+              </PopoverTooltip>
+            ) : (
+              closeButton
+            )
           ) : null}
         </div>
       ) : null}

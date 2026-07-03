@@ -13,7 +13,8 @@ import { CURATED_MODELS } from "@/ai/providers/curatedModels";
  *   - `user`   — accent-tinted bubble, right-aligned.
  *   - `assistant` — surface bubble, markdown-rendered (react-markdown + gfm,
  *      already a dependency; the same stack HelpMarkdownDocument uses).
- *   - `tool`   — muted monospace block showing a routed query/tool result.
+ *   - internal tool messages — hidden from the human transcript; they are
+ *     provider context, not assistant copy.
  *   - `system` — not shown (system prompt is transport-only).
  *
  * The optional `streamingText` renders as an in-progress assistant bubble
@@ -31,7 +32,9 @@ export function AiMessageList({
 	streamingText,
 	streaming,
 }: AiMessageListProps) {
-	const visible = messages.filter((message) => message.role !== "system");
+	const visible = messages.filter(
+		(message) => message.role !== "system" && !message.internal,
+	);
 
 	if (visible.length === 0 && !streaming) {
 		return (
@@ -79,17 +82,7 @@ function AiMessageBubble({ message }: { message: ConversationMessage }) {
 	}
 
 	if (message.role === "tool") {
-		return (
-			<div
-				className="editor-bg-subtle editor-border-subtle editor-text-muted max-w-[85%] self-start overflow-x-auto rounded-lg border px-3 py-2 font-mono text-xs"
-				data-ai-role="tool"
-			>
-				<div className="editor-text-muted mb-1 text-[10px] uppercase tracking-wide">
-					Tool result
-				</div>
-				<pre className="whitespace-pre-wrap break-words">{message.content}</pre>
-			</div>
-		);
+		return null;
 	}
 
 	// assistant

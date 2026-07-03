@@ -1,4 +1,4 @@
-import { Settings, Sparkles } from "lucide-react";
+import { Settings, Sparkles, Trash2 } from "lucide-react";
 import {
 	useCallback,
 	useEffect,
@@ -12,6 +12,7 @@ import {
 } from "react";
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Button } from "@/components/ui/button";
+import { PopoverTooltip } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { NoticeSurface } from "@/components/ui/settings-panel";
 import { applyAiCommands } from "@/api/editorApi";
@@ -46,6 +47,7 @@ import {
 	type AiConversationApi,
 	useAiConversation,
 } from "@/ai/conversationStore";
+import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import { EditorPanelHeader } from "./EditorPanelHeader";
 import { AiMessageList } from "./ai/AiMessageList";
 import { AiDraftDiffCard } from "./ai/AiDraftDiffCard";
@@ -315,6 +317,51 @@ export function AiPanel({
 	onApplyAiCommands,
 	adapterOverride,
 }: AiPanelProps) {
+	return (
+		<AiConversationProvider>
+			<AiPanelShell
+				open={open}
+				position={position}
+				onPositionChange={onPositionChange}
+				panelRef={panelRef}
+				document={document}
+				editorState={editorState}
+				onOpenChange={onOpenChange}
+				onClose={onClose}
+				onOpenSettings={onOpenSettings}
+				onOpenDocumentation={onOpenDocumentation}
+				onOpenShortcuts={onOpenShortcuts}
+				onUndo={onUndo}
+				onRedo={onRedo}
+				canUndo={canUndo}
+				canRedo={canRedo}
+				onApplyAiCommands={onApplyAiCommands}
+				adapterOverride={adapterOverride}
+			/>
+		</AiConversationProvider>
+	);
+}
+
+function AiPanelShell({
+	open,
+	position,
+	onPositionChange,
+	panelRef,
+	document,
+	editorState,
+	onOpenChange,
+	onClose,
+	onOpenSettings,
+	onOpenDocumentation,
+	onOpenShortcuts,
+	onUndo,
+	onRedo,
+	canUndo,
+	canRedo,
+	onApplyAiCommands,
+	adapterOverride,
+}: AiPanelProps) {
+	const conversation = useAiConversation();
 	const surfaceRef = useRef<HTMLDivElement | null>(null);
 	const [panelDragState, setPanelDragState] = useState<PanelDragState | null>(
 		null,
@@ -397,6 +444,9 @@ export function AiPanel({
 		});
 	}
 
+	const canClearConversation =
+		conversation.messages.length > 0 || conversation.pendingDraft !== null;
+
 	return (
 		<FloatingPanelShell
 			ref={setCombinedRef}
@@ -415,41 +465,67 @@ export function AiPanel({
 						description="Ask about your document."
 						closeLabel="Close AI assistant panel"
 						onClose={onClose}
+						closeTooltip
 						className="cursor-grab px-3 py-2.5 active:cursor-grabbing"
 						actions={
-							onOpenSettings ? (
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									className="editor-icon-button-subtle rounded-lg border"
-									onClick={onOpenSettings}
-									aria-label="Open AI assistant settings"
+							<>
+								<PopoverTooltip
+									content="Clear conversation"
+									side="bottom"
+									align="end"
+									className={DARK_TOOLTIP_CLASS}
 								>
-									<Settings className="h-4 w-4" />
-								</Button>
-							) : null
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="editor-icon-button-subtle rounded-lg border"
+										onClick={conversation.clearConversation}
+										disabled={!canClearConversation}
+										aria-label="Clear AI conversation"
+									>
+										<Trash2 className="h-4 w-4" aria-hidden="true" />
+									</Button>
+								</PopoverTooltip>
+								{onOpenSettings ? (
+									<PopoverTooltip
+										content="Open settings"
+										side="bottom"
+										align="end"
+										className={DARK_TOOLTIP_CLASS}
+									>
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon"
+											className="editor-icon-button-subtle rounded-lg border"
+											onClick={onOpenSettings}
+											aria-label="Open AI assistant settings"
+										>
+											<Settings className="h-4 w-4" aria-hidden="true" />
+										</Button>
+									</PopoverTooltip>
+								) : null}
+							</>
 						}
 					/>
 				</div>
 			}
 			bodyClassName="contents"
 		>
-			<AiConversationProvider>
-				<AiPanelBody
-					document={document}
-					editorState={editorState}
-					onOpenSettings={onOpenSettings}
-					onOpenDocumentation={onOpenDocumentation}
-					onOpenShortcuts={onOpenShortcuts}
-					onUndo={onUndo}
-					onRedo={onRedo}
-					canUndo={canUndo}
-					canRedo={canRedo}
-					onApplyAiCommands={onApplyAiCommands}
-					adapterOverride={adapterOverride}
-				/>
-			</AiConversationProvider>
+			<AiPanelBody
+				document={document}
+				editorState={editorState}
+				onOpenSettings={onOpenSettings}
+				onOpenDocumentation={onOpenDocumentation}
+				onOpenShortcuts={onOpenShortcuts}
+				onUndo={onUndo}
+				onRedo={onRedo}
+				canUndo={canUndo}
+				canRedo={canRedo}
+				onApplyAiCommands={onApplyAiCommands}
+				adapterOverride={adapterOverride}
+			/>
 		</FloatingPanelShell>
 	);
 }

@@ -84,6 +84,26 @@ describe("showcase tour config", () => {
 		});
 	});
 
+	it("adds the AI assistant MVP to the welcome path", () => {
+		const topic = SHOWCASE_TOUR_CONFIG.topics.find((item) => item.id === "start");
+		const step = SHOWCASE_TOUR_CONFIG.steps.find(
+			(item) => item.id === "ai-panel",
+		);
+
+		expect(topic?.stepIds).toContain("ai-panel");
+		expect(step?.body).toContain("limited MVP");
+		expect(step?.body).toContain("OpenRouter subscription");
+		expect(step?.anchor).toEqual({
+			type: "selector",
+			selector: ".editor-ai-panel",
+			label: "AI assistant MVP",
+		});
+		expect(step?.navigation).toMatchObject({
+			editor: { focusedMode: null, panel: "ai" },
+			panels: [{ type: "closeAll" }, { type: "open", panel: "ai" }],
+		});
+	});
+
 	it("anchors the animation story to the real inspector block", () => {
 		const step = SHOWCASE_TOUR_CONFIG.steps.find(
 			(item) => item.id === "animation-preview",

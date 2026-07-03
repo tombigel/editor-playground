@@ -45,6 +45,7 @@ Purpose: orient a visitor quickly and frame the app as a solo-built editor/produ
 | `welcome` | Start with the editor | Initial editor shell and stage | Home page active, no selection, all default panels closed | Centered fallback panel, stage shell behind it | `#/edit?tour=start&step=welcome` |
 | `seeded-model` | The stage starts from a real document model | Seeded Post section | Home page active, select the initial "Post Title" text node by API target query | `[data-node-id="<resolved-post-title>"]` | `#/edit?tour=start&step=seeded-model` |
 | `menu-is-nonlinear` | Jump by topic, follow your curiosity | Tour topic/step menu | Tour open, menu expanded | Tour menu itself | `#/edit?tour=start&step=menu-is-nonlinear` |
+| `ai-panel` | Open the AI assistant panel | Floating AI assistant panel | AI panel open; all other transient panels closed | `.editor-ai-panel` | `#/edit?tour=start&step=ai-panel` |
 
 ### Topic 1: Sticky And Scroll Prototyping
 
@@ -111,6 +112,7 @@ These are the API-backed intents Phase 2 must be able to express before showcase
 | `welcome` | `resetEditorView({ activePage: "home", selection: "none", panels: "closed" })` |
 | `seeded-model` | `setActivePage("home")` + `selectNodeTarget({ name: "Post Title", contentType: "text" })` |
 | `menu-is-nonlinear` | `openTourMenu()` without changing editor selection |
+| `ai-panel` | `openPanel("ai")` and describe the limited MVP harness, minimal command set, and user-owned OpenRouter subscription requirement |
 | `sticky-templates` | `openPanel("sectionTemplates")` |
 | `sticky-node` | `ensureSectionTemplate("stickyPinnedCards" | "stickyEdgeLab")` + `selectNodeTarget({ sticky: true })` + `openInspectorBlock("sticky")` |
 | `sticky-guides` | `selectNodeTarget({ sticky: true })` + `setEditorViewFlags({ previewSticky: true, spacerVisibility: "all" })` |

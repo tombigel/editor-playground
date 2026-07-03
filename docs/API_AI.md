@@ -27,6 +27,8 @@ Before a user message is sent to a model, the AI panel runs a shallow request ro
 
 Draft-control, history-control, and help routes are handled locally by the app: draft approval/rejection uses the same approve/reject path as the draft card, undo/redo dispatches the editor's existing history actions when the corresponding stack is available, and help requests open the existing Help or Shortcuts surfaces. Redo is intentionally narrower than undo: explicit `redo` / `reapply` wording or phrases such as `undo the undo` redo, while `undo`, `revert`, and `cancel last change` undo. Direct-operation routes still go to the selected model, but the request history is enriched with current selection context, selected node summaries, rect values, visibility, and text previews. The system prompt tells the model to draft an available mutation tool call immediately when the target/action/value are clear, and to ask one concise clarification when they are fuzzy.
 
+The chat loop treats read-only query tool results as internal provider context rather than human transcript content. If a model turn only gathers data, the panel records the assistant tool call and the tool result for OpenRouter-compatible follow-up history, hides both from the visible transcript, and sends a follow-up turn so the model can summarize the result in normal language. The system prompt requires concise human-readable answers with a clear next action, and forbids raw JSON, full node objects, complete tool results, or long data dumps unless the user explicitly asks for raw/debug/exhaustive output.
+
 ## Query Tools
 
 Source: `src/api/ai/queryTools.ts`

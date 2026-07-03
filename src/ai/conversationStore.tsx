@@ -113,6 +113,12 @@ export function persistConversationState(state: PersistedAiConversationState): v
   );
 }
 
+export function clearPersistedConversationMessages(
+  state: PersistedAiConversationState,
+): PersistedAiConversationState {
+  return { ...state, messages: [] };
+}
+
 function createMessageId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -125,6 +131,28 @@ function createDraftId(): string {
     return crypto.randomUUID();
   }
   return `draft_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}
+
+function serializeToolResultContent(result: ToolResult): string {
+  return result.error ?? JSON.stringify(result.queryData ?? null);
+}
+
+export function createToolResultMessage(
+  result: ToolResult,
+  options: { id?: string; createdAt?: number } = {},
+): ConversationMessage | null {
+  if (result.kind === 'mutation' && result.draftCommands && result.draftCommands.length > 0) {
+    return null;
+  }
+
+  return {
+    id: options.id ?? createMessageId(),
+    role: 'tool',
+    content: serializeToolResultContent(result),
+    toolCallId: result.toolCallId,
+    internal: true,
+    createdAt: options.createdAt ?? Date.now(),
+  };
 }
 
 /**
@@ -177,6 +205,7 @@ export type AiConversationState = {
 export type AiConversationApi = AiConversationState & {
   appendMessage: (message: ConversationMessage) => void;
   recordToolResult: (result: ToolResult) => void;
+  clearConversation: () => void;
   clearPendingDraft: () => void;
   setSelectedModelId: (modelId: string | null) => void;
   setPromptCachingEnabled: (enabled: boolean) => void;
@@ -221,19 +250,22 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
       }
 
       // Query results (and rejections, which are also `kind: 'query'` with an
-      // `error` set) are appended as a tool-result message rather than staged
-      // as a draft — nothing here can mutate the document either way.
-      const content = result.error ?? JSON.stringify(result.queryData ?? null);
-      appendMessage({
-        id: createMessageId(),
-        role: 'tool',
-        content,
-        toolCallId: result.toolCallId,
-        createdAt: Date.now(),
-      });
+      // `error` set) are appended as internal tool-result messages. They stay
+      // available to the provider for follow-up reasoning but are hidden from
+      // the human transcript so the panel does not surface raw data dumps.
+      const toolMessage = createToolResultMessage(result);
+      if (toolMessage) {
+        appendMessage(toolMessage);
+      }
     },
     [appendMessage],
   );
+
+  const clearConversation = useCallback(() => {
+    persistAndSet(clearPersistedConversationMessages);
+    setPendingDraft(null);
+    setDraftOverflowed(false);
+  }, [persistAndSet]);
 
   const clearPendingDraft = useCallback(() => {
     setPendingDraft(null);
@@ -263,6 +295,7 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
       draftOverflowed,
       appendMessage,
       recordToolResult,
+      clearConversation,
       clearPendingDraft,
       setSelectedModelId,
       setPromptCachingEnabled,
@@ -273,6 +306,7 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
       draftOverflowed,
       appendMessage,
       recordToolResult,
+      clearConversation,
       clearPendingDraft,
       setSelectedModelId,
       setPromptCachingEnabled,

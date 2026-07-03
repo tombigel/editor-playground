@@ -6,6 +6,8 @@ import type { ConversationMessage, DraftBatch, ToolResult } from '../types/index
 import {
   accumulateDraft,
   AiConversationProvider,
+  clearPersistedConversationMessages,
+  createToolResultMessage,
   loadPersistedConversationState,
   persistConversationState,
   useAiConversation,
@@ -190,6 +192,21 @@ describe('ai/conversationStore persistence', () => {
     expect(Object.keys(parsed).sort()).toEqual(['messages', 'promptCachingEnabled', 'selectedModelId']);
     expect(parsed).not.toHaveProperty('pendingDraft');
   });
+
+  it('clears persisted messages without resetting model or prompt-caching preferences', () => {
+    const message: ConversationMessage = { id: 'm1', role: 'user', content: 'hi', createdAt: 1 };
+    const state: PersistedAiConversationState = {
+      messages: [message],
+      selectedModelId: 'model-x',
+      promptCachingEnabled: true,
+    };
+
+    expect(clearPersistedConversationMessages(state)).toEqual({
+      messages: [],
+      selectedModelId: 'model-x',
+      promptCachingEnabled: true,
+    });
+  });
 });
 
 describe('ai/conversationStore AiConversationProvider / useAiConversation', () => {
@@ -220,6 +237,7 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
     expect(box.captured?.promptCachingEnabled).toBe(false);
     expect(typeof box.captured?.appendMessage).toBe('function');
     expect(typeof box.captured?.recordToolResult).toBe('function');
+    expect(typeof box.captured?.clearConversation).toBe('function');
     expect(typeof box.captured?.clearPendingDraft).toBe('function');
     expect(typeof box.captured?.setSelectedModelId).toBe('function');
     expect(typeof box.captured?.setPromptCachingEnabled).toBe('function');
@@ -261,6 +279,29 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
 });
 
 describe('ai/conversationStore ToolResult routing shape sanity (documents recordToolResult contract)', () => {
+  it('creates internal tool-result messages for query results only', () => {
+    const queryResult: ToolResult = {
+      toolCallId: 'call-1',
+      kind: 'query',
+      queryData: [{ id: 'node-1' }],
+    };
+    const mutationResult: ToolResult = {
+      toolCallId: 'call-2',
+      kind: 'mutation',
+      draftCommands: [{ type: 'deleteNode', nodeId: 'n1' }],
+    };
+
+    expect(createToolResultMessage(queryResult, { id: 'tool-1', createdAt: 1 })).toEqual({
+      id: 'tool-1',
+      role: 'tool',
+      content: JSON.stringify([{ id: 'node-1' }]),
+      toolCallId: 'call-1',
+      internal: true,
+      createdAt: 1,
+    });
+    expect(createToolResultMessage(mutationResult)).toBeNull();
+  });
+
   it('a mutation ToolResult carries draftCommands that accumulateDraft can consume directly', () => {
     const toolResult: ToolResult = {
       toolCallId: 'call-1',

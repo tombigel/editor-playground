@@ -3,7 +3,10 @@ import { AI_TOOL_MANIFEST } from "@/api/ai/toolManifest";
 import type { DocumentModel } from "@/model/types";
 import type { EditorState } from "@/editor/types/index";
 import { routeToolCall } from "@/ai/toolRouter";
-import type { AiConversationApi } from "@/ai/conversationStore";
+import {
+	createToolResultMessage,
+	type AiConversationApi,
+} from "@/ai/conversationStore";
 import { AI_SYSTEM_PROMPT } from "@/ai/systemPrompt";
 import {
 	resolveModelSelection,
@@ -14,6 +17,7 @@ import type {
 	ConversationMessage,
 	ProviderAdapter,
 	ToolCall,
+	ToolResult,
 } from "@/ai/types/index";
 
 /**
@@ -50,6 +54,8 @@ function createSystemPromptMessage(): ConversationMessage {
 	};
 }
 
+const MAX_QUERY_TOOL_FOLLOW_UP_TURNS = 2;
+
 export function buildAssistantRequestHistory(
 	priorMessages: ConversationMessage[],
 	userMessage: ConversationMessage,
@@ -61,6 +67,52 @@ export function buildAssistantRequestHistory(
 		...(options.contextMessages ?? []),
 		userMessage,
 	];
+}
+
+function createAssistantMessage({
+	content,
+	toolCalls,
+	respondingModelId,
+	internal = false,
+}: {
+	content: string;
+	toolCalls?: ToolCall[];
+	respondingModelId?: string | null;
+	internal?: boolean;
+}): ConversationMessage {
+	return {
+		id: createMessageId(),
+		role: "assistant",
+		content,
+		toolCalls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
+		respondingModelId: respondingModelId ?? undefined,
+		internal,
+		createdAt: Date.now(),
+	};
+}
+
+export type RoutedAssistantToolCalls = {
+	results: ToolResult[];
+	toolResultMessages: ConversationMessage[];
+	hasMutationDraft: boolean;
+};
+
+export function routeAssistantToolCalls(
+	toolCalls: ToolCall[],
+	context: { document: DocumentModel; editorState: EditorState },
+): RoutedAssistantToolCalls {
+	const results = toolCalls.map((toolCall) => routeToolCall(toolCall, context));
+	return {
+		results,
+		toolResultMessages: results
+			.map((result) => createToolResultMessage(result))
+			.filter((message): message is ConversationMessage => message !== null),
+		hasMutationDraft: results.some(
+			(result) =>
+				result.kind === "mutation" &&
+				Boolean(result.draftCommands && result.draftCommands.length > 0),
+		),
+	};
 }
 
 type UseAiChatOptions = {
@@ -268,45 +320,112 @@ export function useAiChat({
 			abortRef.current = controller;
 			setStreaming(true);
 
-			let assistantText = "";
-			let toolCalls: ToolCall[] = [];
-			let respondingModelId: string | null = null;
+			let activeRequestHistory = requestHistory;
+			let producedVisibleAssistantMessage = false;
 
 			try {
-				const resolvedSelection = resolveModelSelection(modelSelection);
-				const outcome =
-					resolvedSelection.kind === "auto-fallback"
-						? await runAssistantTurnWithFallback(
-								buildAdapter,
-								resolvedSelection.candidateModelIds,
-								requestHistory,
-								{
-									onTextDelta: setStreamingText,
-									onError: setStreamError,
-								},
-								controller.signal,
-							)
-						: await (async (): Promise<FallbackTurnOutcome> => {
-								const modelId = resolvedSelection.applyFloorSuffix
-									? withFloorSuffix(resolvedSelection.modelId)
-									: resolvedSelection.modelId;
-								const singleOutcome = await runAssistantTurn(
-									buildAdapter(modelId, resolvedSelection.adapterOptions),
-									requestHistory,
+				for (
+					let followUpTurn = 0;
+					followUpTurn <= MAX_QUERY_TOOL_FOLLOW_UP_TURNS;
+					followUpTurn += 1
+				) {
+					const resolvedSelection = resolveModelSelection(modelSelection);
+					const outcome =
+						resolvedSelection.kind === "auto-fallback"
+							? await runAssistantTurnWithFallback(
+									buildAdapter,
+									resolvedSelection.candidateModelIds,
+									activeRequestHistory,
 									{
 										onTextDelta: setStreamingText,
 										onError: setStreamError,
 									},
 									controller.signal,
-								);
-								return {
-									...singleOutcome,
-									respondingModelId: singleOutcome.resolvedModelId ?? modelId,
-								};
-							})();
-				assistantText = outcome.text;
-				toolCalls = outcome.toolCalls;
-				respondingModelId = outcome.respondingModelId;
+								)
+							: await (async (): Promise<FallbackTurnOutcome> => {
+									const modelId = resolvedSelection.applyFloorSuffix
+										? withFloorSuffix(resolvedSelection.modelId)
+										: resolvedSelection.modelId;
+									const singleOutcome = await runAssistantTurn(
+										buildAdapter(modelId, resolvedSelection.adapterOptions),
+										activeRequestHistory,
+										{
+											onTextDelta: setStreamingText,
+											onError: setStreamError,
+										},
+										controller.signal,
+									);
+									return {
+										...singleOutcome,
+										respondingModelId: singleOutcome.resolvedModelId ?? modelId,
+									};
+								})();
+
+					const routed = routeAssistantToolCalls(outcome.toolCalls, {
+						document,
+						editorState,
+					});
+					const hasToolResultsForFollowUp =
+						routed.toolResultMessages.length > 0 && !routed.hasMutationDraft;
+					const shouldFollowUp =
+						hasToolResultsForFollowUp &&
+						!outcome.error &&
+						!controller.signal.aborted &&
+						followUpTurn < MAX_QUERY_TOOL_FOLLOW_UP_TURNS;
+
+					const providerAssistantMessage =
+						outcome.text.length > 0 || outcome.toolCalls.length > 0
+							? createAssistantMessage({
+									content: outcome.text,
+									toolCalls: outcome.toolCalls,
+									respondingModelId: outcome.respondingModelId,
+									internal: shouldFollowUp || hasToolResultsForFollowUp,
+								})
+							: null;
+
+					if (providerAssistantMessage) {
+						if (providerAssistantMessage.internal) {
+							conversation.appendMessage(providerAssistantMessage);
+						} else {
+							conversation.appendMessage({
+								...providerAssistantMessage,
+								toolCalls: undefined,
+							});
+							producedVisibleAssistantMessage = true;
+						}
+					}
+
+					for (const result of routed.results) {
+						conversation.recordToolResult(result);
+					}
+
+					if (shouldFollowUp && providerAssistantMessage) {
+						activeRequestHistory = [
+							...activeRequestHistory,
+							providerAssistantMessage,
+							...routed.toolResultMessages,
+						];
+						setStreamingText("");
+						continue;
+					}
+
+					if (
+						hasToolResultsForFollowUp &&
+						!routed.hasMutationDraft &&
+						!producedVisibleAssistantMessage
+					) {
+						conversation.appendMessage(
+							createAssistantMessage({
+								content:
+									"I gathered the document details, but I couldn't turn them into a clear final answer in this turn. Tell me whether you want a short summary or a specific edit.",
+								respondingModelId: outcome.respondingModelId,
+							}),
+						);
+						producedVisibleAssistantMessage = true;
+					}
+
+					break;
+				}
 			} catch (error) {
 				setStreamError(error instanceof Error ? error.message : String(error));
 			} finally {
@@ -315,26 +434,6 @@ export function useAiChat({
 				setStreamingText("");
 			}
 
-			// Persist the assistant message (text + any requested tool calls) so the
-			// transcript and the next turn's provider history stay consistent.
-			if (assistantText.length > 0 || toolCalls.length > 0) {
-				conversation.appendMessage({
-					id: createMessageId(),
-					role: "assistant",
-					content: assistantText,
-					toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-					respondingModelId: respondingModelId ?? undefined,
-					createdAt: Date.now(),
-				});
-			}
-
-			// Route each requested tool call. Query tools execute and their data is
-			// recorded as a tool message; mutation tools are staged as a draft in
-			// `pendingDraft` (never applied here — Task 10 renders/approves it).
-			for (const toolCall of toolCalls) {
-				const result = routeToolCall(toolCall, { document, editorState });
-				conversation.recordToolResult(result);
-			}
 		},
 		[buildAdapter, buildContextMessages, conversation, document, editorState, modelSelection, streaming],
 	);

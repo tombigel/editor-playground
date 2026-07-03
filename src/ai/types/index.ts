@@ -57,6 +57,8 @@ export type ConversationMessage = {
   toolCalls?: ToolCall[];
   toolCallId?: string;
   respondingModelId?: string;
+  /** Internal provider-context messages are sent to the model but hidden from the human transcript. */
+  internal?: boolean;
   createdAt: number;
 };
 

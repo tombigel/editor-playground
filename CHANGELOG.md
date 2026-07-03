@@ -13,6 +13,15 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ### Added
 
+- improve assistant panel responses
+
+---
+
+## [0.12.0] — 2026-07-03
+Document: 1.7.28 · API: 2.5.28 · Editor: 0.19.28
+
+### Added
+
 - feature tour on empty welcome page
 - sync WebDAV deploys incrementally
 - added link to tombigel.com
@@ -26,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add lazy-loaded AI assistant panel with read-only chat
 - add AI draft diff card with approve/reject and showcase entry
 - add AI provider, model, and API key settings
+- add AI assistant MVP step to the welcome tour
 - restructure curated models into 3 data-driven cost/value tiers
 - add structured model pricing and automatic sentinels
 - clarify OpenRouter routing and model status

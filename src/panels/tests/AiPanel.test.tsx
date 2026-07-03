@@ -10,11 +10,13 @@ import type {
 	ToolCall,
 } from "../../ai/types/index";
 import { AiPanel, handleLocalAiRoute } from "../AiPanel";
+import { AiMessageList } from "../ai/AiMessageList";
 import {
 	buildAssistantRequestHistory,
 	isRetryableStreamError,
 	runAssistantTurn,
 	runAssistantTurnWithFallback,
+	routeAssistantToolCalls,
 } from "../ai/useAiChat";
 import { AI_SYSTEM_PROMPT } from "../../ai/systemPrompt";
 
@@ -51,7 +53,7 @@ function makePanelProps() {
 
 function createConversationStub(overrides: Partial<AiConversationApi> = {}): AiConversationApi {
 	const messages: ConversationMessage[] = [];
-	return {
+	const base: AiConversationApi = {
 		messages,
 		pendingDraft: null,
 		selectedModelId: null,
@@ -61,11 +63,12 @@ function createConversationStub(overrides: Partial<AiConversationApi> = {}): AiC
 			messages.push(message);
 		},
 		recordToolResult: NO_OP,
+		clearConversation: NO_OP,
 		clearPendingDraft: NO_OP,
 		setSelectedModelId: NO_OP,
 		setPromptCachingEnabled: NO_OP,
-		...overrides,
 	};
+	return { ...base, ...overrides };
 }
 
 describe("panels/AiPanel", () => {
@@ -76,6 +79,9 @@ describe("panels/AiPanel", () => {
 		expect(markup).toContain('data-ui="panel-header"');
 		expect(markup).toContain("Close AI assistant panel");
 		expect(markup).toContain("AI Assistant");
+		expect(markup).toContain("Clear conversation");
+		expect(markup).toContain("Open settings");
+		expect(markup).toContain('role="tooltip"');
 		expect(markup).toContain("Open AI assistant settings");
 	});
 
@@ -98,6 +104,7 @@ describe("panels/AiPanel", () => {
 		);
 
 		expect(markup).toContain('data-ui="textarea"');
+		expect(markup).toContain("Clear AI conversation");
 		expect(markup).toContain(
 			"Ask a question about your document to get started.",
 		);
@@ -147,6 +154,13 @@ describe("panels/AiPanel", () => {
 		expect(history.slice(1)).toEqual([...prior, userMessage]);
 	});
 
+	it("system prompt requires concise human-readable answers with a next action", () => {
+		expect(AI_SYSTEM_PROMPT).toContain("Never answer with raw JSON");
+		expect(AI_SYSTEM_PROMPT).toContain("2-5 sentences");
+		expect(AI_SYSTEM_PROMPT).toContain("call to action");
+		expect(AI_SYSTEM_PROMPT).toContain("Do not paste the tool result back to the user");
+	});
+
 	it("builds request history with app-provided direct-operation context before the user message", () => {
 		const prior: ConversationMessage[] = [
 			{ id: "m1", role: "assistant", content: "Earlier answer", createdAt: 1 },
@@ -175,6 +189,42 @@ describe("panels/AiPanel", () => {
 			"m2",
 		]);
 		expect(history[2].content).toBe("Direct operation context");
+	});
+
+	it("keeps internal tool messages out of the visible transcript", () => {
+		const markup = renderToStaticMarkup(
+			<AiMessageList
+				streaming={false}
+				streamingText=""
+				messages={[
+					{
+						id: "user",
+						role: "user",
+						content: "What text nodes exist?",
+						createdAt: 1,
+					},
+					{
+						id: "tool",
+						role: "tool",
+						content: '{"large":"json dump"}',
+						toolCallId: "call-1",
+						internal: true,
+						createdAt: 2,
+					},
+					{
+						id: "assistant",
+						role: "assistant",
+						content: "There are three text groups. Want me to adjust them?",
+						createdAt: 3,
+					},
+				]}
+			/>,
+		);
+
+		expect(markup).toContain("What text nodes exist?");
+		expect(markup).toContain("There are three text groups");
+		expect(markup).not.toContain("json dump");
+		expect(markup).not.toContain("Tool result");
 	});
 
 	it("handles help routes locally by opening existing help targets and recording a transcript", () => {
@@ -310,6 +360,29 @@ describe("panels/AiPanel", () => {
 		expect(result.queryData).toBeDefined();
 	});
 
+	it("routes query tool calls into hidden follow-up context instead of visible dumps", () => {
+		const state = createInitialState();
+		const routed = routeAssistantToolCalls(
+			[
+				{
+					id: "call-1",
+					name: "getDocumentTree",
+					arguments: {},
+				},
+			],
+			{ document: state.document, editorState: state },
+		);
+
+		expect(routed.hasMutationDraft).toBe(false);
+		expect(routed.results).toHaveLength(1);
+		expect(routed.toolResultMessages).toHaveLength(1);
+		expect(routed.toolResultMessages[0]).toMatchObject({
+			role: "tool",
+			toolCallId: "call-1",
+			internal: true,
+		});
+	});
+
 	it("stages a mutation tool-call as a draft rather than applying it", async () => {
 		const state = createInitialState();
 		const targetNode = Object.values(state.document.nodes).find(
@@ -342,6 +415,30 @@ describe("panels/AiPanel", () => {
 		// is never applied here; Task 10's diff card approves it via editorApi.
 		expect(result.kind).toBe("mutation");
 		expect(result.draftCommands).toBeDefined();
+	});
+
+	it("routes mutation tool calls as drafts without creating follow-up tool messages", () => {
+		const state = createInitialState();
+		const targetNode = Object.values(state.document.nodes).find(
+			(node) => node.contentType === "container" && node.subtype === "section",
+		);
+		if (!targetNode) {
+			throw new Error("Expected a section node in the default document");
+		}
+
+		const routed = routeAssistantToolCalls(
+			[
+				{
+					id: "call-2",
+					name: "setNodeVisibility",
+					arguments: { nodeId: targetNode.id, visible: false },
+				},
+			],
+			{ document: state.document, editorState: state },
+		);
+
+		expect(routed.hasMutationDraft).toBe(true);
+		expect(routed.toolResultMessages).toEqual([]);
 	});
 
 	it("surfaces a stream error from the mocked adapter as an error outcome", async () => {
