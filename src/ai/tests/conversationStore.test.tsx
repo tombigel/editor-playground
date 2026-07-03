@@ -5,6 +5,7 @@ import type { AiDocumentCommand } from '../../api/ai/types';
 import type { ConversationMessage, DraftBatch, ToolResult } from '../types/index';
 import {
   accumulateDraft,
+  AI_CONVERSATION_STATE_CHANGED_EVENT,
   AiConversationProvider,
   clearPersistedConversationMessages,
   createToolResultMessage,
@@ -111,6 +112,7 @@ describe('ai/conversationStore persistence', () => {
       messages: [message],
       selectedModelId: 'some/model',
       promptCachingEnabled: true,
+      autoApproveAiDrafts: true,
     };
 
     persistConversationState(state);
@@ -119,11 +121,52 @@ describe('ai/conversationStore persistence', () => {
     expect(loaded).toEqual(state);
   });
 
+  it('dispatches a same-window change event for external settings writes', () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('window', {
+      localStorage: createLocalStorageStub(),
+      dispatchEvent,
+    } as unknown as Window & typeof globalThis);
+
+    persistConversationState({
+      messages: [],
+      selectedModelId: 'openai/gpt-5.4',
+      promptCachingEnabled: true,
+      autoApproveAiDrafts: true,
+    });
+
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
+    expect(dispatchEvent.mock.calls[0]?.[0]).toMatchObject({
+      type: AI_CONVERSATION_STATE_CHANGED_EVENT,
+    });
+  });
+
+  it('can persist silently for provider-owned updates that already set React state', () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('window', {
+      localStorage: createLocalStorageStub(),
+      dispatchEvent,
+    } as unknown as Window & typeof globalThis);
+
+    persistConversationState(
+      {
+        messages: [],
+        selectedModelId: 'openai/gpt-5.4',
+        promptCachingEnabled: true,
+        autoApproveAiDrafts: true,
+      },
+      { notify: false },
+    );
+
+    expect(dispatchEvent).not.toHaveBeenCalled();
+  });
+
   it('falls back to an empty initial state on missing/malformed localStorage content', () => {
     expect(loadPersistedConversationState()).toEqual({
       messages: [],
       selectedModelId: null,
       promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
     });
 
     (window as unknown as { localStorage: Storage }).localStorage.setItem(
@@ -134,6 +177,7 @@ describe('ai/conversationStore persistence', () => {
       messages: [],
       selectedModelId: null,
       promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
     });
 
     (window as unknown as { localStorage: Storage }).localStorage.setItem(
@@ -144,10 +188,11 @@ describe('ai/conversationStore persistence', () => {
       messages: [],
       selectedModelId: null,
       promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
     });
   });
 
-  it('defaults missing/malformed promptCachingEnabled to false without wiping existing state', () => {
+  it('defaults missing/malformed promptCachingEnabled and autoApproveAiDrafts to false without wiping existing state', () => {
     const message: ConversationMessage = { id: 'm1', role: 'user', content: 'hi', createdAt: 1 };
     const win = window as unknown as { localStorage: Storage };
 
@@ -159,6 +204,7 @@ describe('ai/conversationStore persistence', () => {
       messages: [message],
       selectedModelId: 'legacy/model',
       promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
     });
 
     win.localStorage.setItem(
@@ -167,20 +213,23 @@ describe('ai/conversationStore persistence', () => {
         messages: [message],
         selectedModelId: 'legacy/model',
         promptCachingEnabled: 'yes',
+        autoApproveAiDrafts: 'yes',
       }),
     );
     expect(loadPersistedConversationState()).toEqual({
       messages: [message],
       selectedModelId: 'legacy/model',
       promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
     });
   });
 
-  it('does NOT persist pendingDraft: only persisted conversation keys are ever written', () => {
+  it('persists autoApproveAiDrafts while still omitting pendingDraft', () => {
     const state: PersistedAiConversationState = {
       messages: [],
       selectedModelId: 'model-x',
       promptCachingEnabled: false,
+      autoApproveAiDrafts: true,
     };
     persistConversationState(state);
 
@@ -189,7 +238,13 @@ describe('ai/conversationStore persistence', () => {
     );
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw as string);
-    expect(Object.keys(parsed).sort()).toEqual(['messages', 'promptCachingEnabled', 'selectedModelId']);
+    expect(Object.keys(parsed).sort()).toEqual([
+      'autoApproveAiDrafts',
+      'messages',
+      'promptCachingEnabled',
+      'selectedModelId',
+    ]);
+    expect(parsed.autoApproveAiDrafts).toBe(true);
     expect(parsed).not.toHaveProperty('pendingDraft');
   });
 
@@ -199,12 +254,14 @@ describe('ai/conversationStore persistence', () => {
       messages: [message],
       selectedModelId: 'model-x',
       promptCachingEnabled: true,
+      autoApproveAiDrafts: true,
     };
 
     expect(clearPersistedConversationMessages(state)).toEqual({
       messages: [],
       selectedModelId: 'model-x',
       promptCachingEnabled: true,
+      autoApproveAiDrafts: true,
     });
   });
 });
@@ -235,12 +292,14 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
     expect(box.captured?.pendingDraft).toBeNull();
     expect(box.captured?.selectedModelId).toBeNull();
     expect(box.captured?.promptCachingEnabled).toBe(false);
+    expect(box.captured?.autoApproveAiDrafts).toBe(false);
     expect(typeof box.captured?.appendMessage).toBe('function');
     expect(typeof box.captured?.recordToolResult).toBe('function');
     expect(typeof box.captured?.clearConversation).toBe('function');
     expect(typeof box.captured?.clearPendingDraft).toBe('function');
     expect(typeof box.captured?.setSelectedModelId).toBe('function');
     expect(typeof box.captured?.setPromptCachingEnabled).toBe('function');
+    expect(typeof box.captured?.setAutoApproveAiDrafts).toBe('function');
   });
 
   it('useAiConversation throws outside of a provider (no silent undefined context)', () => {
@@ -258,6 +317,7 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
       messages: [message],
       selectedModelId: 'model-y',
       promptCachingEnabled: true,
+      autoApproveAiDrafts: true,
     });
 
     const box: { captured: ReturnType<typeof useAiConversation> | null } = { captured: null };
@@ -275,6 +335,7 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
     expect(box.captured?.messages).toEqual([message]);
     expect(box.captured?.selectedModelId).toBe('model-y');
     expect(box.captured?.promptCachingEnabled).toBe(true);
+    expect(box.captured?.autoApproveAiDrafts).toBe(true);
   });
 });
 

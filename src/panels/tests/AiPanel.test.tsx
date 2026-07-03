@@ -9,7 +9,11 @@ import type {
 	StreamEvent,
 	ToolCall,
 } from "../../ai/types/index";
-import { AiPanel, handleLocalAiRoute } from "../AiPanel";
+import {
+	AiPanel,
+	getAutoApproveDraftDecision,
+	handleLocalAiRoute,
+} from "../AiPanel";
 import { AiMessageList } from "../ai/AiMessageList";
 import {
 	buildAssistantRequestHistory,
@@ -56,6 +60,7 @@ function createConversationStub(overrides: Partial<AiConversationApi> = {}): AiC
 		pendingDraft: null,
 		selectedModelId: null,
 		promptCachingEnabled: false,
+		autoApproveAiDrafts: false,
 		draftOverflowed: false,
 		appendMessage: (message) => {
 			messages.push(message);
@@ -65,6 +70,7 @@ function createConversationStub(overrides: Partial<AiConversationApi> = {}): AiC
 		clearPendingDraft: NO_OP,
 		setSelectedModelId: NO_OP,
 		setPromptCachingEnabled: NO_OP,
+		setAutoApproveAiDrafts: NO_OP,
 	};
 	return { ...base, ...overrides };
 }
@@ -103,6 +109,8 @@ describe("panels/AiPanel", () => {
 
 		expect(markup).toContain('data-ui="textarea"');
 		expect(markup).toContain("Clear AI conversation");
+		expect(markup).toContain("Auto approve");
+		expect(markup).toContain("Auto approve safe AI drafts");
 		expect(markup).toContain(
 			"Ask a question about your document to get started.",
 		);
@@ -225,6 +233,34 @@ describe("panels/AiPanel", () => {
 		expect(markup).not.toContain("Tool result");
 	});
 
+	it("renders edit and rerun actions on user prompts only", () => {
+		const markup = renderToStaticMarkup(
+			<AiMessageList
+				streaming={false}
+				streamingText=""
+				onEditPrompt={NO_OP}
+				onRerunPrompt={NO_OP}
+				messages={[
+					{
+						id: "user",
+						role: "user",
+						content: "Move this text down",
+						createdAt: 1,
+					},
+					{
+						id: "assistant",
+						role: "assistant",
+						content: "I can do that.",
+						createdAt: 2,
+					},
+				]}
+			/>,
+		);
+
+		expect(markup).toContain("Edit prompt");
+		expect(markup).toContain("Rerun prompt");
+	});
+
 	it("handles help routes locally by opening existing help targets and recording a transcript", () => {
 		const conversation = createConversationStub();
 		const openDocumentation = vi.fn();
@@ -269,6 +305,30 @@ describe("panels/AiPanel", () => {
 		expect(approve).toHaveBeenCalledWith([command]);
 		expect(reject).not.toHaveBeenCalled();
 		expect(conversation.messages.at(-1)?.content).toContain("Approved and applied");
+	});
+
+	it("auto-approves only safe non-overflowed drafts", () => {
+		expect(
+			getAutoApproveDraftDecision(
+				[{ type: "setNodeVisibility", nodeId: "node-1", visible: false }],
+				{ draftOverflowed: false },
+			),
+		).toEqual({ action: "approve" });
+	});
+
+	it("keeps destructive and overflowed drafts on the manual approval path", () => {
+		expect(
+			getAutoApproveDraftDecision(
+				[{ type: "deleteNode", nodeId: "node-1" }],
+				{ draftOverflowed: false },
+			),
+		).toEqual({ action: "manual", reason: "destructive" });
+		expect(
+			getAutoApproveDraftDecision(
+				[{ type: "setNodeVisibility", nodeId: "node-1", visible: false }],
+				{ draftOverflowed: true },
+			),
+		).toEqual({ action: "manual", reason: "overflowed" });
 	});
 
 	it("handles undo and redo routes locally through app history callbacks", () => {

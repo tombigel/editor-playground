@@ -74,8 +74,16 @@ describe("panels/settings/sections/AiSettingsSection", () => {
 		expect(markup).toContain('aria-label="Model"');
 		expect(markup).not.toContain('aria-label="Custom OpenRouter model id"');
 		expect(markup).toContain('aria-label="Prompt caching"');
+		expect(markup).toContain('aria-label="Auto approve safe AI drafts by default"');
 		expect(markup).toContain('aria-label="More information"');
 		expect(markup).toContain("Check connection");
+		expect(markup).toContain("Usage");
+		expect(markup).toContain('style="width:420px"');
+		expect(markup).toContain("flex-1 text-right text-xs");
+		expect(markup).toContain("Not checked");
+		expect(markup).toContain("Refresh");
+		expect(markup).not.toContain("OpenRouter credits:");
+		expect(markup).not.toContain("flex-1 truncate text-xs");
 		expect(markup).not.toContain("OpenRouter connection not checked");
 		expect(markup).toContain('href="https://openrouter.ai/keys"');
 		expect(markup).toContain('target="_blank"');
@@ -162,6 +170,8 @@ describe("panels/settings/sections/AiSettingsSection", () => {
 			JSON.stringify({
 				messages: before.messages,
 				selectedModelId: secondModel?.id,
+				promptCachingEnabled: before.promptCachingEnabled,
+				autoApproveAiDrafts: before.autoApproveAiDrafts,
 			}),
 		);
 
@@ -238,6 +248,7 @@ describe("panels/settings/sections/AiSettingsSection", () => {
 				messages: [],
 				selectedModelId: FREE_MODEL_SENTINEL,
 				promptCachingEnabled: true,
+				autoApproveAiDrafts: false,
 			}),
 		);
 
@@ -245,6 +256,25 @@ describe("panels/settings/sections/AiSettingsSection", () => {
 
 		expect(loadPersistedConversationState().promptCachingEnabled).toBe(true);
 		expect(markup).toContain('aria-label="Prompt caching"');
+		expect(markup).toContain('data-state="checked"');
+	});
+
+	it("reflects the persisted auto-approve preference in the Settings switch", () => {
+		const win = window as unknown as { localStorage: Storage };
+		win.localStorage.setItem(
+			"editor-playground.ai-conversation.v1",
+			JSON.stringify({
+				messages: [],
+				selectedModelId: FREE_MODEL_SENTINEL,
+				promptCachingEnabled: false,
+				autoApproveAiDrafts: true,
+			}),
+		);
+
+		const markup = renderToStaticMarkup(<AiSettingsSection />);
+
+		expect(loadPersistedConversationState().autoApproveAiDrafts).toBe(true);
+		expect(markup).toContain('aria-label="Auto approve safe AI drafts by default"');
 		expect(markup).toContain('data-state="checked"');
 	});
 });

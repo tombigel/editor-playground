@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { isBatchSizeAllowed, MAX_COMMANDS_PER_BATCH } from './guardrails';
 import type { ConversationMessage, DraftBatch, ToolResult } from './types/index';
 
@@ -18,6 +18,7 @@ import type { ConversationMessage, DraftBatch, ToolResult } from './types/index'
  */
 
 const STORAGE_KEY = 'editor-playground.ai-conversation.v1';
+export const AI_CONVERSATION_STATE_CHANGED_EVENT = 'editor-playground.ai-conversation-state-changed';
 
 /**
  * The persisted subset of conversation state. `pendingDraft` is deliberately
@@ -32,10 +33,16 @@ export type PersistedAiConversationState = {
   messages: ConversationMessage[];
   selectedModelId: string | null;
   promptCachingEnabled: boolean;
+  autoApproveAiDrafts: boolean;
 };
 
 function createInitialPersistedState(): PersistedAiConversationState {
-  return { messages: [], selectedModelId: null, promptCachingEnabled: false };
+  return {
+    messages: [],
+    selectedModelId: null,
+    promptCachingEnabled: false,
+    autoApproveAiDrafts: false,
+  };
 }
 
 function isConversationMessage(value: unknown): value is ConversationMessage {
@@ -65,10 +72,13 @@ function normalizePersistedState(parsed: unknown): PersistedAiConversationState 
   }
   const promptCachingEnabled =
     typeof candidate.promptCachingEnabled === 'boolean' ? candidate.promptCachingEnabled : false;
+  const autoApproveAiDrafts =
+    typeof candidate.autoApproveAiDrafts === 'boolean' ? candidate.autoApproveAiDrafts : false;
   return {
     messages: candidate.messages,
     selectedModelId: selectedModelId ?? null,
     promptCachingEnabled,
+    autoApproveAiDrafts,
   };
 }
 
@@ -99,7 +109,21 @@ export function loadPersistedConversationState(): PersistedAiConversationState {
  * Persists `messages`/`selectedModelId`/`promptCachingEnabled` only —
  * `pendingDraft` is never written to localStorage.
  */
-export function persistConversationState(state: PersistedAiConversationState): void {
+function dispatchConversationStateChanged(): void {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return;
+  }
+  try {
+    window.dispatchEvent(new Event(AI_CONVERSATION_STATE_CHANGED_EVENT));
+  } catch {
+    // Ignore notification failures; localStorage remains the source of truth.
+  }
+}
+
+export function persistConversationState(
+  state: PersistedAiConversationState,
+  options: { notify?: boolean } = {},
+): void {
   if (typeof window === 'undefined') {
     return;
   }
@@ -109,8 +133,12 @@ export function persistConversationState(state: PersistedAiConversationState): v
       messages: state.messages,
       selectedModelId: state.selectedModelId,
       promptCachingEnabled: state.promptCachingEnabled,
+      autoApproveAiDrafts: state.autoApproveAiDrafts,
     }),
   );
+  if (options.notify ?? true) {
+    dispatchConversationStateChanged();
+  }
 }
 
 export function clearPersistedConversationMessages(
@@ -198,6 +226,7 @@ export type AiConversationState = {
   pendingDraft: DraftBatch | null;
   selectedModelId: string | null;
   promptCachingEnabled: boolean;
+  autoApproveAiDrafts: boolean;
   /** Set when the most recent accumulation into `pendingDraft` overflowed `MAX_COMMANDS_PER_BATCH`. */
   draftOverflowed: boolean;
 };
@@ -209,6 +238,7 @@ export type AiConversationApi = AiConversationState & {
   clearPendingDraft: () => void;
   setSelectedModelId: (modelId: string | null) => void;
   setPromptCachingEnabled: (enabled: boolean) => void;
+  setAutoApproveAiDrafts: (enabled: boolean) => void;
 };
 
 const AiConversationContext = createContext<AiConversationApi | null>(null);
@@ -226,7 +256,7 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
   const persistAndSet = useCallback((updater: (prev: PersistedAiConversationState) => PersistedAiConversationState) => {
     setPersisted((prev) => {
       const next = updater(prev);
-      persistConversationState(next);
+      persistConversationState(next, { notify: false });
       return next;
     });
   }, []);
@@ -286,12 +316,42 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
     [persistAndSet],
   );
 
+  const setAutoApproveAiDrafts = useCallback(
+    (enabled: boolean) => {
+      persistAndSet((prev) => ({ ...prev, autoApproveAiDrafts: enabled }));
+    },
+    [persistAndSet],
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      return undefined;
+    }
+
+    const syncPersistedState = () => {
+      setPersisted(loadPersistedConversationState());
+    };
+    const syncStorageState = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        syncPersistedState();
+      }
+    };
+
+    window.addEventListener(AI_CONVERSATION_STATE_CHANGED_EVENT, syncPersistedState);
+    window.addEventListener('storage', syncStorageState);
+    return () => {
+      window.removeEventListener(AI_CONVERSATION_STATE_CHANGED_EVENT, syncPersistedState);
+      window.removeEventListener('storage', syncStorageState);
+    };
+  }, []);
+
   const value = useMemo<AiConversationApi>(
     () => ({
       messages: persisted.messages,
       pendingDraft,
       selectedModelId: persisted.selectedModelId,
       promptCachingEnabled: persisted.promptCachingEnabled,
+      autoApproveAiDrafts: persisted.autoApproveAiDrafts,
       draftOverflowed,
       appendMessage,
       recordToolResult,
@@ -299,6 +359,7 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
       clearPendingDraft,
       setSelectedModelId,
       setPromptCachingEnabled,
+      setAutoApproveAiDrafts,
     }),
     [
       persisted,
@@ -310,6 +371,7 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
       clearPendingDraft,
       setSelectedModelId,
       setPromptCachingEnabled,
+      setAutoApproveAiDrafts,
     ],
   );
 

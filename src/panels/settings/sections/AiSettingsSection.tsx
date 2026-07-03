@@ -1,8 +1,9 @@
 import {
 	CheckCircle2,
 	ExternalLink,
-	KeyRound,
+	HatGlasses,
 	LoaderCircle,
+	RefreshCcw,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/ai/providers/curatedModels";
 import {
 	checkOpenRouterConnection,
+	getOpenRouterCredits,
 	type OpenRouterAdapterOptions,
 } from "@/ai/providers/openRouterAdapter";
 import {
@@ -61,6 +63,17 @@ type ConnectionCheckState =
 	| { status: "checking" }
 	| { status: "success"; modelId: string }
 	| { status: "error"; modelId: string | null; message: string };
+
+type CreditsCheckState =
+	| { status: "idle" }
+	| { status: "checking" }
+	| {
+			status: "success";
+			totalCredits: number;
+			totalUsage: number;
+			remainingCredits: number;
+	  }
+	| { status: "error"; message: string };
 
 /**
  * Reads the stored OpenRouter API key using the exact same shape
@@ -107,9 +120,10 @@ function writeStoredApiKey(value: string): void {
  * (`editor-playground.ai-conversation.v1`) and shape that
  * `conversationStore.tsx` already exports
  * (`loadPersistedConversationState`/`persistConversationState`), reusing
- * those functions directly rather than re-deriving the JSON shape here. Since
- * the provider always re-reads localStorage on mount, a selection made here
- * is picked up the next time the AI panel opens.
+ * those functions directly rather than re-deriving the JSON shape here.
+ * `persistConversationState` also notifies any currently open AI panel so
+ * model, prompt-caching, and auto-approve changes take effect without
+ * remounting the panel.
  */
 function readSelectedModelId(): string {
 	const persisted = loadPersistedConversationState();
@@ -133,6 +147,48 @@ function readPromptCachingEnabled(): boolean {
 function writePromptCachingEnabled(enabled: boolean): void {
 	const persisted = loadPersistedConversationState();
 	persistConversationState({ ...persisted, promptCachingEnabled: enabled });
+}
+
+function readAutoApproveAiDrafts(): boolean {
+	return loadPersistedConversationState().autoApproveAiDrafts;
+}
+
+function writeAutoApproveAiDrafts(enabled: boolean): void {
+	const persisted = loadPersistedConversationState();
+	persistConversationState({ ...persisted, autoApproveAiDrafts: enabled });
+}
+
+function formatCreditValue(value: number): string {
+	return new Intl.NumberFormat(undefined, {
+		style: "currency",
+		currency: "USD",
+		maximumFractionDigits: 2,
+	}).format(value);
+}
+
+function getCreditsStatusText(state: CreditsCheckState): string {
+	if (state.status === "checking") {
+		return "Refreshing OpenRouter credits...";
+	}
+	if (state.status === "success") {
+		return `${formatCreditValue(state.totalUsage)} used · ${formatCreditValue(
+			state.remainingCredits,
+		)} left of ${formatCreditValue(state.totalCredits)}`;
+	}
+	if (state.status === "error") {
+		return `Unavailable: ${state.message}`;
+	}
+	return "Not checked";
+}
+
+function getCreditsStatusClassName(state: CreditsCheckState): string {
+	if (state.status === "success") {
+		return "editor-success-text";
+	}
+	if (state.status === "error") {
+		return "editor-warning-text";
+	}
+	return "editor-text-muted";
 }
 
 function getSelectedModelLabel(modelId: string): string {
@@ -199,19 +255,26 @@ export function AiSettingsSection() {
 	});
 	const [promptCachingEnabled, setPromptCachingEnabledState] =
 		useState<boolean>(() => readPromptCachingEnabled());
+	const [autoApproveAiDrafts, setAutoApproveAiDraftsState] =
+		useState<boolean>(() => readAutoApproveAiDrafts());
 	const [connectionCheck, setConnectionCheck] = useState<ConnectionCheckState>({
+		status: "idle",
+	});
+	const [creditsCheck, setCreditsCheck] = useState<CreditsCheckState>({
 		status: "idle",
 	});
 
 	const handleApiKeyChange = useCallback((value: string) => {
 		setApiKey(value);
 		setConnectionCheck({ status: "idle" });
+		setCreditsCheck({ status: "idle" });
 		writeStoredApiKey(value);
 	}, []);
 
 	const handleClearApiKey = useCallback(() => {
 		setApiKey("");
 		setConnectionCheck({ status: "idle" });
+		setCreditsCheck({ status: "idle" });
 		writeStoredApiKey("");
 	}, []);
 
@@ -241,6 +304,11 @@ export function AiSettingsSection() {
 		writePromptCachingEnabled(enabled);
 	}, []);
 
+	const handleAutoApproveChange = useCallback((enabled: boolean) => {
+		setAutoApproveAiDraftsState(enabled);
+		writeAutoApproveAiDrafts(enabled);
+	}, []);
+
 	const selectedModelLabel = getSelectedModelLabel(selectedModelId);
 	const modelSelectValue =
 		isCustomModelId(selectedModelId) ||
@@ -252,6 +320,27 @@ export function AiSettingsSection() {
 		apiKey.length > 0 && selectionMayUseFreeTier(selectedModelId);
 	const canCheckConnection =
 		apiKey.trim().length > 0 && connectionCheck.status !== "checking";
+	const canRefreshCredits =
+		apiKey.trim().length > 0 && creditsCheck.status !== "checking";
+
+	const handleRefreshCredits = useCallback(async () => {
+		const trimmedKey = apiKey.trim();
+		if (trimmedKey.length === 0) {
+			setCreditsCheck({
+				status: "error",
+				message: "Add an OpenRouter API key before checking credits.",
+			});
+			return;
+		}
+
+		setCreditsCheck({ status: "checking" });
+		const result = await getOpenRouterCredits(trimmedKey);
+		if (result.ok) {
+			setCreditsCheck({ status: "success", ...result.usage });
+			return;
+		}
+		setCreditsCheck({ status: "error", message: result.message });
+	}, [apiKey]);
 
 	const handleCheckConnection = useCallback(async () => {
 		const trimmedKey = apiKey.trim();
@@ -281,6 +370,7 @@ export function AiSettingsSection() {
 		);
 		if (result.ok) {
 			setConnectionCheck({ status: "success", modelId: result.modelId });
+			void handleRefreshCredits();
 			return;
 		}
 		setConnectionCheck({
@@ -288,7 +378,7 @@ export function AiSettingsSection() {
 			modelId: result.modelId,
 			message: result.message,
 		});
-	}, [apiKey, selectedModelId]);
+	}, [apiKey, handleRefreshCredits, selectedModelId]);
 
 	return (
 		<>
@@ -297,9 +387,22 @@ export function AiSettingsSection() {
 				title="Provider, model, and API key"
 				description="Bring your own OpenRouter key to chat with the AI assistant."
 			/>
+			<NoticeSurface
+				tone="info"
+				icon={<HatGlasses className="h-3.5 w-3.5" />}
+				className="mb-3"
+			>
+				Your key stays in this browser&rsquo;s local storage and is sent
+				directly to OpenRouter. Editor Playground never stores or proxies it.
+			</NoticeSurface>
 			<PlainGroup title="OpenRouter">
 				<ControlGroup>
-					<LabeledControlRow label="API key" controlWidth="280px">
+					<LabeledControlRow
+						label="API key"
+						controlWidth="280px"
+						className="items-start"
+						labelClassName="pt-2"
+					>
 						<div className="flex w-full flex-col gap-1.5">
 							<div className="flex w-full items-center gap-2">
 								<Input
@@ -444,6 +547,11 @@ export function AiSettingsSection() {
 							/>
 						</LabeledControlRow>
 					) : null}
+					{showFreeTierNotice ? (
+						<NoticeSurface tone="message">
+							You&rsquo;re on the free tier, which is rate-limited by OpenRouter; switch to Auto, Floor, or a paid model for higher limits.
+						</NoticeSurface>
+					) : null}
 					<LabeledControlRow
 						label={
 							<span className="flex items-center gap-1.5">
@@ -463,8 +571,28 @@ export function AiSettingsSection() {
 							aria-label="Prompt caching"
 						/>
 					</LabeledControlRow>
+					<LabeledControlRow
+						label={
+							<span className="flex items-center gap-1.5">
+								Auto approve
+								<InfoTooltip>
+									Applies validated safe drafts automatically. Deletions,
+									stale drafts, and trimmed oversized drafts still require
+									manual review.
+								</InfoTooltip>
+							</span>
+						}
+						controlWidth="280px"
+					>
+						<Switch
+							checked={autoApproveAiDrafts}
+							onCheckedChange={handleAutoApproveChange}
+							aria-label="Auto approve safe AI drafts by default"
+						/>
+					</LabeledControlRow>
 					<LabeledControlRow label="Connection" controlWidth="280px">
 						<div className="flex items-center gap-2">
+							<ConnectionCheckIcon state={connectionCheck} />
 							<Button
 								type="button"
 								variant="outline"
@@ -476,26 +604,40 @@ export function AiSettingsSection() {
 									? "Checking…"
 									: "Check connection"}
 							</Button>
-							<ConnectionCheckIcon state={connectionCheck} />
+						</div>
+					</LabeledControlRow>
+					<LabeledControlRow label="Usage" controlWidth="420px">
+						<div className="flex w-full min-w-0 items-center gap-2">
+							<div
+								className={`min-w-0 flex-1 text-right text-xs leading-5 ${getCreditsStatusClassName(
+									creditsCheck,
+								)}`}
+								aria-live="polite"
+							>
+								{getCreditsStatusText(creditsCheck)}
+							</div>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="shrink-0 gap-1.5"
+								onClick={() => void handleRefreshCredits()}
+								disabled={!canRefreshCredits}
+							>
+								{creditsCheck.status === "checking" ? (
+									<LoaderCircle
+										className="h-3.5 w-3.5 animate-spin"
+										aria-hidden="true"
+									/>
+								) : (
+									<RefreshCcw className="h-3.5 w-3.5" aria-hidden="true" />
+								)}
+								{creditsCheck.status === "checking" ? "Refreshing…" : "Refresh"}
+							</Button>
 						</div>
 					</LabeledControlRow>
 				</ControlGroup>
 				<ConnectionCheckNotice state={connectionCheck} />
-				<NoticeSurface
-					tone="info"
-					icon={<KeyRound className="h-3.5 w-3.5" />}
-					className="mt-3"
-				>
-					Your key stays in this browser&rsquo;s local storage and is sent
-					directly to OpenRouter. Editor Playground never stores or proxies it.
-				</NoticeSurface>
-				{showFreeTierNotice ? (
-					<NoticeSurface tone="info" className="mt-2">
-						You&rsquo;re on the free tier, which is rate-limited by OpenRouter.
-						For higher limits, switch to OpenRouter Auto, Floor, or a specific
-						paid model above.
-					</NoticeSurface>
-				) : null}
 			</PlainGroup>
 		</>
 	);

@@ -19,6 +19,7 @@ import type {
  */
 
 const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_CREDITS_URL = 'https://openrouter.ai/api/v1/credits';
 const CONNECTION_CHECK_MAX_TOKENS = 16;
 
 export type OpenRouterAdapterOptions = {
@@ -29,6 +30,16 @@ export type OpenRouterAdapterOptions = {
 export type OpenRouterConnectionCheckResult =
   | { ok: true; modelId: string }
   | { ok: false; modelId: string; message: string };
+
+export type OpenRouterCreditsUsage = {
+  totalCredits: number;
+  totalUsage: number;
+  remainingCredits: number;
+};
+
+export type OpenRouterCreditsResult =
+  | { ok: true; usage: OpenRouterCreditsUsage }
+  | { ok: false; message: string };
 
 /**
  * Creates a {@link ProviderAdapter} bound to a single OpenRouter API key, so
@@ -82,6 +93,57 @@ export async function checkOpenRouterConnection(
     }
     return { ok: false, modelId: model, message: describeError(caughtError) };
   }
+}
+
+export async function getOpenRouterCredits(
+  apiKey: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<OpenRouterCreditsResult> {
+  try {
+    const response = await fetch(OPENROUTER_CREDITS_URL, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      signal: options.signal,
+    });
+
+    if (!response.ok) {
+      return { ok: false, message: await describeErrorResponse(response) };
+    }
+
+    const parsed = await response.json();
+    const usage = parseOpenRouterCreditsResponse(parsed);
+    if (!usage) {
+      return { ok: false, message: 'OpenRouter returned credits data in an unexpected format.' };
+    }
+    return { ok: true, usage };
+  } catch (caughtError) {
+    if (isAbortError(caughtError)) {
+      return { ok: false, message: 'Credits check was cancelled.' };
+    }
+    return { ok: false, message: describeError(caughtError) };
+  }
+}
+
+export function parseOpenRouterCreditsResponse(parsed: unknown): OpenRouterCreditsUsage | null {
+  if (typeof parsed !== 'object' || parsed === null) {
+    return null;
+  }
+  const data = (parsed as { data?: unknown }).data;
+  if (typeof data !== 'object' || data === null) {
+    return null;
+  }
+  const totalCredits = (data as { total_credits?: unknown }).total_credits;
+  const totalUsage = (data as { total_usage?: unknown }).total_usage;
+  if (typeof totalCredits !== 'number' || typeof totalUsage !== 'number') {
+    return null;
+  }
+  return {
+    totalCredits,
+    totalUsage,
+    remainingCredits: Math.max(0, totalCredits - totalUsage),
+  };
 }
 
 async function* streamChat(

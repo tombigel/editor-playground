@@ -22,8 +22,8 @@ describe('panels/SettingsPanel e2e', () => {
     await server?.close();
   });
 
-  async function newCleanPage() {
-    const nextPage = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+  async function newCleanPage(viewport = { width: 1440, height: 1100 }) {
+    const nextPage = await browser.newPage({ viewport });
     await nextPage.addInitScript(() => {
       window.localStorage.clear();
       window.sessionStorage.clear();
@@ -75,6 +75,47 @@ describe('panels/SettingsPanel e2e', () => {
 
     await settings.waitFor({ state: 'visible' });
     expect(await settings.isVisible()).toBe(true);
+  }, 30_000);
+
+  it('keeps the compact settings nav inside the body layout at shorter viewport heights', async () => {
+    page = await newCleanPage({ width: 852, height: 700 });
+    await waitForEditorReady(page);
+    const settings = await openSettingsPanel(page);
+
+    const geometry = await settings.evaluate((dialog) => {
+      const header = dialog.querySelector('[data-ui="panel-header"]');
+      const layout = dialog.querySelector('[data-ui="settings-panel-layout"]');
+      const navRail = dialog.querySelector('[data-ui="settings-panel-nav-rail"]');
+      if (!(header instanceof HTMLElement) || !(layout instanceof HTMLElement) || !(navRail instanceof HTMLElement)) {
+        return null;
+      }
+
+      const headerBox = header.getBoundingClientRect();
+      const layoutBox = layout.getBoundingClientRect();
+      const navBox = navRail.getBoundingClientRect();
+      const layoutStyle = window.getComputedStyle(layout);
+      const navStyle = window.getComputedStyle(navRail);
+
+      return {
+        headerHeight: headerBox.height,
+        headerBottom: headerBox.bottom,
+        layoutTop: layoutBox.top,
+        layoutHeight: layoutBox.height,
+        navTop: navBox.top,
+        navHeight: navBox.height,
+        layoutHeightStyle: layoutStyle.height,
+        navOverflowY: navStyle.overflowY,
+      };
+    });
+
+    expect(geometry).not.toBeNull();
+    expect(geometry?.headerHeight).toBeGreaterThanOrEqual(56);
+    expect(geometry?.layoutHeight).toBeGreaterThanOrEqual(600);
+    expect(geometry?.layoutHeightStyle).toBe('600px');
+    expect(geometry?.navOverflowY).toBe('auto');
+    expect(geometry?.layoutTop).toBeCloseTo(geometry?.headerBottom ?? 0, 1);
+    expect(geometry?.navTop).toBeCloseTo(geometry?.layoutTop ?? 0, 1);
+    expect(geometry?.navHeight).toBeCloseTo(geometry?.layoutHeight ?? 0, 1);
   }, 30_000);
 
   it('opens inspector dropdowns in the same top-layer model without body portals', async () => {

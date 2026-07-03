@@ -220,8 +220,14 @@ export function SettingsPanel({
           className="px-5"
         />
 
-        <div className="grid h-[min(76vh,680px)] min-h-0 grid-cols-[180px_minmax(0,1fr)]">
-          <aside className="editor-bg-subtle editor-border-subtle border-r">
+        <div
+          data-ui="settings-panel-layout"
+          className="grid h-[clamp(600px,76vh,680px)] min-h-0 grid-cols-[180px_minmax(0,1fr)]"
+        >
+          <aside
+            data-ui="settings-panel-nav-rail"
+            className="editor-bg-subtle editor-border-subtle min-h-0 overflow-y-auto border-r"
+          >
             <SettingsSectionNav
               activeSection={activeSection}
               onSelect={scrollToSection}

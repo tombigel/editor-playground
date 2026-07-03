@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AiToolDefinition } from '../../../api/ai/types';
 import type { ConversationMessage, StreamEvent } from '../../types/index';
-import { checkOpenRouterConnection, createOpenRouterAdapter } from '../openRouterAdapter';
+import {
+  checkOpenRouterConnection,
+  createOpenRouterAdapter,
+  getOpenRouterCredits,
+  parseOpenRouterCreditsResponse,
+} from '../openRouterAdapter';
 
 /**
  * Builds a fake `fetch` `Response` whose body is a `ReadableStream` emitting
@@ -452,5 +457,74 @@ describe('checkOpenRouterConnection', () => {
     expect(result.message).toContain('upstream provider is currently rate-limiting this model');
     expect(result.message).toContain('439');
     expect(result.message).toContain('No endpoints available for free model');
+  });
+});
+
+describe('getOpenRouterCredits', () => {
+  it('normalizes the official credits response into used and remaining values', () => {
+    expect(
+      parseOpenRouterCreditsResponse({
+        data: {
+          total_credits: 100.5,
+          total_usage: 25.75,
+        },
+      }),
+    ).toEqual({
+      totalCredits: 100.5,
+      totalUsage: 25.75,
+      remainingCredits: 74.75,
+    });
+  });
+
+  it('requests the official OpenRouter credits endpoint with a bearer key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: () =>
+        Promise.resolve({
+          data: {
+            total_credits: 12,
+            total_usage: 4.5,
+          },
+        }),
+      text: () => Promise.resolve(''),
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await getOpenRouterCredits('management-key');
+
+    expect(result).toEqual({
+      ok: true,
+      usage: {
+        totalCredits: 12,
+        totalUsage: 4.5,
+        remainingCredits: 7.5,
+      },
+    });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://openrouter.ai/api/v1/credits');
+    expect(init.method).toBe('GET');
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer management-key' });
+  });
+
+  it('returns a non-blocking error when the key cannot read credits', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        text: () => Promise.resolve(JSON.stringify({ error: { message: 'Management key required' } })),
+      } as unknown as Response),
+    );
+
+    const result = await getOpenRouterCredits('chat-only-key');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain('403');
+      expect(result.message).toContain('Management key required');
+    }
   });
 });

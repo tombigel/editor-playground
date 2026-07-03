@@ -1,9 +1,12 @@
+import { Pencil, RotateCcw } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { PopoverTooltip } from "@/components/ui/popover";
 import { NoticeSurface } from "@/components/ui/settings-panel";
 import type { ConversationMessage } from "@/ai/types/index";
 import { CURATED_MODELS } from "@/ai/providers/curatedModels";
+import { cn, DARK_TOOLTIP_CLASS } from "@/lib/utils";
 
 /**
  * Read-only transcript renderer for the AI assistant panel (Task 9).
@@ -25,12 +28,16 @@ type AiMessageListProps = {
 	messages: ConversationMessage[];
 	streamingText: string;
 	streaming: boolean;
+	onEditPrompt?: (message: ConversationMessage) => void;
+	onRerunPrompt?: (message: ConversationMessage) => void;
 };
 
 export function AiMessageList({
 	messages,
 	streamingText,
 	streaming,
+	onEditPrompt,
+	onRerunPrompt,
 }: AiMessageListProps) {
 	const visible = messages.filter(
 		(message) => message.role !== "system" && !message.internal,
@@ -50,7 +57,12 @@ export function AiMessageList({
 	return (
 		<div className="flex flex-col gap-2.5">
 			{visible.map((message) => (
-				<AiMessageBubble key={message.id} message={message} />
+				<AiMessageBubble
+					key={message.id}
+					message={message}
+					onEditPrompt={onEditPrompt}
+					onRerunPrompt={onRerunPrompt}
+				/>
 			))}
 			{streaming ? (
 				<div
@@ -69,14 +81,66 @@ export function AiMessageList({
 	);
 }
 
-function AiMessageBubble({ message }: { message: ConversationMessage }) {
+function AiMessageBubble({
+	message,
+	onEditPrompt,
+	onRerunPrompt,
+}: {
+	message: ConversationMessage;
+	onEditPrompt?: (message: ConversationMessage) => void;
+	onRerunPrompt?: (message: ConversationMessage) => void;
+}) {
 	if (message.role === "user") {
 		return (
-			<div
-				className="max-w-[85%] self-end rounded-lg border border-[color:color-mix(in_srgb,var(--editor-accent)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] px-3 py-2 text-sm text-[color:var(--editor-utility-text-strong)]"
-				data-ai-role="user"
-			>
-				{message.content}
+			<div className="group flex max-w-[85%] flex-col items-end gap-1 self-end">
+				<div
+					className="rounded-lg border border-[color:color-mix(in_srgb,var(--editor-accent)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] px-3 py-2 text-sm text-[color:var(--editor-utility-text-strong)]"
+					data-ai-role="user"
+				>
+					{message.content}
+				</div>
+				{onEditPrompt || onRerunPrompt ? (
+					<div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+						{onEditPrompt ? (
+							<PopoverTooltip
+								content="Edit prompt"
+								side="bottom"
+								align="end"
+								className={DARK_TOOLTIP_CLASS}
+							>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									className="editor-icon-button-subtle h-7 w-7 rounded-lg border"
+									onClick={() => onEditPrompt(message)}
+									aria-label="Edit prompt"
+								>
+									<Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+								</Button>
+							</PopoverTooltip>
+						) : null}
+						{onRerunPrompt ? (
+							<PopoverTooltip
+								content="Rerun prompt"
+								side="bottom"
+								align="end"
+								className={DARK_TOOLTIP_CLASS}
+							>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									className="editor-icon-button-subtle h-7 w-7 rounded-lg border"
+									onClick={() => onRerunPrompt(message)}
+									aria-label="Rerun prompt"
+								>
+									<RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+								</Button>
+							</PopoverTooltip>
+						) : null}
+					</div>
+				) : null}
 			</div>
 		);
 	}

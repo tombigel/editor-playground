@@ -70,6 +70,10 @@ describe('panels/SettingsPanel', () => {
     expect(markup).toContain('Save JSON');
     expect(markup).toContain('Save Site ZIP');
     expect(markup).toContain('editor-scrollbar');
+    expect(markup).toContain('data-ui="settings-panel-layout"');
+    expect(markup).toContain('data-ui="settings-panel-nav-rail"');
+    expect(markup).toContain('h-[clamp(600px,76vh,680px)]');
+    expect(markup).toContain('overflow-y-auto');
     expect(markup).not.toContain('Save Site HTML');
     expect(markup).not.toContain('Save Site CSS');
     expect(markup).not.toContain('Copy Site HTML');

@@ -13,6 +13,7 @@ import {
 import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { NoticeSurface } from "@/components/ui/settings-panel";
 import { applyAiCommands } from "@/api/editorApi";
@@ -80,6 +81,39 @@ export function applyApprovedDraft(
 ): { stale: boolean } {
 	const nextState = applyAiCommands(editorState, commands);
 	return { stale: nextState === editorState };
+}
+
+export type AutoApproveDraftDecision =
+	| { action: "approve" }
+	| { action: "manual"; reason: "destructive" | "overflowed" | "empty" };
+
+export function getAutoApproveDraftDecision(
+	commands: AiDocumentCommand[],
+	options: { draftOverflowed: boolean },
+): AutoApproveDraftDecision {
+	if (commands.length === 0) {
+		return { action: "manual", reason: "empty" };
+	}
+	if (options.draftOverflowed) {
+		return { action: "manual", reason: "overflowed" };
+	}
+	if (commands.some((command) => command.type === "deleteNode")) {
+		return { action: "manual", reason: "destructive" };
+	}
+	return { action: "approve" };
+}
+
+function describeAutoApproveManualReason(
+	reason: Exclude<AutoApproveDraftDecision, { action: "approve" }>["reason"],
+): string {
+	switch (reason) {
+		case "destructive":
+			return "Auto approve paused because this draft deletes content. Review it, then approve or reject it.";
+		case "overflowed":
+			return "Auto approve paused because the draft was trimmed. Ask for a smaller edit, or review the staged proposal.";
+		case "empty":
+			return "Auto approve paused because there is no safe draft to apply. Ask for the next edit when ready.";
+	}
 }
 
 /**
@@ -561,6 +595,8 @@ function AiPanelBody({
 	const [input, setInput] = useState("");
 	const [staleError, setStaleError] = useState<string | null>(null);
 	const scrollRef = useRef<HTMLDivElement | null>(null);
+	const inputRef = useRef<HTMLTextAreaElement | null>(null);
+	const reviewedAutoDraftIdRef = useRef<string | null>(null);
 
 	const { pendingDraft, clearPendingDraft } = conversation;
 
@@ -644,12 +680,55 @@ function AiPanelBody({
 		}
 	}, [messageCount, streamingText]);
 
-	const handleSubmit = useCallback(
-		(event?: FormEvent<HTMLFormElement>) => {
-			event?.preventDefault();
-			const text = input.trim();
+	useEffect(() => {
+		if (!pendingDraft) {
+			reviewedAutoDraftIdRef.current = null;
+			return;
+		}
+		if (
+			!conversation.autoApproveAiDrafts ||
+			reviewedAutoDraftIdRef.current === pendingDraft.id
+		) {
+			return;
+		}
+
+		reviewedAutoDraftIdRef.current = pendingDraft.id;
+		const decision = getAutoApproveDraftDecision(pendingDraft.commands, {
+			draftOverflowed: conversation.draftOverflowed,
+		});
+		if (decision.action === "manual") {
+			conversation.appendMessage({
+				id: createLocalMessageId("auto-approve-paused"),
+				role: "assistant",
+				content: describeAutoApproveManualReason(decision.reason),
+				createdAt: Date.now(),
+			});
+			return;
+		}
+
+		const result = handleApproveDraft(pendingDraft.commands);
+		conversation.appendMessage({
+			id: createLocalMessageId("auto-approve"),
+			role: "assistant",
+			content:
+				result === "applied"
+					? "Auto-approved and applied the safe draft. Review the canvas, then ask for the next edit."
+					: "Auto approve paused because that proposal is out of date. Ask me to regenerate it.",
+			createdAt: Date.now(),
+		});
+	}, [
+		conversation,
+		conversation.autoApproveAiDrafts,
+		conversation.draftOverflowed,
+		handleApproveDraft,
+		pendingDraft,
+	]);
+
+	const submitPromptText = useCallback(
+		(rawText: string): boolean => {
+			const text = rawText.trim();
 			if (!text || streaming) {
-				return;
+				return false;
 			}
 
 			const route = classifyAiRequest(text, {
@@ -670,23 +749,21 @@ function AiPanelBody({
 				canRedo,
 			});
 			if (handledLocally) {
-				setInput("");
-				return;
+				return true;
 			}
 
 			if (!buildAdapter) {
-				return;
+				return false;
 			}
 
-			setInput("");
 			void sendMessage(text);
+			return true;
 		},
 		[
 			buildAdapter,
 			conversation,
 			handleApproveDraft,
 			handleRejectDraft,
-			input,
 			onOpenDocumentation,
 			onOpenShortcuts,
 			onUndo,
@@ -697,6 +774,30 @@ function AiPanelBody({
 			sendMessage,
 			streaming,
 		],
+	);
+
+	const handleSubmit = useCallback(
+		(event?: FormEvent<HTMLFormElement>) => {
+			event?.preventDefault();
+			if (submitPromptText(input)) {
+				setInput("");
+			}
+		},
+		[input, submitPromptText],
+	);
+
+	const handleEditPrompt = useCallback((message: ConversationMessage) => {
+		setInput(message.content);
+		requestAnimationFrame(() => {
+			inputRef.current?.focus();
+		});
+	}, []);
+
+	const handleRerunPrompt = useCallback(
+		(message: ConversationMessage) => {
+			void submitPromptText(message.content);
+		},
+		[submitPromptText],
 	);
 
 	const handleKeyDown = useCallback(
@@ -741,6 +842,8 @@ function AiPanelBody({
 					messages={conversation.messages}
 					streamingText={streamingText}
 					streaming={streaming}
+					onEditPrompt={handleEditPrompt}
+					onRerunPrompt={handleRerunPrompt}
 				/>
 			</div>
 			{streamError ? (
@@ -775,17 +878,28 @@ function AiPanelBody({
 			>
 				<div className="min-w-0 flex-1">
 					<Textarea
+						ref={inputRef}
 						value={input}
 						onChange={(event) => setInput(event.currentTarget.value)}
 						onKeyDown={handleKeyDown}
 						placeholder="Ask about your document…"
 						rows={2}
-						className="min-h-[2.25rem] resize-none"
+						className="max-h-36 min-h-20 resize-y"
 						aria-label="Message the AI assistant"
 						disabled={streaming}
 					/>
-					<div className="editor-text-muted mt-1 truncate text-[11px]">
-						Model: {activeModelText}
+					<div className="mt-1 flex min-w-0 items-center justify-between gap-2">
+						<div className="editor-text-muted min-w-0 truncate text-[11px]">
+							Model: {activeModelText}
+						</div>
+						<div className="editor-text-muted flex shrink-0 items-center gap-1.5 text-[11px]">
+							<span>Auto approve</span>
+							<Switch
+								checked={conversation.autoApproveAiDrafts}
+								onCheckedChange={conversation.setAutoApproveAiDrafts}
+								aria-label="Auto approve safe AI drafts"
+							/>
+						</div>
 					</div>
 				</div>
 				{streaming ? (
