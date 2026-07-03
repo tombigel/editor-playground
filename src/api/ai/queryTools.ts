@@ -1,5 +1,5 @@
 import { getNode, validateDocument, validateLinks } from '../documentApi';
-import type { DocumentModel, DocumentNode, NodeId } from '../documentApi';
+import type { ContainerSubtype, DocumentModel, DocumentNode, MediaSubtype, NodeId, TextSubtype } from '../documentApi';
 import { getHomePage } from '../pageApi';
 import { flattenTextContent } from '../textConversion';
 import type { EditorState } from '../../editor/types/index';
@@ -28,6 +28,8 @@ export type AiDocumentTreeNode = {
   visible: boolean;
   children: AiDocumentTreeNode[];
 };
+
+export type AiNodeSearchType = 'container' | 'text' | 'media' | ContainerSubtype | TextSubtype | MediaSubtype;
 
 function toTreeNode(document: DocumentModel, nodeId: NodeId): AiDocumentTreeNode | null {
   const node = document.nodes[nodeId];
@@ -74,13 +76,18 @@ export function getSelection(editorState: EditorState): { selectedId: NodeId | n
 }
 
 /**
- * Filters `document.nodes` by top-level content type.
+ * Filters `document.nodes` by top-level content type or concrete subtype.
  */
 export function searchNodesByType(
   document: DocumentModel,
-  contentType: 'container' | 'text' | 'media',
+  nodeType: AiNodeSearchType,
 ): DocumentNode[] {
-  return Object.values(document.nodes).filter((node) => node.contentType === contentType);
+  return Object.values(document.nodes).filter((node) => {
+    if (node.contentType === nodeType) {
+      return true;
+    }
+    return 'subtype' in node && node.subtype === nodeType;
+  });
 }
 
 /**

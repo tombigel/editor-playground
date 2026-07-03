@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createTextNode } from '../../../model/defaults';
+import { createInitialDocument, createMediaNode, createTextNode } from '../../../model/defaults';
 import { createTextDocumentFromText } from '../../../model/richContent';
 import type { DocumentModel } from '../../../model/types';
 import { isContainerNode } from '../../../model/types';
@@ -27,13 +27,15 @@ function createFixtureDocument(): DocumentModel {
 
   const textNode = createTextNode('block', parentContainer.id);
   textNode.content = createTextDocumentFromText(KNOWN_TEXT);
+  const imageNode = createMediaNode('image', parentContainer.id);
 
   return {
     ...document,
     nodes: {
       ...document.nodes,
-      [parentContainer.id]: { ...parentContainer, children: [...parentContainer.children, textNode.id] },
+      [parentContainer.id]: { ...parentContainer, children: [...parentContainer.children, textNode.id, imageNode.id] },
       [textNode.id]: textNode,
+      [imageNode.id]: imageNode,
     },
   };
 }
@@ -118,19 +120,25 @@ describe('api/ai/queryTools', () => {
     expect(editorState).toEqual(before);
   });
 
-  it('searchNodesByType: filters document.nodes by contentType without mutating the document', () => {
+  it('searchNodesByType: filters document.nodes by contentType or subtype without mutating the document', () => {
     const document = createFixtureDocument();
     const before = structuredClone(document);
 
     const containers = searchNodesByType(document, 'container');
     const textNodes = searchNodesByType(document, 'text');
     const mediaNodes = searchNodesByType(document, 'media');
+    const imageNodes = searchNodesByType(document, 'image');
+    const blockNodes = searchNodesByType(document, 'block');
 
     expect(containers.every((node) => node.contentType === 'container')).toBe(true);
     expect(textNodes.every((node) => node.contentType === 'text')).toBe(true);
     expect(mediaNodes.every((node) => node.contentType === 'media')).toBe(true);
+    expect(imageNodes.every((node) => node.contentType === 'media' && node.subtype === 'image')).toBe(true);
+    expect(blockNodes.every((node) => node.contentType === 'text' && node.subtype === 'block')).toBe(true);
     expect(containers.length).toBeGreaterThan(0);
     expect(textNodes.length).toBeGreaterThan(0);
+    expect(imageNodes.length).toBeGreaterThan(0);
+    expect(blockNodes.length).toBeGreaterThan(0);
     expect(document).toEqual(before);
   });
 

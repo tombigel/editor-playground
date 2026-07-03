@@ -7,6 +7,7 @@ import {
   getValidationErrors,
   searchNodesByText,
   searchNodesByType,
+  type AiNodeSearchType,
 } from '../api/ai/queryTools';
 import { validateAiCommand } from '../api/ai/validation';
 import type { AiDocumentCommand } from '../api/ai/types';
@@ -78,6 +79,28 @@ function isBoolean(value: unknown): value is boolean {
   return typeof value === 'boolean';
 }
 
+const AI_NODE_SEARCH_TYPES = [
+  'container',
+  'text',
+  'media',
+  'section',
+  'header',
+  'footer',
+  'group',
+  'block',
+  'rich',
+  'code',
+  'list',
+  'image',
+  'video',
+  'svg',
+  'embed',
+] as const satisfies readonly AiNodeSearchType[];
+
+function isAiNodeSearchType(value: unknown): value is AiNodeSearchType {
+  return isString(value) && AI_NODE_SEARCH_TYPES.includes(value as AiNodeSearchType);
+}
+
 /**
  * Executes one of the 8 read-only query tools immediately. Returns `null` if
  * `call.name` does not match a query tool name, so the caller can fall
@@ -104,8 +127,8 @@ function routeQueryTool(
       return queryOk(call, getSelection(editorState));
 
     case 'searchNodesByType': {
-      if (!isString(args.nodeType) || (args.nodeType !== 'container' && args.nodeType !== 'text' && args.nodeType !== 'media')) {
-        return rejected(call, 'searchNodesByType requires a "nodeType" argument of "container", "text", or "media"');
+      if (!isAiNodeSearchType(args.nodeType)) {
+        return rejected(call, `searchNodesByType requires a "nodeType" argument of ${AI_NODE_SEARCH_TYPES.join(', ')}`);
       }
       return queryOk(call, searchNodesByType(document, args.nodeType));
     }

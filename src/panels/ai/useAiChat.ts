@@ -53,8 +53,14 @@ function createSystemPromptMessage(): ConversationMessage {
 export function buildAssistantRequestHistory(
 	priorMessages: ConversationMessage[],
 	userMessage: ConversationMessage,
+	options: { contextMessages?: ConversationMessage[] } = {},
 ): ConversationMessage[] {
-	return [createSystemPromptMessage(), ...priorMessages, userMessage];
+	return [
+		createSystemPromptMessage(),
+		...priorMessages,
+		...(options.contextMessages ?? []),
+		userMessage,
+	];
 }
 
 type UseAiChatOptions = {
@@ -65,6 +71,7 @@ type UseAiChatOptions = {
 	modelSelection: string;
 	document: DocumentModel;
 	editorState: EditorState;
+	buildContextMessages?: (userText: string) => ConversationMessage[];
 };
 
 export type AssistantTurnHandlers = {
@@ -220,6 +227,7 @@ export function useAiChat({
 	modelSelection,
 	document,
 	editorState,
+	buildContextMessages,
 }: UseAiChatOptions): UseAiChatResult {
 	const [streaming, setStreaming] = useState(false);
 	const [streamingText, setStreamingText] = useState("");
@@ -253,6 +261,7 @@ export function useAiChat({
 			const requestHistory = buildAssistantRequestHistory(
 				conversation.messages,
 				userMessage,
+				{ contextMessages: buildContextMessages?.(trimmed) ?? [] },
 			);
 
 			const controller = new AbortController();
@@ -327,7 +336,7 @@ export function useAiChat({
 				conversation.recordToolResult(result);
 			}
 		},
-		[buildAdapter, conversation, document, editorState, modelSelection, streaming],
+		[buildAdapter, buildContextMessages, conversation, document, editorState, modelSelection, streaming],
 	);
 
 	return { streaming, streamingText, streamError, sendMessage, cancel };

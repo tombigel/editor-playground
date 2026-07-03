@@ -84,6 +84,45 @@ function buildToolCallSseBody(nodeId: string, visible: boolean): string {
   return `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join('')}data: [DONE]\n\n`;
 }
 
+function buildSetRectSseBody(nodeId: string, field: 'x' | 'y' | 'width' | 'height', value: string): string {
+  const args = JSON.stringify({ nodeId, field, value });
+  const argsHead = args.slice(0, Math.ceil(args.length / 2));
+  const argsTail = args.slice(argsHead.length);
+
+  const chunks = [
+    { choices: [{ index: 0, delta: { role: 'assistant', content: '' } }] },
+    { choices: [{ index: 0, delta: { content: "I'll propose that move." } }] },
+    {
+      choices: [
+        {
+          index: 0,
+          delta: {
+            tool_calls: [
+              {
+                index: 0,
+                id: 'call_move_1',
+                type: 'function',
+                function: { name: 'setRect', arguments: argsHead },
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      choices: [
+        {
+          index: 0,
+          delta: { tool_calls: [{ index: 0, function: { arguments: argsTail } }] },
+        },
+      ],
+    },
+    { choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] },
+  ];
+
+  return `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join('')}data: [DONE]\n\n`;
+}
+
 function buildTextSseBody(text: string, model?: string): string {
   return `data: ${JSON.stringify({ model, choices: [{ index: 0, delta: { content: text } }] })}\n\ndata: [DONE]\n\n`;
 }
@@ -348,6 +387,44 @@ describe('ai assistant draft/approve/undo e2e', () => {
 
     expect(requestBodies).toHaveLength(1);
     expect(requestBodies[0]?.model).toBe(OPENROUTER_AUTO_MODEL_ID);
+  }, 45_000);
+
+  it('sends direct-operation prompts with selected-node context and stages a move draft in one turn', async () => {
+    const aiPage = await newAiPage();
+    const { nodeId } = await readTargetNode(aiPage);
+    const targetNode = aiPage.locator(`.stage-canvas .stage-leaf[data-node-id="${nodeId}"]`).first();
+    await targetNode.click();
+
+    const requestBodies: Array<Record<string, unknown>> = [];
+    await aiPage.route('**/openrouter.ai/api/v1/chat/completions', async (route: Route) => {
+      requestBodies.push(route.request().postDataJSON() as Record<string, unknown>);
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: buildSetRectSseBody(nodeId, 'x', '493px'),
+      });
+    });
+
+    await enterFakeApiKey(aiPage);
+    await openAiPanel(aiPage);
+    await sendMessage(aiPage, 'move selection 20px to the right');
+
+    const draftCard = aiPage.locator('[data-ui="ai-draft-diff-card"]');
+    await draftCard.waitFor({ state: 'visible' });
+    expect(await draftCard.textContent()).toContain('Set x');
+    expect(await draftCard.textContent()).toContain('493px');
+
+    expect(requestBodies).toHaveLength(1);
+    const messages = requestBodies[0]?.messages as Array<{ role: string; content: unknown }>;
+    const contextMessage = messages.find(
+      (message) =>
+        message.role === 'system' &&
+        typeof message.content === 'string' &&
+        message.content.includes('direct editor operation'),
+    );
+    expect(contextMessage?.content).toContain(nodeId);
+    expect(contextMessage?.content).toContain('call the appropriate mutation tool now');
+    expect(contextMessage?.content).toContain('"selectedIds"');
   }, 45_000);
 
   it('proposes a mutation as a draft, applies it on Approve as one undoable step, and reverts in a single Undo', async () => {

@@ -35,7 +35,15 @@ import {
 import type { ProviderAdapter } from "@/ai/types/index";
 import type { ConversationMessage } from "@/ai/types/index";
 import {
+	buildDirectOperationContextMessage,
+	classifyAiRequest,
+	type AiHelpTarget,
+	type AiHistoryControlAction,
+	type AiRequestRoute,
+} from "@/ai/requestRouting";
+import {
 	AiConversationProvider,
+	type AiConversationApi,
 	useAiConversation,
 } from "@/ai/conversationStore";
 import { EditorPanelHeader } from "./EditorPanelHeader";
@@ -82,6 +90,12 @@ export function applyApprovedDraft(
  */
 export const AI_PROVIDER_KEY_STORAGE_KEY = "editor-playground.ai-provider-key.v1";
 
+const HELP_ENTRY_BY_TARGET: Record<Exclude<AiHelpTarget, "shortcuts">, string> = {
+	gettingStarted: "doc:docs/GETTING_STARTED.md",
+	aiApi: "doc:docs/API_AI.md",
+	api: "doc:docs/API.md",
+};
+
 function readStoredApiKey(): string | null {
 	if (typeof window === "undefined") {
 		return null;
@@ -92,6 +106,152 @@ function readStoredApiKey(): string | null {
 	} catch {
 		return null;
 	}
+}
+
+function createLocalMessageId(prefix: string): string {
+	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+		return `${prefix}:${crypto.randomUUID()}`;
+	}
+	return `${prefix}:${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}
+
+function appendLocalExchange(
+	conversation: AiConversationApi,
+	userText: string,
+	assistantText: string,
+) {
+	const createdAt = Date.now();
+	conversation.appendMessage({
+		id: createLocalMessageId("local-user"),
+		role: "user",
+		content: userText,
+		createdAt,
+	});
+	conversation.appendMessage({
+		id: createLocalMessageId("local-assistant"),
+		role: "assistant",
+		content: assistantText,
+		createdAt: createdAt + 1,
+	});
+}
+
+function createLocalAssistantContextMessage(
+	document: DocumentModel,
+	editorState: EditorState,
+	route: Extract<AiRequestRoute, { kind: "directOperation" }>,
+): ConversationMessage {
+	return {
+		id: createLocalMessageId("system-direct-operation"),
+		role: "system",
+		content: buildDirectOperationContextMessage(document, editorState, route),
+		createdAt: Date.now(),
+	};
+}
+
+function describeHelpTarget(target: AiHelpTarget): string {
+	switch (target) {
+		case "shortcuts":
+			return "Opened keyboard shortcuts.";
+		case "aiApi":
+			return "Opened the AI command reference.";
+		case "api":
+			return "Opened the API documentation.";
+		case "gettingStarted":
+			return "Opened Getting Started in Help.";
+	}
+}
+
+function handleHelpRoute(
+	target: AiHelpTarget,
+	callbacks: {
+		onOpenDocumentation?: (entryId: string) => void;
+		onOpenShortcuts?: () => void;
+	},
+) {
+	if (target === "shortcuts") {
+		callbacks.onOpenShortcuts?.();
+		return;
+	}
+	callbacks.onOpenDocumentation?.(HELP_ENTRY_BY_TARGET[target]);
+}
+
+function describeHistoryAction(action: AiHistoryControlAction, available: boolean): string {
+	if (!available) {
+		return action === "undo" ? "There is nothing to undo." : "There is nothing to redo.";
+	}
+	return action === "undo" ? "Undid the last change." : "Redid the last undone change.";
+}
+
+export function handleLocalAiRoute({
+	conversation,
+	route,
+	text,
+	pendingDraft,
+	onApproveDraft,
+	onRejectDraft,
+	onOpenDocumentation,
+	onOpenShortcuts,
+	onUndo,
+	onRedo,
+	canUndo = false,
+	canRedo = false,
+}: {
+	conversation: AiConversationApi;
+	route: AiRequestRoute;
+	text: string;
+	pendingDraft: AiConversationApi["pendingDraft"];
+	onApproveDraft: (commands: AiDocumentCommand[]) => "applied" | "stale";
+	onRejectDraft: () => void;
+	onOpenDocumentation?: (entryId: string) => void;
+	onOpenShortcuts?: () => void;
+	onUndo?: () => void;
+	onRedo?: () => void;
+	canUndo?: boolean;
+	canRedo?: boolean;
+}): boolean {
+	if (route.kind === "helpRequest") {
+		handleHelpRoute(route.target, { onOpenDocumentation, onOpenShortcuts });
+		appendLocalExchange(conversation, text, describeHelpTarget(route.target));
+		return true;
+	}
+
+	if (route.kind === "historyControl") {
+		if (route.action === "undo") {
+			const available = canUndo && onUndo != null;
+			if (available) {
+				onUndo();
+			}
+			appendLocalExchange(conversation, text, describeHistoryAction(route.action, available));
+			return true;
+		}
+
+		const available = canRedo && onRedo != null;
+		if (available) {
+			onRedo();
+		}
+		appendLocalExchange(conversation, text, describeHistoryAction(route.action, available));
+		return true;
+	}
+
+	if (route.kind !== "draftControl" || !pendingDraft) {
+		return false;
+	}
+
+	if (route.action === "reject") {
+		onRejectDraft();
+		appendLocalExchange(conversation, text, "Rejected the pending draft.");
+		return true;
+	}
+
+	const result = onApproveDraft(pendingDraft.commands);
+	appendLocalExchange(
+		conversation,
+		text,
+		result === "applied"
+			? "Approved and applied the pending draft."
+			: "That proposal is out of date and cannot be applied. Ask me to try again.",
+	);
+	return true;
 }
 
 const PANEL_VIEWPORT_MARGIN_PX = 16;
@@ -114,6 +274,12 @@ export type AiPanelProps = {
 	onOpenChange: (open: boolean) => void;
 	onClose: () => void;
 	onOpenSettings?: () => void;
+	onOpenDocumentation?: (entryId: string) => void;
+	onOpenShortcuts?: () => void;
+	onUndo?: () => void;
+	onRedo?: () => void;
+	canUndo?: boolean;
+	canRedo?: boolean;
 	/**
 	 * Commits an approved AI draft as a single, history-tracked editor action.
 	 * Wired by the app shell to `dispatch({ type: 'applyAiCommands', commands })`
@@ -140,6 +306,12 @@ export function AiPanel({
 	onOpenChange,
 	onClose,
 	onOpenSettings,
+	onOpenDocumentation,
+	onOpenShortcuts,
+	onUndo,
+	onRedo,
+	canUndo,
+	canRedo,
 	onApplyAiCommands,
 	adapterOverride,
 }: AiPanelProps) {
@@ -268,6 +440,12 @@ export function AiPanel({
 					document={document}
 					editorState={editorState}
 					onOpenSettings={onOpenSettings}
+					onOpenDocumentation={onOpenDocumentation}
+					onOpenShortcuts={onOpenShortcuts}
+					onUndo={onUndo}
+					onRedo={onRedo}
+					canUndo={canUndo}
+					canRedo={canRedo}
 					onApplyAiCommands={onApplyAiCommands}
 					adapterOverride={adapterOverride}
 				/>
@@ -280,6 +458,12 @@ type AiPanelBodyProps = {
 	document: DocumentModel;
 	editorState: EditorState;
 	onOpenSettings?: () => void;
+	onOpenDocumentation?: (entryId: string) => void;
+	onOpenShortcuts?: () => void;
+	onUndo?: () => void;
+	onRedo?: () => void;
+	canUndo?: boolean;
+	canRedo?: boolean;
 	onApplyAiCommands?: (commands: AiDocumentCommand[]) => void;
 	adapterOverride?: ProviderAdapter;
 };
@@ -288,6 +472,12 @@ function AiPanelBody({
 	document,
 	editorState,
 	onOpenSettings,
+	onOpenDocumentation,
+	onOpenShortcuts,
+	onUndo,
+	onRedo,
+	canUndo,
+	canRedo,
 	onApplyAiCommands,
 	adapterOverride,
 }: AiPanelBodyProps) {
@@ -299,14 +489,14 @@ function AiPanelBody({
 	const { pendingDraft, clearPendingDraft } = conversation;
 
 	const handleApproveDraft = useCallback(
-		(commands: AiDocumentCommand[]) => {
+		(commands: AiDocumentCommand[]): "applied" | "stale" => {
 			// Delegates to `applyApprovedDraft` — the single UI-layer call site of
 			// `editorApi.applyAiCommands` — to detect a stale draft. A stale batch
 			// must NOT be silently cleared; surface it and keep the draft.
 			const { stale } = applyApprovedDraft(editorState, commands);
 			if (stale) {
 				setStaleError(STALE_DRAFT_MESSAGE);
-				return;
+				return "stale";
 			}
 
 			// Not stale: commit through the app-shell dispatch so the batch lands
@@ -314,6 +504,7 @@ function AiPanelBody({
 			setStaleError(null);
 			onApplyAiCommands?.(commands);
 			clearPendingDraft();
+			return "applied";
 		},
 		[clearPendingDraft, editorState, onApplyAiCommands],
 	);
@@ -346,8 +537,26 @@ function AiPanelBody({
 			});
 	}, [adapterOverride, conversation.promptCachingEnabled, storedKey]);
 
+	const buildContextMessages = useCallback(
+		(userText: string) => {
+			const route = classifyAiRequest(userText, { hasPendingDraft: false });
+			if (route.kind !== "directOperation") {
+				return [];
+			}
+			return [createLocalAssistantContextMessage(document, editorState, route)];
+		},
+		[document, editorState],
+	);
+
 	const { streaming, streamingText, streamError, sendMessage, cancel } =
-		useAiChat({ conversation, buildAdapter, modelSelection, document, editorState });
+		useAiChat({
+			conversation,
+			buildAdapter,
+			modelSelection,
+			document,
+			editorState,
+			buildContextMessages,
+		});
 
 	const messageCount = conversation.messages.length;
 
@@ -362,14 +571,56 @@ function AiPanelBody({
 	const handleSubmit = useCallback(
 		(event?: FormEvent<HTMLFormElement>) => {
 			event?.preventDefault();
-			if (!input.trim() || streaming || !buildAdapter) {
+			const text = input.trim();
+			if (!text || streaming) {
 				return;
 			}
-			const text = input;
+
+			const route = classifyAiRequest(text, {
+				hasPendingDraft: pendingDraft !== null,
+			});
+			const handledLocally = handleLocalAiRoute({
+				conversation,
+				route,
+				text,
+				pendingDraft,
+				onApproveDraft: handleApproveDraft,
+				onRejectDraft: handleRejectDraft,
+				onOpenDocumentation,
+				onOpenShortcuts,
+				onUndo,
+				onRedo,
+				canUndo,
+				canRedo,
+			});
+			if (handledLocally) {
+				setInput("");
+				return;
+			}
+
+			if (!buildAdapter) {
+				return;
+			}
+
 			setInput("");
 			void sendMessage(text);
 		},
-		[buildAdapter, input, sendMessage, streaming],
+		[
+			buildAdapter,
+			conversation,
+			handleApproveDraft,
+			handleRejectDraft,
+			input,
+			onOpenDocumentation,
+			onOpenShortcuts,
+			onUndo,
+			onRedo,
+			canUndo,
+			canRedo,
+			pendingDraft,
+			sendMessage,
+			streaming,
+		],
 	);
 
 	const handleKeyDown = useCallback(

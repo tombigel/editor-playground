@@ -1,14 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createInitialState } from "../../editor/editorPersistenceState";
 import { routeToolCall } from "../../ai/toolRouter";
+import type { AiConversationApi } from "../../ai/conversationStore";
 import type {
 	ConversationMessage,
 	ProviderAdapter,
 	StreamEvent,
 	ToolCall,
 } from "../../ai/types/index";
-import { AiPanel } from "../AiPanel";
+import { AiPanel, handleLocalAiRoute } from "../AiPanel";
 import {
 	buildAssistantRequestHistory,
 	isRetryableStreamError,
@@ -45,6 +46,25 @@ function makePanelProps() {
 		onOpenChange: NO_OP,
 		onClose: NO_OP,
 		onOpenSettings: NO_OP,
+	};
+}
+
+function createConversationStub(overrides: Partial<AiConversationApi> = {}): AiConversationApi {
+	const messages: ConversationMessage[] = [];
+	return {
+		messages,
+		pendingDraft: null,
+		selectedModelId: null,
+		promptCachingEnabled: false,
+		draftOverflowed: false,
+		appendMessage: (message) => {
+			messages.push(message);
+		},
+		recordToolResult: NO_OP,
+		clearPendingDraft: NO_OP,
+		setSelectedModelId: NO_OP,
+		setPromptCachingEnabled: NO_OP,
+		...overrides,
 	};
 }
 
@@ -125,6 +145,140 @@ describe("panels/AiPanel", () => {
 			createdAt: 0,
 		});
 		expect(history.slice(1)).toEqual([...prior, userMessage]);
+	});
+
+	it("builds request history with app-provided direct-operation context before the user message", () => {
+		const prior: ConversationMessage[] = [
+			{ id: "m1", role: "assistant", content: "Earlier answer", createdAt: 1 },
+		];
+		const contextMessage: ConversationMessage = {
+			id: "ctx",
+			role: "system",
+			content: "Direct operation context",
+			createdAt: 2,
+		};
+		const userMessage: ConversationMessage = {
+			id: "m2",
+			role: "user",
+			content: "move selection 20px right",
+			createdAt: 3,
+		};
+
+		const history = buildAssistantRequestHistory(prior, userMessage, {
+			contextMessages: [contextMessage],
+		});
+
+		expect(history.map((message) => message.id)).toEqual([
+			"system:editor-playground-ai",
+			"m1",
+			"ctx",
+			"m2",
+		]);
+		expect(history[2].content).toBe("Direct operation context");
+	});
+
+	it("handles help routes locally by opening existing help targets and recording a transcript", () => {
+		const conversation = createConversationStub();
+		const openDocumentation = vi.fn();
+		const openShortcuts = vi.fn();
+
+		const handled = handleLocalAiRoute({
+			conversation,
+			route: { kind: "helpRequest", target: "aiApi" },
+			text: "help with AI tools",
+			pendingDraft: null,
+			onApproveDraft: () => "applied",
+			onRejectDraft: NO_OP,
+			onOpenDocumentation: openDocumentation,
+			onOpenShortcuts: openShortcuts,
+		});
+
+		expect(handled).toBe(true);
+		expect(openDocumentation).toHaveBeenCalledWith("doc:docs/API_AI.md");
+		expect(openShortcuts).not.toHaveBeenCalled();
+		expect(conversation.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
+		expect(conversation.messages.at(-1)?.content).toContain("AI command reference");
+	});
+
+	it("handles draft-control routes locally without calling the model", () => {
+		const command = { type: "setNodeVisibility", nodeId: "node-1", visible: false } as const;
+		const conversation = createConversationStub({
+			pendingDraft: { id: "draft-1", commands: [command] },
+		});
+		const approve = vi.fn(() => "applied" as const);
+		const reject = vi.fn();
+
+		const handled = handleLocalAiRoute({
+			conversation,
+			route: { kind: "draftControl", action: "approve" },
+			text: "make the change",
+			pendingDraft: conversation.pendingDraft,
+			onApproveDraft: approve,
+			onRejectDraft: reject,
+		});
+
+		expect(handled).toBe(true);
+		expect(approve).toHaveBeenCalledWith([command]);
+		expect(reject).not.toHaveBeenCalled();
+		expect(conversation.messages.at(-1)?.content).toContain("Approved and applied");
+	});
+
+	it("handles undo and redo routes locally through app history callbacks", () => {
+		const conversation = createConversationStub();
+		const undo = vi.fn();
+		const redo = vi.fn();
+
+		const undoHandled = handleLocalAiRoute({
+			conversation,
+			route: { kind: "historyControl", action: "undo" },
+			text: "undo",
+			pendingDraft: null,
+			onApproveDraft: () => "applied",
+			onRejectDraft: NO_OP,
+			onUndo: undo,
+			onRedo: redo,
+			canUndo: true,
+			canRedo: true,
+		});
+		const redoHandled = handleLocalAiRoute({
+			conversation,
+			route: { kind: "historyControl", action: "redo" },
+			text: "undo the undo",
+			pendingDraft: null,
+			onApproveDraft: () => "applied",
+			onRejectDraft: NO_OP,
+			onUndo: undo,
+			onRedo: redo,
+			canUndo: true,
+			canRedo: true,
+		});
+
+		expect(undoHandled).toBe(true);
+		expect(redoHandled).toBe(true);
+		expect(undo).toHaveBeenCalledTimes(1);
+		expect(redo).toHaveBeenCalledTimes(1);
+		expect(conversation.messages.at(-3)?.content).toContain("Undid the last change");
+		expect(conversation.messages.at(-1)?.content).toContain("Redid the last undone change");
+	});
+
+	it("does not call history callbacks when the requested stack is empty", () => {
+		const conversation = createConversationStub();
+		const undo = vi.fn();
+
+		const handled = handleLocalAiRoute({
+			conversation,
+			route: { kind: "historyControl", action: "undo" },
+			text: "revert",
+			pendingDraft: null,
+			onApproveDraft: () => "applied",
+			onRejectDraft: NO_OP,
+			onUndo: undo,
+			canUndo: false,
+		});
+
+		expect(handled).toBe(true);
+		expect(undo).not.toHaveBeenCalled();
+		expect(conversation.messages.at(-1)?.content).toContain("nothing to undo");
 	});
 
 	it("routes a query tool-call from the stream into a query result", async () => {

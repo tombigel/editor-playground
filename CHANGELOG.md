@@ -29,6 +29,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - restructure curated models into 3 data-driven cost/value tiers
 - add structured model pricing and automatic sentinels
 - clarify OpenRouter routing and model status
+- route assistant control requests locally
 
 ### Changed
 

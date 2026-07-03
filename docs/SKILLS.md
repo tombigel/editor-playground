@@ -35,6 +35,22 @@ Audits editor UI for hardcoded colors bypassing the CSS token system, duplicated
 
 **Run:** after touching editor UI, before releases, or as part of `/maintenance`
 
+### `/ai-harness-audit` — AI Rules/API/Harness Alignment
+
+Audits AI-facing changes across prompts, request routing, tool manifests, tool routers, provider adapters, draft approval, docs, tests, and security boundaries.
+
+**What it catches:**
+
+- Prompt/tool/router/API drift
+- AI mutation paths that bypass draft approval or apply-time validation
+- Local help/draft-control routes that accidentally call the model
+- Missing docs/tests for changed AI behavior
+- Provider/tool-loop risks such as malformed tool schemas or silent guardrail drops
+
+**Source of truth:** `docs/API_AI.md`, `docs/PLAYGROUND_SPEC.md`, `src/ai/`, and `src/api/ai/`
+
+**Run:** after changing AI rules, commands, APIs, provider adapters, request routing, or draft/apply behavior
+
 ### `/doc-triage` — Document Freshness
 
 Audits planning documents for staleness, completed phases that should be archived, roadmap status drift, and orphaned references.

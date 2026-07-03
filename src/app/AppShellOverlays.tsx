@@ -372,6 +372,15 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onPositionChange={onAiPositionChange}
 						onClose={onCloseAi}
 						onOpenSettings={onOpenAiSettings}
+						onOpenDocumentation={(entryId) => {
+							setHelpEntryTarget(entryId);
+							onHelpOpenChange(true);
+						}}
+						onOpenShortcuts={() => onShortcutsOpenChange?.(true)}
+						onUndo={() => dispatch({ type: "undo" })}
+						onRedo={() => dispatch({ type: "redo" })}
+						canUndo={historyState.past.length > 0}
+						canRedo={historyState.future.length > 0}
 						onApplyAiCommands={(commands) =>
 							dispatch({ type: "applyAiCommands", commands })
 						}

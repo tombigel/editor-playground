@@ -16,6 +16,17 @@ The AI layer never mutates a document directly. The flow is:
 
 This mirrors the `documentApi` -> `editorApi` layering used everywhere else in the codebase: `src/api/ai/commands.ts` is the pure model layer (`applyAiDocumentCommands`), and `editorApi.applyAiCommands` is the thin selection/history wrapper the eventual editor UI calls.
 
+### Request routing and command-aware context
+
+Before a user message is sent to a model, the AI panel runs a shallow request router (`src/ai/requestRouting.ts`). This is not a full natural-language parser. It detects only high-confidence local routes:
+
+- draft controls such as `approve`, `make the change`, `reject`, or `cancel` when a pending draft exists
+- history controls such as `undo`, `revert`, `cancel last change`, `redo`, `reapply`, or `undo the undo`
+- help requests such as `help`, `how do I`, `show shortcuts`, or `docs`
+- likely direct editor operations containing words such as `move`, `nudge`, `delete`, `hide`, `show`, `rename`, `resize`, `set`, or `change`
+
+Draft-control, history-control, and help routes are handled locally by the app: draft approval/rejection uses the same approve/reject path as the draft card, undo/redo dispatches the editor's existing history actions when the corresponding stack is available, and help requests open the existing Help or Shortcuts surfaces. Redo is intentionally narrower than undo: explicit `redo` / `reapply` wording or phrases such as `undo the undo` redo, while `undo`, `revert`, and `cancel last change` undo. Direct-operation routes still go to the selected model, but the request history is enriched with current selection context, selected node summaries, rect values, visibility, and text previews. The system prompt tells the model to draft an available mutation tool call immediately when the target/action/value are clear, and to ask one concise clarification when they are fuzzy.
+
 ## Query Tools
 
 Source: `src/api/ai/queryTools.ts`
@@ -27,13 +38,15 @@ All read-only. None of these return a full `DocumentModel`, and none mutate thei
 | `getDocumentTree` | Returns a lightweight, nested tree projection of the whole document (ids, content types, subtypes, names, visibility, parent/child structure) starting at `document.rootId`. Omits style/rect/content payloads by design. | `document.nodes` traversal from `rootId` |
 | `getNodeById` | Returns the full node data for a single node id, or `undefined` if missing. | `getNode` (`model/selectors`) |
 | `getSelection` | Returns the current editor selection (`selectedId`, `selectedIds`). | `EditorState.selectedId` / `selectedIds` |
-| `searchNodesByType` | Finds all nodes matching a top-level content type (`container` \| `text` \| `media`). | `document.nodes` filter |
+| `searchNodesByType` | Finds all nodes matching a top-level content type (`container` \| `text` \| `media`) or concrete subtype (`section`, `image`, `block`, etc.). | `document.nodes` filter |
 | `searchNodesByText` | Finds text nodes whose flattened text content includes a query string (case-insensitive). | `flattenTextContent` (`textConversion.ts`) |
 | `getPageList` | Returns the list of pages in the site. | `document.pages` |
 | `getActivePage` | Resolves the currently active page from `editorState.activePageId`, falling back to the home page. | `getHomePage` (`pageApi.ts`) |
 | `getValidationErrors` | Returns a flat list of human-readable document + link validation errors. | `validateDocument`, `validateLinks` (`model/validation`) |
 
 `AiDocumentTreeNode` is the return shape of `getDocumentTree`: `{ id, contentType, subtype, name, visible, children }`, recursively nested.
+
+`AiNodeSearchType` is the accepted `nodeType` vocabulary for `searchNodesByType`: top-level content types (`container`, `text`, `media`) plus concrete subtypes (`section`, `header`, `footer`, `group`, `block`, `rich`, `code`, `list`, `image`, `video`, `svg`, `embed`).
 
 ## Mutation Commands
 

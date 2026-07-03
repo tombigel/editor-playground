@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialDocument, createTextNode } from '../../model/defaults';
+import { createInitialDocument, createMediaNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentFromText } from '../../model/richContent';
 import type { DocumentModel } from '../../model/types';
 import { isContainerNode } from '../../model/types';
@@ -18,13 +18,15 @@ function createFixtureDocument(): DocumentModel {
 
   const textNode = createTextNode('block', parentContainer.id);
   textNode.content = createTextDocumentFromText(KNOWN_TEXT);
+  const imageNode = createMediaNode('image', parentContainer.id);
 
   return {
     ...document,
     nodes: {
       ...document.nodes,
-      [parentContainer.id]: { ...parentContainer, children: [...parentContainer.children, textNode.id] },
+      [parentContainer.id]: { ...parentContainer, children: [...parentContainer.children, textNode.id, imageNode.id] },
       [textNode.id]: textNode,
+      [imageNode.id]: imageNode,
     },
   };
 }
@@ -102,6 +104,7 @@ describe('ai/toolRouter routeToolCall', () => {
       makeCall('getValidationErrors'),
       makeCall('getNodeById', { nodeId: document.rootId }),
       makeCall('searchNodesByType', { nodeType: 'text' }),
+      makeCall('searchNodesByType', { nodeType: 'image' }),
     ];
 
     for (const call of calls) {
@@ -111,6 +114,25 @@ describe('ai/toolRouter routeToolCall', () => {
       expect(result.toolCallId).toBe(call.id);
     }
 
+    expect(document).toEqual(documentBefore);
+  });
+
+  it('routes searchNodesByType for concrete node subtypes such as image', () => {
+    const document = createFixtureDocument();
+    const editorState = createFixtureEditorState(document);
+    const documentBefore = structuredClone(document);
+
+    const result = routeToolCall(makeCall('searchNodesByType', { nodeType: 'image' }), { document, editorState });
+
+    expect(result.kind).toBe('query');
+    expect(result.error).toBeUndefined();
+    expect(Array.isArray(result.queryData)).toBe(true);
+    expect((result.queryData as unknown[]).length).toBeGreaterThan(0);
+    expect(
+      (result.queryData as Array<{ contentType: string; subtype?: string }>).every(
+        (node) => node.contentType === 'media' && node.subtype === 'image',
+      ),
+    ).toBe(true);
     expect(document).toEqual(documentBefore);
   });
 
