@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - added link to tombigel.com
 - scaffold AI command types and tool manifest
 - add AI read-only document query tools
+- add AI mutation command batch apply and validation
 
 ### Changed
 
