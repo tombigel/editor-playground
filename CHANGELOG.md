@@ -31,6 +31,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - document AI command layer and draft/apply flow
 - regenerate help docs manifest for AI command layer page
 
+### Fixed
+
+- update curated OpenRouter models to current generation
+
 ---
 
 ## [0.11.0] — 2026-06-23
