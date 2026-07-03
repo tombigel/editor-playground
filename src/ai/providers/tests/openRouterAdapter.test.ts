@@ -121,6 +121,33 @@ describe('createOpenRouterAdapter / streamChat', () => {
     ]);
   });
 
+  it('applies cache_control only to the first system message when multiple system messages exist', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeSseResponse(['data: [DONE]\n\n']));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const messagesWithContextSystem: ConversationMessage[] = [
+      { id: 's1', role: 'system', content: 'base system prompt', createdAt: 0 },
+      { id: 'm1', role: 'user', content: 'hello', createdAt: 1 },
+      { id: 's2', role: 'system', content: 'direct-operation context', createdAt: 2 },
+    ];
+
+    const adapter = createOpenRouterAdapter('test-key', 'anthropic/claude-sonnet-5', {
+      cacheSystemPrompt: true,
+    });
+    await collectEvents(adapter.streamChat(messagesWithContextSystem, []));
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.messages[0].content).toEqual([
+      {
+        type: 'text',
+        text: 'base system prompt',
+        cache_control: { type: 'ephemeral' },
+      },
+    ]);
+    expect(body.messages[2].content).toBe('direct-operation context');
+  });
+
   it('passes Auto Router cost tradeoff options through the streaming request body', async () => {
     const fetchMock = vi.fn().mockResolvedValue(makeSseResponse(['data: [DONE]\n\n']));
     vi.stubGlobal('fetch', fetchMock);

@@ -103,7 +103,7 @@ async function* streamChat(
       body: JSON.stringify({
         model,
         stream: true,
-        messages: messages.map((message) => toOpenRouterMessage(message, adapterOptions.cacheSystemPrompt ?? false)),
+        messages: messages.map((message, index) => toOpenRouterMessage(message, (adapterOptions.cacheSystemPrompt ?? false) && index === 0)),
         tools: tools.length > 0 ? tools.map(toOpenRouterTool) : undefined,
         ...toOpenRouterRoutingOptions(adapterOptions),
       }),
@@ -366,11 +366,11 @@ function parseToolCallArguments(argumentsText: string): Record<string, unknown> 
   }
 }
 
-function toOpenRouterMessage(message: ConversationMessage, cacheSystemPrompt: boolean): OpenRouterMessage {
+function toOpenRouterMessage(message: ConversationMessage, applyCacheControl: boolean): OpenRouterMessage {
   const base: OpenRouterMessage = {
     role: message.role,
     content:
-      cacheSystemPrompt && message.role === 'system'
+      applyCacheControl && message.role === 'system'
         ? [{ type: 'text', text: message.content, cache_control: { type: 'ephemeral' } }]
         : message.content,
   };

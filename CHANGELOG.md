@@ -19,6 +19,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - open help for question-form undo/redo requests instead of running them
 - only treat short bare confirmations as draft approve/reject
+- apply prompt caching only to the base system prompt
 
 ---
 
