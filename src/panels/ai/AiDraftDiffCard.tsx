@@ -249,7 +249,18 @@ function DiffRow({ summary }: { summary: CommandSummary }) {
 			<div className="min-w-0 flex-1">
 				<div className="font-medium">
 					{summary.action}{" "}
-					<span className="editor-text-muted font-normal">
+					{/*
+					 * On a destructive row the surface is the danger background,
+					 * against which `editor-text-muted` fails WCAG AA contrast
+					 * (~4.32:1). Inherit the row's `editor-danger-text` colour
+					 * instead — it is designed for that surface and clears AA.
+					 */}
+					<span
+						className={cn(
+							"font-normal",
+							summary.destructive ? undefined : "editor-text-muted",
+						)}
+					>
 						{summary.target}
 					</span>
 				</div>
