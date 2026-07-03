@@ -56,6 +56,7 @@ export type ConversationMessage = {
   content: string;
   toolCalls?: ToolCall[];
   toolCallId?: string;
+  respondingModelId?: string;
   createdAt: number;
 };
 

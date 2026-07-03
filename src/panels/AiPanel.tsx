@@ -297,21 +297,21 @@ function AiPanelBody({
 	}, [clearPendingDraft]);
 
 	const storedKey = adapterOverride ? "mock" : readStoredApiKey();
-	const modelId =
-		conversation.selectedModelId ?? CURATED_MODELS[0]?.id ?? null;
+	const modelSelection =
+		conversation.selectedModelId ?? CURATED_MODELS[0]?.id ?? "";
 
-	const adapter = useMemo<ProviderAdapter | null>(() => {
+	const buildAdapter = useMemo<((modelId: string) => ProviderAdapter) | null>(() => {
 		if (adapterOverride) {
-			return adapterOverride;
+			return () => adapterOverride;
 		}
-		if (!storedKey || !modelId) {
+		if (!storedKey) {
 			return null;
 		}
-		return createOpenRouterAdapter(storedKey, modelId);
-	}, [adapterOverride, modelId, storedKey]);
+		return (modelId: string) => createOpenRouterAdapter(storedKey, modelId);
+	}, [adapterOverride, storedKey]);
 
 	const { streaming, streamingText, streamError, sendMessage, cancel } =
-		useAiChat({ conversation, adapter, document, editorState });
+		useAiChat({ conversation, buildAdapter, modelSelection, document, editorState });
 
 	const messageCount = conversation.messages.length;
 
@@ -326,14 +326,14 @@ function AiPanelBody({
 	const handleSubmit = useCallback(
 		(event?: FormEvent<HTMLFormElement>) => {
 			event?.preventDefault();
-			if (!input.trim() || streaming || !adapter) {
+			if (!input.trim() || streaming || !buildAdapter) {
 				return;
 			}
 			const text = input;
 			setInput("");
 			void sendMessage(text);
 		},
-		[adapter, input, sendMessage, streaming],
+		[buildAdapter, input, sendMessage, streaming],
 	);
 
 	const handleKeyDown = useCallback(
@@ -346,7 +346,7 @@ function AiPanelBody({
 		[handleSubmit],
 	);
 
-	if (!adapter) {
+	if (!buildAdapter) {
 		return (
 			<div className="flex flex-col gap-3 p-3">
 				<NoticeSurface tone="info" className="text-sm">

@@ -4,6 +4,10 @@ import type { DocumentModel } from "@/model/types";
 import type { EditorState } from "@/editor/types/index";
 import { routeToolCall } from "@/ai/toolRouter";
 import type { AiConversationApi } from "@/ai/conversationStore";
+import {
+	resolveModelSelection,
+	withFloorSuffix,
+} from "@/ai/providers/resolveModelSelection";
 import type {
 	ConversationMessage,
 	ProviderAdapter,
@@ -37,7 +41,8 @@ function createMessageId(): string {
 
 type UseAiChatOptions = {
 	conversation: AiConversationApi;
-	adapter: ProviderAdapter | null;
+	buildAdapter: ((modelId: string) => ProviderAdapter) | null;
+	modelSelection: string;
 	document: DocumentModel;
 	editorState: EditorState;
 };
@@ -51,6 +56,10 @@ export type AssistantTurnOutcome = {
 	text: string;
 	toolCalls: ToolCall[];
 	error: string | null;
+};
+
+export type FallbackTurnOutcome = AssistantTurnOutcome & {
+	respondingModelId: string | null;
 };
 
 /**
@@ -98,6 +107,71 @@ export async function runAssistantTurn(
 	return { text, toolCalls, error };
 }
 
+export function isRetryableStreamError(message: string): boolean {
+	const normalized = message.toLowerCase();
+	return (
+		/\b(429|502|503|504)\b/.test(normalized) ||
+		normalized.includes("rate limit") ||
+		normalized.includes("rate-limit") ||
+		normalized.includes("rate limited") ||
+		normalized.includes("timeout") ||
+		normalized.includes("timed out") ||
+		normalized.includes("overload") ||
+		normalized.includes("temporarily unavailable") ||
+		normalized.includes("no provider available")
+	);
+}
+
+export async function runAssistantTurnWithFallback(
+	buildAdapter: (modelId: string) => ProviderAdapter,
+	candidateModelIds: string[],
+	history: ConversationMessage[],
+	handlers: AssistantTurnHandlers,
+	signal?: AbortSignal,
+): Promise<FallbackTurnOutcome> {
+	let lastTriedModelId: string | null = null;
+	let lastRetryableOutcome: AssistantTurnOutcome | null = null;
+
+	for (const candidateModelId of candidateModelIds) {
+		lastTriedModelId = candidateModelId;
+		let attemptError: string | null = null;
+		const outcome = await runAssistantTurn(
+			buildAdapter(candidateModelId),
+			history,
+			{
+				onTextDelta: handlers.onTextDelta,
+				onError: (message) => {
+					attemptError = message;
+				},
+			},
+			signal,
+		);
+
+		if (!outcome.error || !isRetryableStreamError(outcome.error) || signal?.aborted) {
+			if (outcome.error) {
+				handlers.onError(outcome.error);
+			}
+			return { ...outcome, respondingModelId: candidateModelId };
+		}
+
+		lastRetryableOutcome = outcome;
+		if (candidateModelId !== candidateModelIds.at(-1)) {
+			handlers.onTextDelta("");
+		}
+
+		if (attemptError && candidateModelId === candidateModelIds.at(-1)) {
+			handlers.onError(attemptError);
+		}
+	}
+
+	return {
+		text: lastRetryableOutcome?.text ?? "",
+		toolCalls: lastRetryableOutcome?.toolCalls ?? [],
+		error: lastRetryableOutcome?.error ?? "No model candidates were available.",
+		respondingModelId: lastTriedModelId,
+	};
+}
+
 export type UseAiChatResult = {
 	/** True while a `streamChat` request is in flight. */
 	streaming: boolean;
@@ -113,7 +187,8 @@ export type UseAiChatResult = {
 
 export function useAiChat({
 	conversation,
-	adapter,
+	buildAdapter,
+	modelSelection,
 	document,
 	editorState,
 }: UseAiChatOptions): UseAiChatResult {
@@ -129,7 +204,7 @@ export function useAiChat({
 	const sendMessage = useCallback(
 		async (text: string) => {
 			const trimmed = text.trim();
-			if (!trimmed || !adapter || streaming) {
+			if (!trimmed || !buildAdapter || streaming) {
 				return;
 			}
 
@@ -154,19 +229,40 @@ export function useAiChat({
 
 			let assistantText = "";
 			let toolCalls: ToolCall[] = [];
+			let respondingModelId: string | null = null;
 
 			try {
-				const outcome = await runAssistantTurn(
-					adapter,
-					history,
-					{
-						onTextDelta: setStreamingText,
-						onError: setStreamError,
-					},
-					controller.signal,
-				);
+				const resolvedSelection = resolveModelSelection(modelSelection);
+				const outcome =
+					resolvedSelection.kind === "auto-fallback"
+						? await runAssistantTurnWithFallback(
+								buildAdapter,
+								resolvedSelection.candidateModelIds,
+								history,
+								{
+									onTextDelta: setStreamingText,
+									onError: setStreamError,
+								},
+								controller.signal,
+							)
+						: await (async (): Promise<FallbackTurnOutcome> => {
+								const modelId = resolvedSelection.applyFloorSuffix
+									? withFloorSuffix(resolvedSelection.modelId)
+									: resolvedSelection.modelId;
+								const singleOutcome = await runAssistantTurn(
+									buildAdapter(modelId),
+									history,
+									{
+										onTextDelta: setStreamingText,
+										onError: setStreamError,
+									},
+									controller.signal,
+								);
+								return { ...singleOutcome, respondingModelId: modelId };
+							})();
 				assistantText = outcome.text;
 				toolCalls = outcome.toolCalls;
+				respondingModelId = outcome.respondingModelId;
 			} catch (error) {
 				setStreamError(error instanceof Error ? error.message : String(error));
 			} finally {
@@ -183,6 +279,7 @@ export function useAiChat({
 					role: "assistant",
 					content: assistantText,
 					toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+					respondingModelId: respondingModelId ?? undefined,
 					createdAt: Date.now(),
 				});
 			}
@@ -195,7 +292,7 @@ export function useAiChat({
 				conversation.recordToolResult(result);
 			}
 		},
-		[adapter, conversation, document, editorState, streaming],
+		[buildAdapter, conversation, document, editorState, modelSelection, streaming],
 	);
 
 	return { streaming, streamingText, streamError, sendMessage, cancel };
