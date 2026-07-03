@@ -16,6 +16,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - feature tour on empty welcome page
 - sync WebDAV deploys incrementally
 - added link to tombigel.com
+- scaffold AI command types and tool manifest
 
 ### Changed
 
