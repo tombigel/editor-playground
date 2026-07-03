@@ -112,6 +112,8 @@ const violations = [
   ...collectViolations('model', ['src/editor', 'src/app', 'src/panels', 'src/stage', 'src/api']),
   ...collectViolations('sticky', ['src/editor', 'src/app', 'src/panels', 'src/stage', 'src/api']),
   ...collectViolations('site', ['src/editor', 'src/api', 'src/app', 'src/panels', 'src/stage']),
+  ...collectViolations('ai', ['src/app']),
+  ...collectViolations('api/ai', ['src/app', 'src/panels']),
 ];
 
 if (violations.length > 0) {
