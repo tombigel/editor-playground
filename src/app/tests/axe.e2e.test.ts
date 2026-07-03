@@ -176,6 +176,15 @@ describe('app/axe accessibility e2e', () => {
     await settingsDialog.waitFor({ state: 'visible' });
     await settingsDialog.locator('[data-settings-nav="ai"]').click();
     await settingsDialog.getByLabel('OpenRouter API key').fill('sk-or-fake-a11y-key');
+    await settingsDialog.getByLabel('Custom OpenRouter model id').waitFor({ state: 'visible' });
+    await settingsDialog.getByLabel('Prompt caching').waitFor({ state: 'visible' });
+    await settingsDialog.getByRole('link', { name: /Get an OpenRouter key/ }).waitFor({ state: 'visible' });
+    const settingsScanResults = await analyzeWithRetry(
+      () => new AxeBuilder({ page: page as Page }).include('[role="dialog"]'),
+      page,
+    );
+    await expectNoViolations(settingsScanResults);
+
     await expect
       .poll(async () =>
         page.evaluate((key) => window.localStorage.getItem(key), AI_PROVIDER_KEY_STORAGE_KEY),

@@ -1,6 +1,14 @@
 import { chromium, type Browser, type BrowserContext, type Page, type Route } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { startViteE2EServer, type StartedServer } from '../../stage/tests/e2eServer';
+import {
+  AUTO_MODEL_ID,
+  FLOOR_MODEL_SENTINEL,
+  FREE_MODEL_SENTINEL,
+  getFloorCuratedModel,
+  getFreeCuratedModel,
+  getModelsInAscendingPriceOrder,
+} from '../../ai/providers/curatedModels';
 
 /**
  * End-to-end proof of the agentic-interface feature's core guarantee
@@ -25,6 +33,7 @@ import { startViteE2EServer, type StartedServer } from '../../stage/tests/e2eSer
  */
 
 const AI_PROVIDER_KEY_STORAGE_KEY = 'editor-playground.ai-provider-key.v1';
+const AI_CONVERSATION_STORAGE_KEY = 'editor-playground.ai-conversation.v1';
 
 /**
  * Builds an OpenAI-compatible SSE stream body: some assistant text deltas
@@ -73,6 +82,10 @@ function buildToolCallSseBody(nodeId: string, visible: boolean): string {
   return `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join('')}data: [DONE]\n\n`;
 }
 
+function buildTextSseBody(text: string): string {
+  return `data: ${JSON.stringify({ choices: [{ index: 0, delta: { content: text } }] })}\n\ndata: [DONE]\n\n`;
+}
+
 /**
  * Registers a `page.route` interception for OpenRouter's chat-completions
  * endpoint that replies with `sseBody`. Kept as a helper so each test can swap
@@ -87,6 +100,26 @@ async function mockOpenRouter(page: Page, sseBody: string) {
       body: sseBody,
     });
   });
+}
+
+async function persistAiConversationSelection(
+  page: Page,
+  selectedModelId: string,
+  promptCachingEnabled = false,
+) {
+  await page.evaluate(
+    ({ key, selectedModelId: modelId, promptCachingEnabled: cacheEnabled }) => {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          messages: [],
+          selectedModelId: modelId,
+          promptCachingEnabled: cacheEnabled,
+        }),
+      );
+    },
+    { key: AI_CONVERSATION_STORAGE_KEY, selectedModelId, promptCachingEnabled },
+  );
 }
 
 async function expectEditorReady(page: Page, url: string) {
@@ -206,6 +239,121 @@ describe('ai assistant draft/approve/undo e2e', () => {
     page = nextPage;
     return nextPage;
   }
+
+  it('resolves Free, Floor, custom, and prompt-caching selections at send time', async () => {
+    const cases = [
+      {
+        name: 'Free',
+        selection: FREE_MODEL_SENTINEL,
+        expectedModel: getFreeCuratedModel()?.id,
+        promptCachingEnabled: false,
+      },
+      {
+        name: 'Floor',
+        selection: FLOOR_MODEL_SENTINEL,
+        expectedModel: `${getFloorCuratedModel()?.id}:floor`,
+        promptCachingEnabled: false,
+      },
+      {
+        name: 'Custom',
+        selection: 'mistralai/mistral-large',
+        expectedModel: 'mistralai/mistral-large',
+        promptCachingEnabled: false,
+      },
+      {
+        name: 'Prompt caching',
+        selection: 'anthropic/claude-sonnet-5',
+        expectedModel: 'anthropic/claude-sonnet-5',
+        promptCachingEnabled: true,
+      },
+    ];
+
+    for (const testCase of cases) {
+      const aiPage = await newAiPage();
+      const requestBodies: Array<Record<string, unknown>> = [];
+      await aiPage.route('**/openrouter.ai/api/v1/chat/completions', async (route: Route) => {
+        requestBodies.push(route.request().postDataJSON() as Record<string, unknown>);
+        await route.fulfill({
+          status: 200,
+          contentType: 'text/event-stream',
+          body: buildTextSseBody(`ok ${testCase.name}`),
+        });
+      });
+
+      await enterFakeApiKey(aiPage);
+      await persistAiConversationSelection(
+        aiPage,
+        testCase.selection,
+        testCase.promptCachingEnabled,
+      );
+      await openAiPanel(aiPage);
+      await sendMessage(aiPage, `Say hello for ${testCase.name}.`);
+
+      await aiPage
+        .locator('.editor-ai-panel [data-ai-role="assistant"]:not([data-ai-streaming="true"])')
+        .filter({ hasText: `ok ${testCase.name}` })
+        .waitFor({ state: 'visible' });
+
+      expect(requestBodies).toHaveLength(1);
+      expect(requestBodies[0]?.model).toBe(testCase.expectedModel);
+      const messages = requestBodies[0]?.messages as Array<{ role: string; content: unknown }>;
+      expect(messages[0]?.role).toBe('system');
+      if (testCase.promptCachingEnabled) {
+        expect(messages[0]?.content).toEqual([
+          expect.objectContaining({
+            type: 'text',
+            cache_control: { type: 'ephemeral' },
+          }),
+        ]);
+      } else {
+        expect(typeof messages[0]?.content).toBe('string');
+      }
+
+      await aiPage.close();
+      await context?.close();
+      page = null;
+      context = null;
+    }
+  }, 90_000);
+
+  it('Auto retries a retryable failure using the next cheapest model and renders provenance', async () => {
+    const aiPage = await newAiPage();
+    const requestBodies: Array<Record<string, unknown>> = [];
+    let requestCount = 0;
+    await aiPage.route('**/openrouter.ai/api/v1/chat/completions', async (route: Route) => {
+      requestCount += 1;
+      requestBodies.push(route.request().postDataJSON() as Record<string, unknown>);
+      if (requestCount === 1) {
+        await route.fulfill({
+          status: 429,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { message: 'Rate limit exceeded' } }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: buildTextSseBody('auto recovered'),
+      });
+    });
+
+    const orderedModels = getModelsInAscendingPriceOrder();
+    await enterFakeApiKey(aiPage);
+    await persistAiConversationSelection(aiPage, AUTO_MODEL_ID);
+    await openAiPanel(aiPage);
+    await sendMessage(aiPage, 'Use automatic fallback.');
+
+    const assistantMessage = aiPage
+      .locator('.editor-ai-panel [data-ai-role="assistant"]:not([data-ai-streaming="true"])')
+      .filter({ hasText: 'auto recovered' });
+    await assistantMessage.waitFor({ state: 'visible' });
+    expect(await assistantMessage.textContent()).toContain(`Answered by ${orderedModels[1]?.name}`);
+
+    expect(requestBodies).toHaveLength(2);
+    expect(requestBodies[0]?.model).toBe(orderedModels[0]?.id);
+    expect(requestBodies[1]?.model).toBe(orderedModels[1]?.id);
+  }, 45_000);
 
   it('proposes a mutation as a draft, applies it on Approve as one undoable step, and reverts in a single Undo', async () => {
     const aiPage = await newAiPage();

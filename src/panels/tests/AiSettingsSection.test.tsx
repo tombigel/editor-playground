@@ -67,6 +67,10 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(markup).toContain('aria-label="Model"');
     expect(markup).toContain('aria-label="Custom OpenRouter model id"');
     expect(markup).toContain('aria-label="Prompt caching"');
+    expect(markup).toContain('href="https://openrouter.ai/keys"');
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toContain('rel="noreferrer"');
+    expect(markup).toContain('Get an OpenRouter key');
     // Radix's Select renders its option list into a portal that
     // renderToStaticMarkup (no DOM/portal) can't capture when closed — only
     // the trigger's current value is visible in SSR'd markup, matching this

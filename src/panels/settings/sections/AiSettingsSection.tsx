@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { KeyRound } from 'lucide-react';
+import { ExternalLink, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -203,26 +203,37 @@ export function AiSettingsSection() {
       <PlainGroup title="OpenRouter">
         <ControlGroup>
           <LabeledControlRow label="API key" controlWidth="280px">
-            <div className="flex w-full items-center gap-2">
-              <Input
-                type="password"
-                autoComplete="off"
-                spellCheck={false}
-                value={apiKey}
-                onChange={(event) => handleApiKeyChange(event.target.value)}
-                placeholder="sk-or-…"
-                aria-label="OpenRouter API key"
-                className="text-sm"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleClearApiKey}
-                disabled={apiKey.length === 0}
+            <div className="flex w-full flex-col gap-1.5">
+              <div className="flex w-full items-center gap-2">
+                <Input
+                  type="password"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={apiKey}
+                  onChange={(event) => handleApiKeyChange(event.target.value)}
+                  placeholder="sk-or-…"
+                  aria-label="OpenRouter API key"
+                  className="text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearApiKey}
+                  disabled={apiKey.length === 0}
+                >
+                  Clear
+                </Button>
+              </div>
+              <a
+                href="https://openrouter.ai/keys"
+                target="_blank"
+                rel="noreferrer"
+                className="editor-text-muted inline-flex items-center gap-1 text-[11px] hover:underline"
               >
-                Clear
-              </Button>
+                Get an OpenRouter key
+                <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
           </LabeledControlRow>
           <LabeledControlRow label="Model" controlWidth="280px">
