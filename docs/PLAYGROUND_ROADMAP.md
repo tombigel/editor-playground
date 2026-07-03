@@ -60,16 +60,16 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-11` | `⚪ Not started` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | - |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
 | `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
-| `RI-13` | `⚪ Not started` | [AI layer for conversational editor control](#ai-layer-for-conversational-editor-control) | `🔴 Next` | Feature | Shared | Umbrella for `RI-46`, `RI-47`, `RI-48` |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-45` | `⚪ Not started` | [Form and input authoring platform](#form-and-input-authoring-platform) | `🔴 Next` | Feature | Shared | Requires behavior/backoffice/docs/a11y spec before implementation |
-| `RI-46` | `⚪ Not started` | [AI command/interface layer over the public API](#ai-commandinterface-layer-over-the-public-api) | `🔴 Next` | Platform | Shared | Dep: `RI-13` |
-| `RI-47` | `⚪ Not started` | [Bring-your-own-model connection layer](#bring-your-own-model-connection-layer) | `🔴 Next` | Platform | Shared | Dep: `RI-46` |
-| `RI-48` | `⚪ Not started` | [Conversational editor UI with assistant-ui](#conversational-editor-ui-with-assistant-ui) | `🔴 Next` | UX | Shared | Dep: `RI-46`, `RI-47` |
 | `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
 | `RI-02` | `✅ Done` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
 | `RI-03` | `✅ Done` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
+| `RI-13` | `✅ Done` | [AI layer for conversational editor control](#ai-layer-for-conversational-editor-control) | `🔴 Next` | Feature | Shared | Umbrella for `RI-46`, `RI-47`, `RI-48` — all shipped, v1 scope cut documented |
 | `RI-43` | `✅ Done` | [Guided showcase tour for editor portfolio](#guided-showcase-tour-for-editor-portfolio) | `🔴 Next` | UX | Shared | Unplanned; needed to make the editor understandable as portfolio evidence |
+| `RI-46` | `✅ Done` | [AI command/interface layer over the public API](#ai-commandinterface-layer-over-the-public-api) | `🔴 Next` | Platform | Shared | `src/api/ai/`: 12-command union, 8 query tools, all-or-nothing batch apply. Dep: `RI-13` |
+| `RI-47` | `✅ Done` | [Bring-your-own-model connection layer](#bring-your-own-model-connection-layer) | `🔴 Next` | Platform | Shared | OpenRouter SSE adapter, localStorage key, 3-model allowlist. Dep: `RI-46` |
+| `RI-48` | `✅ Done` | [Conversational editor UI with assistant-ui](#conversational-editor-ui-with-assistant-ui) | `🔴 Next` | UX | Shared | Hand-rolled thread UI shipped instead of assistant-ui (test-tooling constraint). Dep: `RI-46`, `RI-47` |
 | `RI-04` | `⚪ Not started` | [Animation keyframes UI for development phase](#animation-authoring-ui-for-development-phase) | `🟠 High` | UX | LLM | Deferred to next phase |
 | `RI-05` | `⚪ Not started` | [Designed animation UI with product/UX intent](#animation-authoring-ui-with-real-productux-design) | `🟠 High` | UX | Human | Dep: `RI-03`, `RI-04` |
 | `RI-06` | `🟣 Partially present` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | Shared | Dep: `RI-05` |
@@ -284,12 +284,11 @@ None yet.
 
 - `Type`: `UX`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-48`
 - `Dependencies`: `RI-46`, `RI-47`
 - `Why it matters`: A conversational layer needs to feel like part of the editor, not a detached chatbot; authors need to see tool calls, proposed changes, and approval/apply states in the same design language as the rest of the workspace.
-- `Current state`: No chat surface, assistant thread, provider picker, or AI approval UI exists in the editor. `assistant-ui` is the likely starting point because it can provide a customizable React chat/thread/composer surface while leaving editor-specific behavior in this codebase.
-- `Next move`: Design the first editor-integrated assistant panel around thread/composer UX, tool-call rendering, draft/approval/apply affordances, provider/model selection entry points, and alignment with `docs/EDITOR_STYLE_GUIDE.md`.
+- `Current state`: **Complete, with a naming caveat** — the delivered UI is a hand-rolled thread UI (`src/panels/AiPanel.tsx`, `src/panels/ai/AiMessageList.tsx`, `src/panels/ai/AiDraftDiffCard.tsx`), not the `assistant-ui` library named in the item title. This repo's test infrastructure has no jsdom/testing-library (only `renderToStaticMarkup` plus node-environment vitest), which would have made `assistant-ui`'s stateful `ExternalStoreRuntime` contract untestable within existing conventions without introducing new test tooling — a judgment call authorized by the plan's own Task 9 decision-gate framing (commit `553d5f1`). The delivered surface still covers everything the item asked for: a floating/toggleable panel (like Layers/Settings, not a persistent sidebar), draft/approval/apply affordances (`AiDraftDiffCard` with destructive-command visual distinction and stale-draft handling), provider/model selection entry points (Settings → AI Assistant section), and design-system alignment (verified via `/design-system-check`, zero token violations).
 
 ##### Variable fonts as an authoring workflow
 
@@ -327,13 +326,13 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-13`
-- `Relationship`: Umbrella for `RI-46`, `RI-47`, and `RI-48`.
+- `Relationship`: Umbrella for `RI-46`, `RI-47`, and `RI-48` — all three shipped.
 - `Why it matters`: AI-assisted generation and transformation could accelerate site authoring, animation work, and internal iteration, but only if the model operates through the same API-first boundaries as the rest of the editor.
-- `Current state`: There is no productized AI layer in the current editor flow. The current architecture already separates pure document/page APIs from editor selection/history wrappers, which makes a typed command layer possible without teaching AI to drive the UI directly.
-- `Target direction`: Build a conversational command layer over `src/api/`, where prompts produce validated tool calls or document/editor commands that can be previewed, approved, and committed as normal undoable editor actions.
-- `Next move`: Treat the first implementation wave as three heavy tasks: define the API-facing command/interface model, build bring-your-own-model connectivity, then add the conversational UI, probably with `assistant-ui`.
+- `Current state`: **Complete** — a conversational command layer now sits over `src/api/`: prompts produce validated tool calls that are previewed as a draft diff, approved, and committed as a single undoable editor action. See `RI-46`, `RI-47`, `RI-48` for the per-layer delivered detail.
+- `V1 scope cut`: 12 of 100+ `documentApi` functions are exposed as AI tools; clipboard/paste, animation, font management, page/site structural operations, drag-drop session APIs, and code-block/rich-list-specific setters are explicitly out of scope for v1 — these are straightforward additive follow-ups, not architectural gaps. Provider support is OpenRouter-only (no local/Ollama bridge yet). There is no serverless key proxy — the OpenRouter key is client-direct only (localStorage), a documented tradeoff, not an oversight.
+- `Next move`: Treat further command coverage, additional providers, and a key-proxy option as independent follow-up items rather than a re-plan of this umbrella.
 
 ##### Responsive and adaptive authoring model
 
@@ -447,23 +446,22 @@ None yet.
 
 - `Type`: `Platform`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-46`
 - `Dependencies`: `RI-13`
 - `Why it matters`: AI edits must preserve the editor's API-first architecture, validation rules, and undo model. A typed command/interface layer prevents the assistant from becoming a parallel editor that mutates documents outside supported APIs.
-- `Current state`: `documentApi`, `pageApi`, `siteApi`, and `editorApi` expose the right architectural boundary, and `DocumentCommand` already exists as a small batch path, but there is no AI-oriented tool manifest or draft/apply command protocol.
-- `Next move`: Define the AI tool/command surface over public APIs, including read-only context tools, mutation commands, validation, draft preview/apply flow, and a single undoable editor commit path.
+- `Current state`: **Complete** — `src/api/ai/` ships a 12-variant curated `AiDocumentCommand` union (`setRect`, `setSticky`, `setText`, `setTextDocumentContent`, `insertText`, `insertContainer`, `insertSectionTemplate`, `deleteNode`, `setNodeVisibility`, `reparentNode`, `reorderNode`, `setContainerChildBoundary`), each a thin wrapper over an existing `documentApi` function. 8 read-only query tools (`getDocumentTree`, `getNodeById`, `getSelection`, `searchNodesByType`, `searchNodesByText`, `getPageList`, `getActivePage`, `getValidationErrors`). `applyAiDocumentCommands` re-validates every command against the current document at apply time and applies all-or-nothing, rejecting the whole batch as a stale draft if anything no longer validates. `editorApi.applyAiCommands` is the single undoable commit path, with exactly one UI call site (`AiDraftDiffCard.tsx`) — a multi-command batch yields exactly one `HistoryEntry`. Documented in `docs/API_AI.md`.
 
 ##### Bring-your-own-model connection layer
 
 - `Type`: `Platform`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-47`
 - `Dependencies`: `RI-46`
 - `Why it matters`: Users should be able to choose their own model provider without coupling the editor to one hosted vendor, while the app still owns streaming, tool execution, key handling, and serverless/client proxy boundaries.
-- `Current state`: The editor has no model connection settings, provider adapter layer, streaming agent endpoint, local-model bridge, or policy for storing/sending user-provided keys.
-- `Next move`: Plan the bring-your-own-model adapter boundary for hosted providers, OpenRouter-style routers, local/Ollama-compatible endpoints, streaming/tool events, key storage modes, and when calls go direct from the browser versus through a serverless proxy.
+- `Current state`: **Complete, v1 scope** — `src/ai/providers/openRouterAdapter.ts` is a client-direct-to-OpenRouter adapter (`fetch` + SSE streaming, `AbortSignal`-cancellable), no proxy/backend. The `ProviderAdapter` interface is designed for future multi-provider extension but ships OpenRouter-only in v1. The API key lives in `localStorage` only, entered via Settings → AI Assistant, with an inline notice documenting the client-direct key model. `curatedModels.ts` hardcodes a 3-model allowlist (`anthropic/claude-sonnet-5`, `openai/gpt-5-mini`, `google/gemini-3-flash-preview`) rather than the full OpenRouter catalog.
+- `Next move`: A local/Ollama-compatible bridge and a serverless key proxy remain deliberately deferred (see `RI-13`'s scope-cut note) — revisit only if the app starts handling a shared/app-owned key or other users' documents.
 
 ##### Text phase 2.0: on-stage editing
 

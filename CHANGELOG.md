@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - regenerate help docs manifest for AI command layer page
 - add end-to-end draft/approve/undo smoke test and a11y coverage
 - remove undefined AI markdown/bubble CSS class markers
+- mark RI-13/46/47/48 done for agentic interface v1
 
 ### Fixed
 
