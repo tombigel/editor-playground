@@ -16,6 +16,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - improve assistant panel responses
 - add Qwen free model option
 
+### Changed
+
+- remove superseded client-side model fallback machinery
+
 ### Fixed
 
 - open help for question-form undo/redo requests instead of running them

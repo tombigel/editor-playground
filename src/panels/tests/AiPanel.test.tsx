@@ -13,9 +13,7 @@ import { AiPanel, handleLocalAiRoute } from "../AiPanel";
 import { AiMessageList } from "../ai/AiMessageList";
 import {
 	buildAssistantRequestHistory,
-	isRetryableStreamError,
 	runAssistantTurn,
-	runAssistantTurnWithFallback,
 	routeAssistantToolCalls,
 } from "../ai/useAiChat";
 import { AI_SYSTEM_PROMPT } from "../../ai/systemPrompt";
@@ -474,67 +472,4 @@ describe("panels/AiPanel", () => {
 		expect(outcome.resolvedModelId).toBe("qwen/qwen3-next-80b-a3b-instruct:free");
 	});
 
-	it("classifies retryable stream errors conservatively", () => {
-		expect(isRetryableStreamError("OpenRouter rejected the request (429)")).toBe(true);
-		expect(isRetryableStreamError("No provider available for this model")).toBe(true);
-		expect(isRetryableStreamError("Provider timed out while overloaded")).toBe(true);
-		expect(isRetryableStreamError("OpenRouter rejected the request (401)")).toBe(false);
-		expect(isRetryableStreamError("Malformed request body")).toBe(false);
-	});
-
-	it("falls through to the next model on a retryable stream error and records provenance", async () => {
-		const calls: string[] = [];
-		const adapters: Record<string, ProviderAdapter> = {
-			"first/model": createMockAdapter([{ type: "error", message: "OpenRouter rejected the request (429)" }]),
-			"second/model": createMockAdapter([
-				{ type: "text-delta", delta: "Recovered" },
-				{ type: "message-complete" },
-			]),
-		};
-
-		const outcome = await runAssistantTurnWithFallback(
-			(modelId) => {
-				calls.push(modelId);
-				return adapters[modelId];
-			},
-			["first/model", "second/model"],
-			[],
-			{ onTextDelta: NO_OP, onError: NO_OP },
-		);
-
-		expect(calls).toEqual(["first/model", "second/model"]);
-		expect(outcome.text).toBe("Recovered");
-		expect(outcome.error).toBeNull();
-		expect(outcome.respondingModelId).toBe("second/model");
-	});
-
-	it("stops fallback immediately on a terminal stream error", async () => {
-		const calls: string[] = [];
-		const outcome = await runAssistantTurnWithFallback(
-			(modelId) => {
-				calls.push(modelId);
-				return createMockAdapter([{ type: "error", message: "OpenRouter rejected the request (401)" }]);
-			},
-			["first/model", "second/model"],
-			[],
-			{ onTextDelta: NO_OP, onError: NO_OP },
-		);
-
-		expect(calls).toEqual(["first/model"]);
-		expect(outcome.error).toContain("401");
-		expect(outcome.respondingModelId).toBe("first/model");
-	});
-
-	it("keeps the last tried model id when every fallback candidate has a retryable error", async () => {
-		const outcome = await runAssistantTurnWithFallback(
-			(modelId) =>
-				createMockAdapter([{ type: "error", message: `${modelId} returned 503` }]),
-			["first/model", "second/model"],
-			[],
-			{ onTextDelta: NO_OP, onError: NO_OP },
-		);
-
-		expect(outcome.error).toContain("503");
-		expect(outcome.respondingModelId).toBe("second/model");
-	});
 });

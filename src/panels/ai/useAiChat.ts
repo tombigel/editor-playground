@@ -10,7 +10,6 @@ import {
 import { AI_SYSTEM_PROMPT } from "@/ai/systemPrompt";
 import {
 	resolveModelSelection,
-	withFloorSuffix,
 } from "@/ai/providers/resolveModelSelection";
 import type { OpenRouterAdapterOptions } from "@/ai/providers/openRouterAdapter";
 import type {
@@ -138,10 +137,6 @@ export type AssistantTurnOutcome = {
 	resolvedModelId: string | null;
 };
 
-export type FallbackTurnOutcome = AssistantTurnOutcome & {
-	respondingModelId: string | null;
-};
-
 /**
  * Pure, hook-free core of one assistant turn: consumes a `ProviderAdapter`'s
  * `streamChat` iterable, accumulating text and tool-call-complete events.
@@ -191,74 +186,7 @@ export async function runAssistantTurn(
 	return { text, toolCalls, error, resolvedModelId };
 }
 
-export function isRetryableStreamError(message: string): boolean {
-	const normalized = message.toLowerCase();
-	return (
-		/\b(429|502|503|504)\b/.test(normalized) ||
-		normalized.includes("rate limit") ||
-		normalized.includes("rate-limit") ||
-		normalized.includes("rate limited") ||
-		normalized.includes("timeout") ||
-		normalized.includes("timed out") ||
-		normalized.includes("overload") ||
-		normalized.includes("temporarily unavailable") ||
-		normalized.includes("no provider available")
-	);
-}
-
-export async function runAssistantTurnWithFallback(
-	buildAdapter: (modelId: string) => ProviderAdapter,
-	candidateModelIds: string[],
-	history: ConversationMessage[],
-	handlers: AssistantTurnHandlers,
-	signal?: AbortSignal,
-): Promise<FallbackTurnOutcome> {
-	let lastTriedModelId: string | null = null;
-	let lastRetryableOutcome: AssistantTurnOutcome | null = null;
-
-	for (const candidateModelId of candidateModelIds) {
-		lastTriedModelId = candidateModelId;
-		let attemptError: string | null = null;
-		const outcome = await runAssistantTurn(
-			buildAdapter(candidateModelId),
-			history,
-			{
-				onTextDelta: handlers.onTextDelta,
-				onError: (message) => {
-					attemptError = message;
-				},
-			},
-			signal,
-		);
-
-		if (!outcome.error || !isRetryableStreamError(outcome.error) || signal?.aborted) {
-			if (outcome.error) {
-				handlers.onError(outcome.error);
-			}
-			return {
-				...outcome,
-				respondingModelId: outcome.resolvedModelId ?? candidateModelId,
-			};
-		}
-
-		lastRetryableOutcome = outcome;
-		if (candidateModelId !== candidateModelIds.at(-1)) {
-			handlers.onTextDelta("");
-		}
-
-		if (attemptError && candidateModelId === candidateModelIds.at(-1)) {
-			handlers.onError(attemptError);
-		}
-	}
-
-	return {
-		text: lastRetryableOutcome?.text ?? "",
-		toolCalls: lastRetryableOutcome?.toolCalls ?? [],
-		error: lastRetryableOutcome?.error ?? "No model candidates were available.",
-		resolvedModelId: lastRetryableOutcome?.resolvedModelId ?? null,
-		respondingModelId: lastRetryableOutcome?.resolvedModelId ?? lastTriedModelId,
-	};
-}
+type TurnOutcomeWithModelId = AssistantTurnOutcome & { respondingModelId: string | null };
 
 export type UseAiChatResult = {
 	/** True while a `streamChat` request is in flight. */
@@ -329,37 +257,20 @@ export function useAiChat({
 					followUpTurn <= MAX_QUERY_TOOL_FOLLOW_UP_TURNS;
 					followUpTurn += 1
 				) {
-					const resolvedSelection = resolveModelSelection(modelSelection);
-					const outcome =
-						resolvedSelection.kind === "auto-fallback"
-							? await runAssistantTurnWithFallback(
-									buildAdapter,
-									resolvedSelection.candidateModelIds,
-									activeRequestHistory,
-									{
-										onTextDelta: setStreamingText,
-										onError: setStreamError,
-									},
-									controller.signal,
-								)
-							: await (async (): Promise<FallbackTurnOutcome> => {
-									const modelId = resolvedSelection.applyFloorSuffix
-										? withFloorSuffix(resolvedSelection.modelId)
-										: resolvedSelection.modelId;
-									const singleOutcome = await runAssistantTurn(
-										buildAdapter(modelId, resolvedSelection.adapterOptions),
-										activeRequestHistory,
-										{
-											onTextDelta: setStreamingText,
-											onError: setStreamError,
-										},
-										controller.signal,
-									);
-									return {
-										...singleOutcome,
-										respondingModelId: singleOutcome.resolvedModelId ?? modelId,
-									};
-								})();
+					const resolved = resolveModelSelection(modelSelection);
+					const assistantOutcome = await runAssistantTurn(
+						buildAdapter(resolved.modelId, resolved.adapterOptions),
+						activeRequestHistory,
+						{
+							onTextDelta: setStreamingText,
+							onError: setStreamError,
+						},
+						controller.signal,
+					);
+					const outcome: TurnOutcomeWithModelId = {
+						...assistantOutcome,
+						respondingModelId: assistantOutcome.resolvedModelId ?? resolved.modelId,
+					};
 
 					const routed = routeAssistantToolCalls(outcome.toolCalls, {
 						document,

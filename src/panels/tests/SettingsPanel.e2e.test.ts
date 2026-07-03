@@ -32,7 +32,7 @@ describe('panels/SettingsPanel e2e', () => {
   }
 
   async function waitForEditorReady(targetPage: Page) {
-    await targetPage.goto(server.url, { waitUntil: 'domcontentloaded' });
+    await targetPage.goto(`${server.url}/#/edit`, { waitUntil: 'domcontentloaded' });
     await targetPage.getByRole('toolbar', { name: 'Editor toolbar' }).waitFor({ state: 'visible' });
     await targetPage.locator('.stage-shell').waitFor({ state: 'visible' });
   }

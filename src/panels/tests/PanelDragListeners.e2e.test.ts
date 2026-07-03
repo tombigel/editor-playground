@@ -38,7 +38,7 @@ describe("panel drag listener e2e", () => {
 			window.localStorage.clear();
 			window.sessionStorage.clear();
 		});
-		await nextPage.goto(server.url, { waitUntil: "domcontentloaded" });
+		await nextPage.goto(`${server.url}/#/edit`, { waitUntil: "domcontentloaded" });
 		await nextPage
 			.getByRole("toolbar", { name: "Editor toolbar" })
 			.waitFor({ state: "visible" });

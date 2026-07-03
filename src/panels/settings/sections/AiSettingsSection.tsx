@@ -185,16 +185,7 @@ export function resolveConnectionCheckRequest(
 		return null;
 	}
 	const resolved = resolveModelSelection(modelSelection);
-	if (resolved.kind === "auto-fallback") {
-		const modelId = resolved.candidateModelIds[0];
-		return modelId ? { modelId } : null;
-	}
-	return {
-		modelId: resolved.applyFloorSuffix
-			? `${resolved.modelId}:floor`
-			: resolved.modelId,
-		adapterOptions: resolved.adapterOptions,
-	};
+	return { modelId: resolved.modelId, adapterOptions: resolved.adapterOptions };
 }
 
 export function AiSettingsSection() {

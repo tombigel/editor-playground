@@ -5,9 +5,7 @@ import {
   CURATED_MODELS,
   FLOOR_MODEL_SENTINEL,
   FREE_MODEL_SENTINEL,
-  getFloorCuratedModel,
   getFreeCuratedModel,
-  getModelsInAscendingPriceOrder,
   isAutoGroupSentinel,
 } from '../curatedModels';
 
@@ -84,27 +82,4 @@ describe('CURATED_MODELS', () => {
     expect(freeModels.every((model) => model.outputPricePerMillion === 0)).toBe(true);
   });
 
-  it('finds the cheapest non-free model for Floor', () => {
-    const floorModel = getFloorCuratedModel();
-
-    expect(floorModel).toBeDefined();
-    expect(floorModel?.tier).not.toBe('free');
-    expect(floorModel?.id).toBe('moonshotai/kimi-k2-thinking');
-  });
-
-  it('sorts curated models by ascending input then output price', () => {
-    const sorted = getModelsInAscendingPriceOrder();
-
-    expect(sorted).toHaveLength(CURATED_MODELS.length);
-    expect(sorted[0]?.tier).toBe('free');
-    for (let index = 1; index < sorted.length; index += 1) {
-      const previous = sorted[index - 1];
-      const current = sorted[index];
-      expect(
-        previous.inputPricePerMillion < current.inputPricePerMillion ||
-          (previous.inputPricePerMillion === current.inputPricePerMillion &&
-            previous.outputPricePerMillion <= current.outputPricePerMillion),
-      ).toBe(true);
-    }
-  });
 });

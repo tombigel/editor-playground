@@ -121,7 +121,7 @@ describe("stage/Stage e2e", () => {
 			);
 		}
 
-		await page.goto(server.url);
+		await page.goto(`${server.url}/#/edit`);
 		try {
 			await page.waitForSelector(".stage-shell", { timeout: 5_000 });
 		} catch {

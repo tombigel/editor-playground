@@ -126,7 +126,7 @@ describe('panels/InspectorControls e2e', () => {
       },
     );
 
-    await page.goto(server.url);
+    await page.goto(`${server.url}/#/edit`);
     await page.locator('.editor-inspector-shell').waitFor({ state: 'visible' });
 
     const readPickerState = () => page.evaluate(() => {
@@ -194,7 +194,7 @@ describe('panels/InspectorControls e2e', () => {
       },
     );
 
-    await page.goto(server.url);
+    await page.goto(`${server.url}/#/edit`);
     await page.locator('.editor-inspector-shell').waitFor({ state: 'visible' });
 
     const picker = page.locator('color-input[aria-label="Text color"]').first();
@@ -249,7 +249,7 @@ describe('panels/InspectorControls e2e', () => {
       },
     );
 
-    await page.goto(server.url);
+    await page.goto(`${server.url}/#/edit`);
     await page.locator('.editor-inspector-shell').waitFor({ state: 'visible' });
 
     const readPickerState = () => page.evaluate(() => {
@@ -326,7 +326,7 @@ describe('panels/InspectorControls e2e', () => {
       },
     );
 
-    await page.goto(server.url);
+    await page.goto(`${server.url}/#/edit`);
     await page.locator('.editor-inspector-shell').waitFor({ state: 'visible' });
 
     const readPickerState = (ariaLabel: string) => page.evaluate((label) => {
@@ -398,7 +398,7 @@ describe('panels/InspectorControls e2e', () => {
       },
     );
 
-    await page.goto(server.url);
+    await page.goto(`${server.url}/#/edit`);
     await page.locator('.editor-inspector-shell').waitFor({ state: 'visible' });
 
     const shadowPicker = page.locator('color-input[aria-label="Shadow color"]').first();

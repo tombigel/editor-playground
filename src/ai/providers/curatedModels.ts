@@ -115,19 +115,3 @@ export function isAutoGroupSentinel(value: string): value is AutoGroupSentinel {
 export function getFreeCuratedModel(): CuratedModel | undefined {
   return CURATED_MODELS.find((model) => model.tier === 'free');
 }
-
-export function getFloorCuratedModel(): CuratedModel | undefined {
-  return [...CURATED_MODELS.filter((model) => model.tier !== 'free')].sort(
-    (a, b) =>
-      a.inputPricePerMillion - b.inputPricePerMillion ||
-      a.outputPricePerMillion - b.outputPricePerMillion,
-  )[0];
-}
-
-export function getModelsInAscendingPriceOrder(): CuratedModel[] {
-  return [...CURATED_MODELS].sort(
-    (a, b) =>
-      a.inputPricePerMillion - b.inputPricePerMillion ||
-      a.outputPricePerMillion - b.outputPricePerMillion,
-  );
-}
