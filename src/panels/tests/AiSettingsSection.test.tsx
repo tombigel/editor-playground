@@ -1,6 +1,10 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AiSettingsSection } from '../settings/sections/AiSettingsSection';
+import {
+  AiSettingsSection,
+  isCustomModelId,
+  normalizeCustomModelIdInput,
+} from '../settings/sections/AiSettingsSection';
 import { AI_PROVIDER_KEY_STORAGE_KEY } from '../AiPanel';
 import {
   AUTO_GROUP_SENTINELS,
@@ -61,6 +65,7 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(markup).toContain('aria-label="OpenRouter API key"');
     expect(markup).toContain('type="password"');
     expect(markup).toContain('aria-label="Model"');
+    expect(markup).toContain('aria-label="Custom OpenRouter model id"');
     // Radix's Select renders its option list into a portal that
     // renderToStaticMarkup (no DOM/portal) can't capture when closed — only
     // the trigger's current value is visible in SSR'd markup, matching this
@@ -152,5 +157,33 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(markup).toContain('Free');
     expect(markup).not.toContain(CURATED_MODELS[0]?.name ?? '');
     expect(FREE_MODEL_SENTINEL).toBe('auto:free');
+  });
+
+  it('prefills the custom model field when the persisted selection is not curated or automatic', () => {
+    const customModelId = 'mistralai/mistral-large';
+    const win = window as unknown as { localStorage: Storage };
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({ messages: [], selectedModelId: customModelId }),
+    );
+
+    const markup = renderToStaticMarkup(<AiSettingsSection />);
+
+    expect(markup).toContain(`value="${customModelId}"`);
+    expect(markup).toContain(`Custom: ${customModelId}`);
+  });
+
+  it('classifies custom model ids separately from automatic sentinels and curated ids', () => {
+    expect(isCustomModelId('mistralai/mistral-large')).toBe(true);
+    expect(isCustomModelId(FREE_MODEL_SENTINEL)).toBe(false);
+    expect(isCustomModelId(CURATED_MODELS[0]?.id ?? '')).toBe(false);
+  });
+
+  it('normalizes custom model input before persistence', () => {
+    expect(normalizeCustomModelIdInput('  mistralai/mistral-large  ')).toBe(
+      'mistralai/mistral-large',
+    );
+    expect(normalizeCustomModelIdInput('   ')).toBeNull();
+    expect(normalizeCustomModelIdInput('')).toBeNull();
   });
 });

@@ -26,6 +26,7 @@ import {
   FLOOR_MODEL_SENTINEL,
   FREE_MODEL_SENTINEL,
   getFreeCuratedModel,
+  isAutoGroupSentinel,
   type CuratedModelTier,
 } from '@/ai/providers/curatedModels';
 
@@ -122,11 +123,28 @@ function selectionResolvesToFreeTier(modelId: string): boolean {
   return modelId === FREE_MODEL_SENTINEL || (freeModel ? modelId === freeModel.id : false);
 }
 
+export function isCustomModelId(modelId: string): boolean {
+  return (
+    modelId.trim().length > 0 &&
+    !isAutoGroupSentinel(modelId) &&
+    !CURATED_MODELS.some((model) => model.id === modelId)
+  );
+}
+
+export function normalizeCustomModelIdInput(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export function AiSettingsSection() {
   const [apiKey, setApiKey] = useState<string>(() => readStoredApiKey());
   const [selectedModelId, setSelectedModelIdState] = useState<string>(() =>
     readSelectedModelId(),
   );
+  const [customModelIdInput, setCustomModelIdInput] = useState<string>(() => {
+    const modelId = readSelectedModelId();
+    return isCustomModelId(modelId) ? modelId : '';
+  });
 
   const handleApiKeyChange = useCallback((value: string) => {
     setApiKey(value);
@@ -139,8 +157,19 @@ export function AiSettingsSection() {
   }, []);
 
   const handleModelChange = useCallback((modelId: string) => {
+    setCustomModelIdInput('');
     setSelectedModelIdState(modelId);
     writeSelectedModelId(modelId);
+  }, []);
+
+  const handleCustomModelIdChange = useCallback((value: string) => {
+    setCustomModelIdInput(value);
+    const normalized = normalizeCustomModelIdInput(value);
+    if (!normalized) {
+      return;
+    }
+    setSelectedModelIdState(normalized);
+    writeSelectedModelId(normalized);
   }, []);
 
   const selectedModelLabel = getSelectedModelLabel(selectedModelId);
@@ -233,6 +262,18 @@ export function AiSettingsSection() {
                 })}
               </SelectContent>
             </Select>
+          </LabeledControlRow>
+          <LabeledControlRow label="Custom model id" controlWidth="280px">
+            <Input
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={customModelIdInput}
+              onChange={(event) => handleCustomModelIdChange(event.target.value)}
+              placeholder="e.g. mistralai/mistral-large"
+              aria-label="Custom OpenRouter model id"
+              className="text-sm"
+            />
           </LabeledControlRow>
         </ControlGroup>
         <NoticeSurface tone="info" icon={<KeyRound className="h-3.5 w-3.5" />} className="mt-3">
