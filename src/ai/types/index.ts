@@ -28,12 +28,19 @@ export type ToolCall = {
  * - For a `mutation` tool, `draftCommands` carries a *staged draft* — commands
  *   that have been validated but NOT applied. Nothing mutates the document
  *   until the human user explicitly approves.
+ * - `error`, when set, means the call was rejected (disallowed tool name or
+ *   malformed/invalid arguments) rather than executed. This is Task 7's
+ *   minimal extension to the Task 6 shape: rejections must be a visible,
+ *   reportable value on the result — never a silent no-op and never a thrown
+ *   exception from the router. `kind` is set to `'query'` on a rejection (no
+ *   mutation was ever attempted); callers should check `error` first.
  */
 export type ToolResult = {
   toolCallId: string;
   kind: 'query' | 'mutation';
   queryData?: unknown;
   draftCommands?: AiDocumentCommand[];
+  error?: string;
 };
 
 /**
