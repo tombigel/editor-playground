@@ -25,6 +25,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add OpenRouter provider adapter with curated model list
 - add lazy-loaded AI assistant panel with read-only chat
 - add AI draft diff card with approve/reject and showcase entry
+- add AI provider, model, and API key settings
 
 ### Changed
 

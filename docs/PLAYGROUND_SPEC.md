@@ -528,6 +528,15 @@ The AI command layer (`src/api/ai/`, documented fully in `docs/API_AI.md`) is th
 - Apply is all-or-nothing. If any single command in the batch now fails validation (for example, a referenced node was deleted in the meantime), the entire batch is rejected — `AiCommandBatchRejectedError` is thrown from `applyAiDocumentCommands`, `editorApi.applyAiCommands` returns the editor state unchanged, and **zero** commands from the batch are applied. There is no partial-apply outcome: a batch either lands completely as one committed, undoable change, or not at all.
 - This all-or-nothing/stale-draft guarantee is what will let a future draft-review UI promise "what you approved is what happened" — the document can never end up in a state that only partially reflects an approved proposal.
 
+### Settings: provider, model, and API key
+
+- Settings has an **AI Assistant** section (`src/panels/settings/sections/AiSettingsSection.tsx`) with three controls: a masked OpenRouter API key field with a Clear affordance, a model picker populated from the curated allowlist (`CURATED_MODELS`, `src/ai/providers/curatedModels.ts`), and an inline notice about key handling.
+- The notice states plainly, at the point of key entry: the key is stored only in the browser's local storage and sent directly from the browser to OpenRouter, never to any other server — a deliberate client-only, bring-your-own-model design, not a security oversight.
+- **Coordination with the AI panel:** Settings and the AI panel (`src/panels/AiPanel.tsx`) are separate React trees — `AiConversationProvider` mounts fresh only while the AI panel is open and is not lifted above Settings in the app shell. Settings therefore does not call `useAiConversation()` directly; instead:
+  - The API key field reads/writes `localStorage[AI_PROVIDER_KEY_STORAGE_KEY]` (the exact constant exported from `AiPanel.tsx`) in the same plain-string format `AiPanel.tsx` reads.
+  - The model picker reads/writes the persisted conversation state via `conversationStore.tsx`'s own `loadPersistedConversationState`/`persistConversationState` functions (not a re-derived JSON shape), under the same `editor-playground.ai-conversation.v1` key the store already persists to.
+  - Because `AiConversationProvider` re-reads localStorage on every mount, a key or model changed in Settings takes effect the next time the AI panel is opened (already-open panels are not live-reactive to a Settings change).
+
 ## Import / Export
 
 The playground imports and exports document JSON and exports a rendered site bundle. It does not export full editor session state.

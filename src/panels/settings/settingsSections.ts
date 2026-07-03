@@ -4,6 +4,7 @@ import {
   Eye,
   Keyboard,
   BookOpenText,
+  Sparkles,
   SlidersHorizontal,
   ToggleRight,
   Type,
@@ -14,6 +15,7 @@ export type SettingsSectionId =
   | 'pages'
   | 'defaults'
   | 'fonts'
+  | 'ai'
   | 'transfer'
   | 'advanced'
   | 'shortcuts';
@@ -51,6 +53,12 @@ export const SETTINGS_SECTION_META: SettingsSectionMeta[] = [
     label: 'Fonts',
     icon: Type,
     description: 'Site font library.',
+  },
+  {
+    id: 'ai',
+    label: 'AI Assistant',
+    icon: Sparkles,
+    description: 'Provider, model, and API key.',
   },
   {
     id: 'transfer',

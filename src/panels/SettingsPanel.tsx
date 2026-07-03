@@ -19,6 +19,7 @@ import type { ActionResult } from './settingsTransfer';
 import type { SettingsTransferState } from './settings/useSettingsTransferState';
 import { useSettingsTransferState } from './settings/useSettingsTransferState';
 import { AdvancedSettingsSection } from './settings/sections/AdvancedSettingsSection';
+import { AiSettingsSection } from './settings/sections/AiSettingsSection';
 import { DefaultsSettingsSection } from './settings/sections/DefaultsSettingsSection';
 import { DisplaySettingsSection } from './settings/sections/DisplaySettingsSection';
 import { FontsSettingsSection } from './settings/sections/FontsSettingsSection';
@@ -139,6 +140,7 @@ export function SettingsPanel({
   const pagesRef = useRef<HTMLElement | null>(null);
   const defaultsRef = useRef<HTMLElement | null>(null);
   const fontsRef = useRef<HTMLElement | null>(null);
+  const aiRef = useRef<HTMLElement | null>(null);
   const transferRef = useRef<HTMLElement | null>(null);
   const advancedRef = useRef<HTMLElement | null>(null);
   const shortcutsRef = useRef<HTMLElement | null>(null);
@@ -153,6 +155,7 @@ export function SettingsPanel({
       pages: pagesRef,
       defaults: defaultsRef,
       fonts: fontsRef,
+      ai: aiRef,
       transfer: transferRef,
       advanced: advancedRef,
       shortcuts: shortcutsRef,
@@ -404,6 +407,8 @@ function renderSectionContent(
           onPurgeUnused={props.onPurgeUnusedFonts}
         />
       );
+    case 'ai':
+      return <AiSettingsSection />;
     case 'transfer':
       return (
         <TransferSettingsSection
