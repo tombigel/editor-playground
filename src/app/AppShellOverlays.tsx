@@ -372,6 +372,9 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onPositionChange={onAiPositionChange}
 						onClose={onCloseAi}
 						onOpenSettings={onOpenAiSettings}
+						onApplyAiCommands={(commands) =>
+							dispatch({ type: "applyAiCommands", commands })
+						}
 					/>
 				</Suspense>
 			) : null}

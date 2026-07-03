@@ -1,4 +1,4 @@
-import { AppWindow, Blocks, Cuboid, Palette } from "lucide-react";
+import { AppWindow, Blocks, Cuboid, Palette, Sparkles } from "lucide-react";
 import type { DSSection } from "./types";
 
 export const DS_SECTIONS: DSSection[] = [
@@ -84,6 +84,14 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "composite-focused-panel", label: "Focused Panel" },
 			{ id: "composite-section-templates", label: "Section Templates" },
 			{ id: "composite-font-management", label: "Font Management" },
+		],
+	},
+	{
+		id: "ai",
+		label: "AI Assistant",
+		icon: Sparkles,
+		subsections: [
+			{ id: "composite-ai-draft-diff", label: "AI Draft Diff Card" },
 		],
 	},
 ];

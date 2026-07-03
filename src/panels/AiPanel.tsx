@@ -14,6 +14,8 @@ import { FloatingPanelShell } from "@/components/ui/floating-panel-shell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { NoticeSurface } from "@/components/ui/settings-panel";
+import { applyAiCommands } from "@/api/editorApi";
+import type { AiDocumentCommand } from "@/api/ai/types";
 import type { DocumentModel } from "@/model/types";
 import type { EditorState } from "@/editor/types/index";
 import { createOpenRouterAdapter } from "@/ai/providers/openRouterAdapter";
@@ -25,7 +27,37 @@ import {
 } from "@/ai/conversationStore";
 import { EditorPanelHeader } from "./EditorPanelHeader";
 import { AiMessageList } from "./ai/AiMessageList";
+import { AiDraftDiffCard } from "./ai/AiDraftDiffCard";
 import { useAiChat } from "./ai/useAiChat";
+
+export const STALE_DRAFT_MESSAGE =
+	"This proposal is out of date and can't be applied — ask the assistant to try again.";
+
+/**
+ * The single UI-layer entry point into `editorApi.applyAiCommands`.
+ *
+ * This is intentionally the ONLY place under `src/panels/` that calls
+ * `applyAiCommands` — the whole feature's safety guarantee ("an AI proposal
+ * only becomes a committed, undoable document change through one audited
+ * path"). It runs the batch against `editorState` purely to detect staleness:
+ * `applyAiCommands` re-validates every command against the current document
+ * and, when it rejects the batch (e.g. a referenced node was deleted since the
+ * draft was created), returns the SAME `EditorState` reference — a true no-op
+ * (see `src/editor/editorMutations/core.ts`).
+ *
+ * Returns `{ stale: true }` when nothing changed, so the caller surfaces the
+ * stale state instead of silently clearing the draft; otherwise `{ stale:
+ * false }` and the caller commits the batch through the history-tracked
+ * dispatch. The recomputed state here is discarded — the dispatch path is the
+ * source of truth for the committed, undoable entry.
+ */
+export function applyApprovedDraft(
+	editorState: EditorState,
+	commands: AiDocumentCommand[],
+): { stale: boolean } {
+	const nextState = applyAiCommands(editorState, commands);
+	return { stale: nextState === editorState };
+}
 
 /**
  * localStorage key holding the user's OpenRouter API key.
@@ -70,6 +102,14 @@ export type AiPanelProps = {
 	onClose: () => void;
 	onOpenSettings?: () => void;
 	/**
+	 * Commits an approved AI draft as a single, history-tracked editor action.
+	 * Wired by the app shell to `dispatch({ type: 'applyAiCommands', commands })`
+	 * so the batch becomes exactly one undoable entry. The panel only calls this
+	 * AFTER its own staleness check (see `AiPanelBody`) confirms the batch still
+	 * applies against the current document.
+	 */
+	onApplyAiCommands?: (commands: AiDocumentCommand[]) => void;
+	/**
 	 * Test seam: inject a mocked `ProviderAdapter` instead of building a real
 	 * OpenRouter adapter from a stored key. Task 9 verifies against a mock since
 	 * no key-entry UI exists until Task 11.
@@ -87,6 +127,7 @@ export function AiPanel({
 	onOpenChange,
 	onClose,
 	onOpenSettings,
+	onApplyAiCommands,
 	adapterOverride,
 }: AiPanelProps) {
 	const surfaceRef = useRef<HTMLDivElement | null>(null);
@@ -200,6 +241,7 @@ export function AiPanel({
 					document={document}
 					editorState={editorState}
 					onOpenSettings={onOpenSettings}
+					onApplyAiCommands={onApplyAiCommands}
 					adapterOverride={adapterOverride}
 				/>
 			</AiConversationProvider>
@@ -211,6 +253,7 @@ type AiPanelBodyProps = {
 	document: DocumentModel;
 	editorState: EditorState;
 	onOpenSettings?: () => void;
+	onApplyAiCommands?: (commands: AiDocumentCommand[]) => void;
 	adapterOverride?: ProviderAdapter;
 };
 
@@ -218,11 +261,40 @@ function AiPanelBody({
 	document,
 	editorState,
 	onOpenSettings,
+	onApplyAiCommands,
 	adapterOverride,
 }: AiPanelBodyProps) {
 	const conversation = useAiConversation();
 	const [input, setInput] = useState("");
+	const [staleError, setStaleError] = useState<string | null>(null);
 	const scrollRef = useRef<HTMLDivElement | null>(null);
+
+	const { pendingDraft, clearPendingDraft } = conversation;
+
+	const handleApproveDraft = useCallback(
+		(commands: AiDocumentCommand[]) => {
+			// Delegates to `applyApprovedDraft` — the single UI-layer call site of
+			// `editorApi.applyAiCommands` — to detect a stale draft. A stale batch
+			// must NOT be silently cleared; surface it and keep the draft.
+			const { stale } = applyApprovedDraft(editorState, commands);
+			if (stale) {
+				setStaleError(STALE_DRAFT_MESSAGE);
+				return;
+			}
+
+			// Not stale: commit through the app-shell dispatch so the batch lands
+			// as exactly one undoable history entry, then clear the draft.
+			setStaleError(null);
+			onApplyAiCommands?.(commands);
+			clearPendingDraft();
+		},
+		[clearPendingDraft, editorState, onApplyAiCommands],
+	);
+
+	const handleRejectDraft = useCallback(() => {
+		setStaleError(null);
+		clearPendingDraft();
+	}, [clearPendingDraft]);
 
 	const storedKey = adapterOverride ? "mock" : readStoredApiKey();
 	const modelId =
@@ -320,6 +392,17 @@ function AiPanelBody({
 						The proposed change was too large and was trimmed. Ask for a
 						smaller edit.
 					</NoticeSurface>
+				</div>
+			) : null}
+			{pendingDraft ? (
+				<div className="px-3 pb-2">
+					<AiDraftDiffCard
+						draftBatch={pendingDraft}
+						document={document}
+						onApprove={handleApproveDraft}
+						onReject={handleRejectDraft}
+						staleError={staleError}
+					/>
 				</div>
 			) : null}
 			<form

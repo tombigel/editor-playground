@@ -5,6 +5,7 @@ import { DesignSystemNav } from "./DesignSystemNav";
 import { DesignSystemStage } from "./DesignSystemStage";
 import { DesignSystemThemePanel } from "./DesignSystemThemePanel";
 import { DS_SECTIONS } from "./registry";
+import { AiSection } from "./sections/ai";
 import { BaseComponentsSection } from "./sections/base";
 import { CompositeSection } from "./sections/composite";
 import { DesignTokensSection } from "./sections/DesignTokensSection";
@@ -82,6 +83,13 @@ export default function DesignSystemApp() {
 							Panels
 						</h2>
 						<PanelsSection />
+					</section>
+
+					<section className="mb-16">
+						<h2 className="editor-text-strong mb-6 text-xl font-bold">
+							AI Assistant
+						</h2>
+						<AiSection />
 					</section>
 				</DesignSystemStage>
 			</div>

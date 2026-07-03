@@ -49,6 +49,7 @@ export default defineConfig({
 				base: "./base.html",
 				composite: "./composite.html",
 				panels: "./panels.html",
+				ai: "./ai.html",
 			},
 			output: {
 				chunkFileNames: "assets/[name]-[hash].js",

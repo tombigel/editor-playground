@@ -507,13 +507,20 @@ Undo/redo uses an in-memory history stack.
 
 ## AI Command Layer
 
-The AI command layer (`src/api/ai/`, documented fully in `docs/API_AI.md`) is the underlying mechanism an eventual conversational editor UI will call — this section describes the API/reducer-level behavior that exists today, not an already-visible end-user feature. No AI panel or chat surface exists yet.
+The AI command layer (`src/api/ai/`, documented fully in `docs/API_AI.md`) is the underlying mechanism the conversational editor UI calls. A floating, lazily-loaded AI panel (`src/panels/AiPanel.tsx`) hosts the read-only chat and the draft-review card described below; this section describes both the API/reducer-level behavior and the draft/approve UX that surfaces it.
 
 ### Draft, approve, apply
 
 - The AI layer never mutates a document directly. Read-only query tools (`getDocumentTree`, `searchNodesByText`, etc.) execute immediately, since there is nothing to undo. Mutation tools (`setRect`, `deleteNode`, `insertSectionTemplate`, and 9 others — the full 12-command v1 surface) are proposed as an `AiDocumentCommand[]` batch, validated, and staged as a **draft**, never applied on proposal.
-- `editorApi.applyAiCommands(state, commands)` is the only function that commits a draft. It is expected to be called from exactly one place once the approval UI exists (a future Approve action) — orchestration code that proposes drafts has no access to the dispatcher and cannot apply a batch itself.
+- `editorApi.applyAiCommands(state, commands)` is the only function that commits a draft, and it is called from exactly one place in the whole UI: the Approve action of the AI draft-review card (`src/panels/ai/AiDraftDiffCard.tsx`, wired through `src/panels/AiPanel.tsx`). Orchestration code that proposes drafts has no access to the dispatcher and cannot apply a batch itself.
 - A dispatched `{ type: 'applyAiCommands', commands }` action produces exactly **one** history entry for the whole batch, regardless of how many commands it contains. Undo reverts the entire batch together, the same "one transaction per action" semantics the History Model section above uses for move/non-text updates — never a partial undo of just the last command in the batch.
+
+### Draft-review card (Approve / Reject)
+
+- A staged draft renders in the AI panel as a **draft diff card**: one row per proposed command with a short human-readable summary and, where applicable, a current→proposed (before→after) value (for example, a `setText` shows the node's current text vs. the proposed text; a `setRect` shows the current field value vs. the proposed one). Insert/delete operations that have no meaningful "before" value describe the operation itself.
+- **Destructive commands (`deleteNode`) are rendered visually distinct** from additive/edit commands — a danger-toned row with a delete icon and left border, plus an "Includes deletion" badge and a destructive-styled Approve button — so a deletion cannot be approved by reflex.
+- **Approve** commits the whole batch (see the single-call-site guarantee above) as one undoable entry, then clears the draft. **Reject** clears the draft and never touches the document.
+- If Approve is attempted on a **stale draft** (a referenced node changed or was removed since the draft was proposed, so the apply-time re-validation rejects the batch), the card does not silently clear. It surfaces an explicit out-of-date message and swaps Approve for a Dismiss-and-regenerate affordance, asking the user to have the assistant try again.
 
 ### Validation and stale-draft rejection
 
