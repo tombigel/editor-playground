@@ -97,6 +97,15 @@ export const CURATED_MODELS: CuratedModel[] = [
     inputPricePerMillion: 0,
     outputPricePerMillion: 0,
   },
+  {
+    id: 'qwen/qwen3-next-80b-a3b-instruct:free',
+    name: 'Qwen3 Next 80B',
+    label: 'Qwen3 Next 80B — free instruct, rate-limited',
+    provider: 'Qwen',
+    tier: 'free',
+    inputPricePerMillion: 0,
+    outputPricePerMillion: 0,
+  },
 ];
 
 export function isAutoGroupSentinel(value: string): value is AutoGroupSentinel {

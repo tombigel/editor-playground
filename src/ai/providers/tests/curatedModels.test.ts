@@ -12,9 +12,9 @@ import {
 } from '../curatedModels';
 
 describe('CURATED_MODELS', () => {
-  it('has between 3 and 5 entries', () => {
+  it('has between 3 and 6 entries', () => {
     expect(CURATED_MODELS.length).toBeGreaterThanOrEqual(3);
-    expect(CURATED_MODELS.length).toBeLessThanOrEqual(5);
+    expect(CURATED_MODELS.length).toBeLessThanOrEqual(6);
   });
 
   it('has a non-empty id, label, and provider for every entry', () => {
@@ -73,13 +73,15 @@ describe('CURATED_MODELS', () => {
     expect(isAutoGroupSentinel('openai/gpt-5.4')).toBe(false);
   });
 
-  it('finds the single free curated model', () => {
+  it('finds curated free models', () => {
     const freeModel = getFreeCuratedModel();
+    const freeModels = CURATED_MODELS.filter((model) => model.tier === 'free');
 
     expect(freeModel).toBeDefined();
     expect(freeModel?.tier).toBe('free');
-    expect(freeModel?.inputPricePerMillion).toBe(0);
-    expect(freeModel?.outputPricePerMillion).toBe(0);
+    expect(freeModels.map((model) => model.id)).toContain('qwen/qwen3-next-80b-a3b-instruct:free');
+    expect(freeModels.every((model) => model.inputPricePerMillion === 0)).toBe(true);
+    expect(freeModels.every((model) => model.outputPricePerMillion === 0)).toBe(true);
   });
 
   it('finds the cheapest non-free model for Floor', () => {

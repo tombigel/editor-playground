@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Added
 
 - improve assistant panel responses
+- add Qwen free model option
 
 ### Fixed
 
