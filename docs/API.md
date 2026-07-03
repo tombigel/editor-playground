@@ -10,6 +10,7 @@ This landing page now points to nested reference pages instead of keeping the en
 - [Text](./API_TEXT.md)
 - [Pages and Site](./API_PAGES_AND_SITE.md)
 - [Editor](./API_EDITOR.md)
+- [AI](./API_AI.md)
 - [Rendering and Export](./API_RENDERING_AND_EXPORT.md)
 - [Types](./API_TYPES.md)
 

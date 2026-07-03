@@ -28,6 +28,7 @@ This spec is implementation-oriented. For the quickest path through it:
 - [Layout Model](#layout-model)
 - [Ordering Model](#ordering-model)
 - [History Model](#history-model)
+- [AI Command Layer](#ai-command-layer)
 - [Import / Export](#import--export)
 - [Units](#units)
 - [Font Management](#font-management)
@@ -503,6 +504,22 @@ Undo/redo uses an in-memory history stack.
 
 - `Cmd + Z` / `Cmd + Shift + Z` are handled by the app outside text-entry contexts.
 - In text fields and other editable content, native browser undo/redo is preserved.
+
+## AI Command Layer
+
+The AI command layer (`src/api/ai/`, documented fully in `docs/API_AI.md`) is the underlying mechanism an eventual conversational editor UI will call — this section describes the API/reducer-level behavior that exists today, not an already-visible end-user feature. No AI panel or chat surface exists yet.
+
+### Draft, approve, apply
+
+- The AI layer never mutates a document directly. Read-only query tools (`getDocumentTree`, `searchNodesByText`, etc.) execute immediately, since there is nothing to undo. Mutation tools (`setRect`, `deleteNode`, `insertSectionTemplate`, and 9 others — the full 12-command v1 surface) are proposed as an `AiDocumentCommand[]` batch, validated, and staged as a **draft**, never applied on proposal.
+- `editorApi.applyAiCommands(state, commands)` is the only function that commits a draft. It is expected to be called from exactly one place once the approval UI exists (a future Approve action) — orchestration code that proposes drafts has no access to the dispatcher and cannot apply a batch itself.
+- A dispatched `{ type: 'applyAiCommands', commands }` action produces exactly **one** history entry for the whole batch, regardless of how many commands it contains. Undo reverts the entire batch together, the same "one transaction per action" semantics the History Model section above uses for move/non-text updates — never a partial undo of just the last command in the batch.
+
+### Validation and stale-draft rejection
+
+- Every command is validated against the *current* document at apply time via `validateAiCommand` (`src/api/ai/validation.ts`), not against whatever document existed when the draft was first proposed. This matters because a draft can go stale: the document may change between proposal and approval through normal editor use, or even a second approved AI batch.
+- Apply is all-or-nothing. If any single command in the batch now fails validation (for example, a referenced node was deleted in the meantime), the entire batch is rejected — `AiCommandBatchRejectedError` is thrown from `applyAiDocumentCommands`, `editorApi.applyAiCommands` returns the editor state unchanged, and **zero** commands from the batch are applied. There is no partial-apply outcome: a batch either lands completely as one committed, undoable change, or not at all.
+- This all-or-nothing/stale-draft guarantee is what will let a future draft-review UI promise "what you approved is what happened" — the document can never end up in a state that only partially reflects an approved proposal.
 
 ## Import / Export
 
