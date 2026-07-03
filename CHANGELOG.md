@@ -27,6 +27,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add AI draft diff card with approve/reject and showcase entry
 - add AI provider, model, and API key settings
 - restructure curated models into 3 data-driven cost/value tiers
+- add structured model pricing and automatic sentinels
 
 ### Changed
 
