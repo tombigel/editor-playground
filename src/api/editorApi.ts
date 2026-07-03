@@ -7,6 +7,7 @@
  */
 
 import * as editorStore from '../editor/editorStore';
+import type { AiDocumentCommand } from './ai/types/index';
 import * as stageNavigation from '../editor/stageNavigation';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../model/defaults';
 import { getNode } from '../model/selectors';
@@ -80,6 +81,7 @@ import {
 
 /** Types shared between documentApi and editorApi, plus editor-specific types. */
 export type {
+  AiDocumentCommand,
   ContainerNode,
   ContainerSubtype,
   DocumentModel,
@@ -112,6 +114,7 @@ export type {
 } from './editorNavigationApi';
 
 /** State lifecycle: create, load, persist, and reset editor state. */
+export const applyAiCommands = editorStore.applyAiCommands;
 export const cancelPromoteWrapperRole = editorStore.cancelPromoteWrapperRole;
 export const clearSessionState = editorStore.clearSessionState;
 export const clearPersistedState = editorStore.clearPersistedState;

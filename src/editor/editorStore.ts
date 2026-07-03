@@ -26,6 +26,7 @@ export {
 export {
   setActivePage,
   importDocument,
+  applyAiCommands,
   insertWrapper,
   insertSectionTemplate,
   insertLeaf,

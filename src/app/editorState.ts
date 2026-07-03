@@ -1,4 +1,5 @@
 import {
+  applyAiCommands,
   applyTextNodeMarkdown,
   alignNodes,
   cancelPromoteWrapperRole,
@@ -532,6 +533,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: syncPageHrefLinks(state.document, action.oldUrl, action.newUrl) };
     case 'setSiteSettings':
       return { ...state, document: setSiteSettings(state.document, action.patch) };
+    case 'applyAiCommands':
+      return applyAiCommands(state, action.commands);
     default:
       return state;
   }

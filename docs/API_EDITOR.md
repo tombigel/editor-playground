@@ -60,6 +60,8 @@ The app shell should consume these APIs for URL-driven or scripted navigation be
 
 The editor should delegate important document mutations to pure APIs first, then layer on selection/history behavior through `editorApi` and related state helpers.
 
+`applyAiCommands(state, commands: AiDocumentCommand[])` commits a batch of AI-proposed commands (see `docs/API_AI.md`) as a single, atomic `EditorState` update: it delegates to `applyAiDocumentCommands` (`src/api/ai/commands.ts`), which re-validates every command against the *current* document and applies all-or-nothing. Dispatching the corresponding `{ type: 'applyAiCommands' }` action through `historyReducer` produces exactly one undo/redo history entry for the whole batch — undo reverts every command in the batch together, never one field at a time. If the batch is rejected (a stale draft referencing a node that no longer exists, for example), `applyAiCommands` returns the state unchanged: no document mutation, no history entry.
+
 ## Rule Of Thumb
 
 If a behavior matters outside the current editor shell, it should exist in a headless API first and only then be surfaced through editor state.

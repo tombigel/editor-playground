@@ -23,6 +23,7 @@ import type {
 } from '../../api/documentApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
 import type { EditorNavigationUrlState, EditorNodeTarget } from '../../api/editorNavigationApi';
+import type { AiDocumentCommand } from '../../api/ai/types/index';
 
 export type { SnapSettings, AnimationPreviewState };
 
@@ -181,7 +182,8 @@ export type EditorAction =
   | { type: 'setTextDocumentContent'; id: NodeId; content: TextDocumentContent; options?: SetTextDocumentContentOptions }
   | { type: 'setTextDocumentBlockGap'; id: NodeId; value: number }
   | { type: 'syncPageLinks'; oldUrl: string; newUrl: string }
-  | { type: 'setSiteSettings'; patch: Partial<SiteSettings> };
+  | { type: 'setSiteSettings'; patch: Partial<SiteSettings> }
+  | { type: 'applyAiCommands'; commands: AiDocumentCommand[] };
 
 export type HistoryAction =
   | EditorAction

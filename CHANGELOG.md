@@ -19,6 +19,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - scaffold AI command types and tool manifest
 - add AI read-only document query tools
 - add AI mutation command batch apply and validation
+- add single-undo AI command batch commit path
 
 ### Changed
 
