@@ -380,9 +380,9 @@ describe('ai assistant draft/approve/undo e2e', () => {
       .locator('.editor-ai-panel [data-ai-role="assistant"]:not([data-ai-streaming="true"])')
       .filter({ hasText: 'auto delegated' });
     await assistantMessage.waitFor({ state: 'visible' });
-    expect(await assistantMessage.textContent()).toContain('Answered by qwen/qwen3-next-80b-a3b-instruct:free');
+    expect(await assistantMessage.textContent()).toContain('Answered by Qwen3 Next 80B');
     await aiPage
-      .getByText('Model: qwen/qwen3-next-80b-a3b-instruct:free')
+      .getByText('Model: Qwen3 Next 80B')
       .waitFor({ state: 'visible' });
 
     expect(requestBodies).toHaveLength(1);

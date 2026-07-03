@@ -176,6 +176,10 @@ describe('app/axe accessibility e2e', () => {
     await settingsDialog.waitFor({ state: 'visible' });
     await settingsDialog.locator('[data-settings-nav="ai"]').click();
     await settingsDialog.getByLabel('OpenRouter API key').fill('sk-or-fake-a11y-key');
+    // The custom model id field only renders once "Custom Model" is the
+    // active selection — the default model falls back to the Free router.
+    await settingsDialog.getByLabel('Model').click();
+    await settingsDialog.locator('[data-ui="select-content"]').getByText('Custom Model').click();
     await settingsDialog.getByLabel('Custom OpenRouter model id').waitFor({ state: 'visible' });
     await settingsDialog.getByLabel('Prompt caching').waitFor({ state: 'visible' });
     await settingsDialog.getByRole('link', { name: /Get an OpenRouter key/ }).waitFor({ state: 'visible' });

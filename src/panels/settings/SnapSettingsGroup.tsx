@@ -37,6 +37,7 @@ function SnapSubRow({
         <div className="w-16">
           <Input
             type="number"
+            aria-label={label}
             min={min}
             max={max}
             value={value}

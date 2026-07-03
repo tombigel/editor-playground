@@ -317,7 +317,7 @@ export function ManageFontsPanel({
           </LabeledFieldStack>
           <LabeledFieldStack label="Language" className="space-y-1" labelClassName="text-[11px] font-medium">
             <Select value={subset} onValueChange={(value) => setFilters((current) => ({ ...current, subset: value }))}>
-              <SelectTrigger className="text-[11px]">
+              <SelectTrigger className="text-[11px]" aria-label="Language">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -331,7 +331,7 @@ export function ManageFontsPanel({
           </LabeledFieldStack>
           <LabeledFieldStack label="Category" className="space-y-1" labelClassName="text-[11px] font-medium">
             <Select value={category} onValueChange={(value) => setFilters((current) => ({ ...current, category: value }))}>
-              <SelectTrigger className="text-[11px]">
+              <SelectTrigger className="text-[11px]" aria-label="Category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -401,7 +401,7 @@ export function ManageFontsPanel({
                         setFilters((current) => ({ ...current, pageSize: normalizeCatalogPageSize(Number.parseInt(value, 10)) }))
                       }
                     >
-                      <SelectTrigger className="h-7 w-[72px] text-[11px]">
+                      <SelectTrigger className="h-7 w-[72px] text-[11px]" aria-label="Show">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

@@ -56,7 +56,7 @@ export function PagesSiteSettingsContent({
                 })
               }
             >
-              <SelectTrigger className="h-7 text-xs">
+              <SelectTrigger className="h-7 text-xs" aria-label="Site transition">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -80,6 +80,7 @@ export function PagesSiteSettingsContent({
 
           <FormField label="Auto-sync slugs" layout="inline">
             <Switch
+              aria-label="Auto-sync slugs"
               checked={siteSettings?.autoSyncSlugs ?? true}
               onCheckedChange={(checked) => onSetSiteSettings({ autoSyncSlugs: checked })}
             />

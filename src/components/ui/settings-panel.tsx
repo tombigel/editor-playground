@@ -402,7 +402,11 @@ export function SettingRow({
 					) : null}
 				</div>
 			</div>
-			<Switch checked={checked} onCheckedChange={onCheckedChange} />
+			<Switch
+				aria-label={title}
+				checked={checked}
+				onCheckedChange={onCheckedChange}
+			/>
 		</div>
 	);
 }
@@ -462,6 +466,7 @@ export function NumericRow({
 			<div className="w-[96px] shrink-0">
 				<Input
 					type="number"
+					aria-label={title}
 					min={1}
 					max={500}
 					value={value}

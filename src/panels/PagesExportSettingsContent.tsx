@@ -48,7 +48,7 @@ export function PagesExportSettingsContent({
             })
           }
         >
-          <SelectTrigger className="h-7 text-xs">
+          <SelectTrigger className="h-7 text-xs" aria-label="Output structure">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
