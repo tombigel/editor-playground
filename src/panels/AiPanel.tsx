@@ -19,7 +19,7 @@ import type { AiDocumentCommand } from "@/api/ai/types";
 import type { DocumentModel } from "@/model/types";
 import type { EditorState } from "@/editor/types/index";
 import { createOpenRouterAdapter } from "@/ai/providers/openRouterAdapter";
-import { CURATED_MODELS } from "@/ai/providers/curatedModels";
+import { FREE_MODEL_SENTINEL } from "@/ai/providers/curatedModels";
 import type { ProviderAdapter } from "@/ai/types/index";
 import {
 	AiConversationProvider,
@@ -297,8 +297,7 @@ function AiPanelBody({
 	}, [clearPendingDraft]);
 
 	const storedKey = adapterOverride ? "mock" : readStoredApiKey();
-	const modelSelection =
-		conversation.selectedModelId ?? CURATED_MODELS[0]?.id ?? "";
+	const modelSelection = conversation.selectedModelId ?? FREE_MODEL_SENTINEL;
 
 	const buildAdapter = useMemo<((modelId: string) => ProviderAdapter) | null>(() => {
 		if (adapterOverride) {
@@ -350,7 +349,8 @@ function AiPanelBody({
 		return (
 			<div className="flex flex-col gap-3 p-3">
 				<NoticeSurface tone="info" className="text-sm">
-					Add your OpenRouter API key in Settings to start chatting.
+					Add a free OpenRouter API key in Settings to start chatting — even
+					the free-tier model needs one (no credit card required).
 				</NoticeSurface>
 				{onOpenSettings ? (
 					<Button

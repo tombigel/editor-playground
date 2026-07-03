@@ -61,8 +61,9 @@ describe("panels/AiPanel", () => {
 		const markup = renderToStaticMarkup(<AiPanel {...makePanelProps()} />);
 
 		expect(markup).toContain(
-			"Add your OpenRouter API key in Settings to start chatting.",
+			"Add a free OpenRouter API key in Settings to start chatting",
 		);
+		expect(markup).toContain("even the free-tier model needs one");
 		expect(markup).not.toContain("Ask about your document…");
 	});
 
@@ -77,7 +78,7 @@ describe("panels/AiPanel", () => {
 			"Ask a question about your document to get started.",
 		);
 		expect(markup).not.toContain(
-			"Add your OpenRouter API key in Settings to start chatting.",
+			"Add a free OpenRouter API key in Settings to start chatting",
 		);
 	});
 

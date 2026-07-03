@@ -212,6 +212,32 @@ const SelectItem = React.forwardRef<
 });
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
+const SelectGroup = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Group>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Group>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Group
+    ref={ref}
+    data-ui="select-group"
+    className={cn('py-1', className)}
+    {...props}
+  />
+));
+SelectGroup.displayName = SelectPrimitive.Group.displayName;
+
+const SelectLabel = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Label
+    ref={ref}
+    data-ui="select-label"
+    className={cn('editor-text-muted px-2 py-1 text-[10px] font-semibold uppercase tracking-wide', className)}
+    {...props}
+  />
+));
+SelectLabel.displayName = SelectPrimitive.Label.displayName;
+
 const SelectSeparator = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
@@ -228,7 +254,9 @@ SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 export {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectSeparator,
   SelectTrigger,
   SelectValue,

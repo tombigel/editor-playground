@@ -1,7 +1,16 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { File } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectOptionRow, SelectTrigger, SelectValue } from '../select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectOptionRow,
+  SelectTrigger,
+  SelectValue,
+} from '../select';
 
 describe('components/ui/select', () => {
   it('uses the shared compact control radius for trigger and content', () => {
@@ -78,5 +87,26 @@ describe('components/ui/select', () => {
     expect(markup).toContain('data-ui="select-option-row"');
     expect(markup).toContain('data-ui="select-option-icon"');
     expect(markup).toContain('data-ui="select-option-description"');
+  });
+
+  it('exposes grouped option labels through shared Radix wrappers', () => {
+    const markup = renderToStaticMarkup(
+      <Select value="free" defaultOpen>
+        <SelectTrigger aria-label="Model">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Automatic</SelectLabel>
+            <SelectItem value="free">Free</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>,
+    );
+
+    expect(markup).toContain('data-ui="select-group"');
+    expect(markup).toContain('data-ui="select-label"');
+    expect(markup).toContain('Automatic');
+    expect(markup).toContain('uppercase');
   });
 });

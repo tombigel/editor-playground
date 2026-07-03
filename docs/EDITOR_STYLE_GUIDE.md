@@ -531,6 +531,9 @@ Content:
 - border: subtle border
 - radius: `rounded-sm`
 - shadow: medium surface shadow
+- grouped option sets should use the shared `SelectGroup` / `SelectLabel`
+  wrappers; labels use muted uppercase `10px` text and stay inside the select
+  content surface
 
 Item highlight:
 

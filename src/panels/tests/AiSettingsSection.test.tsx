@@ -2,7 +2,11 @@ import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AiSettingsSection } from '../settings/sections/AiSettingsSection';
 import { AI_PROVIDER_KEY_STORAGE_KEY } from '../AiPanel';
-import { CURATED_MODELS } from '../../ai/providers/curatedModels';
+import {
+  AUTO_GROUP_SENTINELS,
+  CURATED_MODELS,
+  FREE_MODEL_SENTINEL,
+} from '../../ai/providers/curatedModels';
 import { loadPersistedConversationState } from '../../ai/conversationStore';
 
 /**
@@ -51,7 +55,7 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     );
   });
 
-  it('renders the API key input, the model picker (defaulting to the first curated model), and the storage notice', () => {
+  it('renders the API key input, the model picker defaulting to Free, and the storage notice', () => {
     const markup = renderToStaticMarkup(<AiSettingsSection />);
 
     expect(markup).toContain('aria-label="OpenRouter API key"');
@@ -66,11 +70,20 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     // which only renders in the open option list) to avoid overflowing the
     // fixed-height trigger. All curated models being wired as SelectItems is
     // covered structurally below.
-    expect(markup).toContain(CURATED_MODELS[0]?.name ?? '');
+    expect(markup).toContain('Free');
     expect(markup).toContain('stored only in this browser');
     expect(markup).toContain('sent directly from your browser to OpenRouter');
     expect(markup).toContain('never to any other server');
     expect(markup).toContain('bring-your-own-model');
+    expect(markup).toContain('still requires a free API key');
+  });
+
+  it('keeps the automatic model choices unique and pinned separately from curated ids', () => {
+    expect(AUTO_GROUP_SENTINELS).toEqual(['auto:free', 'auto:floor', 'auto']);
+    expect(new Set(AUTO_GROUP_SENTINELS).size).toBe(AUTO_GROUP_SENTINELS.length);
+    for (const sentinel of AUTO_GROUP_SENTINELS) {
+      expect(CURATED_MODELS.some((model) => model.id === sentinel)).toBe(false);
+    }
   });
 
   it('has at least three curated models available to populate the picker (sanity guard for the round-trip tests below)', () => {
@@ -132,11 +145,12 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(loaded.selectedModelId).toBe(secondModel?.id);
   });
 
-  it('falls back to the first curated model when no selection has been persisted yet', () => {
+  it('falls back to the Free automatic choice when no selection has been persisted yet', () => {
     const markup = renderToStaticMarkup(<AiSettingsSection />);
-    const firstModel = CURATED_MODELS[0];
 
     expect(loadPersistedConversationState().selectedModelId).toBeNull();
-    expect(markup).toContain(firstModel?.name ?? '');
+    expect(markup).toContain('Free');
+    expect(markup).not.toContain(CURATED_MODELS[0]?.name ?? '');
+    expect(FREE_MODEL_SENTINEL).toBe('auto:free');
   });
 });

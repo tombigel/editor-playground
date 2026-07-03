@@ -3,8 +3,11 @@ import { EyeOff, File, Files, ListFilter } from "lucide-react";
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
+	SelectLabel,
 	SelectOptionRow,
+	SelectSeparator,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
@@ -195,15 +198,29 @@ function SelectDemo() {
 							/>
 						</SelectTrigger>
 						<SelectContent>
-							{options.map((option) => (
-								<SelectItem key={option.value} value={option.value}>
+							<SelectGroup>
+								<SelectLabel>Pages</SelectLabel>
+								{options.slice(0, 3).map((option) => (
+									<SelectItem key={option.value} value={option.value}>
+										<SelectOptionRow
+											icon={option.icon}
+											label={option.label}
+											labelClassName="text-xs font-medium"
+										/>
+									</SelectItem>
+								))}
+							</SelectGroup>
+							<SelectSeparator />
+							<SelectGroup>
+								<SelectLabel>Visibility</SelectLabel>
+								<SelectItem value={options[3].value}>
 									<SelectOptionRow
-										icon={option.icon}
-										label={option.label}
+										icon={options[3].icon}
+										label={options[3].label}
 										labelClassName="text-xs font-medium"
 									/>
 								</SelectItem>
-							))}
+							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</div>

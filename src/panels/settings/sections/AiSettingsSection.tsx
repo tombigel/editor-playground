@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectSeparator,
   SelectTrigger,
   SelectValue,
@@ -18,7 +20,14 @@ import {
   SectionHeading,
 } from '@/components/ui/settings-panel';
 import { AI_PROVIDER_KEY_STORAGE_KEY } from '@/panels/AiPanel';
-import { CURATED_MODELS, type CuratedModelTier } from '@/ai/providers/curatedModels';
+import {
+  AUTO_MODEL_ID,
+  CURATED_MODELS,
+  FLOOR_MODEL_SENTINEL,
+  FREE_MODEL_SENTINEL,
+  getFreeCuratedModel,
+  type CuratedModelTier,
+} from '@/ai/providers/curatedModels';
 
 const TIER_ORDER: CuratedModelTier[] = ['low-cost', 'good', 'free'];
 
@@ -83,12 +92,34 @@ function writeStoredApiKey(value: string): void {
  */
 function readSelectedModelId(): string {
   const persisted = loadPersistedConversationState();
-  return persisted.selectedModelId ?? CURATED_MODELS[0]?.id ?? '';
+  return persisted.selectedModelId ?? FREE_MODEL_SENTINEL;
 }
 
 function writeSelectedModelId(modelId: string): void {
   const persisted = loadPersistedConversationState();
   persistConversationState({ ...persisted, selectedModelId: modelId });
+}
+
+function getSelectedModelLabel(modelId: string): string {
+  if (modelId === AUTO_MODEL_ID) {
+    return 'Auto';
+  }
+  if (modelId === FLOOR_MODEL_SENTINEL) {
+    return 'Floor';
+  }
+  if (modelId === FREE_MODEL_SENTINEL) {
+    return 'Free';
+  }
+  const curated = CURATED_MODELS.find((model) => model.id === modelId);
+  if (curated) {
+    return `${TIER_LABEL[curated.tier]} · ${curated.name}`;
+  }
+  return modelId.trim().length > 0 ? `Custom: ${modelId}` : 'Free';
+}
+
+function selectionResolvesToFreeTier(modelId: string): boolean {
+  const freeModel = getFreeCuratedModel();
+  return modelId === FREE_MODEL_SENTINEL || (freeModel ? modelId === freeModel.id : false);
 }
 
 export function AiSettingsSection() {
@@ -112,8 +143,8 @@ export function AiSettingsSection() {
     writeSelectedModelId(modelId);
   }, []);
 
-  const selectedModel =
-    CURATED_MODELS.find((model) => model.id === selectedModelId) ?? CURATED_MODELS[0];
+  const selectedModelLabel = getSelectedModelLabel(selectedModelId);
+  const showFreeTierNotice = apiKey.length > 0 && selectionResolvesToFreeTier(selectedModelId);
 
   return (
     <>
@@ -148,13 +179,39 @@ export function AiSettingsSection() {
             </div>
           </LabeledControlRow>
           <LabeledControlRow label="Model" controlWidth="280px">
-            <Select value={selectedModel?.id} onValueChange={handleModelChange}>
+            <Select value={selectedModelId} onValueChange={handleModelChange}>
               <SelectTrigger aria-label="Model">
-                <SelectValue>
-                  {selectedModel ? `${TIER_LABEL[selectedModel.tier]} · ${selectedModel.name}` : ''}
-                </SelectValue>
+                <SelectValue>{selectedModelLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Automatic</SelectLabel>
+                  <SelectItem value={FREE_MODEL_SENTINEL}>
+                    <span className="flex flex-col">
+                      <span>Free</span>
+                      <span className="editor-text-muted text-[11px]">
+                        Always uses the free-tier model. Rate-limited, no fallback.
+                      </span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem value={FLOOR_MODEL_SENTINEL}>
+                    <span className="flex flex-col">
+                      <span>Floor</span>
+                      <span className="editor-text-muted text-[11px]">
+                        Cheapest paid curated model, routed to the cheapest provider.
+                      </span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem value={AUTO_MODEL_ID}>
+                    <span className="flex flex-col">
+                      <span>Auto</span>
+                      <span className="editor-text-muted text-[11px]">
+                        Tries the cheapest model first, then falls back on retryable errors.
+                      </span>
+                    </span>
+                  </SelectItem>
+                </SelectGroup>
+                <SelectSeparator />
                 {TIER_ORDER.flatMap((tier, tierIndex) => {
                   const modelsInTier = CURATED_MODELS.filter((model) => model.tier === tier);
                   if (modelsInTier.length === 0) {
@@ -189,10 +246,17 @@ export function AiSettingsSection() {
           Models are grouped by cost/value tier — Low-cost models benchmark
           close to frontier quality at a fraction of the price; Premium models
           are top-of-market frontier options; Free is rate-limited and best
-          for trying the assistant out. Tier picks are chosen from published
-          OpenRouter pricing and benchmarks across providers, not defaulted to
-          any single vendor.
+          for trying the assistant out. OpenRouter still requires a free API
+          key for free-tier models (no credit card needed). Tier picks are
+          chosen from published OpenRouter pricing and benchmarks across
+          providers, not defaulted to any single vendor.
         </NoticeSurface>
+        {showFreeTierNotice ? (
+          <NoticeSurface tone="info" className="mt-2">
+            You&rsquo;re on the free tier, which is rate-limited by OpenRouter.
+            For higher limits, switch to Floor, Auto, or a specific paid model above.
+          </NoticeSurface>
+        ) : null}
       </PlainGroup>
     </>
   );

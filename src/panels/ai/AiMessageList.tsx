@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 import { NoticeSurface } from "@/components/ui/settings-panel";
 import type { ConversationMessage } from "@/ai/types/index";
+import { CURATED_MODELS } from "@/ai/providers/curatedModels";
 
 /**
  * Read-only transcript renderer for the AI assistant panel (Task 9).
@@ -92,6 +93,7 @@ function AiMessageBubble({ message }: { message: ConversationMessage }) {
 	}
 
 	// assistant
+	const respondingModelName = getRespondingModelName(message.respondingModelId);
 	return (
 		<div
 			className={cn(
@@ -106,6 +108,22 @@ function AiMessageBubble({ message }: { message: ConversationMessage }) {
 					Proposed a change (see draft below).
 				</span>
 			)}
+			{respondingModelName ? (
+				<div className="editor-text-muted mt-2 text-[11px]">
+					Answered by {respondingModelName}
+				</div>
+			) : null}
 		</div>
 	);
+}
+
+function getRespondingModelName(modelId: string | undefined): string | null {
+	if (!modelId) {
+		return null;
+	}
+	const normalizedId = modelId.endsWith(":floor")
+		? modelId.slice(0, -":floor".length)
+		: modelId;
+	const curated = CURATED_MODELS.find((model) => model.id === normalizedId);
+	return curated?.name ?? modelId;
 }
