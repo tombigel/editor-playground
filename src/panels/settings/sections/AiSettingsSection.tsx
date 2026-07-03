@@ -2,7 +2,14 @@ import { useCallback, useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   ControlGroup,
   LabeledControlRow,
@@ -11,7 +18,15 @@ import {
   SectionHeading,
 } from '@/components/ui/settings-panel';
 import { AI_PROVIDER_KEY_STORAGE_KEY } from '@/panels/AiPanel';
-import { CURATED_MODELS } from '@/ai/providers/curatedModels';
+import { CURATED_MODELS, type CuratedModelTier } from '@/ai/providers/curatedModels';
+
+const TIER_ORDER: CuratedModelTier[] = ['low-cost', 'good', 'free'];
+
+const TIER_LABEL: Record<CuratedModelTier, string> = {
+  'low-cost': 'Low-cost',
+  good: 'Premium',
+  free: 'Free',
+};
 import {
   loadPersistedConversationState,
   persistConversationState,
@@ -135,14 +150,30 @@ export function AiSettingsSection() {
           <LabeledControlRow label="Model" controlWidth="280px">
             <Select value={selectedModel?.id} onValueChange={handleModelChange}>
               <SelectTrigger aria-label="Model">
-                <SelectValue>{selectedModel?.label}</SelectValue>
+                <SelectValue>
+                  {selectedModel ? `${TIER_LABEL[selectedModel.tier]} · ${selectedModel.name}` : ''}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {CURATED_MODELS.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    {model.provider} — {model.label}
-                  </SelectItem>
-                ))}
+                {TIER_ORDER.flatMap((tier, tierIndex) => {
+                  const modelsInTier = CURATED_MODELS.filter((model) => model.tier === tier);
+                  if (modelsInTier.length === 0) {
+                    return [];
+                  }
+                  return [
+                    tierIndex > 0 ? <SelectSeparator key={`${tier}-sep`} /> : null,
+                    ...modelsInTier.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        <span className="flex flex-col">
+                          <span>
+                            {TIER_LABEL[tier]} · {model.provider} — {model.name}
+                          </span>
+                          <span className="editor-text-muted text-[11px]">{model.label}</span>
+                        </span>
+                      </SelectItem>
+                    )),
+                  ];
+                })}
               </SelectContent>
             </Select>
           </LabeledControlRow>
@@ -153,6 +184,14 @@ export function AiSettingsSection() {
           to any other server. This tool is bring-your-own-model by design: no
           proxy or backend ever sees or stores your key. That is a deliberate
           client-only tradeoff, not a security oversight.
+        </NoticeSurface>
+        <NoticeSurface tone="message" className="mt-2">
+          Models are grouped by cost/value tier — Low-cost models benchmark
+          close to frontier quality at a fraction of the price; Premium models
+          are top-of-market frontier options; Free is rate-limited and best
+          for trying the assistant out. Tier picks are chosen from published
+          OpenRouter pricing and benchmarks across providers, not defaulted to
+          any single vendor.
         </NoticeSurface>
       </PlainGroup>
     </>

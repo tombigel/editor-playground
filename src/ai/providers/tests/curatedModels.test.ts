@@ -33,4 +33,22 @@ describe('CURATED_MODELS', () => {
     const ids = new Set(CURATED_MODELS.map((model) => model.id));
     expect(ids.size).toBe(CURATED_MODELS.length);
   });
+
+  it('has a valid tier for every entry', () => {
+    for (const model of CURATED_MODELS) {
+      expect(['free', 'low-cost', 'good']).toContain(model.tier);
+    }
+  });
+
+  it('includes at least one model in each of the three tiers', () => {
+    const tiers = new Set(CURATED_MODELS.map((model) => model.tier));
+    expect(tiers).toEqual(new Set(['free', 'low-cost', 'good']));
+  });
+
+  it('does not default to a single provider across the good/low-cost tiers', () => {
+    const nonFreeProviders = new Set(
+      CURATED_MODELS.filter((model) => model.tier !== 'free').map((model) => model.provider),
+    );
+    expect(nonFreeProviders.size).toBeGreaterThanOrEqual(3);
+  });
 });

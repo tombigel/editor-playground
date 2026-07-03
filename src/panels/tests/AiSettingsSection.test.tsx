@@ -61,9 +61,12 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     // renderToStaticMarkup (no DOM/portal) can't capture when closed — only
     // the trigger's current value is visible in SSR'd markup, matching this
     // repo's existing convention for testing Select-based rows (see
-    // SettingsPanel.test.tsx's Theme/Palette assertions). All curated
-    // models being wired as SelectItems is covered structurally below.
-    expect(markup).toContain(CURATED_MODELS[0]?.label ?? '');
+    // SettingsPanel.test.tsx's Theme/Palette assertions). The trigger shows
+    // a compact "tier · name" value (not the fuller price/benchmark label,
+    // which only renders in the open option list) to avoid overflowing the
+    // fixed-height trigger. All curated models being wired as SelectItems is
+    // covered structurally below.
+    expect(markup).toContain(CURATED_MODELS[0]?.name ?? '');
     expect(markup).toContain('stored only in this browser');
     expect(markup).toContain('sent directly from your browser to OpenRouter');
     expect(markup).toContain('never to any other server');
@@ -134,6 +137,6 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     const firstModel = CURATED_MODELS[0];
 
     expect(loadPersistedConversationState().selectedModelId).toBeNull();
-    expect(markup).toContain(firstModel?.label ?? '');
+    expect(markup).toContain(firstModel?.name ?? '');
   });
 });
