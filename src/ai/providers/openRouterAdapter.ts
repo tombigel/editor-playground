@@ -20,6 +20,10 @@ import type {
 
 const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+type OpenRouterAdapterOptions = {
+  cacheSystemPrompt?: boolean;
+};
+
 /**
  * Creates a {@link ProviderAdapter} bound to a single OpenRouter API key, so
  * callers don't need to pass the key on every `streamChat` call. This is a
@@ -27,10 +31,14 @@ const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/compl
  * already expects and to keep the key private to the closure rather than a
  * public instance field.
  */
-export function createOpenRouterAdapter(apiKey: string, model: string): ProviderAdapter {
+export function createOpenRouterAdapter(
+  apiKey: string,
+  model: string,
+  adapterOptions: OpenRouterAdapterOptions = {},
+): ProviderAdapter {
   return {
     streamChat(messages, tools, options) {
-      return streamChat(apiKey, model, messages, tools, options);
+      return streamChat(apiKey, model, messages, tools, adapterOptions, options);
     },
   };
 }
@@ -40,6 +48,7 @@ async function* streamChat(
   model: string,
   messages: ConversationMessage[],
   tools: AiToolDefinition[],
+  adapterOptions: OpenRouterAdapterOptions,
   options?: { signal?: AbortSignal },
 ): AsyncGenerator<StreamEvent> {
   let response: Response;
@@ -53,7 +62,7 @@ async function* streamChat(
       body: JSON.stringify({
         model,
         stream: true,
-        messages: messages.map(toOpenRouterMessage),
+        messages: messages.map((message) => toOpenRouterMessage(message, adapterOptions.cacheSystemPrompt ?? false)),
         tools: tools.length > 0 ? tools.map(toOpenRouterTool) : undefined,
       }),
       signal: options?.signal,
@@ -311,10 +320,13 @@ function parseToolCallArguments(argumentsText: string): Record<string, unknown> 
   }
 }
 
-function toOpenRouterMessage(message: ConversationMessage): OpenRouterMessage {
+function toOpenRouterMessage(message: ConversationMessage, cacheSystemPrompt: boolean): OpenRouterMessage {
   const base: OpenRouterMessage = {
     role: message.role,
-    content: message.content,
+    content:
+      cacheSystemPrompt && message.role === 'system'
+        ? [{ type: 'text', text: message.content, cache_control: { type: 'ephemeral' } }]
+        : message.content,
   };
 
   if (message.role === 'tool' && message.toolCallId) {

@@ -306,8 +306,11 @@ function AiPanelBody({
 		if (!storedKey) {
 			return null;
 		}
-		return (modelId: string) => createOpenRouterAdapter(storedKey, modelId);
-	}, [adapterOverride, storedKey]);
+		return (modelId: string) =>
+			createOpenRouterAdapter(storedKey, modelId, {
+				cacheSystemPrompt: conversation.promptCachingEnabled,
+			});
+	}, [adapterOverride, conversation.promptCachingEnabled, storedKey]);
 
 	const { streaming, streamingText, streamError, sendMessage, cancel } =
 		useAiChat({ conversation, buildAdapter, modelSelection, document, editorState });

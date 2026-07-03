@@ -17,9 +17,15 @@ import type { ToolCall } from '../types/index';
  */
 
 /** OpenAI-compatible message shape sent in the `messages` array. */
+export type OpenRouterTextContentBlock = {
+  type: 'text';
+  text: string;
+  cache_control?: { type: 'ephemeral' };
+};
+
 export type OpenRouterMessage = {
   role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string;
+  content: string | OpenRouterTextContentBlock[];
   tool_calls?: OpenRouterRequestToolCall[];
   tool_call_id?: string;
 };

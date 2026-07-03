@@ -37,6 +37,11 @@ const testMessages: ConversationMessage[] = [
   { id: 'm1', role: 'user', content: 'hello', createdAt: 0 },
 ];
 
+const testMessagesWithSystemPrompt: ConversationMessage[] = [
+  { id: 's1', role: 'system', content: 'system instructions', createdAt: 0 },
+  { id: 'm1', role: 'user', content: 'hello', createdAt: 1 },
+];
+
 const testTools: AiToolDefinition[] = [
   { name: 'getDocumentTree', description: 'Returns the tree.', kind: 'query', parameters: {} },
 ];
@@ -72,6 +77,47 @@ describe('createOpenRouterAdapter / streamChat', () => {
     expect(body.messages).toEqual([{ role: 'user', content: 'hello' }]);
     expect(body.tools).toEqual([
       { type: 'function', function: { name: 'getDocumentTree', description: 'Returns the tree.', parameters: {} } },
+    ]);
+  });
+
+  it('leaves the system message content as a plain string when prompt caching is disabled', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeSseResponse(['data: [DONE]\n\n']));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const adapter = createOpenRouterAdapter('test-key', 'anthropic/claude-sonnet-5');
+    await collectEvents(adapter.streamChat(testMessagesWithSystemPrompt, []));
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.messages).toEqual([
+      { role: 'system', content: 'system instructions' },
+      { role: 'user', content: 'hello' },
+    ]);
+  });
+
+  it('wraps only the system message with cache_control when prompt caching is enabled', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeSseResponse(['data: [DONE]\n\n']));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const adapter = createOpenRouterAdapter('test-key', 'anthropic/claude-sonnet-5', {
+      cacheSystemPrompt: true,
+    });
+    await collectEvents(adapter.streamChat(testMessagesWithSystemPrompt, []));
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.messages).toEqual([
+      {
+        role: 'system',
+        content: [
+          {
+            type: 'text',
+            text: 'system instructions',
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+      },
+      { role: 'user', content: 'hello' },
     ]);
   });
 

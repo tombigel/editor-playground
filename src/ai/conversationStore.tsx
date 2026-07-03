@@ -31,10 +31,11 @@ const STORAGE_KEY = 'editor-playground.ai-conversation.v1';
 export type PersistedAiConversationState = {
   messages: ConversationMessage[];
   selectedModelId: string | null;
+  promptCachingEnabled: boolean;
 };
 
 function createInitialPersistedState(): PersistedAiConversationState {
-  return { messages: [], selectedModelId: null };
+  return { messages: [], selectedModelId: null, promptCachingEnabled: false };
 }
 
 function isConversationMessage(value: unknown): value is ConversationMessage {
@@ -62,7 +63,13 @@ function normalizePersistedState(parsed: unknown): PersistedAiConversationState 
   if (selectedModelId !== null && typeof selectedModelId !== 'string') {
     return null;
   }
-  return { messages: candidate.messages, selectedModelId: selectedModelId ?? null };
+  const promptCachingEnabled =
+    typeof candidate.promptCachingEnabled === 'boolean' ? candidate.promptCachingEnabled : false;
+  return {
+    messages: candidate.messages,
+    selectedModelId: selectedModelId ?? null,
+    promptCachingEnabled,
+  };
 }
 
 /**
@@ -89,8 +96,8 @@ export function loadPersistedConversationState(): PersistedAiConversationState {
 }
 
 /**
- * Persists `messages`/`selectedModelId` only — `pendingDraft` is never
- * written to localStorage.
+ * Persists `messages`/`selectedModelId`/`promptCachingEnabled` only —
+ * `pendingDraft` is never written to localStorage.
  */
 export function persistConversationState(state: PersistedAiConversationState): void {
   if (typeof window === 'undefined') {
@@ -98,7 +105,11 @@ export function persistConversationState(state: PersistedAiConversationState): v
   }
   window.localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify({ messages: state.messages, selectedModelId: state.selectedModelId }),
+    JSON.stringify({
+      messages: state.messages,
+      selectedModelId: state.selectedModelId,
+      promptCachingEnabled: state.promptCachingEnabled,
+    }),
   );
 }
 
@@ -158,6 +169,7 @@ export type AiConversationState = {
   messages: ConversationMessage[];
   pendingDraft: DraftBatch | null;
   selectedModelId: string | null;
+  promptCachingEnabled: boolean;
   /** Set when the most recent accumulation into `pendingDraft` overflowed `MAX_COMMANDS_PER_BATCH`. */
   draftOverflowed: boolean;
 };
@@ -167,6 +179,7 @@ export type AiConversationApi = AiConversationState & {
   recordToolResult: (result: ToolResult) => void;
   clearPendingDraft: () => void;
   setSelectedModelId: (modelId: string | null) => void;
+  setPromptCachingEnabled: (enabled: boolean) => void;
 };
 
 const AiConversationContext = createContext<AiConversationApi | null>(null);
@@ -234,18 +247,36 @@ export function AiConversationProvider({ children }: { children: ReactNode }) {
     [persistAndSet],
   );
 
+  const setPromptCachingEnabled = useCallback(
+    (enabled: boolean) => {
+      persistAndSet((prev) => ({ ...prev, promptCachingEnabled: enabled }));
+    },
+    [persistAndSet],
+  );
+
   const value = useMemo<AiConversationApi>(
     () => ({
       messages: persisted.messages,
       pendingDraft,
       selectedModelId: persisted.selectedModelId,
+      promptCachingEnabled: persisted.promptCachingEnabled,
       draftOverflowed,
       appendMessage,
       recordToolResult,
       clearPendingDraft,
       setSelectedModelId,
+      setPromptCachingEnabled,
     }),
-    [persisted, pendingDraft, draftOverflowed, appendMessage, recordToolResult, clearPendingDraft, setSelectedModelId],
+    [
+      persisted,
+      pendingDraft,
+      draftOverflowed,
+      appendMessage,
+      recordToolResult,
+      clearPendingDraft,
+      setSelectedModelId,
+      setPromptCachingEnabled,
+    ],
   );
 
   return <AiConversationContext.Provider value={value}>{children}</AiConversationContext.Provider>;

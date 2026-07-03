@@ -3,16 +3,19 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createInitialState } from "../../editor/editorPersistenceState";
 import { routeToolCall } from "../../ai/toolRouter";
 import type {
+	ConversationMessage,
 	ProviderAdapter,
 	StreamEvent,
 	ToolCall,
 } from "../../ai/types/index";
 import { AiPanel } from "../AiPanel";
 import {
+	buildAssistantRequestHistory,
 	isRetryableStreamError,
 	runAssistantTurn,
 	runAssistantTurnWithFallback,
 } from "../ai/useAiChat";
+import { AI_SYSTEM_PROMPT } from "../../ai/systemPrompt";
 
 const NO_OP = () => undefined;
 
@@ -99,6 +102,28 @@ describe("panels/AiPanel", () => {
 		expect(outcome.toolCalls).toHaveLength(0);
 		expect(outcome.error).toBeNull();
 		expect(accumulated.at(-1)).toBe("There are 3 sections.");
+	});
+
+	it("builds request history with the transport-only system prompt first", () => {
+		const prior: ConversationMessage[] = [
+			{ id: "m1", role: "assistant", content: "Earlier answer", createdAt: 1 },
+		];
+		const userMessage: ConversationMessage = {
+			id: "m2",
+			role: "user",
+			content: "What changed?",
+			createdAt: 2,
+		};
+
+		const history = buildAssistantRequestHistory(prior, userMessage);
+
+		expect(history[0]).toMatchObject({
+			id: "system:editor-playground-ai",
+			role: "system",
+			content: AI_SYSTEM_PROMPT,
+			createdAt: 0,
+		});
+		expect(history.slice(1)).toEqual([...prior, userMessage]);
 	});
 
 	it("routes a query tool-call from the stream into a query result", async () => {

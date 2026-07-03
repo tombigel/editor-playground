@@ -105,7 +105,11 @@ describe('ai/conversationStore persistence', () => {
       content: 'What sections are on this page?',
       createdAt: Date.now(),
     };
-    const state: PersistedAiConversationState = { messages: [message], selectedModelId: 'some/model' };
+    const state: PersistedAiConversationState = {
+      messages: [message],
+      selectedModelId: 'some/model',
+      promptCachingEnabled: true,
+    };
 
     persistConversationState(state);
     const loaded = loadPersistedConversationState();
@@ -114,23 +118,68 @@ describe('ai/conversationStore persistence', () => {
   });
 
   it('falls back to an empty initial state on missing/malformed localStorage content', () => {
-    expect(loadPersistedConversationState()).toEqual({ messages: [], selectedModelId: null });
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+    });
 
     (window as unknown as { localStorage: Storage }).localStorage.setItem(
       'editor-playground.ai-conversation.v1',
       'not json',
     );
-    expect(loadPersistedConversationState()).toEqual({ messages: [], selectedModelId: null });
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+    });
 
     (window as unknown as { localStorage: Storage }).localStorage.setItem(
       'editor-playground.ai-conversation.v1',
       JSON.stringify({ messages: 'not-an-array', selectedModelId: null }),
     );
-    expect(loadPersistedConversationState()).toEqual({ messages: [], selectedModelId: null });
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+    });
   });
 
-  it('does NOT persist pendingDraft: only messages/selectedModelId keys are ever written', () => {
-    const state: PersistedAiConversationState = { messages: [], selectedModelId: 'model-x' };
+  it('defaults missing/malformed promptCachingEnabled to false without wiping existing state', () => {
+    const message: ConversationMessage = { id: 'm1', role: 'user', content: 'hi', createdAt: 1 };
+    const win = window as unknown as { localStorage: Storage };
+
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({ messages: [message], selectedModelId: 'legacy/model' }),
+    );
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [message],
+      selectedModelId: 'legacy/model',
+      promptCachingEnabled: false,
+    });
+
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({
+        messages: [message],
+        selectedModelId: 'legacy/model',
+        promptCachingEnabled: 'yes',
+      }),
+    );
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [message],
+      selectedModelId: 'legacy/model',
+      promptCachingEnabled: false,
+    });
+  });
+
+  it('does NOT persist pendingDraft: only persisted conversation keys are ever written', () => {
+    const state: PersistedAiConversationState = {
+      messages: [],
+      selectedModelId: 'model-x',
+      promptCachingEnabled: false,
+    };
     persistConversationState(state);
 
     const raw = (window as unknown as { localStorage: Storage }).localStorage.getItem(
@@ -138,7 +187,7 @@ describe('ai/conversationStore persistence', () => {
     );
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw as string);
-    expect(Object.keys(parsed).sort()).toEqual(['messages', 'selectedModelId']);
+    expect(Object.keys(parsed).sort()).toEqual(['messages', 'promptCachingEnabled', 'selectedModelId']);
     expect(parsed).not.toHaveProperty('pendingDraft');
   });
 });
@@ -168,10 +217,12 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
     expect(box.captured?.messages).toEqual([]);
     expect(box.captured?.pendingDraft).toBeNull();
     expect(box.captured?.selectedModelId).toBeNull();
+    expect(box.captured?.promptCachingEnabled).toBe(false);
     expect(typeof box.captured?.appendMessage).toBe('function');
     expect(typeof box.captured?.recordToolResult).toBe('function');
     expect(typeof box.captured?.clearPendingDraft).toBe('function');
     expect(typeof box.captured?.setSelectedModelId).toBe('function');
+    expect(typeof box.captured?.setPromptCachingEnabled).toBe('function');
   });
 
   it('useAiConversation throws outside of a provider (no silent undefined context)', () => {
@@ -185,7 +236,11 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
 
   it('initializes messages/selectedModelId from persisted localStorage state', () => {
     const message: ConversationMessage = { id: 'm1', role: 'user', content: 'hi', createdAt: 1 };
-    persistConversationState({ messages: [message], selectedModelId: 'model-y' });
+    persistConversationState({
+      messages: [message],
+      selectedModelId: 'model-y',
+      promptCachingEnabled: true,
+    });
 
     const box: { captured: ReturnType<typeof useAiConversation> | null } = { captured: null };
     function Consumer() {
@@ -201,6 +256,7 @@ describe('ai/conversationStore AiConversationProvider / useAiConversation', () =
 
     expect(box.captured?.messages).toEqual([message]);
     expect(box.captured?.selectedModelId).toBe('model-y');
+    expect(box.captured?.promptCachingEnabled).toBe(true);
   });
 });
 

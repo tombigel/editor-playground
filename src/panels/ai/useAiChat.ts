@@ -4,6 +4,7 @@ import type { DocumentModel } from "@/model/types";
 import type { EditorState } from "@/editor/types/index";
 import { routeToolCall } from "@/ai/toolRouter";
 import type { AiConversationApi } from "@/ai/conversationStore";
+import { AI_SYSTEM_PROMPT } from "@/ai/systemPrompt";
 import {
 	resolveModelSelection,
 	withFloorSuffix,
@@ -37,6 +38,22 @@ function createMessageId(): string {
 		return crypto.randomUUID();
 	}
 	return `msg_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}
+
+function createSystemPromptMessage(): ConversationMessage {
+	return {
+		id: "system:editor-playground-ai",
+		role: "system",
+		content: AI_SYSTEM_PROMPT,
+		createdAt: 0,
+	};
+}
+
+export function buildAssistantRequestHistory(
+	priorMessages: ConversationMessage[],
+	userMessage: ConversationMessage,
+): ConversationMessage[] {
+	return [createSystemPromptMessage(), ...priorMessages, userMessage];
 }
 
 type UseAiChatOptions = {
@@ -221,7 +238,10 @@ export function useAiChat({
 
 			// The adapter reads prior turns from the store; include the just-sent
 			// user message since `appendMessage`'s state update is async.
-			const history = [...conversation.messages, userMessage];
+			const requestHistory = buildAssistantRequestHistory(
+				conversation.messages,
+				userMessage,
+			);
 
 			const controller = new AbortController();
 			abortRef.current = controller;
@@ -238,7 +258,7 @@ export function useAiChat({
 						? await runAssistantTurnWithFallback(
 								buildAdapter,
 								resolvedSelection.candidateModelIds,
-								history,
+								requestHistory,
 								{
 									onTextDelta: setStreamingText,
 									onError: setStreamError,
@@ -251,7 +271,7 @@ export function useAiChat({
 									: resolvedSelection.modelId;
 								const singleOutcome = await runAssistantTurn(
 									buildAdapter(modelId),
-									history,
+									requestHistory,
 									{
 										onTextDelta: setStreamingText,
 										onError: setStreamError,
