@@ -15,6 +15,24 @@ describe('ai/requestRouting classifyAiRequest', () => {
     expect(classifyAiRequest('make the change', { hasPendingDraft: false }).kind).toBe('normalChat');
   });
 
+  it('gates draft control to short bare confirmations (max 4 tokens)', () => {
+    expect(classifyAiRequest('yes', { hasPendingDraft: true })).toEqual({
+      kind: 'draftControl',
+      action: 'approve',
+    });
+    expect(classifyAiRequest('please make the change', { hasPendingDraft: true })).toEqual({
+      kind: 'draftControl',
+      action: 'approve',
+    });
+    expect(classifyAiRequest('no', { hasPendingDraft: true })).toEqual({
+      kind: 'draftControl',
+      action: 'reject',
+    });
+    // Longer messages fall through to normalChat instead
+    expect(classifyAiRequest('yes, but make it narrower', { hasPendingDraft: true }).kind).toBe('normalChat');
+    expect(classifyAiRequest('no, make it wider instead', { hasPendingDraft: true }).kind).toBe('normalChat');
+  });
+
   it('routes help requests to existing help targets', () => {
     expect(classifyAiRequest('help', { hasPendingDraft: false })).toEqual({
       kind: 'helpRequest',

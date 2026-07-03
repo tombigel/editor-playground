@@ -22,7 +22,7 @@ Before a user message is sent to a model, the AI panel runs a shallow request ro
 
 - help requests such as `help`, `how do I`, `show shortcuts`, or `docs`
 - history controls such as `undo`, `revert`, `cancel last change`, `redo`, `reapply`, or `undo the undo`
-- draft controls such as `approve`, `make the change`, `reject`, or `cancel` when a pending draft exists
+- draft controls such as `approve`, `make the change`, `reject`, or `cancel` when a pending draft exists (only short bare confirmations; longer mixed-intent replies are sent to the model)
 - likely direct editor operations containing words such as `move`, `nudge`, `delete`, `hide`, `show`, `rename`, `resize`, `set`, or `change`
 
 Help detection takes precedence over history and draft controls, so question-form phrasing (e.g. "how do I undo…") opens help instead of mutating history. Draft-control, history-control, and help routes are handled locally by the app: draft approval/rejection uses the same approve/reject path as the draft card, undo/redo dispatches the editor's existing history actions when the corresponding stack is available, and help requests open the existing Help or Shortcuts surfaces. Redo is intentionally narrower than undo: explicit `redo` / `reapply` wording or phrases such as `undo the undo` redo, while `undo`, `revert`, and `cancel last change` undo. Direct-operation routes still go to the selected model, but the request history is enriched with current selection context, selected node summaries, rect values, visibility, and text previews. The system prompt tells the model to draft an available mutation tool call immediately when the target/action/value are clear, and to ask one concise clarification when they are fuzzy.

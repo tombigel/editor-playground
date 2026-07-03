@@ -45,6 +45,8 @@ const TARGET_HINT_WORDS = [
   'container',
 ] as const;
 
+const MAX_DRAFT_CONTROL_TOKENS = 4; // draft controls only match short, bare confirmations
+
 const APPROVE_PHRASES = [
   'approve',
   'apply',
@@ -206,12 +208,12 @@ export function classifyAiRequest(text: string, options: ClassifyAiRequestOption
     return { kind: 'historyControl', action: historyAction };
   }
 
-  if (options.hasPendingDraft) {
+  if (options.hasPendingDraft && tokens.length <= MAX_DRAFT_CONTROL_TOKENS) {
     const draftAction = classifyDraftControl(normalized);
     if (draftAction) {
       return { kind: 'draftControl', action: draftAction };
     }
-  } else if (classifyDraftControl(normalized)) {
+  } else if (tokens.length <= MAX_DRAFT_CONTROL_TOKENS && classifyDraftControl(normalized)) {
     return { kind: 'normalChat' };
   }
 

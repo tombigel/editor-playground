@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - open help for question-form undo/redo requests instead of running them
+- only treat short bare confirmations as draft approve/reject
 
 ---
 
