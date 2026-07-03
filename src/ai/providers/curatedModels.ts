@@ -19,10 +19,8 @@
  * defaulted to any single vendor (including this assistant's own model
  * family) — see each entry's price/benchmark note.
  *
- * Model ids were verified live against each model's own openrouter.ai page
- * on 2026-07-03 (not guessed from training data, and not trusted from
- * catalog/collection-page summaries, which have been observed to lag the
- * live per-model pages by a generation).
+ * Model ids were verified live against OpenRouter model pages/catalog data on
+ * 2026-07-03 (not guessed from training data).
  *
  * Named exports only.
  */
@@ -91,10 +89,10 @@ export const CURATED_MODELS: CuratedModel[] = [
     outputPricePerMillion: 10,
   },
   {
-    id: 'qwen/qwen3-coder:free',
-    name: 'Qwen3 Coder 480B',
-    label: 'Qwen3 Coder 480B — free, rate-limited',
-    provider: 'Qwen',
+    id: 'poolside/laguna-xs-2.1:free',
+    name: 'Laguna XS 2.1',
+    label: 'Laguna XS 2.1 — free coding, rate-limited',
+    provider: 'Poolside',
     tier: 'free',
     inputPricePerMillion: 0,
     outputPricePerMillion: 0,

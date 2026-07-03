@@ -5,10 +5,12 @@ import {
   AUTO_MODEL_ID,
   FLOOR_MODEL_SENTINEL,
   FREE_MODEL_SENTINEL,
-  getFloorCuratedModel,
-  getFreeCuratedModel,
-  getModelsInAscendingPriceOrder,
 } from '../../ai/providers/curatedModels';
+import {
+  OPENROUTER_AUTO_MODEL_ID,
+  OPENROUTER_FLOOR_COST_QUALITY_TRADEOFF,
+  OPENROUTER_FREE_MODEL_ID,
+} from '../../ai/providers/resolveModelSelection';
 
 /**
  * End-to-end proof of the agentic-interface feature's core guarantee
@@ -82,8 +84,8 @@ function buildToolCallSseBody(nodeId: string, visible: boolean): string {
   return `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join('')}data: [DONE]\n\n`;
 }
 
-function buildTextSseBody(text: string): string {
-  return `data: ${JSON.stringify({ choices: [{ index: 0, delta: { content: text } }] })}\n\ndata: [DONE]\n\n`;
+function buildTextSseBody(text: string, model?: string): string {
+  return `data: ${JSON.stringify({ model, choices: [{ index: 0, delta: { content: text } }] })}\n\ndata: [DONE]\n\n`;
 }
 
 /**
@@ -245,14 +247,15 @@ describe('ai assistant draft/approve/undo e2e', () => {
       {
         name: 'Free',
         selection: FREE_MODEL_SENTINEL,
-        expectedModel: getFreeCuratedModel()?.id,
+        expectedModel: OPENROUTER_FREE_MODEL_ID,
         promptCachingEnabled: false,
       },
       {
         name: 'Floor',
         selection: FLOOR_MODEL_SENTINEL,
-        expectedModel: `${getFloorCuratedModel()?.id}:floor`,
+        expectedModel: OPENROUTER_AUTO_MODEL_ID,
         promptCachingEnabled: false,
+        expectedPlugins: [{ id: 'auto-router', cost_quality_tradeoff: OPENROUTER_FLOOR_COST_QUALITY_TRADEOFF }],
       },
       {
         name: 'Custom',
@@ -296,6 +299,7 @@ describe('ai assistant draft/approve/undo e2e', () => {
 
       expect(requestBodies).toHaveLength(1);
       expect(requestBodies[0]?.model).toBe(testCase.expectedModel);
+      expect(requestBodies[0]?.plugins).toEqual(testCase.expectedPlugins);
       const messages = requestBodies[0]?.messages as Array<{ role: string; content: unknown }>;
       expect(messages[0]?.role).toBe('system');
       if (testCase.promptCachingEnabled) {
@@ -316,43 +320,34 @@ describe('ai assistant draft/approve/undo e2e', () => {
     }
   }, 90_000);
 
-  it('Auto retries a retryable failure using the next cheapest model and renders provenance', async () => {
+  it('Auto delegates model choice to OpenRouter instead of retrying app-curated candidates', async () => {
     const aiPage = await newAiPage();
     const requestBodies: Array<Record<string, unknown>> = [];
-    let requestCount = 0;
     await aiPage.route('**/openrouter.ai/api/v1/chat/completions', async (route: Route) => {
-      requestCount += 1;
       requestBodies.push(route.request().postDataJSON() as Record<string, unknown>);
-      if (requestCount === 1) {
-        await route.fulfill({
-          status: 429,
-          contentType: 'application/json',
-          body: JSON.stringify({ error: { message: 'Rate limit exceeded' } }),
-        });
-        return;
-      }
       await route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
-        body: buildTextSseBody('auto recovered'),
+        body: buildTextSseBody('auto delegated', 'qwen/qwen3-next-80b-a3b-instruct:free'),
       });
     });
 
-    const orderedModels = getModelsInAscendingPriceOrder();
     await enterFakeApiKey(aiPage);
     await persistAiConversationSelection(aiPage, AUTO_MODEL_ID);
     await openAiPanel(aiPage);
-    await sendMessage(aiPage, 'Use automatic fallback.');
+    await sendMessage(aiPage, 'Use OpenRouter auto.');
 
     const assistantMessage = aiPage
       .locator('.editor-ai-panel [data-ai-role="assistant"]:not([data-ai-streaming="true"])')
-      .filter({ hasText: 'auto recovered' });
+      .filter({ hasText: 'auto delegated' });
     await assistantMessage.waitFor({ state: 'visible' });
-    expect(await assistantMessage.textContent()).toContain(`Answered by ${orderedModels[1]?.name}`);
+    expect(await assistantMessage.textContent()).toContain('Answered by qwen/qwen3-next-80b-a3b-instruct:free');
+    await aiPage
+      .getByText('Model: qwen/qwen3-next-80b-a3b-instruct:free')
+      .waitFor({ state: 'visible' });
 
-    expect(requestBodies).toHaveLength(2);
-    expect(requestBodies[0]?.model).toBe(orderedModels[0]?.id);
-    expect(requestBodies[1]?.model).toBe(orderedModels[1]?.id);
+    expect(requestBodies).toHaveLength(1);
+    expect(requestBodies[0]?.model).toBe(OPENROUTER_AUTO_MODEL_ID);
   }, 45_000);
 
   it('proposes a mutation as a draft, applies it on Approve as one undoable step, and reverts in a single Undo', async () => {

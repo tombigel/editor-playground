@@ -207,6 +207,22 @@ describe("panels/AiPanel", () => {
 		expect(reported).toContain("401");
 	});
 
+	it("records the concrete model reported by the provider stream", async () => {
+		const adapter = createMockAdapter([
+			{ type: "model-resolved", modelId: "qwen/qwen3-next-80b-a3b-instruct:free" },
+			{ type: "text-delta", delta: "Hello" },
+			{ type: "message-complete" },
+		]);
+
+		const outcome = await runAssistantTurn(adapter, [], {
+			onTextDelta: NO_OP,
+			onError: NO_OP,
+		});
+
+		expect(outcome.text).toBe("Hello");
+		expect(outcome.resolvedModelId).toBe("qwen/qwen3-next-80b-a3b-instruct:free");
+	});
+
 	it("classifies retryable stream errors conservatively", () => {
 		expect(isRetryableStreamError("OpenRouter rejected the request (429)")).toBe(true);
 		expect(isRetryableStreamError("No provider available for this model")).toBe(true);

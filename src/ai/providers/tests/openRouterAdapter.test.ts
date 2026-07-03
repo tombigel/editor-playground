@@ -121,6 +121,20 @@ describe('createOpenRouterAdapter / streamChat', () => {
     ]);
   });
 
+  it('passes Auto Router cost tradeoff options through the streaming request body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeSseResponse(['data: [DONE]\n\n']));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const adapter = createOpenRouterAdapter('test-key', 'openrouter/auto', {
+      autoRouterCostQualityTradeoff: 10,
+    });
+    await collectEvents(adapter.streamChat(testMessages, []));
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.plugins).toEqual([{ id: 'auto-router', cost_quality_tradeoff: 10 }]);
+  });
+
   it('produces text-delta events followed by message-complete for a text-only stream', async () => {
     const chunks = [
       sseLine({ choices: [{ delta: { content: 'Hello' } }] }),
@@ -136,6 +150,23 @@ describe('createOpenRouterAdapter / streamChat', () => {
     expect(events).toEqual([
       { type: 'text-delta', delta: 'Hello' },
       { type: 'text-delta', delta: ', world' },
+      { type: 'message-complete' },
+    ]);
+  });
+
+  it('emits the resolved OpenRouter model from streamed chunks', async () => {
+    const chunks = [
+      sseLine({ model: 'qwen/qwen3-next-80b-a3b-instruct:free', choices: [{ delta: { content: 'Hello' } }] }),
+      'data: [DONE]\n\n',
+    ];
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(makeSseResponse(chunks)));
+
+    const adapter = createOpenRouterAdapter('test-key', 'openrouter/free');
+    const events = await collectEvents(adapter.streamChat(testMessages, []));
+
+    expect(events).toEqual([
+      { type: 'model-resolved', modelId: 'qwen/qwen3-next-80b-a3b-instruct:free' },
+      { type: 'text-delta', delta: 'Hello' },
       { type: 'message-complete' },
     ]);
   });
@@ -319,19 +350,38 @@ describe('checkOpenRouterConnection', () => {
     } as unknown as Response);
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await checkOpenRouterConnection('test-key', 'qwen/qwen3-coder:free');
+    const result = await checkOpenRouterConnection('test-key', 'poolside/laguna-xs-2.1:free');
 
-    expect(result).toEqual({ ok: true, modelId: 'qwen/qwen3-coder:free' });
+    expect(result).toEqual({ ok: true, modelId: 'poolside/laguna-xs-2.1:free' });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
     expect(init.headers).toMatchObject({ Authorization: 'Bearer test-key' });
     const body = JSON.parse(init.body as string);
     expect(body).toMatchObject({
-      model: 'qwen/qwen3-coder:free',
+      model: 'poolside/laguna-xs-2.1:free',
       stream: false,
-      max_tokens: 1,
-      messages: [{ role: 'user', content: 'ping' }],
+      max_tokens: 16,
+      messages: [{ role: 'user', content: 'Reply with OK only.' }],
     });
+  });
+
+  it('passes Auto Router options through the connection-check request body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: () => Promise.resolve(''),
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await checkOpenRouterConnection('test-key', 'openrouter/auto', {
+      autoRouterCostQualityTradeoff: 10,
+    });
+
+    expect(result).toEqual({ ok: true, modelId: 'openrouter/auto' });
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.plugins).toEqual([{ id: 'auto-router', cost_quality_tradeoff: 10 }]);
   });
 
   it('returns the OpenRouter error text when the connection check fails', async () => {
@@ -345,13 +395,35 @@ describe('checkOpenRouterConnection', () => {
       } as unknown as Response),
     );
 
-    const result = await checkOpenRouterConnection('test-key', 'qwen/qwen3-coder:free');
+    const result = await checkOpenRouterConnection('test-key', 'poolside/laguna-xs-2.1:free');
 
     if (result.ok) {
       throw new Error('Expected the connection check to fail');
     }
-    expect(result.modelId).toBe('qwen/qwen3-coder:free');
+    expect(result.modelId).toBe('poolside/laguna-xs-2.1:free');
     expect(result.message).toContain('429');
     expect(result.message).toContain('Provider returned error');
+  });
+
+  it('describes free-tier/provider throttling distinctly when OpenRouter returns a provider-limit status', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 439,
+        statusText: 'Provider Rate Limited',
+        text: () => Promise.resolve(JSON.stringify({ error: { message: 'No endpoints available for free model' } })),
+      } as unknown as Response),
+    );
+
+    const result = await checkOpenRouterConnection('test-key', 'poolside/laguna-xs-2.1:free');
+
+    if (result.ok) {
+      throw new Error('Expected the connection check to fail');
+    }
+    expect(result.modelId).toBe('poolside/laguna-xs-2.1:free');
+    expect(result.message).toContain('upstream provider is currently rate-limiting this model');
+    expect(result.message).toContain('439');
+    expect(result.message).toContain('No endpoints available for free model');
   });
 });

@@ -63,6 +63,7 @@ export type OpenRouterStreamToolCallDelta = {
 
 /** A single `data: {...}` chunk of an OpenRouter/OpenAI-compatible SSE stream. */
 export type OpenRouterStreamChunk = {
+  model?: string;
   choices?: Array<{
     delta?: {
       content?: string | null;

@@ -1,59 +1,62 @@
 import {
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
 	type ChangeEvent,
 	type CSSProperties,
 	type Dispatch,
 	type PointerEvent as ReactPointerEvent,
 	type Ref,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
 } from "react";
+import type { ShortcutPlatform } from "@/lib/shortcuts";
+import {
+	getAccentColorForDarkThemeSelection,
+	getAccentColorForLightThemeSelection,
+	type ResolvedTheme,
+	resolveAccentSurfaceColors,
+	resolveEditorAccentColor,
+	resolveStickyGuideColors,
+} from "@/lib/theme";
+import type { DocumentFontFamily } from "../api/documentViewApi";
+import { isTextNode, validateLinks } from "../api/documentViewApi";
 import type {
 	DocumentNode,
 	EditorState,
 	StickyGeometrySnapshot,
 } from "../api/editorApi";
-import type { DocumentFontFamily } from "../api/documentViewApi";
-import { isTextNode } from "../api/documentViewApi";
-import { buildDocumentGoogleFontsStylesheetHref } from "../fonts";
 import {
 	addDocumentFontFamily,
 	purgeUnusedDocumentFonts,
 	removeDocumentFontFamily,
 	toggleDocumentFontFavorite,
 } from "../api/fontApi";
-import {
-	INSPECTOR_COLLAPSED_WIDTH_PX,
-	INSPECTOR_EXPANDED_WIDTH_PX,
-} from "../panels/inspectorLayout";
-import { AppShellEditorMain } from "./AppShellEditorMain";
-import { AppShellOverlays } from "./AppShellOverlays";
 import { renderSiteCss } from "../api/siteApi";
-import { PreviewMode } from "./AppShellPreview";
-import type { ActionResult } from "../panels/settingsTransfer";
-import type { ShortcutPlatform } from "@/lib/shortcuts";
-import { getOrCreateEditorWindowId } from "./previewWindow";
-import {
-	getAccentColorForDarkThemeSelection,
-	getAccentColorForLightThemeSelection,
-	resolveAccentSurfaceColors,
-	resolveEditorAccentColor,
-	resolveStickyGuideColors,
-	type ResolvedTheme,
-} from "@/lib/theme";
 import {
 	clampFocusedPanelOffset,
 	FOCUSED_PANEL_RIGHT_OFFSET_PX,
 } from "../editor/focusedPanelPosition";
 import { useDebugLogger } from "../editor/useDebugLogger";
-import type { TextTypeRole } from "./AppChrome";
-import type { HistoryAction, HistoryState } from "./editorState";
-import type { SettingsSectionId } from "../panels/settings/settingsSections";
+import { buildDocumentGoogleFontsStylesheetHref } from "../fonts";
 import type { HelpEntry } from "../panels/helpDocs";
-import { validateLinks } from "../api/documentViewApi";
+import {
+	INSPECTOR_COLLAPSED_WIDTH_PX,
+	INSPECTOR_EXPANDED_WIDTH_PX,
+} from "../panels/inspectorLayout";
+import type { SettingsSectionId } from "../panels/settings/settingsSections";
+import type { ActionResult } from "../panels/settingsTransfer";
+import type { TextTypeRole } from "./AppChrome";
+import { AppShellEditorMain } from "./AppShellEditorMain";
+import { AppShellOverlays } from "./AppShellOverlays";
+import { PreviewMode } from "./AppShellPreview";
+import {
+	type AppMode,
+	type AppStartupAction,
+	HOME_ROUTE_HASH,
+} from "./appRouting";
+import type { HistoryAction, HistoryState } from "./editorState";
+import { getOrCreateEditorWindowId } from "./previewWindow";
 import { useShowcaseTourController } from "./showcaseTour/useShowcaseTourController";
-import { HOME_ROUTE_HASH, type AppMode, type AppStartupAction } from "./appRouting";
 
 type Props = {
 	state: EditorState;
@@ -700,7 +703,11 @@ export function AppShell({
 		onAiOpenChange,
 		onAiPositionChange,
 		onCloseAi,
-		onOpenAiSettings,
+		onOpenAiSettings: () => {
+			setSettingsSectionTarget("ai");
+			onOpenAiSettings();
+			onSettingsOpenChange(true);
+		},
 		onToggleAi: () => onAiOpenChange(!aiOpen),
 		onOpenSectionTemplates,
 		onSectionTemplateOpenChange,

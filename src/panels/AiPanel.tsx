@@ -18,9 +18,22 @@ import { applyAiCommands } from "@/api/editorApi";
 import type { AiDocumentCommand } from "@/api/ai/types";
 import type { DocumentModel } from "@/model/types";
 import type { EditorState } from "@/editor/types/index";
-import { createOpenRouterAdapter } from "@/ai/providers/openRouterAdapter";
-import { FREE_MODEL_SENTINEL } from "@/ai/providers/curatedModels";
+import {
+	createOpenRouterAdapter,
+	type OpenRouterAdapterOptions,
+} from "@/ai/providers/openRouterAdapter";
+import {
+	AUTO_MODEL_ID,
+	CURATED_MODELS,
+	FLOOR_MODEL_SENTINEL,
+	FREE_MODEL_SENTINEL,
+} from "@/ai/providers/curatedModels";
+import {
+	OPENROUTER_AUTO_MODEL_ID,
+	OPENROUTER_FREE_MODEL_ID,
+} from "@/ai/providers/resolveModelSelection";
 import type { ProviderAdapter } from "@/ai/types/index";
+import type { ConversationMessage } from "@/ai/types/index";
 import {
 	AiConversationProvider,
 	useAiConversation,
@@ -312,17 +325,24 @@ function AiPanelBody({
 
 	const storedKey = adapterOverride ? "mock" : readStoredApiKey();
 	const modelSelection = conversation.selectedModelId ?? FREE_MODEL_SENTINEL;
+	const activeModelText = getActiveModelText(
+		modelSelection,
+		conversation.messages,
+	);
 
-	const buildAdapter = useMemo<((modelId: string) => ProviderAdapter) | null>(() => {
+	const buildAdapter = useMemo<
+		((modelId: string, adapterOptions?: OpenRouterAdapterOptions) => ProviderAdapter) | null
+	>(() => {
 		if (adapterOverride) {
 			return () => adapterOverride;
 		}
 		if (!storedKey) {
 			return null;
 		}
-		return (modelId: string) =>
+		return (modelId: string, adapterOptions?: OpenRouterAdapterOptions) =>
 			createOpenRouterAdapter(storedKey, modelId, {
 				cacheSystemPrompt: conversation.promptCachingEnabled,
+				...adapterOptions,
 			});
 	}, [adapterOverride, conversation.promptCachingEnabled, storedKey]);
 
@@ -426,16 +446,21 @@ function AiPanelBody({
 				className="editor-border-subtle flex items-end gap-2 border-t p-3"
 				onSubmit={handleSubmit}
 			>
-				<Textarea
-					value={input}
-					onChange={(event) => setInput(event.currentTarget.value)}
-					onKeyDown={handleKeyDown}
-					placeholder="Ask about your document…"
-					rows={2}
-					className="min-h-[2.25rem] flex-1 resize-none"
-					aria-label="Message the AI assistant"
-					disabled={streaming}
-				/>
+				<div className="min-w-0 flex-1">
+					<Textarea
+						value={input}
+						onChange={(event) => setInput(event.currentTarget.value)}
+						onKeyDown={handleKeyDown}
+						placeholder="Ask about your document…"
+						rows={2}
+						className="min-h-[2.25rem] resize-none"
+						aria-label="Message the AI assistant"
+						disabled={streaming}
+					/>
+					<div className="editor-text-muted mt-1 truncate text-[11px]">
+						Model: {activeModelText}
+					</div>
+				</div>
 				{streaming ? (
 					<Button
 						type="button"
@@ -460,6 +485,54 @@ function AiPanelBody({
 			</form>
 		</div>
 	);
+}
+
+function getActiveModelText(
+	modelSelection: string,
+	messages: ConversationMessage[],
+): string {
+	const latestResolvedModelId = getLatestResolvedModelId(messages);
+	if (isOpenRouterModeSelection(modelSelection)) {
+		return latestResolvedModelId
+			? getDisplayModelName(latestResolvedModelId)
+			: "OpenRouter will choose on send";
+	}
+	return getDisplayModelName(modelSelection);
+}
+
+function isOpenRouterModeSelection(modelSelection: string): boolean {
+	return (
+		modelSelection === FREE_MODEL_SENTINEL ||
+		modelSelection === FLOOR_MODEL_SENTINEL ||
+		modelSelection === AUTO_MODEL_ID ||
+		modelSelection === OPENROUTER_FREE_MODEL_ID ||
+		modelSelection === OPENROUTER_AUTO_MODEL_ID
+	);
+}
+
+function getLatestResolvedModelId(
+	messages: ConversationMessage[],
+): string | null {
+	for (let index = messages.length - 1; index >= 0; index -= 1) {
+		const message = messages[index];
+		const modelId = message?.respondingModelId;
+		if (
+			message?.role === "assistant" &&
+			modelId &&
+			!isOpenRouterModeSelection(modelId)
+		) {
+			return modelId;
+		}
+	}
+	return null;
+}
+
+function getDisplayModelName(modelId: string): string {
+	const normalizedId = modelId.endsWith(":floor")
+		? modelId.slice(0, -":floor".length)
+		: modelId;
+	const curated = CURATED_MODELS.find((model) => model.id === normalizedId);
+	return curated?.name ?? modelId;
 }
 
 function clampToViewport(value: number, size: number, viewportSize: number) {

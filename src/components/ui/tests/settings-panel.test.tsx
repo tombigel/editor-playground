@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   ControlGroup,
+  InfoTooltip,
   InlineNotice,
   LabeledFieldStack,
   LabeledControlRow,
@@ -102,6 +103,23 @@ describe('components/ui/settings-panel', () => {
     expect(errorMarkup).toContain('data-tone="error"');
     expect(errorMarkup).toContain('lucide-shield-alert');
     expect(errorMarkup).not.toContain('text-red-700');
+  });
+
+  it('renders compact info tooltips for long settings help text', () => {
+    const markup = renderToStaticMarkup(
+      <InfoTooltip>
+        Models are grouped by cost and intended use, including provider/model-identifiers-that-may-be-long.
+      </InfoTooltip>,
+    );
+
+    expect(markup).toContain('aria-label="More information"');
+    expect(markup).toContain('h-4 w-4');
+    expect(markup).toContain('h-3 w-3');
+    expect(markup).not.toContain('editor-icon-button-subtle');
+    expect(markup).not.toContain('rounded-full border');
+    expect(markup).toContain('w-80');
+    expect(markup).toContain('whitespace-normal');
+    expect(markup).toContain('[overflow-wrap:anywhere]');
   });
 
   it('renders stacked field and compact value pill contracts', () => {

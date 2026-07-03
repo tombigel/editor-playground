@@ -83,6 +83,7 @@ export type DraftBatch = {
  */
 export type StreamEvent =
   | { type: 'text-delta'; delta: string }
+  | { type: 'model-resolved'; modelId: string }
   | { type: 'tool-call-start'; toolCallId: string; name: string }
   | { type: 'tool-call-delta'; toolCallId: string; argumentsDelta: string }
   | { type: 'tool-call-complete'; toolCall: ToolCall }

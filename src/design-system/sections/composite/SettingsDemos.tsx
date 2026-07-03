@@ -127,6 +127,7 @@ function SettingsPrimitivesDemo() {
 					icon={Eye}
 					title="Sticky preview"
 					description="Applies CSS sticky behavior in preview."
+					tooltip="Shows how the setting affects stage behavior without changing the document model."
 					checked={previewSticky}
 					onCheckedChange={setPreviewSticky}
 				/>

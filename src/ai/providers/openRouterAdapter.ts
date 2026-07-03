@@ -19,9 +19,11 @@ import type {
  */
 
 const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const CONNECTION_CHECK_MAX_TOKENS = 16;
 
-type OpenRouterAdapterOptions = {
+export type OpenRouterAdapterOptions = {
   cacheSystemPrompt?: boolean;
+  autoRouterCostQualityTradeoff?: number;
 };
 
 export type OpenRouterConnectionCheckResult =
@@ -50,7 +52,7 @@ export function createOpenRouterAdapter(
 export async function checkOpenRouterConnection(
   apiKey: string,
   model: string,
-  options?: { signal?: AbortSignal },
+  options?: OpenRouterAdapterOptions & { signal?: AbortSignal },
 ): Promise<OpenRouterConnectionCheckResult> {
   try {
     const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
@@ -62,8 +64,9 @@ export async function checkOpenRouterConnection(
       body: JSON.stringify({
         model,
         stream: false,
-        max_tokens: 1,
-        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: CONNECTION_CHECK_MAX_TOKENS,
+        messages: [{ role: 'user', content: 'Reply with OK only.' }],
+        ...toOpenRouterRoutingOptions(options),
       }),
       signal: options?.signal,
     });
@@ -102,6 +105,7 @@ async function* streamChat(
         stream: true,
         messages: messages.map((message) => toOpenRouterMessage(message, adapterOptions.cacheSystemPrompt ?? false)),
         tools: tools.length > 0 ? tools.map(toOpenRouterTool) : undefined,
+        ...toOpenRouterRoutingOptions(adapterOptions),
       }),
       signal: options?.signal,
     });
@@ -236,6 +240,10 @@ function processSseEvent(
     if (chunk.error?.message) {
       events.push({ type: 'error', message: chunk.error.message });
       continue;
+    }
+
+    if (chunk.model) {
+      events.push({ type: 'model-resolved', modelId: chunk.model });
     }
 
     const choice = chunk.choices?.[0];
@@ -400,6 +408,20 @@ function toOpenRouterTool(tool: AiToolDefinition): OpenRouterToolDefinition {
   };
 }
 
+function toOpenRouterRoutingOptions(options: OpenRouterAdapterOptions = {}): { plugins?: Array<Record<string, unknown>> } {
+  if (typeof options.autoRouterCostQualityTradeoff !== 'number') {
+    return {};
+  }
+  return {
+    plugins: [
+      {
+        id: 'auto-router',
+        cost_quality_tradeoff: options.autoRouterCostQualityTradeoff,
+      },
+    ],
+  };
+}
+
 async function describeErrorResponse(response: Response): Promise<string> {
   let bodyText = '';
   try {
@@ -413,6 +435,12 @@ async function describeErrorResponse(response: Response): Promise<string> {
 
   if (response.status === 401) {
     return `OpenRouter rejected the request (401 Unauthorized) — check that the API key is present and valid${suffix}`;
+  }
+  if (response.status === 402) {
+    return `OpenRouter rejected the request (402 Payment Required) — check that the selected model is allowed by your OpenRouter account or switch to a free/cheaper model${suffix}`;
+  }
+  if (response.status === 429 || response.status === 439) {
+    return `OpenRouter or the upstream provider is currently rate-limiting this model (${response.status} ${response.statusText})${suffix}`;
   }
   return `OpenRouter request failed with status ${response.status} ${response.statusText}${suffix}`;
 }
