@@ -80,6 +80,7 @@ type Props = {
 	settingsPanelRef: Ref<HTMLDivElement>;
 	layersPanelRef?: Ref<HTMLDivElement>;
 	pagesPanelRef?: Ref<HTMLDivElement>;
+	aiPanelRef?: Ref<HTMLDivElement>;
 	sectionTemplatePanelRef: Ref<HTMLDivElement>;
 	textTypePanelRef: Ref<HTMLDivElement>;
 	documentJson: string;
@@ -91,6 +92,12 @@ type Props = {
 	onLayersPositionChange?: (position: { top: number; left: number }) => void;
 	onPagesPositionChange?: (position: { top: number; left: number }) => void;
 	onCloseLayers?: () => void;
+	aiOpen?: boolean;
+	aiPosition?: { top: number; left: number };
+	onAiOpenChange?: (open: boolean) => void;
+	onAiPositionChange?: (position: { top: number; left: number }) => void;
+	onCloseAi?: () => void;
+	onOpenAiSettings?: () => void;
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
 	onSectionTemplateOpenChange: (open: boolean) => void;
 	onCloseSectionTemplates: () => void;
@@ -136,11 +143,14 @@ export function AppShell({
 	pagesOpen = false,
 	layersPosition = { top: 112, left: 102 },
 	pagesPosition = { top: 76, left: 416 },
+	aiOpen = false,
+	aiPosition = { top: 76, left: 80 },
 	sectionTemplateOpen,
 	textTypeOpen,
 	settingsPanelRef,
 	layersPanelRef,
 	pagesPanelRef,
+	aiPanelRef,
 	sectionTemplatePanelRef,
 	textTypePanelRef,
 	documentJson,
@@ -152,6 +162,10 @@ export function AppShell({
 	onLayersPositionChange = () => undefined,
 	onPagesPositionChange = () => undefined,
 	onCloseLayers = () => undefined,
+	onAiOpenChange = () => undefined,
+	onAiPositionChange = () => undefined,
+	onCloseAi = () => undefined,
+	onOpenAiSettings = () => undefined,
 	onOpenSectionTemplates,
 	onSectionTemplateOpenChange,
 	onCloseSectionTemplates,
@@ -665,11 +679,14 @@ export function AppShell({
 		aboutOpen,
 		layersOpen,
 		pagesOpen,
+		aiOpen,
 		layersPosition,
 		pagesPosition,
+		aiPosition,
 		settingsPanelRef,
 		layersPanelRef,
 		pagesPanelRef,
+		aiPanelRef,
 		sectionTemplatePanelRef,
 		textTypePanelRef,
 		documentJson,
@@ -680,6 +697,11 @@ export function AppShell({
 		onLayersPositionChange,
 		onPagesPositionChange,
 		onCloseLayers,
+		onAiOpenChange,
+		onAiPositionChange,
+		onCloseAi,
+		onOpenAiSettings,
+		onToggleAi: () => onAiOpenChange(!aiOpen),
 		onOpenSectionTemplates,
 		onSectionTemplateOpenChange,
 		onCloseSectionTemplates,

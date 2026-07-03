@@ -22,6 +22,7 @@ import { FocusedModePanel } from "../panels/FocusedModePanel";
 import { HelpDialog } from "../panels/HelpDialog";
 import { ShortcutsDialog } from "../panels/ShortcutsDialog";
 import {
+	AiPanel,
 	LayersPanel,
 	ManageFontsPanel,
 	PagesPanel,
@@ -59,11 +60,14 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		aboutOpen,
 		layersOpen,
 		pagesOpen,
+		aiOpen,
 		layersPosition,
 		pagesPosition,
+		aiPosition,
 		settingsPanelRef,
 		layersPanelRef,
 		pagesPanelRef,
+		aiPanelRef,
 		sectionTemplatePanelRef,
 		textTypePanelRef,
 		documentJson,
@@ -72,6 +76,10 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		onLayersPositionChange,
 		onPagesPositionChange,
 		onCloseLayers,
+		onAiOpenChange,
+		onAiPositionChange,
+		onCloseAi,
+		onOpenAiSettings,
 		onSectionTemplateOpenChange,
 		onCloseSectionTemplates,
 		onTextTypeOpenChange,
@@ -348,6 +356,22 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 								targetIndex,
 							})
 						}
+					/>
+				</Suspense>
+			) : null}
+
+			{aiOpen ? (
+				<Suspense fallback={null}>
+					<AiPanel
+						panelRef={aiPanelRef}
+						open={aiOpen}
+						position={aiPosition}
+						document={state.document}
+						editorState={state}
+						onOpenChange={onAiOpenChange}
+						onPositionChange={onAiPositionChange}
+						onClose={onCloseAi}
+						onOpenSettings={onOpenAiSettings}
 					/>
 				</Suspense>
 			) : null}

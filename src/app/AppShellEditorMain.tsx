@@ -33,6 +33,8 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		stageSelectableIds,
 		layersOpen,
 		pagesOpen,
+		aiOpen,
+		onToggleAi,
 		dispatch,
 		onStickyGeometryChange,
 		onOpenLayers,
@@ -213,6 +215,8 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 							pagesOpen={pagesOpen}
 							onOpenPages={() => handleOpenPagesPanel()}
 							onClosePages={() => onPagesOpenChange(false)}
+							aiOpen={aiOpen}
+							onToggleAi={onToggleAi}
 						/>
 						<div className="mt-auto flex justify-center pt-3">
 							<div className="flex flex-col gap-2">

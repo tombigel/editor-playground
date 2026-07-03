@@ -20,7 +20,8 @@ export type EditorPanelId =
 	| "components"
 	| "pages"
 	| "sectionTemplates"
-	| "textTypes";
+	| "textTypes"
+	| "ai";
 
 export type EditorSettingsSectionId =
 	| "display"
@@ -48,6 +49,7 @@ export type EditorPanelState = {
 	pagesOpen: boolean;
 	sectionTemplateOpen: boolean;
 	textTypeOpen: boolean;
+	aiOpen: boolean;
 	componentsPosition: EditorPanelPosition;
 	pagesPosition: EditorPanelPosition;
 	componentsPositionCustomized: boolean;
@@ -63,7 +65,7 @@ export type EditorPanelRequest =
 	| { type: "close"; panel: EditorPanelId }
 	| {
 			type: "toggle";
-			panel: Extract<EditorPanelId, "components" | "pages" | "manageFonts">;
+			panel: Extract<EditorPanelId, "components" | "pages" | "manageFonts" | "ai">;
 	  }
 	| { type: "closeAll" }
 	| { type: "openSettingsSection"; section: EditorSettingsSectionId }

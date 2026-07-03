@@ -5,6 +5,7 @@ import {
 	Link2,
 	RectangleEllipsis,
 	Rows3,
+	Sparkles,
 	SquareStack,
 	Type,
 } from "lucide-react";
@@ -23,6 +24,8 @@ type Props = {
 	pagesOpen?: boolean;
 	onOpenPages?: (trigger: HTMLElement) => void;
 	onClosePages?: () => void;
+	aiOpen?: boolean;
+	onToggleAi?: () => void;
 };
 
 const INSERT_ITEMS = [
@@ -80,9 +83,12 @@ export function InsertPanel({
 	pagesOpen = false,
 	onOpenPages = () => undefined,
 	onClosePages = () => undefined,
+	aiOpen = false,
+	onToggleAi = () => undefined,
 }: Props) {
 	const componentsLabel = "Components";
 	const pagesLabel = "Pages";
+	const aiLabel = "AI Assistant";
 
 	return (
 		<div className="flex flex-col items-center gap-2 overflow-visible">
@@ -212,6 +218,34 @@ export function InsertPanel({
 					}}
 				>
 					<BookOpenText className="h-4 w-4" strokeWidth={1.9} />
+				</Button>
+			</PopoverTooltip>
+			<PopoverTooltip
+				side="right"
+				align="center"
+				className="min-w-[148px] text-left font-normal"
+				content={
+					<>
+						<span className="editor-text-strong block text-sm font-medium">
+							{aiLabel}
+						</span>
+						<span className="editor-text-muted mt-0.5 block text-xs">
+							Ask about your document
+						</span>
+					</>
+				}
+			>
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon"
+					data-panel-trigger="ai"
+					aria-label={aiLabel}
+					aria-pressed={aiOpen}
+					className="editor-rail-entry-button"
+					onClick={onToggleAi}
+				>
+					<Sparkles className="h-4 w-4" strokeWidth={1.9} />
 				</Button>
 			</PopoverTooltip>
 		</div>

@@ -34,6 +34,10 @@ export function useAppPanels() {
 	const pagesPanelRef = useRef<HTMLDivElement | null>(null);
 	const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
 	const textTypePanelRef = useRef<HTMLDivElement | null>(null);
+	const aiPanelRef = useRef<HTMLDivElement | null>(null);
+	const [aiPosition, setAiPosition] = useState<EditorPanelPosition>(
+		getDefaultLeftFloatingPanelPosition,
+	);
 
 	function applyPanelRequest(
 		request: Parameters<typeof applyEditorPanelRequest>[1],
@@ -69,6 +73,10 @@ export function useAppPanels() {
 
 	function togglePagesPanel() {
 		applyPanelRequest({ type: "toggle", panel: "pages" });
+	}
+
+	function toggleAiPanel() {
+		applyPanelRequest({ type: "toggle", panel: "ai" });
 	}
 
 	function openPages() {
@@ -156,6 +164,13 @@ export function useAppPanels() {
 		pagesOpen: panelState.pagesOpen,
 		setPagesOpen: (value: SetStateAction<boolean>) =>
 			setPanelOpen("pages", value),
+		aiOpen: panelState.aiOpen,
+		setAiOpen: (value: SetStateAction<boolean>) => setPanelOpen("ai", value),
+		aiPanelRef,
+		aiPosition,
+		handleAiPositionChange: (position: EditorPanelPosition) =>
+			setAiPosition(position),
+		toggleAiPanel,
 		layersPosition: panelState.componentsPosition,
 		pagesPosition: panelState.pagesPosition,
 		layersPanelRef,
@@ -190,7 +205,8 @@ export function useAppPanels() {
 			panelState.componentsOpen ||
 			panelState.pagesOpen ||
 			panelState.sectionTemplateOpen ||
-			panelState.textTypeOpen,
+			panelState.textTypeOpen ||
+			panelState.aiOpen,
 	};
 }
 
@@ -214,5 +230,7 @@ function getPanelOpenState(state: EditorPanelState, panel: EditorPanelId) {
 			return state.sectionTemplateOpen;
 		case "textTypes":
 			return state.textTypeOpen;
+		case "ai":
+			return state.aiOpen;
 	}
 }

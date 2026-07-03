@@ -24,6 +24,7 @@ export function createDefaultEditorPanelState(
 		pagesOpen: false,
 		sectionTemplateOpen: false,
 		textTypeOpen: false,
+		aiOpen: false,
 		componentsPosition: options.componentsPosition,
 		pagesPosition: options.pagesPosition,
 		componentsPositionCustomized: false,
@@ -69,7 +70,7 @@ export function applyEditorPanelRequest(
 
 function togglePanel(
 	state: EditorPanelState,
-	panel: Extract<EditorPanelId, "components" | "pages" | "manageFonts">,
+	panel: Extract<EditorPanelId, "components" | "pages" | "manageFonts" | "ai">,
 ) {
 	if (panel === "components") {
 		return state.componentsOpen
@@ -78,6 +79,9 @@ function togglePanel(
 	}
 	if (panel === "pages") {
 		return state.pagesOpen ? closePanel(state, "pages") : openPanel(state, "pages");
+	}
+	if (panel === "ai") {
+		return state.aiOpen ? closePanel(state, "ai") : openPanel(state, "ai");
 	}
 	return state.manageFontsOpen
 		? closePanel(state, "manageFonts")
@@ -96,6 +100,7 @@ function closeAllPanels(state: EditorPanelState): EditorPanelState {
 		pagesOpen: false,
 		sectionTemplateOpen: false,
 		textTypeOpen: false,
+		aiOpen: false,
 	};
 }
 
@@ -135,6 +140,8 @@ function openPanel(
 			return { ...state, sectionTemplateOpen: true };
 		case "textTypes":
 			return { ...state, textTypeOpen: true };
+		case "ai":
+			return { ...state, aiOpen: true };
 		default:
 			return state;
 	}
@@ -160,6 +167,8 @@ function closePanel(state: EditorPanelState, panel: EditorPanelId): EditorPanelS
 			return { ...state, sectionTemplateOpen: false };
 		case "textTypes":
 			return { ...state, textTypeOpen: false };
+		case "ai":
+			return { ...state, aiOpen: false };
 		default:
 			return state;
 	}

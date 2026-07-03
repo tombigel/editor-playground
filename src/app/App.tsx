@@ -501,6 +501,13 @@ export function App({
 			onLayersPositionChange={panels.handleLayersPositionChange}
 			onPagesPositionChange={panels.handlePagesPositionChange}
 			onCloseLayers={panels.closeLayersPanel}
+			aiOpen={panels.aiOpen}
+			aiPosition={panels.aiPosition}
+			aiPanelRef={panels.aiPanelRef}
+			onAiOpenChange={panels.setAiOpen}
+			onAiPositionChange={panels.handleAiPositionChange}
+			onCloseAi={() => panels.setAiOpen(false)}
+			onOpenAiSettings={() => panels.setSettingsOpen(true)}
 			onOpenSectionTemplates={panels.openSectionTemplates}
 			onSectionTemplateOpenChange={panels.handleSectionTemplateOpenChange}
 			onCloseSectionTemplates={panels.closeSectionTemplatePopover}

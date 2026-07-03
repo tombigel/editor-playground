@@ -17,3 +17,6 @@ export const PagesPanel = lazy(() =>
 export const EditorSidebar = lazy(() =>
 	import("../panels/EditorSidebar").then((m) => ({ default: m.EditorSidebar })),
 );
+export const AiPanel = lazy(() =>
+	import("../panels/AiPanel").then((m) => ({ default: m.AiPanel })),
+);

@@ -179,7 +179,8 @@ function isEditorPanelId(value: unknown): value is EditorPanelId {
 		value === "components" ||
 		value === "pages" ||
 		value === "sectionTemplates" ||
-		value === "textTypes"
+		value === "textTypes" ||
+		value === "ai"
 	);
 }
 
