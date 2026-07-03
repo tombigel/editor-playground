@@ -15,6 +15,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - improve assistant panel responses
 
+### Fixed
+
+- open help for question-form undo/redo requests instead of running them
+
 ---
 
 ## [0.12.0] — 2026-07-03

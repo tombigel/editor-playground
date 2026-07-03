@@ -197,6 +197,10 @@ export function classifyAiRequest(text: string, options: ClassifyAiRequestOption
     return { kind: 'normalChat' };
   }
 
+  if (isHelpRequest(normalized, tokens)) {
+    return { kind: 'helpRequest', target: classifyHelpTarget(normalized, tokens) };
+  }
+
   const historyAction = classifyHistoryControl(normalized);
   if (historyAction) {
     return { kind: 'historyControl', action: historyAction };
@@ -209,10 +213,6 @@ export function classifyAiRequest(text: string, options: ClassifyAiRequestOption
     }
   } else if (classifyDraftControl(normalized)) {
     return { kind: 'normalChat' };
-  }
-
-  if (isHelpRequest(normalized, tokens)) {
-    return { kind: 'helpRequest', target: classifyHelpTarget(normalized, tokens) };
   }
 
   const commandWords = findMatchedWords(tokens, DIRECT_COMMAND_WORDS);

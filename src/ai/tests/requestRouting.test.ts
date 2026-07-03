@@ -34,6 +34,21 @@ describe('ai/requestRouting classifyAiRequest', () => {
     });
   });
 
+  it('routes question-form history and draft control phrases to help instead', () => {
+    expect(classifyAiRequest('how do I undo something?', { hasPendingDraft: false })).toEqual({
+      kind: 'helpRequest',
+      target: 'gettingStarted',
+    });
+    expect(classifyAiRequest('how do I redo an undo?', { hasPendingDraft: false })).toEqual({
+      kind: 'helpRequest',
+      target: 'gettingStarted',
+    });
+    expect(classifyAiRequest('how do I approve this?', { hasPendingDraft: true })).toEqual({
+      kind: 'helpRequest',
+      target: 'gettingStarted',
+    });
+  });
+
   it('routes undo and carefully scoped redo phrases to local history control', () => {
     expect(classifyAiRequest('undo', { hasPendingDraft: false })).toEqual({
       kind: 'historyControl',
