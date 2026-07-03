@@ -127,6 +127,7 @@ function describeAutoApproveManualReason(
 export const AI_PROVIDER_KEY_STORAGE_KEY = "editor-playground.ai-provider-key.v1";
 
 const HELP_ENTRY_BY_TARGET: Record<Exclude<AiHelpTarget, "shortcuts">, string> = {
+	aiGuide: "doc:docs/AI_CONVERSATION_GUIDE.md",
 	gettingStarted: "doc:docs/GETTING_STARTED.md",
 	aiApi: "doc:docs/API_AI.md",
 	api: "doc:docs/API.md",
@@ -188,6 +189,8 @@ function describeHelpTarget(target: AiHelpTarget): string {
 	switch (target) {
 		case "shortcuts":
 			return "Opened keyboard shortcuts.";
+		case "aiGuide":
+			return "Opened the AI conversation guide.";
 		case "aiApi":
 			return "Opened the AI command reference.";
 		case "api":

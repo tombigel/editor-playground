@@ -412,6 +412,7 @@ Global controls:
 
 - `Mod + ,`: open settings
 - `?`: open the detached Shortcuts dialog when no input field is focused
+- `Mod + K`: toggle the AI Assistant panel when no text input is focused
 - `Shift + H`: open Documentation when no input field is focused
 - `Esc`: close open panels and dialogs
 
@@ -543,7 +544,7 @@ The AI command layer (`src/api/ai/`, documented fully in `docs/API_AI.md`) is th
 - The AI panel input footer uses the shared textarea styling, shows the current model in small muted text, and includes an **Auto approve** switch that live-syncs with the Settings default. For OpenRouter router modes such as **Free**, **Floor**, and **Auto**, it shows the concrete model id reported by OpenRouter after a response instead of the router id; before the first router response, it says OpenRouter will choose on send.
 - User prompt bubbles expose **Edit prompt** and **Rerun prompt** icon actions. Edit copies that prompt into the composer and focuses it; Rerun sends the same prompt as a new turn using the current document/context while preserving conversation history.
 - Read-only query tool calls and their tool-result payloads are internal provider context, not visible chat bubbles. When a turn only gathers data, the AI panel keeps the OpenRouter-compatible assistant-tool/tool-result history hidden and automatically asks the model for a follow-up answer, so the visible transcript gets a short human-readable summary with a next action rather than a raw JSON/data dump. Raw JSON, full node objects, complete tool results, or exhaustive lists are only appropriate when the user explicitly asks for raw/debug/exhaustive output.
-- Before sending a chat message to a model, the AI panel runs a shallow request router rather than a full natural-language parser. Help detection takes precedence, so question-form requests ("how do I undo…") open help instead of mutating history. Pending-draft control phrases such as `make the change`, `approve`, `reject`, or `cancel` are handled locally through the same draft card approve/reject behavior, but only for short bare confirmations (up to a few words); longer mixed-intent replies are sent to the model so requested modifications are not dropped. History phrases such as `undo`, `revert`, and `cancel last change` dispatch the existing editor undo action; explicit `redo`, `reapply`, or `undo the undo` dispatch redo only when redo history exists. Help requests such as `help`, `how do I`, `show shortcuts`, or `docs` open the existing Help/Shortcuts surfaces and record a brief local transcript message.
+- Before sending a chat message to a model, the AI panel runs a shallow request router rather than a full natural-language parser. Help detection takes precedence, so question-form requests ("how do I undo…") open help instead of mutating history. Pending-draft control phrases such as `make the change`, `approve`, `reject`, or `cancel` are handled locally through the same draft card approve/reject behavior, but only for short bare confirmations (up to a few words); longer mixed-intent replies are sent to the model so requested modifications are not dropped. History phrases such as `undo`, `revert`, and `cancel last change` dispatch the existing editor undo action; explicit `redo`, `reapply`, or `undo the undo` dispatch redo only when redo history exists. Help requests such as `help`, `/help`, `how do I`, `show shortcuts`, or `docs` open the existing Help/Shortcuts surfaces and record a brief local transcript message. Bare `help` / `/help`, prompt guidance, "what can you do", and AI tool questions open `docs/AI_CONVERSATION_GUIDE.md`, the user-facing guide to current capabilities, prompt patterns, and prompts that are not supported yet.
 - Direct editor operation prompts are detected by prominent verbs (`move`, `nudge`, `delete`, `hide`, `show`, `rename`, `resize`, `set`, `change`) and lightweight target/pronoun hints (`selection`, `selected`, `this`, `image`, `text`, `block`, etc.). These requests still go to the selected model, but the app injects current selection and selected-node context so the model can call a mutation tool as a draft without a multi-turn discovery exchange. If the target/action/value is fuzzy, the model should ask one concise clarification instead of guessing.
 - Assistant messages may show a muted provenance caption (`Answered by ...`) when the responding model id is known (for Automatic modes, the concrete model OpenRouter reports).
 - The notice states plainly, at the point of key entry: the key is stored only in the browser's local storage and sent directly from the browser to OpenRouter, never to any other server — a deliberate client-only, bring-your-own-model design, not a security oversight.
@@ -1370,9 +1371,10 @@ Additional rules:
 Navigation model:
 
 - `?` opens the detached `Shortcuts` dialog.
+- `Help → AI conversation guide` opens the documentation browser directly to the muggle-facing AI guide.
 - `Help → Documentation` opens the documentation browser dialog with a collapsible left nav.
 - `Help → About` opens a detached about dialog.
-- The documentation browser root IA is `About`, `Keyboard shortcuts`, `Guides`, `Reference`, and `Developers`.
+- The documentation browser root IA is `About`, `Keyboard shortcuts`, `AI Conversation Guide`, `Guides`, `Reference`, and `Developers`.
 - `About` and `Keyboard shortcuts` remain top-level browseable surfaces even though they also have detached dialogs.
 - Opening the documentation browser without an explicit entry target defaults to `About`.
 - `Guides` is the user-facing docs root for actual editor guidance and currently starts with `Getting Started`.

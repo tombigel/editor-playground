@@ -169,9 +169,12 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("Shift + H");
 		expect(markup).toContain("Shift + R");
 		expect(markup).toContain("Shift + D");
+		expect(markup).toContain("Cmd + K");
 		expect(markup).toContain("Cmd + Alt + P");
 		expect(markup).toContain("Components panel");
 		expect(markup).toContain("Pages panel");
+		expect(markup).toContain("AI Assistant");
+		expect(markup).toContain("AI conversation guide");
 		expect(markup).toContain("Documentation");
 		expect(markup).toContain("Showcase tour");
 		expect(markup).not.toContain("Import JSON…");

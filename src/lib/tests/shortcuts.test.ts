@@ -208,6 +208,48 @@ describe('shortcut registry', () => {
     expect(getShortcutLabel('openDocumentation', 'other')).toBe('Shift + H');
   });
 
+  it('matches the AI assistant shortcut outside text entry', () => {
+    const aiPanel = findMatchingShortcut(
+      {
+        code: 'KeyK',
+        metaKey: true,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+      },
+      {
+        interactiveFocus: true,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'mac',
+    );
+
+    const blockedInTextInput = findMatchingShortcut(
+      {
+        code: 'KeyK',
+        metaKey: true,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        target: createMockFocusTarget({ textInput: true, interactive: true }),
+      },
+      {
+        interactiveFocus: true,
+        hasSelection: false,
+        hasDismissiblePanels: false,
+        hasStageFocus: false,
+      },
+      'mac',
+    );
+
+    expect(aiPanel?.id).toBe('toggleAiPanel');
+    expect(blockedInTextInput).toBeNull();
+    expect(getShortcutLabel('toggleAiPanel', 'mac')).toBe('Cmd + K');
+    expect(getShortcutLabel('toggleAiPanel', 'other')).toBe('Ctrl + K');
+  });
+
   it('matches and labels copy, paste, and duplicate shortcuts outside text editing', () => {
     const context = {
       interactiveFocus: false,

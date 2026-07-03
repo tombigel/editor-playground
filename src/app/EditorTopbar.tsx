@@ -51,6 +51,7 @@ import { resolvePublicAssetUrl } from "@/lib/publicAssets";
 import type { ThemeMode } from "@/lib/theme";
 
 const DOCUMENTATION_ENTRY_ID = "about";
+const AI_GUIDE_ENTRY_ID = "doc:docs/AI_CONVERSATION_GUIDE.md";
 
 function getPageDepth(pages: DocumentPage[], page: DocumentPage) {
 	let depth = 0;
@@ -119,6 +120,7 @@ export function EditorTopbar({
 	onSetFocusedMode,
 	onToggleLayersPanel,
 	onTogglePagesPanel,
+	onToggleAiPanel,
 	onOpenManageFonts,
 	onOpenShortcuts,
 	onOpenDocumentation,
@@ -174,6 +176,7 @@ export function EditorTopbar({
 	onSetFocusedMode: (mode: FocusedMode) => void;
 	onToggleLayersPanel: () => void;
 	onTogglePagesPanel: () => void;
+	onToggleAiPanel: () => void;
 	onOpenManageFonts: () => void;
 	onOpenShortcuts: () => void;
 	onOpenDocumentation: (entryId: string) => void;
@@ -405,6 +408,13 @@ export function EditorTopbar({
 							</MenubarSubmenu>
 							<MenubarSeparator />
 							<MenubarItem
+								icon={Sparkles}
+								shortcut={getShortcutLabel("toggleAiPanel", shortcutPlatform)}
+								onClick={onToggleAiPanel}
+							>
+								AI Assistant
+							</MenubarItem>
+							<MenubarItem
 								icon={Type}
 								shortcut={getShortcutLabel(
 									"toggleFontsPanel",
@@ -439,9 +449,15 @@ export function EditorTopbar({
 						</MenubarContent>
 					</MenubarMenu>
 
-<MenubarMenu id="help">
+					<MenubarMenu id="help">
 						<MenubarTrigger>Help</MenubarTrigger>
 						<MenubarContent>
+							<MenubarItem
+								icon={Sparkles}
+								onClick={() => onOpenDocumentation(AI_GUIDE_ENTRY_ID)}
+							>
+								AI conversation guide
+							</MenubarItem>
 							<MenubarItem
 								icon={Keyboard}
 								shortcut={getShortcutLabel(

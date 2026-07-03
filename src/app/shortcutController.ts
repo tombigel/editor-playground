@@ -30,6 +30,9 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
   openDocumentation: (_state, _shiftKey, handlers) => {
     handlers.app.openDocumentation();
   },
+  toggleAiPanel: (_state, _shiftKey, handlers) => {
+    handlers.panels.toggleAiPanel();
+  },
   openPreviewSite: (_state, _shiftKey, handlers) => {
     handlers.app.openPreviewSite();
   },

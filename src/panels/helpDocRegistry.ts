@@ -32,6 +32,13 @@ export const HELP_DOC_REGISTRY: readonly HelpDocRegistryEntry[] = [
   { id: 'about', kind: 'about', title: 'About', order: 10 },
   { id: 'shortcuts', kind: 'shortcuts', title: 'Keyboard shortcuts', order: 20 },
   {
+    id: 'doc:docs/AI_CONVERSATION_GUIDE.md',
+    kind: 'markdown',
+    sourcePath: 'docs/AI_CONVERSATION_GUIDE.md',
+    title: 'AI Conversation Guide',
+    order: 25,
+  },
+  {
     id: 'section:guides',
     kind: 'section',
     title: 'Guides',

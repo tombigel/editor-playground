@@ -342,6 +342,7 @@ export function App({
       },
       toggleSettings: () => panels.setSettingsOpen((open) => !open),
       openShortcuts: () => panels.setShortcutsOpen(true),
+      toggleAiPanel: () => panels.toggleAiPanel(),
       toggleFontsPanel: () => panels.toggleManageFontsPanel(),
       toggleComponentsPanel: () => panels.toggleLayersPanel(),
       togglePagesPanel: () => panels.togglePagesPanel(),

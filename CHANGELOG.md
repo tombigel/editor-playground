@@ -16,6 +16,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - improve assistant panel responses
 - add Qwen free model option
 - improve assistant settings controls
+- add AI conversation guide and shortcut
 
 ### Changed
 

@@ -31,7 +31,7 @@ Inspect the diff first. Classify each touched AI change as one or more:
 - **Provider protocol:** `src/ai/providers/`
 - **Draft/apply path:** `src/ai/conversationStore.tsx`, `src/api/ai/commands.ts`, `src/api/ai/validation.ts`, `src/api/editorApi.ts`, `src/panels/AiPanel.tsx`, `src/panels/ai/AiDraftDiffCard.tsx`
 - **Help/history/local routes:** `src/panels/helpDocs.ts`, `src/panels/HelpDialog.tsx`, app-shell panel wiring, undo/redo dispatch callbacks
-- **Docs/tests:** `docs/API_AI.md`, `docs/API.md`, `docs/API_EDITOR.md`, `docs/PLAYGROUND_SPEC.md`, nearby tests
+- **Docs/tests:** `docs/AI_CONVERSATION_GUIDE.md`, `docs/API_AI.md`, `docs/API.md`, `docs/API_EDITOR.md`, `docs/PLAYGROUND_SPEC.md`, nearby tests
 
 Do not assume a prompt-only change is isolated; check whether the real tool/API/harness behavior still matches it.
 
@@ -84,6 +84,7 @@ For provider or chat-loop changes, check:
 Required docs for important behavior changes:
 
 - `docs/API_AI.md` for AI query/mutation/request-routing behavior.
+- `docs/AI_CONVERSATION_GUIDE.md` for user-facing AI conversation capabilities, prompt guidance, local chat commands, and currently unsupported prompt examples. Update it on every AI-facing behavior change.
 - `docs/API.md` when public API exports or tool surfaces change.
 - `docs/API_EDITOR.md` when approval/history/editor wrapper behavior changes.
 - `docs/PLAYGROUND_SPEC.md` for user-visible AI panel, help-routing, request-routing, or draft UX changes.

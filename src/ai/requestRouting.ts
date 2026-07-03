@@ -6,7 +6,7 @@ export type AiDraftControlAction = 'approve' | 'reject';
 
 export type AiHistoryControlAction = 'undo' | 'redo';
 
-export type AiHelpTarget = 'gettingStarted' | 'shortcuts' | 'aiApi' | 'api';
+export type AiHelpTarget = 'aiGuide' | 'gettingStarted' | 'shortcuts' | 'aiApi' | 'api';
 
 export type AiRequestRoute =
   | { kind: 'draftControl'; action: AiDraftControlAction }
@@ -143,14 +143,23 @@ function includesPhrase(normalized: string, phrase: string): boolean {
 }
 
 function classifyHelpTarget(normalized: string, tokens: string[]): AiHelpTarget {
+  if (normalized === 'help' || normalized.includes('what can you do')) {
+    return 'aiGuide';
+  }
   if (tokens.some((token) => tokenMatchesWord(token, 'shortcut') || tokenMatchesWord(token, 'shortcuts'))) {
     return 'shortcuts';
+  }
+  if (
+    tokens.some((token) => tokenMatchesWord(token, 'api')) &&
+    tokens.some((token) => tokenMatchesWord(token, 'ai') || tokenMatchesWord(token, 'tool') || tokenMatchesWord(token, 'tools'))
+  ) {
+    return 'aiApi';
   }
   if (
     tokens.some((token) => tokenMatchesWord(token, 'ai') || tokenMatchesWord(token, 'tool') || tokenMatchesWord(token, 'tools')) ||
     normalized.includes('prompt')
   ) {
-    return 'aiApi';
+    return 'aiGuide';
   }
   if (tokens.some((token) => tokenMatchesWord(token, 'api') || tokenMatchesWord(token, 'docs'))) {
     return 'api';

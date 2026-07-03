@@ -232,6 +232,7 @@ export type ShortcutExecutionHandlers = {
     closePanels: () => void;
     toggleSettings: () => void;
     openShortcuts: () => void;
+    toggleAiPanel: () => void;
     toggleFontsPanel: () => void;
     toggleComponentsPanel: () => void;
     togglePagesPanel: () => void;

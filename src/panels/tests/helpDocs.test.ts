@@ -20,7 +20,14 @@ describe('panels/helpDocs', () => {
   it('builds the configured root IA in the expected order', () => {
     const roots = getHelpRootEntries().map((entry) => entry.title);
 
-    expect(roots).toEqual(['About', 'Keyboard shortcuts', 'Guides', 'Reference', 'Developers']);
+    expect(roots).toEqual([
+      'About',
+      'Keyboard shortcuts',
+      'AI Conversation Guide',
+      'Guides',
+      'Reference',
+      'Developers',
+    ]);
   });
 
   it('nests guides, reference, and developers content under the expected parents', () => {

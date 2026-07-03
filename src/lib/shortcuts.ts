@@ -80,6 +80,17 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     execution: { actionId: 'openDocumentation' },
   },
   {
+    id: 'toggleAiPanel',
+    category: 'General',
+    description: 'AI assistant',
+    combos: [{ code: 'KeyK', keyLabel: 'K', mod: true }],
+    context: {
+      allowInInteractive: true,
+      allowInTextInput: false,
+    },
+    execution: { actionId: 'toggleAiPanel' },
+  },
+  {
     id: 'openPreviewSite',
     category: 'View',
     description: 'Preview site',

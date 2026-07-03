@@ -1,5 +1,11 @@
 [
   {
+    "path": "docs/AI_CONVERSATION_GUIDE.md",
+    "fileName": "AI_CONVERSATION_GUIDE.md",
+    "fullTitle": "AI Conversation Guide",
+    "assetUrl": "/assets/help-docs/AI_CONVERSATION_GUIDE.md"
+  },
+  {
     "path": "docs/AI_HARNESS_AUDIT_FIXES_TASKLIST.md",
     "fileName": "AI_HARNESS_AUDIT_FIXES_TASKLIST.md",
     "fullTitle": "AI Harness Audit Fixes: Agent Task List",

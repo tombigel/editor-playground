@@ -170,6 +170,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				}
 				onToggleLayersPanel={() => onLayersOpenChange(!layersOpen)}
 				onTogglePagesPanel={() => onPagesOpenChange(!pagesOpen)}
+				onToggleAiPanel={onToggleAi}
 				onOpenManageFonts={() =>
 					openManageFontsWithOptions(onManageFontsOpenChange)
 				}

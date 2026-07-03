@@ -17,6 +17,7 @@ function createHandlers() {
       closePanels: vi.fn(),
       toggleSettings: vi.fn(),
       openShortcuts: vi.fn(),
+      toggleAiPanel: vi.fn(),
       toggleFontsPanel: vi.fn(),
       toggleComponentsPanel: vi.fn(),
       togglePagesPanel: vi.fn(),
@@ -115,6 +116,7 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('openSettings'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('showShortcutHelp'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('openDocumentation'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('toggleAiPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('openPreviewSite'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleFontsPanel'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleComponentsPanel'), baseState, false, handlers);
@@ -132,6 +134,7 @@ describe('app/shortcutController', () => {
     expect(handlers.panels.toggleSettings).toHaveBeenCalledOnce();
     expect(handlers.panels.openShortcuts).toHaveBeenCalledOnce();
     expect(handlers.app.openDocumentation).toHaveBeenCalledOnce();
+    expect(handlers.panels.toggleAiPanel).toHaveBeenCalledOnce();
     expect(handlers.app.openPreviewSite).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleFontsPanel).toHaveBeenCalledOnce();
     expect(handlers.panels.toggleComponentsPanel).toHaveBeenCalledOnce();

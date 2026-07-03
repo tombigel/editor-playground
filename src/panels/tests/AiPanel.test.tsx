@@ -261,15 +261,15 @@ describe("panels/AiPanel", () => {
 		expect(markup).toContain("Rerun prompt");
 	});
 
-	it("handles help routes locally by opening existing help targets and recording a transcript", () => {
+	it("handles help routes locally by opening the AI guide and recording a transcript", () => {
 		const conversation = createConversationStub();
 		const openDocumentation = vi.fn();
 		const openShortcuts = vi.fn();
 
 		const handled = handleLocalAiRoute({
 			conversation,
-			route: { kind: "helpRequest", target: "aiApi" },
-			text: "help with AI tools",
+			route: { kind: "helpRequest", target: "aiGuide" },
+			text: "/help",
 			pendingDraft: null,
 			onApproveDraft: () => "applied",
 			onRejectDraft: NO_OP,
@@ -278,10 +278,12 @@ describe("panels/AiPanel", () => {
 		});
 
 		expect(handled).toBe(true);
-		expect(openDocumentation).toHaveBeenCalledWith("doc:docs/API_AI.md");
+		expect(openDocumentation).toHaveBeenCalledWith(
+			"doc:docs/AI_CONVERSATION_GUIDE.md",
+		);
 		expect(openShortcuts).not.toHaveBeenCalled();
 		expect(conversation.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
-		expect(conversation.messages.at(-1)?.content).toContain("AI command reference");
+		expect(conversation.messages.at(-1)?.content).toContain("AI conversation guide");
 	});
 
 	it("handles draft-control routes locally without calling the model", () => {

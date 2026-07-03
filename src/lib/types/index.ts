@@ -12,6 +12,7 @@ export type ShortcutId =
   | 'openSettings'
   | 'showShortcutHelp'
   | 'openDocumentation'
+  | 'toggleAiPanel'
   | 'openPreviewSite'
   | 'toggleFontsPanel'
   | 'toggleComponentsPanel'

@@ -36,7 +36,11 @@ describe('ai/requestRouting classifyAiRequest', () => {
   it('routes help requests to existing help targets', () => {
     expect(classifyAiRequest('help', { hasPendingDraft: false })).toEqual({
       kind: 'helpRequest',
-      target: 'gettingStarted',
+      target: 'aiGuide',
+    });
+    expect(classifyAiRequest('/help', { hasPendingDraft: false })).toEqual({
+      kind: 'helpRequest',
+      target: 'aiGuide',
     });
     expect(classifyAiRequest('show shortcuts', { hasPendingDraft: false })).toEqual({
       kind: 'helpRequest',
@@ -44,7 +48,15 @@ describe('ai/requestRouting classifyAiRequest', () => {
     });
     expect(classifyAiRequest('how do AI tools work?', { hasPendingDraft: false })).toEqual({
       kind: 'helpRequest',
+      target: 'aiGuide',
+    });
+    expect(classifyAiRequest('open the AI API docs', { hasPendingDraft: false })).toEqual({
+      kind: 'helpRequest',
       target: 'aiApi',
+    });
+    expect(classifyAiRequest('what can you do?', { hasPendingDraft: false })).toEqual({
+      kind: 'helpRequest',
+      target: 'aiGuide',
     });
     expect(classifyAiRequest('open API docs', { hasPendingDraft: false })).toEqual({
       kind: 'helpRequest',
