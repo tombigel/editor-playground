@@ -42,6 +42,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - update curated OpenRouter models to current generation
+- preserve native clipboard in panels
 
 ---
 

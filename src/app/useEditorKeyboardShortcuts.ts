@@ -3,6 +3,7 @@ import { getAdjacentStageSelection, type DocumentModel } from '../api/editorApi'
 import type { PageId } from '../api/documentViewApi';
 import { findMatchingShortcut, type ShortcutPlatform } from '@/lib/shortcuts';
 import { executeEditorShortcut, type ShortcutUiState } from './shortcutController';
+import { shouldUseEditorClipboard } from './editorClipboardContext';
 import { getShortcutFocusContext } from './useEditorEnvironment';
 import type { ShortcutExecutionHandlers } from './types';
 
@@ -63,6 +64,13 @@ export function useEditorKeyboardShortcuts({
       );
 
       if (!shortcut) {
+        return;
+      }
+
+      if (
+        (shortcut.id === 'copySelection' || shortcut.id === 'pasteClipboard') &&
+        !shouldUseEditorClipboard(event)
+      ) {
         return;
       }
 

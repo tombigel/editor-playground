@@ -31,7 +31,6 @@ import { useAppPanels } from "./useAppPanels";
 import { useAppRuntime } from "./useAppRuntime";
 import { useAppViewModel } from "./useAppViewModel";
 import { useEditorKeyboardShortcuts } from "./useEditorKeyboardShortcuts";
-import { getShortcutFocusContext } from "./useEditorEnvironment";
 import { openPreviewSiteWindow } from "./previewWindow";
 import type { ShortcutExecutionHandlers } from "./types";
 import {
@@ -40,6 +39,7 @@ import {
 	writeNodePayloadToEventClipboard,
 	writeNodePayloadToSystemClipboard,
 } from "./appClipboard";
+import { shouldUseEditorClipboard } from "./editorClipboardContext";
 
 type AppProps = {
 	mode?: Extract<AppMode, "edit" | "preview">;
@@ -271,20 +271,15 @@ export function App({
 	}, []);
 
 	useEffect(() => {
-		function shouldUseEditorClipboard() {
-			const activeElement = window.document.activeElement as HTMLElement | null;
-			return !getShortcutFocusContext(activeElement).textInputFocus;
-		}
-
 		function handleCopy(event: ClipboardEvent) {
-			if (state.selectedIds.length === 0 || !shouldUseEditorClipboard()) {
+			if (state.selectedIds.length === 0 || !shouldUseEditorClipboard(event)) {
 				return;
 			}
 			copySelectionToEventClipboard(event);
 		}
 
 		function handlePaste(event: ClipboardEvent) {
-			if (!shouldUseEditorClipboard()) {
+			if (!shouldUseEditorClipboard(event)) {
 				return;
 			}
 			pasteFromEventClipboard(event);
