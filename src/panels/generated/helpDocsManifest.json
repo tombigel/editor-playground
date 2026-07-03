@@ -1,5 +1,11 @@
 [
   {
+    "path": "docs/API_AI.md",
+    "fileName": "API_AI.md",
+    "fullTitle": "API Reference - AI",
+    "assetUrl": "/assets/help-docs/API_AI.md"
+  },
+  {
     "path": "docs/API_DOCUMENT_MODEL.md",
     "fileName": "API_DOCUMENT_MODEL.md",
     "fullTitle": "API Reference - Document Model",
