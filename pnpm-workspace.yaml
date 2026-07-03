@@ -1,0 +1,3 @@
+allowBuilds:
+  msw: false
+  simple-git-hooks: true

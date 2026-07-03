@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AiToolDefinition } from '../../../api/ai/types';
 import type { ConversationMessage, StreamEvent } from '../../types/index';
-import { createOpenRouterAdapter } from '../openRouterAdapter';
+import { checkOpenRouterConnection, createOpenRouterAdapter } from '../openRouterAdapter';
 
 /**
  * Builds a fake `fetch` `Response` whose body is a `ReadableStream` emitting
@@ -306,5 +306,52 @@ describe('createOpenRouterAdapter / streamChat', () => {
 
     expect(events[0]?.type).toBe('error');
     expect(events.at(-1)).toEqual({ type: 'message-complete' });
+  });
+});
+
+describe('checkOpenRouterConnection', () => {
+  it('checks the selected model with a bearer key through chat completions', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: () => Promise.resolve(''),
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await checkOpenRouterConnection('test-key', 'qwen/qwen3-coder:free');
+
+    expect(result).toEqual({ ok: true, modelId: 'qwen/qwen3-coder:free' });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer test-key' });
+    const body = JSON.parse(init.body as string);
+    expect(body).toMatchObject({
+      model: 'qwen/qwen3-coder:free',
+      stream: false,
+      max_tokens: 1,
+      messages: [{ role: 'user', content: 'ping' }],
+    });
+  });
+
+  it('returns the OpenRouter error text when the connection check fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
+        text: () => Promise.resolve(JSON.stringify({ error: { message: 'Provider returned error' } })),
+      } as unknown as Response),
+    );
+
+    const result = await checkOpenRouterConnection('test-key', 'qwen/qwen3-coder:free');
+
+    if (result.ok) {
+      throw new Error('Expected the connection check to fail');
+    }
+    expect(result.modelId).toBe('qwen/qwen3-coder:free');
+    expect(result.message).toContain('429');
+    expect(result.message).toContain('Provider returned error');
   });
 });

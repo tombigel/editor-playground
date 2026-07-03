@@ -4,12 +4,17 @@ import {
   AiSettingsSection,
   isCustomModelId,
   normalizeCustomModelIdInput,
+  resolveConnectionCheckModelId,
 } from '../settings/sections/AiSettingsSection';
 import { AI_PROVIDER_KEY_STORAGE_KEY } from '../AiPanel';
 import {
   AUTO_GROUP_SENTINELS,
+  AUTO_MODEL_ID,
   CURATED_MODELS,
+  FLOOR_MODEL_SENTINEL,
   FREE_MODEL_SENTINEL,
+  getFloorCuratedModel,
+  getFreeCuratedModel,
 } from '../../ai/providers/curatedModels';
 import { loadPersistedConversationState } from '../../ai/conversationStore';
 
@@ -67,6 +72,8 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(markup).toContain('aria-label="Model"');
     expect(markup).toContain('aria-label="Custom OpenRouter model id"');
     expect(markup).toContain('aria-label="Prompt caching"');
+    expect(markup).toContain('Check connection');
+    expect(markup).toContain('OpenRouter connection not checked');
     expect(markup).toContain('href="https://openrouter.ai/keys"');
     expect(markup).toContain('target="_blank"');
     expect(markup).toContain('rel="noreferrer"');
@@ -191,6 +198,17 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     );
     expect(normalizeCustomModelIdInput('   ')).toBeNull();
     expect(normalizeCustomModelIdInput('')).toBeNull();
+  });
+
+  it('resolves the connection-check model id for automatic, floor, and custom selections', () => {
+    expect(resolveConnectionCheckModelId(FREE_MODEL_SENTINEL)).toBe(getFreeCuratedModel()?.id);
+    expect(resolveConnectionCheckModelId(FLOOR_MODEL_SENTINEL)).toBe(
+      `${getFloorCuratedModel()?.id}:floor`,
+    );
+    expect(resolveConnectionCheckModelId(AUTO_MODEL_ID)).toBe(getFreeCuratedModel()?.id);
+    expect(resolveConnectionCheckModelId('mistralai/mistral-large')).toBe(
+      'mistralai/mistral-large',
+    );
   });
 
   it('reflects the persisted prompt-caching preference in the Settings switch', () => {

@@ -42,6 +42,14 @@ import {
   loadPersistedConversationState,
   persistConversationState,
 } from '@/ai/conversationStore';
+import { checkOpenRouterConnection } from '@/ai/providers/openRouterAdapter';
+import { resolveModelSelection, withFloorSuffix } from '@/ai/providers/resolveModelSelection';
+
+type ConnectionCheckState =
+  | { status: 'idle' }
+  | { status: 'checking' }
+  | { status: 'success'; modelId: string }
+  | { status: 'error'; modelId: string | null; message: string };
 
 /**
  * Reads the stored OpenRouter API key using the exact same shape
@@ -146,6 +154,14 @@ export function normalizeCustomModelIdInput(value: string): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+export function resolveConnectionCheckModelId(modelSelection: string): string | null {
+  const resolved = resolveModelSelection(modelSelection);
+  if (resolved.kind === 'auto-fallback') {
+    return resolved.candidateModelIds[0] ?? null;
+  }
+  return resolved.applyFloorSuffix ? withFloorSuffix(resolved.modelId) : resolved.modelId;
+}
+
 export function AiSettingsSection() {
   const [apiKey, setApiKey] = useState<string>(() => readStoredApiKey());
   const [selectedModelId, setSelectedModelIdState] = useState<string>(() =>
@@ -158,20 +174,24 @@ export function AiSettingsSection() {
   const [promptCachingEnabled, setPromptCachingEnabledState] = useState<boolean>(() =>
     readPromptCachingEnabled(),
   );
+  const [connectionCheck, setConnectionCheck] = useState<ConnectionCheckState>({ status: 'idle' });
 
   const handleApiKeyChange = useCallback((value: string) => {
     setApiKey(value);
+    setConnectionCheck({ status: 'idle' });
     writeStoredApiKey(value);
   }, []);
 
   const handleClearApiKey = useCallback(() => {
     setApiKey('');
+    setConnectionCheck({ status: 'idle' });
     writeStoredApiKey('');
   }, []);
 
   const handleModelChange = useCallback((modelId: string) => {
     setCustomModelIdInput('');
     setSelectedModelIdState(modelId);
+    setConnectionCheck({ status: 'idle' });
     writeSelectedModelId(modelId);
   }, []);
 
@@ -182,6 +202,7 @@ export function AiSettingsSection() {
       return;
     }
     setSelectedModelIdState(normalized);
+    setConnectionCheck({ status: 'idle' });
     writeSelectedModelId(normalized);
   }, []);
 
@@ -192,6 +213,41 @@ export function AiSettingsSection() {
 
   const selectedModelLabel = getSelectedModelLabel(selectedModelId);
   const showFreeTierNotice = apiKey.length > 0 && selectionResolvesToFreeTier(selectedModelId);
+  const connectionModelId = resolveConnectionCheckModelId(selectedModelId);
+  const canCheckConnection = apiKey.trim().length > 0 && connectionCheck.status !== 'checking';
+
+  const handleCheckConnection = useCallback(async () => {
+    const trimmedKey = apiKey.trim();
+    const modelId = resolveConnectionCheckModelId(selectedModelId);
+    if (trimmedKey.length === 0) {
+      setConnectionCheck({
+        status: 'error',
+        modelId: null,
+        message: 'Add an OpenRouter API key before checking the connection.',
+      });
+      return;
+    }
+    if (!modelId) {
+      setConnectionCheck({
+        status: 'error',
+        modelId: null,
+        message: 'Choose a model before checking the connection.',
+      });
+      return;
+    }
+
+    setConnectionCheck({ status: 'checking' });
+    const result = await checkOpenRouterConnection(trimmedKey, modelId);
+    if (result.ok) {
+      setConnectionCheck({ status: 'success', modelId: result.modelId });
+      return;
+    }
+    setConnectionCheck({
+      status: 'error',
+      modelId: result.modelId,
+      message: result.message,
+    });
+  }, [apiKey, selectedModelId]);
 
   return (
     <>
@@ -311,7 +367,23 @@ export function AiSettingsSection() {
               aria-label="Prompt caching"
             />
           </LabeledControlRow>
+          <LabeledControlRow label="Connection" controlWidth="280px">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void handleCheckConnection()}
+              disabled={!canCheckConnection}
+            >
+              {connectionCheck.status === 'checking' ? 'Checking…' : 'Check connection'}
+            </Button>
+          </LabeledControlRow>
         </ControlGroup>
+        <ConnectionCheckNotice
+          apiKeyPresent={apiKey.trim().length > 0}
+          modelId={connectionModelId}
+          state={connectionCheck}
+        />
         <NoticeSurface tone="info" icon={<KeyRound className="h-3.5 w-3.5" />} className="mt-3">
           Your OpenRouter API key is stored only in this browser&rsquo;s local
           storage and is sent directly from your browser to OpenRouter — never
@@ -341,5 +413,54 @@ export function AiSettingsSection() {
         </NoticeSurface>
       </PlainGroup>
     </>
+  );
+}
+
+function ConnectionCheckNotice({
+  apiKeyPresent,
+  modelId,
+  state,
+}: {
+  apiKeyPresent: boolean;
+  modelId: string | null;
+  state: ConnectionCheckState;
+}) {
+  if (!apiKeyPresent) {
+    return (
+      <NoticeSurface tone="message" className="mt-3">
+        OpenRouter connection not checked. Add an API key, then check the selected model.
+      </NoticeSurface>
+    );
+  }
+
+  if (state.status === 'checking') {
+    return (
+      <NoticeSurface tone="message" className="mt-3">
+        Checking OpenRouter key and model connection…
+      </NoticeSurface>
+    );
+  }
+
+  if (state.status === 'success') {
+    return (
+      <NoticeSurface tone="success" className="mt-3">
+        OpenRouter connection OK for <span className="font-mono">{state.modelId}</span>.
+      </NoticeSurface>
+    );
+  }
+
+  if (state.status === 'error') {
+    return (
+      <NoticeSurface tone="warning" className="mt-3">
+        OpenRouter connection failed{state.modelId ? ` for ${state.modelId}` : ''}: {state.message}
+      </NoticeSurface>
+    );
+  }
+
+  return (
+    <NoticeSurface tone="message" className="mt-3">
+      OpenRouter connection not checked for{' '}
+      <span className="font-mono">{modelId ?? 'the selected model'}</span>. This checks both the API key and model/provider availability.
+    </NoticeSurface>
   );
 }

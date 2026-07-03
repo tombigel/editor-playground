@@ -24,6 +24,10 @@ type OpenRouterAdapterOptions = {
   cacheSystemPrompt?: boolean;
 };
 
+export type OpenRouterConnectionCheckResult =
+  | { ok: true; modelId: string }
+  | { ok: false; modelId: string; message: string };
+
 /**
  * Creates a {@link ProviderAdapter} bound to a single OpenRouter API key, so
  * callers don't need to pass the key on every `streamChat` call. This is a
@@ -41,6 +45,40 @@ export function createOpenRouterAdapter(
       return streamChat(apiKey, model, messages, tools, adapterOptions, options);
     },
   };
+}
+
+export async function checkOpenRouterConnection(
+  apiKey: string,
+  model: string,
+  options?: { signal?: AbortSignal },
+): Promise<OpenRouterConnectionCheckResult> {
+  try {
+    const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        stream: false,
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'ping' }],
+      }),
+      signal: options?.signal,
+    });
+
+    if (!response.ok) {
+      return { ok: false, modelId: model, message: await describeErrorResponse(response) };
+    }
+
+    return { ok: true, modelId: model };
+  } catch (caughtError) {
+    if (isAbortError(caughtError)) {
+      return { ok: false, modelId: model, message: 'Connection check was cancelled.' };
+    }
+    return { ok: false, modelId: model, message: describeError(caughtError) };
+  }
 }
 
 async function* streamChat(

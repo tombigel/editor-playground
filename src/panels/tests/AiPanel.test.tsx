@@ -56,6 +56,7 @@ describe("panels/AiPanel", () => {
 		expect(markup).toContain('data-ui="panel-header"');
 		expect(markup).toContain("Close AI assistant panel");
 		expect(markup).toContain("AI Assistant");
+		expect(markup).toContain("Open AI assistant settings");
 	});
 
 	it("shows the add-your-key empty state when no adapter is available", () => {

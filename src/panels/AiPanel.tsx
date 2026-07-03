@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { Settings, Sparkles } from "lucide-react";
 import {
 	useCallback,
 	useEffect,
@@ -231,6 +231,20 @@ export function AiPanel({
 						closeLabel="Close AI assistant panel"
 						onClose={onClose}
 						className="cursor-grab px-3 py-2.5 active:cursor-grabbing"
+						actions={
+							onOpenSettings ? (
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									className="editor-icon-button-subtle rounded-lg border"
+									onClick={onOpenSettings}
+									aria-label="Open AI assistant settings"
+								>
+									<Settings className="h-4 w-4" />
+								</Button>
+							) : null
+						}
 					/>
 				</div>
 			}
