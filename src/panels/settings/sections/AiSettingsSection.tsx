@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -101,6 +102,15 @@ function writeSelectedModelId(modelId: string): void {
   persistConversationState({ ...persisted, selectedModelId: modelId });
 }
 
+function readPromptCachingEnabled(): boolean {
+  return loadPersistedConversationState().promptCachingEnabled;
+}
+
+function writePromptCachingEnabled(enabled: boolean): void {
+  const persisted = loadPersistedConversationState();
+  persistConversationState({ ...persisted, promptCachingEnabled: enabled });
+}
+
 function getSelectedModelLabel(modelId: string): string {
   if (modelId === AUTO_MODEL_ID) {
     return 'Auto';
@@ -145,6 +155,9 @@ export function AiSettingsSection() {
     const modelId = readSelectedModelId();
     return isCustomModelId(modelId) ? modelId : '';
   });
+  const [promptCachingEnabled, setPromptCachingEnabledState] = useState<boolean>(() =>
+    readPromptCachingEnabled(),
+  );
 
   const handleApiKeyChange = useCallback((value: string) => {
     setApiKey(value);
@@ -170,6 +183,11 @@ export function AiSettingsSection() {
     }
     setSelectedModelIdState(normalized);
     writeSelectedModelId(normalized);
+  }, []);
+
+  const handlePromptCachingChange = useCallback((enabled: boolean) => {
+    setPromptCachingEnabledState(enabled);
+    writePromptCachingEnabled(enabled);
   }, []);
 
   const selectedModelLabel = getSelectedModelLabel(selectedModelId);
@@ -275,6 +293,13 @@ export function AiSettingsSection() {
               className="text-sm"
             />
           </LabeledControlRow>
+          <LabeledControlRow label="Prompt caching" controlWidth="280px">
+            <Switch
+              checked={promptCachingEnabled}
+              onCheckedChange={handlePromptCachingChange}
+              aria-label="Prompt caching"
+            />
+          </LabeledControlRow>
         </ControlGroup>
         <NoticeSurface tone="info" icon={<KeyRound className="h-3.5 w-3.5" />} className="mt-3">
           Your OpenRouter API key is stored only in this browser&rsquo;s local
@@ -298,6 +323,11 @@ export function AiSettingsSection() {
             For higher limits, switch to Floor, Auto, or a specific paid model above.
           </NoticeSurface>
         ) : null}
+        <NoticeSurface tone="message" className="mt-2">
+          Prompt caching can reduce repeat-request cost for providers that
+          support it, such as Anthropic. It may have no effect where caching is
+          automatic or unsupported.
+        </NoticeSurface>
       </PlainGroup>
     </>
   );

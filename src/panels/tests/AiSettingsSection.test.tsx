@@ -66,6 +66,7 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(markup).toContain('type="password"');
     expect(markup).toContain('aria-label="Model"');
     expect(markup).toContain('aria-label="Custom OpenRouter model id"');
+    expect(markup).toContain('aria-label="Prompt caching"');
     // Radix's Select renders its option list into a portal that
     // renderToStaticMarkup (no DOM/portal) can't capture when closed — only
     // the trigger's current value is visible in SSR'd markup, matching this
@@ -81,6 +82,7 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     expect(markup).toContain('never to any other server');
     expect(markup).toContain('bring-your-own-model');
     expect(markup).toContain('still requires a free API key');
+    expect(markup).toContain('Prompt caching can reduce repeat-request cost');
   });
 
   it('keeps the automatic model choices unique and pinned separately from curated ids', () => {
@@ -185,5 +187,23 @@ describe('panels/settings/sections/AiSettingsSection', () => {
     );
     expect(normalizeCustomModelIdInput('   ')).toBeNull();
     expect(normalizeCustomModelIdInput('')).toBeNull();
+  });
+
+  it('reflects the persisted prompt-caching preference in the Settings switch', () => {
+    const win = window as unknown as { localStorage: Storage };
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({
+        messages: [],
+        selectedModelId: FREE_MODEL_SENTINEL,
+        promptCachingEnabled: true,
+      }),
+    );
+
+    const markup = renderToStaticMarkup(<AiSettingsSection />);
+
+    expect(loadPersistedConversationState().promptCachingEnabled).toBe(true);
+    expect(markup).toContain('aria-label="Prompt caching"');
+    expect(markup).toContain('data-state="checked"');
   });
 });
