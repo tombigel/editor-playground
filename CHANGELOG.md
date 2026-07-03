@@ -22,6 +22,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add single-undo AI command batch commit path
 - add orchestration types, system prompt, guardrails, and architecture boundary check
 - add tool router and conversation session state
+- add OpenRouter provider adapter with curated model list
 
 ### Changed
 
