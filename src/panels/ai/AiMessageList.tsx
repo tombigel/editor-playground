@@ -55,9 +55,7 @@ export function AiMessageList({
 					data-ai-streaming="true"
 				>
 					{streamingText.length > 0 ? (
-						<div className="editor-ai-markdown">
-							<Markdown remarkPlugins={[remarkGfm]}>{streamingText}</Markdown>
-						</div>
+						<Markdown remarkPlugins={[remarkGfm]}>{streamingText}</Markdown>
 					) : (
 						<span className="editor-text-muted text-xs">Thinking…</span>
 					)}
@@ -71,7 +69,7 @@ function AiMessageBubble({ message }: { message: ConversationMessage }) {
 	if (message.role === "user") {
 		return (
 			<div
-				className="editor-ai-user-bubble max-w-[85%] self-end rounded-lg border border-[color:color-mix(in_srgb,var(--editor-accent)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] px-3 py-2 text-sm text-[color:var(--editor-utility-text-strong)]"
+				className="max-w-[85%] self-end rounded-lg border border-[color:color-mix(in_srgb,var(--editor-accent)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] px-3 py-2 text-sm text-[color:var(--editor-utility-text-strong)]"
 				data-ai-role="user"
 			>
 				{message.content}
@@ -102,9 +100,7 @@ function AiMessageBubble({ message }: { message: ConversationMessage }) {
 			data-ai-role="assistant"
 		>
 			{message.content.length > 0 ? (
-				<div className="editor-ai-markdown">
-					<Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
-				</div>
+				<Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
 			) : (
 				<span className="editor-text-muted text-xs">
 					Proposed a change (see draft below).

@@ -34,6 +34,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - document AI command layer and draft/apply flow
 - regenerate help docs manifest for AI command layer page
 - add end-to-end draft/approve/undo smoke test and a11y coverage
+- remove undefined AI markdown/bubble CSS class markers
 
 ### Fixed
 
