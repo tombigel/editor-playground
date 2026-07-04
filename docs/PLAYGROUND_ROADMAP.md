@@ -84,13 +84,13 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
 | `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
 | `RI-49` | `⚪ Not started` | [Editor URL deep links outside the tour](#editor-url-deep-links-outside-the-tour) | `🟠 High` | Feature | LLM | Boot hydration decided 2026-07-04. Dep: `RI-50` |
-| `RI-50` | `⚪ Not started` | [Centralized panel request adapter](#centralized-panel-request-adapter) | `🟠 High` | Refactor | LLM | Fixes latent `ai` toggle drift bug in tour controller |
 | `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
 | `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
 | `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
 | `RI-39` | `✅ Done` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
 | `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
 | `RI-42` | `✅ Done` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Anchor/box child boundaries, deterministic drag commit, and modifier cleanup delivered |
+| `RI-50` | `✅ Done` | [Centralized panel request adapter](#centralized-panel-request-adapter) | `🟠 High` | Refactor | LLM | Shared adapter over `applyEditorPanelRequest`; `ai` toggle drift fixed |
 | `RI-14` | `🟣 Partially present` | [Export surface expansion](#export-surface-expansion) | `🔵 Low` | Feature | Shared | - |
 | `RI-16` | `⚪ Not started` | [User management](#user-management) | `🔵 Low` | Platform | Human | - |
 | `RI-18` | `⚪ Not started` | [Project management](#project-management) | `🔵 Low` | Platform | Human | - |
@@ -553,11 +553,10 @@ None yet.
 
 - `Type`: `Refactor`
 - `Owner lane`: `LLM`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-50`
-- `Why it matters`: `useShowcaseTourController` re-implements the panel request switch directly against nine React setters while `applyEditorPanelRequest` in `src/api/editorNavigationApi/panelState.ts` implements the same semantics purely. The two have already drifted: the pure helper's `toggle` supports `ai`, but the tour controller's copy falls through to manage fonts, so a tour step toggling the AI panel would toggle Manage Fonts instead.
-- `Current state`: Duplicated switch in `src/app/showcaseTour/useShowcaseTourController.ts` (`applyPanelRequest`) with the latent `ai` toggle bug; the pure helper is correct.
-- `Next move`: Build one shared adapter that runs `applyEditorPanelRequest` and diffs the resulting `EditorPanelState` onto the app's React setters; migrate the tour controller to it, removing the duplicated switch and fixing the toggle drift. Decided in the showcase tour review follow-up (2026-07-04).
+- `Why it matters`: `useShowcaseTourController` re-implemented the panel request switch directly against nine React setters while `applyEditorPanelRequest` in `src/api/editorNavigationApi/panelState.ts` implements the same semantics purely. The two had drifted: the pure helper's `toggle` supports `ai`, but the tour controller's copy fell through to manage fonts.
+- `Current state`: **Complete** — `src/app/panelRequestAdapter.ts` runs the pure `applyEditorPanelRequest` and diffs the resulting `EditorPanelState` onto the app shell's React setters. The tour controller now takes a single `applyPanelRequest` prop instead of eleven setters; its duplicated switch is deleted, the `ai` toggle drift is fixed, and tour `closeAll` scenes now also close the AI panel (matching non-tour behavior). Covered by `src/app/tests/panelRequestAdapter.test.ts`.
 
 #### Infra
 

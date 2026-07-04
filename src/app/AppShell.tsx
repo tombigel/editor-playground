@@ -4,6 +4,7 @@ import {
 	type Dispatch,
 	type PointerEvent as ReactPointerEvent,
 	type Ref,
+	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
@@ -55,6 +56,12 @@ import {
 	HOME_ROUTE_HASH,
 } from "./appRouting";
 import type { HistoryAction, HistoryState } from "./editorState";
+import type {
+	EditorPanelRequest,
+	EditorPanelState,
+	EditorSettingsSectionId,
+} from "../api/editorNavigationApi";
+import { applyPanelRequestWithCallbacks } from "./panelRequestAdapter";
 import { getOrCreateEditorWindowId } from "./previewWindow";
 import { useShowcaseTourController } from "./showcaseTour/useShowcaseTourController";
 
@@ -222,6 +229,96 @@ export function AppShell({
 	);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
 	const handledStartupActionIdRef = useRef<number | null>(null);
+	const panelStateSnapshot = useMemo<EditorPanelState>(
+		() => ({
+			settingsOpen,
+			manageFontsOpen,
+			helpOpen,
+			shortcutsOpen,
+			aboutOpen,
+			componentsOpen: layersOpen,
+			pagesOpen,
+			sectionTemplateOpen,
+			textTypeOpen,
+			aiOpen,
+			componentsPosition: layersPosition,
+			pagesPosition,
+			componentsPositionCustomized: false,
+			pagesPositionCustomized: false,
+			settingsSectionTarget: settingsSectionTarget as
+				| EditorSettingsSectionId
+				| undefined,
+			helpEntryTarget,
+			pagesPanelTabTarget,
+			requestedPageSettingsId,
+		}),
+		[
+			settingsOpen,
+			manageFontsOpen,
+			helpOpen,
+			shortcutsOpen,
+			aboutOpen,
+			layersOpen,
+			pagesOpen,
+			sectionTemplateOpen,
+			textTypeOpen,
+			aiOpen,
+			layersPosition,
+			pagesPosition,
+			settingsSectionTarget,
+			helpEntryTarget,
+			pagesPanelTabTarget,
+			requestedPageSettingsId,
+		],
+	);
+	const panelStateSnapshotRef = useRef(panelStateSnapshot);
+	panelStateSnapshotRef.current = panelStateSnapshot;
+	const applyPanelRequest = useCallback(
+		(request: EditorPanelRequest) => {
+			// Chain the pure result back into the snapshot so multiple requests
+			// applied in one tick (a tour panel scene) diff against each other,
+			// not against the same pre-render state. The next render rebuilds the
+			// snapshot from props.
+			panelStateSnapshotRef.current = applyPanelRequestWithCallbacks(
+				panelStateSnapshotRef.current,
+				request,
+				{
+					onSettingsOpenChange,
+					onManageFontsOpenChange,
+					onHelpOpenChange,
+					onShortcutsOpenChange,
+					onAboutOpenChange,
+					onComponentsOpenChange: onLayersOpenChange,
+					onComponentsPositionChange: onLayersPositionChange,
+					onPagesOpenChange,
+					onPagesPositionChange,
+					onSectionTemplatesOpenChange: onSectionTemplateOpenChange,
+					onTextTypesOpenChange: onTextTypeOpenChange,
+					onAiOpenChange,
+					onSettingsSectionTargetChange: (section) =>
+						setSettingsSectionTarget(section as SettingsSectionId),
+					onHelpEntryTargetChange: (entryId) =>
+						setHelpEntryTarget(entryId as HelpEntry["id"] | undefined),
+					onPagesPanelTabTargetChange: setPagesPanelTabTarget,
+					onRequestedPageSettingsIdChange: setRequestedPageSettingsId,
+				},
+			);
+		},
+		[
+			onSettingsOpenChange,
+			onManageFontsOpenChange,
+			onHelpOpenChange,
+			onShortcutsOpenChange,
+			onAboutOpenChange,
+			onLayersOpenChange,
+			onLayersPositionChange,
+			onPagesOpenChange,
+			onPagesPositionChange,
+			onSectionTemplateOpenChange,
+			onTextTypeOpenChange,
+			onAiOpenChange,
+		],
+	);
 	const {
 		showcaseTourLocation,
 		setShowcaseTourLocation,
@@ -232,24 +329,7 @@ export function AppShell({
 		searchParams,
 		state,
 		dispatch,
-		layersOpen,
-		pagesOpen,
-		manageFontsOpen,
-		setRequestedPageSettingsId,
-		setPagesPanelTabTarget,
-		setSettingsSectionTarget,
-		setHelpEntryTarget,
-		onLayersOpenChange,
-		onLayersPositionChange,
-		onPagesOpenChange,
-		onPagesPositionChange,
-		onSettingsOpenChange,
-		onManageFontsOpenChange,
-		onHelpOpenChange,
-		onShortcutsOpenChange,
-		onAboutOpenChange,
-		onSectionTemplateOpenChange,
-		onTextTypeOpenChange,
+		applyPanelRequest,
 	});
 
 	const activateRichEditRef = useRef<(id: string) => void>(() => {});
