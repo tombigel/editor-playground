@@ -38,6 +38,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - strengthen swallowed and observability-weak assertions
 - cover editor state reducer action branches
 - add AI assistant rail glow
+- improve light mode AI button glow
 
 ### Fixed
 

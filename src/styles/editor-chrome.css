@@ -1030,13 +1030,7 @@ a.editor-pill-subtle:focus-visible {
   z-index: 0;
   pointer-events: none;
   content: '';
-  background:
-    linear-gradient(
-      115deg,
-      transparent 28%,
-      color-mix(in srgb, #ffffff 42%, transparent) 43%,
-      transparent 58%
-    );
+  background: var(--editor-ai-shine-gradient);
   opacity: 0;
   transform: translateX(-92%) rotate(8deg);
 }

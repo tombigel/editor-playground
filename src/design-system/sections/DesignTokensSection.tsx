@@ -138,6 +138,7 @@ const COLOR_TOKEN_GROUPS: Array<{ title: string; tokens: string[] }> = [
 			"--editor-ai-surface-background",
 			"--editor-ai-surface-hover-background",
 			"--editor-ai-icon-color",
+			"--editor-ai-shine-gradient",
 			"--editor-ai-glow",
 		],
 	},

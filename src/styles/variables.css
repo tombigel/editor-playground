@@ -112,10 +112,20 @@
       color-mix(in srgb, var(--editor-accent) 10%, var(--editor-surface-background))
     );
   --editor-ai-icon-color: color-mix(in srgb, var(--editor-accent) 82%, #7c3aed);
+  --editor-ai-shine-gradient:
+    linear-gradient(
+      115deg,
+      transparent 26%,
+      color-mix(in srgb, #7c3aed 36%, transparent) 39%,
+      color-mix(in srgb, var(--editor-accent) 48%, transparent) 48%,
+      color-mix(in srgb, #22d3ee 38%, transparent) 57%,
+      transparent 70%
+    );
   --editor-ai-glow:
-    0 14px 34px color-mix(in srgb, var(--editor-accent) 28%, transparent),
-    0 0 18px color-mix(in srgb, var(--editor-accent) 12%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--editor-accent) 16%, transparent);
+    0 14px 34px color-mix(in srgb, #7c3aed 24%, transparent),
+    0 0 22px color-mix(in srgb, var(--editor-accent) 20%, transparent),
+    0 0 18px color-mix(in srgb, #22d3ee 16%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--editor-accent) 20%, transparent);
   --editor-dialog-overlay-background: rgba(15, 23, 42, 0.3);
   --editor-focus-ring: color-mix(in srgb, var(--editor-accent) 20%, transparent);
   --editor-focus-ring-strong: color-mix(in srgb, var(--editor-accent) 40%, transparent);
@@ -516,6 +526,13 @@ body[data-editor-theme='dark'] {
       color-mix(in srgb, var(--editor-accent) calc(var(--editor-dark-tint-soft) + 5%), var(--editor-dark-surface-base))
     );
   --editor-ai-icon-color: color-mix(in srgb, var(--editor-accent) 72%, #e9d5ff);
+  --editor-ai-shine-gradient:
+    linear-gradient(
+      115deg,
+      transparent 28%,
+      color-mix(in srgb, #ffffff 42%, transparent) 43%,
+      transparent 58%
+    );
   --editor-ai-glow:
     0 16px 36px color-mix(in srgb, var(--editor-accent) 34%, transparent),
     0 0 22px color-mix(in srgb, var(--editor-accent) 22%, transparent),
