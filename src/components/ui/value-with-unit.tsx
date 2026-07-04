@@ -47,7 +47,7 @@ export type ValueWithUnitSuggestion = {
 	label?: string;
 };
 
-function clampSuggestionIndex(index: number, suggestionCount: number) {
+export function clampSuggestionIndex(index: number, suggestionCount: number) {
 	if (suggestionCount === 0) {
 		return -1;
 	}

@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 
+export type TitleEditorKeyAction = "commit" | "cancel" | null;
+
+export function resolveTitleEditorKeyAction(key: string): TitleEditorKeyAction {
+	if (key === "Enter") {
+		return "commit";
+	}
+	if (key === "Escape") {
+		return "cancel";
+	}
+	return null;
+}
+
 export function LayersRowTitleEditor({
 	name,
 	onCommit,
@@ -44,14 +56,15 @@ export function LayersRowTitleEditor({
 				commit();
 			}}
 			onKeyDown={(event) => {
-				if (event.key === "Enter") {
+				const action = resolveTitleEditorKeyAction(event.key);
+				if (action === "commit") {
 					event.preventDefault();
 					skipBlurCommitRef.current = true;
 					commit();
 					return;
 				}
 
-				if (event.key === "Escape") {
+				if (action === "cancel") {
 					event.preventDefault();
 					skipBlurCommitRef.current = true;
 					onCancel();

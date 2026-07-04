@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ValueWithUnit, composeValueWithUnitValue } from '../value-with-unit';
+import { ValueWithUnit, clampSuggestionIndex, composeValueWithUnitValue } from '../value-with-unit';
 
 describe('components/ui/value-with-unit', () => {
   it('renders a fixed number+unit shell', () => {
@@ -182,5 +182,32 @@ describe('components/ui/value-with-unit', () => {
         selectedOptionInputMode: 'numeric',
       }),
     ).toBe('12px');
+  });
+
+  it('composes values across every mode and selected-option input-mode combination', () => {
+    const base = { inputValue: '24', selectedOptionValue: 'px' } as const;
+
+    expect(composeValueWithUnitValue({ ...base, mode: 'number-fixed', selectedOptionInputMode: 'numeric' })).toBe('24px');
+    expect(composeValueWithUnitValue({ ...base, mode: 'number-fixed', selectedOptionInputMode: 'keyword' })).toBe('24px');
+
+    expect(composeValueWithUnitValue({ ...base, mode: 'number-select', selectedOptionInputMode: 'numeric' })).toBe('24px');
+    expect(composeValueWithUnitValue({ ...base, mode: 'number-select', selectedOptionInputMode: 'keyword' })).toBe('24px');
+
+    expect(composeValueWithUnitValue({ ...base, mode: 'keyword-select', selectedOptionInputMode: 'numeric' })).toBeNull();
+    expect(composeValueWithUnitValue({ ...base, mode: 'keyword-select', selectedOptionInputMode: 'keyword' })).toBeNull();
+
+    expect(
+      composeValueWithUnitValue({ ...base, mode: 'number-or-keyword-select', selectedOptionInputMode: 'numeric' }),
+    ).toBe('24px');
+    expect(
+      composeValueWithUnitValue({ ...base, mode: 'number-or-keyword-select', selectedOptionInputMode: 'keyword' }),
+    ).toBeNull();
+  });
+
+  it('clamps suggestion indexes into range and returns -1 for an empty list', () => {
+    expect(clampSuggestionIndex(0, 0)).toBe(-1);
+    expect(clampSuggestionIndex(-3, 5)).toBe(0);
+    expect(clampSuggestionIndex(10, 5)).toBe(4);
+    expect(clampSuggestionIndex(2, 5)).toBe(2);
   });
 });
