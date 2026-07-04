@@ -9,6 +9,7 @@ import {
 } from "../lib/theme";
 import { DOCUMENT_MODEL_VERSION } from "../lib/version";
 import { createInitialDocument } from "../model/defaults";
+import { migrateDocumentModel } from "../model/migration";
 import type { DocumentModel } from "../model/types";
 import { validateDocument } from "../model/validation";
 import { normalizeDocument } from "./editorDocumentNormalization";
@@ -280,7 +281,9 @@ export function parseImportedDocumentJson(raw: string): DocumentModel {
 	}
 
 	try {
-		const document = normalizeDocument(parsed as DocumentModel);
+		// Migration is idempotent: legacy `type`/`role` documents are converted
+		// to the canonical model, current documents pass through.
+		const document = normalizeDocument(migrateDocumentModel(parsed));
 		const errors = validateDocument(document);
 		if (errors.length > 0) {
 			throw new Error(`Import failed: ${errors.join("; ")}`);

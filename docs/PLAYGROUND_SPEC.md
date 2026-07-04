@@ -568,7 +568,8 @@ The playground imports and exports document JSON and exports a rendered site bun
 - Choose a `.json` file.
 - Paste JSON from the clipboard into the settings import box.
 - Import pasted JSON from the textarea.
-- Imported documents are normalized, validated, upgraded for legacy font state, replace the current document, clear selection, and can be undone with `Cmd + Z`.
+- Imported documents are migrated from the legacy `type`/`role` node format when needed (`migrateDocumentModel`, idempotent — current-format documents pass through unchanged), normalized, validated, upgraded for legacy font state, replace the current document, clear selection, and can be undone with `Cmd + Z`.
+- The same migration runs in the API-layer `parseDocumentJson()`, so legacy documents are importable through `src/api/` without the editor UI.
 
 ### Document JSON export
 

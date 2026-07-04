@@ -469,7 +469,7 @@ describe('model/migration', () => {
       expect('htmlTag' in node).toBe(false);
     });
 
-    it('produces a code block carrying language/theme/highlightedHtml', () => {
+    it('produces a code block carrying language/theme and dropping derived highlightedHtml', () => {
       const raw = docWith({
         'site-root': baseRaw({ id: 'site-root', parentId: null, type: 'site', contentType: 'site' }),
         codeNode: baseRaw({
@@ -486,7 +486,9 @@ describe('model/migration', () => {
       const block = node.content.blocks[0];
       expect(block.language).toBe('ts');
       expect(block.theme).toBe('dark');
-      expect(block.highlightedHtml).toBe('<span>code</span>');
+      // highlightedHtml is derived render output, not canonical content —
+      // normalization drops it, matching stripDerivedCodeHighlightsFromTextNode.
+      expect(block.highlightedHtml).toBeUndefined();
     });
 
     it('normalizes list content into a rich list block', () => {
@@ -659,12 +661,6 @@ describe('model/migration', () => {
     });
 
     it('is idempotent for a mixed legacy and new-format document', () => {
-      // Note: legacy `block` subtype leaves are intentionally excluded here.
-      // migrateNewFormatNode's block branch only accepts string content, so a
-      // block leaf that was already migrated once (content is now a
-      // TextDocumentContent object) loses its text on a second pass. That is
-      // a known limitation of the transitional block-subtype path, not
-      // something this idempotency check is meant to cover.
       const raw = docWith(
         {
           'site-root': baseRaw({ id: 'site-root', parentId: null, type: 'site', children: ['section-1'] }),
@@ -672,7 +668,7 @@ describe('model/migration', () => {
             id: 'section-1',
             type: 'wrapper',
             role: 'header',
-            children: ['leaf-1', 'leaf-2'],
+            children: ['leaf-1', 'leaf-2', 'leaf-3', 'leaf-4', 'leaf-5'],
             rect: RECT,
             style: { background: 'white' },
           }),
@@ -693,12 +689,61 @@ describe('model/migration', () => {
             rect: RECT,
             content: [{ text: 'already migrated' }],
           }),
+          'leaf-3': baseRaw({
+            id: 'leaf-3',
+            parentId: 'section-1',
+            type: 'leaf',
+            role: 'text',
+            htmlTag: 'h2',
+            content: 'legacy block text',
+            rect: RECT,
+          }),
+          'leaf-4': baseRaw({
+            id: 'leaf-4',
+            parentId: 'section-1',
+            contentType: 'text',
+            subtype: 'code',
+            rect: RECT,
+            content: 'const x = 1;',
+            code: { language: 'ts' },
+          }),
+          'leaf-5': baseRaw({
+            id: 'leaf-5',
+            parentId: 'section-1',
+            contentType: 'text',
+            subtype: 'list',
+            rect: RECT,
+            content: { type: 'ul', items: [{ text: 'item 1' }] },
+          }),
         },
         { sharedRegionIds: ['region-1'] },
       );
 
       const once = migrateDocumentModel(raw);
       const twice = migrateDocumentModel(once);
+      expect(twice).toEqual(once);
+    });
+
+    it('preserves block text content across a second migration pass', () => {
+      const raw = docWith({
+        'site-root': baseRaw({ id: 'site-root', parentId: null, type: 'site', contentType: 'site' }),
+        blockNode: baseRaw({
+          id: 'blockNode',
+          contentType: 'text',
+          subtype: 'block',
+          htmlTag: 'h3',
+          rect: RECT,
+          content: 'heading text',
+        }),
+      });
+
+      const once = migrateDocumentModel(raw);
+      const twice = migrateDocumentModel(once);
+      const node = twice.nodes.blockNode as unknown as {
+        content: { blocks: { type: string; children: { text: string }[] }[] };
+      };
+      expect(node.content.blocks[0].type).toBe('h3');
+      expect(node.content.blocks[0].children).toEqual([{ text: 'heading text' }]);
       expect(twice).toEqual(once);
     });
 

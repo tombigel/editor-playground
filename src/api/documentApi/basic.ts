@@ -1,5 +1,6 @@
 import { DOCUMENT_MODEL_VERSION } from '../../lib/version';
 import { normalizeDocumentFontState } from '../../fonts';
+import { migrateDocumentModel } from '../../model/migration';
 import { stripDerivedCodeHighlightsFromTextNode } from '../../model/richContent';
 import type { ContainerChildBoundary, DocumentModel, NodeId, StickyDefinition } from '../../model/types';
 import { isContainerNode, isTextNode } from '../../model/types';
@@ -188,7 +189,9 @@ export function setSiteNodeStickyElevation(
 }
 
 export function parseDocumentJson(raw: string): DocumentModel {
-  const parsed = normalizeDocumentFontState(JSON.parse(raw) as DocumentModel);
+  // Migration is idempotent: legacy `type`/`role` documents are converted to
+  // the canonical `contentType`/`subtype` model, current documents pass through.
+  const parsed = normalizeDocumentFontState(migrateDocumentModel(JSON.parse(raw)));
   for (const node of Object.values(parsed.nodes)) {
     if (isTextNode(node)) {
       stripDerivedCodeHighlightsFromTextNode(node);

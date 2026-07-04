@@ -771,6 +771,33 @@ describe('editor/editorPersistence', () => {
       expect(wrappers.some((w) => w.subtype === 'footer')).toBe(true);
     });
 
+    it('imports a legacy type/role document by migrating it to the canonical model', () => {
+      const rect = {
+        x: { base: { value: 0, unit: 'px' } },
+        y: { base: { value: 0, unit: 'px' } },
+        width: { base: { value: 100, unit: 'px' } },
+        height: { base: { keyword: 'auto' } },
+      };
+      const legacy = {
+        rootId: 'site-root',
+        nodes: {
+          'site-root': { id: 'site-root', parentId: null, children: ['section-1'], name: 'Site', visible: true, locked: false, type: 'site' },
+          'section-1': { id: 'section-1', parentId: 'site-root', children: ['text-1'], name: 'Section', visible: true, locked: false, type: 'wrapper', role: 'section', rect, style: {} },
+          'text-1': { id: 'text-1', parentId: 'section-1', children: [], name: 'Text', visible: true, locked: false, type: 'leaf', role: 'text', htmlTag: 'h1', content: 'Welcome', rect },
+        },
+        fontLibrary: { defaults: [], favorites: [], usedFamilies: [] },
+      };
+
+      const parsed = parseImportedDocumentJson(JSON.stringify(legacy));
+
+      expect(parsed.nodes['section-1'].contentType).toBe('container');
+      const text = parsed.nodes['text-1'];
+      if (text.contentType !== 'text') {
+        throw new Error('Expected text node');
+      }
+      expect(text.subtype).toBe('block');
+    });
+
   });
 
   // ─── loadPersistedState edge cases ────────────────────────────────

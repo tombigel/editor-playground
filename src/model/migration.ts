@@ -31,6 +31,7 @@ import {
   createCodeBlockContent,
   createTextBlockContent,
   createTextDocumentContent,
+  isTextDocumentContent,
   listContentToRichListBlock,
   normalizeTextDocumentContent,
 } from './richContent';
@@ -270,29 +271,34 @@ function migrateNewFormatNode(raw: RawNode): DocumentNode | null {
       if (node.subtype === 'rich') {
         node.content = normalizeTextDocumentContent(rawContent);
         delete node.htmlTag;
+      } else if (isTextDocumentContent(rawContent)) {
+        // Content is already in the canonical TextDocumentContent shape
+        // (block/code/list node migrated on a previous pass) — coercing it
+        // through the transitional string/list branches below would wipe it.
+        node.content = normalizeTextDocumentContent(rawContent);
       } else if (node.subtype === 'code') {
         const codeText = typeof rawContent === 'string' ? rawContent : '';
-        node.content = createTextDocumentContent([
+        node.content = normalizeTextDocumentContent(createTextDocumentContent([
           createCodeBlockContent(codeText, {
             direction: 'ltr',
             language: node.code?.language,
             theme: node.code?.theme,
             highlightedHtml: node.code?.highlightedHtml,
           }),
-        ]);
+        ]));
       } else if (node.subtype === 'list') {
-        node.content = createTextDocumentContent([
+        node.content = normalizeTextDocumentContent(createTextDocumentContent([
           listContentToRichListBlock(normalizeListContent(rawContent), { direction: 'ltr' }),
-        ]);
+        ]));
       } else {
         const blockText = typeof rawContent === 'string' ? rawContent : '';
-        node.content = createTextDocumentContent([
+        node.content = normalizeTextDocumentContent(createTextDocumentContent([
           createTextBlockContent(
             node.htmlTag === 'blockquote' ? 'blockquote' : node.htmlTag && node.htmlTag !== 'p' ? node.htmlTag : 'paragraph',
             blockText,
             { direction: 'ltr' },
           ),
-        ]);
+        ]));
       }
     }
     return node;
@@ -366,7 +372,9 @@ export function migrateDocumentModel(raw: unknown): DocumentModel {
   }
 
   const rawNodes = isObject(rawDoc.nodes) ? rawDoc.nodes : {};
-  const migratedNodes: Record<NodeId, DocumentNode> = {};
+  // Null prototype: node ids come from untrusted JSON, and a key like
+  // "__proto__" must become an own entry, not a prototype assignment.
+  const migratedNodes: Record<NodeId, DocumentNode> = Object.create(null);
 
   for (const [id, rawNode] of Object.entries(rawNodes)) {
     if (!isObject(rawNode)) {

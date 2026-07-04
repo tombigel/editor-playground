@@ -42,6 +42,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - only treat short bare confirmations as draft approve/reject
 - apply prompt caching only to the base system prompt
 - label settings dialog controls and update stale e2e assertions
+- migrate legacy documents on import and make migration idempotent
 
 ---
 

@@ -60,7 +60,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-11` | `⚪ Not started` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | - |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
 | `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
-| `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 (model migration) done. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
+| `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 done; migration wired into import paths, idempotency fixed. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-45` | `⚪ Not started` | [Form and input authoring platform](#form-and-input-authoring-platform) | `🔴 Next` | Feature | Shared | Requires behavior/backoffice/docs/a11y spec before implementation |
 | `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
 | `RI-02` | `✅ Done` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
@@ -491,7 +491,7 @@ None yet.
 - `Source`: `RI-32`
 - `Dependencies`: `RI-11`, `RI-28`
 - `Why it matters`: As text, media, and container node families grow, each needs interchangeable subtypes (single-block vs rich text, image vs video vs inline SVG, container vs display-contents group). A shared type discriminator pattern lets the renderer pick the right component per node and lets the editor switch types by changing one property, with shared data (position, size, styles) transferring automatically.
-- `Current state`: **Task 1 (model migration) complete** — `ContainerNode`/`TextNode`/`MediaNode` with `contentType`/`subtype` discriminators are the canonical types; all deprecated aliases and shims removed. Tasks 2-3 (slate-subset rich text model, on-stage rich text editor) pending. See also `RI-34` for the related text phase 2.0 work.
+- `Current state`: **Task 1 (model migration) complete** — `ContainerNode`/`TextNode`/`MediaNode` with `contentType`/`subtype` discriminators are the canonical types; all deprecated aliases and shims removed. `migrateDocumentModel` is wired into the document import paths (`parseDocumentJson` in `src/api/documentApi/basic.ts` and `parseImportedDocumentJson` in `src/editor/editorPersistenceState.ts`), so legacy `type`/`role` documents remain importable; its idempotency bug for already-migrated block/code/list text content is fixed. Tasks 2-3 (slate-subset rich text model, on-stage rich text editor) pending. See also `RI-34` for the related text phase 2.0 work.
 - `Next move`: Task 2 — define the slate-subset rich text model for `TextNode` with `subtype: 'rich'`, then Task 3 — on-stage rich text editing.
 
 ##### Base UI primitive token migration
