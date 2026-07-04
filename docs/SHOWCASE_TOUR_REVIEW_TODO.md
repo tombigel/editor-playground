@@ -42,10 +42,9 @@ Reviewers:
 - [x] Decide whether panel request handling should be centralized around the API panel-state helper.
   - Source: Senior Developer.
   - Decision (2026-07-04): centralize — build a shared adapter over `applyEditorPanelRequest` and migrate the tour controller to it. Review of the duplicated switch found real drift: its `toggle` case sends `ai` to manage fonts. Tracked as `RI-50` in the roadmap.
-- [ ] Decide topic-progress framing.
+- [x] Decide topic-progress framing.
   - Source: UX.
-  - Current state: the card header shows global progress like `18/23`.
-  - Decision: keep global progress, switch to topic-local progress like `2/4`, or show both.
+  - Decision (2026-07-05): topic-local progress — the card header shows `Topic · 2/4` via `getShowcaseTourProgress` in `showcaseTourApi`; Back/Next navigation and the Done state stay global. Implemented in the same change.
 - [ ] Decide responsive support level for the tour.
   - Source: UX, QA.
   - Current state: smoke coverage is desktop-sized; small viewports may force overlap between the tour card and menu.

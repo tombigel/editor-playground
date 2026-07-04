@@ -26,6 +26,7 @@ import {
 import { buildAppHash, parseAppRoute } from "../appRouting";
 import {
 	getAdjacentShowcaseTourStep,
+	getShowcaseTourProgress,
 	getShowcaseTourStep,
 	getShowcaseTourStepsForTopic,
 	getShowcaseTourTopic,
@@ -122,15 +123,10 @@ export function ShowcaseTourOverlay({
 		anchorState.rect ? Math.round(anchorState.rect.left) : "none",
 		anchorState.rect ? Math.round(anchorState.rect.top) : "none",
 	].join(":");
-	const progress = useMemo(() => {
-		const allSteps = config.topics.flatMap((candidate) =>
-			getShowcaseTourStepsForTopic(config, candidate.id),
-		);
-		const index = allSteps.findIndex(
-			(candidate) => candidate.id === location.stepId,
-		);
-		return { index: Math.max(0, index), total: allSteps.length };
-	}, [config, location.stepId]);
+	const progress = useMemo(
+		() => getShowcaseTourProgress(config, location),
+		[config, location],
+	);
 	const anchoredPanelStyle =
 		panelPosition?.bottom === undefined
 			? panelStyle
@@ -355,7 +351,7 @@ export function ShowcaseTourOverlay({
 						>
 							<div>
 								<div className="editor-text-muted text-[11px] font-medium">
-									{topic.label} · {progress.index + 1}/{progress.total}
+									{topic.label} · {progress.topicIndex + 1}/{progress.topicTotal}
 								</div>
 								<h2 className="editor-text-strong mt-1 text-base font-semibold">
 									{step.title}

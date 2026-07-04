@@ -613,6 +613,7 @@ Source: `src/api/showcaseTourApi.ts`
 | `getShowcaseTourStepsForTopic` | `(config, topicId) -> ShowcaseTourStep[]` | Return the ordered steps for a topic |
 | `getAdjacentShowcaseTourStep` | `(config, location, direction) -> ShowcaseTourLocation` | Resolve previous/next linear movement across the non-linear topic map |
 | `isLastShowcaseTourStep` | `(config, location) -> boolean` | Detect whether the current location is the final ordered step |
+| `getShowcaseTourProgress` | `(config, location) -> { index, total, topicIndex, topicTotal }` | Report global and topic-local step progress for a tour location |
 
 Showcase tour types:
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	getAdjacentShowcaseTourStep,
 	getShowcaseTourPanelRequests,
+	getShowcaseTourProgress,
 	getShowcaseTourStep,
 	getShowcaseTourStepsForTopic,
 	isLastShowcaseTourStep,
@@ -163,5 +164,14 @@ describe("showcaseTourApi", () => {
 			{ type: "closeAll" },
 			{ type: "openHelpEntry", entryId: "doc:docs/API.md" },
 		]);
+	});
+
+	it("reports global and topic-local progress for a location", () => {
+		expect(
+			getShowcaseTourProgress(config, { topicId: "start", stepId: "jump" }),
+		).toEqual({ index: 1, total: 3, topicIndex: 1, topicTotal: 2 });
+		expect(
+			getShowcaseTourProgress(config, { topicId: "api", stepId: "url-state" }),
+		).toEqual({ index: 2, total: 3, topicIndex: 0, topicTotal: 1 });
 	});
 });

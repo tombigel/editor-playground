@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - improve assistant settings controls
 - add AI conversation guide and shortcut
 - show local dev badge in topbar
+- show topic-local step progress in tour card header
 
 ### Changed
 

@@ -208,3 +208,23 @@ export function isLastShowcaseTourStep(
 	const next = getAdjacentShowcaseTourStep(config, location, "next");
 	return next.topicId === location.topicId && next.stepId === location.stepId;
 }
+
+export function getShowcaseTourProgress(
+	config: ShowcaseTourConfig,
+	location: ShowcaseTourLocation,
+) {
+	const allSteps = config.topics.flatMap((topic) =>
+		getShowcaseTourStepsForTopic(config, topic.id),
+	);
+	const index = allSteps.findIndex((step) => step.id === location.stepId);
+	const topicSteps = getShowcaseTourStepsForTopic(config, location.topicId);
+	const topicIndex = topicSteps.findIndex(
+		(step) => step.id === location.stepId,
+	);
+	return {
+		index: Math.max(0, index),
+		total: allSteps.length,
+		topicIndex: Math.max(0, topicIndex),
+		topicTotal: topicSteps.length,
+	};
+}

@@ -1572,6 +1572,7 @@ Naming and title behavior:
 - Steps can also request an idempotent section-template insertion through the existing editor action. The request must name a template and a stable node name used to detect whether the tour already created that story surface.
 - The overlay renders in the native popover/top layer and opts into top-layer re-entry so it stays above editor panels and dialogs even when tour navigation opens those surfaces later. It does not blur the stage, and it can be minimized to a small “Show tour” control without closing the URL-backed tour state. The expanded tour panel and topic menu can be dragged separately by their headers during the current tour session; closing the tour clears both local positions and reopening returns them to the default compact placement.
 - The expanded tour panel keeps its footer controls anchored while step content changes. The card grows upward from its bottom edge when possible, and long content scrolls inside the body instead of pushing Back/Next controls down.
+- The tour card header shows the topic label with topic-local step progress (for example `Design · 2/4`) via `getShowcaseTourProgress`. Back/Next ordering, the Back-disabled state on the first step, and the final-step Done state remain global across topics.
 - Tour overlay pointer interactions are marked as editor outside-click-exempt. Dragging or clicking the tour is neutral to unrelated panels, popovers, and field suggestions that use shared outside-click dismissal behavior, including `useClickOutside` consumers and the app-level floating-panel dismiss listener.
 - The topic menu starts closed so the default tour path stays compact. Visitors can open it from the tour header when they want non-linear topic navigation.
 - Steps whose anchor is the tour menu open the topic menu automatically and highlight it, then close the auto-opened menu when the visitor leaves that step.
@@ -1583,7 +1584,7 @@ Naming and title behavior:
 - Tour URL sync rewrites known editor-navigation params for the active step instead of preserving stale panel/help/page/view params from prior steps; unrelated query params remain intact.
 - Closing the tour restores the captured pre-tour editor view flags, including debug, sticky preview, animation preview, spacer visibility, grid, hidden-node display, and focus mode. Tours opened from an editor control restore the previous search string; tours opened from a deep link remove tour/editor-navigation params while preserving unrelated query params.
 - Steps can display route chips and an action. External actions, such as the design-system showcase and preview mode, open in a new tab so the tour flow remains intact.
-- Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables.
+- Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables. The subtle product-native default skin is the final phase-1 treatment; no separate portfolio/presenter skin is planned (decided 2026-07-04).
 
 ## Text Type Picker
 
