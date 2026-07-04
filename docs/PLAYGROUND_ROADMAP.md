@@ -57,7 +57,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 | Raw intake id | Status | Short name | Priority | Type | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-11` | `⚪ Not started` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | - |
+| `RI-11` | `🟢 In progress` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Ranking pass done 2026-07-05; build order: video → inline SVG → gradients. Embed deferred |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
 | `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 done; migration wired into import paths, idempotency fixed. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
@@ -394,11 +394,22 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `Not started`
+- `Status`: `In progress`
 - `Source`: `RI-11`
 - `Why it matters`: Richer components widen the playground from a sticky/layout lab into a broader authoring environment.
-- `Current state`: The current core leaf set is text, image, link, and button.
-- `Next move`: Rank candidate components by model complexity and export/site value rather than by visual novelty alone.
+- `Current state`: The core leaf set is text, image, link, and button, but the `MediaNode` model already declares `image | video | svg | embed` subtypes with `video` playback fields (`autoplay`/`loop`/`muted`) and an `svg.renderMode` (`img`/`inline`) field, and default factories exist for all of them. What is missing for video and SVG is the editor surface only: insertion roles, stage/site renderer branches, and inspector configs. Backgrounds are plain CSS strings, so gradient support is an inspector/authoring problem, not a model migration.
+- `Ranked backlog (2026-07-05)`: Candidates scored on model complexity vs export/site value:
+  1. **Video** — model scaffolded; work is renderers + inspector + insertion only; high export value. Build first.
+  2. **Inline SVG** — model scaffolded (`img` and `inline` render modes); high export value; the one real cost is input-time sanitization for inline markup. Build second.
+  3. **Gradient backgrounds** — existing `background?: string` already accepts CSS gradient strings with zero migration; work is a design-system-aligned inspector control. Build third (parallelizable).
+  4. **Extended link types** (email/tel/download) — tiny `LinkExtension` union delta, high authoring value; scheduled under `RI-12A`.
+  5. **Semantic wrappers** (nav/aside/article) — tiny union + tag-map delta, high a11y/export value; scheduled under `RI-12B` and required by `RI-40`.
+  6. **Divider/hr** — trivial model, modest value; unscheduled backlog.
+  7. **Icon** — medium complexity (asset source and export strategy undecided), medium value; unscheduled backlog.
+  8. **Audio** — needs a new media subtype, low authoring demand; unscheduled backlog.
+  9. **Embed/iframe** — subtype exists in the model, but inline third-party embeds raise sandboxing/CSP/security questions that video/SVG do not. **Decision: out of the first implementation wave**; stays on the backlog until a sandboxing stance is defined.
+  10. **Dialogs** — needs an interaction runtime on exported static sites; spec-first under `RI-12A` before any implementation.
+- `Next move`: Implement video (insertion role, stage/site renderers, inspector config, spec, tests), then inline SVG gated on an input-time sanitization decision, then the gradient background control.
 
 ##### Table component support: markdown and designable variants
 

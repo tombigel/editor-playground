@@ -44,6 +44,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - remove duplicate alert icon alias
 - archive completed tasklists and fix archived-doc references
 - add RI-49 URL boot hydration and RI-50 panel request adapter
+- rank RI-11 component candidates and set build order
 
 ### Fixed
 
