@@ -544,6 +544,28 @@ a.editor-pill-subtle:focus-visible {
   box-shadow: none;
 }
 
+.editor-topbar-local-dev-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-left: 0.58rem;
+  border: 1px solid var(--editor-warning-border);
+  border-radius: 0.28rem;
+  background: var(--editor-warning-background);
+  color: var(--editor-warning-text);
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.26rem 0.62rem;
+}
+
+.editor-topbar-local-dev-badge-icon {
+  width: 0.72rem;
+  height: 0.72rem;
+  flex-shrink: 0;
+  stroke-width: 2.4;
+}
+
 .editor-menubar-content {
   margin: 0;
   border: 1px solid var(--editor-surface-border);

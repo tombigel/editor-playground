@@ -14,6 +14,7 @@ import {
 	Keyboard,
 	Layers2,
 	Palette,
+	Pickaxe,
 	Redo2,
 	Settings,
 	Sparkles,
@@ -52,6 +53,7 @@ import type { ThemeMode } from "@/lib/theme";
 
 const DOCUMENTATION_ENTRY_ID = "about";
 const AI_GUIDE_ENTRY_ID = "doc:docs/AI_CONVERSATION_GUIDE.md";
+const SHOW_LOCAL_DEV_BADGE = import.meta.env.DEV;
 
 function getPageDepth(pages: DocumentPage[], page: DocumentPage) {
 	let depth = 0;
@@ -502,6 +504,17 @@ export function EditorTopbar({
 							</MenubarPanelLinkItem>
 						</MenubarContent>
 					</MenubarMenu>
+
+					{SHOW_LOCAL_DEV_BADGE ? (
+						<span
+							className="editor-topbar-local-dev-badge"
+							data-ui="topbar-local-dev-badge"
+							aria-hidden="true"
+						>
+							<Pickaxe className="editor-topbar-local-dev-badge-icon" />
+							Local Dev
+						</span>
+					) : null}
 				</Menubar>
 
 				{activePage ? (

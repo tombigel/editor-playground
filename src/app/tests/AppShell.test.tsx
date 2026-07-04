@@ -153,6 +153,10 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("View");
 		expect(markup).toContain("Pages");
 		expect(markup).toContain("Help");
+		expect(markup).toContain("Local Dev");
+		expect(markup).toContain("editor-topbar-local-dev-badge");
+		expect(markup).toContain('data-ui="topbar-local-dev-badge"');
+		expect(markup).toContain("lucide-pickaxe");
 		expect(markup).toContain("Start fresh...");
 		expect(markup).toContain("editor-topbar-menubar-row");
 		expect(markup).toContain("editor-topbar-brand-mark");
