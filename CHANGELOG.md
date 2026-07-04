@@ -29,6 +29,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - cover snap and measure math
 - add direct tests for document tree operations
 - cover document normalization and panel state helpers
+- cover list content and text conversion edge branches
 
 ### Fixed
 
