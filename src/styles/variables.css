@@ -67,7 +67,7 @@
   --editor-settings-nav-hover-text: #0f172a;
   --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 7%, #ffffff);
   --editor-settings-nav-active-text: #16315f;
-  --editor-settings-nav-active-muted: #5d7293;
+  --editor-settings-nav-active-muted: #596e8e;
   --editor-settings-nav-active-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 14%, transparent);
   --editor-template-tag-background: rgba(16, 185, 129, 0.12);
   --editor-template-tag-text: #047857;
@@ -559,7 +559,7 @@ body[data-editor-theme='light'][data-editor-light-theme='midday'] {
   --editor-settings-nav-hover-background: color-mix(in srgb, var(--editor-accent) 9%, rgba(255, 255, 255, 0.84));
   --editor-settings-nav-active-background: color-mix(in srgb, var(--editor-accent) 14%, #ffffff);
   --editor-settings-nav-active-text: color-mix(in srgb, var(--editor-accent) 38%, #16315f);
-  --editor-settings-nav-active-muted: color-mix(in srgb, var(--editor-accent) 24%, #5d7293);
+  --editor-settings-nav-active-muted: color-mix(in srgb, var(--editor-accent) 24%, #596e8e);
   --editor-utility-bg-subtle: color-mix(in srgb, var(--editor-accent) 9%, #f8fafc);
   --editor-utility-border: color-mix(in srgb, var(--editor-accent) 14%, #dbe3ee);
 }

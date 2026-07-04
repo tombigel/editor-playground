@@ -44,6 +44,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - apply prompt caching only to the base system prompt
 - label settings dialog controls and update stale e2e assertions
 - migrate legacy documents on import and make migration idempotent
+- darken active settings nav description text to meet WCAG AA contrast
 
 ---
 
