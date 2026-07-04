@@ -49,6 +49,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - darken active settings nav description text to meet WCAG AA contrast
 - keep AI panel actions reachable
 - keep AI panel resize within viewport
+- make AI rail shine trigger on hover
 
 ---
 

@@ -45,8 +45,9 @@ describe('stage/stage styles', () => {
     expect(styles).toContain('var(--editor-ai-border-gradient) border-box');
     expect(styles).toContain('box-shadow: var(--editor-ai-glow);');
     expect(styles).toContain('@keyframes editor-ai-rail-shine');
+    expect(styles).toContain('@keyframes editor-ai-rail-hover-shine');
     expect(styles).toContain('animation: editor-ai-rail-shine 15000ms ease-in-out 5;');
-    expect(styles).toContain('animation: editor-ai-rail-shine 900ms ease-in-out 1;');
+    expect(styles).toContain('animation: editor-ai-rail-hover-shine 900ms ease-in-out 1;');
   });
 
   it('scopes inspector control tokens to the floating focused panel', () => {
