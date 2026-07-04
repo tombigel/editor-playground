@@ -24,7 +24,7 @@ export function getLeafInlineStyle(node: LeafNode): StyleRecord {
     return getTextLeafStyle(node);
   }
 
-  if (isMediaNode(node) && node.subtype === 'image') {
+  if (isMediaNode(node)) {
     return getImageLeafStyle(node);
   }
 
@@ -159,6 +159,7 @@ export function getSiteLeafBaseRules(selectors: {
   image: string;
   brandMarkImage: string;
   imagePlaceholder: string;
+  video: string;
   button: string;
 }): SharedCssRule[] {
   return [
@@ -223,6 +224,16 @@ export function getSiteLeafBaseRules(selectors: {
         minHeight: '100px',
         display: 'grid',
         placeItems: 'center',
+      },
+    },
+    {
+      selector: selectors.video,
+      style: {
+        display: 'block',
+        maxWidth: '100%',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
       },
     },
     {

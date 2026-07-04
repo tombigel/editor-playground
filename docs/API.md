@@ -868,14 +868,27 @@ type MediaNode = BaseNode & {
   src?: string;
   alt?: string;
   link?: LinkExtension;
-  video?: { autoplay?: boolean; loop?: boolean; muted?: boolean };
+  video?: {
+    autoplay?: boolean;
+    loop?: boolean;
+    muted?: boolean;
+    controls?: boolean;
+    poster?: string;
+    preload?: VideoPreload;      // 'auto' | 'metadata' | 'none'
+    intrinsicRatio?: number;     // measured from loaded metadata
+  };
   svg?: { renderMode: 'img' | 'inline' };
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
-  style?: BorderStyle & ShadowStyle;
+  style?: BorderStyle & ShadowStyle & {
+    objectFit?: MediaObjectFit;  // 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
+    objectPosition?: string;
+  };
 };
 ```
+
+`adoptVideoIntrinsicRatioDoc(document, nodeId, ratio)` records a video's measured intrinsic aspect ratio and adopts it as the layout aspect only while the node height still follows the default or previously adopted intrinsic ratio; user-authored aspects and fixed heights are never overwritten.
 
 ### StickyDefinition
 
@@ -964,6 +977,10 @@ type EditorTextField =
   | 'borderRadius' | 'borderTopLeftRadius' | 'borderTopRightRadius' | 'borderBottomRightRadius' | 'borderBottomLeftRadius'
   // Shadow
   | 'shadowColor' | 'shadowBlur' | 'shadowSpread' | 'shadowOffsetX' | 'shadowOffsetY'
+  // Media fit (MediaFitField)
+  | 'objectFit' | 'objectPosition'
+  // Video settings (VideoSettingField)
+  | 'videoAutoplay' | 'videoMuted' | 'videoControls' | 'videoLoop' | 'videoPoster' | 'videoPreload'
   // Block gap
   | 'blockGap';
 ```
@@ -1096,6 +1113,7 @@ This index keeps the split API reference synchronized with the public export sur
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
 - `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
+- `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
 - `setPageAsHomeDoc`, `normalizeSlug`
 - `FocusedMode`, `LinkValidationError`, `StageProps`, `SiteRendererProps`, `SiteExportOptions`

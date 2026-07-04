@@ -43,6 +43,7 @@ import {
   type NodeId,
 } from '../api/editorApi';
 import {
+  adoptVideoIntrinsicRatioDoc,
   mergeTextNodesToRichDoc,
   setSiteNodeStickyElevation,
   setTextDocumentBlockGapDoc,
@@ -164,6 +165,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTextDocumentContentDoc(state.document, action.id, action.content, action.options) };
     case 'setTextDocumentBlockGap':
       return { ...state, document: setTextDocumentBlockGapDoc(state.document, action.id, action.value) };
+    case 'adoptVideoIntrinsicRatio':
+      return { ...state, document: adoptVideoIntrinsicRatioDoc(state.document, action.id, action.ratio) };
     case 'switchTextSubtype':
       return {
         ...state,
@@ -735,6 +738,7 @@ function shouldTrackInHistory(action: EditorAction) {
     action.type !== 'setDarkTheme' &&
     action.type !== 'setFocusedMode' &&
     action.type !== 'applyEditorNavigation' &&
+    action.type !== 'adoptVideoIntrinsicRatio' &&
     action.type !== 'setStartupFocusedMode' &&
     action.type !== 'setInspectorCollapsed' &&
     action.type !== 'setTemporaryInspectorOpen' &&

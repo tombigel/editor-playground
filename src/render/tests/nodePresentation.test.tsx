@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { createInitialDocument, createLinkTextNode, createTextNode } from '../../model/defaults';
+import { createInitialDocument, createLinkTextNode, createMediaNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentContent, createTextDocumentFromCode, createTextDocumentFromText, getTextContent, listContentToRichListBlock } from '../../model/richContent';
 import { CODE_THEME_SURFACE } from '../../model/textNodeDefaults';
 import { parseFontSizeValue } from '../../model/units';
@@ -120,6 +120,58 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('href="https://example.com/media"');
     expect(markup).toContain('<img');
     expect(markup).toContain('</a>');
+  });
+
+  it('renders video nodes with playback attributes and fit styling', () => {
+    const video = createMediaNode('video', 'section-1');
+    video.src = 'https://example.com/clip.mp4';
+    video.video = { ...video.video, poster: 'https://example.com/poster.jpg', autoplay: true, muted: false, loop: true, preload: 'metadata' };
+    video.style = { ...video.style, objectFit: 'cover', objectPosition: 'left top' };
+
+    const markup = renderToStaticMarkup(
+      renderLeafContent(video, { videoClassName: 'sp-video' }),
+    );
+
+    expect(markup).toContain('<video');
+    expect(markup).toContain('class="sp-video"');
+    expect(markup).toContain('src="https://example.com/clip.mp4"');
+    expect(markup).toContain('poster="https://example.com/poster.jpg"');
+    expect(markup).toContain('controls');
+    expect(markup.toLowerCase()).toContain('autoplay');
+    expect(markup).toContain('loop');
+    expect(markup).not.toContain('muted');
+    expect(markup).toContain('preload="metadata"');
+    expect(markup).toContain('object-fit:cover');
+    expect(markup).toContain('object-position:left top');
+  });
+
+  it('renders a paused non-interactive video preview for the stage', () => {
+    const video = createMediaNode('video', 'section-1');
+    video.src = 'https://example.com/clip.mp4';
+    video.video = { ...video.video, autoplay: true, controls: true };
+
+    const markup = renderToStaticMarkup(
+      renderLeafContent(video, { videoClassName: 'stage-video', videoPreviewOnly: true }),
+    );
+
+    expect(markup).toContain('<video');
+    expect(markup.toLowerCase()).not.toContain('autoplay');
+    expect(markup).not.toContain('controls');
+    expect(markup).toContain('muted');
+    expect(markup).toContain('preload="metadata"');
+    expect(markup).toContain('pointer-events:none');
+  });
+
+  it('renders a placeholder for a video without a source', () => {
+    const video = createMediaNode('video', 'section-1');
+    video.src = undefined;
+
+    const markup = renderToStaticMarkup(
+      renderLeafContent(video, { imagePlaceholderClassName: 'image-placeholder' }),
+    );
+
+    expect(markup).toContain('class="image-placeholder"');
+    expect(markup).toContain('Video');
   });
 
   it('does not classify code nodes by legacy block-only link styling', () => {

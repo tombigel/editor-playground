@@ -663,7 +663,8 @@ Additional rules:
 |---|---|---|---|
 | `text` | body copy + HTML tag + optional link | `Text style`, `Design` | Editable HTML tag, optional destination |
 | `link` | label + destination | `Text style`, `Design` | Add-rail shortcut for link-enabled block text |
-| `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface |
+| `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface + object fit/position |
+| `video` | `src`, poster, label, playback flags, preload + optional link | `Design` | Paused stage preview; native `<video>` in preview/export |
 | `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
 
 ### Text leaf semantics
@@ -729,6 +730,29 @@ Broken anchor behavior:
 - Images expose the same `Link` toggle and destination controls in `Content`.
 - Linked images render and export as `<a href="..."><img ... /></a>`.
 - Linked image placeholders use the same anchor wrapper pattern.
+
+### Video leaf behavior
+
+Content and playback:
+
+- Video sources are external URLs (same hosting assumption as images; there is no asset pipeline).
+- Playback settings live on `MediaNode.video`: `autoplay` (default off), `muted` (default on), `controls` (default on), `loop` (default off), optional `poster` URL, and `preload` (`auto` default, `metadata`, `none`).
+- The `Label` field stores `alt` and is exported as `aria-label` on the `<video>` element.
+- Videos expose the same `Link` toggle as images; a linked video exports as `<a href="..."><video ... /></a>`.
+
+Stage vs preview/export:
+
+- The editor stage renders a paused, non-interactive preview: no native controls, no autoplay, muted, `preload="metadata"`, and pointer events disabled so selection and drag stay clean.
+- Preview and export render a native `<video>` with the authored playback attributes.
+
+Aspect ratio:
+
+- New videos default to a `16/9` aspect-ratio height. When video metadata loads, the measured intrinsic ratio is stored on `MediaNode.video.intrinsicRatio` and adopted as the layout aspect **only** while the height still follows the default or the previously adopted intrinsic ratio. A user-authored aspect or fixed height is never overwritten. Adoption is a silent update and does not create an undo entry.
+
+Object fit and position:
+
+- Image and video share `Fit` (`cover`, `contain`, `fill`, `none`, `scale-down`) and `Position` (9 alignment presets) controls in `Design`, stored as `style.objectFit` / `style.objectPosition` on the media node and rendered inline on the media element.
+- Image defaults to `cover` (unchanged legacy behavior via base CSS); video defaults to `contain`, `center center` (explicit factory values).
 
 ### Button leaf behavior
 

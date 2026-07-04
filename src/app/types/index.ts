@@ -96,7 +96,8 @@ export type EditorAction =
   | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
-  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'link' | 'button' }
+  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'video' | 'link' | 'button' }
+  | { type: 'adoptVideoIntrinsicRatio'; id: NodeId; ratio: number }
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }

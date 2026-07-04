@@ -1,5 +1,6 @@
 import {
 	BookOpenText,
+	Clapperboard,
 	ImageIcon,
 	Layers3,
 	Link2,
@@ -9,7 +10,7 @@ import {
 	SquareStack,
 	Type,
 } from "lucide-react";
-type LeafItemKind = 'image' | 'link' | 'button';
+type LeafItemKind = 'image' | 'video' | 'link' | 'button';
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
 
@@ -55,6 +56,13 @@ const INSERT_ITEMS = [
 		icon: ImageIcon,
 		label: "Image",
 		hint: "Seeded visual",
+	},
+	{
+		kind: "leaf" as const,
+		role: "video" as const,
+		icon: Clapperboard,
+		label: "Video",
+		hint: "Embedded player",
 	},
 	{
 		kind: "leaf" as const,

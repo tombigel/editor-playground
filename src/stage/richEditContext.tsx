@@ -13,6 +13,7 @@ export type RichEditContextValue = {
   updateBlockGap: (id: NodeId, value: number) => void;
   discardEdit: () => void;
   onOpenManageFonts: (options?: { category?: string }) => void;
+  adoptVideoIntrinsicRatio: (id: NodeId, ratio: number) => void;
 };
 
 export const RichEditContext = createContext<RichEditContextValue>({
@@ -22,6 +23,7 @@ export const RichEditContext = createContext<RichEditContextValue>({
   updateBlockGap: () => {},
   discardEdit: () => {},
   onOpenManageFonts: () => {},
+  adoptVideoIntrinsicRatio: () => {},
 });
 
 export function useRichEditContext() {

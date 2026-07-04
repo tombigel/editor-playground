@@ -19,6 +19,11 @@ export type RenderLeafContentOptions = {
   imageClassName?: string;
   imagePlaceholderClassName?: string;
   imageDraggable?: boolean;
+  videoClassName?: string;
+  /** Render video as a non-interactive paused preview (editor stage). */
+  videoPreviewOnly?: boolean;
+  /** Called when a video's intrinsic dimensions become known. */
+  onVideoIntrinsicRatio?: (nodeId: string, ratio: number) => void;
   disableTabNavigation?: boolean;
   document?: DocumentModel;
 };
@@ -64,6 +69,7 @@ export type RenderLeafPlanNode = {
   spacerEdgesBefore: RenderTrackSpacerEdge[];
   spacerEdgesAfter: RenderTrackSpacerEdge[];
   imageClassName: string;
+  videoClassName: string;
   imagePlaceholderClassName: string;
   isBrandMark: boolean;
 };

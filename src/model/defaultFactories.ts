@@ -35,7 +35,10 @@ import {
   DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
   DEFAULT_LINK_COLOR,
+  DEFAULT_MEDIA_OBJECT_FIT_VIDEO,
+  DEFAULT_MEDIA_OBJECT_POSITION,
   DEFAULT_TEXT_COLOR,
+  DEFAULT_VIDEO_ASPECT_HEIGHT,
 } from './styleDefaults';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from './units';
 import { TEXT_NODE_DEFAULTS } from './textNodeDefaults';
@@ -385,9 +388,9 @@ export function createMediaNode(subtype: MediaSubtype, parentId: NodeId): MediaN
       name: 'Video',
       visible: true,
       locked: false,
-      rect: createDefaultRect('32px', '32px', '320px', 'aspect-ratio(4/3)' as string),
-      video: { autoplay: false, loop: false, muted: true },
-      style: {},
+      rect: createDefaultRect('32px', '32px', '320px', DEFAULT_VIDEO_ASPECT_HEIGHT),
+      video: { autoplay: false, loop: false, muted: true, controls: true, preload: 'auto' },
+      style: { objectFit: DEFAULT_MEDIA_OBJECT_FIT_VIDEO, objectPosition: DEFAULT_MEDIA_OBJECT_POSITION },
     };
   }
 

@@ -60,7 +60,7 @@ export function getNodeTextContent(node: LeafNode): string {
     return getTextContent(node.content.blocks, { blockSeparator: '\n' });
   }
   if (isMediaNode(node)) {
-    return node.alt ?? 'Image';
+    return node.alt ?? (node.subtype === 'video' ? 'Video' : 'Image');
   }
   return '';
 }
@@ -535,6 +535,9 @@ export function renderLeafContent(
     imageClassName,
     imagePlaceholderClassName,
     imageDraggable = true,
+    videoClassName,
+    videoPreviewOnly = false,
+    onVideoIntrinsicRatio,
     disableTabNavigation = false,
     document,
     codeSurfaceMinHeight,
@@ -564,16 +567,79 @@ export function renderLeafContent(
   }
 
   if (isMediaNode(node)) {
-    const mediaContent = node.src ? (
-      <img
-        className={imageClassName}
-        src={node.src}
-        alt={node.alt || 'Image'}
-        draggable={imageDraggable}
-      />
-    ) : (
-      <div className={imagePlaceholderClassName}>{getNodeTextContent(node)}</div>
-    );
+    const mediaFitStyle: CSSProperties = {
+      ...(node.style?.objectFit ? { objectFit: node.style.objectFit } : {}),
+      ...(node.style?.objectPosition ? { objectPosition: node.style.objectPosition } : {}),
+    };
+    const renderMediaElement = (standalone: boolean): ReactNode => {
+      const elementStyle: CSSProperties | undefined = standalone
+        ? { ...contentStyle, ...mediaFitStyle }
+        : Object.keys(mediaFitStyle).length > 0
+          ? mediaFitStyle
+          : undefined;
+
+      if (node.subtype === 'video') {
+        if (!node.src) {
+          return (
+            <div
+              className={imagePlaceholderClassName}
+              data-node-id={standalone ? dataNodeId : undefined}
+              style={standalone ? contentStyle : undefined}
+            >
+              {getNodeTextContent(node)}
+            </div>
+          );
+        }
+        const video = node.video;
+        return (
+          // biome-ignore lint/a11y/useMediaCaption: caption tracks are not part of the authoring model yet
+          <video
+            className={videoClassName}
+            data-node-id={standalone ? dataNodeId : undefined}
+            src={node.src}
+            poster={video?.poster || undefined}
+            controls={videoPreviewOnly ? false : video?.controls !== false}
+            autoPlay={videoPreviewOnly ? false : video?.autoplay === true}
+            muted={videoPreviewOnly ? true : video?.muted !== false}
+            loop={videoPreviewOnly ? false : video?.loop === true}
+            preload={videoPreviewOnly ? 'metadata' : video?.preload ?? 'auto'}
+            playsInline
+            aria-label={node.alt || undefined}
+            tabIndex={tabIndex}
+            style={videoPreviewOnly ? { ...elementStyle, pointerEvents: 'none' } : elementStyle}
+            onLoadedMetadata={
+              onVideoIntrinsicRatio
+                ? (event) => {
+                    const element = event.currentTarget;
+                    if (element.videoWidth > 0 && element.videoHeight > 0) {
+                      onVideoIntrinsicRatio(node.id, element.videoWidth / element.videoHeight);
+                    }
+                  }
+                : undefined
+            }
+          />
+        );
+      }
+
+      return node.src ? (
+        <img
+          className={imageClassName}
+          data-node-id={standalone ? dataNodeId : undefined}
+          style={elementStyle}
+          src={node.src}
+          alt={node.alt || 'Image'}
+          draggable={imageDraggable}
+        />
+      ) : (
+        <div
+          className={imagePlaceholderClassName}
+          data-node-id={standalone ? dataNodeId : undefined}
+          style={standalone ? contentStyle : undefined}
+        >
+          {getNodeTextContent(node)}
+        </div>
+      );
+    };
 
     if (node.link) {
       return (
@@ -586,23 +652,12 @@ export function renderLeafContent(
           {...getExternalNavigationProps(node)}
           {...getPageCurrentProps(node.link, currentPageId)}
         >
-          {mediaContent}
+          {renderMediaElement(false)}
         </a>
       );
     }
 
-    return node.src ? (
-      <img
-        className={imageClassName}
-        data-node-id={dataNodeId}
-        style={contentStyle}
-        src={node.src}
-        alt={node.alt || 'Image'}
-        draggable={imageDraggable}
-      />
-    ) : (
-      <div className={imagePlaceholderClassName} data-node-id={dataNodeId} style={contentStyle}>{getNodeTextContent(node)}</div>
-    );
+    return renderMediaElement(true);
   }
 
   if (isTextNode(node) && node.subtype === 'code') {

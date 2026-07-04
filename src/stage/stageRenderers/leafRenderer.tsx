@@ -121,7 +121,7 @@ function StageLeaf({
   viewport: ViewportMeasurement;
   interactKeys?: Set<NodeId>;
 }) {
-  const { editingId, commitEdit, updateBlockGap, discardEdit, onOpenManageFonts } = useRichEditContext();
+  const { editingId, commitEdit, updateBlockGap, discardEdit, onOpenManageFonts, adoptVideoIntrinsicRatio } = useRichEditContext();
   const child = plan.node;
   const hiddenStyle = getStageHiddenStyle(plan.hiddenState);
   const meshPlacement = plan.meshPlacement;
@@ -139,11 +139,11 @@ function StageLeaf({
   const leafBaseHeight = getLeafCssHeight(child);
   const intrinsicHeightLeaf = usesIntrinsicHeight(child);
   const trackWidth = getTrackCssWidth(child);
-  const isImageNode = child.contentType === 'media' && child.subtype === 'image';
+  const isMediaLeaf = child.contentType === 'media';
   const isEditableTextNode = child.contentType === 'text' && isEditableTextSubtype(child.subtype);
   const isEditingTextNode = isEditableTextNode && editingId === child.id;
   const contentPresentationStyle = styleRecordToReactStyle(getLeafInlineStyle(child));
-  const leafBodyStyle = isImageNode ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined;
+  const leafBodyStyle = isMediaLeaf ? styleRecordToReactStyle(getLeafInlineStyle(child)) : undefined;
   const leafBody = (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: editor canvas node, not web content
     <div
@@ -215,10 +215,13 @@ function StageLeaf({
             />
           )
           : renderLeafContent(child, {
-            contentStyle: isImageNode ? undefined : contentPresentationStyle,
+            contentStyle: isMediaLeaf ? undefined : contentPresentationStyle,
             imageClassName: 'stage-image',
             imagePlaceholderClassName: 'image-placeholder',
             imageDraggable: false,
+            videoClassName: 'stage-video',
+            videoPreviewOnly: true,
+            onVideoIntrinsicRatio: adoptVideoIntrinsicRatio,
             disableTabNavigation: true,
           })}
       </div>

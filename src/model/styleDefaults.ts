@@ -16,6 +16,12 @@ export const DEFAULT_IMAGE_SHADOW_SPREAD_PX = 0;
 export const DEFAULT_IMAGE_SHADOW_OFFSET_X_PX = 0;
 export const DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX = 12;
 
+export const DEFAULT_VIDEO_ASPECT_RATIO = 16 / 9;
+export const DEFAULT_VIDEO_ASPECT_HEIGHT = 'aspect-ratio(16/9)';
+export const DEFAULT_MEDIA_OBJECT_FIT_IMAGE = 'cover';
+export const DEFAULT_MEDIA_OBJECT_FIT_VIDEO = 'contain';
+export const DEFAULT_MEDIA_OBJECT_POSITION = 'center center';
+
 export const DEFAULT_BUTTON_TEXT_COLOR = '#fff';
 export const DEFAULT_BUTTON_BACKGROUND = '#05070a';
 export const DEFAULT_BUTTON_BORDER_RADIUS = '999px';

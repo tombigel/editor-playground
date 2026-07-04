@@ -20,7 +20,9 @@ import {
   DEFAULT_IMAGE_SHADOW_SPREAD_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_X_PX,
   DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX,
+  DEFAULT_MEDIA_OBJECT_FIT_IMAGE,
 } from '../../../api/documentViewApi';
+import { MediaFitFields } from './mediaFitFields';
 import type { ImageInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import {
@@ -110,6 +112,12 @@ export function ImageDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
+        <MediaFitFields
+          objectFit={node.style?.objectFit}
+          objectPosition={node.style?.objectPosition}
+          fitFallback={DEFAULT_MEDIA_OBJECT_FIT_IMAGE}
+          onTextChange={onTextChange}
+        />
         <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
           <Label className="pt-1 text-[11px] font-medium">Border</Label>
           <BorderControlGroup

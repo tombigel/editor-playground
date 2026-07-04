@@ -99,6 +99,7 @@ export {
 } from './documentApi/text';
 export { setNodeVisibilityDoc, setPageTopLevelWrapperPlacement, setTopLevelWrapperVisibility } from './documentApi/visibility';
 export { insertContainerDoc, insertLeafDoc, insertMediaDoc, insertSectionTemplateDoc, insertTextDoc } from './documentApi/insertion';
+export { adoptVideoIntrinsicRatioDoc } from './documentApi/media';
 export {
   createNodeClipboardJson,
   createNodeFromExternalClipboardDoc,

@@ -40,6 +40,7 @@ export type {
   ListContent,
   ListTextItem,
   MediaNode,
+  MediaObjectFit,
   NodeId,
   RichInlineNode,
   RichListBlock,

@@ -707,6 +707,7 @@
 }
 
 .stage-image,
+.stage-video,
 .image-placeholder {
   display: block;
   width: 100%;
@@ -715,6 +716,10 @@
 
 .stage-image {
   object-fit: cover;
+}
+
+.stage-video {
+  object-fit: contain;
 }
 
 .stage-leaf.role-image.is-brand-mark .stage-image {

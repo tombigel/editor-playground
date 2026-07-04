@@ -68,6 +68,7 @@ export type StageProps = {
 	onUpdateTextDocumentBlockGap?: (id: NodeId, value: number) => void;
 	onRegisterActivateRichEdit?: (fn: (id: NodeId) => void) => void;
 	onOpenManageFonts?: (options?: { category?: string }) => void;
+	onAdoptVideoIntrinsicRatio?: (id: NodeId, ratio: number) => void;
 	followLinkPopup?: FollowLinkPopupData | null;
 };
 

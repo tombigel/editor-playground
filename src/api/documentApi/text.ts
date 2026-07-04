@@ -334,12 +334,12 @@ export function setTextNodeContentDoc(
     return next;
   }
 
-  if (field === 'linkEnabled' && isMediaNode(node) && node.subtype === 'image') {
+  if (field === 'linkEnabled' && isMediaNode(node)) {
     node.link = value === 'true' ? (node.link ?? createDefaultLinkExtension()) : undefined;
     return next;
   }
 
-  if (field === 'linkType' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
+  if (field === 'linkType' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
     const linkType = normalizeNavigationKind(value);
     node.link = { ...node.link, linkType };
     if (linkType !== 'page') {
@@ -348,38 +348,72 @@ export function setTextNodeContentDoc(
     return next;
   }
 
-  if (field === 'anchorTargetId' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
+  if (field === 'anchorTargetId' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, anchorTargetId: value || undefined };
     return next;
   }
 
-  if (field === 'href' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
+  if (field === 'href' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, href: value };
     return next;
   }
 
-  if (field === 'openInNewTab' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
+  if (field === 'openInNewTab' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
     return next;
   }
 
-  if (field === 'targetPageId' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
+  if (field === 'targetPageId' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
     return next;
   }
 
-  if (field === 'pageAnchorId' && ((isTextNode(node) && node.subtype === 'block') || (isMediaNode(node) && node.subtype === 'image')) && node.link !== undefined) {
+  if (field === 'pageAnchorId' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, pageAnchorId: value || undefined };
     return next;
   }
 
-  if (field === 'src' && isMediaNode(node) && node.subtype === 'image') {
+  if (field === 'src' && isMediaNode(node)) {
     node.src = value;
     return next;
   }
 
-  if (field === 'alt' && isMediaNode(node) && node.subtype === 'image') {
+  if (field === 'alt' && isMediaNode(node)) {
     node.alt = value;
+    return next;
+  }
+
+  if ((field === 'videoAutoplay' || field === 'videoMuted' || field === 'videoControls' || field === 'videoLoop') && isMediaNode(node) && node.subtype === 'video') {
+    const flag = field === 'videoAutoplay' ? 'autoplay' : field === 'videoMuted' ? 'muted' : field === 'videoControls' ? 'controls' : 'loop';
+    node.video = { ...node.video, [flag]: value === 'true' };
+    return next;
+  }
+
+  if (field === 'videoPoster' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, poster: value.trim() || undefined };
+    return next;
+  }
+
+  if (field === 'videoPreload' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = {
+      ...node.video,
+      preload: value === 'metadata' || value === 'none' ? value : 'auto',
+    };
+    return next;
+  }
+
+  if (field === 'objectFit' && isMediaNode(node)) {
+    node.style ??= {};
+    node.style.objectFit =
+      value === 'cover' || value === 'contain' || value === 'fill' || value === 'none' || value === 'scale-down'
+        ? value
+        : undefined;
+    return next;
+  }
+
+  if (field === 'objectPosition' && isMediaNode(node)) {
+    node.style ??= {};
+    node.style.objectPosition = value.trim() || undefined;
     return next;
   }
 

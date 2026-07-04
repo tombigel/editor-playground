@@ -398,6 +398,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onUpdateTextDocumentBlockGap={(id, value) =>
 							dispatch({ type: "setTextDocumentBlockGap", id, value })
 						}
+						onAdoptVideoIntrinsicRatio={(id, ratio) =>
+							dispatch({ type: "adoptVideoIntrinsicRatio", id, ratio })
+						}
 						onRegisterActivateRichEdit={(fn) => {
 							activateRichEditRef.current = fn;
 						}}

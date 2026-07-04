@@ -64,6 +64,16 @@ export type ShadowStyleField =
   | 'shadowSpread'
   | 'shadowOffsetX'
   | 'shadowOffsetY';
+export type MediaObjectFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
+export type VideoPreload = 'auto' | 'metadata' | 'none';
+export type MediaFitField = 'objectFit' | 'objectPosition';
+export type VideoSettingField =
+  | 'videoAutoplay'
+  | 'videoMuted'
+  | 'videoControls'
+  | 'videoLoop'
+  | 'videoPoster'
+  | 'videoPreload';
 export type LeafTypographyField =
   | 'color'
   | 'backgroundColor'
@@ -80,7 +90,7 @@ export type TextStyleField =
   | LeafTypographyField
   | ShadowStyleField;
 export type LinkStyleField = LeafTypographyField | TextWrapField | ShadowStyleField;
-export type ImageStyleField = BorderColorField | BorderWidthField | BorderRadiusField | ShadowStyleField;
+export type ImageStyleField = BorderColorField | BorderWidthField | BorderRadiusField | ShadowStyleField | MediaFitField;
 export type ButtonStyleField =
   | LeafTypographyField
   | 'background'
@@ -91,7 +101,7 @@ export type ButtonStyleField =
   | BorderWidthField
   | BorderRadiusField
   | ShadowStyleField;
-export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField | 'blockGap';
+export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField | VideoSettingField | 'blockGap';
 export type WrapperStyleField =
   | 'background'
   | BorderColorField
@@ -547,12 +557,24 @@ export type MediaNode = BaseNode & {
   src?: string;
   alt?: string;
   link?: LinkExtension;
-  video?: { autoplay?: boolean; loop?: boolean; muted?: boolean };
+  video?: {
+    autoplay?: boolean;
+    loop?: boolean;
+    muted?: boolean;
+    controls?: boolean;
+    poster?: string;
+    preload?: VideoPreload;
+    /** Intrinsic width/height ratio measured from loaded metadata; drives auto aspect adoption. */
+    intrinsicRatio?: number;
+  };
   svg?: { renderMode: 'img' | 'inline' };
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
-  style?: BorderStyle & ShadowStyle;
+  style?: BorderStyle & ShadowStyle & {
+    objectFit?: MediaObjectFit;
+    objectPosition?: string;
+  };
 };
 
 // ---------------------------------------------------------------------------

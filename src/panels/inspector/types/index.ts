@@ -13,6 +13,7 @@ export type TextInspectorNode = TextNode;
 export type ButtonInspectorNode = TextNode;
 export type LinkInspectorNode = TextNode;
 export type ImageInspectorNode = MediaNode;
+export type VideoInspectorNode = MediaNode;
 export type WrapperInspectorNode = ContainerNode;
 
 export type InspectorActionHandlers = {

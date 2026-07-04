@@ -92,6 +92,7 @@ export function Stage({
 	onUpdateTextDocumentBlockGap,
 	onRegisterActivateRichEdit,
 	onOpenManageFonts = () => {},
+	onAdoptVideoIntrinsicRatio,
 	followLinkPopup,
 }: StageProps) {
 	const stageRef = useRef<HTMLDivElement | null>(null);
@@ -504,6 +505,7 @@ export function Stage({
 				updateBlockGap: (id, value) => onUpdateTextDocumentBlockGap?.(id, value),
 				discardEdit,
 				onOpenManageFonts,
+				adoptVideoIntrinsicRatio: (id, ratio) => onAdoptVideoIntrinsicRatio?.(id, ratio),
 			}}>
 			<StageScene
 				document={document}
