@@ -28,6 +28,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add legacy document migration fixture suite
 - cover snap and measure math
 - add direct tests for document tree operations
+- cover document normalization and panel state helpers
 
 ### Fixed
 
