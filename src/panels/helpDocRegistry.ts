@@ -283,27 +283,11 @@ export const HELP_DOC_REGISTRY: readonly HelpDocRegistryEntry[] = [
     order: 20,
   },
   {
-    id: 'doc:docs/MULTIPLE_PAGES_AUDIT_REPORT.md',
-    kind: 'markdown',
-    sourcePath: 'docs/MULTIPLE_PAGES_AUDIT_REPORT.md',
-    parentId: 'section:developers-planning',
-    order: 30,
-    navVisibility: 'secondary',
-  },
-  {
     id: 'doc:docs/TEXT_COMPONENT_MASTER_BRIEF.md',
     kind: 'markdown',
     sourcePath: 'docs/TEXT_COMPONENT_MASTER_BRIEF.md',
     parentId: 'section:developers-planning',
     order: 40,
-    navVisibility: 'secondary',
-  },
-  {
-    id: 'doc:docs/TEXT_COMPONENT_TASKLIST.md',
-    kind: 'markdown',
-    sourcePath: 'docs/TEXT_COMPONENT_TASKLIST.md',
-    parentId: 'section:developers-planning',
-    order: 50,
     navVisibility: 'secondary',
   },
   {

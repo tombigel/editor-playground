@@ -5,7 +5,7 @@ This document is the immutable source brief for the text-system recovery workstr
 Execution rules:
 
 - Every fresh agent must read this file first.
-- The canonical live execution ledger is [`TEXT_COMPONENT_TASKLIST.md`](./TEXT_COMPONENT_TASKLIST.md).
+- The phase 1.x execution ledger is closed and archived at [`TEXT_COMPONENT_TASKLIST.md`](../archive/TEXT_COMPONENT_TASKLIST.md). The live ledger for the current phase is [`TEXT_COMPONENT_PHASE_2_0_TASKLIST.md`](./TEXT_COMPONENT_PHASE_2_0_TASKLIST.md).
 - If scope changes, update this brief first, then the tasklist, then code.
 - API-first is mandatory: no important text behavior may exist only in editor code.
 
@@ -482,8 +482,8 @@ Allowed files:
 - shared DS files only if truly needed
 - stage tests
 - `docs/PLAYGROUND_SPEC.md`
-- `docs/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`
-- `docs/TEXT_COMPONENT_TASKLIST.md`
+- `archive/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md` (closed)
+- `archive/TEXT_COMPONENT_TASKLIST.md` (closed)
 
 Deliverables:
 - first click selects

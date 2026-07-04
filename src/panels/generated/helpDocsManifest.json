@@ -6,12 +6,6 @@
     "assetUrl": "/assets/help-docs/AI_CONVERSATION_GUIDE.md"
   },
   {
-    "path": "docs/AI_HARNESS_AUDIT_FIXES_TASKLIST.md",
-    "fileName": "AI_HARNESS_AUDIT_FIXES_TASKLIST.md",
-    "fullTitle": "AI Harness Audit Fixes: Agent Task List",
-    "assetUrl": "/assets/help-docs/AI_HARNESS_AUDIT_FIXES_TASKLIST.md"
-  },
-  {
     "path": "docs/API_AI.md",
     "fileName": "API_AI.md",
     "fullTitle": "API Reference - AI",
@@ -108,18 +102,6 @@
     "assetUrl": "/assets/help-docs/EDITOR_STYLE_GUIDE.md"
   },
   {
-    "path": "docs/FORMFIELD_LAYOUT_AUDIT_CONTINUATION_TASKLIST.md",
-    "fileName": "FORMFIELD_LAYOUT_AUDIT_CONTINUATION_TASKLIST.md",
-    "fullTitle": "FormField Layout Audit Continuation Tasklist",
-    "assetUrl": "/assets/help-docs/FORMFIELD_LAYOUT_AUDIT_CONTINUATION_TASKLIST.md"
-  },
-  {
-    "path": "docs/FORMFIELD_LAYOUT_AUDIT_TASKLIST.md",
-    "fileName": "FORMFIELD_LAYOUT_AUDIT_TASKLIST.md",
-    "fullTitle": "FormField Layout Audit Tasklist",
-    "assetUrl": "/assets/help-docs/FORMFIELD_LAYOUT_AUDIT_TASKLIST.md"
-  },
-  {
     "path": "docs/GETTING_STARTED.md",
     "fileName": "GETTING_STARTED.md",
     "fullTitle": "Getting Started",
@@ -136,12 +118,6 @@
     "fileName": "Interact Accessibility Discussion.md",
     "fullTitle": "Interact A11y",
     "assetUrl": "/assets/help-docs/Interact Accessibility Discussion.md"
-  },
-  {
-    "path": "docs/MULTIPLE_PAGES_AUDIT_REPORT.md",
-    "fileName": "MULTIPLE_PAGES_AUDIT_REPORT.md",
-    "fullTitle": "Multiple Pages Audit Report",
-    "assetUrl": "/assets/help-docs/MULTIPLE_PAGES_AUDIT_REPORT.md"
   },
   {
     "path": "docs/NEXT_STAGE_BRIEF.md",
@@ -166,24 +142,6 @@
     "fileName": "REFERENCE.md",
     "fullTitle": "Reference",
     "assetUrl": "/assets/help-docs/REFERENCE.md"
-  },
-  {
-    "path": "docs/SHORTCUT_EXPANSION_TASKLIST.md",
-    "fileName": "SHORTCUT_EXPANSION_TASKLIST.md",
-    "fullTitle": "Shortcut Expansion Tasklist",
-    "assetUrl": "/assets/help-docs/SHORTCUT_EXPANSION_TASKLIST.md"
-  },
-  {
-    "path": "docs/SHOWCASE_TOUR_IMPLEMENTATION_TODO.md",
-    "fileName": "SHOWCASE_TOUR_IMPLEMENTATION_TODO.md",
-    "fullTitle": "Showcase Tour Implementation Todo",
-    "assetUrl": "/assets/help-docs/SHOWCASE_TOUR_IMPLEMENTATION_TODO.md"
-  },
-  {
-    "path": "docs/SHOWCASE_TOUR_PHASE_1.md",
-    "fileName": "SHOWCASE_TOUR_PHASE_1.md",
-    "fullTitle": "Showcase Tour Phase 1 Research",
-    "assetUrl": "/assets/help-docs/SHOWCASE_TOUR_PHASE_1.md"
   },
   {
     "path": "docs/SHOWCASE_TOUR_REVIEW_TODO.md",
@@ -220,12 +178,6 @@
     "fileName": "TEXT_COMPONENT_PHASE_2_0_TASKLIST.md",
     "fullTitle": "Text Component Phase 2.0 Tasklist",
     "assetUrl": "/assets/help-docs/TEXT_COMPONENT_PHASE_2_0_TASKLIST.md"
-  },
-  {
-    "path": "docs/TEXT_COMPONENT_TASKLIST.md",
-    "fileName": "TEXT_COMPONENT_TASKLIST.md",
-    "fullTitle": "Text Component Tasklist",
-    "assetUrl": "/assets/help-docs/TEXT_COMPONENT_TASKLIST.md"
   },
   {
     "path": "CHANGELOG.md",

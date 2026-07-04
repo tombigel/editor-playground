@@ -2,7 +2,7 @@
 
 This document records the interfaces missing from the external `hdr-color-input` component that currently force Editor Playground to rely on implementation details.
 
-It is a companion to [`DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`](./DESIGN_SYSTEM_CONVERGENCE_AUDIT.md), focused specifically on the shared color-picker primitive.
+It began as a companion to the design-system convergence audit (now closed and archived at `archive/DESIGN_SYSTEM_CONVERGENCE_AUDIT.md`), focused specifically on the shared color-picker primitive.
 
 ## Current Local Usage
 

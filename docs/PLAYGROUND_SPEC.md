@@ -1565,7 +1565,7 @@ Naming and title behavior:
 ### Showcase Tour
 
 - The showcase tour is an editor overlay for portfolio/recruiting demos. It is non-linear: visitors can use Back/Next or jump by topic and step from the tour menu.
-- The first-phase tour map is fixed by `docs/SHOWCASE_TOUR_PHASE_1.md` and implemented as typed config in `src/app/showcaseTour/showcaseTourConfig.ts`.
+- The first-phase tour map was fixed by the phase 1 research brief (now `archive/SHOWCASE_TOUR_PHASE_1.md`) and is implemented as typed config in `src/app/showcaseTour/showcaseTourConfig.ts`, which is the current source of truth.
 - The Start Here topic includes an AI Assistant step that opens the real floating AI panel. The step must describe the interface as a limited MVP with a minimal harness and command set, and must state that it currently supports only the user's own OpenRouter subscription.
 - Tour URL state uses `tour=<topicId>` and `step=<stepId>` in the `#/edit` route search. Loading a URL such as `#/edit?tour=start&step=welcome` opens the overlay at the resolved topic/step; invalid values fall back through `showcaseTourApi`.
 - Every step applies editor movement through `ShowcaseTourStepNavigation`, which can contain `EditorNavigationUrlState`, `EditorNodeTarget`, and/or `EditorPanelRequest` values. The overlay must not click editor controls to navigate. Steps should be complete scenes: focused mode is explicit (`null` clears it), and the panel scene starts by closing transient panels before opening only the panels required by that step.

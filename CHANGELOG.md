@@ -42,6 +42,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - catalog imported lucide icons
 - align showcase sections and AI warning badge
 - remove duplicate alert icon alias
+- archive completed tasklists and fix archived-doc references
 
 ### Fixed
 
