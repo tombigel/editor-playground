@@ -121,8 +121,10 @@ describe("app/AppShell", () => {
 		expect(markup).not.toContain("editor-insert-button-inner");
 		expect(markup).toContain('data-panel-trigger="components"');
 		expect(markup).toContain('data-panel-trigger="pages"');
+		expect(markup).toContain('data-panel-trigger="ai"');
 		expect(markup).toContain('aria-label="Components"');
 		expect(markup).toContain('aria-label="Pages"');
+		expect(markup).toContain('aria-label="AI Assistant"');
 		expect(markup).toContain("editor-rail-entry-button");
 		expect(markup).toContain("editor-rail-toggle-button");
 	});

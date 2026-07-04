@@ -1005,6 +1005,85 @@ a.editor-pill-subtle:focus-visible {
   background: color-mix(in srgb, var(--editor-accent) 14%, var(--editor-surface-background));
 }
 
+.editor-rail-entry-button[data-panel-trigger='ai'] {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-width: 2px;
+  border-color: transparent;
+  background:
+    var(--editor-ai-surface-background) padding-box,
+    var(--editor-ai-border-gradient) border-box;
+  color: var(--editor-ai-icon-color);
+  box-shadow: var(--editor-ai-glow);
+}
+
+.editor-rail-entry-button[data-panel-trigger='ai'] > svg {
+  position: relative;
+  z-index: 1;
+}
+
+.editor-rail-entry-button[data-panel-trigger='ai']::before {
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(
+      115deg,
+      transparent 28%,
+      color-mix(in srgb, #ffffff 42%, transparent) 43%,
+      transparent 58%
+    );
+  opacity: 0;
+  transform: translateX(-92%) rotate(8deg);
+  animation: editor-ai-rail-shine 15000ms ease-in-out 5;
+}
+
+.editor-rail-entry-button[data-panel-trigger='ai']:hover,
+.editor-rail-entry-button[data-panel-trigger='ai']:focus-visible,
+.editor-rail-entry-button[data-panel-trigger='ai'][aria-pressed='true'] {
+  border-width: 2px;
+  border-color: transparent;
+  background:
+    var(--editor-ai-surface-hover-background) padding-box,
+    var(--editor-ai-border-gradient) border-box;
+  color: var(--editor-ai-icon-color);
+  box-shadow:
+    var(--editor-ai-glow),
+    inset 0 0 0 1px color-mix(in srgb, var(--editor-accent) 10%, transparent);
+}
+
+.editor-rail-entry-button[data-panel-trigger='ai']:hover::before,
+.editor-rail-entry-button[data-panel-trigger='ai']:focus-visible::before {
+  animation: editor-ai-rail-shine 900ms ease-in-out 1;
+}
+
+@keyframes editor-ai-rail-shine {
+  0%,
+  2% {
+    opacity: 0;
+    transform: translateX(-92%) rotate(8deg);
+  }
+
+  4% {
+    opacity: 0.72;
+  }
+
+  8%,
+  100% {
+    opacity: 0;
+    transform: translateX(92%) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-rail-entry-button[data-panel-trigger='ai']::before {
+    animation: none;
+  }
+}
+
 :is(body, .editor-shell)[data-editor-theme='light'][data-editor-light-theme='clarity'] :is(
   [data-ui='button'][data-variant='outline'],
   [data-ui='button'][data-variant='secondary'],

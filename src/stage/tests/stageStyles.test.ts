@@ -35,6 +35,20 @@ describe('stage/stage styles', () => {
     expect(styles).not.toContain('rgba(128, 128, 128, 0.22)');
   });
 
+  it('gives the AI rail entry a tokenized gradient border and glow', () => {
+    expect(styles).toContain('--editor-ai-border-gradient:');
+    expect(styles).toContain('--editor-ai-surface-background:');
+    expect(styles).toContain('--editor-ai-glow:');
+    expect(styles).toContain(".editor-rail-entry-button[data-panel-trigger='ai']");
+    expect(styles).toContain('border-width: 2px;');
+    expect(styles).toContain('var(--editor-ai-surface-background) padding-box');
+    expect(styles).toContain('var(--editor-ai-border-gradient) border-box');
+    expect(styles).toContain('box-shadow: var(--editor-ai-glow);');
+    expect(styles).toContain('@keyframes editor-ai-rail-shine');
+    expect(styles).toContain('animation: editor-ai-rail-shine 15000ms ease-in-out 5;');
+    expect(styles).toContain('animation: editor-ai-rail-shine 900ms ease-in-out 1;');
+  });
+
   it('scopes inspector control tokens to the floating focused panel', () => {
     expect(styles).toContain('.editor-focused-panel');
     expect(styles).toContain("[data-ui='button'][data-variant='default']");

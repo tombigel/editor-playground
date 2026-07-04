@@ -134,6 +134,11 @@ const COLOR_TOKEN_GROUPS: Array<{ title: string; tokens: string[] }> = [
 			"--editor-accent-foreground",
 			"--editor-accent-foreground-muted",
 			"--editor-accent-shadow",
+			"--editor-ai-border-gradient",
+			"--editor-ai-surface-background",
+			"--editor-ai-surface-hover-background",
+			"--editor-ai-icon-color",
+			"--editor-ai-glow",
 		],
 	},
 	{
@@ -341,6 +346,11 @@ const SHADOW_ROLES = [
 		name: "Accent micro",
 		token: "--editor-accent-shadow",
 		usage: "Accent elements",
+	},
+	{
+		name: "AI glow",
+		token: "--editor-ai-glow",
+		usage: "AI entry points",
 	},
 	{ name: "Topbar", token: "--editor-topbar-shadow", usage: "Header bar" },
 	{

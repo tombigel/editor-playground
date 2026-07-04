@@ -37,6 +37,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - split useAiChat sendMessage suite out of AiPanel.test.tsx
 - strengthen swallowed and observability-weak assertions
 - cover editor state reducer action branches
+- add AI assistant rail glow
 
 ### Fixed
 

@@ -5,6 +5,7 @@ import {
 	Info,
 	Keyboard,
 	Settings,
+	Sparkles,
 	TextCursorInput,
 	X,
 } from "lucide-react";
@@ -279,6 +280,19 @@ function IconButtonDemo() {
 						),
 					},
 					{
+						label: "Rail AI",
+						render: () => (
+							<button
+								type="button"
+								className="editor-rail-entry-button"
+								data-panel-trigger="ai"
+								aria-label="AI Assistant"
+							>
+								<Sparkles className="h-4 w-4" />
+							</button>
+						),
+					},
+					{
 						label: "Topbar",
 						render: () => (
 							<button
@@ -353,7 +367,7 @@ export function InteractionDemos() {
 			<ComponentPreview
 				id="base-icon-button"
 				name="Icon Button"
-				description="Icon-only buttons with variant support and a toggle pair pattern."
+				description="Icon-only buttons with variant support, rail/topbar chrome states, and the AI rail entry gradient-rim variant."
 				sourceFile="src/components/ui/button.tsx"
 				props={ICON_BUTTON_PROPS}
 			>

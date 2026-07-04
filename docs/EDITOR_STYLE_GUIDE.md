@@ -217,6 +217,7 @@ Approved shadow roles:
 | Stage frame | `--editor-stage-frame-shadow` |
 | Tooltip | `--editor-tooltip-shadow` |
 | Accent micro shadow | `--editor-accent-shadow` |
+| AI glow | `--editor-ai-glow` |
 | Drag preview | `--editor-drag-preview-shadow` |
 
 Rules:
@@ -244,6 +245,7 @@ Use accent for:
 - focused fields
 - active segmented buttons
 - resize handles
+- AI entry points, using a 2px `--editor-ai-border-gradient` rim, `--editor-ai-glow`, hover shine, and five idle shine passes on a 15000ms cadence instead of large fills
 - drop target highlights during drag (outline + tinted background via `color-mix`)
 - editor interaction emphasis
 
