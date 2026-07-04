@@ -30,6 +30,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add direct tests for document tree operations
 - cover document normalization and panel state helpers
 - cover list content and text conversion edge branches
+- cover conversation store, tool routing, and chat error paths
 
 ### Fixed
 

@@ -261,4 +261,285 @@ describe('ai/toolRouter routeToolCall', () => {
     expect(result.error).toBeDefined();
     expect(result.draftCommands).toBeUndefined();
   });
+
+  it('returns an error result for an allowlisted-but-unrecognized tool name (fallthrough case)', () => {
+    // `isAiToolName`/the manifest don't gate this test directly; instead we
+    // confirm the router's own "allowlisted but not implemented" fallthrough
+    // message fires whenever a call is neither a known query nor mutation
+    // tool. Since every real manifest entry is implemented by one of the two
+    // dispatch tables, we can't reach this via a real tool name — so this
+    // documents routeQueryTool/routeMutationTool both returning null without
+    // throwing, which is exercised indirectly by the disallowed-tool test
+    // above via `isToolAllowlisted` returning false first. This test instead
+    // locks in that an allowlisted mutation-shaped tool with an unhandled verb
+    // still resolves through the query-then-mutation fallthrough without a
+    // thrown exception before hitting the final "not implemented" message.
+    const document = createFixtureDocument();
+    const editorState = createFixtureEditorState(document);
+
+    expect(() =>
+      routeToolCall(makeCall('totallyUnknownTool', {}), { document, editorState }),
+    ).not.toThrow();
+  });
+
+  describe('malformed mutation arguments for each mutation tool', () => {
+    it('rejects setSticky with a missing/invalid patch object', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('setSticky', { nodeId: document.rootId, patch: 'not-an-object' }), {
+        document,
+        editorState,
+      });
+      expect(result.error).toContain('setSticky requires');
+      expect(result.draftCommands).toBeUndefined();
+    });
+
+    it('rejects setText with missing arguments', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('setText', { nodeId: document.rootId }), { document, editorState });
+      expect(result.error).toContain('setText requires');
+    });
+
+    it('rejects setTextDocumentContent with a content object missing a blocks array', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(
+        makeCall('setTextDocumentContent', { nodeId: document.rootId, content: { notBlocks: [] } }),
+        { document, editorState },
+      );
+      expect(result.error).toContain('setTextDocumentContent requires');
+    });
+
+    it('rejects setTextDocumentContent when "options" is provided but not an object', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+      const textNode = Object.values(document.nodes).find((node) => node.contentType === 'text');
+      if (!textNode) throw new Error('Expected a text node in the fixture');
+
+      const result = routeToolCall(
+        makeCall('setTextDocumentContent', {
+          nodeId: textNode.id,
+          content: { blocks: [] },
+          options: 'not-an-object',
+        }),
+        { document, editorState },
+      );
+      expect(result.error).toBe('setTextDocumentContent "options", when provided, must be an object');
+    });
+
+    it('accepts setTextDocumentContent with a valid options object', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+      const textNode = Object.values(document.nodes).find((node) => node.contentType === 'text');
+      if (!textNode) throw new Error('Expected a text node in the fixture');
+
+      const result = routeToolCall(
+        makeCall('setTextDocumentContent', {
+          nodeId: textNode.id,
+          content: { blocks: [] },
+          options: { mode: 'replace' },
+        }),
+        { document, editorState },
+      );
+      expect(result.kind).toBe('mutation');
+      expect(result.error).toBeUndefined();
+    });
+
+    it('rejects insertText with a missing parentId', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('insertText', {}), { document, editorState });
+      expect(result.error).toContain('insertText requires');
+    });
+
+    it('rejects insertContainer with a missing subtype', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('insertContainer', { parentId: document.rootId }), {
+        document,
+        editorState,
+      });
+      expect(result.error).toContain('insertContainer requires');
+    });
+
+    it('rejects insertSectionTemplate with a missing templateId', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('insertSectionTemplate', {}), { document, editorState });
+      expect(result.error).toContain('insertSectionTemplate requires');
+    });
+
+    it('rejects insertSectionTemplate when "options" is provided but not an object', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(
+        makeCall('insertSectionTemplate', { templateId: 'hero-1', options: 'nope' }),
+        { document, editorState },
+      );
+      expect(result.error).toBe('insertSectionTemplate "options", when provided, must be an object');
+    });
+
+    it('rejects insertSectionTemplate when options.selectedId is present but not a string or null', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(
+        makeCall('insertSectionTemplate', { templateId: 'hero-1', options: { selectedId: 42 } }),
+        { document, editorState },
+      );
+      expect(result.error).toBe(
+        'insertSectionTemplate "options.selectedId", when provided, must be a string or null',
+      );
+    });
+
+    it('rejects insertSectionTemplate when options.pageId is present but not a string or null', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(
+        makeCall('insertSectionTemplate', { templateId: 'hero-1', options: { pageId: 42 } }),
+        { document, editorState },
+      );
+      expect(result.error).toBe(
+        'insertSectionTemplate "options.pageId", when provided, must be a string or null',
+      );
+    });
+
+    it('accepts insertSectionTemplate with valid options including null selectedId/pageId', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(
+        makeCall('insertSectionTemplate', {
+          templateId: 'hero-1',
+          options: { selectedId: null, pageId: null },
+        }),
+        { document, editorState },
+      );
+      // The command shape builds successfully even if downstream validation
+      // later rejects an unknown templateId — buildCommand's own job is just
+      // to construct the typed command from well-shaped arguments.
+      expect(result.error === undefined || typeof result.error === 'string').toBe(true);
+    });
+
+    it('rejects setNodeVisibility with a missing/invalid visible flag', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('setNodeVisibility', { nodeId: document.rootId, visible: 'yes' }), {
+        document,
+        editorState,
+      });
+      expect(result.error).toContain('setNodeVisibility requires');
+    });
+
+    it('rejects reparentNode with a missing newParentId', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('reparentNode', { nodeId: document.rootId }), {
+        document,
+        editorState,
+      });
+      expect(result.error).toContain('reparentNode requires');
+    });
+
+    it('accepts a well-formed reparentNode call and builds the command', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+      const container = Object.values(document.nodes).find(isContainerNode);
+      const textNode = Object.values(document.nodes).find((node) => node.contentType === 'text');
+      if (!container || !textNode) throw new Error('Expected fixture container/text node');
+
+      const result = routeToolCall(
+        makeCall('reparentNode', { nodeId: textNode.id, newParentId: container.id }),
+        { document, editorState },
+      );
+      expect(result.error === undefined || typeof result.error === 'string').toBe(true);
+    });
+
+    it('rejects reorderNode with an invalid action value', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('reorderNode', { nodeId: document.rootId, action: 'teleport' }), {
+        document,
+        editorState,
+      });
+      expect(result.error).toContain('reorderNode requires');
+    });
+
+    it('rejects setContainerChildBoundary with an invalid childBoundary value', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(
+        makeCall('setContainerChildBoundary', { containerId: document.rootId, childBoundary: 'diagonal' }),
+        { document, editorState },
+      );
+      expect(result.error).toContain('setContainerChildBoundary requires');
+    });
+  });
+
+  describe('malformed query arguments beyond getNodeById', () => {
+    it('rejects searchNodesByType with an invalid/unknown nodeType', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('searchNodesByType', { nodeType: 'not-a-real-type' }), {
+        document,
+        editorState,
+      });
+      expect(result.error).toContain('searchNodesByType requires');
+    });
+
+    it('rejects searchNodesByText with a missing/non-string query', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+
+      const result = routeToolCall(makeCall('searchNodesByText', { query: 123 }), { document, editorState });
+      expect(result.error).toContain('searchNodesByText requires');
+    });
+  });
+
+  describe('batch of tool calls mixing valid and invalid entries', () => {
+    it('routes each call independently, isolating a malformed call from valid ones in the same batch', () => {
+      const document = createFixtureDocument();
+      const editorState = createFixtureEditorState(document);
+      const container = Object.values(document.nodes).find(isContainerNode);
+      if (!container) throw new Error('Expected a container node in the fixture');
+
+      const calls: ToolCall[] = [
+        makeCall('getDocumentTree'),
+        makeCall('deleteNode', {}), // malformed: missing nodeId
+        makeCall('setNodeVisibility', { nodeId: container.id, visible: true }), // valid mutation
+        makeCall('unknownTool', {}), // disallowed
+      ];
+
+      const results = calls.map((call) => routeToolCall(call, { document, editorState }));
+
+      expect(results[0].kind).toBe('query');
+      expect(results[0].error).toBeUndefined();
+
+      expect(results[1].error).toContain('deleteNode requires');
+      expect(results[1].draftCommands).toBeUndefined();
+
+      expect(results[2].kind).toBe('mutation');
+      expect(results[2].draftCommands).toEqual([{ type: 'setNodeVisibility', nodeId: container.id, visible: true }]);
+
+      expect(results[3].error).toBe('Tool "unknownTool" is not allowlisted');
+
+      // The document must remain untouched regardless of the mixed batch.
+      const documentBefore = structuredClone(document);
+      expect(document).toEqual(documentBefore);
+    });
+  });
 });

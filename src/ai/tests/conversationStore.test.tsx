@@ -94,6 +94,18 @@ describe('ai/conversationStore accumulateDraft', () => {
     expect(result.draft.commands).toHaveLength(MAX_COMMANDS_PER_BATCH);
     expect(result.draft.commands.at(-1)).toEqual(makeCommand('fits'));
   });
+
+  it('falls back to a non-crypto draft id when crypto.randomUUID is unavailable', () => {
+    const originalCrypto = globalThis.crypto;
+    delete (globalThis as { crypto?: unknown }).crypto;
+
+    try {
+      const result = accumulateDraft(null, [makeCommand('a')]);
+      expect(result.draft.id).toMatch(/^draft_/);
+    } finally {
+      globalThis.crypto = originalCrypto;
+    }
+  });
 });
 
 describe('ai/conversationStore persistence', () => {
@@ -192,6 +204,67 @@ describe('ai/conversationStore persistence', () => {
     });
   });
 
+  it('falls back to an empty initial state when the parsed JSON is not an object (e.g. a bare number or null)', () => {
+    const win = window as unknown as { localStorage: Storage };
+    win.localStorage.setItem('editor-playground.ai-conversation.v1', JSON.stringify(42));
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
+    });
+
+    win.localStorage.setItem('editor-playground.ai-conversation.v1', JSON.stringify(null));
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
+    });
+  });
+
+  it('falls back to an empty initial state when a message in the array is a non-object (not just missing fields)', () => {
+    const win = window as unknown as { localStorage: Storage };
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({ messages: ['not-an-object', null], selectedModelId: null }),
+    );
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
+    });
+  });
+
+  it('falls back to an empty initial state when a message in the array is missing required fields', () => {
+    const win = window as unknown as { localStorage: Storage };
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({ messages: [{ id: 'm1', role: 'user' }], selectedModelId: null }),
+    );
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
+    });
+  });
+
+  it('falls back to an empty initial state when selectedModelId is present but not a string or null', () => {
+    const win = window as unknown as { localStorage: Storage };
+    win.localStorage.setItem(
+      'editor-playground.ai-conversation.v1',
+      JSON.stringify({ messages: [], selectedModelId: 42 }),
+    );
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
+    });
+  });
+
   it('defaults missing/malformed promptCachingEnabled and autoApproveAiDrafts to false without wiping existing state', () => {
     const message: ConversationMessage = { id: 'm1', role: 'user', content: 'hi', createdAt: 1 };
     const win = window as unknown as { localStorage: Storage };
@@ -246,6 +319,65 @@ describe('ai/conversationStore persistence', () => {
     ]);
     expect(parsed.autoApproveAiDrafts).toBe(true);
     expect(parsed).not.toHaveProperty('pendingDraft');
+  });
+
+  it('is a no-op when called in a non-browser (window-less) environment', () => {
+    vi.stubGlobal('window', undefined as unknown as Window & typeof globalThis);
+
+    expect(() =>
+      persistConversationState({
+        messages: [],
+        selectedModelId: null,
+        promptCachingEnabled: false,
+        autoApproveAiDrafts: false,
+      }),
+    ).not.toThrow();
+  });
+
+  it('swallows a dispatchEvent failure instead of throwing, leaving localStorage as the source of truth', () => {
+    const dispatchEvent = vi.fn(() => {
+      throw new Error('dispatch boom');
+    });
+    vi.stubGlobal('window', {
+      localStorage: createLocalStorageStub(),
+      dispatchEvent,
+    } as unknown as Window & typeof globalThis);
+
+    expect(() =>
+      persistConversationState({
+        messages: [],
+        selectedModelId: 'model-x',
+        promptCachingEnabled: false,
+        autoApproveAiDrafts: false,
+      }),
+    ).not.toThrow();
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not dispatch a change event when window.dispatchEvent is not a function', () => {
+    vi.stubGlobal('window', {
+      localStorage: createLocalStorageStub(),
+    } as unknown as Window & typeof globalThis);
+
+    expect(() =>
+      persistConversationState({
+        messages: [],
+        selectedModelId: null,
+        promptCachingEnabled: false,
+        autoApproveAiDrafts: false,
+      }),
+    ).not.toThrow();
+  });
+
+  it('returns the initial empty state from loadPersistedConversationState in a non-browser environment', () => {
+    vi.stubGlobal('window', undefined as unknown as Window & typeof globalThis);
+
+    expect(loadPersistedConversationState()).toEqual({
+      messages: [],
+      selectedModelId: null,
+      promptCachingEnabled: false,
+      autoApproveAiDrafts: false,
+    });
   });
 
   it('clears persisted messages without resetting model or prompt-caching preferences', () => {
@@ -361,6 +493,24 @@ describe('ai/conversationStore ToolResult routing shape sanity (documents record
       createdAt: 1,
     });
     expect(createToolResultMessage(mutationResult)).toBeNull();
+  });
+
+  it('generates a default id/createdAt (via the no-crypto fallback) when options are omitted', () => {
+    const originalCrypto = globalThis.crypto;
+    delete (globalThis as { crypto?: unknown }).crypto;
+
+    try {
+      const message = createToolResultMessage({
+        toolCallId: 'call-3',
+        kind: 'query',
+        error: 'boom',
+      });
+      expect(message?.id).toMatch(/^msg_/);
+      expect(typeof message?.createdAt).toBe('number');
+      expect(message?.content).toBe('boom');
+    } finally {
+      globalThis.crypto = originalCrypto;
+    }
   });
 
   it('a mutation ToolResult carries draftCommands that accumulateDraft can consume directly', () => {
