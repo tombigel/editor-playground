@@ -162,6 +162,24 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('pointer-events:none');
   });
 
+  it('never wraps a video in an anchor even when a legacy link exists on the node', () => {
+    const video = createMediaNode('video', 'section-1');
+    video.src = 'https://example.com/clip.mp4';
+    video.link = { linkType: 'external', href: 'https://example.com' };
+
+    const markup = renderToStaticMarkup(renderLeafContent(video, { videoClassName: 'sp-video' }));
+
+    expect(markup).toContain('<video');
+    expect(markup).not.toContain('<a');
+  });
+
+  it('formats media node labels per subtype', () => {
+    const video = createMediaNode('video', 'section-1');
+    const image = createMediaNode('image', 'section-1');
+    expect(formatNodeLabel(video)).toBe('Video');
+    expect(formatNodeLabel(image)).toBe('Image');
+  });
+
   it('renders a placeholder for a video without a source', () => {
     const video = createMediaNode('video', 'section-1');
     video.src = undefined;

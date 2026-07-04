@@ -88,6 +88,14 @@ describe('api/documentApi media fields', () => {
     expect(getMediaNode(clearedPosition, video.id).style?.objectPosition).toBeUndefined();
   });
 
+  it('does not allow enabling a link on a video node', () => {
+    const document = structuredClone(createInitialDocument());
+    const video = addVideoNode(document);
+
+    const next = setTextNodeContentDoc(document, video.id, 'linkEnabled', 'true');
+    expect(getMediaNode(next, video.id).link).toBeUndefined();
+  });
+
   it('ignores video-only fields on non-video media', () => {
     const document = structuredClone(createInitialDocument());
     const section = firstSection(document);

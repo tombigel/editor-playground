@@ -32,8 +32,10 @@ import type {
   BorderRadiusField,
   BorderWidthField,
   DocumentModel,
+  DocumentNode,
   EditorTextField,
   ListContent,
+  MediaNode,
   NodeId,
   RichContent,
   RichInlineNode,
@@ -55,6 +57,11 @@ import { cloneDocument } from './shared';
 export type SetTextDocumentContentOptions = {
   clearBlockNodeLink?: boolean;
 };
+
+/** Videos are always interactive players and can never be links (a11y). */
+function isLinkableMediaNode(node: DocumentNode): node is MediaNode {
+  return isMediaNode(node) && node.subtype !== 'video';
+}
 
 function syncTransitionalTextNodeFields(node: TextNode): void {
   if (node.subtype === 'block') {
@@ -334,12 +341,12 @@ export function setTextNodeContentDoc(
     return next;
   }
 
-  if (field === 'linkEnabled' && isMediaNode(node)) {
+  if (field === 'linkEnabled' && isLinkableMediaNode(node)) {
     node.link = value === 'true' ? (node.link ?? createDefaultLinkExtension()) : undefined;
     return next;
   }
 
-  if (field === 'linkType' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
+  if (field === 'linkType' && ((isTextNode(node) && node.subtype === 'block') || isLinkableMediaNode(node)) && node.link !== undefined) {
     const linkType = normalizeNavigationKind(value);
     node.link = { ...node.link, linkType };
     if (linkType !== 'page') {
@@ -348,27 +355,27 @@ export function setTextNodeContentDoc(
     return next;
   }
 
-  if (field === 'anchorTargetId' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
+  if (field === 'anchorTargetId' && ((isTextNode(node) && node.subtype === 'block') || isLinkableMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, anchorTargetId: value || undefined };
     return next;
   }
 
-  if (field === 'href' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
+  if (field === 'href' && ((isTextNode(node) && node.subtype === 'block') || isLinkableMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, href: value };
     return next;
   }
 
-  if (field === 'openInNewTab' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
+  if (field === 'openInNewTab' && ((isTextNode(node) && node.subtype === 'block') || isLinkableMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, openInNewTab: value === 'true' ? true : undefined };
     return next;
   }
 
-  if (field === 'targetPageId' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
+  if (field === 'targetPageId' && ((isTextNode(node) && node.subtype === 'block') || isLinkableMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, targetPageId: (value as PageId) || undefined };
     return next;
   }
 
-  if (field === 'pageAnchorId' && ((isTextNode(node) && node.subtype === 'block') || isMediaNode(node)) && node.link !== undefined) {
+  if (field === 'pageAnchorId' && ((isTextNode(node) && node.subtype === 'block') || isLinkableMediaNode(node)) && node.link !== undefined) {
     node.link = { ...node.link, pageAnchorId: value || undefined };
     return next;
   }

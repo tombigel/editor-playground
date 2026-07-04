@@ -664,7 +664,7 @@ Additional rules:
 | `text` | body copy + HTML tag + optional link | `Text style`, `Design` | Editable HTML tag, optional destination |
 | `link` | label + destination | `Text style`, `Design` | Add-rail shortcut for link-enabled block text |
 | `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface + object fit/position |
-| `video` | `src`, poster, label, playback flags, preload + optional link | `Design` | Paused stage preview; native `<video>` in preview/export |
+| `video` | `src`, poster, label, playback flags, preload | `Design` | Paused stage preview; native `<video>` in preview/export; never a link |
 | `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
 
 ### Text leaf semantics
@@ -738,7 +738,7 @@ Content and playback:
 - Video sources are external URLs (same hosting assumption as images; there is no asset pipeline).
 - Playback settings live on `MediaNode.video`: `autoplay` (default off), `muted` (default on), `controls` (default on), `loop` (default off), optional `poster` URL, and `preload` (`auto` default, `metadata`, `none`).
 - The `Label` field stores `alt` and is exported as `aria-label` on the `<video>` element.
-- Videos expose the same `Link` toggle as images; a linked video exports as `<a href="..."><video ... /></a>`.
+- Videos cannot be links: the player is always the interactive element, and nesting it inside an anchor would create conflicting interactive controls (a11y). The API ignores link fields on video nodes and the renderer never anchor-wraps a video.
 
 Stage vs preview/export:
 

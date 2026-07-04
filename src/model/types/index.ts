@@ -556,6 +556,7 @@ export type MediaNode = BaseNode & {
   subtype: MediaSubtype;
   src?: string;
   alt?: string;
+  /** Not supported on `subtype: 'video'` — videos stay interactive players, never anchors (a11y). */
   link?: LinkExtension;
   video?: {
     autoplay?: boolean;

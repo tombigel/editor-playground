@@ -7,10 +7,9 @@ import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinitio
 
 const videoContentSection: InspectorSectionDefinition = {
   id: 'video-content',
-  render: ({ document, node, actions, focusedMode }) =>
+  render: ({ node, actions, focusedMode }) =>
     isVideoNode(node) ? (
       <VideoContentSection
-        document={document}
         node={node}
         onTextChange={actions.onTextChange}
         focusedMode={focusedMode}

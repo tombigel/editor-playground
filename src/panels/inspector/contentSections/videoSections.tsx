@@ -2,7 +2,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import type { DocumentModel } from '../../../api/editorApi';
 import {
   BorderControlGroup,
   FormField,
@@ -33,8 +32,6 @@ import {
 import {
   type FocusModeCardProps,
   createShadowFallback,
-  LinkEnabledRow,
-  NavigationFields,
 } from './shared';
 import { MediaFitFields } from './mediaFitFields';
 
@@ -46,7 +43,6 @@ const VIDEO_PLAYBACK_FLAGS: { field: EditorTextField; label: string; defaultValu
 ];
 
 export function VideoContentSection({
-  document,
   node,
   onTextChange,
   focusedMode,
@@ -55,7 +51,6 @@ export function VideoContentSection({
   headerAction,
   contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
-  document: DocumentModel;
   node: VideoInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
 } & FocusModeCardProps) {
@@ -118,13 +113,6 @@ export function VideoContentSection({
             </SelectContent>
           </Select>
         </FormField>
-      </InspectorFieldGroup>
-      <InspectorFieldGroup gap>
-        <LinkEnabledRow
-          checked={Boolean(node.link)}
-          onCheckedChange={(checked) => onTextChange('linkEnabled', checked ? 'true' : '')}
-        />
-        {node.link ? <NavigationFields document={document} node={node} onTextChange={onTextChange} /> : null}
       </InspectorFieldGroup>
     </InspectorSectionCard>
   );

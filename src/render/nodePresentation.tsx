@@ -47,6 +47,12 @@ export function formatNodeLabel(node: StageOrSiteNode) {
   if (isTextNode(node)) {
     return 'Text';
   }
+  if (node.subtype === 'video') {
+    return 'Video';
+  }
+  if (node.subtype === 'svg') {
+    return 'SVG';
+  }
   return 'Image';
 }
 
@@ -641,7 +647,8 @@ export function renderLeafContent(
       );
     };
 
-    if (node.link) {
+    // Videos are always interactive players and never anchor-wrapped (a11y).
+    if (node.link && node.subtype !== 'video') {
       return (
         <a
           className={leafClassName}
