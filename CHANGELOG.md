@@ -50,6 +50,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - rank RI-11 component candidates and set build order
 - centralize panel requests through shared adapter
 - allow preview dev server to use an auto-assigned port
+- mark inline SVG shipped under RI-11
 
 ### Fixed
 

@@ -410,7 +410,8 @@ None yet.
   9. **Embed/iframe** — subtype exists in the model, but inline third-party embeds raise sandboxing/CSP/security questions that video/SVG do not. **Decision: out of the first implementation wave**; stays on the backlog until a sandboxing stance is defined.
   10. **Dialogs** — needs an interaction runtime on exported static sites; spec-first under `RI-12A` before any implementation.
 - `Current progress`: **Video shipped 2026-07-05** — video leaf with insertion rail entry, content panel (src, poster, label, autoplay/muted/controls/loop switches, preload), design panel (fit/position, border, shadow), paused stage preview, native `<video>` preview/export, silent intrinsic-aspect adoption, and shared image/video object-fit/position controls.
-- `Next move`: Implement inline SVG gated on an input-time sanitization decision, then the gradient background control.
+- `Current progress`: **Video + inline SVG shipped 2026-07-05.** Inline SVG: DOMPurify-sanitized paste-markup and convert-from-image sources, a11y (decorative/label/labelledby/title/desc), viewBox management (original + author override + fit-to-bbox), monochrome fill/opacity, global stroke, filter shadow, and shared fit/position. Markup is re-sanitized at document ingestion to close the raw-JSON import bypass.
+- `Next move`: Implement the gradient container background control (structured model, stops/reorder, background-clip:text).
 
 ##### Table component support: markdown and designable variants
 
