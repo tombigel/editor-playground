@@ -2,11 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { isOutsideClickExemptTarget, OUTSIDE_CLICK_EXEMPT_ATTR } from '../useClickOutside';
 
 describe('useClickOutside', () => {
-  it('exports a function', async () => {
-    const mod = await import('../useClickOutside');
-    expect(typeof mod.useClickOutside).toBe('function');
-  });
-
   it('detects targets inside outside-click-exempt surfaces', () => {
     const originalElement = globalThis.Element;
     class FakeElement {

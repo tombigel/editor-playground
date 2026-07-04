@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - remove superseded client-side model fallback machinery
+- remove no-value export-check tests
 
 ### Fixed
 

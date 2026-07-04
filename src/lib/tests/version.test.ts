@@ -4,19 +4,12 @@ import { PROJECT_VERSION, DOCUMENT_MODEL_VERSION, API_VERSION, EDITOR_VERSION } 
 const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
 describe('version constants', () => {
-  it('PROJECT_VERSION is a valid semver string', () => {
-    expect(PROJECT_VERSION).toMatch(SEMVER_RE);
-  });
-
-  it('DOCUMENT_MODEL_VERSION is a valid semver string', () => {
-    expect(DOCUMENT_MODEL_VERSION).toMatch(SEMVER_RE);
-  });
-
-  it('API_VERSION is a valid semver string', () => {
-    expect(API_VERSION).toMatch(SEMVER_RE);
-  });
-
-  it('EDITOR_VERSION is a valid semver string', () => {
-    expect(EDITOR_VERSION).toMatch(SEMVER_RE);
+  it.each([
+    ['PROJECT_VERSION', PROJECT_VERSION],
+    ['DOCUMENT_MODEL_VERSION', DOCUMENT_MODEL_VERSION],
+    ['API_VERSION', API_VERSION],
+    ['EDITOR_VERSION', EDITOR_VERSION],
+  ])('%s is a valid semver string', (_name, value) => {
+    expect(value).toMatch(SEMVER_RE);
   });
 });

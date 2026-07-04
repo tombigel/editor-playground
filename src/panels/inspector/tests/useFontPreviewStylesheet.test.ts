@@ -4,10 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { useFontPreviewStylesheet } from '../useFontPreviewStylesheet';
 
 describe('panels/inspector/useFontPreviewStylesheet', () => {
-  it('exports a function', () => {
-    expect(typeof useFontPreviewStylesheet).toBe('function');
-  });
-
   it('does not throw during SSR with null href', () => {
     // The hook checks `typeof window === "undefined"` for SSR safety.
     // renderToStaticMarkup runs synchronously without effects, so useEffect
