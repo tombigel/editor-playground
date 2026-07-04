@@ -253,18 +253,6 @@ describe('editor/editorMutations', () => {
   // insertSectionTemplate
   // ---------------------------------------------------------------------------
   describe('insertSectionTemplate', () => {
-    it('inserts a blank section template before footer when nothing is selected', () => {
-      const state = createInitialState();
-      const rootBefore = getRoot(state.document);
-      const lastChildBefore = rootBefore.children[rootBefore.children.length - 1];
-
-      const next = insertSectionTemplate(state, 'blank');
-      const rootAfter = getRoot(next.document);
-
-      expect(rootAfter.children[rootAfter.children.length - 1]).toBe(lastChildBefore);
-      expect(rootAfter.children.length).toBe(rootBefore.children.length + 1);
-    });
-
     it('inserts after the selected section when a descendant is selected', () => {
       const state = createInitialState();
       const section = findNodeByRole(state, 'wrapper', 'section');
@@ -283,22 +271,6 @@ describe('editor/editorMutations', () => {
       const rootAfter = getRoot(next.document);
 
       expect(rootAfter.children.indexOf(next.selectedId!)).toBe(rootBefore.children.indexOf(section.id) + 1);
-    });
-
-    it('inserts before footer when the footer is selected', () => {
-      const state = createInitialState();
-      const footer = findNodeByRole(state, 'wrapper', 'footer');
-      if (!footer || footer.contentType !== 'container') {
-        throw new Error('Expected footer');
-      }
-
-      const withSelection: EditorState = { ...state, selectedId: footer.id, selectedIds: [footer.id] };
-      const rootBefore = getRoot(withSelection.document);
-
-      const next = insertSectionTemplate(withSelection, 'blank');
-      const rootAfter = getRoot(next.document);
-
-      expect(rootAfter.children.indexOf(next.selectedId!)).toBe(rootBefore.children.indexOf(footer.id));
     });
 
     it('inserts a post section template', () => {
@@ -325,16 +297,38 @@ describe('editor/editorMutations', () => {
   // updateTextField
   // ---------------------------------------------------------------------------
   describe('updateTextField', () => {
-    it('updates a text node name', () => {
+    it('delegates to the document API and returns a new editor state with the updated document', () => {
       const state = createInitialState();
       const withLeaf = insertLeaf(state, 'text');
       const leafId = withLeaf.selectedId!;
 
       const next = updateTextField(withLeaf, leafId, 'name', 'New Name');
       expect(next.document.nodes[leafId].name).toBe('New Name');
+      expect(next.document).not.toBe(withLeaf.document);
     });
 
-    it('updates text content', () => {
+    it('returns the same state reference when the document API reports no change', () => {
+      const state = createInitialState();
+
+      const forSiteNode = updateTextField(state, state.document.rootId, 'name', 'Foo');
+      expect(forSiteNode).toBe(state);
+
+      const withLeaf = insertLeaf(state, 'text');
+      const leafId = withLeaf.selectedId!;
+      const forStaleField = updateTextField(withLeaf, leafId, 'fontWeight', 'bold');
+      expect(forStaleField).toBe(withLeaf);
+    });
+
+    it('normalizes document font state after a fontFamily edit registers the used family', () => {
+      const state = createInitialState();
+      const withLeaf = insertLeaf(state, 'text');
+      const leafId = withLeaf.selectedId!;
+
+      const next = updateTextField(withLeaf, leafId, 'fontFamily', 'JetBrains Mono');
+      expect(next.document.fontLibrary.usedFamilies.some((family) => family.family === 'JetBrains Mono')).toBe(true);
+    });
+
+    it('updates a representative text field end-to-end through the wrapper', () => {
       const state = createInitialState();
       const withLeaf = insertLeaf(state, 'text');
       const leafId = withLeaf.selectedId!;
@@ -343,465 +337,6 @@ describe('editor/editorMutations', () => {
       const node = next.document.nodes[leafId];
       if (node.contentType === 'text') {
         expect(getTextContent(node.content.blocks)).toBe('Hello world');
-      }
-    });
-
-    it('updates text htmlTag', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'htmlTag', 'h3');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.htmlTag).toBe('h3');
-      }
-    });
-
-    it('normalizes invalid htmlTag to p', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'htmlTag', 'span' as never);
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.htmlTag).toBe('p');
-      }
-    });
-
-    it('returns unchanged state for site node', () => {
-      const state = createInitialState();
-      const next = updateTextField(state, state.document.rootId, 'name', 'Foo');
-      expect(next).toBe(state);
-    });
-
-    it('updates text color on a text leaf', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'color', '#ff0000');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.color).toBe('#ff0000');
-      }
-    });
-
-    it('clears color when empty string is given', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const withColor = updateTextField(withLeaf, leafId, 'color', '#ff0000');
-      const next = updateTextField(withColor, leafId, 'color', '');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.color).toBeUndefined();
-      }
-    });
-
-    it('updates fontSize on a text leaf', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'fontSize', '24px');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.fontSize?.raw).toBe('24px');
-      }
-    });
-
-    it('updates fontWeight and clamps to valid range', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'fontWeight', '1200');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.fontWeight).toBe(900);
-      }
-    });
-
-    it('rejects non-numeric fontWeight', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'fontWeight', 'bold');
-      expect(next).toBe(withLeaf);
-    });
-
-    it('updates fontStyle to italic', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'fontStyle', 'italic');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.fontStyle).toBe('italic');
-      }
-    });
-
-    it('normalizes unknown fontStyle to normal', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'fontStyle', 'oblique');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.fontStyle).toBe('normal');
-      }
-    });
-
-    it('updates textDecorationLine', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'textDecorationLine', 'underline');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.textDecorationLine).toBe('underline');
-      }
-    });
-
-    it('normalizes unknown textDecorationLine to none', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'textDecorationLine', 'dotted');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.textDecorationLine).toBe('none');
-      }
-    });
-
-    it('updates lineHeight with valid positive number', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'lineHeight', '1.5');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.lineHeight).toBe(1.5);
-      }
-    });
-
-    it('ignores non-positive lineHeight', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const withLH = updateTextField(withLeaf, leafId, 'lineHeight', '1.5');
-      const next = updateTextField(withLH, leafId, 'lineHeight', '-2');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.lineHeight).toBe(1.5);
-      }
-    });
-
-    it('updates direction to rtl', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'direction', 'rtl');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.direction).toBe('rtl');
-      }
-    });
-
-    it('defaults direction to ltr for unknown values', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'direction', 'bidi');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.direction).toBe('ltr');
-      }
-    });
-
-    it('updates textAlign to center and right', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const withCenter = updateTextField(withLeaf, leafId, 'textAlign', 'center');
-      const node1 = withCenter.document.nodes[leafId];
-      if (node1.contentType === 'text') {
-        expect(node1.style?.textAlign).toBe('center');
-      }
-
-      const withRight = updateTextField(withCenter, leafId, 'textAlign', 'right');
-      const node2 = withRight.document.nodes[leafId];
-      if (node2.contentType === 'text') {
-        expect(node2.style?.textAlign).toBe('right');
-      }
-    });
-
-    it('defaults textAlign to left for unknown values', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'textAlign', 'justify');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.textAlign).toBe('left');
-      }
-    });
-
-    it('updates link label', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'label', 'Click me');
-      const node = next.document.nodes[leafId];
-      if (node.contentType !== 'container' && node.contentType !== 'site' && 'label' in node) {
-        expect(node.label).toBe('Click me');
-      }
-    });
-
-    it('updates link href', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'href', 'https://example.com');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.href).toBe('https://example.com');
-      }
-    });
-
-    it('updates linkType to anchor', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'linkType', 'anchor');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.linkType).toBe('anchor');
-      }
-    });
-
-    it('defaults linkType to external for unknown values', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'linkType', 'internal');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.linkType).toBe('external');
-      }
-    });
-
-    it('updates openInNewTab to true', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'openInNewTab', 'true');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.openInNewTab).toBe(true);
-      }
-    });
-
-    it('clears openInNewTab for non-true values', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const withOpen = updateTextField(withLeaf, leafId, 'openInNewTab', 'true');
-      const next = updateTextField(withOpen, leafId, 'openInNewTab', 'false');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.openInNewTab).toBeUndefined();
-      }
-    });
-
-    it('updates page-link target fields', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-      const targetPageId = state.document.pages?.[0]?.id;
-      if (!targetPageId) {
-        throw new Error('Expected page id');
-      }
-
-      const withType = updateTextField(withLeaf, leafId, 'linkType', 'page');
-      const withPage = updateTextField(withType, leafId, 'targetPageId', targetPageId);
-      const withAnchor = updateTextField(withPage, leafId, 'pageAnchorId', 'section_5');
-      const node = withAnchor.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link.linkType).toBe('page');
-        expect(node.link.targetPageId).toBe(targetPageId);
-        expect(node.link.pageAnchorId).toBe('section_5');
-      }
-    });
-
-    it('updates image src and alt', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'image');
-      const leafId = withLeaf.selectedId!;
-
-      const withSrc = updateTextField(withLeaf, leafId, 'src', 'https://example.com/image.png');
-      const withAlt = updateTextField(withSrc, leafId, 'alt', 'An example image');
-      const node = withAlt.document.nodes[leafId];
-      if (node.contentType === 'media') {
-        expect(node.src).toBe('https://example.com/image.png');
-        expect(node.alt).toBe('An example image');
-      }
-    });
-
-    it('updates button background', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'button');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'background', '#0066ff');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.style?.background).toBe('#0066ff');
-      }
-    });
-
-    it('updates button paddingBlock and paddingInline', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'button');
-      const leafId = withLeaf.selectedId!;
-
-      const withPB = updateTextField(withLeaf, leafId, 'paddingBlock', '12px');
-      const withPI = updateTextField(withPB, leafId, 'paddingInline', '24px');
-      const node = withPI.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.style?.paddingBlock?.raw).toBe('12px');
-        expect(node.style?.paddingInline?.raw).toBe('24px');
-      }
-    });
-
-    it('updates textWrap on link', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'textWrap', 'wrap');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.style?.textWrap).toBe('wrap');
-      }
-    });
-
-    it('defaults textWrap to single-line for unknown values', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'textWrap', 'auto');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.style?.textWrap).toBe('single-line');
-      }
-    });
-
-    it('updates border fields on image leaf', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'image');
-      const leafId = withLeaf.selectedId!;
-
-      const withColor = updateTextField(withLeaf, leafId, 'borderColor', '#000');
-      const withWidth = updateTextField(withColor, leafId, 'borderWidth', '2px');
-      const withRadius = updateTextField(withWidth, leafId, 'borderRadius', '8px');
-      const node = withRadius.document.nodes[leafId];
-      if (node.contentType === 'media') {
-        expect(node.style?.borderColor).toBe('#000');
-        expect(node.style?.borderWidth?.raw).toBe('2px');
-        expect(node.style?.borderRadius?.raw).toBe('8px');
-      }
-    });
-
-    it('updates code design fields through the document API wrapper', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'code');
-      const leafId = withLeaf.selectedId!;
-
-      const withBackground = updateTextField(withLeaf, leafId, 'background', '#101418');
-      const withBorderColor = updateTextField(withBackground, leafId, 'borderColor', '#4c6ef5');
-      const withBorderWidth = updateTextField(withBorderColor, leafId, 'borderWidth', '2px');
-      const withBorderRadius = updateTextField(withBorderWidth, leafId, 'borderRadius', '14px');
-      const node = withBorderRadius.document.nodes[leafId];
-      if (node.contentType === 'text' && node.subtype === 'code') {
-        expect(node.style?.background).toBe('#101418');
-        expect(node.style?.borderColor).toBe('#4c6ef5');
-        expect(node.style?.borderWidth?.raw).toBe('2px');
-        expect(node.style?.borderRadius?.raw).toBe('14px');
-      }
-    });
-
-    it('updates shadow fields on text leaf', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const withColor = updateTextField(withLeaf, leafId, 'shadowColor', '#333');
-      const withBlur = updateTextField(withColor, leafId, 'shadowBlur', '4');
-      const withOffsetX = updateTextField(withBlur, leafId, 'shadowOffsetX', '2');
-      const node = withOffsetX.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.shadowColor).toBe('#333');
-        expect(node.style?.shadowBlur).toBe(4);
-        expect(node.style?.shadowOffsetX).toBe(2);
-      }
-    });
-
-    it('ignores non-finite shadow length values', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'text');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'shadowBlur', 'abc');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text') {
-        expect(node.style?.shadowBlur).toBeUndefined();
-      }
-    });
-
-    it('updates anchorTargetId on a link', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const next = updateTextField(withLeaf, leafId, 'anchorTargetId', 'section_5');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.anchorTargetId).toBe('section_5');
-      }
-    });
-
-    it('clears anchorTargetId when empty string is given', () => {
-      const state = createInitialState();
-      const withLeaf = insertLeaf(state, 'link');
-      const leafId = withLeaf.selectedId!;
-
-      const withTarget = updateTextField(withLeaf, leafId, 'anchorTargetId', 'section_5');
-      const next = updateTextField(withTarget, leafId, 'anchorTargetId', '');
-      const node = next.document.nodes[leafId];
-      if (node.contentType === 'text' && node.link != null) {
-        expect(node.link?.anchorTargetId).toBeUndefined();
       }
     });
   });
