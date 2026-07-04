@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - remove superseded client-side model fallback machinery
 - remove no-value export-check tests
 - extract pure control logic from title editor and value-with-unit for testability
+- cover text field normalization directly at the document API layer
 
 ### Fixed
 
