@@ -34,6 +34,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - replace brittle utility-class assertions with semantic contracts
 - tighten coverage config and raise thresholds
 - split useAiChat sendMessage suite out of AiPanel.test.tsx
+- strengthen swallowed and observability-weak assertions
 
 ### Fixed
 

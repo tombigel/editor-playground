@@ -354,19 +354,24 @@ describe('ai/conversationStore persistence', () => {
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
   });
 
-  it('does not dispatch a change event when window.dispatchEvent is not a function', () => {
+  it('still persists to localStorage when window.dispatchEvent is not a function', () => {
+    const localStorage = createLocalStorageStub();
     vi.stubGlobal('window', {
-      localStorage: createLocalStorageStub(),
+      localStorage,
     } as unknown as Window & typeof globalThis);
 
     expect(() =>
       persistConversationState({
         messages: [],
-        selectedModelId: null,
+        selectedModelId: 'model-x',
         promptCachingEnabled: false,
         autoApproveAiDrafts: false,
       }),
     ).not.toThrow();
+
+    const raw = localStorage.getItem('editor-playground.ai-conversation.v1');
+    expect(raw).not.toBeNull();
+    expect(JSON.parse(raw as string).selectedModelId).toBe('model-x');
   });
 
   it('returns the initial empty state from loadPersistedConversationState in a non-browser environment', () => {

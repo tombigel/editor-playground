@@ -214,11 +214,9 @@ describe('api/documentApi tree operations', () => {
 
     it('is a no-op for a node with no parent id or missing parent', () => {
       const document = structuredClone(createInitialDocument());
-      const section = getSection(document);
       const orphan = createTextNode('block', 'nonexistent_parent');
       document.nodes[orphan.id] = orphan;
       expect(reorderNodeDoc(document, orphan.id, 'forward')).toBe(document);
-      void section;
     });
 
     it('is a no-op for a non-reorderable container subtype (group is reorderable but section child position requires a section parent)', () => {

@@ -292,9 +292,13 @@ describe("panels/ai/useAiChat sendMessage", () => {
 		expect(conversation.messages.map((message) => message.role)).toEqual(["user"]);
 	});
 
-	it("does not throw when cancel() is invoked against an in-flight request", async () => {
+	it("aborts the in-flight request's signal when cancel() is invoked", async () => {
 		const state = createInitialState();
 		const conversation = createConversationStub();
+		// Captured out of the generator and asserted after the turn completes:
+		// an expect() thrown inside the generator would be swallowed by
+		// sendMessage's own try/catch and could never fail this test.
+		let abortedDuringStream: boolean | undefined;
 		const adapter: ProviderAdapter = {
 			async *streamChat(_messages, _tools, options) {
 				yield { type: "text-delta", delta: "partial" } as StreamEvent;
@@ -303,9 +307,9 @@ describe("panels/ai/useAiChat sendMessage", () => {
 				// normally — the mock adapter itself doesn't act on the abort signal
 				// (that's `OpenRouterAdapter`'s job), but this confirms the
 				// `AbortController` created per `sendMessage` call is reachable via
-				// `cancel()` without throwing.
+				// `cancel()`.
 				await Promise.resolve();
-				expect(options?.signal?.aborted).toBe(true);
+				abortedDuringStream = options?.signal?.aborted;
 				yield { type: "message-complete" } as StreamEvent;
 			},
 		};
@@ -322,6 +326,7 @@ describe("panels/ai/useAiChat sendMessage", () => {
 		expect(() => hook.cancel()).not.toThrow();
 		await firstSend;
 
+		expect(abortedDuringStream).toBe(true);
 		expect(conversation.messages[0].content).toBe("first message");
 	});
 });
