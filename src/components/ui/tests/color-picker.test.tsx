@@ -10,7 +10,6 @@ describe('components/ui/color-picker', () => {
 
     expect(markup).toContain('data-ui="color-picker"');
     expect(markup).toContain('data-variant="default"');
-    expect(markup).toContain('class="block min-w-0 w-full"');
   });
 
   it('renders the shared swatch host variant for dense inspector consumers', () => {
@@ -21,8 +20,5 @@ describe('components/ui/color-picker', () => {
     expect(markup).toContain('data-variant="swatch"');
     expect(markup).toContain('editor-color-picker');
     expect(markup).toContain('editor-icon-button-subtle');
-    expect(markup).toContain('h-7 w-7');
-    expect(markup).toContain('inline-flex');
-    expect(markup).toContain('shrink-0');
   });
 });

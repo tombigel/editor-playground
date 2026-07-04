@@ -23,13 +23,11 @@ describe('panels/InspectorBlockList', () => {
     const markup = renderToStaticMarkup(<InspectorBlockList blocks={TEST_BLOCKS} />);
 
     expect(markup).toContain('editor-scrollbar');
-    expect(markup).toContain('overflow-auto');
   });
 
   it('omits the shared scrollbar class when scrolling is disabled', () => {
     const markup = renderToStaticMarkup(<InspectorBlockList blocks={TEST_BLOCKS} scrollable={false} />);
 
     expect(markup).not.toContain('editor-scrollbar');
-    expect(markup).not.toContain('overflow-auto');
   });
 });

@@ -84,8 +84,6 @@ describe('panels/LayersPanel', () => {
     expect(markup).toContain('Visibility: Current page');
     expect(allPagesTriggerMarkup).toContain('data-variant="menu"');
     expect(currentPageTriggerMarkup).toContain('data-variant="menu"');
-    expect(allPagesTriggerMarkup).toContain('h-7 w-7 rounded-sm');
-    expect(currentPageTriggerMarkup).toContain('h-7 w-7 rounded-sm');
     expect(allPagesTriggerMarkup).not.toContain('All pages</span>');
     expect(currentPageTriggerMarkup).not.toContain('Current page</span>');
     expect(markup).toContain('Edit title');

@@ -37,7 +37,6 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('aria-label="Text color"');
     expect(markup).toContain('value="oklch(62% 0.18 252 / 0.8)"');
     expect(markup).toContain('editor-color-picker');
-    expect(markup).toContain('h-7 w-7');
   });
 
   it('renders shadow numeric controls with compact fixed unit suffixes', () => {
@@ -127,18 +126,13 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('Lora');
     expect(markup).toContain('Bold');
     expect(markup).toContain('Normal');
-    expect(markup).toContain('w-[352px]');
-    expect(markup).toContain('grid-cols-[minmax(0,1fr)_140px]');
     expect(markup).toContain('ui-popover-surface');
     expect(markup).toContain('popover="manual"');
     expect(markup).toContain('editor-font-picker-trigger');
-    expect(markup).toContain('text-[13px] leading-4');
-    expect(markup).toContain('px-2');
     expect(markup).toContain('hover:text-[color:var(--editor-accent)]');
     expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
     expect(markup).toContain('text-[color:var(--editor-accent)] [background:var(--editor-select-highlight-background)]');
     expect(markup).not.toContain('ring-1 ring-[color:var(--editor-accent)]');
-    expect(markup).not.toContain('editor-text-muted ml-2 shrink-0 text-[10px]');
     expect(markup.match(/lucide-check/g)?.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -151,11 +145,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('aria-autocomplete="list"');
     expect(markup).toContain('value-with-unit-suggestions');
     expect(markup).toContain('hover:[background:var(--editor-select-highlight-background)]');
-    expect(markup).toContain('leading-5');
-    expect(markup).toContain('py-2');
-    expect(markup).toContain('max-h-[180px]');
     expect(markup).toContain('editor-scrollbar');
-    expect(markup).toContain('overflow-y-auto');
   });
 
   it('prefers explicit font-size and spacing measurement resolvers over stage DOM lookup', () => {

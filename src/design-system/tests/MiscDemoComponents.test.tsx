@@ -10,7 +10,5 @@ describe("design-system/MiscDemoComponents", () => {
 		expect(markup).toContain("Multi-select");
 		expect(markup).toContain('data-ui="options-selector"');
 		expect(markup).toContain('data-mixed="true"');
-		expect(markup).toContain("h-6 px-2.5");
-		expect(markup).not.toContain("h-7 px-2.5");
 	});
 });

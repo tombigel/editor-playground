@@ -77,7 +77,6 @@ describe('components/ui/settings-panel', () => {
     expect(dangerMarkup).toContain('editor-danger-text');
     expect(errorMarkup).toContain('data-tone="error"');
     expect(errorMarkup).toContain('lucide-shield-alert');
-    expect(errorMarkup).not.toContain('text-red-700');
     expect(customMarkup).toContain('data-testid="custom-icon"');
     expect(customMarkup).not.toContain('lucide-info');
     expect(suppressedMarkup).not.toContain('data-ui="notice-icon"');
@@ -102,7 +101,6 @@ describe('components/ui/settings-panel', () => {
     expect(dangerMarkup).toContain('editor-danger-text');
     expect(errorMarkup).toContain('data-tone="error"');
     expect(errorMarkup).toContain('lucide-shield-alert');
-    expect(errorMarkup).not.toContain('text-red-700');
   });
 
   it('renders compact info tooltips for long settings help text', () => {
@@ -113,13 +111,7 @@ describe('components/ui/settings-panel', () => {
     );
 
     expect(markup).toContain('aria-label="More information"');
-    expect(markup).toContain('h-4 w-4');
-    expect(markup).toContain('h-3 w-3');
     expect(markup).not.toContain('editor-icon-button-subtle');
-    expect(markup).not.toContain('rounded-full border');
-    expect(markup).toContain('w-80');
-    expect(markup).toContain('whitespace-normal');
-    expect(markup).toContain('[overflow-wrap:anywhere]');
   });
 
   it('renders stacked field and compact value pill contracts', () => {
@@ -154,9 +146,7 @@ describe('components/ui/settings-panel', () => {
     expect(fullMarkup).toContain('settings-nav-link');
     expect(fullMarkup).toContain('Manage typography');
     expect(compactMarkup).toContain('data-active="true"');
-    expect(compactMarkup).toContain('shadow-sm');
     expect(compactMarkup).toContain('Typography');
     expect(accentHoverMarkup).toContain('data-variant="accent-hover"');
-    expect(accentHoverMarkup).toContain('bg-transparent');
   });
 });

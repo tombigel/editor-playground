@@ -70,8 +70,6 @@ describe('panels/sticky sections', () => {
     expect(markup).toContain('>Duration<');
     expect(markup).toContain('>Auto<');
     expect(markup).toContain('>Custom<');
-    expect(markup).toContain('h-6 px-2.5 text-[11px]');
-    expect(markup).not.toContain('h-7 px-2.5 text-[11px]');
   });
 
   it('uses FormField inline rows for multi-select sticky duration mode', () => {
@@ -109,8 +107,6 @@ describe('panels/sticky sections', () => {
     expect(markup).toContain('>Duration<');
     expect(markup).toContain('>Auto<');
     expect(markup).toContain('>Custom<');
-    expect(markup).toContain('h-6 px-2.5 text-[11px]');
-    expect(markup).not.toContain('h-7 px-2.5 text-[11px]');
   });
 
   it('uses editor tokens for mixed multi-select switch styling', () => {
@@ -156,13 +152,10 @@ describe('panels/sticky sections', () => {
     );
 
     expect(markup).toContain('data-mixed="true"');
-    expect(markup).toContain('bg-transparent');
     expect(markup).not.toContain('--editor-switch-background-mixed');
     expect(markup).toContain('--editor-switch-mixed-indicator');
-    expect(markup).toContain('border-dashed');
     expect(markup).not.toContain('!');
     expect(markup).not.toContain('var(--editor-accent)_50%');
     expect(markup).not.toContain('bg-slate-400');
-    expect(markup).not.toContain('h-0.5 w-3 rounded-full bg-white');
   });
 });

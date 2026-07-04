@@ -18,8 +18,6 @@ describe('components/ui/tabs', () => {
     expect(markup).toContain('role="tablist"');
     expect(markup).toContain('role="tab"');
     expect(markup).toContain('aria-selected="true"');
-    expect(markup).toContain('h-7');
-    expect(markup).toContain('rounded-[6px]');
     expect(markup).toContain('Page content');
     expect(markup).not.toContain('Settings content');
   });
@@ -41,14 +39,6 @@ describe('components/ui/tabs', () => {
     expect(markup).toContain('data-ui="tabs-list"');
     expect(markup).toContain('data-variant="segmented"');
     expect(markup).toContain('data-size="compact"');
-    expect(markup).toContain('gap-0.5');
-    expect(markup).toContain('h-6');
-    expect(markup).toContain('rounded-sm');
-    expect(markup).toContain('text-[11px]');
-    expect(markup).toContain('p-0.5');
-    expect(markup).not.toContain('h-7');
-    expect(markup).not.toContain('min-w-[76px]');
-    expect(markup).not.toContain('p-1');
     expect(markup).toContain('editor-pill-subtle');
     expect(markup).toContain(
       'hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))]',

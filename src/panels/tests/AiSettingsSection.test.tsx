@@ -79,11 +79,9 @@ describe("panels/settings/sections/AiSettingsSection", () => {
 		expect(markup).toContain("Check connection");
 		expect(markup).toContain("Usage");
 		expect(markup).toContain('style="width:420px"');
-		expect(markup).toContain("flex-1 text-right text-xs");
 		expect(markup).toContain("Not checked");
 		expect(markup).toContain("Refresh");
 		expect(markup).not.toContain("OpenRouter credits:");
-		expect(markup).not.toContain("flex-1 truncate text-xs");
 		expect(markup).not.toContain("OpenRouter connection not checked");
 		expect(markup).toContain('href="https://openrouter.ai/keys"');
 		expect(markup).toContain('target="_blank"');

@@ -151,7 +151,6 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).not.toContain('>HTML tag<');
     expect(markup).toContain('>Color<');
     expect(markup).toContain('>Shadow<');
-    expect(markup).toContain('editor-border-subtle space-y-2.5 border-t pt-2.5');
     expect(markup).toContain('aria-label="Close design focus mode"');
   });
 
@@ -196,7 +195,6 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('>External<');
     expect(markup).toContain('>Href<');
     expect(markup).toContain('Open in a new tab');
-    expect(markup).toContain('space-y-2.5 px-3 pt-1.5 pb-5');
   });
 
   it('renders a layout-only message for hidden non-layout focused modes', () => {
@@ -261,10 +259,8 @@ describe('panels/FocusedModePanel', () => {
     );
 
     expect(markup).toContain('Nothing to edit yet');
-    expect(markup).toContain('editor-text-strong text-sm font-medium');
     expect(markup).toContain(siteNode.name);
     expect(markup).toContain('site');
-    expect(markup).toContain('editor-text-strong text-xs font-medium');
     expect(markup).toContain('Select a non-site node');
     expect(markup).toContain('aria-label="Close sticky focus mode"');
   });

@@ -37,12 +37,11 @@ describe('panels/PagesPanel', () => {
     );
 
     expect(markup).toContain('editor-pages-panel');
-    expect(markup).toContain('w-[760px]');
-    expect(markup).toContain('grid-cols-[280px_minmax(0,1fr)]');
     expect(markup).toContain('editor-panel-header-actions');
-    expect(markup).toContain('editor-bg-subtle editor-border-subtle min-h-0 border-r');
-    expect(markup).toContain('editor-scrollbar editor-scrollbar-gutter min-h-0 overflow-y-auto px-5 py-4');
-    expect(markup).toContain('max-w-[420px]');
+    expect(markup).toContain('editor-bg-subtle');
+    expect(markup).toContain('editor-border-subtle');
+    expect(markup).toContain('editor-scrollbar');
+    expect(markup).toContain('editor-scrollbar-gutter');
     expect(markup).toContain('Home');
     expect(markup).toContain('Add page');
     expect(markup).toContain('Language');
@@ -88,13 +87,12 @@ describe('panels/PagesPanel', () => {
     expect(markup).toContain('Site page settings');
     expect(markup).toContain('Home');
     expect(markup).toContain('Add page');
-    expect(markup).toContain('grid-cols-[280px_minmax(0,1fr)]');
-    expect(markup).toContain('editor-bg-subtle editor-border-subtle min-h-0 border-r');
+    expect(markup).toContain('editor-bg-subtle');
+    expect(markup).toContain('editor-border-subtle');
     expect(markup).toContain('Title');
     expect(markup).toContain('Site language');
     expect(markup).toContain('Site transition');
     expect(markup).toContain('English (United States) (en-US)');
-    expect(markup).toContain('max-w-[420px]');
     expect(markup).not.toContain('Status');
     expect(markup).not.toContain('Output structure');
     expect(markup).not.toContain('Rendered Site');

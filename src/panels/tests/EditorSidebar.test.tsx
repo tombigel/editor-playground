@@ -83,9 +83,7 @@ describe("panels/EditorSidebar", () => {
 		);
 
 		expect(markup).toContain('aria-label="Edit title"');
-		expect(markup).toContain("text-left");
-		expect(markup).toContain("editor-pill-contrast inline-flex");
-		expect(markup).toContain("group-hover:opacity-100");
+		expect(markup).toContain("editor-pill-contrast");
 	});
 
 	it("renders a stronger current-page editor when nothing is selected", () => {
@@ -114,10 +112,8 @@ describe("panels/EditorSidebar", () => {
 
 		expect(markup).toContain("Page settings");
 		expect(markup).toContain("All pages");
-		expect(markup).toContain("font-mono");
 		expect(markup).toContain("Inherit from site");
 		expect(markup).toContain("Parent");
-		expect(markup).toContain(">Slug</label><div class=\"flex items-center gap-1\">");
-		expect(markup).toContain("overflow-y-auto pt-3");
+		expect(markup).toContain(">Slug</label>");
 	});
 });

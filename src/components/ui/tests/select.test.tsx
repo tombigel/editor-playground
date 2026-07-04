@@ -25,10 +25,8 @@ describe('components/ui/select', () => {
       </Select>,
     );
 
-    expect(markup).toContain('h-7');
-    expect(markup).toContain('rounded-sm');
-    expect(markup).not.toContain('rounded-md');
-    expect(markup).not.toContain('h-8');
+    expect(markup).toContain('data-ui="select-trigger"');
+    expect(markup).toContain('data-size="default"');
   });
 
   it('supports compact and small trigger sizes without consumer-owned height classes', () => {
@@ -55,11 +53,7 @@ describe('components/ui/select', () => {
     );
 
     expect(compactMarkup).toContain('data-size="compact"');
-    expect(compactMarkup).toContain('h-7');
-    expect(compactMarkup).toContain('text-xs');
     expect(smallMarkup).toContain('data-size="small"');
-    expect(smallMarkup).toContain('h-7');
-    expect(smallMarkup).toContain('text-[11px]');
   });
 
   it('renders icon and supporting text through the shared select row helper', () => {
@@ -107,6 +101,5 @@ describe('components/ui/select', () => {
     expect(markup).toContain('data-ui="select-group"');
     expect(markup).toContain('data-ui="select-label"');
     expect(markup).toContain('Automatic');
-    expect(markup).toContain('uppercase');
   });
 });

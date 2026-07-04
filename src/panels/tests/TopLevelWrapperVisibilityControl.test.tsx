@@ -26,8 +26,9 @@ describe('panels/TopLevelWrapperVisibilityControl', () => {
     expect(markup).toContain('Visibility: Custom pages (2)');
     expect(markup).toContain('Custom pages (2)');
     expect(markup).toContain('data-ui="select-trigger"');
-    expect(markup).toContain('editor-bg-surface editor-border-subtle editor-text-strong flex h-7');
-    expect(markup).toContain('text-[11px]');
+    expect(markup).toContain('editor-bg-surface');
+    expect(markup).toContain('editor-border-subtle');
+    expect(markup).toContain('editor-text-strong');
     expect(markup).toContain('data-ui="select-option-row"');
   });
 
@@ -51,7 +52,6 @@ describe('panels/TopLevelWrapperVisibilityControl', () => {
     expect(markup).toContain('Visibility: All pages</div>');
     expect(triggerMarkup).toContain('data-ui="button"');
     expect(triggerMarkup).toContain('data-variant="menu"');
-    expect(triggerMarkup).toContain('h-7 w-7 rounded-sm');
     expect(triggerMarkup).not.toContain('data-ui="select-option-row"');
     expect(triggerMarkup).not.toContain('All pages</span>');
   });

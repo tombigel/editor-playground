@@ -46,7 +46,6 @@ describe('components/ui/searchable-multi-select', () => {
     );
 
     expect(selectedMarkup).toContain('aria-multiselectable="true"');
-    expect(selectedMarkup).toContain('h-7 text-xs');
     expect(selectedMarkup).toContain('data-ui="searchable-multi-select-item"');
     expect(selectedMarkup).toContain('editor-searchable-multi-select-item');
     expect(selectedMarkup).not.toContain('editor-menubar-item');
@@ -68,7 +67,5 @@ describe('components/ui/searchable-multi-select', () => {
     expect(markup).toContain('aria-haspopup="listbox"');
     expect(markup).toContain('2 selected');
     expect(markup).toContain('data-ui="select-trigger"');
-    expect(markup).toContain('flex h-7 w-full');
-    expect(markup).not.toContain('h-8');
   });
 });

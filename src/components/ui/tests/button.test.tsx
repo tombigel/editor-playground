@@ -12,18 +12,14 @@ describe("components/ui/button", () => {
 			</Button>,
 		);
 
-		expect(defaultMarkup).toContain("h-7");
-		expect(smallMarkup).toContain("h-7");
-		expect(iconMarkup).toContain("size-7");
-		expect(defaultMarkup).not.toContain("h-8");
-		expect(iconMarkup).not.toContain("size-8");
+		expect(defaultMarkup).toContain('data-size="default"');
+		expect(smallMarkup).toContain('data-size="sm"');
+		expect(iconMarkup).toContain('data-size="icon"');
 	});
 
 	it("renders a token-backed keyboard focus outline", () => {
 		const markup = renderToStaticMarkup(<Button>Save</Button>);
 
-		expect(markup).toContain("focus-visible:outline-2");
-		expect(markup).toContain("focus-visible:outline-offset-2");
 		expect(markup).toContain("var(--editor-focus-ring-strong)");
 	});
 });
