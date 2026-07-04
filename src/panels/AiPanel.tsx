@@ -52,6 +52,10 @@ import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import { EditorPanelHeader } from "./EditorPanelHeader";
 import { AiMessageList } from "./ai/AiMessageList";
 import { AiDraftDiffCard } from "./ai/AiDraftDiffCard";
+import {
+	AI_PANEL_VIEWPORT_MARGIN_PX,
+	useAiPanelResize,
+} from "./ai/useAiPanelResize";
 import { useAiChat } from "./ai/useAiChat";
 
 export const STALE_DRAFT_MESSAGE =
@@ -293,8 +297,6 @@ export function handleLocalAiRoute({
 	return true;
 }
 
-const PANEL_VIEWPORT_MARGIN_PX = 16;
-
 type PanelDragState = {
 	pointerId: number;
 	originX: number;
@@ -403,6 +405,12 @@ function AiPanelShell({
 	const [panelDragState, setPanelDragState] = useState<PanelDragState | null>(
 		null,
 	);
+	const { panelSize, resizeHandleProps } = useAiPanelResize({
+		open,
+		surfaceRef,
+		position,
+		onPositionChange,
+	});
 
 	useEffect(() => {
 		if (!panelDragState || typeof window === "undefined") {
@@ -451,6 +459,21 @@ function AiPanelShell({
 		};
 	}, [onPositionChange, panelDragState]);
 
+	useEffect(() => {
+		if (!panelDragState) {
+			return;
+		}
+
+		const { cursor, userSelect } = globalThis.document.body.style;
+		globalThis.document.body.style.cursor = "grabbing";
+		globalThis.document.body.style.userSelect = "none";
+
+		return () => {
+			globalThis.document.body.style.cursor = cursor;
+			globalThis.document.body.style.userSelect = userSelect;
+		};
+	}, [panelDragState]);
+
 	function setCombinedRef(node: HTMLDivElement | null) {
 		surfaceRef.current = node;
 		if (typeof panelRef === "function") {
@@ -489,8 +512,14 @@ function AiPanelShell({
 			ref={setCombinedRef}
 			open={open}
 			onOpenChange={onOpenChange}
-			className="editor-ai-panel flex max-h-[calc(100vh-32px)] w-[360px] flex-col overflow-hidden"
-			style={{ top: `${position.top}px`, left: `${position.left}px` }}
+			className="editor-ai-panel relative flex max-h-[calc(100vh-32px)] flex-col overflow-hidden"
+			style={{
+				top: `${position.top}px`,
+				left: `${position.left}px`,
+				width: `${panelSize.width}px`,
+				height:
+					panelSize.height === null ? undefined : `${panelSize.height}px`,
+			}}
 			header={
 				<div
 					className="editor-panel-drag-zone"
@@ -562,6 +591,13 @@ function AiPanelShell({
 				canRedo={canRedo}
 				onApplyAiCommands={onApplyAiCommands}
 				adapterOverride={adapterOverride}
+			/>
+			<div
+				data-ui="ai-panel-resize-corner"
+				data-prevent-panel-drag="true"
+				className="absolute bottom-0 right-0 h-5 w-5 cursor-nwse-resize touch-none"
+				{...resizeHandleProps}
+				aria-hidden="true"
 			/>
 		</FloatingPanelShell>
 	);
@@ -977,8 +1013,8 @@ function getDisplayModelName(modelId: string): string {
 function clampToViewport(value: number, size: number, viewportSize: number) {
 	return Math.round(
 		Math.max(
-			PANEL_VIEWPORT_MARGIN_PX,
-			Math.min(viewportSize - size - PANEL_VIEWPORT_MARGIN_PX, value),
+			AI_PANEL_VIEWPORT_MARGIN_PX,
+			Math.min(viewportSize - size - AI_PANEL_VIEWPORT_MARGIN_PX, value),
 		),
 	);
 }

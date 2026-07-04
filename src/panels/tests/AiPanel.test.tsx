@@ -17,6 +17,10 @@ import {
 } from "../AiPanel";
 import { AiMessageList } from "../ai/AiMessageList";
 import {
+	getBoundedAiPanelFrame,
+	getBoundedAiPanelSize,
+} from "../ai/useAiPanelResize";
+import {
 	buildAssistantRequestHistory,
 	routeAssistantToolCalls,
 	runAssistantTurn,
@@ -134,6 +138,67 @@ describe("panels/AiPanel", () => {
 		expect(markup).toContain('data-ui="ai-panel-scroll-region"');
 		expect(markup).toContain("overflow-y-auto");
 		expect(markup).toContain("flex shrink-0 items-end");
+	});
+
+	it("renders a native-style corner resize hit target", () => {
+		const adapter = createMockAdapter([{ type: "message-complete" }]);
+		const markup = renderToStaticMarkup(
+			<AiPanel {...makePanelProps()} adapterOverride={adapter} />,
+		);
+
+		expect(markup).toContain('data-ui="ai-panel-resize-corner"');
+		expect(markup).toContain('data-prevent-panel-drag="true"');
+		expect(markup).toContain("cursor-nwse-resize");
+		expect(markup).not.toContain("Resize AI assistant panel");
+		expect(markup).toContain("width:360px");
+	});
+
+	it("bounds resized AI panel dimensions to usable viewport limits", () => {
+		expect(
+			getBoundedAiPanelSize(
+				{ width: 120, height: 120 },
+				{ top: 24, left: 32 },
+				{ width: 1440, height: 900 },
+			),
+		).toEqual({ width: 320, height: 360 });
+
+		expect(
+			getBoundedAiPanelSize(
+				{ width: 1200, height: 1200 },
+				{ top: 24, left: 32 },
+				{ width: 1440, height: 900 },
+			),
+		).toEqual({ width: 720, height: 760 });
+
+		expect(
+			getBoundedAiPanelSize(
+				{ width: 720, height: 760 },
+				{ top: 400, left: 900 },
+				{ width: 1024, height: 640 },
+			),
+		).toEqual({ width: 720, height: 608 });
+
+		expect(
+			getBoundedAiPanelFrame(
+				{ width: 720, height: 760 },
+				{ top: 400, left: 900 },
+				{ width: 1024, height: 640 },
+			),
+		).toEqual({
+			size: { width: 720, height: 608 },
+			position: { top: 16, left: 288 },
+		});
+
+		expect(
+			getBoundedAiPanelFrame(
+				{ width: 360, height: 480 },
+				{ top: 700, left: 1200 },
+				{ width: 1280, height: 720 },
+			),
+		).toEqual({
+			size: { width: 360, height: 480 },
+			position: { top: 224, left: 904 },
+		});
 	});
 
 	it("streams assistant text deltas from a mocked adapter", async () => {
