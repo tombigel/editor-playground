@@ -92,13 +92,15 @@ Implementation baseline:
 
 ## Design System Correspondence
 
-The design system showcase is the visual verification surface for this guide. It is organized into three top-level sections, and this document should map cleanly onto them:
+The design system showcase is the visual verification surface for this guide. Its top-level sections should map cleanly onto this document:
 
 | Showcase section | Showcase source | What this guide covers |
 | --- | --- | --- |
+| `Logo Assets` | `src/design-system/registry.ts` → `logo-assets` | Canonical product logo files used by favicon, topbar, and About surfaces. |
 | `Design Tokens` | `src/design-system/registry.ts` → `tokens` | Sections `2` through `10`: typography, radii, borders, shadows, color tokens, scrollbars, and interaction tokens. |
 | `Base Components` | `src/design-system/registry.ts` → `base` | Section `11`: primitive controls such as buttons, inputs, selects, switches, dialogs, and value fields. |
 | `Composites` | `src/design-system/registry.ts` → `composite` | Sections `12` through `14`: settings nav, inspector controls, and stage/editor chrome patterns. |
+| `Panels` | `src/design-system/registry.ts` → `panels` | Full panel surfaces and panel-owned workflows, including AI assistant diff review UI. |
 
 Rules:
 

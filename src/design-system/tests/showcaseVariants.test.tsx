@@ -1,10 +1,30 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { DS_SECTIONS } from "../registry";
+import { LogoAssetsSection } from "../sections/LogoAssetsSection";
+import { AiSection } from "../sections/ai";
 import { FontControlDemos } from "../sections/base/FontControlDemos";
 import { MiscDemos } from "../sections/base/MiscDemos";
+import { BaseComponentsSection } from "../sections/base";
+import { CompositeSection } from "../sections/composite";
+import { DesignTokensSection } from "../sections/DesignTokensSection";
+import { PanelsSection } from "../sections/panels";
 
 describe("design-system/showcase variants", () => {
+	function renderFullShowcaseMarkup() {
+		return renderToStaticMarkup(
+			<>
+				<LogoAssetsSection />
+				<DesignTokensSection themeKey="light-default-default-#1668ff" />
+				<BaseComponentsSection />
+				<CompositeSection />
+				<PanelsSection />
+				<AiSection />
+			</>,
+		);
+	}
+
 	it("shows the hidden selection chrome variant", () => {
 		const markup = renderToStaticMarkup(<MiscDemos />);
 
@@ -14,15 +34,27 @@ describe("design-system/showcase variants", () => {
 	});
 
 	it("shows all Editor Playground logo asset variants", () => {
-		const markup = renderToStaticMarkup(<MiscDemos />);
+		const markup = renderToStaticMarkup(<LogoAssetsSection />);
 
-		expect(markup).toContain('id="base-logo-assets"');
+		expect(markup).toContain('id="logo-assets"');
 		expect(markup).toContain("editor-playground-logo-favicon.svg");
 		expect(markup).toContain("editor-playground-logo-favicon-monochrome.svg");
 		expect(markup).toContain("editor-playground-logo-one-line.svg");
 		expect(markup).toContain("editor-playground-logo-one-line-monochrome.svg");
 		expect(markup).toContain("editor-playground-logo-two-lines.svg");
 		expect(markup).toContain("editor-playground-logo-two-lines-monochrome.svg");
+	});
+
+	it("keeps registry menu items in the same order as rendered showcase items", () => {
+		const registryIds = DS_SECTIONS.flatMap((section) =>
+			section.subsections.map((subsection) => subsection.id),
+		);
+		const markup = renderFullShowcaseMarkup();
+		const renderedIds = Array.from(markup.matchAll(/\sid="([^"]+)"/g))
+			.map((match) => match[1])
+			.filter((id): id is string => Boolean(id) && registryIds.includes(id));
+
+		expect(renderedIds).toEqual(registryIds);
 	});
 
 	it("renders searchable select sections after Dropdown (Select)", () => {

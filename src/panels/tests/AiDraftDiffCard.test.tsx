@@ -90,6 +90,9 @@ describe("panels/ai/AiDraftDiffCard rendering", () => {
 		// A batch containing a deletion surfaces a distinct badge and uses the
 		// destructive Approve variant so it can't be approved by reflex.
 		expect(markup).toContain('data-ui="ai-draft-destructive-badge"');
+		expect(markup).toContain('aria-label="Includes deletion"');
+		expect(markup).toContain('role="tooltip"');
+		expect(markup).toContain(">Includes deletion</div>");
 		expect(markup).toContain('data-variant="destructive"');
 	});
 

@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 const DS_CARDS: Record<string, string> = {
+	"logo-assets": "Logo Assets",
 	tokens: "Design Tokens",
 	base: "Base Components",
 	composite: "Composites",
@@ -45,11 +46,11 @@ export default defineConfig({
 		sourcemap: false,
 		rollupOptions: {
 			input: {
+				"logo-assets": "./logo-assets.html",
 				tokens: "./tokens.html",
 				base: "./base.html",
 				composite: "./composite.html",
 				panels: "./panels.html",
-				ai: "./ai.html",
 			},
 			output: {
 				chunkFileNames: "assets/[name]-[hash].js",

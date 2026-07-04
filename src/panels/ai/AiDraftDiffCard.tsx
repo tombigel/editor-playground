@@ -1,6 +1,7 @@
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { ShieldAlert, Trash2, TriangleAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PopoverTooltip } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { getNodeById } from "@/api/ai/queryTools";
 import { flattenTextContent } from "@/api/textConversion";
@@ -60,6 +61,9 @@ type CommandSummary = {
 	/** True for irreversible/removal operations that must stand out. */
 	destructive: boolean;
 };
+
+const DESTRUCTIVE_BADGE_TOOLTIP_CLASS_NAME =
+	"editor-tooltip-panel max-w-[14rem] rounded-lg border px-3 py-2 text-xs font-medium";
 
 function nodeLabel(node: DocumentNode | undefined, fallbackId: string): string {
 	if (!node) {
@@ -310,13 +314,22 @@ export function AiDraftDiffCard({
 						</span>
 					</div>
 					{hasDestructive ? (
-						<span
-							data-ui="ai-draft-destructive-badge"
-							className="editor-danger-text inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide"
+						<PopoverTooltip
+							side="bottom"
+							align="end"
+							offset={6}
+							className={DESTRUCTIVE_BADGE_TOOLTIP_CLASS_NAME}
+							content="Includes deletion"
 						>
-							<AlertTriangle className="h-3 w-3" aria-hidden="true" />
-							Includes deletion
-						</span>
+							<span
+								data-ui="ai-draft-destructive-badge"
+								role="img"
+								aria-label="Includes deletion"
+								className="editor-danger-text inline-flex h-5 w-5 items-center justify-center"
+							>
+								<ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+							</span>
+						</PopoverTooltip>
 					) : null}
 				</div>
 
@@ -335,7 +348,7 @@ export function AiDraftDiffCard({
 						data-ui="ai-draft-stale-error"
 						className="editor-warning-surface editor-warning-text flex items-start gap-2 rounded-lg border px-3 py-2 text-xs"
 					>
-						<AlertTriangle
+						<TriangleAlert
 							className="mt-0.5 h-3.5 w-3.5 shrink-0"
 							aria-hidden="true"
 						/>

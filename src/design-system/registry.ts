@@ -1,7 +1,19 @@
-import { AppWindow, Blocks, Cuboid, Palette, Sparkles } from "lucide-react";
+import {
+	AppWindow,
+	Blocks,
+	Cuboid,
+	Palette,
+	Presentation,
+} from "lucide-react";
 import type { DSSection } from "./types";
 
 export const DS_SECTIONS: DSSection[] = [
+	{
+		id: "logo-assets",
+		label: "Logo Assets",
+		icon: Presentation,
+		subsections: [{ id: "logo-assets", label: "Logo Assets" }],
+	},
 	{
 		id: "tokens",
 		label: "Design Tokens",
@@ -20,7 +32,6 @@ export const DS_SECTIONS: DSSection[] = [
 		icon: Cuboid,
 		subsections: [
 			{ id: "base-title", label: "Title" },
-			{ id: "base-logo-assets", label: "Logo Assets" },
 			{ id: "base-badge", label: "Component Badges" },
 			{ id: "base-label", label: "Label" },
 			{ id: "base-form-field", label: "FormField" },
@@ -84,13 +95,6 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "composite-focused-panel", label: "Focused Panel" },
 			{ id: "composite-section-templates", label: "Section Templates" },
 			{ id: "composite-font-management", label: "Font Management" },
-		],
-	},
-	{
-		id: "ai",
-		label: "AI Assistant",
-		icon: Sparkles,
-		subsections: [
 			{ id: "composite-ai-draft-diff", label: "AI Draft Diff Card" },
 		],
 	},

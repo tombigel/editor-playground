@@ -7,6 +7,36 @@ describe("design-system/registry", () => {
 		return baseSection?.subsections.map((subsection) => subsection.id) ?? [];
 	}
 
+	it("promotes logo assets before design tokens", () => {
+		expect(DS_SECTIONS[0]).toMatchObject({
+			id: "logo-assets",
+			label: "Logo Assets",
+		});
+		expect(DS_SECTIONS[0]?.subsections).toEqual([
+			{ id: "logo-assets", label: "Logo Assets" },
+		]);
+
+		const sectionIds = DS_SECTIONS.map((section) => section.id);
+
+		expect(sectionIds.indexOf("logo-assets")).toBeLessThan(
+			sectionIds.indexOf("tokens"),
+		);
+		expect(sectionIds).not.toContain("ai");
+	});
+
+	it("keeps AI assistant demos under Panels", () => {
+		const panelsSection = DS_SECTIONS.find((section) => section.id === "panels");
+
+		expect(
+			panelsSection?.subsections.find(
+				(subsection) => subsection.id === "composite-ai-draft-diff",
+			),
+		).toEqual({
+			id: "composite-ai-draft-diff",
+			label: "AI Draft Diff Card",
+		});
+	});
+
 	it("includes the FormField demo in the Base Components menu", () => {
 		const baseSection = DS_SECTIONS.find((section) => section.id === "base");
 
@@ -17,28 +47,22 @@ describe("design-system/registry", () => {
 			.toEqual({ id: "base-form-field", label: "FormField" });
 	});
 
-	it("includes the logo asset demo in the Base Components menu", () => {
+	it("does not duplicate logo assets inside the Base Components menu", () => {
 		const baseSection = DS_SECTIONS.find((section) => section.id === "base");
 
 		expect(
-			baseSection?.subsections.find(
-				(subsection) => subsection.id === "base-logo-assets",
+			baseSection?.subsections.some(
+				(subsection) =>
+					subsection.id === "logo-assets" ||
+					subsection.id === "base-logo-assets",
 			),
-		).toEqual({
-			id: "base-logo-assets",
-			label: "Logo Assets",
-		});
+		).toBe(false);
 	});
 
 	it("keeps the FormField entry ordered with the rendered base demos", () => {
 		const ids = getBaseSubsectionIds();
 
-		expect(ids.indexOf("base-title")).toBeLessThan(
-			ids.indexOf("base-logo-assets"),
-		);
-		expect(ids.indexOf("base-logo-assets")).toBeLessThan(
-			ids.indexOf("base-badge"),
-		);
+		expect(ids.indexOf("base-title")).toBeLessThan(ids.indexOf("base-badge"));
 		expect(ids.indexOf("base-label")).toBeLessThan(ids.indexOf("base-form-field"));
 		expect(ids.indexOf("base-form-field")).toBeLessThan(
 			ids.indexOf("base-text-button"),

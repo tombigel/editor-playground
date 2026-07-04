@@ -40,6 +40,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add AI assistant rail glow
 - improve light mode AI button glow
 - catalog imported lucide icons
+- align showcase sections and AI warning badge
 
 ### Fixed
 
