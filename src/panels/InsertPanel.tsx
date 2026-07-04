@@ -6,11 +6,12 @@ import {
 	Link2,
 	RectangleEllipsis,
 	Rows3,
+	Shapes,
 	Sparkles,
 	SquareStack,
 	Type,
 } from "lucide-react";
-type LeafItemKind = 'image' | 'video' | 'link' | 'button';
+type LeafItemKind = 'image' | 'video' | 'svg' | 'link' | 'button';
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
 
@@ -63,6 +64,13 @@ const INSERT_ITEMS = [
 		icon: Clapperboard,
 		label: "Video",
 		hint: "Embedded player",
+	},
+	{
+		kind: "leaf" as const,
+		role: "svg" as const,
+		icon: Shapes,
+		label: "SVG",
+		hint: "Inline vector graphic",
 	},
 	{
 		kind: "leaf" as const,

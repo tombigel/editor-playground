@@ -160,6 +160,7 @@ export function getSiteLeafBaseRules(selectors: {
   brandMarkImage: string;
   imagePlaceholder: string;
   video: string;
+  svg: string;
   button: string;
 }): SharedCssRule[] {
   return [
@@ -234,6 +235,29 @@ export function getSiteLeafBaseRules(selectors: {
         width: '100%',
         height: '100%',
         objectFit: 'contain',
+      },
+    },
+    {
+      selector: selectors.svg,
+      style: {
+        display: 'block',
+        maxWidth: '100%',
+        width: '100%',
+        height: '100%',
+      },
+    },
+    {
+      selector: `${selectors.svg}.sp-svg-mono :where(path, circle, ellipse, rect, polygon, polyline, line)`,
+      style: {
+        fill: 'currentColor',
+        fillOpacity: 'var(--sp-svg-fill-opacity, 1)',
+      },
+    },
+    {
+      selector: `${selectors.svg}.sp-svg-stroke :where(path, circle, ellipse, rect, polygon, polyline, line)`,
+      style: {
+        stroke: 'var(--sp-svg-stroke-color, currentColor)',
+        strokeWidth: 'var(--sp-svg-stroke-width, 1)',
       },
     },
     {

@@ -20,6 +20,7 @@ import type {
   ExternalClipboardData,
   ParentExpansionRequest,
   SetTextDocumentContentOptions,
+  SvgMarkupPayload,
 } from '../../api/documentApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../animations/types';
 import type { EditorNavigationUrlState, EditorNodeTarget } from '../../api/editorNavigationApi';
@@ -96,8 +97,10 @@ export type EditorAction =
   | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
   | { type: 'insertWrapper'; role: 'section' | 'container' }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
-  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'video' | 'link' | 'button' }
+  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'video' | 'svg' | 'link' | 'button' }
   | { type: 'adoptVideoIntrinsicRatio'; id: NodeId; ratio: number }
+  | { type: 'setSvgMarkup'; id: NodeId; payload: SvgMarkupPayload }
+  | { type: 'convertImageToSvg'; id: NodeId; payload: SvgMarkupPayload }
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }

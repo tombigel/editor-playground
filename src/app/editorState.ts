@@ -44,6 +44,8 @@ import {
 } from '../api/editorApi';
 import {
   adoptVideoIntrinsicRatioDoc,
+  convertImageToInlineSvgDoc,
+  setSvgMarkupDoc,
   mergeTextNodesToRichDoc,
   setSiteNodeStickyElevation,
   setTextDocumentBlockGapDoc,
@@ -167,6 +169,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTextDocumentBlockGapDoc(state.document, action.id, action.value) };
     case 'adoptVideoIntrinsicRatio':
       return { ...state, document: adoptVideoIntrinsicRatioDoc(state.document, action.id, action.ratio) };
+    case 'setSvgMarkup':
+      return { ...state, document: setSvgMarkupDoc(state.document, action.id, action.payload) };
+    case 'convertImageToSvg':
+      return { ...state, document: convertImageToInlineSvgDoc(state.document, action.id, action.payload) };
     case 'switchTextSubtype':
       return {
         ...state,

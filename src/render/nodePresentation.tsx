@@ -10,6 +10,7 @@ import {
   isRichTextLink,
 } from '../model/richContent';
 import { isMediaNode, isTextNode } from '../model/types';
+import { mediaFitToPreserveAspectRatio } from '../model/svg';
 import type {
   DocumentModel,
   ListContent,
@@ -61,12 +62,16 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
   return node.name && node.name !== roleLabel ? `${roleLabel}: ${node.name}` : roleLabel;
 }
 
+function escapeXmlText(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export function getNodeTextContent(node: LeafNode): string {
   if (isTextNode(node)) {
     return getTextContent(node.content.blocks, { blockSeparator: '\n' });
   }
   if (isMediaNode(node)) {
-    return node.alt ?? (node.subtype === 'video' ? 'Video' : 'Image');
+    return node.alt ?? (node.subtype === 'video' ? 'Video' : node.subtype === 'svg' ? 'SVG' : 'Image');
   }
   return '';
 }
@@ -542,6 +547,7 @@ export function renderLeafContent(
     imagePlaceholderClassName,
     imageDraggable = true,
     videoClassName,
+    svgClassName,
     videoPreviewOnly = false,
     onVideoIntrinsicRatio,
     disableTabNavigation = false,
@@ -623,6 +629,68 @@ export function renderLeafContent(
                   }
                 : undefined
             }
+          />
+        );
+      }
+
+      if (node.subtype === 'svg' && node.svg?.renderMode === 'inline') {
+        const svg = node.svg;
+        if (!svg.innerMarkup) {
+          return (
+            <div
+              className={imagePlaceholderClassName}
+              data-node-id={standalone ? dataNodeId : undefined}
+              style={standalone ? contentStyle : undefined}
+            >
+              {getNodeTextContent(node)}
+            </div>
+          );
+        }
+
+        const a11y = svg.a11y;
+        const labelled = !a11y?.hidden && Boolean(a11y?.label || a11y?.labelledBy);
+        const monochrome = svg.monochrome?.enabled ? svg.monochrome : undefined;
+        const stroke = svg.stroke?.enabled ? svg.stroke : undefined;
+        const svgStyle: CSSProperties & Record<string, string | number> = { ...elementStyle };
+        if (monochrome) {
+          svgStyle.color = monochrome.fill ?? 'currentColor';
+          if (monochrome.opacity !== undefined) {
+            svgStyle['--sp-svg-fill-opacity'] = monochrome.opacity;
+          }
+        }
+        if (stroke) {
+          if (stroke.color) {
+            svgStyle['--sp-svg-stroke-color'] = stroke.color;
+          }
+          if (stroke.width !== undefined) {
+            svgStyle['--sp-svg-stroke-width'] = stroke.width;
+          }
+        }
+        const accessibleMarkup =
+          (a11y?.title ? `<title>${escapeXmlText(a11y.title)}</title>` : '') +
+          (a11y?.desc ? `<desc>${escapeXmlText(a11y.desc)}</desc>` : '') +
+          svg.innerMarkup;
+
+        return (
+          <svg
+            className={[svgClassName, monochrome ? 'sp-svg-mono' : '', stroke ? 'sp-svg-stroke' : '']
+              .filter(Boolean)
+              .join(' ') || undefined}
+            data-node-id={standalone ? dataNodeId : undefined}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox={svg.viewBox ?? svg.originalViewBox}
+            preserveAspectRatio={mediaFitToPreserveAspectRatio(node.style?.objectFit, node.style?.objectPosition)}
+            focusable="false"
+            {...(a11y?.hidden || !labelled
+              ? { 'aria-hidden': true }
+              : {
+                  role: 'img',
+                  ...(a11y?.label ? { 'aria-label': a11y.label } : {}),
+                  ...(a11y?.labelledBy ? { 'aria-labelledby': a11y.labelledBy } : {}),
+                })}
+            style={svgStyle}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: markup is DOMPurify-sanitized at input time before storage
+            dangerouslySetInnerHTML={{ __html: accessibleMarkup }}
           />
         );
       }

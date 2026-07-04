@@ -1,5 +1,5 @@
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../../../api/editorApi';
-import type { WrapperStyleField } from '../../../api/documentApi';
+import type { SvgMarkupPayload, WrapperStyleField } from '../../../api/documentApi';
 import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
@@ -14,6 +14,7 @@ export type ButtonInspectorNode = TextNode;
 export type LinkInspectorNode = TextNode;
 export type ImageInspectorNode = MediaNode;
 export type VideoInspectorNode = MediaNode;
+export type SvgInspectorNode = MediaNode;
 export type WrapperInspectorNode = ContainerNode;
 
 export type InspectorActionHandlers = {
@@ -38,6 +39,8 @@ export type InspectorActionHandlers = {
   onStickyElevation: (value: boolean) => void;
   onStickyElevated: (value: boolean) => void;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
+  onSetSvgMarkup?: (nodeId: string, payload: SvgMarkupPayload) => void;
+  onConvertImageToSvg?: (nodeId: string, payload: SvgMarkupPayload) => void;
   onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;

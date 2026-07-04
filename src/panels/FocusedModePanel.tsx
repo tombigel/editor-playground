@@ -64,6 +64,8 @@ type Props = Pick<
   | 'onAnimationDocSettingsChange'
   | 'globalStickyElevation'
   | 'onSwitchTextSubtype'
+  | 'onSetSvgMarkup'
+  | 'onConvertImageToSvg'
   | 'onApplyTextNodeMarkdown'
   | 'onSetTextDocumentContent'
   | 'onSetTextDocumentBlockGap'
@@ -127,6 +129,8 @@ export function FocusedModePanel({
   onAnimationDocSettingsChange,
   globalStickyElevation,
   onSwitchTextSubtype,
+  onSetSvgMarkup,
+  onConvertImageToSvg,
   onApplyTextNodeMarkdown,
   onSetTextDocumentContent,
   onSetTextDocumentBlockGap,
@@ -171,6 +175,8 @@ export function FocusedModePanel({
     onAnimationClear,
     onAnimationDocSettingsChange,
     onSwitchTextSubtype,
+    onSetSvgMarkup,
+    onConvertImageToSvg,
     onApplyTextNodeMarkdown,
     onSetTextDocumentContent,
     onSetTextDocumentBlockGap,

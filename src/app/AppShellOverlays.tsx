@@ -167,6 +167,12 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onTextChange={(field, value) =>
 							dispatch({ type: "text", field, value })
 						}
+						onSetSvgMarkup={(id, payload) =>
+							dispatch({ type: "setSvgMarkup", id, payload })
+						}
+						onConvertImageToSvg={(id, payload) =>
+							dispatch({ type: "convertImageToSvg", id, payload })
+						}
 						onWrapperStyleChange={(field, value) =>
 							dispatch({ type: "wrapperStyle", field, value })
 						}

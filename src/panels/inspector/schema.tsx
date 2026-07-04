@@ -5,6 +5,7 @@ import { FOOTER_INSPECTOR_CONFIG } from './config.footer';
 import { HEADER_INSPECTOR_CONFIG } from './config.header';
 import { IMAGE_INSPECTOR_CONFIG } from './config.image';
 import { VIDEO_INSPECTOR_CONFIG } from './config.video';
+import { SVG_INSPECTOR_CONFIG } from './config.svg';
 import { LINK_INSPECTOR_CONFIG } from './config.link';
 import { SECTION_INSPECTOR_CONFIG } from './config.section';
 import { SITE_INSPECTOR_CONFIG } from './config.site';
@@ -29,7 +30,8 @@ export type InspectorConfigKey =
   | 'button'
   | 'link'
   | 'image'
-  | 'video';
+  | 'video'
+  | 'svg';
 
 const EMPTY_INSPECTOR_CONFIG: readonly InspectorBlockDefinition[] = [summaryBlock];
 
@@ -50,7 +52,7 @@ export function resolveInspectorConfigKey(node: InspectorNode | null): Inspector
     return 'text';
   }
   if (isMediaNode(node)) {
-    return node.subtype === 'video' ? 'video' : 'image';
+    return node.subtype === 'video' ? 'video' : node.subtype === 'svg' ? 'svg' : 'image';
   }
   return 'text';
 }
@@ -125,6 +127,8 @@ function getInspectorConfig(node: InspectorNode | null): readonly InspectorBlock
       return IMAGE_INSPECTOR_CONFIG;
     case 'video':
       return VIDEO_INSPECTOR_CONFIG;
+    case 'svg':
+      return SVG_INSPECTOR_CONFIG;
     default:
       return EMPTY_INSPECTOR_CONFIG;
   }

@@ -107,6 +107,7 @@ describe('api/documentApi', () => {
         { role: 'code', expectedContentType: 'text', expectedSubtype: 'code' },
         { role: 'image', expectedContentType: 'media', expectedSubtype: 'image' },
         { role: 'video', expectedContentType: 'media', expectedSubtype: 'video' },
+        { role: 'svg', expectedContentType: 'media', expectedSubtype: 'svg' },
         { role: 'link', expectedContentType: 'text', expectedSubtype: 'block' },
         { role: 'button', expectedContentType: 'text', expectedSubtype: 'block' },
       ];

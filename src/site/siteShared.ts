@@ -24,6 +24,7 @@ export const SITE_CONTENT_CLASS = 'sp-wrapper-content';
 export const SITE_CONTENT_SPACER_CLASS = 'sp-content-spacer';
 export const SITE_IMAGE_CLASS = 'sp-image';
 export const SITE_VIDEO_CLASS = 'sp-video';
+export const SITE_SVG_CLASS = 'sp-svg';
 export const SITE_IMAGE_PLACEHOLDER_CLASS = 'sp-image-placeholder';
 export const SITE_BRAND_MARK_CLASS = 'is-brand-mark';
 

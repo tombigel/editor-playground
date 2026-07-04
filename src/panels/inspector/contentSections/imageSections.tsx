@@ -1,6 +1,11 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { InlineNotice } from '@/components/ui/settings-panel';
 import type { DocumentModel } from '../../../api/editorApi';
+import type { SvgMarkupPayload } from '../../../api/documentApi';
+import { sanitizeSvgMarkup } from '../../../lib/svgSanitize';
 import {
   BorderControlGroup,
   FormField,
@@ -46,6 +51,7 @@ export function ImageContentSection({
   document,
   node,
   onTextChange,
+  onConvertImageToSvg,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
@@ -55,7 +61,33 @@ export function ImageContentSection({
   document: DocumentModel;
   node: ImageInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onConvertImageToSvg?: (nodeId: string, payload: SvgMarkupPayload) => void;
 } & FocusModeCardProps) {
+  const [convertError, setConvertError] = useState(false);
+  const isSvgSource = /\.svg(\?|#|$)/i.test(node.src ?? '');
+
+  const convertToInlineSvg = async () => {
+    if (!node.src || !onConvertImageToSvg) {
+      return;
+    }
+    try {
+      const response = await fetch(node.src);
+      if (!response.ok) {
+        setConvertError(true);
+        return;
+      }
+      const sanitized = sanitizeSvgMarkup(await response.text());
+      if (!sanitized) {
+        setConvertError(true);
+        return;
+      }
+      setConvertError(false);
+      onConvertImageToSvg(node.id, { innerMarkup: sanitized.innerMarkup, originalViewBox: sanitized.viewBox });
+    } catch {
+      setConvertError(true);
+    }
+  };
+
   return (
     <InspectorSectionCard
       title="Content"
@@ -71,6 +103,18 @@ export function ImageContentSection({
         <FormField label="Alt">
           <Input value={node.alt ?? ''} onChange={(e) => onTextChange('alt', e.target.value)} />
         </FormField>
+        {isSvgSource && onConvertImageToSvg ? (
+          <div className="flex items-center justify-end">
+            <Button type="button" size="sm" variant="outline" onClick={() => void convertToInlineSvg()}>
+              Convert to inline SVG
+            </Button>
+          </div>
+        ) : null}
+        {convertError ? (
+          <InlineNotice tone="warning">
+            Could not load or sanitize the SVG source for inline conversion.
+          </InlineNotice>
+        ) : null}
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
         <LinkEnabledRow

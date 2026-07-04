@@ -3,3 +3,4 @@ export { ButtonContentSection, ButtonTextStyleSection, ButtonDesignSection, Butt
 export { LinkContentSection, LinkTextStyleSection, LinkDesignSection, LinkAppearanceSection } from './contentSections/linkSections';
 export { ImageContentSection, ImageDesignSection } from './contentSections/imageSections';
 export { VideoContentSection, VideoDesignSection } from './contentSections/videoSections';
+export { SvgContentSection, SvgDesignSection } from './contentSections/svgSections';

@@ -106,6 +106,7 @@ function renderLeafPlan(plan: RenderLeafPlanNode) {
     currentPageId: renderPageId,
     imageClassName: plan.imageClassName,
     videoClassName: plan.videoClassName,
+    svgClassName: plan.svgClassName,
     imagePlaceholderClassName: plan.imagePlaceholderClassName,
   }) as ReactElement;
   const leaf = leafElement.key == null ? cloneElement(leafElement, { key: node.id }) : leafElement;

@@ -1,7 +1,7 @@
 {
   "name": "editor-playground",
   "private": true,
-  "version": "0.12.43",
+  "version": "0.12.44",
   "type": "module",
   "packageManager": "pnpm@10.34.3",
   "engines": {
@@ -44,6 +44,7 @@
     "@wix/motion-presets": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.11",
     "fflate": "^0.8.2",
     "hdr-color-input": "^0.4.0",
     "lucide-react": "^1.7.0",
@@ -73,6 +74,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.2",
+    "jsdom": "^29.1.1",
     "playwright": "^1.59.1",
     "rollup-plugin-visualizer": "^7.0.1",
     "semver": "^7.7.2",

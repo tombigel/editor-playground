@@ -37,6 +37,7 @@ import {
 	parseUnitValue,
 } from "../model/units";
 import { highlightCode } from "../render/codeHighlight";
+import { sanitizeStoredSvgInnerMarkup } from "../lib/svgSanitize";
 
 export function cloneDocument(document: DocumentModel): DocumentModel {
 	return {
@@ -102,6 +103,17 @@ export function normalizeDocument(document: DocumentModel): DocumentModel {
 		if (isTextNode(node)) {
 			node.htmlTag = normalizeTextHtmlTag(node.htmlTag);
 			stripDerivedCodeHighlightsFromTextNode(node);
+		}
+		if (
+			isMediaNode(node) &&
+			node.subtype === "svg" &&
+			node.svg?.renderMode === "inline" &&
+			node.svg.innerMarkup
+		) {
+			// Re-sanitize inline SVG that may have entered as raw JSON, before it
+			// can reach the dangerouslySetInnerHTML render sink or static export.
+			const safeMarkup = sanitizeStoredSvgInnerMarkup(node.svg.innerMarkup);
+			node.svg = { ...node.svg, innerMarkup: safeMarkup ?? undefined };
 		}
 		node.sticky = normalizeSticky(node.sticky);
 		if (

@@ -46,6 +46,10 @@ import { TEXT_NODE_DEFAULTS } from './textNodeDefaults';
 let counter = 0;
 let imageCounter = 0;
 
+export const DEFAULT_SVG_VIEW_BOX = '0 0 24 24';
+export const DEFAULT_SVG_INNER_MARKUP =
+  '<path d="M12 2.5l2.95 5.98 6.6.96-4.78 4.65 1.13 6.58L12 17.57l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2.5z" fill="currentColor"/>';
+
 const IMAGE_SOURCES = [
   {
     src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
@@ -404,9 +408,14 @@ export function createMediaNode(subtype: MediaSubtype, parentId: NodeId): MediaN
       name: 'SVG',
       visible: true,
       locked: false,
-      rect: createDefaultRect('32px', '32px', '120px', '120px'),
-      svg: { renderMode: 'img' },
-      style: {},
+      rect: createDefaultRect('32px', '32px', '120px', 'aspect-ratio(1/1)'),
+      svg: {
+        renderMode: 'inline',
+        innerMarkup: DEFAULT_SVG_INNER_MARKUP,
+        originalViewBox: DEFAULT_SVG_VIEW_BOX,
+        a11y: { hidden: true },
+      },
+      style: { objectFit: 'contain', objectPosition: DEFAULT_MEDIA_OBJECT_POSITION },
     };
   }
 

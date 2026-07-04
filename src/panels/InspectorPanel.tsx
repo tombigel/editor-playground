@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../api/editorApi';
-import type { WrapperStyleField } from '../api/documentApi';
+import type { SvgMarkupPayload, WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../api/documentViewApi';
 import type { ContainerChildBoundary, PageId } from '../api/documentViewApi';
 import type { AnimationTriggerType, KeyframeAnimationEffect, HoverOutAction, ReducedMotionResponse, DocumentAnimationSettings } from '../api/animationApi';
@@ -85,6 +85,8 @@ export type InspectorPanelProps = {
   onAnimationDocSettingsChange: (settings: DocumentAnimationSettings) => void;
   globalStickyElevation: boolean;
   onSwitchTextSubtype: (nodeId: string, subtype: TextSubtype, conversionMode?: TextConversionMode) => void;
+  onSetSvgMarkup?: (nodeId: string, payload: SvgMarkupPayload) => void;
+  onConvertImageToSvg?: (nodeId: string, payload: SvgMarkupPayload) => void;
   onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
@@ -149,6 +151,8 @@ export function InspectorPanel({
   onAnimationDocSettingsChange,
   globalStickyElevation,
   onSwitchTextSubtype,
+  onSetSvgMarkup,
+  onConvertImageToSvg,
   onApplyTextNodeMarkdown,
   onSetTextDocumentContent,
   onSetTextDocumentBlockGap,
@@ -196,6 +200,8 @@ export function InspectorPanel({
       onAnimationClear,
       onAnimationDocSettingsChange,
       onSwitchTextSubtype,
+      onSetSvgMarkup,
+      onConvertImageToSvg,
       onApplyTextNodeMarkdown,
       onSetTextDocumentContent,
       onSetTextDocumentBlockGap,
@@ -215,6 +221,7 @@ export function InspectorPanel({
       onAnimationPresetChange, onAnimationKeyframeChange, onAnimationOptionsChange,
       onAnimationClear, onAnimationDocSettingsChange,
     onSwitchTextSubtype, onSetTextDocumentContent,
+      onSetSvgMarkup, onConvertImageToSvg,
       onApplyTextNodeMarkdown,
       onSetTextDocumentBlockGap,
       onMergeTextSelectionToRich, onSplitRichTextNode, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,

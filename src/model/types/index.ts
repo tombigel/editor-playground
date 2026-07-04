@@ -74,6 +74,19 @@ export type VideoSettingField =
   | 'videoLoop'
   | 'videoPoster'
   | 'videoPreload';
+export type SvgSettingField =
+  | 'svgHidden'
+  | 'svgLabel'
+  | 'svgLabelledBy'
+  | 'svgTitle'
+  | 'svgDesc'
+  | 'svgMonochrome'
+  | 'svgFill'
+  | 'svgFillOpacity'
+  | 'svgStrokeEnabled'
+  | 'svgStrokeColor'
+  | 'svgStrokeWidth'
+  | 'svgViewBox';
 export type LeafTypographyField =
   | 'color'
   | 'backgroundColor'
@@ -101,7 +114,7 @@ export type ButtonStyleField =
   | BorderWidthField
   | BorderRadiusField
   | ShadowStyleField;
-export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField | VideoSettingField | 'blockGap';
+export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField | VideoSettingField | SvgSettingField | 'blockGap';
 export type WrapperStyleField =
   | 'background'
   | BorderColorField
@@ -568,7 +581,7 @@ export type MediaNode = BaseNode & {
     /** Intrinsic width/height ratio measured from loaded metadata; drives auto aspect adoption. */
     intrinsicRatio?: number;
   };
-  svg?: { renderMode: 'img' | 'inline' };
+  svg?: SvgExtension;
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
@@ -576,6 +589,37 @@ export type MediaNode = BaseNode & {
     objectFit?: MediaObjectFit;
     objectPosition?: string;
   };
+};
+
+/**
+ * Inline SVG data for `subtype: 'svg'`. Kept as a grouped extension so future
+ * capabilities (path editing, use-as-mask, animation targets) can be added
+ * without reshaping the node.
+ */
+export type SvgExtension = {
+  renderMode: 'img' | 'inline';
+  /** Sanitized inner markup of the root `<svg>` element (root tag excluded). Must be sanitized before storage. */
+  innerMarkup?: string;
+  /** viewBox parsed from the imported markup; the render fallback. */
+  originalViewBox?: string;
+  /** Author viewBox override (e.g. fitted to content bbox). */
+  viewBox?: string;
+  a11y?: SvgA11y;
+  monochrome?: { enabled: boolean; fill?: string; opacity?: number };
+  stroke?: { enabled: boolean; color?: string; width?: number };
+};
+
+export type SvgA11y = {
+  /** Decorative: exports `aria-hidden="true"` and no role. Default for new nodes. */
+  hidden?: boolean;
+  /** Exports `role="img"` + `aria-label`. */
+  label?: string;
+  /** Exports `role="img"` + `aria-labelledby`. */
+  labelledBy?: string;
+  /** Injected as a leading `<title>` element. */
+  title?: string;
+  /** Injected as a leading `<desc>` element. */
+  desc?: string;
 };
 
 // ---------------------------------------------------------------------------

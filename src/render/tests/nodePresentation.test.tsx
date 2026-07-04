@@ -180,6 +180,54 @@ describe('render/nodePresentation', () => {
     expect(formatNodeLabel(image)).toBe('Image');
   });
 
+  it('renders inline svg with viewBox, decorative aria, and injected title', () => {
+    const svg = createMediaNode('svg', 'section-1');
+    svg.svg = {
+      renderMode: 'inline',
+      innerMarkup: '<circle r="5" fill="blue"/>',
+      originalViewBox: '0 0 10 10',
+      a11y: { hidden: true, title: 'A <blue> circle' },
+    };
+    svg.style = { objectFit: 'cover', objectPosition: 'left top' };
+
+    const markup = renderToStaticMarkup(renderLeafContent(svg, { svgClassName: 'sp-svg' }));
+
+    expect(markup).toContain('<svg');
+    expect(markup).toContain('class="sp-svg"');
+    expect(markup).toContain('viewBox="0 0 10 10"');
+    expect(markup).toContain('preserveAspectRatio="xMinYMin slice"');
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('focusable="false"');
+    expect(markup).toContain('<title>A &lt;blue&gt; circle</title>');
+    expect(markup).toContain('<circle r="5" fill="blue"');
+    expect(markup).not.toContain('role="img"');
+  });
+
+  it('renders labelled inline svg with role img and author viewBox override', () => {
+    const svg = createMediaNode('svg', 'section-1');
+    svg.svg = {
+      renderMode: 'inline',
+      innerMarkup: '<rect width="10" height="10"/>',
+      originalViewBox: '0 0 10 10',
+      viewBox: '2 2 6 6',
+      a11y: { label: 'Company logo' },
+      monochrome: { enabled: true, fill: '#ff0000', opacity: 0.5 },
+      stroke: { enabled: true, color: '#00ff00', width: 2 },
+    };
+
+    const markup = renderToStaticMarkup(renderLeafContent(svg, { svgClassName: 'sp-svg' }));
+
+    expect(markup).toContain('role="img"');
+    expect(markup).toContain('aria-label="Company logo"');
+    expect(markup).toContain('viewBox="2 2 6 6"');
+    expect(markup).toContain('sp-svg-mono');
+    expect(markup).toContain('sp-svg-stroke');
+    expect(markup).toContain('color:#ff0000');
+    expect(markup).toContain('--sp-svg-fill-opacity:0.5');
+    expect(markup).toContain('--sp-svg-stroke-color:#00ff00');
+    expect(markup).toContain('--sp-svg-stroke-width:2');
+  });
+
   it('renders a placeholder for a video without a source', () => {
     const video = createMediaNode('video', 'section-1');
     video.src = undefined;

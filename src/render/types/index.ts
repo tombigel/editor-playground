@@ -20,6 +20,7 @@ export type RenderLeafContentOptions = {
   imagePlaceholderClassName?: string;
   imageDraggable?: boolean;
   videoClassName?: string;
+  svgClassName?: string;
   /** Render video as a non-interactive paused preview (editor stage). */
   videoPreviewOnly?: boolean;
   /** Called when a video's intrinsic dimensions become known. */
@@ -70,6 +71,7 @@ export type RenderLeafPlanNode = {
   spacerEdgesAfter: RenderTrackSpacerEdge[];
   imageClassName: string;
   videoClassName: string;
+  svgClassName: string;
   imagePlaceholderClassName: string;
   isBrandMark: boolean;
 };

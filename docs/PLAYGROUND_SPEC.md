@@ -665,6 +665,7 @@ Additional rules:
 | `link` | label + destination | `Text style`, `Design` | Add-rail shortcut for link-enabled block text |
 | `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface + object fit/position |
 | `video` | `src`, poster, label, playback flags, preload | `Design` | Paused stage preview; native `<video>` in preview/export; never a link |
+| `svg` | sanitized inline markup, a11y fields, viewBox | `Design` | DOMPurify-sanitized at input; exports semantic inline `<svg>` |
 | `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
 
 ### Text leaf semantics
@@ -753,6 +754,33 @@ Object fit and position:
 
 - Image and video share `Fit` (`cover`, `contain`, `fill`, `none`, `scale-down`) and `Position` (9 alignment presets) controls in `Design`, stored as `style.objectFit` / `style.objectPosition` on the media node and rendered inline on the media element.
 - Image defaults to `cover` (unchanged legacy behavior via base CSS); video defaults to `contain`, `center center` (explicit factory values).
+
+
+### SVG leaf behavior
+
+Content and sanitization:
+
+- The SVG component stores **sanitized inline markup** on `MediaNode.svg.innerMarkup` (inner content of the root `<svg>` element). All input paths run DOMPurify with the SVG profiles plus a `foreignObject`/`style` ban before storage, so the model — and every render/export path — never contains scripts, event handlers, or `javascript:` URLs.
+- Markup sources: pasting markup into the inspector `Markup` field (applied via the `Apply markup` button), and a `Convert to inline SVG` action on image nodes whose `src` ends in `.svg` (fetches, sanitizes, and switches the node subtype in place, preserving layout/sticky/animation and turning `alt` into the accessible label).
+- Documents can also enter the model as raw JSON (import, localStorage restore), bypassing input-time sanitization. To keep the "stored model is safe" invariant true at every entry point, `normalizeDocument` re-sanitizes every inline SVG node's `innerMarkup` at ingestion before it can reach the render sink or static export; markup that fails sanitization is dropped.
+- Image nodes continue to support `.svg` URLs as a plain `src` (rendered as `<img>`); `svg.renderMode: 'img'` remains supported for that path.
+
+Accessibility:
+
+- New SVG nodes default to **decorative**: `aria-hidden="true"`, no role, `focusable="false"`.
+- Setting a `Label` (`aria-label`) or `Labelled by` (`aria-labelledby`) turns off decorative mode and exports `role="img"`.
+- Optional `Title` and `Description` fields inject leading `<title>`/`<desc>` elements (XML-escaped).
+
+ViewBox:
+
+- The sanitizer extracts `originalViewBox` from the source (deriving one from `width`/`height` when absent). Authors can override it (`svgViewBox`), use `Fit to content` (measures the on-stage `getBBox()`), or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
+
+Color, stroke, and fit:
+
+- `Monochrome` forces all shape fills to a single color + opacity via a `sp-svg-mono` class rule (`fill: currentColor`) with the color carried inline on the root element.
+- `Stroke` applies a global stroke color/width via a `sp-svg-stroke` class rule and CSS custom properties.
+- The shared Fit/Position controls map to `preserveAspectRatio`: `contain` → `meet`, `cover` → `slice`, `fill` → `none`, with the 9 position presets mapping to `xMinYMin`…`xMaxYMax` alignment.
+- The `SvgExtension` model is grouped so future capabilities (path editing, use-as-mask, animation targets) extend without reshaping the node.
 
 ### Button leaf behavior
 

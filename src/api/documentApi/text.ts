@@ -44,11 +44,13 @@ import type {
   RichTextLeaf,
   RichTextLink,
   ShadowStyleField,
+  SvgSettingField,
   TextDocumentContent,
   TextNode,
   TextSubtype,
 } from '../../model/types';
 import { isLeafNode, isMediaNode, isTextNode } from '../../model/types';
+import { isValidViewBox } from '../../model/svg';
 import { parseFontSizeValue, parseSpacingValue, parseUnitValue } from '../../model/units';
 import { highlightCode, normalizeCodeLanguage } from '../../render/codeHighlight';
 import { parseMarkdownForTextSubtype, serializeTextNodeToMarkdown } from '../textMarkdown';
@@ -61,6 +63,25 @@ export type SetTextDocumentContentOptions = {
 /** Videos are always interactive players and can never be links (a11y). */
 function isLinkableMediaNode(node: DocumentNode): node is MediaNode {
   return isMediaNode(node) && node.subtype !== 'video';
+}
+
+const SVG_SETTING_FIELDS: readonly SvgSettingField[] = [
+  'svgHidden',
+  'svgLabel',
+  'svgLabelledBy',
+  'svgTitle',
+  'svgDesc',
+  'svgMonochrome',
+  'svgFill',
+  'svgFillOpacity',
+  'svgStrokeEnabled',
+  'svgStrokeColor',
+  'svgStrokeWidth',
+  'svgViewBox',
+];
+
+function isSvgSettingField(field: EditorTextField): field is SvgSettingField {
+  return (SVG_SETTING_FIELDS as readonly string[]).includes(field);
 }
 
 function syncTransitionalTextNodeFields(node: TextNode): void {
@@ -406,6 +427,58 @@ export function setTextNodeContentDoc(
       ...node.video,
       preload: value === 'metadata' || value === 'none' ? value : 'auto',
     };
+    return next;
+  }
+
+  if (isSvgSettingField(field) && isMediaNode(node) && node.subtype === 'svg' && node.svg) {
+    const svg = node.svg;
+    if (field === 'svgHidden') {
+      node.svg = { ...svg, a11y: { ...svg.a11y, hidden: value === 'true' } };
+    } else if (field === 'svgLabel') {
+      const label = value.trim() || undefined;
+      node.svg = { ...svg, a11y: { ...svg.a11y, label, ...(label ? { hidden: false } : {}) } };
+    } else if (field === 'svgLabelledBy') {
+      const labelledBy = value.trim() || undefined;
+      node.svg = { ...svg, a11y: { ...svg.a11y, labelledBy, ...(labelledBy ? { hidden: false } : {}) } };
+    } else if (field === 'svgTitle') {
+      node.svg = { ...svg, a11y: { ...svg.a11y, title: value.trim() || undefined } };
+    } else if (field === 'svgDesc') {
+      node.svg = { ...svg, a11y: { ...svg.a11y, desc: value.trim() || undefined } };
+    } else if (field === 'svgMonochrome') {
+      node.svg = { ...svg, monochrome: { ...svg.monochrome, enabled: value === 'true' } };
+    } else if (field === 'svgFill') {
+      node.svg = { ...svg, monochrome: { enabled: svg.monochrome?.enabled ?? true, ...svg.monochrome, fill: value || undefined } };
+    } else if (field === 'svgFillOpacity') {
+      const opacity = Number.parseFloat(value);
+      node.svg = {
+        ...svg,
+        monochrome: {
+          enabled: svg.monochrome?.enabled ?? true,
+          ...svg.monochrome,
+          opacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : undefined,
+        },
+      };
+    } else if (field === 'svgStrokeEnabled') {
+      node.svg = { ...svg, stroke: { ...svg.stroke, enabled: value === 'true' } };
+    } else if (field === 'svgStrokeColor') {
+      node.svg = { ...svg, stroke: { enabled: svg.stroke?.enabled ?? true, ...svg.stroke, color: value || undefined } };
+    } else if (field === 'svgStrokeWidth') {
+      const width = Number.parseFloat(value);
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          width: Number.isFinite(width) && width >= 0 ? width : undefined,
+        },
+      };
+    } else if (field === 'svgViewBox') {
+      const trimmed = value.trim();
+      if (trimmed && !isValidViewBox(trimmed)) {
+        return document;
+      }
+      node.svg = { ...svg, viewBox: trimmed || undefined };
+    }
     return next;
   }
 

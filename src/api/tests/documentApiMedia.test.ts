@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createMediaNode } from '../../model/defaults';
 import { parseHeightValue } from '../../model/units';
-import { adoptVideoIntrinsicRatioDoc, createInitialDocument } from '../documentApi';
+import {
+  adoptVideoIntrinsicRatioDoc,
+  convertImageToInlineSvgDoc,
+  createInitialDocument,
+  setSvgMarkupDoc,
+  setSvgViewBoxDoc,
+} from '../documentApi';
 import { setTextNodeContentDoc } from '../documentApi/text';
 import type { MediaNode } from '../../model/types';
 
@@ -105,6 +111,90 @@ describe('api/documentApi media fields', () => {
 
     const next = setTextNodeContentDoc(document, image.id, 'videoAutoplay', 'true');
     expect(getMediaNode(next, image.id).video).toBeUndefined();
+  });
+});
+
+describe('api/documentApi svg operations', () => {
+  function addSvgNode(document: ReturnType<typeof createInitialDocument>) {
+    const section = firstSection(document);
+    const svg = createMediaNode('svg', section.id);
+    document.nodes[svg.id] = svg;
+    section.children.push(svg.id);
+    return svg;
+  }
+
+  it('creates svg nodes with inline default markup and decorative a11y', () => {
+    const document = structuredClone(createInitialDocument());
+    const svg = addSvgNode(document);
+    const node = getMediaNode(document, svg.id);
+    expect(node.svg?.renderMode).toBe('inline');
+    expect(node.svg?.innerMarkup).toContain('<path');
+    expect(node.svg?.originalViewBox).toBe('0 0 24 24');
+    expect(node.svg?.a11y?.hidden).toBe(true);
+  });
+
+  it('replaces markup and resets the viewBox override', () => {
+    const document = structuredClone(createInitialDocument());
+    const svg = addSvgNode(document);
+
+    const withOverride = setSvgViewBoxDoc(document, svg.id, '2 2 20 20');
+    expect(getMediaNode(withOverride, svg.id).svg?.viewBox).toBe('2 2 20 20');
+
+    const replaced = setSvgMarkupDoc(withOverride, svg.id, {
+      innerMarkup: '<circle r="5"/>',
+      originalViewBox: '0 0 10 10',
+    });
+    const node = getMediaNode(replaced, svg.id);
+    expect(node.svg?.innerMarkup).toBe('<circle r="5"/>');
+    expect(node.svg?.originalViewBox).toBe('0 0 10 10');
+    expect(node.svg?.viewBox).toBeUndefined();
+  });
+
+  it('rejects invalid viewBox values', () => {
+    const document = structuredClone(createInitialDocument());
+    const svg = addSvgNode(document);
+    expect(setSvgViewBoxDoc(document, svg.id, 'not a viewbox')).toBe(document);
+    expect(setTextNodeContentDoc(document, svg.id, 'svgViewBox', '0 0 0 0')).toBe(document);
+  });
+
+  it('converts an svg-source image into an inline svg node', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = firstSection(document);
+    const image = createMediaNode('image', section.id);
+    image.alt = 'Star logo';
+    document.nodes[image.id] = image;
+    section.children.push(image.id);
+
+    const next = convertImageToInlineSvgDoc(document, image.id, {
+      innerMarkup: '<circle r="5"/>',
+      originalViewBox: '0 0 10 10',
+    });
+    const node = getMediaNode(next, image.id);
+    expect(node.subtype).toBe('svg');
+    expect(node.src).toBeUndefined();
+    expect(node.svg?.renderMode).toBe('inline');
+    expect(node.svg?.a11y?.label).toBe('Star logo');
+  });
+
+  it('updates a11y, monochrome, and stroke settings through text fields', () => {
+    const document = structuredClone(createInitialDocument());
+    const svg = addSvgNode(document);
+
+    let next = setTextNodeContentDoc(document, svg.id, 'svgLabel', 'Decorative star');
+    expect(getMediaNode(next, svg.id).svg?.a11y?.label).toBe('Decorative star');
+    expect(getMediaNode(next, svg.id).svg?.a11y?.hidden).toBe(false);
+
+    next = setTextNodeContentDoc(next, svg.id, 'svgTitle', 'Star');
+    next = setTextNodeContentDoc(next, svg.id, 'svgMonochrome', 'true');
+    next = setTextNodeContentDoc(next, svg.id, 'svgFill', '#ff0000');
+    next = setTextNodeContentDoc(next, svg.id, 'svgFillOpacity', '1.5');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeEnabled', 'true');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeWidth', '2');
+
+    const node = getMediaNode(next, svg.id);
+    expect(node.svg?.a11y?.title).toBe('Star');
+    expect(node.svg?.monochrome).toMatchObject({ enabled: true, fill: '#ff0000', opacity: 1 });
+    expect(node.svg?.stroke).toMatchObject({ enabled: true, width: 2 });
   });
 });
 

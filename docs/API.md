@@ -772,6 +772,8 @@ Source: `src/model/defaultFactories.ts`
 | `createMediaNode` | `(subtype, parentId) -> MediaNode` | Create a media node |
 | `createLinkTextNode` | `(parentId) -> TextNode` | Create a text node preconfigured as a link |
 | `createButtonTextNode` | `(parentId) -> TextNode` | Create a text node preconfigured as a button |
+| `DEFAULT_SVG_VIEW_BOX` | string | Default viewBox for new inline svg nodes |
+| `DEFAULT_SVG_INNER_MARKUP` | string | Default star-shape markup for new inline svg nodes |
 
 ---
 
@@ -877,7 +879,7 @@ type MediaNode = BaseNode & {
     preload?: VideoPreload;      // 'auto' | 'metadata' | 'none'
     intrinsicRatio?: number;     // measured from loaded metadata
   };
-  svg?: { renderMode: 'img' | 'inline' };
+  svg?: SvgExtension;
   rect: RectModel;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
@@ -889,6 +891,30 @@ type MediaNode = BaseNode & {
 ```
 
 `adoptVideoIntrinsicRatioDoc(document, nodeId, ratio)` records a video's measured intrinsic aspect ratio and adopts it as the layout aspect only while the node height still follows the default or previously adopted intrinsic ratio; user-authored aspects and fixed heights are never overwritten.
+
+### SvgExtension
+
+```typescript
+type SvgExtension = {
+  renderMode: 'img' | 'inline';
+  innerMarkup?: string;       // sanitized inner markup of the root <svg> (callers MUST sanitize via src/lib/svgSanitize.ts)
+  originalViewBox?: string;   // parsed from the imported markup
+  viewBox?: string;           // author override (e.g. fitted to content bbox)
+  a11y?: SvgA11y;             // hidden | label | labelledBy | title | desc
+  monochrome?: { enabled: boolean; fill?: string; opacity?: number };
+  stroke?: { enabled: boolean; color?: string; width?: number };
+};
+```
+
+SVG document operations:
+
+| Function | Parameters | Description |
+| --- | --- | --- |
+| `setSvgMarkupDoc` | `(document, nodeId, payload: SvgMarkupPayload)` | Replace inline markup; resets the author viewBox override |
+| `convertImageToInlineSvgDoc` | `(document, nodeId, payload: SvgMarkupPayload)` | Convert an image node into an inline svg node in place |
+| `setSvgViewBoxDoc` | `(document, nodeId, viewBox: string)` | Set or clear the author viewBox override (validated) |
+
+`SvgMarkupPayload` carries `innerMarkup` (sanitized) and the extracted `originalViewBox`. Sanitization happens at input time in the editor layer (`sanitizeSvgMarkup` in `src/lib/svgSanitize.ts`, DOMPurify-backed); the document API stores what it is given and documents the sanitized-input contract.
 
 ### StickyDefinition
 
@@ -981,6 +1007,10 @@ type EditorTextField =
   | 'objectFit' | 'objectPosition'
   // Video settings (VideoSettingField)
   | 'videoAutoplay' | 'videoMuted' | 'videoControls' | 'videoLoop' | 'videoPoster' | 'videoPreload'
+  // SVG settings (SvgSettingField)
+  | 'svgHidden' | 'svgLabel' | 'svgLabelledBy' | 'svgTitle' | 'svgDesc'
+  | 'svgMonochrome' | 'svgFill' | 'svgFillOpacity'
+  | 'svgStrokeEnabled' | 'svgStrokeColor' | 'svgStrokeWidth' | 'svgViewBox'
   // Block gap
   | 'blockGap';
 ```
@@ -1114,6 +1144,7 @@ This index keeps the split API reference synchronized with the public export sur
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
 - `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
+- `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
 - `setPageAsHomeDoc`, `normalizeSlug`
 - `FocusedMode`, `LinkValidationError`, `StageProps`, `SiteRendererProps`, `SiteExportOptions`

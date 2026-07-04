@@ -220,6 +220,7 @@ function StageLeaf({
             imagePlaceholderClassName: 'image-placeholder',
             imageDraggable: false,
             videoClassName: 'stage-video',
+            svgClassName: 'stage-svg',
             videoPreviewOnly: true,
             onVideoIntrinsicRatio: adoptVideoIntrinsicRatio,
             disableTabNavigation: true,

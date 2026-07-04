@@ -26,6 +26,7 @@ import {
   SITE_CONTENT_SPACER_CLASS,
   SITE_IMAGE_CLASS,
   SITE_VIDEO_CLASS,
+  SITE_SVG_CLASS,
   SITE_IMAGE_PLACEHOLDER_CLASS,
   SITE_LEAF_CLASS,
   SITE_MAIN_CLASS,
@@ -75,6 +76,7 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
       brandMarkImage: `img.${SITE_IMAGE_CLASS}.${SITE_BRAND_MARK_CLASS}`,
       imagePlaceholder: `.${SITE_IMAGE_PLACEHOLDER_CLASS}`,
       video: `video.${SITE_VIDEO_CLASS}`,
+      svg: `svg.${SITE_SVG_CLASS}`,
       button: `button.${SITE_LEAF_CLASS}.sp-role-button`,
     }),
   ];

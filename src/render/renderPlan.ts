@@ -32,6 +32,7 @@ import {
   SITE_BRAND_MARK_CLASS,
   SITE_IMAGE_CLASS,
   SITE_VIDEO_CLASS,
+  SITE_SVG_CLASS,
   SITE_IMAGE_PLACEHOLDER_CLASS,
   splitRootWrappers,
 } from '../site/siteShared';
@@ -165,6 +166,7 @@ function buildLeafPlan(
     spacerEdgesAfter: spacerSequence.after,
     imageClassName: `${brandMark ? `${nodeClassName} ${SITE_BRAND_MARK_CLASS}` : nodeClassName} ${SITE_IMAGE_CLASS}`,
     videoClassName: `${nodeClassName} ${SITE_VIDEO_CLASS}`,
+    svgClassName: `${nodeClassName} ${SITE_SVG_CLASS}`,
     imagePlaceholderClassName: `${nodeClassName} ${SITE_IMAGE_PLACEHOLDER_CLASS}`,
     isBrandMark: brandMark,
   };
@@ -259,6 +261,7 @@ function buildStageLeafPlan(
     spacerEdgesAfter: spacerSequence.after,
     imageClassName: `${brandMark ? `${nodeClassName} ${SITE_BRAND_MARK_CLASS}` : nodeClassName} ${SITE_IMAGE_CLASS}`,
     videoClassName: `${nodeClassName} ${SITE_VIDEO_CLASS}`,
+    svgClassName: `${nodeClassName} ${SITE_SVG_CLASS}`,
     imagePlaceholderClassName: `${nodeClassName} ${SITE_IMAGE_PLACEHOLDER_CLASS}`,
     isBrandMark: brandMark,
   };

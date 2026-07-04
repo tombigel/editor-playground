@@ -162,6 +162,10 @@ function createLeafNode(role: LeafInsertionRole, parentId: NodeId): TextNode | R
     return createMediaNode('video', parentId);
   }
 
+  if (role === 'svg') {
+    return createMediaNode('svg', parentId);
+  }
+
   if (role === 'link') {
     const node = createLinkTextNode(parentId);
     return {

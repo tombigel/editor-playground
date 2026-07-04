@@ -722,6 +722,22 @@
   object-fit: contain;
 }
 
+.stage-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stage-svg.sp-svg-mono :where(path, circle, ellipse, rect, polygon, polyline, line) {
+  fill: currentColor;
+  fill-opacity: var(--sp-svg-fill-opacity, 1);
+}
+
+.stage-svg.sp-svg-stroke :where(path, circle, ellipse, rect, polygon, polyline, line) {
+  stroke: var(--sp-svg-stroke-color, currentColor);
+  stroke-width: var(--sp-svg-stroke-width, 1);
+}
+
 .stage-leaf.role-image.is-brand-mark .stage-image {
   object-fit: contain;
 }
