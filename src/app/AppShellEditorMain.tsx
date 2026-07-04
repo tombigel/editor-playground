@@ -48,7 +48,8 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		onAboutOpenChange,
 		onPagesOpenChange,
 		showStorageWarning,
-		setShowStorageWarning,
+		storageWarningMessage,
+		onDismissStorageWarning,
 		importInputRef,
 		activateRichEditRef,
 		globalStickyElevation,
@@ -332,19 +333,18 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				<div className="editor-workspace-shell relative min-h-0 overflow-hidden">
 					{showStorageWarning && (
 						<div
-							className="editor-bg-subtle editor-border-subtle flex items-center justify-between border-b px-4 py-2 text-xs"
+							className="editor-warning-surface flex items-center justify-between border-b px-4 py-2 text-xs"
 							style={{ position: "relative", zIndex: 10 }}
 							role="alert"
 						>
-							<span className="editor-text-strong">
-								Document is large (&gt;4 MB). Consider exporting and clearing
-								unused data to avoid localStorage limits.
+							<span className="editor-warning-text font-medium">
+								{storageWarningMessage}
 							</span>
 							<button
 								type="button"
-								className="editor-text-muted ml-4 shrink-0 font-medium hover:opacity-70"
+								className="editor-warning-text ml-4 shrink-0 font-medium hover:opacity-70"
 								aria-label="Dismiss storage warning"
-								onClick={() => setShowStorageWarning(false)}
+								onClick={onDismissStorageWarning}
 							>
 								✕
 							</button>

@@ -96,7 +96,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-18` | `⚪ Not started` | [Project management](#project-management) | `🔵 Low` | Platform | Human | - |
 | `RI-19` | `⚪ Not started` | [Assets management](#assets-management) | `🔵 Low` | Platform | Human | - |
 | `RI-20` | `⚪ Not started` | [CMS](#cms) | `🔵 Low` | Platform | Human | - |
-| `RI-31` | `⚪ Not started` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | Dep: `RI-07` |
+| `RI-31` | `🟣 Partially present` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | localStorage size warning and quota status slice done; IndexedDB migration remains |
 | `RI-28` | `✅ Done` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
 | `RI-30` | `✅ Done` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | Shared | Four semver versions in `src/lib/version.ts`; pre-commit patch bump; `schemaVersion` on export |
 | `RI-37` | `✅ Done` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
@@ -668,8 +668,8 @@ None yet.
 - `Source`: `RI-31`
 - `Dependencies`: `RI-07`
 - `Why it matters`: localStorage has a hard ~5MB limit per origin. As the model grows with multiple pages, shared components, animations, and richer node trees, this ceiling becomes a real constraint with no graceful failure — it throws a quota error and stops saving.
-- `Current state`: All editor state is stored in localStorage. This is sufficient for single-page sites with URL-referenced media, but not a long-term solution. IndexedDB offers the same browser-local, no-server model with storage limits of 50MB+ and a path to storing larger blobs if needed.
-- `Next move`: Add a storage size warning in the editor when the model approaches the localStorage limit. Plan the IndexedDB migration as a discrete platform task once multi-page sites make the constraint real. Migration is straightforward — same model, different persistence backend.
+- `Current state`: All editor state is still stored in localStorage. The first warning slice is complete: persistence size checks now use the actual saved editor payload shape (`{ ...state, pendingRoleSwap: null }`), the editor warns at the 4 MB threshold with explicit size/threshold copy, and quota failures return a status for the warning surface instead of disappearing silently. This is sufficient for single-page sites with URL-referenced media, but not a long-term solution.
+- `Next move`: Plan the IndexedDB migration as a discrete platform task once multi-page sites make the constraint real. Migration is straightforward — same model, different persistence backend — and IndexedDB offers the same browser-local, no-server model with storage limits of 50MB+ and a path to storing larger blobs if needed.
 
 #### Refactor
 

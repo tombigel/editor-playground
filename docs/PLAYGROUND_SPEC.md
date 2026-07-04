@@ -483,6 +483,9 @@ Undo/redo uses an in-memory history stack.
 - History is not persisted to `localStorage`.
 - Entries are stored incrementally as per-node before/after patches.
 - History stores incremental patches rather than full document snapshots.
+- Editor persistence estimates the exact saved editor payload shape, `{ ...state, pendingRoleSwap: null }`, using UTF-16 localStorage byte cost.
+- The editor shows a token-backed warning when the persisted payload reaches the 4 MB warning threshold against the approximate 5 MB localStorage quota, including the current size and threshold in MB.
+- If saving fails because localStorage quota is exceeded, the failure is reported as persistence status for the editor warning surface instead of silently disappearing.
 
 ### Transaction semantics
 
@@ -1547,6 +1550,7 @@ Naming and title behavior:
 
 - Undo and redo remain in-memory incremental history operations.
 - Editor UI and session state persist in `localStorage`.
+- The persistence warning uses the actual stored editor-state payload and reports quota failures so authors can export JSON or clear unused data before continuing.
 - `Reset data` restores the factory document baseline and clears undo/redo while preserving editor UI preferences.
 - `Reset all` also clears persisted editor UI and session state and restores the full editor baseline.
 

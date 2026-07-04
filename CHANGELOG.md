@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - show topic-local step progress in tour card header
 - video leaf component with playback, fit, and aspect controls
 - inline SVG leaf component with sanitized markup and a11y
+- warn when local storage nears quota
 
 ### Changed
 

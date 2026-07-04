@@ -18,12 +18,16 @@ import {
   createFactoryResetState,
   createInitialState,
   DEFAULT_DOCUMENT_STORAGE_KEY,
+  getEditorPersistenceSizeStatus,
+  getLastEditorPersistenceStatus,
   isStructuralWrapper,
+  LOCAL_STORAGE_WARNING_THRESHOLD_BYTES,
   loadPersistedState,
   normalizeDocument,
   normalizeTextHtmlTag,
   parseImportedDocumentJson,
   persistState,
+  serializePersistedEditorState,
   STORAGE_KEY,
 } from '../editorPersistence';
 
@@ -553,6 +557,72 @@ describe('editor/editorPersistence', () => {
 
       const raw = JSON.parse(windowStub.localStorage.getItem(STORAGE_KEY)!);
       expect(raw.pendingRoleSwap).toBeNull();
+    });
+
+    it('serializes the actual persisted editor payload for size checks', () => {
+      const state = {
+        ...createInitialState(),
+        pendingRoleSwap: {
+          requestedId: 'some_id',
+          targetRole: 'footer' as const,
+          existingId: 'other_id',
+        },
+      };
+
+      const serialized = serializePersistedEditorState(state);
+      const parsed = JSON.parse(serialized);
+      const status = getEditorPersistenceSizeStatus(state);
+
+      expect(parsed.document).toEqual(state.document);
+      expect(parsed.ui).toEqual(state.ui);
+      expect(parsed.pendingRoleSwap).toBeNull();
+      expect(status.byteLength).toBe(serialized.length * 2);
+      expect(status.serializedLength).toBe(serialized.length);
+      expect(status.kind).toBe('ok');
+    });
+
+    it('reports a warning when the persisted payload crosses the threshold', () => {
+      const state = createInitialState();
+      const largeState = {
+        ...state,
+        document: {
+          ...state.document,
+          oversizedTestPayload: 'x'.repeat(LOCAL_STORAGE_WARNING_THRESHOLD_BYTES / 2),
+        },
+      } as unknown as typeof state;
+
+      const status = getEditorPersistenceSizeStatus(largeState);
+
+      expect(status.kind).toBe('warning');
+      expect(status.byteLength).toBeGreaterThanOrEqual(LOCAL_STORAGE_WARNING_THRESHOLD_BYTES);
+      expect(status.warningThresholdBytes).toBe(LOCAL_STORAGE_WARNING_THRESHOLD_BYTES);
+    });
+
+    it('returns a quota-error status without throwing when localStorage is full', () => {
+      const setItem = vi.fn(() => {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      });
+      const windowStub = {
+        location: { search: '' },
+        localStorage: {
+          getItem: () => null,
+          setItem,
+          removeItem: () => undefined,
+          clear: () => undefined,
+        },
+        dispatchEvent: vi.fn(),
+      };
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      vi.stubGlobal('window', windowStub);
+
+      const status = persistState(createInitialState());
+
+      expect(status?.kind).toBe('quota-error');
+      expect(status?.errorMessage).toContain('localStorage is full');
+      expect(getLastEditorPersistenceStatus()?.kind).toBe('quota-error');
+      expect(setItem).toHaveBeenCalledOnce();
+      expect(warn).toHaveBeenCalledOnce();
+      warn.mockRestore();
     });
 
     it('normalizes spacerVisibility to "selected" when invalid', () => {

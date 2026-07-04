@@ -28,6 +28,23 @@ import { DEFAULT_SNAP_SETTINGS } from "./types";
 export const STORAGE_KEY = "editor-playground.editor-state.v2";
 export const DEFAULT_DOCUMENT_STORAGE_KEY =
 	"editor-playground.default-document.v1";
+export const LOCAL_STORAGE_QUOTA_ESTIMATE_BYTES = 5 * 1024 * 1024;
+export const LOCAL_STORAGE_WARNING_THRESHOLD_BYTES = 4 * 1024 * 1024;
+export const EDITOR_PERSISTENCE_STATUS_EVENT =
+	"editor-playground:persistence-status";
+
+export type EditorPersistenceStatusKind = "ok" | "warning" | "quota-error";
+
+export type EditorPersistenceStatus = {
+	kind: EditorPersistenceStatusKind;
+	byteLength: number;
+	serializedLength: number;
+	warningThresholdBytes: number;
+	quotaEstimateBytes: number;
+	errorMessage?: string;
+};
+
+let lastEditorPersistenceStatus: EditorPersistenceStatus | null = null;
 
 export function createInitialState(): EditorState {
 	const ui = createDefaultUiState();
@@ -162,14 +179,122 @@ export function loadPersistedState(): EditorState {
 	}
 }
 
-export function persistState(state: EditorState) {
+export function createPersistedEditorStatePayload(state: EditorState): EditorState {
+	return { ...state, pendingRoleSwap: null };
+}
+
+export function serializePersistedEditorState(state: EditorState): string {
+	return JSON.stringify(createPersistedEditorStatePayload(state));
+}
+
+export function estimateLocalStorageBytes(value: string): number {
+	return value.length * 2;
+}
+
+export function formatStorageBytes(bytes: number): string {
+	const mib = bytes / (1024 * 1024);
+	if (mib >= 1) {
+		return `${mib.toFixed(2)} MB`;
+	}
+	const kib = bytes / 1024;
+	return `${kib.toFixed(1)} KB`;
+}
+
+export function getEditorPersistenceSizeStatus(
+	state: EditorState,
+): EditorPersistenceStatus {
+	const serialized = serializePersistedEditorState(state);
+	const byteLength = estimateLocalStorageBytes(serialized);
+	return {
+		kind:
+			byteLength >= LOCAL_STORAGE_WARNING_THRESHOLD_BYTES ? "warning" : "ok",
+		byteLength,
+		serializedLength: serialized.length,
+		warningThresholdBytes: LOCAL_STORAGE_WARNING_THRESHOLD_BYTES,
+		quotaEstimateBytes: LOCAL_STORAGE_QUOTA_ESTIMATE_BYTES,
+	};
+}
+
+export function getLastEditorPersistenceStatus(): EditorPersistenceStatus | null {
+	return lastEditorPersistenceStatus;
+}
+
+export function getEditorPersistenceStatus(
+	state: EditorState,
+): EditorPersistenceStatus {
+	const sizeStatus = getEditorPersistenceSizeStatus(state);
+	const lastStatus = getLastEditorPersistenceStatus();
+	if (
+		lastStatus?.kind === "quota-error" &&
+		lastStatus.byteLength === sizeStatus.byteLength
+	) {
+		return lastStatus;
+	}
+	return sizeStatus;
+}
+
+function setLastEditorPersistenceStatus(status: EditorPersistenceStatus) {
+	lastEditorPersistenceStatus = status;
+	if (
+		typeof window === "undefined" ||
+		typeof window.dispatchEvent !== "function" ||
+		typeof CustomEvent === "undefined"
+	) {
+		return;
+	}
+	window.dispatchEvent(
+		new CustomEvent(EDITOR_PERSISTENCE_STATUS_EVENT, { detail: status }),
+	);
+}
+
+function isLocalStorageQuotaError(error: unknown): boolean {
+	if (
+		typeof DOMException !== "undefined" &&
+		error instanceof DOMException &&
+		(error.name === "QuotaExceededError" ||
+			error.name === "NS_ERROR_DOM_QUOTA_REACHED")
+	) {
+		return true;
+	}
+	if (!error || typeof error !== "object") {
+		return false;
+	}
+	const candidate = error as { code?: unknown; name?: unknown };
+	return (
+		candidate.name === "QuotaExceededError" ||
+		candidate.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+		candidate.code === 22 ||
+		candidate.code === 1014
+	);
+}
+
+export function persistState(
+	state: EditorState,
+): EditorPersistenceStatus | undefined {
 	if (typeof window === "undefined") {
 		return;
 	}
-	window.localStorage.setItem(
-		STORAGE_KEY,
-		JSON.stringify({ ...state, pendingRoleSwap: null }),
-	);
+	const serialized = serializePersistedEditorState(state);
+	const sizeStatus = getEditorPersistenceSizeStatus(state);
+	try {
+		window.localStorage.setItem(STORAGE_KEY, serialized);
+		setLastEditorPersistenceStatus(sizeStatus);
+		return sizeStatus;
+	} catch (error) {
+		if (!isLocalStorageQuotaError(error)) {
+			throw error;
+		}
+		const status: EditorPersistenceStatus = {
+			...sizeStatus,
+			kind: "quota-error",
+			errorMessage: "The editor could not save because localStorage is full.",
+		};
+		console.warn(
+			`[editor-playground] Could not save editor state: localStorage quota exceeded (${formatStorageBytes(status.byteLength)} of roughly ${formatStorageBytes(status.quotaEstimateBytes)}).`,
+		);
+		setLastEditorPersistenceStatus(status);
+		return status;
+	}
 }
 
 export function persistDefaultDocument(document: DocumentModel) {

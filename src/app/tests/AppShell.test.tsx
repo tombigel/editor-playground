@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createInitialState, insertLeaf } from "../../api/editorApi";
 import { AppShell } from "../AppShell";
 import { LayersPanel } from "../../panels/LayersPanel";
+import { LOCAL_STORAGE_WARNING_THRESHOLD_BYTES } from "../../editor/editorPersistence";
 import {
 	INSPECTOR_COLLAPSED_WIDTH_PX,
 	INSPECTOR_EXPANDED_WIDTH_PX,
@@ -127,6 +128,27 @@ describe("app/AppShell", () => {
 		expect(markup).toContain('aria-label="AI Assistant"');
 		expect(markup).toContain("editor-rail-entry-button");
 		expect(markup).toContain("editor-rail-toggle-button");
+	});
+
+	it("renders a token-backed storage warning with the persisted payload size", () => {
+		const props = createProps();
+		props.state = {
+			...props.state,
+			document: {
+				...props.state.document,
+				oversizedTestPayload: "x".repeat(
+					LOCAL_STORAGE_WARNING_THRESHOLD_BYTES / 2,
+				),
+			},
+		} as typeof props.state;
+
+		const markup = renderToStaticMarkup(<AppShell {...props} />);
+
+		expect(markup).toContain("editor-warning-surface");
+		expect(markup).toContain("editor-warning-text");
+		expect(markup).toContain("above the 4.00 MB localStorage warning threshold");
+		expect(markup).toContain("Dismiss storage warning");
+		expect(markup).not.toContain("Document is large (&gt;4 MB)");
 	});
 
 	it("renders a list option in the text type popover", () => {

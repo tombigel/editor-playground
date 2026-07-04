@@ -37,6 +37,12 @@ import {
 	clampFocusedPanelOffset,
 	FOCUSED_PANEL_RIGHT_OFFSET_PX,
 } from "../editor/focusedPanelPosition";
+import {
+	EDITOR_PERSISTENCE_STATUS_EVENT,
+	formatStorageBytes,
+	getEditorPersistenceStatus,
+	type EditorPersistenceStatus,
+} from "../editor/editorPersistence";
 import { useDebugLogger } from "../editor/useDebugLogger";
 import { buildDocumentGoogleFontsStylesheetHref } from "../fonts";
 import type { HelpEntry } from "../panels/helpDocs";
@@ -210,7 +216,9 @@ export function AppShell({
 	const isPreview = appMode === "preview";
 	const editorWindowId = useMemo(() => getOrCreateEditorWindowId(), []);
 
-	const [showStorageWarning, setShowStorageWarning] = useState(false);
+	const [editorPersistenceStatus, setEditorPersistenceStatus] =
+		useState<EditorPersistenceStatus>(() => getEditorPersistenceStatus(state));
+	const [storageWarningDismissed, setStorageWarningDismissed] = useState(false);
 	const [linkPopupVisible, setLinkPopupVisible] = useState(false);
 	const [requestedPageSettingsId, setRequestedPageSettingsId] = useState<
 		string | null
@@ -341,9 +349,6 @@ export function AppShell({
 		originOffset: EditorState["ui"]["focusedPanelOffset"];
 	} | null>(null);
 	const focusedPanelOffsetDraftRef = useRef(state.ui.focusedPanelOffset);
-	const storageWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-		null,
-	);
 	const [focusedPanelOffsetDraft, setFocusedPanelOffsetDraft] = useState(
 		state.ui.focusedPanelOffset,
 	);
@@ -377,6 +382,12 @@ export function AppShell({
 		resolvedAccent,
 		stickyGuideColors,
 	);
+	const showStorageWarning =
+		!storageWarningDismissed && editorPersistenceStatus.kind !== "ok";
+	const storageWarningMessage =
+		editorPersistenceStatus.kind === "quota-error"
+			? `Editor changes could not be saved because localStorage is full. Current payload is ${formatStorageBytes(editorPersistenceStatus.byteLength)} of roughly ${formatStorageBytes(editorPersistenceStatus.quotaEstimateBytes)}. Export JSON or clear unused data before continuing.`
+			: `Editor data is ${formatStorageBytes(editorPersistenceStatus.byteLength)}, above the ${formatStorageBytes(editorPersistenceStatus.warningThresholdBytes)} localStorage warning threshold. Export JSON or clear unused data before the browser quota is reached.`;
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
@@ -482,15 +493,40 @@ export function AppShell({
 	useDebugLogger(state.ui.showDebugInfo, state.document, state.selectedId);
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			const size = JSON.stringify(state.document).length * 2;
-			if (size > 4 * 1024 * 1024) {
-				setShowStorageWarning(true);
+		setEditorPersistenceStatus(getEditorPersistenceStatus(state));
+	}, [state]);
+
+	useEffect(() => {
+		if (editorPersistenceStatus.kind === "ok") {
+			setStorageWarningDismissed(false);
+		}
+	}, [editorPersistenceStatus.kind]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+		function handlePersistenceStatus(event: Event) {
+			const detail = (event as CustomEvent<EditorPersistenceStatus>).detail;
+			if (!detail) {
+				return;
 			}
-		}, 2000);
-		storageWarningTimerRef.current = timer;
-		return () => clearTimeout(timer);
-	}, [state.document]);
+			setEditorPersistenceStatus(detail);
+			if (detail.kind === "quota-error") {
+				setStorageWarningDismissed(false);
+			}
+		}
+		window.addEventListener(
+			EDITOR_PERSISTENCE_STATUS_EVENT,
+			handlePersistenceStatus,
+		);
+		return () => {
+			window.removeEventListener(
+				EDITOR_PERSISTENCE_STATUS_EVENT,
+				handlePersistenceStatus,
+			);
+		};
+	}, []);
 
 	useEffect(() => {
 		const node = state.selectedId
@@ -809,7 +845,8 @@ export function AppShell({
 		onPasteClipboard,
 		onDuplicateSelection,
 		showStorageWarning,
-		setShowStorageWarning,
+		storageWarningMessage,
+		onDismissStorageWarning: () => setStorageWarningDismissed(true),
 		requestedPageSettingsId,
 		pagesPanelTabTarget,
 		settingsSectionTarget,
