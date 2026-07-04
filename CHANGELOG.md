@@ -47,6 +47,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add RI-49 URL boot hydration and RI-50 panel request adapter
 - rank RI-11 component candidates and set build order
 - centralize panel requests through shared adapter
+- allow preview dev server to use an auto-assigned port
 
 ### Fixed
 
