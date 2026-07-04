@@ -39,6 +39,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - cover editor state reducer action branches
 - add AI assistant rail glow
 - improve light mode AI button glow
+- catalog imported lucide icons
 
 ### Fixed
 
