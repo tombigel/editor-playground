@@ -26,6 +26,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - cover text field normalization directly at the document API layer
 - reduce editorMutations tests to wrapper concerns
 - add legacy document migration fixture suite
+- cover snap and measure math
 
 ### Fixed
 
