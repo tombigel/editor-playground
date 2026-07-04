@@ -45,6 +45,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - label settings dialog controls and update stale e2e assertions
 - migrate legacy documents on import and make migration idempotent
 - darken active settings nav description text to meet WCAG AA contrast
+- keep AI panel actions reachable
 
 ---
 

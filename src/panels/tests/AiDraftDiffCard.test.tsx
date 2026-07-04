@@ -119,6 +119,34 @@ describe("panels/ai/AiDraftDiffCard rendering", () => {
 		expect(markup).toContain('data-variant="default"');
 	});
 
+	it("allows long proposed values to wrap inside the diff row", () => {
+		const state = createInitialState();
+		const draft: DraftBatch = {
+			id: "draft-long-value",
+			commands: [
+				{
+					type: "setText",
+					nodeId: firstTextNodeId(state),
+					field: "content",
+					value: "ThisIsAReallyLongUnbrokenProposedValueThatMustStayInsideTheDraftCard",
+				},
+			],
+		};
+		const markup = renderToStaticMarkup(
+			<AiDraftDiffCard
+				draftBatch={draft}
+				document={state.document}
+				onApprove={() => undefined}
+				onReject={() => undefined}
+			/>,
+		);
+
+		expect(markup).toContain("[overflow-wrap:anywhere]");
+		expect(markup).toContain(
+			"ThisIsAReallyLongUnbrokenProposedValueThatMustStayInsideTheDraftCard",
+		);
+	});
+
 	it("renders the stale-error message and hides Approve when staleError is set", () => {
 		const state = createInitialState();
 		const draft = makeMixedDraft(state);

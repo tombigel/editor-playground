@@ -489,7 +489,7 @@ function AiPanelShell({
 			ref={setCombinedRef}
 			open={open}
 			onOpenChange={onOpenChange}
-			className="editor-ai-panel flex w-[360px] flex-col"
+			className="editor-ai-panel flex max-h-[calc(100vh-32px)] w-[360px] flex-col overflow-hidden"
 			style={{ top: `${position.top}px`, left: `${position.left}px` }}
 			header={
 				<div
@@ -548,7 +548,7 @@ function AiPanelShell({
 					/>
 				</div>
 			}
-			bodyClassName="contents"
+			bodyClassName="flex min-h-0 flex-1 flex-col"
 		>
 			<AiPanelBody
 				document={document}
@@ -836,10 +836,11 @@ function AiPanelBody({
 	}
 
 	return (
-		<div className="flex min-h-0 flex-col">
+		<div className="flex min-h-0 flex-1 flex-col">
 			<div
 				ref={scrollRef}
-				className="editor-scrollbar editor-scrollbar-gutter flex max-h-[52vh] min-h-[180px] flex-col overflow-y-auto p-3"
+				data-ui="ai-panel-scroll-region"
+				className="editor-scrollbar editor-scrollbar-gutter flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3"
 			>
 				<AiMessageList
 					messages={conversation.messages}
@@ -848,24 +849,18 @@ function AiPanelBody({
 					onEditPrompt={handleEditPrompt}
 					onRerunPrompt={handleRerunPrompt}
 				/>
-			</div>
-			{streamError ? (
-				<div className="px-3 pb-1">
+				{streamError ? (
 					<NoticeSurface tone="warning" className="text-xs">
 						{streamError}
 					</NoticeSurface>
-				</div>
-			) : null}
-			{conversation.draftOverflowed ? (
-				<div className="px-3 pb-1">
+				) : null}
+				{conversation.draftOverflowed ? (
 					<NoticeSurface tone="warning" className="text-xs">
 						The proposed change was too large and was trimmed. Ask for a
 						smaller edit.
 					</NoticeSurface>
-				</div>
-			) : null}
-			{pendingDraft ? (
-				<div className="px-3 pb-2">
+				) : null}
+				{pendingDraft ? (
 					<AiDraftDiffCard
 						draftBatch={pendingDraft}
 						document={document}
@@ -873,10 +868,10 @@ function AiPanelBody({
 						onReject={handleRejectDraft}
 						staleError={staleError}
 					/>
-				</div>
-			) : null}
+				) : null}
+			</div>
 			<form
-				className="editor-border-subtle flex items-end gap-2 border-t p-3"
+				className="editor-border-subtle flex shrink-0 items-end gap-2 border-t p-3"
 				onSubmit={handleSubmit}
 			>
 				<div className="min-w-0 flex-1">

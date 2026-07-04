@@ -121,6 +121,21 @@ describe("panels/AiPanel", () => {
 		);
 	});
 
+	it("bounds long AI content inside a scrollable panel region above the composer", () => {
+		const adapter = createMockAdapter([{ type: "message-complete" }]);
+		const markup = renderToStaticMarkup(
+			<AiPanel {...makePanelProps()} adapterOverride={adapter} />,
+		);
+
+		expect(markup).toContain("max-h-[calc(100vh-32px)]");
+		expect(markup).toContain("overflow-hidden");
+		expect(markup).toContain('data-ui="floating-panel-body"');
+		expect(markup).toContain("flex min-h-0 flex-1 flex-col");
+		expect(markup).toContain('data-ui="ai-panel-scroll-region"');
+		expect(markup).toContain("overflow-y-auto");
+		expect(markup).toContain("flex shrink-0 items-end");
+	});
+
 	it("streams assistant text deltas from a mocked adapter", async () => {
 		const adapter = createMockAdapter([
 			{ type: "text-delta", delta: "There are " },

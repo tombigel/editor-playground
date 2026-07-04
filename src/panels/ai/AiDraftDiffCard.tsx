@@ -265,9 +265,9 @@ function DiffRow({ summary }: { summary: CommandSummary }) {
 					</span>
 				</div>
 				{summary.before !== null || summary.after !== null ? (
-					<div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+					<div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 font-mono text-[11px] [overflow-wrap:anywhere]">
 						{summary.before !== null ? (
-							<span className="editor-text-muted line-through decoration-1">
+							<span className="editor-text-muted min-w-0 line-through decoration-1">
 								{summary.before}
 							</span>
 						) : null}
@@ -277,7 +277,7 @@ function DiffRow({ summary }: { summary: CommandSummary }) {
 							</span>
 						) : null}
 						{summary.after !== null ? (
-							<span className="editor-text-strong">{summary.after}</span>
+							<span className="editor-text-strong min-w-0">{summary.after}</span>
 						) : null}
 					</div>
 				) : null}
@@ -343,7 +343,7 @@ export function AiDraftDiffCard({
 					</div>
 				) : null}
 
-				<div className="flex items-center justify-end gap-2">
+				<div className="flex flex-wrap items-center justify-end gap-2">
 					<Button
 						type="button"
 						variant="ghost"
