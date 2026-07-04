@@ -32,18 +32,16 @@ Reviewers:
   - Why: smoke coverage existed, but helper-level regressions were weakly covered.
 - [x] Refresh implementation work-memory status.
   - Source: local review.
-  - Why: `docs/SHOWCASE_TOUR_IMPLEMENTATION_TODO.md` still marked the latest nav-highlight alignment as pending.
+  - Why: the implementation work-memory doc (now `archive/SHOWCASE_TOUR_IMPLEMENTATION_TODO.md`) still marked the latest nav-highlight alignment as pending.
 
 ## Waiting For Tom
 
-- [ ] Decide whether editor URL params should open editor panels outside the tour.
+- [x] Decide whether editor URL params should open editor panels outside the tour.
   - Source: Senior Developer.
-  - Current state: tour URLs apply panel scenes through tour step navigation, but direct `?panel=settings&settings=transfer` without `tour` does not currently open Settings.
-  - Decision: either implement full app boot hydration for panel/help/page params, or narrow the docs to tour/editor-navigation API parse-build support only.
-- [ ] Decide whether panel request handling should be centralized around the API panel-state helper.
+  - Decision (2026-07-04): implement boot hydration — apply parsed panel/help/settings/page targets once at app load, no continuous two-way sync outside the tour. Tracked as `RI-49` in the roadmap.
+- [x] Decide whether panel request handling should be centralized around the API panel-state helper.
   - Source: Senior Developer.
-  - Current state: `useShowcaseTourController` adapts `EditorPanelRequest` directly to React setters while `applyEditorPanelRequest` handles the pure state shape.
-  - Decision: keep the shell adapter as-is for now, or create a shared callback adapter to reduce drift.
+  - Decision (2026-07-04): centralize — build a shared adapter over `applyEditorPanelRequest` and migrate the tour controller to it. Review of the duplicated switch found real drift: its `toggle` case sends `ai` to manage fonts. Tracked as `RI-50` in the roadmap.
 - [ ] Decide topic-progress framing.
   - Source: UX.
   - Current state: the card header shows global progress like `18/23`.
@@ -52,10 +50,9 @@ Reviewers:
   - Source: UX, QA.
   - Current state: smoke coverage is desktop-sized; small viewports may force overlap between the tour card and menu.
   - Decision: desktop-only showcase for phase 1, or add tablet/mobile layout behavior and coverage.
-- [ ] Decide final visual differentiator.
+- [x] Decide final visual differentiator.
   - Source: UX.
-  - Current state: the default skin has a distinct accent and tokenized styling, but final portfolio-layer expression is still intentionally unresolved.
-  - Decision: subtle product-native overlay vs stronger portfolio/presenter treatment.
+  - Decision (2026-07-04): keep the subtle product-native treatment — tokenized skin with the existing distinct accent — and treat it as final. The tour itself is design-system evidence; no separate presenter layer.
 
 ## Additional QA Backlog
 

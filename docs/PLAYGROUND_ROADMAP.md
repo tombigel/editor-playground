@@ -83,6 +83,8 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
 | `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
 | `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
+| `RI-49` | `⚪ Not started` | [Editor URL deep links outside the tour](#editor-url-deep-links-outside-the-tour) | `🟠 High` | Feature | LLM | Boot hydration decided 2026-07-04. Dep: `RI-50` |
+| `RI-50` | `⚪ Not started` | [Centralized panel request adapter](#centralized-panel-request-adapter) | `🟠 High` | Refactor | LLM | Fixes latent `ai` toggle drift bug in tour controller |
 | `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
 | `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
 | `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
@@ -168,6 +170,8 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-46` AI command/interface layer over the public API — model prompts as typed tools and document/editor commands over `src/api/`, not UI automation or freeform model mutation
 - `RI-47` bring-your-own-model connection layer — let users connect hosted providers, OpenRouter-style routers, local/Ollama-compatible endpoints, and future local agents with clear streaming/key/proxy boundaries
 - `RI-48` conversational editor UI with assistant-ui — add the editor-facing chat/thread/composer surface, tool-call rendering, approval/apply affordances, provider/model picker entry points, and design-system alignment
+- `RI-49` editor URL deep links should work outside the tour — direct `#/edit?panel=...` / settings/help/page params should hydrate panels once at app boot, not only through tour step navigation; decided in the showcase tour review follow-up
+- `RI-50` centralize panel request handling — the tour controller re-implements the panel request switch against React setters and has drifted from the pure `applyEditorPanelRequest` helper (an `ai` toggle falls through to manage fonts); route all consumers through one shared adapter over the pure helper
 
 ## Structured Roadmap
 
@@ -430,6 +434,17 @@ None yet.
 - `Current state`: The editor already has structural wrapper roles such as `section`, `header`, `footer`, and `container`, but it does not yet expose a broader grouping semantics layer that can reinterpret child meaning or authoring behavior.
 - `Next move`: Define how semantic grouping should affect export semantics, inspector controls, and editing affordances without collapsing into arbitrary wrapper complexity.
 
+##### Editor URL deep links outside the tour
+
+- `Type`: `Feature`
+- `Owner lane`: `LLM`
+- `Status`: `Not started`
+- `Source`: `RI-49`
+- `Why it matters`: `PLAYGROUND_SPEC.md` describes editor URLs as supporting panel, settings, help, and page targets, but outside the tour those params are parsed and never applied at boot — the spec over-claims, and shareable deep links (a URL that opens a specific help doc or settings section) are valuable for the portfolio surface.
+- `Current state`: `editorNavigationApi` already parses and builds all the params, and tour step navigation applies them through panel scenes. Direct `#/edit?panel=settings&settings=transfer` without `tour` does nothing at boot.
+- `Next move`: Apply parsed panel/help/settings/page targets once at app boot (no continuous two-way sync outside the tour), reusing the tour's stale-param rewriting rules. Decided in the showcase tour review follow-up (2026-07-04).
+- `Dependencies`: `RI-50`
+
 #### Platform
 
 ##### Performance optimization program
@@ -522,6 +537,16 @@ None yet.
 - `Why it matters`: Escape key handling (6+ implementations), click-outside detection (3+ patterns), pointer drag tracking (3+ implementations), and popover positioning (4+ implementations) are each reimplemented ad-hoc in every consumer. This makes behavior inconsistent and requires re-explaining expected behavior for each new panel, dropdown, or dialog.
 - `Current state`: `useEscapeKey` and `useClickOutside` hooks extracted to `src/lib/` and migrated to 4 consumers (FontControls, ValueWithUnit, TopLevelWrapperVisibilityControl, SearchableSelect). `DARK_TOOLTIP_CLASS` constant extracted and deduplicated across 15 occurrences in 8 files. Popover positioning and pointer drag hooks assessed and deferred — the positioning strategies are fundamentally different per component (tooltip side-based, select viewport-smart, menu fixed-offset) making a shared abstraction a poor fit.
 - `Next move`: Evaluate whether new composite components (`DismissablePopover`, `DraggablePanel`) are worth building as more interactive panels are added. For now the hooks cover the most common duplication.
+
+##### Centralized panel request adapter
+
+- `Type`: `Refactor`
+- `Owner lane`: `LLM`
+- `Status`: `Not started`
+- `Source`: `RI-50`
+- `Why it matters`: `useShowcaseTourController` re-implements the panel request switch directly against nine React setters while `applyEditorPanelRequest` in `src/api/editorNavigationApi/panelState.ts` implements the same semantics purely. The two have already drifted: the pure helper's `toggle` supports `ai`, but the tour controller's copy falls through to manage fonts, so a tour step toggling the AI panel would toggle Manage Fonts instead.
+- `Current state`: Duplicated switch in `src/app/showcaseTour/useShowcaseTourController.ts` (`applyPanelRequest`) with the latent `ai` toggle bug; the pure helper is correct.
+- `Next move`: Build one shared adapter that runs `applyEditorPanelRequest` and diffs the resulting `EditorPanelState` onto the app's React setters; migrate the tour controller to it, removing the duplicated switch and fixing the toggle drift. Decided in the showcase tour review follow-up (2026-07-04).
 
 #### Infra
 

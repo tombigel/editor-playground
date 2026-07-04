@@ -43,6 +43,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - align showcase sections and AI warning badge
 - remove duplicate alert icon alias
 - archive completed tasklists and fix archived-doc references
+- add RI-49 URL boot hydration and RI-50 panel request adapter
 
 ### Fixed
 
