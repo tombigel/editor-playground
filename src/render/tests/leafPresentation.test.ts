@@ -17,7 +17,7 @@ describe('render/leafPresentation', () => {
     expect(style.minWidth).toBe('min-content');
     expect(style.maxWidth).toBe('100%');
     expect(style.boxSizing).toBe('border-box');
-    expect(style.background).toBe('#05070a');
+    expect(style.backgroundColor).toBe('#05070a');
     expect(style.borderRadius).toBe('999px');
     expect(style.boxShadow).toBe('0px 10px 18px rgba(5, 7, 10, 0.16)');
     expect(style.filter).toBeUndefined();
@@ -130,7 +130,7 @@ describe('render/leafPresentation', () => {
     expect(preStyle.wordBreak).toBe('break-word');
     expect(preStyle.overflowWrap).toBe('anywhere');
     expect(preStyle.wordWrap).toBe('break-word');
-    expect(preStyle.background).toBe(code.style?.background);
+    expect(preStyle.backgroundColor).toBe(code.style?.background);
   });
 
   it('keeps theme-owned code surfaces out of idle inline styles', () => {
@@ -145,7 +145,7 @@ describe('render/leafPresentation', () => {
     const preStyle = getStandaloneCodePreStyle(code);
 
     expect(wrapperStyle.color).toBeUndefined();
-    expect(preStyle.background).toBeUndefined();
+    expect(preStyle.backgroundColor).toBeUndefined();
   });
 
   it('keeps code node shadows on box-shadow without adding a duplicate filter shadow', () => {

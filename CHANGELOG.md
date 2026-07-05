@@ -72,6 +72,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - label video nodes correctly and remove link support from video
 - refine SVG a11y pattern and color controls
 - refine gradient controls, background-size, and clip-text edit mode
+- use background-color longhand for button and code leaves
 
 ---
 

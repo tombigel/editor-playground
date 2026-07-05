@@ -322,7 +322,7 @@ describe('site/siteExport', () => {
     const css = renderSiteCss(document);
 
     expect(css).toContain('color: oklch(70% 0.2 250 / 0.7);');
-    expect(css).toContain('background: color(display-p3 0.24 0.52 0.88 / 0.9);');
+    expect(css).toContain('background-color: color(display-p3 0.24 0.52 0.88 / 0.9);');
   });
 
   it('exports button typography and wrap settings', () => {
@@ -519,7 +519,7 @@ describe('site/siteExport', () => {
     expect(css).toContain('border-radius: 28px;');
     expect(css).toContain('box-shadow: 0px 12px 18px 4px rgba(37, 99, 235, 0.2);');
     expect(css).toContain(`.sp-node-${button.id}.sp-role-button.sp-leaf`);
-    expect(css).toContain('background: #f8fafc;');
+    expect(css).toContain('background-color: #f8fafc;');
     expect(css).toContain('padding-block: 0.75em;');
     expect(css).toContain('padding-inline: 1.5rem;');
     expect(css).toContain('background-clip: padding-box;');

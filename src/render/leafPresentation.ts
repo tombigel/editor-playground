@@ -68,7 +68,7 @@ export function getStandaloneCodePreStyle(node: TextNode): StyleRecord {
     wordWrap: wrap ? 'break-word' : 'normal',
     overflowX: wrap ? 'hidden' : 'auto',
     ...(node.style?.tabSize != null ? { tabSize: node.style.tabSize } : {}),
-    ...(isAuthoredCodeSurfaceValue(node.style?.background) ? { background: node.style.background } : {}),
+    ...(isAuthoredCodeSurfaceValue(node.style?.background) ? { backgroundColor: node.style.background } : {}),
   };
   Object.assign(style, buildBorderStyle(node.style));
   const boxShadow = buildBoxShadow(node.style);
@@ -131,7 +131,7 @@ export function getButtonLeafStyle(node: TextNode): StyleRecord {
       fontFamily: DEFAULT_FONT_FALLBACK_STACK,
       whiteSpace: node.style?.textWrap === 'wrap' ? 'normal' : node.style?.textWrap === 'single-line' ? 'nowrap' : undefined,
     }, { includeFilter: false }),
-    ...(node.style?.background ? { background: node.style.background } : {}),
+    ...(node.style?.background ? { backgroundColor: node.style.background } : {}),
     ...(node.style?.paddingBlock ? { paddingBlock: formatValue(node.style.paddingBlock.parsed) } : {}),
     ...(node.style?.paddingInline ? { paddingInline: formatValue(node.style.paddingInline.parsed) } : {}),
   };

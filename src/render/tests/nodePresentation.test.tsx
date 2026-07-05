@@ -468,7 +468,7 @@ describe('render/nodePresentation', () => {
     expect(markup).not.toContain('background:#f5f2f0');
     expect(markup).not.toContain('color:#16202a');
     expect(markup).not.toContain('data-code-color="author"');
-    expect(markup).toContain('background:#101418');
+    expect(markup).toContain('background-color:#101418');
     expect(markup).toContain('JetBrains Mono');
     expect(markup).toContain('font-size:22px');
     expect(markup).toContain('tab-size:6');
