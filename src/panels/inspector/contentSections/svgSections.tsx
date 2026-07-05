@@ -523,7 +523,7 @@ export function SvgDesignSection({
                 onChange={(value) => onTextChange('svgStrokeWidth', value)}
               />
             </FormField>
-            <FormField label={<ScaleWithShapeLabel />} layout="inline">
+            <FormField label={<ScaleWithShapeLabel />} layout="inline" labelClassName="editor-text-muted">
               <ScaleWithShapeSwitch
                 nonScaling={stroke.nonScaling}
                 onChange={(nextNonScaling) => onTextChange('svgStrokeNonScaling', nextNonScaling ? 'true' : 'false')}

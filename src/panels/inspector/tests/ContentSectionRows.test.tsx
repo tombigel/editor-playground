@@ -190,6 +190,8 @@ describe("panels/inspector/content section rows", () => {
 		expect(markup).toContain(">Width<");
 		expect(markup).toContain('aria-label="SVG stroke width"');
 		expect(markup).toContain(">Scale with shape<");
+		expect(markup).toContain("min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium editor-text-muted");
+		expect(markup).toContain("inline-flex min-w-0 items-center gap-1");
 		expect(markup).toContain("stroke width scales as the SVG is resized");
 		expect(markup).toContain('aria-label="Scale stroke with shape"');
 		expect(markup.indexOf('aria-label="SVG stroke width"')).toBeLessThan(markup.indexOf(">Scale with shape<"));
