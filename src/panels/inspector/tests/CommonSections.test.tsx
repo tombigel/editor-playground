@@ -269,6 +269,41 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).not.toContain('>Border<');
   });
 
+  it('keeps clip text inside active gradient controls after color stops', () => {
+    const node = createContainerNode('section', 'root');
+
+    const withoutGradientMarkup = renderToStaticMarkup(
+      <WrapperDesignSection
+        node={node}
+        onWrapperStyleChange={() => {}}
+      />,
+    );
+
+    expect(withoutGradientMarkup).not.toContain('Clip background to text');
+
+    node.style = {
+      ...node.style,
+      backgroundGradient: 'linear-gradient(180deg, red 0%, blue 100%)',
+      backgroundClipText: true,
+    };
+
+    const markup = renderToStaticMarkup(
+      <WrapperDesignSection
+        node={node}
+        onWrapperStyleChange={() => {}}
+      />,
+    );
+    const typeIndex = markup.indexOf('>Type<');
+    const stopsIndex = markup.indexOf('>Color stops<');
+    const angleIndex = markup.indexOf('>Angle<');
+    const clipIndex = markup.indexOf('Clip background to text');
+
+    expect(typeIndex).toBeGreaterThan(-1);
+    expect(stopsIndex).toBeGreaterThan(typeIndex);
+    expect(angleIndex).toBeGreaterThan(stopsIndex);
+    expect(clipIndex).toBeGreaterThan(angleIndex);
+  });
+
   it('uses FormField inline-group for the layout order row', () => {
     const document = createInitialDocument();
     const node = Object.values(document.nodes).find((candidate) => candidate.contentType === 'text');

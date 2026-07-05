@@ -548,19 +548,6 @@ export function WrapperDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
-        {supportsGradient ? (
-          <>
-            <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
-              Clip background to text
-              <Switch
-                checked={node.style?.backgroundClipText ?? false}
-                onCheckedChange={(checked) => onWrapperStyleChange('backgroundClipText', checked ? 'true' : '')}
-              />
-            </Label>
-            <div className="editor-border-subtle border-b" aria-hidden="true" />
-          </>
-        ) : null}
-
         <FormField label="Background" layout="inline" controlClassName="gap-2">
           <HoverColorField
             value={node.style?.background}
@@ -585,6 +572,10 @@ export function WrapperDesignSection({
               <GradientControl
                 value={gradient}
                 onChange={(next) => onWrapperStyleChange('backgroundGradient', next)}
+                clipBackgroundToText={node.style?.backgroundClipText ?? false}
+                onClipBackgroundToTextChange={(checked) =>
+                  onWrapperStyleChange('backgroundClipText', checked ? 'true' : '')
+                }
               />
             ) : null}
             {gradient && gradientRepeats ? (

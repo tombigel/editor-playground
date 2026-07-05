@@ -44,6 +44,9 @@ export function setWrapperStyleFieldDoc(
       return document;
     }
     node.style.backgroundGradient = value || undefined;
+    if (!value) {
+      node.style.backgroundClipText = undefined;
+    }
     // A repeating gradient whose stops span 0-100% renders identically to a
     // non-repeating one; only a background-size makes the tiling visible. Seed
     // a real size on first repeat so the toggle has an immediate effect and the

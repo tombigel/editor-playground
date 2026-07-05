@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { OptionsSelector } from '@/components/ui/options-selector';
+import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LabeledControlRow } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
@@ -56,22 +57,32 @@ const STOP_ACTION_ICON_CLASS = 'h-3.5 w-3.5';
 export function GradientControl({
   value,
   onChange,
+  clipBackgroundToText,
+  onClipBackgroundToTextChange,
 }: {
   value: string;
   onChange: (nextGradientText: string) => void;
+  clipBackgroundToText?: boolean;
+  onClipBackgroundToTextChange?: (checked: boolean) => void;
 }) {
   const parsed = parseGradient(value);
 
   if (!parsed) {
     return (
-      <FormField label="Gradient">
-        <Input
-          aria-label="Gradient CSS"
-          className="text-[11px]"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+      <div className="space-y-2">
+        <FormField label="Gradient">
+          <Input
+            aria-label="Gradient CSS"
+            className="text-[11px]"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </FormField>
+        <ClipBackgroundToTextControl
+          checked={clipBackgroundToText ?? false}
+          onCheckedChange={onClipBackgroundToTextChange}
         />
-      </FormField>
+      </div>
     );
   }
 
@@ -88,8 +99,6 @@ export function GradientControl({
           onValueChange={(next) => update(changeGradientType(parsed, next as GradientType))}
         />
       </FormField>
-
-      <LeadingParams gradient={parsed} onUpdate={update} />
 
       <div className="space-y-1.5">
         <div className="editor-text-muted text-[11px] font-medium">Color stops</div>
@@ -111,6 +120,8 @@ export function GradientControl({
         </Button>
       </div>
 
+      <LeadingParams gradient={parsed} onUpdate={update} />
+
       <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
         Repeat
         <Switch
@@ -118,7 +129,30 @@ export function GradientControl({
           onCheckedChange={(checked) => update({ ...parsed, repeating: checked })}
         />
       </Label>
+      <ClipBackgroundToTextControl
+        checked={clipBackgroundToText ?? false}
+        onCheckedChange={onClipBackgroundToTextChange}
+      />
     </div>
+  );
+}
+
+function ClipBackgroundToTextControl({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+}) {
+  if (!onCheckedChange) {
+    return null;
+  }
+
+  return (
+    <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
+      Clip background to text
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </Label>
   );
 }
 
@@ -327,55 +361,70 @@ function StopRow({
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
 }) {
-  // Matches the panel's color-row convention: actions on the left, then the
-  // value input, with the color swatch outermost on the right.
   return (
-    <div className="flex items-center justify-end gap-1">
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        className={STOP_ACTION_BUTTON_CLASS}
-        disabled={index === 0}
-        aria-label={`Move stop ${index + 1} up`}
-        onClick={() => onMove(-1)}
-      >
-        <ArrowUp className={STOP_ACTION_ICON_CLASS} />
-      </Button>
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        className={STOP_ACTION_BUTTON_CLASS}
-        disabled={index === count - 1}
-        aria-label={`Move stop ${index + 1} down`}
-        onClick={() => onMove(1)}
-      >
-        <ArrowDown className={STOP_ACTION_ICON_CLASS} />
-      </Button>
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        className={STOP_ACTION_BUTTON_CLASS}
-        disabled={count <= 2}
-        aria-label={`Remove stop ${index + 1}`}
-        onClick={onRemove}
-      >
-        <Trash2 className={STOP_ACTION_ICON_CLASS} />
-      </Button>
-      <NumericUnitInlineField
-        value={formatPosition(stop.position)}
-        units={['%', 'px']}
-        className={AXIS_FIELD_CLASS}
-        aria-label={`Stop ${index + 1} position`}
-        onChange={(raw) => {
-          const next = parseAxis(raw);
-          if (next) onPositionChange(next);
-        }}
-      />
-      <HoverColorField value={stop.color} ariaLabel={`Stop ${index + 1} color`} onChange={onColorChange} />
+    <div className="flex items-center gap-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
+        <StopActionButton
+          label={`Move stop ${index + 1} up`}
+          disabled={index === 0}
+          onClick={() => onMove(-1)}
+          icon={<ArrowUp className={STOP_ACTION_ICON_CLASS} />}
+        />
+        <StopActionButton
+          label={`Move stop ${index + 1} down`}
+          disabled={index === count - 1}
+          onClick={() => onMove(1)}
+          icon={<ArrowDown className={STOP_ACTION_ICON_CLASS} />}
+        />
+        <StopActionButton
+          label={`Remove stop ${index + 1}`}
+          disabled={count <= 2}
+          onClick={onRemove}
+          icon={<Trash2 className={STOP_ACTION_ICON_CLASS} />}
+        />
+      </div>
+      <div className="ml-auto flex shrink-0 items-center justify-end gap-1">
+        <NumericUnitInlineField
+          value={formatPosition(stop.position)}
+          units={['%', 'px']}
+          className={AXIS_FIELD_CLASS}
+          aria-label={`Stop ${index + 1} position`}
+          onChange={(raw) => {
+            const next = parseAxis(raw);
+            if (next) onPositionChange(next);
+          }}
+        />
+        <HoverColorField value={stop.color} ariaLabel={`Stop ${index + 1} color`} onChange={onColorChange} />
+      </div>
     </div>
+  );
+}
+
+function StopActionButton({
+  label,
+  disabled,
+  icon,
+  onClick,
+}: {
+  label: string;
+  disabled: boolean;
+  icon: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <PopoverTooltip content={label}>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        className={STOP_ACTION_BUTTON_CLASS}
+        disabled={disabled}
+        aria-label={label}
+        onClick={onClick}
+      >
+        {icon}
+      </Button>
+    </PopoverTooltip>
   );
 }
 

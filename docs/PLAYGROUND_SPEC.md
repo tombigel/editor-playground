@@ -751,7 +751,7 @@ Container, section, header, and footer wrappers support a gradient background la
 
 ### Background clip to text
 
-A wrapper can clip its background to descendant text (`backgroundClipText`). The control sits at the top of the Design gradient group.
+A wrapper can clip its background to descendant text (`backgroundClipText`). The control lives inside the active Gradient controls and is cleared when the gradient is removed.
 
 - The wrapper carries the gradient and clips its own (empty) text so the full rect never paints; descendant text elements `background: inherit` the gradient and clip it to their own glyphs. `-webkit-text-fill-color: transparent` overrides painting only, so authored `color` in the model is preserved; the rule uses `:where()` for zero specificity.
 - On the exported site the wrapper content div is the text container, so the clipped background works directly. On the editor stage the leaf children render inside `.content-wrapper`, so the clipped gradient is painted there (`getContentWrapperTextClipBackgroundStyle`) and the decorative surface/spacer layers reset their background so they never paint an unclipped rect.

@@ -80,6 +80,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - use background-color longhand for button and code leaves
 - make gradient repeat produce visible tiling
 - harden viewbox handling
+- keep clip text with gradients
 
 ---
 

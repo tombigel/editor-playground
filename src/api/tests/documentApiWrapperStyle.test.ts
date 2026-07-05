@@ -37,13 +37,16 @@ describe('api/documentApi setWrapperStyleFieldDoc', () => {
     const section = firstSection(document);
     const gradient = 'linear-gradient(45deg, rgba(255,0,0,0.4) 0%, var(--brand) 100%)';
 
-    const withGradient = setWrapperStyleFieldDoc(document, section.id, 'backgroundGradient', gradient);
+    let withGradient = setWrapperStyleFieldDoc(document, section.id, 'backgroundGradient', gradient);
+    withGradient = setWrapperStyleFieldDoc(withGradient, section.id, 'backgroundClipText', 'true');
     expect(getContainer(withGradient, section.id).style?.backgroundGradient).toBe(gradient);
+    expect(getContainer(withGradient, section.id).style?.backgroundClipText).toBe(true);
 
     expect(setWrapperStyleFieldDoc(withGradient, section.id, 'backgroundGradient', '#ff0000')).toBe(withGradient);
 
     const cleared = setWrapperStyleFieldDoc(withGradient, section.id, 'backgroundGradient', '');
     expect(getContainer(cleared, section.id).style?.backgroundGradient).toBeUndefined();
+    expect(getContainer(cleared, section.id).style?.backgroundClipText).toBeUndefined();
   });
 
   it('seeds a background size when a repeating gradient is enabled', () => {
