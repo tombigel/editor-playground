@@ -61,7 +61,7 @@ import {
   applyWrapperShadowPatch,
 } from './styleFields';
 import { createShadowFallback } from './contentSections/shared';
-import { GradientAxisField, GradientControl } from './contentSections/GradientControl';
+import { GradientAxisField, GradientAxisGroup, GradientControl } from './contentSections/GradientControl';
 import { createDefaultGradient, parseGradient, serializeGradient } from '../../api/documentViewApi';
 
 export type FocusedModeEntry = {
@@ -588,31 +588,28 @@ export function WrapperDesignSection({
               />
             ) : null}
             {gradient && gradientRepeats ? (
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium">Size</Label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <GradientAxisField
-                    label="W"
-                    value={backgroundSizeAxes[0] ?? ''}
-                    units={['px', '%']}
-                    ariaLabel="Background size X"
-                    placeholder="auto"
-                    onChange={(next) =>
-                      onWrapperStyleChange('backgroundSize', joinBackgroundSize(next, backgroundSizeAxes[1]))
-                    }
-                  />
-                  <GradientAxisField
-                    label="H"
-                    value={backgroundSizeAxes[1] ?? ''}
-                    units={['px', '%']}
-                    ariaLabel="Background size Y"
-                    placeholder="auto"
-                    onChange={(next) =>
-                      onWrapperStyleChange('backgroundSize', joinBackgroundSize(backgroundSizeAxes[0], next))
-                    }
-                  />
-                </div>
-              </div>
+              <GradientAxisGroup label="Size">
+                <GradientAxisField
+                  label="W"
+                  value={backgroundSizeAxes[0] ?? ''}
+                  units={['px', '%']}
+                  ariaLabel="Background size X"
+                  placeholder="auto"
+                  onChange={(next) =>
+                    onWrapperStyleChange('backgroundSize', joinBackgroundSize(next, backgroundSizeAxes[1]))
+                  }
+                />
+                <GradientAxisField
+                  label="H"
+                  value={backgroundSizeAxes[1] ?? ''}
+                  units={['px', '%']}
+                  ariaLabel="Background size Y"
+                  placeholder="auto"
+                  onChange={(next) =>
+                    onWrapperStyleChange('backgroundSize', joinBackgroundSize(backgroundSizeAxes[0], next))
+                  }
+                />
+              </GradientAxisGroup>
             ) : null}
           </div>
         ) : null}

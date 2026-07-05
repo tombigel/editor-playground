@@ -1,5 +1,7 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { OptionsSelector } from '@/components/ui/options-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -40,6 +42,9 @@ const RADIAL_EXTENTS: { value: RadialExtentKeyword; label: string }[] = [
 
 const DEFAULT_POSITION = { x: { value: 50, unit: '%' as const }, y: { value: 50, unit: '%' as const } };
 const AXIS_FIELD_CLASS = 'w-[4.5rem]';
+const AXIS_GROUP_GRID_CLASS = 'grid grid-cols-2 gap-1.5';
+const STOP_ACTION_BUTTON_CLASS = 'h-6 w-6';
+const STOP_ACTION_ICON_CLASS = 'h-3.5 w-3.5';
 
 /**
  * Editor for a single CSS gradient stored as text. Parses the stored string,
@@ -60,8 +65,9 @@ export function GradientControl({
   if (!parsed) {
     return (
       <FormField label="Gradient">
-        <input
-          className="editor-input h-7 w-full rounded-md px-2 text-[11px]"
+        <Input
+          aria-label="Gradient CSS"
+          className="text-[11px]"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -211,29 +217,35 @@ function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; on
         </Select>
       </FormField>
       {usingExplicit ? (
-        <div className="space-y-1.5">
-          <Label className="text-[11px] font-medium">{isEllipse ? 'Radii' : 'Radius'}</Label>
-          <div className="grid grid-cols-2 gap-1.5">
+        <GradientAxisGroup label={isEllipse ? 'Radii' : 'Radius'}>
+          <GradientAxisField
+            label="W"
+            value={formatPosition(gradient.sizes?.[0])}
+            units={['px', '%']}
+            ariaLabel="Radial size X"
+            onChange={(raw) => setSize(0, raw)}
+          />
+          {isEllipse ? (
             <GradientAxisField
-              label="W"
-              value={formatPosition(gradient.sizes?.[0])}
+              label="H"
+              value={formatPosition(gradient.sizes?.[1])}
               units={['px', '%']}
-              ariaLabel="Radial size X"
-              onChange={(raw) => setSize(0, raw)}
+              ariaLabel="Radial size Y"
+              onChange={(raw) => setSize(1, raw)}
             />
-            {isEllipse ? (
-              <GradientAxisField
-                label="H"
-                value={formatPosition(gradient.sizes?.[1])}
-                units={['px', '%']}
-                ariaLabel="Radial size Y"
-                onChange={(raw) => setSize(1, raw)}
-              />
-            ) : null}
-          </div>
-        </div>
+          ) : null}
+        </GradientAxisGroup>
       ) : null}
     </>
+  );
+}
+
+export function GradientAxisGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-[11px] font-medium">{label}</Label>
+      <div className={AXIS_GROUP_GRID_CLASS}>{children}</div>
+    </div>
   );
 }
 
@@ -279,25 +291,22 @@ function PositionFields({ gradient, onUpdate }: { gradient: ParsedGradient; onUp
     onUpdate({ ...gradient, position: { ...position, [axis]: parsedAxis } });
   };
   return (
-    <div className="space-y-1.5">
-      <Label className="text-[11px] font-medium">Position</Label>
-      <div className="grid grid-cols-2 gap-1.5">
-        <GradientAxisField
-          label="X"
-          value={formatPosition(position.x)}
-          units={['%', 'px']}
-          ariaLabel="Gradient position X"
-          onChange={(raw) => setAxis('x', raw)}
-        />
-        <GradientAxisField
-          label="Y"
-          value={formatPosition(position.y)}
-          units={['%', 'px']}
-          ariaLabel="Gradient position Y"
-          onChange={(raw) => setAxis('y', raw)}
-        />
-      </div>
-    </div>
+    <GradientAxisGroup label="Position">
+      <GradientAxisField
+        label="X"
+        value={formatPosition(position.x)}
+        units={['%', 'px']}
+        ariaLabel="Gradient position X"
+        onChange={(raw) => setAxis('x', raw)}
+      />
+      <GradientAxisField
+        label="Y"
+        value={formatPosition(position.y)}
+        units={['%', 'px']}
+        ariaLabel="Gradient position Y"
+        onChange={(raw) => setAxis('y', raw)}
+      />
+    </GradientAxisGroup>
   );
 }
 
@@ -326,34 +335,34 @@ function StopRow({
         type="button"
         size="icon"
         variant="ghost"
-        className="h-6 w-6"
+        className={STOP_ACTION_BUTTON_CLASS}
         disabled={index === 0}
         aria-label={`Move stop ${index + 1} up`}
         onClick={() => onMove(-1)}
       >
-        <ArrowUp className="h-3.5 w-3.5" />
+        <ArrowUp className={STOP_ACTION_ICON_CLASS} />
       </Button>
       <Button
         type="button"
         size="icon"
         variant="ghost"
-        className="h-6 w-6"
+        className={STOP_ACTION_BUTTON_CLASS}
         disabled={index === count - 1}
         aria-label={`Move stop ${index + 1} down`}
         onClick={() => onMove(1)}
       >
-        <ArrowDown className="h-3.5 w-3.5" />
+        <ArrowDown className={STOP_ACTION_ICON_CLASS} />
       </Button>
       <Button
         type="button"
         size="icon"
         variant="ghost"
-        className="h-6 w-6"
+        className={STOP_ACTION_BUTTON_CLASS}
         disabled={count <= 2}
         aria-label={`Remove stop ${index + 1}`}
         onClick={onRemove}
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2 className={STOP_ACTION_ICON_CLASS} />
       </Button>
       <NumericUnitInlineField
         value={formatPosition(stop.position)}
