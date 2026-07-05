@@ -3,9 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
 	createButtonTextNode,
 	createInitialDocument,
+	createMediaNode,
 	createTextNode,
 } from "../../../model/defaults";
 import { ButtonDesignSection } from "../contentSections/buttonSections";
+import {
+	SvgContentSection,
+	readNextSvgViewBoxValue,
+} from "../contentSections/svgSections";
 import {
 	CodeDesignSection,
 	CodeTextStyleSection,
@@ -105,5 +110,43 @@ describe("panels/inspector/content section rows", () => {
 		expect((anchorMarkup.match(/data-layout="stack"/g) ?? []).length).toBeGreaterThanOrEqual(1);
 		expect(openInNewTabMarkup).toContain('data-layout="inline"');
 		expect(openInNewTabMarkup).toContain('aria-label="Open in a new tab"');
+	});
+
+	it("renders SVG markup as mono text and splits viewBox controls", () => {
+		const svgNode = createMediaNode("svg", "root");
+		if (svgNode.subtype !== "svg") {
+			throw new Error("Expected SVG media node");
+		}
+		if (!svgNode.svg) {
+			throw new Error("Expected SVG extension");
+		}
+		svgNode.svg.viewBox = "1 2 30 40";
+
+		const markup = renderToStaticMarkup(
+			<SvgContentSection
+				node={svgNode}
+				onTextChange={() => {}}
+				onSetSvgMarkup={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain("font-mono");
+		expect(markup).toContain('aria-label="SVG viewBox Min X"');
+		expect(markup).toContain('aria-label="SVG viewBox Min Y"');
+		expect(markup).toContain('aria-label="SVG viewBox Width"');
+		expect(markup).toContain('aria-label="SVG viewBox Height"');
+		expect(markup).toContain('value="1"');
+		expect(markup).toContain('value="2"');
+		expect(markup).toContain('value="30"');
+		expect(markup).toContain('value="40"');
+		expect(markup).toContain("lucide-check");
+		expect(markup).toContain("lucide-maximize-2");
+		expect(markup).toContain("lucide-rotate-ccw");
+	});
+
+	it("composes SVG viewBox edits and accepts pasted viewBox strings", () => {
+		expect(readNextSvgViewBoxValue("0 0 24 24", "width", "32")).toBe("0 0 32 24");
+		expect(readNextSvgViewBoxValue("0 0 24 24", "minX", "1 2 30 40")).toBe("1 2 30 40");
+		expect(readNextSvgViewBoxValue("", "width", "32")).toBeNull();
 	});
 });

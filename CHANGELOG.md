@@ -26,6 +26,8 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - duplicate nodes with option drag
 - duplicate nodes with option drag
 - gradient backgrounds for containers and sections
+- split viewbox controls
+- split viewbox controls
 
 ### Changed
 

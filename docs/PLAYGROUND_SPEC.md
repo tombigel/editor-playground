@@ -796,7 +796,7 @@ Accessibility:
 
 ViewBox:
 
-- The sanitizer extracts a valid `originalViewBox` from the source (deriving one from `width`/`height` when the source value is absent or malformed). Authors can override it (`svgViewBox`), use `Fit to content` (measures the on-stage `getBBox()`), or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
+- The sanitizer extracts a valid `originalViewBox` from the source (deriving one from `width`/`height` when the source value is absent or malformed). Authors can override it (`svgViewBox`) through split Min X, Min Y, Width, and Height fields; pasting a complete viewBox string into any field fills all four parts. Authors can also use `Fit to content` (measures the on-stage `getBBox()`) or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
 
 Color, stroke, and fit:
 

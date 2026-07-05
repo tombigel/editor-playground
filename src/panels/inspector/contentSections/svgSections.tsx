@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { Check, Maximize2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,15 @@ import { createFocusedModeEntry, InspectorSectionCard } from '../CommonSections'
 import { type FocusModeCardProps, createShadowFallback } from './shared';
 import { MediaFitFields } from './mediaFitFields';
 
+const VIEW_BOX_PARTS = [
+  { key: 'minX', label: 'Min X' },
+  { key: 'minY', label: 'Min Y' },
+  { key: 'width', label: 'Width' },
+  { key: 'height', label: 'Height' },
+] as const;
+
+type ViewBoxPartKey = (typeof VIEW_BOX_PARTS)[number]['key'];
+
 function reconstructSvgSource(node: SvgInspectorNode): string {
   const svg = node.svg;
   if (!svg?.innerMarkup) {
@@ -52,6 +62,9 @@ export function SvgContentSection({
   const [draftMarkup, setDraftMarkup] = useState(() => reconstructSvgSource(node));
   const [markupError, setMarkupError] = useState(false);
   const [viewBoxFitError, setViewBoxFitError] = useState(false);
+  const viewBoxFieldId = useId();
+  const viewBoxSource = node.svg?.viewBox ?? node.svg?.originalViewBox ?? '';
+  const [viewBoxPartsDraft, setViewBoxPartsDraft] = useState(() => parseViewBoxParts(viewBoxSource));
 
   // Re-seed the editor when a different node is selected.
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset draft only when the node identity changes
@@ -59,7 +72,12 @@ export function SvgContentSection({
     setDraftMarkup(reconstructSvgSource(node));
     setMarkupError(false);
     setViewBoxFitError(false);
+    setViewBoxPartsDraft(parseViewBoxParts(node.svg?.viewBox ?? node.svg?.originalViewBox ?? ''));
   }, [node.id]);
+
+  useEffect(() => {
+    setViewBoxPartsDraft(parseViewBoxParts(viewBoxSource));
+  }, [viewBoxSource]);
 
   const applyMarkup = () => {
     const sanitized = sanitizeSvgMarkup(draftMarkup);
@@ -69,6 +87,7 @@ export function SvgContentSection({
     }
     setMarkupError(false);
     setViewBoxFitError(false);
+    setViewBoxPartsDraft(parseViewBoxParts(sanitized.viewBox ?? ''));
     onSetSvgMarkup(node.id, { innerMarkup: sanitized.innerMarkup, originalViewBox: sanitized.viewBox });
   };
 
@@ -81,7 +100,9 @@ export function SvgContentSection({
     try {
       const bbox = element?.getBBox();
       if (bbox && bbox.width > 0 && bbox.height > 0) {
-        onTextChange('svgViewBox', formatViewBox(bbox));
+        const nextViewBox = formatViewBox(bbox);
+        setViewBoxPartsDraft(parseViewBoxParts(nextViewBox));
+        onTextChange('svgViewBox', nextViewBox);
         return;
       }
     } catch {
@@ -91,6 +112,23 @@ export function SvgContentSection({
   };
 
   const a11y = node.svg?.a11y;
+
+  const updateViewBoxPart = (key: ViewBoxPartKey, value: string) => {
+    setViewBoxFitError(false);
+    const pastedViewBox = parsePastedViewBox(value);
+    if (pastedViewBox) {
+      setViewBoxPartsDraft(partsArrayToViewBoxRecord(pastedViewBox));
+      onTextChange('svgViewBox', pastedViewBox.join(' '));
+      return;
+    }
+
+    const nextDraft = { ...viewBoxPartsDraft, [key]: value };
+    setViewBoxPartsDraft(nextDraft);
+    const nextValue = composeViewBoxValue(nextDraft);
+    if (nextValue) {
+      onTextChange('svgViewBox', nextValue);
+    }
+  };
 
   return (
     <InspectorSectionCard
@@ -107,11 +145,13 @@ export function SvgContentSection({
             rows={5}
             spellCheck={false}
             placeholder="Paste SVG markup"
+            className="font-mono text-[12px]"
             onChange={(e) => setDraftMarkup(e.target.value)}
           />
         </FormField>
         <div className="flex items-center justify-end gap-2">
           <Button type="button" size="sm" variant="outline" onClick={applyMarkup}>
+            <Check className="h-3.5 w-3.5" aria-hidden="true" />
             Apply markup
           </Button>
         </div>
@@ -150,11 +190,25 @@ export function SvgContentSection({
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
         <FormField label="ViewBox">
-          <Input
-            value={node.svg?.viewBox ?? node.svg?.originalViewBox ?? ''}
-            placeholder="min-x min-y width height"
-            onChange={(e) => onTextChange('svgViewBox', e.target.value)}
-          />
+          <div className="grid grid-cols-4 gap-1.5">
+            {VIEW_BOX_PARTS.map((part) => {
+              const inputId = `${viewBoxFieldId}-${part.key}`;
+              return (
+                <label key={part.key} htmlFor={inputId} className="min-w-0 space-y-0.5">
+                  <span className="editor-text-muted block truncate text-[10px] leading-4">{part.label}</span>
+                  <Input
+                    id={inputId}
+                    value={viewBoxPartsDraft[part.key]}
+                    inputMode="decimal"
+                    placeholder="0"
+                    aria-label={`SVG viewBox ${part.label}`}
+                    className="h-7 px-2 text-[12px]"
+                    onChange={(e) => updateViewBoxPart(part.key, e.target.value)}
+                  />
+                </label>
+              );
+            })}
+          </div>
         </FormField>
         <div className="flex items-center justify-end gap-2">
           <Button
@@ -163,6 +217,7 @@ export function SvgContentSection({
             variant="outline"
             onClick={fitViewBoxToContent}
           >
+            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
             Fit to content
           </Button>
           <Button
@@ -171,9 +226,11 @@ export function SvgContentSection({
             variant="ghost"
             onClick={() => {
               setViewBoxFitError(false);
+              setViewBoxPartsDraft(parseViewBoxParts(''));
               onTextChange('svgViewBox', '');
             }}
           >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             Reset
           </Button>
         </div>
@@ -185,6 +242,53 @@ export function SvgContentSection({
       </InspectorFieldGroup>
     </InspectorSectionCard>
   );
+}
+
+function parseViewBoxParts(value: string): Record<ViewBoxPartKey, string> {
+  const parts = value.trim().split(/[\s,]+/);
+  if (parts.length !== VIEW_BOX_PARTS.length) {
+    return { minX: '', minY: '', width: '', height: '' };
+  }
+  return {
+    minX: parts[0],
+    minY: parts[1],
+    width: parts[2],
+    height: parts[3],
+  };
+}
+
+export function readNextSvgViewBoxValue(
+  currentValue: string,
+  key: ViewBoxPartKey,
+  value: string,
+): string | null {
+  const pastedViewBox = parsePastedViewBox(value);
+  if (pastedViewBox) {
+    return pastedViewBox.join(' ');
+  }
+
+  return composeViewBoxValue({ ...parseViewBoxParts(currentValue), [key]: value });
+}
+
+function parsePastedViewBox(value: string): string[] | null {
+  const parts = value.trim().split(/[\s,]+/);
+  return parts.length === VIEW_BOX_PARTS.length && parts.every((part) => part !== '') ? parts : null;
+}
+
+function partsArrayToViewBoxRecord(parts: string[]): Record<ViewBoxPartKey, string> {
+  return {
+    minX: parts[0] ?? '',
+    minY: parts[1] ?? '',
+    width: parts[2] ?? '',
+    height: parts[3] ?? '',
+  };
+}
+
+function composeViewBoxValue(parts: Record<ViewBoxPartKey, string>): string | null {
+  if (!VIEW_BOX_PARTS.every((part) => parts[part.key].trim() !== '')) {
+    return null;
+  }
+  return VIEW_BOX_PARTS.map((part) => parts[part.key].trim()).join(' ');
 }
 
 function formatViewBox(bbox: DOMRect) {
