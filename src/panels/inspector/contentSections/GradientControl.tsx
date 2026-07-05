@@ -251,7 +251,7 @@ function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; on
         </Select>
       </FormField>
       {usingExplicit ? (
-        <GradientAxisGroup label={isEllipse ? 'Radii' : 'Radius'}>
+        <GradientAxisGroup>
           <GradientAxisField
             label="W"
             value={formatPosition(gradient.sizes?.[0])}
@@ -274,10 +274,10 @@ function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; on
   );
 }
 
-export function GradientAxisGroup({ label, children }: { label: string; children: ReactNode }) {
+export function GradientAxisGroup({ label, children }: { label?: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-[11px] font-medium">{label}</Label>
+      {label ? <Label className="text-[11px] font-medium">{label}</Label> : null}
       <div className={AXIS_GROUP_GRID_CLASS}>{children}</div>
     </div>
   );
