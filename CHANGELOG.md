@@ -20,6 +20,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Changed
 
 - remove radial radii label
+- semantic wrappers, link types, and slate table task list
 
 ### Fixed
 

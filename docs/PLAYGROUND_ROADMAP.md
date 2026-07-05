@@ -58,8 +58,8 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | Raw intake id | Status | Short name | Priority | Type | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
 | `RI-11` | `🟢 In progress` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Video + inline SVG + gradients shipped 2026-07-05; embed/divider/icon/audio backlog |
-| `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
-| `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
+| `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream B |
+| `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream A |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 done; migration wired into import paths, idempotency fixed. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-45` | `⚪ Not started` | [Form and input authoring platform](#form-and-input-authoring-platform) | `🔴 Next` | Feature | Shared | Requires behavior/backoffice/docs/a11y spec before implementation |
 | `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
@@ -80,7 +80,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🟠 High` | UX | Shared | Dep: `RI-06` |
 | `RI-34` | `🟢 In progress` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | P2-A through P2-D done; rich E2E isolated; four rich authoring cases quarantined; P2-C follow-ups, P2-E, and P2-F remain |
 | `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
-| `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
+| `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream C. Dep: `RI-11`, `RI-12B` |
 | `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
 | `RI-49` | `⚪ Not started` | [Editor URL deep links outside the tour](#editor-url-deep-links-outside-the-tour) | `🟠 High` | Feature | LLM | Boot hydration decided 2026-07-04. Dep: `RI-50` |
 | `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
@@ -426,7 +426,8 @@ None yet.
 - `Slate findings`: Slate has official table references, but tables are not a first-party typed primitive. The docs and examples frame tables as a custom nested model enabled by Slate's recursive document tree. The official example defines userland `table`, `table-row`, and `table-cell` elements, renders them to semantic table markup, and adds only minimal editing guards. Richer behaviors such as keyboard navigation, headers, row/column insertion, paste/import/export normalization, and formulas would be owned by this project.
 - `Simple-table direction`: Treat the simple table as part of the text system, but store it as a structured Slate block rather than as plain markdown text. Markdown pipe syntax can be an authoring/import/export format, while the canonical content should remain a typed nested table block that exports to semantic HTML table markup.
 - `Designable-table boundary`: Keep the designable table separate from the simple text-table path. If cells can host document nodes such as images, buttons, wrappers, sticky targets, or animation targets, the table belongs in the document/container model rather than inside Slate-only text content.
-- `Next move`: Split the first planning pass into two variants: a simple markdown-backed table optimized for fast text/data authoring and predictable export, and a more robust designable table where each cell can host nodes and inherit wrapper/layout semantics. Then decide whether they share one base model with two authoring modes or should remain separate component families.
+- `Decision (2026-07-05)`: The simple table and the designable table are **separate component families** — no shared base model. The simple table is a typed Slate block (`TextSubtype: 'table'`) following the standalone-list architecture; markdown pipe syntax is import/export only.
+- `Next move`: Execute Workstream C of [SEMANTICS_AND_TABLE_TASKLIST.md](./SEMANTICS_AND_TABLE_TASKLIST.md) (tasks C1-C6: content model, documentApi ops, rendering/export, markdown round-trip, editing UX, closeout).
 
 ##### More semantic components
 
@@ -436,7 +437,7 @@ None yet.
 - `Source`: `RI-12A`
 - `Why it matters`: The editor needs richer semantic building blocks, not just generic visual nodes, so authored output can express more real UI and content patterns.
 - `Current state`: Some semantic capability already exists through wrapper roles and text tag authoring, but there is no broader semantic component surface for cases like richer link types, dialogs, landmarks, and related semantic elements.
-- `Next move`: Separate semantic component expansion from wrapper semantics and rank the first additions by authoring value, export value, and accessibility impact.
+- `Next move`: Execute Workstream B of [SEMANTICS_AND_TABLE_TASKLIST.md](./SEMANTICS_AND_TABLE_TASKLIST.md) (email/tel/download link types across model, inspector, and rich-text inline links). Dialogs remain a separate spec-first follow-up.
 
 ##### Semantic wrappers and grouping
 
@@ -446,7 +447,7 @@ None yet.
 - `Source`: `RI-12B`
 - `Why it matters`: Group-level semantics such as `nav`, `aside`, or `article` can change both exported meaning and the editor UX for how grouped content is handled.
 - `Current state`: The editor already has structural wrapper roles such as `section`, `header`, `footer`, and `container`, but it does not yet expose a broader grouping semantics layer that can reinterpret child meaning or authoring behavior.
-- `Next move`: Define how semantic grouping should affect export semantics, inspector controls, and editing affordances without collapsing into arbitrary wrapper complexity.
+- `Next move`: Execute Workstream A of [SEMANTICS_AND_TABLE_TASKLIST.md](./SEMANTICS_AND_TABLE_TASKLIST.md) (`nav`/`aside`/`article` subtypes behaving like containers, exported as semantic tags, with an inspector Role selector; `main` stays hardcoded).
 
 ##### Editor URL deep links outside the tour
 
