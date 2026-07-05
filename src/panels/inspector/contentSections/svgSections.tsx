@@ -624,16 +624,6 @@ export function SvgDesignSection({
                 onChange={(value) => onTextChange('svgStrokeDashArray', value)}
               />
             </FormField>
-            <FormField label="Overflow" layout="inline">
-              <OptionsSelector
-                value={overflow}
-                options={SVG_OVERFLOW_OPTIONS}
-                display="label"
-                size="compact"
-                ariaLabel="SVG overflow"
-                onValueChange={(value) => onTextChange('svgOverflow', value)}
-              />
-            </FormField>
             <FormField label="Paint order" layout="inline">
               <Select
                 value={strokePaintOrder}
@@ -670,6 +660,18 @@ export function SvgDesignSection({
           onAngleChange={(value) => applyLeafShadowPatch(onTextChange, node.style, shadowFallback, { angle: value })}
         />
       </div>
+      <InspectorFieldGroup separated>
+        <FormField label="Overflow" layout="inline">
+          <OptionsSelector
+            value={overflow}
+            options={SVG_OVERFLOW_OPTIONS}
+            display="label"
+            size="compact"
+            ariaLabel="SVG overflow"
+            onValueChange={(value) => onTextChange('svgOverflow', value)}
+          />
+        </FormField>
+      </InspectorFieldGroup>
     </InspectorSectionCard>
   );
 }
