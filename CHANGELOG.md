@@ -91,6 +91,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - polish dash and paint order controls
 - preserve transparent monochrome fills
 - align scale label styling
+- lazily optimize svg sources
 
 ---
 

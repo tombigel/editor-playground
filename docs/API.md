@@ -935,7 +935,7 @@ SVG document operations:
 | `convertImageToInlineSvgDoc` | `(document, nodeId, payload: SvgMarkupPayload)` | Convert an image node into an inline svg node in place |
 | `setSvgViewBoxDoc` | `(document, nodeId, viewBox: string)` | Set or clear the author viewBox override (validated) |
 
-`SvgMarkupPayload` carries `innerMarkup` (sanitized) and the extracted `originalViewBox`. Sanitization happens at input time in the editor layer (`sanitizeSvgMarkup` in `src/lib/svgSanitize.ts`, DOMPurify-backed); the document API stores what it is given and documents the sanitized-input contract.
+`SvgMarkupPayload` carries `innerMarkup` (sanitized) and the extracted `originalViewBox`. Sanitization happens at input time in the editor layer (`sanitizeSvgMarkupWithCleanup` in `src/lib/svgSanitize.ts`, which lazy-loads SVGO for conservative cleanup before the final DOMPurify pass); the document API stores what it is given and documents the sanitized-input contract. `sanitizeSvgMarkup` remains the synchronous DOMPurify-only guard for stored document ingestion.
 
 ### StickyDefinition
 

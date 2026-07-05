@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { sanitizeStoredSvgInnerMarkup, sanitizeSvgMarkup } from '../svgSanitize';
+import { sanitizeStoredSvgInnerMarkup, sanitizeSvgMarkup, sanitizeSvgMarkupWithCleanup } from '../svgSanitize';
 import { isValidViewBox } from '../../model/svg';
 
 describe('lib/svgSanitize', () => {
@@ -72,6 +72,79 @@ describe('lib/svgSanitize', () => {
     expect(sanitizeSvgMarkup('')).toBeNull();
     expect(sanitizeSvgMarkup('<div>not svg</div>')).toBeNull();
     expect(sanitizeSvgMarkup('<svg viewBox="0 0 10 10"><script>alert(1)</script></svg>')).toBeNull();
+  });
+});
+
+describe('lib/svgSanitize sanitizeSvgMarkupWithCleanup', () => {
+  it('optimizes redundant author markup before the DOMPurify pass', async () => {
+    const result = await sanitizeSvgMarkupWithCleanup(
+      '<svg viewBox="0 0 24 24"><!-- export note --><metadata>editor export</metadata><g id="unused-wrapper"><rect x="0" y="0" width="24" height="24"/></g></svg>',
+    );
+
+    expect(result).not.toBeNull();
+    expect(result?.sourceStatus).toBe('sanitized');
+    expect(result?.viewBox).toBe('0 0 24 24');
+    expect(result?.innerMarkup).not.toContain('export note');
+    expect(result?.innerMarkup).not.toContain('metadata');
+    expect(result?.innerMarkup).toContain('<path');
+  });
+
+  it('keeps DOMPurify as the final safety boundary after cleanup', async () => {
+    const result = await sanitizeSvgMarkupWithCleanup(
+      '<svg viewBox="0 0 10 10"><rect width="10" height="10" onclick="alert(1)"/><a href="javascript:alert(2)"><circle r="4"/></a></svg>',
+    );
+
+    expect(result).not.toBeNull();
+    expect(result?.sourceStatus).toBe('sanitized');
+    expect(result?.innerMarkup).not.toContain('onclick');
+    expect(result?.innerMarkup).not.toContain('javascript:');
+    expect(result?.innerMarkup).toContain('<path');
+  });
+
+  it('preserves viewBox and can still derive it from width and height', async () => {
+    const withViewBox = await sanitizeSvgMarkupWithCleanup(
+      '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
+    );
+    const derived = await sanitizeSvgMarkupWithCleanup(
+      '<svg width="100" height="50"><rect width="100" height="50"/></svg>',
+    );
+
+    expect(withViewBox?.viewBox).toBe('0 0 24 24');
+    expect(derived?.viewBox).toBe('0 0 100 50');
+  });
+
+  it('preserves color semantics and transparent no-paint values', async () => {
+    const result = await sanitizeSvgMarkupWithCleanup(
+      '<svg viewBox="0 0 24 24"><rect width="12" height="12" fill="currentColor" stroke="currentColor"/><circle cx="18" cy="18" r="4" fill="transparent" fill-opacity="0"/></svg>',
+    );
+
+    expect(result).not.toBeNull();
+    expect(result?.innerMarkup).toContain('stroke="currentColor"');
+    expect(result?.innerMarkup).toContain('fill="currentColor"');
+    expect(result?.innerMarkup).toContain('fill="transparent"');
+    expect(result?.innerMarkup).toContain('fill-opacity="0"');
+  });
+
+  it('prefixes ids while keeping url references connected', async () => {
+    const result = await sanitizeSvgMarkupWithCleanup(
+      '<svg viewBox="0 0 10 10"><defs><linearGradient id="paint"><stop stop-color="red"/></linearGradient></defs><rect width="10" height="10" fill="url(#paint)"/></svg>',
+    );
+
+    expect(result).not.toBeNull();
+    expect(result?.innerMarkup).toMatch(/id="svg-[a-z0-9]+-[a-z]"/);
+    expect(result?.innerMarkup).toMatch(/fill="url\(#svg-[a-z0-9]+-[a-z]\)"/);
+  });
+
+  it('keeps accessible SVG metadata that survives DOMPurify', async () => {
+    const result = await sanitizeSvgMarkupWithCleanup(
+      '<svg viewBox="0 0 10 10" role="img" aria-labelledby="title desc"><title id="title">Logo</title><desc id="desc">Two squares</desc><rect width="10" height="10"/></svg>',
+    );
+
+    expect(result).not.toBeNull();
+    expect(result?.innerMarkup).toContain('<title');
+    expect(result?.innerMarkup).toContain('Logo');
+    expect(result?.innerMarkup).toContain('<desc');
+    expect(result?.innerMarkup).toContain('Two squares');
   });
 });
 

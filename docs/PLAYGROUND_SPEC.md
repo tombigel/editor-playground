@@ -784,7 +784,7 @@ Object fit and position:
 
 Content and sanitization:
 
-- The SVG component stores **sanitized inline markup** on `MediaNode.svg.innerMarkup` (inner content of the root `<svg>` element). All input paths run DOMPurify with the SVG profiles plus a `foreignObject`/`style` ban before storage, so the model — and every render/export path — never contains scripts, event handlers, or `javascript:` URLs.
+- The SVG component stores **sanitized inline markup** on `MediaNode.svg.innerMarkup` (inner content of the root `<svg>` element). Author input paths lazy-load SVGO and run a conservative cleanup pass before DOMPurify: default SVG optimization with preserved viewBox, accessibility descriptions, ARIA/role metadata, and authored color semantics, plus ID prefixing/minification to reduce collisions. DOMPurify still runs last with the SVG profiles plus a `foreignObject`/`style` ban, so the model — and every render/export path — never contains scripts, event handlers, or `javascript:` URLs.
 - Markup sources: pasting or typing markup into the inspector `Markup` field (debounced and sanitized automatically with a clean/sanitized/invalid source indicator), and a `Convert to inline SVG` action on image nodes whose `src` ends in `.svg` (fetches, sanitizes, and switches the node subtype in place, preserving layout/sticky/animation and turning `alt` into the accessible label).
 - Documents can also enter the model as raw JSON (import, localStorage restore), bypassing input-time sanitization. To keep the "stored model is safe" invariant true at every entry point, `normalizeDocument` re-sanitizes every inline SVG node's `innerMarkup` at ingestion before it can reach the render sink or static export; markup that fails sanitization is dropped.
 - Image nodes continue to support `.svg` URLs as a plain `src` (rendered as `<img>`); `svg.renderMode: 'img'` remains supported for that path.
@@ -796,7 +796,7 @@ Accessibility:
 
 ViewBox:
 
-- The sanitizer normalizes the root SVG namespace before DOMPurify runs, then extracts a valid `originalViewBox` from the source (deriving one from `width`/`height` when the source value is absent or malformed). Authors can override it (`svgViewBox`) through split Min X, Min Y, Width, and Height fields; pasting a complete viewBox string into any field fills all four parts. Authors can also use `Fit to content` (measures the on-stage `getBBox()`) or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
+- The sanitizer normalizes the root SVG namespace before cleanup and DOMPurify run, then extracts a valid `originalViewBox` from the source (deriving one from `width`/`height` when the source value is absent or malformed). Authors can override it (`svgViewBox`) through split Min X, Min Y, Width, and Height fields; pasting a complete viewBox string into any field fills all four parts. Authors can also use `Fit to content` (measures the on-stage `getBBox()`) or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
 
 Color, stroke, and fit:
 

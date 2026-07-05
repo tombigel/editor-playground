@@ -1,14 +1,35 @@
 import DOMPurify from 'dompurify';
+import type { Config } from 'svgo/browser';
 import { isValidViewBox } from '../model/svg';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+const SVG_OPTIMIZER_PLUGINS = [
+  {
+    name: 'preset-default',
+    params: {
+      overrides: {
+        cleanupIds: {
+          minify: true,
+          remove: true,
+        },
+        convertColors: false,
+        removeDesc: false,
+        removeUnknownsAndDefaults: {
+          keepAriaAttrs: true,
+          keepRoleAttr: true,
+        },
+        removeUselessStrokeAndFill: false,
+      },
+    },
+  },
+] satisfies Config['plugins'];
 
 export type SanitizedSvg = {
   /** Sanitized inner markup of the root svg element (root tag excluded). */
   innerMarkup: string;
   /** viewBox from the source, or one derived from width/height when absent. */
   viewBox?: string;
-  /** Whether DOMPurify returned the original source unchanged or stripped/rewrote it. */
+  /** Whether the cleanup/sanitization pipeline returned the original source unchanged. */
   sourceStatus: 'clean' | 'sanitized';
 };
 
@@ -29,8 +50,28 @@ export function sanitizeSvgMarkup(raw: string): SanitizedSvg | null {
     return null;
   }
   const normalizedSource = normalizeSvgRootNamespace(trimmed);
+  return sanitizeSvgMarkupSource(trimmed, normalizedSource);
+}
 
-  const clean = DOMPurify.sanitize(normalizedSource, {
+/**
+ * Optimize author-supplied SVG markup before the final DOMPurify safety pass.
+ *
+ * Intended for interactive/import input paths where the app can lazy-load SVGO.
+ * Document ingestion keeps using the synchronous sanitizer so normalization does
+ * not depend on an async optimizer chunk.
+ */
+export async function sanitizeSvgMarkupWithCleanup(raw: string): Promise<SanitizedSvg | null> {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const normalizedSource = normalizeSvgRootNamespace(trimmed);
+  const optimizedSource = await optimizeSvgMarkup(normalizedSource).catch(() => normalizedSource);
+  return sanitizeSvgMarkupSource(trimmed, optimizedSource);
+}
+
+function sanitizeSvgMarkupSource(originalSource: string, sourceForSanitization: string): SanitizedSvg | null {
+  const clean = DOMPurify.sanitize(sourceForSanitization, {
     USE_PROFILES: { svg: true, svgFilters: true },
     FORBID_TAGS: ['foreignObject', 'style'],
     NAMESPACE: SVG_NAMESPACE,
@@ -57,8 +98,29 @@ export function sanitizeSvgMarkup(raw: string): SanitizedSvg | null {
   return {
     innerMarkup,
     viewBox: resolveViewBox(root),
-    sourceStatus: isEquivalentSvgSource(trimmed, clean) ? 'clean' : 'sanitized',
+    sourceStatus: isEquivalentSvgSource(originalSource, clean) ? 'clean' : 'sanitized',
   };
+}
+
+async function optimizeSvgMarkup(source: string) {
+  const { optimize } = await import('svgo/browser');
+  const result = optimize(source, {
+    multipass: true,
+    path: `${createSvgIdPrefix(source)}.svg`,
+    plugins: [
+      ...SVG_OPTIMIZER_PLUGINS,
+      {
+        name: 'prefixIds',
+        params: {
+          delim: '-',
+          prefix: createSvgIdPrefix(source),
+          prefixClassNames: false,
+          prefixIds: true,
+        },
+      },
+    ],
+  });
+  return result.data;
 }
 
 /**
@@ -104,6 +166,14 @@ function normalizeSvgRootNamespace(source: string) {
     ? openTag.replace(/\sxmlns\s*=\s*(["']).*?\1/, ` xmlns="${SVG_NAMESPACE}"`)
     : openTag.replace(/^<svg\b/i, `<svg xmlns="${SVG_NAMESPACE}"`);
   return `${source.slice(0, match.index)}${normalizedOpenTag}${source.slice(match.index + openTag.length)}`;
+}
+
+function createSvgIdPrefix(source: string) {
+  let hash = 0;
+  for (let index = 0; index < source.length; index += 1) {
+    hash = (Math.imul(31, hash) + source.charCodeAt(index)) | 0;
+  }
+  return `svg-${(hash >>> 0).toString(36)}`;
 }
 
 function resolveViewBox(root: Element): string | undefined {

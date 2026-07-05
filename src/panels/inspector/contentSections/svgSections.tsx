@@ -21,7 +21,11 @@ import {
   DEFAULT_MEDIA_OBJECT_FIT_VIDEO,
   DEFAULT_TEXT_COLOR,
 } from '../../../api/documentViewApi';
-import { sanitizeSvgMarkup } from '../../../lib/svgSanitize';
+import {
+  sanitizeSvgMarkup,
+  sanitizeSvgMarkupWithCleanup,
+  type SanitizedSvg,
+} from '../../../lib/svgSanitize';
 import type { SvgInspectorNode } from '../types';
 import type { EditorTextField } from '../../../api/documentApi';
 import type { SvgMarkupPayload } from '../../../api/documentApi';
@@ -56,7 +60,24 @@ const SVG_STROKE_PAINT_ORDER_OPTIONS = [
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 type ViewBoxPartKey = (typeof VIEW_BOX_PARTS)[number]['key'];
-type SvgMarkupStatus = ReturnType<typeof readSvgMarkupStatus>;
+type SvgMarkupStatus =
+  | {
+    kind: 'clean';
+    label: 'Clean';
+    description: string;
+    result: SanitizedSvg;
+  }
+  | {
+    kind: 'sanitized';
+    label: 'Sanitized';
+    description: string;
+    result: SanitizedSvg;
+  }
+  | {
+    kind: 'fail';
+    label: 'Invalid';
+    description: string;
+  };
 
 function reconstructSvgSource(node: SvgInspectorNode): string {
   const svg = node.svg;
@@ -83,7 +104,7 @@ export function SvgContentSection({
 } & FocusModeCardProps) {
   const initialMarkupSource = reconstructSvgSource(node);
   const [draftMarkup, setDraftMarkup] = useState(() => initialMarkupSource);
-  const [markupStatus, setMarkupStatus] = useState(() => readSvgMarkupStatus(initialMarkupSource));
+  const [markupStatus, setMarkupStatus] = useState<SvgMarkupStatus>(() => readInitialSvgMarkupStatus(initialMarkupSource));
   const [viewBoxFitError, setViewBoxFitError] = useState(false);
   const lastSubmittedMarkupRef = useRef<string | null>(initialMarkupSource);
   const viewBoxFieldId = useId();
@@ -96,34 +117,42 @@ export function SvgContentSection({
   useEffect(() => {
     const nextSource = reconstructSvgSource(node);
     setDraftMarkup(nextSource);
-    setMarkupStatus(readSvgMarkupStatus(nextSource));
+    setMarkupStatus(readInitialSvgMarkupStatus(nextSource));
     lastSubmittedMarkupRef.current = nextSource;
     setViewBoxFitError(false);
     setViewBoxPartsDraft(parseViewBoxParts(node.svg?.viewBox ?? node.svg?.originalViewBox ?? ''));
   }, [node.id]);
 
   useEffect(() => {
-    const nextStatus = readSvgMarkupStatus(draftMarkup);
-    setMarkupStatus(nextStatus);
-    if (
-      draftMarkup === currentMarkupSource ||
-      draftMarkup === lastSubmittedMarkupRef.current ||
-      nextStatus.kind === 'fail'
-    ) {
-      return;
-    }
-
+    let isCurrent = true;
     const timeout = window.setTimeout(() => {
-      lastSubmittedMarkupRef.current = draftMarkup;
-      setViewBoxFitError(false);
-      setViewBoxPartsDraft(parseViewBoxParts(nextStatus.result.viewBox ?? ''));
-      onSetSvgMarkup(node.id, {
-        innerMarkup: nextStatus.result.innerMarkup,
-        originalViewBox: nextStatus.result.viewBox,
+      void readSvgMarkupStatus(draftMarkup).then((nextStatus) => {
+        if (!isCurrent) {
+          return;
+        }
+        setMarkupStatus(nextStatus);
+        if (
+          draftMarkup === currentMarkupSource ||
+          draftMarkup === lastSubmittedMarkupRef.current ||
+          nextStatus.kind === 'fail'
+        ) {
+          return;
+        }
+
+        lastSubmittedMarkupRef.current = draftMarkup;
+        setViewBoxFitError(false);
+        setViewBoxPartsDraft(parseViewBoxParts(nextStatus.result.viewBox ?? ''));
+        onSetSvgMarkup(node.id, {
+          innerMarkup: nextStatus.result.innerMarkup,
+          originalViewBox: nextStatus.result.viewBox,
+        });
       });
     }, SVG_MARKUP_DEBOUNCE_MS);
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(timeout);
+    };
   }, [currentMarkupSource, draftMarkup, node.id, onSetSvgMarkup]);
 
   useEffect(() => {
@@ -304,23 +333,35 @@ export function SvgContentSection({
   );
 }
 
-function readSvgMarkupStatus(raw: string) {
+function readInitialSvgMarkupStatus(raw: string) {
   if (typeof DOMParser === 'undefined' || typeof XMLSerializer === 'undefined') {
-    return raw.trim().startsWith('<svg')
-      ? {
-        kind: 'clean' as const,
-        label: 'Clean',
-        description: 'SVG source is ready for browser sanitization.',
-        result: { innerMarkup: '', sourceStatus: 'clean' as const },
-      }
-      : {
-        kind: 'fail' as const,
-        label: 'Invalid',
-        description: 'No usable SVG content survived sanitization.',
-      };
+    return readBrowserUnavailableSvgMarkupStatus(raw);
   }
 
   const result = sanitizeSvgMarkup(raw);
+  return createSvgMarkupStatus(raw, result, {
+    clean: 'DOMPurify returned the source unchanged.',
+    sanitized: 'DOMPurify changed the source before storage.',
+  });
+}
+
+async function readSvgMarkupStatus(raw: string): Promise<SvgMarkupStatus> {
+  if (typeof DOMParser === 'undefined' || typeof XMLSerializer === 'undefined') {
+    return readBrowserUnavailableSvgMarkupStatus(raw);
+  }
+
+  const result = await sanitizeSvgMarkupWithCleanup(raw);
+  return createSvgMarkupStatus(raw, result, {
+    clean: 'SVGO and DOMPurify returned the source unchanged.',
+    sanitized: 'SVGO or DOMPurify changed the source before storage.',
+  });
+}
+
+function createSvgMarkupStatus(
+  raw: string,
+  result: SanitizedSvg | null,
+  descriptions: { clean: string; sanitized: string },
+): SvgMarkupStatus {
   if (!result) {
     return {
       kind: 'fail' as const,
@@ -333,7 +374,7 @@ function readSvgMarkupStatus(raw: string) {
     return {
       kind: 'sanitized' as const,
       label: 'Sanitized',
-      description: readSvgNamespaceIssue(raw) ?? 'DOMPurify changed the source before storage.',
+      description: readSvgNamespaceIssue(raw) ?? descriptions.sanitized,
       result,
     };
   }
@@ -341,9 +382,24 @@ function readSvgMarkupStatus(raw: string) {
   return {
     kind: 'clean' as const,
     label: 'Clean',
-    description: 'DOMPurify returned the source unchanged.',
+    description: descriptions.clean,
     result,
   };
+}
+
+function readBrowserUnavailableSvgMarkupStatus(raw: string): SvgMarkupStatus {
+  return raw.trim().startsWith('<svg')
+    ? {
+      kind: 'clean' as const,
+      label: 'Clean',
+      description: 'SVG source is ready for browser sanitization.',
+      result: { innerMarkup: '', sourceStatus: 'clean' as const },
+    }
+    : {
+      kind: 'fail' as const,
+      label: 'Invalid',
+      description: 'No usable SVG content survived sanitization.',
+    };
 }
 
 function readSvgMarkupFailureDescription(raw: string) {

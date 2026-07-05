@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { InlineNotice } from '@/components/ui/settings-panel';
 import type { DocumentModel } from '../../../api/editorApi';
 import type { SvgMarkupPayload } from '../../../api/documentApi';
-import { sanitizeSvgMarkup } from '../../../lib/svgSanitize';
+import { sanitizeSvgMarkupWithCleanup } from '../../../lib/svgSanitize';
 import {
   BorderControlGroup,
   FormField,
@@ -76,7 +76,7 @@ export function ImageContentSection({
         setConvertError(true);
         return;
       }
-      const sanitized = sanitizeSvgMarkup(await response.text());
+      const sanitized = await sanitizeSvgMarkupWithCleanup(await response.text());
       if (!sanitized) {
         setConvertError(true);
         return;
