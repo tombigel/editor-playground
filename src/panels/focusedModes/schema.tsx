@@ -9,8 +9,12 @@ import {
   ImageContentSection,
   ImageDesignSection,
   RichTextContentSection,
+  SvgContentSection,
+  SvgDesignSection,
   TextAppearanceSection,
   TextContentSection,
+  VideoContentSection,
+  VideoDesignSection,
 } from '../inspector/ContentSections';
 import {
   InspectorSectionCard,
@@ -164,13 +168,45 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (isMediaNode(node)) {
+    if (isMediaNode(node) && node.subtype === 'image') {
       return [
         createFocusedModeBlock('content', 'primary', () => (
           <ImageContentSection
             document={context.document}
             node={node}
             onTextChange={context.actions.onTextChange}
+            onConvertImageToSvg={context.actions.onConvertImageToSvg}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
+    if (isMediaNode(node) && node.subtype === 'video') {
+      return [
+        createFocusedModeBlock('content', 'primary', () => (
+          <VideoContentSection
+            node={node}
+            onTextChange={context.actions.onTextChange}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
+    if (isMediaNode(node) && node.subtype === 'svg') {
+      return [
+        createFocusedModeBlock('content', 'primary', () => (
+          <SvgContentSection
+            node={node}
+            onTextChange={context.actions.onTextChange}
+            onSetSvgMarkup={context.actions.onSetSvgMarkup ?? (() => undefined)}
             focusedMode={context.focusedMode}
             onEnterFocusedMode={context.actions.onEnterFocusedMode}
             headerContent={options.headerContent}
@@ -232,10 +268,40 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
-    if (isMediaNode(node)) {
+    if (isMediaNode(node) && node.subtype === 'image') {
       return [
         createFocusedModeBlock('design', 'primary', () => (
           <ImageDesignSection
+            node={node}
+            onTextChange={context.actions.onTextChange}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
+    if (isMediaNode(node) && node.subtype === 'video') {
+      return [
+        createFocusedModeBlock('design', 'primary', () => (
+          <VideoDesignSection
+            node={node}
+            onTextChange={context.actions.onTextChange}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
+    if (isMediaNode(node) && node.subtype === 'svg') {
+      return [
+        createFocusedModeBlock('design', 'primary', () => (
+          <SvgDesignSection
             node={node}
             onTextChange={context.actions.onTextChange}
             focusedMode={context.focusedMode}

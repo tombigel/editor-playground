@@ -194,6 +194,8 @@ describe('render/layout', () => {
     expect(getContentWrapperTextClipBackgroundStyle(container)).toMatchObject({
       backgroundColor: '#101828',
       backgroundImage: 'linear-gradient(45deg, red, blue)',
+      '--sp-clip-text-background-color': '#101828',
+      '--sp-clip-text-background-image': 'linear-gradient(45deg, red, blue)',
     });
 
     // The site content div (default) keeps the background so CSS can clip it.

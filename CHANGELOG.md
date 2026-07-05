@@ -22,6 +22,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 - remove radial radii label
 - semantic wrappers, link types, and slate table task list
+- align editor panels with document api
 
 ### Fixed
 

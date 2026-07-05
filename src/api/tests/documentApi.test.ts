@@ -15,11 +15,14 @@ import {
 } from '../../model/richContent';
 import {
   applyDocumentCommands,
+  alignNodesDoc,
   createNodeFromExternalClipboardDoc,
   createTextDocumentContentFromClipboardHtml,
   convertTextNodeDoc,
   createInitialDocument,
   duplicateNodesDoc,
+  distributeNodesDoc,
+  insertContainerDoc,
   insertLeafDoc,
   insertSectionTemplateDoc,
   moveNodeInTreeDoc,
@@ -93,6 +96,22 @@ describe('api/documentApi', () => {
       }
       return sectionId;
     }
+
+    it('inserts a section and attaches it to the requested page through the pure API', () => {
+      const document = createInitialDocument();
+      const pageId = document.pages?.[0]?.id;
+      if (!pageId) {
+        throw new Error('Expected a page');
+      }
+
+      const next = insertContainerDoc(document, 'section', document.rootId, { pageId });
+      const insertedId = Object.keys(next.nodes).find((nodeId) => !document.nodes[nodeId]);
+      if (!insertedId) {
+        throw new Error('Expected inserted section');
+      }
+
+      expect(next.pages?.find((page) => page.id === pageId)?.sectionIds).toContain(insertedId);
+    });
 
     it('inserts every leaf role through the pure API', () => {
       const cases: Array<{
@@ -496,6 +515,98 @@ describe('api/documentApi', () => {
     }
     expect(node.sticky?.enabled).toBe(true);
     expect(node.sticky?.durationMode).toBe('custom');
+  });
+
+  it('normalizes unsupported container content-wrapper sticky targets in the document API', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const container = createContainerNode('container', section.id);
+    section.children.push(container.id);
+    document.nodes[container.id] = container;
+
+    const next = setNodeSticky(document, container.id, { enabled: true, target: 'contentWrapper' });
+    const node = next.nodes[container.id];
+    if (node.contentType !== 'container') {
+      throw new Error('Expected container');
+    }
+
+    expect(node.sticky?.enabled).toBe(true);
+    expect(node.sticky?.target).toBe('self');
+  });
+
+  it('aligns sibling nodes through the document API', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const first = createTextNode('block', section.id);
+    const second = createTextNode('block', section.id);
+    first.rect.x.base = { raw: '40px', parsed: { value: 40, unit: 'px' } };
+    second.rect.x.base = { raw: '120px', parsed: { value: 120, unit: 'px' } };
+    section.children.push(first.id, second.id);
+    document.nodes[first.id] = first;
+    document.nodes[second.id] = second;
+
+    const next = alignNodesDoc(
+      document,
+      [first.id, second.id],
+      'left',
+      {
+        [first.id]: { left: 40, top: 0, width: 80, height: 40 },
+        [second.id]: { left: 120, top: 0, width: 80, height: 40 },
+      },
+    );
+
+    const alignedSecond = next.nodes[second.id];
+    if (alignedSecond.contentType === 'site') {
+      throw new Error('Expected aligned leaf');
+    }
+    expect(alignedSecond.rect.x.base.raw).toBe('40px');
+  });
+
+  it('distributes sibling nodes through the document API', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const first = createTextNode('block', section.id);
+    const second = createTextNode('block', section.id);
+    const third = createTextNode('block', section.id);
+    first.rect.x.base = { raw: '0px', parsed: { value: 0, unit: 'px' } };
+    second.rect.x.base = { raw: '20px', parsed: { value: 20, unit: 'px' } };
+    third.rect.x.base = { raw: '100px', parsed: { value: 100, unit: 'px' } };
+    section.children.push(first.id, second.id, third.id);
+    document.nodes[first.id] = first;
+    document.nodes[second.id] = second;
+    document.nodes[third.id] = third;
+
+    const next = distributeNodesDoc(
+      document,
+      [first.id, second.id, third.id],
+      'horizontal',
+      {
+        [first.id]: { left: 0, top: 0, width: 10, height: 10 },
+        [second.id]: { left: 20, top: 0, width: 10, height: 10 },
+        [third.id]: { left: 100, top: 0, width: 10, height: 10 },
+      },
+    );
+
+    const distributedSecond = next.nodes[second.id];
+    if (distributedSecond.contentType === 'site') {
+      throw new Error('Expected distributed leaf');
+    }
+    expect(distributedSecond.rect.x.base.raw).toBe('50px');
   });
 
   it('updates text html tag through API helpers', () => {

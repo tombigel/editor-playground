@@ -144,6 +144,12 @@
     "assetUrl": "/assets/help-docs/REFERENCE.md"
   },
   {
+    "path": "docs/SEMANTICS_AND_TABLE_TASKLIST.md",
+    "fileName": "SEMANTICS_AND_TABLE_TASKLIST.md",
+    "fullTitle": "Semantic Wrappers, Link Types, and Slate Table Block: Agent Task List",
+    "assetUrl": "/assets/help-docs/SEMANTICS_AND_TABLE_TASKLIST.md"
+  },
+  {
     "path": "docs/SHOWCASE_TOUR_REVIEW_TODO.md",
     "fileName": "SHOWCASE_TOUR_REVIEW_TODO.md",
     "fullTitle": "Showcase Tour Review Todo",

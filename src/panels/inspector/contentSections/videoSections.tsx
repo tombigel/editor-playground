@@ -1,11 +1,11 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InfoTooltip } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, CircleAlert, ClosedCaption, Loader2, SlidersHorizontal } from 'lucide-react';
+import { type InputValidationStatus, ValidatedInput } from '@/components/ui/validated-input';
+import { ClosedCaption, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   BorderControlGroup,
@@ -49,15 +49,10 @@ const VIDEO_PLAYBACK_FLAGS: { field: EditorTextField; label: string; defaultValu
 ];
 const AUTOPLAY_MUTED_TOOLTIP = 'Videos that autoplay must be muted.';
 
-type ValidationStatus = {
-  state: 'idle' | 'checking' | 'valid' | 'error';
-  message?: string;
-};
-
 const VALIDATION_DELAY_MS = 550;
 
-function useVideoSourceValidation(src: string | undefined): ValidationStatus {
-  const [status, setStatus] = useState<ValidationStatus>({ state: 'idle' });
+function useVideoSourceValidation(src: string | undefined): InputValidationStatus {
+  const [status, setStatus] = useState<InputValidationStatus>({ state: 'idle' });
 
   useEffect(() => {
     const url = src?.trim();
@@ -77,7 +72,7 @@ function useVideoSourceValidation(src: string | undefined): ValidationStatus {
         video.removeAttribute('src');
         video.load();
       };
-      const finish = (next: ValidationStatus) => {
+      const finish = (next: InputValidationStatus) => {
         if (settled) return;
         settled = true;
         setStatus(next);
@@ -107,8 +102,8 @@ function useVideoSourceValidation(src: string | undefined): ValidationStatus {
   return status;
 }
 
-function usePosterValidation(src: string | undefined): ValidationStatus {
-  const [status, setStatus] = useState<ValidationStatus>({ state: 'idle' });
+function usePosterValidation(src: string | undefined): InputValidationStatus {
+  const [status, setStatus] = useState<InputValidationStatus>({ state: 'idle' });
 
   useEffect(() => {
     const url = src?.trim();
@@ -121,7 +116,7 @@ function usePosterValidation(src: string | undefined): ValidationStatus {
     const timeout = window.setTimeout(() => {
       let settled = false;
       const image = new Image();
-      const finish = (next: ValidationStatus) => {
+      const finish = (next: InputValidationStatus) => {
         if (settled) return;
         settled = true;
         setStatus(next);
@@ -152,62 +147,6 @@ function LabelWithTooltip({ label, tooltip }: { label: string; tooltip: string }
       <span>{label}</span>
       <InfoTooltip>{tooltip}</InfoTooltip>
     </span>
-  );
-}
-
-function ValidationIndicator({ status, label }: { status: ValidationStatus; label: string }) {
-  if (status.state === 'idle') {
-    return null;
-  }
-
-  const content = status.message ?? label;
-  const icon =
-    status.state === 'checking' ? (
-      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-    ) : status.state === 'valid' ? (
-      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-    ) : (
-      <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
-    );
-  const className =
-    status.state === 'valid'
-      ? 'text-emerald-600 dark:text-emerald-400'
-      : status.state === 'error'
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'editor-text-muted';
-
-  return (
-    <PopoverTooltip
-      side="top"
-      align="center"
-      className="editor-tooltip-panel max-w-[16rem] rounded-lg border px-3 py-2 text-xs font-normal leading-5"
-      content={content}
-    >
-      <span className={`inline-flex h-7 w-6 items-center justify-center ${className}`} role="img" aria-label={content}>
-        {icon}
-      </span>
-    </PopoverTooltip>
-  );
-}
-
-function InputWithStatus({
-  value,
-  placeholder,
-  onChange,
-  status,
-  statusLabel,
-}: {
-  value: string;
-  placeholder?: string;
-  onChange: (value: string) => void;
-  status?: ValidationStatus;
-  statusLabel?: string;
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-1">
-      <Input value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
-      {status && statusLabel ? <ValidationIndicator status={status} label={statusLabel} /> : null}
-    </div>
   );
 }
 
@@ -264,18 +203,18 @@ export function VideoContentSection({
     >
       <InspectorFieldGroup>
         <FormField label="Src">
-          <InputWithStatus
+          <ValidatedInput
             value={node.src ?? ''}
-            onChange={(value) => onTextChange('src', value)}
+            onValueChange={(value) => onTextChange('src', value)}
             status={sourceStatus}
             statusLabel="Video source status"
           />
         </FormField>
         <FormField label="Poster">
-          <InputWithStatus
+          <ValidatedInput
             value={video?.poster ?? ''}
             placeholder="Image URL shown before playback"
-            onChange={(value) => onTextChange('videoPoster', value)}
+            onValueChange={(value) => onTextChange('videoPoster', value)}
             status={posterStatus}
             statusLabel="Poster status"
           />

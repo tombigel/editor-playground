@@ -4,8 +4,11 @@ import {
   createInitialDocument,
   deleteNodeDoc,
   deleteNodesDoc,
+  demoteWrapperRoleDoc,
   moveNodeInTreeDoc,
+  promoteWrapperRoleDoc,
   reorderNodeDoc,
+  reorderNodesDoc,
   reparentNodeDoc,
   reparentNodeAtDoc,
   reparentNodesAtDoc,
@@ -212,11 +215,65 @@ describe('api/documentApi tree operations', () => {
       expect(reorderNodeDoc(document, document.rootId, 'forward')).toBe(document);
     });
 
+    it('reorders multiple sibling leaves in one document mutation', () => {
+      const document = structuredClone(createInitialDocument());
+      const section = getSection(document);
+      const container = createContainerNode('container', section.id);
+      const leafA = createTextNode('block', container.id);
+      const leafB = createTextNode('block', container.id);
+      const leafC = createTextNode('block', container.id);
+      const leafD = createTextNode('block', container.id);
+      container.children = [leafA.id, leafB.id, leafC.id, leafD.id];
+      section.children.push(container.id);
+      document.nodes[container.id] = container;
+      document.nodes[leafA.id] = leafA;
+      document.nodes[leafB.id] = leafB;
+      document.nodes[leafC.id] = leafC;
+      document.nodes[leafD.id] = leafD;
+
+      const backed = reorderNodesDoc(document, [leafB.id, leafC.id], 'back');
+      expect(backed.nodes[container.id].children).toEqual([leafB.id, leafC.id, leafA.id, leafD.id]);
+
+      const front = reorderNodesDoc(backed, [leafB.id, leafC.id], 'bringToFront');
+      expect(front.nodes[container.id].children).toEqual([leafA.id, leafD.id, leafB.id, leafC.id]);
+    });
+
     it('is a no-op for a node with no parent id or missing parent', () => {
       const document = structuredClone(createInitialDocument());
       const orphan = createTextNode('block', 'nonexistent_parent');
       document.nodes[orphan.id] = orphan;
       expect(reorderNodeDoc(document, orphan.id, 'forward')).toBe(document);
+    });
+
+    it('promotes and demotes wrapper roles through pure document helpers', () => {
+      const document = structuredClone(createInitialDocument());
+      const root = getRoot(document);
+      const existingHeader = root.children
+        .map((childId) => document.nodes[childId])
+        .find((node) => node?.contentType === 'container' && node.subtype === 'header');
+      const section = getSection(document);
+      if (!existingHeader || existingHeader.contentType !== 'container') {
+        throw new Error('Expected header');
+      }
+
+      expect(promoteWrapperRoleDoc(document, section.id, 'header')).toBe(document);
+
+      const promoted = promoteWrapperRoleDoc(document, section.id, 'header', { replaceExisting: true });
+      const promotedSection = promoted.nodes[section.id];
+      const replacedHeader = promoted.nodes[existingHeader.id];
+      if (promotedSection.contentType !== 'container' || replacedHeader.contentType !== 'container') {
+        throw new Error('Expected wrapper roles');
+      }
+      expect(promotedSection.subtype).toBe('header');
+      expect(replacedHeader.subtype).toBe('section');
+      expect(promoted.nodes[promoted.rootId].children[0]).toBe(section.id);
+
+      const demoted = demoteWrapperRoleDoc(promoted, section.id);
+      const demotedSection = demoted.nodes[section.id];
+      if (demotedSection.contentType !== 'container') {
+        throw new Error('Expected demoted section');
+      }
+      expect(demotedSection.subtype).toBe('section');
     });
 
     it('is a no-op for a non-reorderable container subtype (group is reorderable but section child position requires a section parent)', () => {

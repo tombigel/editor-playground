@@ -107,7 +107,7 @@ export function GradientControl({
             onRemove={() => update(removeGradientStop(parsed, index))}
           />
         ))}
-        <Button type="button" size="sm" variant="ghost" onClick={() => update(addGradientStop(parsed))}>
+        <Button type="button" size="sm" variant="outline" onClick={() => update(addGradientStop(parsed))}>
           <Plus className="mr-1 h-3.5 w-3.5" /> Add stop
         </Button>
       </div>

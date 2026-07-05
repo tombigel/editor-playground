@@ -20,6 +20,7 @@ export type { TextConversionMode, TextConversionOptions } from './textConversion
 export type { MergeTextNodesOptions } from './textMerge';
 export type { SetTextDocumentContentOptions } from './documentApi/text';
 export type { ParentExpansionOptions, ParentExpansionRequest } from './documentApi/parentExpansion';
+export type { InsertContainerOptions } from './documentApi/insertion';
 export type {
   DuplicateNodePlacement,
   DuplicateNodesOptions,
@@ -65,7 +66,9 @@ export { resolveStickyLayout, resolveWrapperStickyState } from '../sticky/resolv
 export { getTopLevelWrapperVisibilityState } from '../model/topLevelWrapperVisibility';
 export { setPageAsHome as setPageAsHomeDoc } from './pageApi';
 export {
+  alignNodesDoc,
   applyDocumentCommands,
+  distributeNodesDoc,
   moveNodeDoc,
   moveNodesDoc,
   parseDocumentJson,
@@ -75,6 +78,9 @@ export {
   setNodeRect,
   setNodeSticky,
   setSiteNodeStickyElevation,
+  type NodeAlignmentMode,
+  type NodeDistributionMode,
+  type SelectionRect,
 } from './documentApi/basic';
 export { cloneDocument } from './documentApi/shared';
 export { expandParentHeightDoc } from './documentApi/parentExpansion';
@@ -122,11 +128,14 @@ export {
 } from './documentApi/clipboard';
 export {
   convertTextNodeDoc,
+  demoteWrapperRoleDoc,
   deleteNodeDoc,
   deleteNodesDoc,
   mergeTextNodesToRichDoc,
   moveNodeInTreeDoc,
+  promoteWrapperRoleDoc,
   reorderNodeDoc,
+  reorderNodesDoc,
   reparentNodeDoc,
   reparentNodeAtDoc,
   reparentNodesAtDoc,
@@ -134,3 +143,4 @@ export {
   switchSubtypeDoc,
   switchTextSubtypeDoc,
 } from './documentApi/tree';
+export type { PromoteWrapperRoleOptions } from './documentApi/tree';

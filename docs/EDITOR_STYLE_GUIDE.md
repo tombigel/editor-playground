@@ -136,9 +136,9 @@ Approved sizes:
 | Role | Size | Typical use |
 | --- | --- | --- |
 | Micro | `10px` | pills, suffixes, selected-node labels |
-| Label | `11px` | field labels, metadata, compact inputs |
+| Label | `11px` | field labels, metadata |
 | Small | `12px` | supporting copy |
-| Body | `14px` | buttons, inputs, panel body copy |
+| Body | `14px` | buttons, panel body copy |
 | Section title | `15px` | inspector summary heading |
 | Dialog title | `18px` | larger modal titles |
 
@@ -487,12 +487,13 @@ Implementation reference:
 
 Spec:
 
-- height: `36px`
-- padding-x: `12px`
+- height: `28px`
+- padding-x: `10px`
 - radius: `rounded-sm`
 - border: `1px solid var(--editor-input-border)`
 - background: `var(--editor-input-background)`
 - text: `var(--editor-input-text)`
+- font: `12px`
 - placeholder: muted slate
 - shadow: `shadow-sm`
 
@@ -514,6 +515,7 @@ Spec:
 - min height: `80px`
 - padding: `12px x 8px`
 - radius: `rounded-sm`
+- font: `12px`
 
 ### 11.4 Selects
 
@@ -523,10 +525,11 @@ Implementation reference:
 
 Trigger:
 
-- height: `36px`
+- height: `28px`
 - radius: `rounded-sm`
 - border + background same as inputs
 - text: strong text
+- font: `12px`
 - chevron icon: muted text
 
 Content:

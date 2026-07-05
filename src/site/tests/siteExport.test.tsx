@@ -527,6 +527,30 @@ describe('site/siteExport', () => {
     expect(css).toContain('box-shadow: 0px 8px 14px 3px rgba(15, 23, 42, 0.15);');
   });
 
+  it('exports clip-text backgrounds through authored background variables', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.style ??= {};
+    section.style.background = '#101828';
+    section.style.backgroundGradient = 'linear-gradient(45deg, red, blue)';
+    section.style.backgroundClipText = true;
+
+    const css = renderSiteCss(document);
+
+    expect(css).toContain('--sp-clip-text-background-color: #101828;');
+    expect(css).toContain('--sp-clip-text-background-image: linear-gradient(45deg, red, blue);');
+    expect(css).toContain('background-image: var(--sp-clip-text-background-image, none);');
+    expect(css).not.toContain('background: inherit;');
+    expect(css).not.toContain('button, div, pre');
+  });
+
   it('does not serialize zero-width borders, zero radius, or fully transparent shadows into export css', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

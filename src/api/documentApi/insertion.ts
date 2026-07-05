@@ -18,6 +18,10 @@ import { highlightCode, normalizeCodeLanguage } from '../../render/codeHighlight
 import { cloneDocument } from './shared';
 import type { LeafInsertionRole, SectionTemplateInsertionOptions } from './types';
 
+export type InsertContainerOptions = {
+  pageId?: PageId | null;
+};
+
 /**
  * Insert a container node into the document without requiring EditorState.
  * The container is appended as the last child of `parentId`.
@@ -26,6 +30,7 @@ export function insertContainerDoc(
   document: DocumentModel,
   subtype: ContainerSubtype,
   parentId: NodeId,
+  options: InsertContainerOptions = {},
 ): DocumentModel {
   const next = cloneDocument(document);
   syncIdCountersWithDocument(next);
@@ -42,6 +47,14 @@ export function insertContainerDoc(
 
   next.nodes[node.id] = node;
   parent.children.push(node.id);
+  if (subtype === 'section' && options.pageId && next.pages) {
+    const pageIndex = next.pages.findIndex((page) => page.id === options.pageId);
+    if (pageIndex >= 0) {
+      next.pages = next.pages.map((page, index) =>
+        index === pageIndex ? { ...page, sectionIds: [...page.sectionIds, node.id] } : page,
+      );
+    }
+  }
   return next;
 }
 

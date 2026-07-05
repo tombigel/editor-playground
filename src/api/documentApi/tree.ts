@@ -126,6 +126,73 @@ export function reorderNodeDoc(
   return next;
 }
 
+export function reorderNodesDoc(
+  document: DocumentModel,
+  nodeIds: NodeId[],
+  action: NodeOrderAction,
+): DocumentModel {
+  const selectedIds = normalizeSelectedIdsForDocument(document, nodeIds);
+  if (selectedIds.length <= 1) {
+    return selectedIds[0] ? reorderNodeDoc(document, selectedIds[0], action) : document;
+  }
+
+  if (
+    selectedIds.some((nodeId) => {
+      const node = document.nodes[nodeId];
+      return node && isContainerNode(node) && node.subtype === 'section';
+    })
+  ) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const selectedNodes = selectedIds
+    .map((nodeId) => next.nodes[nodeId])
+    .filter(Boolean) as Exclude<DocumentNode, { contentType: 'site' }>[];
+  const parentId = selectedNodes[0]?.parentId ?? null;
+  if (
+    !parentId ||
+    selectedNodes.some((node) => !isReorderableNode(node) || node.parentId !== parentId)
+  ) {
+    return document;
+  }
+
+  const parent = next.nodes[parentId];
+  if (!parent) {
+    return document;
+  }
+
+  const selectedIdSet = new Set(selectedIds);
+  const nextChildren = [...parent.children];
+
+  if (action === 'sendToBack' || action === 'bringToFront') {
+    const selectedChildren = nextChildren.filter((childId) => selectedIdSet.has(childId));
+    const unselectedChildren = nextChildren.filter((childId) => !selectedIdSet.has(childId));
+    parent.children =
+      action === 'sendToBack'
+        ? [...selectedChildren, ...unselectedChildren]
+        : [...unselectedChildren, ...selectedChildren];
+    return next;
+  }
+
+  if (action === 'back') {
+    for (let index = 1; index < nextChildren.length; index += 1) {
+      if (selectedIdSet.has(nextChildren[index]) && !selectedIdSet.has(nextChildren[index - 1])) {
+        [nextChildren[index - 1], nextChildren[index]] = [nextChildren[index], nextChildren[index - 1]];
+      }
+    }
+  } else {
+    for (let index = nextChildren.length - 2; index >= 0; index -= 1) {
+      if (selectedIdSet.has(nextChildren[index]) && !selectedIdSet.has(nextChildren[index + 1])) {
+        [nextChildren[index], nextChildren[index + 1]] = [nextChildren[index + 1], nextChildren[index]];
+      }
+    }
+  }
+
+  parent.children = nextChildren;
+  return next;
+}
+
 /**
  * Reparent a node to a new parent within the document.
  * Returns the original document unchanged when the operation is invalid
@@ -380,6 +447,64 @@ export function moveNodeInTreeDoc(
   return next;
 }
 
+export type PromoteWrapperRoleOptions = {
+  replaceExisting?: boolean;
+};
+
+export function promoteWrapperRoleDoc(
+  document: DocumentModel,
+  wrapperId: NodeId,
+  targetRole: 'header' | 'footer',
+  options: PromoteWrapperRoleOptions = {},
+): DocumentModel {
+  const node = document.nodes[wrapperId];
+  if (!node || !isContainerNode(node)) {
+    return document;
+  }
+
+  if (
+    !options.replaceExisting &&
+    Object.values(document.nodes).some(
+      (candidate) => isContainerNode(candidate) && candidate.subtype === targetRole && candidate.id !== wrapperId,
+    )
+  ) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const wrapper = next.nodes[wrapperId];
+  if (!wrapper || !isContainerNode(wrapper)) {
+    return document;
+  }
+
+  if (options.replaceExisting) {
+    for (const candidate of Object.values(next.nodes)) {
+      if (isContainerNode(candidate) && candidate.subtype === targetRole && candidate.id !== wrapperId) {
+        candidate.subtype = 'section';
+      }
+    }
+  }
+  wrapper.subtype = targetRole;
+  moveWrapperToRoot(next, wrapper.id, targetRole);
+  return next;
+}
+
+export function demoteWrapperRoleDoc(document: DocumentModel, wrapperId: NodeId): DocumentModel {
+  const node = document.nodes[wrapperId];
+  if (!node || !isContainerNode(node) || (node.subtype !== 'header' && node.subtype !== 'footer')) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const wrapper = next.nodes[wrapperId];
+  if (!wrapper || !isContainerNode(wrapper)) {
+    return document;
+  }
+
+  wrapper.subtype = 'section';
+  return next;
+}
+
 export function convertTextNodeDoc(
   document: DocumentModel,
   nodeId: NodeId,
@@ -520,6 +645,57 @@ function isDescendantOf(document: DocumentModel, candidateId: NodeId, ancestorId
     current = document.nodes[current.parentId];
   }
   return false;
+}
+
+function normalizeSelectedIdsForDocument(document: DocumentModel, nodeIds: NodeId[]) {
+  const seen = new Set<NodeId>();
+  const normalized: NodeId[] = [];
+  for (const nodeId of nodeIds) {
+    if (seen.has(nodeId) || !document.nodes[nodeId]) {
+      continue;
+    }
+    seen.add(nodeId);
+    normalized.push(nodeId);
+  }
+  return normalized.filter((nodeId) => !isDescendantOfAny(document, nodeId, seen));
+}
+
+function isDescendantOfAny(document: DocumentModel, nodeId: NodeId, ancestorIds: Set<NodeId>) {
+  let current = document.nodes[nodeId];
+  while (current?.parentId) {
+    if (ancestorIds.has(current.parentId)) {
+      return true;
+    }
+    current = document.nodes[current.parentId];
+  }
+  return false;
+}
+
+function moveWrapperToRoot(
+  document: DocumentModel,
+  wrapperId: NodeId,
+  targetRole: 'header' | 'footer',
+) {
+  const wrapper = document.nodes[wrapperId];
+  const root = document.nodes[document.rootId];
+  if (!wrapper || !isContainerNode(wrapper) || root.contentType !== 'site') {
+    return;
+  }
+
+  if (wrapper.parentId && wrapper.parentId !== root.id) {
+    const previousParent = document.nodes[wrapper.parentId];
+    if (previousParent) {
+      previousParent.children = previousParent.children.filter((childId) => childId !== wrapper.id);
+    }
+  }
+
+  root.children = root.children.filter((childId) => childId !== wrapper.id);
+  if (targetRole === 'header') {
+    root.children.unshift(wrapper.id);
+  } else {
+    root.children.push(wrapper.id);
+  }
+  wrapper.parentId = root.id;
 }
 
 function isReorderableNode(node: DocumentNode): boolean {

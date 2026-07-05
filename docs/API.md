@@ -459,6 +459,9 @@ Source: `src/api/documentApi.ts`
 | --- | --- | --- |
 | `moveNodeDoc` | `(document, nodeId, { x?, y? }, options?) -> DocumentModel` | Move a node to authored coordinates, optionally growing a parent |
 | `moveNodesDoc` | `(document, moves, options?) -> DocumentModel` | Move multiple nodes to authored coordinates, optionally growing a parent |
+| `alignNodesDoc` | `(document, nodeIds, mode, rects) -> DocumentModel` | Align sibling nodes from supplied measured rectangles |
+| `distributeNodesDoc` | `(document, nodeIds, mode, rects) -> DocumentModel` | Distribute sibling node positions from supplied measured rectangles |
+| `reorderNodesDoc` | `(document, nodeIds, action) -> DocumentModel` | Reorder multiple sibling nodes in one pure mutation |
 | `reparentNodeAtDoc` | `(document, nodeId, parentId, { x, y }, options?) -> DocumentModel` | Reparent a node and set local authored coordinates, optionally growing the target parent |
 | `reparentNodesAtDoc` | `(document, parentId, moves, options?) -> DocumentModel` | Reparent multiple nodes and set local authored coordinates, optionally growing the target parent |
 | `expandParentHeightDoc` | `(document, { parentId, minHeightPx }) -> DocumentModel` | Grow a container height to at least the requested px size, preserving authored `auto` height |
@@ -689,6 +692,8 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | --- | --- | --- |
 | `alignNodes` | `(state, nodeIds, alignment) -> EditorState` | Align selected nodes |
 | `distributeNodes` | `(state, nodeIds, axis) -> EditorState` | Distribute nodes evenly |
+
+Editor alignment and distribution delegate to `alignNodesDoc` and `distributeNodesDoc`; callers provide `SelectionRect` measurements because the document model does not own DOM geometry.
 
 ### Field updates
 
@@ -1198,7 +1203,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Document and Editor API
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
-- `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
+- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
 - `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgStrokeCap`, `SvgStrokeJoin`, `SvgStrokePaintOrder`, `SvgStrokeStyle`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`

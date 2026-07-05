@@ -17,6 +17,25 @@ export const INPUT_PROPS: PropDefinition[] = [
 	},
 ];
 
+export const VALIDATED_INPUT_PROPS: PropDefinition[] = [
+	...INPUT_PROPS,
+	{
+		name: "status",
+		type: "{ state: 'idle' | 'checking' | 'valid' | 'error'; message?: string }",
+		description: "Connection or asset validation status shown as a compact trailing icon.",
+	},
+	{
+		name: "statusLabel",
+		type: "string",
+		description: "Accessible fallback label for the validation icon tooltip.",
+	},
+	{
+		name: "onValueChange",
+		type: "(value: string) => void",
+		description: "Value change handler that receives the next string value.",
+	},
+];
+
 export const SWITCH_PROPS: PropDefinition[] = [
 	{ name: "checked", type: "boolean", description: "Checked state." },
 	{

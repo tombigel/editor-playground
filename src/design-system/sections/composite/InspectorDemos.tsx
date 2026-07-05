@@ -1,4 +1,4 @@
-import { PanelRightClose, Pin, PinOff, Settings2 } from "lucide-react";
+import { ClosedCaption, LineStyle, PaintBucket, PanelRightClose, Pin, Settings2, TypeOutline } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SwitchBlock } from "@/panels/InspectorControls";
@@ -139,30 +139,52 @@ export function InspectorDemos() {
 			>
 				<div className="w-[300px] space-y-3">
 					<div>
-						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Enabled</div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Gradient with nested child</div>
 						<SwitchBlock
-							icon={<Pin className="h-3.5 w-3.5 shrink-0 editor-text-accent" />}
-							title="Enabled"
-							description="Pin this node inside its structural range."
+							icon={<PaintBucket className="h-3.5 w-3.5 shrink-0 editor-text-accent" />}
+							title="Background gradient"
+							description="Add a gradient layer."
 							checked={true}
 							onCheckedChange={() => {}}
-						/>
+						>
+							<div className="flex items-center justify-between gap-3">
+								<div className="flex min-w-0 items-start gap-2">
+									<TypeOutline className="mt-0.5 h-3.5 w-3.5 shrink-0 editor-text-accent" />
+									<div>
+										<div className="editor-text-strong text-xs font-medium">Clip background to text</div>
+										<div className="editor-text-muted text-[11px]">Paint text with the gradient.</div>
+									</div>
+								</div>
+								<Switch checked onCheckedChange={() => {}} />
+							</div>
+						</SwitchBlock>
 					</div>
 					<div>
-						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Disabled</div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Standalone divider block</div>
 						<SwitchBlock
-							icon={<PinOff className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
-							title="Disabled"
-							description="Pin this node inside its structural range."
+							icon={<LineStyle className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+							title="Global stroke"
+							description="Use one outline style."
 							checked={false}
 							onCheckedChange={() => {}}
 						/>
 					</div>
 					<div>
-						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">With nested child</div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Short description</div>
 						<SwitchBlock
+							icon={<ClosedCaption className="h-3.5 w-3.5 shrink-0 editor-text-accent" />}
+							title="Video captions"
+							description="Attach a WebVTT file."
+							checked={true}
+							onCheckedChange={() => {}}
+						/>
+					</div>
+					<div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Existing sticky use</div>
+						<SwitchBlock
+							icon={<Pin className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
 							title="Global elevation"
-							description="Elevate all sticky elements above siblings."
+							description="Elevate sticky elements."
 							checked={false}
 							onCheckedChange={() => {}}
 						>

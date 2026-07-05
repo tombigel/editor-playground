@@ -3,6 +3,7 @@ import { Layers2, Pin, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
 import { Input } from "@/components/ui/input";
+import { ValidatedInput } from "@/components/ui/validated-input";
 import {
 	Menubar,
 	MenubarCheckboxItem,
@@ -41,6 +42,7 @@ import {
 	TABS_PROPS,
 	TEXTAREA_PROPS,
 	TOOLTIP_PROPS,
+	VALIDATED_INPUT_PROPS,
 	WARNING_INFO_PROPS,
 } from "./MiscDemos.props";
 
@@ -163,7 +165,7 @@ export function MiscDemos() {
 			<ComponentPreview
 				id="base-input"
 				name="Text Input"
-				description="Text input with controlled value and draft management."
+				description="Compact text input with controlled value and draft management."
 				sourceFile="src/components/ui/input.tsx"
 				props={INPUT_PROPS}
 			>
@@ -171,6 +173,35 @@ export function MiscDemos() {
 					<Input placeholder="Placeholder text…" />
 					<Input value="Filled value" readOnly />
 					<Input disabled placeholder="Disabled" />
+				</div>
+			</ComponentPreview>
+
+			<ComponentPreview
+				id="base-validated-input"
+				name="Validated Input"
+				description="Text input with a compact trailing validation icon for media URLs, remote assets, and connection checks."
+				sourceFile="src/components/ui/validated-input.tsx"
+				props={VALIDATED_INPUT_PROPS}
+			>
+				<div className="max-w-[320px] space-y-3">
+					<ValidatedInput
+						value="https://cdn.example.com/video.mp4"
+						onValueChange={() => {}}
+						status={{ state: "checking", message: "Checking video source..." }}
+						statusLabel="Video source status"
+					/>
+					<ValidatedInput
+						value="poster.jpg"
+						onValueChange={() => {}}
+						status={{ state: "valid", message: "Poster image decoded." }}
+						statusLabel="Poster status"
+					/>
+					<ValidatedInput
+						value="missing.webm"
+						onValueChange={() => {}}
+						status={{ state: "error", message: "Media error: the video source could not be loaded." }}
+						statusLabel="Video source status"
+					/>
 				</div>
 			</ComponentPreview>
 

@@ -44,6 +44,7 @@ export const DS_SECTIONS: DSSection[] = [
 			{ id: "base-page-switcher-select", label: "Page Switcher Select" },
 			{ id: "base-tabs", label: "Tabs" },
 			{ id: "base-input", label: "Text Input" },
+			{ id: "base-validated-input", label: "Validated Input" },
 			{ id: "base-switch", label: "Toggle (Switch)" },
 			{ id: "base-options-selector", label: "Options Selector" },
 			{ id: "base-textarea", label: "Text Field" },

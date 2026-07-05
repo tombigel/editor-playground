@@ -307,7 +307,7 @@ export function SvgContentSection({
           <Button
             type="button"
             size="sm"
-            variant="ghost"
+            variant="secondary"
             onClick={() => {
               setViewBoxFitError(false);
               setViewBoxPartsDraft(parseViewBoxParts(''));

@@ -476,7 +476,7 @@ export function NumericRow({
 							onChange(next);
 						}
 					}}
-					className="text-sm"
+					className="text-xs"
 				/>
 			</div>
 		</div>

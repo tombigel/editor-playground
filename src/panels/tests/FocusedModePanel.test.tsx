@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createButtonTextNode } from '../../model/defaults';
+import { createInitialDocument, createButtonTextNode, createMediaNode } from '../../model/defaults';
 import { FocusedModePanel } from '../FocusedModePanel';
 import { EditorSidebar } from '../EditorSidebar';
 
@@ -81,7 +81,7 @@ function createInspectorProps() {
     onAnimationDocSettingsChange: () => {},
   };
 
-  return { document, textNode, linkNode, buttonNode, siteNode, baseProps };
+  return { document, textNode, linkNode, buttonNode, sectionNode, siteNode, baseProps };
 }
 
 describe('panels/FocusedModePanel', () => {
@@ -195,6 +195,67 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('>External<');
     expect(markup).toContain('>Href<');
     expect(markup).toContain('Open in a new tab');
+  });
+
+  it('renders video-specific content controls in focused mode', () => {
+    const { document, sectionNode, baseProps } = createInspectorProps();
+    const videoNode = createMediaNode('video', sectionNode.id);
+    document.nodes[videoNode.id] = videoNode;
+
+    const markup = renderToStaticMarkup(
+      <FocusedModePanel
+        {...baseProps}
+        document={document}
+        node={videoNode}
+        focusedMode="content"
+        mode="content"
+        onExitFocusedMode={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('>Src<');
+    expect(markup).toContain('>Poster<');
+    expect(markup).toContain('>Long description<');
+    expect(markup).toContain('>Playback<');
+    expect(markup).toContain('>Video captions<');
+    expect(markup).not.toContain('Open in a new tab');
+  });
+
+  it('renders svg-specific content and design controls in focused mode', () => {
+    const { document, sectionNode, baseProps } = createInspectorProps();
+    const svgNode = createMediaNode('svg', sectionNode.id);
+    document.nodes[svgNode.id] = svgNode;
+
+    const contentMarkup = renderToStaticMarkup(
+      <FocusedModePanel
+        {...baseProps}
+        document={document}
+        node={svgNode}
+        focusedMode="content"
+        mode="content"
+        onExitFocusedMode={() => {}}
+      />,
+    );
+
+    expect(contentMarkup).toContain('>Markup<');
+    expect(contentMarkup).toContain('SVG markup is sanitized before it is stored');
+    expect(contentMarkup).toContain('>ViewBox<');
+    expect(contentMarkup).not.toContain('>Alt<');
+
+    const designMarkup = renderToStaticMarkup(
+      <FocusedModePanel
+        {...baseProps}
+        document={document}
+        node={svgNode}
+        focusedMode="design"
+        mode="design"
+        onExitFocusedMode={() => {}}
+      />,
+    );
+
+    expect(designMarkup).toContain('>Monochrome<');
+    expect(designMarkup).toContain('>Global stroke<');
+    expect(designMarkup).toContain('>Fit<');
   });
 
   it('renders a layout-only message for hidden non-layout focused modes', () => {

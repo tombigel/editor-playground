@@ -6,7 +6,7 @@ Primary source: `src/api/documentApi.ts`
 
 ### Insert Operations
 
-- `insertContainerDoc(document, subtype, parentId)`
+- `insertContainerDoc(document, subtype, parentId, options?)`
 - `insertLeafDoc(document, role, parentId)`
 - `insertTextDoc(document, parentId)`
 - `insertMediaDoc(document, parentId)`
@@ -14,6 +14,8 @@ Primary source: `src/api/documentApi.ts`
 
 `insertLeafDoc` is the API-first insertion surface for editor leaf roles:
 `text`, `heading`, `list`, `richtext`, `code`, `image`, `link`, and `button`.
+
+`InsertContainerOptions` accepts `pageId` so pure section insertion can also attach the new section to a page without going through editor state.
 
 ### Delete Operations
 
@@ -23,10 +25,15 @@ Primary source: `src/api/documentApi.ts`
 ### Reorder And Reparent
 
 - `reorderNodeDoc(document, nodeId, action)`
+- `reorderNodesDoc(document, nodeIds, action)`
 - `reparentNodeDoc(document, nodeId, newParentId)`
 - `reparentNodeAtDoc(document, nodeId, newParentId, { x, y }, options?)`
 - `reparentNodesAtDoc(document, newParentId, moves, options?)`
 - `moveNodeInTreeDoc(document, nodeId, targetParentId, targetIndex)`
+- `promoteWrapperRoleDoc(document, wrapperId, targetRole, options?)`
+- `demoteWrapperRoleDoc(document, wrapperId)`
+
+`PromoteWrapperRoleOptions` accepts `replaceExisting` for the editor's confirm-replace flow; request/cancel UI state remains editor-only.
 
 ## Geometry And Layout
 
@@ -39,6 +46,15 @@ Primary source: `src/api/documentApi.ts`
 - `expandParentHeightDoc(document, { parentId, minHeightPx })` grows a container height without moving children. Authored `auto` height is preserved.
 
 The move and reparent-at-position helpers accept `options.parentExpansion?: { parentId, minHeightPx }`. Drag/drop uses this to commit child placement and parent height growth together for default `anchor` / Allow overflow downward drops. When the parent height is authored as `auto`, the movement still commits and the height remains `auto`.
+
+### Alignment And Distribution
+
+- `alignNodesDoc(document, nodeIds, mode, rects)` aligns siblings from supplied measured rectangles.
+- `distributeNodesDoc(document, nodeIds, mode, rects)` distributes sibling positions from supplied measured rectangles.
+
+`NodeAlignmentMode` is `'left' | 'center-x' | 'right' | 'top' | 'center-y' | 'bottom'`.
+`NodeDistributionMode` is `'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom'`.
+`SelectionRect` is the measured `{ left, top, width, height }` rectangle that editor and scripted callers pass into these pure document mutations.
 
 ### Container Child Boundaries
 

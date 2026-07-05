@@ -107,7 +107,7 @@ export function getWrapperBorderDeclarations(node: ContainerNode): string[] {
 function getWrapperBackgroundStyle(node: ContainerNode): CSSProperties {
   const gradient = node.style?.backgroundGradient;
   const repeating = gradient?.startsWith('repeating-') === true;
-  return {
+  const style: CSSProperties & Record<string, string> = {
     ...(node.style?.background ? { backgroundColor: node.style.background } : {}),
     ...(gradient ? { backgroundImage: gradient } : {}),
     ...(repeating
@@ -117,6 +117,15 @@ function getWrapperBackgroundStyle(node: ContainerNode): CSSProperties {
         }
       : {}),
   };
+
+  if (node.style?.backgroundClipText === true) {
+    style['--sp-clip-text-background-color'] = node.style.background ?? 'transparent';
+    style['--sp-clip-text-background-image'] = gradient ?? 'none';
+    style['--sp-clip-text-background-repeat'] = 'repeat';
+    style['--sp-clip-text-background-size'] = repeating && node.style?.backgroundSize ? node.style.backgroundSize : 'auto';
+  }
+
+  return style;
 }
 
 export function getContentWrapperSurfaceStyle(

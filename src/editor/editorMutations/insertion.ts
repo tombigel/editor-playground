@@ -1,35 +1,25 @@
-import {
-  createContainerNode,
-  syncIdCountersWithDocument,
-  type SectionTemplateId,
-} from '../../model/defaults';
+import type { SectionTemplateId } from '../../model/defaults';
 import type { ContainerSubtype, DocumentModel, NodeId } from '../../model/types';
 import { isContainerNode } from '../../model/types';
-import { insertLeafDoc, insertSectionTemplateDoc, type LeafInsertionRole } from '../../api/documentApi';
+import { insertContainerDoc, insertLeafDoc, insertSectionTemplateDoc, type LeafInsertionRole } from '../../api/documentApi';
 import type { EditorState } from '../types';
-import { cloneDocument } from '../editorPersistence';
 import { applySelectionToDocument } from './shared';
 
 export function insertWrapper(state: EditorState, role: ContainerSubtype): EditorState {
-  const document = cloneDocument(state.document);
-  syncIdCountersWithDocument(document);
   const parentId = state.selectedId
-    ? getInsertionParent(document, state.selectedId, role === 'container' ? 'containerWrapper' : 'siteWrapper')
+    ? getInsertionParent(state.document, state.selectedId, role === 'container' ? 'containerWrapper' : 'siteWrapper')
     : role === 'container'
-      ? findFirstSection(document) ?? document.rootId
-      : document.rootId;
-  const node = createUniqueWrapper(document, role, parentId);
-  document.nodes[node.id] = node;
-  document.nodes[parentId].children.push(node.id);
-  if (role === 'section' && state.activePageId && document.pages) {
-    const pageIndex = document.pages.findIndex((p) => p.id === state.activePageId);
-    if (pageIndex >= 0) {
-      document.pages = document.pages.map((p, i) =>
-        i === pageIndex ? { ...p, sectionIds: [...p.sectionIds, node.id] } : p,
-      );
-    }
+      ? findFirstSection(state.document) ?? state.document.rootId
+      : state.document.rootId;
+  const document = insertContainerDoc(state.document, role, parentId, { pageId: state.activePageId });
+  if (document === state.document) {
+    return state;
   }
-  return applySelectionToDocument(state, document, [node.id]);
+  const insertedId = Object.keys(document.nodes).find((nodeId) => !state.document.nodes[nodeId]);
+  if (!insertedId) {
+    return state;
+  }
+  return applySelectionToDocument(state, document, [insertedId]);
 }
 
 export function insertSectionTemplate(state: EditorState, templateId: SectionTemplateId): EditorState {
@@ -104,12 +94,4 @@ function getInsertionParent(
     return document.rootId;
   }
   return document.rootId;
-}
-
-function createUniqueWrapper(document: DocumentModel, subtype: ContainerSubtype, parentId: NodeId) {
-  let node = createContainerNode(subtype, parentId);
-  while (document.nodes[node.id]) {
-    node = createContainerNode(subtype, parentId);
-  }
-  return node;
 }
