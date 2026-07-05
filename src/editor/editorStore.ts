@@ -53,6 +53,7 @@ export {
   cancelPromoteWrapperRole,
   demoteWrapperRole,
   duplicateSelection,
+  duplicateDraggedNodes,
   deleteNode,
   deleteNodes,
   pasteClipboardNodes,

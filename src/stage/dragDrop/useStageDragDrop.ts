@@ -53,6 +53,7 @@ type DragControllerArgs = {
   onMoveSelection?: StageProps['onMoveSelection'];
   onReparent: StageProps['onReparent'];
   onReparentSelection?: StageProps['onReparentSelection'];
+  onDuplicateDrag?: StageProps['onDuplicateDrag'];
 };
 
 export function useStageDragDrop({
@@ -65,6 +66,7 @@ export function useStageDragDrop({
   onMoveSelection,
   onReparent,
   onReparentSelection,
+  onDuplicateDrag,
 }: DragControllerArgs) {
   const draggableElementsRef = useRef(new Map<NodeId, HTMLElement>());
   const dropTargetElementsRef = useRef(new Map<NodeId, HTMLElement>());
@@ -117,8 +119,12 @@ export function useStageDragDrop({
       onReparent(commit.id, commit.parentId, commit.x, commit.y, { parentExpansion: commit.parentExpansion });
     } else if (commit.type === 'reparentSelection') {
       onReparentSelection?.(commit.parentId, commit.moves, { parentExpansion: commit.parentExpansion });
+    } else if (commit.type === 'duplicate') {
+      onDuplicateDrag?.(commit.nodeIds, commit.targetParentId, commit.placements, {
+        parentExpansion: commit.parentExpansion,
+      });
     }
-  }, [onMove, onMoveSelection, onReparent, onReparentSelection]);
+  }, [onDuplicateDrag, onMove, onMoveSelection, onReparent, onReparentSelection]);
 
   const cleanupInteraction = useCallback((releaseCapture = false) => {
     pendingInteractionRef.current = null;

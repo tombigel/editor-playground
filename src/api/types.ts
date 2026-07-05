@@ -117,6 +117,13 @@ export type DragResolvedPlacement = {
 
 export type DragCommitIntent =
   | { type: 'none' }
+  | {
+      type: 'duplicate';
+      nodeIds: NodeId[];
+      targetParentId: NodeId;
+      placements: Array<{ sourceId: NodeId; x: string; y: string }>;
+      parentExpansion?: DragParentExpansion;
+    }
   | { type: 'move'; id: NodeId; x: string; y: string; parentExpansion?: DragParentExpansion }
   | { type: 'moveSelection'; moves: Array<{ id: NodeId; x: string; y: string }>; parentExpansion?: DragParentExpansion }
   | { type: 'reparent'; id: NodeId; parentId: NodeId; x: string; y: string; parentExpansion?: DragParentExpansion }

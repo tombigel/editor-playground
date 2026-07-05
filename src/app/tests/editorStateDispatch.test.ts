@@ -64,6 +64,7 @@ describe('app/editorReducer empty-selection guards', () => {
     ['demote', { type: 'demote' }],
     ['delete', { type: 'delete' }],
     ['duplicateSelection', { type: 'duplicateSelection' }],
+    ['duplicateDraggedNodes', { type: 'duplicateDraggedNodes', nodeIds: [], targetParentId: 'missing', placements: [] }],
     ['orderBack', { type: 'orderBack' }],
     ['orderForward', { type: 'orderForward' }],
     ['orderSendToBack', { type: 'orderSendToBack' }],
@@ -146,6 +147,38 @@ describe('app/editorReducer geometry and structure dispatch', () => {
     });
     expect(next.document.nodes[leafId].parentId).toBe(container.id);
     expect(next.document.nodes[container.id].children).toContain(leafId);
+  });
+
+  it('duplicateDraggedNodes clones into the drag target and selects the duplicate', () => {
+    const { state, leafId } = stateWithSelectedLeaf();
+    const sectionId = findSectionId(state);
+    const document = structuredClone(state.document);
+    const container = createContainerNode('container', sectionId);
+    document.nodes[container.id] = container;
+    const section = document.nodes[sectionId];
+    if (section.contentType !== 'container') {
+      throw new Error('Expected container section');
+    }
+    section.children.push(container.id);
+    const withContainer = { ...state, document };
+
+    const next = editorReducer(withContainer, {
+      type: 'duplicateDraggedNodes',
+      nodeIds: [leafId],
+      targetParentId: container.id,
+      placements: [{ sourceId: leafId, x: '32px', y: '48px' }],
+    });
+
+    expect(next.selectedId).toBeTruthy();
+    expect(next.selectedId).not.toBe(leafId);
+    const duplicate = next.selectedId ? next.document.nodes[next.selectedId] : null;
+    expect(duplicate?.parentId).toBe(container.id);
+    if (!duplicate || duplicate.contentType === 'site') {
+      throw new Error('Expected duplicate editable node');
+    }
+    expect(duplicate.rect.x.base.raw).toBe('32px');
+    expect(duplicate.rect.y.base.raw).toBe('48px');
+    expect(next.document.nodes[leafId].parentId).toBe(sectionId);
   });
 
   it('promote/confirmPromote and demote drive the wrapper role lifecycle', () => {

@@ -268,6 +268,44 @@ describe('api/documentApi', () => {
       expect(result.document.nodes[textId]).toBeTruthy();
     });
 
+    it('duplicates nodes into a drag-resolved target parent and placement', () => {
+      const document = createInitialDocument();
+      const sectionId = firstSectionId(document);
+      const withText = insertLeafDoc(document, 'text', sectionId);
+      const textId = Object.keys(withText.nodes).find((nodeId) => !document.nodes[nodeId]);
+      if (!textId) throw new Error('Expected inserted text');
+
+      const container = createContainerNode('container', sectionId);
+      const withContainer = structuredClone(withText);
+      withContainer.nodes[container.id] = container;
+      const section = withContainer.nodes[sectionId];
+      if (!section || section.contentType !== 'container') {
+        throw new Error('Expected section');
+      }
+      section.children.push(container.id);
+
+      const result = duplicateNodesDoc(withContainer, [textId], {
+        targetParentId: container.id,
+        placements: [{ sourceId: textId, x: '42px', y: '84px' }],
+        parentExpansion: { parentId: container.id, minHeightPx: 320 },
+      });
+      const pasted = result.document.nodes[result.pastedIds[0]];
+
+      expect(result.pastedIds[0]).not.toBe(textId);
+      expect(pasted?.parentId).toBe(container.id);
+      if (!pasted || pasted.contentType === 'site') {
+        throw new Error('Expected pasted editable node');
+      }
+      expect(pasted.rect.x.base.raw).toBe('42px');
+      expect(pasted.rect.y.base.raw).toBe('84px');
+      const expandedParent = result.document.nodes[container.id];
+      if (expandedParent?.contentType !== 'container') {
+        throw new Error('Expected target container');
+      }
+      expect(expandedParent.rect.height.base.raw).toBe('320px');
+      expect(result.document.nodes[textId]?.parentId).toBe(sectionId);
+    });
+
     it('creates link and image nodes from external clipboard URLs', () => {
       const document = createInitialDocument();
       const sectionId = firstSectionId(document);

@@ -813,6 +813,95 @@ describe('api/dragDropApi', () => {
     expect(duplicateRequested.guideX).toEqual({ value: 160, source: 'page', anchor: 'edge' });
   });
 
+  it('commits Alt drag as a duplicate placement instead of moving the source node', () => {
+    const { document, leafAId, containerAId, containerBId } = createDragDocument();
+    const input = makeDragInput({
+      clientX: 520,
+      clientY: 140,
+      timestampMs: 48,
+      altKey: true,
+    });
+    const commit = finishUpdatedDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId],
+        startClientX: 100,
+        startClientY: 100,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [{ nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 }],
+          nodes: [{ id: leafAId, originX: 20, originY: 30, parentId: containerAId }],
+          sourceParentId: containerAId,
+          dropTargets: [
+            {
+              id: containerAId,
+              contentBox: { left: 100, top: 100, width: 300, height: 200 },
+              depth: 0,
+              order: 1,
+            },
+            {
+              id: containerBId,
+              contentBox: { left: 480, top: 100, width: 300, height: 200 },
+              depth: 0,
+              order: 2,
+            },
+          ],
+        }),
+      }),
+      input,
+    );
+
+    expect(commit).toEqual({
+      type: 'duplicate',
+      nodeIds: [leafAId],
+      targetParentId: containerBId,
+      placements: [{ sourceId: leafAId, x: '0px', y: '20px' }],
+    });
+  });
+
+  it('commits multi-select Alt drag with relative duplicate placements', () => {
+    const { document, leafAId, leafBId, containerAId } = createDragDocument();
+    const input = makeDragInput({
+      clientX: 180,
+      clientY: 160,
+      timestampMs: 48,
+      altKey: true,
+    });
+    const commit = finishUpdatedDragSession(
+      beginDragSession({
+        document,
+        anchorId: leafAId,
+        selectedIds: [leafAId, leafBId],
+        startClientX: 100,
+        startClientY: 100,
+        startTimestampMs: 0,
+        geometry: makeGeometry({
+          previewItems: [
+            { nodeId: leafAId, offsetX: 0, offsetY: 0, width: 80, height: 40 },
+            { nodeId: leafBId, offsetX: 120, offsetY: 0, width: 80, height: 40 },
+          ],
+          nodes: [
+            { id: leafAId, originX: 20, originY: 30, parentId: containerAId },
+            { id: leafBId, originX: 140, originY: 30, parentId: containerAId },
+          ],
+          sourceParentId: containerAId,
+        }),
+      }),
+      input,
+    );
+
+    expect(commit).toEqual({
+      type: 'duplicate',
+      nodeIds: [leafAId, leafBId],
+      targetParentId: containerAId,
+      placements: [
+        { sourceId: leafAId, x: '40px', y: '40px' },
+        { sourceId: leafBId, x: '160px', y: '40px' },
+      ],
+    });
+  });
+
   it('computes smoothed drag motion from timestamped pointer updates', () => {
     const { document, leafAId, containerAId } = createDragDocument();
     const session = updateDragSession(

@@ -121,6 +121,13 @@ export type EditorAction =
   | { type: 'delete' }
   | { type: 'deleteNode'; id: string }
   | { type: 'duplicateSelection'; nodeIds?: NodeId[] }
+  | {
+      type: 'duplicateDraggedNodes';
+      nodeIds: NodeId[];
+      targetParentId: NodeId;
+      placements: Array<{ sourceId: NodeId; x: string; y: string }>;
+      options?: DragCommitOptions;
+    }
   | { type: 'pasteClipboardNodes'; payload: EditorNodeClipboardPayload }
   | { type: 'pasteExternalClipboard'; data: ExternalClipboardData }
   | { type: 'setNodeVisibility'; id: string; value: boolean }

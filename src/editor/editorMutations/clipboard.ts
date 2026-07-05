@@ -1,9 +1,11 @@
 import {
   createNodeFromExternalClipboardDoc,
+  type DuplicateNodePlacement,
   duplicateNodesDoc,
   pasteNodesFromClipboardDoc,
   type EditorNodeClipboardPayload,
   type ExternalClipboardData,
+  type ParentExpansionRequest,
 } from '../../api/documentApi';
 import type { NodeId } from '../../model/types';
 import type { EditorState } from '../types';
@@ -30,6 +32,25 @@ export function duplicateSelection(state: EditorState, nodeIds?: NodeId[]): Edit
     selectedId: state.selectedId,
     activePageId: state.activePageId,
     offset: true,
+  });
+  if (result.document === state.document || result.pastedIds.length === 0) {
+    return state;
+  }
+  return applySelectionToDocument(state, result.document, result.pastedIds);
+}
+
+export function duplicateDraggedNodes(
+  state: EditorState,
+  nodeIds: NodeId[],
+  targetParentId: NodeId,
+  placements: DuplicateNodePlacement[],
+  options: { parentExpansion?: ParentExpansionRequest } = {},
+): EditorState {
+  const result = duplicateNodesDoc(state.document, nodeIds, {
+    activePageId: state.activePageId,
+    targetParentId,
+    placements,
+    parentExpansion: options.parentExpansion,
   });
   if (result.document === state.document || result.pastedIds.length === 0) {
     return state;

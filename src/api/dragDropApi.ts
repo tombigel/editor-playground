@@ -205,9 +205,11 @@ export function finishDragSession(
     return { type: 'none' };
   }
 
+  const targetId = resolved.resolvedPlacement.targetParentId;
+  const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
+
   if (resolved.dragIds.length > 1) {
     const anchorNode = resolved.geometry.nodes.find((node) => node.id === resolved.anchorId);
-    const targetId = resolved.resolvedPlacement.targetParentId;
     if (!anchorNode) {
       return { type: 'none' };
     }
@@ -215,39 +217,52 @@ export function finishDragSession(
     const anchorLocalX = resolved.resolvedPlacement.localX;
     const anchorLocalY = resolved.resolvedPlacement.localY;
     const draggedNodes = resolved.geometry.nodes.filter((node) => resolved.dragIds.includes(node.id));
+    const placements = draggedNodes.map((node) => ({
+      sourceId: node.id,
+      x: `${targetId === sourceParentId ? Math.max(0, Math.round(anchorLocalX + (node.originX - anchorNode.originX))) : Math.round(anchorLocalX + (node.originX - anchorNode.originX))}px`,
+      y: `${targetId === sourceParentId ? Math.max(0, Math.round(anchorLocalY + (node.originY - anchorNode.originY))) : Math.round(anchorLocalY + (node.originY - anchorNode.originY))}px`,
+    }));
 
-    if (targetId !== sourceParentId) {
-      const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
+    if (resolved.duplicateRequested) {
       return {
-        type: 'reparentSelection',
-        parentId: targetId,
-        moves: draggedNodes.map((node) => ({
-          id: node.id,
-          x: `${Math.round(anchorLocalX + (node.originX - anchorNode.originX))}px`,
-          y: `${Math.round(anchorLocalY + (node.originY - anchorNode.originY))}px`,
-        })),
+        type: 'duplicate',
+        nodeIds: resolved.dragIds,
+        targetParentId: targetId,
+        placements,
         ...(parentExpansion ? { parentExpansion } : {}),
       };
     }
 
-    const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
+    if (targetId !== sourceParentId) {
+      return {
+        type: 'reparentSelection',
+        parentId: targetId,
+        moves: placements.map((placement) => ({ id: placement.sourceId, x: placement.x, y: placement.y })),
+        ...(parentExpansion ? { parentExpansion } : {}),
+      };
+    }
+
     return {
       type: 'moveSelection',
-      moves: draggedNodes.map((node) => ({
-          id: node.id,
-          x: `${Math.max(0, Math.round(anchorLocalX + (node.originX - anchorNode.originX)))}px`,
-          y: `${Math.max(0, Math.round(anchorLocalY + (node.originY - anchorNode.originY)))}px`,
-        })),
+      moves: placements.map((placement) => ({ id: placement.sourceId, x: placement.x, y: placement.y })),
       ...(parentExpansion ? { parentExpansion } : {}),
     };
   }
 
-  const targetId = resolved.resolvedPlacement.targetParentId;
   const localX = Math.round(resolved.resolvedPlacement.localX);
   const localY = Math.round(resolved.resolvedPlacement.localY);
 
+  if (resolved.duplicateRequested) {
+    return {
+      type: 'duplicate',
+      nodeIds: [resolved.anchorId],
+      targetParentId: targetId,
+      placements: [{ sourceId: resolved.anchorId, x: `${localX}px`, y: `${localY}px` }],
+      ...(parentExpansion ? { parentExpansion } : {}),
+    };
+  }
+
   if (targetId !== sourceParentId) {
-    const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
     return {
       type: 'reparent',
       id: resolved.anchorId,
@@ -258,7 +273,6 @@ export function finishDragSession(
     };
   }
 
-  const parentExpansion = resolveCommitParentExpansion(resolved.resolvedPlacement.parentExpansion);
   return {
     type: 'move',
     id: resolved.anchorId,

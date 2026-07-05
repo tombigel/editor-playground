@@ -56,6 +56,12 @@ export type StageProps = {
 		moves: Array<{ id: NodeId; x: string; y: string }>,
 		options?: { parentExpansion?: ParentExpansionRequest },
 	) => void;
+	onDuplicateDrag?: (
+		nodeIds: NodeId[],
+		targetParentId: NodeId,
+		placements: Array<{ sourceId: NodeId; x: string; y: string }>,
+		options?: { parentExpansion?: ParentExpansionRequest },
+	) => void;
 	onResize: (id: NodeId, width: string, height: string) => void;
 	onResizeStart: (id: NodeId) => void;
 	onResizeEnd: (id: NodeId) => void;

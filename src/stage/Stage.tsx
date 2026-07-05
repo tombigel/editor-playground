@@ -84,6 +84,7 @@ export function Stage({
 	onMoveSelection,
 	onReparent,
 	onReparentSelection,
+	onDuplicateDrag,
 	onResize,
 	onResizeStart,
 	onResizeEnd,
@@ -157,6 +158,7 @@ export function Stage({
 		onMoveSelection,
 		onReparent,
 		onReparentSelection,
+		onDuplicateDrag,
 	});
 
 	useLayoutEffect(() => {

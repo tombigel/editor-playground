@@ -125,6 +125,7 @@ export const createInitialState = editorStore.createInitialState;
 export const deleteNode = editorStore.deleteNode;
 export const deleteNodes = editorStore.deleteNodes;
 export const demoteWrapperRole = editorStore.demoteWrapperRole;
+export const duplicateDraggedNodes = editorStore.duplicateDraggedNodes;
 export const duplicateSelection = editorStore.duplicateSelection;
 export const distributeNodes = editorStore.distributeNodes;
 export const importDocument = editorStore.importDocument;

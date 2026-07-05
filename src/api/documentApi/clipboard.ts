@@ -26,6 +26,7 @@ import type {
 import { isContainerNode, isLeafNode } from '../../model/types';
 import type { PageId } from '../../model/types/site';
 import { parseUnitValue } from '../../model/units';
+import { expandParentHeightDoc, type ParentExpansionRequest } from './parentExpansion';
 import { cloneDocument } from './shared';
 
 export const EDITOR_NODE_CLIPBOARD_MIME = 'application/x-editor-playground-node+json';
@@ -43,6 +44,18 @@ export type PasteNodesOptions = {
   selectedId?: NodeId | null;
   activePageId?: PageId | null;
   offset?: boolean;
+};
+
+export type DuplicateNodePlacement = {
+  sourceId: NodeId;
+  x: string;
+  y: string;
+};
+
+export type DuplicateNodesOptions = PasteNodesOptions & {
+  targetParentId?: NodeId | null;
+  placements?: DuplicateNodePlacement[];
+  parentExpansion?: ParentExpansionRequest | null;
 };
 
 export type PasteNodesResult = {
@@ -188,7 +201,7 @@ export function pasteNodesFromClipboardDoc(
 export function duplicateNodesDoc(
   document: DocumentModel,
   nodeIds: NodeId[],
-  options: PasteNodesOptions = {},
+  options: DuplicateNodesOptions = {},
 ): PasteNodesResult {
   const payload = serializeNodesForClipboardDoc(document, nodeIds);
   if (!payload) {
@@ -197,11 +210,34 @@ export function duplicateNodesDoc(
 
   const firstRoot = payload.rootIds[0];
   const sourceParentId = firstRoot ? document.nodes[firstRoot]?.parentId : null;
-  return pasteNodesFromClipboardDoc(document, payload, {
+  const result = pasteNodesFromClipboardDoc(document, payload, {
     ...options,
-    selectedId: sourceParentId ?? options.selectedId ?? null,
-    offset: true,
+    selectedId: options.targetParentId ?? sourceParentId ?? options.selectedId ?? null,
+    offset: !options.placements,
   });
+  if (result.document === document || result.pastedIds.length === 0 || !options.placements) {
+    return result;
+  }
+
+  const placementBySourceId = new Map(options.placements.map((placement) => [placement.sourceId, placement]));
+  const next = cloneDocument(result.document);
+  payload.rootIds.forEach((sourceId, index) => {
+    const pastedId = result.pastedIds[index];
+    const placement = placementBySourceId.get(sourceId);
+    const node = pastedId ? next.nodes[pastedId] : null;
+    if (!placement || !node || node.contentType === 'site') {
+      return;
+    }
+    node.rect.x.base = parseUnitValue(placement.x);
+    node.rect.y.base = parseUnitValue(placement.y);
+  });
+
+  return {
+    document: options.parentExpansion
+      ? expandParentHeightDoc(next, options.parentExpansion)
+      : next,
+    pastedIds: result.pastedIds,
+  };
 }
 
 export function createNodeClipboardJson(payload: EditorNodeClipboardPayload) {

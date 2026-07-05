@@ -46,6 +46,8 @@ Source: `src/api/documentApi.ts`
 | --- | --- | --- |
 | `EDITOR_NODE_CLIPBOARD_MIME` | string | Custom MIME type for editor node clipboard payloads |
 | `EDITOR_NODE_CLIPBOARD_VERSION` | number | Current version for editor node clipboard payloads |
+| `DuplicateNodePlacement` | type | Drag-resolved source id and destination coordinates for explicit duplicate placement |
+| `DuplicateNodesOptions` | type | Paste-style duplicate options plus optional drag target, explicit placements, and parent expansion |
 | `EditorNodeClipboardPayload` | type | Serializable selected-node clipboard payload |
 | `ExternalClipboardData` | type | External clipboard text/html input for fallback paste |
 | `PasteNodesOptions` | type | Selected node, active page, and offset options for paste/duplicate |
@@ -54,7 +56,7 @@ Source: `src/api/documentApi.ts`
 | `createNodeClipboardJson` | `(payload) -> string` | Serialize an editor clipboard payload as JSON for custom clipboard MIME or hidden HTML fallback storage |
 | `createTextDocumentContentFromClipboardHtml` | `(document, { text?, html? }) -> TextDocumentContent` | Convert clipboard HTML to the Slate-backed text document model, preserving supported styling and installed font families |
 | `pasteNodesFromClipboardDoc` | `(document, payload, options?) -> PasteNodesResult` | Paste serialized nodes with remapped ids, target-parent resolution, and optional offset |
-| `duplicateNodesDoc` | `(document, nodeIds, options?) -> PasteNodesResult` | Duplicate selected nodes through the same clipboard payload path |
+| `duplicateNodesDoc` | `(document, nodeIds, options?) -> PasteNodesResult` | Duplicate selected nodes through the same clipboard payload path, including optional explicit drag placements |
 | `createNodeFromExternalClipboardDoc` | `(document, { text?, html? }, options?) -> PasteNodesResult` | Create a rich text, link, or image node from external clipboard data |
 
 `PasteNodesResult` returns the next document and pasted root ids so editor wrappers can select the pasted nodes and track history.
@@ -165,6 +167,7 @@ Source: `src/api/pageApi.ts`
 
 | Function | Signature | Description |
 | --- | --- | --- |
+| `DuplicatePageResult` | type | Result for page duplication, including the next document and duplicate page id when created |
 | `addPage` | `(document, options?: Partial<Omit<DocumentPage, 'type' \| 'id'>>) -> DocumentModel` | Add a new page with optional properties |
 | `deletePage` | `(document, pageId) -> DocumentModel` | Delete a page and unlink its sections |
 | `duplicatePage` | `(document, pageId) -> { document, pageId }` | Duplicate a page with unique route metadata and cloned page-owned sections |
@@ -484,13 +487,13 @@ Start a new drag session from a pointer-down event.
 updateDragSession(session: DragSession, input: DragUpdateInput): DragSession
 ```
 
-Update the session with new pointer position; resolves the target parent, local placement, preview placement, guides, drop highlight, axis lock, snap-bypass state, parent-expansion request, and duplicate-requested stub state. The resolved placement on the session is the single source of truth for both preview and commit.
+Update the session with new pointer position; resolves the target parent, local placement, preview placement, guides, drop highlight, axis lock, snap-bypass state, parent-expansion request, and duplicate-drag intent. The resolved placement on the session is the single source of truth for both preview and commit.
 
 ```typescript
 finishDragSession(session: DragSession, input: DragUpdateInput): DragCommitIntent
 ```
 
-Finalize the drag and return the commit intent (what to move/reparent, plus optional parent expansion). Finish uses the already-resolved session placement and does not re-run snapping, drop-target detection, or boundary resolution on pointer-up.
+Finalize the drag and return the commit intent (what to move/reparent/duplicate, plus optional parent expansion). Finish uses the already-resolved session placement and does not re-run snapping, drop-target detection, or boundary resolution on pointer-up.
 
 ```typescript
 cancelDragSession(session: DragSession | null): null
@@ -655,6 +658,7 @@ These wrap `documentApi` functions with editor state, selection, and history man
 | `deleteNodes` | `(state, nodeIds) -> EditorState` | Delete multiple nodes |
 | `createNodeClipboardJson` | `(payload) -> string` | Re-exported clipboard JSON helper for editor consumers |
 | `createTextDocumentContentFromClipboardHtml` | `(document, data) -> TextDocumentContent` | Re-exported styled HTML clipboard converter for editor paste surfaces |
+| `duplicateDraggedNodes` | `(state, nodeIds, targetParentId, placements, options?) -> EditorState` | Duplicate dragged nodes into a resolved target parent and placement, then select the duplicates |
 | `duplicateSelection` | `(state, nodeIds?) -> EditorState` | Duplicate the current selection and select the duplicated roots |
 | `pasteClipboardNodes` | `(state, payload) -> EditorState` | Paste editor clipboard nodes and select pasted roots |
 | `pasteExternalClipboard` | `(state, data) -> EditorState` | Paste external text/html/link/image clipboard data as a new node |

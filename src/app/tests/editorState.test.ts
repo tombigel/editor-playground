@@ -226,6 +226,50 @@ describe('app/editorState', () => {
     expect(undone.present.document.nodes[sourceId]).toBeTruthy();
   });
 
+  it('duplicates a dragged node at the committed placement and tracks undo history', () => {
+    let present = createInitialState();
+    present = insertLeaf(present, 'text');
+    const sourceId = present.selectedId;
+    if (!sourceId) {
+      throw new Error('Expected selected text');
+    }
+    const sourceParentId = present.document.nodes[sourceId].parentId;
+    if (!sourceParentId) {
+      throw new Error('Expected source parent');
+    }
+    const initial = {
+      present,
+      past: [],
+      future: [],
+      historyLimit: 100,
+      activeResize: null,
+    } satisfies HistoryState;
+
+    const duplicated = historyReducer(initial, {
+      type: 'duplicateDraggedNodes',
+      nodeIds: [sourceId],
+      targetParentId: sourceParentId,
+      placements: [{ sourceId, x: '96px', y: '112px' }],
+    });
+
+    expect(duplicated.past).toHaveLength(1);
+    expect(duplicated.present.selectedId).not.toBe(sourceId);
+    const duplicate = duplicated.present.selectedId
+      ? duplicated.present.document.nodes[duplicated.present.selectedId]
+      : null;
+    if (!duplicate || duplicate.contentType === 'site') {
+      throw new Error('Expected duplicate editable node');
+    }
+    expect(duplicate.parentId).toBe(sourceParentId);
+    expect(duplicate.rect.x.base.raw).toBe('96px');
+    expect(duplicate.rect.y.base.raw).toBe('112px');
+    expect(duplicated.present.document.nodes[sourceId].parentId).toBe(sourceParentId);
+
+    const undone = historyReducer(duplicated, { type: 'undo' });
+    expect(undone.present.selectedId).toBe(sourceId);
+    expect(Object.keys(undone.present.document.nodes)).toHaveLength(Object.keys(present.document.nodes).length);
+  });
+
   it('pastes a clipboard node payload into the selected container parent', () => {
     let source = createInitialState();
     source = insertLeaf(source, 'text');

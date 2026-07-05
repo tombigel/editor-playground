@@ -9,6 +9,7 @@ import {
   deleteNode,
   deleteNodes,
   demoteWrapperRole,
+  duplicateDraggedNodes,
   duplicateSelection,
   distributeNodes,
   importDocument as importEditorDocument,
@@ -158,6 +159,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return deleteNode(state, action.id);
     case 'duplicateSelection':
       return selectedIds.length > 0 ? duplicateSelection(state, action.nodeIds) : state;
+    case 'duplicateDraggedNodes':
+      return action.nodeIds.length > 0
+        ? duplicateDraggedNodes(state, action.nodeIds, action.targetParentId, action.placements, action.options)
+        : state;
     case 'pasteClipboardNodes':
       return pasteClipboardNodes(state, action.payload);
     case 'pasteExternalClipboard':

@@ -387,6 +387,16 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onReparentSelection={(parentId, moves, options) =>
 							dispatch({ type: "reparentSelection", parentId, moves, options })
 						}
+						onDuplicateDrag={(nodeIds, targetParentId, placements, options) => {
+							setLinkPopupVisible(false);
+							dispatch({
+								type: "duplicateDraggedNodes",
+								nodeIds,
+								targetParentId,
+								placements,
+								options,
+							});
+						}}
 						onResize={(id, width, height) =>
 							dispatch({ type: "resize", id, width, height })
 						}

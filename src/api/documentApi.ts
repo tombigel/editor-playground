@@ -21,6 +21,8 @@ export type { MergeTextNodesOptions } from './textMerge';
 export type { SetTextDocumentContentOptions } from './documentApi/text';
 export type { ParentExpansionOptions, ParentExpansionRequest } from './documentApi/parentExpansion';
 export type {
+  DuplicateNodePlacement,
+  DuplicateNodesOptions,
   EditorNodeClipboardPayload,
   ExternalClipboardData,
   PasteNodesOptions,

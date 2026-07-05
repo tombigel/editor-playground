@@ -23,6 +23,8 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - inline SVG leaf component with sanitized markup and a11y
 - warn when local storage nears quota
 - duplicate whole pages
+- duplicate nodes with option drag
+- duplicate nodes with option drag
 
 ### Changed
 
