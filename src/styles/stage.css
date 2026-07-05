@@ -240,6 +240,17 @@
   -webkit-text-fill-color: transparent;
 }
 
+/*
+ * Decorative stage chrome (surface underlay, spacer layers) must not inherit or
+ * paint the clip-text gradient — their inline background-clip would otherwise
+ * beat the :where() rule and paint a full rect. Higher specificity than :where.
+ */
+.sp-clip-text .content-wrapper-surface,
+.sp-clip-text .sticky-spacer-layer,
+.sp-clip-text .sticky-spacer-range-layer {
+  background: none;
+}
+
 .grid-lane-overlay {
   position: absolute;
   inset: 0;

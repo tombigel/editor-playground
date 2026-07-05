@@ -1,23 +1,32 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { OptionsSelector } from '@/components/ui/options-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, HoverColorField, NumberInput, NumericUnitInlineField } from '../../InspectorControls';
 import {
-  createDefaultGradient,
-  parseGradient,
-  serializeGradient,
   type GradientStop,
   type GradientStopPosition,
   type GradientType,
   type ParsedGradient,
   type RadialExtentKeyword,
+  addGradientStop,
+  changeGradientType,
+  moveGradientStopColor,
+  parseGradient,
+  removeGradientStop,
+  serializeGradient,
 } from '../../../api/documentViewApi';
 
-const GRADIENT_TYPES: { value: GradientType; label: string }[] = [
+const GRADIENT_TYPES = [
   { value: 'linear', label: 'Linear' },
   { value: 'radial', label: 'Radial' },
   { value: 'conic', label: 'Conic' },
-];
+] as const;
+
+const RADIAL_SHAPES = [
+  { value: 'ellipse', label: 'Ellipse' },
+  { value: 'circle', label: 'Circle' },
+] as const;
 
 const RADIAL_EXTENTS: { value: RadialExtentKeyword; label: string }[] = [
   { value: 'closest-side', label: 'Closest side' },
@@ -27,49 +36,33 @@ const RADIAL_EXTENTS: { value: RadialExtentKeyword; label: string }[] = [
 ];
 
 const DEFAULT_POSITION = { x: { value: 50, unit: '%' as const }, y: { value: 50, unit: '%' as const } };
+const AXIS_FIELD_CLASS = 'w-[4.5rem]';
 
 /**
- * Editor for a single CSS gradient stored as text. Parses the stored string on
- * every render, applies structured edits, and serializes back through onChange.
- * Falls back to a raw-text field when the stored value is not a gradient this
- * editor round-trips (e.g. hand-authored `to top` syntax).
+ * Editor for a single CSS gradient stored as text. Parses the stored string,
+ * applies structured edits, and serializes back through onChange. The parent
+ * owns the on/off toggle, so this always renders with a present gradient value;
+ * it falls back to a raw-text field when the value is not one this editor
+ * round-trips.
  */
 export function GradientControl({
   value,
   onChange,
 }: {
-  value: string | undefined;
+  value: string;
   onChange: (nextGradientText: string) => void;
 }) {
-  const enabled = Boolean(value);
-  const parsed = value ? parseGradient(value) : null;
+  const parsed = parseGradient(value);
 
-  if (!enabled) {
-    return (
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={() => onChange(serializeGradient(createDefaultGradient()))}
-      >
-        <Plus className="mr-1 h-3.5 w-3.5" /> Add gradient
-      </Button>
-    );
-  }
-
-  // Unparseable but present: expose the raw text so nothing is silently lost.
   if (!parsed) {
     return (
-      <div className="space-y-1.5">
-        <FormField label="Gradient">
-          <input
-            className="editor-input h-7 w-full rounded-md px-2 text-[11px]"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        </FormField>
-        <RemoveButton onRemove={() => onChange('')} />
-      </div>
+      <FormField label="Gradient">
+        <input
+          className="editor-input h-7 w-full rounded-md px-2 text-[11px]"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </FormField>
     );
   }
 
@@ -77,24 +70,14 @@ export function GradientControl({
 
   return (
     <div className="space-y-2">
-      <FormField label="Type" layout="inline">
-        <Select
-          size="compact"
-          value={parsed.type}
-          onValueChange={(next) => update(changeType(parsed, next as GradientType))}
-        >
-          <SelectTrigger size="compact">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {GRADIENT_TYPES.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormField>
+      <OptionsSelector
+        ariaLabel="Gradient type"
+        size="compact"
+        className="w-full"
+        value={parsed.type}
+        options={GRADIENT_TYPES.map((t) => ({ ...t }))}
+        onValueChange={(next) => update(changeGradientType(parsed, next as GradientType))}
+      />
 
       <LeadingParams gradient={parsed} onUpdate={update} />
 
@@ -109,11 +92,11 @@ export function GradientControl({
             count={parsed.stops.length}
             onColorChange={(color) => update(patchStop(parsed, index, { color }))}
             onPositionChange={(position) => update(patchStop(parsed, index, { position }))}
-            onMove={(direction) => update(moveStop(parsed, index, direction))}
-            onRemove={() => update(removeStop(parsed, index))}
+            onMove={(direction) => update(moveGradientStopColor(parsed, index, direction))}
+            onRemove={() => update(removeGradientStop(parsed, index))}
           />
         ))}
-        <Button type="button" size="sm" variant="ghost" onClick={() => update(addStop(parsed))}>
+        <Button type="button" size="sm" variant="ghost" onClick={() => update(addGradientStop(parsed))}>
           <Plus className="mr-1 h-3.5 w-3.5" /> Add stop
         </Button>
       </div>
@@ -133,8 +116,6 @@ export function GradientControl({
           </SelectContent>
         </Select>
       </FormField>
-
-      <RemoveButton onRemove={() => onChange('')} />
     </div>
   );
 }
@@ -177,27 +158,48 @@ function LeadingParams({ gradient, onUpdate }: { gradient: ParsedGradient; onUpd
   return (
     <>
       <FormField label="Shape" layout="inline">
-        <Select
+        <OptionsSelector
+          ariaLabel="Radial shape"
           size="compact"
           value={gradient.shape ?? 'ellipse'}
+          options={RADIAL_SHAPES.map((s) => ({ ...s }))}
           onValueChange={(shape) => onUpdate({ ...gradient, shape: shape as 'circle' | 'ellipse' })}
-        >
-          <SelectTrigger size="compact">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ellipse">Ellipse</SelectItem>
-            <SelectItem value="circle">Circle</SelectItem>
-          </SelectContent>
-        </Select>
+        />
       </FormField>
+      <RadialSizeFields gradient={gradient} onUpdate={onUpdate} />
+      <PositionFields gradient={gradient} onUpdate={onUpdate} />
+    </>
+  );
+}
+
+function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; onUpdate: (next: ParsedGradient) => void }) {
+  const usingExplicit = (gradient.sizes?.length ?? 0) > 0;
+  const mode = usingExplicit ? 'custom' : gradient.extent ?? 'farthest-corner';
+  const isEllipse = (gradient.shape ?? 'ellipse') === 'ellipse';
+
+  const setSize = (axis: 0 | 1, raw: string) => {
+    const parsedAxis = parseAxis(raw);
+    if (!parsedAxis) return;
+    const sizes = [...(gradient.sizes ?? [])];
+    sizes[axis] = parsedAxis;
+    if (!isEllipse) sizes.length = 1;
+    onUpdate({ ...gradient, extent: undefined, sizes });
+  };
+
+  return (
+    <>
       <FormField label="Size" layout="inline">
         <Select
           size="compact"
-          value={gradient.extent ?? 'farthest-corner'}
-          onValueChange={(extent) =>
-            onUpdate({ ...gradient, extent: extent as RadialExtentKeyword, sizes: undefined })
-          }
+          value={mode}
+          onValueChange={(next) => {
+            if (next === 'custom') {
+              const seed: GradientStopPosition = { value: 50, unit: '%' };
+              onUpdate({ ...gradient, extent: undefined, sizes: isEllipse ? [seed, seed] : [seed] });
+            } else {
+              onUpdate({ ...gradient, extent: next as RadialExtentKeyword, sizes: undefined });
+            }
+          }}
         >
           <SelectTrigger size="compact">
             <SelectValue />
@@ -208,10 +210,32 @@ function LeadingParams({ gradient, onUpdate }: { gradient: ParsedGradient; onUpd
                 {option.label}
               </SelectItem>
             ))}
+            <SelectItem value="custom">Custom…</SelectItem>
           </SelectContent>
         </Select>
       </FormField>
-      <PositionFields gradient={gradient} onUpdate={onUpdate} />
+      {usingExplicit ? (
+        <FormField label={isEllipse ? 'Radii' : 'Radius'} layout="inline">
+          <div className="flex gap-1">
+            <NumericUnitInlineField
+              value={formatPosition(gradient.sizes?.[0])}
+              units={['px', '%']}
+              className={AXIS_FIELD_CLASS}
+              aria-label="Radial size X"
+              onChange={(raw) => setSize(0, raw)}
+            />
+            {isEllipse ? (
+              <NumericUnitInlineField
+                value={formatPosition(gradient.sizes?.[1])}
+                units={['px', '%']}
+                className={AXIS_FIELD_CLASS}
+                aria-label="Radial size Y"
+                onChange={(raw) => setSize(1, raw)}
+              />
+            ) : null}
+          </div>
+        </FormField>
+      ) : null}
     </>
   );
 }
@@ -227,14 +251,16 @@ function PositionFields({ gradient, onUpdate }: { gradient: ParsedGradient; onUp
     <FormField label="Position" layout="inline">
       <div className="flex gap-1">
         <NumericUnitInlineField
-          value={`${position.x.value}${position.x.unit}`}
+          value={formatPosition(position.x)}
           units={['%', 'px']}
+          className={AXIS_FIELD_CLASS}
           aria-label="Gradient position X"
           onChange={(raw) => setAxis('x', raw)}
         />
         <NumericUnitInlineField
-          value={`${position.y.value}${position.y.unit}`}
+          value={formatPosition(position.y)}
           units={['%', 'px']}
+          className={AXIS_FIELD_CLASS}
           aria-label="Gradient position Y"
           onChange={(raw) => setAxis('y', raw)}
         />
@@ -264,8 +290,9 @@ function StopRow({
     <div className="flex items-center gap-1">
       <HoverColorField value={stop.color} ariaLabel={`Stop ${index + 1} color`} onChange={onColorChange} />
       <NumericUnitInlineField
-        value={`${stop.position?.value ?? 0}${stop.position?.unit ?? '%'}`}
+        value={formatPosition(stop.position)}
         units={['%', 'px']}
+        className={AXIS_FIELD_CLASS}
         aria-label={`Stop ${index + 1} position`}
         onChange={(raw) => {
           const next = parseAxis(raw);
@@ -309,55 +336,18 @@ function StopRow({
   );
 }
 
-function RemoveButton({ onRemove }: { onRemove: () => void }) {
-  return (
-    <Button type="button" size="sm" variant="ghost" className="editor-text-muted" onClick={onRemove}>
-      <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove gradient
-    </Button>
-  );
-}
-
 // --- pure structural transforms -------------------------------------------
 
-function parseAxis(raw: string): { value: number; unit: '%' | 'px' } | null {
+function formatPosition(position: GradientStopPosition | undefined): string {
+  return position ? `${position.value}${position.unit}` : '';
+}
+
+function parseAxis(raw: string): GradientStopPosition | null {
   const match = raw.match(/^(-?\d+(?:\.\d+)?)(%|px)$/);
   return match ? { value: Number.parseFloat(match[1]), unit: match[2] as '%' | 'px' } : null;
 }
 
-function changeType(gradient: ParsedGradient, type: GradientType): ParsedGradient {
-  if (type === gradient.type) return gradient;
-  const base: ParsedGradient = { type, repeating: gradient.repeating, stops: gradient.stops };
-  if (type === 'linear') {
-    return { ...base, angle: gradient.angle ?? 180 };
-  }
-  if (type === 'conic') {
-    return { ...base, angle: gradient.angle ?? 0, position: gradient.position ?? DEFAULT_POSITION };
-  }
-  return { ...base, shape: 'ellipse', extent: 'farthest-corner', position: gradient.position ?? DEFAULT_POSITION };
-}
-
 function patchStop(gradient: ParsedGradient, index: number, patch: Partial<GradientStop>): ParsedGradient {
   const stops = gradient.stops.map((stop, i) => (i === index ? { ...stop, ...patch } : stop));
-  return { ...gradient, stops };
-}
-
-function addStop(gradient: ParsedGradient): ParsedGradient {
-  const last = gradient.stops[gradient.stops.length - 1];
-  return {
-    ...gradient,
-    stops: [...gradient.stops, { color: last?.color ?? 'rgba(0,0,0,1)', position: { value: 100, unit: '%' } }],
-  };
-}
-
-function removeStop(gradient: ParsedGradient, index: number): ParsedGradient {
-  if (gradient.stops.length <= 2) return gradient;
-  return { ...gradient, stops: gradient.stops.filter((_, i) => i !== index) };
-}
-
-function moveStop(gradient: ParsedGradient, index: number, direction: -1 | 1): ParsedGradient {
-  const target = index + direction;
-  if (target < 0 || target >= gradient.stops.length) return gradient;
-  const stops = [...gradient.stops];
-  [stops[index], stops[target]] = [stops[target], stops[index]];
   return { ...gradient, stops };
 }

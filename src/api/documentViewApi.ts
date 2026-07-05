@@ -70,9 +70,13 @@ export type {
 } from '../model/validation';
 
 export {
+  addGradientStop,
+  changeGradientType,
   createDefaultGradient,
   isGradientText,
+  moveGradientStopColor,
   parseGradient,
+  removeGradientStop,
   serializeGradient,
 } from '../model/gradient';
 

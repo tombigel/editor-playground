@@ -62,7 +62,7 @@ import {
 } from './styleFields';
 import { createShadowFallback } from './contentSections/shared';
 import { GradientControl } from './contentSections/GradientControl';
-import { parseGradient } from '../../api/documentViewApi';
+import { createDefaultGradient, parseGradient, serializeGradient } from '../../api/documentViewApi';
 
 export type FocusedModeEntry = {
   mode: ActiveFocusedMode;
@@ -486,6 +486,16 @@ function LabeledPaddingField({
   );
 }
 
+/** Compose a `background-size` value from optional X/Y axis tokens (auto fills a gap). */
+function joinBackgroundSize(x: string | undefined, y: string | undefined): string {
+  const xToken = x?.trim();
+  const yToken = y?.trim();
+  if (xToken && yToken) return `${xToken} ${yToken}`;
+  if (xToken) return xToken;
+  if (yToken) return `auto ${yToken}`;
+  return '';
+}
+
 export function WrapperDesignSection({
   node,
   onWrapperStyleChange,
@@ -505,9 +515,22 @@ export function WrapperDesignSection({
 }) {
   const supportsContainerSurfaceStyling = node.subtype === 'container';
   const allowsBackgroundOpacity = node.subtype === 'container';
-  const supportsGradient = node.subtype === 'container' || node.subtype === 'section';
+  // Sections, headers, and footers are all section-like backgrounds.
+  const supportsGradient =
+    node.subtype === 'container' ||
+    node.subtype === 'section' ||
+    node.subtype === 'header' ||
+    node.subtype === 'footer';
   const gradient = node.style?.backgroundGradient;
   const gradientRepeats = gradient ? parseGradient(gradient)?.repeating === true : false;
+  // Split into single tokens and keep only numeric+unit ones so the numeric
+  // field never receives a two-value string or a keyword (which parseUnitValue
+  // rejects). Keywords like `auto` render as an empty field with a placeholder.
+  const backgroundSizeAxes = (node.style?.backgroundSize ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => (/^-?\d+(?:\.\d+)?(?:px|%)$/.test(token) ? token : ''));
   const shadowFallback = createShadowFallback(
     DEFAULT_SHADOW_COLOR,
     DEFAULT_SHADOW_BLUR_PX,
@@ -549,20 +572,45 @@ export function WrapperDesignSection({
 
         {supportsGradient ? (
           <div className="space-y-1.5">
-            <div className="editor-text-muted text-[11px] font-medium">Gradient</div>
-            <GradientControl
-              value={gradient}
-              onChange={(next) => onWrapperStyleChange('backgroundGradient', next)}
-            />
-            {gradientRepeats ? (
+            <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
+              Gradient
+              <Switch
+                checked={Boolean(gradient)}
+                onCheckedChange={(checked) =>
+                  onWrapperStyleChange('backgroundGradient', checked ? serializeGradient(createDefaultGradient()) : '')
+                }
+              />
+            </Label>
+            {gradient ? (
+              <GradientControl
+                value={gradient}
+                onChange={(next) => onWrapperStyleChange('backgroundGradient', next)}
+              />
+            ) : null}
+            {gradient && gradientRepeats ? (
               <FormField label="Size" layout="inline">
-                <NumericUnitInlineField
-                  value={node.style?.backgroundSize ?? ''}
-                  units={['px', '%']}
-                  aria-label="Background size"
-                  placeholder="auto"
-                  onChange={(value) => onWrapperStyleChange('backgroundSize', value)}
-                />
+                <div className="flex gap-1">
+                  <NumericUnitInlineField
+                    value={backgroundSizeAxes[0] ?? ''}
+                    units={['px', '%']}
+                    className="w-[4.5rem]"
+                    aria-label="Background size X"
+                    placeholder="auto"
+                    onChange={(next) =>
+                      onWrapperStyleChange('backgroundSize', joinBackgroundSize(next, backgroundSizeAxes[1]))
+                    }
+                  />
+                  <NumericUnitInlineField
+                    value={backgroundSizeAxes[1] ?? ''}
+                    units={['px', '%']}
+                    className="w-[4.5rem]"
+                    aria-label="Background size Y"
+                    placeholder="auto"
+                    onChange={(next) =>
+                      onWrapperStyleChange('backgroundSize', joinBackgroundSize(backgroundSizeAxes[0], next))
+                    }
+                  />
+                </div>
               </FormField>
             ) : null}
           </div>

@@ -143,11 +143,14 @@ export function renderContainer({
       }}
     >
       <div
-        className="content-wrapper"
+        className={`content-wrapper${node.style?.backgroundClipText ? ' sp-clip-text' : ''}`}
         ref={(element) => registerDropTarget(node.id, element)}
         data-content-wrapper-for={node.id}
         data-drop-wrapper-id={node.id}
-        style={contentWrapperStyle}
+        // The content-wrapper is the box that actually contains the leaf children,
+        // so the clip-text gradient must live here (not on the decorative surface
+        // underlay or the spacer-only grid) for clip-text to work in edit mode.
+        style={{ ...contentWrapperStyle, ...getContentWrapperTextClipBackgroundStyle(node) }}
       >
         <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node, { includeClipBackground: false })} />
         {showGridLanes ? renderGridLaneOverlay(meshLayout, node, measuredNodeSizes, viewport) : null}
@@ -164,11 +167,10 @@ export function renderContainer({
             )
           : null}
         <div
-          className={`sticky-spacer-layer${node.style?.backgroundClipText ? ' sp-clip-text' : ''}`}
+          className="sticky-spacer-layer"
           style={{
             boxSizing: 'border-box',
             ...getContentWrapperPaddingStyle(node),
-            ...getContentWrapperTextClipBackgroundStyle(node),
             display: 'grid',
             gridTemplateColumns: meshLayout.columnTemplate,
             gridTemplateRows: meshLayout.rowTemplate,

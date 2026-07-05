@@ -563,6 +563,21 @@ describe('editor/editorMutations', () => {
       }
     });
 
+    it('stores background-size permutations verbatim (single, two-value, percent, keyword)', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      for (const value of ['20px', '20px 20px', '50%', '50% 50%', 'auto 40%', 'cover']) {
+        const next = updateWrapperStyleField(state, section.id, 'backgroundSize', value);
+        const node = next.document.nodes[section.id];
+        expect(node.contentType === 'container' && node.style!.backgroundSize).toBe(value);
+      }
+
+      const cleared = updateWrapperStyleField(state, section.id, 'backgroundSize', '');
+      const clearedNode = cleared.document.nodes[section.id];
+      expect(clearedNode.contentType === 'container' && clearedNode.style!.backgroundSize).toBeUndefined();
+    });
+
     it('toggles background-clip:text', () => {
       const state = createInitialState();
       const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;

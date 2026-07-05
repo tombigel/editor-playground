@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addGradientStop,
+  changeGradientType,
   createDefaultGradient,
   isGradientText,
+  moveGradientStopColor,
   parseGradient,
+  removeGradientStop,
   serializeGradient,
   splitTopLevelArgs,
+  type ParsedGradient,
 } from '../gradient';
 
 describe('model/gradient splitTopLevelArgs', () => {
@@ -114,6 +119,71 @@ describe('model/gradient round-trip', () => {
   it('serializes the default gradient to parseable text', () => {
     const gradient = createDefaultGradient();
     expect(parseGradient(serializeGradient(gradient))).toEqual(gradient);
+  });
+});
+
+describe('model/gradient stop transforms', () => {
+  const linear = (): ParsedGradient => ({
+    type: 'linear',
+    repeating: false,
+    angle: 180,
+    stops: [
+      { color: 'red', position: { value: 0, unit: '%' } },
+      { color: 'blue', position: { value: 100, unit: '%' } },
+    ],
+  });
+
+  it('adds a stop at 100% and moves the previous last to the midpoint', () => {
+    const next = addGradientStop(linear());
+    expect(next.stops.map((s) => s.position)).toEqual([
+      { value: 0, unit: '%' },
+      { value: 50, unit: '%' },
+      { value: 100, unit: '%' },
+    ]);
+    expect(next.stops[2].position).toEqual({ value: 100, unit: '%' });
+  });
+
+  it('reorders only the colors, keeping positions fixed', () => {
+    const g = linear();
+    const moved = moveGradientStopColor(g, 0, 1);
+    expect(moved.stops.map((s) => s.color)).toEqual(['blue', 'red']);
+    // Positions stay in place — colors slid along the axis.
+    expect(moved.stops.map((s) => s.position)).toEqual([
+      { value: 0, unit: '%' },
+      { value: 100, unit: '%' },
+    ]);
+  });
+
+  it('does not move a color past the ends', () => {
+    const g = linear();
+    expect(moveGradientStopColor(g, 0, -1)).toBe(g);
+    expect(moveGradientStopColor(g, 1, 1)).toBe(g);
+  });
+
+  it('keeps at least two stops when removing', () => {
+    const g = linear();
+    expect(removeGradientStop(g, 0)).toBe(g);
+    const three = addGradientStop(g);
+    expect(removeGradientStop(three, 1).stops).toHaveLength(2);
+  });
+
+  it('changes type while preserving stops and seeding per-type defaults', () => {
+    const radial = changeGradientType(linear(), 'radial');
+    expect(radial).toMatchObject({ type: 'radial', shape: 'ellipse', extent: 'farthest-corner' });
+    expect(radial.stops).toHaveLength(2);
+    const conic = changeGradientType(radial, 'conic');
+    expect(conic).toMatchObject({ type: 'conic', angle: 0 });
+    // Angle is preserved across type changes rather than reset.
+    const backToLinear = changeGradientType(conic, 'linear');
+    expect(backToLinear).toMatchObject({ type: 'linear', angle: 0 });
+    // A fresh linear with no prior angle seeds the 180 default.
+    const freshLinear = changeGradientType({ type: 'radial', repeating: false, stops: linear().stops }, 'linear');
+    expect(freshLinear.angle).toBe(180);
+  });
+
+  it('serializes a transformed gradient to parseable text', () => {
+    const g = addGradientStop(changeGradientType(linear(), 'radial'));
+    expect(parseGradient(serializeGradient(g))).toEqual(g);
   });
 });
 

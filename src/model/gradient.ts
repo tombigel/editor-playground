@@ -319,3 +319,68 @@ export function createDefaultGradient(): ParsedGradient {
 export function isGradientText(value: string): boolean {
   return GRADIENT_HEAD_PATTERN.test(value.trim()) && value.trim().endsWith(')');
 }
+
+// ---------------------------------------------------------------------------
+// Pure stop transforms (shared by the inspector; kept here to be unit-tested)
+// ---------------------------------------------------------------------------
+
+/**
+ * Add a stop at 100% and nudge the previously-last stop to the midpoint between
+ * it and the stop before it, so the new maximum has room: [0, 100] → [0, 50, 100].
+ */
+export function addGradientStop(gradient: ParsedGradient): ParsedGradient {
+  const stops = gradient.stops.map((stop) => ({ ...stop }));
+  const lastIndex = stops.length - 1;
+  const last = stops[lastIndex];
+  const prev = stops[lastIndex - 1];
+  if (last?.position && prev?.position && last.position.unit === prev.position.unit) {
+    stops[lastIndex] = {
+      ...last,
+      position: { value: (last.position.value + prev.position.value) / 2, unit: last.position.unit },
+    };
+  }
+  stops.push({ color: last?.color ?? 'rgba(0,0,0,1)', position: { value: 100, unit: '%' } });
+  return { ...gradient, stops };
+}
+
+/** Remove a stop, keeping at least two. */
+export function removeGradientStop(gradient: ParsedGradient, index: number): ParsedGradient {
+  if (gradient.stops.length <= 2) return gradient;
+  return { ...gradient, stops: gradient.stops.filter((_, i) => i !== index) };
+}
+
+/**
+ * Swap only the stop COLORS between adjacent slots; position values stay fixed,
+ * so moving a color slides it along the axis without reshuffling the offsets.
+ */
+export function moveGradientStopColor(gradient: ParsedGradient, index: number, direction: -1 | 1): ParsedGradient {
+  const target = index + direction;
+  if (target < 0 || target >= gradient.stops.length) return gradient;
+  const stops = gradient.stops.map((stop) => ({ ...stop }));
+  const moved = stops[index].color;
+  stops[index].color = stops[target].color;
+  stops[target].color = moved;
+  return { ...gradient, stops };
+}
+
+/** Change gradient type, seeding sensible per-type defaults and keeping the stops. */
+export function changeGradientType(gradient: ParsedGradient, type: GradientType): ParsedGradient {
+  if (type === gradient.type) return gradient;
+  const base: ParsedGradient = { type, repeating: gradient.repeating, stops: gradient.stops };
+  if (type === 'linear') {
+    return { ...base, angle: gradient.angle ?? 180 };
+  }
+  if (type === 'conic') {
+    return {
+      ...base,
+      angle: gradient.angle ?? 0,
+      position: gradient.position ?? { x: { value: 50, unit: '%' }, y: { value: 50, unit: '%' } },
+    };
+  }
+  return {
+    ...base,
+    shape: 'ellipse',
+    extent: 'farthest-corner',
+    position: gradient.position ?? { x: { value: 50, unit: '%' }, y: { value: 50, unit: '%' } },
+  };
+}

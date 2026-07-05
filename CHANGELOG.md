@@ -70,6 +70,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - make AI rail shine trigger on hover
 - label video nodes correctly and remove link support from video
 - refine SVG a11y pattern and color controls
+- refine gradient controls, background-size, and clip-text edit mode
 
 ---
 
