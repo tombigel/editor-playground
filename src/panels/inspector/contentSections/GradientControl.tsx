@@ -210,7 +210,7 @@ function LeadingParams({ gradient, onUpdate }: { gradient: ParsedGradient; onUpd
 
 function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; onUpdate: (next: ParsedGradient) => void }) {
   const usingExplicit = (gradient.sizes?.length ?? 0) > 0;
-  const mode = usingExplicit ? 'custom' : gradient.extent ?? 'farthest-corner';
+  const mode = usingExplicit ? 'manual' : gradient.extent ?? 'farthest-corner';
   const isEllipse = (gradient.shape ?? 'ellipse') === 'ellipse';
 
   const setSize = (axis: 0 | 1, raw: string) => {
@@ -229,7 +229,7 @@ function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; on
           size="compact"
           value={mode}
           onValueChange={(next) => {
-            if (next === 'custom') {
+            if (next === 'manual') {
               const seed: GradientStopPosition = { value: 50, unit: '%' };
               onUpdate({ ...gradient, extent: undefined, sizes: isEllipse ? [seed, seed] : [seed] });
             } else {
@@ -246,7 +246,7 @@ function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; on
                 {option.label}
               </SelectItem>
             ))}
-            <SelectItem value="custom">Custom…</SelectItem>
+            <SelectItem value="manual">Manual size</SelectItem>
           </SelectContent>
         </Select>
       </FormField>

@@ -14,6 +14,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Added
 
 - add overflow control
+- default radial size to manual
 
 ### Fixed
 

@@ -743,7 +743,7 @@ Container, section, header, and footer wrappers support a gradient background la
 
 - The gradient is stored as **CSS text** on `ContainerNode.style.backgroundGradient`; a two-way parser (`src/model/gradient.ts`) converts it to a structured form for the inspector and serializes edits back. Color values are opaque tokens, so `var()`, `color-mix()`, `rgba()`, etc. pass through untouched.
 - The inspector Gradient control edits: gradient **type** (linear/radial/conic, a segmented selector), per-type leading params (linear angle; radial shape + size + position; conic from-angle + position), a list of **color stops** (color with alpha + position in px/%), and a **repeat** toggle.
-  - **Radial size** is either an extent keyword (`closest/farthest-side/corner`) or explicit lengths (one radius for a circle, two for an ellipse) in px/%.
+  - **Radial size** is either an extent keyword (`closest/farthest-side/corner`) or a manual size with explicit lengths (one radius for a circle, two for an ellipse) in px/%. New radial gradients default to manual `50% 50%`.
   - **Adding a stop** appends one at 100% and moves the previously-last stop to the midpoint between it and the stop before it (`[0, 100]` → `[0, 50, 100]`).
   - **Reordering a stop** swaps only the stop colors between adjacent slots; position offsets stay fixed, so a color slides along the axis.
   - When **repeat** is on, a two-axis **background-size** control (`backgroundSize`) is exposed for tiled effects (e.g. checker patterns).

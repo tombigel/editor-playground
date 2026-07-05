@@ -169,7 +169,12 @@ describe('model/gradient stop transforms', () => {
 
   it('changes type while preserving stops and seeding per-type defaults', () => {
     const radial = changeGradientType(linear(), 'radial');
-    expect(radial).toMatchObject({ type: 'radial', shape: 'ellipse', extent: 'farthest-corner' });
+    expect(radial).toMatchObject({
+      type: 'radial',
+      shape: 'ellipse',
+      sizes: [{ value: 50, unit: '%' }, { value: 50, unit: '%' }],
+    });
+    expect(radial.extent).toBeUndefined();
     expect(radial.stops).toHaveLength(2);
     const conic = changeGradientType(radial, 'conic');
     expect(conic).toMatchObject({ type: 'conic', angle: 0 });

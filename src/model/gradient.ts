@@ -380,7 +380,7 @@ export function changeGradientType(gradient: ParsedGradient, type: GradientType)
   return {
     ...base,
     shape: 'ellipse',
-    extent: 'farthest-corner',
+    sizes: [{ value: 50, unit: '%' }, { value: 50, unit: '%' }],
     position: gradient.position ?? { x: { value: 50, unit: '%' }, y: { value: 50, unit: '%' } },
   };
 }
