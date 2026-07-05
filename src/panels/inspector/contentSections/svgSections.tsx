@@ -57,6 +57,10 @@ const SVG_STROKE_PAINT_ORDER_OPTIONS = [
   { value: 'fill', label: 'Fill first' },
   { value: 'stroke', label: 'Stroke first' },
 ] as const;
+const SVG_OVERFLOW_OPTIONS = [
+  { value: 'hidden', label: 'Hidden' },
+  { value: 'visible', label: 'Visible' },
+] as const;
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 type ViewBoxPartKey = (typeof VIEW_BOX_PARTS)[number]['key'];
@@ -523,6 +527,7 @@ export function SvgDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
   const monochrome = node.svg?.monochrome;
   const stroke = node.svg?.stroke;
+  const overflow = node.svg?.overflow ?? 'hidden';
   const strokeCap = stroke?.cap ?? 'butt';
   const strokeJoin = stroke?.join ?? deriveSvgStrokeJoinFromCap(strokeCap);
   const strokePaintOrder = stroke?.paintOrder ?? 'normal';
@@ -617,6 +622,16 @@ export function SvgDesignSection({
               <SvgDashPatternFields
                 value={stroke.dashArray}
                 onChange={(value) => onTextChange('svgStrokeDashArray', value)}
+              />
+            </FormField>
+            <FormField label="Overflow" layout="inline">
+              <OptionsSelector
+                value={overflow}
+                options={SVG_OVERFLOW_OPTIONS}
+                display="label"
+                size="compact"
+                ariaLabel="SVG overflow"
+                onValueChange={(value) => onTextChange('svgOverflow', value)}
               />
             </FormField>
             <FormField label="Paint order" layout="inline">

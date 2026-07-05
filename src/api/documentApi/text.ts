@@ -78,6 +78,7 @@ const SVG_SETTING_FIELDS: readonly SvgSettingField[] = [
   'svgHidden',
   'svgTitle',
   'svgDesc',
+  'svgOverflow',
   'svgMonochrome',
   'svgFill',
   'svgStrokeEnabled',
@@ -556,6 +557,8 @@ export function setTextNodeContentDoc(
       node.svg = { ...svg, a11y: { ...svg.a11y, title: value.trim() || undefined } };
     } else if (field === 'svgDesc') {
       node.svg = { ...svg, a11y: { ...svg.a11y, desc: value.trim() || undefined } };
+    } else if (field === 'svgOverflow') {
+      node.svg = { ...svg, overflow: value === 'visible' ? 'visible' : undefined };
     } else if (field === 'svgMonochrome') {
       // Enabling seeds a real fill color so the control never shows a value
       // that is not backed by model data.

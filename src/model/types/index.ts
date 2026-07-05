@@ -87,6 +87,7 @@ export type SvgSettingField =
   | 'svgHidden'
   | 'svgTitle'
   | 'svgDesc'
+  | 'svgOverflow'
   | 'svgMonochrome'
   | 'svgFill'
   | 'svgStrokeEnabled'
@@ -640,6 +641,8 @@ export type SvgExtension = {
   originalViewBox?: string;
   /** Author viewBox override (e.g. fitted to content bbox). */
   viewBox?: string;
+  /** Root SVG overflow. Hidden is the browser/default behavior and is omitted from storage. */
+  overflow?: 'visible';
   a11y?: SvgA11y;
   /** Fill color carries its own alpha; there is no separate opacity field. */
   monochrome?: { enabled: boolean; fill?: string };

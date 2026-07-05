@@ -660,6 +660,9 @@ export function renderLeafContent(
         const monochrome = svg.monochrome?.enabled ? svg.monochrome : undefined;
         const stroke = svg.stroke?.enabled ? svg.stroke : undefined;
         const svgStyle: CSSProperties & Record<string, string | number> = { ...elementStyle };
+        if (svg.overflow === 'visible') {
+          svgStyle.overflow = 'visible !important' as CSSProperties['overflow'];
+        }
         if (monochrome?.fill) {
           // Alpha rides on the color itself; there is no separate fill-opacity.
           svgStyle.color = monochrome.fill;

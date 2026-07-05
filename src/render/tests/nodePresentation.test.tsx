@@ -232,6 +232,7 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('focusable="false"');
     expect(markup).toContain('<circle r="5" fill="blue"');
+    expect(markup).not.toContain('overflow:visible');
     expect(markup).not.toContain('role="img"');
     expect(markup).not.toContain('aria-label');
   });
@@ -243,6 +244,7 @@ describe('render/nodePresentation', () => {
       innerMarkup: '<rect width="10" height="10"/>',
       originalViewBox: '0 0 10 10',
       viewBox: '2 2 6 6',
+      overflow: 'visible',
       a11y: { title: 'Company logo', desc: 'A <blue> square mark' },
       monochrome: { enabled: true, fill: 'rgba(255,0,0,0.5)' },
       stroke: {
@@ -264,6 +266,7 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain(`aria-describedby="sp-svg-desc-${svg.id}"`);
     expect(markup).toContain(`<desc id="sp-svg-desc-${svg.id}">A &lt;blue&gt; square mark</desc>`);
     expect(markup).toContain('viewBox="2 2 6 6"');
+    expect(markup).toContain('overflow:visible !important');
     expect(markup).toContain('sp-svg-mono');
     expect(markup).toContain('sp-svg-stroke');
     expect(markup).toContain('color:rgba(255,0,0,0.5)');

@@ -219,10 +219,12 @@ describe('api/documentApi svg operations', () => {
     next = setTextNodeContentDoc(next, svg.id, 'svgStrokeDashArray', '4 2');
     next = setTextNodeContentDoc(next, svg.id, 'svgStrokeDashOffset', '0.5em');
     next = setTextNodeContentDoc(next, svg.id, 'svgStrokeNonScaling', 'true');
+    next = setTextNodeContentDoc(next, svg.id, 'svgOverflow', 'visible');
     next = setTextNodeContentDoc(next, svg.id, 'svgStrokePaintOrder', 'stroke');
 
     const node = getMediaNode(next, svg.id);
     expect(node.svg?.a11y?.desc).toBe('A five-pointed star');
+    expect(node.svg?.overflow).toBe('visible');
     expect(node.svg?.stroke).toMatchObject({
       enabled: true,
       width: '2px',
@@ -233,6 +235,9 @@ describe('api/documentApi svg operations', () => {
       nonScaling: true,
       paintOrder: 'stroke',
     });
+
+    const hidden = setTextNodeContentDoc(next, svg.id, 'svgOverflow', 'hidden');
+    expect(getMediaNode(hidden, svg.id).svg?.overflow).toBeUndefined();
   });
 
   it('seeds a real fill color when monochrome is enabled and rides alpha on the color', () => {

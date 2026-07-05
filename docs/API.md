@@ -932,6 +932,7 @@ type SvgExtension = {
   innerMarkup?: string;       // sanitized inner markup of the root <svg> (callers MUST sanitize via src/lib/svgSanitize.ts)
   originalViewBox?: string;   // parsed from the imported markup
   viewBox?: string;           // author override (e.g. fitted to content bbox)
+  overflow?: 'visible';       // hidden/default is omitted; visible exports overflow: visible !important on the root <svg>
   a11y?: SvgA11y;             // hidden | title (aria-label) | desc (aria-describedby)
   monochrome?: { enabled: boolean; fill?: string };  // alpha rides on the color; explicit no-paint SVG fills remain untouched
   stroke?: SvgStrokeStyle;
@@ -1043,7 +1044,7 @@ type EditorTextField =
   | 'videoCaptionsSrc' | 'videoCaptionsLabel' | 'videoCaptionsLang' | 'videoCaptionsDefault'
   | 'videoTranscriptSrc'
   // SVG settings (SvgSettingField)
-  | 'svgHidden' | 'svgTitle' | 'svgDesc'
+  | 'svgHidden' | 'svgTitle' | 'svgDesc' | 'svgOverflow'
   | 'svgMonochrome' | 'svgFill'
   | 'svgStrokeEnabled' | 'svgStrokeColor' | 'svgStrokeWidth'
   | 'svgStrokeCap' | 'svgStrokeJoin' | 'svgStrokeDashArray' | 'svgStrokeDashOffset'

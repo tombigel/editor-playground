@@ -11,6 +11,10 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+### Added
+
+- add overflow control
+
 ---
 
 ## [0.13.0] — 2026-07-05
