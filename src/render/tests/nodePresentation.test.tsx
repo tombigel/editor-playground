@@ -139,10 +139,43 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('controls');
     expect(markup.toLowerCase()).toContain('autoplay');
     expect(markup).toContain('loop');
-    expect(markup).not.toContain('muted');
+    expect(markup).toContain('muted');
     expect(markup).toContain('preload="metadata"');
+    expect(markup).toContain('<source src="https://example.com/clip.mp4" type="video/mp4"/>');
     expect(markup).toContain('object-fit:cover');
     expect(markup).toContain('object-position:left top');
+  });
+
+  it('renders visible video titles, descriptions, captions, and transcript fallback', () => {
+    const video = createMediaNode('video', 'section-1');
+    video.src = 'https://example.com/clip.mp4';
+    video.video = {
+      ...video.video,
+      title: 'Quarterly review',
+      titleHidden: false,
+      titleTag: 'h4',
+      description: 'A five-minute presentation with revenue charts.',
+      captions: {
+        src: '/captions/review.vtt',
+        srclang: 'en',
+        label: 'English CC',
+        default: true,
+      },
+      transcriptSrc: '/transcripts/review.html',
+    };
+
+    const markup = renderToStaticMarkup(renderLeafContent(video, { videoClassName: 'sp-video' }));
+
+    expect(markup).toContain('class="sp-video"');
+    expect(markup).toContain('<h4 id="sp-video-title-');
+    expect(markup).toContain('class="sp-video-title"');
+    expect(markup).toContain('aria-labelledby="sp-video-title-');
+    expect(markup).toContain('aria-describedby="sp-video-description-');
+    expect(markup).toContain('kind="captions"');
+    expect(markup).toContain('src="/captions/review.vtt"');
+    expect(markup).toContain('label="English CC"');
+    expect(markup).toContain('default=""');
+    expect(markup).toContain('href="/transcripts/review.html"');
   });
 
   it('renders a paused non-interactive video preview for the stage', () => {
@@ -270,7 +303,7 @@ describe('render/nodePresentation', () => {
     );
 
     expect(markup).toContain('class="image-placeholder"');
-    expect(markup).toContain('Video');
+    expect(markup).toContain('Big Buck Bunny sample video');
   });
 
   it('does not classify code nodes by legacy block-only link styling', () => {

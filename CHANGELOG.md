@@ -31,6 +31,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - debounce markup sanitization
 - expand stroke controls
 - add accessible video defaults and API fields
+- render accessible titles and tracks
 
 ### Changed
 

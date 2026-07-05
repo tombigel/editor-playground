@@ -669,7 +669,7 @@ Additional rules:
 | `text` | body copy + HTML tag + optional link | `Text style`, `Design` | Editable HTML tag, optional destination |
 | `link` | label + destination | `Text style`, `Design` | Add-rail shortcut for link-enabled block text |
 | `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface + object fit/position |
-| `video` | `src`, poster, label, playback flags, preload | `Design` | Paused stage preview; native `<video>` in preview/export; never a link |
+| `video` | `src`, poster, title, captions, transcript, playback flags, preload | `Design` | Paused stage preview; native controlled `<video>` in preview/export; never a link |
 | `svg` | sanitized inline markup, a11y fields, viewBox | `Design` | DOMPurify-sanitized at input; exports semantic inline `<svg>` |
 | `button` | label + destination | `Text style`, `Design` | Can export as native button or styled anchor |
 
@@ -762,8 +762,13 @@ A wrapper can clip its background to descendant text (`backgroundClipText`). The
 Content and playback:
 
 - Video sources are external URLs (same hosting assumption as images; there is no asset pipeline).
-- Playback settings live on `MediaNode.video`: `autoplay` (default off), `muted` (default on), `controls` (default on), `loop` (default off), optional `poster` URL, and `preload` (`auto` default, `metadata`, `none`).
-- The `Label` field stores `alt` and is exported as `aria-label` on the `<video>` element.
+- New video nodes default to the Big Buck Bunny Archive.org MP4/poster sample (`https://archive.org/download/BigBuckBunny_328/BigBuckBunny_512kb.mp4` and `https://archive.org/download/BigBuckBunny_328/__ia_thumb.jpg`). The sample is open Creative Commons Attribution content, not public domain, so docs/examples should preserve attribution context when presenting it outside tests.
+- Playback settings live on `MediaNode.video`: `autoplay` (default off), `muted` (default on), `controls` (always rendered on preview/export for accessibility), `loop` (default off), optional `poster` URL, and `preload` (`auto` default, `metadata`, `none`).
+- Autoplay is muted by contract. Setting `autoplay` on forces `muted` on, attempts to unmute an autoplaying video are ignored, and legacy documents with `autoplay: true, muted: false` still render muted.
+- Video accessibility metadata lives on `MediaNode.video`: `title`, `titleHidden`, `titleTag`, optional `description`, optional caption track metadata (`captions.src`, `captions.srclang`, `captions.label`, `captions.default`), and optional `transcriptSrc`.
+- The legacy `alt` field remains a fallback for the video accessible title. The inspector writes the Title field to both `video.title` and `alt` for compatibility.
+- Hidden titles export as `aria-label` on the `<video>`. Visible titles render as a heading (`h1`-`h6`) and label the player with `aria-labelledby`; in site output the heading is a top-left overlay that fades in on hover/focus and while paused when the browser exposes paused media state.
+- Long descriptions render as visually hidden text referenced by `aria-describedby`. Caption URLs render as WebVTT `<track kind="captions">`; transcript URLs render in the native video fallback paragraph.
 - Videos cannot be links: the player is always the interactive element, and nesting it inside an anchor would create conflicting interactive controls (a11y). The API ignores link fields on video nodes and the renderer never anchor-wraps a video.
 
 Stage vs preview/export:

@@ -23,6 +23,10 @@ describe('render/leafPresentation', () => {
       brandMarkImage: '.brand-mark-image',
       imagePlaceholder: '.image-placeholder',
       video: '.video',
+      videoFrame: '.video-frame',
+      videoMedia: '.video-media',
+      videoTitle: '.video-title',
+      videoDescription: '.video-description',
       svg: '.svg',
       button: '.button',
     });
@@ -39,6 +43,33 @@ describe('render/leafPresentation', () => {
     expect(monochromeRule?.selector).toContain(':not([style*="fill-opacity: 0" i])');
     expect(monochromeRule?.style.color).toBe('inherit !important');
     expect(monochromeRule?.style.fill).toBe('currentColor !important');
+  });
+
+  it('fades visible video titles in on hover, focus, and paused media state', () => {
+    const rules = getSiteLeafBaseRules({
+      text: '.text',
+      blockquoteText: '.blockquote-text',
+      linkAnchor: '.link-anchor',
+      imageLink: '.image-link',
+      image: '.image',
+      brandMarkImage: '.brand-mark-image',
+      imagePlaceholder: '.image-placeholder',
+      video: '.video',
+      videoFrame: '.video-frame',
+      videoMedia: '.video-media',
+      videoTitle: '.video-title',
+      videoDescription: '.video-description',
+      svg: '.svg',
+      button: '.button',
+    });
+    const titleRule = rules.find((rule) => rule.selector === '.video-title');
+    const revealRule = rules.find((rule) => rule.selector.includes(':has(.video-media:paused)'));
+
+    expect(titleRule?.style.opacity).toBe(0);
+    expect(titleRule?.style.transition).toBe('opacity 500ms ease');
+    expect(revealRule?.selector).toContain('.video-frame:is(:hover, :focus-within) .video-title');
+    expect(revealRule?.selector).toContain('.video-frame:has(.video-media:paused) .video-title');
+    expect(revealRule?.style.opacity).toBe(1);
   });
 
   it('uses shared default button presentation even without authored border or shadow overrides', () => {

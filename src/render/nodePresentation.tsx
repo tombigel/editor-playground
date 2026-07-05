@@ -15,7 +15,6 @@ import type {
   DocumentModel,
   ListContent,
   LinkExtension,
-  MediaNode,
   RichBlock,
   RichBlockStyle,
   RichCodeBlock,
@@ -41,6 +40,7 @@ import {
   isAuthoredCodeSurfaceValue,
   styleRecordToReactStyle,
 } from './leafPresentation';
+import { renderVideoElement } from './videoPresentation';
 export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
@@ -535,30 +535,6 @@ export function isBrandMark(node: LeafNode) {
   return isMediaNode(node) && node.subtype === 'image' && node.name === 'Brand Mark';
 }
 
-function getVideoPlaybackProps(video: MediaNode['video'], previewOnly: boolean) {
-  if (previewOnly) {
-    return {
-      controls: false,
-      autoPlay: false,
-      muted: true,
-      loop: false,
-      preload: 'metadata' as const,
-    };
-  }
-
-  return {
-    controls: video?.controls !== false,
-    autoPlay: video?.autoplay === true,
-    muted: video?.muted !== false,
-    loop: video?.loop === true,
-    preload: video?.preload ?? 'auto',
-  };
-}
-
-function getVideoStyle(style: CSSProperties | undefined, previewOnly: boolean): CSSProperties | undefined {
-  return previewOnly ? { ...style, pointerEvents: 'none' } : style;
-}
-
 function getExternalNavigationProps(node: LeafNode) {
   if (!node.link) {
     return {};
@@ -649,31 +625,17 @@ export function renderLeafContent(
             </div>
           );
         }
-        const video = node.video;
-        const playbackProps = getVideoPlaybackProps(video, videoPreviewOnly);
-        return (
-          <video
-            className={videoClassName}
-            data-node-id={standalone ? dataNodeId : undefined}
-            src={node.src}
-            poster={video?.poster || undefined}
-            {...playbackProps}
-            playsInline
-            aria-label={node.alt || undefined}
-            tabIndex={tabIndex}
-            style={getVideoStyle(elementStyle, videoPreviewOnly)}
-            onLoadedMetadata={
-              onVideoIntrinsicRatio
-                ? (event) => {
-                    const element = event.currentTarget;
-                    if (element.videoWidth > 0 && element.videoHeight > 0) {
-                      onVideoIntrinsicRatio(node.id, element.videoWidth / element.videoHeight);
-                    }
-                  }
-                : undefined
-            }
-          />
-        );
+        return renderVideoElement({
+          node,
+          standalone,
+          dataNodeId,
+          videoClassName,
+          contentStyle: elementStyle,
+          mediaFitStyle,
+          previewOnly: videoPreviewOnly,
+          tabIndex,
+          onVideoIntrinsicRatio,
+        });
       }
 
       if (node.subtype === 'svg' && node.svg?.renderMode === 'inline') {

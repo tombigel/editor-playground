@@ -179,6 +179,10 @@ export function getSiteLeafBaseRules(selectors: {
   brandMarkImage: string;
   imagePlaceholder: string;
   video: string;
+  videoFrame: string;
+  videoMedia: string;
+  videoTitle: string;
+  videoDescription: string;
   svg: string;
   button: string;
 }): SharedCssRule[] {
@@ -247,13 +251,62 @@ export function getSiteLeafBaseRules(selectors: {
       },
     },
     {
-      selector: selectors.video,
+      selector: `${selectors.video}, ${selectors.videoFrame}`,
+      style: {
+        display: 'block',
+        maxWidth: '100%',
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+      },
+    },
+    {
+      selector: `${selectors.video}, ${selectors.videoMedia}`,
       style: {
         display: 'block',
         maxWidth: '100%',
         width: '100%',
         height: '100%',
         objectFit: 'contain',
+      },
+    },
+    {
+      selector: selectors.videoTitle,
+      style: {
+        position: 'absolute',
+        top: '0.75rem',
+        left: '0.75rem',
+        zIndex: 1,
+        maxWidth: 'calc(100% - 1.5rem)',
+        margin: 0,
+        padding: '0.35rem 0.5rem',
+        borderRadius: '0.375rem',
+        background: 'rgba(15, 23, 42, 0.72)',
+        color: '#ffffff',
+        font: '600 0.875rem/1.2 system-ui, sans-serif',
+        opacity: 0,
+        transition: 'opacity 500ms ease',
+        pointerEvents: 'none',
+      },
+    },
+    {
+      selector: `${selectors.videoFrame}:is(:hover, :focus-within) ${selectors.videoTitle}, ${selectors.videoFrame}:has(${selectors.videoMedia}:paused) ${selectors.videoTitle}`,
+      style: {
+        opacity: 1,
+      },
+    },
+    {
+      selector: selectors.videoDescription,
+      style: {
+        position: 'absolute',
+        width: '1px',
+        height: '1px',
+        padding: 0,
+        margin: '-1px',
+        overflow: 'hidden',
+        clip: 'rect(0, 0, 0, 0)',
+        whiteSpace: 'nowrap',
+        border: 0,
       },
     },
     {

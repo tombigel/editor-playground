@@ -739,6 +739,7 @@
 
 .stage-image,
 .stage-video,
+.sp-video-media,
 .image-placeholder {
   display: block;
   width: 100%;
@@ -750,7 +751,41 @@
 }
 
 .stage-video {
+  position: relative;
+}
+
+.stage-video,
+.sp-video-media {
   object-fit: contain;
+}
+
+.stage-video .sp-video-title {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  max-width: calc(100% - 16px);
+  margin: 0;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--editor-topbar-tooltip-background) 74%, transparent);
+  color: var(--editor-topbar-tooltip-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.stage-video .sp-video-description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .stage-svg {
