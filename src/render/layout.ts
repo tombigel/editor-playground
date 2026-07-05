@@ -94,10 +94,33 @@ export function getWrapperBorderDeclarations(node: ContainerNode): string[] {
   return cssPropertiesToDeclarations(getWrapperBorderStyle(node));
 }
 
-export function getContentWrapperSurfaceStyle(node: ContainerNode): CSSProperties {
+/**
+ * Base color + gradient layer as CSS longhands (color behind, gradient on top).
+ * Uses `backgroundColor` rather than the `background` shorthand so it never
+ * conflicts with `backgroundClip` (from the border style) — React warns when a
+ * shorthand and a longhand for the same property mix during rerender.
+ */
+function getWrapperBackgroundStyle(node: ContainerNode): CSSProperties {
+  const gradient = node.style?.backgroundGradient;
+  return {
+    ...(node.style?.background ? { backgroundColor: node.style.background } : {}),
+    ...(gradient ? { backgroundImage: gradient } : {}),
+    ...(gradient && node.style?.backgroundSize ? { backgroundSize: node.style.backgroundSize } : {}),
+  };
+}
+
+export function getContentWrapperSurfaceStyle(
+  node: ContainerNode,
+  options: { includeClipBackground?: boolean } = {},
+): CSSProperties {
+  const clipText = node.style?.backgroundClipText === true;
+  // When clip-text is on, the background must live on the text-containing box.
+  // The site content div is that box (includeClipBackground defaults true); the
+  // stage underlay is not, so it opts out and the grid layer paints instead.
+  const includeBackground = !clipText || options.includeClipBackground !== false;
   const style: CSSProperties = {
     boxSizing: 'border-box',
-    background: node.style?.background,
+    ...(includeBackground ? getWrapperBackgroundStyle(node) : {}),
   };
 
   Object.assign(style, buildBorderStyle(node.style));
@@ -108,6 +131,19 @@ export function getContentWrapperSurfaceStyle(node: ContainerNode): CSSPropertie
   }
 
   return style;
+}
+
+/**
+ * Background style for the stage grid layer when background-clip:text is active.
+ * The stage separates the decorative underlay from the text grid, so the clipped
+ * gradient is painted here (on the box that actually contains text). Returns {}
+ * when clip-text is off.
+ */
+export function getContentWrapperTextClipBackgroundStyle(node: ContainerNode): CSSProperties {
+  if (node.style?.backgroundClipText !== true) {
+    return {};
+  }
+  return getWrapperBackgroundStyle(node);
 }
 
 function getSectionDividerStyle(node: ContainerNode): CSSProperties {

@@ -214,6 +214,26 @@ function getBaseSiteCssRules(document: DocumentModel): SharedCssRule[] {
         display: 'contents',
       },
     },
+    // background-clip: text — wrapper clips its own (empty) text to hide the
+    // rect; descendants inherit the gradient and clip to their glyphs.
+    // -webkit-text-fill-color overrides painting only, preserving authored color.
+    {
+      selector: '.sp-clip-text',
+      style: {
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+      },
+    },
+    {
+      selector: '.sp-clip-text :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, div, pre, code)',
+      style: {
+        background: 'inherit',
+        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+      },
+    },
   ];
 }
 

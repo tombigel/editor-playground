@@ -736,6 +736,22 @@ Broken anchor behavior:
 - Linked images render and export as `<a href="..."><img ... /></a>`.
 - Linked image placeholders use the same anchor wrapper pattern.
 
+### Wrapper gradient backgrounds
+
+Container and section wrappers support a gradient background layered over the base color ("color behind + gradient on top").
+
+- The gradient is stored as **CSS text** on `ContainerNode.style.backgroundGradient`; a two-way parser (`src/model/gradient.ts`) converts it to a structured form for the inspector and serializes edits back. Color values are opaque tokens, so `var()`, `color-mix()`, `rgba()`, etc. pass through untouched.
+- The inspector Gradient control edits: gradient **type** (linear/radial/conic) with per-type leading params (linear angle; radial shape + extent keyword `closest/farthest-side/corner` + position; conic from-angle + position), a list of **color stops** (color with alpha + position in px/%) with add/remove/reorder, and a **repeat** toggle. When repeating, a **background-size** control (`backgroundSize`) is exposed for tiled effects (e.g. checker patterns).
+- The model stores a single gradient today but is shaped so multiple gradients/sizes can be added later without a migration.
+- Render composes CSS longhands — `background-color` (base) + `background-image` (gradient) + `background-size` — so the base-color shorthand can never reset the gradient image.
+
+### Background clip to text
+
+A wrapper can clip its background to descendant text (`backgroundClipText`). The control sits at the top of the Design gradient group.
+
+- The wrapper carries the gradient and clips its own (empty) text so the full rect never paints; descendant text elements `background: inherit` the gradient and clip it to their own glyphs. `-webkit-text-fill-color: transparent` overrides painting only, so authored `color` in the model is preserved; the rule uses `:where()` for zero specificity.
+- On the exported site the wrapper content div is the text container, so the clipped background works directly. On the editor stage the decorative surface underlay and the text grid are separate elements, so the clipped gradient is painted on the grid layer instead (`getContentWrapperTextClipBackgroundStyle`) while the underlay opts out.
+
 ### Video leaf behavior
 
 Content and playback:

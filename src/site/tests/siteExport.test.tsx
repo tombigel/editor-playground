@@ -563,7 +563,7 @@ describe('site/siteExport', () => {
     const imageRule = css.match(new RegExp(`\\.sp-node-${image.id}\\.sp-role-image\\.sp-leaf \\{[^}]+\\}`, 'm'))?.[0] ?? '';
 
     expect(containerRule).toContain(`.sp-node-${container.id}-content`);
-    expect(containerRule).toContain('background: #ffffff;');
+    expect(containerRule).toContain('background-color: #ffffff;');
     expect(containerRule).toContain('box-sizing: border-box;');
     expect(containerRule).not.toContain('background-clip: padding-box;');
     expect(containerRule).not.toContain('border-width: 0px;');

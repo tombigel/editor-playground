@@ -531,6 +531,51 @@ describe('editor/editorMutations', () => {
       }
     });
 
+    it('stores a gradient verbatim without force-opaquing its stops', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+      const gradient = 'linear-gradient(45deg, rgba(255,0,0,0.4) 0%, var(--brand) 100%)';
+
+      const next = updateWrapperStyleField(state, section.id, 'backgroundGradient', gradient);
+      const node = next.document.nodes[section.id];
+      if (node.contentType === 'container') {
+        expect(node.style!.backgroundGradient).toBe(gradient);
+      }
+    });
+
+    it('rejects a non-gradient value for backgroundGradient', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      const next = updateWrapperStyleField(state, section.id, 'backgroundGradient', '#ff0000');
+      expect(next).toBe(state);
+    });
+
+    it('clears the gradient with an empty value', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      const withGradient = updateWrapperStyleField(state, section.id, 'backgroundGradient', 'linear-gradient(red, blue)');
+      const cleared = updateWrapperStyleField(withGradient, section.id, 'backgroundGradient', '');
+      const node = cleared.document.nodes[section.id];
+      if (node.contentType === 'container') {
+        expect(node.style!.backgroundGradient).toBeUndefined();
+      }
+    });
+
+    it('toggles background-clip:text', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      const on = updateWrapperStyleField(state, section.id, 'backgroundClipText', 'true');
+      const onNode = on.document.nodes[section.id];
+      expect(onNode.contentType === 'container' && onNode.style!.backgroundClipText).toBe(true);
+
+      const off = updateWrapperStyleField(on, section.id, 'backgroundClipText', '');
+      const offNode = off.document.nodes[section.id];
+      expect(offNode.contentType === 'container' && offNode.style!.backgroundClipText).toBeUndefined();
+    });
+
     it('clears wrapper padding with empty value', () => {
       const state = createInitialState();
       const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;

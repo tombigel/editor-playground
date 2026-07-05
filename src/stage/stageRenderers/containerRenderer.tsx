@@ -18,6 +18,7 @@ import {
   getContentWrapperBaseStyle,
   getContentWrapperPaddingStyle,
   getContentWrapperSurfaceStyle,
+  getContentWrapperTextClipBackgroundStyle,
   getNodeHeight,
   hasIntrinsicWidth,
   getNodeWidth,
@@ -148,7 +149,7 @@ export function renderContainer({
         data-drop-wrapper-id={node.id}
         style={contentWrapperStyle}
       >
-        <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node)} />
+        <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node, { includeClipBackground: false })} />
         {showGridLanes ? renderGridLaneOverlay(meshLayout, node, measuredNodeSizes, viewport) : null}
         {showPaddingVisual ? renderWrapperPaddingOverlay(node) : null}
         {showWrapperSpacerVisuals ? renderOffsetVisual(node.sticky, node, measuredNodeSizes, viewport, ownerWrapper) : null}
@@ -163,10 +164,11 @@ export function renderContainer({
             )
           : null}
         <div
-          className="sticky-spacer-layer"
+          className={`sticky-spacer-layer${node.style?.backgroundClipText ? ' sp-clip-text' : ''}`}
           style={{
             boxSizing: 'border-box',
             ...getContentWrapperPaddingStyle(node),
+            ...getContentWrapperTextClipBackgroundStyle(node),
             display: 'grid',
             gridTemplateColumns: meshLayout.columnTemplate,
             gridTemplateRows: meshLayout.rowTemplate,

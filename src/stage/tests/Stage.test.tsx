@@ -736,7 +736,7 @@ describe('stage/Stage', () => {
 
     expect(markup).toContain('class="drag-preview-content-wrapper content-wrapper"');
     expect(markup).toContain('class="content-wrapper-surface"');
-    expect(markup).toContain('background:#f6d7c8');
+    expect(markup).toContain('background-color:#f6d7c8');
     expect(markup).toContain('border-style:solid');
     expect(markup).toContain('border-width:3px');
     expect(markup).toContain('border-color:#4c2a1b');

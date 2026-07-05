@@ -9,6 +9,7 @@ import type {
 } from '../../model/types';
 import { isContainerNode } from '../../model/types';
 import { forceOpaqueColorValue } from '../../model/colors';
+import { isGradientText } from '../../model/gradient';
 import { parseSpacingValue, parseUnitValue } from '../../model/units';
 import {
   applyMarkdownToTextNodeDoc,
@@ -74,6 +75,26 @@ export function updateWrapperStyleField(
 
   if (field === 'background' && isStructuralWrapper(node.subtype)) {
     node.style.background = value ? forceOpaqueColorValue(value) : undefined;
+    return { ...state, document };
+  }
+
+  if (field === 'backgroundGradient') {
+    // Gradient text must stay verbatim (alpha stops, var()/color-mix() colors);
+    // the structural-wrapper force-opaque rule applies to the base color only.
+    if (value && !isGradientText(value)) {
+      return state;
+    }
+    node.style.backgroundGradient = value || undefined;
+    return { ...state, document };
+  }
+
+  if (field === 'backgroundSize') {
+    node.style.backgroundSize = value.trim() || undefined;
+    return { ...state, document };
+  }
+
+  if (field === 'backgroundClipText') {
+    node.style.backgroundClipText = value === 'true' ? true : undefined;
     return { ...state, document };
   }
 

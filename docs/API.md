@@ -1025,10 +1025,26 @@ type EditorTextField =
 ```typescript
 type WrapperStyleField =
   | 'background'
+  | 'backgroundGradient'   // CSS gradient text, validated via isGradientText
+  | 'backgroundSize'       // background-size for a repeating gradient
+  | 'backgroundClipText'   // 'true' to clip the background to descendant text
   | BorderColorField | BorderWidthField | BorderRadiusField | ShadowStyleField
   | 'paddingTop' | 'paddingRight' | 'paddingBottom' | 'paddingLeft'
   | 'sectionBorderBottomColor' | 'sectionBorderBottomWidth';
 ```
+
+### Gradient parser
+
+`src/model/gradient.ts` (re-exported from `documentViewApi`) provides the two-way CSS gradient parser used by the wrapper Design inspector.
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `parseGradient` | `(css: string) -> ParsedGradient \| null` | Parse a supported gradient string; null when not round-trippable |
+| `serializeGradient` | `(gradient: ParsedGradient) -> string` | Serialize the structured form back to CSS text |
+| `createDefaultGradient` | `() -> ParsedGradient` | Starter linear gradient for newly enabled backgrounds |
+| `isGradientText` | `(value: string) -> boolean` | Quick syntactic gradient check used by validation |
+
+`ParsedGradient` covers `type` (`linear`/`radial`/`conic`), `repeating`, `angle`, `position`, radial `shape`/`extent`/`sizes`, and `stops` (opaque color token + optional px/% position). Color values are never reinterpreted, so `var()`/`color-mix()` pass through.
 
 ### AnimationDefinition
 

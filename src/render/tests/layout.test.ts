@@ -8,6 +8,7 @@ import {
   getContentWrapperBaseStyle,
   getContentWrapperPaddingStyle,
   getContentWrapperSurfaceStyle,
+  getContentWrapperTextClipBackgroundStyle,
   getLeafCssHeight,
   getNodeHeight,
   getNodeWidth,
@@ -139,7 +140,7 @@ describe('render/layout', () => {
     expect(getContentWrapperSurfaceStyle(container)).toEqual({
       boxSizing: 'border-box',
       backgroundClip: 'padding-box',
-      background: '#ffffff',
+      backgroundColor: '#ffffff',
       borderStyle: 'solid',
       borderWidth: '2px',
       borderColor: '#dbe3ee',
@@ -147,6 +148,48 @@ describe('render/layout', () => {
       boxShadow: '0px 12px 24px 8px rgba(18, 32, 51, 0.18)',
     });
     expect(getWrapperBorderStyle(container)).toEqual({});
+  });
+
+  it('composes base color behind and gradient on top using longhands', () => {
+    const container = createContainerNode('container', 'root');
+    container.style!.background = '#101828';
+    container.style!.backgroundGradient = 'linear-gradient(45deg, red 0%, blue 100%)';
+    container.style!.backgroundSize = '20px 20px';
+
+    expect(getContentWrapperSurfaceStyle(container)).toMatchObject({
+      backgroundColor: '#101828',
+      backgroundImage: 'linear-gradient(45deg, red 0%, blue 100%)',
+      backgroundSize: '20px 20px',
+    });
+  });
+
+  it('keeps the gradient background off the stage underlay but on the text-clip layer when clip-text is on', () => {
+    const container = createContainerNode('container', 'root');
+    container.style!.background = '#101828';
+    container.style!.backgroundGradient = 'linear-gradient(45deg, red, blue)';
+    container.style!.backgroundClipText = true;
+
+    // Stage underlay opts out of the clipped background.
+    const underlay = getContentWrapperSurfaceStyle(container, { includeClipBackground: false });
+    expect(underlay).not.toHaveProperty('backgroundImage');
+    expect(underlay).not.toHaveProperty('background');
+
+    // The text-clip layer (stage grid) paints the gradient instead.
+    expect(getContentWrapperTextClipBackgroundStyle(container)).toMatchObject({
+      backgroundColor: '#101828',
+      backgroundImage: 'linear-gradient(45deg, red, blue)',
+    });
+
+    // The site content div (default) keeps the background so CSS can clip it.
+    expect(getContentWrapperSurfaceStyle(container)).toMatchObject({
+      backgroundImage: 'linear-gradient(45deg, red, blue)',
+    });
+  });
+
+  it('returns no text-clip background when clip-text is off', () => {
+    const container = createContainerNode('container', 'root');
+    container.style!.backgroundGradient = 'linear-gradient(red, blue)';
+    expect(getContentWrapperTextClipBackgroundStyle(container)).toEqual({});
   });
 
   it('omits zero-width borders, zero radius, and fully transparent shadows from wrapper surfaces', () => {
@@ -163,7 +206,7 @@ describe('render/layout', () => {
 
     expect(getContentWrapperSurfaceStyle(container)).toEqual({
       boxSizing: 'border-box',
-      background: '#ffffff',
+      backgroundColor: '#ffffff',
     });
   });
 

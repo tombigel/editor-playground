@@ -114,6 +114,9 @@ export type ButtonStyleField =
 export type EditorTextField = NodeTextField | TextStyleField | LinkStyleField | ImageStyleField | ButtonStyleField | VideoSettingField | SvgSettingField | 'blockGap';
 export type WrapperStyleField =
   | 'background'
+  | 'backgroundGradient'
+  | 'backgroundSize'
+  | 'backgroundClipText'
   | BorderColorField
   | BorderWidthField
   | BorderRadiusField
@@ -516,6 +519,16 @@ export type ContainerNode = BaseNode & {
   topLevelWrapperVisibility?: TopLevelWrapperVisibilityState;
   style?: BorderStyle & ShadowStyle & {
     background?: string;
+    /**
+     * CSS gradient text layered over `background` (base color behind).
+     * Single gradient today; kept as text so a future multi-gradient model can
+     * become a comma-joined list without a migration.
+     */
+    backgroundGradient?: string;
+    /** background-size for the gradient layer (exposed when the gradient repeats). */
+    backgroundSize?: string;
+    /** Clip the background to descendant text (background-clip: text). */
+    backgroundClipText?: boolean;
     /** Section-only decorative bottom border color */
     sectionBorderBottomColor?: string;
     /** Section-only decorative bottom border width */

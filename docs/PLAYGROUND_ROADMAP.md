@@ -57,7 +57,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 | Raw intake id | Status | Short name | Priority | Type | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-11` | `🟢 In progress` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Ranking pass done 2026-07-05; build order: video → inline SVG → gradients. Embed deferred |
+| `RI-11` | `🟢 In progress` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Video + inline SVG + gradients shipped 2026-07-05; embed/divider/icon/audio backlog |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | - |
 | `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | - |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 done; migration wired into import paths, idempotency fixed. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
@@ -411,7 +411,8 @@ None yet.
   10. **Dialogs** — needs an interaction runtime on exported static sites; spec-first under `RI-12A` before any implementation.
 - `Current progress`: **Video shipped 2026-07-05** — video leaf with insertion rail entry, content panel (src, poster, label, autoplay/muted/controls/loop switches, preload), design panel (fit/position, border, shadow), paused stage preview, native `<video>` preview/export, silent intrinsic-aspect adoption, and shared image/video object-fit/position controls.
 - `Current progress`: **Video + inline SVG shipped 2026-07-05.** Inline SVG: DOMPurify-sanitized paste-markup and convert-from-image sources, a11y (decorative/label/labelledby/title/desc), viewBox management (original + author override + fit-to-bbox), monochrome fill/opacity, global stroke, filter shadow, and shared fit/position. Markup is re-sanitized at document ingestion to close the raw-JSON import bypass.
-- `Next move`: Implement the gradient container background control (structured model, stops/reorder, background-clip:text).
+- `Current progress`: **Video, inline SVG, and gradient backgrounds shipped 2026-07-05.** Gradient: container + section backgrounds with a base color behind a CSS-text gradient, a two-way parser (`src/model/gradient.ts`) accepting `var()`/`color-mix()` colors, linear/radial/conic types with per-type params, color stops (color+alpha, px/% position) with reorder, repeat + background-size, and a background-clip:text mode (descendants inherit + clip via a zero-specificity `-webkit-text-fill-color` rule). Single gradient today, multi-ready.
+- `Next move`: RI-11 core wave complete. Remaining backlog candidates (embed/iframe with sandboxing, divider, icon, audio) stay unscheduled pending prioritization.
 
 ##### Table component support: markdown and designable variants
 

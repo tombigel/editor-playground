@@ -220,6 +220,26 @@
   pointer-events: none;
 }
 
+/*
+ * background-clip: text. The wrapper carries the gradient and clips its own
+ * (empty) text so the full rect never paints; descendant text elements inherit
+ * the gradient and clip it to their own glyphs. -webkit-text-fill-color only
+ * overrides painting, so authored `color` in the model is preserved. :where()
+ * keeps specificity at zero.
+ */
+.sp-clip-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sp-clip-text :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, div, pre, code) {
+  background: inherit;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .grid-lane-overlay {
   position: absolute;
   inset: 0;

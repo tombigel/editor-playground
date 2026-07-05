@@ -61,6 +61,8 @@ import {
   applyWrapperShadowPatch,
 } from './styleFields';
 import { createShadowFallback } from './contentSections/shared';
+import { GradientControl } from './contentSections/GradientControl';
+import { parseGradient } from '../../api/documentViewApi';
 
 export type FocusedModeEntry = {
   mode: ActiveFocusedMode;
@@ -503,6 +505,9 @@ export function WrapperDesignSection({
 }) {
   const supportsContainerSurfaceStyling = node.subtype === 'container';
   const allowsBackgroundOpacity = node.subtype === 'container';
+  const supportsGradient = node.subtype === 'container' || node.subtype === 'section';
+  const gradient = node.style?.backgroundGradient;
+  const gradientRepeats = gradient ? parseGradient(gradient)?.repeating === true : false;
   const shadowFallback = createShadowFallback(
     DEFAULT_SHADOW_COLOR,
     DEFAULT_SHADOW_BLUR_PX,
@@ -520,6 +525,19 @@ export function WrapperDesignSection({
       contentClassName={contentClassName}
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
+        {supportsGradient ? (
+          <>
+            <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
+              Clip background to text
+              <Switch
+                checked={node.style?.backgroundClipText ?? false}
+                onCheckedChange={(checked) => onWrapperStyleChange('backgroundClipText', checked ? 'true' : '')}
+              />
+            </Label>
+            <div className="editor-border-subtle border-b" aria-hidden="true" />
+          </>
+        ) : null}
+
         <FormField label="Background" layout="inline" controlClassName="gap-2">
           <HoverColorField
             value={node.style?.background}
@@ -528,6 +546,29 @@ export function WrapperDesignSection({
             showOpacity={allowsBackgroundOpacity}
           />
         </FormField>
+
+        {supportsGradient ? (
+          <div className="space-y-1.5">
+            <div className="editor-text-muted text-[11px] font-medium">Gradient</div>
+            <GradientControl
+              value={gradient}
+              onChange={(next) => onWrapperStyleChange('backgroundGradient', next)}
+            />
+            {gradientRepeats ? (
+              <FormField label="Size" layout="inline">
+                <NumericUnitInlineField
+                  value={node.style?.backgroundSize ?? ''}
+                  units={['px', '%']}
+                  aria-label="Background size"
+                  placeholder="auto"
+                  onChange={(value) => onWrapperStyleChange('backgroundSize', value)}
+                />
+              </FormField>
+            ) : null}
+          </div>
+        ) : null}
+
+        {supportsGradient ? <div className="editor-border-subtle border-b" aria-hidden="true" /> : null}
         {supportsContainerSurfaceStyling ? (
           <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
             <Label className="pt-1 text-[11px] font-medium">Border</Label>

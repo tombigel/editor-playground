@@ -68,3 +68,18 @@ export {
 export type {
   LinkValidationError,
 } from '../model/validation';
+
+export {
+  createDefaultGradient,
+  isGradientText,
+  parseGradient,
+  serializeGradient,
+} from '../model/gradient';
+
+export type {
+  GradientStop,
+  GradientStopPosition,
+  GradientType,
+  ParsedGradient,
+  RadialExtentKeyword,
+} from '../model/gradient';
